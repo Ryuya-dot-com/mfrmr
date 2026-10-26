@@ -95,4 +95,7 @@ head(interaction_effect_table(fit))
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}},
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=compare_mfrm]{compare_mfrm()}}, \link{mfrmr_linking_and_dff}
+
+\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} with \code{interaction} for supported
+fixed-population RSM/PCM MML cell intervals from full joint information.
 }

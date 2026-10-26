@@ -142,7 +142,7 @@ test_that("DFF comparison labels fit the device without changing the plotted res
         units = "inches", cex = args$cex.axis))
     }
     axis(side, ...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   p <- plot(x)
   expect_gt(left_margin, label_width)
   expect_identical(plot_data(p), plot_data(plot(x, draw = FALSE)))

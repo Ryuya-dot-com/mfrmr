@@ -228,6 +228,17 @@ status symbols and optional ordinary comparison. Titles, subtitles, captions,
 reference lines and legends can be changed through the source plot arguments.
 Methods use both line types and vertical offsets, including in monochrome.
 }
+\section{Interactive views}{
+
+The \href{https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html}{visual gallery}
+shows how to pass a supported ggplot to \code{plotly::ggplotly()} for browser-based
+hovering, zooming and legend filtering. Plotly is an optional downstream
+renderer. Keep the original mfrmr plot and its \code{\link[=plot_data]{plot_data()}} notes alongside
+the widget; conversion does not recalculate estimates or intervals. Check
+labels, custom geoms and interval layers after conversion. The gallery includes
+static figures, numeric tables and an HTML export recipe.
+}
+
 \examples{
 toy <- load_mfrmr_data("example_core")
 # A balanced slice retains every Rater and Criterion while running quickly.

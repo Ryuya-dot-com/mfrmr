@@ -212,6 +212,13 @@
 #' an available G. Non-PSD component matrices are described in the returned
 #' notes; inspect `x$component_diagnostics` before using raw projections.
 #' Increasing planned counts does not repair those component estimates.
+#' The saved `negative_components` convention is preserved in curves and
+#' error-contribution plots. Notes identify raw, GENOVA ALGORITHM or GENOVA EMS
+#' projections; original G-study diagnostics remain available. GENOVA-adjusted
+#' results accept original-source population intervals calculated for that
+#' treatment by `confint(x)`. Bands retain their original bounds and may not
+#' contain adjusted points; notes and saved intervals retain the distinction.
+#' A saved interval with a different component treatment is rejected.
 #' Missing values are never plotted as zero. Previously saved D-study objects
 #' retain their recorded values and availability: rerun
 #' [mfrm_d_study()] on the saved G-study to apply current rules.
@@ -291,6 +298,7 @@ plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem", "e
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
   type <- match.arg(type)
+  if (!identical(.mfrm_mvds_policy(x), "raw")) x <- .mfrm_mvds_replay(x)
   if (!isTRUE(intervals) && (!missing(assumption) || !missing(method) || !missing(level)))
     stop("`assumption`, `method` and `level` apply only when `intervals = TRUE`; saved intervals retain their own settings.", call. = FALSE)
   if (isFALSE(intervals)) intervals <- NULL
@@ -444,10 +452,12 @@ plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem", "e
   subtitle <- paste(design_label, "|", if (is.null(bands))
     "Estimated components held fixed | No confidence intervals" else
     "Saved coefficient intervals | Source-study uncertainty")
-  component_note <- if (any(!x$component_diagnostics$PositiveSemidefinite))
-    "Non-PSD covariance components: raw projections; review component diagnostics." else NULL
+  component_note <- c(if (!identical(.mfrm_mvds_policy(x), "raw")) .mfrm_mvds_component_note(x),
+    if (any(!x$component_diagnostics$PositiveSemidefinite))
+      "Non-PSD covariance components in the original G-study; review component diagnostics and the selected treatment.")
   out <- new_mfrm_plot_data("multivariate_d_study", list(table = tab, series = series,
     unavailable = unavailable, design_grid = x$design_grid, weights = selected_weights,
+    negative_components = .mfrm_mvds_policy(x),
     nesting = nesting, panel_by = panel_by,
     panels = if (faceted) panels else NULL, ncol = if (faceted) panel_columns else NULL,
     score = score, kind = kind, plot = type, x_var = x_var, x_label = x_label,
@@ -487,45 +497,45 @@ plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem", "e
       series$Metric == panels$Metric[i], , drop = FALSE]
     ok <- s$Status == "Available" & is.finite(s$Value)
     x_lim <- if (faceted) range(series$X) else range(s$X)
-    graphics::plot(x_lim, y_lim, type = "n", ylim = y_lim,
+    plot(x_lim, y_lim, type = "n", ylim = y_lim,
       xlab = x_label,
       ylab = if (length(metrics) == 1L) sub(": ", "\n", y_label) else if (type == "coefficients") "Dependability\nHigher is better" else "SEM (score units)\nLower is better",
       main = if (faceted || length(metrics) > 1L) panels$Label[i] else NULL, xaxt = "n", yaxt = "n")
     ticks <- sort(unique(if (faceted) series$X else s$X))
     if (length(ticks) > 15L) ticks <- pretty(range(ticks))
-    graphics::axis(1, at = ticks[ticks >= x_lim[1] & ticks <= x_lim[2] & ticks == floor(ticks)])
+    axis(1, at = ticks[ticks >= x_lim[1] & ticks <= x_lim[2] & ticks == floor(ticks)])
     has_intervals <- !is.null(bands) && any(s$IntervalAvailable)
     if (any(ok) || has_intervals) {
       if (type == "coefficients" && identical(y_lim, c(0, 1)))
-        graphics::axis(2, at = seq(0, 1, 0.2), las = 1) else graphics::axis(2, las = 1)
+        axis(2, at = seq(0, 1, 0.2), las = 1) else axis(2, las = 1)
       graphics::grid(nx = NA, ny = NULL, col = style$grid)
       if (has_intervals) for (run in unique(stats::na.omit(s$IntervalRun))) {
         z <- s[!is.na(s$IntervalRun) & s$IntervalRun == run, , drop = FALSE]
         z <- z[order(z$X, z$Scenario), , drop = FALSE]
         j <- match(z$Group[1L], groups)
         if (length(unique(z$X)) == 1L) {
-          graphics::segments(z$X, z$Lower, z$X, z$Upper, col = cols[j], lty = line_types[j])
+          segments(z$X, z$Lower, z$X, z$Upper, col = cols[j], lty = line_types[j])
         } else {
           graphics::polygon(c(z$X, rev(z$X)), c(z$Lower, rev(z$Upper)),
             col = grDevices::adjustcolor(cols[j], alpha.f = .14), border = NA)
-          graphics::lines(z$X, z$Lower, col = cols[j], lty = line_types[j], lwd = .7)
-          graphics::lines(z$X, z$Upper, col = cols[j], lty = line_types[j], lwd = .7)
+          lines(z$X, z$Lower, col = cols[j], lty = line_types[j], lwd = .7)
+          lines(z$X, z$Upper, col = cols[j], lty = line_types[j], lwd = .7)
         }
       }
       for (j in seq_along(groups)) {
         z <- s[s$Group == groups[j], , drop = FALSE]
         z <- z[order(z$X, z$Scenario), , drop = FALSE]
         z$Value[z$Status != "Available" | !is.finite(z$Value)] <- NA_real_
-        graphics::lines(z$X, z$Value, col = cols[j], lty = line_types[j], lwd = 2)
+        lines(z$X, z$Value, col = cols[j], lty = line_types[j], lwd = 2)
         pch <- rep(shapes[j], nrow(z))
         if (!is.null(bands)) pch[!z$IntervalAvailable] <- c(1, 2, 0, 5, 1, 2)[(j-1L) %% 6L+1L]
-        graphics::points(z$X, z$Value, col = cols[j], pch = pch)
+        points(z$X, z$Value, col = cols[j], pch = pch)
       }
     } else {
-      graphics::text(mean(x_lim), mean(y_lim), .mfrm_mvds_unavailable_message(s$Status, compact = faceted),
+      text(mean(x_lim), mean(y_lim), .mfrm_mvds_unavailable_message(s$Status, compact = faceted),
         cex = 0.8, col = style$foreground)
     }
-    if (nrow(references)) graphics::abline(h = references$value,
+    if (nrow(references)) abline(h = references$value,
       lty = references$linetype, col = style$neutral)
     if (show_legend && !faceted) {
       .mfrm_mvds_legend(groups, cols, line_types, shapes, faceted = FALSE)
@@ -541,13 +551,13 @@ plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem", "e
   # Recompute physical text spacing when pkgdown or a saved plot changes devices.
   grDevices::recordGraphics({
     if (faceted) {
-      graphics::legend(graphics::grconvertX(.5, from = "ndc"),
+      legend(graphics::grconvertX(.5, from = "ndc"),
         graphics::grconvertY(.015, from = "ndc"), legend = groups,
         col = cols, lty = line_types, pch = shapes, ncol = min(2, length(groups)),
         bty = "n", xpd = NA, xjust = .5, yjust = 0, cex = .8)
     } else {
       usr <- graphics::par("usr")
-      graphics::legend(usr[2] + 0.03 * diff(usr[1:2]), usr[4], legend = groups,
+      legend(usr[2] + 0.03 * diff(usr[1:2]), usr[4], legend = groups,
         col = cols, lty = line_types, pch = shapes, bty = "n", xpd = NA, cex = .8)
     }
   }, list(groups = groups, cols = cols, line_types = line_types,

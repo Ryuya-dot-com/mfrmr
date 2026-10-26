@@ -162,7 +162,7 @@ test_that("numerous PCM thresholds do not erase the default facet display", {
       x = graphics::grconvertX(c(box$left, box$left + box$w), from = "user", to = "ndc"),
       y = graphics::grconvertY(c(box$top - box$h, box$top), from = "user", to = "ndc"))
     result
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   grDevices::pdf(NULL, width = 5, height = 4)
   on.exit(grDevices::dev.off(), add = TRUE)
   .mfrmr_muffle_expected_warnings(plot(fit, type = "ccc"), "^Review-only display:")
@@ -211,7 +211,7 @@ test_that("pathway and CCC retain the reference profile outside the default figu
   testthat::local_mocked_bindings(mtext = function(text, ...) {
     labels <<- c(labels, as.character(text))
     original_mtext(text, ...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   grDevices::pdf(NULL, width = 7, height = 5)
   on.exit(grDevices::dev.off(), add = TRUE)
   for (type in c("pathway", "ccc")) {
@@ -238,7 +238,7 @@ test_that("category-count axes include expected counts above observed bars", {
     result
   }, .package = "mfrmr")
 
-  categories <- list(category_table = data.frame(
+  categories <- list(calculation_version = 2L, category_table = data.frame(
     Category = 1:3, Count = c(2, 4, 3), ExpectedCount = c(NA, 30, 1)
   ))
   categories$category_usage <- mfrmr:::summarize_category_usage(categories$category_table)
@@ -283,7 +283,7 @@ test_that("rater profiles reserve room for complete labels or explain the size l
                 graphics::par("mai")[2] - 0.1)
     }
     original_axis(side, at = at, labels = labels, ...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   plot_rater_severity_profile(fit, dx)
   expect_equal(axis_calls, 1L)
   expect_identical(graphics::par("mar"), old_mar)
@@ -305,4 +305,26 @@ test_that("FACETS maps warn when adjacent multi-line cells cannot fit", {
     strrep("long label ", 30))
   expect_warning(mfrmr:::draw_wright_facets_style(p$data, show_ci = FALSE),
                  "FACETS-style facet labels need more space")
+})
+
+
+test_that("facet bars reserve label space and include confidence limits", {
+  grDevices::png(tempfile(fileext = ".png"), width = 1200, height = 740, res = 160)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  before <- graphics::par("mar")
+  seen <- NULL
+  previous_hook <- getHook("plot.new")
+  on.exit(setHook("plot.new", previous_hook, action = "replace"), add = TRUE)
+  setHook("plot.new", function(...) {
+    seen <<- graphics::par("mai")[2]
+  }, action = "append")
+  tab <- data.frame(Facet = "Rater", Level = c("R01", "R06"),
+    Estimate = c(-.61, .41), SE = c(.3, .2))
+  draw_facet_plot(tab, title = "", show_ci = TRUE)
+  expect_gt(seen, max(graphics::strwidth(paste0(tab$Facet, ": ", tab$Level),
+    units = "inches")))
+  bounds <- c(tab$Estimate - qnorm(.975)*tab$SE, tab$Estimate + qnorm(.975)*tab$SE)
+  expect_lte(graphics::par("usr")[1], min(bounds))
+  expect_gte(graphics::par("usr")[2], max(bounds))
+  expect_identical(graphics::par("mar"), before)
 })

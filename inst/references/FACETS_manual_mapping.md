@@ -10,7 +10,20 @@ scores and the zero-bias summary also agree in that example. This does not
 establish equivalence for other models, versions, anchors, extreme treatments,
 missingness patterns or replication weights.
 
-Reviewed against the 0.2.4 development routes on October 23, 2026. Use
+A separate five-facet PCM comparison checks Criterion-specific 0:3 scales,
+unit-weight nonextreme observations, fair averages and core fit statistics.
+Independent response-probability calculations verify the native fair-score
+aggregation and conditional plot derivatives. Small calibration differences
+can move a fair average across a two-decimal rounding boundary, so identical
+printed values are not the numerical acceptance rule. Expected correlations
+agree after the published finite-count correction described below; four small
+Outfit-df discrepancies remain unresolved. These results do not establish
+every executable diagnostic as equivalent.
+Scorefile `S.E.` belongs to the measure; it is not a fair-average SE. The
+native plot's conditional interval holds the other calibration parameters
+fixed and remains diagnostic-only, without established coverage.
+
+Reviewed against the 0.2.4 development routes on October 24, 2026. Use
 `facets_feature_coverage()` for route limits and
 `help("mfrmr_methods_reference")` for calculation assumptions and literature.
 These routes are not automatically available for two-family GPCM or corrected
@@ -30,6 +43,22 @@ Plotting uses `plot()` on fits or analysis results; see `mfrmr_plot_migration`.
 - **PTMEA:** scores now correlate with the oriented observation-level measure
   sum, including Person rows, as defined in the
   [point-measure documentation](https://www.winsteps.com/facetman64/gstats.htm).
+- **Expected PTMEA:** ordinary additive RSM/PCM JML diagnostics now expose
+  `PTMEAExpected`, the covariance of the oriented predictor with the conditional
+  expected score divided by the square root of the product of predictor
+  variance and the sum of expected-score variance and `(N-2)/N` times mean
+  conditional variance.
+  All moments use frequency weights and `N` is their sum. This follows
+  [Linacre's finite-count note](https://www.rasch.org/rmt/rmt221e.htm), which
+  supplements the earlier unadjusted attenuation formula. It explains the
+  retained PCM expected-correlation discrepancy; fresh unit, repeated,
+  fractional and unequal-weight checks agree within printed precision where
+  `N >= 2`. `PTMEAExpectedAsymptotic` retains the unadjusted ratio and status
+  columns preserve unavailable scopes. At `N < 2`, mfrmr withholds the corrected
+  reference rather than copying native boundary values. Group-mean anchors,
+  fitted interactions and other estimation routes are outside this addition.
+  The corrected quantity is a reporting approximation, not an exact expectation
+  of a finite sample correlation or a calibrated inferential test.
 - **Displacement:** the proposed update now follows the fitted facet sign and
   score derivative. For a negative facet it subtracts the predictor shift.
   It remains a conditional one-step diagnostic, not a complete released refit.
@@ -49,11 +78,61 @@ Plotting uses `plot()` on fits or analysis results; see `mfrmr_plot_migration`.
   cells with count 8. mfrmr retains its count-minus-1 approximation, matching
   that executable example. Do not infer another version's behavior from the
   web text alone; these conditional tail areas do not establish calibrated
-  small-sample fairness inference.
+  small-sample fairness inference. In fixed-calibration fractional-count
+  examples, native tail areas differ from ordinary Student tails beyond
+  print precision, count-minus-two and adjacent-integer df alternatives.
+  The checked native fractional tails are reproduced by using integer-df
+  finite sums with fractional df in their arguments, while truncating the
+  recurrence length and parity. This is not the continuous Student distribution;
+  at count 13.99, a checked cell has native tail .0589 versus Student .04905446.
+  This reproduces the observed behavior, not an inspection of the executable's
+  source. mfrmr retains the continuous Student reference, independently checked
+  by integrating its density. `ProbabilityReference`, `ProbabilityStatus` and
+  `ProbabilityReason` preserve its basis and unavailable states. `DFDisplay`
+  rounds positive df to the nearest integer (halves upward) for comparison.
+  Nonpositive count-minus-one values stay in `DFUnrounded`, but cannot define a
+  reference df or probability. These fields do not relabel a separate GPCM LR tail.
 - **Anchors and extremes:** a fixed anchor is no longer replaced by an extreme
   display adjustment. Malformed nonempty anchor schemas now always stop fitting.
-  Native `xtreme` still adjusts an average-score display target and does not
-  implement [FACETS Xtreme](https://www.winsteps.com/facetman64/xtremescore.htm).
+  The default `xtreme_method = "display"` retains the average-score display
+  target. Ordinary additive RSM/PCM JML also supports
+  `fair_average_table(..., xtreme = .3, xtreme_method = "facets")`:
+  [FACETS Xtreme](https://www.winsteps.com/facetman64/xtremescore.htm)-style
+  weighted-total extrapolation, using the element's minimum positive eligible
+  weight and actual administered calibration. Primary estimates stay intact;
+  corrected locations enter that element's fair scores and conditional
+  information supplies a distinctly labeled reporting SE. Fair-score intervals
+  remain unavailable for positive `xtreme`. `estimate_bias(..., xtreme = .5)`
+  separately handles extreme cells with a root inside the specified search
+  limits. Extreme main effects are excluded from its calibration rows.
+  Binary unit/replication-weight examples and a fixed-scale PCM kernel agree
+  with FACETS 4.5.0 to small numerical tolerances. Public PCM results also satisfy
+  their own administered-scale score equations. This does not establish full
+  PCM fitting or whole-program equivalence. Matching the origin constraints
+  resolves the checked interior partial-anchor discrepancies, as described
+  below. With only same-boundary Person-anchor responses in matched sparse
+  RSM/PCM inputs, FACETS 4.5.0 retains all observations and the anchor value,
+  but reports a finite calibration whose expected anchor total is about
+  0.299 or 17.701 for observed totals 0 or 18 (`Xtreme=0.3`). A feasible
+  location shift strictly improves the ordinary likelihood, so this is not
+  a finite ordinary JML solution. mfrmr's `anchor_origin` route rejects this
+  configuration before optimization without requiring `lpSolve`; additional
+  interior or opposite-boundary Person-anchor support does not trigger that
+  specific rule. With additional interior Person-anchor support, native
+  fair scores and conditional Rater-by-Task bias calculations agree with
+  independent calculations at the reported calibration. All responses,
+  including those of the fixed extreme Person, remain eligible in these
+  examples. Main calibrations still differ: free-Person scores are nonzero
+  and maximum-score examples reach the main iteration limit. Conditional
+  reporting agreement therefore does not establish calibration equivalence.
+  Ordinary additive RSM/PCM JML now retains direct fixed anchors in both
+  fair-score display conventions, including `totalscore = FALSE` and the
+  conditional PCM plot derivative. The exact native adjustment and broader
+  anchored exclusion designs remain unverified. Do not extend the manual's general
+  extreme-exclusion rule to fixed anchors without checking the actual output.
+  Group-mean anchors and fitted interactions are unsupported.
+  Reporting SEs and screening tails are not uncertainty for the original
+  infinite MLE, calibration-inclusive inference or fairness decisions.
 - **Pairwise bias:** local estimates use `target + bias/TargetSign`, with
   conditional cell SEs. The default now uses the modified Rasch-Welch df in
   the [t-statistics manual](https://www.winsteps.com/facetman64/t-statistics.htm),
@@ -261,12 +340,49 @@ measures. Strata describes hypothetical distinguishable levels, not discovered
 groups. See the [FACETS interpretation](https://www.winsteps.com/facetman64/reliability.htm)
 and the estimator-specific formulas in `help("diagnose_mfrm")`.
 
-The [FACETS G-theory menu](https://www.winsteps.com/facetman64/gtheory.htm)
-launches the external R package `gtheory`. mfrmr's own
-`mfrm_multivariate_gstudy()` / `mfrm_multivariate_d_study()` route handles
+In FACETS 4.5.0, the [G-theory menu](https://www.winsteps.com/facetman64/gtheory.htm)
+generates an R program using the external package `gtheory`. The
+[version history](https://www.winsteps.com/facgood.htm) records replacement of
+that interface in 4.5.1; check the installed version separately from online
+help. The menu defaults to all facet main effects, no interactions, observed
+scores (`Obs`), and the first facet as the object of measurement. Select the
+relevant interactions explicitly before comparing a full G-theory design.
+This R route models numeric observed scores with Gaussian random effects;
+it does not analyze Rasch parameter uncertainty.
+
+The `gtheory` 0.1.2 calculation uses `lme4` REML with nonnegative variance
+components. This differs from unconstrained ANOVA and from simply truncating
+its negative estimates. The generated D-study passes the observed data and
+score column to calculate averaging denominators. Check that D-study's `n`
+column, rather than the G-study table's initial `n = 1`: for a complete
+four-rater, four-task design with one rating per Person-by-Rater-by-Task cell,
+Person-by-Rater and Person-by-Task use 4, and Rater-by-Task and the residual
+use 16. Changing a score variable, interaction or future count changes the
+question. Preserve boundary warnings and messages and the R environment
+with the results. A message that R was launched does not establish
+that its analysis completed; retain the generated script, its data and actual
+R output. The archived dependency and temporary input paths also need to be
+available when replaying an older FACETS program.
+
+mfrmr's own
+`mfrm_g_study()` / `mfrm_d_study()` route handles
 supported univariate or multivariate observed-score designs, interactions,
 composites and future complete plans. Its component/covariance plots and
-D-study curves retain negative components and unavailable metrics. For balanced
+D-study curves retain negative components and unavailable metrics by default.
+For complete balanced univariate ANOVA sources, the D-study's explicit
+`negative_components = "genova_algorithm"` or `"genova_ems"` option reproduces
+GENOVA zero substitution or source-design EMS recalculation before future-plan
+scaling. Original G-study estimates are retained separately from effective
+components; summaries and plot notes record the choice. These options do not
+implement REML or multivariate covariance repair. `confint(d)` retains
+population-parameter intervals from the original source alongside adjusted
+points, with explicit `IntervalEstimate` and `IntervalBasis`; the bounds are
+not shifted to center on the adjusted point. Native GENOVA's component SEs
+continue to describe the original estimator, even when D-study components are
+adjusted. They are not SEs of the truncated/EMS estimator. Supported population
+plan differences use `confint(d, reference = ...)`; the separate delta-estimator
+comparison requires `"raw"`.
+For balanced
 ANOVA, `confint(g, assumption = "normal")` supplies component SEs and intervals
 for one score or a fixed composite. Two-score covariance intervals now have
 explicit generalized and conservative choices with signed bounds. Scalar
@@ -331,7 +447,21 @@ the appropriate route for each surface. External-only areas include:
 ## Anchoring Rules Encoded
 - Direct anchors (`Facet`, `Level`, `Anchor`) are fixed.
 - Group anchors (`Facet`, `Level`, `Group`, `GroupValue`) constrain group means.
-- If a level appears in both tables, direct anchor takes precedence.
+- A level in both tables retains its fixed value and contributes to the group
+  mean; incompatible constraints stop fitting.
+- Default `centering_scope = "facet"` includes fixed values in the zero sum;
+  `"remainder"` retains the earlier remainder constraint. Ordinary additive
+  RSM/PCM JML also supports `"anchor_origin"`: direct or group anchors replace their
+  facet's centering, matching the FACETS
+  [centering specification](https://www.winsteps.com/facetman64/centerfacet.htm).
+  Declare an unanchored, active noncenter facet. Convert native per-element
+  group contributions to one repeated arithmetic-mean `GroupValue`; native
+  group 0 requires direct anchors. mfrmr retains the ordinary constrained
+  likelihood, not all native multi-group numerical updates or `X` extreme
+  exclusions. For a Person anchor, Noncenter=Rater and centered Task
+  resolve the checked sparse RSM/PCM discrepancy in native 4.5.0. Keeping
+  Rater and Task centered instead imposes an additional restriction in mfrmr
+  and is not a matched FACETS maximum when native score residuals persist.
 - Missing `GroupValue` is treated as 0.
 - Default review thresholds (not universal adequacy or identification rules):
   - common anchors per linking facet: `>= 5`

@@ -700,6 +700,14 @@ mfrm_g_study <- function(data, scores, person = "Person",
 #'   Otherwise, each scenario reports the original scores once, followed by
 #'   each composite. A vector's composite is named `"Composite"`; a matrix
 #'   preserves its column names and order.
+#' @param negative_components Component treatment for D-study point projections.
+#'   `"raw"` (default) retains the original estimates. `"genova_algorithm"`
+#'   replaces negative variance components with zero; `"genova_ems"` first
+#'   recalculates components by source-design expected-mean-square equations,
+#'   substituting zero as each negative component is encountered. The latter
+#'   choices require a complete balanced univariate ANOVA G-study with one or
+#'   two supported crossed or nested random facets. Original G-study estimates
+#'   remain unchanged. These options do not supply adjusted-estimator intervals.
 #'
 #' @details Start with a concrete comparison, such as six versus twelve tasks
 #'   for every examinee. Each row of `design_grid` is one scenario. With both
@@ -870,7 +878,7 @@ mfrm_g_study <- function(data, scores, person = "Person",
 #'   mean-score estimate (the equal WWTS/AWTS case in mGENOVA). Different
 #'   target and estimation weights, profile reliability, and accuracy at a
 #'   cut score are not provided. Unlike mGENOVA's default D-study procedure,
-#'   negative variance estimates are not replaced with zero. mGENOVA replaces
+#'   negative variance estimates are not replaced with zero by default. mGENOVA replaces
 #'   negative variance components with zero for the D-study unless its
 #'   `NEGATIVE` option is selected (manual, pages 15 and 21). That rule concerns
 #'   variances, not all negative covariances, and does not guarantee PSD
@@ -883,16 +891,38 @@ mfrm_g_study <- function(data, scores, person = "Person",
 #'   A matched negative-interaction example gives Phi = 0.73096 with the raw
 #'   components retained here, 0.72727 in GENOVA 3.1 `ALGORITHM`, and 0.73532
 #'   with its default `EMS`. This is a component-treatment difference, not a
-#'   coefficient-formula discrepancy. These conventions are not selectable
-#'   estimation options in this function.
+#'   coefficient-formula discrepancy. Select `negative_components` explicitly
+#'   to reproduce either GENOVA D-study convention in supported univariate
+#'   designs. EMS recalculation uses the source counts, before division by the
+#'   future-plan counts. It is not REML or a positive-semidefinite matrix repair.
+#'   Multivariate and MINQUE sources require `"raw"`; negative cross-score
+#'   covariance is not a negative variance. GENOVA's `NEGATIVE` printing option
+#'   is separate from this component-treatment choice.
 #'
-#'   Raw covariance matrices and projected variances remain available. G
+#'   `gstudy` retains raw estimates and diagnostics. `effective_components`
+#'   contains the matrices actually used in projections; their diagnostics are
+#'   in `effective_component_diagnostics`. `ComponentTreatment` identifies the
+#'   choice in coefficient tables. `ComponentPSD` still describes the original
+#'   G-study, so zero replacement does not erase evidence of problematic raw
+#'   components. Save the complete result to preserve both sets.
+#'   For GENOVA-adjusted results, `confint()` retains population-parameter
+#'   intervals based on the original source study alongside adjusted points.
+#'   `IntervalEstimate` records the original projection; bounds are not
+#'   recentered on the adjusted `Estimate`. Any `IntervalSE` and other sampling
+#'   diagnostics retain the original interval-method basis. Summary and plot
+#'   methods accept intervals with the same recorded treatment. Supported
+#'   population plan differences use `confint(d, reference = ...)`; the separate
+#'   delta-estimator comparison API still requires raw components. These
+#'   intervals do not characterize the adjusted estimator's sampling law.
+#'   See [confint.mfrm_multivariate_d_study()] for assumptions and distinctions.
+#'
+#'   Original covariance matrices and the selected projected variances remain available. G
 #'   requires nonnegative universe and relative-error variances and a positive
 #'   sum; Phi uses absolute-error variance instead. Each SEM requires only its
 #'   corresponding nonnegative error variance. A failed requirement makes
 #'   only that metric `NA`. Zero universe variance yields a coefficient of
 #'   zero when its error variance is positive; a zero total variance leaves
-#'   the coefficient undefined. No estimates are clipped or replaced.
+#'   the coefficient undefined. Under `"raw"`, no estimates are clipped or replaced.
 #'
 #'   `Status` summarizes a row as `"Available"`, `"Partially available"`, or
 #'   `"Unavailable"`; the four metric-specific status columns give the reasons.
@@ -911,13 +941,16 @@ mfrm_g_study <- function(data, scores, person = "Person",
 #'   confidence intervals, missing-data correction, or MFRM latent inference.
 #'
 #' @return An `mfrm_multivariate_d_study` list containing `coefficients`
-#'   (scenario, counts of included facets, score/composite identity, raw
-#'   universe/relative/absolute variances, G/Phi, relative/absolute SEM, and
+#'   (scenario, counts of included facets, score/composite identity,
+#'   universe/relative/absolute variances under the selected treatment,
+#'   G/Phi, relative/absolute SEM, `ComponentTreatment`, and
 #'   row and metric-specific status, and `ComponentPSD`), `covariances`
 #'   (three matrices per scenario), `design_grid`,
 #'   `weights` (the supplied vector or matrix, reordered to the G-study score
 #'   order), `component_diagnostics`,
-#'   and `gstudy` (the source result). `summary()` returns `coefficients`.
+#'   `negative_components`, `effective_components`,
+#'   `effective_component_diagnostics`, and `gstudy` (the unchanged source result).
+#'   `summary()` returns `coefficients`.
 #'   `print()` returns the same D-study invisibly without computing intervals.
 #'   [summary.mfrm_multivariate_d_study()] with `intervals = TRUE` explicitly
 #'   calculates and collects supported intervals, methods and source context.
@@ -958,6 +991,17 @@ mfrm_g_study <- function(data, scores, person = "Person",
 #' individual <- mfrm_d_study(g, data.frame(Tasks = c(6, 12)))
 #' plot(individual, score = "V")
 #'
+#' # Explicit GENOVA convention for a single observed score.
+#' g_one <- mfrm_g_study(tasks, "V", rater = NULL)
+#' d_ems <- mfrm_d_study(g_one, data.frame(Tasks = c(6, 12)),
+#'   negative_components = "genova_ems")
+#' summary(d_ems)
+#' ci_ems <- confint(d_ems, assumption = "normal")
+#' # Adjusted point and original-source population interval have separate bases.
+#' ci_ems[, c("Estimate", "IntervalEstimate", "Lower", "Upper", "IntervalBasis")]
+#' d_ems$effective_components # Compare with d_ems$gstudy$components.
+#' plot(d_ems, metric = "G", intervals = ci_ems) # Original-source population bounds.
+#'
 #' # Compare weight choices on the same task-count scenarios.
 #' weights <- cbind(Equal = c(V = 0.5, W = 0.5),
 #'   W_focus = c(V = 0.2, W = 0.8), Difference = c(V = -1, W = 1))
@@ -971,8 +1015,10 @@ mfrm_g_study <- function(data, scores, person = "Person",
 #' @aliases mfrm_multivariate_d_study
 #' @method mfrm_d_study mfrm_multivariate_gstudy
 #' @export
-mfrm_d_study.mfrm_multivariate_gstudy <- function(x, design_grid = NULL, weights = NULL, ...) {
+mfrm_d_study.mfrm_multivariate_gstudy <- function(x, design_grid = NULL, weights = NULL,
+    negative_components = c("raw", "genova_algorithm", "genova_ems"), ...) {
   rlang::check_dots_empty()
+  negative_components <- match.arg(negative_components)
   if (!inherits(x, "mfrm_multivariate_gstudy") ||
       !(identical(x$design$calculation_version, 1L) || identical(x$design$calculation_version, 2L) ||
         identical(x$design$calculation_version, 3L))) {
@@ -1074,7 +1120,8 @@ mfrm_d_study.mfrm_multivariate_gstudy <- function(x, design_grid = NULL, weights
     stop("Composite variances exceed numeric range; rescale the weights.", call. = FALSE)
   }
   vectors <- sweep(vectors, 2L, projection_scale, "/")
-  c <- x$components
+  c <- .mfrm_mvds_components(x, negative_components)
+  effective_diagnostics <- .mfrm_mvgt_diagnostics(c, x$score_scale)
   covariances <- vector("list", nrow(design_grid))
   tables <- vector("list", nrow(design_grid))
   for (i in seq_len(nrow(design_grid))) {
@@ -1127,10 +1174,13 @@ mfrm_d_study.mfrm_multivariate_gstudy <- function(x, design_grid = NULL, weights
       Kind = kind, Score = colnames(vectors), UniverseVariance = variances[, 1L],
       RelativeErrorVariance = variances[, 2L], AbsoluteErrorVariance = variances[, 3L],
       values, Status = status, metric_status,
-      ComponentPSD = all(diagnostics$PositiveSemidefinite), row.names = NULL, check.names = FALSE)
+      ComponentPSD = all(diagnostics$PositiveSemidefinite),
+      ComponentTreatment = negative_components, row.names = NULL, check.names = FALSE)
   }
   structure(list(coefficients = do.call(rbind, tables), covariances = covariances,
     design_grid = design_grid, weights = weights, component_diagnostics = diagnostics,
+    negative_components = negative_components, effective_components = c,
+    effective_component_diagnostics = effective_diagnostics,
     gstudy = x), class = "mfrm_multivariate_d_study")
 }
 
@@ -1190,6 +1240,7 @@ summary.mfrm_multivariate_gstudy <- function(object, ...) {
 #' @method print mfrm_multivariate_d_study
 #' @export
 print.mfrm_multivariate_d_study <- function(x, digits = NULL, row.names = FALSE, ...) {
+  if (!identical(.mfrm_mvds_policy(x), "raw")) .mfrm_mvds_replay(x)
   cat("Multivariate observed-score D-study\n")
   .mfrm_mvgt_print_source(x$gstudy$design, x$gstudy$data_usage$counts)
   cat("Future complete balanced plans; counts apply to every person and score.\n")
@@ -1198,13 +1249,14 @@ print.mfrm_multivariate_d_study <- function(x, digits = NULL, row.names = FALSE,
   if (is.null(convention)) convention <- paste("Means over common random",
     paste(tolower(names(x$design_grid)), collapse = " and "))
   cat(paste0(convention, "; weights are used as supplied.\n"))
+  cat(.mfrm_mvds_component_note(x), "\n")
   if (!is.null(x$weights)) {
     cat("Composite weights (not normalized):\n")
     print(if (is.matrix(x$weights)) x$weights else
       matrix(x$weights, ncol = 1L, dimnames = list(names(x$weights), "Composite")), digits = digits)
   }
   if (any(!x$component_diagnostics$PositiveSemidefinite)) {
-    cat("Warning: non-PSD covariance components. Values use raw projections; inspect component_diagnostics.\n")
+    cat("Warning: non-PSD covariance components in the original G-study; inspect component_diagnostics and the selected treatment.\n")
   }
   print(x$coefficients, digits = digits, row.names = row.names, ...)
   cat("Point projections conditional on estimated covariance components; no confidence intervals.\n")

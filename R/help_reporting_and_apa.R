@@ -24,6 +24,11 @@
 #' linking synthesis use their own caveated `GPCM` routes and should not be
 #' treated as automatic operational-scoring evidence.
 #'
+#' See `vignette("mfrmr-networks-and-reporting")` for Lamprianou-inspired network
+#' views, the FACETS/ConQuest reporting crosswalk and speaking/writing examples
+#' combining MFRM with G/D studies. [plot_data()] supports long-format extraction
+#' and original-value cluster profiles for custom distribution plots.
+#'
 #' @section Start with the reporting question:
 #' - "Where should I start with an existing fit?"
 #'   Use [mfrm_results()] to retain the fit and matching outputs, inspect
@@ -55,6 +60,23 @@
 #'   Use [visual_reporting_template()] for conservative caption and results
 #'   sentence starters, then verify availability with
 #'   `reporting_checklist()$visual_scope`.
+#'
+#' @section Editable one-family GPCM report:
+#' Copy the installed `templates/gpcm-report.Rmd` using
+#' `system.file("templates", "gpcm-report.Rmd", package = "mfrmr")`, then render
+#' it with [rmarkdown::render()]. The default synthetic example produces an
+#' HTML report, separation/Strata/reliability and fit tables, a Wright map,
+#' category-probability curves, ordinal Krippendorff's alpha, CSVs and an RDS
+#' analysis. Set `ratings_csv`, `rating_min`, `rating_max` and `output_dir`
+#' through the template's parameters for your data. It expects columns Person,
+#' Rater, Criterion and Score, with one rating per cell; repeated occasions
+#' require an explicit measurement unit and agreement keys.
+#' The model is one-family GPCM MML with criterion-owned steps and slopes.
+#' Alpha is calculated separately from observed ratings; [mfrm_report()] does
+#' not automatically include it. Fit review states and precision limitations
+#' remain visible. Complete the study-context and interpretation prompts before
+#' treating the rendered document as a manuscript. See
+#' `vignette("mfrmr-reporting-and-apa")` for the output map and full RSM lesson.
 #'
 #' @section Recommended reporting route:
 #' 1. Fit with [fit_mfrm()] and inspect `summary(fit)` before interpreting it.

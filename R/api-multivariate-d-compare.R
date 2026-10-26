@@ -6,6 +6,10 @@
 #' random-effects assumption.
 #'
 #' @param x A result from [mfrm_d_study()] with at least two plans.
+#'   It must retain `negative_components = "raw"`; this inference does not
+#'   describe GENOVA-adjusted component estimators.
+#'   For population plan-difference intervals alongside GENOVA-adjusted points,
+#'   use the supported `reference` methods in [confint.mfrm_multivariate_d_study()].
 #' @param reference Row number of the reference plan in `x$design_grid`.
 #' @param score One original score name. With no selection, use the sole
 #'   composite, or the first original score if there is no composite.
@@ -167,6 +171,7 @@ mfrm_multivariate_d_compare <- function(x, reference = 1L, score = NULL,
   if (!inherits(x, "mfrm_multivariate_d_study")) {
     stop("`x` must be a multivariate D-study result.", call. = FALSE)
   }
+  .mfrm_mvds_require_raw(x)
   d <- mfrm_d_study(x$gstudy, x$design_grid, x$weights)
   g <- d$gstudy
   if (length(g$design$counts) != 3L || !is.null(g$design$nesting)) {

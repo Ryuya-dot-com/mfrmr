@@ -243,7 +243,7 @@ test_that("a separated fixed facet cannot pass on a small gradient alone", {
   # Reproduce the Windows failure mode: roundoff can leave a tiny positive
   # information matrix even though the likelihood has no finite maximum.
   local_mocked_bindings(optimHess = function(par, ...) diag(1e-11, length(par)),
-    .package = "stats")
+    .package = "mfrmr")
   d <- expand.grid(Person = 1:24, Rater = 1:3, Criterion = 1:2)
   d$Score <- d$Criterion - 1
   expect_warning(fit <- fit_mfrm_random_rater(d, "Person", "Rater", "Score", "Criterion",

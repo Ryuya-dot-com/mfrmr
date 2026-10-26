@@ -11,6 +11,8 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "gpcm_score_side_contract", "gpcm_runtime_guard_coverage"
   ) %in% exports))
   expected_exports <- c(
+    "mfrm_residual_network",
+    "fit_rater_network",
     "mfrm_features",
     "mfrm_cluster",
     "mfrm_cluster_pam",
@@ -176,6 +178,14 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
 
   s3 <- grep("^S3method\\(", ns_lines, value = TRUE)
   expected_s3 <- c(
+    "S3method(coef,mfrm_network_ergm)",
+    "S3method(confint,mfrm_network_ergm)",
+    "S3method(vcov,mfrm_network_ergm)",
+    "S3method(summary,mfrm_curve_intervals)",
+    "S3method(summary,mfrm_gpcm_bootstrap)",
+    "S3method(plot,mfrm_network_ergm)",
+    "S3method(print,mfrm_network_ergm)",
+    "S3method(summary,mfrm_network_ergm)",
     "S3method(fitted,mfrm_fit)",
     "S3method(fitted,mfrm_cml_fit)",
     "S3method(fitted,mfrm_comparison_fit)",
@@ -215,6 +225,9 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(plot,mfrm_multivariate_gstudy)",
     "S3method(plot,mfrm_qc_pipeline)",
     "S3method(plot,mfrm_residual_pca)",
+    "S3method(plot,mfrm_residual_network)",
+    "S3method(summary,mfrm_residual_network)",
+    "S3method(print,mfrm_residual_network)",
 
     "S3method(as_ggplot,mfrm_curve_intervals)",
     "S3method(as_ggplot,mfrm_gpcm_bootstrap)",
@@ -527,7 +540,50 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(plot,mfrm_calibration_score)",
     "S3method(print,mfrm_calibration_score)",
     "S3method(print,summary.mfrm_calibration_score)",
-    "S3method(summary,mfrm_calibration_score)"
+    "S3method(summary,mfrm_calibration_score)",
+    "S3method(as.data.frame,mfrm_facets_results)",
+    "S3method(plot,mfrm_facets_results)",
+    "S3method(print,mfrm_facets_results)",
+    "S3method(summary,mfrm_facets_results)",
+    "S3method(coef,mfrm_jeffreys_fit)",
+    "S3method(confint,mfrm_jeffreys_fit)",
+    "S3method(fitted,mfrm_jeffreys_fit)",
+    "S3method(logLik,mfrm_jeffreys_fit)",
+    "S3method(print,mfrm_jeffreys_fit)",
+    "S3method(summary,mfrm_jeffreys_fit)",
+    "S3method(vcov,mfrm_jeffreys_fit)",
+    "S3method(confint,mfrm_fair_average)",
+    "S3method(plot,mfrm_fair_intervals)",
+    "S3method(print,mfrm_fair_intervals)",
+    "S3method(summary,mfrm_fair_intervals)",
+    "S3method(vcov,mfrm_facet_intervals)"
   )
   expect_setequal(s3, expected_s3)
+})
+
+
+test_that("dependency mocks affect only mfrmr's own bindings", {
+  ns <- asNamespace("mfrmr")
+  hessian <- stats::optimHess
+  plot_default <- getS3method("plot", "default")
+  points_default <- getS3method("points", "default")
+  expect_identical(get("optimHess", ns), hessian)
+  local({
+    local_mocked_bindings(optimHess = function(...) "controlled failure", .package = "mfrmr")
+    expect_identical(get("optimHess", ns)(), "controlled failure")
+    expect_identical(stats::optimHess, hessian)
+  })
+  expect_identical(get("optimHess", ns), hessian)
+  captured <- character()
+  local({
+    local_graphics_headings(function(main) captured <<- c(captured, main))
+    grDevices::pdf(NULL)
+    on.exit(grDevices::dev.off(), add = TRUE)
+    get("plot", ns)(1:2, main = "Package heading")
+    graphics::plot(1:2, main = "External heading")
+    expect_identical(captured, "Package heading")
+    expect_identical(getS3method("plot", "default"), plot_default)
+    expect_identical(getS3method("points", "default"), points_default)
+  })
+  expect_identical(get("plot", ns), graphics::plot)
 })

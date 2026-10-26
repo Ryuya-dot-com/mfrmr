@@ -338,7 +338,7 @@ test_that("GPCM JML local checks refuse unresolved sources and singular curvatur
     expect_gt(nrow(review_mfrm_calibration(bad)), 0)
     expect_error(validate_mfrm_calibration(bad), class = "mfrm_calibration_error")
   }
-  local_mocked_bindings(optimHess = function(par, ...) diag(0, length(par)), .package = "stats")
+  local_mocked_bindings(optimHess = function(par, ...) diag(0, length(par)), .package = "mfrmr")
   expect_false(mfrmr:::prediction_source_scoring_readiness(f)$ready)
   expect_error(extract_mfrm_calibration(f), "SOURCE_READINESS_INELIGIBLE")
 })

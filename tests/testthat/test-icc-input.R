@@ -37,7 +37,7 @@ test_that("ICC ratios and availability survive score-unit changes without roundi
 })
 
 test_that("constant retained scores remain unidentified at zero and nonzero values", {
-  testthat::local_mocked_bindings(bootMer = function(...) stop("must not run"), .package = "lme4")
+  testthat::local_mocked_bindings(.mfrm_boot_mer = function(...) stop("must not run"), .package = "mfrmr")
   data <- load_mfrmr_data("example_core")
   for (value in c(0, 5, 1e-6)) {
     data$Score <- value

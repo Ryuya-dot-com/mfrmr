@@ -165,17 +165,17 @@ plot_guttman_scalogram <- function(fit,
     apply_plot_preset(style)
     n_cat <- length(unique(stats::na.omit(as.vector(mat))))
     cat_palette <- grDevices::hcl.colors(max(3L, n_cat), "YlGnBu", rev = TRUE)
-    graphics::image(
+    image(
       x = seq_len(ncol(mat)), y = seq_len(nrow(mat)),
       z = t(mat), col = cat_palette,
       xaxt = "n", yaxt = "n",
       xlab = column_facet, ylab = "Person (sorted by measure)",
       main = ""
     )
-    graphics::axis(1, at = seq_len(ncol(mat)), labels = cols,
+    axis(1, at = seq_len(ncol(mat)), labels = cols,
                    las = 2, cex.axis = 0.75)
     if (nrow(mat) <= 25L) {
-      graphics::axis(2, at = seq_len(nrow(mat)), labels = rownames(mat),
+      axis(2, at = seq_len(nrow(mat)), labels = rownames(mat),
                      las = 1, cex.axis = 0.7)
     }
     if (nrow(unexpected_overlay) > 0L) {
@@ -183,7 +183,7 @@ plot_guttman_scalogram <- function(fit,
         r <- match(unexpected_overlay$Person[k], rownames(mat))
         c <- match(unexpected_overlay$Column[k], colnames(mat))
         if (is.finite(r) && is.finite(c)) {
-          graphics::rect(c - 0.5, r - 0.5, c + 0.5, r + 0.5,
+          rect(c - 0.5, r - 0.5, c + 0.5, r + 0.5,
                          border = style$fail, lwd = 2)
         }
       }
@@ -281,14 +281,14 @@ plot_residual_qq <- function(fit,
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    graphics::plot(
+    plot(
       x = q_theory, y = q_sample,
       xlab = "Theoretical quantile (N(0, 1))",
       ylab = "Sample quantile (person standardized residual)",
       main = "",
       pch = 19, col = style$accent_primary
     )
-    graphics::abline(a = 0, b = 1, lty = 2, col = style$neutral)
+    abline(a = 0, b = 1, lty = 2, col = style$neutral)
   }
 
   out <- new_mfrm_plot_data(
@@ -441,30 +441,30 @@ plot_rater_trajectory <- function(fits,
     xlim <- c(0.8, length(fits) + 0.2)
     y_range <- range(c(long$Estimate, long$CI_Lower, long$CI_Upper),
                      finite = TRUE, na.rm = TRUE)
-    graphics::plot(
+    plot(
       x = numeric(0), y = numeric(0),
       xlim = xlim, ylim = y_range,
       xaxt = "n", xlab = "Wave", ylab = "Severity (logit)",
       main = ""
     )
-    graphics::axis(1, at = seq_along(fits), labels = names(fits),
+    axis(1, at = seq_along(fits), labels = names(fits),
                    las = 1)
-    graphics::abline(h = 0, lty = 2, col = style$neutral)
+    abline(h = 0, lty = 2, col = style$neutral)
     for (k in seq_along(levels_kept)) {
       lvl <- levels_kept[k]
       sub <- long[long$Level == lvl, , drop = FALSE]
-      graphics::lines(sub$WaveOrder, sub$Estimate,
+      lines(sub$WaveOrder, sub$Estimate,
                       col = pal[k], lwd = 2)
-      graphics::points(sub$WaveOrder, sub$Estimate,
+      points(sub$WaveOrder, sub$Estimate,
                        pch = 19, col = pal[k])
       valid <- is.finite(sub$CI_Lower) & is.finite(sub$CI_Upper)
       if (any(valid)) {
-        graphics::segments(sub$WaveOrder[valid], sub$CI_Lower[valid],
+        segments(sub$WaveOrder[valid], sub$CI_Lower[valid],
                            sub$WaveOrder[valid], sub$CI_Upper[valid],
                            col = pal[k], lwd = 1)
       }
     }
-    graphics::legend("topright", legend = levels_kept, col = pal,
+    legend("topright", legend = levels_kept, col = pal,
                      lwd = 2, bty = "n", cex = 0.75, inset = 0.02)
   }
 
@@ -607,26 +607,26 @@ plot_rater_agreement_heatmap <- function(fit,
     label_lines <- max(graphics::strwidth(raters, units = "inches", cex = .8)) /
       (graphics::par("csi") * graphics::par("mex"))
     graphics::par(mar = c(rep(max(4, label_lines + 2.5), 2), 1, 1))
-    graphics::image(
+    image(
       x = seq_len(ncol(mat)), y = seq_len(nrow(mat)),
       z = mat, col = cols, zlim = zlim,
       xaxt = "n", yaxt = "n",
       xlab = "", ylab = "",
       main = ""
     )
-    graphics::axis(1, at = seq_along(raters), labels = raters,
+    axis(1, at = seq_along(raters), labels = raters,
                    las = 2, cex.axis = 0.8)
-    graphics::axis(2, at = seq_along(raters), labels = raters,
+    axis(2, at = seq_along(raters), labels = raters,
                    las = 1, cex.axis = 0.8)
-    graphics::mtext(agree$settings$rater_facet, side = 1, line = label_lines + 1.4)
-    graphics::mtext(agree$settings$rater_facet, side = 2, line = label_lines + 1.4)
+    mtext(agree$settings$rater_facet, side = 1, line = label_lines + 1.4)
+    mtext(agree$settings$rater_facet, side = 2, line = label_lines + 1.4)
     for (i in seq_along(raters)) for (j in seq_along(raters)) {
       v <- mat[i, j]
       if (is.finite(v)) {
         color_index <- findInterval(v, seq(zlim[1], zlim[2], length.out = length(cols) + 1L),
           all.inside = TRUE)
         luminance <- sum(grDevices::col2rgb(cols[color_index]) / 255 * c(.299, .587, .114))
-        graphics::text(j, i, sprintf("%.2f", v), cex = 0.7,
+        text(j, i, sprintf("%.2f", v), cex = 0.7,
                        col = if (luminance < .5) "white" else "black")
       }
     }

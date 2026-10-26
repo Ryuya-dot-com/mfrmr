@@ -8,9 +8,10 @@
 #' The default is `method = "MML"` (marginal maximum likelihood).
 #' The `RSM` / `PCM` branches are the package's many-facet Rasch-family
 #' reference route. `GPCM` adds positive, level-specific discriminations to
-#' one facet. MML permits a different facet to supply category steps;
-#' JML requires the same facet for both roles. See "GPCM model and
-#' inference" below for the current limits on uncertainty and comparisons.
+#' one facet, or provisionally to two facets under MML. With one family,
+#' MML permits a different facet to supply category steps; JML requires the
+#' same facet for both roles. Start with "Choose a model and its population"
+#' below; the model-specific sections explain uncertainty and comparisons.
 #' In the example, `ratings` stores the data and `fit` stores the fitted model.
 #' The loading line reads an existing packaged synthetic dataset; you do not
 #' need to generate ratings or create an empty object first.
@@ -53,6 +54,8 @@
 #'   unobserved internal category in a polytomous fitted ladder creates an
 #'   unsupported adjacent-step contrast and fitting stops before optimization
 #'   with a structured category-support error.
+#'   The explicit Jeffreys route below retains empty categories under a
+#'   different estimating equation; it does not certify ordinary finite MLEs.
 #' @param rating_min Optional minimum category value. Supply this with
 #'   `rating_max` when the intended score scale includes unobserved boundary
 #'   categories.
@@ -162,13 +165,28 @@
 #'   Use columns `Facet`, `Level`, `Group`, and `GroupValue`. Person group
 #'   constraints require JML.
 #' @param noncenter_facet One facet to leave non-centered (default `"Person"`).
-#'   Other facets use the zero-sum convention selected by `centering_scope`.
+#'   Other facets use the convention selected by `centering_scope`.
+#'   To estimate a cohort mean while leaving an anchored RSM/PCM facet
+#'   uncentered, also set `population_formula = ~ 1` and `population_sd`;
+#'   see **Anchor origin and cohort means**.
+#' @param population_sd Optional positive residual population SD, fixed during
+#'   estimation. `NULL` preserves the existing behavior: an active population
+#'   model estimates its residual variance; RSM/PCM without a population
+#'   formula uses N(0,1).
+#'   A numeric value requires `population_formula`, full direct RSM/PCM MML,
+#'   and no interactions. It does not activate a population model implicitly.
+#'   Supplied SD and anchor values are treated as fixed, without source-error
+#'   propagation. GPCM and other estimation engines do not support this option.
 #' @param centering_scope `"facet"` (default) centers each declared facet across
 #'   all its levels, including direct anchors and group totals. `"remainder"`
 #'   reproduces the earlier convention that centers only levels outside direct
-#'   and group constraints. It does not change `noncenter_facet`, the population
-#'   model, or category steps. Unsupported specialized routes reject an explicit
-#'   setting. See **Anchors and scale constraints**.
+#'   and group constraints. For ordinary additive RSM/PCM JML,
+#'   `"anchor_origin"` lets direct or group anchors replace centering on their facet;
+#'   select an unanchored, active `noncenter_facet`. Other facets remain centered.
+#'   This option excludes comparison-only fitting. None of
+#'   these conventions changes the population model or category steps.
+#'   Unsupported specialized routes reject an explicit setting.
+#'   See **Anchors and scale constraints**.
 #' @param fit_scope `"full"` (default) fits the ordinary model and retains its
 #'   identification guards. `"comparisons"` explicitly fits only the targets in
 #'   `comparison_review`; see **Comparison-only estimation**.
@@ -235,7 +253,12 @@
 #' @param reltol Portable tolerance setting for the initial optimizer stage.
 #'   For two-family fixed-grid EM, omit this argument and use `em_score_tol`.
 #'   Adaptive two-family direct MML uses `reltol` and the direct optimizer's
-#'   gradient check.
+#'   gradient check. New two-family adaptive fits cap the ordinary total-gradient
+#'   review tolerance at `N * 1e-6`, where N is the number of fitted Persons;
+#'   a stricter ordinary tolerance is retained. This aligns optimizer finishing
+#'   with the subsequent per-Person score check. The rule is recorded in the
+#'   fitted controls; older saved fits retain their recorded review convention.
+#'   Curvature, derivative and integration checks remain separate.
 #'   The default is `1e-9`. For BFGS this is passed as `reltol`; for L-BFGS-B
 #'   it is mapped to `factr` and `pgtol`, whose actual values are recorded in
 #'   the fit. When this setting is at least as strict as the public default
@@ -244,6 +267,15 @@
 #'   The best non-worsening stage under the recorded selection rule is
 #'   retained. Requested and selected-stage settings remain in `fit$summary`,
 #'   and the complete stage history remains in `fit$opt$optimizer_polish`.
+#'   Ordinary additive RSM/PCM JML without shrinkage can finish a remaining
+#'   stall with at most three sparse Newton steps from the exact likelihood
+#'   information. Each step must reduce the gradient without likelihood loss
+#'   beyond roundoff, pass its linear-solve check and move no coordinate by more
+#'   than one logit. Extreme Persons, nonpositive information and failed
+#'   proposals retain their diagnostic state. The final stage is labelled
+#'   `jml_information_polish`, with method `Newton`, `InformationSteps` and
+#'   `InformationSolveResidual`. This does not correct JML bias or qualify
+#'   interval coverage; the original terminal-gradient criterion still applies.
 #'   If ordinary polishing still stalls, fixed-grid RSM/PCM/GPCM MML fits
 #'   (including estimated population parameters) or adaptive GPCM MML fits
 #'   with a fixed population can use one local curvature step to restart the
@@ -264,7 +296,8 @@
 #'   adequate quadrature, or valid confidence intervals. Inspect the
 #'   `SmallestCurvature`, `CurvatureScale` and `CurvatureReviewError` fields
 #'   in the stage history alongside the objective and terminal gradient.
-#' @param gpcm_mml_start Initial values for two-family adaptive direct MML only.
+#' @param gpcm_mml_start Initial values for two-family adaptive direct MML,
+#'   including its `mml_integration="auto"` refinement stages.
 #'   `NULL` (default) selects `"neutral_em"`: optimize from both the neutral vector
 #'   and a same-data fixed-grid EM vector, and select the lowest finite adaptive
 #'   negative log likelihood, retaining its convergence status. `"neutral"`
@@ -332,15 +365,18 @@
 #'   discrimination upper limit.
 #'   Adaptive fits with nonlinear coordinates have no completed probability-
 #'   map identification audit; GPCM also lacks an adaptive slope-boundary audit.
-#'   These fits remain review-only for formal parameter inference. ConQuest exports
-#'   currently require fixed integration.
+#'   Their overall `InferenceReady` flag remains false. Supported native-location
+#'   and RSM/PCM population intervals have separate source and numerical checks;
+#'   see the MML integration workflow section below and [mfrm_facet_intervals()].
+#'   Available intervals retain their asymptotic assumptions and coverage cautions.
+#'   ConQuest exports currently require fixed integration.
 #'   `"auto"` first fits the fixed grid at `quad_points`, then checks every
 #'   Person's log marginal likelihood, EAP and posterior SD against two adaptive
 #'   orders. It also checks the change in the full marginal gradient and its
 #'   absolute maximum at the retained and finer rules. If any criterion fails,
 #'   it warm-starts adaptive refits at the orders in `mml_accuracy_control`.
-#'   It requires ordinary full direct MML (RSM, PCM or one-slope-family GPCM),
-#'   with no checkpoint. Population regression, anchors and interactions retain
+#'   This fixed-to-adaptive sequence applies to ordinary full direct MML
+#'   (RSM, PCM or one-slope-family GPCM), with no checkpoint. Population regression, anchors and interactions retain
 #'   their existing model restrictions. On success the resolved fixed/adaptive
 #'   rule and order control all subsequent fit calculations; inspect
 #'   `fit$config$mml_accuracy` for controls, stage history and final Person
@@ -352,8 +388,68 @@
 #'   refinement orders are exhausted, an error of class
 #'   `mfrmr_mml_accuracy_error` carries `history`, `control` and the last
 #'   parameter vector instead of returning a fit.
+#'   In current errors (`provenance_version = 2`), `last_candidate` holds the
+#'   last returned optimizer vector, its parameter-block names and sizes, its
+#'   matching `config`, and its stage diagnostics. These are free optimization
+#'   coordinates, not a table of facet estimates or a precision-qualified fit.
+#'   `last_attempt` records the final attempted stage and failure phase; it may
+#'   describe a later failed optimization. `last_integration` and
+#'   `last_quad_points` now describe `last_parameters`, not that later attempt.
+#'   If no optimizer returned, `last_candidate` is NULL, `parameter_source` is
+#'   `"initial_values"`, and the integration aliases are NA. Initial values are
+#'   retained separately as `initial_parameters`. Earlier saved errors lack
+#'   this provenance version; their integration aliases can describe the failed
+#'   attempt rather than the retained vector. Inspect their stage history.
+#'   Capture the condition with `tryCatch(fit_mfrm(...),
+#'   mfrmr_mml_accuracy_error = function(e) e)` and inspect both records.
+#'   Saving the condition preserves the values and reasons without converting
+#'   unsuccessful accuracy checks into a successful model fit.
+#'
+#'   For two-family GPCM, `"auto"` instead preserves the requested engine:
+#'   `mml_engine="em"` uses fixed integration and `mml_engine="direct"`
+#'   uses adaptive integration at every stage. Each refit retains the existing
+#'   neutral EM start or the specified adaptive `gpcm_mml_start` policy;
+#'   no cross-order warm start or engine switch is introduced. The default
+#'   hard ceiling is 241 points, including the `2*q-1` reference checks.
+#'   Person log marginal likelihood, EAP and posterior SD differences must
+#'   pass, together with the existing two-family local-information and
+#'   stationarity checks described in [confint.mfrm_fit()]. This conservative
+#'   automatic route therefore requires more than delivery of a point estimate.
+#'   A sole quadrature-sensitivity failure or inaccurate Person moments causes
+#'   refinement; another failed information, convergence or model check stops
+#'   with its own reason. It does not automatically diagnose a boundary.
+#'   In two-family errors, `last_candidate$accuracy` retains available checks
+#'   and Person comparisons. If fitting failed before a candidate was returned,
+#'   `parameter_source="unavailable"` and `last_parameters=NULL`; there is no
+#'   single initial vector to report for a multi-start policy. No two-family
+#'   global optimum or interval-coverage guarantee follows from auto success.
+#'   The latest successful automatic fit can reuse its complete qualification
+#'   for subsequent two-family intervals in the same R session, provided the
+#'   entire fit, information-memory budget and numerical backend are unchanged.
+#'   Source and result retention is bounded by that budget. Warning-producing
+#'   or refused qualification is not reused.
+#'   This transient cache is not saved in the fit; a new session recomputes.
 #' @param mml_accuracy_control Named list used only with
-#'   `mml_integration = "auto"`. Defaults are `adaptive_points = c(31, 61, 121)`
+#'   `mml_integration = "auto"`. To specify only a ceiling, use
+#'   `list(max_points=121)`. It bounds every quadrature rule used by automatic
+#'   fitting and its acceptance checks, including reference rules; it does not
+#'   bound optimizer iterations, total runtime or later separately requested
+#'   inference/scoring. Orders increase automatically and stop at the first
+#'   accepted stage. `max_points` must be an integer of at least 7 for ordinary
+#'   MML, or 3 for two-family GPCM; requested rules must be representable.
+#'   Unused finer rules are not constructed. A ceiling and an explicit
+#'   `adaptive_points` vector cannot both be supplied. An explicitly supplied
+#'   `quad_points` must fit within the ceiling (including its finer reference
+#'   for two-family fitting); an omitted starting order is reduced if needed.
+#'   For example, the two-family ceiling 121 permits fitting/checking orders
+#'   31/61 and 61/121. A ceiling of 100 permits 31/61 and 50/99, preserving the
+#'   same reference-order formula. Reaching the ceiling without passing all
+#'   criteria raises `mfrmr_mml_accuracy_error`, retaining the attempted rules
+#'   and source-bound candidate; it does not relax tolerances or return a
+#'   precision-qualified fit.
+#'
+#'   For ordinary MML without a ceiling, the retained defaults are
+#'   `adaptive_points = c(31, 61, 121)`
 #'   (strictly increasing integer refit orders, each checked against `2*q+1`),
 #'   `loglik_tol = 1e-7` (maximum absolute log-marginal difference per Person),
 #'   `posterior_tol = 1e-6` (maximum absolute EAP or posterior-SD difference,
@@ -368,6 +464,27 @@
 #'   require their separate checks; automatic integration does not qualify
 #'   previously unavailable identification or inference. `maxit` applies to
 #'   each fit, so refinement increases total computation.
+#'   Two-family controls instead default to `max_points=241`,
+#'   `loglik_tol=1e-7` and `posterior_tol=1e-6`, with `2*q-1` reference rules.
+#'   They do not accept `adaptive_points` or `gradient_tol`: their established
+#'   engine-specific stationarity and information criteria are retained.
+#'   Passing component-interval checks at an order does not ensure that its
+#'   Person likelihood and posterior moments meet these additional tolerances.
+#'   A prerequisite check that stops two-family refinement records
+#'   `history$Status = "check_refused"`. Inspect the failed rows of
+#'   `last_candidate$accuracy$checks`; this status does not identify the cause.
+#'   A failed higher-order information check also stops refinement. Earlier
+#'   saved histories use `"nonintegration_refusal"` for the same stopping rule;
+#'   neither label establishes a boundary or whether more points would help.
+#' @param progress Logical; `TRUE` displays a progress indicator with elapsed
+#'   time. Two-family GPCM reports EM iterations, adaptive starts, quadrature
+#'   stages and precision checks; direct optimization reports objective
+#'   evaluations. Other routes may provide only a coarse phase display.
+#'   Iteration/stage limits are budgets, not percent completion or a remaining-
+#'   time forecast: convergence and required refinement are not known in advance.
+#'   Display follows `cli` console settings and is cleared on return, error or
+#'   interruption. The default is silent; it does not change numerical controls
+#'   or become part of saved calibration/replay settings.
 #' @param mml_engine MML optimization engine for `method = "MML"`:
 #'   `"direct"` (default) uses the selected direct optimizer on the marginal
 #'   log-likelihood,
@@ -456,6 +573,11 @@
 #'   `optim()` engine ignores it. Use this to make long MML EM
 #'   fits crash-resilient on shared compute environments.
 #'
+#' @param jml_penalty `"none"` (default) preserves the ordinary estimator.
+#'   Explicit `"jeffreys"` with additive RSM/PCM `method = "JML"` selects
+#'   canonical information-penalized joint estimation. It returns a separate
+#'   `mfrm_jeffreys_fit` with point estimates and numerical checks, without
+#'   ordinary SEs or FACETS diagnostics. See **Jeffreys-penalized JML**.
 #' @param jml_correction_order `NULL` (default) leaves the usual estimator
 #'   unchanged. A positive integer explicitly selects an experimental
 #'   profile-score adjustment for shared-owner `model = "GPCM", method = "JML"`.
@@ -470,6 +592,40 @@
 #'   variation in their ability composition; neither estimates the variance
 #'   from reassessing the same Persons at fixed abilities. Omit this argument
 #'   when no correction is requested.
+#'
+#' @section Choose a model and its population:
+#' For the `Rater` and `Criterion` columns in the Examples, the model choices
+#' are below. A slope family gives one discrimination per level of its owner;
+#' "two families" does not mean two ability dimensions or just two slopes.
+#' No Q matrix is required or accepted by this unidimensional API.
+#'
+#' | Model | Step owner | Slope owner | MML population |
+#' | --- | --- | --- | --- |
+#' | `RSM` | Shared | Fixed at one | Fixed N(0,1) |
+#' | `PCM` | `Criterion` | Fixed at one | Fixed N(0,1) |
+#' | One-family `GPCM` | `Criterion` | `Criterion` | Estimated mean and SD |
+#' | Two-family `GPCM` | `Rater` | `Criterion`, then `Rater` | Explicit fixed N(0,1) |
+#'
+#' Supply these owner names through `step_facet` and `slope_facet`; for two
+#' families use `slope_facet = c("Criterion", "Rater")`. The first three rows
+#' show their default MML populations. Two-family settings must be chosen
+#' explicitly; see "Two slope families" below. One-family slopes are relative.
+#'
+#' Changing only `model` therefore need not hold the population assumptions
+#' constant. For RSM/PCM, estimating its mean and SD requires
+#' `population_formula = ~ 1` and `person_data = unique(ratings["Person"])`.
+#' This is a model choice, not a universal recommendation. Fixing both the
+#' population SD and the one-family GPCM slope geometric mean to one is a
+#' narrower model, not just an alternative reporting scale.
+#'
+#' Start with the complete RSM Examples. For PCM, add `step_facet` and change
+#' `model`; for one-family GPCM, also explicitly choose `slope_facet` and
+#' read the population choice above. Keep the data-column and rubric arguments.
+#' The complete two-family call and its narrower output workflow are in
+#' `vignette("mfrmr-gpcm-scope", package = "mfrmr")`, under "A provisional
+#' two-family workflow". Its zero-based scores and ordered owners require
+#' the explicit preparation described there; changing `slope_facet` alone
+#' is insufficient.
 #'
 #' @section Choose an estimator and the result you need:
 #' The ordinary worked example uses RSM/MML. Choose the model and estimation
@@ -953,6 +1109,56 @@
 #' `"standard"` < 50, `"strong"` >= 50). These package screening bands are
 #' not guarantees of precision, interval coverage or sample adequacy.
 #'
+#' @section Jeffreys-penalized JML:
+#' `jml_penalty = "jeffreys"` minimizes
+#' \eqn{-\ell(\beta)-\tfrac12\log|I(\beta)|} in the actual affine free
+#' canonical coordinates, with anchor offsets retained. Here \eqn{I} is the
+#' full joint expected response information, including free Person parameters.
+#' The optimizer starts at the free-coordinate origin, uses BFGS with
+#' `reltol = min(reltol, 1e-14)` and the requested `maxit`, and requires maximum
+#' penalized gradient at most `1e-4`, positive information with checked solves,
+#' and numerically interior category probabilities. It uses no probability
+#' clipping, parameter box, ridge or ordinary extreme-score replacement.
+#' If BFGS stops on objective change before satisfying the gradient criterion,
+#' at most three local Newton steps use the analytic penalized Jacobian. Steps
+#' must be numerically identified, at most one in every free coordinate, not
+#' increase the same objective and reduce the full penalized gradient; backtracking is
+#' bounded. `checks$polish` records an attempted finish. The original gradient
+#' criterion and failure status remain in force if finishing fails.
+#'
+#' The supported scope is an identified additive RSM/PCM design, unit weights,
+#' explicitly declared `rating_min` and `rating_max`, and unchanged full score
+#' coding (`category_policy = "preserve"`). Direct finite anchors and ordinary
+#' centering conventions are supported; group anchors, interactions, GPCM,
+#' population models, shrinkage, corrected-JML arguments and attached ordinary
+#' diagnostics are not. `optimizer` must be `"auto"` or `"BFGS"`.
+#' Repeated cells require the explicit independent-occasion declaration when
+#' substantively justified. Missing categories and constant outcomes are
+#' retained on the declared rubric; rank deficiency is still refused.
+#'
+#' [summary.mfrm_jeffreys_fit()] describes Person, facet and step points,
+#' category probabilities and numerical diagnostics. For common-plan Person
+#' expected scores use [fair_average_table()] with `reference_plan`, followed
+#' by [confint.mfrm_fair_average()] for experimental refit or delta intervals. Calibration,
+#' scoring and generating fits must all select this estimator; every replicate
+#' re-estimates its calibration and anchors using the same equation. The ordinary
+#' delta derivative and inverse information SEs do not describe this estimator;
+#' its delta route uses analytic penalized score/anchor derivatives and shared
+#' categorical response covariance. It is not an inverse-curvature interval.
+#' Parameter covariance, Wald intervals, AIC, likelihood-ratio inference,
+#' ordinary FairM/FairZ diagnostics and FACETS export are not supplied.
+#'
+#' This is an opt-in alternative to ordinary FACETS-oriented JML, separate from
+#' both the generator-only Jeffreys option and corrected GPCM. Firth's (1993)
+#' fixed-dimensional canonical bias result does not establish unbiased nonlinear
+#' expected scores, coverage, or incidental-parameter consistency when the number
+#' of Person parameters grows. The binomial finiteness theorem of Kosmidis and
+#' Firth (2021) is not asserted as a general many-facet PCM theorem. A qualified
+#' local stationary point does not establish a global optimum. Small-sample,
+#' sparse and weak-link bias/coverage remain to be qualified independently.
+#' References: Firth (1993), \doi{10.1093/biomet/80.1.27}; Kosmidis and Firth
+#' (2021), \doi{10.1093/biomet/asaa052}.
+#'
 #' @section Estimator choice and the JML incidental-parameter caveat:
 #' Joint maximum likelihood (`method = "JML"` / `"JMLE"`) estimates
 #' both the structural parameters (facets, thresholds, slopes) and
@@ -1019,6 +1225,39 @@
 #'   General GPCM inference uses MML. JML remains a point-estimation/FACETS
 #'   comparison route, not a fixed-exposure truth-centered Wald procedure.
 #'   Third-party CML fits can still be imported with [import_erm_fit()].
+#'
+#' @section MML integration workflow:
+#' Choose integration together with the result you need. The default remains
+#' `mml_integration = "fixed"`, `quad_points = 31`; this order does not certify
+#' accuracy. [mml_quadrature_sensitivity()] compares refits at specified orders.
+#' Review changes in estimates and uncertainty before reporting a fixed-grid fit.
+#'
+#' For ordinary full direct RSM/PCM or one-family GPCM fitting, `"auto"` checks
+#' the fitted response patterns and refines integration when needed. Read
+#' `fit$config$mml_accuracy` and the resolved rule in
+#' `fit$config$estimation_control$mml_integration`. Downstream support depends
+#' on this resolved rule, which can be adaptive even when the initial rule was
+#' fixed. Check the intended output's model and integration scope before fitting:
+#' - Ordinary fixed-N(0,1) RSM/PCM model and sandwich facet intervals require
+#'   fixed integration, as do joint cell intervals requested with `interaction`
+#'   and independent anchor-source propagation. See [mfrm_facet_intervals()].
+#' - Native-location intervals for estimated-normal RSM/PCM and one-family
+#'   GPCM accept fixed or adaptive direct MML within their stated scope.
+#'   RSM/PCM population-coefficient and residual-variance intervals use the same
+#'   qualification; see [mfrm_population_intervals()]. GPCM latent-regression
+#'   location intervals are unavailable.
+#' - Automatic integration does not support EM/hybrid engines, checkpoints,
+#'   comparison-only fitting or two slope families. ConQuest overlap export
+#'   currently requires a resolved fixed rule.
+#'
+#' Overall fit readiness, interval eligibility and coverage are different
+#' statements. A supported target-specific interval can have `CIEligible = TRUE`
+#' while its unchanged source fit has `InferenceReady = FALSE`. Inspect the
+#' interval's `Status`, `checks`, `numerical_checks` and cautions. Eligibility
+#' means the procedure's checks passed; it does not establish global
+#' identification, nominal finite-sample coverage or availability of other
+#' inference procedures. Automatic likelihood/gradient/posterior checks also
+#' do not replace the interval's full-information and finer-order review.
 #'
 #' @section MML inference conditions:
 #' There is no ten-response-row minimum. Full RSM/PCM JML, native CML and
@@ -1241,7 +1480,9 @@
 #' the training design; otherwise scoring requests a new calibration fit.
 #'
 #' For an intercept-only model, `population_formula = ~ 1` estimates a single
-#' population mean and variance. Training still requires a one-row-per-person
+#' population mean and variance by default. In supported RSM/PCM direct MML,
+#' `population_sd = 1` instead fixes the SD and estimates only the mean.
+#' Training still requires a one-row-per-person
 #' ID table in `person_data`. Adjusting these two moments retains a normal
 #' population shape; it does not learn skewness or establish that the training
 #' population represents the people who will receive scores. New-Person
@@ -1262,18 +1503,60 @@
 #' the ordinary fit summary does not acquire automatic intervals.
 #' The internal MML observed-information calculation includes
 #' \eqn{(\boldsymbol{\beta}, \log\sigma^2)} when computing joint covariance
-#' for structural-parameter SEs. Population intervals for GPCM remain
+#' for structural-parameter SEs. With explicit `population_sd`, variance is
+#' fixed and its log-variance coordinate is excluded from that covariance;
+#' coefficient and structural uncertainty are conditional on the supplied SD.
+#' Population intervals for GPCM remain
 #' unavailable through this new helper. Sampling coverage is not established
 #' by numerical checks. Treat the population summary tables as descriptive
 #' point estimates; use the separately saved interval result when reporting
 #' the experimental approximation and its limitations.
 #'
-#' The implemented latent-regression identification requires
+#' The default latent-regression identification uses
 #' `noncenter_facet = "Person"`. Without anchors, this sum-to-zero-centers
 #' all non-Person facets. With anchors, `centering_scope = "facet"` includes
 #' their contributions in each facet's zero sum; `"remainder"` retains the
 #' earlier restriction on the unconstrained remainder. The population model
-#' is never changed implicitly to accommodate anchors.
+#' is never changed implicitly to accommodate anchors. The restricted
+#' anchor-origin alternative below uses an explicitly fixed population SD.
+#'
+#' @section Anchor origin and cohort means:
+#' When an old rater panel is anchored, leaving Rater uncentered allows new
+#' raters to have a nonzero mean severity. Fixing the Person mean to zero can
+#' nevertheless distort estimates when the receiving cohort differs. For
+#' RSM/PCM direct MML, `population_formula = ~ 1` with `population_sd = 1`
+#' estimates the receiving mean on an explicitly fixed-SD normal population.
+#' Set `noncenter_facet = "Rater"` and supply a retained direct Rater anchor.
+#' An anchor on another facet does not resolve the mean/Rater alias.
+#' The complete constrained design must still have full rank; one anchor is
+#' sufficient only in an otherwise identified design. Group anchors, dummy
+#' facets, population covariates and interactions are outside this alternative.
+#'
+#' For example, begin with the bundled ratings and an externally supplied
+#' anchor value (0.3 below is illustrative, not a validated calibration):
+#' ```r
+#' ratings <- load_mfrmr_data("example_core")
+#' fixed_rater <- data.frame(Facet = "Rater", Level = "R01", Anchor = 0.3)
+#' cohort_fit <- fit_mfrm(
+#'   ratings, person = "Person", facets = c("Rater", "Criterion"), score = "Score",
+#'   model = "RSM", method = "MML", anchors = fixed_rater,
+#'   noncenter_facet = "Rater", population_formula = ~ 1,
+#'   person_data = unique(ratings["Person"]), population_sd = 1
+#' )
+#' summary(cohort_fit)$population_coefficients # Estimated receiving-cohort mean
+#' summary(cohort_fit)$population_overview     # Fixed versus estimated variance
+#' ```
+#' Use [mfrm_population_intervals()] for the mean and [mfrm_facet_intervals()]
+#' for rater uncertainty after their independent numerical checks. The fixed
+#' variance remains visible without an inferential CI. Covariance includes
+#' all free calibration coordinates and the population mean, but excludes
+#' uncertainty in the supplied anchors and SD. No general coverage guarantee
+#' follows from agreement with another program.
+#'
+#' Other facets retain their declared centering. Rater anchors do not establish
+#' item invariance: a changed item pool or its difficulty distribution can
+#' change the mean's substantive interpretation. Report the anchored panel,
+#' item/criterion reference, fixed SD, and assumed stability across cohorts.
 #'
 #' @section Anchors and scale constraints:
 #' Anchor inputs are optional and have distinct roles:
@@ -1304,19 +1587,74 @@
 #' Use `centering_scope = "remainder"` to reproduce earlier partial anchoring:
 #' the ungrouped, unanchored levels sum to zero and a singleton is fixed at zero.
 #' Saved results retain their original constraints; reloading does not migrate
-#' estimates. Changing conventions requires refitting. Neither convention
-#' automatically disables centering as FACETS can do. Match `noncenter_facet`,
-#' the response design and population assumptions for TAM/ConQuest comparisons;
-#' the anchor value alone does not establish equivalence.
+#' estimates. Changing conventions requires refitting.
+#'
+#' For ordinary additive RSM/PCM JML, `centering_scope = "anchor_origin"`
+#' implements the FACETS convention that a directly or group-anchored facet is not
+#' additionally centered. With a Person anchor, choose an unanchored facet such
+#' as `noncenter_facet = "Rater"`; other unanchored facets remain centered.
+#' A Rater anchor can instead retain the default noncenter Person facet.
+#' The noncenter facet must be active and have neither direct nor group anchors.
+#' A single direct anchor or group mean supplies
+#' its facet's origin; multiple fixed values can impose additional substantive
+#' constraints. Without Person group constraints, if all retained responses of
+#' the directly anchored Persons are
+#' at the same declared minimum or maximum, fitting stops before optimization,
+#' without requiring `lpSolve`: free Person and noncenter-facet locations can
+#' diverge together while preserving every fixed value. FACETS 4.5.0 can report
+#' finite values for such inputs, but these are not an ordinary finite JML
+#' solution and are not reproduced by this route. An extreme anchor does not
+#' alone trigger this rule when another Person anchor supplies interior or
+#' opposite-boundary responses. Other detected joint additive recession
+#' directions affecting calibration also stop this route; passing the checks
+#' does not certify every boundary configuration. General extreme-score
+#' exclusion and every FACETS option are not equivalent. See the FACETS
+#' [centering specification](https://www.winsteps.com/facetman64/centerfacet.htm).
+#' Match category support, signs, the response design and population assumptions
+#' for TAM/ConQuest comparisons; an anchor value alone does not establish
+#' equivalence. All these routes condition on supplied anchor values and do not
+#' propagate error from an external estimated calibration.
+#'
+#' If an old zero-sum panel is fully anchored and new raters are added,
+#' whole-facet centering also forces the new raters to sum to zero. This is
+#' an additional constraint, not evidence that the new panel has the same
+#' average severity. In supported fixed-population MML models, choosing
+#' `noncenter_facet = "Rater"` can leave that facet uncentered. This is not
+#' a general remedy: only one facet can be noncentered. The RSM/PCM
+#' intercept-only, fixed-SD alternative is described above. Other latent
+#' regression, including the usual one-family GPCM population model, requires
+#' `noncenter_facet = "Person"`. Review the complete identification and
+#' population assumptions before using anchors to compare cohorts.
 #'
 #' A group target is an unweighted arithmetic mean of its declared levels,
 #' including any directly anchored members. It is not weighted by rating
-#' counts. In MML, individual abilities are integrated out: Person direct and
+#' counts. FACETS `G` supplies per-element contributions to a group total;
+#' convert their arithmetic mean to one repeated `GroupValue`. For example,
+#' contributions 0.2 and 1.0 become `GroupValue = 0.6` for both members.
+#' Unequal `GroupValue` entries are conflicting targets, not contributions;
+#' use `anchor_policy = "error"` to stop on review issues. FACETS group 0
+#' denotes direct anchors and must be translated to `anchors`; mfrmr treats
+#' `Group = "0"` as an ordinary group identifier. The FACETS `X` convention
+#' that removes extreme members is not applied automatically. See
+#' [FACETS element specifications](https://www.winsteps.com/facetman64/elements.htm).
+#'
+#' Group-origin support retains constrained maximum likelihood, not every
+#' native FACETS update. Matched interior RSM/PCM examples agree when a single
+#' group only sets the origin. With additional restrictions, FACETS 4.5.0 can
+#' satisfy the group means while leaving a nonzero likelihood derivative along
+#' a constraint-preserving direction. mfrmr optimizes that likelihood rather
+#' than reproducing those numerical differences. Matching means alone does
+#' not establish parameter, SE or interval equivalence; group-anchor extreme
+#' extrapolation remains unsupported. In MML, individual abilities are
+#' integrated out: Person direct and
 #' group anchors are unsupported and rejected even with `anchor_policy =
 #' "silent"`. Sharing Persons across raters requires no fixed Person values.
 #'
-#' Uncertainty from estimating supplied anchor values is not propagated.
-#' Downstream SEs and intervals condition on those values and retain the
+#' Ordinary fit summaries condition on supplied anchor values. Independent
+#' source-anchor covariance can be propagated explicitly in the bounded
+#' fixed-SD RSM/PCM route through [mfrm_facet_intervals()] and
+#' [mfrm_population_intervals()]; it is not added automatically.
+#' By default, downstream SEs and intervals condition on those values and retain the
 #' selected estimator's other limitations. A missing SE for a fixed value
 #' does not mean its source calibration was error-free. See
 #' [mfrmr_linking_and_dff] for the theoretical background and a loading-first
@@ -1758,6 +2096,9 @@
 #' establish global MML identification or finite-sample inference here.
 #'
 #' @return
+#' With `method = "JML", jml_penalty = "jeffreys"`, a separate
+#' `mfrm_jeffreys_fit`; see [summary.mfrm_jeffreys_fit()] for its point tables,
+#' probabilities, numerical checks and unsupported inference.
 #' With `method = "CML", fit_scope = "full"`, an `mfrm_cml_fit` with structural estimates,
 #' joint `covariance` and `information` (missing where unavailable), `person_totals`, `checks`, preparation,
 #' configuration and optimizer controls; see "Conditional maximum likelihood".
@@ -1933,11 +2274,16 @@ fit_mfrm <- function(data,
                      jml_correction_sampling = c("fixed_rosters", "random_rosters"),
                      gpcm_mml_start = NULL,
                      repeated_ratings = c("review", "independent"),
-                     centering_scope = c("facet", "remainder"),
+                     centering_scope = c("facet", "remainder", "anchor_origin"),
                      fit_scope = c("full", "comparisons"),
                      comparison_review = NULL,
-                     mml_accuracy_control = NULL) {
-  supplied_arguments <- names(as.list(match.call())[-1L])
+                     mml_accuracy_control = NULL,
+                     population_sd = NULL,
+                     jml_penalty = c("none", "jeffreys"),
+                     progress = FALSE) {
+  close_progress <- mfrmr_start_fit_progress(progress)
+  on.exit(close_progress(), add = TRUE)
+  supplied_arguments <- setdiff(names(as.list(match.call())[-1L]), "progress")
   fit_scope <- match.arg(fit_scope)
   if (fit_scope == "full" && !is.null(comparison_review))
     stop("Use fit_scope = 'comparisons' to fit a comparison review, or extract comparisons from a full fit with interaction_effect_table().", call. = FALSE)
@@ -2027,16 +2373,45 @@ fit_mfrm <- function(data,
   model <- toupper(match.arg(model))
   method_input <- public_mfrm_method_label(toupper(match.arg(method)))
   method <- method_input
+  if (identical(centering_scope, "anchor_origin") &&
+      (!identical(method, "JML") || !model %in% c("RSM", "PCM") ||
+       length(facet_interactions) > 0L || fit_scope != "full")) {
+    stop("`centering_scope = 'anchor_origin'` requires ordinary additive RSM/PCM JML with fit_scope = 'full'.",
+         call. = FALSE)
+  }
   optimizer <- normalize_mfrm_optimizer(match.arg(optimizer))
   mml_engine <- tolower(match.arg(mml_engine))
   mml_integration <- match.arg(mml_integration)
+  jml_penalty <- match.arg(jml_penalty)
+  if (!is.null(population_sd)) {
+    if (!is.numeric(population_sd) || is.complex(population_sd) ||
+        length(population_sd) != 1L || !is.finite(population_sd) ||
+        population_sd <= 0 || !is.finite(population_sd^2) || population_sd^2 <= 0)
+      stop("`population_sd` must be NULL or one positive finite number with a representable positive variance.", call. = FALSE)
+    if (!model %in% c("RSM", "PCM") || method != "MML" ||
+        mml_engine != "direct" || is.null(population_formula) ||
+        fit_scope != "full" || length(facet_interactions))
+      stop("`population_sd` requires a population_formula with full direct RSM/PCM MML and no interactions.", call. = FALSE)
+    population_sd <- as.numeric(population_sd)
+  }
   if (identical(mml_integration, "auto")) {
-    if (!identical(method, "MML") || !identical(mml_engine, "direct") ||
-        !is.null(checkpoint) || fit_scope != "full" || length(slope_facet) > 1L) {
-      stop("`mml_integration = 'auto'` requires ordinary full MML with the direct engine, at most one slope facet and no checkpoint.",
+    product_auto <- identical(model, "GPCM") && length(slope_facet) == 2L &&
+      is.null(jml_correction_order) && identical(jml_penalty, "none")
+    if (!identical(method, "MML") || !is.null(checkpoint) || fit_scope != "full" ||
+        (!product_auto && (!identical(mml_engine, "direct") || length(slope_facet) > 1L)) ||
+        (product_auto && !mml_engine %in% c("em", "direct"))) {
+      stop("`mml_integration = 'auto'` requires ordinary full MML with the direct engine, or two-family GPCM with the em/direct engine, and no checkpoint.",
         call. = FALSE)
     }
-    mml_accuracy_control <- mfrmr_mml_accuracy_control(mml_accuracy_control)
+    mml_accuracy_control <- if (product_auto) mfrmr_gmfrm_accuracy_control(mml_accuracy_control) else
+      mfrmr_mml_accuracy_control(mml_accuracy_control)
+    if (!is.null(mml_accuracy_control$max_points)) {
+      maximum_initial <- if (product_auto) floor((mml_accuracy_control$max_points + 1) / 2) else
+        mml_accuracy_control$max_points
+      if ("quad_points" %in% supplied_arguments && quad_points > maximum_initial)
+        stop("`quad_points` exceeds the initial order allowed by `max_points`, including reference checks.", call. = FALSE)
+      quad_points <- min(quad_points, maximum_initial)
+    }
   } else if (!is.null(mml_accuracy_control)) {
     stop("`mml_accuracy_control` requires `mml_integration = 'auto'`.", call. = FALSE)
   }
@@ -2050,6 +2425,10 @@ fit_mfrm <- function(data,
   anchor_policy <- tolower(match.arg(anchor_policy))
   population_policy <- tolower(match.arg(population_policy))
   facet_shrinkage <- match.arg(facet_shrinkage)
+  if (jml_penalty != "none") {
+    arguments <- mget(names(formals(fit_mfrm)), envir = environment(), inherits = FALSE)
+    return(mfrm_fit_jeffreys(arguments, supplied_arguments))
+  }
   if (!is.null(facet_prior_sd)) {
     if (!is.numeric(facet_prior_sd) || length(facet_prior_sd) != 1L ||
         !is.finite(facet_prior_sd) || facet_prior_sd < 0 ||
@@ -2083,7 +2462,7 @@ fit_mfrm <- function(data,
   if (!is.null(gpcm_mml_start) &&
       !(length(slope_facet) == 2L && identical(model, "GPCM") &&
         identical(method_input, "MML") && identical(mml_engine, "direct") &&
-        identical(mml_integration, "adaptive") && is.null(jml_correction_order)))
+        mml_integration %in% c("adaptive", "auto") && is.null(jml_correction_order)))
     stop("`gpcm_mml_start` applies only to two-family adaptive direct MML.", call. = FALSE)
   if (!is.null(jml_correction_order)) {
     arguments <- mget(names(formals(fit_mfrm)), envir = environment(), inherits = FALSE)
@@ -2093,6 +2472,8 @@ fit_mfrm <- function(data,
     stop("`jml_correction_sampling` requires an explicit `jml_correction_order`.", call. = FALSE)
   if (length(slope_facet) > 1L) {
     arguments <- mget(names(formals(fit_mfrm)), envir = environment(), inherits = FALSE)
+    if (identical(mml_integration, "auto"))
+      return(mfrm_fit_product_slopes_auto(arguments, supplied_arguments))
     return(mfrm_fit_product_slopes(arguments, supplied_arguments))
   }
   if (!is.null(em_score_tol)) {
@@ -2151,6 +2532,7 @@ fit_mfrm <- function(data,
     person_id = effective_person_id,
     population_policy = population_policy
   )
+  if (!is.null(population_sd)) population$fixed_sd <- population_sd
   population$source <- if (auto_gpcm_population) {
     "gpcm_mml_default_identification"
   } else if (isTRUE(population$active)) {
@@ -2207,12 +2589,12 @@ fit_mfrm <- function(data,
           call. = FALSE
         )
       }
-      stop(
-        "Latent-regression identification requires `noncenter_facet = \"Person\"` ",
-        "so all non-person facets remain centered and the population-model ",
-        "intercept is identified.",
-        call. = FALSE
-      )
+      if (!model %in% c("RSM", "PCM") || is.null(population_sd) ||
+          !identical(population$design_columns, "(Intercept)") ||
+          any(population$design_matrix != 1) || length(dummy_facets) ||
+          (!is.null(group_anchors) && NROW(group_anchors) > 0L))
+        stop("Latent-regression identification requires `noncenter_facet = \"Person\"`, or an intercept-only RSM/PCM population with explicit `population_sd` and a direct anchor on the noncentered facet, without groups or dummy facets.", call. = FALSE)
+      population$identification_role <- "direct_anchor_origin_fixed_population_sd"
     }
   }
   estimation_data <- data
@@ -2361,7 +2743,7 @@ fit_mfrm <- function(data,
 
   if (identical(model, "GPCM") && identical(method_input, "MML") &&
       nrow(fit$slopes %||% data.frame()) > 0L) {
-    population_sd <- if (isTRUE(fit$population$active)) {
+    fitted_population_sd <- if (isTRUE(fit$population$active)) {
       sqrt(as.numeric(fit$population$sigma2 %||% NA_real_)[1])
     } else {
       1
@@ -2372,11 +2754,11 @@ fit_mfrm <- function(data,
     primary_relative <- as.numeric(
       fit$slopes$PrimaryEstimate %||% rep(NA_real_, nrow(fit$slopes))
     )
-    fit$slopes$PopulationSD <- rep(population_sd, nrow(fit$slopes))
+    fit$slopes$PopulationSD <- rep(fitted_population_sd, nrow(fit$slopes))
     fit$slopes$FixedLatentSDOptimizerEstimate <-
-      population_sd * optimizer_relative
+      fitted_population_sd * optimizer_relative
     fit$slopes$FixedLatentSDPrimaryEstimate <-
-      population_sd * primary_relative
+      fitted_population_sd * primary_relative
     fit$slopes$FixedLatentSDBasis <- if (isTRUE(fit$population$active)) {
       "population_sd_times_relative_slope"
     } else {
@@ -2445,6 +2827,7 @@ fit_mfrm <- function(data,
     mml_integration = mml_integration,
     mml_accuracy_control = mml_accuracy_control,
     population_formula = population_formula,
+    population_sd = population_sd,
     person_id = if (is.null(person_id)) NULL else as.character(person_id),
     population_policy = as.character(population_policy),
     facet_shrinkage = as.character(facet_shrinkage),
@@ -2548,6 +2931,8 @@ fit_mfrm <- function(data,
 #'   quad_points = 7, maxit = 30
 #' )
 #' head(interaction_effect_table(fit))
+#' @seealso [mfrm_facet_intervals()] with `interaction` for supported
+#'   fixed-population RSM/PCM MML cell intervals from full joint information.
 #' @export
 interaction_effect_table <- function(fit, comparison_review = NULL) {
   if (inherits(fit, "mfrm_comparison_fit")) {
@@ -3331,9 +3716,11 @@ mfrm_population_design <- function(fit) {
     design <- design[lookup[order(persons, method = "radix")],
                      order(columns, method = "radix"), drop = FALSE]
     if (any(!is.finite(design))) return(NULL)
-    list(active = TRUE, persons = sort(persons, method = "radix"),
+    out <- list(active = TRUE, persons = sort(persons, method = "radix"),
          columns = sort(columns, method = "radix"),
          design = matrix(as.numeric(design), nrow = length(persons)))
+    if (!is.null(pop$fixed_sd)) out$fixed_sd <- pop$fixed_sd
+    out
 }
 
 audit_compare_mfrm_nesting <- function(fits, labels) {
@@ -3482,6 +3869,17 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
     idx_simple <- which(model_pair == "RSM")[1]
     idx_complex <- which(model_pair == "PCM")[1]
     step_facet <- sigs[[idx_complex]]$step_facet
+    missing_interactions <- setdiff(interaction_sets[[idx_simple]], interaction_sets[[idx_complex]])
+    if (length(missing_interactions)) {
+      return(list(
+        eligible = FALSE,
+        reason = paste0("RSM interaction terms are absent from the PCM: ",
+          paste(missing_interactions, collapse = ", "),
+          ". Freeing category steps does not preserve these interaction effects."),
+        simpler = NA_character_, complex = NA_character_,
+        relation = "RSM_PCM_interactions_not_nested"
+      ))
+    }
     if (!is.na(step_facet) && nzchar(step_facet)) {
       return(list(
         eligible = TRUE,
@@ -4956,6 +5354,10 @@ plot.mfrm_data_description <- function(x,
 #'   that mean. The target requires an external justification such as a
 #'   defensible equal-mean or known-scale assumption.
 #'   The mean is unweighted over declared levels, not over rating rows.
+#'   `GroupValue` repeats one target per group. It is not a FACETS per-element
+#'   contribution: values 0.2 and 1.0 in a native two-member group translate
+#'   to 0.6 for both rows. See [fit_mfrm()] for group-origin centering and
+#'   FACETS group 0 / extreme-exclusion differences.
 #' - When both types include the same element, both constraints are retained:
 #'   the direct anchor fixes that element and the group constraint still fixes
 #'   the declared group mean. Incompatible combinations are rejected by the
@@ -4983,8 +5385,11 @@ plot.mfrm_data_description <- function(x,
 #' @return A list of class `mfrm_anchor_review` with:
 #' - `anchors`: cleaned direct constraints used by estimation
 #' - `group_anchors`: cleaned group-mean constraints used by estimation
-#' - `centering_scope`: the reviewed whole-facet or legacy remainder convention
-#' - `facet_summary`: counts of levels inside/outside declared constraints
+#' - `centering_scope`: the reviewed `"facet"`, `"remainder"` or
+#'   `"anchor_origin"` convention
+#' - `facet_summary`: counts of levels inside/outside declared constraints,
+#'   `Centered` indicating the declared centering constraint, and `OriginBasis`
+#'   describing how the facet's origin is set
 #' - `design_checks`: observation-count checks by level/category
 #' - `thresholds`: active threshold settings used for recommendations
 #' - `issue_counts`: issue-type counts
@@ -5037,7 +5442,7 @@ review_mfrm_anchors <- function(data,
                                 dummy_facets = NULL,
                                 category_policy = NULL,
                                 repeated_ratings = c("review", "independent"),
-                                centering_scope = c("facet", "remainder")) {
+                                centering_scope = c("facet", "remainder", "anchor_origin")) {
   centering_scope <- match.arg(centering_scope)
   keep_original <- resolve_mfrm_category_policy(
     keep_original, category_policy, !missing(keep_original))
@@ -6357,7 +6762,9 @@ mfrm_ic_fit_check <- function(fit, contract, information = NULL, allow_singleton
 #' intentionally conservative. It currently supports the following
 #' restrictions under shared data and shared constraints:
 #' - `RSM` nested inside `PCM` when the `PCM` fit has an explicit
-#'   `step_facet`;
+#'   `step_facet` and retains every `facet_interactions` term in the RSM.
+#'   The PCM may add interaction terms; omitting an RSM interaction is not
+#'   repaired by freeing category steps;
 #' - `PCM` nested inside `GPCM` with the same step facet, population
 #'   design, other facet/step constraints and interactions. The only additional
 #'   parameters must be G-1 relative log-slope contrasts for G slope levels.

@@ -18,6 +18,9 @@ knitr::opts_chunk$set(
 )
 ```
 
+Start with the [interactive ggplot2 gallery](https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html)
+for three worked examples with Plotly views, static figures and underlying values.
+
 This vignette connects figures to questions about fitted ratings, external
 attributes and observed-score planning. It is organized around six practical
 questions:
@@ -781,7 +784,42 @@ Applying the idea to fitted residuals asks about *remaining* structure and is
 not the same procedure as EGA on the original item responses. The existing
 `mfrm_network_analysis()`, `rater_network_analysis()` and
 `rater_halo_network_analysis()` do not implement a residual EGA procedure.
-There is currently no native residual-network/EGA API.
+`mfrm_residual_network()` now supplies a native **signed correlation network**
+and optional hierarchical clustering, using standardized residual means per
+Person and facet level. It is not EGA, which uses a different network and
+community estimation procedure.
+
+```{r residual-network-route, eval=FALSE}
+# Reuse a fitted model and its matching diagnostics.
+net <- mfrm_residual_network(fit, diagnostics = diag, facet = "Criterion",
+  missing = "complete", clusters = 2, min_abs = .2)
+net$settings
+net$pairs                    # include unavailable pairs and shared-person N
+net$person_usage             # complete-person inclusion, not rating-row N
+plot(net, type = "network")  # sign/strength; circular layout is not a distance
+plot(net, type = "matrix")   # all correlations, before the display threshold
+if (net$clustering$status == "available") plot(net, type = "dendrogram")
+report <- mfrm_report(net)
+export_summary_appendix(report, output_dir = "residual-review")
+saveRDS(net, "residual-review/network.rds")
+```
+
+Clustering uses `sqrt(2*(1-r))` distances between centered unit-length residual
+profiles on a common complete-person sample. Average or complete linkage and
+the supplied number of groups define an exploratory partition. Strong negative
+correlations are dissimilarity, not similarity by absolute value. The display
+threshold never changes the groups. Without a common usable sample or variation
+at every level, clustering is unavailable; the network retains that reason.
+Use `missing = "pairwise"` without clustering when pair-specific overlap is the
+intended descriptive analysis. Neither route estimates group stability.
+
+Random forests belong to a separately designed prediction stage.
+[Wesolowski (2019)](https://doi.org/10.1111/jedm.12227) formed rater groups by
+k-means on differential-rater-functioning indices and then predicted those
+labels with random forests. Predicting exploratory labels does not validate
+latent classes. The [function help](../reference/mfrm_residual_network.html)
+explains unsupervised learning, supervised prediction, leakage, resampling and
+why out-of-bag accuracy alone cannot validate labels discovered on all data.
 
 For example, residual associations among accuracy criteria across different
 tasks and assessors may motivate a second substantive-domain hypothesis.
@@ -792,7 +830,7 @@ all competing explanations. Communities, centrality and edge density are not
 proof of dimensions, rater quality or an omitted causal mechanism. No edges
 can also reflect regularization or weak data rather than independence.
 
-Before a residual-network workflow is admitted, specify nodes (criterion,
+For any residual-network workflow, specify nodes (criterion,
 task-by-criterion, or another justified unit), residual type, aggregation and
 pairwise person counts. Sparse pairwise correlations may be undefined or form
 an invalid correlation matrix. Do not encode unassigned cells as zero, treat a

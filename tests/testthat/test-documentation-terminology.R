@@ -65,13 +65,16 @@ test_that("FACETS positioning distinguishes native estimates from visual emulati
   readme <- paste(readLines(file.path(pkg_root, "README.md"), warn = FALSE),
                   collapse = "\n")
 
-  readme_flat <- gsub("[[:space:]]+", " ", readme)
-  expect_match(readme_flat, "keeps uncertainty visible", fixed = TRUE)
-  expect_match(readme, "FACETS-style", fixed = TRUE)
-  expect_true(grepl("asterisk", tolower(readme), fixed = TRUE))
-  expect_true(grepl("rubric", tolower(readme), fixed = TRUE))
-  expect_true(grepl("does not reproduce a facets run", tolower(readme),
-                    fixed = TRUE))
+  expect_match(readme, "mfrmr-facets-migration.html", fixed = TRUE)
+  guide <- paste(readLines(file.path(pkg_root, "vignettes", "mfrmr-facets-migration.Rmd"),
+    warn = FALSE), collapse = "\n")
+  text <- gsub("[[:space:]]+", " ", paste(readme, guide))
+  expect_match(guide, "mfrmr uncertainty estimates", fixed = TRUE)
+  expect_match(guide, "FACETS-style", fixed = TRUE)
+  expect_true(grepl("asterisk", tolower(guide), fixed = TRUE))
+  expect_true(grepl("rubric", tolower(guide), fixed = TRUE))
+  expect_match(text, paste("Neither renderer implies that FACETS performed the estimation",
+    "or that the two programs are numerically equivalent."), fixed = TRUE)
   expect_false(grepl("FACETS produced the estimates", readme, fixed = TRUE))
   expect_false(grepl("complete facets reproduction", tolower(readme),
                      fixed = TRUE))
@@ -105,12 +108,14 @@ test_that("public documentation does not advertise later-release routes as curre
 
   expect_identical(hits, character(0))
   expect_match(flat, "one observed score scale", fixed = TRUE)
-  expect_match(flat, "portable fixed-calibration artifacts are available only", fixed = TRUE)
+  portable <- tolower(gsub("[[:space:]]+", " ", paste(readLines(file.path(
+    pkg_root, "vignettes", "mfrmr-portable-calibration.Rmd"), warn = FALSE), collapse = "\n")))
+  expect_match(portable, "portable workflow is deliberately narrower than fitted-object scoring", fixed = TRUE)
   expect_true(grepl(
-    "estimated-population rsm/pcm and latent-regression mml remain fitted-object-only",
-    flat, fixed = TRUE
+    "estimated-population rsm/pcm and latent regression remain fitted-object-only",
+    portable, fixed = TRUE
   ))
-  expect_match(flat, "posterior scoring from an existing fitted object is a separate", fixed = TRUE)
+  expect_match(portable, "portable calibration are different objects", fixed = TRUE)
 })
 
 test_that("public estimator vocabulary keeps JMLE as an input alias only", {

@@ -90,7 +90,8 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #' @param anchors Optional anchor table (data.frame).
 #' @param group_anchors Optional group-anchor table (data.frame).
 #' @param noncenter_facet Non-centered facet passed to [fit_mfrm()].
-#' @param centering_scope Whole-facet (default) or legacy remainder centering;
+#' @param centering_scope Whole-facet (default), legacy remainder, or explicit
+#'   direct/group-anchor-origin centering for ordinary additive RSM/PCM JML;
 #'   passed to [fit_mfrm()].
 #' @param dummy_facets Optional dummy facets fixed at zero.
 #' @param positive_facets Optional facets with positive orientation.
@@ -219,7 +220,7 @@ run_mfrm_facets <- function(data,
                             mml_engine = c("direct", "em", "hybrid"),
                             top_n_interactions = 20L,
                             mml_integration = c("fixed", "adaptive"),
-                            centering_scope = c("facet", "remainder")) {
+                            centering_scope = c("facet", "remainder", "anchor_origin")) {
   model <- toupper(match.arg(model))
   method <- toupper(match.arg(method))
   optimizer <- match.arg(optimizer)
@@ -338,7 +339,7 @@ mfrmRFacets <- function(data,
                         mml_engine = c("direct", "em", "hybrid"),
                         top_n_interactions = 20L,
                         mml_integration = c("fixed", "adaptive"),
-                            centering_scope = c("facet", "remainder")) {
+                            centering_scope = c("facet", "remainder", "anchor_origin")) {
   run_mfrm_facets(
     data = data,
     person = person,

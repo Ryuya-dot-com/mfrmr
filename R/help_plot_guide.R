@@ -9,6 +9,18 @@
       Notes = notes, stringsAsFactors = FALSE)
   }
   out <- rbind(
+    route("Inspect signed pairwise rater agreement", "mfrm_rater_network",
+      'plot(x, type = "network", draw = FALSE)', "rater_network", "edges", "unavailable",
+      "Create with weight_metric='KrippendorffAlpha'. Width is magnitude; dashed edges are negative. Missing pairs are not zero. Use layout/graphical for customization."),
+    route("Compare weighted network inconsistency indices", "mfrm_rater_network",
+      'plot(x, type = "fit", metric = "SWS", draw = FALSE)', "rater_network", "table", "unavailable",
+      "Create with weight_metric='DirectionalMagnitude'. Choose SWS or PUS, retain unavailable rows, and report score units. These are not Rasch MnSq or calibrated pass/fail indices."),
+    route("Inspect conditional binary-network coefficients", "mfrm_network_ergm",
+      'plot(x, type = "coefficients", draw = FALSE)', "network_ergm", "table", "unavailable",
+      "Pointwise normal intervals require adequate backend estimation. A coefficient is a conditional network log-odds effect, not MFRM severity."),
+    route("Compare a binary network with model simulations", "mfrm_network_ergm",
+      'plot(x, type = "gof", draw = FALSE)', "network_ergm", "draws", "unavailable",
+      "Requires saved GOF from fit_rater_network(). Long simulation draws support custom plots; inspect MCMC diagnostics separately. GOF does not test causal halo."),
     route("Compare persons, facet levels and category steps", "mfrm_fit",
       'plot(x, type = "wright", draw = FALSE)', "wright_map", "locations", "dedicated",
       "Native Wright view for supported ordinary/one-family fits; unavailable for two-family GPCM or corrected JML. Inspect gpcm_capability_matrix() and the source uncertainty settings."),
@@ -84,6 +96,15 @@
     route("Show pooled fixed-facet intervals after multiple imputation", "mfrm_pooled",
       'plot(x, draw = FALSE)', "pooled_facet_intervals", "table", "dedicated",
       "Saved pointwise MI t intervals; no repooling. Missingness and imputation-model assumptions remain."),
+    route("Inspect all residual associations and missing pairs", "mfrm_residual_network",
+      'plot(x, type = "matrix", draw = FALSE)', "local_dependence_heatmap", "matrix", "dedicated",
+      "Signed Pearson correlations of Person-by-facet standardized-residual means; retain pair overlap and unavailable cells. No calibrated local-independence test."),
+    route("Locate residual co-movement after model review", "mfrm_residual_network",
+      'plot(x, type = "network", draw = FALSE)', "residual_network", "edges", "unavailable",
+      "Solid positive and dashed negative edges; thickness is absolute correlation. Circular positions are not distances. Thresholding is descriptive, not EGA or causal inference."),
+    route("Inspect exploratory groups of residual profiles", "mfrm_residual_network",
+      'plot(x, type = "dendrogram", draw = FALSE)', "residual_network", "clustering", "unavailable",
+      "Available only after explicit common-person clustering. The supplied group count is not an estimated number of latent dimensions. Stability and calibration uncertainty are not estimated."),
     route("Inspect separation of external-feature groups", "mfrm_clusters",
       'plot(x, type = "silhouette", draw = FALSE)', "cluster_silhouette", "table", "dedicated",
       "Descriptive clustering quality, not response-model fit or latent ability."),
@@ -131,6 +152,7 @@
       "This component becomes points from its first two numeric columns. Generic conversion does not reproduce the base curve or its annotations.")
   )
   creators <- c(mfrm_fit = "fit_mfrm", mfrm_rating_scale = "rating_scale_table",
+    mfrm_rater_network = "rater_network_analysis", mfrm_network_ergm = "fit_rater_network",
     mfrm_bias_interaction = "bias_interaction_report", mfrm_halo_network = "rater_halo_network_analysis",
     mfrm_category_curves = "category_curves_report", mfrm_facet_intervals = "mfrm_facet_intervals",
     mfrm_slope_intervals = "confint.mfrm_fit", mfrm_curve_intervals = "mfrm_curve_intervals",
@@ -142,7 +164,7 @@
     mfrm_clusters = "mfrm_cluster", mfrm_hierarchical_clusters = "mfrm_cluster_hierarchical",
     mfrm_imputed_clusters = "mfrm_cluster_imputed", mfrm_pca = "mfrm_pca",
     mfrm_bundle = "subset_connectivity_report", mfrm_d_study = "mfrm_d_study", mfrm_multivariate_d_study = "mfrm_d_study",
-    mfrm_multivariate_gstudy = "mfrm_g_study",
+    mfrm_multivariate_gstudy = "mfrm_g_study", mfrm_residual_network = "mfrm_residual_network",
     mfrm_population_intervals = "mfrm_population_intervals",
     mfrm_bias_collection = "estimate_all_bias",
     mfrm_multivariate_d_comparison = "mfrm_multivariate_d_compare", mfrm_information = "compute_information")

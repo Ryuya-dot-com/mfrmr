@@ -10,6 +10,9 @@
 #'   Alternatively supply a saved `confint(d)` result or a list of such results.
 #'   Saved results may contain different metrics, methods, scores or reference
 #'   plans, but must match this D-study's source, plans and score weights.
+#'   GENOVA-adjusted results retain adjusted points alongside original-source
+#'   population intervals, with separate `IntervalEstimate` and `IntervalBasis`.
+#'   Saved intervals must match the component treatment too.
 #' @param parm Metrics to calculate when `intervals = TRUE`. The default
 #'   includes `"G"`, `"Phi"`, `"RelativeSEM"` and `"AbsoluteSEM"`.
 #'   Select fewer metrics when only those answer your question, particularly
@@ -37,8 +40,9 @@
 #'   * `notes`: method qualifications and interpretation reminders.
 #'   `print()` returns the same saved summary invisibly.
 #'   For G/Phi with `method = "delta"`, the table retains and prints the
-#'   coefficient sampling `SE`, distinct from measurement SEM. Normal-reference
-#'   bounds outside `[0,1]` are not clipped.
+#'   coefficient sampling `SE`, distinct from measurement SEM. For GENOVA-adjusted
+#'   points it is named `IntervalSE` and describes the original estimator, not
+#'   the adjusted point. Normal-reference bounds outside `[0,1]` are not clipped.
 #'
 #' @details The intervals describe uncertainty from the observed G-study in
 #'   the population coefficient or SEM of a specified future complete plan.
@@ -97,6 +101,7 @@
 #' @export
 summary.mfrm_multivariate_d_study <- function(object, intervals = FALSE,
     parm = c("G", "Phi", "RelativeSEM", "AbsoluteSEM"), ...) {
+  if (!identical(.mfrm_mvds_policy(object), "raw")) .mfrm_mvds_replay(object)
   if (isFALSE(intervals)) {
     rlang::check_dots_empty()
     if (!missing(parm)) stop("`parm` applies only when `intervals = TRUE`.", call. = FALSE)
@@ -146,6 +151,7 @@ summary.mfrm_multivariate_d_study <- function(object, intervals = FALSE,
 }
 
 .mfrm_mvds_interval_source <- function(ci, object) {
+  .mfrm_mvds_interval_policy(ci, object)
   required <- c("Scenario", "Kind", "Score", "Metric", "Estimate", "PointStatus",
     "Lower", "Upper", "Level", "MethodCode", "Method", "Status", "Available")
   if (!all(required %in% names(ci)) || !nrow(ci))
@@ -236,7 +242,7 @@ print.summary.mfrm_multivariate_d_study <- function(x, digits = NULL, row.names 
     cat("Composite weights (not normalized):\n"); print(x$weights, digits = digits)
   }
   columns <- c("Scenario", names(x$design_grid), "Kind", "Score", "Metric",
-    "Reference", "Estimate", "SE", "IntervalCenter", "Lower", "Upper", "Level", "MethodCode")
+    "Reference", "Estimate", "ComponentTreatment", "IntervalEstimate", "SE", "IntervalSE", "IntervalCenter", "Lower", "Upper", "Level", "MethodCode")
   print(x$table[intersect(columns, names(x$table))], digits = digits, row.names = row.names, ...)
   cat("Methods and qualifications:\n")
   print(unique(x$table[intersect(c("MethodCode", "Method", "Validation"), names(x$table))]),

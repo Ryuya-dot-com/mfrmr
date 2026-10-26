@@ -127,7 +127,11 @@ when saving the analysis, so its fitted model and supplied anchors stay together
   `centering_scope = "remainder"` reproduces the earlier restriction that the
   ungrouped, unanchored levels sum to zero. Saved results are not converted by
   reloading them; fitting under a different convention requires re-estimation.
-  Neither mode automatically disables centering as FACETS can do.
+  For ordinary additive RSM/PCM JML, `centering_scope = "anchor_origin"`
+  instead lets direct or group anchors replace their facet's centering, as FACETS does.
+  Choose an unanchored, active noncenter facet and repeat the same arithmetic
+  mean target for each group member. This does not change the default or
+  account for estimated-anchor error.
 - **The helper does not copy every setting.** The model, estimation method,
   centering convention and MML integration mode are inherited automatically.
   Older baselines without convention metadata retain `"remainder"`.

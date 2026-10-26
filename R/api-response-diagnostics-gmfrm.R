@@ -38,7 +38,8 @@ mfrm_gmfrm_response_input <- function(fit, check_solution = TRUE,
       if (length(reltol) != 1L || !is.finite(reltol) || reltol <= 0 ||
           !identical(fit$gmfrm$controls$reltol, cfg$estimation_control$reltol)) stop(
         "The saved adaptive optimizer controls must match the fitted specification.", call. = FALSE)
-      fresh <- build_optimizer_diagnostics(fit$opt, gradient = state$gradient, reltol = reltol)
+      fresh <- build_optimizer_diagnostics(fit$opt, gradient = state$gradient, reltol = reltol,
+        gradient_tolerance = mfrm_optimizer_gradient_tolerance(cfg, reltol))
       if (!is.finite(state$value) || any(!is.finite(state$gradient)) ||
           !identical(fresh$ConvergenceSeverity, "pass") ||
           !identical(fresh$GradientReviewTolerance, fit$opt$optimizer_diagnostics$GradientReviewTolerance) ||

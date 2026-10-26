@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-gpcm-curve-intervals.R
 \name{mfrm_curve_intervals}
 \alias{mfrm_curve_intervals}
+\alias{summary.mfrm_curve_intervals}
 \alias{print.mfrm_curve_intervals}
 \alias{plot.mfrm_curve_intervals}
 \title{Uncertainty in GPCM category probabilities and information curves}
@@ -16,6 +17,8 @@ mfrm_curve_intervals(
   level = 0.95,
   simultaneous = c("none", "bonferroni")
 )
+
+\method{summary}{mfrm_curve_intervals}(object, ...)
 
 \method{print}{mfrm_curve_intervals}(x, ...)
 
@@ -47,7 +50,7 @@ sum over all observed exposures as in \code{\link[=compute_information]{compute_
 
 \item{method, clusters, adjust, level, simultaneous}{As in \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}.}
 
-\item{x}{A saved \code{mfrm_curve_intervals} result.}
+\item{object, x}{A saved \code{mfrm_curve_intervals} result.}
 
 \item{...}{Unused.}
 
@@ -74,6 +77,8 @@ records the retained rating design, not statistical identification or
 interval reliability. Its plot method returns a ggplot with the plotted data available
 in \code{plot$data}; descriptions and cautions are available through
 \code{plot_data(p, "notes")}, separately from the figure.
+\code{summary()} returns settings, the complete interval table, contexts,
+numerical cautions and the anchor note without recalculating information.
 }
 \description{
 Evaluate specified rating contexts at known ability values and propagate the

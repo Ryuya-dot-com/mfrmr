@@ -42,8 +42,11 @@ With \code{centering_scope = "facet"} (the ordinary-fit default), centered facet
 sum to zero across all levels, including direct anchors and group totals.
 A single ungrouped remainder therefore balances those totals. Use
 \code{centering_scope = "remainder"} to reproduce earlier fits that centered only
-the levels outside direct/group constraints. Neither convention disables
-centering automatically as FACETS can do. Read \code{\link[=fit_mfrm]{fit_mfrm()}} before linking
+the levels outside direct/group constraints. Ordinary additive RSM/PCM JML
+also offers \code{centering_scope = "anchor_origin"}: direct or group anchors replace
+their facet's centering, with an unanchored, active noncenter facet.
+Group targets are repeated arithmetic means, not per-element contributions.
+The default remains \code{"facet"}. Read \code{\link[=fit_mfrm]{fit_mfrm()}} before linking
 a cohort with new raters or tasks; population and \code{noncenter_facet} settings
 also determine the scale. Contradictory constraints stop before estimation.
 
@@ -436,6 +439,10 @@ Fixed anchor values also carry uncertainty from their source calibration.
 Current anchor, drift, and chain summaries do not propagate all source-fit,
 offset, or cross-fit covariance. Compare substantively defensible anchor
 sets and report sensitivity when conclusions depend on the selected set.
+The bounded fixed-SD RSM/PCM anchor-origin route now offers explicit
+independent-source covariance propagation through \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}
+and \code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}. This does not change drift or chain
+summaries, correct noninvariant anchors, or handle dependent samples.
 }
 
 \section{Reading the theoretical background}{

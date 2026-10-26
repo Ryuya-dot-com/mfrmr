@@ -78,9 +78,10 @@ test_that("base reliability graphics keep the interpretation in returned notes",
     },
     mtext = function(text, ...) {
       stop("No margin notes are expected for this figure")
-    }, .package = "graphics")
+    }, .package = "mfrmr")
   grDevices::pdf(NULL, width = 7, height = 5)
   on.exit(grDevices::dev.off(), add = TRUE)
+  local_graphics_headings(function(main) text <<- c(text, as.character(main)))
   p <- plot_reliability_snapshot(fit, diagnostics = diagnostics)
   expect_false(any(nzchar(text)))
   notes <- plot_data(p, "notes")
@@ -121,11 +122,12 @@ test_that("saved profile plots retain cautions and unresolved points outside fig
 
 test_that("shared bars distinguish structural panel labels from figure headings", {
   seen <- character()
+  local_graphics_headings(function(main) seen <<- c(seen, as.character(main)))
   original <- graphics::title
   local_mocked_bindings(title = function(main = NULL, ...) {
     seen <<- c(seen, as.character(main))
     original(main = main, ...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   grDevices::pdf(NULL, width = 7, height = 5)
   on.exit(grDevices::dev.off(), add = TRUE)
   mfrmr:::barplot_rot45(1:2, c("A", "B"), "grey", main = "Figure title")

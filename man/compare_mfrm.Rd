@@ -148,7 +148,9 @@ intentionally conservative. It currently supports the following
 restrictions under shared data and shared constraints:
 \itemize{
 \item \code{RSM} nested inside \code{PCM} when the \code{PCM} fit has an explicit
-\code{step_facet};
+\code{step_facet} and retains every \code{facet_interactions} term in the RSM.
+The PCM may add interaction terms; omitting an RSM interaction is not
+repaired by freeing category steps;
 \item \code{PCM} nested inside \code{GPCM} with the same step facet, population
 design, other facet/step constraints and interactions. The only additional
 parameters must be G-1 relative log-slope contrasts for G slope levels.

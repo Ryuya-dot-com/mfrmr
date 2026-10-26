@@ -20,7 +20,11 @@ mfrm_multivariate_d_compare(
 \method{print}{mfrm_multivariate_d_comparison}(x, digits = NULL, row.names = FALSE, ...)
 }
 \arguments{
-\item{x}{A result from \code{\link[=mfrm_d_study]{mfrm_d_study()}} with at least two plans.}
+\item{x}{A result from \code{\link[=mfrm_d_study]{mfrm_d_study()}} with at least two plans.
+It must retain \code{negative_components = "raw"}; this inference does not
+describe GENOVA-adjusted component estimators.
+For population plan-difference intervals alongside GENOVA-adjusted points,
+use the supported \code{reference} methods in \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}}.}
 
 \item{reference}{Row number of the reference plan in \code{x$design_grid}.}
 

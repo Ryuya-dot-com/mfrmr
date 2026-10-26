@@ -125,7 +125,7 @@ test_that("profile curvature refinement also checks the higher-order nuisance sc
   ev <- list(value = function(p) sum(p^2) / 2, gradient = function(p) p)
   hi <- list(value = function(p) ev$value(p) + 3e-6 * p[2],
     gradient = function(p) p + c(0, 3e-6))
-  local_mocked_bindings(optim = function(...) list(par = 9.8e-5, convergence = 0L), .package = "stats")
+  local_mocked_bindings(optim = function(...) list(par = 9.8e-5, convergence = 0L), .package = "mfrmr")
   ans <- mfrm_gpcm_profile_nuisance(ev, hi, c(0, 0), c(1, 0), 0, 100)
   expect_true(ans$check$Passed)
   expect_lt(abs(ans$parameters[2]), 1e-10)

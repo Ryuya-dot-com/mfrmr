@@ -94,7 +94,7 @@ test_that("all archive routes replace ZIP members and report failed commands", {
     expect_true(all(file.exists(removed)), info = "Unrequested loose files are preserved")
     old_zip <- tools::md5sum(archive)
     failed <- with_mocked_bindings(routes[[name]](path, FALSE),
-      zip = function(...) 12L, .package = "utils")
+      zip = function(...) 12L, .package = "mfrmr")
     expect_false(any(failed$written_files$Format == "zip"), info = name)
     expect_false(as.logical(failed$summary$ZipWritten), info = name)
     expect_match(paste(c(failed$zip_note, failed$notes), collapse = " "), "exit status: 12")
@@ -121,7 +121,7 @@ test_that("ZIP validation preserves old archives on missing or incomplete output
   )
   for (name in names(scenarios)) {
     out <- with_mocked_bindings(mfrm_write_export_zip(path, input, overwrite = TRUE),
-      zip = scenarios[[name]], .package = "utils")
+      zip = scenarios[[name]], .package = "mfrmr")
     expect_null(out$path)
     expect_true(nzchar(out$note), info = name)
     expect_identical(tools::md5sum(path), before)

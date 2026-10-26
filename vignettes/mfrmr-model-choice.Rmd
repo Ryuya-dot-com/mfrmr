@@ -258,7 +258,10 @@ target and explain any changed assumptions.
 For information criteria or likelihood-ratio comparisons, match retained
 ratings, category coding, weights, anchors, identification and population
 assumptions. `compare_mfrm()` checks supported MML comparisons; an explicit
-`nested = TRUE` requests a supported nested comparison. Default RSM and default
+`nested = TRUE` requests a supported nested comparison. For RSM versus PCM,
+the PCM must retain every interaction in the RSM; additional category-step
+parameters alone do not establish nesting. Information criteria can still
+compare eligible nonnested models. Default RSM and default
 GPCM fits do not automatically form a matched pair because their population
 defaults differ. Do not rank CML, JML and MML by putting their different
 likelihoods into one AIC table. A converged fit, a small SE or the lowest AIC

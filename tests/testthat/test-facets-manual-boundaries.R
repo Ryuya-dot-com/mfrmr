@@ -18,8 +18,19 @@ manual_boundary_fit <- local({
   }
 })
 
+# These display tests use one immutable calibration and identical diagnostic
+# settings. Build the fixture once per file; modified copies remain local to
+# their test. The independent diagnostic/numerical tests are unchanged.
+manual_boundary_diagnostics <- local({
+  d <- NULL
+  function() {
+    if (is.null(d)) d <<- diagnose_mfrm(manual_boundary_fit(), residual_pca = "none")
+    d
+  }
+})
+
 test_that("chi-square unavailable flags and summary survive display truncation", {
-  f <- manual_boundary_fit(); d <- diagnose_mfrm(f,residual_pca='none')
+  f <- manual_boundary_fit(); d <- manual_boundary_diagnostics()
   all <- facets_chisq_table(f,d); one <- facets_chisq_table(f,d,top_n=1)
   expect_equal(all$summary,one$summary)
   expect_equal(nrow(one$table),1L)
@@ -30,7 +41,7 @@ test_that("chi-square unavailable flags and summary survive display truncation",
 })
 
 test_that("weighted display preserves fractions and SE fallback scales once", {
-  f <- manual_boundary_fit(); d <- diagnose_mfrm(f,residual_pca='none')
+  f <- manual_boundary_fit(); d <- manual_boundary_diagnostics()
   row <- which(d$measures$Facet=='Rater' & !d$measures$Fixed)[1]
   d$measures$ModelSE[row] <- .2; d$measures$RealSE[row] <- NA_real_
   d$measures$Infit[row] <- 1.8
@@ -76,7 +87,7 @@ test_that("median boundaries solve cumulative probabilities and missing crossing
 })
 
 test_that("bias-count display never relabels logits as score points", {
-  f <- manual_boundary_fit();d <- diagnose_mfrm(f,residual_pca='none')
+  f <- manual_boundary_fit();d <- manual_boundary_diagnostics()
   b <- estimate_bias(f,d,facet_a='Rater',facet_b='Criterion')
   x <- bias_count_table(b,branch='facets')$table
   idx <- match(paste(x$Facet1,x$Facet2),paste(b$table$FacetA_Level,b$table$FacetB_Level))

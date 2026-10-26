@@ -109,7 +109,7 @@ test_that("numeric workflows refuse invalid geometry and optimization results", 
   expect_error(mfrm_pca(huge), 'not representable')
   expect_error(mfrm_cluster_kmeans(mfrm_pca(complete),2,scale=TRUE), 'when fitting')
   expect_error(mfrm_cluster_kmeans(complete,2,silhouette=NA), 'silhouette')
-  local_mocked_bindings(kmeans = function(...) list(ifault=2), .package='stats')
+  local_mocked_bindings(kmeans = function(...) list(ifault=2), .package="mfrmr")
   expect_error(mfrm_cluster_kmeans(complete,2,silhouette=FALSE), 'converged')
 })
 
@@ -203,7 +203,7 @@ test_that("wide PCA retains centered rank and initialization failures preserve R
   expect_identical(a$membership,b$membership)
   expect_false(exists('.Random.seed',envir=.GlobalEnv,inherits=FALSE))
   assign('.Random.seed',original_seed,envir=.GlobalEnv)
-  local_mocked_bindings(kmeans=function(...) { runif(1); warning('Iteration limit') }, .package='stats')
+  local_mocked_bindings(kmeans=function(...) { runif(1); warning('Iteration limit') }, .package="mfrmr")
   expect_error(mfrm_cluster_kmeans(x,2,silhouette=FALSE),'did not complete cleanly')
   expect_identical(.Random.seed,original_seed)
 })

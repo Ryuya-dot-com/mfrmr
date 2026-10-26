@@ -66,6 +66,10 @@ causal effects, simultaneous intervals or prediction intervals. Numerical
 availability does not establish nominal coverage: the source's experimental
 status, failed checks and qualifications remain in \code{notes} and the tables.
 A wide interval remains visible. Missing bounds are not infinite endpoints.
+When source-anchor uncertainty was requested, the saved intervals include
+that contribution. The returned subtitle, settings and \code{anchor_uncertainty}
+distinguish it from intervals conditional on exact supplied anchors;
+conditional bounds remain in the returned table.
 
 For an executable bundled-data example, run the example on
 \code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}, which creates \code{ci} and both views. Then use

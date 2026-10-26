@@ -15,7 +15,7 @@
 #'   (one row per supplied context/ability). Information is per rating, not a
 #'   sum over all observed exposures as in [compute_information()].
 #' @param method,clusters,adjust,level,simultaneous As in [confint.mfrm_fit()].
-#' @param x A saved `mfrm_curve_intervals` result.
+#' @param object,x A saved `mfrm_curve_intervals` result.
 #' @param title,subtitle Optional returned text; NULL removes it. Figure text
 #'   is not drawn. Use `plot_data(p, "title")` and `plot_data(p, "notes")`.
 #' @param palette Optional vector of colors, one per category/series. Line
@@ -83,6 +83,8 @@
 #'   interval reliability. Its plot method returns a ggplot with the plotted data available
 #'   in `plot$data`; descriptions and cautions are available through
 #'   `plot_data(p, "notes")`, separately from the figure.
+#'   `summary()` returns settings, the complete interval table, contexts,
+#'   numerical cautions and the anchor note without recalculating information.
 #' @seealso [confint.mfrm_fit()], [category_curves_report()], [compute_information()]
 #' @details A numerically verified but ill-conditioned information inverse can
 #'   supply intervals with a warning, as described in [confint.mfrm_fit()].
@@ -185,6 +187,13 @@ mfrm_curve_intervals <- function(fit, newdata, type = c("probability", "informat
       target = if (point_only) "Provisional fitted curves at fixed ability and rating context; intervals unavailable" else
         "Calibration uncertainty at fixed native-scale ability and rating context")),
     class = "mfrm_curve_intervals")
+}
+
+#' @rdname mfrm_curve_intervals
+#' @export
+summary.mfrm_curve_intervals <- function(object, ...) {
+  rlang::check_dots_empty()
+  object[c("settings", "table", "contexts", "cautions", "anchor_note")]
 }
 
 #' @rdname mfrm_curve_intervals

@@ -50,7 +50,7 @@ fit_mfrm_imputed <- function(x, model = c("RSM", "PCM"), step_facet = NULL, ...)
   dots <- list(...)
   blocked <- c("data", "person", "facets", "score", "rating_min", "rating_max",
     "keep_original", "category_policy", "missing_codes", "method", "weight", "population_formula",
-    "person_data", "person_id", "population_policy", "facet_shrinkage",
+    "person_data", "person_id", "population_policy", "population_sd", "facet_shrinkage",
     "facet_prior_sd", "shrink_person", "checkpoint", "gpcm_mml_identification",
     "slope_facet", "mml_integration", "attach_diagnostics")
   allowed <- setdiff(names(formals(fit_mfrm)), c(blocked, "model", "step_facet"))
@@ -322,7 +322,7 @@ pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
   se <- sqrt(variance)
   cutoff <- rep(NA_real_, length(df))
   valid_df <- !fixed & !is.na(df) & df > 0
-  cutoff[valid_df] <- stats::qt(log1p(-ci_level) - log(2), df[valid_df],
+  cutoff[valid_df] <- qt(log1p(-ci_level) - log(2), df[valid_df],
     lower.tail = FALSE, log.p = TRUE)
   margin <- cutoff * se
   lower <- estimate - margin; upper <- estimate + margin

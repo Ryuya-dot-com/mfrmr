@@ -5,10 +5,16 @@
 \title{Build a subset connectivity report (preferred alias)}
 \usage{
 subset_connectivity_report(
-  fit,
+  fit = NULL,
   diagnostics = NULL,
   top_n_subsets = NULL,
-  min_observations = 0
+  min_observations = 0,
+  data = NULL,
+  person = NULL,
+  facets = NULL,
+  score = NULL,
+  basis = c("observed", "planned"),
+  weight = NULL
 )
 }
 \arguments{
@@ -19,6 +25,23 @@ subset_connectivity_report(
 \item{top_n_subsets}{Optional maximum number of subset rows to keep.}
 
 \item{min_observations}{Minimum observations required to keep a subset row.}
+
+\item{data}{Optional raw assignment/rating data, supplied instead of \code{fit}.}
+
+\item{person, facets}{Names of the person column and one or more facet columns
+in \code{data}. Include only Rater in \code{facets} to inspect person-rater links
+without a common Criterion node obscuring separate panels.}
+
+\item{score}{Numeric score column for \code{basis = "observed"}. Recode study-specific
+missing markers to \code{NA} first; no category recoding or estimation is done.}
+
+\item{basis}{\code{"observed"} includes rows with complete identifiers and nonmissing
+finite scores; \code{"planned"} includes complete assignment rows without scores.
+Planned networks require \code{score = NULL} and \code{weight = NULL}.}
+
+\item{weight}{Optional numeric weight column for observed raw data. Missing
+and zero-weight rows do not create edges. Edge weights still count rows,
+not sampling weights. Negative or infinite weights are refused.}
 }
 \value{
 A named list with subset-connectivity components. Class:
@@ -53,6 +76,20 @@ criterion can connect panels whose person/rater locations remain confounded.
 \item Use the model rank and population assumptions to assess linking; a single
 co-observation component is not a FACETS identification subset.
 }
+}
+
+\section{Before fitting}{
+
+Supply \code{data}, \code{person}, \code{facets} and \code{score} instead of \code{fit}. Known levels
+from incomplete/unscored rows remain as nodes, including isolates. A planned
+assignment roster can be examined with \code{basis = "planned"}; absent assignments
+cannot be reconstructed from an observed-only file. \code{row_usage} records each
+input row's inclusion and first exclusion reason. With a fit, only its retained
+rows are available here; review original missing assignments before fitting.
+No prefit result supplies an identification audit or model-readiness decision.
+\code{settings$is_disjoint} describes the source graph, even when subset filters
+omit components; compare source/retained subset counts. Filters do not establish
+linking. See \code{vignette("mfrmr-networks-and-reporting")} for a panel example.
 }
 
 \examples{

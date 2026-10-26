@@ -25,6 +25,8 @@ cran_light_tests <- c(
   "bias-numerics",
   "facets-manual-consistency",
   "facets-manual-boundaries",
+  "facets-results",
+  "fair-delta",
   "category-owner-reporting",
   "rater-effect-plots",
   "fixed-measure-precision",
@@ -115,6 +117,7 @@ cran_light_tests <- c(
   "gpcm-capability-matrix",
   "gpcm-ic-eligibility",
   "gpcm-lrt",
+  "rsm-pcm-nesting",
   "gpcm-uncertainty-readiness",
   "gpcm-inference-extensions",
   "gpcm-inference-reporting",
@@ -134,6 +137,13 @@ cran_light_tests <- c(
   "gmfrm-adaptive-start",
   "gmfrm-em",
   "jml-public-workflow",
+  "study-report",
+  "report-modules",
+  "residual-network",
+  "network-inference",
+  "prefit-network",
+  "descriptive-review-contract",
+  "krippendorff-alpha",
   "namespace-contract",
   "optimizer-curvature",
   "vignette-artifacts"
@@ -154,7 +164,27 @@ if (is_cran_check) {
   # Detailed plotting, repeated estimation/diagnostics, simulation/recovery,
   # documentation scans and broad regression tests remain in the complete
   # local/CI suite, which must be run with NOT_CRAN=true.
-  test_check("mfrmr", filter = cran_light_filter)
+  local({
+    # CRAN permits at most two concurrent cores. Keep each worker's numerical
+    # libraries single-threaded, retain an explicit serial override, and leave
+    # the full regression suite below unchanged. No test is dropped for timing.
+    requested <- suppressWarnings(as.integer(getOption(
+      "Ncpus", Sys.getenv("TESTTHAT_CPUS", "2")
+    )))
+    if (length(requested) != 1L || is.na(requested) || requested < 1L) {
+      stop("Ncpus / TESTTHAT_CPUS must specify a positive integer.")
+    }
+    withr::local_options(Ncpus = min(2L, requested))
+    withr::local_envvar(c(
+      TESTTHAT_PARALLEL = if (utils::packageVersion("testthat") >= "3.1.0") {
+        Sys.getenv("TESTTHAT_PARALLEL", "true")
+      } else "false",
+      OMP_NUM_THREADS = "1", OPENBLAS_NUM_THREADS = "1",
+      MKL_NUM_THREADS = "1", VECLIB_MAXIMUM_THREADS = "1",
+      BLIS_NUM_THREADS = "1"
+    ))
+    test_check("mfrmr", filter = cran_light_filter)
+  })
 } else {
   test_check("mfrmr")
 }

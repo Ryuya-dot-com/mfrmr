@@ -59,7 +59,7 @@ test_that("bias plots retain conditional search limits and do not replace failed
   local_mocked_bindings(segments = function(..., lty = 1) {
     lines[[length(lines) + 1L]] <<- lty
     original(..., lty = lty)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   p <- plot_bias_interaction(bundle, plot = "scatter", show_ci = TRUE)
   expect_equal(p$data$scatter_data$CI_Lower, c(0,-5))
   expect_identical(p$data$scatter_data$CI_Status, tab$ProfileCIStatus)

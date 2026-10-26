@@ -722,7 +722,7 @@ draw_wright_facets_style <- function(plot_data,
     mgp = c(2.6, 0.8, 0),
     xpd = FALSE
   )
-  graphics::plot(
+  plot(
     NA_real_, NA_real_,
     xlim = c(0.45, n_col + 0.55),
     ylim = yr,
@@ -741,17 +741,17 @@ draw_wright_facets_style <- function(plot_data,
     axis_labels <- format(axis_at, trim = TRUE)
   }
   grid_at <- if (nrow(rows) <= 30L) rows$Logit else axis_at
-  graphics::abline(h = grid_at, col = grDevices::adjustcolor(pal["grid"], alpha.f = 0.38), lty = 1)
+  abline(h = grid_at, col = grDevices::adjustcolor(pal["grid"], alpha.f = 0.38), lty = 1)
   if (nrow(rows) <= 30L) {
-    graphics::abline(h = rows$Logit[major], col = grDevices::adjustcolor(pal["range"], alpha.f = 0.75), lwd = 1.1)
+    abline(h = rows$Logit[major], col = grDevices::adjustcolor(pal["range"], alpha.f = 0.75), lwd = 1.1)
   }
-  graphics::abline(v = seq(0.5, n_col + 0.5, by = 1), col = grDevices::adjustcolor(pal["grid"], alpha.f = 0.9))
-  graphics::axis(2, at = axis_at, labels = axis_labels, las = 1, cex.axis = 0.78)
-  graphics::axis(4, at = axis_at, labels = axis_labels, las = 1, cex.axis = 0.78)
+  abline(v = seq(0.5, n_col + 0.5, by = 1), col = grDevices::adjustcolor(pal["grid"], alpha.f = 0.9))
+  axis(2, at = axis_at, labels = axis_labels, las = 1, cex.axis = 0.78)
+  axis(4, at = axis_at, labels = axis_labels, las = 1, cex.axis = 0.78)
   header_labels <- sub("^Scale:", "Scale:\n", headers$Header)
   header_cex <- min(0.78, 0.78 * 0.9 / max(graphics::strwidth(
     header_labels, cex = 0.78 / graphics::par("cex"))))
-  graphics::mtext(header_labels, side = 3, at = seq_len(n_col),
+  mtext(header_labels, side = 3, at = seq_len(n_col),
                   line = 0.8, cex = max(0.6, header_cex))
   if (header_cex < 0.6) warning(
     "FACETS-style column headings need more space; use a wider device.", call. = FALSE)
@@ -763,7 +763,7 @@ draw_wright_facets_style <- function(plot_data,
                               family = "mono") > 0.9)) warning(
       "FACETS-style frequency stars exceed their column; increase `persons_per_star` or use a wider device.",
       call. = FALSE)
-    graphics::text(
+    text(
       x = person_x,
       y = person_freq$RulerValue,
       labels = person_freq$Stars,
@@ -811,7 +811,7 @@ draw_wright_facets_style <- function(plot_data,
             (head(label_heights, -1L) + tail(label_heights, -1L)) / 2))) {
         warning("FACETS-style facet labels need more space; use a taller or wider device, increase `rows_per_logit`, or use `renderer = 'native'`.", call. = FALSE)
       }
-      graphics::text(
+      text(
         x = x_pos,
         y = cell$RulerValue,
         labels = cell_labels,
@@ -831,7 +831,7 @@ draw_wright_facets_style <- function(plot_data,
       moved <- is.finite(raw_label_y) & is.finite(label_y) &
         abs(raw_label_y - label_y) > sqrt(.Machine$double.eps)
       if (any(moved)) {
-        graphics::segments(
+        segments(
           x0 = x_pos - 0.04,
           y0 = raw_label_y[moved],
           x1 = x_pos + 0.04,
@@ -840,7 +840,7 @@ draw_wright_facets_style <- function(plot_data,
           lwd = 0.8
         )
       }
-      graphics::text(
+      text(
         x = x_pos,
         y = label_y,
         labels = as.character(sub$DisplayLabel),
@@ -860,36 +860,36 @@ draw_wright_facets_style <- function(plot_data,
           ci_x <- ci_x_all[regular]
           lo <- sub$DisplayCI_Lower[regular]
           hi <- sub$DisplayCI_Upper[regular]
-          graphics::segments(
+          segments(
             x0 = ci_x, y0 = lo,
             x1 = ci_x, y1 = hi,
             col = grDevices::adjustcolor(pal["facet_level"], alpha.f = 0.65), lwd = 1
           )
-          graphics::segments(
+          segments(
             x0 = ci_x - 0.035, y0 = lo,
             x1 = ci_x + 0.035, y1 = lo,
             col = grDevices::adjustcolor(pal["facet_level"], alpha.f = 0.65)
           )
-          graphics::segments(
+          segments(
             x0 = ci_x - 0.035, y0 = hi,
             x1 = ci_x + 0.035, y1 = hi,
             col = grDevices::adjustcolor(pal["facet_level"], alpha.f = 0.65)
           )
           if (any(sub$CIClippedLower[regular])) {
             lower_marker <- regular & sub$CIClippedLower
-            graphics::points(
+            points(
               x = ci_x_all[lower_marker], y = yr[1],
               pch = 25, bg = "white", col = pal["facet_level"], cex = 0.62
             )
           }
           if (any(sub$CIClippedUpper[regular])) {
             upper_marker <- regular & sub$CIClippedUpper
-            graphics::points(
+            points(
               x = ci_x_all[upper_marker], y = yr[2],
               pch = 24, bg = "white", col = pal["facet_level"], cex = 0.62
             )
           }
-          graphics::points(
+          points(
             x = ci_x,
             y = sub$DisplayEstimate[regular],
             pch = 16,
@@ -904,7 +904,7 @@ draw_wright_facets_style <- function(plot_data,
             25,
             ifelse(sub$BoundaryEnd[boundary_interval] == "upper", 24, 23)
           )
-          graphics::points(
+          points(
             x = ci_x_all[boundary_interval],
             y = sub$DisplayEstimate[boundary_interval],
             pch = boundary_pch,
@@ -929,7 +929,7 @@ draw_wright_facets_style <- function(plot_data,
     ]
     if (nrow(step_sub) > 0L) {
       step_y <- suppressWarnings(as.numeric(step_sub$DrawValue))
-      graphics::segments(
+      segments(
         x0 = x_pos - 0.34, y0 = step_y,
         x1 = x_pos + 0.34, y1 = step_y,
         col = pal["step_threshold"], lwd = 1.5
@@ -951,7 +951,7 @@ draw_wright_facets_style <- function(plot_data,
         function(value) paste(strwrap(value, width = 20L), collapse = "\n"),
         character(1)
       )
-      graphics::text(
+      text(
         x = x_pos,
         y = step_y,
         labels = draw_labels,
@@ -964,7 +964,7 @@ draw_wright_facets_style <- function(plot_data,
       , drop = FALSE
     ]
     if (nrow(half_sub) > 0L) {
-      graphics::segments(
+      segments(
         x0 = x_pos - 0.22, y0 = half_sub$DrawValue,
         x1 = x_pos + 0.22, y1 = half_sub$DrawValue,
         col = grDevices::adjustcolor(pal["step_threshold"], alpha.f = 0.55),
@@ -973,7 +973,7 @@ draw_wright_facets_style <- function(plot_data,
     }
   }
 
-  if (length(footer_lines)) graphics::mtext(
+  if (length(footer_lines)) mtext(
     footer_lines, side = 1, line = 1.5 + 0.75 * seq_along(footer_lines),
     adj = 0, cex = 0.67, col = "gray35"
   )

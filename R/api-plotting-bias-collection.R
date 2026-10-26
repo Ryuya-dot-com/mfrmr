@@ -120,13 +120,13 @@ plot.mfrm_bias_collection <- function(x, pair = NULL,
   graphics::par(mex = .8)
   left <- label_width / (graphics::par("csi") * graphics::par("mex")) + 1.2
   graphics::par(mar = c(4.5, max(4, left), 1, 1))
-  graphics::plot(NA_real_, NA_real_, xlim = limits,
+  plot(NA_real_, NA_real_, xlim = limits,
     ylim = c(.5, max(1, nrow(overview)) + .5), yaxt = "n",
     xlab = out$data$xlab, ylab = "")
-  graphics::abline(v = 0, col = style$neutral, lty = 2)
-  graphics::axis(2, at = rev(seq_len(nrow(overview))), labels = labels,
+  abline(v = 0, col = style$neutral, lty = 2)
+  axis(2, at = rev(seq_len(nrow(overview))), labels = labels,
     las = 1, tick = FALSE, cex.axis = .8)
-  graphics::points(table[["Bias Size"]][shown], table$PlotY[shown],
+  points(table[["Bias Size"]][shown], table$PlotY[shown],
     pch = ifelse(table$ScreenAvailable[shown], 16, 1), cex = .9, col = style$axis)
   invisible(out)
 }

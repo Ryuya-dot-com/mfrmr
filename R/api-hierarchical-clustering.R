@@ -23,6 +23,7 @@
 #'   `summary()` returns the size/silhouette table. `plot()` invisibly returns
 #'   `mfrm_plot_data`; dendrogram data include the tree, leaf order, memberships,
 #'   group count, and excluded IDs.
+#' @inheritSection mfrm_cluster Reading clustering metrics
 #' @details
 #' Uses [stats::hclust()] followed by [stats::cutree()] at the requested `k`.
 #' Feature types, scaling, weights, missingness handling, silhouette definition,

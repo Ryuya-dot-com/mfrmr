@@ -132,6 +132,7 @@ test_that("estimate_bias rejects invalid fit object", {
 
 test_that("estimate_bias rejects invalid diagnostics object", {
   fake_fit <- structure(list(), class = c("mfrm_fit", "list"))
+  expect_error(estimate_bias(fake_fit, facet_a = "R", facet_b = "C"), "diagnostics.*required")
   expect_error(
     estimate_bias(fake_fit, list(), facet_a = "R", facet_b = "C"),
     "diagnose_mfrm"

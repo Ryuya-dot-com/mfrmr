@@ -10,6 +10,7 @@ stop_if_product_slopes <- function(fit, helper) {
   if (mfrm_has_product_slopes(fit)) {
     stop(new_gpcm_scope_error(paste0("`", helper, "` is not available for two slope families. ",
       "Use summary(fit) and mfrm_curve_intervals(fit, newdata) for fitted curves without intervals; ",
+      "category_curves_report(fit, newdata = contexts) supplies full-context curves and cumulative thresholds without intervals. ",
       "confint(fit, parm = 'slopes') separately checks experimental component log-Wald intervals. ",
       "mfrm_response_diagnostics(fit) supplies descriptive posterior residuals with the fitted integration method. ",
       "An explicit method = 'profile' call can separately review one named component slope. ",
@@ -197,6 +198,8 @@ mfrm_gmfrm_common_setup <- function(data, max_score,
 # sampling-coverage certificate. Reuse the full marginal information: frozen-Q
 # curvature and the inverse slope block are not the covariance of joint estimates.
 mfrm_gpcm_product_inference <- function(fit) {
+  reused <- mfrmr_gmfrm_inference_reuse(fit)
+  if (!is.null(reused)) return(reused)
   checks <- data.frame(Check = character(), Passed = logical(), Detail = character())
   out <- list(covariance = NULL, information = NULL, checks = checks,
     check = list(eligible = FALSE, review = "Two-family inference was not evaluated."))

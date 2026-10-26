@@ -401,41 +401,41 @@ plot.mfrm_multivariate_gstudy <- function(x, score = NULL, weights = NULL,
         graphics::par("csi") + 2)
       graphics::par(mar = c(4.5, left, if (nrow(panels) > 1L) 2.5 else 1, .5))
       position <- rev(seq_len(nrow(part)))
-      graphics::plot(limits, c(.5, nrow(part) + .5), type = "n", yaxt = "n",
+      plot(limits, c(.5, nrow(part) + .5), type = "n", yaxt = "n",
         xlab = out$data$x_label, ylab = "", cex.lab = .8, cex.axis = .8)
-      graphics::axis(2, at = position, labels = labels, las = 1, cex.axis = .75, tick = FALSE)
-      graphics::abline(v = 0, lty = 2, col = style$grid)
+      axis(2, at = position, labels = labels, las = 1, cex.axis = .75, tick = FALSE)
+      abline(v = 0, lty = 2, col = style$grid)
       if (intervals) {
         ok <- part$IntervalAvailable
-        graphics::segments(part$Lower[ok], position[ok], part$Upper[ok], position[ok], col = style$foreground)
-        for (endpoint in c("Lower", "Upper")) graphics::segments(part[[endpoint]][ok], position[ok] - .09,
+        segments(part$Lower[ok], position[ok], part$Upper[ok], position[ok], col = style$foreground)
+        for (endpoint in c("Lower", "Upper")) segments(part[[endpoint]][ok], position[ok] - .09,
           part[[endpoint]][ok], position[ok] + .09, col = style$foreground)
-        graphics::points(part$Estimate[!ok], position[!ok], pch = 0, cex = 1.5, col = style$foreground)
-      } else graphics::segments(0, position, part$Estimate, position, col = style$foreground)
-      graphics::points(part$Estimate, position, pch = ifelse(part$Estimate < 0, 1, 16), col = style$foreground)
+        points(part$Estimate[!ok], position[!ok], pch = 0, cex = 1.5, col = style$foreground)
+      } else segments(0, position, part$Estimate, position, col = style$foreground)
+      points(part$Estimate, position, pch = ifelse(part$Estimate < 0, 1, 16), col = style$foreground)
     } else {
       graphics::par(mar = c(3.3, 5.5, 3.5, .5))
       q <- length(score)
-      graphics::plot(c(.5, q + .5), c(.5, q + .5), type = "n", axes = FALSE,
+      plot(c(.5, q + .5), c(.5, q + .5), type = "n", axes = FALSE,
         xlab = "", ylab = "", xaxs = "i", yaxs = "i")
       xx <- match(part$Column, score); yy <- q + 1 - match(part$Row, score)
       index <- round((part$Estimate / bound + 1) * 50) + 1L
-      graphics::rect(xx - .5, yy - .5, xx + .5, yy + .5, col = colors[index], border = "white")
+      rect(xx - .5, yy - .5, xx + .5, yy + .5, col = colors[index], border = "white")
       ink <- ifelse(colMeans(grDevices::col2rgb(colors[index])) < 140, "white", "black")
-      graphics::text(xx, yy, trimws(formatC(part$Estimate, format = "g", digits = 3)), col = ink, cex = .8)
+      text(xx, yy, trimws(formatC(part$Estimate, format = "g", digits = 3)), col = ink, cex = .8)
       score_labels <- vapply(score, function(s) paste(strwrap(s, 14), collapse = "\n"), character(1))
-      graphics::axis(1, at = seq_len(q), labels = score_labels, tick = FALSE, cex.axis = .75, gap.axis = -1)
-      graphics::axis(2, at = rev(seq_len(q)), labels = score_labels, las = 1, tick = FALSE, cex.axis = .75)
+      axis(1, at = seq_len(q), labels = score_labels, tick = FALSE, cex.axis = .75, gap.axis = -1)
+      axis(2, at = rev(seq_len(q)), labels = score_labels, las = 1, tick = FALSE, cex.axis = .75)
     }
-    if (nrow(panels) > 1L || type == "covariance") graphics::mtext(
+    if (nrow(panels) > 1L || type == "covariance") mtext(
       paste(strwrap(panels$Label[i], 28), collapse = "\n"), side = 3, line = .5, cex = .85)
   }
   if (type == "covariance") {
     graphics::par(mar = c(2.7, 5.5, .2, 1), pty = "m")
-    graphics::image(seq(-1, 1, length.out = 101), 1, matrix(seq_len(101), ncol = 1),
+    image(seq(-1, 1, length.out = 101), 1, matrix(seq_len(101), ncol = 1),
       col = colors, axes = FALSE, xlab = "", ylab = "")
-    graphics::axis(1, at = c(-1, 0, 1), labels = format(signif(c(-bound, 0, bound), 3), trim = TRUE), cex.axis = .8)
-    graphics::mtext("Variance / covariance", side = 1, line = 1.6, cex = .8)
+    axis(1, at = c(-1, 0, 1), labels = format(signif(c(-bound, 0, bound), 3), trim = TRUE), cex.axis = .8)
+    mtext("Variance / covariance", side = 1, line = 1.6, cex = .8)
   }
   invisible(out)
 }

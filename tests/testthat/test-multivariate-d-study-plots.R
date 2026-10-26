@@ -666,7 +666,7 @@ test_that("single metrics and optional references use the requested scale", {
   local_mocked_bindings(abline = function(..., h = NULL) {
     if (!is.null(h)) h <<- h
     original_abline(..., h = h)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   expect_no_warning(plot(d, type = "sem", metric = "AbsoluteSEM", reference = 10))
   expect_equal(h, 10)
   if (requireNamespace("ggplot2", quietly = TRUE)) {

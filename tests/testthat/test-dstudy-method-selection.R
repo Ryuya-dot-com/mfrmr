@@ -25,6 +25,10 @@ test_that("explicit two-facet methods preserve estimates and source context", {
   expect_identical(ci$MethodCode, rep(c("approximate_f", "mean_square_region"), each = 2))
   expect_equal(ci$Estimate, rep(subset(d$coefficients, Kind == "Composite")$Phi, 2))
   expect_true(all(ci$Available)); expect_true(all(grepl("Experimental", ci$Validation)))
+  expect_true(all(grepl("undercoverage documented",
+    ci$Validation[ci$MethodCode == "approximate_f"], fixed = TRUE)))
+  expect_true(all(grepl("conservative joint coverage under the normal model",
+    ci$Validation[ci$MethodCode == "mean_square_region"], fixed = TRUE)))
   expect_identical(d, original)
   expect_equal(attr(ci, "weights"), c(Content = .5, Organization = .5))
   expect_length(attr(ci, "diagnostics"), 4)

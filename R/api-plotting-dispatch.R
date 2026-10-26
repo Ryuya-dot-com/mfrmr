@@ -1,9 +1,10 @@
 # Public plot methods reuse the existing numerical and drawing implementations.
-.mfrm_plot_call <- function(fun, x, args = list()) {
+.mfrm_plot_call <- function(fun, x, args = list(), additional_allowed = character()) {
   nms <- names(args)
   if (length(args) && (is.null(nms) || anyNA(nms) || any(!nzchar(nms)) || anyDuplicated(nms)))
     stop("Name each plot argument once.", call. = FALSE)
   allowed <- setdiff(names(formals(fun)), c(names(formals(fun))[1L], "..."))
+  allowed <- union(allowed, additional_allowed)
   if ("..." %in% names(formals(fun))) allowed <- c(allowed,
     "col", "pch", "lty", "lwd", "cex", "xlim", "ylim", "xlab", "ylab",
     "main", "sub", "cex.axis", "cex.lab", "cex.main", "las", "bty", "axes", "xaxt", "yaxt")
@@ -94,7 +95,11 @@
   } else if (type == "facet_equivalence") {
     args <- .mfrm_plot_rename(args, "view", "type")
   }
-  .mfrm_plot_call(get(name, envir = environment(.mfrm_dispatch_fit_plot)), x, args)
+  additional_allowed <- if (identical(name, "plot_fair_average")) {
+    setdiff(names(formals(fair_average_table)), c("fit", "diagnostics", "..."))
+  } else character()
+  .mfrm_plot_call(get(name, envir = environment(.mfrm_dispatch_fit_plot)), x, args,
+    additional_allowed = additional_allowed)
 }
 
 #' Plot design-weighted information or conditional precision

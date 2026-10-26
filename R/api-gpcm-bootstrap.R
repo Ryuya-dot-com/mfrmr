@@ -101,6 +101,9 @@
 #'   calculation is performed for recording. Older saved results may lack these
 #'   fields. LRT results also have `comparison` and `test`. Printing or
 #'   changing the interval level never refits. Failed replicates remain present.
+#'   `summary()` returns planned/available/unresolved counts, settings and either
+#'   the saved likelihood-ratio test or default slope intervals, plus retained
+#'   numerical cautions. It does not refit or discard unresolved trials.
 #'   If a saved analysis records selected refit updates in `settings$recheck`,
 #'   printing and slope intervals retain a caution that it is not a complete
 #'   rerun under one procedure. Sampling tables preserve that record and any
@@ -364,6 +367,19 @@ confint.mfrm_gpcm_bootstrap <- function(object, parm = "slopes", level = .95,
     diagnostic_checks_scope = object$settings$diagnostic_checks_scope)
   attr(out, "source") <- mfrm_gpcm_inference_source(object$source)
   out
+}
+
+#' @rdname bootstrap_mfrm_gpcm
+#' @export
+summary.mfrm_gpcm_bootstrap <- function(object, ...) {
+  rlang::check_dots_empty()
+  available <- sum(object$trials$Available %in% TRUE)
+  cautions <- unique(object$checks$BootstrapCaution[object$checks$BootstrapEligible %in% TRUE])
+  list(overview = data.frame(Planned = nrow(object$trials), Available = available,
+      Unresolved = nrow(object$trials) - available),
+    settings = object$settings, test = object$test,
+    intervals = if (is.null(object$test)) confint(object) else NULL,
+    cautions = cautions[!is.na(cautions) & nzchar(cautions)])
 }
 
 #' @rdname bootstrap_mfrm_gpcm

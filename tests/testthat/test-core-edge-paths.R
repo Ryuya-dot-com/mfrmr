@@ -373,7 +373,7 @@ test_that("category_warnings_text reports disordered thresholds", {
   cat_tbl <- dplyr::tibble(
     Category = 1:5,
     Count = c(50, 60, 70, 80, 90),
-    AvgPersonMeasure = c(-1, -0.5, 0, 0.5, 1)
+    AvgMeasure = c(-1, -0.5, 0, 0.5, 1)
   )
   step_tbl <- dplyr::tibble(
     StepFacet = c("Common", "Common", "Common", "Common"),
@@ -652,7 +652,7 @@ test_that("category_warnings_text handles no warnings", {
   cat_tbl <- dplyr::tibble(
     Category = 1:3,
     Count = c(50, 50, 50),
-    AvgPersonMeasure = c(-1, 0, 1)
+    AvgMeasure = c(-1, 0, 1)
   )
   result <- fn(cat_tbl, step_tbl = NULL)
   expect_equal(result, "No warnings among the available category summaries; this does not establish category adequacy.")
@@ -663,7 +663,7 @@ test_that("category_warnings_text reports unused categories", {
   cat_tbl <- dplyr::tibble(
     Category = 1:3,
     Count = c(0, 50, 50),
-    AvgPersonMeasure = c(NA, 0, 1)
+    AvgMeasure = c(NA, 0, 1)
   )
   result <- fn(cat_tbl)
   expect_true(grepl("Unused categories", result))
@@ -674,7 +674,7 @@ test_that("category_warnings_text reports non-monotonic averages", {
   cat_tbl <- dplyr::tibble(
     Category = 1:4,
     Count = c(50, 50, 50, 50),
-    AvgPersonMeasure = c(-1, 0, 1, 0.5)  # not monotonic
+    AvgMeasure = c(-1, 0, 1, 0.5)  # not monotonic
   )
   result <- fn(cat_tbl)
   expect_true(grepl("not monotonic", result))
@@ -923,7 +923,7 @@ test_that("category_warnings_text reports DiffPercent and ZSTD warnings", {
   cat_tbl <- dplyr::tibble(
     Category = 1:3,
     Count = c(50, 50, 50),
-    AvgPersonMeasure = c(-1, 0, 1),
+    AvgMeasure = c(-1, 0, 1),
     DiffPercent = c(0, 6, -7),
     InfitZSTD = c(0.5, 2.5, 0.5),
     OutfitZSTD = c(0.5, 0.5, 2.5)

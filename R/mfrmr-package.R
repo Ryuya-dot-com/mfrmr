@@ -829,7 +829,7 @@
 #' @importFrom dplyr case_when coalesce count desc distinct everything filter group_by
 #' @importFrom dplyr if_all inner_join lag last left_join mutate n n_distinct pull rename
 #' @importFrom dplyr row_number rowwise select slice slice_head slice_tail summarise
-#' @importFrom dplyr summarize transmute ungroup
+#' @importFrom dplyr starts_with summarize transmute ungroup
 #' @importFrom tidyr drop_na expand_grid pivot_wider replace_na unite
 #' @importFrom tibble as_tibble column_to_rownames tibble
 #' @importFrom purrr map map_dbl map_dfr pmap_chr
@@ -838,9 +838,13 @@
 #' @importFrom psych cor.smooth describe principal
 #' @importFrom utils combn data globalVariables head modifyList packageVersion
 #' @importFrom utils read.csv tail write.csv
+#' @importFrom graphics abline arrows axis barplot dotchart hist image legend lines mtext plot plot.new points rect segments text title
+#' @importFrom stats cutree hclust kmeans nlminb optim optimHess optimize qt
+#' @importFrom utils zip
+#' @importFrom cli cli_progress_bar cli_progress_done cli_progress_update
 #' @importFrom lifecycle deprecate_soft
 #' @importFrom rlang .data
-#' @importFrom stats confint na.omit optim p.adjust pchisq predict pt rnorm sd setNames uniroot
+#' @importFrom stats ave confint na.omit optim p.adjust pchisq predict pt qnorm rnorm sd setNames uniroot
 #'
 #' @name mfrmr-package
 "_PACKAGE"

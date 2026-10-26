@@ -64,7 +64,8 @@ narrow:
 \item binary responses only;
 \item exactly one difficulty-oriented non-person facet, treated as the item
 facet, with unanchored sum-to-zero locations and default binary steps;
-\item active latent-regression \code{MML};
+\item active latent-regression \code{MML} with estimated residual variance; an
+explicitly fixed \code{population_sd} requires a separately matched model;
 \item exactly one numeric person covariate beyond the intercept;
 \item complete person-by-item rectangular data with unit weights;
 \item no group anchors, dummy facets, interactions or shrinkage.

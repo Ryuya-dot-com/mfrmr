@@ -152,6 +152,10 @@
 #' Fit-derived forecasts must match the source fit when supplied to archive or
 #' replay helpers. Explicit `sim_spec` forecasts remain separate scenarios;
 #' attaching them does not establish that their assumptions match the fit.
+#' Fit-derived forecasts with a fixed `population_sd` are unavailable: the
+#' design-simulation refits do not preserve that variance constraint or an
+#' anchor-defined origin. An explicit `sim_spec` can describe a separate
+#' forecasting scenario, but does not reproduce those source-fit constraints.
 #' See [mfrmr_compatibility_layer] for migration and replay behavior.
 #' @export
 predict_mfrm_population <- function(fit = NULL,
@@ -178,6 +182,9 @@ predict_mfrm_population <- function(fit = NULL,
   if (has_fit) {
     if (!inherits(fit, "mfrm_fit")) {
       stop("`fit` must be output from fit_mfrm().", call. = FALSE)
+    }
+    if (!is.null(fit$population$fixed_sd %||% fit$config$population_spec$fixed_sd)) {
+      stop("Fit-derived population forecasts do not yet preserve fixed `population_sd` or an anchor-defined origin during simulation refits. Supply an explicit `sim_spec` only for a separately declared forecasting scenario; it does not reproduce those source-fit constraints.", call. = FALSE)
     }
     default_fit_method <- as.character(fit$summary$Method[1])
     if (!is.character(default_fit_method) || !nzchar(default_fit_method)) {
@@ -869,6 +876,8 @@ prepare_mfrm_prediction_population <- function(fit,
 
   scaffold$coefficients <- fit_population$coefficients
   scaffold$sigma2 <- fit_population$sigma2
+  fixed_sd <- fit_population$fixed_sd %||% fit$config$population_spec$fixed_sd
+  if (!is.null(fixed_sd)) scaffold$fixed_sd <- fixed_sd
   scaffold$converged <- isTRUE(fit_population$converged)
   scaffold$posterior_basis <- "population_model"
 
@@ -1110,7 +1119,7 @@ prediction_jml_calibration_review <- function(fit) {
         max(abs(gradient)) > 1e-4)
       stop("The joint objective must agree within 1e-6 and its maximum absolute gradient must be <= 1e-4.")
     # Includes all free Person and structural parameters; no regularization or inversion.
-    information <- stats::optimHess(par, evaluator$value, evaluator$gradient)
+    information <- optimHess(par, evaluator$value, evaluator$gradient)
     if (!identical(dim(information), rep(length(par), 2L)) || any(!is.finite(information)))
       stop("Joint JML curvature is unavailable.")
     chol(information)
@@ -1287,6 +1296,7 @@ prediction_source_scoring_readiness <- function(fit, covariance = NULL) {
   if (population_active) parameter_ready <- parameter_ready &&
     isTRUE(pop$active) && length(pop$sigma2) == 1L && is.finite(pop$sigma2) &&
     pop$sigma2 > 0 && length(pop$coefficients) > 0L && all(is.finite(pop$coefficients)) &&
+    identical(fit$population$fixed_sd, pop$fixed_sd) &&
     isTRUE(all.equal(fit$population$sigma2, pop$sigma2, tolerance = 1e-10)) &&
     isTRUE(all.equal(as.numeric(fit$population$coefficients), as.numeric(pop$coefficients), tolerance = 1e-10)) &&
     identical(as.character(fit$population$design_columns), names(pop$coefficients))
@@ -1424,7 +1434,7 @@ prediction_validate_interval_record <- function(x) {
     identical(unname(x$estimates$IntervalLevel), rep(unname(level), nrow(x$estimates))) &&
     identical(unname(x$estimates$ScoringAlgorithm), rep(unname(algorithm), nrow(x$estimates)))
   if (!isTRUE(valid))
-    stop("Two-family scoring output has inconsistent interval records. Re-score to change the interval level or algorithm; saved bounds cannot be relabelled.", call. = FALSE)
+    stop("Scoring output has inconsistent interval records. Re-score to change the interval level or algorithm; saved bounds cannot be relabelled.", call. = FALSE)
   invisible(x)
 }
 
@@ -2477,6 +2487,8 @@ predict_mfrm_units <- function(fit,
     adaptive_quad_points, population_spec = scoring_population
   )
   out$settings$adaptive_quad_points <- adaptive_quad_points
+  if (is.null(scoring_prior) && !is.null(population_ready$spec$fixed_sd))
+    out$settings$population_fixed_sd <- population_ready$spec$fixed_sd
   out$notes <- c(out$notes,
     "Scoring integration compares the reported EAP and SD with adaptive reference orders under the same calibration and prior. Passing does not validate the scoring prior for another population.")
   out$settings$score_integration_review <- prediction_score_integration_review(

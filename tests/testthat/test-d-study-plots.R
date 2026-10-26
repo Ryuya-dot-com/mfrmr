@@ -61,7 +61,7 @@ test_that("D-study curves keep every condition fixed and surfaces refuse mixed c
     args <- list(...)
     if (length(args) >= 3L) labels <<- c(labels, as.character(args[[3L]]))
     original_text(...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   expect_no_warning(plot(partial, type = "contour", panel_by = "n_Occasion"))
   expect_true(any(grepl("Estimates unavailable", labels, fixed = TRUE)))
   expect_false(any(grepl("constant surface", labels, fixed = TRUE)))
@@ -71,7 +71,8 @@ test_that("D-study curves keep every condition fixed and surfaces refuse mixed c
   local_mocked_bindings(title = function(main = NULL, ...) {
     if (!is.null(main)) titles <<- c(titles, main)
     original_title(main = main, ...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
+  local_graphics_headings(function(main) titles <<- c(titles, main))
   expect_no_warning(plot(sensitive, panel_grid = c("Metric", "ResidualScaling")))
   expect_true(all(startsWith(titles[1:3], "G / ")))
   expect_true(all(startsWith(titles[4:6], "Phi / ")))

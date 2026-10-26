@@ -360,6 +360,74 @@ carry crosses, so unavailable pairs remain distinct from zero in monochrome.
 IDs and number of imputations. Hiding headings with `ggplot2::labs()` does
 not remove those records or change the meaning of the fractions.
 
+## Custom distribution plots
+
+Profile means do not show individual variation. Retrieve one original-unit
+value per rater and feature, with group membership and inclusion status:
+
+```{r profile-observations}
+values <- plot_data(one_completion, "observations", type = "profile",
+  feature = "ExperienceYears")
+head(values)
+```
+
+`Value` is the selected completion's experience in years. `Included = FALSE`
+retains omitted raters, even when this particular feature is observed. In this
+completed example, missing values have been imputed; retain the original
+`features$missing` record to distinguish them from observed attributes.
+A completion's values are not repeated independent observations, and its
+arbitrary group labels must not be averaged across imputations.
+
+The following raincloud combines a half-density, a box and individual points.
+All plotting choices remain editable in ordinary ggplot2. The density is a
+visual smoothing of a discrete years variable; for small groups or ordinal
+rubric scores prefer points/counts. Group differences are partly built into the
+clustering and are not independent tests validating the groups.
+
+```{r raincloud, fig.width=7, fig.height=4.5}
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  displayed <- subset(values, Included & is.finite(Value))
+  displayed$Group <- factor(displayed$Cluster)
+  displayed$Position <- as.integer(displayed$Group)
+  clouds <- lapply(split(displayed, displayed$Group), function(d) {
+    if (nrow(d) < 5L || length(unique(d$Value)) < 2L) return(NULL)
+    density <- stats::density(d$Value, from = min(d$Value), to = max(d$Value))
+    center <- d$Position[1]
+    data.frame(X = c(center, center + .38*density$y/max(density$y), center),
+      Value = c(density$x[1], density$x, tail(density$x, 1)),
+      Group = d$Group[1])
+  })
+  clouds <- do.call(rbind, clouds)
+  raincloud <- ggplot2::ggplot(displayed,
+    ggplot2::aes(x = Position, y = Value, group = Group))
+  if (!is.null(clouds)) raincloud <- raincloud +
+    ggplot2::geom_polygon(data = clouds,
+      ggplot2::aes(x = X, y = Value, group = Group, fill = Group),
+      inherit.aes = FALSE, alpha = .35, colour = NA)
+  raincloud <- raincloud +
+    ggplot2::geom_boxplot(width = .08, outlier.shape = NA) +
+    ggplot2::geom_point(ggplot2::aes(x = Position - .15), alpha = .5, size = 1.2,
+      position = ggplot2::position_jitter(width = .045, height = 0, seed = 1)) +
+    ggplot2::scale_x_continuous(breaks = seq_along(levels(displayed$Group)),
+      labels = paste("Group", levels(displayed$Group))) +
+    ggplot2::labs(x = NULL, y = "Rating experience (years)") +
+    ggplot2::theme_minimal() + ggplot2::theme(legend.position = "none")
+  print(raincloud)
+}
+```
+
+```{r save-profile-values, eval=FALSE}
+write.csv(values, "rater-experience-long.csv", row.names = FALSE)
+saveRDS(one_completion, "feature-groups.rds")
+ggplot2::ggsave("experience-raincloud.pdf", raincloud, width = 7, height = 4.5)
+```
+
+For a selected wide plot table, `plot_data(..., format = "long", value_cols = ...)`
+gathers explicitly chosen quantities; other columns remain identifiers or metadata.
+Matrices retain row/column indices and labels, including missing cells.
+The [network/reporting lesson](mfrmr-networks-and-reporting.html) shows how to
+export node, edge and coordinate tables without adopting a fixed figure style.
+
 ## Compare PAM with a hierarchy
 
 A hierarchy asks which groups merge as dissimilarity increases. Fit it
@@ -424,7 +492,12 @@ performance assessment,
 [Wesolowski (2019), *Predicting Operational Rater-Type Classifications Using
 Rasch Measurement Theory and Random Forests*](https://doi.org/10.1111/jedm.12227),
 reported nonhierarchical k-means clustering of 29 differential rater functioning
-indices, followed by prediction of the resulting labels.
+indices, followed by random-forest prediction of the resulting labels.
+The forest is supervised prediction, not the clustering step. Avoid using
+labels discovered from the full sample as if out-of-bag classification alone
+validated those groups. For **residual** profiles, use `mfrm_residual_network()`
+then `mfrm_report()`; its help explains its different features, common-person
+correlation distances, validation requirements and RF follow-up limitations.
 
 Those analyses ask about patterns of rating behaviour. This tutorial instead
 groups external backgrounds such as experience and specialty. Its Gower

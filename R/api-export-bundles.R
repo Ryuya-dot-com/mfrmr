@@ -217,6 +217,8 @@ build_replay_fit_mfrm_lines <- function(replay_inputs,
   # used a population model.
   if (isTRUE(fit_population$active)) {
     out <- c(out,
+      add_optional("population_sd", fit_population$fixed_sd %||%
+        cfg$population_spec$fixed_sd %||% ri$population_sd),
       paste0("  population_formula = ",
              render_r_object_literal(
                fit_population$formula %||% stats::as.formula(~ 1)
@@ -692,6 +694,7 @@ build_mfrm_manifest <- function(fit,
     } else {
       NULL
     },
+    population_fixed_sd = fit_population$fixed_sd %||% cfg$population_spec$fixed_sd,
     population_person_id = as.character(fit_population$person_id %||% NULL),
     population_policy = as.character(fit_population$policy %||% NULL),
     population_design_columns = paste(as.character(fit_population$design_columns %||% character(0)), collapse = ", "),
@@ -779,6 +782,7 @@ build_mfrm_manifest <- function(fit,
     } else {
       NULL
     },
+    fit_population_fixed_sd = fit_population$fixed_sd %||% cfg$population_spec$fixed_sd,
     fit_population_person_id = as.character(fit_population$person_id %||% NULL),
     fit_population_policy = as.character(fit_population$policy %||% NULL),
     fit_population_xlevel_variables = compact_population_coding_variables(fit_population$xlevels),
@@ -1858,6 +1862,7 @@ build_mfrm_replay_script <- function(fit,
     } else {
       NULL
     },
+    fit_population_fixed_sd = fit_population$fixed_sd %||% cfg$population_spec$fixed_sd,
     fit_population_person_id = fit_population_person_id,
     fit_population_policy = as.character(fit_population$policy %||% NULL),
     fit_population_person_rows_replay = if (is.data.frame(fit_population$person_table_replay)) {
@@ -2006,6 +2011,9 @@ validate_conquest_overlap_fit <- function(fit) {
   }
   cfg <- fit$config %||% list()
   pop <- fit$population %||% list()
+  if (!is.null(pop$fixed_sd %||% cfg$population_spec$fixed_sd)) {
+    stop("The ConQuest overlap template estimates residual variance and does not preserve fixed `population_sd`. Use a separately matched external model for this fit.", call. = FALSE)
+  }
   method <- toupper(as.character(cfg$method_input %||% cfg$method %||% NA_character_))
   model <- toupper(as.character(cfg$model %||% NA_character_))
   posterior_basis <- as.character(cfg$posterior_basis %||% pop$posterior_basis %||% "legacy_mml")
@@ -2503,7 +2511,8 @@ conquest_overlap_component_sensitivity <- function(component) {
 #' - binary responses only;
 #' - exactly one difficulty-oriented non-person facet, treated as the item
 #'   facet, with unanchored sum-to-zero locations and default binary steps;
-#' - active latent-regression `MML`;
+#' - active latent-regression `MML` with estimated residual variance; an
+#'   explicitly fixed `population_sd` requires a separately matched model;
 #' - exactly one numeric person covariate beyond the intercept;
 #' - complete person-by-item rectangular data with unit weights;
 #' - no group anchors, dummy facets, interactions or shrinkage.
@@ -3029,12 +3038,18 @@ resolve_conquest_overlap_column <- function(df, column, arg, role) {
   names(df)[matched_idx]
 }
 
+conquest_overlap_numeric_estimate <- function(values) {
+  # Factor codes are not the reported numerical estimates.
+  if (is.factor(values)) values <- as.character(values)
+  suppressWarnings(as.numeric(values))
+}
+
 normalize_conquest_overlap_table_component <- function(df,
                                                        id_col,
                                                        estimate_col,
                                                        id_name,
                                                        keep_extra_columns = TRUE) {
-  estimate_numeric <- suppressWarnings(as.numeric(df[[estimate_col]]))
+  estimate_numeric <- conquest_overlap_numeric_estimate(df[[estimate_col]])
   out <- data.frame(
     Identifier = trimws(as.character(df[[id_col]])),
     Estimate = estimate_numeric,
@@ -3648,9 +3663,10 @@ normalize_conquest_overlap_exports <- function(bundle,
   case_estimate_col <- resolve_export_column(
     cases, c("EAP_1", "EAP", "Estimate"), "case_file"
   )
+  # Normalization needs the original text to distinguish invalid cells from blanks.
   case_tbl <- data.frame(
     Person = trimws(as.character(cases[[case_id_col]])),
-    Estimate = suppressWarnings(as.numeric(cases[[case_estimate_col]])),
+    Estimate = cases[[case_estimate_col]],
     stringsAsFactors = FALSE
   )
   person_map <- bundle$person_map
@@ -4093,7 +4109,7 @@ review_conquest_overlap <- function(bundle,
 
   pop_tbl <- as.data.frame(bundle$mfrmr_population, stringsAsFactors = FALSE)
   pop_raw_estimate <- conquest_population[[pop_est_col]]
-  pop_numeric_estimate <- suppressWarnings(as.numeric(pop_raw_estimate))
+  pop_numeric_estimate <- conquest_overlap_numeric_estimate(pop_raw_estimate)
   cq_pop <- data.frame(
     Parameter = trimws(as.character(conquest_population[[pop_term_col]])),
     ConQuestEstimate = pop_numeric_estimate,
@@ -4169,7 +4185,7 @@ review_conquest_overlap <- function(bundle,
   item_tbl <- as.data.frame(bundle$mfrmr_item_estimates, stringsAsFactors = FALSE)
   item_tbl$MatchID <- item_match$match_ids
   item_raw_estimate <- conquest_item_estimates[[item_est_col]]
-  item_numeric_estimate <- suppressWarnings(as.numeric(item_raw_estimate))
+  item_numeric_estimate <- conquest_overlap_numeric_estimate(item_raw_estimate)
   cq_item <- data.frame(
     MatchID = trimws(as.character(conquest_item_estimates[[item_id_col]])),
     ConQuestEstimate = item_numeric_estimate,
@@ -4246,7 +4262,7 @@ review_conquest_overlap <- function(bundle,
 
   case_tbl <- as.data.frame(bundle$mfrmr_case_eap, stringsAsFactors = FALSE)
   case_raw_estimate <- conquest_case_eap[[case_est_col]]
-  case_numeric_estimate <- suppressWarnings(as.numeric(case_raw_estimate))
+  case_numeric_estimate <- conquest_overlap_numeric_estimate(case_raw_estimate)
   cq_case <- data.frame(
     Person = if (isTRUE(inputs$standardized)) as.character(conquest_case_eap[[case_person_col]]) else trimws(as.character(conquest_case_eap[[case_person_col]])),
     ConQuestEstimate = case_numeric_estimate,
@@ -6115,6 +6131,12 @@ export_normalize_summary_table_inputs <- function(summary_tables,
                                                   top_n = 10,
                                                   preview_chars = 160) {
   if (is.null(summary_tables)) return(list())
+
+  if (inherits(summary_tables, c("mfrm_report", .mfrm_study_report_classes()))) {
+    one <- export_as_summary_table_bundle(summary_tables, digits = digits,
+      top_n = top_n, preview_chars = preview_chars)
+    return(stats::setNames(list(one$bundle), one$label))
+  }
 
   summary_table_input_classes <- c(
     "mfrm_fit",

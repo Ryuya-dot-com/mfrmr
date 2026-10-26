@@ -23,7 +23,9 @@
 #' @return Invisibly, an `mfrm_plot_data` object. Its `data` contains the plotted
 #'   table or matrix, title, subtitle, legend, and excluded IDs. Heatmaps also
 #'   retain the displayed IDs and the number of imputations. Use [plot_data()]
-#'   to extract this payload for custom graphics.
+#'   to extract this payload for custom graphics. Profile plots also retain
+#'   `observations`: original-unit entity values and group/exclusion status,
+#'   suitable for custom distribution plots; see [plot_data()].
 #'   [as_ggplot()] converts imputation co-membership heatmaps using the saved
 #'   matrix, ID order, label choice, colours and imputation count. The default
 #'   and `component = "matrix"` retain the complete view and its fixed
@@ -119,15 +121,15 @@ plot.mfrm_clusters <- function(x, type = c("silhouette", "profile"),
     old <- graphics::par(mar = c(6, 7, 5, if (show_labels) 6 else 2))
     on.exit(graphics::par(old), add = TRUE)
     pos <- seq_len(nrow(tab))
-    graphics::plot(NA, xlim = c(-1, 1), ylim = c(nrow(tab) + 0.5, 0.5),
+    plot(NA, xlim = c(-1, 1), ylim = c(nrow(tab) + 0.5, 0.5),
       xlab = "Silhouette width", ylab = "", yaxt = "n", main = "")
-    graphics::abline(v = 0, col = style$grid)
-    graphics::rect(0, pos - 0.4, tab$Silhouette, pos + 0.4, border = NA,
+    abline(v = 0, col = style$grid)
+    rect(0, pos - 0.4, tab$Silhouette, pos + 0.4, border = NA,
       col = ifelse(tab$Cluster %% 2L == 1L, style$accent_primary, style$accent_secondary))
-    graphics::abline(v = average, lty = 2, col = style$foreground)
+    abline(v = average, lty = 2, col = style$foreground)
     centers <- tapply(pos, tab$Cluster, mean)
-    graphics::axis(2, at = centers, labels = paste("Group", names(centers)), las = 1)
-    if (show_labels) graphics::axis(4, at = pos, labels = tab$ID, las = 1, tick = FALSE)
+    axis(2, at = centers, labels = paste("Group", names(centers)), las = 1)
+    if (show_labels) axis(4, at = pos, labels = tab$ID, las = 1, tick = FALSE)
     return(invisible(out))
   }
   if (!is.character(feature) || length(feature) != 1L || is.na(feature) ||
@@ -142,6 +144,14 @@ plot.mfrm_clusters <- function(x, type = c("silhouette", "profile"),
   group_labels <- sprintf("Group %d (n = %d)", groups, x$cluster_summary$N)
   payload <- list(table = tab, excluded_ids = excluded, feature = feature,
     title = title, subtitle = subtitle, preset = style$name)
+  original <- x$feature_data
+  ids <- original$row_summary$ID
+  membership <- x$membership$Cluster[match(ids, x$membership$ID)]
+  reasons <- original$missing[original$missing$Feature == feature, , drop = FALSE]
+  payload$observations <- data.frame(ID = ids, Feature = feature,
+    Value = original$data[[feature]], Cluster = membership,
+    Included = !is.na(membership),
+    MissingReason = reasons$Reason[match(ids, reasons$ID)], check.names = FALSE)
   if (numeric) {
     payload$legend <- new_plot_legend(c("Mean", "Median"), rep("summary", 2),
       rep("pch", 2), c("16", "17"))
@@ -162,11 +172,11 @@ plot.mfrm_clusters <- function(x, type = c("silhouette", "profile"),
     old <- graphics::par(mar = c(6, 9, 5, 2))
     on.exit(graphics::par(old), add = TRUE)
     pos <- seq_len(nrow(tab))
-    graphics::plot(tab$Mean, pos, xlim = range(c(tab$Mean, tab$Median)),
+    plot(tab$Mean, pos, xlim = range(c(tab$Mean, tab$Median)),
       ylim = c(nrow(tab) + 0.5, 0.5), pch = 16, col = style$accent_primary,
       xlab = paste(feature, "(original units)"), ylab = "", yaxt = "n", main = "")
-    graphics::points(tab$Median, pos, pch = 17, col = style$accent_secondary)
-    graphics::axis(2, at = pos, labels = group_labels, las = 1)
+    points(tab$Median, pos, pch = 17, col = style$accent_secondary)
+    axis(2, at = pos, labels = group_labels, las = 1)
   }
   invisible(out)
 }
@@ -224,20 +234,20 @@ draw_cluster_proportions <- function(mat, title, subtitle, style, labels, captio
   on.exit(graphics::par(old), add = TRUE)
   nr <- nrow(mat)
   nc <- ncol(mat)
-  graphics::plot(NA, xlim = c(0.5, nc + 0.5), ylim = c(0.5, nr + 0.5),
+  plot(NA, xlim = c(0.5, nc + 0.5), ylim = c(0.5, nr + 0.5),
     xaxs = "i", yaxs = "i", xlab = "", ylab = "", axes = FALSE, main = "")
-  graphics::rect(0.5, 0.5, nc + 0.5, nr + 0.5, col = "grey70", border = NA)
-  graphics::image(seq(0.5, nc + 0.5), seq(0.5, nr + 0.5),
+  rect(0.5, 0.5, nc + 0.5, nr + 0.5, col = "grey70", border = NA)
+  image(seq(0.5, nc + 0.5), seq(0.5, nr + 0.5),
     t(mat[nr:1, , drop = FALSE]), add = TRUE, useRaster = TRUE,
     col = grDevices::colorRampPalette(c("white", style$accent_primary))(100),
     breaks = seq(0, 1, length.out = 101))
   if (labels) {
-    graphics::axis(1, at = seq_len(nc), labels = colnames(mat), las = 2, tick = FALSE)
-    graphics::axis(2, at = seq_len(nr), labels = rev(rownames(mat)), las = 1, tick = FALSE)
+    axis(1, at = seq_len(nc), labels = colnames(mat), las = 2, tick = FALSE)
+    axis(2, at = seq_len(nr), labels = rev(rownames(mat)), las = 1, tick = FALSE)
   }
   graphics::box()
   key <- cluster_proportion_legend(style)
-  graphics::legend(nc + 0.5 + 0.03 * nc, nr + 0.5, legend = key$label,
+  legend(nc + 0.5 + 0.03 * nc, nr + 0.5, legend = key$label,
     fill = key$value, bty = "n", xpd = NA, cex = 0.8)
 }
 

@@ -206,6 +206,28 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'
 #'   For feature selection, missingness review, and multiple-imputation examples,
 #'   see `vignette("mfrmr-external-features", package = "mfrmr")`.
+#' @section Reading clustering metrics:
+#' For entity i, a(i) is its mean dissimilarity to other members of its own
+#' group; b(i) is the smallest mean dissimilarity to any other group.
+#' Silhouette = (b - a) / max(a, b), between -1 and 1. Values near 1 indicate
+#' compact, separated placement in this fitted geometry; near zero indicates
+#' a boundary; negative values indicate closer average proximity to another
+#' group. A singleton receives 0 by convention; zero does not establish overlap.
+#' A zero denominator also receives 0. Overall means weight entities equally;
+#' cluster means use that cluster's included entities. Excluded IDs have NA.
+#' A silhouette is neither a membership probability nor evidence of stability.
+#'
+#' Gower distance is unitless in `[0, 1]` here: numeric absolute differences
+#' divided by included-sample ranges, nominal/binary mismatches, and ordinal
+#' rank differences are combined using the specified feature weights.
+#' The PAM medoid is an actual included entity minimizing within-group total
+#' dissimilarity; it is not a feature-wise mean. Profile Mean/Median/SD retain
+#' original units; categorical Proportion uses included group size as denominator.
+#' A large group or a high silhouette is not a better-performing group.
+#' Compare partitions under a fixed feature/distance definition; changing the
+#' sample, weights or scaling changes what these numbers measure.
+#' See [cluster::silhouette()] and Rousseeuw (1987),
+#' \doi{10.1016/0377-0427(87)90125-7}, for the silhouette definition.
 #' @seealso [mfrm_features()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
 #'   [mfrm_cluster_hierarchical()], [plot.mfrm_clusters()], [cluster::daisy()], [cluster::pam()]
 #' @examples
@@ -288,9 +310,9 @@ cluster_external_features <- function(x, k, weights, missing, linkage = NULL) {
     silhouette <- numeric(n)
     silhouette[as.integer(rownames(fit$silinfo$widths))] <- fit$silinfo$widths[, "sil_width"]
   } else {
-    tree <- stats::hclust(distance, method = linkage)
+    tree <- hclust(distance, method = linkage)
     tree$labels <- x$row_summary$ID[keep]
-    labels <- stats::cutree(tree, k = as.integer(k))
+    labels <- cutree(tree, k = as.integer(k))
     silhouette <- unname(cluster::silhouette(labels, distance)[, "sil_width"])
   }
   membership <- data.frame(ID = x$row_summary$ID, Cluster = NA_integer_,

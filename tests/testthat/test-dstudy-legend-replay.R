@@ -11,7 +11,7 @@ test_that("D-study legends recalculate text spacing on a resized recorded plot",
     calls[[length(calls) + 1L]] <<- c(spacing = min(diff(y)),
       height = graphics::strheight("M", cex = .8), device = graphics::par("din")[2])
     value
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   grDevices::pdf(paths[1], width = 7, height = 7)
   device <- grDevices::dev.cur()
   withr::defer(if (device %in% grDevices::dev.list()) grDevices::dev.off(device))
@@ -41,7 +41,7 @@ test_that("D-study interval forests leave room for numbered and nested plan labe
       required = max(graphics::strwidth(labels, units = "inches", cex = .8))+
         graphics::par("mgp")[2]*graphics::par("csi")*graphics::par("mex"))
     original(side = side, at = at, labels = labels, ...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   for (nested in c(FALSE, TRUE)) {
     g <- if (nested) mfrm_g_study(mfrmr_example_gtheory_nested, "Content",
       nesting = c(Rater = "Task")) else

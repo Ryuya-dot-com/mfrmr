@@ -2,7 +2,7 @@ Package: mfrmr
 Type: Package
 Title: Estimation and Diagnostics for Many-Facet Measurement Models
 Version: 0.2.4
-Date: 2026-10-21
+Date: 2026-10-26
 Config/mfrmr/release-status: candidate
 Config/mfrmr/public-version: 0.2.3.1
 Authors@R:
@@ -55,6 +55,7 @@ Imports:
     methods,
     parallel,
     stats,
+    tools,
     utils
 LinkingTo:
     cpp11
@@ -71,9 +72,12 @@ Suggests:
     knitr,
     rmarkdown,
     igraph,
+    ergm (>= 4.0),
+    network,
     lme4,
     minqa,
     nloptr,
+    numDeriv,
     ordinal,
     kableExtra,
     flextable,
@@ -87,5 +91,5 @@ Suggests:
     lpSolve
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-Config/Needs/website: pkgdown
+Config/Needs/website: pkgdown, plotly, htmlwidgets
 Config/roxygen2/version: 8.1.1

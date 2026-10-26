@@ -19,7 +19,11 @@ rater_halo_network_analysis(
   halo_contrast_review = 0.1,
   min_retained_halo_edges = 1,
   positive_only = TRUE,
-  include_graph = FALSE
+  include_graph = FALSE,
+  bootstrap = 0L,
+  conf_level = 0.95,
+  seed = NULL,
+  halo_reference = c("different_criteria", "all")
 )
 }
 \arguments{
@@ -74,6 +78,19 @@ correlations regardless of this setting; inspect \code{MeanSignedHaloWeight}
 before interpreting a review flag.}
 
 \item{include_graph}{If \code{TRUE}, include the underlying \code{igraph} object.}
+
+\item{bootstrap}{Number of person-cluster resamples for the halo contrast;
+\code{0} (default) requests no interval. At least 199 when requested; use 999
+or more for reporting and assess Monte Carlo stability.}
+
+\item{conf_level}{Confidence level for the pointwise percentile interval.}
+
+\item{seed}{Optional seed, preserving the caller's RNG state.}
+
+\item{halo_reference}{\code{"different_criteria"} compares within-rater
+cross-criterion correlations with between-rater cross-criterion
+correlations. \code{"all"} also includes same-criterion between-rater edges,
+matching the paper's descriptive all-non-halo reference.}
 }
 \value{
 A bundle of class \code{mfrm_halo_network} containing:
@@ -179,6 +196,49 @@ Plot payloads retain settings, caveats and denominators outside the figure.
 Export the result's data frames with \code{\link[utils:write.csv]{utils::write.csv()}}; this standalone
 bundle is not an automatically included section of \code{\link[=mfrm_report]{mfrm_report()}}.
 }
+\section{Dependence-aware halo contrasts}{
+
+\code{halo_contrast} is the unweighted mean of signed same-rater correlations
+minus the mean of the declared between-rater reference correlations. It uses
+the original available pair set before p-value/sign/edge filtering; it may
+therefore differ from the legacy retained-edge summary. Report the actual
+criterion/overlap mix in \code{contrast_pairs}; the default removes same-criterion
+reference edges but does not balance unequal criterion-pair counts.
+
+Bootstrap resampling draws whole persons, keeping all their contexts, raters
+and criteria together, and recomputes every fixed pair. Repeated draws of a
+person remain repeated observations. This preserves within-person dependence
+and shared-edge sampling dependence. It assumes independent, representative
+person clusters and conditions on the observed raters, criteria and pair set.
+It does not generalize to a population of raters, account for clustering of
+persons within schools, establish causal halo, or validate missingness
+assumptions. A person context must be retained for resampling.
+
+\code{bootstrap_draws} retains every attempted replicate and its status. If any
+required correlation becomes undefined (e.g. constant bootstrap scores), the
+interval is withheld rather than conditioning on successful replicates or
+silently changing the target edge set. Few persons/sparse overlap can make
+this method unsuitable. Percentile intervals are approximate, pointwise and
+not selection-adjusted. No independent-edge Welch p-value is supplied.
+}
+
+\section{Relation to MFRM and published network analyses}{
+
+These are observed-score relationships, not fitted residuals or adjusted
+Rasch parameters. Lamprianou (2025) compares agreement, directional and
+rater-by-criterion networks with MFRM; a close empirical correspondence is
+not numerical equivalence. Signed alpha edges and weighted directional
+SWS/PUS indices are available here; \code{\link[=fit_rater_network]{fit_rater_network()}} supplies binary
+ERGM estimation. Halo-edge associations can reflect trait covariance and
+rubric overlap; \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}} offers person-cluster
+bootstrap contrasts instead of an independent-edge test.
+Use \code{\link[=mfrm_residual_network]{mfrm_residual_network()}} for residual associations and
+\code{\link[=subset_connectivity_report]{subset_connectivity_report()}} for prefit assignment links. See
+\code{vignette("mfrmr-networks-and-reporting")} for complementary views, paired
+overlap, direction and interpretation. \code{\link[=plot.mfrm_bundle]{plot.mfrm_bundle()}} documents custom
+layouts and display-only filters, which do not change the computed network.
+}
+
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",

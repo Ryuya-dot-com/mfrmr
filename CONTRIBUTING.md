@@ -79,6 +79,13 @@ checks, examples or vignette execution.
 - Use `on.exit(..., add = TRUE)` or `withr::defer()` for cleanup. Replacing exit
   handlers can discard mock or option restoration and contaminate later tests,
   even when the test that changed the state passes in isolation.
+- Mock only mfrmr's own bindings. Import a required dependency function or wrap
+  an optional backend locally, then use `local_mocked_bindings(.package = "mfrmr")`.
+  Follow [testthat's dependency-mocking guidance](https://testthat.r-lib.org/reference/local_mocked_bindings.html)
+  and the [CRAN namespace policy](https://cran.r-project.org/web/packages/policies.html):
+  do not replace another package's functions or standard S3 methods. Graphics
+  observers should check the arguments mfrmr sends to the drawing functions;
+  use a positive assertion to ensure the observer actually sees the call.
 
 ## Documentation expectations
 
@@ -106,6 +113,15 @@ changing plot images or adding visible titles or captions.
 Run `Rscript --vanilla scripts/check-reference-alt.R` after changing the hook,
 then build the affected reference topics with examples enabled. This scoped
 HTML check does not replace review of the figures or screen-reader testing.
+
+The interactive gallery is a website-only article in `vignettes/articles/`;
+its Plotly dependencies are declared in `Config/Needs/website`. With the matching
+package installed, run `Rscript --vanilla scripts/render-visual-gallery.R` from
+the package root to regenerate the README preview from that article's code.
+Then use `pkgdown::build_article("articles/visual-gallery")` to check the page.
+Verify labels, interval endpoints and underlying values after conversion, and
+retain the static figures and tables. A successful HTML build does not replace
+checking browser interactions and the deployed site's assets.
 
 ## Examples and timing policy
 
@@ -173,6 +189,17 @@ hosts; retain substantial analyses in tutorials and the complete test suite.
   information budgets and integration settings; avoid a suite-wide cache that
   could conceal stale results. Measure affected files separately from a complete
   package check.
+- Ordinary checks run the same selected tests in at most two testthat workers,
+  with numerical-library threads limited to one per worker. This follows the
+  [CRAN resource limit](https://cran.r-project.org/web/packages/policies.html)
+  and [testthat's parallel-test interface](https://testthat.r-lib.org/articles/parallel.html).
+  It reduces elapsed time, not the amount of numerical validation or necessarily
+  total CPU time. `TESTTHAT_PARALLEL=false` retains serial execution;
+  `Ncpus` / `TESTTHAT_CPUS` requests are capped at two in ordinary checks.
+  Older testthat versions without the supported interface run serially.
+  `NOT_CRAN=true` retains the complete regression suite and its existing
+  execution policy. Keep files independent, use session-local temporary files,
+  and verify unchanged test results before accepting a scheduling change.
 - CRAN-time `testthat` and ordinary push/PR CI run the representative workflow
   and selected contracts from `tests/testthat.R`. For broad changes or a batched
   release review, explicitly enable `full_suite` when manually running

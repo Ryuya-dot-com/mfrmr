@@ -43,7 +43,7 @@ test_that("typed rejected objectives backtrack without a fabricated gradient", {
 })
 
 test_that("optimizer code zero cannot qualify a false boundary or an excessive score", {
-  local_mocked_bindings(nlminb = function(start,...) list(par=start,convergence=0L), .package="stats")
+  local_mocked_bindings(nlminb = function(start,...) list(par=start,convergence=0L), .package="mfrmr")
   ev <- list(lower = 0, evaluate = function(x) list(value = (x+1)^2, gradient = 2*(x+1)))
   positive <- mfrm_gmfrm_bounded_search(1e-12,ev)
   expect_length(positive$active,0L)
@@ -67,7 +67,7 @@ test_that("unexpected and gradient-only errors remain failures with the best poi
   expect_false(fit$candidate)
   local_mocked_bindings(nlminb = function(start,objective,gradient,...) {
     gradient(start+1); list(par=start,convergence=0L)
-  }, .package="stats")
+  }, .package="mfrmr")
   ev$evaluate <- function(x) {
     if (x > 0) stop(new_adaptive_quadrature_numeric_error("gradient unavailable"))
     list(value=1,gradient=-2)
@@ -80,7 +80,7 @@ test_that("unexpected and gradient-only errors remain failures with the best poi
 
 test_that("an iteration stop is retained even when the selected point is stationary", {
   local_mocked_bindings(nlminb = function(start,...) list(par=start,convergence=1L,
-    message="iteration limit reached"), .package="stats")
+    message="iteration limit reached"), .package="mfrmr")
   ev <- list(lower=0, evaluate=function(x) list(value=(x-1)^2,gradient=2*(x-1)))
   fit <- mfrm_gmfrm_bounded_search(1,ev)
   expect_true(fit$nuisance_stationary)

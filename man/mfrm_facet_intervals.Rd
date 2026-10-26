@@ -4,6 +4,7 @@
 \alias{mfrm_facet_intervals}
 \alias{print.mfrm_facet_intervals}
 \alias{summary.mfrm_facet_intervals}
+\alias{vcov.mfrm_facet_intervals}
 \title{Pointwise intervals for fixed facet estimates and contrasts}
 \usage{
 mfrm_facet_intervals(
@@ -15,12 +16,17 @@ mfrm_facet_intervals(
   adjust = FALSE,
   level = 0.95,
   scale = c("native", "standardized"),
-  comparison_review = NULL
+  comparison_review = NULL,
+  anchor_covariance = NULL,
+  independent_anchors = FALSE,
+  interaction = NULL
 )
 
 \method{print}{mfrm_facet_intervals}(x, ...)
 
 \method{summary}{mfrm_facet_intervals}(object, ...)
+
+\method{vcov}{mfrm_facet_intervals}(object, ...)
 }
 \arguments{
 \item{fit}{An inference-ready RSM/PCM MML fit from \code{\link[=fit_mfrm]{fit_mfrm()}}, using a
@@ -81,6 +87,26 @@ Uses its declared facet-by-origin contrasts instead of facet locations;
 omit \code{contrasts} and optionally \code{facet}. Requires \code{method = "model"}.
 See "MML interaction contrasts" for scope and assumptions.
 Omit this argument for a CML comparison-only fit; its saved review is reused.}
+
+\item{anchor_covariance}{Optional full sampling covariance of the supplied
+anchor estimates, including their correlations, in native ability units
+squared. Row and column names must match every directly anchored level
+on the one noncentered facet. Requires the fixed-grid direct RSM/PCM
+anchor-origin route with an intercept-only population and fixed SD.
+\code{NULL} retains the existing conditional-on-anchors calculation.}
+
+\item{independent_anchors}{Logical, default \code{FALSE}. Set \code{TRUE} with
+\code{anchor_covariance} only when source calibration and receiving responses
+are independent. Shared respondents or dependent clusters require
+cross-sample covariance and are unsupported. This is an explicit
+assumption, not a check inferred from different Person identifiers.}
+
+\item{interaction}{Optional exact name of one fitted two-facet interaction,
+for example \code{"Rater:Criterion"}. Omit \code{facet} and \code{comparison_review}.
+This selects jointly fitted cell effects rather than fixed-baseline bias
+screens. Requires \code{method = "model"}, \code{scale = "native"}, full direct
+fixed-grid RSM/PCM MML with fixed N(0,1), one interaction, no anchors,
+groups, dummy facets or shrinkage. See the joint-cell section below.}
 
 \item{x, object}{An object returned by \code{mfrm_facet_intervals()}.}
 
@@ -167,6 +193,136 @@ used with a warning. Successful inversion does not establish reliable
 normal intervals. Review interval width, boundary proximity and quadrature
 sensitivity; changing to sandwich covariance does not remove this concern.
 }
+\section{Jointly fitted interaction cells and contrasts}{
+
+Fit a prespecified two-facet interaction with \code{fit_mfrm(facet_interactions = "Rater:Criterion")}, then use \code{mfrm_facet_intervals(fit, interaction = "Rater:Criterion")}. The default returns all fitted cells,
+including the dependent last row and column. Cell labels, counts, sparse
+flags and identification constraints are retained in \code{interaction_cells}.
+This bounded route uses a fixed standard-normal ability population; latent
+regression, estimated population variance, adaptive integration, JML, CML,
+GPCM and multiple fitted interaction terms are outside this extension.
+
+An interaction effect is an additive predictor shift after jointly fitting
+the main effects. Positive values increase expected coded ratings; they do
+not automatically imply favorable performance or unfairness. Effects have
+zero row sums and zero column sums across the declared levels, without
+weighting those constraints by cell counts. Their values depend on that
+definition and the included main effects. This differs from \code{\link[=estimate_bias]{estimate_bias()}},
+which holds the fitted calibration and person measures fixed while estimating
+an additional residual shift. Neither result proves substantive rater bias.
+
+Write free interaction coordinates as gamma and their expansion to all cells
+as G gamma. Cell covariance is G V_gamma G', where V_gamma is the interaction
+block of the inverse full marginal information, including main effects and
+thresholds. It is not the inverse of only the interaction information block.
+Dependent cells consequently have correlated estimates and a singular joint
+cell covariance; this alone does not invalidate individual pointwise intervals.
+For a prespecified cell contrast C, the covariance is C G V_gamma G' C'.
+Supply every cell \code{Target} as a named column of \code{contrasts}, including zeros.
+A contrast fixed at zero by the row/column constraints has \code{Status = "fixed"}
+and no inferential interval; it is not evidence for a null interaction.
+
+Source consistency, identification/boundary records, full information,
+stationarity and finer-quadrature checks must pass. Unavailable intervals
+retain finite point estimates and reasons. Sparse-cell flags are descriptive,
+not a sample-size guarantee. Full-design identification and numerical success
+do not establish nominal coverage. These are pointwise Wald intervals, not
+simultaneous bounds or multiplicity-adjusted cell decisions. Saved tables,
+plots, \code{\link[=apa_table]{apa_table()}} and \code{\link[=mfrm_results]{mfrm_results()}} retain the same values and cautions.
+
+A bundled-data example uses the existing estimation and interval APIs:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{ratings <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  model = "PCM", step_facet = "Criterion", noncenter_facet = "Criterion",
+  facet_interactions = "Rater:Criterion", quad_points = 61)
+cells <- mfrm_facet_intervals(fit, interaction = "Rater:Criterion")
+summary(cells)[, c("Target", "Estimate", "SE", "Lower", "Upper", "Status")]
+plot(cells)
+# Compare the first two displayed cells; choose the scientific contrast first.
+C <- matrix(0, 1, nrow(cells$table),
+  dimnames = list("First minus second", cells$table$Target))
+C[1, 1:2] <- c(1, -1)
+difference <- mfrm_facet_intervals(fit, interaction = "Rater:Criterion",
+  contrasts = C)
+vcov(difference) # Uses covariance between both cells
+}\if{html}{\out{</div>}}
+}
+
+\section{Uncertainty from independently estimated anchors}{
+
+The default intervals condition on the exact anchor values. Supplying
+\code{anchor_covariance} and \code{independent_anchors = TRUE} adds source-calibration
+uncertainty without changing any point estimates. Use the full covariance,
+not only a vector of SEs or a diagonal replacement for correlated anchors.
+Its numerical validity is checked; its statistical validity, units and
+correspondence to the supplied anchor values remain the analyst's responsibility.
+
+Write the free receiving parameters as u, supplied anchors as a, and the
+negative log likelihood Hessian blocks as H_uu and H_ua. Implicit
+differentiation gives S = -inverse(H_uu) H_ua. For a reported target t(u,a),
+its source derivative is D = t_u S + t_a. The selected target covariance is
+t_u V_conditional t_u' + D V_anchor D'. The direct derivative t_a matters
+for targets containing anchored elements; adding variance only to the free
+parameters would omit that contribution and their cross-covariance.
+This is a first-order approximation for independent samples, not joint
+recalibration, a bootstrap or a correction for anchor drift or biased anchors.
+
+Source derivatives use central differences of the analytic marginal score,
+checked by halving the difference step and refining the quadrature. Failed
+source-derivative checks preserve point estimates and the conditional
+results, with unavailable selected uncertainty. \code{ConditionalSE},
+\code{ConditionalLower}, \code{ConditionalUpper} and \code{ConditionalStatus} retain that
+separate calculation; facet \verb{Model*} columns also retain it. \code{AnchorSourceSE}
+is the square root of the added variance contribution, not a separate
+confidence interval. The selected \code{SE}, bounds and \code{vcov()} include both
+components. A conditionally fixed anchor may therefore have a selected
+interval for its source-estimated value. A zero covariance contribution does
+not create an interval for a target fixed under both specifications.
+
+\code{anchor_uncertainty} retains the supplied and numerically symmetrized/PSD
+covariance, any floating-point adjustment, anchor values, sensitivity,
+independent-sample assumption and derivative checks. Singular PSD matrices
+are allowed. The free-parameter covariance includes source propagation;
+it does not include anchored values as extra optimizer coordinates.
+Saved population intervals can reuse this sensitivity and the conditional
+information: \code{mfrm_population_intervals(rater_ci)} propagates it once, without
+refitting or differentiating again. Reports and exported tables retain the
+supplied covariance and source-derivative checks; RDS retains the full result.
+
+Only fixed-grid direct RSM/PCM MML with unit weights, no interactions,
+shrinkage or groups, an intercept-only population, fixed SD and all anchors
+on its noncentered facet is supported. Adaptive integration, free population
+variance, GPCM, dependent calibration samples and uncertainty in the supplied
+SD are outside this extension. No nominal coverage guarantee follows from
+numerical agreement or positive covariance. Other facets retain their
+centering; changing an item pool still requires a defensible scale link.
+
+A complete interface example starts from bundled ratings. This split is
+illustrative: independent Persons and stable anchors must be justified for
+the actual sampling design, and different IDs alone do not establish them.
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{ratings <- load_mfrmr_data("example_core")
+ids <- unique(ratings$Person)
+source <- ratings[ratings$Person \%in\% ids[1:20], ]
+receiving <- ratings[!ratings$Person \%in\% ids[1:20], ]
+baseline <- fit_mfrm(source, "Person", c("Rater", "Criterion"), "Score",
+  model = "RSM", noncenter_facet = "Rater", quad_points = 61)
+baseline_ci <- mfrm_facet_intervals(baseline, "Rater")
+common <- c("R01", "R02")
+anchors <- data.frame(Facet = "Rater", Level = common,
+  Anchor = baseline_ci$table$Estimate[match(common, baseline_ci$table$Target)])
+cohort <- fit_mfrm(receiving, "Person", c("Rater", "Criterion"), "Score",
+  model = "RSM", anchors = anchors, noncenter_facet = "Rater",
+  population_formula = ~1, person_data = unique(receiving["Person"]),
+  population_sd = 1, quad_points = 61)
+rater_ci <- mfrm_facet_intervals(cohort, "Rater",
+  anchor_covariance = vcov(baseline_ci)[common, common], independent_anchors = TRUE)
+summary(rater_ci) # Selected and conditional intervals side by side
+population_ci <- mfrm_population_intervals(rater_ci)
+}\if{html}{\out{</div>}}
+}
+
 \section{Small samples and singleton categories}{
 
 A small sample or a wide interval is not, by itself, a reason to suppress an
@@ -293,8 +449,8 @@ fourth rater is fixed at -0.30. The three group members can still differ
 unless other constraints fix them; their mean has no inferential interval.
 A difference between a free rater and an anchored rater can remain uncertain.
 These are conditional statements, not evidence that the source calibration
-or group-mean assumption is error-free. Estimated-population/native-location
-extensions still exclude anchors and groups.
+or group-mean assumption is error-free. Native-location anchors use only
+the fixed-SD RSM/PCM extension below; groups remain excluded there.
 }
 
 \section{Native locations}{
@@ -310,11 +466,23 @@ centered facets and centered steps. RSM/PCM also accepts a fitted full-rank
 conditional-normal regression, retaining its coefficient and residual-variance
 cross-information when computing structural uncertainty. The saved population
 table identifies coefficients and residual variance; it does not label
-regression coefficients as marginal population means. Anchors, GPCM latent
-regression and sandwich covariance remain unavailable here. Interactions
-use the separate \code{comparison_review} route below.
+regression coefficients as marginal population means. GPCM latent
+regression and sandwich covariance remain unavailable here. The native
+location procedure performs its own qualification even when the source
+fit has \code{InferenceReady = FALSE}. Read \code{CIEligible}, \code{Status}, \code{checks},
+\code{numerical_checks} and cautions on this result; interval availability does
+not change the source fit's overall readiness or qualify other procedures.
+Interactions use the separate \code{comparison_review} route below.
 Population-coefficient and variance intervals are separate targets and are
 not returned by this helper.
+RSM/PCM populations may fix residual SD with \code{population_sd}. For an
+intercept-only population (\code{population_formula = ~1}), a direct anchor on
+the selected non-Person \code{noncenter_facet} identifies the origin while free
+levels on that facet remain uncentered. These anchored intervals require
+no groups or dummy facets and condition on the supplied anchors and SD;
+their source-calibration uncertainty is not propagated. Other facets keep
+their declared centered constraints. Fixed SD has no variance coordinate
+in the joint information.
 
 The covariance transforms the inverse full joint marginal information,
 including all estimated population, slope and step coordinates. A
@@ -323,7 +491,7 @@ The source, category support, local solution and unregularized information
 must pass checks; covariance and score changes are also checked at a finer
 integration order at the same fitted parameter vector. This model-information
 procedure has no empirical Person-score rank requirement.
-For estimated RSM/PCM populations, a zero-residual-variance candidate at
+For RSM/PCM populations with estimated variance, a zero-residual-variance candidate at
 the retained nuisance estimates is compared with the fitted likelihood.
 A higher boundary likelihood beyond the numerical allowance prevents
 intervals. This check does not optimize or exclude the entire boundary.
@@ -366,6 +534,8 @@ The covariance term can increase or decrease the SE relative to dividing
 the native SE by the fitted SD. A zero estimated contrast can still have
 positive variance. With fixed
 N(0,1), the result equals the native contrast because the known SD is one.
+With an explicit fixed \code{population_sd}, divide the native contrast and SE
+by that SD; no estimated-SD derivative or uncertainty is introduced.
 Conditional-normal regression is excluded: its residual SD is not a
 marginal population SD. Standardization does not equate expected ratings
 across models with different slopes or category steps.

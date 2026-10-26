@@ -109,12 +109,21 @@ test_that("halo network draws without automatic titles and retains its notes", {
   skip_if_not_installed("igraph")
   x <- rater_effect_halo_fixture()
   seen <- NULL
-  local_mocked_bindings(plot.igraph = function(..., main = NULL) { seen <<- main }, .package = "igraph")
+  local_mocked_bindings(.mfrm_plot_igraph = function(..., main = NULL) { seen <<- main }, .package = "mfrmr")
   grDevices::pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
   p <- plot(x, type = "network")
   expect_identical(seen, "")
   expect_match(paste(plot_data(p, "notes")$Text, collapse = " "), "not rater centrality")
   expect_identical(p$data$caveats, x$caveats)
+  filtered <- plot(x, type = "network", display_min_weight = 1, draw = FALSE)
+  expect_identical(filtered$data$caveats, x$caveats)
+  expect_identical(filtered$data$settings, x$settings)
+  expect_identical(filtered$data$source_edges, x$edge_metrics)
+  expect_equal(nrow(filtered$data$edges), 0L)
+  expect_match(paste(plot_data(filtered, "notes")$Text, collapse = " "),
+    "No causal halo diagnosis; correlations are dependent.", fixed = TRUE)
+  expect_match(paste(plot_data(filtered, "notes")$Text, collapse = " "),
+    "Missing or filtered edges do not mean zero correlation or absence of halo.", fixed = TRUE)
 })
 
 severity_plot_fixture <- function() {
@@ -223,7 +232,7 @@ test_that('severity guides are opt-in and use the same neutral colors in both re
   rectangles <- character()
   local_mocked_bindings(rect = function(..., col = NULL) {
     rectangles <<- c(rectangles, col)
-  }, .package = 'graphics')
+  }, .package = "mfrmr")
   grDevices::pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
   plot(x$fit, type = 'rater_severity', diagnostics = x$diagnostics)
   expect_length(rectangles, 0L)

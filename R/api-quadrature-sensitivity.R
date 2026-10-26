@@ -110,6 +110,8 @@ mfrmr_gqs_validate <- function(fit, data, quad_points,
 mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
   replay <- fit$config$replay_inputs
   if (mfrm_has_product_slopes(fit)) {
+    replay$mml_integration <- fit$config$estimation_control$mml_integration
+    replay$mml_accuracy_control <- NULL
     if (mfrmr_adaptive_integration(fit$config)) {
       policy <- fit$config$estimation_control$gpcm_mml_start %||% "neutral"
       if (identical(policy, "explicit")) {
@@ -205,7 +207,10 @@ mfrmr_gqs_population_arguments <- function(fit) {
       ordered = is.ordered(persons[[name]]))
     if (!is.null(pop$contrasts[[name]])) stats::contrasts(persons[[name]]) <- pop$contrasts[[name]]
   }
-  list(population_formula = pop$formula, person_data = persons, person_id = pop$person_id)
+  arguments <- list(population_formula = pop$formula, person_data = persons, person_id = pop$person_id)
+  fixed_sd <- pop$fixed_sd %||% fit$config$population_spec$fixed_sd
+  if (!is.null(fixed_sd)) arguments$population_sd <- fixed_sd
+  arguments
 }
 
 mfrmr_gqs_canonical_prepared_data <- function(fit) {
@@ -509,7 +514,11 @@ mfrmr_gqs_score_difference <- function(reference, candidate, column) {
 }
 
 mfrmr_gqs_raw_information <- function(fit) {
-  covariance <- compute_mml_parameter_covariance(fit)
+  product <- mfrm_has_product_slopes(fit)
+  inference <- if (product) mfrm_gpcm_product_inference(fit) else NULL
+  # Reuse only within this call. An early interval refusal may have no matrix;
+  # raw diagnostic information remains separately available in that case.
+  covariance <- inference$information %||% compute_mml_parameter_covariance(fit)
   hessian <- covariance$hessian
   eigenvalues <- if (is.matrix(hessian) && nrow(hessian) > 0L) {
     eigen(hessian, symmetric = TRUE, only.values = TRUE)$values
@@ -532,8 +541,7 @@ mfrmr_gqs_raw_information <- function(fit) {
   )
   slope_se <- rep(NA_real_, length(slope_values))
   slope_slice <- covariance$param_slices[["log_slopes"]] %||% integer()
-  product <- mfrm_has_product_slopes(fit)
-  intervals <- if (product) stats::confint(fit, parm = "slopes") else NULL
+  intervals <- if (product) mfrm_gpcm_intervals_from_inference(fit, inference) else NULL
   if (product && identical(covariance$status, "ok") && is.matrix(covariance$cov)) {
     target <- mfrm_gpcm_product_slope_targets(fit$opt$par, fit$config)$components
     index <- mfrm_match_slope_table(target$metadata$Owner, target$metadata$Level, slopes)

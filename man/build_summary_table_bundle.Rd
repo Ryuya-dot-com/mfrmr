@@ -85,6 +85,11 @@ manuscript-facing subset before plotting or export.
 \section{Supported inputs}{
 
 \itemize{
+\item \code{\link[=mfrm_g_study]{mfrm_g_study()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}},
+\code{\link[=mfrm_residual_network]{mfrm_residual_network()}} or their \code{\link[=mfrm_report]{mfrm_report()}} objects; supply saved
+intervals to \code{mfrm_report()} first. These routes retain all evidence tables,
+including signed estimates, settings and unavailable states, without \code{top_n}
+truncation.
 \item \code{\link[=fit_mfrm]{fit_mfrm()}} or \code{summary(fit)}
 \item \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} or \code{summary(diag)}
 \item \code{\link[=precision_review_report]{precision_review_report()}} or \code{summary(precision_review)}

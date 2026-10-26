@@ -6,6 +6,16 @@ template:
 development:
   mode: unreleased
 
+articles:
+  - title: "Start with a picture"
+    navbar: ~
+    contents:
+      - articles/visual-gallery
+  - title: "Analysis guides"
+    navbar: "Analysis guides"
+    contents:
+      - starts_with("mfrmr-")
+
 redirects:
   - [reference/evaluate_mfrm_recovery.html, reference/simulate_mfrm_recovery.html]
   - [reference/build_peer_review_design_review.html, reference/review_peer_design.html]
@@ -29,6 +39,7 @@ reference:
       - mfrmr_agreement_data
       - describe_mfrm_data
       - fit_mfrm
+      - summary.mfrm_jeffreys_fit
       - mfrm_fit_extractors
       - mfrm_fit_responses
       - confint.mfrm_fit
@@ -41,18 +52,17 @@ reference:
       - mfrmr_workflow_methods
       - mfrmr_methods_reference
 
-  - title: "External features and exploratory groups"
-    desc: "Review entity-level external attributes and describe exploratory groups."
+  - title: "Rating design and linking networks"
+    desc: "Review who rated what, crossing/nesting and observed linking vulnerabilities. Start with observed ratings or a planned roster; inspect graph links before fitting, then check model identification."
     contents:
-      - mfrm_features
-      - mfrm_cluster_pam
-      - mfrm_cluster_hierarchical
-      - mfrm_pca
-      - plot.mfrm_pca
-      - mfrm_cluster_kmeans
-      - mfrm_cluster_imputed
-      - mfrm_cluster_compare
-      - plot.mfrm_clusters
+      - analyze_hierarchical_structure
+      - detect_facet_nesting
+      - facet_small_sample_review
+      - subset_connectivity_report
+      - mfrm_network_analysis
+      - build_mfrm_network_review
+      - build_peer_review_sim_spec
+      - review_peer_design
 
   - title: "Missing assigned scores"
     desc: "Review response imputations, fit a common MFRM and pool eligible facet targets."
@@ -136,6 +146,8 @@ reference:
   - title: "GPCM slopes and model comparison"
     desc: "Relative-slope intervals, model comparisons, and the scope of GPCM workflows."
     contents:
+      - compare_mfrm
+      - plot.mfrm_extended_comparison
       - gpcm_capability_matrix
       - bootstrap_mfrm_gpcm
       - mfrm_curve_intervals
@@ -164,10 +176,17 @@ reference:
       - score_comparison_table
       - automated_scoring_table
       - rater_centrality_table
+      - rater_network_analysis
+      - rater_halo_network_analysis
+      - fit_rater_network
+      - plot.mfrm_network_ergm
       - fit_rater_accuracy
       - unexpected_response_table
       - displacement_table
       - analyze_residual_pca
+      - mfrm_residual_network
+      - plot.mfrm_residual_network
+      - q3_statistic
       - compute_person_fit_indices
       - run_qc_pipeline
       - mfrmr_visual_diagnostics
@@ -186,7 +205,7 @@ reference:
       - plot.mfrm_response_time_review
 
   - title: "Reporting, tables, and exports"
-    desc: "Manuscript-ready tables, visual summaries, appendices, and replay bundles."
+    desc: "Connect the study question to draft tables, figures, interpretation and saved evidence; see the reporting article for optional sections and model-specific routes."
     contents:
       - reporting_checklist
       - build_apa_outputs
@@ -258,6 +277,8 @@ reference:
       - facets_output_file_bundle
       - facets_output_contract_review
       - read_facets_fit_table
+      - read_facets_results
+      - plot.mfrm_facets_results
       - import_facets_fit_table
       - run_mfrm_facets
       - import_mirt_fit
@@ -265,11 +286,23 @@ reference:
       - import_erm_fit
       - mfrmr_compatibility_layer
 
+  - title: "External features and exploratory groups"
+    desc: "Review entity-level external attributes and describe exploratory groups."
+    contents:
+      - mfrm_features
+      - mfrm_cluster_pam
+      - mfrm_cluster_hierarchical
+      - mfrm_pca
+      - plot.mfrm_pca
+      - mfrm_cluster_kmeans
+      - mfrm_cluster_imputed
+      - mfrm_cluster_compare
+      - plot.mfrm_clusters
+
   - title: "Advanced reviews and visualization"
     desc: "Specialist plots, S3 methods, network reviews, reliability, shrinkage, and compatibility helpers."
     contents:
       - analyze_facet_equivalence
-      - analyze_hierarchical_structure
       - apply_empirical_bayes_shrinkage
       - as.data.frame.mfrm_fit
       - as_flextable.apa_table
@@ -281,23 +314,18 @@ reference:
       - build_conquest_overlap_bundle
       - build_fixed_reports
       - build_misfit_casebook
-      - build_mfrm_network_review
-      - build_peer_review_sim_spec
-      - review_peer_design
-      - compare_mfrm
-      - plot.mfrm_extended_comparison
       - compatibility_alias_table
       - compute_facet_design_effect
       - compute_facet_icc
       - data_quality_report
-      - detect_facet_nesting
       - ej2021_data
       - estimation_iteration_report
       - export_mfrm_tables
-      - facet_small_sample_review
       - facet_statistics_report
       - facets_chisq_table
       - fair_average_table
+      - confint.mfrm_fair_average
+      - plot.mfrm_fair_intervals
       - interaction_effect_table
       - mfrm_misfit_thresholds
       - mfrm_results_interactive
@@ -306,9 +334,6 @@ reference:
       - normalize_conquest_overlap_exports
       - normalize_conquest_overlap_files
       - normalize_conquest_overlap_tables
-      - mfrm_network_analysis
-      - rater_network_analysis
-      - rater_halo_network_analysis
       - plot.apa_table
       - plot.mfrm_anchor_review
       - plot.mfrm_bundle
@@ -323,7 +348,6 @@ reference:
       - plot.mfrm_signal_detection
       - plot.mfrm_summary_table_bundle
       - print.mfrm_apa_text
-      - q3_statistic
       - recode_missing_codes
       - recommend_mfrm_design
       - reference_case_benchmark
@@ -332,7 +356,6 @@ reference:
       - response_time_review
       - shrinkage_report
       - specifications_report
-      - subset_connectivity_report
       - summary.apa_table
       - summary.mfrm_anchor_review
       - summary.mfrm_apa_outputs

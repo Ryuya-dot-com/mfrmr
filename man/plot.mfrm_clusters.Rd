@@ -47,7 +47,9 @@ not clustering or the denominator. By default all IDs appear in input order.}
 Invisibly, an \code{mfrm_plot_data} object. Its \code{data} contains the plotted
 table or matrix, title, subtitle, legend, and excluded IDs. Heatmaps also
 retain the displayed IDs and the number of imputations. Use \code{\link[=plot_data]{plot_data()}}
-to extract this payload for custom graphics.
+to extract this payload for custom graphics. Profile plots also retain
+\code{observations}: original-unit entity values and group/exclusion status,
+suitable for custom distribution plots; see \code{\link[=plot_data]{plot_data()}}.
 \code{\link[=as_ggplot]{as_ggplot()}} converts imputation co-membership heatmaps using the saved
 matrix, ID order, label choice, colours and imputation count. The default
 and \code{component = "matrix"} retain the complete view and its fixed

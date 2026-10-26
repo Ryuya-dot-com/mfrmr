@@ -129,10 +129,34 @@ mfrm_gpcm_results_inputs <- function(fit, intervals) {
 }
 
 mfrm_gpcm_results_score_tables <- function(fit, scores) {
-  if (!mfrm_has_product_slopes(fit) ||
-      !inherits(scores, c("mfrm_unit_prediction", "mfrm_calibration_score")))
-    stop("Two-family `scores` must be saved predict_mfrm_units() output or a format-6 score_mfrm_calibration() result.", call. = FALSE)
+  product <- mfrm_has_product_slopes(fit)
   portable <- inherits(scores, "mfrm_calibration_score")
+  if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit") ||
+      !identical(fit$config$model, "GPCM") ||
+      !inherits(scores, c("mfrm_unit_prediction", "mfrm_calibration_score")) ||
+      (portable && !product))
+    stop("GPCM `scores` must be saved predict_mfrm_units() output; two-family fits also accept a format-6 score_mfrm_calibration() result.", call. = FALSE)
+  if (!product) {
+    if (!same_signature_component(fit$config$score_map %||% fit$prep$score_map, fit$prep$score_map) ||
+        !identical(as.numeric(c(fit$config$rating_min, fit$config$rating_max)),
+          as.numeric(c(fit$prep$rating_min, fit$prep$rating_max))))
+      stop("fit/scores mismatch: the saved calibration category coding is internally inconsistent.", call. = FALSE)
+    mfrm_validate_result_identity(scores, prediction_fit_identity(fit), "scores",
+      "predict_mfrm_units()", "mfrm_results()")
+    prediction_validate_interval_record(scores)
+    if (!identical(scores$settings$method, prediction_resolve_fit_method(fit)) ||
+        !isTRUE(scores$settings$score_integration_required) ||
+        is.null(scores$settings$prior_comparison) ||
+        !is.data.frame(scores$quadrature_review) ||
+        !identical(unique(scores$quadrature_review$FixedNodes), scores$settings$scoring_quad_points) ||
+        !identical(scores$settings$quad_points, scores$settings$scoring_quad_points) ||
+        !identical(sort(unique(scores$quadrature_review$AdaptiveNodes)),
+          sort(scores$settings$adaptive_quad_points)) ||
+        !identical(scores$settings$score_integration_review,
+          prediction_score_integration_review(scores$estimates, scores$quadrature_review)) ||
+        !is.null(scores$settings$two_family_calibration))
+      stop("Saved scores require matching estimator, prior and scoring-integration records. Recreate them with predict_mfrm_units() from the saved fit.", call. = FALSE)
+  }
   if (portable) {
     mfrmr_validate_calibration_score(scores)
     if (!identical(scores$settings$schema_version, 6L))
@@ -143,7 +167,7 @@ mfrm_gpcm_results_score_tables <- function(fit, scores) {
     not_scored <- sum(scores$person_dispositions$Disposition == "not_scored")
     notes <- scores$notes
   } else {
-    if (!identical(scores$settings$source_scoring_policy_basis, "two_family_conditional_eap_v1"))
+    if (product && !identical(scores$settings$source_scoring_policy_basis, "two_family_conditional_eap_v1"))
       stop("Two-family results require scores from the two-family calibration.", call. = FALSE)
     prediction_validate_population_output(scores)
     source <- list(status = scores$settings$source_scoring_status,
@@ -156,50 +180,55 @@ mfrm_gpcm_results_score_tables <- function(fit, scores) {
     notes <- prediction_output_notes(scores)
   }
   identity <- source$local_calibration_review$source_identity
-  legacy <- is.character(identity) && length(identity) == 1L &&
-    isTRUE(startsWith(identity, "gmfrm_scoring_source_v1:"))
-  if (is.null(identity) || !identical(identity, prediction_gmfrm_source_identity(fit, legacy)))
-    stop("Saved scores must match this fit's calibration, data, owner/category coding, integration and source status. Re-score older outputs if their source identity is absent or incompatible; the fit need not be re-estimated.", call. = FALSE)
-  settings <- scores$settings
-  params <- expand_params(fit$opt$par, build_param_sizes(fit$config), fit$config)
-  if (portable) {
-    # Compare the saved operational coordinates as well as the source fingerprint.
-    # A valid edited artifact can still describe a different calibration.
-    semantic <- settings$semantic_components
-    model <- semantic$facet_order_roles_levels_signs
-    facets <- as.character(fit$config$facet_names)
-    levels <- do.call(rbind, lapply(facets, function(facet) data.frame(
-      Facet = facet, Level = as.character(fit$config$facet_levels[[facet]]),
-      LevelIndex = seq_along(fit$config$facet_levels[[facet]]))))
-    roles <- data.frame(Facet = facets,
-      Role = ifelse(facets == fit$config$step_facet, "facet_and_step_owner", "facet"),
-      OrderIndex = seq_along(facets))
-    score_map <- as.data.frame(fit$prep$score_map)
-    score_map$OrderIndex <- seq_len(nrow(score_map))
-    score_map <- score_map[c("OriginalScore", "InternalScore", "OrderIndex")]
-    contexts <- unique(as.data.frame(unname(lapply(fit$prep$data[fit$config$slope_facet],
-      as.character)), check.names = FALSE))
-    names(contexts) <- fit$config$slope_facet
-    rownames(contexts) <- NULL
-    coordinates <- mfrmr_calibration_extract_coordinates(fit, params)
-    matching <- identical(semantic$parameter_coordinates, coordinates) &&
-      identical(model, list(facet_names = facets, facet_roles = roles, facet_levels = levels,
-        facet_signs = fit$config$facet_signs[facets], step_owner = fit$config$step_facet)) &&
-      identical(semantic$slope_specification, list(slope_owner = fit$config$slope_facet,
-        slope_action = "full_adjacent_predictor")) &&
-      identical(semantic$response_map, list(score_map = score_map,
-        rating_min = as.integer(fit$prep$rating_min), rating_max = as.integer(fit$prep$rating_max),
-        n_categories = as.integer(fit$config$n_cat))) &&
-      identical(semantic$product_structure, list(slope_composition = "product",
-        observed_contexts = contexts, source_columns = mfrmr_calibration_normalize_source_columns(fit))) &&
-      identical(semantic$identification_constraints, mfrmr_calibration_product_identification(
-        fit$config$slope_facet, fit$config$facet_levels, fit$config$n_cat - 1L)) &&
-      identical(semantic$typed_anchors, mfrmr_calibration_extract_anchors(fit)) &&
-      identical(semantic$interaction_map, mfrmr_calibration_extract_interactions(fit, coordinates))
-  } else matching <- identical(settings$two_family_calibration,
-    prediction_gmfrm_calibration(fit, params))
-  if (!matching)
-    stop("Saved scoring calibration records do not match this fit. Attach scores from the matching calibration; editing a source identity does not change the calibration used for scoring.", call. = FALSE)
+  if (product) {
+    legacy <- is.character(identity) && length(identity) == 1L &&
+      isTRUE(startsWith(identity, "gmfrm_scoring_source_v1:"))
+    if (is.null(identity) || !identical(identity, prediction_gmfrm_source_identity(fit, legacy)))
+      stop("Saved scores must match this fit's calibration, data, owner/category coding, integration and source status. Re-score older outputs if their source identity is absent or incompatible; the fit need not be re-estimated.", call. = FALSE)
+    settings <- scores$settings
+    params <- expand_params(fit$opt$par, build_param_sizes(fit$config), fit$config)
+    if (portable) {
+      # Compare the saved operational coordinates as well as the source fingerprint.
+      # A valid edited artifact can still describe a different calibration.
+      semantic <- settings$semantic_components
+      model <- semantic$facet_order_roles_levels_signs
+      facets <- as.character(fit$config$facet_names)
+      levels <- do.call(rbind, lapply(facets, function(facet) data.frame(
+        Facet = facet, Level = as.character(fit$config$facet_levels[[facet]]),
+        LevelIndex = seq_along(fit$config$facet_levels[[facet]]))))
+      roles <- data.frame(Facet = facets,
+        Role = ifelse(facets == fit$config$step_facet, "facet_and_step_owner", "facet"),
+        OrderIndex = seq_along(facets))
+      score_map <- as.data.frame(fit$prep$score_map)
+      score_map$OrderIndex <- seq_len(nrow(score_map))
+      score_map <- score_map[c("OriginalScore", "InternalScore", "OrderIndex")]
+      contexts <- unique(as.data.frame(unname(lapply(fit$prep$data[fit$config$slope_facet],
+        as.character)), check.names = FALSE))
+      names(contexts) <- fit$config$slope_facet
+      rownames(contexts) <- NULL
+      coordinates <- mfrmr_calibration_extract_coordinates(fit, params)
+      matching <- identical(semantic$parameter_coordinates, coordinates) &&
+        identical(model, list(facet_names = facets, facet_roles = roles, facet_levels = levels,
+          facet_signs = fit$config$facet_signs[facets], step_owner = fit$config$step_facet)) &&
+        identical(semantic$slope_specification, list(slope_owner = fit$config$slope_facet,
+          slope_action = "full_adjacent_predictor")) &&
+        identical(semantic$response_map, list(score_map = score_map,
+          rating_min = as.integer(fit$prep$rating_min), rating_max = as.integer(fit$prep$rating_max),
+          n_categories = as.integer(fit$config$n_cat))) &&
+        identical(semantic$product_structure, list(slope_composition = "product",
+          observed_contexts = contexts, source_columns = mfrmr_calibration_normalize_source_columns(fit))) &&
+        identical(semantic$identification_constraints, mfrmr_calibration_product_identification(
+          fit$config$slope_facet, fit$config$facet_levels, fit$config$n_cat - 1L)) &&
+        identical(semantic$typed_anchors, mfrmr_calibration_extract_anchors(fit)) &&
+        identical(semantic$interaction_map, mfrmr_calibration_extract_interactions(fit, coordinates))
+    } else matching <- identical(settings$two_family_calibration,
+      prediction_gmfrm_calibration(fit, params))
+    if (!matching)
+      stop("Saved scoring calibration records do not match this fit. Attach scores from the matching calibration; editing a source identity does not change the calibration used for scoring.", call. = FALSE)
+  } else {
+    settings <- scores$settings
+    identity <- mfrm_checkpoint_fingerprint(scores$fit_identity, canonical = TRUE)
+  }
   tables <- list(
     person_scores = estimates,
     scoring_overview = data.frame(Scored = nrow(estimates), Review = review,
@@ -207,7 +236,9 @@ mfrm_gpcm_results_score_tables <- function(fit, scores) {
       SourceStatus = source$status),
     scoring_settings = data.frame(Route = if (portable) "portable_format_6" else "fitted_object",
       SourceIdentity = identity, CalibrationId = settings$calibration_id %||% NA_character_,
-      PriorMean = 0, PriorSD = 1, ScoringAlgorithm = settings$scoring_algorithm,
+      PriorMean = if (product) 0 else if (length(unique(estimates$PriorMean)) == 1L) estimates$PriorMean[1L] else NA_real_,
+      PriorSD = if (product) 1 else if (length(unique(estimates$PriorSD)) == 1L) estimates$PriorSD[1L] else NA_real_,
+      ScoringAlgorithm = settings$scoring_algorithm,
       QuadratureOrder = settings$scoring_quad_points %||% settings$quadrature_order,
       IntervalLevel = settings$interval_level,
       UncertaintyBasis = "conditional_on_fixed_calibration"),
@@ -219,6 +250,13 @@ mfrm_gpcm_results_score_tables <- function(fit, scores) {
     scoring_notes = data.frame(Note = unique(c(notes,
       if (!portable) "Native row omissions are recorded in scoring_row_review; NotScored is not enumerated by this route.")))
   )
+  if (!product) {
+    tables$scoring_settings$CalibrationMethod <- settings$method
+    tables$scoring_settings$PosteriorBasis <- settings$posterior_basis
+    tables$scoring_settings$ReadinessPolicy <- settings$readiness_policy
+    tables$scoring_priors <- settings$prior_comparison
+    tables$scoring_population_review <- scores$population_review
+  }
   if (portable) {
     tables$scoring_person_dispositions <- scores$person_dispositions
     tables$scoring_row_dispositions <- scores$row_dispositions
@@ -234,13 +272,17 @@ mfrm_gpcm_results_attach_scores <- function(out, scores) {
   out$table_index <- mfrm_results_table_index(out$tables)
   out$status <- rbind(out$status, mfrm_results_status_row("person_scores",
     tables$scoring_overview$Status,
-    "Saved two-family conditional EAP; source/batch checks and review labels retained. Calibration uncertainty excluded; no rescoring."))
-  out$notes <- unique(c(out$notes, "Saved new-Person scores are conditional on fixed calibration and the N(0,1) prior. Review-only results remain review-only; coverage and population transport are not established."))
+    if (mfrm_has_product_slopes(out$fit))
+      "Saved two-family conditional EAP; source/batch checks and review labels retained. Calibration uncertainty excluded; no rescoring." else
+      "Saved conditional EAP; source/batch checks and review labels retained. Calibration and population estimation uncertainty excluded; no rescoring."))
+  out$notes <- unique(c(out$notes, if (mfrm_has_product_slopes(out$fit))
+    "Saved new-Person scores are conditional on fixed calibration and the N(0,1) prior. Review-only results remain review-only; coverage and population transport are not established." else
+    "Saved Person scores are conditional on fixed calibration and their recorded scoring priors. Review-only results remain review-only; calibration/population estimation uncertainty and frequentist coverage are not supplied by these intervals."))
   out
 }
 
 mfrm_gpcm_results_validate_scores <- function(x) {
-  if (!mfrm_has_product_slopes(x$fit)) return(invisible(x))
+  if (!identical(x$fit$config$model, "GPCM")) return(invisible(x))
   if (is.null(x$scores) && is.null(x$components$scores) &&
       !any(names(x$tables) == "person_scores" | startsWith(names(x$tables), "scoring_"))) return(invisible(x))
   tables <- mfrm_gpcm_results_score_tables(x$fit, x$scores)

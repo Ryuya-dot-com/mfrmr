@@ -13,7 +13,7 @@ mfrm_write_export_zip <- function(path, files, overwrite = FALSE) {
   pending <- tempfile(".mfrmr-export-", tmpdir = dirname(path), fileext = ".zip")
   on.exit(unlink(pending), add = TRUE)
   tryCatch({
-    status <- utils::zip(pending, files, flags = "-q9X", extras = "-j")
+    status <- zip(pending, files, flags = "-q9X", extras = "-j")
     if (length(status) != 1L || is.na(status) || status != 0)
       stop("ZIP command failed (exit status: ", paste(status, collapse = ", "), ").")
     if (!file.exists(pending)) stop("ZIP command did not create an archive.")

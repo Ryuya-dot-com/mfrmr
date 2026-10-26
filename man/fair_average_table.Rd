@@ -17,7 +17,9 @@ fair_average_table(
   omit_unobserved = FALSE,
   xtreme = 0,
   fair_se = FALSE,
-  ci_level = 0.95
+  ci_level = 0.95,
+  xtreme_method = c("display", "facets"),
+  reference_plan = NULL
 )
 }
 \arguments{
@@ -29,7 +31,9 @@ Matching saved diagnostics are reusable; recompute them after refitting.}
 \item{facets}{Optional subset of facets.}
 
 \item{totalscore}{Include all observations for score totals (\code{TRUE}) or apply
-legacy extreme-row exclusion (\code{FALSE}).}
+extreme-row exclusion (\code{FALSE}). In ordinary additive RSM/PCM JML,
+finite direct anchors remain eligible even with all-minimum/all-maximum
+responses, under both \code{xtreme_method} conventions.}
 
 \item{umean}{Additive origin shift for Measure (not fair-score values).}
 
@@ -45,11 +49,10 @@ legacy extreme-row exclusion (\code{FALSE}).}
 
 \item{omit_unobserved}{If \code{TRUE}, remove unobserved levels.}
 
-\item{xtreme}{Display adjustment in score units for all-minimum/all-maximum
-rows; default \code{0} leaves fitted measures unchanged. A positive value
-replaces the displayed \code{Measure} by inversion of an expected score that
-far from the endpoint. It does not adjust responses, refit the model or
-correct JML bias.}
+\item{xtreme}{Nonnegative correction smaller than the score range for
+all-minimum/all-maximum rows. Default \code{0} leaves measures unchanged.
+Its units depend on \code{xtreme_method}; no responses or primary estimates
+are changed, and this does not correct JML bias.}
 
 \item{fair_se}{Logical. When \code{TRUE} and \code{fit} is an MML \code{GPCM}
 fit, add structural delta-method standard errors and confidence limits
@@ -61,6 +64,27 @@ unavailable.}
 
 \item{ci_level}{Confidence level used when \code{fair_se = TRUE}; default
 \code{0.95}.}
+
+\item{xtreme_method}{\code{"display"} (default) retains the historical
+average-score display adjustment. \code{"facets"} uses conditional total-score
+extrapolation for ordinary additive RSM/PCM JML, without group-mean anchors.
+Supply \code{xtreme = .3} explicitly to use the usual FACETS main correction.}
+
+\item{reference_plan}{Optional data frame of non-Person facet columns,
+using the fitted facet names, and an optional positive \code{Weight} column.
+For ordinary additive RSM/PCM JML, adds \code{reference_scores}: each Person's
+expected average on this same plan, using its fitted facet locations and
+scale profiles. Weights are normalized to sum to one. This distinct target
+does not replace FairM/FairZ or their administered PCM scale mixture.
+Primary estimates are used, irrespective of display/extrapolation settings.
+Scores use internal score units, unaffected by \code{umean} or \code{uscale}.
+The result retains the fit for \code{\link[=confint.mfrm_fair_average]{confint.mfrm_fair_average()}}.
+For an explicit \code{mfrm_jeffreys_fit}, this argument is required and the
+result contains only common-plan \code{reference_scores}, the plan, fit and
+estimator identity. Other arguments beyond \code{fit} and \code{reference_plan}
+are refused: ordinary FairM/FairZ diagnostics do not apply. Inspect
+\code{summary(result)}; use \code{plot(confint(result, ...))} for supported interval
+plots. Direct FairM/FairZ plotting is unavailable for this result.}
 }
 \value{
 A named list with:
@@ -95,14 +119,44 @@ integrates over Person ability; these are expected scores, not z-scores.
 
 With \code{xtreme > 0}, \code{PrimaryMeasure} retains the fitted measure, including
 infinite JML estimates and fixed anchors, on the requested reporting scale.
-\code{MeasureBasis} identifies display-only replacements and \code{ExtremeAdjustment}
-records their amount in score units. The displayed \code{Measure} may differ
-from an unanchored extreme estimate. Fixed anchors retain their measure
-in both columns. Measure SEs are
-unavailable on replaced rows because the original SE does not describe the
-display adjustment. Fair-score calculations do not use the replacement.
+Fixed anchors retain their measure in both columns. With
+\code{xtreme_method = "display"}, an expected average that is \code{xtreme} from the
+endpoint is inverted. Measure SEs are unavailable on replaced rows and
+fair-score calculations do not use that replacement.
+For ordinary additive RSM/PCM JML, a directly anchored element is not
+classified as an unanchored extreme for row exclusion. Its observations
+remain eligible when \code{totalscore = FALSE}, unless another unanchored extreme
+element requires their exclusion. This rule also preserves the PCM scale
+mixture used in fair scores and does not depend on the display adjustment.
+Recreate older affected fair-score tables and plots from the saved fit and
+matching diagnostics; refitting the calibration is unnecessary.
+
+With \code{xtreme_method = "facets"}, the weighted total is moved inward by
+\code{xtreme} times the smallest positive weight among that element's eligible
+observations. Responses involving another unanchored extreme element are
+excluded. The resulting weighted score equation is solved using the actual
+administered calibration and PCM scales. Its reciprocal square-root
+conditional information supplies the reporting SE. The replacement enters
+that element's FairM/FairZ, while reference locations retain their original
+basis. \code{ExtremeAdjustment} records a weighted-total correction in this mode,
+versus an average-score correction in \code{"display"} mode. \code{MeasureBasis} and
+\code{MeasureSEBasis} identify the reported quantities. These are finite reporting
+values and conditional SEs at an adjusted total, not finite MLEs or SEs for
+the original extreme response pattern. Fair-score intervals remain
+unavailable when \code{xtreme > 0}.
+
+Binary unit/replication-weight examples and a fixed-scale PCM kernel were
+checked against FACETS 4.5.0. This is not whole-program equivalence: partial
+anchor examples can leave native score residuals and shifted final measures,
+which this conditional calculation does not reproduce. Group-mean anchors,
+fitted interactions, corrected JML, MML and GPCM are outside this route.
 Recompute older diagnostics and recreate saved tables from the existing
 fit before summarizing or plotting them; no model refit is needed.
+With an extreme fixed Person plus an informative interior Person anchor,
+matched RSM/PCM examples also agree for conditional fair scores at the
+reported native calibration. Main estimates can still differ and native
+iteration limits or nonzero free-element score residuals must not be
+interpreted as calibration agreement.
 
 \code{GPCM} fits are supported under a slope-aware
 element-conditional construction. For each slope-facet element
@@ -140,6 +194,10 @@ use the column \code{Level}.
 
 Observed-vs-fair gaps also reflect person mix and assignment. They are
 descriptive follow-up prompts, not standalone evidence of rater bias.
+Ordinary additive RSM/PCM JML tables also retain \code{PTMEAExpected} and its
+availability metadata when present in the matching diagnostics. This is a
+conditional reference for observed \verb{PtMea Corr}, not an inferential cutoff;
+see \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for its finite-count correction and weighting basis.
 }
 
 \section{Typical workflow}{
@@ -167,6 +225,7 @@ The \code{stacked} data.frame contains the following columns, selected by
 \item{Measure}{Displayed facet measure, transformed by \code{umean} and \code{uscale}; may be replaced when \code{xtreme > 0}.}
 \item{PrimaryMeasure}{Original fitted measure on the same reporting scale, including infinite JML estimates.}
 \item{MeasureBasis, ExtremeAdjustment}{Whether the displayed measure was replaced and the replacement amount in score units.}
+\item{MeasureSEBasis}{In \code{raw_by_facet}, distinguishes conditional information at a corrected total from fitted-measure uncertainty.}
 \item{FairMReference}{The mean reference used for FairM, or why that reference is unavailable.}
 \item{ModelBasedSE, FitAdjustedSE}{Package-native aliases for \verb{Model S.E.} and \verb{Real S.E.}.}
 \item{Infit MnSq, Outfit MnSq}{Fit statistics for this level.}
@@ -209,7 +268,7 @@ Export \code{stacked} or the summary's \code{summary} / \code{preview} data.fram
 MESA Press.
 \item Linacre, J. M. (2026). \emph{A user's guide to FACETS, version 4.5.0}.
 Winsteps.com.
-(FACETS Table 12 corresponds to the fair-average
+(FACETS Table 7 corresponds to the fair-average
 construction implemented here for \code{RSM} / \code{PCM} fits; the
 slope-aware element-conditional construction for \code{GPCM}
 is documented in this help page.)
@@ -249,6 +308,13 @@ fair <- fair_average_table(fit, diagnostics = diagnostics, facets = "Person",
 head(fair$raw_by_facet$Person[, c("Level", "ObservedAverage", "FairM")])
 # FairM uses the mean reference for the other facets; it is in score units
 # It is a conditional model prediction, not a guarantee of fairness
+
+# For an ordinary JML fit, request total-score extrapolation explicitly
+jml <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML")
+extreme_report <- fair_average_table(jml, xtreme = .3, xtreme_method = "facets")
+head(extreme_report$raw_by_facet$Person[, c("Level", "PrimaryMeasure",
+     "Measure", "MeasureBasis", "ModelSE", "MeasureSEBasis")])
+# ModelSE describes the adjusted total when MeasureBasis says extrapolation
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=displacement_table]{displacement_table()}}

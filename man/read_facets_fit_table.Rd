@@ -40,11 +40,12 @@ positions are used as score-file numbers.}
 
 \item{format}{File format. \code{"auto"} detects FACETS \code{score.N.txt} files from
 their name/header; \code{"delimited"} reads a CSV/TSV/semicolon table; and
-\code{"scorefile"} reads a FACETS score-file table. Fixed-field input requires
+\code{"scorefile"} reads a FACETS score-file table, including comma, tab or
+semicolon exports with facet heading lines. Fixed-field input requires
 validated all-field headings with element number after the statistics;
 appended facet fields are separated from the element label. Headerless,
 element-first and selected-field fixed layouts are rejected. Use named
-delimited columns for those layouts.}
+delimited columns for those layouts and for non-ASCII labels.}
 
 \item{facet_col, level_col}{Optional explicit column names for delimited
 tables when automatic detection is not sufficient. For score files,
@@ -53,14 +54,14 @@ tables when automatic detection is not sufficient. For score files,
 \item{delimiter}{Optional delimiter for delimited tables. If omitted, comma,
 tab, and semicolon are detected from the header line.}
 
-\item{encoding}{File encoding passed to \code{\link[=readLines]{readLines()}}.}
+\item{encoding}{Source file encoding, explicitly converted to UTF-8.}
 }
 \value{
 A tibble with standardized fit-table columns suitable for
 \code{facets_fit_review(fit, facets_fit = read_facets_fit_table(...))}.
 }
 \description{
-Read a FACETS fit table for fit review
+For standalone plots with source-state checks, use \code{\link[=read_facets_results]{read_facets_results()}}.
 }
 \details{
 This helper does not run FACETS. It reads FACETS output that already exists
@@ -78,7 +79,7 @@ the conventional threshold.
 Two common workflows are supported:
 \itemize{
 \item a FACETS score file such as \code{score.2.txt}, where the facet name is supplied
-by \code{facet_map} or inferred as \code{Facet2}. Both comma-delimited score files
+by \code{facet_map} or inferred as \code{Facet2}. Comma, tab and semicolon score files
 with field names and fixed-field score files using the FACETS manual
 column positions are supported;
 \item a CSV/TSV table already exported from FACETS or a harmonization script,

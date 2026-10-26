@@ -959,7 +959,7 @@ test_that("estimate_bias surfaces optimization failures instead of using zero-bi
 
   testthat::local_mocked_bindings(
     optimize = function(...) stop("forced optimize failure"),
-    .package = "stats"
+    .package = "mfrmr"
   )
 
   bias <- estimate_bias(

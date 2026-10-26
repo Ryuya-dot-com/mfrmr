@@ -24,6 +24,125 @@ connects those steps to actual `mfrmr` tables and figures. The
 [Manuscript coverage map](#manuscript-coverage-map) also identifies information
 that the researcher must provide outside the fitted model.
 
+For a literature-based comparison with FACETS/ConQuest and actual L2
+speaking/writing papers, see [connect designs, networks and reports](mfrmr-networks-and-reporting.html#connect-to-a-manuscript-not-a-coefficient-inventory).
+That lesson also distinguishes the analysis units of MFRM and G/D studies.
+
+## Choose report sections by question
+
+A report needs a common core: the question, rating unit and assignment,
+rubric endpoints/direction, retained sample, method and scale, uncertainty,
+and the substantive answer. Add the sections below when they answer that
+question. An unrequested analysis is not a reporting defect, and a longer
+coefficient list is not stronger evidence.
+
+| When this is your question | Report these outputs together | Existing route |
+| --- | --- | --- |
+| Can the model distinguish people or facet levels, and where does it misfit? | Estimates/intervals, Separation, Strata, model or fit-adjusted Reliability, fit basis, Wright map and relevant category curves | `diagnose_mfrm()` → `mfrm_results()` → `mfrm_report()`; this lesson below |
+| Do two named raters agree on the same responses? | Exact/adjacent agreement when useful, Cohen's kappa with declared unweighted/linear/quadratic weights, common-unit counts and exclusions | `pairwise_kappa_table()`; [agreement lesson](mfrmr-rating-agreement.html). Several raters produce separate pair results, not a single panel kappa. |
+| How much observed agreement does the panel show? | Krippendorff's alpha with its distance and pairable units, or a justified alternative such as Gwet AC2 | `krippendorff_alpha_table()` / `gwet_ac2_table()`. Choose the chance/distance model before interpreting the coefficient. |
+| How reproducible are numeric ratings under the specified rater model? | The stated ICC definition, single/average-score target, consistency/absolute-agreement target and analyzed sample | `pairwise_icc_table()` and its help. An ICC is not interchangeable with separation reliability, alpha or kappa. |
+| Which future assessment plan suits the intended score? | G-study variance/covariance components; D-study G/Phi/SEM, score weights, count grid, uncertainty and eligible paired contrasts | [G/D-study reporting structure](mfrmr-gtheory.html#report-the-assessment-planning-answer), `mfrm_report(g/d, intervals = saved_ci)` → `build_summary_table_bundle()`; `plot(g/d)` and the editable G/D template |
+| Can scores be compared across forms or waves? | Anchor source, values, scale/direction, centering, overlap, invariance assumption, drift and uncertainty basis | [Linking workflow](mfrmr-linking-and-dff.html), `review_mfrm_anchors()` → anchored fit / `build_linking_review()` → `build_summary_table_bundle()` |
+| Does a particular combination or group need investigation? | Signed bias/DFF contrast, cell evidence, reference group, multiplicity, uncertainty and follow-up | Specified `estimate_bias()` / `analyze_dff()` → `plot()` / tables. Supply matching bias results to `reporting_checklist()` and `build_apa_outputs()`; `dif_report()` serves DFF. |
+| Does a model choice change the answer? | Comparison basis, AIC/BIC where comparable, eligible LRT, numerical checks and changes in the target estimates/conclusion | `compare_mfrm()` → `build_model_choice_review()` → `build_summary_table_bundle()`; [model choice](mfrmr-model-choice.html#compare-conclusions-not-just-fit-statistics) |
+| What unexplained structure or grouping merits follow-up? | Node/feature definition, residual versus observed-score basis, overlap, missingness, selection choices and exploratory stability | [Visual diagnostics](mfrmr-visual-diagnostics.html) and [feature groups](mfrmr-external-features.html); keep exploration separate from confirmation |
+
+Separation describes spread relative to error; Strata transforms separation;
+Reliability expresses another ratio of the same underlying variance estimates.
+They are useful companion summaries, not three independent confirmations.
+Kappa and alpha instead concern observed agreement. Report both only when the
+pairwise and panel questions both matter. Select comparable criteria/occasions
+and name the pooling rule; a single pooled coefficient can hide differences
+among criteria. Never fill missing overlap with zero agreement.
+
+The ordinary report already has fit, precision, bias and linking wording
+tables. `include = "bias"` supplies a facet screen, not a newly selected
+Rater-by-Criterion interaction; `include = "linking"` does not create evidence
+from other waves. Supply the targeted analyses through their supported routes.
+Observed alpha/kappa and external-feature groups remain separate result objects.
+G/D studies and residual networks now enter `mfrm_report()` directly and retain
+their own estimands and reporting tables. The editable GPCM example below joins one particular set of
+these outputs; it is not an automatic report for all package functions.
+
+For assessment planning, copy and render
+`system.file("templates", "gtheory-report.Rmd", package = "mfrmr")`.
+See the [G/D-study route](mfrmr-gtheory.html#report-the-assessment-planning-answer)
+for source-checked saved intervals and full CSV/HTML exports.
+
+For selected **anchor, bias and model-choice questions**, copy
+`system.file("templates", "assessment-review.Rmd", package = "mfrmr")`.
+Its switches run only the requested modules. The template starts from bundled
+ratings, retains all bias cells and anchor values, and exports each report
+with a complete saved analysis. These objects now enter `mfrm_report()`
+directly; reporting does not recalculate estimates or test missing evidence.
+
+Keep the study's score meaning with each report:
+
+```{r declared-context, eval=FALSE}
+context <- c(rating_unit = "One performance by judge by criterion rating",
+  score_direction = "Higher Comprehensibility means harder to understand",
+  rubric = "1 = very easy; 9 = very difficult", transformation = "None")
+report <- mfrm_report(results, study_context = context)
+report$tables$study_context
+```
+
+The declaration is copied into the object, HTML/Markdown and appendix tables;
+it does not recode the data or reverse a parameter's sign. Reuse it across
+measurement, planning and feedback only when the units and meanings match.
+Record differences in aggregation, scale and anchor origin explicitly. The
+model cannot validate the meaning of these author-supplied declarations.
+
+## Start with an editable GPCM report
+
+For a **one-family GPCM MML** analysis, the package includes a complete
+R Markdown starting point. It fits the bundled synthetic ratings and produces
+an HTML report, CSV tables, two PNG figures and a saved analysis:
+
+```{r gpcm-template, eval=FALSE}
+template <- system.file("templates", "gpcm-report.Rmd", package = "mfrmr")
+file.copy(template, "gpcm-report.Rmd")
+rmarkdown::render("gpcm-report.Rmd")
+
+# Then use your own data: Person, Rater, Criterion, Score; one rating per cell.
+rmarkdown::render("gpcm-report.Rmd", params = list(
+  ratings_csv = "ratings.csv", rating_min = 1, rating_max = 4,
+  output_dir = "my-gpcm-report-files"
+))
+```
+
+Edit the model and study-context sections for your assessment. The template
+uses criterion-specific steps and slopes; it is not a two-family GPCM or
+JML template. Repeated occasions require an explicit measurement unit and
+matching agreement keys. The default output folder is `gpcm-report-files`.
+
+| What you want to report | Where it comes from | Key distinction |
+| --- | --- | --- |
+| Separation, Strata, Reliability | `diagnose_mfrm(fit)$reliability` | Separation-based precision, with its recorded SE basis and eligibility; not observed agreement. |
+| Infit/Outfit and ZSTD | `diagnose_mfrm(fit)$fit` | Native MML EAP plug-in fit; not TAM/ConQuest posterior-averaged fit. |
+| Wright map | `plot(fit, diagnostics = diagnostics)` | Locations and targeting; the template deliberately draws points without implying qualified intervals. |
+| Category-probability curves | `plot(fit, type = "ccc")`; `category_curves_report(fit)` | Conditional reference profiles; retain their step/slope owners and reference settings. |
+| Krippendorff's alpha | `krippendorff_alpha_table()` on the ratings | A separate observed-agreement calculation. `mfrm_report()` does not automatically add it. |
+| Draft Methods/Results and reporting gaps | `mfrm_report(..., style = "apa")`, `build_apa_outputs()`, `reporting_checklist()` | Draft text and evidence tracking; recruitment, design justification and the substantive answer still come from the researcher. |
+
+These outputs can support a paper, but their presence does not qualify every
+claim. In particular, a converged one-family GPCM can retain incomplete
+identification/boundary evidence and review-only precision summaries. Read the
+fit decision and any target-specific interval result; do not interpret missing
+intervals or formal-inference eligibility as established by a report preset.
+The template retains these states and separates model precision from alpha.
+
+It asks a panel-level agreement question, which explains its alpha section.
+Separation is already included. For a specified rater-pair question, add
+`pairwise_kappa_table()` with explicit weights and the same matched rating
+units; the template includes an optional code example. The synthetic rating
+design has six raters but only six of the fifteen possible pairs share units.
+The remaining nine pair coefficients are unavailable, not zero. This is a
+reason to show the assignment/overlap evidence alongside agreement, not to
+substitute model-adjusted severity for missing pairwise observations.
+
+The worked lesson below develops the reporting logic in more detail using RSM.
+
 The running question is: **after accounting for person ability and criterion
 difficulty, how much do the raters differ in severity?** The synthetic data
 illustrate the reporting workflow; they are not evidence about a real

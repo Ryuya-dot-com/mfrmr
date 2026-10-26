@@ -191,8 +191,14 @@ integration (\code{population = NULL}). One-family GPCM EM/hybrid requests fall 
 and record the engine in \code{fit$summary}.
 
 The provisional two-slope-family GMFRM route uses fixed-standard-normal MML
-with numerical generalized EM. It requires an explicit EM request; direct
-and hybrid are not available for this route. EM is not a defining property
+with fixed-grid generalized EM (\code{mml_engine = "em"}) or adaptive direct
+optimization (\verb{mml_engine = "direct", mml_integration = "adaptive"}).
+\code{mml_integration = "auto"} preserves the selected engine and increases
+integration points up to \code{mml_accuracy_control = list(max_points = ...)},
+including reference rules, while retaining the numerical and information
+checks. Fixed integration remains the package default; two-family direct
+fitting requires explicit adaptive or automatic integration. Adaptive EM
+and two-family hybrid fitting are unavailable. EM is not a defining property
 of GMFRM. See the GPCM
 scope vignette for the distinction between the model, estimation method
 and algorithm, with links to Muraki, TAM and sirt.

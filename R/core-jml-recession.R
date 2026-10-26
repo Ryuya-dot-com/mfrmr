@@ -16,6 +16,43 @@
 # step tables.  That promotion belongs to the cross-surface propagation work
 # after the certificate and target mapping have been stress-tested.
 
+mfrmr_check_extreme_person_anchor_origin <- function(prep, config) {
+  if (!identical(config$centering_scope, "anchor_origin") ||
+      !identical(config$method, "JML") ||
+      !config$model %in% c("RSM", "PCM") ||
+      length(config$interaction_specs) > 0L) {
+    return(invisible(NULL))
+  }
+  person_spec <- config$theta_spec
+  noncenter <- config$noncenter_facet
+  other_spec <- config$facet_specs[[noncenter]]
+  if (is.null(other_spec) || isTRUE(person_spec$centered) ||
+      isTRUE(other_spec$centered) || any(is.finite(other_spec$anchors)) ||
+      any(!is.na(person_spec$groups)) || any(!is.na(other_spec$groups))) {
+    return(invisible(NULL))
+  }
+  anchored <- names(person_spec$anchors)[is.finite(person_spec$anchors)]
+  data <- prep$data
+  rows <- as.character(data$Person) %in% anchored & data$Weight > 0
+  if (!any(rows)) return(invisible(NULL))
+  tail <- if (all(data$Score[rows] == prep$rating_min)) "minimum" else
+    if (all(data$Score[rows] == prep$rating_max)) "maximum" else NULL
+  if (is.null(tail)) return(invisible(NULL))
+
+  # All positive-weight anchored responses lie at the same boundary. Shift
+  # every free Person by c and every level of the noncenter facet by -c/sign.
+  # Free-Person predictors are unchanged; fixed-Person predictors move by -c.
+  # Choosing the sign of c toward that boundary strictly increases likelihood
+  # at every finite point, preserving every anchor and centering constraint.
+  # This certificate needs neither an optimizer nor the optional LP solver.
+  stop("`centering_scope = 'anchor_origin'`: all retained responses of the ",
+       "directly anchored Persons are at the declared ", tail, ". ",
+       "Free Person and ", noncenter, " locations can diverge together. ",
+       "No finite joint maximum is available under these anchors; review ",
+       "anchor support and constraints. Finite FACETS Xtreme reporting values ",
+       "do not supply an ordinary JML solution.", call. = FALSE)
+}
+
 mfrmr_jml_recession_empty_target_table <- function() {
   data.frame(
     ParameterId = character(0),

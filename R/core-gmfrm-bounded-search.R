@@ -47,7 +47,7 @@ mfrm_gmfrm_bounded_search <- function(start, evaluator, fixed = integer(), maxit
       Inf
     })
   tryCatch({
-    opt <- stats::nlminb(start[free]/parameter_scale, objective,
+    opt <- nlminb(start[free]/parameter_scale, objective,
       function(x) state(embed(x))$evaluation$gradient[free]*parameter_scale/objective_scale,
       lower = lower[free]/parameter_scale,
       control = list(iter.max = as.integer(maxit), eval.max = as.integer(min(.Machine$integer.max, 5*maxit)),

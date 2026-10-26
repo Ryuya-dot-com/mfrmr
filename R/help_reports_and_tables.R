@@ -491,9 +491,9 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "precision_review_report()",
       "facet_statistics_report()",
       "rating_scale_table(); category_structure_report(); category_curves_report()",
-      "estimate_all_bias(); estimate_bias(); analyze_dff(); bias_interaction_report()",
-      "review_mfrm_anchors(); detect_anchor_drift(); build_linking_review()",
-      "build_model_choice_review(); build_weighting_review(); compare_mfrm()",
+      "estimate_all_bias(); estimate_bias() -> mfrm_report(); analyze_dff(); bias_interaction_report()",
+      "review_mfrm_anchors() -> mfrm_report(); detect_anchor_drift(); build_linking_review() -> mfrm_report()",
+      "build_model_choice_review() -> mfrm_report(); build_weighting_review(); compare_mfrm()",
       "build_summary_table_bundle()",
       "mfrm_report(); reporting_checklist(); build_apa_outputs()",
       "export_mfrm_results(); export_summary_appendix(); export_mfrm_bundle(); build_mfrm_manifest()",
@@ -525,7 +525,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "anchor tables, drift results, or equating chain objects",
       "two or more fitted candidate models",
       "summary(), review, recovery, prediction, or checklist objects",
-      "mfrm_results, or mfrm_fit plus diagnostics/checklist evidence",
+      "mfrm_results, G/D-study, network results, bias estimates or anchor/linking/model-choice reviews; fit plus diagnostics for build_apa_outputs()",
       "summary-table bundle, manifest, or fitted analysis bundle",
       "mfrm_fit or run_mfrm_facets() output"
     ),
@@ -540,7 +540,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Use operational linking synthesis for RSM/PCM; keep GPCM linking review caveated and exploratory.",
       "Report GPCM fit gains as sensitivity evidence, not automatic scoring policy.",
       "Use apa_table() or export_summary_appendix().",
-      "Start from res <- mfrm_results(fit); use mfrm_report(res, style = \"qc\") before manuscript-specific prose.",
+      "Use mfrm_report() on the supported saved result; add study_context for score meaning. For a fit, first call mfrm_results(fit). Copy assessment-review.Rmd for anchor/bias/model-choice modules.",
       "Check written_files and available_outputs before sharing.",
       "Prefer package-native routes unless a downstream tool requires this layout."
     ),
@@ -570,7 +570,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Operational linking conclusions remain RSM/PCM-scoped; GPCM review is caveated exploratory synthesis.",
       "Use with gpcm_capability_matrix().",
       "Works for several object classes; inspect table_index.",
-      "mfrm_report() is the report entry point over mfrm_results(); GPCM APA text is caveated and carries gpcm_boundary.",
+      "mfrm_report() retains each supported domain's evidence and limits; declarations do not recode scores or validate claims. GPCM APA text retains its capability boundary.",
       "Use export_mfrm_results() for controlled mfrm_results analysis archives; it does not deidentify files. Choose the narrowest route needed for review and keep gpcm_boundary with GPCM bundles.",
       "Compatibility is a presentation contract, not numerical equivalence."
     ),
@@ -590,8 +590,8 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     OutputFamily = c("entry", "entry", "entry", "plot-data", "plot-data", "export"),
     MainFunction = c(
       paste0(
-        "describe_mfrm_data(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ...); ",
-        "fit <- fit_mfrm(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ..., method = \"MML\")"
+        "describe_mfrm_data(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ..., category_policy = \"preserve\"); ",
+        "fit <- fit_mfrm(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ..., category_policy = \"preserve\", method = \"MML\", model = \"RSM\")"
       ),
       "summary(fit, profile = \"fit\", detail = \"brief\")",
       "res <- mfrm_results(fit); summary(res)",
@@ -1269,7 +1269,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     OutputFamily = rep("entry", 3),
     MainFunction = c("mfrm_features(); mfrm_cluster_pam(); mfrm_cluster_hierarchical(); mfrm_pca(); mfrm_cluster_kmeans(); mfrm_cluster_imputed(); mfrm_cluster_compare()",
       "review_mfrm_imputations(); fit_mfrm_imputed(); pool_mfrm_imputed()",
-      "mfrm_g_study(); mfrm_d_study(); mfrm_multivariate_d_compare()"),
+      "mfrm_g_study(); mfrm_d_study(); mfrm_multivariate_d_compare(); mfrm_report()"),
     UseWhen = c("Exploratory groups summarize selected external attributes; numeric PCA/k-means and mixed-feature grouping use different distances.",
       "Reviewed completions preserve observed scores, allowed categories and the assigned roster, with a justified imputation model.",
       "The question concerns G/Phi/SEM for declared crossed or supported nested facets and fixed score components."),
@@ -1278,7 +1278,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Numeric observed scores, Person IDs, declared facet columns, future counts and score weights."),
     NextStep = c("summary() for reviews and comparisons; plot() and plot_data() for fitted PCA, partitions and imputation co-membership. Retain the transformation and grouping with saveRDS(); export selected tables with write.csv(). See vignette('mfrmr-external-features').",
       "Inspect summary(analyses) for every completion; summary(pooled); plot(pooled); plot_data(pooled); saveRDS(pooled); write.csv(summary(pooled), ...). See vignette('mfrmr-response-imputation').",
-      "Start with summary(g) and plot(g) for score components; use type = 'covariance' for between-score matrices. With D-study result d, inspect summary(d) and plot(d), choosing metric, score and panel_by explicitly. Use plot(d, type = 'sem') for error in score units, or type = 'error_components' to see which sources contribute to each future plan. For uncertainty, see confint.mfrm_multivariate_gstudy and confint.mfrm_multivariate_d_study; summary(d, intervals = TRUE, assumption = 'normal') collects supported coefficient/SEM intervals. Save the full object with saveRDS(); CSV saves only a selected table. See vignette('mfrmr-gtheory')."),
+      "Start with summary(g) and plot(g) for score components; use type = 'covariance' for between-score matrices. With D-study result d, inspect summary(d) and plot(d), choosing metric, score and panel_by explicitly. Use plot(d, type = 'sem') for error in score units, or type = 'error_components' to see which sources contribute to each future plan. For uncertainty, see confint.mfrm_multivariate_gstudy and confint.mfrm_multivariate_d_study; summary(d, intervals = TRUE, assumption = 'normal') collects supported coefficient/SEM intervals. Pass g/d or a paired comparison directly to mfrm_report(); attach saved intervals explicitly. build_summary_table_bundle(report), apa_table(report, which = 'coefficients') and export_summary_appendix(report) retain reporting context. Save the full report with saveRDS(); use templates/gtheory-report.Rmd for a complete editable manuscript. See vignette('mfrmr-gtheory')."),
     GPCMStatus = c("not_applicable", "unavailable; fixed-standard-normal RSM/PCM MML only", "not_applicable"),
     Notes = c("Descriptive groups, not abilities, rater quality or validated latent classes. Pair the same feature imputations when comparing settings; do not pool cluster labels or PCA bases. Use dedicated tables/plots and RDS saving, not mfrm_results(); as_ggplot() supports PCA scree/scores/loadings, saved dendrograms, imputation co-membership, silhouettes and numeric/categorical profiles.",
       "Pool eligible non-Person facet targets and full covariances only; no EAP, cluster-label or fit-statistic pooling. No unassigned-cell filling, general coverage guarantee or extended-model pooling. The pooled object uses dedicated tables/plots and RDS saving, not mfrm_results(); as_ggplot() preserves saved pointwise MI intervals and inference settings.",
@@ -1410,10 +1410,52 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     stringsAsFactors = FALSE
   )
 
+  workflow_rows <- rbind(workflow_rows, data.frame(
+    Scope = "network", Question = "Which facet levels share residual profiles after fitting?",
+    OutputFamily = "report", MainFunction = "mfrm_residual_network(); mfrm_report()",
+    UseWhen = "A stated unexplained-structure question follows model and overlap review; node levels belong to one fitted facet.",
+    TypicalInput = "A fit and matching diagnostics; explicit aggregation/missingness, overlap threshold and optional group count.",
+    NextStep = "Inspect pairs and person_usage; plot(net, type = 'matrix'/'network'/'dendrogram'); mfrm_report(net) -> build_summary_table_bundle() -> export_summary_appendix(). Save the complete result with saveRDS().",
+    GPCMStatus = "ordinary one-family diagnostics only; extended-model residuals unavailable",
+    Notes = "Signed standardized-residual correlations, not raw Yen Q3, partial correlations, EGA or a fitted residual-network model. Hierarchical grouping uses common complete persons and sqrt(2*(1-r)) distance. Unavailable pairs and clustering remain explicit. Groups are exploratory, not rater quality or latent classes; random forests are a separately validated supervised follow-up.",
+    stringsAsFactors = FALSE))
+
+  network_rows <- data.frame(
+    Scope = "network", OutputFamily = "report",
+    Question = c("Are planned or observed ratings connected before fitting?",
+      "Which raters agree, score higher, or show inconsistent score differences?",
+      "Are within-rater criterion associations stronger than between-rater associations?",
+      "Do declared binary rater ties show reciprocity or covariate associations?"),
+    MainFunction = c("mfrm_network_analysis(); build_mfrm_network_review()",
+      "rater_network_analysis(); mfrm_report()",
+      "rater_halo_network_analysis(); mfrm_report()",
+      "fit_rater_network(); mfrm_report()"),
+    UseWhen = c("You need to inspect planned assignment or observed overlap before interpreting comparisons.",
+      "You want complementary observed-score agreement/direction diagnostics after checking shared contexts.",
+      "A rubric question motivates a declared same-rater minus other-rater correlation contrast.",
+      "The research question concerns network configurations or exogenous rater attributes, with a prespecified tie rule."),
+    TypicalInput = c("Raw long ratings/assignments with person/facet keys and an explicit observed/planned basis, or an existing fit.",
+      "An ordinary fit and matching diagnostics; rater/context facets, agreement metric and thresholds.",
+      "An ordinary fit and matching diagnostics; rater/criterion/context facets including Person for bootstrap intervals.",
+      "A rater/halo network, strict binary threshold, ERGM formula and optional complete Node-keyed covariates."),
+    NextStep = c("Inspect all nodes, isolated levels and row_usage; plot the graph and improve overlap where substantively justified.",
+      "Use KrippendorffAlpha for signed agreement or DirectionalMagnitude for network_fit; plot, mfrm_report() and export_summary_appendix().",
+      "Declare halo_reference; inspect halo_contrast and bootstrap_draws, including failures, then report/export the same target.",
+      "Review summary(model), backend warnings, MCMC diagnostics and simulated GOF; confint(model) extracts conditional coefficient intervals. Use plot(), mfrm_report() and export_summary_appendix()."),
+    GPCMStatus = c("Design links do not depend on a fitted response model.",
+      "Observed-score relationships, not GPCM-specific fit or slope-adjusted effects.",
+      "Observed-score associations, not a latent halo parameter.",
+      "A binary network likelihood, not a GPCM rating likelihood."),
+    Notes = c("Connectedness is not model identification. An unassigned or unscored cell is not a zero response.",
+      "Negative alpha, zero and unavailable agreement differ. SWS/PUS depend on score units and have no universal Rasch-style cutoffs; signed path centralities are withheld.",
+      "Person-cluster resampling conditions on observed raters/criteria and a fixed pair set. Undefined replicates withhold the interval. The contrast does not establish causal halo.",
+      "Optional ergm/network packages. Missing dyads stay NA; missing='model' assumes ignorability. Threshold/model selection and estimated-edge uncertainty are not included."),
+    stringsAsFactors = FALSE)
+
   out <- rbind(
     public_rows, calibration_rows, entry_rows, viewer_rows, binary_rows, out, linking_rows,
     advanced_rows, gpcm_rows, migration_entry_rows, user_pathway_rows, model_rows, workflow_rows,
-    feedback_rows, rating_evaluation_rows, model_export_row
+    feedback_rows, rating_evaluation_rows, model_export_row, network_rows
   )
   out$Lifecycle <- "stable"
   out$Lifecycle[out$OutputFamily %in% "compatibility" | out$Scope %in% c("compatibility", "facets", "conquest")] <- "compatibility"

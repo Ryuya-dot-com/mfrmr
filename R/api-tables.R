@@ -583,7 +583,9 @@ validate_unexpected_coverage <- function(x) {
 #'   Matching saved diagnostics are reusable; recompute them after refitting.
 #' @param facets Optional subset of facets.
 #' @param totalscore Include all observations for score totals (`TRUE`) or apply
-#'   legacy extreme-row exclusion (`FALSE`).
+#'   extreme-row exclusion (`FALSE`). In ordinary additive RSM/PCM JML,
+#'   finite direct anchors remain eligible even with all-minimum/all-maximum
+#'   responses, under both `xtreme_method` conventions.
 #' @param umean Additive origin shift for Measure (not fair-score values).
 #' @param uscale Multiplicative scale for Measure and measure SEs (not fair scores).
 #' @param udecimals Rounding digits used in formatted output.
@@ -592,11 +594,14 @@ validate_unexpected_coverage <- function(x) {
 #' @param label_style Column-label style for formatted outputs:
 #'   `"both"` (default), `"native"`, or `"legacy"`.
 #' @param omit_unobserved If `TRUE`, remove unobserved levels.
-#' @param xtreme Display adjustment in score units for all-minimum/all-maximum
-#'   rows; default `0` leaves fitted measures unchanged. A positive value
-#'   replaces the displayed `Measure` by inversion of an expected score that
-#'   far from the endpoint. It does not adjust responses, refit the model or
-#'   correct JML bias.
+#' @param xtreme Nonnegative correction smaller than the score range for
+#'   all-minimum/all-maximum rows. Default `0` leaves measures unchanged.
+#'   Its units depend on `xtreme_method`; no responses or primary estimates
+#'   are changed, and this does not correct JML bias.
+#' @param xtreme_method `"display"` (default) retains the historical
+#'   average-score display adjustment. `"facets"` uses conditional total-score
+#'   extrapolation for ordinary additive RSM/PCM JML, without group-mean anchors.
+#'   Supply `xtreme = .3` explicitly to use the usual FACETS main correction.
 #' @param fair_se Logical. When `TRUE` and `fit` is an MML `GPCM`
 #'   fit, add structural delta-method standard errors and confidence limits
 #'   for `Fair(M)` / `AdjustedAverage` and `Fair(Z)` /
@@ -606,6 +611,21 @@ validate_unexpected_coverage <- function(x) {
 #'   unavailable.
 #' @param ci_level Confidence level used when `fair_se = TRUE`; default
 #'   `0.95`.
+#' @param reference_plan Optional data frame of non-Person facet columns,
+#'   using the fitted facet names, and an optional positive `Weight` column.
+#'   For ordinary additive RSM/PCM JML, adds `reference_scores`: each Person's
+#'   expected average on this same plan, using its fitted facet locations and
+#'   scale profiles. Weights are normalized to sum to one. This distinct target
+#'   does not replace FairM/FairZ or their administered PCM scale mixture.
+#'   Primary estimates are used, irrespective of display/extrapolation settings.
+#'   Scores use internal score units, unaffected by `umean` or `uscale`.
+#'   The result retains the fit for [confint.mfrm_fair_average()].
+#'   For an explicit `mfrm_jeffreys_fit`, this argument is required and the
+#'   result contains only common-plan `reference_scores`, the plan, fit and
+#'   estimator identity. Other arguments beyond `fit` and `reference_plan`
+#'   are refused: ordinary FairM/FairZ diagnostics do not apply. Inspect
+#'   `summary(result)`; use `plot(confint(result, ...))` for supported interval
+#'   plots. Direct FairM/FairZ plotting is unavailable for this result.
 #'
 #' @details
 #' This function wraps the package's adjusted-score calculations and returns
@@ -628,14 +648,44 @@ validate_unexpected_coverage <- function(x) {
 #'
 #' With `xtreme > 0`, `PrimaryMeasure` retains the fitted measure, including
 #' infinite JML estimates and fixed anchors, on the requested reporting scale.
-#' `MeasureBasis` identifies display-only replacements and `ExtremeAdjustment`
-#' records their amount in score units. The displayed `Measure` may differ
-#' from an unanchored extreme estimate. Fixed anchors retain their measure
-#' in both columns. Measure SEs are
-#' unavailable on replaced rows because the original SE does not describe the
-#' display adjustment. Fair-score calculations do not use the replacement.
+#' Fixed anchors retain their measure in both columns. With
+#' `xtreme_method = "display"`, an expected average that is `xtreme` from the
+#' endpoint is inverted. Measure SEs are unavailable on replaced rows and
+#' fair-score calculations do not use that replacement.
+#' For ordinary additive RSM/PCM JML, a directly anchored element is not
+#' classified as an unanchored extreme for row exclusion. Its observations
+#' remain eligible when `totalscore = FALSE`, unless another unanchored extreme
+#' element requires their exclusion. This rule also preserves the PCM scale
+#' mixture used in fair scores and does not depend on the display adjustment.
+#' Recreate older affected fair-score tables and plots from the saved fit and
+#' matching diagnostics; refitting the calibration is unnecessary.
+#'
+#' With `xtreme_method = "facets"`, the weighted total is moved inward by
+#' `xtreme` times the smallest positive weight among that element's eligible
+#' observations. Responses involving another unanchored extreme element are
+#' excluded. The resulting weighted score equation is solved using the actual
+#' administered calibration and PCM scales. Its reciprocal square-root
+#' conditional information supplies the reporting SE. The replacement enters
+#' that element's FairM/FairZ, while reference locations retain their original
+#' basis. `ExtremeAdjustment` records a weighted-total correction in this mode,
+#' versus an average-score correction in `"display"` mode. `MeasureBasis` and
+#' `MeasureSEBasis` identify the reported quantities. These are finite reporting
+#' values and conditional SEs at an adjusted total, not finite MLEs or SEs for
+#' the original extreme response pattern. Fair-score intervals remain
+#' unavailable when `xtreme > 0`.
+#'
+#' Binary unit/replication-weight examples and a fixed-scale PCM kernel were
+#' checked against FACETS 4.5.0. This is not whole-program equivalence: partial
+#' anchor examples can leave native score residuals and shifted final measures,
+#' which this conditional calculation does not reproduce. Group-mean anchors,
+#' fitted interactions, corrected JML, MML and GPCM are outside this route.
 #' Recompute older diagnostics and recreate saved tables from the existing
 #' fit before summarizing or plotting them; no model refit is needed.
+#' With an extreme fixed Person plus an informative interior Person anchor,
+#' matched RSM/PCM examples also agree for conditional fair scores at the
+#' reported native calibration. Main estimates can still differ and native
+#' iteration limits or nonzero free-element score residuals must not be
+#' interpreted as calibration agreement.
 #'
 #' `GPCM` fits are supported under a slope-aware
 #' element-conditional construction. For each slope-facet element
@@ -670,6 +720,10 @@ validate_unexpected_coverage <- function(x) {
 #'
 #' Observed-vs-fair gaps also reflect person mix and assignment. They are
 #' descriptive follow-up prompts, not standalone evidence of rater bias.
+#' Ordinary additive RSM/PCM JML tables also retain `PTMEAExpected` and its
+#' availability metadata when present in the matching diagnostics. This is a
+#' conditional reference for observed `PtMea Corr`, not an inferential cutoff;
+#' see [diagnose_mfrm()] for its finite-count correction and weighting basis.
 #'
 #' @section Typical workflow:
 #' 1. Run `fair_average_table(fit, ...)`.
@@ -691,6 +745,7 @@ validate_unexpected_coverage <- function(x) {
 #'   \item{Measure}{Displayed facet measure, transformed by `umean` and `uscale`; may be replaced when `xtreme > 0`.}
 #'   \item{PrimaryMeasure}{Original fitted measure on the same reporting scale, including infinite JML estimates.}
 #'   \item{MeasureBasis, ExtremeAdjustment}{Whether the displayed measure was replaced and the replacement amount in score units.}
+#'   \item{MeasureSEBasis}{In `raw_by_facet`, distinguishes conditional information at a corrected total from fitted-measure uncertainty.}
 #'   \item{FairMReference}{The mean reference used for FairM, or why that reference is unavailable.}
 #'   \item{ModelBasedSE, FitAdjustedSE}{Package-native aliases for `Model S.E.` and `Real S.E.`.}
 #'   \item{Infit MnSq, Outfit MnSq}{Fit statistics for this level.}
@@ -753,13 +808,20 @@ validate_unexpected_coverage <- function(x) {
 #' head(fair$raw_by_facet$Person[, c("Level", "ObservedAverage", "FairM")])
 #' # FairM uses the mean reference for the other facets; it is in score units
 #' # It is a conditional model prediction, not a guarantee of fairness
+#'
+#' # For an ordinary JML fit, request total-score extrapolation explicitly
+#' jml <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML")
+#' extreme_report <- fair_average_table(jml, xtreme = .3, xtreme_method = "facets")
+#' head(extreme_report$raw_by_facet$Person[, c("Level", "PrimaryMeasure",
+#'      "Measure", "MeasureBasis", "ModelSE", "MeasureSEBasis")])
+#' # ModelSE describes the adjusted total when MeasureBasis says extrapolation
 #' @section References:
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
 #' - Linacre, J. M. (1994). *Many-facet Rasch Measurement* (2nd ed.).
 #'   MESA Press.
 #' - Linacre, J. M. (2026). *A user's guide to FACETS, version 4.5.0*.
 #'   Winsteps.com.
-#'   (FACETS Table 12 corresponds to the fair-average
+#'   (FACETS Table 7 corresponds to the fair-average
 #'   construction implemented here for `RSM` / `PCM` fits; the
 #'   slope-aware element-conditional construction for `GPCM`
 #'   is documented in this help page.)
@@ -785,9 +847,22 @@ fair_average_table <- function(fit,
                                omit_unobserved = FALSE,
                                xtreme = 0,
                                fair_se = FALSE,
-                               ci_level = 0.95) {
+                               ci_level = 0.95,
+                               xtreme_method = c("display", "facets"),
+                               reference_plan = NULL) {
+  if (mfrm_is_jeffreys_fit(fit)) {
+    supplied <- names(as.list(match.call())[-1L])
+    if (any(!supplied %in% c("fit", "reference_plan")) || is.null(reference_plan))
+      stop("Jeffreys fits support fair_average_table(fit, reference_plan = ...); ordinary FairM/FairZ and diagnostic controls are unavailable.", call. = FALSE)
+    plan <- mfrm_fair_reference_plan(fit, reference_plan)
+    return(as_mfrm_bundle(list(reference_scores = mfrm_fair_reference_scores(fit, plan),
+      reference_plan = plan, reference_fit = fit, reference_identity = mfrm_fair_fit_identity(fit),
+      settings = list(reference_target = "common_plan_expected_average",
+        estimator = "jeffreys_canonical_joint"), notes = fit$notes), "mfrm_fair_average"))
+  }
   reference <- match.arg(reference)
   label_style <- match.arg(label_style)
+  xtreme_method <- match.arg(xtreme_method)
   if (!is.numeric(ci_level) || length(ci_level) != 1L ||
       !is.finite(ci_level) || ci_level <= 0 || ci_level >= 1) {
     stop("`ci_level` must be a single number in (0, 1).", call. = FALSE)
@@ -796,6 +871,15 @@ fair_average_table <- function(fit,
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
   fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
+  if (identical(xtreme_method, "facets") &&
+      (!identical(fit$config$method, "JML") || !fit_model %in% c("RSM", "PCM") ||
+       length(fit$config$interaction_specs)))
+    stop("FACETS total-score extrapolation requires ordinary additive RSM/PCM JML.", call. = FALSE)
+  if (identical(xtreme_method, "facets") && any(fit$config$anchor_summary$GroupAnchors > 0))
+    stop("FACETS total-score extrapolation does not support group-mean anchors.", call. = FALSE)
+  if (!is.numeric(xtreme) || length(xtreme) != 1L || !is.finite(xtreme) || xtreme < 0 ||
+      xtreme >= fit$prep$rating_max - fit$prep$rating_min)
+    stop("`xtreme` must be finite, nonnegative and less than the score range.", call. = FALSE)
   if (is.null(diagnostics)) {
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
   }
@@ -817,6 +901,7 @@ fair_average_table <- function(fit,
     label_style = label_style,
     omit_unobserved = omit_unobserved,
     xtreme = xtreme,
+    xtreme_method = xtreme_method,
     fair_se = fair_se,
     ci_level = ci_level
   )
@@ -830,6 +915,7 @@ fair_average_table <- function(fit,
     label_style = label_style,
     omit_unobserved = omit_unobserved,
     xtreme = xtreme,
+    xtreme_method = xtreme_method,
     fair_se = isTRUE(fair_se),
     ci_level = ci_level,
     rating_min = fit$prep$rating_min,
@@ -853,6 +939,14 @@ fair_average_table <- function(fit,
       "rows when the MML observed-information Hessian is available. ",
       "See `gpcm_capability_matrix()` for the current support contract."
     )
+  }
+  if (!is.null(reference_plan)) {
+    plan <- mfrm_fair_reference_plan(fit, reference_plan)
+    bundle$reference_scores <- mfrm_fair_reference_scores(fit, plan)
+    bundle$reference_plan <- plan
+    bundle$reference_fit <- fit
+    bundle$reference_identity <- prediction_fit_identity(fit)
+    bundle$settings$reference_target <- "common_plan_expected_average"
   }
   as_mfrm_bundle(bundle, "mfrm_fair_average")
 }
@@ -2790,8 +2884,8 @@ table3_iteration_report <- function(fit,
 build_subset_connectivity_edges <- function(fit, nodes_tbl, keep_subsets) {
   data <- as.data.frame(fit$prep$data %||% data.frame(), stringsAsFactors = FALSE)
   source_cols <- fit$config$source_columns %||% list()
-  person_col <- as.character(source_cols$person %||% "Person")
-  facet_cols <- as.character(source_cols$facets %||% fit$config$facet_names %||% character(0))
+  person_col <- if ("Person" %in% names(data)) "Person" else as.character(source_cols$person)
+  facet_cols <- as.character(fit$prep$facet_names %||% fit$config$facet_names %||% source_cols$facets %||% character(0))
   cols <- c(person_col, facet_cols)
   cols <- cols[nzchar(cols)]
   if (!is.data.frame(data) || nrow(data) == 0L || length(cols) < 2L ||
@@ -2816,11 +2910,10 @@ build_subset_connectivity_edges <- function(fit, nodes_tbl, keep_subsets) {
     )
   }))
   long <- long[!is.na(long$Level) & nzchar(long$Level), , drop = FALSE]
-  long$Node <- paste(long$Facet, long$Level, sep = ":")
   long <- merge(
     long,
-    node_lookup[, c("Node", "Subset"), drop = FALSE],
-    by = "Node",
+    node_lookup[, c("Facet", "Level", "Node", "Subset"), drop = FALSE],
+    by = c("Facet", "Level"),
     all.x = FALSE,
     all.y = FALSE
   )
@@ -2828,6 +2921,7 @@ build_subset_connectivity_edges <- function(fit, nodes_tbl, keep_subsets) {
   split_rows <- split(long, long$Row)
   edge_list <- lapply(split_rows, function(row_tbl) {
     row_tbl <- row_tbl[!duplicated(row_tbl$Node), , drop = FALSE]
+    row_tbl <- row_tbl[order(row_tbl$Node), , drop = FALSE]
     if (nrow(row_tbl) < 2L) return(NULL)
     cmb <- utils::combn(seq_len(nrow(row_tbl)), 2L)
     from <- row_tbl[cmb[1, ], , drop = FALSE]
@@ -4723,7 +4817,8 @@ table8_curves_export <- function(fit,
                                  theta_points = 241,
                                  digits = 4,
                                  include_fixed = FALSE,
-                                 fixed_max_rows = 400) {
+                                 fixed_max_rows = 400,
+                                 newdata = NULL) {
   signal_legacy_name_deprecation(
     old_name = "table8_curves_export",
     new_name = "category_curves_report",
@@ -4732,7 +4827,11 @@ table8_curves_export <- function(fit,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
-  stop_if_product_slopes(fit, "category_curves_report()")
+  if (is.null(newdata)) stop_if_product_slopes(fit, "category_curves_report()")
+  if (!is.null(newdata) && (!is.numeric(theta_points) || length(theta_points) != 1L ||
+      !is.finite(theta_points) || theta_points < 2 || theta_points > .Machine$integer.max)) {
+    stop("`theta_points` must be a finite number of at least two points.", call. = FALSE)
+  }
   theta_points <- max(51L, as.integer(theta_points))
   theta_range <- as.numeric(theta_range)
   if (length(theta_range) != 2 || !all(is.finite(theta_range)) || theta_range[1] >= theta_range[2]) {
@@ -4740,12 +4839,23 @@ table8_curves_export <- function(fit,
   }
   digits <- max(0L, as.integer(digits))
 
-  curve_spec <- build_step_curve_spec(fit)
+  curve_spec <- if (is.null(newdata)) build_step_curve_spec(fit) else
+    category_context_curve_spec(fit, newdata)
   theta_grid <- seq(theta_range[1], theta_range[2], length.out = theta_points)
   curve_tbl <- build_curve_tables(curve_spec, theta_grid)
   prob_df <- as.data.frame(curve_tbl$probabilities, stringsAsFactors = FALSE)
   exp_df <- as.data.frame(curve_tbl$expected, stringsAsFactors = FALSE)
   cumulative_tbls <- build_cumulative_category_tables(prob_df, curve_spec$categories)
+  if (!is.null(newdata)) {
+    cumulative_tbls$boundaries <- category_context_boundaries(
+      cumulative_tbls$boundaries, curve_spec, theta_range, fit)
+    prob_df$CategoryLabel <- category_original_labels(as.numeric(prob_df$Category), fit)
+    cumulative_tbls$probabilities$CategoryLabel <- category_original_labels(
+      as.numeric(cumulative_tbls$probabilities$BoundaryCategory), fit)
+    cumulative_tbls$probabilities$CategorySet <- paste(
+      ifelse(cumulative_tbls$probabilities$Direction == "at_or_below", "<=", ">="),
+      cumulative_tbls$probabilities$CategoryLabel)
+  }
 
   groups <- unique(as.character(exp_df$CurveGroup))
   scale_map <- setNames(seq_along(groups), groups)
@@ -4808,12 +4918,12 @@ table8_curves_export <- function(fit,
     graphfile_syntactic = round_numeric(graph_tbl_syntactic),
     probabilities = round_numeric(as.data.frame(prob_df, stringsAsFactors = FALSE)),
     cumulative_probabilities = round_numeric(cumulative_tbls$probabilities),
-    cumulative_boundaries = round_numeric(cumulative_tbls$boundaries),
+    cumulative_boundaries = if (is.null(newdata)) round_numeric(cumulative_tbls$boundaries) else cumulative_tbls$boundaries,
     category_information = round_numeric(
       as.data.frame(
         prob_df |>
           dplyr::select(
-            "CurveGroup", "Theta", "Category", "Probability",
+            "CurveGroup", "Theta", "Category", dplyr::any_of("CategoryLabel"), "Probability",
             "ExpectedScore", "ScoreVariance", "Information",
             "CategoryInformation", "CategoryInformationShare",
             "Slope", "Model", "CurveBasis", "PredictorOffset"
@@ -4828,7 +4938,7 @@ table8_curves_export <- function(fit,
       digits = digits,
       curve_basis = curve_spec$curve_basis,
       predictor_offset = curve_spec$predictor_offset,
-      curve_basis_description = paste(
+      curve_basis_description = curve_spec$basis_description %||% paste(
         "Estimated step and, for GPCM, slope parameters are retained;",
         "additive facet main effects and fitted interactions are fixed at zero."
       ),
@@ -4843,6 +4953,25 @@ table8_curves_export <- function(fit,
       )
     )
   )
+  if (!is.null(newdata)) {
+    out$newdata <- curve_spec$newdata
+    out$fit_readiness <- as.data.frame(mfrmr_get_readiness_record(fit)$fit)
+    out$settings$predictor_offset <- NULL
+    out$settings$point_only <- TRUE
+    out$settings$boundary_method <- "analytic_or_paired_mass"
+    out$settings$source_converged <- fit$summary$Converged %||% NA
+    out$settings$source_inference_ready <- out$fit_readiness$InferenceReady
+    out$notes <- c(curve_spec$basis_description,
+      "Point calculations only; calibration SEs and confidence intervals are not computed by this report.",
+      "Cumulative 50% thresholds differ from adjacent-category intersections and centered Andrich step offsets.",
+      "Ordered cumulative thresholds do not establish adequate category functioning or calibration reliability.",
+      paste0("Source convergence: ", out$settings$source_converged,
+        "; source inference readiness: ", out$settings$source_inference_ready,
+        ". Finite calculations do not upgrade the source diagnostics."),
+      if (mfrm_has_product_slopes(fit)) "Two-family GPCM values are provisional; curve and threshold intervals are unavailable.",
+      if (any(!curve_spec$profiles$ObservedContext)) "Some supplied contexts combine fitted levels not jointly observed in the retained rating design.",
+      mfrm_gpcm_anchor_note(fit))
+  }
   if (isTRUE(include_fixed)) {
     fixed_max_rows <- max(25L, as.integer(fixed_max_rows))
     out$fixed <- build_sectioned_fixed_report(
@@ -4854,6 +4983,9 @@ table8_curves_export <- function(fit,
       ),
       max_col_width = 24
     )
+  }
+  if (isTRUE(include_fixed) && !is.null(newdata)) {
+    out$fixed <- paste(out$fixed, "Interpretation:", paste(out$notes, collapse = "\n"), sep = "\n\n")
   }
   out
 }
@@ -6693,7 +6825,7 @@ plot_residual_pca <- function(x,
       if (isTRUE(draw)) {
         apply_plot_preset(style)
         yr <- range(c(tbl$Eigenvalue, tbl$ParallelMean, tbl$ParallelCutoff, rasch_refs), finite = TRUE)
-        graphics::plot(
+        plot(
           x = tbl$Component,
           y = tbl$Eigenvalue,
           type = "b",
@@ -6705,9 +6837,9 @@ plot_residual_pca <- function(x,
           main = "",
           sub = ""
         )
-        graphics::abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
-        graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-        graphics::lines(
+        abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
+        abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
+        lines(
           x = tbl$Component,
           y = tbl$ParallelCutoff,
           type = "b",
@@ -6715,15 +6847,15 @@ plot_residual_pca <- function(x,
           lty = 2,
           col = style$accent_secondary
         )
-        graphics::lines(
+        lines(
           x = tbl$Component,
           y = tbl$ParallelMean,
           type = "l",
           lty = 3,
           col = style$accent_tertiary
         )
-        graphics::abline(h = rasch_refs, lty = 2, col = style$neutral)
-        graphics::legend("topright", bty = "n", cex = .8,
+        abline(h = rasch_refs, lty = 2, col = style$neutral)
+        legend("topright", bty = "n", cex = .8,
           legend = c("Observed residual eigenvalues", q_label, "Parallel mean", rasch_ref_labels),
           col = c(style$accent_primary, style$accent_secondary, style$accent_tertiary, style$neutral),
           lty = c(1, 2, 3, 2), pch = c(16, 17, NA, NA))
@@ -6767,7 +6899,7 @@ plot_residual_pca <- function(x,
       if (isTRUE(draw)) {
         apply_plot_preset(style)
         cols <- ifelse(tbl$ExceedsParallelCutoff, style$accent_secondary, style$neutral)
-        graphics::barplot(
+        barplot(
           height = tbl$ExcessOverParallelCutoff,
           names.arg = tbl$Component,
           col = cols,
@@ -6777,7 +6909,7 @@ plot_residual_pca <- function(x,
           main = "",
           sub = ""
         )
-        graphics::abline(h = 0, lty = 2, col = style$neutral)
+        abline(h = 0, lty = 2, col = style$neutral)
       }
       out <- new_mfrm_plot_data(
         "residual_pca",
@@ -6808,7 +6940,7 @@ plot_residual_pca <- function(x,
 
     if (isTRUE(draw)) {
       apply_plot_preset(style)
-      graphics::plot(
+      plot(
         x = tbl$Component,
         y = tbl$Eigenvalue,
         type = "b",
@@ -6818,9 +6950,9 @@ plot_residual_pca <- function(x,
         ylab = "Eigenvalue",
         main = ""
       )
-      graphics::abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
-      graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-      graphics::abline(h = rasch_refs, lty = 2, col = style$neutral)
+      abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
+      abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
+      abline(h = rasch_refs, lty = 2, col = style$neutral)
     }
 
     out <- new_mfrm_plot_data(
@@ -6866,7 +6998,7 @@ plot_residual_pca <- function(x,
   if (isTRUE(draw)) {
     apply_plot_preset(style)
     cols <- ifelse(load_tbl$Loading >= 0, style$accent_tertiary, style$accent_secondary)
-    graphics::barplot(
+    barplot(
       height = load_tbl$Loading,
       names.arg = load_tbl$Variable,
       horiz = TRUE,
@@ -6876,7 +7008,7 @@ plot_residual_pca <- function(x,
       xlab = "Loading",
       main = ""
     )
-    graphics::abline(v = 0, lty = 2, col = style$neutral)
+    abline(v = 0, lty = 2, col = style$neutral)
   }
 
   out <- new_mfrm_plot_data(
@@ -6957,15 +7089,31 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #'   restricted to the pairwise case. The canonical `"Person"` role may be
 #'   supplied explicitly; see the Person-screening boundary below.
 #' @param max_abs Bound for absolute bias size.
-#' @param omit_extreme Omit extreme-only elements.
+#' @param omit_extreme Omit extreme-only elements. In ordinary additive RSM/PCM
+#'   JML, directly fixed finite anchors are retained even with all-low/all-high
+#'   responses. Their cell bias may still have no finite unconstrained optimum.
 #' @param max_iter Maximum number of repeated cell-estimation passes recorded
 #'   in `iteration`; the baseline calibration stays fixed throughout.
 #' @param tol Between-pass change tolerance for the iteration log. This does
 #'   not control the tolerance of the bounded scalar likelihood optimizer.
+#' @param xtreme Default `0` retains bounded extreme-cell estimates with SEs
+#'   withheld. A positive correction (usually `.5` for FACETS bias reporting)
+#'   requests finite total-score extrapolation for ordinary additive RSM/PCM
+#'   JML without group-mean anchors; it must be smaller than the score range.
 #'
 #' @details
-#' **Bias (interaction) in MFRM** refers to a systematic departure from
-#' the additive model: a specific rater-criterion (or higher-order)
+#' This helper supports `RSM`, `PCM`, and one-slope-family `GPCM` fits.
+#' Two-slope-family `GPCM` fits are not currently supported.
+#' It estimates an additional cell shift relative to the fitted baseline,
+#' holding that baseline fixed. For joint estimation of main effects and
+#' a two-facet interaction in `RSM` / `PCM`, use the `facet_interactions`
+#' argument of [fit_mfrm()]. For the supported fixed-population RSM/PCM MML
+#' route, [mfrm_facet_intervals()] with `interaction = "FacetA:FacetB"` returns
+#' joint-information cell intervals. They estimate a different target and
+#' do not replace or relabel this fixed-baseline screening result.
+#'
+#' **Bias (interaction) in an additive MFRM** refers to a systematic departure
+#' from the main-effects model: a specific rater-criterion (or higher-order)
 #' combination produces scores that are consistently higher or lower than
 #' predicted by the main effects alone.  For example, Rater A might be
 #' unexpectedly harsh on Criterion 2 despite being lenient overall.
@@ -6978,6 +7126,9 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' Here the example uses negatively oriented rater and criterion facets.
 #' The returned `Bias Size` is always an additive shift in the score predictor:
 #' positive values increase expected scores; negative values decrease them.
+#' If the fitted model already contains `facet_interactions`, those fitted
+#' interactions remain part of the fixed baseline. The new shift is a
+#' residual departure from that model, not a re-estimate of its interaction.
 #' Each cell's shift is estimated by maximizing its conditional likelihood
 #' within `[-max_abs, max_abs]`, holding fitted person measures, facet values,
 #' steps and slopes fixed. For `RSM` / `PCM`, an interior solution satisfies
@@ -6989,7 +7140,12 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' \eqn{\mathrm{SE}(\hat b) = [\sum_n w_{njc}
 #' \mathrm{Var}_{njc}(\hat b)]^{-1/2}}. For `GPCM`, the score and information
 #' include the observation's slope and squared slope, respectively, and
-#' conditional profile-likelihood columns are also returned. All these
+#' conditional profile-likelihood columns are also returned. `Bias Size`
+#' is in the model's native ability units: in `RSM` / `PCM` it equals the
+#' change in adjacent-category log odds, whereas in `GPCM` that change is
+#' \eqn{a b} for an observation with slope \eqn{a}. The same bias value can
+#' therefore imply different probability changes across observations.
+#' All these
 #' quantities are plug-in screening evidence: JML person measures or MML EAP
 #' scores and the calibration parameters are treated as known. Their estimation
 #' uncertainty, including uncertainty in supplied anchors, is not propagated.
@@ -7001,6 +7157,31 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' Inspect `ScreenStatus` and `ScreenReason`: a bound can mean an insufficient
 #' search range or an all-low/all-high cell with no finite unconstrained
 #' optimum. Increasing the range does not resolve the latter.
+#'
+#' With `xtreme > 0`, an all-low/all-high cell's weighted total is moved inward
+#' by `xtreme` times its smallest positive weight. A root strictly inside
+#' `[-max_abs, max_abs]` yields `BiasStatus = "extreme_adjusted"`, finite
+#' `Bias Size` and conditional information SE; `PrimaryBias` retains the
+#' infinite cell MLE and `ExtremeAdjustment` records the total correction.
+#' Otherwise the boundary remains unavailable for screening. Observations
+#' involving any unanchored extreme main-effect element are excluded in this
+#' route even when `omit_extreme = FALSE`; finite fixed anchors remain usable.
+#' This prevents main-effect display replacements from becoming calibration.
+#' The default `xtreme = 0` also retains directly fixed finite anchors in ordinary
+#' additive RSM/PCM JML; extreme cells then keep bounded points with screening
+#' SEs and tail areas withheld. Group-mean constraints are not direct anchors.
+#' The native FACETS `Xtreme = main,bias` has two separate corrections: this
+#' function's `xtreme` corresponds to the second value (normally `.5`), not
+#' the first (normally `.3`). Executed FACETS 4.5.0 Person-by-Rater examples
+#' retain fixed extreme Persons and agree with the conditional cell calculation
+#' on the same main calibration. This does not establish main-calibration parity.
+#' If a low cell's baseline expectation is already below the inward correction,
+#' its adjusted bias can be positive despite a negative observed-minus-expected
+#' score difference (and conversely at the upper endpoint). Inspect `PrimaryBias`,
+#' `ExtremeAdjustment` and `Obs-Exp Average` together; the adjusted sign describes
+#' the amended total, not a reversal of the observed departure.
+#' Extrapolated tail areas, summaries and pairwise contrasts are reporting
+#' conventions, not regular-MLE inference, coverage guarantees or fairness tests.
 #'
 #' `ConditionalInformation` uses every cell row, including small positive
 #' conditional variances; the residual-screening cutoff does not remove their
@@ -7020,7 +7201,7 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #'   The function emits a classed warning when `"Person"` is requested.
 #'
 #' @section What this screening means:
-#' `estimate_bias()` summarizes interaction departures from the additive MFRM.
+#' `estimate_bias()` summarizes additional cell departures from the fitted MFRM.
 #' It is best read as a targeted screening tool for potentially noteworthy
 #' cells or facet combinations that may merit substantive review.
 #'
@@ -7036,8 +7217,9 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' interaction effects.
 #'
 #' Prioritize rows with:
-#' - larger `|Bias Size|`, assessed against a substantively chosen logit
-#'   threshold rather than a universal small/large-effect rule
+#' - larger `|Bias Size|`, assessed against a substantively chosen threshold
+#'   in native ability units and its effect on expected scores, rather than
+#'   a universal small/large-effect rule
 #' - larger `|t|` among the screening metrics (the default review rule is
 #'   \eqn{|t| \ge 2}, not a validated fairness decision)
 #' - smaller `Prob.` among the screening metrics
@@ -7049,6 +7231,22 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' Cell t reference df uses weighted count minus 1. This matches the executed
 #' FACETS 4.5.0 equal-count binary example; a manual count-minus-2 description
 #' is a distinct convention and does not establish version-wide equivalence.
+#' `DFUnrounded` retains count minus one, including nonpositive values.
+#' A nonpositive value withholds `d.f.`, `DFDisplay` and `Prob.`; a finite point
+#' and conditional information SE can remain available. For positive df,
+#' `DFDisplay` rounds to the nearest integer (halves upward) for RSM/PCM display
+#' comparison only. `d.f.` and `Prob.` use the continuous reference.
+#' `ProbabilityReference`, `ProbabilityStatus` and `ProbabilityReason` identify
+#' the reference distribution and distinguish available conditional or
+#' extreme-adjusted tails from unavailable df, statistics or numerical results.
+#' These fields describe `Prob.`, not the separate GPCM likelihood-ratio tail.
+#'
+#' Checked FACETS 4.5.0 fractional-count tails are reproduced by extending an
+#' integer-df finite-sum formula to fractional df. That extension is not the
+#' continuous-df Student distribution and can change a 0.05 screening flag.
+#' mfrmr retains the continuous Student tail, independently checked by density
+#' integration. This explains the checked output behavior without claiming
+#' access to the executable's implementation or general finite-sample validity.
 #' The all-zero `chi_sq` screen sums squared bias/SE ratios without centering;
 #' its df is the number of cells. It requires at least two cells and complete
 #' cell estimates and SEs. Otherwise its statistic, degrees of freedom and
@@ -7075,7 +7273,8 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #'
 #' @section Interpreting key output columns:
 #' In `bias$table`, the most-used columns are:
-#' - `Bias Size`: estimated interaction effect \eqn{b_{jc}} (logit scale)
+#' - `Bias Size`: estimated additional cell shift \eqn{b_{jc}} in native
+#'   ability units; in `GPCM`, adjacent log odds change by \eqn{a b_{jc}}
 #' - `t` and `Prob.`: screening metrics, not formal inferential quantities
 #' - `S.E.`: conditional information-based SE of the cell shift, with the
 #'   calibration held fixed
@@ -7129,7 +7328,8 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #'   optimizer failures encountered while estimating the bias
 #'   parameters; empty when every cell converged cleanly
 #'
-#' @seealso [build_fixed_reports()], [build_apa_outputs()]
+#' @seealso [interaction_effect_table()], [build_fixed_reports()],
+#'   [build_apa_outputs()]
 #' @examples
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
@@ -7137,17 +7337,22 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' s_bias <- summary(bias)
 #' s_bias$overview
-#' # Look for: `MaxAbsBias` < ~0.5 logits and `Significant = 0` mean
-#' #   no cell exceeded the screen. The `BonferroniSignificant` /
+#' # This example uses the default RSM, so Bias Size is also in logit units.
+#' # `Significant` counts cells crossing the screening rule, not proven bias.
+#' # The `BonferroniSignificant` /
 #' #   `HolmSignificant` columns count cells that survive multiple-
 #' #   testing adjustment to screening tail areas. Zero flags do not
 #' #   establish absence of bias or equivalence.
 #' s_bias$top_rows
-#' # Look for: rows with `|t|` > 2 and |Bias Size| > 0.5 logits warrant
-#' #   review. These cutoffs do not establish statistical reliability;
+#' # An illustrative review rule is |t| > 2 and |Bias Size| > 0.5 logits.
+#' # Choose the effect threshold substantively; these cutoffs do not
+#' #   establish statistical reliability;
 #' #   inspect cell counts, uncertainty and substantive consequences.
 #' p_bias <- plot(bias, type = "bias", draw = FALSE)
 #' p_bias$data$plot
+#' # Optional finite reporting for extreme cells; this does not refit calibration
+#' extreme_bias <- estimate_bias(fit, diag, "Rater", "Criterion", xtreme = .5)
+#' head(extreme_bias$table[, c("Bias Size", "PrimaryBias", "BiasStatus", "SEBasis")])
 #'
 #' @section References:
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
@@ -7179,13 +7384,13 @@ estimate_bias <- function(fit,
                           max_abs = 10,
                           omit_extreme = TRUE,
                           max_iter = 4,
-                          tol = 1e-3) {
+                          tol = 1e-3,
+                          xtreme = 0) {
   stop_if_product_slopes(fit, "estimate_bias()")
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm(). ",
          "Got: ", paste(class(fit), collapse = "/"), ".", call. = FALSE)
   }
-  fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
   if (missing(diagnostics)) {
     stop("`diagnostics` is required. Call diagnose_mfrm(fit) first and ",
          "pass the result as the second argument: ",
@@ -7196,6 +7401,15 @@ estimate_bias <- function(fit,
     stop("`diagnostics` must be the output of diagnose_mfrm(). ",
          "Run: diagnostics <- diagnose_mfrm(fit)", call. = FALSE)
   }
+  fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
+  if (!is.numeric(xtreme) || length(xtreme) != 1L || !is.finite(xtreme) || xtreme < 0 ||
+      xtreme >= fit$prep$rating_max - fit$prep$rating_min)
+    stop("`xtreme` must be finite, nonnegative and less than the score range.", call. = FALSE)
+  if (xtreme > 0 && (!identical(fit$config$method, "JML") || !fit_model %in% c("RSM", "PCM") ||
+      length(fit$config$interaction_specs)))
+    stop("Extreme bias extrapolation requires ordinary additive RSM/PCM JML.", call. = FALSE)
+  if (xtreme > 0 && any(fit$config$anchor_summary$GroupAnchors > 0))
+    stop("Extreme bias extrapolation does not support group-mean anchors.", call. = FALSE)
   mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "estimate_bias()")
   if (is.null(interaction_facets)) {
     if (is.null(facet_a) || is.null(facet_b)) {
@@ -7246,11 +7460,13 @@ estimate_bias <- function(fit,
     max_abs = max_abs,
     omit_extreme = omit_extreme,
     max_iter = max_iter,
-    tol = tol
+    tol = tol,
+    xtreme = xtreme
   )
   if (is.list(out) && length(out) > 0) {
     class(out) <- c("mfrm_bias", class(out))
     out$fit_identity <- mfrm_result_fit_identity(fit)
+    out$xtreme <- xtreme
     out$person_interaction <- person_interaction
     out$person_source_column <- as.character(
       fit$config$source_columns$person %||% "Person"
@@ -8609,8 +8825,8 @@ plot_table13_bias <- function(x,
     if (plot == "scatter") {
       scatter_plot <- scatter[is.finite(scatter$ObsExpAverage) & is.finite(scatter$BiasSize), , drop = FALSE]
       if (nrow(scatter_plot) == 0) {
-        graphics::plot.new()
-        graphics::text(0.5, 0.5, "No data")
+        plot.new()
+        text(0.5, 0.5, "No data")
       } else {
         col <- ifelse(as.logical(scatter_plot$Flag), pal["flag"], pal["normal"])
         # Widen ylim when CI whiskers are drawn so the plot fits them.
@@ -8621,7 +8837,7 @@ plot_table13_bias <- function(x,
         } else {
           NULL
         }
-        graphics::plot(
+        plot(
           x = scatter_plot$ObsExpAverage,
           y = scatter_plot$BiasSize,
           pch = 16,
@@ -8634,7 +8850,7 @@ plot_table13_bias <- function(x,
         if (ci_available && all(c("CI_Lower", "CI_Upper") %in% names(scatter_plot))) {
           valid <- is.finite(scatter_plot$CI_Lower) & is.finite(scatter_plot$CI_Upper)
           if (any(valid)) {
-            graphics::segments(
+            segments(
               x0 = scatter_plot$ObsExpAverage[valid],
               y0 = scatter_plot$CI_Lower[valid],
               x1 = scatter_plot$ObsExpAverage[valid],
@@ -8644,16 +8860,16 @@ plot_table13_bias <- function(x,
             )
           }
         }
-        graphics::abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
-        graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-        graphics::abline(h = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn), lty = c(2, 1, 2), col = c(style$neutral, style$axis, style$neutral))
-        graphics::abline(v = 0, lty = 2, col = style$neutral)
+        abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
+        abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
+        abline(h = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn), lty = c(2, 1, 2), col = c(style$neutral, style$axis, style$neutral))
+        abline(v = 0, lty = 2, col = style$neutral)
       }
     } else if (plot == "ranked") {
       ranked_plot <- ranked[is.finite(suppressWarnings(as.numeric(ranked$BiasSize))), , drop = FALSE]
       if (nrow(ranked_plot) == 0) {
-        graphics::plot.new()
-        graphics::text(0.5, 0.5, "No data")
+        plot.new()
+        text(0.5, 0.5, "No data")
       } else {
         sub <- ranked_plot[seq_len(min(nrow(ranked_plot), top_n)), , drop = FALSE]
         y <- rev(seq_len(nrow(sub)))
@@ -8678,7 +8894,7 @@ plot_table13_bias <- function(x,
         } else {
           NULL
         }
-        graphics::plot(
+        plot(
           x = vals,
           y = y,
           type = "n",
@@ -8688,12 +8904,12 @@ plot_table13_bias <- function(x,
           main = "",
           xlim = xlim
         )
-        graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-        graphics::segments(0, y, vals, y, col = style$neutral)
+        abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
+        segments(0, y, vals, y, col = style$neutral)
         if (have_sub_ci) {
           valid <- is.finite(ci_lo) & is.finite(ci_hi)
           if (any(valid)) {
-            graphics::segments(
+            segments(
               x0 = ci_lo[valid], y0 = y[valid],
               x1 = ci_hi[valid], y1 = y[valid],
               col = col[valid], lwd = 2,
@@ -8701,9 +8917,9 @@ plot_table13_bias <- function(x,
             )
           }
         }
-        graphics::points(vals, y, pch = 16, col = col)
-        graphics::axis(side = 2, at = y, labels = lbl, las = las_rank, cex.axis = 0.75)
-        graphics::abline(v = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn), lty = c(2, 1, 2), col = c(style$neutral, style$axis, style$neutral))
+        points(vals, y, pch = 16, col = col)
+        axis(side = 2, at = y, labels = lbl, las = las_rank, cex.axis = 0.75)
+        abline(v = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn), lty = c(2, 1, 2), col = c(style$neutral, style$axis, style$neutral))
       }
     } else if (plot == "heatmap") {
       # Cell-color heatmap of bias size for the two interaction facets.
@@ -8715,8 +8931,8 @@ plot_table13_bias <- function(x,
       b_lvls <- heatmap_data$x_levels
       if (length(mat_bias) == 0L || length(a_lvls) == 0L ||
           length(b_lvls) == 0L) {
-        graphics::plot.new()
-        graphics::text(0.5, 0.5, "No data")
+        plot.new()
+        text(0.5, 0.5, "No data")
       } else {
         # Diverging palette around zero with symmetric range.
         max_abs <- max(abs(mat_bias), na.rm = TRUE)
@@ -8729,7 +8945,7 @@ plot_table13_bias <- function(x,
         graphics::par(mar = c(max(5, label_angle / 9 + 4),
                               max(5, max(nchar(a_lvls)) * 0.55 + 2),
                               3, 1))
-        graphics::image(
+        image(
           x = seq_len(length(b_lvls)),
           y = seq_len(length(a_lvls)),
           z = t(mat_bias),
@@ -8740,21 +8956,21 @@ plot_table13_bias <- function(x,
           ylab = "",
           main = ""
         )
-        graphics::axis(1, at = seq_len(length(b_lvls)), labels = b_lvls,
+        axis(1, at = seq_len(length(b_lvls)), labels = b_lvls,
                        las = if (label_angle >= 45) 2 else 1,
                        cex.axis = 0.8)
-        graphics::axis(2, at = seq_len(length(a_lvls)), labels = a_lvls,
+        axis(2, at = seq_len(length(a_lvls)), labels = a_lvls,
                        las = 1, cex.axis = 0.8)
         # Flagged cells: thick outline so they stand out.
         for (i in seq_len(nrow(mat_flag))) {
           for (j in seq_len(ncol(mat_flag))) {
             if (isTRUE(mat_flag[i, j])) {
-              graphics::rect(j - 0.5, i - 0.5, j + 0.5, i + 0.5,
+              rect(j - 0.5, i - 0.5, j + 0.5, i + 0.5,
                              border = pal["flag"], lwd = 2)
             }
             v <- mat_bias[i, j]
             if (is.finite(v)) {
-              graphics::text(j, i, sprintf("%.2f", v),
+              text(j, i, sprintf("%.2f", v),
                              cex = 0.7,
                              col = if (abs(v) > max_abs * 0.6) "white" else "black")
             }
@@ -8765,10 +8981,10 @@ plot_table13_bias <- function(x,
       tvals <- abs(suppressWarnings(as.numeric(scatter$t)))
       tvals <- tvals[is.finite(tvals)]
       if (length(tvals) == 0) {
-        graphics::plot.new()
-        graphics::text(0.5, 0.5, "No data")
+        plot.new()
+        text(0.5, 0.5, "No data")
       } else {
-        graphics::hist(
+        hist(
           x = tvals,
           breaks = "FD",
           col = pal["hist"],
@@ -8776,13 +8992,13 @@ plot_table13_bias <- function(x,
           xlab = "|t|",
           main = ""
         )
-        graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-        graphics::abline(v = thr$abs_t_warn, lty = 2, col = style$neutral)
+        abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
+        abline(v = thr$abs_t_warn, lty = 2, col = style$neutral)
       }
     } else {
       if (nrow(profile) == 0 || !all(c("Facet", "Level", "MeanAbsBias", "FlagRate") %in% names(profile))) {
-        graphics::plot.new()
-        graphics::text(0.5, 0.5, "No data")
+        plot.new()
+        text(0.5, 0.5, "No data")
       } else {
         prof <- profile |>
           dplyr::mutate(
@@ -8792,23 +9008,23 @@ plot_table13_bias <- function(x,
           dplyr::filter(is.finite(.data$MeanAbsBias)) |>
           dplyr::arrange(.data$Facet, dplyr::desc(.data$MeanAbsBias))
         if (nrow(prof) == 0) {
-          graphics::plot.new()
-          graphics::text(0.5, 0.5, "No data")
+          plot.new()
+          text(0.5, 0.5, "No data")
         } else {
           lbl <- truncate_axis_label(paste0(prof$Facet, ": ", prof$Level), width = 34L)
           cols <- ifelse(is.finite(prof$FlagRate) & prof$FlagRate > 0, pal["flag"], pal["profile"])
-          graphics::dotchart(
+          dotchart(
             x = prof$MeanAbsBias,
             labels = lbl,
             pch = 16,
-            col = cols,
+            color = cols,
             cex = 0.8,
             cex.axis = 0.75,
             xlab = "Mean |Bias Size| (logits)",
             main = ""
           )
-          graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-          graphics::abline(v = thr$abs_bias_warn, lty = 2, col = style$neutral)
+          abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
+          abline(v = thr$abs_bias_warn, lty = 2, col = style$neutral)
         }
       }
     }

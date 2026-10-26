@@ -6,6 +6,22 @@ local({
                       compute = "never", include = "standard")
   sheet <- function(x = res, ...) mfrm_report(x, style = "rater", facet = "Rater", rater = "R01", ...)
 
+  test_that("explicit rubric context accompanies feedback and ordinary reports", {
+    context <- c(score_direction = "Higher means easier to understand", transformation = "None")
+    plain <- sheet()
+    s <- sheet(study_context = context)
+    expect_identical(s$tables$severity, plain$tables$severity)
+    expect_identical(s$tables$uncertainty, plain$tables$uncertainty)
+    expect_identical(s$tables$study_context$Value, unname(context))
+    expect_match(s$markdown, context[1], fixed = TRUE)
+    h <- sheet(output = "html", study_context = context)
+    expect_match(h$html, context[1], fixed = TRUE)
+    expect_false(grepl("<h2>NA</h2>", h$html, fixed = TRUE))
+    r <- mfrm_report(res, study_context = context)
+    expect_identical(build_summary_table_bundle(r)$tables$study_context, r$study_context)
+    expect_identical(r$fit_readiness, mfrm_report(res)$fit_readiness)
+  })
+
   test_that("individual sheets reuse saved estimates without invoking estimation", {
     local_mocked_bindings(fit_mfrm = function(...) stop("Unexpected refit"),
       diagnose_mfrm = function(...) stop("Unexpected diagnostics"),

@@ -5,6 +5,7 @@ S3method(AIC,mfrm_cml_fit)
 S3method(AIC,mfrm_fit)
 S3method(BIC,mfrm_cml_fit)
 S3method(BIC,mfrm_fit)
+S3method(as.data.frame,mfrm_facets_results)
 S3method(as.data.frame,mfrm_fit)
 S3method(as.data.frame,mfrm_quadrature_sensitivity)
 S3method(as_flextable,apa_table)
@@ -22,21 +23,28 @@ S3method(as_kable,apa_table)
 S3method(coef,mfrm_cml_fit)
 S3method(coef,mfrm_comparison_fit)
 S3method(coef,mfrm_fit)
+S3method(coef,mfrm_jeffreys_fit)
+S3method(coef,mfrm_network_ergm)
 S3method(confint,mfrm_cml_fit)
 S3method(confint,mfrm_comparison_fit)
+S3method(confint,mfrm_fair_average)
 S3method(confint,mfrm_fit)
 S3method(confint,mfrm_gpcm_bootstrap)
+S3method(confint,mfrm_jeffreys_fit)
 S3method(confint,mfrm_multivariate_d_study)
 S3method(confint,mfrm_multivariate_gstudy)
+S3method(confint,mfrm_network_ergm)
 S3method(confint,mfrm_random_rater)
 S3method(confint,mfrm_random_rater_intervals)
 S3method(confint,mfrm_testlet)
 S3method(fitted,mfrm_cml_fit)
 S3method(fitted,mfrm_comparison_fit)
 S3method(fitted,mfrm_fit)
+S3method(fitted,mfrm_jeffreys_fit)
 S3method(logLik,mfrm_cml_fit)
 S3method(logLik,mfrm_comparison_fit)
 S3method(logLik,mfrm_fit)
+S3method(logLik,mfrm_jeffreys_fit)
 S3method(mfrm_d_study,default)
 S3method(mfrm_d_study,mfrm_fit)
 S3method(mfrm_d_study,mfrm_generalizability)
@@ -68,7 +76,9 @@ S3method(plot,mfrm_facet_equivalence)
 S3method(plot,mfrm_facet_intervals)
 S3method(plot,mfrm_facet_nesting)
 S3method(plot,mfrm_facet_sample_review)
+S3method(plot,mfrm_facets_results)
 S3method(plot,mfrm_facets_run)
+S3method(plot,mfrm_fair_intervals)
 S3method(plot,mfrm_fit)
 S3method(plot,mfrm_gpcm_bootstrap)
 S3method(plot,mfrm_hierarchical_clusters)
@@ -78,6 +88,7 @@ S3method(plot,mfrm_information)
 S3method(plot,mfrm_multivariate_d_comparison)
 S3method(plot,mfrm_multivariate_d_study)
 S3method(plot,mfrm_multivariate_gstudy)
+S3method(plot,mfrm_network_ergm)
 S3method(plot,mfrm_pca)
 S3method(plot,mfrm_person_scores)
 S3method(plot,mfrm_pooled)
@@ -88,6 +99,7 @@ S3method(plot,mfrm_random_rater_intervals)
 S3method(plot,mfrm_random_rater_scores)
 S3method(plot,mfrm_recovery_assessment)
 S3method(plot,mfrm_recovery_simulation)
+S3method(plot,mfrm_residual_network)
 S3method(plot,mfrm_residual_pca)
 S3method(plot,mfrm_response_diagnostics)
 S3method(plot,mfrm_response_time_review)
@@ -138,7 +150,9 @@ S3method(print,mfrm_facet_icc)
 S3method(print,mfrm_facet_intervals)
 S3method(print,mfrm_facet_nesting)
 S3method(print,mfrm_facet_sample_review)
+S3method(print,mfrm_facets_results)
 S3method(print,mfrm_facets_run)
+S3method(print,mfrm_fair_intervals)
 S3method(print,mfrm_features)
 S3method(print,mfrm_fit)
 S3method(print,mfrm_generalizability)
@@ -147,12 +161,14 @@ S3method(print,mfrm_hierarchical_structure)
 S3method(print,mfrm_imported_fit)
 S3method(print,mfrm_imputed_clusters)
 S3method(print,mfrm_imputed_fits)
+S3method(print,mfrm_jeffreys_fit)
 S3method(print,mfrm_linking_review)
 S3method(print,mfrm_misfit_casebook)
 S3method(print,mfrm_model_choice_review)
 S3method(print,mfrm_multivariate_d_comparison)
 S3method(print,mfrm_multivariate_d_study)
 S3method(print,mfrm_multivariate_gstudy)
+S3method(print,mfrm_network_ergm)
 S3method(print,mfrm_network_review)
 S3method(print,mfrm_pca)
 S3method(print,mfrm_peer_review_design_review)
@@ -178,6 +194,7 @@ S3method(print,mfrm_report_html)
 S3method(print,mfrm_reporting_checklist)
 S3method(print,mfrm_resamples)
 S3method(print,mfrm_resampling_spec)
+S3method(print,mfrm_residual_network)
 S3method(print,mfrm_response_diagnostics)
 S3method(print,mfrm_response_imputations)
 S3method(print,mfrm_response_time_review)
@@ -264,6 +281,7 @@ S3method(summary,mfrm_clusters)
 S3method(summary,mfrm_cml_fit)
 S3method(summary,mfrm_comparison)
 S3method(summary,mfrm_comparison_fit)
+S3method(summary,mfrm_curve_intervals)
 S3method(summary,mfrm_d_study)
 S3method(summary,mfrm_data_description)
 S3method(summary,mfrm_design_evaluation)
@@ -281,19 +299,24 @@ S3method(summary,mfrm_facet_icc)
 S3method(summary,mfrm_facet_intervals)
 S3method(summary,mfrm_facet_nesting)
 S3method(summary,mfrm_facet_sample_review)
+S3method(summary,mfrm_facets_results)
 S3method(summary,mfrm_facets_run)
+S3method(summary,mfrm_fair_intervals)
 S3method(summary,mfrm_features)
 S3method(summary,mfrm_fit)
+S3method(summary,mfrm_gpcm_bootstrap)
 S3method(summary,mfrm_hierarchical_structure)
 S3method(summary,mfrm_imported_fit)
 S3method(summary,mfrm_imputed_clusters)
 S3method(summary,mfrm_imputed_fits)
+S3method(summary,mfrm_jeffreys_fit)
 S3method(summary,mfrm_linking_review)
 S3method(summary,mfrm_misfit_casebook)
 S3method(summary,mfrm_model_choice_review)
 S3method(summary,mfrm_multivariate_d_comparison)
 S3method(summary,mfrm_multivariate_d_study)
 S3method(summary,mfrm_multivariate_gstudy)
+S3method(summary,mfrm_network_ergm)
 S3method(summary,mfrm_network_review)
 S3method(summary,mfrm_pca)
 S3method(summary,mfrm_peer_review_design_review)
@@ -314,6 +337,7 @@ S3method(summary,mfrm_report)
 S3method(summary,mfrm_reporting_checklist)
 S3method(summary,mfrm_resamples)
 S3method(summary,mfrm_resampling_spec)
+S3method(summary,mfrm_residual_network)
 S3method(summary,mfrm_response_diagnostics)
 S3method(summary,mfrm_response_imputations)
 S3method(summary,mfrm_response_time_review)
@@ -330,8 +354,11 @@ S3method(summary,mfrm_unit_prediction)
 S3method(summary,mfrm_weighting_review)
 S3method(vcov,mfrm_cml_fit)
 S3method(vcov,mfrm_comparison_fit)
+S3method(vcov,mfrm_facet_intervals)
 S3method(vcov,mfrm_fit)
+S3method(vcov,mfrm_jeffreys_fit)
 S3method(vcov,mfrm_multivariate_gstudy)
+S3method(vcov,mfrm_network_ergm)
 S3method(vcov,mfrm_population_intervals)
 export(analyze_dff)
 export(analyze_dif)
@@ -418,6 +445,7 @@ export(fit_mfrm_imputed)
 export(fit_mfrm_random_rater)
 export(fit_mfrm_testlet)
 export(fit_rater_accuracy)
+export(fit_rater_network)
 export(freeze_mfrm_calibration)
 export(gpcm_capability_matrix)
 export(gpcm_mml_quadrature_sensitivity)
@@ -457,6 +485,7 @@ export(mfrm_pca)
 export(mfrm_population_intervals)
 export(mfrm_random_rater_intervals)
 export(mfrm_report)
+export(mfrm_residual_network)
 export(mfrm_response_diagnostics)
 export(mfrm_response_imputations)
 export(mfrm_results)
@@ -486,6 +515,7 @@ export(rater_halo_network_analysis)
 export(rater_network_analysis)
 export(rating_scale_table)
 export(read_facets_fit_table)
+export(read_facets_results)
 export(recode_missing_codes)
 export(recommend_mfrm_design)
 export(reference_case_benchmark)
@@ -518,6 +548,11 @@ export(validate_mfrm_calibration)
 export(visual_reporting_template)
 export(write_mfrm_residual_file)
 export(write_mfrm_subset_file)
+importFrom(cli,
+  cli_progress_bar,
+  cli_progress_done,
+  cli_progress_update
+)
 importFrom(dplyr,
   across,
   all_of,
@@ -549,10 +584,30 @@ importFrom(dplyr,
   slice,
   slice_head,
   slice_tail,
+  starts_with,
   summarise,
   summarize,
   transmute,
   ungroup
+)
+importFrom(graphics,
+  abline,
+  arrows,
+  axis,
+  barplot,
+  dotchart,
+  hist,
+  image,
+  legend,
+  lines,
+  mtext,
+  plot,
+  plot.new,
+  points,
+  rect,
+  segments,
+  text,
+  title
 )
 importFrom(lifecycle,deprecate_soft)
 importFrom(psych,
@@ -570,17 +625,26 @@ importFrom(rlang,.data)
 importFrom(stats,
   AIC,
   BIC,
+  ave,
   coef,
   confint,
+  cutree,
   fitted,
+  hclust,
+  kmeans,
   logLik,
   na.omit,
+  nlminb,
   nobs,
   optim,
+  optimHess,
+  optimize,
   p.adjust,
   pchisq,
   predict,
   pt,
+  qnorm,
+  qt,
   residuals,
   rnorm,
   sd,
@@ -619,7 +683,8 @@ importFrom(utils,
   packageVersion,
   read.csv,
   tail,
-  write.csv
+  write.csv,
+  zip
 )
 importMethodsFrom(Matrix,"%*%")
 useDynLib(mfrmr, .registration = TRUE)

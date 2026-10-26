@@ -159,8 +159,14 @@
 #' and record the engine in `fit$summary`.
 #'
 #' The provisional two-slope-family GMFRM route uses fixed-standard-normal MML
-#' with numerical generalized EM. It requires an explicit EM request; direct
-#' and hybrid are not available for this route. EM is not a defining property
+#' with fixed-grid generalized EM (`mml_engine = "em"`) or adaptive direct
+#' optimization (`mml_engine = "direct", mml_integration = "adaptive"`).
+#' `mml_integration = "auto"` preserves the selected engine and increases
+#' integration points up to `mml_accuracy_control = list(max_points = ...)`,
+#' including reference rules, while retaining the numerical and information
+#' checks. Fixed integration remains the package default; two-family direct
+#' fitting requires explicit adaptive or automatic integration. Adaptive EM
+#' and two-family hybrid fitting are unavailable. EM is not a defining property
 #' of GMFRM. See the GPCM
 #' scope vignette for the distinction between the model, estimation method
 #' and algorithm, with links to Muraki, TAM and sirt.
@@ -764,6 +770,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "Two-family GPCM uses fixed-grid EM or adaptive direct MML with fixed-standard-normal identification.",
         "EM uses ascent-checked M steps and per-Person marginal-score stopping; adaptive direct MML uses reltol and optimizer gradient checks;",
         "numerical convergence does not establish inferential reliability.",
+        "mml_integration = 'auto' preserves the selected engine and checks increasing rules within mml_accuracy_control = list(max_points = ...), including reference rules. Fixed integration remains the default; two-family direct fitting requires adaptive or auto.",
         "One-family EM/hybrid requests still use direct optimization and record that fallback.",
         "Adaptive EM and two-family hybrid fitting are not supported."
       )

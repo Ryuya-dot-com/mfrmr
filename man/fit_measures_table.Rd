@@ -86,6 +86,8 @@ ZSTD, reproducing the previous combined rule when all indices are available.}
 \value{
 A bundle of class \code{mfrm_fit_measures} with:
 \itemize{
+\item \code{fit_basis}: calculation target and interpretation by facet
+\item \code{diagnostic_basis}: saved diagnostic-path guide, when present
 \item \code{table}: R-friendly fit-measure table with status columns
 \item \code{facets_table}: FACETS-style column labels for reporting/review
 \item \code{status_summary}: counts by facet and fit status
@@ -151,6 +153,15 @@ conventions. The \code{df_zstd_tolerance}, \code{df_zstd_large_shift}, and
 \code{df_ratio_tolerance} arguments make the df-sensitivity screen explicit so
 the same table can be reproduced under stricter or more permissive review
 rules.
+
+Saved calculation definitions remain beside the fit values: \code{FitBasis} and
+\code{FitInterpretation} distinguish residuals at saved EAPs, JML optimizer
+coordinates, and imported source statistics. EAP plug-in MnSq is descriptive;
+it is not posterior-averaged or posterior-predictive fit, and same-response
+EAP scoring does not guarantee expectation one. Missing definitions are
+marked as not recorded, without discarding finite values. \code{diagnostic_basis}
+preserves the original guide to other diagnostic paths; marginal category
+counts are not posterior-averaged MnSq.
 }
 \examples{
 toy <- load_mfrmr_data("example_operational")

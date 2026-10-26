@@ -98,6 +98,36 @@ the selected route and reusable data; set \code{draw = TRUE} for immediate base 
 }
 }
 
+\section{Network display controls}{
+
+For subset, design, rater and halo bundles with \code{type = "network"}, use
+\code{layout} (a two-column coordinate matrix, optionally row-named by all node IDs,
+or a function of the displayed igraph), \code{display_min_weight} (absolute edge
+weight for the picture only), and \code{graphical} (a named list of plot.igraph
+arguments, such as vertex.size, vertex.label, vertex.color, edge.curved).
+Unnamed vectors and coordinates follow the returned \code{nodes} order. All nodes,
+including isolates, remain. Edge vectors in \code{graphical} follow the displayed
+\code{edges} order, after any display filter. The default is a deterministic circle; positions
+do not estimate anything. Labels are hidden by default above 80 nodes;
+set vertex.label explicitly to override. Supply the same named layout to compare views.
+Constructor filters such as \code{min_weight} change calculated metrics;
+\code{display_min_weight} does not. Returned \code{source_edges} retain the calculated
+graph, \code{edges} the displayed graph, and \code{coordinates} the actual positions.
+Titles are metadata by default; add a title explicitly via \code{graphical}.
+See \code{vignette("mfrmr-networks-and-reporting")} for bipartite assignment,
+directional disagreement and rater-by-criterion examples inspired by Lamprianou.
+With \code{\link[=rater_network_analysis]{rater_network_analysis()}} and \code{weight_metric = "DirectionalMagnitude"},
+\verb{type = "fit", metric = "SWS"} (or \code{"PUS"}) shows the published network
+inconsistency index. The returned table retains unavailable rows/statuses;
+there are no calibrated reference cutoffs. An entirely unavailable index
+draws an unavailable message and retains the original rows/statuses in the
+returned table, rather than substituting zero. For signed alpha,
+\code{type = "matrix"} returns all eligible signed pair coefficients before graph filtering, retaining
+zero and undefined values separately. Network drawings use magnitude for
+edge width and dashed lines for negative agreement. Use
+\code{\link[=plot.mfrm_network_ergm]{plot.mfrm_network_ergm()}} for ERGM coefficient intervals and simulated GOF.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default

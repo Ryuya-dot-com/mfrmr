@@ -281,6 +281,13 @@ Each panel uses its metric's status, so an unavailable Phi does not hide
 an available G. Non-PSD component matrices are described in the returned
 notes; inspect \code{x$component_diagnostics} before using raw projections.
 Increasing planned counts does not repair those component estimates.
+The saved \code{negative_components} convention is preserved in curves and
+error-contribution plots. Notes identify raw, GENOVA ALGORITHM or GENOVA EMS
+projections; original G-study diagnostics remain available. GENOVA-adjusted
+results accept original-source population intervals calculated for that
+treatment by \code{confint(x)}. Bands retain their original bounds and may not
+contain adjusted points; notes and saved intervals retain the distinction.
+A saved interval with a different component treatment is rejected.
 Missing values are never plotted as zero. Previously saved D-study objects
 retain their recorded values and availability: rerun
 \code{\link[=mfrm_d_study]{mfrm_d_study()}} on the saved G-study to apply current rules.

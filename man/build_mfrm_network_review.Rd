@@ -5,14 +5,20 @@
 \title{Build an MFRM network review}
 \usage{
 build_mfrm_network_review(
-  fit,
+  fit = NULL,
   diagnostics = NULL,
   sparse_design = NULL,
   peer_review_design = NULL,
   top_n_subsets = NULL,
   min_observations = 0,
   top_n = 10,
-  include_graph = FALSE
+  include_graph = FALSE,
+  data = NULL,
+  person = NULL,
+  facets = NULL,
+  score = NULL,
+  basis = c("observed", "planned"),
+  weight = NULL
 )
 }
 \arguments{
@@ -40,6 +46,23 @@ passed to \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}.}
 
 \item{include_graph}{Logical; if \code{TRUE}, keep the underlying \code{igraph} object
 in the nested \code{source_network} bundle.}
+
+\item{data}{Optional raw assignment/rating data, supplied instead of \code{fit}.}
+
+\item{person, facets}{Names of the person column and one or more facet columns
+in \code{data}. Include only Rater in \code{facets} to inspect person-rater links
+without a common Criterion node obscuring separate panels.}
+
+\item{score}{Numeric score column for \code{basis = "observed"}. Recode study-specific
+missing markers to \code{NA} first; no category recoding or estimation is done.}
+
+\item{basis}{\code{"observed"} includes rows with complete identifiers and nonmissing
+finite scores; \code{"planned"} includes complete assignment rows without scores.
+Planned networks require \code{score = NULL} and \code{weight = NULL}.}
+
+\item{weight}{Optional numeric weight column for observed raw data. Missing
+and zero-weight rows do not create edges. Edge weights still count rows,
+not sampling weights. Negative or infinite weights are refused.}
 }
 \value{
 A bundle of class \code{mfrm_network_review} containing:
@@ -86,6 +109,20 @@ Measurement}, 47(5-6), 351-364. doi:10.1177/01466216231182148.
 \emph{Many-Facet Rasch Designs: How Should Raters be Assigned to Examinees?}
 NCME presentation.
 }
+}
+
+\section{Before fitting}{
+
+Supply \code{data}, \code{person}, \code{facets} and \code{score} instead of \code{fit}. Known levels
+from incomplete/unscored rows remain as nodes, including isolates. A planned
+assignment roster can be examined with \code{basis = "planned"}; absent assignments
+cannot be reconstructed from an observed-only file. \code{row_usage} records each
+input row's inclusion and first exclusion reason. With a fit, only its retained
+rows are available here; review original missing assignments before fitting.
+No prefit result supplies an identification audit or model-readiness decision.
+\code{settings$is_disjoint} describes the source graph, even when subset filters
+omit components; compare source/retained subset counts. Filters do not establish
+linking. See \code{vignette("mfrmr-networks-and-reporting")} for a panel example.
 }
 
 \examples{

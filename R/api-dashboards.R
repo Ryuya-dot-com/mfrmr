@@ -593,7 +593,7 @@ dashboard_draw_plot <- function(tbl,
     cols[tbl$MisfitFlag %in% TRUE] <- unname(pal["misfit"])
     cols[tbl$SeverityFlag %in% TRUE] <- unname(pal["flag"])
     y <- rev(seq_len(nrow(tbl)))
-    graphics::plot(
+    plot(
       x = rev(tbl$Estimate),
       y = y,
       type = "n",
@@ -602,25 +602,25 @@ dashboard_draw_plot <- function(tbl,
       ylab = "",
       main = ""
     )
-    graphics::segments(0, y, rev(tbl$Estimate), y, col = "gray70")
-    graphics::points(rev(tbl$Estimate), y, pch = 16, col = rev(cols))
-    graphics::axis(side = 2, at = y, labels = rev(labels), las = 2, cex.axis = 0.75)
-    graphics::abline(v = c(-abs(thresholds$severity_warn[1]), 0, abs(thresholds$severity_warn[1])),
+    segments(0, y, rev(tbl$Estimate), y, col = "gray70")
+    points(rev(tbl$Estimate), y, pch = 16, col = rev(cols))
+    axis(side = 2, at = y, labels = rev(labels), las = 2, cex.axis = 0.75)
+    abline(v = c(-abs(thresholds$severity_warn[1]), 0, abs(thresholds$severity_warn[1])),
                      lty = c(2, 1, 2), col = c("gray45", "gray30", "gray45"))
     return(invisible(NULL))
   }
 
   tbl <- tbl[tbl$AnyFlag %in% TRUE, , drop = FALSE]
   if (nrow(tbl) == 0) {
-    graphics::plot.new()
-    graphics::text(0.5, 0.5, "No observed flags; inspect missing diagnostics and notes")
+    plot.new()
+    text(0.5, 0.5, "No observed flags; inspect missing diagnostics and notes")
     return(invisible(NULL))
   }
   ord <- order(tbl$FlagCount, abs(tbl$Estimate), decreasing = TRUE, na.last = TRUE)
   tbl <- tbl[ord, , drop = FALSE]
   labels <- utils::head(as.character(tbl$Level), n = nrow(tbl))
   cols <- ifelse(tbl$BiasFlag %in% TRUE, pal["bias"], pal["flag"])
-  bp <- graphics::barplot(
+  bp <- barplot(
     height = tbl$FlagCount,
     names.arg = labels,
     col = cols,
@@ -628,7 +628,7 @@ dashboard_draw_plot <- function(tbl,
     main = "",
     ylab = "Flag count"
   )
-  graphics::abline(h = 0, col = "gray60")
+  abline(h = 0, col = "gray60")
   invisible(bp)
 }
 

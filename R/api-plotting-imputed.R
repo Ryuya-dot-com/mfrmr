@@ -62,14 +62,14 @@ plot.mfrm_pooled <- function(x, draw = TRUE, preset = "standard",
   limits <- range(c(0, tab$Estimate, tab$Lower, tab$Upper), finite = TRUE)
   if (diff(limits) == 0) limits <- limits + c(-0.1, 0.1)
   fixed <- tab$Status == "fixed"
-  graphics::plot(tab$Estimate, y, xlim = limits, ylim = c(0.5, nrow(tab) + 0.5),
+  plot(tab$Estimate, y, xlim = limits, ylim = c(0.5, nrow(tab) + 0.5),
     pch = ifelse(fixed, 5, ifelse(is.na(tab$Lower) | is.na(tab$Upper), 4, 16)),
     col = style$accent_primary, yaxt = "n",
     xlab = "Estimate (logits)", ylab = "", main = "")
-  graphics::abline(v = 0, col = style$grid, lty = 2)
-  graphics::segments(tab$Lower[!fixed], y[!fixed], tab$Upper[!fixed], y[!fixed],
+  abline(v = 0, col = style$grid, lty = 2)
+  segments(tab$Lower[!fixed], y[!fixed], tab$Upper[!fixed], y[!fixed],
     col = style$accent_primary, lwd = 2)
-  graphics::axis(2, at = y, labels = tab$Target, las = 1)
+  axis(2, at = y, labels = tab$Target, las = 1)
   invisible(out)
 }
 

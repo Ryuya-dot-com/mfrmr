@@ -151,6 +151,17 @@ summary.mfrm_pca <- function(object, ...) object$variance
 #'   calculated in different geometries are not directly comparable evidence
 #'   of which feature set, scale or component count is correct. Grouping does
 #'   not propagate measurement uncertainty or establish rater quality.
+#' @section Reading clustering metrics:
+#' `withinss` is the sum of squared Euclidean distances from members to their
+#' cluster center; `tot.withinss` sums it across clusters. `totss` uses the
+#' grand center instead. The descriptive ratio 1 - tot.withinss/totss is the
+#' fraction of fitted-space scatter between groups, not predictive accuracy,
+#' latent reliability or a test of the chosen k. Increasing k usually improves
+#' this ratio even without meaningful groups. These sums have squared units
+#' of the transformed coordinates (SD-scaled/weighted features or retained PCs),
+#' not necessarily original feature units. Compare them only for the same rows
+#' and geometry. For silhouette a(i), b(i), range, singleton conventions and
+#' profile denominators, see the metric section of [mfrm_cluster_pam()].
 #' @seealso [mfrm_pca()], [mfrm_cluster_pam()], [mfrm_cluster_imputed()],
 #'   [mfrm_cluster_compare()], [plot.mfrm_clusters()], [stats::kmeans()]
 #' @examples
@@ -208,7 +219,7 @@ mfrm_cluster_kmeans <- function(x, k, weights = NULL,
     stop("Install 'cluster' for silhouettes or use silhouette = FALSE.", call. = FALSE)
   }
   fit <- with_preserved_rng_seed(seed, withCallingHandlers(
-    stats::kmeans(z, centers = as.integer(k), nstart = as.integer(nstart),
+    kmeans(z, centers = as.integer(k), nstart = as.integer(nstart),
       iter.max = as.integer(iter.max), algorithm = "Hartigan-Wong"),
     warning = function(w) stop("K-means did not complete cleanly: ",
       conditionMessage(w), call. = FALSE)))

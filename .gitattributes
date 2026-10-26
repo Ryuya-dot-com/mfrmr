@@ -1,1 +1,7 @@
 inst/extdata/vignette-artifacts/*.csv text eol=lf
+
+# Retain FACETS inputs/exports byte-for-byte, including CRLF and field padding.
+inst/extdata/facets-example/*.txt -text
+inst/extdata/facets-graph-example/*.txt -text
+tests/testthat/fixtures/facets-*-score.txt -text
+tests/testthat/fixtures/facets-graph-*.txt -text

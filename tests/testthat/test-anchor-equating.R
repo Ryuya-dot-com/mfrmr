@@ -133,47 +133,12 @@ test_that("anchor_to_baseline refuses a nonready baseline fit", {
 
 test_that("fit_mfrm surfaces malformed anchor schemas instead of silently dropping them", {
   toy <- load_mfrmr_data("example_core")
-  bad_anchors <- data.frame(
-    WrongFacet = "Rater",
-    WrongLevel = "R1",
-    WrongValue = 0,
-    stringsAsFactors = FALSE
-  )
-
-  expect_warning(
-    withCallingHandlers(
-      fit_mfrm(
-        toy,
-        person = "Person",
-        facets = c("Rater", "Criterion"),
-        score = "Score",
-        method = "JML",
-        maxit = 15,
-        anchors = bad_anchors,
-        anchor_policy = "warn"
-      ),
-      warning = function(w) {
-        if (grepl("Optimization convergence review did not produce", conditionMessage(w), fixed = TRUE)) {
-          invokeRestart("muffleWarning")
-        }
-      }
-    ),
-    "anchor_schema_mismatch"
-  )
-
-  expect_error(
-    fit_mfrm(
-      toy,
-      person = "Person",
-      facets = c("Rater", "Criterion"),
-      score = "Score",
-      method = "JML",
-      maxit = 15,
-      anchors = bad_anchors,
-      anchor_policy = "error"
-    ),
-    "anchor_schema_mismatch"
-  )
+  bad_anchors <- data.frame(WrongFacet = "Rater", WrongLevel = "R1", WrongValue = 0)
+  for (policy in c("warn", "error", "silent")) {
+    expect_error(fit_mfrm(toy, person = "Person", facets = c("Rater", "Criterion"),
+      score = "Score", method = "JML", maxit = 15, anchors = bad_anchors,
+      anchor_policy = policy), "Malformed anchor schema")
+  }
 })
 
 test_that("anchor_to_baseline S3 methods produce output", {

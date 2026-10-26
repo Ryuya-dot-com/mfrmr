@@ -6,6 +6,83 @@ marginal_pair_fixture <- function() {
        observed_cat = c(0, 1, 0, 1), weights = rep(1, 4), categories = 0:1)
 }
 
+test_that("pairwise integration agrees with literal weighted category-pair probabilities", {
+  d <- expand.grid(Person = c("P1", "P2"), Rater = c("A", "B", "C"),
+    Criterion = c("X", "Y"), stringsAsFactors = FALSE)
+  d <- d[c(1:11, 1), ] # Unequal contexts and a duplicate level within a context.
+  n <- nrow(d)
+  probabilities <- lapply(1:3, function(q) {
+    p <- matrix(seq_len(n * 4) %% (5 + q) + 1, n, 4)
+    p / rowSums(p)
+  })
+  posterior <- t(vapply(d$Person, function(p)
+    if (p == "P1") c(.2, .3, .5) else c(.6, .3, .1), numeric(3)))
+  core <- list(prep = list(data = d), config = list(facet_names = c("Rater", "Criterion")),
+    logprob_bundle = list(prob_list = probabilities),
+    posterior_bundle = list(obs_posterior = posterior),
+    observed_cat = rep(0:3, length.out = n), weights = rep(c(0, .5, 1, 2), length.out = n),
+    categories = 0:3)
+  reference <- list()
+  for (facet in core$config$facet_names) {
+    context <- setdiff(names(d), facet)
+    for (i in seq_len(n - 1L)) for (j in seq.int(i + 1L, n)) {
+      if (d[[facet]][i] == d[[facet]][j] ||
+          !all(vapply(context, function(name) d[[name]][i] == d[[name]][j], TRUE))) next
+      w <- core$weights[i] * core$weights[j]
+      if (w == 0) next
+      exact <- adjacent <- 0
+      # Literal joint probability, independent of the matrix implementation.
+      for (q in 1:3) for (a in 0:3) for (b in 0:3) {
+        mass <- posterior[i, q] * probabilities[[q]][i, a + 1L] * probabilities[[q]][j, b + 1L]
+        if (a == b) exact <- exact + mass
+        if (abs(a - b) <= 1) adjacent <- adjacent + mass
+      }
+      levels <- sort(c(d[[facet]][i], d[[facet]][j]))
+      reference[[length(reference) + 1L]] <- data.frame(Facet = facet,
+        Level1 = levels[1], Level2 = levels[2], LevelPairCount = 1,
+        OpportunityWeight = w,
+        ObservedExactCount = w * (core$observed_cat[i] == core$observed_cat[j]),
+        ExpectedExactCount = w * exact, ExactVarianceCount = w^2 * exact * (1 - exact),
+        ObservedAdjacentCount = w * (abs(core$observed_cat[i] - core$observed_cat[j]) <= 1),
+        ExpectedAdjacentCount = w * adjacent, AdjacentVarianceCount = w^2 * adjacent * (1 - adjacent))
+    }
+  }
+  expected <- do.call(rbind, reference)
+  keys <- c("Facet", "Level1", "Level2")
+  expected <- aggregate(expected[setdiff(names(expected), keys)], expected[keys], sum)
+  actual <- calc_marginal_pairwise_bundle(core)$pair_stats
+  key <- function(x) do.call(paste, c(x[keys], sep = "\r"))
+  expect_equal(as.data.frame(actual[match(key(expected), key(actual)), names(expected)]),
+    expected, tolerance = 1e-13, ignore_attr = TRUE)
+  expect_true(all(actual$UnavailableContextPairs == 0))
+
+  # Node and observation order must not alter the diagnostic target.
+  rows <- rev(seq_len(n)); nodes <- c(3L, 1L, 2L)
+  core$prep$data <- d[rows, ]
+  core$logprob_bundle$prob_list <- lapply(probabilities[nodes], function(p) p[rows, ])
+  core$posterior_bundle$obs_posterior <- posterior[rows, nodes]
+  core$observed_cat <- core$observed_cat[rows]
+  core$weights <- core$weights[rows]
+  expect_equal(calc_marginal_pairwise_bundle(core)$pair_stats, actual, tolerance = 1e-13)
+})
+
+test_that("invalid node probabilities and inconsistent posteriors remain unavailable", {
+  core <- marginal_pair_fixture()
+  core$logprob_bundle$prob_list <- rep(core$logprob_bundle$prob_list, 2)
+  core$posterior_bundle$obs_posterior <- matrix(rep(c(1, 0), each = 4), 4, 2)
+  for (bad in list(NA_real_, Inf, -.1, 1.1, .6)) {
+    x <- core
+    # An invalid zero-posterior node is still invalid, not silently omitted.
+    x$logprob_bundle$prob_list[[2]][3, 1] <- bad
+    result <- calc_marginal_pairwise_bundle(x)$pair_stats
+    expect_equal(result$UnavailableContextPairs, 1)
+    expect_true(is.na(result$ExpectedExactCount) && is.na(result$ExpectedAdjacentCount))
+    expect_true(is.na(result$Flagged))
+  }
+  core$posterior_bundle$obs_posterior[3, ] <- c(.3, .7)
+  expect_equal(calc_marginal_pairwise_bundle(core)$pair_stats$UnavailableContextPairs, 1)
+})
+
 test_that("marginal cells do not omit missing probabilities or fabricate classifications", {
   cells <- function(p, w = c(1, 1), obs = c(0, 1)) summarize_marginal_fit_grid(NULL, obs, p, w, 0:1)
   good <- cells(matrix(0.5, 2, 2))

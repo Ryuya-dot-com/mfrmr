@@ -36,7 +36,7 @@ test_that("fit curves share colour and line encodings across renderers", {
     args <- list(...)
     if (!is.null(args$lty)) drawn[[length(drawn) + 1L]] <<- args
     original_lines(...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   for (type in c("ccc", "pathway")) {
     original <- .mfrmr_muffle_expected_warnings(
       plot(fit, type = type, draw = FALSE), "^Review-only display:")

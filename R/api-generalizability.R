@@ -1076,18 +1076,18 @@ plot.mfrm_d_study <- function(x,
         }
         z_finite <- z[is.finite(z)]
         if (!length(z_finite)) {
-          graphics::plot(range(x_levels), range(y_levels), type = "n",
+          plot(range(x_levels), range(y_levels), type = "n",
             xlab = axis_label(x_var), ylab = axis_label(y_var), xaxt = "n", yaxt = "n",
             main = main %||% paste(metric_cols[1L], panel, sep = " / "))
-          graphics::axis(1, at = x_levels)
-          graphics::axis(2, at = y_levels, las = 1)
-          graphics::text(mean(range(x_levels)), mean(range(y_levels)),
+          axis(1, at = x_levels)
+          axis(2, at = y_levels, las = 1)
+          text(mean(range(x_levels)), mean(range(y_levels)),
             "Estimates unavailable\nInspect the D-study table.", cex = 0.8)
           next
         }
         has_contours <- length(unique(z_finite)) > 1L
         if (identical(type, "heatmap")) {
-          graphics::image(
+          image(
             x_levels, y_levels, z,
             col = fill_cols,
             zlim = fill_values,
@@ -1095,10 +1095,10 @@ plot.mfrm_d_study <- function(x,
             ylab = axis_label(y_var), xaxt = "n", yaxt = "n",
             main = main %||% paste(metric_cols[1L], panel, sep = " / ")
           )
-          graphics::axis(1, at = x_levels)
-          graphics::axis(2, at = y_levels, las = 1)
+          axis(1, at = x_levels)
+          axis(2, at = y_levels, las = 1)
           usr <- graphics::par("usr")
-          graphics::legend(usr[2] + 0.03 * diff(usr[1:2]), usr[4],
+          legend(usr[2] + 0.03 * diff(usr[1:2]), usr[4],
             legend = heat_key$label, fill = heat_key$value, title = metric_cols[1L],
             bty = "n", xpd = NA, cex = 0.75)
         } else if (identical(type, "contour")) {
@@ -1111,7 +1111,7 @@ plot.mfrm_d_study <- function(x,
               drawlabels = TRUE
             )
           } else {
-            graphics::plot(
+            plot(
               range(x_levels, na.rm = TRUE),
               range(y_levels, na.rm = TRUE),
               type = "n",
@@ -1119,7 +1119,7 @@ plot.mfrm_d_study <- function(x,
               ylab = axis_label(y_var),
               main = main %||% paste(metric_cols[1L], panel, sep = " / ")
             )
-            graphics::text(mean(range(x_levels, na.rm = TRUE)), mean(range(y_levels, na.rm = TRUE)), "constant surface")
+            text(mean(range(x_levels, na.rm = TRUE)), mean(range(y_levels, na.rm = TRUE)), "constant surface")
           }
         } else {
           zlim <- range(z_finite, na.rm = TRUE)
@@ -1253,7 +1253,7 @@ plot.mfrm_d_study <- function(x,
         s_panel <- series_tbl[series_tbl$Panel == panel_specs$Panel[i], , drop = FALSE]
         panel_title <- panel_specs$Panel[i]
       }
-      graphics::plot(
+      plot(
         s_panel$X,
         s_panel$Value,
         type = "n",
@@ -1262,17 +1262,17 @@ plot.mfrm_d_study <- function(x,
         ylim = y_lim,
         main = main %||% panel_title
       )
-      graphics::axis(1, at = sort(unique(s_panel$X)))
+      axis(1, at = sort(unique(s_panel$X)))
       graphics::grid(col = style$grid)
       for (series in unique(s_panel$Series)) {
         s <- s_panel[s_panel$Series == series, , drop = FALSE]
         s <- s[order(s$X), , drop = FALSE]
-        graphics::lines(s$X, s$Value, col = series_cols[series], lty = line_types[series], lwd = 2)
-        graphics::points(s$X, s$Value, col = series_cols[series], pch = 16)
+        lines(s$X, s$Value, col = series_cols[series], lty = line_types[series], lwd = 2)
+        points(s$X, s$Value, col = series_cols[series], pch = 16)
       }
-      if (nrow(references)) graphics::abline(h = references$value,
+      if (nrow(references)) abline(h = references$value,
         col = style$neutral, lty = references$linetype)
-      graphics::legend(
+      legend(
         "bottomright",
         legend = unique(s_panel$Series),
         col = unname(series_cols[unique(s_panel$Series)]),

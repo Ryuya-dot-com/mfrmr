@@ -396,7 +396,8 @@ mfrm_rater_feedback_render <- function(x, html = TRUE) {
   headings <- c(severity = "Scoring tendency", exposure = "Ratings included",
     uncertainty = "Uncertainty in scoring tendency", fit = "Consistency with the model",
     categories = "Category use", cases = "Ratings to discuss", slope = "Response sensitivity",
-    steps = "Category-step offsets", residuals = "Saved response residuals")
+    steps = "Category-step offsets", residuals = "Saved response residuals",
+    study_context = "Study and score meaning")
   product <- "slope" %in% names(x$tables)
   if (product) headings["uncertainty"] <- "Uncertainty in the component slope"
   headings <- headings[setdiff(names(x$tables), "interpretation_notes")]

@@ -42,6 +42,10 @@
 #' availability does not establish nominal coverage: the source's experimental
 #' status, failed checks and qualifications remain in `notes` and the tables.
 #' A wide interval remains visible. Missing bounds are not infinite endpoints.
+#' When source-anchor uncertainty was requested, the saved intervals include
+#' that contribution. The returned subtitle, settings and `anchor_uncertainty`
+#' distinguish it from intervals conditional on exact supplied anchors;
+#' conditional bounds remain in the returned table.
 #'
 #' For an executable bundled-data example, run the example on
 #' [mfrm_population_intervals()], which creates `ci` and both views. Then use
@@ -97,6 +101,7 @@ plot.mfrm_population_intervals <- function(x, type = c("coefficients", "contrast
     "Residual variance is retained in intervals but not drawn on the coefficient/contrast axis."))
   out <- new_mfrm_plot_data("population_intervals", list(table = tab,
     intervals = x$table, type = type, settings = x$settings,
+    anchor_uncertainty = x$anchor_uncertainty,
     population_spec = population[intersect(c("formula", "terms", "xlevels", "contrasts", "design_columns"), names(population))],
     population_coding = population_coding_summary_table(population),
     contrast_weights = x$contrasts, source = x$source,
@@ -107,23 +112,25 @@ plot.mfrm_population_intervals <- function(x, type = c("coefficients", "contrast
     x_range = limits, y_range = c(.5, sum(pmax(1, heights)) + .5),
     title = paste("Conditional population", type),
     subtitle = paste0(format(100 * x$settings$level, trim = TRUE),
-      "% experimental pointwise intervals"),
+      "% experimental pointwise intervals",
+      if (identical(x$settings$uncertainty, "independent_anchor_delta"))
+        " | Independent anchor-source uncertainty included"),
     xlab = if (type == "coefficients") "Coefficient (native ability scale)" else
       "Contrast (native ability scale)"))
   if (!draw) return(invisible(out))
   apply_plot_preset(style)
   old <- graphics::par(mar = c(4.5, 10, 1.5, 2))
   on.exit(graphics::par(old), add = TRUE)
-  graphics::plot(NA_real_, NA_real_, type = "n", xlim = limits,
+  plot(NA_real_, NA_real_, type = "n", xlim = limits,
     ylim = out$data$y_range, yaxt = "n",
     xlab = out$data$xlab, ylab = "", main = "")
-  if (!is.null(reference)) graphics::abline(v = reference, col = style$grid, lty = 2)
-  graphics::segments(tab$Lower[available], tab$Y[available],
+  if (!is.null(reference)) abline(v = reference, col = style$grid, lty = 2)
+  segments(tab$Lower[available], tab$Y[available],
     tab$Upper[available], tab$Y[available], col = style$accent_primary, lwd = 2)
   finite <- is.finite(tab$Estimate)
-  graphics::points(tab$Estimate[finite], tab$Y[finite],
+  points(tab$Estimate[finite], tab$Y[finite],
     pch = ifelse(available[finite], 16, 4), col = style$accent_primary)
-  graphics::axis(2, at = tab$Y, labels = tab$Label, las = 1, cex.axis = .8)
+  axis(2, at = tab$Y, labels = tab$Label, las = 1, cex.axis = .8)
   invisible(out)
 }
 

@@ -203,6 +203,9 @@ test_that('selected bootstrap updates remain identified through saved output', {
   b$settings$diagnostic_checks_scope <- 'Only selected refits were rechecked.'
   before <- serialize(b,NULL)
   ci <- confint(b)
+  expect_identical(summary(b)$intervals, ci)
+  expect_identical(summary(b)$settings, b$settings)
+  expect_equal(summary(b)$overview$Unresolved, 1L)
   expect_identical(as.numeric(ci),as.numeric(original))
   expect_identical(attr(ci,'availability'),attr(original,'availability'))
   expect_match(paste(capture.output(print(b)),collapse=' '),'not a complete rerun')
@@ -223,4 +226,33 @@ test_that('selected bootstrap updates remain identified through saved output', {
   b$settings$purpose <- 'PCM_GPCM_test'
   expect_match(paste(capture.output(print(b)),collapse=' '),'not a complete rerun')
   expect_identical(mfrmr:::mfrm_gpcm_inference_tables(b)$sampling$Reanalysis,b$settings$recheck)
+})
+
+
+test_that("saved curve and bootstrap summaries retain unavailable targets and history", {
+  curve <- structure(list(settings = list(level = .95, point_only = TRUE),
+    table = data.frame(Estimate = .4, Lower = NA_real_, Upper = NA_real_,
+      CIEligible = FALSE, InferenceReview = "Provisional curves only"),
+    contexts = data.frame(ObservedContext = FALSE), cautions = "Retained caution",
+    anchor_note = "Conditional on fixed anchors"), class = "mfrm_curve_intervals")
+  out <- summary(curve)
+  expect_identical(out$table, curve$table)
+  expect_identical(out$settings, curve$settings)
+  expect_identical(out$contexts, curve$contexts)
+  expect_identical(out$cautions, curve$cautions)
+  expect_identical(out$anchor_note, curve$anchor_note)
+  boot <- structure(list(trials = data.frame(Available = c(TRUE, FALSE, NA)),
+    settings = list(purpose = "PCM_GPCM_test", recheck = list(replicate = 2)),
+    checks = data.frame(BootstrapEligible = c(TRUE, FALSE),
+      BootstrapCaution = c("Weak information", "Rejected trial")),
+    test = data.frame(PValue = NA_real_, Reason = "Unresolved trials")),
+    class = "mfrm_gpcm_bootstrap")
+  s <- summary(boot)
+  expect_equal(s$overview, data.frame(Planned = 3L, Available = 1L, Unresolved = 2L))
+  expect_identical(s$settings, boot$settings)
+  expect_identical(s$test, boot$test)
+  expect_null(s$intervals)
+  expect_identical(s$cautions, "Weak information")
+  expect_error(summary(curve, unused = TRUE), "must be empty")
+  expect_error(summary(boot, unused = TRUE), "must be empty")
 })

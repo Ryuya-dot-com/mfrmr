@@ -187,6 +187,10 @@ reporting}. Psychological Methods.
 Fit-derived forecasts must match the source fit when supplied to archive or
 replay helpers. Explicit \code{sim_spec} forecasts remain separate scenarios;
 attaching them does not establish that their assumptions match the fit.
+Fit-derived forecasts with a fixed \code{population_sd} are unavailable: the
+design-simulation refits do not preserve that variance constraint or an
+anchor-defined origin. An explicit \code{sim_spec} can describe a separate
+forecasting scenario, but does not reproduce those source-fit constraints.
 See \link{mfrmr_compatibility_layer} for migration and replay behavior.
 }
 

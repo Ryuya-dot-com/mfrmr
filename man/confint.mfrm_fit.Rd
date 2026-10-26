@@ -308,6 +308,23 @@ entries retain each order's interval checks for plotting and reporting.
 The score workspace is also subject to
 \code{mfrmr.max_information_bytes}.
 
+Integration failure and a slope-boundary problem need different remedies.
+More quadrature points can repair inaccurate integration, but do not ensure
+a stationary interior solution. For example, let a second-family slope
+\eqn{a_r} approach zero while keeping \eqn{B_r=a_r b_r} and
+\eqn{T_{rk}=a_r\tau_{rk}} fixed, where \eqn{b_r} is its location and
+\eqn{\tau_{rk}} its step. An adjacent logit
+\eqn{a_t a_r(\theta-b_t-b_r-\tau_{rk})} then tends to
+\eqn{-a_t(B_r+T_{rk})}. Response probabilities can have finite limits
+even while the original location and step diverge. This differs from
+setting the slope to zero with all other parameters fixed.
+A small slope alone does not prove a boundary optimum. If such a competing
+path improves the likelihood, however, merely increasing quadrature order,
+relaxing stationarity checks or regularizing the information does not
+justify local Wald intervals at the retained point. Boundary-aware fitting
+and inference require separate qualification; these intervals do not
+implement that extension.
+
 These are numerical safeguards, not thresholds calibrated for coverage.
 Profiling additionally requires absolute low-versus-high quadrature NLL
 agreement within 1e-5 and gradient agreement within 1e-4, including at

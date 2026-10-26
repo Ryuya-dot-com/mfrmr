@@ -32,6 +32,53 @@ knitr::opts_chunk$set(
 )
 ```
 
+## Choose the result you need
+
+Start with the intended score and decision, then choose a branch. These are
+connected workflows, not a checklist requiring every analysis.
+
+| Your situation | Connected route | What to carry into the report |
+| --- | --- | --- |
+| Define what was rated and whether the design links the groups | `describe_mfrm_data()` → model/design review → `subset_connectivity_report()` or `build_mfrm_network_review()` after fitting | Rubric endpoints, rating unit, assigned/missing rows, shared observations and identification checks. A connected graph alone does not establish a common scale. |
+| Estimate person measures and named rater/criterion effects | `fit_mfrm()` → `summary()` → `diagnose_mfrm()` and eligible intervals → `mfrm_results()` → `mfrm_report()` | Model, scale, estimates, uncertainty, Separation/Strata/Reliability, fit and the figures that answer the question. |
+| Decide how many raters or tasks a score needs | `mfrm_g_study()` → `mfrm_d_study()` → `plot()` / `summary()` → eligible plan comparisons | [G/D-study](mfrmr-gtheory.html) components, score weights, G/Phi/SEM, future counts and uncertainty. No MFRM fit is required. |
+| Describe observed agreement | Match the rating unit → `pairwise_kappa_table()`, `krippendorff_alpha_table()` or `pairwise_icc_table()` | [Agreement](mfrmr-rating-agreement.html) target, category distances/ICC definition, overlap and exclusions. Choose the coefficient from the question. |
+| Reuse a scale across forms or waves | Anchor review → anchored fit / linking review → drift and eligible uncertainty | [Anchor provenance and scale](mfrmr-linking-and-dff.html), invariance assumption, fixed versus propagated uncertainty. A common label is not a common calibration. |
+| Investigate an unexpected rater/criterion combination or group contrast | Diagnostics → specified `estimate_bias()` or `analyze_dff()` → signed tables and `plot()` → reporting | [Bias/DFF](mfrmr-linking-and-dff.html) target, cell counts, direction, multiplicity and conditional uncertainty; a screen does not establish unfairness. |
+| Decide whether another model changes the answer | Matched fits → `compare_mfrm()` → `build_model_choice_review()` → `build_summary_table_bundle()` | [Model comparison](mfrmr-model-choice.html), comparable likelihoods, eligible tests and changes in substantive conclusions. |
+| Investigate structure left unexplained or describe groups | Residual diagnostics / `analyze_residual_pca()` / `q3_statistic()` → `mfrm_residual_network()` → `mfrm_report()`; separately, declared entity features → clustering | [Residual exploration](mfrmr-visual-diagnostics.html#residual-networks-ega-and-the-assignment-graph-answer-different-questions) and [feature groups](mfrmr-external-features.html) have different inputs. Retain overlap, feature construction and exploratory status. |
+| Give feedback, score new responses or save evidence | Eligible rater report / `score_mfrm_persons()` or portable calibration → plots, export and RDS | Recipient-specific evidence and limitations, scoring prior/calibration version and the source of uncertainty. See the [reporting map](mfrmr-reporting-and-apa.html#choose-report-sections-by-question). |
+
+Before any branch, record the **meaning of low and high scores**. A column
+named Comprehensibility may encode ease or difficulty. Higher Person locations
+predict higher coded categories; they do not inherently mean better performance.
+With the default Rater orientation, higher locations predict lower coded scores.
+See [score direction](mfrmr-visual-diagnostics.html#establish-what-higher-scores-mean)
+before interpreting severity, bias, plots or anchors. Changing `positive_facets`
+is not reverse-coding the outcome.
+
+If Content and Organization are **separate reported scores**, start with the
+[criterion-versus-score distinction](mfrmr-gtheory.html#is-a-criterion-a-facet-or-a-score).
+A Criterion facet in one-dimensional MFRM does not estimate a separate ability
+for each criterion. Multivariate G theory estimates cross-score covariance
+components; it does not fit multidimensional IRT.
+
+### Put the network at the stage its edges describe
+
+| Network | Best point in the workflow | What an edge means |
+| --- | --- | --- |
+| Assignment/co-observation | Design review, before interpreting measures; return to it when planning additional links or anchors | Who shares observed ratings: `mfrm_network_analysis()` → `build_mfrm_network_review()`. Pass `data`, `person`, `facets`, `score` before fitting; use `basis = "planned"` without a score column for an assignment roster. Inspect the person-rater projection as well as the full graph. |
+| Rater score relations | After matching shared responses, alongside agreement and rater feedback | Observed score agreement/disagreement or directional differences in `rater_network_analysis()`; cross-criterion observed correlations in `rater_halo_network_analysis()`. These are not residual networks or causal halo tests. |
+| Residual associations or communities | After fitting and checking residual/overlap definitions, for a stated unexplained-structure question | Associations left after the model. `mfrm_residual_network()` supplies signed residual correlations and optional hierarchical groups. Report all pairs, overlap and missingness with `mfrm_report()`. This is descriptive exploration, not EGA or a jointly fitted network model. |
+
+An assignment graph is especially useful for explaining why adding a shared
+performance or rater might improve linking. It cannot create direct pairwise
+agreement evidence where no common responses were rated. Feature clustering
+can describe external rater backgrounds; clustering estimated bias or residual
+profiles additionally needs explicit aggregation, missingness, comparability
+and estimation-uncertainty treatment. The current feature API does not supply
+those steps automatically.
+
 ## Quick start
 
 By the end of this lesson you should be able to prepare one-rating-per-row

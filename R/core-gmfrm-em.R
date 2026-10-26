@@ -95,8 +95,11 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
   obs_node <- outer(cell, nc * (seq_len(nq) - 1L), "+")
   quad_basis <- list(log_weights = matrix(log(weights), np, nq, byrow = TRUE))
 
+  cached_par <- NULL; cached_kernel <- NULL
   kernel <- function(par) {
     if (length(par) != length(start) || any(!is.finite(par))) stop("Invalid parameter vector.")
+    if (identical(par, cached_par)) return(cached_kernel)
+    cached_par <<- NULL; cached_kernel <<- NULL
     params <- tryCatch(expand_params(par, common$sizes, common$config),
       mfrmr_gpcm_slope_numeric_boundary_error = function(e) NULL)
     if (is.null(params)) return(NULL)
@@ -113,7 +116,11 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
     logits <- bundle$linear_part * slope
     if (any(!is.finite(logits))) return(NULL)
     if (any(!is.finite(bundle$log_probs))) return(NULL)
-    list(log_prob = bundle$log_probs, prob = bundle$probs, logits = logits, slope = slope)
+    cached_kernel <<- list(log_prob = bundle$log_probs, prob = bundle$probs,
+      logits = logits, slope = slope)
+    # Own the key: optim may reuse its callback parameter buffer.
+    cached_par <<- par + 0
+    cached_kernel
   }
   expected_counts <- function(posterior) {
     counts <- array(0, c(nc, nq, max_score + 1L))
@@ -210,6 +217,8 @@ mfrm_gmfrm_em <- function(problem, start = problem$start, maxit = 500L,
   reason <- "iteration_limit"
   for (iteration in seq_len(maxit)) {
     if (max(abs(state$gradient)) <= score_tol) { reason <- "score_tolerance"; break }
+    mfrmr_fit_progress(sprintf("Two-family EM: q=%d, iteration %d/%d",
+      length(problem$nodes), iteration, maxit))
     counts <- state$counts
     old_q <- problem$complete(par, counts, FALSE)$value
     mstep <- stats::optim(par,
@@ -297,6 +306,7 @@ mfrm_gmfrm_adaptive_fit <- function(problem, config, quad_points, maxit, reltol,
   }
   em <- NULL
   if (identical(policy, "neutral_em")) {
+    mfrmr_fit_progress(sprintf("Adaptive start preparation: EM, q=%d", quad_points))
     em <- capture(function() mfrm_gmfrm_em(problem, maxit = maxit, score_tol = 1e-6))
     starts["em"] <- list(em$value$par)
     if (!is.null(em$value)) em$value <- em$value[c("par", "trace", "controls",
@@ -305,6 +315,7 @@ mfrm_gmfrm_adaptive_fit <- function(problem, config, quad_points, maxit, reltol,
   common <- problem$common
   evaluate <- mfrmr_make_adaptive_mml_evaluator(common$idx, config, common$sizes, quad_points)
   attempts <- lapply(names(starts), function(name) {
+    mfrmr_fit_progress(sprintf("Adaptive start %s: q=%d", name, quad_points))
     start <- starts[[name]]; initial <- NA_real_
     trial <- capture(function() {
       if (is.null(start)) stop(paste("EM initialization unavailable:", em$error), call. = FALSE)
@@ -431,6 +442,7 @@ mfrm_gmfrm_assemble_fit <- function(problem, config, opt, controls, transformati
     estimability_audit = config$estimability_audit,
     category_support_audit = config$category_support_audit)
   params <- expand_params(opt$par, sizes, config)
+  mfrmr_fit_progress("Assembling two-family scores and diagnostics")
   person <- build_person_table("MML", common$idx, config, params, prep,
     quad_points = length(quad$nodes), quad = quad)
   config$boundary_audit <- audit_mfrm_person_boundary(person, config, prep)
@@ -527,6 +539,7 @@ mfrm_fit_product_slopes <- function(args, supplied) {
     config$estimation_control <- list(maxit = args$maxit, reltol = tol,
       quad_points = args$quad_points, quadrature = problem$specification$quadrature,
       mml_integration = "adaptive", mml_engine_requested = "direct", mml_engine_used = "direct",
+      gradient_review_per_person = 1e-6,
       optimizer_requested = args$optimizer)
     policy <- if (is.list(args$gpcm_mml_start)) args$gpcm_mml_start else
       match.arg(args$gpcm_mml_start %||% "neutral_em", c("neutral_em", "neutral"))

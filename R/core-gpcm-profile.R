@@ -49,7 +49,7 @@ mfrm_gpcm_profile_nuisance <- function(evaluator, reference, start, contrast,
     result <- tryCatch({
       # An invalid initial value is not a finite optimizer penalty.
       raw_fn(initial)
-      opt <- stats::optim(initial, fn, gr, method = "BFGS",
+      opt <- optim(initial, fn, gr, method = "BFGS",
         control = c(build_mfrm_optim_control("BFGS", maxit, tol),
           # Match the EM search scale without rescaling LR values or checks.
           list(fnscale = evaluator$optimization_scale %||% 1)))
@@ -73,7 +73,7 @@ mfrm_gpcm_profile_nuisance <- function(evaluator, reference, start, contrast,
       if (is.null(scale$transform)) stop(scale$error)
       center <- selected$par
       native <- function(z) center + drop(scale$transform %*% z)
-      opt <- stats::optim(rep(0, length(center)),
+      opt <- optim(rep(0, length(center)),
         function(z) fn(native(z)),
         function(z) drop(crossprod(scale$transform, gr(native(z)))), method = "BFGS",
         # The transform already accounts for the total-likelihood curvature.

@@ -1747,6 +1747,15 @@
 #'   appearance changes after conversion, use ggplot tools such as
 #'   `ggplot2::labs(title = NULL)`.
 #'
+#' @section Interactive views:
+#' The [visual gallery](https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html)
+#' shows how to pass a supported ggplot to `plotly::ggplotly()` for browser-based
+#' hovering, zooming and legend filtering. Plotly is an optional downstream
+#' renderer. Keep the original mfrmr plot and its [plot_data()] notes alongside
+#' the widget; conversion does not recalculate estimates or intervals. Check
+#' labels, custom geoms and interval layers after conversion. The gallery includes
+#' static figures, numeric tables and an HTML export recipe.
+#'
 #' @return A `ggplot2` plot object, with a `mfrmr_notes` attribute when the
 #'   source plot payload contains a `notes` table.
 #'   Paired Wright/CCC payloads from [plot(reference, comparison = comparison)][plot.mfrm_fit] retain their selected
@@ -1823,6 +1832,17 @@ as_ggplot.mfrm_signal_detection_plot_data <- function(x, type = NULL,
 #' @rdname as_ggplot
 #' @export
 as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
+  if (identical(x$name, "network_ergm") ||
+      (identical(x$name, "rater_network") && any(x$data$metric %in% c("SWS", "PUS")))) {
+    stop("Automatic network-fit conversion is unavailable; use plot() or plot_data() to retain the selected metric, intervals and unavailable states in custom graphics.", call. = FALSE)
+  }
+  if (x$name %in% c("subset_connectivity", "rater_network", "halo_network") &&
+      identical(x$data$plot, "network")) {
+    stop("Automatic network conversion is unavailable; use plot() with layout/graphical controls, or plot_data() for node, edge and coordinate tables.", call. = FALSE)
+  }
+  if (identical(x$name, "residual_network")) {
+    stop("Use plot() on the saved residual network for network/dendrogram views; as_ggplot() supports its type = 'matrix' view only.", call. = FALSE)
+  }
   if (!is.null(type)) stop("A saved plot already selects a view. Recreate it from the fit or result to select another view.", call. = FALSE)
   if (x$name %in% c("anchor_drift", "anchor_drift_forest", "equating_chain_common_anchors")) {
     rlang::check_dots_empty()

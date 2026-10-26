@@ -1,90 +1,35 @@
 # mfrmr roadmap
 
-Updated 2026-10-23. mfrmr `0.2.4` is a release candidate and has not been
-released. Features described below refer to this candidate unless stated
-otherwise. Previously reviewed inference and user workflows retain their
-scoped evidence. The subsequent critical review has repaired saved-result
-identity checks and numerical defects, added explicit standard R extraction
-contracts, and settled primary-entry and naming decisions with migration
-guidance. The FACETS manual review has corrected fit standardization, PTMEA,
-facet displacement and chi-square df, PCM fair averages, bias expectations and
-summary tests, anchor validation/display, and unexpected-response screening.
-The fit-table and ZSTD pathway defaults use the same df convention as diagnostics;
-refreshing their comparison columns preserves the recorded WHEXACT choice.
-Saved diagnostics and bias results require recreation from their original fit.
-An executed FACETS 4.5.0 binary JML comparison agrees within printed precision
-for the checked measures, fit and bias summaries. Its bias-cell df differs from
-the web manual; the version-specific distinction is documented. The modified Rasch-Welch pairwise reference and integer truncation also
-match an unequal-count example; the earlier classical reference remains
-selectable. General FACETS equivalence is not established. Native conventions and remaining limits are explained in
-the migration guide. GENOVA 3.1, mGENOVA 2.1 and urGENOVA 2.1 comparisons support
-the checked balanced G/D-study examples and distinguish negative-component
-options from calculation defects. These corrections do not by themselves close
-final package and environment qualification.
-Native MML residual MnSq
-uses EAP plug-in scores and is not equivalent to posterior-averaged TAM or
-ConQuest item/parameter fit. ConQuest comparison exports now check the supported model and
-declare independent external numerical controls and reversible names; import
-validates coefficient coordinates, and incomplete item comparisons use a common
-centering set. Reviews retain stopping status, flag surplus IDs, and require
-an established origin for EAP/intercept errors. Numerical precision still
-requires refinement or an independent reference. These repairs
-preserve descriptive comparison scope and do not establish general ConQuest
-fit, scoring or uncertainty equivalence. The other reviewed claims retain their scoped
-acceptance and are matched to their assumptions, derivations,
-independent numerical checks and applicable statistical evidence. User workflows
-preserve those meanings through results, plots, reports and saved reuse.
-Exact, asymptotic, approximate, experimental and descriptive procedures retain
-their distinct qualifications; this is not a general finite-sample accuracy or
-coverage guarantee. A local Windows package-check attempt on an intermediate candidate passed
-examples and tutorials but exposed diagnostic-consumer and Unicode-handling
-defects. The corrected candidate passes the ordinary installed regression
-selection with affected-route reruns, static analysis, changed help examples
-and saved-result replay. This combines a completed check attempt with scoped
-repairs; it is not a second complete package check of the corrected archive.
-Earlier exhaustive regression, example, dependency and documentation checks
-retain their original scope and source attribution. Final specification and
-source selection, supported-environment, execution-cost and hosted-site
-qualification remain open; local checks do not establish release completion.
-No release date is promised.
-See [NEWS](NEWS.md) for changes and [README](README.md)
-for analysis examples.
+Updated 2026-10-26. **0.2.4 is an unreleased candidate.** Its purpose is to
+connect rating-based measurement, assessment planning and useful feedback.
+The immediate priority is to finish these workflows with their meanings intact,
+then qualify and publish the matching package and documentation.
 
-Ordinary direct MML offers opt-in automatic integration checking and adaptive
-refitting. The checks include individual log marginal likelihoods, posterior
-moments and the marginal gradient; failures retain their numerical history.
-The final integration rule also governs information and scoring. This covers
-RSM, PCM and one-family GPCM with their existing model restrictions. Adaptive
-likelihood and gradient evaluation now reuses identical response/design/weight/
-population-covariate patterns while retaining independent Person contributions.
-Changing the default, broader probability reuse across different response
-patterns and extending latent-regression EM remain separate development
-decisions. Numerical checks do not establish
-global optimality, formal identification or interval coverage.
+| User question | Available in the candidate | Remaining boundary or next work |
+| --- | --- | --- |
+| What can be measured after accounting for the rating process? | RSM/PCM and bounded GPCM workflows; estimates, diagnostics, target-specific uncertainty, figures and saved scoring. | Two-family GPCM and common-plan inference retain their experimental scope. Numerical delivery is not a coverage guarantee. |
+| How many ratings are needed for the intended score? | Supported G/D studies, fixed score components/composites, plan comparisons, uncertainty and reports. | Future plans are complete balanced projections; arbitrary sparse future rosters and automatic cost-optimal allocation are not implemented. |
+| What should raters or assessment developers review? | Severity, fit, agreement, specified bias screens, anchor/link reviews, model-choice reports and individual feedback. | Screens are not fairness verdicts. Anchor readiness is not invariance; the review cannot supply missing drift evidence. |
+| Can the analysis be reported and reused faithfully? | Shared report/appendix routes, long plot tables, editable measurement/G/D/review templates and user-declared study context. | Explain data transformations and score direction across analyses. Shared metadata does not make raw G-study scores equivalent to latent measures. |
+| What must happen before release? | A matching local candidate, scoped numerical/workflow evidence, distributed regression and attributed repairs. | Integrate the selected source, finish remaining platform/external-link/website checks and verify authorized publication. Source identification remains separate from release qualification. |
 
-Small supported datasets now reach model-specific checks without a blanket
-ten-rating-row minimum. For RSM/PCM MML, singleton category counts can retain
-model-information intervals after category, convergence, full-information and
-finer-quadrature review. The interval result explains its eligibility and
-small-sample caution while the source fit retains its category review. This
-does not guarantee finite-sample coverage or waive empty-category,
-identification or numerical failures. See `mfrm_facet_intervals()` help.
-Full RSM/PCM JML, CML and fixed-population MML also admit one-Person calibration
-after the applicable checks; JML/MML requires an additive recession check before
-fitting. A finite solution is possible for some informative response patterns,
-but does not establish interval coverage or empirical between-Person variation.
-Results retain this caution. Other calibration routes retain their current
-at-least-two-Person software limit; Person-cluster sandwich uncertainty cannot
-be estimated from one Person.
-CML now also separates finite numerical point estimates from conditional
-information failures. When its identification, finite-MLE and stationarity
-checks pass, unavailable covariance no longer discards the point; summaries
-and intervals retain missing uncertainty and its reason. The information
-warning remains relevant to point accuracy and prevents formal inference.
-Eligible ordinary fixed-population RSM/PCM MML interval results likewise retain
-finite points when joint information fails, with missing model/sandwich
-uncertainty and explicit reasons. Source qualification remains required;
-information failure is not a new guarantee of point accuracy or coverage.
+Recent network extensions are one part of feedback, not the organizing goal of
+the package. Design graphs, signed agreement, SWS/PUS, halo contrasts and binary
+ERGMs answer different questions and retain their documented limitations.
+
+After 0.2.4, prioritize reusable inference and score/event specifications, then
+bounded multidimensional rubric measurement. Response/production time and
+rater scoring time remain distinct observations; continuous-dimension Q
+matrices and discrete-attribute Q matrices remain distinct specifications.
+Bayesian fitting, latent classes and cognitive diagnosis are staged research
+and implementation plans, not capabilities established by their inclusion here.
+See [staged delivery](#direction-and-staged-delivery).
+
+The detailed scope below records method-specific conditions. Start with the
+[workflow requirements](#application-workflows-and-completion-conditions),
+[three pillars](#pillar-milestones-and-progress), or
+[release milestones](#completion-milestones-for-024).
+Use [NEWS](NEWS.md) for changes and migration and [README](README.md) for a first analysis.
 
 ## Focus for 0.2.4
 
@@ -117,6 +62,110 @@ specification freeze. See the [completion milestones](#release-completion-milest
 for their dependencies and acceptance conditions.
 The package is intended for different assessment settings whose
 rating designs match the selected method's assumptions.
+
+<a id="open-facets-and-genova-compatibility-decisions"></a>
+
+### FACETS and GENOVA compatibility: release scope and follow-up
+
+The implemented compatibility options below belong to 0.2.4 within their
+checked scope. Unchecked investigations remain unfinished and are identified
+as follow-up work; they are not claims of software equivalence. Their release
+allocation rests on the independent calculation checks and explicit model
+restrictions below. A wrong calculation within the supported scope, an
+unimplemented promised option or a misleading comparison remains a release
+blocker. Documenting a difference does not complete its numerical explanation.
+
+Compatibility is assessed per quantity. Independently derived model calculations
+remain the statistical basis; verified ordinary-JML reporting conventions can
+match FACETS to support migration and comparison. Unexplained version-specific
+outputs are not reproduced by empirical corrections. Compatibility options must
+retain the estimand, primary estimates and inference qualifications; they do
+not imply that FACETS defines G-theory or all supported estimation methods.
+
+- [x] Select and implement the checked bias-cell df/probability convention.
+  Retain frequency count minus one and the continuous Student tail; the manual's
+  count-minus-two description is not adopted as the executable convention.
+  FACETS 4.5.0 fractional-count tails in the checked examples are reproduced by
+  extending an integer-df finite sum outside its valid domain. This differs from
+  the Student distribution and can change a 0.05 screen. mfrmr retains the
+  independently integrated Student reference, with `ProbabilityReference`,
+  `ProbabilityStatus`, `ProbabilityReason` and separate display df. Nonpositive
+  df withhold the probability without discarding a finite conditional estimate.
+  This scoped decision does not establish other versions' behavior or calibrated
+  finite-sample screening; uncertainty evaluation remains open below.
+- [x] Add the scoped ordinary-JML expected point-measure reference to
+  diagnostics and fair-average tables. `PTMEAExpected` uses the published
+  finite-count factor `(N-2)/N`, with frequency count `N`; the unadjusted
+  reference and unavailable states are retained separately. Fixed-calibration
+  PCM comparisons support this convention with missing assignments and unequal
+  weights. This is an approximate conditional reference, not an exact expected
+  sample correlation or inference with calibration uncertainty.
+- [ ] **Follow-up comparison:** explain four remaining PCM Outfit-df
+  discrepancies. For 0.2.4, retain the independently checked Wright--Masters
+  calculation and disclose the native disagreement. Infit df agrees
+  in the retained comparison, but agreement of fair averages, MnSq, correlations
+  and additional small cases does not explain these Outfit-df differences.
+  Fixed-distribution reflection probes reveal small native deviations under
+  mathematically equivalent score reversal. mfrmr retains stable central moments,
+  checked against independent high-precision arithmetic and reversal invariance;
+  it does not introduce a numerical perturbation to copy unexplained output.
+- [x] Implement explicit conditional total-score extrapolation for ordinary
+  additive RSM/PCM JML: `fair_average_table(..., xtreme = .3,
+  xtreme_method = "facets")` and `estimate_bias(..., xtreme = .5)`. Retain
+  primary estimates, fixed anchors and the old average-score display default;
+  distinguish corrected-total SEs and downstream fair scores. Unit/replication
+  weights, a fixed-scale PCM kernel and public consumers have scoped checks.
+- [ ] **Follow-up comparison:** evaluate native extreme-score equivalence under
+  broader anchoring and exclusion designs. For 0.2.4, retain the checked
+  conditional reporting option and its supported anchor restrictions;
+  broader calibration equivalence is not claimed. Interior partial-anchor differences are resolved by
+  matching the origin constraints, but this does not validate every extreme
+  calibration design. The implemented reporting calculation conditions on
+  the saved calibration.
+  Same-boundary Person anchors expose a substantive difference: FACETS can
+  report finite values where the ordinary likelihood has no finite maximum.
+  mfrmr detects this configuration before optimization and does not reproduce
+  it as ordinary JML. With additional interior-anchor support, conditional
+  fair scores and bias calculations have matched-calibration checks, and
+  finite direct anchors remain in fair-score filtering under both display
+  conventions. Main calibration differences and broader exclusion designs
+  remain unresolved; reporting agreement does not imply estimator equivalence.
+  Group-mean anchors and fitted interactions remain outside this route.
+- [x] Implement explicit `centering_scope = "anchor_origin"` for ordinary
+  additive RSM/PCM JML, with direct or group-mean anchors replacing their facet's centering
+  and an unanchored noncenter facet. Sparse interior partial-anchor cases
+  agree with native FACETS under these constraints. Preserve existing defaults
+  and distinguish fixed anchors from estimated-calibration uncertainty.
+- [x] Cross-check ordinary RSM/PCM JML against TAM with matched category
+  support, identification and corrections, including sparse assignments and
+  supported partial Person anchors. Distinguish default coefficient shrinkage,
+  calibration-score adjustments, MLE/WLE, conditional information and weighted
+  fit definitions. This scoped agreement does not qualify broader extreme
+  anchor configurations or calibration-inclusive inference.
+- [ ] **Post-release inference research:** qualify general fair-average and
+  bias-comparison uncertainty when calibration is estimated, including dependence between compared results
+  and fixed versus estimated anchors. Select an inference method appropriate
+  to the estimand and sampling design; enlarging an ordinary-JML covariance
+  alone does not solve incidental-parameter bias. Assess coverage, screening
+  errors and unavailable results under declared conditions. In 0.2.4,
+  common-plan refit/delta intervals remain experimental and ineligible for
+  qualified confidence-interval decisions. Existing scoped MML source-anchor
+  and joint-cell uncertainty retain their own accepted assumptions and checks;
+  this research item does not withdraw or generalize those outputs. Existing
+  conditional bias intervals remain diagnostic-only; neither coverage nor a bias screen alone
+  establishes fairness of an assessment.
+- [x] Add an explicit D-study component-treatment choice that preserves raw
+  estimates and distinguishes GENOVA `ALGORITHM` zero substitution from `EMS`
+  recalculation. `negative_components` now supports `"raw"` (default),
+  `"genova_algorithm"` and `"genova_ems"` for complete balanced univariate ANOVA
+  sources with supported crossed or nested facets. Matched executable output
+  checks effective components, G/Phi and SEM. Saved results, summaries and
+  plots retain the choice and original components. `confint()` pairs adjusted
+  points with original-source population intervals and supported plan-difference
+  intervals, recording their separate bases without recentering bounds.
+  Sampling uncertainty of the adjusted estimator itself remains unqualified;
+  the separate delta-estimator comparison API requires raw components.
+  Multivariate and incomplete sources retain the raw-only route.
 
 ## Intended uses and evidence
 
@@ -158,6 +207,21 @@ objective, not a condition for releasing the package.
 The following track 0.2.4 workflow requirements. They extend the
 existing examples and result interfaces; they do not replace unresolved
 statistical requirements or imply that new estimators have been implemented.
+
+- [x] **Design review before fitting, with reusable figures.**
+  Assignment networks accept observed ratings or a planned roster, retain
+  unscored isolates and row inclusion, and distinguish graph links from model
+  identification. Network plots expose layouts, display-only filters and
+  node/edge/coordinate tables. Cluster profiles expose original-unit values
+  with inclusion/missingness for custom distribution plots; selected plot
+  tables and matrices can be exported in long form.
+- [x] **Literature-connected reporting and exploratory interpretation.**
+  The network/reporting lesson connects Lamprianou's complementary views,
+  FACETS/ConQuest output and L2 speaking/writing applications to existing
+  reporting modules. Clustering help defines distances, silhouettes and
+  squared-error summaries. The examples retain differences between observed
+  scores, latent estimates, agreement and dependability; no new network model
+  or cross-analysis validity guarantee is implied.
 
 - [x] **An interval-aware assessment-plan summary.**
   `summary(d, intervals = TRUE, assumption = "normal")` collects supported
@@ -279,11 +343,51 @@ An experimental method may pass numerical checks. Conversely, a supported
 method may fail on particular data. Keep numerical status, uncertainty type
 and interpretation notes with saved results and exported tables.
 
+The unresolved issue depends on the procedure. Two-family GPCM retains
+incomplete general identification and boundary qualification; available local
+intervals do not settle those questions. An integration failure may be repaired
+by explicit higher-order refitting. A slope approaching zero while its location
+and steps diverge is a different problem: response probabilities can remain
+finite, and more integration points do not supply valid intervals for those
+original coordinates. The component-interval help explains this distinction;
+boundary-aware estimation and inference remain separate development work.
+Corrected GPCM JML estimates an
+adjusted-equation root, and its root covariance does not establish centering
+at the structural truth. Common-plan refit/delta intervals have demonstrated
+small-sample undercoverage and remain ineligible for inferential use.
+Population intervals, slope profiles, REML target profiles and the extended
+G-score method retain their stated asymptotic or experimental calibration.
+Increasing simulation repetitions alone cannot resolve a wrong target,
+remaining bias or an unsuitable reference distribution.
+
+Conservative regions have a different basis. The mean-square region has a
+joint coverage lower bound for its declared fixed-score future plans under
+independent normal ANOVA strata; the signed covariance regression region has
+its own pointwise conservative argument. Their numerical checks do not prove
+all floating-point errors harmless, and their bounds can be uninformatively
+wide. Approximate F has no corresponding exact pivot and has documented
+undercoverage in small sources. The `Validation` column distinguishes the
+approximation from the experimental numerical projection of a conservative
+region. Conditional Person posterior intervals instead condition on their
+calibration/prior; they do not become calibration-inclusive confidence
+intervals by passing integration checks.
+
 | Purpose | Included in 0.2.4 within its documented scope | Incomplete or experimental | Planned after 0.2.4 |
 | --- | --- | --- | --- |
-| Measurement | RSM/PCM MML and JML; RSM/PCM CML structural estimates and identified interaction contrasts with conditional-information intervals; one-slope-family GPCM; supported diagnostics, category outputs, reliability/strata, scoring and calibration reuse. | Two-family GMFRM estimation, conditional scoring and available intervals; corrected GPCM JML point/scoring results; population intervals whose performance is not fully established. | MML fixed Person anchors, initially RSM/PCM; broader GMFRM/population uncertainty evaluation; more flexible population and facet structures. |
+| Measurement | RSM/PCM MML and JML; RSM/PCM CML structural estimates and identified interaction contrasts with conditional-information intervals; one-slope-family GPCM; supported diagnostics, category outputs, reliability/strata, scoring and calibration reuse. | Two-family GMFRM estimation, conditional scoring and available intervals; corrected GPCM JML point/scoring results; Jeffreys-penalized RSM/PCM point estimation; population intervals whose performance is not fully established. | MML fixed Person anchors, initially RSM/PCM; broader GMFRM/population uncertainty evaluation; scoped native Bayesian estimation and multidimensional rubric models; later population, timing and attribute extensions as described in the post-release priorities. |
 | G-theory planning | Supported crossed/nested G/D studies, identifiable incomplete-source estimation, composites/differences, complete future plans, plots including signed error-source contributions by plan, balanced ANOVA component SEs/intervals and SEM intervals, one-facet G/Phi intervals, approximate MLS individual-plan G/Phi intervals for balanced two-crossed-facet sources, and scoped paired plan-difference intervals. | Explicit delta coefficient SEs/normal-reference intervals; experimental approximate-F and mean-square-region coefficient intervals; target-REML variance/covariance component, G/Phi and SEM intervals for balanced/identifiable incomplete sources; signed balanced-source covariance intervals. Plots retain original points, numerical failures and method-specific qualifications. General small-sample calibration remains incomplete. | General bootstrap alternatives, robust/simultaneous inference and sparse or unequal future rating plans. |
-| Feedback and decisions | Supported individual reports, agreement/reference comparisons, criterion accuracy, centrality, DFF sensitivity checks, exploratory all-pair bias summaries and plots with explicit availability, conditional cut probabilities and fixed-plan classification/SEM. | GMFRM feedback and descriptive diagnostics; general screening accuracy and performance under estimated or shifted ability distributions are not established. Conditional bias screens do not supply collection-wide multiplicity control. | Calibration-inclusive decisions, broader diagnostic evaluation, additional-rating allocation and rank/winner uncertainty. |
+| Feedback and decisions | Supported individual reports, agreement/reference comparisons, criterion accuracy, centrality, DFF sensitivity checks, exploratory all-pair bias summaries and plots with explicit availability, conditional cut probabilities and fixed-plan classification/SEM. | GMFRM feedback and descriptive diagnostics; common-plan refit/delta intervals, including their Jeffreys routes, remain numerically available but inferentially unqualified. General screening accuracy and performance under estimated or shifted ability distributions are not established. Conditional bias screens do not supply collection-wide multiplicity control. | Qualified calibration-inclusive decisions, broader diagnostic evaluation, additional-rating allocation and rank/winner uncertainty. |
+
+Standalone FACETS-result visualization uses `read_facets_results()` and `plot()`
+for reported element measures and fit statistics. Source IDs, labels, precision,
+status and unavailable rows remain available for inspection and export.
+Shared-axis Wright maps require compatible source coordinates to be declared.
+This descriptive import does not provide external frozen-calibration scoring,
+joint uncertainty or a validation of the source analysis. Optional Graphfile
+imports redraw reported category-probability and expected-score coordinates,
+preserving scale/category identity, precision and unavailable points. They do
+not align curves with element measures or reconstruct an external calibration.
+Broader external-calibration reuse remains a later extension.
 
 Anchors, linking/imports, feature analysis, assigned-score imputation and
 eligible pooling, and separate random-rater/testlet models remain included
@@ -292,27 +396,35 @@ implemented combinations: RSM/PCM in both formats, and two-family GPCM in
 Stan. Code export is not a native Bayesian estimator or a guarantee about
 prior choice or credible intervals.
 
-Location anchors use internal coordinates and condition on their supplied
-values. Person direct/group anchors require JML; MML rejects them. New ordinary
+Location anchors use internal coordinates; ordinary fit uncertainty conditions
+on their supplied values. The bounded source-covariance interval extension
+above is opt-in. Person direct/group anchors require JML; MML rejects them. New ordinary
 fits center each declared facet across all levels, including anchors and group
 totals. Use `centering_scope = "remainder"` to reproduce the earlier convention.
-Neither mode automatically disables centering as FACETS can do. Thresholds
+For ordinary additive RSM/PCM JML, `centering_scope = "anchor_origin"` instead
+lets direct or group anchors replace their facet's centering, as FACETS does.
+This needs an unanchored, active noncenter facet. Group targets are repeated
+means, not native per-element contributions. The ordinary constrained
+likelihood is retained: native multi-group numerical results and general
+extreme handling are not reproduced automatically. Thresholds
 and slopes are not carried by the location-anchor
 table. See the [linking tutorial](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.html)
 for a complete example and the distinction from fixed-calibration scoring.
 
-## Anchor alignment before 0.2.4: incomplete
+## Anchor alignment and its qualification
 
 Ordinary fitting and anchor review now accept `centering_scope = "facet"`
-(default) and `"remainder"` (legacy reproduction). The new convention centers
-the whole declared facet, including fixed values. An anchor does
+(default), `"remainder"` (legacy reproduction), and `"anchor_origin"`
+(direct or group anchors replace centering in ordinary additive RSM/PCM JML).
+The default convention centers the whole declared facet, including fixed values. An anchor does
 not implicitly select the population mean, variance, threshold structure or
 uncentered facet. These choices must match before results can be compared with
 TAM or ConQuest. Ordinary fitting, saved refit settings and the scoped
 population-model correspondence and the migration workflow are checked;
-release integration remains incomplete. Anchored estimated-population facet-location intervals
-remain unavailable even when point estimation and local numerical checks
-succeed. One-family GPCM slope and curve intervals have a separate supported
+release integration remains incomplete. The fixed-SD, intercept-only RSM/PCM
+anchor-origin route has conditional facet/population intervals and optional
+independent-source covariance propagation. Broader anchored population
+specifications remain outside that interval extension. One-family GPCM slope and curve intervals have a separate supported
 scope, described below.
 
 Completion requires more than matching a few estimates:
@@ -357,8 +469,9 @@ Completion requires more than matching a few estimates:
 
 Existing results will not be converted merely by changing their labels or
 reloading a file. A fit under a different constraint system generally needs
-re-estimation. This work does not add uncertainty from estimating anchors in
-their source calibration, nor promise equivalent defaults across programs.
+re-estimation. Anchor alignment alone does not add uncertainty from estimating
+anchors; the bounded source-covariance extension requires explicit arguments.
+Neither promises equivalent defaults across programs.
 `make_anchor_table()` preserves fitted numeric values by default. Rounding
 individual anchors can break their joint zero sum; use `digits` explicitly
 for a display copy and review any rounded values before recalibration.
@@ -367,9 +480,13 @@ Conditional intervals for supported ordinary RSM/PCM MML facet estimates
 already exist; verifying them under the revised constraints is part of this
 release work. This differs from propagating uncertainty in externally
 estimated anchors. Bias-screening SEs and conditional bounds retain their
-screening interpretation. Jointly fitted interaction effects currently have
-no public cell-level SE/CI output; adding that inference is a separate
-extension, not an automatic consequence of anchor alignment.
+screening interpretation. For one fitted two-facet interaction in fixed-N(0,1),
+fixed-grid direct RSM/PCM MML, `mfrm_facet_intervals(interaction = ...)` now
+provides joint-information cell and contrast intervals. This separate extension
+uses all nuisance-parameter uncertainty; it is not automatic anchor alignment,
+a replacement for screening, or a guarantee of simultaneous inference.
+Anchors, GPCM, population regression and multiple interaction terms remain
+outside this joint-cell interval route.
 
 ## Across-year assessments with common recordings
 
@@ -587,6 +704,17 @@ has its own restrictions, including second-owner steps. Multiple independent
 threshold owners and arbitrary combinations of model extensions are not
 implied by accepting arbitrary column names.
 
+Saved one-family GPCM Person scores from `predict_mfrm_units()` can now be
+attached to `mfrm_results(..., scores = ...)` for reports, export and saved
+replay. EAP, posterior SD and continuous conditional posterior intervals retain
+the actual scoring priors and numerical review states. They exclude calibration
+and population estimation uncertainty and do not replace diagnostic normal bands.
+
+Explicit rating contexts in `category_curves_report(fit, newdata = contexts)`
+now support native one- and two-family GPCM MML curves and cumulative 50%
+thresholds, with source readiness and unavailable intervals retained. This
+extends descriptive calculation; two-family inference remains provisional.
+
 Read the [GPCM guide](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html) and
 [interval guide](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_interval_guide.html) before selecting an uncertainty
 method. Current distinctions include:
@@ -773,7 +901,30 @@ and facet-count panels, with colour and monochrome options. See the
 [G-theory tutorial](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gtheory.html). These observed-score analyses
 do not estimate latent MFRM reliability or pass/fail classification accuracy.
 
+G/D-study and paired-comparison objects now enter `mfrm_report()` and the
+shared table/CSV/HTML export workflow directly. Supplied saved intervals retain
+source checks, method qualifications and unavailable rows. The editable
+`templates/gtheory-report.Rmd` joins source design, score weights, components,
+G/Phi, error variances, SEM, plan contrasts and figures with manuscript prompts.
+
 ## Rater feedback across application areas
+
+Rater networks now include signed pairwise alpha, magnitude-weighted network
+severity/SWS/PUS, person-cluster halo contrast intervals and an optional binary
+ERGM adapter using statnet. All connect to reports and full-table export.
+These are complementary observed-score/network analyses: SWS/PUS have no
+calibrated universal cutoffs, bootstrap intervals condition on the observed
+rater set and withhold undefined resamples, and ERGM requires a declared tie
+threshold, missing-dyad assumption and backend convergence/GOF review. Valued
+ERGMs, estimated-edge uncertainty and general rater-population halo inference
+remain outside this adapter's scope. See the network guide for examples.
+
+`mfrm_residual_network()` connects fitted standardized residuals to signed
+correlation networks, optional common-person hierarchical groups, three plot
+views and the shared report API. Groups remain exploratory; EGA, jointly fitted
+residual networks, automatic dimensionality decisions and group-stability
+inference are not implemented by this route. The help explains validation and
+the separate supervised role of random forests in rater-type research.
 
 The supported reports distinguish severity, fit, category use, agreement,
 residual dependence and accuracy against a supplied criterion. A screening
@@ -806,9 +957,33 @@ items into a percentage of statistical validity, effort or release readiness.
 
 | Purpose | Accepted baseline within the declared scope | Remaining finalization |
 | --- | --- | --- |
-| Measurement | Model and derived-output checks, anchor migration, native RSM/PCM CML and identified comparisons, MML population-SD contrasts, estimator-specific guides and saved reuse. | Assess whether existing mathematical and statistical evidence supports each final claim, then qualify the matching release source and supported environments. |
-| G-theory planning | Scoped component, individual-plan and paired-plan uncertainty; integrated summaries, figures and saved workflows; scoped maintenance checks. | Confirm the sufficiency of design-specific derivations and calibration evidence for the final claims and method recommendations. Broader research is separate. |
-| Feedback and decisions | Supported diagnostics, reports, fixed-calibration decision summaries, interpretation guidance and saved workflows. | Confirm estimator-specific targets, conditional uncertainty and interpretation against their mathematical basis, then complete final-source delivery checks. |
+| Measurement | Model and derived-output checks, anchor migration, native RSM/PCM CML and identified comparisons, MML population-SD contrasts, estimator-specific guides and saved reuse. | Preserve admitted mathematical/statistical claims and experimental boundaries through the latest report connections, then qualify the matching source and environments. |
+| G-theory planning | Scoped component, individual-plan and paired-plan uncertainty; integrated summaries, figures, editable reports and saved workflows. | Preserve source/future design, score units, fixed weights and method-specific uncertainty. Arbitrary future rosters and allocation optimization remain later work. |
+| Feedback and decisions | Supported diagnostics, report modules, fixed-calibration decision summaries, interpretation guidance and saved workflows. | Complete the selected workflow checks while retaining source context, unavailable evidence and conditional uncertainty. General calibration-inclusive decisions and direct rater-effect models remain later work. |
+
+The 0.2.4 diagnostic allocation retains the recorded estimator-specific fit
+statistics. In particular, EAP plug-in MnSq remains descriptive, without an
+expectation-one guarantee. A new posterior-averaged parameter-fit statistic
+requires a separate definition and validation and is allocated to later work.
+It is not a prerequisite for publishing the existing descriptive diagnostics.
+
+Practical two-family use now has a paired-study guide covering numerical
+delivery, interval coverage, observed runtime, rater overlap, sample-size
+interpretation and unavailable bias/anchor operations. `fit_mfrm(progress = TRUE)`
+provides phase and elapsed-time feedback; iteration limits do not predict time
+remaining. Exact probability reuse reduces duplicated EM work without changing
+the target or admission criteria. The latest successful two-family automatic
+fit also shares its complete numerical qualification with subsequent intervals
+in the same R session, conditional on exact fit, memory-setting and numerical-
+backend identity.
+This transient reuse is absent from saved fits; fresh sessions recalculate.
+Further numerical work should address information-check cost within each fit
+and unresolved curvature/integration failures. New two-family adaptive fits
+cap the total-gradient review at the interval procedure's per-Person scale,
+activating the existing bounded finish when necessary. Older saved fits retain
+their recorded rule, and independent interval checks remain mandatory. Stronger delivery
+or inferential claims require matched validation; the existing experimental
+allocation and source-specific evidence remain explicit.
 
 The [application workflows](#application-workflows-and-completion-conditions)
 remain accepted within their scope. The common-recording annual workflow,
@@ -827,10 +1002,10 @@ which precedes final delivery qualification and publication.
 
 | Milestone | Completion condition | Current state |
 | --- | --- | --- |
-| Final API, mathematical and inferential specification | Each supported target and procedure has explicit model assumptions, identification/existence conditions, an applicable derivation, independent implementation checks, numerical eligibility and evidence adequate for its statistical claims. Inputs, defaults, uncertainty and unavailable operations agree. Resolve required gaps; justify experimental and later allocations. | Accepted for the documented release scope. Exact, regular asymptotic, approximate and descriptive claims remain distinct; broader performance and calibration-inclusive inference retain their later-work allocation. |
-| Complete supported user workflows | The declared entry points lead to interpretable results, supported plots/tables, export and fresh-session reuse. Errors and unavailable results preserve their meaning; help and examples agree with the accepted mathematical specification. | Accepted for implemented workflows, including the reviewed corrections, migration and saved-result restrictions. This combines existing source-specific checks and affected-route verification; it does not claim a fresh complete run of every example or measured novice comprehension. |
-| Substantive specification and source freeze | The preceding outcomes are accepted; functionality, inference, numerical procedures and migration behavior are settled. One identified source and candidate archive agree with metadata, help, examples and release notes. | Accepted for the selected replacement archive: metadata, help, capability declarations, migration guidance and all tutorial outputs agree with the reviewed source. Local installed checks and saved-result replay pass; final package/platform qualification and publication remain separate. |
-| Final package and environment qualification | The selected source has attributable package, supported-platform, dependency, saved-result and documentation checks. Remaining failures and execution-time requirements are resolved; the package and website represent the same accepted behavior. | Complete local package checking now passes with two environment notes; the final documentation-only cleanup has a verified source bridge. All tutorials, ordinary examples, selected tests and both manuals pass. The full installed regression remains accepted as one complete run plus targeted repairs. Short examples and data loading are streamlined without changing numerical precision or test selection. Measured total check cost still exceeds the project targets. Supported-platform, dependency/site and execution-cost qualification remain open. |
+| Final API, mathematical and inferential specification | Each supported target and procedure has explicit model assumptions, identification/existence conditions, an applicable derivation, independent implementation checks, numerical eligibility and evidence adequate for its statistical claims. Inputs, defaults, uncertainty and unavailable operations agree. Resolve required gaps; justify experimental and later allocations. | Accepted for the current release allocation. Capability guidance, help and user outputs agree with the accepted method-family evidence, including uncertainty and refusal labels. Fixed-default/opt-in-auto MML, descriptive diagnostics and experimental/later allocations are explicit. Native comparison follow-up and general coverage research remain unfinished. Exact, asymptotic, approximate and descriptive claims retain their distinct scope. |
+| Complete supported user workflows | The declared entry points lead to interpretable results, supported plots/tables, export and fresh-session reuse. Errors and unavailable results preserve their meaning; help and examples agree with the accepted mathematical specification. | Accepted for the current release allocation, combining scoped teaching, reporting, plotting and saved-result evidence with affected-route corrections and fresh-session review. Saved intervals preserve targets, uncertainty, experimental qualifications and unavailable states. This is not a fresh complete run of every example or measured novice comprehension. |
+| Substantive specification and source freeze | The preceding outcomes are accepted; functionality, inference, numerical procedures and migration behavior are settled. One identified source and candidate archive agree with metadata, help, examples and release notes. | A matching local candidate now includes G/D, network and anchor/bias/model-choice reports, study declarations and the bounded display/input corrections. Its source and distribution correspondence is verified. This local selection is separate from main-source integration, final environment qualification and publication. |
+| Final package and environment qualification | The selected source has attributable package, supported-platform, dependency, saved-result and documentation checks. Remaining failures and execution-time requirements are resolved; the package and website represent the same accepted behavior. | Open, with the missing distributed regression completed and its affected repairs checked in an installed package. Current tutorials, targeted help/site generation and saved reports are verified. Earlier examples/manual checks retain their original source scope; combined evidence is not a fresh clean complete check of the successor. Remaining supported-platform, external-link, website and source-integration qualification stay explicit. |
 | Verified publication | Authorized source, package and documentation are published consistently, with installed/downloaded outputs checked. GitHub availability, CRAN submission and CRAN acceptance have separate recorded states. | Not published; submission is not acceptance. |
 
 RSM/PCM CML supplies conditional structural inference without a fitted ability
@@ -843,6 +1018,13 @@ a structural-truth confidence interval. Existing conditional scoring and
 descriptive diagnostics retain their own documented scope. These roles do not
 by themselves change the default estimator or make every downstream operation
 available for every result class.
+
+RSM-versus-PCM likelihood-ratio tests require the PCM to retain every fixed
+interaction term in the RSM. More free category steps alone do not make a PCM
+an extension of an RSM with omitted interactions. The nesting review now
+withholds those tests while retaining otherwise eligible information-criterion
+comparisons. Recreate affected saved comparisons from their fitted objects;
+this correction does not require refitting the models.
 
 Use accepted source- and scope-matched evidence to close these milestones.
 Mathematical acceptance distinguishes four questions: whether a result follows
@@ -864,8 +1046,10 @@ selecting the replacement source. Unaffected evidence remains valid.
 Checked items are accepted within their stated scope and support the milestones
 above; the detailed items are not additional milestones. Existing G-theory
 derivations and design-specific checks retain their scope, as do the API repairs
-and reviewed workflows. The final substantive specification and replacement
-source are accepted; package/platform and publication qualification remain.
+and reviewed workflows. The selected specification and implemented workflows
+are accepted with their stated qualifications. Candidate archives retain their source-specific evidence; the latest workflow
+changes still require a matching source selection. Package/platform qualification
+and publication remain open.
 Research tasks below do not
 delay release merely because they remain unfinished; incorrect calculations,
 misleading claims or broken supported workflows do require correction.
@@ -997,26 +1181,41 @@ misleading claims or broken supported workflows do require correction.
   figures and the construct-evidence guide, with their stated acceptance checks.
   This completes the selected teaching and saved-result paths; package-wide
   maintenance and final release verification remain separate below.
-- [ ] Settle the API, mathematical and inferential specification for the current
+- [x] Settle the API, mathematical and inferential specification for the current
   release allocation, including CML and identified comparisons. The review
   connects supported claims to assumptions, derivations, independent checks,
   numerical admissibility and appropriately scoped performance evidence.
   General finite-sample guarantees and the listed later research are excluded.
-  Reconcile FACETS YES/NO and legacy linear ZSTD, displacement direction,
-  chi-square eligibility/df, PTMEA/PCM fair-average definitions, bias-table
-  targets and df, anchor validation and extreme-score reporting. Explain
-  estimator assumptions and cutoff-sensitive changes to users.
-  Unaffected specification reviews retain their acceptance.
-- [ ] Close the implemented user workflows against that specification, retaining
+  The scoped FACETS ZSTD, displacement, chi-square, PTMEA/PCM fair-average,
+  bias-table, anchor and extreme-display corrections are implemented and
+  checked within their documented limits. Residual executable differences
+  remain explicit; general FACETS equivalence is not established. Preserve the
+  [FACETS and GENOVA release scope](#open-facets-and-genova-compatibility-decisions),
+  preserving the implemented options and the explicit unresolved comparisons.
+  The MML default, target-specific eligibility and diagnostic allocation are
+  settled. The capability table, help and result labels preserve these
+  decisions, experimental qualifications and refused outputs. The GPCM guide
+  consistently describes fixed-grid EM and adaptive direct fitting, with
+  opt-in automatic integration and unchanged defaults.
+  Unaffected specification reviews retain their acceptance. The broader
+  follow-up comparisons and inference research are not prerequisites for
+  this source/claim reconciliation.
+- [x] Close the implemented user workflows against that specification, retaining
   valid examples and saved reuse with the affected-route corrections. Model,
   target, scale and unavailable states remain explicit. Final package/platform
   qualification is separate from this workflow and interpretation acceptance.
-  Correct affected diagnostic help, method labels, reports and saved-result reuse.
-- [ ] Freeze the substantive specification and identify its matching source,
+  Affected diagnostic help, method labels, reports and saved-result reuse have
+  scoped repairs and checks. Saved-result review preserves experimental and
+  unavailable intervals, source-anchor and joint-cell uncertainty, and the
+  distinct G-theory and common-plan qualifications through their supported
+  reports, plots and exports. This acceptance combines source-matched evidence;
+  it is not a complete package check on one final installation.
+- [x] Freeze the substantive specification and identify its matching source,
   metadata and migration notes before execution-time qualification. The
-  previous archive retains its local build and installed integration evidence.
-  Identify a replacement after the diagnostic/compatibility corrections; earlier
-  evidence retains its original source attribution.
+  October 25 candidate includes the accepted diagnostic, compatibility,
+  integration and model-comparison corrections, with matching installed help
+  and tutorial contents. Earlier archives retain their original evidence;
+  this selection does not establish final package/platform qualification.
 - [ ] Complete maintenance and execution-cost review for measurement and
   feedback as part of delivery preparation, after substantive freeze.
   Assess measured costs against delivery requirements; any optimization must
@@ -1032,6 +1231,131 @@ misleading claims or broken supported workflows do require correction.
 
 These items remain unfinished. Listing them does not promise a particular
 release date or assign them all to 0.2.5.
+
+### Direction and staged delivery
+
+The main purpose remains measurement involving ratings, assessment planning
+and useful feedback. Extensions should answer concrete questions about a
+rating process and its consequences: what a Person's profile means, which
+rater or criterion findings need review, and whether another task, another
+rater or additional scoring time would improve the intended decision.
+
+Existing software already provides multidimensional IRT, Bayesian estimation,
+response-time models and cognitive diagnosis. The development objective is
+to make selected rating workflows usable together, preserving their different
+estimands, assumptions and uncertainty. This is not a claim that these model
+families originate in mfrmr. Named methodological starting points include
+[Bayesian GMFRM](https://doi.org/10.1007/s41237-020-00115-7),
+[multidimensional GMFRM](https://doi.org/10.1007/s41237-021-00144-w),
+[rater-effects cognitive diagnosis](https://doi.org/10.3389/fpsyg.2020.00525)
+and [joint ratings/rating-time models](https://doi.org/10.3758/s13428-023-02259-2).
+Their response equations and inference targets require explicit mapping before
+adoption. Matching a model name is not sufficient.
+
+| Stage and tentative version range | Intended deliverable | Boundary for the first release of that capability |
+| --- | --- | --- |
+| Foundations: 0.2.5 candidates | Scoped native Bayesian fitting, scoring and reporting through CmdStan/cmdstanr, starting with established RSM/PCM; explicit prior and calibration uncertainty. | Admit slope families separately. Existing Stan/brms code export is not already this fitting API. Preserve existing estimator defaults and saved results. |
+| Rubric profiles: 0.3.x candidates | Prespecified multidimensional MFRM/GMFRM, joint Person-profile uncertainty and criterion/rater feedback. | Start with low-dimensional simple structure and unit slopes, then admit free-slope variants. Identification, numerical accuracy and usefulness of subscores need separate evidence. |
+| Rating processes: later 0.3.x / 0.4.x candidates | Direct centrality, restricted rater classes, and response-time/rating-time extensions chosen for specific assessment questions. | Qualify the branches separately. A combined model with every effect is not the initial goal. |
+| Diagnostic attributes: 0.4.x and later candidates | Explicit skill-Q specifications and a bounded rater-effects CDM workflow for mastery/profile feedback. | Begin with a small specified skill structure and a matched established reference. Broader response scales and automatic Q/class selection are separate extensions. |
+| Planning and decisions throughout | Broader future rating rosters, uncertainty in plan comparisons and, eventually, additional-rating allocation under cost constraints. | Specify the score, generalization population and decision loss. Keep classical G-theory and model-based predictive planning distinguishable. |
+
+These ranges express a dependency order, not a release calendar. A useful
+branch can be delivered without waiting for every other model in its stage.
+Each delivery includes its supported scoring/reporting path and saved reuse,
+with unavailable results retained. A converged fit alone does not complete a
+feedback or assessment-planning workflow.
+
+### Model extensions and their acceptance conditions
+
+- [ ] Develop a native Bayesian path using explicit constrained-scale priors,
+  independent density/gradient checks, posterior sampling diagnostics, prior
+  sensitivity, predictive checks and appropriately scoped simulation-based
+  calibration. Propagate calibration uncertainty jointly into supported
+  scores and decisions. Proper priors can regularize weak information; they
+  do not establish likelihood identification or universal frequentist coverage.
+- [ ] Support explicit continuous-dimension and discrete-attribute Q
+  specifications. A loading restriction for a continuous trait differs from
+  a skill requirement in a cognitive diagnosis model. Keep both distinct from
+  the facet design matrix. Preserve simple formula/facet use for ordinary
+  models, and validate dimension/attribute identity, response categories,
+  constraints and the actual observation design.
+- [ ] Develop a low-dimensional rubric workflow with declared loading patterns,
+  scale/orientation constraints and latent correlations. Specify whether
+  dimensions compensate for each other and where facet slopes act. Verify
+  one-dimensional and unit-slope reductions where claimed, assess weak links
+  and nearly indistinguishable dimensions, and report joint profile uncertainty.
+  Exploratory residual PCA and multivariate G-theory do not implement this model.
+- [ ] Develop separate joint-model paths for examinee response/production time
+  and rater scoring time before combining them. A timed performance enters
+  once even when several raters score it; a timed scoring session also enters
+  once when it produces several criterion ratings. Specify repeated events,
+  time units, censoring, pauses and missing times. Current response-time
+  reviews remain descriptive. Fast or slow observations alone do not diagnose
+  effort, guessing or rater quality.
+- [ ] Develop a bounded latent-class workflow with an explicit class owner
+  such as a Person, rater or rating episode. Preserve group-level membership
+  in the likelihood, examine class collapse and competing continuous effects,
+  and report membership uncertainty. A flexible population distribution or
+  descriptive cluster does not establish a substantive rater type. Automatic
+  exclusion and general class-count selection are outside the first workflow.
+- [ ] Develop a rater-effects cognitive diagnosis workflow against a matched
+  established CDM reference. Specify skill meaning, permitted profiles and
+  the observation model; distinguish direct rater effects from a latent-score
+  misclassification model. Evaluate Q misspecification, sparse assignments,
+  rare profiles, classification uncertainty and the no-rater reduction.
+  Dichotomizing continuous scores is not a substitute for fitting a CDM.
+
+Computational choices must preserve the requested estimand and precision.
+Tensor quadrature grows exponentially with the number of continuous dimensions;
+enumerating unrestricted binary attributes also grows exponentially. Future
+multidimensional controls therefore need explicit total computational budgets
+and accuracy diagnostics. Existing one-dimensional point limits do not imply
+the same cost or accuracy in multiple dimensions. Bayesian sampling is an
+additional inference route, not an automatic speed improvement.
+
+Assess additions against simpler models and established software with matching
+response laws, scales and uncertainty targets. Evaluation should include useful
+outputs, unavailable results, uncertainty, decision or prediction performance,
+runtime and memory. Empirical applications and intended-user evaluation are
+needed for claims about practical benefit. Preserve the following ongoing
+priorities alongside the new model branches.
+
+### Relationship to structural equation modeling
+
+Structural equation modeling provides a related framework for connecting
+measurement models to covariates, other constructs and longitudinal processes.
+Selected IRT and categorical factor models coincide under matching response
+laws, scales and constraints. Ordinary ordinal threshold CFA and PCM/GPCM,
+however, use different category-probability constructions. A common path
+diagram or a rescaled loading does not establish model or estimator equivalence.
+
+[lavaan](https://lavaan.ugent.be/tutorial/cat.html) offers a useful CFA/SEM
+reference within its supported response and estimation scope.
+[Mplus](https://www.statmodel.com/irtanalysis.shtml) explicitly includes
+PCM/GPCM, multidimensional and cross-classified IRT, mixtures and diagnostic
+classification. Each proposed overlap needs its specific model/estimator
+combination checked. SEM-based G-theory and dependability methods also exist;
+these areas are not exclusive to mfrmr.
+
+The planned connection is a bounded rating workflow: specify the measurement
+and parameter mapping, relate supported latent profiles to a substantive
+external variable, and preserve uncertainty in results exchanged with other
+software. Current MML latent regression is a scoped starting point, not a
+general structural-model API. Point-score export alone does not propagate
+measurement or shared calibration uncertainty. Plausible-value analyses need
+compatible downstream conditioning and uncertainty handling; existing
+fixed-calibration draws do not automatically meet that requirement.
+
+Prioritize matched reference calculations and selected interoperability
+examples over a general SEM engine. Preserve observation/cluster identities,
+constraints, uncertainty targets and unsupported states. Native Bayesian
+development remains based on CmdStan/cmdstanr. Broader path, growth and
+mediation analysis can use established software when the measurement and
+uncertainty connection is justified; neither a path diagram nor model fit
+alone establishes a causal effect or construct validity.
+
+### Continuing application and inference priorities
 
 - [ ] Develop empirical application studies in language assessment, music or
   judged sports when suitable data, permissions and substantive questions are

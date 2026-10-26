@@ -1,5 +1,125 @@
 # Unreleased 0.2.4 candidate — not for submission
 
+The selected candidate is SHA256
+`b315ddc829b172addfb711071945dcd65ad70c3d9b1af6a9e459320e2cccf78f`.
+It removes foreign namespace mocks from tests, using package-owned imports and
+optional-backend wrappers. Public APIs, numerical settings and independent
+reference assertions are retained.
+
+The immediately preceding archive (`089c7fa309ed021cfabcc005aaec21af90397f67034acb285c1d5b8b0f9e4b55`)
+completed local R 4.6.1 arm64 `--as-cran --timings`: zero errors/warnings, two
+NOTEs, and 14,241 passing ordinary expectations (three established CRAN skips).
+All examples, vignette rebuilding and PDF/HTML manuals pass. Complete elapsed
+time is 588.596 s; check-only is 553.596 s (553.096--554.096 after install
+rounding), below the local 600 s target but above 480 s headroom. The automatic
+readiness verdict remains NA for that archive because the code-usage phase has
+a NOTE. Remote incoming and clock checks were explicitly disabled.
+
+The selected archive repairs that NOTE by spelling dotchart's `color` argument
+in full and qualifying `graphics::plot.window`. These two calls and Packaged
+are its only differences from the checked archive. Installation and eight
+affected files pass 808 expectations without failures, errors, warnings or
+skips; both repaired functions pass R CMD check's code-usage settings. External
+functions and standard S3 methods remain unchanged. This is source-attributed
+combined evidence, not another complete check or timing measurement of the
+final repair. The remaining macOS `xcrun_db` NOTE is not suppressed.
+
+External/source-integration and hosted-site qualifications remain open. This
+local result is not CRAN acceptance or a Windows timing certificate. No fresh
+full NOT_CRAN numerical regression was needed for these call-boundary changes.
+
+Previous candidate evidence follows.
+
+The current local archive adds ERGM coefficient/covariance/interval extractors,
+GPCM bootstrap and curve summaries, and repairs facet-plot label/interval space.
+Its SHA256 is `4fd4f48ef7f9850c04638ed39cceea855597aa1ce7bd629444a56fa6e5431aaf`.
+No estimator, likelihood, numerical precision rule or C++ algorithm changes.
+
+A local `--as-cran --timings` check of the immediate predecessor completed
+all phases with 14,233 passing ordinary-test expectations, no test failures or
+warnings, and three declared CRAN skips. The formal status was one ERROR and
+one NOTE: an ERGM guide row was incorrectly placed in the visual-reporting
+template, causing its example to fail; the NOTE records macOS `xcrun_db`.
+The guide row is now in the interval guide. An explicit optional-backend load
+also makes covariance extraction robust when its methods are not yet loaded.
+The repaired installation passes 21 cases / 518 expectations in three affected
+files without failures/errors/warnings/skips. The failed example, both remaining
+example topics, the guide and ERGM examples, usage checks and fresh-session
+saved-result/backend-reload checks pass. The 57 generated tutorial/index files
+are reused unchanged. This is source-attributed combined evidence, not a new
+clean all-in-one check of the repaired archive.
+
+The measured complete command took 705.09 seconds. Excluding the rounded
+36-second installation gives 669.09 check-only seconds (668.59--669.59), above
+the existing 600-second ceiling and 480-second headroom target. The repaired
+archive has not been timed again as a whole. Remote incoming/clock checks were
+disabled locally; current-source Windows timing, external links and hosted-site
+qualification remain open. This candidate is not ready for submission.
+
+The preceding documentation-only archive updates the beginner README, release highlights and
+detailed migration notes, and adds the README's worked-example figure. Its
+SHA256 is `6fb6dffc31a9b6e34cd76fe8ab4156a0d9e1b2de7c72c98e93c66c6713bcd8cb`.
+Code, tests, data, help and tutorial sources are byte-identical to the preceding
+archive below; its 57 generated tutorial/index files are reused unchanged.
+The README example executes through fitting, diagnostics, plotting, HTML
+reporting and export; its figure matches the saved image exactly. Targeted
+offline home/NEWS generation and local assets are checked. The preview omits
+remote CRAN metadata, and browser layout and hosted-site checks remain open.
+This documentation update does not constitute another complete package check.
+
+The preceding archive includes direct anchor, linking, bias and model-choice
+reports, study declarations and the editable review template. Its SHA256 is
+`13a2322cc265d06915e1607644e89a5be416544d0f8a337b3d60dc62f73f7ef4`.
+
+The distributed installed `NOT_CRAN=true` run visited 444 files. Its initial
+result was 45,828 passing expectations, four failed assertions, four errors
+and five warnings. Repairs cover diagnostic display, validation order and
+outdated test fixtures/expectations. The affected installed run passes 158
+cases / 1,347 expectations across 12 files without failures, errors, warnings
+or skips. Replacing those files in the original results gives 45,861 passing
+expectations and no remaining failures, errors or warnings. There are 56
+within-test skips plus seven file-level skips for excluded source/private
+validation inputs; 437 files produce test-case records. This is attributed
+combined evidence, not a second full run or a new complete `R CMD check`.
+
+A normal build regenerated 19 tutorials and their index; those files remain
+byte-identical in the repaired archive. Five saved reporting modules replay
+exactly in a fresh session. The updated help example and targeted pkgdown
+article/reference generation pass; a nonfatal local Sass cache-write warning
+remains recorded. Browser layout and hosted-site qualification remain open.
+The package-check account below refers to the preceding network candidate.
+
+The October 26 candidate connects measurement, assessment planning and
+reporting. It includes the accepted numerical/compatibility changes, G/D-study
+reports, prefit design networks, signed pairwise alpha, weighted rater-network
+indices, person-cluster halo contrasts and optional binary ERGM estimation.
+New network routes are included in the output/plot guides and ordinary tests.
+All-unavailable network indices retain their statuses through plots and reports.
+
+Two-family GPCM and common-plan inference retain their documented experimental
+qualifications. Network indices are not Rasch fit statistics; no calibrated
+SWS/PUS cutoffs, general halo coverage or arbitrary ERGM convergence is claimed.
+
+The earlier October 26 macOS check passed installation, static and documentation checks,
+examples, vignette rebuilds and PDF/HTML manuals. Ordinary tests reported 14,149
+passing expectations, two failed halo-plot metadata assertions and three
+declared CRAN skips; the check status was one ERROR and one NOTE (xcrun_db).
+The halo plot now retains its source caveats. The corrected archive installs
+and passes 43 cases / 787 expectations across seven affected test files, with
+no failures, errors, warnings or skips. Saved reports and numerical plot data
+replay unchanged in a fresh session. Only the display function, its test and
+the build timestamp differ from the checked archive; generated articles are
+unchanged. This is combined phase-specific evidence, not a second complete
+check of the corrected archive.
+
+Earlier archive/check records apply to their stated sources. Remote incoming
+and clock checks were disabled locally; dependency indexes were inaccessible.
+Remote incoming/URL checks, remaining platform, source integration, hosted-site
+checks and publication remain separate. No CRAN submission is requested
+by this file.
+
+## Historical October 23 Windows snapshot
+
 The October 23 development snapshot incorporates the bounded FACETS and
 G-theory manual corrections, ConQuest comparison-contract repairs, and opt-in
 MML integration checking with adaptive refitting. FACETS corrections cover
@@ -10,7 +130,7 @@ The documented FACETS 4.5.0 and GENOVA comparisons are scoped numerical evidence
 not general cross-software equivalence. Native MML EAP plug-in MnSq remains
 distinct from posterior-averaged TAM/ConQuest fit statistics.
 
-The current verified Windows package archive has SHA256
+The October 23 verified Windows package archive has SHA256
 `204935ba94749a52971cffc1b976f7c017d4f9e24e2f49e501a630175569df52`.
 Its 1,012 code/help/test/tutorial inputs match the development source. The
 ordinary installed regression covered 126 files with 13,275 passing expectations

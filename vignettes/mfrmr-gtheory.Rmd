@@ -53,6 +53,40 @@ your numeric score coding and averaging are meaningful. Calling a facet
 *random* declares a generalization population; the software does not randomly
 assign raters or establish that this assumption is appropriate.
 
+## Is a criterion a facet or a score?
+
+Content and Organization can appear in the same rating sheet but play different
+statistical roles. Decide what will be reported and generalized before reshaping
+the sheet; long versus wide layout alone does not decide the model.
+
+| Intended interpretation | Role of criteria | Route and consequence |
+| --- | --- | --- |
+| One latent performance variable, adjusting for how demanding each criterion is | Criterion is a facet in an ordered-response MFRM | `fit_mfrm(..., facets = c("Rater", "Criterion"))`. PCM/GPCM may give criteria their own steps/slopes, but still use one Person variable. |
+| Content and Organization are named scores, or fixed parts of a declared composite | Each criterion is a fixed score component | `mfrm_g_study(..., scores = c("Content", "Organization"), rater = "Rater", task = "Task")`. Each source has a covariance matrix across scores. D-studies retain those relations in the declared composite or contrast. |
+| The criteria themselves are sampled, exchangeable conditions over which a single score should generalize | Criterion is a random measurement facet | A univariate G-study with `scores = "Score"` and a justified `facets` mapping. The current API supports at most two random measurement facets; Rater, Task and Criterion together exceed this route. |
+
+For two fixed scores and weights `w`, each source's composite variance is
+`t(w) %*% Sigma %*% w`, including cross-score covariance. Separate univariate
+analyses followed by averaging their reliability coefficients do not supply
+this result. The multivariate distinction follows
+[Brennan (2003), Section 6](https://education.uiowa.edu/sites/education.uiowa.edu/files/2026-04/casma-research-report-1-archived.pdf).
+Neither a covariance component nor a criterion-specific GPCM slope establishes
+another latent dimension.
+
+The input to `mfrm_d_study()` also matters: passing a G-study uses its full
+estimated component structure; passing an MFRM fit invokes the separate
+`mfrm_generalizability()` main-effects approximation with a combined-residual
+scaling rule. It does not recover the interaction covariance matrices of the
+multivariate workflow. For the planning question here, start from observed
+scores with `mfrm_g_study()`.
+
+Declare each score's units, endpoints and direction before choosing weights.
+If one score means ease and another means difficulty, their sum has a different
+meaning from a composite of two positively oriented qualities. Reverse-coding
+one score reverses its covariances with unreversed scores and can change
+composite precision. G/Phi being larger, and SEM smaller, concerns dependability
+of the declared score; it does not tell which end represents better performance.
+
 ## Load ratings and inspect their design
 
 Use the bundled synthetic teaching data. One row is one Person–Rater–Task
@@ -304,6 +338,57 @@ values with `as_ggplot(reopened$plot)` if ggplot2 is installed. A CSV of
 `s$table` is useful for a report, but loses the separate weights, notes and
 numerical diagnostics. Changing future counts requires a new D-study;
 changing the source data or model requires a new G-study.
+
+## Report the assessment-planning answer
+
+Use a compact Methods/Results structure, retaining the full analysis above:
+
+| Section | Content to supply | Existing output |
+| --- | --- | --- |
+| Question and score | Intended use, relative ordering or absolute decision, fixed score components, directions and weights | Study records; `d$weights` |
+| Source design | Population of persons and random conditions, crossing/nesting, planned and retained counts, missingness, estimator and negative-component policy | `g$design`, `g$data_usage`, `g$estimation`, component diagnostics |
+| Sources of variation | Relevant variances and cross-score covariances, uncertainty and combined residual terms | `g$components`, `plot(g)` and eligible `confint(g)` |
+| Future plans | Specified counts, score, G/Phi and relative/absolute SEM; assumptions and interval qualifications | `summary(d)` or saved `s$table`; planning and error-component plots |
+| Answer | Magnitude and uncertainty of the prespecified plan difference; workload/cost tradeoff and limits | Saved `mfrm_multivariate_d_compare()` result and the substantive interpretation |
+
+For example: "For [defined score and population], increasing [raters/tasks]
+from [a] to [b] changed projected [metric] by [estimate], with [method/level]
+interval [limits]. This projection assumes [design and model]; [cost or
+uncertainty] limits the recommendation." Use unavailable-result reasons when
+an interval cannot be reported. A larger source Person variance can increase
+G without reducing error; state SEM alongside coefficients when precision matters.
+
+Pass the saved results directly to the shared report API. The report preserves
+signed components, observed counts, future plans, fixed weights, G/Phi, error
+variances and SEM. Supplied intervals are checked against their source; omitted
+intervals remain explicitly not requested.
+
+```{r gtheory-report-route, eval=FALSE}
+report <- mfrm_report(d, intervals = s$intervals, style = "apa")
+bundle <- build_summary_table_bundle(report)
+apa_table(report, which = "coefficients")
+export_summary_appendix(bundle, output_dir = "planning-report")
+saveRDS(report, "planning-report/report.rds")
+
+# A complete editable manuscript starting point, using bundled data:
+template <- system.file("templates", "gtheory-report.Rmd", package = "mfrmr")
+file.copy(template, "gtheory-report.Rmd")
+rmarkdown::render("gtheory-report.Rmd")
+```
+
+If no intervals were computed, use `mfrm_report(d)`; reporting never starts a
+new uncertainty calculation. `mfrm_report(g, intervals = component_ci)` accepts
+current saved component intervals. `mfrm_report(comparison)` preserves a
+paired-delta comparison and its sampling covariance. The installed template
+joins these reports with component, planning and SEM figures, CSV/HTML and a
+complete RDS. Complete its rubric direction, sampling, decision and cost
+prompts before using the prose in a manuscript.
+
+Brennan's *Coefficients and Indices in Generalizability Theory* (2003, CASMA
+Research Report 1) motivates reporting error variances alongside coefficients.
+[Jiang et al. (2022)](https://doi.org/10.1177/00131644211033899) study uncertainty
+in G coefficients under specified designs. These sources support the reporting
+questions; they do not certify every current interval approximation.
 
 ## Adapt the question to another setting
 

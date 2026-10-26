@@ -313,6 +313,23 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #' The score workspace is also subject to
 #' `mfrmr.max_information_bytes`.
 #'
+#' Integration failure and a slope-boundary problem need different remedies.
+#' More quadrature points can repair inaccurate integration, but do not ensure
+#' a stationary interior solution. For example, let a second-family slope
+#' \eqn{a_r} approach zero while keeping \eqn{B_r=a_r b_r} and
+#' \eqn{T_{rk}=a_r\tau_{rk}} fixed, where \eqn{b_r} is its location and
+#' \eqn{\tau_{rk}} its step. An adjacent logit
+#' \eqn{a_t a_r(\theta-b_t-b_r-\tau_{rk})} then tends to
+#' \eqn{-a_t(B_r+T_{rk})}. Response probabilities can have finite limits
+#' even while the original location and step diverge. This differs from
+#' setting the slope to zero with all other parameters fixed.
+#' A small slope alone does not prove a boundary optimum. If such a competing
+#' path improves the likelihood, however, merely increasing quadrature order,
+#' relaxing stationarity checks or regularizing the information does not
+#' justify local Wald intervals at the retained point. Boundary-aware fitting
+#' and inference require separate qualification; these intervals do not
+#' implement that extension.
+#'
 #' These are numerical safeguards, not thresholds calibrated for coverage.
 #' Profiling additionally requires absolute low-versus-high quadrature NLL
 #' agreement within 1e-5 and gradient agreement within 1e-4, including at
@@ -527,6 +544,21 @@ confint.mfrm_fit <- function(object, parm = NULL, level = .95,
   }
   inference <- if (product) mfrm_gpcm_product_inference(object) else
     mfrm_gpcm_inference(object, method, clusters, adjust)
+  mfrm_gpcm_intervals_from_inference(object, inference, level, scale, contrasts,
+    contrast_scale, method, simultaneous)
+}
+
+# Internal consumers share one fresh qualification for this exact calibration.
+# Public option validation remains in confint.mfrm_fit().
+mfrm_gpcm_intervals_from_inference <- function(object, inference, level = .95,
+    scale = "standardized", contrasts = NULL, contrast_scale = "ratio",
+    method = "model", simultaneous = "none") {
+  stop_if_jml_adjustment(object, "confint()")
+  if (inherits(object, "mfrm_imported_fit") || !identical(object$config$model, "GPCM") ||
+      !identical(object$config$method, "MML")) {
+    stop("Slope intervals require a native GPCM fit with method = 'MML'.", call. = FALSE)
+  }
+  product <- mfrm_has_product_slopes(object)
   if (!is.null(inference$check$caution)) warning(inference$check$caution, call. = FALSE)
   target <- if (product) mfrm_gpcm_product_slope_targets(object$opt$par, object$config)$components else
     mfrm_gpcm_slope_target(object, scale, contrasts, contrast_scale)

@@ -271,7 +271,8 @@ mfrmr_adaptive_quadrature_overview <- function(review) {
 # The gradient differentiates the finite adaptive sum, including mode, scale
 # and Jacobian, in the optimizer's actual free coordinates.
 mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points,
-                                               reuse_identical_patterns = TRUE) {
+                                               reuse_identical_patterns = TRUE,
+                                               include_person_summaries = FALSE) {
   if (!identical(config$method, "MML")) {
     stop("Adaptive MML evaluation requires an MML configuration.", call. = FALSE)
   }
@@ -326,6 +327,10 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points,
     sigma <- if (isTRUE(basis$transformed)) basis$sigma else 1
     value <- 0
     gradient <- numeric(p)
+    if (include_person_summaries) {
+      person_summaries <- matrix(NA_real_, length(patterns$person_ids), 3L,
+        dimnames = list(NULL, c("LogMarginal", "EAP", "PosteriorSD")))
+    }
     for (i in seq_along(groups)) {
       person <- person_ids[i]
       rows <- groups[[i]]
@@ -392,6 +397,14 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points,
       # Independent Persons multiply marginal likelihoods; their count belongs
       # outside the integral, never in the observation weights.
       value <- value - multiplicity[i] * (offset + normalizer)
+      if (include_person_summaries) {
+        center <- sum(posterior * z)
+        moments <- c(offset + normalizer, mu[person] + sigma * center,
+          sigma * sqrt(sum(posterior * (z - center)^2)))
+        # Expand exact pattern reuse back to every independent Person.
+        person_summaries[patterns$group_positions[[i]], ] <-
+          matrix(moments, multiplicity[i], 3L, byrow = TRUE)
+      }
       # Projection is linear: average category derivatives before multiplying
       # by the same sparse designs. Keep the slope's residual-times-logit
       # average separate; a product of averages would change the gradient.
@@ -423,6 +436,13 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points,
     if (!is.finite(value) || any(!is.finite(gradient))) {
       stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive MML objective or gradient."))
     }
-    list(value = value, gradient = gradient)
+    out <- list(value = value, gradient = gradient)
+    if (include_person_summaries) {
+      if (any(!is.finite(person_summaries))) {
+        stop(new_adaptive_quadrature_numeric_error("Non-finite posterior moments."))
+      }
+      out$per_person <- data.frame(PersonIndex = patterns$person_ids, person_summaries)
+    }
+    out
   }
 }

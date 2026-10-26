@@ -156,19 +156,9 @@ test_that("run_qc_pipeline surfaces incomplete bias collections as warn rather t
   ))
   diag <- suppressWarnings(diagnose_mfrm(fit, residual_pca = "none"))
   diag$interactions <- data.frame()
-  bias_collection <- structure(
-    list(
-      fit_identity = mfrm_result_fit_identity(fit),
-      by_pair = list(),
-      errors = data.frame(
-        Interaction = "Rater x Criterion",
-        Facets = "Rater x Criterion",
-        Error = "forced pair failure",
-        stringsAsFactors = FALSE
-      )
-    ),
-    class = c("mfrm_bias_collection", "mfrm_bundle", "list")
-  )
+  bias_collection <- with_mocked_bindings(
+    estimate_all_bias(fit, diagnostics = diag, pairs = list(c("Rater", "Criterion"))),
+    estimate_bias = function(...) stop("forced pair failure"), .package = "mfrmr")
 
   qc <- run_qc_pipeline(fit, diagnostics = diag, bias_results = bias_collection)
 

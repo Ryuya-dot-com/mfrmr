@@ -102,8 +102,10 @@ or interval calculation is run by this function.}
 
 \item{scores}{Optional saved \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} result for an extension,
 or \code{\link[=score_mfrm_random_rater]{score_mfrm_random_rater()}} output, with matching source calibration.
-Two-family GPCM also accepts \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} output or a format-6
-\code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} result with matching saved source identity.
+Native one- and two-family GPCM accept saved \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} output
+with matching calibration, population and source identity. Two-family GPCM
+also accepts a format-6 \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} result. One-family
+portable scores keep their standalone reporting/export methods.
 For testlets this is an alias for \code{predictions}; supply it once. Shared
 raters can also attach response \code{predictions} and rater \code{intervals}.
 No Person scoring is run here. Complete source-roster identity is required
@@ -390,6 +392,43 @@ separately checked portable route without retaining training responses.
 Ordinary diagnostics, Wright/Pathway maps and model comparison are unavailable.
 The starter export uses the available saved curves instead of requesting
 an unsupported Wright map.
+}
+
+\section{Saved one-family GPCM Person scores}{
+
+First compute \code{scores <- predict_mfrm_units(fit, new_ratings)} under the
+intended scoring prior, then attach them with
+\code{res <- mfrm_results(fit, scores = scores, include = "fit", compute = "never")}.
+This accepts the existing ordinary MML/JML scoring routes and their recorded
+review restrictions; it does not extend scoring to new designs or estimators.
+Collection checks the fitted calibration, data, population coding and
+numerical state, plus the saved prior, interval and integration records.
+It does not refit, rescore or repeat source numerical checks. Older scores
+without compatible fitted-analysis identity or check records must be
+recreated from the saved fit before attachment; no model refit is needed.
+
+\code{res$tables$person_scores} retains EAP (\code{Estimate}), posterior \code{SD}, continuous
+equal-tail posterior bounds (\code{Lower}, \code{Upper}), level and numerical status.
+Posterior SD is neither the SD of EAPs across Persons nor the population SD
+or a calibration-parameter SE. These bounds differ from the diagnostic
+EAP +/- normal-multiplier times posterior-SD bands elsewhere in the report.
+Neither route includes calibration/population estimation uncertainty or
+establishes frequentist coverage for fixed abilities.
+
+\code{scoring_priors} retains each Person's fitted and scoring priors, including
+explicit prior overrides and covariate-dependent means. The scalar
+\code{PriorMean}/\code{PriorSD} in \code{scoring_settings} are NA when they differ by Person;
+use \code{scoring_priors} instead. \code{scoring_integration}, \code{scoring_row_review} and
+any \code{scoring_population_review} retain checks and omissions. Native scoring
+does not enumerate a complete not-scored Person roster: \code{NotScored} is NA.
+Review-only scores stay review-only even when calibration-parameter
+inference has a different readiness state. JML-derived EAP scores are
+post hoc posterior summaries, not the original JML Person estimates.
+
+\code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}} retain all attached tables and
+complete saved scoring objects. Replay reloads them without recomputing.
+This adds no score plot route; ordinary diagnostic maps keep their existing
+targets and are not replaced by the attached scores.
 }
 
 \section{Saved GPCM inference}{

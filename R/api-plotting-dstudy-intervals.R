@@ -45,6 +45,10 @@
 #'   REML profile and residual-contrast rows retain the original source points;
 #'   the separate `IntervalCenter` and method diagnostics are available in the source
 #'   interval object. A point can lie outside this separately calculated interval.
+#'   For GENOVA-adjusted results, points use the selected component treatment;
+#'   intervals retain their original-source population basis. `IntervalEstimate`
+#'   and `IntervalBasis` in the source table distinguish them. Drawing the two
+#'   together does not make the original sampling SE an adjusted-estimator SE.
 #'   Unresolved numerical candidates are retained in the source object but
 #'   are not drawn as accepted confidence bounds.
 #'   For score and MLS intervals, an empty confidence set is labeled
@@ -148,27 +152,27 @@ plot.mfrm_dstudy_intervals <- function(x, draw = TRUE, preset = "standard",
   for (plan in groups) {
     z <- tab[tab$Scenario %in% plan, , drop = FALSE]
     y <- if (combined) z$Y else z$Row
-    graphics::plot(NA_real_, NA_real_, xlim = xrange,
+    plot(NA_real_, NA_real_, xlim = xrange,
       ylim = c(.5, if (combined) length(plans)+.5 else length(methods)+.5),
       xlab = out$data$xlab, ylab = "", yaxt = "n", main = "")
     if (combined) {
-      if (length(plans) > 1L) graphics::abline(h = centers[-1L]+.5, col = "grey90")
-      graphics::axis(2, at = centers, labels = labels[plans], las = 1, cex.axis = .8, tick = FALSE)
-      graphics::legend(x = mean(graphics::par("usr")[1:2]),
+      if (length(plans) > 1L) abline(h = centers[-1L]+.5, col = "grey90")
+      axis(2, at = centers, labels = labels[plans], las = 1, cex.axis = .8, tick = FALSE)
+      legend(x = mean(graphics::par("usr")[1:2]),
         y = graphics::par("usr")[4] + graphics::strheight("M")*
           if (length(methods) > 2L) .25 else 1.5,
         xjust = .5, yjust = if (length(methods) > 2L) 0 else .5,
         xpd = NA, bty = "n", horiz = length(methods) <= 2L,
         legend = methods, col = palette, pch = 15L+seq_along(methods),
         lty = seq_along(methods), lwd = 2, cex = .8)
-      for (j in which(!z$Available)) graphics::text(z$StatusX[j], y[j], z$StatusLabel[j],
+      for (j in which(!z$Available)) text(z$StatusX[j], y[j], z$StatusLabel[j],
         adj = z$StatusHjust[j], col = z$Colour[j], cex = .7)
     } else {
-      graphics::mtext(labels[plan], side = 3, line = .5, cex = .85)
-      graphics::axis(2, at = z$Row, labels = z$MethodLabel, las = 1, cex.axis = .8)
+      mtext(labels[plan], side = 3, line = .5, cex = .85)
+      axis(2, at = z$Row, labels = z$MethodLabel, las = 1, cex.axis = .8)
     }
-    graphics::segments(z$Lower, y, z$Upper, y, col = z$Colour, lwd = 2, lty = z$LineType)
-    graphics::points(z$Estimate, y, col = z$Colour, pch = z$Shape)
+    segments(z$Lower, y, z$Upper, y, col = z$Colour, lwd = 2, lty = z$LineType)
+    points(z$Estimate, y, col = z$Colour, pch = z$Shape)
   }
   invisible(out)
 }

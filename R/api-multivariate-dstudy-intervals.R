@@ -119,6 +119,32 @@
 #'
 #' Each interval concerns a population coefficient or SEM of a future plan: uncertainty comes
 #' from the source G-study, not from collecting the proposed future ratings.
+#' GENOVA-adjusted D-studies can use the same population-parameter intervals.
+#' `Estimate` and `PointStatus` describe the adjusted point; `IntervalEstimate`
+#' and `IntervalPointStatus` retain the original source-study projection.
+#' `ComponentTreatment` and `IntervalBasis` distinguish their bases. The
+#' original source mean squares, data, bounds, diagnostics and unavailable
+#' states are preserved; adjusted components never replace the source inputs.
+#' The bounds are not recentered and need not contain the adjusted point.
+#' An existing method-specific `IntervalCenter` remains separate from both.
+#' Where a method supplies a coefficient sampling SE, it is named `IntervalSE`
+#' for adjusted results. `SamplingVariance`, error-variance columns and other
+#' diagnostics also retain their original method basis. None describes the
+#' sampling distribution of the zero-substituted or EMS-recalculated estimator.
+#' In the method descriptions below, references to the original `Estimate`
+#' mean `IntervalEstimate` when component treatment is adjusted.
+#'
+#' This distinction follows from the common population target: changing a
+#' reported point does not change the confidence-set event based on the source
+#' study. Exact procedures keep their stated normal-model qualifications;
+#' approximate or experimental methods do not become exact through adjustment.
+#' GENOVA's unchanged component SEs cannot be interpreted as an adjusted
+#' estimator's SE. Its truncation is nonsmooth at zero; an adjusted-estimator
+#' delta interval would require additional derivation and boundary validation.
+#' Saved intervals must match the D-study's treatment as well as its source.
+#' Use `confint(d, reference = ...)` for supported population plan differences;
+#' the separate [mfrm_multivariate_d_compare()] delta-estimator API still
+#' requires raw components.
 #'
 #' For a balanced two-crossed-facet source, start with
 #' `confint(d, parm = "Phi", assumption = "normal")` for absolute dependability,
@@ -1412,6 +1438,14 @@ confint.mfrm_multivariate_d_study <- function(object, parm = "G", level = .95,
     stop("`level` must be strictly between zero and one.", call. = FALSE)
   if (!inherits(object, "mfrm_multivariate_d_study"))
     stop("`object` must be a multivariate D-study result.", call. = FALSE)
+  if (!identical(.mfrm_mvds_policy(object), "raw")) {
+    d <- .mfrm_mvds_replay(object)
+    raw <- mfrm_d_study(d$gstudy, d$design_grid, d$weights)
+    ci <- confint.mfrm_multivariate_d_study(raw, parm = parm, level = level,
+      score = score, composite = composite, assumption = assumption,
+      draws = draws, seed = seed, reference = reference, method = method)
+    return(.mfrm_mvds_adjusted_intervals(ci, d))
+  }
   g <- object$gstudy
   d <- mfrm_d_study(g, object$design_grid, object$weights)
   anova <- identical(g$design$method, "Balanced multivariate ANOVA") &&
@@ -1584,9 +1618,12 @@ confint.mfrm_multivariate_d_study <- function(object, parm = "G", level = .95,
   out$MethodCode <- rep(method, length.out = nrow(out))
   out$Available <- is.finite(out$Lower) & is.finite(out$Upper)
   out$NegativeComponent <- any(p$estimate < 0)
-  if (is.null(out$Validation)) out$Validation <- ifelse(out$MethodCode %in% c("approximate_f", "mean_square_region"),
-    "Experimental; limited finite-sample evaluation", ifelse(out$MethodCode == "gci",
-      "Generalized interval; frequentist coverage not exact", "Normal-model F confidence set"))
+  if (is.null(out$Validation)) out$Validation <- ifelse(out$MethodCode == "approximate_f",
+    "Experimental approximate F; finite-sample undercoverage documented",
+    ifelse(out$MethodCode == "mean_square_region",
+      "Experimental numerical projection; conservative joint coverage under the normal model",
+      ifelse(out$MethodCode == "gci",
+        "Generalized interval; frequentist coverage not exact", "Normal-model F confidence set")))
   attr(out, "design_grid") <- d$design_grid
   # Retain the sufficient summaries so curve overlays cannot mix source studies.
   attr(out, "source_summary") <- d$gstudy[c("design", "components", "mean_products", "degrees_of_freedom")]

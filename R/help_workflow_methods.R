@@ -5,6 +5,48 @@
 #' read the summary. The Examples section contains a complete runnable script.
 #' The later sections describe diagnostics, reporting, and specialist routes.
 #'
+#' See `vignette("mfrmr-networks-and-reporting")` for Lamprianou-inspired network
+#' views, the FACETS/ConQuest reporting crosswalk and speaking/writing examples
+#' combining MFRM with G/D studies. [plot_data()] supports long-format extraction
+#' and original-value cluster profiles for custom distribution plots.
+#'
+#' @section Connect the question to the result:
+#' These are alternative or complementary branches, not requirements to run
+#' every function. Start from the intended score, rating unit, rubric endpoints
+#' and the decision the study needs to support.
+#'
+#' | Question | Connected route |
+#' | --- | --- |
+#' | What was rated, and can the groups be linked? | [describe_mfrm_data()] and [subset_connectivity_report()] with raw data/column arguments before fitting; [build_mfrm_network_review()] adds graph summaries. Graph connectivity does not establish identification. |
+#' | How do persons and named facets differ? | [fit_mfrm()] -> [diagnose_mfrm()] and eligible intervals -> [mfrm_results()] -> [mfrm_report()]. Keep Separation, Strata and Reliability distinct from observed agreement. |
+#' | How many raters/tasks does the reported score need? | [mfrm_g_study()] -> [mfrm_d_study()] -> `summary()`, `plot()` and eligible [mfrm_multivariate_d_compare()]. No MFRM fit is required. |
+#' | Do raters agree? | Matched units -> [pairwise_kappa_table()] for pairs, [krippendorff_alpha_table()] for a declared panel target, or a justified ICC/AC2 definition. Retain overlap and exclusions. |
+#' | Can a scale be reused? | [review_mfrm_anchors()] -> anchored fit / [build_linking_review()] -> plots and [build_summary_table_bundle()]. Retain anchor provenance, scale and uncertainty. |
+#' | Does a combination or group need follow-up? | Specified [estimate_bias()] or [analyze_dff()] -> signed tables and plots -> matching reporting tools. A screen is not a fairness verdict. |
+#' | Does model choice change the answer? | Comparable fits -> [compare_mfrm()] -> [build_model_choice_review()] -> [build_summary_table_bundle()]. AIC and LRT have different eligibility conditions. |
+#' | What remains unexplained? | [analyze_residual_pca()] / [q3_statistic()] for residual structure; separately [mfrm_features()] and clustering for declared entity attributes. [mfrm_residual_network()] supplies signed residual correlations and optional hierarchical groups, followed by [mfrm_report()]. It is not EGA. |
+#'
+#' A Criterion facet in one-dimensional MFRM adjusts criterion locations and,
+#' when specified, steps/slopes; it does not create separate Person dimensions.
+#' Several `scores` in [mfrm_g_study()] are fixed score components with
+#' source-specific covariance matrices, not additional random facets. Read
+#' `vignette("mfrmr-gtheory")` for the criterion/facet distinction and the
+#' report structure. Pass G/D objects directly to [mfrm_report()] and
+#' [build_summary_table_bundle()]; supplied saved intervals retain source context.
+#' The editable `templates/gtheory-report.Rmd` joins tables, plots and exports.
+#'
+#' Higher coded scores need not mean better performance. For Comprehensibility,
+#' record whether they mean greater ease or greater difficulty. `positive_facets`
+#' changes parameter orientation, not outcome coding. Keep coding consistent
+#' with anchors and report labels; see [mfrmr_visual_diagnostics]. The
+#' `vignette("mfrmr-networks-and-reporting")` supplies richer network and custom
+#' distribution examples, plus literature-based reporting connections. The
+#' workflow vignette places assignment networks at design review and score
+#' networks alongside observed agreement. Neither is a residual graph.
+#'
+#' The question-to-report map in `vignette("mfrmr-reporting-and-apa")` identifies
+#' which sections exist, which remain standalone, and what to report together.
+#'
 #' @section Choose a reading path:
 #' To choose a model and estimator before fitting, read
 #' `vignette("mfrmr-model-choice", package = "mfrmr")` or the
@@ -473,14 +515,22 @@
 #'   `separation_facets` only for facets whose levels need to be distinguished;
 #'   it is no longer a default rater-quality requirement. Missing results remain
 #'   unavailable and cannot be treated as passes.
+#' - **Model comparisons:** rerun [compare_mfrm()] on the existing eligible fits,
+#'   retaining the original comparison settings, then rebuild dependent
+#'   [build_model_choice_review()] and [build_weighting_review()] results.
+#'   The corrected RSM/PCM nesting review requires every RSM interaction to be
+#'   retained in the PCM. More category-step parameters do not establish
+#'   nesting. An affected pair can retain an eligible information-criterion
+#'   comparison while losing its invalid chi-square test. This correction
+#'   does not require refitting; printing an old comparison leaves its stored
+#'   decision unchanged.
 #' - **Group comparisons and equivalence:** recreate residual [analyze_dff()]
 #'   / [analyze_dif()] and [dif_interaction_table()] results from the existing
 #'   fit and original group data. They now describe residual differences without
 #'   tests or confidence intervals. Recompute [analyze_facet_equivalence()]
 #'   from an eligible MML fit with matching current diagnostics and the original
 #'   practical bound; old equivalence bundles cannot supply the required joint
-#'   covariance. Rebuild model-choice and weighting reviews from their source
-#'   fits as well.
+#'   covariance.
 #' - **ICC and design effects:** rerun [compute_facet_icc()] or
 #'   [analyze_hierarchical_structure()] from the original data and settings.
 #'   Numeric score labels now retain their values. Missing scores or grouping

@@ -69,7 +69,7 @@ test_that("pooled replay and display controls do not refit, repool or recalculat
   local_mocked_bindings(pool_mfrm_imputed = function(...) stop("Unexpected pooling"),
     fit_mfrm_imputed = function(...) stop("Unexpected fitting"),
     compute_mml_parameter_covariance = function(...) stop("Unexpected covariance"))
-  local_mocked_bindings(qt = function(...) stop("Unexpected interval calculation"), .package = "stats")
+  local_mocked_bindings(qt = function(...) stop("Unexpected interval calculation"), .package = "mfrmr")
   withr::local_options(mfrmr.plot_preset = "invalid")
   file <- tempfile(fileext = ".rds"); on.exit(unlink(file), add = TRUE)
   saveRDS(p, file)

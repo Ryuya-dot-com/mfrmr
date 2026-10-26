@@ -21,7 +21,10 @@
 \code{TRUE} calculates the selected intervals using \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}}.
 Alternatively supply a saved \code{confint(d)} result or a list of such results.
 Saved results may contain different metrics, methods, scores or reference
-plans, but must match this D-study's source, plans and score weights.}
+plans, but must match this D-study's source, plans and score weights.
+GENOVA-adjusted results retain adjusted points alongside original-source
+population intervals, with separate \code{IntervalEstimate} and \code{IntervalBasis}.
+Saved intervals must match the component treatment too.}
 
 \item{parm}{Metrics to calculate when \code{intervals = TRUE}. The default
 includes \code{"G"}, \code{"Phi"}, \code{"RelativeSEM"} and \code{"AbsoluteSEM"}.
@@ -58,8 +61,9 @@ diagnostics, reference context and their existing \code{plot()} methods.
 \item \code{notes}: method qualifications and interpretation reminders.
 \code{print()} returns the same saved summary invisibly.
 For G/Phi with \code{method = "delta"}, the table retains and prints the
-coefficient sampling \code{SE}, distinct from measurement SEM. Normal-reference
-bounds outside \verb{[0,1]} are not clipped.
+coefficient sampling \code{SE}, distinct from measurement SEM. For GENOVA-adjusted
+points it is named \code{IntervalSE} and describes the original estimator, not
+the adjusted point. Normal-reference bounds outside \verb{[0,1]} are not clipped.
 }
 }
 \description{

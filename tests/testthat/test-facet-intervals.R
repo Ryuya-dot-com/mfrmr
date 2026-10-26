@@ -14,7 +14,7 @@ local({
     expect_match(std$table$InferenceReview, "Population-SD-standardized")
     expect_equal(std$covariance, native$covariance, ignore_attr = TRUE)
     expect_false(std$settings$population_sd_estimated)
-    expect_match(plot_data(plot(std, draw = FALSE))$subtitle, "Known population SD = 1")
+    expect_match(plot_data(plot(std, draw = FALSE))$subtitle, "Fixed population SD = 1")
   })
 
   test_that("Person scores and sandwich reproduce direct full-covariance calculations", {
@@ -255,7 +255,7 @@ test_that("both plotted covariance methods mark constraint-fixed targets", {
   local_mocked_bindings(points = function(...) {
     args <- list(...); shapes[[length(shapes) + 1L]] <<- args$pch
     draw_points(...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   grDevices::pdf(NULL)
   tryCatch(plot(ci), finally = grDevices::dev.off())
   expect_gte(length(shapes), 2L)
@@ -282,7 +282,7 @@ test_that("information failure distinguishes anchored values from missing uncert
   local_mocked_bindings(points = function(...) {
     args <- list(...); shapes[[length(shapes) + 1L]] <<- args$pch
     draw_points(...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   grDevices::pdf(NULL)
   tryCatch(plot(ci, show_legend = FALSE), finally = grDevices::dev.off())
   expect_identical(shapes, rep(list(c(5, 4, 4, 5)), 2L))

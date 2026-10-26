@@ -7,7 +7,51 @@
 Start with one analysis: load ratings, fit a model, plot the results, and
 read the summary. The Examples section contains a complete runnable script.
 The later sections describe diagnostics, reporting, and specialist routes.
+
+See \code{vignette("mfrmr-networks-and-reporting")} for Lamprianou-inspired network
+views, the FACETS/ConQuest reporting crosswalk and speaking/writing examples
+combining MFRM with G/D studies. \code{\link[=plot_data]{plot_data()}} supports long-format extraction
+and original-value cluster profiles for custom distribution plots.
 }
+\section{Connect the question to the result}{
+
+These are alternative or complementary branches, not requirements to run
+every function. Start from the intended score, rating unit, rubric endpoints
+and the decision the study needs to support.\tabular{ll}{
+   Question \tab Connected route \cr
+   What was rated, and can the groups be linked? \tab \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} and \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} with raw data/column arguments before fitting; \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}} adds graph summaries. Graph connectivity does not establish identification. \cr
+   How do persons and named facets differ? \tab \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and eligible intervals -> \code{\link[=mfrm_results]{mfrm_results()}} -> \code{\link[=mfrm_report]{mfrm_report()}}. Keep Separation, Strata and Reliability distinct from observed agreement. \cr
+   How many raters/tasks does the reported score need? \tab \code{\link[=mfrm_g_study]{mfrm_g_study()}} -> \code{\link[=mfrm_d_study]{mfrm_d_study()}} -> \code{summary()}, \code{plot()} and eligible \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}. No MFRM fit is required. \cr
+   Do raters agree? \tab Matched units -> \code{\link[=pairwise_kappa_table]{pairwise_kappa_table()}} for pairs, \code{\link[=krippendorff_alpha_table]{krippendorff_alpha_table()}} for a declared panel target, or a justified ICC/AC2 definition. Retain overlap and exclusions. \cr
+   Can a scale be reused? \tab \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} -> anchored fit / \code{\link[=build_linking_review]{build_linking_review()}} -> plots and \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}. Retain anchor provenance, scale and uncertainty. \cr
+   Does a combination or group need follow-up? \tab Specified \code{\link[=estimate_bias]{estimate_bias()}} or \code{\link[=analyze_dff]{analyze_dff()}} -> signed tables and plots -> matching reporting tools. A screen is not a fairness verdict. \cr
+   Does model choice change the answer? \tab Comparable fits -> \code{\link[=compare_mfrm]{compare_mfrm()}} -> \code{\link[=build_model_choice_review]{build_model_choice_review()}} -> \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}. AIC and LRT have different eligibility conditions. \cr
+   What remains unexplained? \tab \code{\link[=analyze_residual_pca]{analyze_residual_pca()}} / \code{\link[=q3_statistic]{q3_statistic()}} for residual structure; separately \code{\link[=mfrm_features]{mfrm_features()}} and clustering for declared entity attributes. \code{\link[=mfrm_residual_network]{mfrm_residual_network()}} supplies signed residual correlations and optional hierarchical groups, followed by \code{\link[=mfrm_report]{mfrm_report()}}. It is not EGA. \cr
+}
+
+
+A Criterion facet in one-dimensional MFRM adjusts criterion locations and,
+when specified, steps/slopes; it does not create separate Person dimensions.
+Several \code{scores} in \code{\link[=mfrm_g_study]{mfrm_g_study()}} are fixed score components with
+source-specific covariance matrices, not additional random facets. Read
+\code{vignette("mfrmr-gtheory")} for the criterion/facet distinction and the
+report structure. Pass G/D objects directly to \code{\link[=mfrm_report]{mfrm_report()}} and
+\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}; supplied saved intervals retain source context.
+The editable \code{templates/gtheory-report.Rmd} joins tables, plots and exports.
+
+Higher coded scores need not mean better performance. For Comprehensibility,
+record whether they mean greater ease or greater difficulty. \code{positive_facets}
+changes parameter orientation, not outcome coding. Keep coding consistent
+with anchors and report labels; see \link{mfrmr_visual_diagnostics}. The
+\code{vignette("mfrmr-networks-and-reporting")} supplies richer network and custom
+distribution examples, plus literature-based reporting connections. The
+workflow vignette places assignment networks at design review and score
+networks alongside observed agreement. Neither is a residual graph.
+
+The question-to-report map in \code{vignette("mfrmr-reporting-and-apa")} identifies
+which sections exist, which remain standalone, and what to report together.
+}
+
 \section{Choose a reading path}{
 
 To choose a model and estimator before fitting, read
@@ -510,14 +554,22 @@ with their original options. In \code{\link[=run_qc_pipeline]{run_qc_pipeline()}
 \code{separation_facets} only for facets whose levels need to be distinguished;
 it is no longer a default rater-quality requirement. Missing results remain
 unavailable and cannot be treated as passes.
+\item \strong{Model comparisons:} rerun \code{\link[=compare_mfrm]{compare_mfrm()}} on the existing eligible fits,
+retaining the original comparison settings, then rebuild dependent
+\code{\link[=build_model_choice_review]{build_model_choice_review()}} and \code{\link[=build_weighting_review]{build_weighting_review()}} results.
+The corrected RSM/PCM nesting review requires every RSM interaction to be
+retained in the PCM. More category-step parameters do not establish
+nesting. An affected pair can retain an eligible information-criterion
+comparison while losing its invalid chi-square test. This correction
+does not require refitting; printing an old comparison leaves its stored
+decision unchanged.
 \item \strong{Group comparisons and equivalence:} recreate residual \code{\link[=analyze_dff]{analyze_dff()}}
 / \code{\link[=analyze_dif]{analyze_dif()}} and \code{\link[=dif_interaction_table]{dif_interaction_table()}} results from the existing
 fit and original group data. They now describe residual differences without
 tests or confidence intervals. Recompute \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}}
 from an eligible MML fit with matching current diagnostics and the original
 practical bound; old equivalence bundles cannot supply the required joint
-covariance. Rebuild model-choice and weighting reviews from their source
-fits as well.
+covariance.
 \item \strong{ICC and design effects:} rerun \code{\link[=compute_facet_icc]{compute_facet_icc()}} or
 \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}} from the original data and settings.
 Numeric score labels now retain their values. Missing scores or grouping

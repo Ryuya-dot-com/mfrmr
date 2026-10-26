@@ -61,7 +61,8 @@ local({
     local_mocked_bindings(title = function(main = NULL, ...) {
       seen[[length(seen) + 1L]] <<- list(main = main)
       real_title(main = main, ...)
-    }, .package = "graphics")
+    }, .package = "mfrmr")
+    local_graphics_headings(function(main) seen[[length(seen) + 1L]] <<- list(main = main))
     grDevices::pdf(NULL)
     on.exit(grDevices::dev.off(), add = TRUE)
     for (case in cases) {
@@ -69,6 +70,7 @@ local({
       for (text in list("Heading sent to renderer", NULL)) {
         seen <- list()
         p <- do.call(case$fun, c(args, list(title = text)))
+        expect_true(length(seen) > 0L, info = paste(case$fun, args[[2]]))
         expect_false(any(vapply(seen, function(s) any(nzchar(as.character(s$main))), logical(1))),
           info = paste(case$fun, args[[2]]))
       }

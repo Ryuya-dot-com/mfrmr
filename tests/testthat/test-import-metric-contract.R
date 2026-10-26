@@ -170,7 +170,7 @@ test_that("mixed mirt item types retain every item's thresholds and probabilitie
   actual <- source
   # An inapplicable NA must be ignored, but a missing actual threshold must fail.
   actual[3L, "b1"] <- NA_real_
-  local_mocked_bindings(coef = function(...) list(items = actual), .package = "mirt")
+  local_mocked_bindings(.mfrm_mirt_coef = function(...) list(items = actual), .package = "mfrmr")
   expect_error(import_mirt_fit(fit, model = "GPCM"), "finite source adjacent-category")
   actual <- source
   actual[4L, "a1"] <- NA_real_

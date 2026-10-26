@@ -59,6 +59,24 @@
 #'   See "MML interaction contrasts" for scope and assumptions.
 #'   Omit this argument for a CML comparison-only fit; its saved review is reused.
 #'
+#' @param interaction Optional exact name of one fitted two-facet interaction,
+#'   for example `"Rater:Criterion"`. Omit `facet` and `comparison_review`.
+#'   This selects jointly fitted cell effects rather than fixed-baseline bias
+#'   screens. Requires `method = "model"`, `scale = "native"`, full direct
+#'   fixed-grid RSM/PCM MML with fixed N(0,1), one interaction, no anchors,
+#'   groups, dummy facets or shrinkage. See the joint-cell section below.
+#' @param anchor_covariance Optional full sampling covariance of the supplied
+#'   anchor estimates, including their correlations, in native ability units
+#'   squared. Row and column names must match every directly anchored level
+#'   on the one noncentered facet. Requires the fixed-grid direct RSM/PCM
+#'   anchor-origin route with an intercept-only population and fixed SD.
+#'   `NULL` retains the existing conditional-on-anchors calculation.
+#' @param independent_anchors Logical, default `FALSE`. Set `TRUE` with
+#'   `anchor_covariance` only when source calibration and receiving responses
+#'   are independent. Shared respondents or dependent clusters require
+#'   cross-sample covariance and are unsupported. This is an explicit
+#'   assumption, not a check inferred from different Person identifiers.
+#'
 #' @return An `mfrm_facet_intervals` object with `table`, selected target
 #'   `covariance`, `model_covariance`, free-parameter `parameter_covariance`,
 #'   `model_parameter_covariance`, `person_scores`, `cluster_scores`, the
@@ -96,6 +114,134 @@
 #'   whether it was estimated, and the full transformation Jacobian.
 #'   `CIEligible` describes numerical availability; `CoverageQualified = FALSE`
 #'   does not claim finite-sample coverage for the transformed interval.
+#'
+#' @section Jointly fitted interaction cells and contrasts:
+#' Fit a prespecified two-facet interaction with `fit_mfrm(facet_interactions =
+#' "Rater:Criterion")`, then use `mfrm_facet_intervals(fit,
+#' interaction = "Rater:Criterion")`. The default returns all fitted cells,
+#' including the dependent last row and column. Cell labels, counts, sparse
+#' flags and identification constraints are retained in `interaction_cells`.
+#' This bounded route uses a fixed standard-normal ability population; latent
+#' regression, estimated population variance, adaptive integration, JML, CML,
+#' GPCM and multiple fitted interaction terms are outside this extension.
+#'
+#' An interaction effect is an additive predictor shift after jointly fitting
+#' the main effects. Positive values increase expected coded ratings; they do
+#' not automatically imply favorable performance or unfairness. Effects have
+#' zero row sums and zero column sums across the declared levels, without
+#' weighting those constraints by cell counts. Their values depend on that
+#' definition and the included main effects. This differs from [estimate_bias()],
+#' which holds the fitted calibration and person measures fixed while estimating
+#' an additional residual shift. Neither result proves substantive rater bias.
+#'
+#' Write free interaction coordinates as gamma and their expansion to all cells
+#' as G gamma. Cell covariance is G V_gamma G', where V_gamma is the interaction
+#' block of the inverse full marginal information, including main effects and
+#' thresholds. It is not the inverse of only the interaction information block.
+#' Dependent cells consequently have correlated estimates and a singular joint
+#' cell covariance; this alone does not invalidate individual pointwise intervals.
+#' For a prespecified cell contrast C, the covariance is C G V_gamma G' C'.
+#' Supply every cell `Target` as a named column of `contrasts`, including zeros.
+#' A contrast fixed at zero by the row/column constraints has `Status = "fixed"`
+#' and no inferential interval; it is not evidence for a null interaction.
+#'
+#' Source consistency, identification/boundary records, full information,
+#' stationarity and finer-quadrature checks must pass. Unavailable intervals
+#' retain finite point estimates and reasons. Sparse-cell flags are descriptive,
+#' not a sample-size guarantee. Full-design identification and numerical success
+#' do not establish nominal coverage. These are pointwise Wald intervals, not
+#' simultaneous bounds or multiplicity-adjusted cell decisions. Saved tables,
+#' plots, [apa_table()] and [mfrm_results()] retain the same values and cautions.
+#'
+#' A bundled-data example uses the existing estimation and interval APIs:
+#' ```r
+#' ratings <- load_mfrmr_data("example_core")
+#' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+#'   model = "PCM", step_facet = "Criterion", noncenter_facet = "Criterion",
+#'   facet_interactions = "Rater:Criterion", quad_points = 61)
+#' cells <- mfrm_facet_intervals(fit, interaction = "Rater:Criterion")
+#' summary(cells)[, c("Target", "Estimate", "SE", "Lower", "Upper", "Status")]
+#' plot(cells)
+#' # Compare the first two displayed cells; choose the scientific contrast first.
+#' C <- matrix(0, 1, nrow(cells$table),
+#'   dimnames = list("First minus second", cells$table$Target))
+#' C[1, 1:2] <- c(1, -1)
+#' difference <- mfrm_facet_intervals(fit, interaction = "Rater:Criterion",
+#'   contrasts = C)
+#' vcov(difference) # Uses covariance between both cells
+#' ```
+#'
+#' @section Uncertainty from independently estimated anchors:
+#' The default intervals condition on the exact anchor values. Supplying
+#' `anchor_covariance` and `independent_anchors = TRUE` adds source-calibration
+#' uncertainty without changing any point estimates. Use the full covariance,
+#' not only a vector of SEs or a diagonal replacement for correlated anchors.
+#' Its numerical validity is checked; its statistical validity, units and
+#' correspondence to the supplied anchor values remain the analyst's responsibility.
+#'
+#' Write the free receiving parameters as u, supplied anchors as a, and the
+#' negative log likelihood Hessian blocks as H_uu and H_ua. Implicit
+#' differentiation gives S = -inverse(H_uu) H_ua. For a reported target t(u,a),
+#' its source derivative is D = t_u S + t_a. The selected target covariance is
+#' t_u V_conditional t_u' + D V_anchor D'. The direct derivative t_a matters
+#' for targets containing anchored elements; adding variance only to the free
+#' parameters would omit that contribution and their cross-covariance.
+#' This is a first-order approximation for independent samples, not joint
+#' recalibration, a bootstrap or a correction for anchor drift or biased anchors.
+#'
+#' Source derivatives use central differences of the analytic marginal score,
+#' checked by halving the difference step and refining the quadrature. Failed
+#' source-derivative checks preserve point estimates and the conditional
+#' results, with unavailable selected uncertainty. `ConditionalSE`,
+#' `ConditionalLower`, `ConditionalUpper` and `ConditionalStatus` retain that
+#' separate calculation; facet `Model*` columns also retain it. `AnchorSourceSE`
+#' is the square root of the added variance contribution, not a separate
+#' confidence interval. The selected `SE`, bounds and `vcov()` include both
+#' components. A conditionally fixed anchor may therefore have a selected
+#' interval for its source-estimated value. A zero covariance contribution does
+#' not create an interval for a target fixed under both specifications.
+#'
+#' `anchor_uncertainty` retains the supplied and numerically symmetrized/PSD
+#' covariance, any floating-point adjustment, anchor values, sensitivity,
+#' independent-sample assumption and derivative checks. Singular PSD matrices
+#' are allowed. The free-parameter covariance includes source propagation;
+#' it does not include anchored values as extra optimizer coordinates.
+#' Saved population intervals can reuse this sensitivity and the conditional
+#' information: `mfrm_population_intervals(rater_ci)` propagates it once, without
+#' refitting or differentiating again. Reports and exported tables retain the
+#' supplied covariance and source-derivative checks; RDS retains the full result.
+#'
+#' Only fixed-grid direct RSM/PCM MML with unit weights, no interactions,
+#' shrinkage or groups, an intercept-only population, fixed SD and all anchors
+#' on its noncentered facet is supported. Adaptive integration, free population
+#' variance, GPCM, dependent calibration samples and uncertainty in the supplied
+#' SD are outside this extension. No nominal coverage guarantee follows from
+#' numerical agreement or positive covariance. Other facets retain their
+#' centering; changing an item pool still requires a defensible scale link.
+#'
+#' A complete interface example starts from bundled ratings. This split is
+#' illustrative: independent Persons and stable anchors must be justified for
+#' the actual sampling design, and different IDs alone do not establish them.
+#' ```r
+#' ratings <- load_mfrmr_data("example_core")
+#' ids <- unique(ratings$Person)
+#' source <- ratings[ratings$Person %in% ids[1:20], ]
+#' receiving <- ratings[!ratings$Person %in% ids[1:20], ]
+#' baseline <- fit_mfrm(source, "Person", c("Rater", "Criterion"), "Score",
+#'   model = "RSM", noncenter_facet = "Rater", quad_points = 61)
+#' baseline_ci <- mfrm_facet_intervals(baseline, "Rater")
+#' common <- c("R01", "R02")
+#' anchors <- data.frame(Facet = "Rater", Level = common,
+#'   Anchor = baseline_ci$table$Estimate[match(common, baseline_ci$table$Target)])
+#' cohort <- fit_mfrm(receiving, "Person", c("Rater", "Criterion"), "Score",
+#'   model = "RSM", anchors = anchors, noncenter_facet = "Rater",
+#'   population_formula = ~1, person_data = unique(receiving["Person"]),
+#'   population_sd = 1, quad_points = 61)
+#' rater_ci <- mfrm_facet_intervals(cohort, "Rater",
+#'   anchor_covariance = vcov(baseline_ci)[common, common], independent_anchors = TRUE)
+#' summary(rater_ci) # Selected and conditional intervals side by side
+#' population_ci <- mfrm_population_intervals(rater_ci)
+#' ```
 #'
 #' @details For cluster score `s_g` and observed negative-log-likelihood
 #'   Hessian `H`, the unadjusted sandwich is
@@ -248,8 +394,8 @@
 #'   unless other constraints fix them; their mean has no inferential interval.
 #'   A difference between a free rater and an anchored rater can remain uncertain.
 #'   These are conditional statements, not evidence that the source calibration
-#'   or group-mean assumption is error-free. Estimated-population/native-location
-#'   extensions still exclude anchors and groups.
+#'   or group-mean assumption is error-free. Native-location anchors use only
+#'   the fixed-SD RSM/PCM extension below; groups remain excluded there.
 #'
 #' @section Native locations:
 #'   For estimated normal RSM/PCM and intercept-only normal one-family GPCM MML,
@@ -263,11 +409,23 @@
 #'   conditional-normal regression, retaining its coefficient and residual-variance
 #'   cross-information when computing structural uncertainty. The saved population
 #'   table identifies coefficients and residual variance; it does not label
-#'   regression coefficients as marginal population means. Anchors, GPCM latent
-#'   regression and sandwich covariance remain unavailable here. Interactions
-#'   use the separate `comparison_review` route below.
+#'   regression coefficients as marginal population means. GPCM latent
+#'   regression and sandwich covariance remain unavailable here. The native
+#'   location procedure performs its own qualification even when the source
+#'   fit has `InferenceReady = FALSE`. Read `CIEligible`, `Status`, `checks`,
+#'   `numerical_checks` and cautions on this result; interval availability does
+#'   not change the source fit's overall readiness or qualify other procedures.
+#'   Interactions use the separate `comparison_review` route below.
 #'   Population-coefficient and variance intervals are separate targets and are
 #'   not returned by this helper.
+#'   RSM/PCM populations may fix residual SD with `population_sd`. For an
+#'   intercept-only population (`population_formula = ~1`), a direct anchor on
+#'   the selected non-Person `noncenter_facet` identifies the origin while free
+#'   levels on that facet remain uncentered. These anchored intervals require
+#'   no groups or dummy facets and condition on the supplied anchors and SD;
+#'   their source-calibration uncertainty is not propagated. Other facets keep
+#'   their declared centered constraints. Fixed SD has no variance coordinate
+#'   in the joint information.
 #'
 #'   The covariance transforms the inverse full joint marginal information,
 #'   including all estimated population, slope and step coordinates. A
@@ -276,7 +434,7 @@
 #'   must pass checks; covariance and score changes are also checked at a finer
 #'   integration order at the same fitted parameter vector. This model-information
 #'   procedure has no empirical Person-score rank requirement.
-#'   For estimated RSM/PCM populations, a zero-residual-variance candidate at
+#'   For RSM/PCM populations with estimated variance, a zero-residual-variance candidate at
 #'   the retained nuisance estimates is compared with the fitted likelihood.
 #'   A higher boundary likelihood beyond the numerical allowance prevents
 #'   intervals. This check does not optimize or exclude the entire boundary.
@@ -318,6 +476,8 @@
 #'   the native SE by the fitted SD. A zero estimated contrast can still have
 #'   positive variance. With fixed
 #'   N(0,1), the result equals the native contrast because the known SD is one.
+#'   With an explicit fixed `population_sd`, divide the native contrast and SE
+#'   by that SD; no estimated-SD derivative or uncertainty is introduced.
 #'   Conditional-normal regression is excluded: its residual SD is not a
 #'   marginal population SD. Standardization does not equate expected ratings
 #'   across models with different slopes or category steps.
@@ -537,7 +697,20 @@ mfrm_facet_intervals <- function(fit, facet = NULL, contrasts = NULL,
                                  method = c("model", "sandwich"),
                                  clusters = NULL, adjust = FALSE, level = .95,
                                  scale = c("native", "standardized"),
-                                 comparison_review = NULL) {
+                                 comparison_review = NULL,
+                                 anchor_covariance = NULL, independent_anchors = FALSE,
+                                 interaction = NULL) {
+  joint <- !is.null(interaction)
+  if (joint && (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_comparison_fit") ||
+      !fit$config$model %in% c("RSM", "PCM") || !identical(fit$config$method, "MML")))
+    stop("Joint cell intervals require a full native RSM/PCM MML fit.", call. = FALSE)
+  if (joint && (!is.null(facet) || !is.null(comparison_review) ||
+      match.arg(method) != "model" || match.arg(scale) != "native" ||
+      !is.null(anchor_covariance) || !identical(independent_anchors, FALSE)))
+    stop("Use interaction with method = 'model', scale = 'native', and omit facet, comparison_review and anchor-source arguments.", call. = FALSE)
+  anchor_request <- mfrmr_anchor_uncertainty_request(fit, anchor_covariance, independent_anchors)
+  if (!is.null(anchor_request) && (match.arg(method) != "model" || !is.null(comparison_review)))
+    stop("Anchor-source intervals require method = 'model' without comparison_review.", call. = FALSE)
   if (inherits(fit, "mfrm_comparison_fit") && identical(fit$config$method, "CML")) return(mfrmr_cml_comparison_intervals(fit,
     facet, contrasts, match.arg(method), clusters, adjust, level, match.arg(scale), comparison_review))
   comparison <- !is.null(comparison_review)
@@ -548,7 +721,7 @@ mfrm_facet_intervals <- function(fit, facet = NULL, contrasts = NULL,
     contrasts, match.arg(method), clusters, adjust, level, match.arg(scale)))
   stop_if_jml_adjustment(fit, "mfrm_facet_intervals()")
   product <- mfrm_has_product_slopes(fit)
-  native <- !product && (comparison || isTRUE(fit$config$population_spec$active) ||
+  native <- !product && (joint || comparison || isTRUE(fit$config$population_spec$active) ||
     identical(fit$config$model, "GPCM"))
   method <- match.arg(method)
   singleton <- !product && !native && identical(method, "model") &&
@@ -558,8 +731,9 @@ mfrm_facet_intervals <- function(fit, facet = NULL, contrasts = NULL,
   standardized <- match.arg(scale) == "standardized"
   if (standardized && (method != "model" || (!comparison && is.null(contrasts))))
     stop("Standardized intervals require explicit zero-sum contrasts and method = 'model'.", call. = FALSE)
-  population_estimated <- isTRUE(fit$config$population_spec$active)
-  if (standardized && population_estimated &&
+  population_active <- isTRUE(fit$config$population_spec$active)
+  population_estimated <- population_active && is.null(fit$config$population_spec$fixed_sd)
+  if (standardized && population_active &&
       !identical(fit$config$population_spec$design_columns, "(Intercept)"))
     stop("Standardized contrasts require an intercept-only normal population; regression residual SD is not marginal population SD.", call. = FALSE)
   if (!product && !native && (!inherits(fit, "mfrm_fit") || !identical(fit$config$method, "MML") ||
@@ -585,10 +759,14 @@ mfrm_facet_intervals <- function(fit, facet = NULL, contrasts = NULL,
   if (native && method != "model") {
     stop("Native population/one-family GPCM location intervals require method = 'model'; sandwich intervals are unavailable.", call. = FALSE)
   }
-  params <- if (native) mfrm_native_location_source(fit, comparison_review) else NULL
+  params <- if (native) mfrm_native_location_source(fit, comparison_review, interaction) else NULL
   sizes <- build_param_sizes(fit$config)
   if (!native) params <- expand_params(fit$opt$par, sizes, fit$config)
-  if (comparison) {
+  if (joint) {
+    facet <- interaction
+    target <- mfrm_joint_interaction_targets(fit, interaction, contrasts)
+    estimate <- drop(target$jacobian %*% fit$opt$par)
+  } else if (comparison) {
     review <- mfrmr_match_comparison_model(fit$prep, fit$config, comparison_review)
     s <- review$specification
     if (!is.null(contrasts) || (!is.null(facet) && !identical(facet, s$facet)))
@@ -606,13 +784,13 @@ mfrm_facet_intervals <- function(fit, facet = NULL, contrasts = NULL,
   }
   if (any(!is.finite(estimate)))
     stop("Contrast estimates must be finite; rescale excessively large coefficients.", call. = FALSE)
-  slice <- if (comparison) seq_along(fit$opt$par) else build_param_slices(sizes)[[facet]]
+  slice <- if (comparison || joint) seq_along(fit$opt$par) else build_param_slices(sizes)[[facet]]
   if (standardized) {
     # Scale rows only for the zero-sum check, avoiding overflow without changing C.
     unit_rows <- target$contrasts / apply(abs(target$contrasts), 1L, max)
     if (any(abs(rowSums(unit_rows)) > 64 * .Machine$double.eps * rowSums(abs(unit_rows))))
       stop("Standardized contrasts must have zero-sum coefficient rows.", call. = FALSE)
-    population_sd <- if (population_estimated) sqrt(params$population$sigma2) else 1
+    population_sd <- if (population_active) sqrt(params$population$sigma2) else 1
     if (!is.finite(population_sd) || population_sd <= 0)
       stop("Standardized contrasts require a finite positive population SD.", call. = FALSE)
     native_estimate <- estimate
@@ -767,7 +945,9 @@ mfrm_facet_intervals <- function(fit, facet = NULL, contrasts = NULL,
   if (native) {
     out$settings$procedure <- "mml_native_location_model_v1"
     out$settings$scale <- "native_ability"
-    out$settings$location_reference <- "sum_to_zero_across_levels"
+    out$settings$location_reference <- if (!is.null(fit$config$population_spec$fixed_sd) &&
+        identical(facet, fit$config$noncenter_facet)) "direct_anchor_origin" else
+      "sum_to_zero_across_levels"
     out$settings$integration <- if (mfrmr_adaptive_integration(fit$config)) "adaptive" else "fixed"
     out$settings$comparison_quad_points <- 2 * out$settings$quad_points - 1
     out$settings$population <- if (!isTRUE(fit$config$population_spec$active)) "fixed_standard_normal" else
@@ -789,12 +969,17 @@ mfrm_facet_intervals <- function(fit, facet = NULL, contrasts = NULL,
       data.frame(Mean = if (is.null(params$population)) 0 else
         unname(params$population$coefficients), Variance = params$population$sigma2 %||% 1)
     out$table$CIEligible <- status == "available"
-    out$table$ScaleReference <- "native ability units; centered facet locations"
+    out$table$ScaleReference <- if (out$settings$location_reference == "direct_anchor_origin")
+      "native ability units; supplied anchor origin" else
+      "native ability units; centered facet locations"
     out$table$InferenceReview <- inference$check$review
     out$table$InferenceReview[status == "fixed"] <- "Constraint-fixed native target; no inferential interval."
     out$table$InferenceReview[status %in% c("nonpositive_variance", "nonfinite_bounds")] <-
       "The target requires finite positive variance and finite normal bounds."
     out$cautions <- unique(c(out$cautions, inference$check$caution,
+      mfrm_gpcm_anchor_note(fit),
+      if (!is.null(fit$config$population_spec$fixed_sd))
+        "Intervals condition on the supplied population SD; its uncertainty is not propagated.",
       if (!standardized) "Native location intervals: pointwise Wald inference assumes a correctly specified, identified regular MML model; numerical eligibility does not guarantee finite-sample coverage. Native ability units are not standardized by the fitted population SD; unequal slopes or steps can make expected-rating differences vary with ability."))
   }
   if (standardized) {
@@ -834,6 +1019,19 @@ mfrm_facet_intervals <- function(fit, facet = NULL, contrasts = NULL,
     out$cautions <- unique(c(out$cautions,
       "Interaction contrasts use the declared group direction and panel weights. Positive conditional rank and local information do not prove global marginal identification; intervals are model-based asymptotic approximations, not calibrated DFF classifications."))
   }
+  if (joint) {
+    out$settings$procedure <- "mml_joint_interaction_model_v1"
+    out$settings$target <- if (is.null(contrasts)) "joint_interaction_cells" else "joint_interaction_contrasts"
+    out$settings$location_reference <- "two_way_sum_to_zero_margins"
+    out$interaction_cells <- target$cells
+    out$table$CoverageQualified <- FALSE
+    out$table$ScaleReference <- "additive predictor shift; fixed N(0,1) ability units"
+    if (is.null(contrasts)) out$table <- cbind(out$table,
+      target$cells[setdiff(names(target$cells), c("Target", "Estimate"))])
+    out$cautions <- unique(c(out$cautions,
+      "Jointly fitted interaction effects use zero row and column sums across the declared facet levels. Positive values increase the score predictor relative to the jointly fitted main effects. These are not fixed-baseline estimate_bias() screens or proof of rater unfairness. Intervals are pointwise, not simultaneous; no multiplicity-adjusted decision is supplied. Sparse or missing cells require design and numerical review; finite estimates do not establish coverage."))
+  }
+  out <- mfrmr_anchor_uncertainty_intervals(out, anchor_request)
   if (length(out$cautions)) {
     out$table$InferenceCaution <- paste(out$cautions, collapse = " ")
     warning(paste(out$cautions, collapse = " "), call. = FALSE)
@@ -928,6 +1126,11 @@ print.mfrm_facet_intervals <- function(x, ...) {
 #' @export
 summary.mfrm_facet_intervals <- function(object, ...) object$table
 
+#' @rdname mfrm_facet_intervals
+#' @importFrom stats vcov
+#' @export
+vcov.mfrm_facet_intervals <- function(object, ...) object$covariance
+
 # Tables share the same saved values across APA output, reports and exports.
 mfrm_facet_interval_tables <- function(x) {
   tab <- x$table
@@ -942,6 +1145,7 @@ mfrm_facet_interval_tables <- function(x) {
     settings = settings,
     contrasts = data.frame(Comparison = rownames(x$contrasts),
       x$contrasts, row.names = NULL, check.names = FALSE))
+  if (!is.null(x$interaction_cells)) tables$interaction_cells <- x$interaction_cells
   if (!is.null(x$comparison_review)) {
     tables$comparison_review <- x$comparison_review$table
     tables$comparison_cells <- x$comparison_review$cells
@@ -949,6 +1153,7 @@ mfrm_facet_interval_tables <- function(x) {
   for (name in c("checks", "numerical_checks", "score_rank", "population", "comparison_information_review")) {
     if (!is.null(x[[name]])) tables[[name]] <- x[[name]]
   }
+  tables <- c(tables, mfrmr_anchor_uncertainty_tables(x))
   if (!is.null(x$clusters)) tables$clusters <- x$clusters
   if (!is.null(x$information_review)) tables$information_review <- x$information_review
   if (!is.null(x$target_jacobian)) tables$target_jacobian <- data.frame(
@@ -976,8 +1181,9 @@ mfrm_facet_results_inputs <- function(fit, intervals) {
     if (is.null(x$fit) || !identical(source, mfrm_gpcm_inference_source(x$fit))) {
       stop("Saved fixed-facet intervals must match the fitted parameters, data, constraints, population and integration settings.", call. = FALSE)
     }
-    if ((x$settings$procedure %||% "") %in% c("mml_native_location_model_v1", "mml_interaction_comparison_model_v1") &&
-        !identical(mfrm_native_location_identity(fit), x$source)) {
+    if ((x$settings$procedure %||% "") %in% c("mml_native_location_model_v1", "mml_interaction_comparison_model_v1", "mml_joint_interaction_model_v1") &&
+        (!identical(mfrm_native_location_identity(fit), x$source) ||
+          !identical(mfrm_native_location_identity(x$fit), x$source))) {
       stop("Saved native location intervals must match the source coordinates, tables and qualification metadata.", call. = FALSE)
     }
   }

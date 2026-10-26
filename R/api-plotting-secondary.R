@@ -76,103 +76,11 @@ plot_local_dependence_heatmap <- function(fit,
                                           preset = c("standard", "publication", "compact", "monochrome"),
                                           draw = TRUE) {
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
-  if (!inherits(fit, "mfrm_fit")) {
-    stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
-  }
-  if (length(facet) != 1L || is.na(facet)) {
-    stop("`facet` must name a single fitted facet.", call. = FALSE)
-  }
-  facet <- as.character(facet)
-  facet_names <- as.character(fit$config$facet_names %||% character(0))
-  if (!facet %in% facet_names) {
-    stop("`facet` must be one of: ", paste(facet_names, collapse = ", "), ".",
-         call. = FALSE)
-  }
-  if (!is.numeric(min_pairs) || length(min_pairs) != 1L ||
-      !is.finite(min_pairs) || min_pairs < 3 || min_pairs != floor(min_pairs)) {
-    stop("`min_pairs` must be a single integer of at least 3.", call. = FALSE)
-  }
   style <- resolve_plot_preset(preset)
-  if (is.null(diagnostics)) {
-    diagnostics <- suppressMessages(diagnose_mfrm(fit, residual_pca = "none",
-                                                    diagnostic_mode = "legacy"))
-  }
-  mfrm_results_validate_diagnostics_identity(
-    fit, diagnostics, helper = "plot(x, type = \"local_dependence\")"
-  )
-  obs <- as.data.frame(diagnostics$obs %||% data.frame(),
-                        stringsAsFactors = FALSE)
-  needed <- c(facet, "Person", "StdResidual")
-  missing <- setdiff(needed, names(obs))
-  if (length(missing) > 0L) {
-    stop("`diagnostics$obs` is missing required columns: ",
-         paste(missing, collapse = ", "), ".",
-         call. = FALSE)
-  }
-  obs[[facet]] <- as.character(obs[[facet]])
-  obs$Person <- as.character(obs$Person)
-  obs$StdResidual <- suppressWarnings(as.numeric(obs$StdResidual))
-  obs <- obs[!is.na(obs[[facet]]) & !is.na(obs$Person), , drop = FALSE]
-  obs$StdResidual[!is.finite(obs$StdResidual)] <- NA_real_
-
-  wide <- tryCatch(
-    tidyr::pivot_wider(
-      obs[, c("Person", facet, "StdResidual"), drop = FALSE],
-      id_cols = "Person",
-      names_from = !!rlang::sym(facet),
-      values_from = "StdResidual",
-      values_fn = function(x) mean(x, na.rm = TRUE)
-    ),
-    error = function(e) NULL
-  )
-  if (is.null(wide)) {
-    stop("Could not pivot residuals to a person x level matrix.",
-         call. = FALSE)
-  }
-  rater_cols <- setdiff(names(wide), "Person")
-  if (length(rater_cols) < 2L) {
-    stop("At least two distinct levels are required for the heatmap.",
-         call. = FALSE)
-  }
-
-  rater_cols <- sort(rater_cols)
-  mat <- matrix(NA_real_, nrow = length(rater_cols), ncol = length(rater_cols),
-                 dimnames = list(rater_cols, rater_cols))
-  diag(mat) <- vapply(rater_cols, function(level) {
-    values <- wide[[level]]
-    values <- values[is.finite(values)]
-    if (length(values) >= min_pairs && stats::sd(values) > 0) 1 else NA_real_
-  }, numeric(1))
-  pairs_rows <- list()
-  for (i in seq_len(length(rater_cols) - 1L)) {
-    for (j in seq.int(i + 1L, length(rater_cols))) {
-      a <- suppressWarnings(as.numeric(wide[[rater_cols[i]]]))
-      b <- suppressWarnings(as.numeric(wide[[rater_cols[j]]]))
-      ok <- is.finite(a) & is.finite(b)
-      n_pair <- sum(ok)
-      r <- if (n_pair >= min_pairs) {
-        suppressWarnings(stats::cor(a[ok], b[ok]))
-      } else NA_real_
-      reason <- if (n_pair < min_pairs) "Insufficient shared persons" else
-        if (!is.finite(r)) "No residual variation in the shared persons" else ""
-      mat[i, j] <- mat[j, i] <- r
-      pairs_rows[[length(pairs_rows) + 1L]] <- data.frame(
-        Level1 = rater_cols[i],
-        Level2 = rater_cols[j],
-        ResidualCor = r,
-        N = n_pair,
-        Reason = reason,
-        stringsAsFactors = FALSE
-      )
-    }
-  }
-  pairs_df <- if (length(pairs_rows) > 0L) {
-    do.call(rbind, pairs_rows)
-  } else {
-    data.frame(Level1 = character(0), Level2 = character(0),
-               ResidualCor = numeric(0), N = integer(0), Reason = character(0),
-               stringsAsFactors = FALSE)
-  }
+  associations <- .mfrm_residual_associations(fit, diagnostics, facet, min_pairs)
+  mat <- associations$matrix
+  pairs_df <- associations$pairs
+  rater_cols <- colnames(mat)
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
@@ -180,20 +88,20 @@ plot_local_dependence_heatmap <- function(fit,
     old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::par(mar = c(5, 5, 3, 2))
-    graphics::image(
+    image(
       x = seq_len(ncol(mat)), y = seq_len(nrow(mat)),
       z = mat, col = cols, zlim = c(-1, 1),
       xaxt = "n", yaxt = "n", xlab = facet, ylab = facet,
       main = ""
     )
-    graphics::axis(1, at = seq_along(rater_cols), labels = rater_cols,
+    axis(1, at = seq_along(rater_cols), labels = rater_cols,
                     las = 2, cex.axis = 0.8)
-    graphics::axis(2, at = seq_along(rater_cols), labels = rater_cols,
+    axis(2, at = seq_along(rater_cols), labels = rater_cols,
                     las = 1, cex.axis = 0.8)
     for (i in seq_along(rater_cols)) for (j in seq_along(rater_cols)) {
       v <- mat[i, j]
       if (is.finite(v)) {
-        graphics::text(j, i, sprintf("%.2f", v), cex = 0.7,
+        text(j, i, sprintf("%.2f", v), cex = 0.7,
                         col = if (abs(v) > 0.6) "white" else "black")
       }
     }
@@ -351,7 +259,7 @@ plot_reliability_snapshot <- function(fit,
     } else {
       max(payload$Value, na.rm = TRUE) * 1.15
     }
-    bp <- graphics::barplot(
+    bp <- barplot(
       payload$Value, names.arg = payload$Facet,
       horiz = TRUE, las = 1,
       xlim = c(0, bar_max),
@@ -360,7 +268,7 @@ plot_reliability_snapshot <- function(fit,
       xlab = if (metric == "reliability") "Separation reliability" else metric_col,
       main = ""
     )
-    graphics::text(payload$Value, bp,
+    text(payload$Value, bp,
                     labels = sprintf("%.2f", payload$Value),
                     pos = 4, cex = 0.85, col = style$neutral)
   }
@@ -493,15 +401,15 @@ plot_residual_matrix <- function(fit,
     old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::par(mar = c(5, 6, 3, 2))
-    graphics::image(
+    image(
       x = seq_along(levels_x), y = seq_along(persons),
       z = t(mat), col = cols, zlim = c(-zmax, zmax),
       xaxt = "n", yaxt = "n", xlab = facet, ylab = "Person",
       main = ""
     )
-    graphics::axis(1, at = seq_along(levels_x), labels = levels_x,
+    axis(1, at = seq_along(levels_x), labels = levels_x,
                     las = 2, cex.axis = 0.7)
-    graphics::axis(2, at = seq_along(persons),
+    axis(2, at = seq_along(persons),
                     labels = persons, las = 1, cex.axis = 0.7)
   }
 
@@ -679,27 +587,27 @@ plot_shrinkage_funnel <- function(fit,
     if (!all(is.finite(xr))) xr <- c(-1, 1)
     if (diff(xr) == 0) xr <- xr + c(-0.5, 0.5)
     xr <- xr + c(-0.06, 0.06) * diff(xr)
-    graphics::plot(NA, xlim = xr, ylim = c(0.5, nrow(payload) + 0.5),
+    plot(NA, xlim = xr, ylim = c(0.5, nrow(payload) + 0.5),
                     yaxt = "n",
                     xlab = "Estimate (logits)", ylab = facet,
                     main = "")
-    graphics::abline(v = 0, lty = 3, col = style$grid)
-    graphics::axis(2, at = payload$RowOrder, labels = payload$Level,
+    abline(v = 0, lty = 3, col = style$grid)
+    axis(2, at = payload$RowOrder, labels = payload$Level,
                     las = 1, cex.axis = 0.7)
-    graphics::segments(payload$RawEstimate, payload$RowOrder,
+    segments(payload$RawEstimate, payload$RowOrder,
                         payload$ShrunkEstimate, payload$RowOrder,
                         col = style$neutral, lwd = 1.2)
     if (isTRUE(show_ci)) {
-      graphics::segments(payload$RawCI_Lower, payload$RowOrder - 0.12,
+      segments(payload$RawCI_Lower, payload$RowOrder - 0.12,
                          payload$RawCI_Upper, payload$RowOrder - 0.12,
                          col = style$accent_primary, lwd = 1)
-      graphics::segments(payload$ShrunkCI_Lower, payload$RowOrder + 0.12,
+      segments(payload$ShrunkCI_Lower, payload$RowOrder + 0.12,
                          payload$ShrunkCI_Upper, payload$RowOrder + 0.12,
                          col = style$accent_tertiary, lwd = 1)
     }
-    graphics::points(payload$RawEstimate, payload$RowOrder,
+    points(payload$RawEstimate, payload$RowOrder,
                       pch = 1, col = style$accent_primary, cex = 1.0)
-    graphics::points(payload$ShrunkEstimate, payload$RowOrder,
+    points(payload$ShrunkEstimate, payload$RowOrder,
                       pch = 19, col = style$accent_tertiary, cex = 1.0)
     legend_labels <- c("Raw", "Shrunken")
     legend_pch <- c(1, 19)
@@ -712,7 +620,7 @@ plot_shrinkage_funnel <- function(fit,
       legend_lty <- c(legend_lty, 1)
       legend_col <- c(legend_col, style$accent_primary)
     }
-    graphics::legend("topright",
+    legend("topright",
                       legend = legend_labels,
                       pch = legend_pch, lty = legend_lty, col = legend_col,
                       bty = "n", cex = 0.85, inset = 0.02)

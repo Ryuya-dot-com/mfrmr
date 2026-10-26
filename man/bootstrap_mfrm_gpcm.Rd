@@ -3,6 +3,7 @@
 \name{bootstrap_mfrm_gpcm}
 \alias{bootstrap_mfrm_gpcm}
 \alias{confint.mfrm_gpcm_bootstrap}
+\alias{summary.mfrm_gpcm_bootstrap}
 \alias{print.mfrm_gpcm_bootstrap}
 \title{Parametric bootstrap for GPCM slopes or a matched PCM comparison}
 \usage{
@@ -18,6 +19,8 @@ bootstrap_mfrm_gpcm(fit, nsim = 499L, seed, null_fit = NULL)
   simultaneous = c("none", "bonferroni"),
   ...
 )
+
+\method{summary}{mfrm_gpcm_bootstrap}(object, ...)
 
 \method{print}{mfrm_gpcm_bootstrap}(x, ...)
 }
@@ -55,6 +58,9 @@ fields mean not recorded, not a successful check. No extra information
 calculation is performed for recording. Older saved results may lack these
 fields. LRT results also have \code{comparison} and \code{test}. Printing or
 changing the interval level never refits. Failed replicates remain present.
+\code{summary()} returns planned/available/unresolved counts, settings and either
+the saved likelihood-ratio test or default slope intervals, plus retained
+numerical cautions. It does not refit or discard unresolved trials.
 If a saved analysis records selected refit updates in \code{settings$recheck},
 printing and slope intervals retain a caution that it is not a complete
 rerun under one procedure. Sampling tables preserve that record and any

@@ -149,7 +149,7 @@ test_that("threshold plots connect only available adjacent pairs in one family",
   segments <- NULL
   testthat::local_mocked_bindings(segments = function(x0, y0, x1, y1, ...) {
     segments <<- data.frame(from = x0, to = x1)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   steps <- data.frame(StepFacet = c("A", "A", "A", "B", "B"),
                      Step = c("Step_1", "Step_2", "Step_4", "Step_1", "Step_2"),
                      Estimate = c(0, 1, 2, -1, NA))

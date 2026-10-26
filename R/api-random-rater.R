@@ -630,7 +630,7 @@ mfrm_random_rater_fit <- function(input, quad_points, fixed_sd, maxit,
     (!estimated_boundary || high_zero_score <= 1e-5) &&
     (!estimated_person_boundary || (high_person_zero_score["score"] + high_person_zero_score["difference"] <= 1e-5 &&
       high_person_zero_score["difference"] < 1e-4))
-  H <- stats::optimHess(best$par, obj$fn, obj$gr)
+  H <- optimHess(best$par, obj$fn, obj$gr)
   H <- (H + t(H)) / 2
   values <- eigen(H, symmetric = TRUE, only.values = TRUE)$values
   information_ready <- !separated && all(is.finite(values)) && min(values) > max(values) * 1e-10

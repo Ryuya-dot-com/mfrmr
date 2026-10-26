@@ -650,7 +650,9 @@ test_that("public documentation surfaces share the bounded calibration wording",
     article = paste(readLines(article, warn = FALSE), collapse = "\n")
   )
 
-  core_surfaces <- text[c("README", "article")]
+  # The README routes readers to the specialist guide instead of duplicating it.
+  expect_match(text$README, "mfrmr-portable-calibration.html", fixed = TRUE)
+  core_surfaces <- text["article"]
   for (surface in core_surfaces) {
     expect_match(surface, "RSM", fixed = TRUE)
     expect_match(surface, "PCM", fixed = TRUE)
@@ -659,7 +661,7 @@ test_that("public documentation surfaces share the bounded calibration wording",
     expect_match(surface, "GPCM", fixed = TRUE)
     expect_match(surface, "JML", fixed = TRUE)
   }
-  expect_match(text$README, "mfrm_calibration_capabilities()", fixed = TRUE)
+  expect_match(text$article, "mfrm_calibration_capabilities()", fixed = TRUE)
   expect_match(
     text$article,
     "score_mfrm_calibration(calibration, new_rows)",

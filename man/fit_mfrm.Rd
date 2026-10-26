@@ -57,10 +57,13 @@ fit_mfrm(
   jml_correction_sampling = c("fixed_rosters", "random_rosters"),
   gpcm_mml_start = NULL,
   repeated_ratings = c("review", "independent"),
-  centering_scope = c("facet", "remainder"),
+  centering_scope = c("facet", "remainder", "anchor_origin"),
   fit_scope = c("full", "comparisons"),
   comparison_review = NULL,
-  mml_accuracy_control = NULL
+  mml_accuracy_control = NULL,
+  population_sd = NULL,
+  jml_penalty = c("none", "jeffreys"),
+  progress = FALSE
 )
 
 \method{summary}{mfrm_cml_fit}(object, ...)
@@ -103,7 +106,9 @@ remain visible in the data-support review. A zero-count boundary category
 is retained as review evidence. With \code{keep_original = TRUE}, however, an
 unobserved internal category in a polytomous fitted ladder creates an
 unsupported adjacent-step contrast and fitting stops before optimization
-with a structured category-support error.}
+with a structured category-support error.
+The explicit Jeffreys route below retains empty categories under a
+different estimating equation; it does not certify ordinary finite MLEs.}
 
 \item{rating_min}{Optional minimum category value. Supply this with
 \code{rating_max} when the intended score scale includes unobserved boundary
@@ -200,7 +205,10 @@ Use columns \code{Facet}, \code{Level}, \code{Group}, and \code{GroupValue}. Per
 constraints require JML.}
 
 \item{noncenter_facet}{One facet to leave non-centered (default \code{"Person"}).
-Other facets use the zero-sum convention selected by \code{centering_scope}.}
+Other facets use the convention selected by \code{centering_scope}.
+To estimate a cohort mean while leaving an anchored RSM/PCM facet
+uncentered, also set \code{population_formula = ~ 1} and \code{population_sd};
+see \strong{Anchor origin and cohort means}.}
 
 \item{dummy_facets}{Facets to fix at zero.}
 
@@ -259,7 +267,12 @@ substantive analysis without an explicit computational protocol.}
 \item{reltol}{Portable tolerance setting for the initial optimizer stage.
 For two-family fixed-grid EM, omit this argument and use \code{em_score_tol}.
 Adaptive two-family direct MML uses \code{reltol} and the direct optimizer's
-gradient check.
+gradient check. New two-family adaptive fits cap the ordinary total-gradient
+review tolerance at \code{N * 1e-6}, where N is the number of fitted Persons;
+a stricter ordinary tolerance is retained. This aligns optimizer finishing
+with the subsequent per-Person score check. The rule is recorded in the
+fitted controls; older saved fits retain their recorded review convention.
+Curvature, derivative and integration checks remain separate.
 The default is \code{1e-9}. For BFGS this is passed as \code{reltol}; for L-BFGS-B
 it is mapped to \code{factr} and \code{pgtol}, whose actual values are recorded in
 the fit. When this setting is at least as strict as the public default
@@ -268,6 +281,15 @@ terminal-gradient review triggers a bounded warm-started polish ladder.
 The best non-worsening stage under the recorded selection rule is
 retained. Requested and selected-stage settings remain in \code{fit$summary},
 and the complete stage history remains in \code{fit$opt$optimizer_polish}.
+Ordinary additive RSM/PCM JML without shrinkage can finish a remaining
+stall with at most three sparse Newton steps from the exact likelihood
+information. Each step must reduce the gradient without likelihood loss
+beyond roundoff, pass its linear-solve check and move no coordinate by more
+than one logit. Extreme Persons, nonpositive information and failed
+proposals retain their diagnostic state. The final stage is labelled
+\code{jml_information_polish}, with method \code{Newton}, \code{InformationSteps} and
+\code{InformationSolveResidual}. This does not correct JML bias or qualify
+interval coverage; the original terminal-gradient criterion still applies.
 If ordinary polishing still stalls, fixed-grid RSM/PCM/GPCM MML fits
 (including estimated population parameters) or adaptive GPCM MML fits
 with a fixed population can use one local curvature step to restart the
@@ -432,15 +454,18 @@ rejecting a trial does not establish a parameter boundary or impose a
 discrimination upper limit.
 Adaptive fits with nonlinear coordinates have no completed probability-
 map identification audit; GPCM also lacks an adaptive slope-boundary audit.
-These fits remain review-only for formal parameter inference. ConQuest exports
-currently require fixed integration.
+Their overall \code{InferenceReady} flag remains false. Supported native-location
+and RSM/PCM population intervals have separate source and numerical checks;
+see the MML integration workflow section below and \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}.
+Available intervals retain their asymptotic assumptions and coverage cautions.
+ConQuest exports currently require fixed integration.
 \code{"auto"} first fits the fixed grid at \code{quad_points}, then checks every
 Person's log marginal likelihood, EAP and posterior SD against two adaptive
 orders. It also checks the change in the full marginal gradient and its
 absolute maximum at the retained and finer rules. If any criterion fails,
 it warm-starts adaptive refits at the orders in \code{mml_accuracy_control}.
-It requires ordinary full direct MML (RSM, PCM or one-slope-family GPCM),
-with no checkpoint. Population regression, anchors and interactions retain
+This fixed-to-adaptive sequence applies to ordinary full direct MML
+(RSM, PCM or one-slope-family GPCM), with no checkpoint. Population regression, anchors and interactions retain
 their existing model restrictions. On success the resolved fixed/adaptive
 rule and order control all subsequent fit calculations; inspect
 \code{fit$config$mml_accuracy} for controls, stage history and final Person
@@ -451,7 +476,47 @@ settings are preserved for replay; explicit sensitivity refits use the
 resolved rule at each requested order. If optimization fails or all
 refinement orders are exhausted, an error of class
 \code{mfrmr_mml_accuracy_error} carries \code{history}, \code{control} and the last
-parameter vector instead of returning a fit.}
+parameter vector instead of returning a fit.
+In current errors (\code{provenance_version = 2}), \code{last_candidate} holds the
+last returned optimizer vector, its parameter-block names and sizes, its
+matching \code{config}, and its stage diagnostics. These are free optimization
+coordinates, not a table of facet estimates or a precision-qualified fit.
+\code{last_attempt} records the final attempted stage and failure phase; it may
+describe a later failed optimization. \code{last_integration} and
+\code{last_quad_points} now describe \code{last_parameters}, not that later attempt.
+If no optimizer returned, \code{last_candidate} is NULL, \code{parameter_source} is
+\code{"initial_values"}, and the integration aliases are NA. Initial values are
+retained separately as \code{initial_parameters}. Earlier saved errors lack
+this provenance version; their integration aliases can describe the failed
+attempt rather than the retained vector. Inspect their stage history.
+Capture the condition with \code{tryCatch(fit_mfrm(...), mfrmr_mml_accuracy_error = function(e) e)} and inspect both records.
+Saving the condition preserves the values and reasons without converting
+unsuccessful accuracy checks into a successful model fit.
+
+For two-family GPCM, \code{"auto"} instead preserves the requested engine:
+\code{mml_engine="em"} uses fixed integration and \code{mml_engine="direct"}
+uses adaptive integration at every stage. Each refit retains the existing
+neutral EM start or the specified adaptive \code{gpcm_mml_start} policy;
+no cross-order warm start or engine switch is introduced. The default
+hard ceiling is 241 points, including the \code{2*q-1} reference checks.
+Person log marginal likelihood, EAP and posterior SD differences must
+pass, together with the existing two-family local-information and
+stationarity checks described in \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}. This conservative
+automatic route therefore requires more than delivery of a point estimate.
+A sole quadrature-sensitivity failure or inaccurate Person moments causes
+refinement; another failed information, convergence or model check stops
+with its own reason. It does not automatically diagnose a boundary.
+In two-family errors, \code{last_candidate$accuracy} retains available checks
+and Person comparisons. If fitting failed before a candidate was returned,
+\code{parameter_source="unavailable"} and \code{last_parameters=NULL}; there is no
+single initial vector to report for a multi-start policy. No two-family
+global optimum or interval-coverage guarantee follows from auto success.
+The latest successful automatic fit can reuse its complete qualification
+for subsequent two-family intervals in the same R session, provided the
+entire fit, information-memory budget and numerical backend are unchanged.
+Source and result retention is bounded by that budget. Warning-producing
+or refused qualification is not reused.
+This transient cache is not saved in the fit; a new session recomputes.}
 
 \item{category_policy}{Optional explicit category choice: \code{"collapse"}
 maps gaps in the observed categories to consecutive scores;
@@ -494,7 +559,8 @@ variation in their ability composition; neither estimates the variance
 from reassessing the same Persons at fixed abilities. Omit this argument
 when no correction is requested.}
 
-\item{gpcm_mml_start}{Initial values for two-family adaptive direct MML only.
+\item{gpcm_mml_start}{Initial values for two-family adaptive direct MML,
+including its \code{mml_integration="auto"} refinement stages.
 \code{NULL} (default) selects \code{"neutral_em"}: optimize from both the neutral vector
 and a same-data fixed-grid EM vector, and select the lowest finite adaptive
 negative log likelihood, retaining its convergence status. \code{"neutral"}
@@ -539,9 +605,13 @@ explicitly there. It is not supported by the two-family GPCM route.}
 \item{centering_scope}{\code{"facet"} (default) centers each declared facet across
 all its levels, including direct anchors and group totals. \code{"remainder"}
 reproduces the earlier convention that centers only levels outside direct
-and group constraints. It does not change \code{noncenter_facet}, the population
-model, or category steps. Unsupported specialized routes reject an explicit
-setting. See \strong{Anchors and scale constraints}.}
+and group constraints. For ordinary additive RSM/PCM JML,
+\code{"anchor_origin"} lets direct or group anchors replace centering on their facet;
+select an unanchored, active \code{noncenter_facet}. Other facets remain centered.
+This option excludes comparison-only fitting. None of
+these conventions changes the population model or category steps.
+Unsupported specialized routes reject an explicit setting.
+See \strong{Anchors and scale constraints}.}
 
 \item{fit_scope}{\code{"full"} (default) fits the ordinary model and retains its
 identification guards. \code{"comparisons"} explicitly fits only the targets in
@@ -552,7 +622,26 @@ identification guards. \code{"comparisons"} explicitly fits only the targets in
 Pass the review's \code{fit_arguments} and the same original ratings.}
 
 \item{mml_accuracy_control}{Named list used only with
-\code{mml_integration = "auto"}. Defaults are \code{adaptive_points = c(31, 61, 121)}
+\code{mml_integration = "auto"}. To specify only a ceiling, use
+\code{list(max_points=121)}. It bounds every quadrature rule used by automatic
+fitting and its acceptance checks, including reference rules; it does not
+bound optimizer iterations, total runtime or later separately requested
+inference/scoring. Orders increase automatically and stop at the first
+accepted stage. \code{max_points} must be an integer of at least 7 for ordinary
+MML, or 3 for two-family GPCM; requested rules must be representable.
+Unused finer rules are not constructed. A ceiling and an explicit
+\code{adaptive_points} vector cannot both be supplied. An explicitly supplied
+\code{quad_points} must fit within the ceiling (including its finer reference
+for two-family fitting); an omitted starting order is reduced if needed.
+For example, the two-family ceiling 121 permits fitting/checking orders
+31/61 and 61/121. A ceiling of 100 permits 31/61 and 50/99, preserving the
+same reference-order formula. Reaching the ceiling without passing all
+criteria raises \code{mfrmr_mml_accuracy_error}, retaining the attempted rules
+and source-bound candidate; it does not relax tolerances or return a
+precision-qualified fit.
+
+For ordinary MML without a ceiling, the retained defaults are
+\code{adaptive_points = c(31, 61, 121)}
 (strictly increasing integer refit orders, each checked against \code{2*q+1}),
 \code{loglik_tol = 1e-7} (maximum absolute log-marginal difference per Person),
 \code{posterior_tol = 1e-6} (maximum absolute EAP or posterior-SD difference,
@@ -566,7 +655,44 @@ or a guarantee of a global optimum or interval coverage. Weak curvature
 can amplify small gradient errors. Hessian precision and formal inference
 require their separate checks; automatic integration does not qualify
 previously unavailable identification or inference. \code{maxit} applies to
-each fit, so refinement increases total computation.}
+each fit, so refinement increases total computation.
+Two-family controls instead default to \code{max_points=241},
+\code{loglik_tol=1e-7} and \code{posterior_tol=1e-6}, with \code{2*q-1} reference rules.
+They do not accept \code{adaptive_points} or \code{gradient_tol}: their established
+engine-specific stationarity and information criteria are retained.
+Passing component-interval checks at an order does not ensure that its
+Person likelihood and posterior moments meet these additional tolerances.
+A prerequisite check that stops two-family refinement records
+\code{history$Status = "check_refused"}. Inspect the failed rows of
+\code{last_candidate$accuracy$checks}; this status does not identify the cause.
+A failed higher-order information check also stops refinement. Earlier
+saved histories use \code{"nonintegration_refusal"} for the same stopping rule;
+neither label establishes a boundary or whether more points would help.}
+
+\item{population_sd}{Optional positive residual population SD, fixed during
+estimation. \code{NULL} preserves the existing behavior: an active population
+model estimates its residual variance; RSM/PCM without a population
+formula uses N(0,1).
+A numeric value requires \code{population_formula}, full direct RSM/PCM MML,
+and no interactions. It does not activate a population model implicitly.
+Supplied SD and anchor values are treated as fixed, without source-error
+propagation. GPCM and other estimation engines do not support this option.}
+
+\item{jml_penalty}{\code{"none"} (default) preserves the ordinary estimator.
+Explicit \code{"jeffreys"} with additive RSM/PCM \code{method = "JML"} selects
+canonical information-penalized joint estimation. It returns a separate
+\code{mfrm_jeffreys_fit} with point estimates and numerical checks, without
+ordinary SEs or FACETS diagnostics. See \strong{Jeffreys-penalized JML}.}
+
+\item{progress}{Logical; \code{TRUE} displays a progress indicator with elapsed
+time. Two-family GPCM reports EM iterations, adaptive starts, quadrature
+stages and precision checks; direct optimization reports objective
+evaluations. Other routes may provide only a coarse phase display.
+Iteration/stage limits are budgets, not percent completion or a remaining-
+time forecast: convergence and required refinement are not known in advance.
+Display follows \code{cli} console settings and is cleared on return, error or
+interruption. The default is silent; it does not change numerical controls
+or become part of saved calibration/replay settings.}
 
 \item{object, x}{A fitted CML result for its summary, print, covariance and
 log-likelihood methods, or a comparison-only result for its summary and
@@ -575,6 +701,9 @@ print methods.}
 \item{...}{Unused.}
 }
 \value{
+With \verb{method = "JML", jml_penalty = "jeffreys"}, a separate
+\code{mfrm_jeffreys_fit}; see \code{\link[=summary.mfrm_jeffreys_fit]{summary.mfrm_jeffreys_fit()}} for its point tables,
+probabilities, numerical checks and unsupported inference.
 With \verb{method = "CML", fit_scope = "full"}, an \code{mfrm_cml_fit} with structural estimates,
 joint \code{covariance} and \code{information} (missing where unavailable), \code{person_totals}, \code{checks}, preparation,
 configuration and optimizer controls; see "Conditional maximum likelihood".
@@ -681,9 +810,10 @@ Each data row is one rating. Supply its column names with \code{person},
 The default is \code{method = "MML"} (marginal maximum likelihood).
 The \code{RSM} / \code{PCM} branches are the package's many-facet Rasch-family
 reference route. \code{GPCM} adds positive, level-specific discriminations to
-one facet. MML permits a different facet to supply category steps;
-JML requires the same facet for both roles. See "GPCM model and
-inference" below for the current limits on uncertainty and comparisons.
+one facet, or provisionally to two facets under MML. With one family,
+MML permits a different facet to supply category steps; JML requires the
+same facet for both roles. Start with "Choose a model and its population"
+below; the model-specific sections explain uncertainty and comparisons.
 In the example, \code{ratings} stores the data and \code{fit} stores the fitted model.
 The loading line reads an existing packaged synthetic dataset; you do not
 need to generate ratings or create an empty object first.
@@ -709,6 +839,42 @@ re-ratings require a suitable dependence model. Adding an estimated occasion
 facet changes the response model and is appropriate only when intended.
 Repeated ratings do not increase the number of independent Persons.
 }
+\section{Choose a model and its population}{
+
+For the \code{Rater} and \code{Criterion} columns in the Examples, the model choices
+are below. A slope family gives one discrimination per level of its owner;
+"two families" does not mean two ability dimensions or just two slopes.
+No Q matrix is required or accepted by this unidimensional API.\tabular{llll}{
+   Model \tab Step owner \tab Slope owner \tab MML population \cr
+   \code{RSM} \tab Shared \tab Fixed at one \tab Fixed N(0,1) \cr
+   \code{PCM} \tab \code{Criterion} \tab Fixed at one \tab Fixed N(0,1) \cr
+   One-family \code{GPCM} \tab \code{Criterion} \tab \code{Criterion} \tab Estimated mean and SD \cr
+   Two-family \code{GPCM} \tab \code{Rater} \tab \code{Criterion}, then \code{Rater} \tab Explicit fixed N(0,1) \cr
+}
+
+
+Supply these owner names through \code{step_facet} and \code{slope_facet}; for two
+families use \code{slope_facet = c("Criterion", "Rater")}. The first three rows
+show their default MML populations. Two-family settings must be chosen
+explicitly; see "Two slope families" below. One-family slopes are relative.
+
+Changing only \code{model} therefore need not hold the population assumptions
+constant. For RSM/PCM, estimating its mean and SD requires
+\code{population_formula = ~ 1} and \code{person_data = unique(ratings["Person"])}.
+This is a model choice, not a universal recommendation. Fixing both the
+population SD and the one-family GPCM slope geometric mean to one is a
+narrower model, not just an alternative reporting scale.
+
+Start with the complete RSM Examples. For PCM, add \code{step_facet} and change
+\code{model}; for one-family GPCM, also explicitly choose \code{slope_facet} and
+read the population choice above. Keep the data-column and rubric arguments.
+The complete two-family call and its narrower output workflow are in
+\code{vignette("mfrmr-gpcm-scope", package = "mfrmr")}, under "A provisional
+two-family workflow". Its zero-based scores and ordered owners require
+the explicit preparation described there; changing \code{slope_facet} alone
+is insufficient.
+}
+
 \section{Choose an estimator and the result you need}{
 
 The ordinary worked example uses RSM/MML. Choose the model and estimation
@@ -1205,6 +1371,58 @@ across non-person facet levels (\code{"sparse"} < 10, \code{"marginal"} < 30,
 not guarantees of precision, interval coverage or sample adequacy.
 }
 
+\section{Jeffreys-penalized JML}{
+
+\code{jml_penalty = "jeffreys"} minimizes
+\eqn{-\ell(\beta)-\tfrac12\log|I(\beta)|} in the actual affine free
+canonical coordinates, with anchor offsets retained. Here \eqn{I} is the
+full joint expected response information, including free Person parameters.
+The optimizer starts at the free-coordinate origin, uses BFGS with
+\code{reltol = min(reltol, 1e-14)} and the requested \code{maxit}, and requires maximum
+penalized gradient at most \code{1e-4}, positive information with checked solves,
+and numerically interior category probabilities. It uses no probability
+clipping, parameter box, ridge or ordinary extreme-score replacement.
+If BFGS stops on objective change before satisfying the gradient criterion,
+at most three local Newton steps use the analytic penalized Jacobian. Steps
+must be numerically identified, at most one in every free coordinate, not
+increase the same objective and reduce the full penalized gradient; backtracking is
+bounded. \code{checks$polish} records an attempted finish. The original gradient
+criterion and failure status remain in force if finishing fails.
+
+The supported scope is an identified additive RSM/PCM design, unit weights,
+explicitly declared \code{rating_min} and \code{rating_max}, and unchanged full score
+coding (\code{category_policy = "preserve"}). Direct finite anchors and ordinary
+centering conventions are supported; group anchors, interactions, GPCM,
+population models, shrinkage, corrected-JML arguments and attached ordinary
+diagnostics are not. \code{optimizer} must be \code{"auto"} or \code{"BFGS"}.
+Repeated cells require the explicit independent-occasion declaration when
+substantively justified. Missing categories and constant outcomes are
+retained on the declared rubric; rank deficiency is still refused.
+
+\code{\link[=summary.mfrm_jeffreys_fit]{summary.mfrm_jeffreys_fit()}} describes Person, facet and step points,
+category probabilities and numerical diagnostics. For common-plan Person
+expected scores use \code{\link[=fair_average_table]{fair_average_table()}} with \code{reference_plan}, followed
+by \code{\link[=confint.mfrm_fair_average]{confint.mfrm_fair_average()}} for experimental refit or delta intervals. Calibration,
+scoring and generating fits must all select this estimator; every replicate
+re-estimates its calibration and anchors using the same equation. The ordinary
+delta derivative and inverse information SEs do not describe this estimator;
+its delta route uses analytic penalized score/anchor derivatives and shared
+categorical response covariance. It is not an inverse-curvature interval.
+Parameter covariance, Wald intervals, AIC, likelihood-ratio inference,
+ordinary FairM/FairZ diagnostics and FACETS export are not supplied.
+
+This is an opt-in alternative to ordinary FACETS-oriented JML, separate from
+both the generator-only Jeffreys option and corrected GPCM. Firth's (1993)
+fixed-dimensional canonical bias result does not establish unbiased nonlinear
+expected scores, coverage, or incidental-parameter consistency when the number
+of Person parameters grows. The binomial finiteness theorem of Kosmidis and
+Firth (2021) is not asserted as a general many-facet PCM theorem. A qualified
+local stationary point does not establish a global optimum. Small-sample,
+sparse and weak-link bias/coverage remain to be qualified independently.
+References: Firth (1993), \doi{10.1093/biomet/80.1.27}; Kosmidis and Firth
+(2021), \doi{10.1093/biomet/asaa052}.
+}
+
 \section{Estimator choice and the JML incidental-parameter caveat}{
 
 Joint maximum likelihood (\code{method = "JML"} / \code{"JMLE"}) estimates
@@ -1273,6 +1491,43 @@ General GPCM inference uses MML. JML remains a point-estimation/FACETS
 comparison route, not a fixed-exposure truth-centered Wald procedure.
 Third-party CML fits can still be imported with \code{\link[=import_erm_fit]{import_erm_fit()}}.
 }
+}
+
+\section{MML integration workflow}{
+
+Choose integration together with the result you need. The default remains
+\code{mml_integration = "fixed"}, \code{quad_points = 31}; this order does not certify
+accuracy. \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} compares refits at specified orders.
+Review changes in estimates and uncertainty before reporting a fixed-grid fit.
+
+For ordinary full direct RSM/PCM or one-family GPCM fitting, \code{"auto"} checks
+the fitted response patterns and refines integration when needed. Read
+\code{fit$config$mml_accuracy} and the resolved rule in
+\code{fit$config$estimation_control$mml_integration}. Downstream support depends
+on this resolved rule, which can be adaptive even when the initial rule was
+fixed. Check the intended output's model and integration scope before fitting:
+\itemize{
+\item Ordinary fixed-N(0,1) RSM/PCM model and sandwich facet intervals require
+fixed integration, as do joint cell intervals requested with \code{interaction}
+and independent anchor-source propagation. See \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}.
+\item Native-location intervals for estimated-normal RSM/PCM and one-family
+GPCM accept fixed or adaptive direct MML within their stated scope.
+RSM/PCM population-coefficient and residual-variance intervals use the same
+qualification; see \code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}. GPCM latent-regression
+location intervals are unavailable.
+\item Automatic integration does not support EM/hybrid engines, checkpoints,
+comparison-only fitting or two slope families. ConQuest overlap export
+currently requires a resolved fixed rule.
+}
+
+Overall fit readiness, interval eligibility and coverage are different
+statements. A supported target-specific interval can have \code{CIEligible = TRUE}
+while its unchanged source fit has \code{InferenceReady = FALSE}. Inspect the
+interval's \code{Status}, \code{checks}, \code{numerical_checks} and cautions. Eligibility
+means the procedure's checks passed; it does not establish global
+identification, nominal finite-sample coverage or availability of other
+inference procedures. Automatic likelihood/gradient/posterior checks also
+do not replace the interval's full-information and finer-order review.
 }
 
 \section{MML inference conditions}{
@@ -1508,7 +1763,9 @@ reconstruct transformed terms only from retained person data that reproduce
 the training design; otherwise scoring requests a new calibration fit.
 
 For an intercept-only model, \code{population_formula = ~ 1} estimates a single
-population mean and variance. Training still requires a one-row-per-person
+population mean and variance by default. In supported RSM/PCM direct MML,
+\code{population_sd = 1} instead fixes the SD and estimates only the mean.
+Training still requires a one-row-per-person
 ID table in \code{person_data}. Adjusting these two moments retains a normal
 population shape; it does not learn skewness or establish that the training
 population represents the people who will receive scores. New-Person
@@ -1531,18 +1788,63 @@ Its result has a \code{vcov()} method on coefficient/log-variance coordinates;
 the ordinary fit summary does not acquire automatic intervals.
 The internal MML observed-information calculation includes
 \eqn{(\boldsymbol{\beta}, \log\sigma^2)} when computing joint covariance
-for structural-parameter SEs. Population intervals for GPCM remain
+for structural-parameter SEs. With explicit \code{population_sd}, variance is
+fixed and its log-variance coordinate is excluded from that covariance;
+coefficient and structural uncertainty are conditional on the supplied SD.
+Population intervals for GPCM remain
 unavailable through this new helper. Sampling coverage is not established
 by numerical checks. Treat the population summary tables as descriptive
 point estimates; use the separately saved interval result when reporting
 the experimental approximation and its limitations.
 
-The implemented latent-regression identification requires
+The default latent-regression identification uses
 \code{noncenter_facet = "Person"}. Without anchors, this sum-to-zero-centers
 all non-Person facets. With anchors, \code{centering_scope = "facet"} includes
 their contributions in each facet's zero sum; \code{"remainder"} retains the
 earlier restriction on the unconstrained remainder. The population model
-is never changed implicitly to accommodate anchors.
+is never changed implicitly to accommodate anchors. The restricted
+anchor-origin alternative below uses an explicitly fixed population SD.
+}
+
+\section{Anchor origin and cohort means}{
+
+When an old rater panel is anchored, leaving Rater uncentered allows new
+raters to have a nonzero mean severity. Fixing the Person mean to zero can
+nevertheless distort estimates when the receiving cohort differs. For
+RSM/PCM direct MML, \code{population_formula = ~ 1} with \code{population_sd = 1}
+estimates the receiving mean on an explicitly fixed-SD normal population.
+Set \code{noncenter_facet = "Rater"} and supply a retained direct Rater anchor.
+An anchor on another facet does not resolve the mean/Rater alias.
+The complete constrained design must still have full rank; one anchor is
+sufficient only in an otherwise identified design. Group anchors, dummy
+facets, population covariates and interactions are outside this alternative.
+
+For example, begin with the bundled ratings and an externally supplied
+anchor value (0.3 below is illustrative, not a validated calibration):
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{ratings <- load_mfrmr_data("example_core")
+fixed_rater <- data.frame(Facet = "Rater", Level = "R01", Anchor = 0.3)
+cohort_fit <- fit_mfrm(
+  ratings, person = "Person", facets = c("Rater", "Criterion"), score = "Score",
+  model = "RSM", method = "MML", anchors = fixed_rater,
+  noncenter_facet = "Rater", population_formula = ~ 1,
+  person_data = unique(ratings["Person"]), population_sd = 1
+)
+summary(cohort_fit)$population_coefficients # Estimated receiving-cohort mean
+summary(cohort_fit)$population_overview     # Fixed versus estimated variance
+}\if{html}{\out{</div>}}
+
+Use \code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}} for the mean and \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}
+for rater uncertainty after their independent numerical checks. The fixed
+variance remains visible without an inferential CI. Covariance includes
+all free calibration coordinates and the population mean, but excludes
+uncertainty in the supplied anchors and SD. No general coverage guarantee
+follows from agreement with another program.
+
+Other facets retain their declared centering. Rater anchors do not establish
+item invariance: a changed item pool or its difficulty distribution can
+change the mean's substantive interpretation. Report the anchored panel,
+item/criterion reference, fixed SD, and assumed stability across cohorts.
 }
 
 \section{Anchors and scale constraints}{
@@ -1577,18 +1879,73 @@ with \code{anchor_policy = "silent"}.
 Use \code{centering_scope = "remainder"} to reproduce earlier partial anchoring:
 the ungrouped, unanchored levels sum to zero and a singleton is fixed at zero.
 Saved results retain their original constraints; reloading does not migrate
-estimates. Changing conventions requires refitting. Neither convention
-automatically disables centering as FACETS can do. Match \code{noncenter_facet},
-the response design and population assumptions for TAM/ConQuest comparisons;
-the anchor value alone does not establish equivalence.
+estimates. Changing conventions requires refitting.
+
+For ordinary additive RSM/PCM JML, \code{centering_scope = "anchor_origin"}
+implements the FACETS convention that a directly or group-anchored facet is not
+additionally centered. With a Person anchor, choose an unanchored facet such
+as \code{noncenter_facet = "Rater"}; other unanchored facets remain centered.
+A Rater anchor can instead retain the default noncenter Person facet.
+The noncenter facet must be active and have neither direct nor group anchors.
+A single direct anchor or group mean supplies
+its facet's origin; multiple fixed values can impose additional substantive
+constraints. Without Person group constraints, if all retained responses of
+the directly anchored Persons are
+at the same declared minimum or maximum, fitting stops before optimization,
+without requiring \code{lpSolve}: free Person and noncenter-facet locations can
+diverge together while preserving every fixed value. FACETS 4.5.0 can report
+finite values for such inputs, but these are not an ordinary finite JML
+solution and are not reproduced by this route. An extreme anchor does not
+alone trigger this rule when another Person anchor supplies interior or
+opposite-boundary responses. Other detected joint additive recession
+directions affecting calibration also stop this route; passing the checks
+does not certify every boundary configuration. General extreme-score
+exclusion and every FACETS option are not equivalent. See the FACETS
+\href{https://www.winsteps.com/facetman64/centerfacet.htm}{centering specification}.
+Match category support, signs, the response design and population assumptions
+for TAM/ConQuest comparisons; an anchor value alone does not establish
+equivalence. All these routes condition on supplied anchor values and do not
+propagate error from an external estimated calibration.
+
+If an old zero-sum panel is fully anchored and new raters are added,
+whole-facet centering also forces the new raters to sum to zero. This is
+an additional constraint, not evidence that the new panel has the same
+average severity. In supported fixed-population MML models, choosing
+\code{noncenter_facet = "Rater"} can leave that facet uncentered. This is not
+a general remedy: only one facet can be noncentered. The RSM/PCM
+intercept-only, fixed-SD alternative is described above. Other latent
+regression, including the usual one-family GPCM population model, requires
+\code{noncenter_facet = "Person"}. Review the complete identification and
+population assumptions before using anchors to compare cohorts.
 
 A group target is an unweighted arithmetic mean of its declared levels,
 including any directly anchored members. It is not weighted by rating
-counts. In MML, individual abilities are integrated out: Person direct and
+counts. FACETS \code{G} supplies per-element contributions to a group total;
+convert their arithmetic mean to one repeated \code{GroupValue}. For example,
+contributions 0.2 and 1.0 become \code{GroupValue = 0.6} for both members.
+Unequal \code{GroupValue} entries are conflicting targets, not contributions;
+use \code{anchor_policy = "error"} to stop on review issues. FACETS group 0
+denotes direct anchors and must be translated to \code{anchors}; mfrmr treats
+\code{Group = "0"} as an ordinary group identifier. The FACETS \code{X} convention
+that removes extreme members is not applied automatically. See
+\href{https://www.winsteps.com/facetman64/elements.htm}{FACETS element specifications}.
+
+Group-origin support retains constrained maximum likelihood, not every
+native FACETS update. Matched interior RSM/PCM examples agree when a single
+group only sets the origin. With additional restrictions, FACETS 4.5.0 can
+satisfy the group means while leaving a nonzero likelihood derivative along
+a constraint-preserving direction. mfrmr optimizes that likelihood rather
+than reproducing those numerical differences. Matching means alone does
+not establish parameter, SE or interval equivalence; group-anchor extreme
+extrapolation remains unsupported. In MML, individual abilities are
+integrated out: Person direct and
 group anchors are unsupported and rejected even with \code{anchor_policy = "silent"}. Sharing Persons across raters requires no fixed Person values.
 
-Uncertainty from estimating supplied anchor values is not propagated.
-Downstream SEs and intervals condition on those values and retain the
+Ordinary fit summaries condition on supplied anchor values. Independent
+source-anchor covariance can be propagated explicitly in the bounded
+fixed-SD RSM/PCM route through \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} and
+\code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}; it is not added automatically.
+By default, downstream SEs and intervals condition on those values and retain the
 selected estimator's other limitations. A missing SE for a fixed value
 does not mean its source calibration was error-free. See
 \link{mfrmr_linking_and_dff} for the theoretical background and a loading-first

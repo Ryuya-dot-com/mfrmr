@@ -96,3 +96,59 @@ test_that("pattern keys distinguish response, weights, missingness, owners and c
   collapsed <- mfrmr_make_adaptive_mml_evaluator(b,a$config,a$sizes,7L)(a$par)
   expect_gt(abs(independent$value-collapsed$value),.01)
 })
+
+test_that("fused accuracy summaries preserve Person moments and refinement criteria", {
+  for (model in c("RSM", "PCM", "GPCM")) for (population in c(FALSE, TRUE)) {
+    a <- adaptive_pattern_problem(model, population)
+    # Retain repeats but also distinguish missing rows, weights and observations.
+    rows <- seq_along(a$idx$person)
+    a$idx <- mfrmr_subset_observation_indices(a$idx, rev(rows[-which(a$idx$person == 8L)[1]]))
+    a$idx$weight[which(a$idx$person == 7L)[1]] <- 0
+    params <- expand_params(a$par, a$sizes, a$config)
+    review <- mfrmr_adaptive_quadrature_review(a$idx, a$config, params,
+      gauss_hermite_normal(15L), a$prep$levels$Person, c(3L, 7L))
+    expect_true(all(review$Status == "computed"))
+    low <- review[review$AdaptiveNodes == 3L, ]
+    high <- review[review$AdaptiveNodes == 7L, ]
+    values <- lapply(c(3L, 7L), function(q) {
+      full <- mfrmr_make_adaptive_mml_evaluator(a$idx, a$config, a$sizes, q,
+        include_person_summaries = TRUE)(a$par)
+      plain <- mfrmr_make_adaptive_mml_evaluator(a$idx, a$config, a$sizes, q)(a$par)
+      expect_identical(full[c("value", "gradient")], plain)
+      expect_identical(full$per_person$PersonIndex, seq_along(a$prep$levels$Person))
+      expected <- review[review$AdaptiveNodes == q,
+        c("AdaptiveLogMarginal", "AdaptiveEAP", "AdaptivePosteriorSD")]
+      expect_equal(unname(as.matrix(full$per_person[, -1])),
+        unname(as.matrix(expected)), tolerance = 1e-11)
+      expect_equal(sum(full$per_person$LogMarginal), -full$value, tolerance = 1e-11)
+      full
+    })
+    for (mode in c("fixed", "adaptive")) {
+      cfg <- a$config
+      cfg$estimation_control <- list(mml_integration = mode,
+        quad_points = if (mode == "fixed") 15L else 3L)
+      control <- mfrmr_mml_accuracy_control()
+      actual <- mfrmr_check_mml_accuracy(list(par = a$par, convergence = 0L),
+        a$idx, cfg, a$sizes, a$prep$levels$Person, 3L, control)
+      prefix <- if (mode == "fixed") "Fixed" else "Adaptive"
+      for (field in c("LogMarginal", "EAP", "PosteriorSD")) {
+        expected <- pmax(abs(low[[paste0(prefix, field)]] - high[[paste0("Adaptive", field)]]),
+          abs(low[[paste0("Adaptive", field)]] - high[[paste0("Adaptive", field)]]))
+        expect_equal(actual$per_person[[paste0(field, "Difference")]], expected,
+          tolerance = 1e-11)
+      }
+      gradient <- if (mode == "adaptive") values[[1]]$gradient else
+        mfrm_grad_mml_core(params, compute_base_eta(a$idx, params, cfg),
+          a$idx, cfg, a$sizes, gauss_hermite_normal(15L))
+      expected <- max(abs(gradient - values[[2]]$gradient),
+        abs(values[[1]]$gradient - values[[2]]$gradient))
+      expect_equal(unname(actual$metrics["MaxGradientDifference"]), expected,
+        tolerance = 1e-11)
+      expect_identical(actual$passed, all(actual$metrics <=
+        c(control$loglik_tol, rep(control$posterior_tol, 2), rep(control$gradient_tol, 2))))
+    }
+  }
+  short <- mfrmr_subset_observation_indices(a$idx, which(a$idx$person != 8L))
+  expect_error(mfrmr_check_mml_accuracy(list(par = a$par, convergence = 0L),
+    short, a$config, a$sizes, a$prep$levels$Person, 3L, control), "Person alignment")
+})

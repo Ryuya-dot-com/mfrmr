@@ -87,26 +87,23 @@ test_that("PCA grouped scores and scree views retain non-colour distinctions", {
     expect_identical(payload$table$PC1,pca$scores$PC1)
     expect_identical(payload$table$PC2,pca$scores$PC2)
   }
-  # Observe registered S3 methods so earlier generic dispatch cannot bypass
-  # the spy. Omitted scree points must remain open and match the legend.
+  # Observe only mfrmr's graphics imports; preserve the standard S3 registry.
   grDevices::pdf(NULL); on.exit(grDevices::dev.off(),add=TRUE)
   plots <- points <- legends <- list()
-  original_plot <- getS3method("plot", "default")
-  original_points <- getS3method("points", "default")
-  withr::defer(registerS3method("plot", "default", original_plot,
-    envir=asNamespace("base")))
-  withr::defer(registerS3method("points", "default", original_points,
-    envir=asNamespace("graphics")))
-  registerS3method("plot", "default", function(...) {
-    plots[[length(plots)+1L]] <<- list(...); original_plot(...)
-  }, envir=asNamespace("base"))
-  registerS3method("points", "default", function(...) {
-    points[[length(points)+1L]] <<- list(...); original_points(...)
-  }, envir=asNamespace("graphics"))
+  local_mocked_bindings(
+    plot = function(...) {
+      args <- list(...)
+      if (length(args) && is.numeric(args[[1]])) plots[[length(plots)+1L]] <<- args
+      graphics::plot(...)
+    },
+    points = function(...) {
+      points[[length(points)+1L]] <<- list(...)
+      graphics::points(...)
+    }, .package = "mfrmr")
   original_legend <- graphics::legend
   local_mocked_bindings(
     legend=function(...) {legends[[length(legends)+1L]] <<- list(...); original_legend(...)},
-    .package="graphics")
+    .package="mfrmr")
   drawn <- plot(pca,type="scores",groups=groups,preset="monochrome",labels=FALSE)
   expect_equal(plots[[1]]$pch,drawn$data$encoding$Shape[match(drawn$data$table$Cluster,drawn$data$encoding$Cluster)])
   expect_identical(legends[[1]]$pch,drawn$data$encoding$Shape)

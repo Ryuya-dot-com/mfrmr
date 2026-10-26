@@ -27,7 +27,7 @@ run_mfrm_facets(
   mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L,
   mml_integration = c("fixed", "adaptive"),
-  centering_scope = c("facet", "remainder")
+  centering_scope = c("facet", "remainder", "anchor_origin")
 )
 
 mfrmRFacets(
@@ -51,7 +51,7 @@ mfrmRFacets(
   mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L,
   mml_integration = c("fixed", "adaptive"),
-  centering_scope = c("facet", "remainder")
+  centering_scope = c("facet", "remainder", "anchor_origin")
 )
 }
 \arguments{
@@ -104,7 +104,8 @@ only when \code{method = "MML"}.}
 \code{"fixed"} (default) or \code{"adaptive"}. Adaptive integration requires the
 direct MML engine.}
 
-\item{centering_scope}{Whole-facet (default) or legacy remainder centering;
+\item{centering_scope}{Whole-facet (default), legacy remainder, or explicit
+direct/group-anchor-origin centering for ordinary additive RSM/PCM JML;
 passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 }
 \value{

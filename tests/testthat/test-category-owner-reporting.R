@@ -185,8 +185,9 @@ test_that("category conversion preserves counts, step values and missing gaps", 
   seen <- character(); title <- graphics::title
   local_mocked_bindings(title = function(main = NULL, ...) {
     seen <<- c(seen, as.character(main)); title(main = main, ...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   grDevices::pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
+  local_graphics_headings(function(main) seen <<- c(seen, as.character(main)))
   plot(x, type = "thresholds")
   expect_false(any(nzchar(seen)))
 })

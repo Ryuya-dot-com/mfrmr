@@ -8,7 +8,7 @@ test_that("plot guide calls resolve without changing the route catalogue", {
   expect_setequal(guide$GGPlot, c("dedicated", "native", "generic", "unavailable"))
   # These result classes inherit the registered plot.mfrm_bundle() method.
   bundle_classes <- c("mfrm_rating_scale", "mfrm_category_curves",
-    "mfrm_bias_interaction", "mfrm_halo_network")
+    "mfrm_bias_interaction", "mfrm_halo_network", "mfrm_rater_network")
   for (i in seq_len(nrow(guide))) {
     call <- str2lang(guide$PlotCall[i])
     fun <- if (identical(call[[1]], as.name("plot"))) {
@@ -156,12 +156,16 @@ test_that("every unavailable guide route refuses even a convertible component", 
   rows <- subset(mfrmr_output_guide("plots"), GGPlot == "unavailable")
   # Valid generic-converter shapes must not bypass a plot-specific refusal.
   for (i in seq_len(nrow(rows))) {
+    call <- str2lang(rows$PlotCall[i])
     p <- mfrmr:::new_mfrm_plot_data(rows$PlotName[i], list(
+      plot = call$type %||% NULL, metric = call$metric %||% NULL,
       table = data.frame(Label = c("A", "B"), Value = c(1, 2)),
       matrix = matrix(1:4, 2)))
-    expect_error(as_ggplot(p), "conversion.*(unavailable|not available)")
-    expect_error(as_ggplot(p, component = "table"), "conversion.*(unavailable|not available)")
-    expect_error(as_ggplot(p, component = "matrix"), "conversion.*(unavailable|not available)")
+    message <- if (rows$InputClass[i] == "mfrm_residual_network")
+      "supports its type = 'matrix' view only" else "conversion.*(unavailable|not available)"
+    expect_error(as_ggplot(p), message)
+    expect_error(as_ggplot(p, component = "table"), message)
+    expect_error(as_ggplot(p, component = "matrix"), message)
   }
 })
 
@@ -232,4 +236,15 @@ test_that("pooled interval guide preserves source intervals through dedicated co
   row <- subset(mfrmr_output_guide("plots"), PlotName == "pooled_facet_intervals")
   expect_identical(row$GGPlot, "dedicated")
   check_plot_guide_route(row, x)
+})
+
+
+test_that("network intervals enter the interval guide without changing visual templates", {
+  guide <- mfrmr_interval_guide()
+  row <- guide[guide$Route == "Binary rater-network coefficient intervals", ]
+  expect_equal(nrow(row), 1L)
+  expect_match(row$PrimaryHelper, "confint(model", fixed = TRUE)
+  expect_match(row$InterpretationBoundary, "estimated-edge uncertainty", fixed = TRUE)
+  expect_no_error(template <- visual_reporting_template())
+  expect_false("Binary rater-network coefficient intervals" %in% unlist(template))
 })

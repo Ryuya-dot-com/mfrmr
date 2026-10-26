@@ -632,6 +632,10 @@ build_curve_tables <- function(curve_spec, theta_grid) {
   }
   for (g in names(curve_spec$groups)) {
     grp <- curve_spec$groups[[g]]
+    group_offset <- grp$predictor_offset %||% predictor_offset
+    if (length(group_offset) != 1L || !is.finite(group_offset)) {
+      stop("Category curves require a finite predictor offset.")
+    }
     slope_val <- if (identical(curve_spec$model, "GPCM")) {
       as.numeric(grp$slope %||% NA_real_)
     } else {
@@ -642,14 +646,14 @@ build_curve_tables <- function(curve_spec, theta_grid) {
     }
     probs <- if (identical(curve_spec$model, "GPCM")) {
       category_prob_gpcm(
-        eta = theta_grid + predictor_offset,
+        eta = theta_grid + group_offset,
         step_cum_mat = matrix(grp$step_cum, nrow = 1L),
         criterion_idx = rep(1L, length(theta_grid)),
         slopes = slope_val,
         slope_idx = rep(1L, length(theta_grid))
       )
     } else {
-      category_prob_rsm(theta_grid + predictor_offset, grp$step_cum)
+      category_prob_rsm(theta_grid + group_offset, grp$step_cum)
     }
     k_vals <- as.numeric(curve_spec$categories)
     expected <- as.numeric(probs %*% matrix(k_vals, ncol = 1))
@@ -664,7 +668,7 @@ build_curve_tables <- function(curve_spec, theta_grid) {
       Model = curve_spec$model,
       CurveGroup = grp$name,
       CurveBasis = curve_basis,
-      PredictorOffset = predictor_offset
+      PredictorOffset = group_offset
     )
     idx_exp <- idx_exp + 1L
     for (k in seq_len(ncol(probs))) {
@@ -683,7 +687,7 @@ build_curve_tables <- function(curve_spec, theta_grid) {
         Category = as.character(curve_spec$categories[k]),
         CurveGroup = grp$name,
         CurveBasis = curve_basis,
-        PredictorOffset = predictor_offset
+        PredictorOffset = group_offset
       )
       idx_prob <- idx_prob + 1L
     }
@@ -1368,7 +1372,7 @@ build_wright_map_data <- function(x,
   }
   hist_data <- if (length(finite_person_estimates) > 0L) {
     # Automatic breaks for one estimate near numerical zero can be subpixel.
-    graphics::hist(finite_person_estimates,
+    hist(finite_person_estimates,
       breaks = if (length(finite_person_estimates) == 1L)
         finite_person_center + c(-0.5, 0.5) else "FD", plot = FALSE)
   } else {
@@ -1672,7 +1676,7 @@ draw_wright_map <- function(plot_data,
   if (!is.finite(hist_max) || hist_max <= 0) hist_max <- 1
 
   graphics::par(mar = c(bottom_margin, 4.6, 3.0, 0.8))
-  graphics::plot(
+  plot(
     x = c(0, hist_max * 1.12),
     y = yr,
     type = "n",
@@ -1681,10 +1685,10 @@ draw_wright_map <- function(plot_data,
     main = "Persons",
     yaxt = "n"
   )
-  graphics::axis(2, at = pretty_y, las = 1)
-  graphics::abline(h = pretty_y, col = pal["grid"], lty = 1)
+  axis(2, at = pretty_y, las = 1)
+  abline(h = pretty_y, col = pal["grid"], lty = 1)
   for (i in seq_along(hist_data$counts)) {
-    graphics::rect(
+    rect(
       xleft = 0,
       ybottom = hist_data$breaks[i],
       xright = hist_data$counts[i],
@@ -1694,9 +1698,9 @@ draw_wright_map <- function(plot_data,
     )
   }
   if (nrow(plot_data$person_stats) > 0) {
-    graphics::abline(h = plot_data$person_stats$Median[1], col = grDevices::adjustcolor("gray25", alpha.f = 0.9), lty = 2, lwd = 1.2)
-    graphics::abline(h = plot_data$person_stats$Mean[1], col = grDevices::adjustcolor("gray45", alpha.f = 0.9), lty = 3, lwd = 1.2)
-    if (!identical(plot_data$display$show_notes, FALSE)) graphics::mtext(
+    abline(h = plot_data$person_stats$Median[1], col = grDevices::adjustcolor("gray25", alpha.f = 0.9), lty = 2, lwd = 1.2)
+    abline(h = plot_data$person_stats$Mean[1], col = grDevices::adjustcolor("gray45", alpha.f = 0.9), lty = 3, lwd = 1.2)
+    if (!identical(plot_data$display$show_notes, FALSE)) mtext(
       sprintf(
         "N=%d  Mean=%.2f  Median=%.2f",
         plot_data$person_stats$N[1],
@@ -1719,10 +1723,10 @@ draw_wright_map <- function(plot_data,
     for (i in seq_along(groups)) {
       sub <- group_density[group_density$Group == groups[i], , drop = FALSE]
       if (nrow(sub) < 2L) next
-      graphics::lines(hist_max * sub$Density / density_max, sub$Theta,
+      lines(hist_max * sub$Density / density_max, sub$Theta,
                       col = cols[i], lwd = 2, lty = line_types[i])
     }
-    graphics::legend("topright", legend = groups, col = cols, lwd = 2, lty = line_types,
+    legend("topright", legend = groups, col = cols, lwd = 2, lty = line_types,
                      bty = "n", cex = 0.65, title = "Scaled density", title.cex = 0.6)
   }
 
@@ -1734,7 +1738,7 @@ draw_wright_map <- function(plot_data,
   legend_margin <- max(graphics::strwidth(legend_spec$label, units = "inches", cex = 0.72)) /
     (graphics::par("csi") * graphics::par("mex")) + 4 / device_scale
   graphics::par(mar = c(bottom_margin, 2.4, 3.0, legend_margin))
-  graphics::plot(
+  plot(
     x = loc$X,
     y = loc_y,
     type = "n",
@@ -1748,7 +1752,7 @@ draw_wright_map <- function(plot_data,
   )
   for (i in seq_along(plot_data$group_levels)) {
     if (i %% 2 == 1) {
-      graphics::rect(
+      rect(
         xleft = i - 0.5,
         ybottom = yr[1] - 10,
         xright = i + 0.5,
@@ -1758,8 +1762,8 @@ draw_wright_map <- function(plot_data,
       )
     }
   }
-  graphics::abline(h = pretty_y, col = pal["grid"], lty = 1)
-  graphics::abline(h = 0, col = grDevices::adjustcolor("gray35", alpha.f = 0.9), lty = 2)
+  abline(h = pretty_y, col = pal["grid"], lty = 1)
+  abline(h = 0, col = grDevices::adjustcolor("gray35", alpha.f = 0.9), lty = 2)
   group_summary <- plot_data$group_summary
   if (!is.null(group_summary) && nrow(group_summary) > 0) {
     group_summary <- group_summary[
@@ -1786,7 +1790,7 @@ draw_wright_map <- function(plot_data,
       grDevices::adjustcolor(pal["step_threshold"], alpha.f = 0.78),
       grDevices::adjustcolor(pal["iqr"], alpha.f = 0.92)
     )
-    graphics::segments(
+    segments(
       x0 = group_summary$XBase,
       y0 = summary_value("DisplayMin", "Min"),
       x1 = group_summary$XBase,
@@ -1794,7 +1798,7 @@ draw_wright_map <- function(plot_data,
       col = range_cols,
       lwd = 1.6
     )
-    graphics::segments(
+    segments(
       x0 = group_summary$XBase,
       y0 = summary_value("DisplayQ1", "Q1"),
       x1 = group_summary$XBase,
@@ -1802,7 +1806,7 @@ draw_wright_map <- function(plot_data,
       col = iqr_cols,
       lwd = 5.2
     )
-    graphics::segments(
+    segments(
       x0 = group_summary$XBase - 0.13,
       y0 = summary_value("DisplayMedian", "Median"),
       x1 = group_summary$XBase + 0.13,
@@ -1811,7 +1815,7 @@ draw_wright_map <- function(plot_data,
       lwd = 1.4
     )
   }
-  graphics::axis(4, at = pretty_y, labels = pretty_y, las = 1)
+  axis(4, at = pretty_y, labels = pretty_y, las = 1)
   x_at <- seq_along(plot_data$group_levels)
   draw_rotated_x_labels(
     at = x_at,
@@ -1820,7 +1824,7 @@ draw_wright_map <- function(plot_data,
     cex = 0.82,
     line_offset = 0.085
   )
-  graphics::mtext(display_title, side = 3, outer = TRUE, line = 0.9,
+  mtext(display_title, side = 3, outer = TRUE, line = 0.9,
                   font = 2, cex = 0.95 * device_scale)
   cols <- ifelse(loc$PlotType == "Step threshold", pal["step_threshold"], pal["facet_level"])
   pch <- ifelse(loc$PlotType == "Step threshold", 17, 16)
@@ -1829,7 +1833,7 @@ draw_wright_map <- function(plot_data,
     for (group in unique(as.character(step_loc$Group))) {
       sub <- step_loc[as.character(step_loc$Group) == group, , drop = FALSE]
       if (nrow(sub) > 1L) {
-        graphics::segments(
+        segments(
           x0 = sub$XBase[1L], y0 = min(sub$DisplayEstimate, na.rm = TRUE),
           x1 = sub$XBase[1L], y1 = max(sub$DisplayEstimate, na.rm = TRUE),
           col = grDevices::adjustcolor(pal["step_threshold"], alpha.f = 0.48),
@@ -1861,7 +1865,7 @@ draw_wright_map <- function(plot_data,
     }
     regular_ci <- ci_ok & !ci_suppressed
     if (any(regular_ci)) {
-      graphics::arrows(
+      arrows(
         x0 = loc$X[regular_ci],
         y0 = ci_lo[regular_ci],
         x1 = loc$X[regular_ci],
@@ -1877,20 +1881,20 @@ draw_wright_map <- function(plot_data,
       clipped_upper <- regular_ci &
         if ("CIClippedUpper" %in% names(loc)) loc$CIClippedUpper else FALSE
       if (any(clipped_lower)) {
-        graphics::points(
+        points(
           loc$X[clipped_lower], rep(yr[1], sum(clipped_lower)),
           pch = 25, bg = "white", col = cols[clipped_lower], cex = 0.78
         )
       }
       if (any(clipped_upper)) {
-        graphics::points(
+        points(
           loc$X[clipped_upper], rep(yr[2], sum(clipped_upper)),
           pch = 24, bg = "white", col = cols[clipped_upper], cex = 0.78
         )
       }
     }
   }
-  graphics::points(
+  points(
     loc$X,
     loc_y,
     pch = pch,
@@ -1923,7 +1927,7 @@ draw_wright_map <- function(plot_data,
     placed <- .place_plot_labels(label_x, label_y, label_text, cex = 0.70,
       point_x = loc$X, point_y = loc_y,
       adj = ifelse(label_side == "left", 1, 0), ylim = yr)
-    graphics::segments(
+    segments(
       x0 = label_tbl$X, y0 = point_y,
       x1 = pmax(placed$Left, pmin(placed$Right, label_tbl$X)),
       y1 = pmax(placed$Bottom, pmin(placed$Top, point_y)),
@@ -1931,7 +1935,7 @@ draw_wright_map <- function(plot_data,
       lwd = 0.7,
       xpd = NA
     )
-    graphics::text(placed$X, placed$Y, labels = label_text, cex = 0.70,
+    text(placed$X, placed$Y, labels = label_text, cex = 0.70,
                     col = "gray15")
   }
   legend_pch <- vapply(legend_spec$key, function(key) switch(
@@ -1965,7 +1969,7 @@ draw_wright_map <- function(plot_data,
     boundary_endpoint = boundary_color
   ), character(1))
   ruler_usr <- graphics::par("usr")
-  graphics::legend(
+  legend(
     x = graphics::grconvertX(
       graphics::grconvertX(ruler_usr[2], from = "user", to = "inches") + 0.26,
       from = "inches", to = "user"),
@@ -1989,7 +1993,7 @@ draw_wright_map <- function(plot_data,
   if (length(footer_lines) > 0L) {
     footer_col <- rep("#9A3412", length(footer_lines))
     for (i in seq_along(footer_lines)) {
-      graphics::mtext(
+      mtext(
         footer_lines[i],
         side = 1,
         line = 0.1 + 0.7 * (i - 1L),
@@ -2182,7 +2186,7 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
                         max(4.6, label_margin),
                         if (identical(plot_data$display$show_title, FALSE)) 1 else 3.2,
                         if (length(groups) <= 5) max(2.1, label_margin) else 2.1))
-  graphics::plot(
+  plot(
     x = range(exp_df$Theta, finite = TRUE),
     y = c(y_rng[1] - band_pad, y_rng[2]),
     type = "n",
@@ -2195,8 +2199,8 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
       fallback = "Expected-score pathway"
     )
   )
-  graphics::axis(2, at = y_breaks[y_breaks >= y_rng[1] & y_breaks <= y_rng[2]], las = 1)
-  graphics::abline(h = y_breaks, col = grDevices::adjustcolor("#d9dde3", alpha.f = 0.8), lty = 1)
+  axis(2, at = y_breaks[y_breaks >= y_rng[1] & y_breaks <= y_rng[2]], las = 1)
+  abline(h = y_breaks, col = grDevices::adjustcolor("#d9dde3", alpha.f = 0.8), lty = 1)
   if (isTRUE(use_strips)) {
     band_h <- max(diff(y_rng) * 0.035, 0.08)
     band_gap <- band_h * 0.35
@@ -2207,7 +2211,7 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
       row <- group_index[[grp]]
       y_top <- band_top - (row - 1) * (band_h + band_gap)
       y_bottom <- y_top - band_h
-      graphics::rect(
+      rect(
         xleft = dominance_regions$ThetaStart[i],
         ybottom = y_bottom,
         xright = dominance_regions$ThetaEnd[i],
@@ -2215,7 +2219,7 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
         col = grDevices::adjustcolor(cols[grp], alpha.f = 0.14),
         border = "white"
       )
-      graphics::text(
+      text(
         x = dominance_regions$ThetaMid[i],
         y = (y_bottom + y_top) / 2,
         labels = as.character(dominance_regions$Category[i]),
@@ -2223,7 +2227,7 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
         col = "gray15"
       )
     }
-    graphics::text(
+    text(
       x = rep(min(exp_df$Theta, na.rm = TRUE), length(groups)),
       y = band_top - (seq_along(groups) - 1) * (band_h + band_gap) - band_h / 2,
       labels = truncate_axis_label(groups, width = 14L),
@@ -2233,14 +2237,14 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
       col = "gray15"
     )
     if (!identical(plot_data$display$show_notes, FALSE)) {
-      graphics::mtext("Dominant category by theta", side = 1, line = 4.6, adj = 0)
+      mtext("Dominant category by theta", side = 1, line = 4.6, adj = 0)
     }
   }
   if (!is.null(plot_data$steps) && nrow(plot_data$steps) > 0) {
     step_groups <- as.character(plot_data$steps$CurveGroup)
     step_cols <- cols[step_groups]
     for (i in seq_len(nrow(plot_data$steps))) {
-      graphics::abline(
+      abline(
         v = plot_data$steps$Threshold[i],
         col = grDevices::adjustcolor(step_cols[i], alpha.f = 0.16),
         lty = 3
@@ -2249,7 +2253,7 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
   }
   for (i in seq_along(groups)) {
     sub <- exp_df[exp_df$CurveGroup == groups[i], , drop = FALSE]
-    graphics::lines(sub$Theta, sub$ExpectedScore, col = cols[groups[i]], lwd = 2, lty = line_types[groups[i]])
+    lines(sub$Theta, sub$ExpectedScore, col = cols[groups[i]], lwd = 2, lty = line_types[groups[i]])
   }
   visible_steps <- plot_data$steps[
     is.finite(plot_data$steps$Threshold) &
@@ -2261,17 +2265,17 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
   if (nrow(visible_steps) > 0) {
     step_groups <- as.character(visible_steps$CurveGroup)
     step_cols <- cols[step_groups]
-    graphics::points(visible_steps$Threshold, visible_steps$PathY, pch = 18, col = step_cols)
+    points(visible_steps$Threshold, visible_steps$PathY, pch = 18, col = step_cols)
     step_labels <- truncate_axis_label(visible_steps$ThresholdLabel, width = 6L)
     placed <- .place_plot_labels(visible_steps$Threshold,
       visible_steps$PathY + graphics::strheight("M", cex = 0.62) * 1.2,
       step_labels, cex = 0.62, point_x = visible_steps$Threshold,
       point_y = visible_steps$PathY, ylim = y_rng)
-    graphics::segments(visible_steps$Threshold, visible_steps$PathY,
+    segments(visible_steps$Threshold, visible_steps$PathY,
       pmax(placed$Left, pmin(placed$Right, visible_steps$Threshold)),
       pmax(placed$Bottom, pmin(placed$Top, visible_steps$PathY)),
       col = step_cols, lwd = 0.7)
-    graphics::text(
+    text(
       x = placed$X,
       y = placed$Y,
       labels = step_labels,
@@ -2285,11 +2289,11 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
       min_gap = 1.4 * graphics::strheight("M", cex = 0.78)
     )
     label_x <- max(exp_df$Theta) + diff(range(exp_df$Theta)) * 0.03
-    graphics::segments(plot_data$endpoint_labels$Theta,
+    segments(plot_data$endpoint_labels$Theta,
                        plot_data$endpoint_labels$ExpectedScore,
                        label_x, label_y, xpd = NA,
                        col = cols[as.character(plot_data$endpoint_labels$CurveGroup)])
-    graphics::text(
+    text(
       x = label_x,
       y = label_y,
       labels = truncate_axis_label(plot_data$endpoint_labels$CurveGroup, width = 14L),
@@ -2299,10 +2303,10 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
       col = "gray15"
     )
   } else {
-    graphics::legend("topleft", legend = truncate_axis_label(groups),
+    legend("topleft", legend = truncate_axis_label(groups),
                       col = cols[groups], lty = line_types[groups], lwd = 2, bty = "n")
   }
-  if (length(basis_lines)) graphics::mtext(basis_lines, side = 1,
+  if (length(basis_lines)) mtext(basis_lines, side = 1,
     line = note_start + 0.7 * seq_along(basis_lines), cex = 0.68)
 }
 
@@ -2567,7 +2571,7 @@ draw_fit_pathway <- function(plot_data,
     if (diff(y_rng) <= sqrt(.Machine$double.eps)) y_rng <- y_rng[1] + c(-0.5, 0.5)
     x_rng <- x_rng + c(-0.08, 0.08) * diff(x_rng)
     y_rng <- y_rng + c(-0.08, 0.08) * diff(y_rng)
-    graphics::plot(
+    plot(
       panel_tbl$FitValue,
       panel_tbl$Measure,
       type = "n",
@@ -2582,29 +2586,29 @@ draw_fit_pathway <- function(plot_data,
       main = panel_title
     )
     if (identical(plot_data$fit_scale, "mnsq")) {
-      graphics::rect(
+      rect(
         plot_data$fit_range[1], y_rng[1], plot_data$fit_range[2], y_rng[2],
         col = grDevices::adjustcolor("#E8F0FE", alpha.f = 0.55), border = NA
       )
     } else {
-      graphics::rect(
+      rect(
         -plot_data$zstd_cut, y_rng[1], plot_data$zstd_cut, y_rng[2],
         col = grDevices::adjustcolor("#E8F0FE", alpha.f = 0.55), border = NA
       )
     }
     for (i in seq_len(nrow(refs))) {
-      graphics::abline(
+      abline(
         v = refs$value[i],
         lty = if (refs$role[i] == "reference") 2 else 3,
         col = if (refs$role[i] == "reference") "gray35" else "gray65"
       )
     }
-    graphics::abline(h = pretty(y_rng, n = 6), col = "gray92", lty = 1)
+    abline(h = pretty(y_rng, n = 6), col = "gray92", lty = 1)
     point_cols <- unname(cols[as.character(panel_tbl$Facet)])
     if (isTRUE(show_ci)) {
       ci_ok <- is.finite(panel_tbl$CI_Lower) & is.finite(panel_tbl$CI_Upper)
       if (any(ci_ok)) {
-        graphics::arrows(
+        arrows(
           x0 = panel_tbl$FitValue[ci_ok], y0 = panel_tbl$CI_Lower[ci_ok],
           x1 = panel_tbl$FitValue[ci_ok], y1 = panel_tbl$CI_Upper[ci_ok],
           angle = 90, code = 3, length = 0.035,
@@ -2612,7 +2616,7 @@ draw_fit_pathway <- function(plot_data,
         )
       }
     }
-    graphics::points(
+    points(
       panel_tbl$FitValue, panel_tbl$Measure,
       pch = panel_tbl$Shape,
       col = point_cols,
@@ -2621,7 +2625,7 @@ draw_fit_pathway <- function(plot_data,
     )
     label_rows <- nzchar(as.character(panel_tbl$LabelText))
     if (any(label_rows)) {
-      graphics::text(
+      text(
         panel_tbl$FitValue[label_rows], panel_tbl$Measure[label_rows],
         labels = truncate_axis_label(panel_tbl$LabelText[label_rows], width = 16L),
         pos = 4, cex = 0.65, offset = 0.35, xpd = NA,
@@ -2641,12 +2645,12 @@ draw_fit_pathway <- function(plot_data,
     }
   } else {
     draw_panel(tbl, title %||% plot_data$title)
-    graphics::legend(
+    legend(
       "topleft", legend = facets, col = cols[facets], pch = 16,
       bty = "n", cex = 0.76
     )
     if (any(tbl$ElementType == "Person")) {
-      graphics::legend(
+      legend(
         "bottomright", legend = c("Facet level", "Person"),
         pch = c(21, 15), col = "gray30", pt.bg = "gray80",
         bty = "n", cex = 0.76
@@ -2882,7 +2886,7 @@ draw_ccc <- function(plot_data, title = NULL, palette = NULL) {
 
   draw_panel <- function(group, panel_title) {
     panel <- prob_df[as.character(prob_df$CurveGroup) == group, , drop = FALSE]
-    graphics::plot(
+    plot(
       x = range(prob_df$Theta, finite = TRUE),
       y = c(0, 1),
       type = "n",
@@ -2890,11 +2894,11 @@ draw_ccc <- function(plot_data, title = NULL, palette = NULL) {
       ylab = "Probability",
       main = panel_title
     )
-    graphics::abline(v = 0, lty = 3, col = "gray75")
+    abline(v = 0, lty = 3, col = "gray75")
     for (category in categories) {
       sub <- panel[as.character(panel$Category) == category, , drop = FALSE]
       if (nrow(sub) == 0L) next
-      graphics::lines(
+      lines(
         sub$Theta, sub$Probability,
         col = cols[category], lwd = 1.6, lty = line_types[category]
       )
@@ -2904,14 +2908,14 @@ draw_ccc <- function(plot_data, title = NULL, palette = NULL) {
       for (category in categories) {
         sub <- overlay[as.character(overlay$Category) == category, , drop = FALSE]
         if (nrow(sub) == 0L) next
-        graphics::points(
+        points(
           sub$Theta, sub$Proportion,
           pch = point_shapes[category], bg = cols[category], col = "gray20",
           cex = 0.72 + 0.5 * sqrt(sub$N / max(1, max_n))
         )
       }
     }
-    if (!shared_legend) graphics::legend(
+    if (!shared_legend) legend(
       "topright",
       legend = paste("Category", categories),
       col = cols[categories], lty = line_types[categories], lwd = 1.6,
@@ -2936,7 +2940,7 @@ draw_ccc <- function(plot_data, title = NULL, palette = NULL) {
     n_rows <- ceiling(length(groups) / n_cols)
     graphics::par(
       mfrow = c(n_rows, n_cols),
-      mar = c(3.8, 3.8, 2.3, 0.8),
+      mar = c(4.8, 3.8, 3.2, 0.8),
       oma = c(if (length(basis_lines)) 1.4 + 0.7 * length(basis_lines) else 0.2,
               0.2, if (nzchar(display_title)) 3.1 else 0.2, max(0.2, legend_margin))
     )
@@ -2944,18 +2948,18 @@ draw_ccc <- function(plot_data, title = NULL, palette = NULL) {
     for (group in groups) {
       draw_panel(group, group_titles[group])
     }
-    graphics::mtext(display_title, side = 3, outer = TRUE, line = 1.35, font = 2)
-    if (length(basis_lines)) graphics::mtext(basis_lines, side = 1, outer = TRUE,
+    mtext(display_title, side = 3, outer = TRUE, line = 1.35, font = 2)
+    if (length(basis_lines)) mtext(basis_lines, side = 1, outer = TRUE,
                     line = 0.4 + 0.7 * seq_along(basis_lines), cex = 0.68)
   } else {
     graphics::par(mar = c(if (length(basis_lines)) 4.7 + 0.7 * length(basis_lines) else 4.1,
                           4.1, if (nzchar(display_title)) 3.2 else 1,
                           if (shared_legend) legend_margin + 0.2 else 1.1))
     draw_panel(groups[1L], display_title)
-    if (length(basis_lines)) graphics::mtext(basis_lines, side = 1,
+    if (length(basis_lines)) mtext(basis_lines, side = 1,
                     line = 3.1 + 0.7 * seq_along(basis_lines), cex = 0.70)
   }
-  if (shared_legend) graphics::legend(
+  if (shared_legend) legend(
     x = graphics::grconvertX(0.99, from = if (length(groups) > 1L) "ndc" else "nfc", to = "user"),
     y = graphics::grconvertY(0.86, from = if (length(groups) > 1L) "ndc" else "nfc", to = "user"),
     legend = paste("Category", categories), xjust = 1, yjust = 1,
@@ -2968,7 +2972,7 @@ draw_ccc <- function(plot_data, title = NULL, palette = NULL) {
 
 draw_person_plot <- function(person_tbl, bins, title = "Person measure distribution", palette = NULL) {
   pal <- resolve_palette(palette = palette, defaults = c(person_hist = "#2C7FB8"))
-  graphics::hist(
+  hist(
     x = person_tbl$Estimate,
     breaks = bins,
     main = title,
@@ -3007,7 +3011,7 @@ draw_step_plot <- function(step_tbl,
   mar[1] <- max(mar[1], (max(label_height) + 0.24) / line_height)
   if (!length(title) || !nzchar(title)) mar[3] <- min(mar[3], 1)
   graphics::par(mar = mar)
-  graphics::plot(
+  plot(
     x = seq_len(nrow(step_tbl)),
     y = estimates,
     ylim = limits,
@@ -3019,13 +3023,13 @@ draw_step_plot <- function(step_tbl,
     main = title,
     col = pal["step_line"]
   )
-  graphics::abline(h = pretty(limits, n = 5), col = pal["grid"], lty = 1)
+  abline(h = pretty(limits, n = 5), col = pal["grid"], lty = 1)
   ends <- which(!is.na(step_tbl$Ordered))
   if (length(ends)) {
-    graphics::segments(ends - 1L, estimates[ends - 1L], ends, estimates[ends], col = pal["step_line"])
+    segments(ends - 1L, estimates[ends - 1L], ends, estimates[ends], col = pal["step_line"])
   }
   if (anyNA(estimates)) {
-    graphics::text(which(is.na(estimates)), mean(limits), "Unavailable", cex = 0.7)
+    text(which(is.na(estimates)), mean(limits), "Unavailable", cex = 0.7)
   }
   draw_rotated_x_labels(
     at = seq_len(nrow(step_tbl)),
@@ -3043,24 +3047,38 @@ draw_facet_plot <- function(facet_tbl,
                             ci_level = 0.95) {
   pal <- resolve_palette(palette = palette, defaults = c(facet_bar = "gray70"))
   labels <- paste0(facet_tbl$Facet, ": ", facet_tbl$Level)
-  mids <- graphics::barplot(
+  old_mar <- graphics::par("mar")
+  on.exit(graphics::par(mar = old_mar), add = TRUE)
+  margin <- old_mar
+  margin[2] <- max(margin[2], max(graphics::strwidth(labels, units = "inches",
+    cex = graphics::par("cex.axis"), font = graphics::par("font.axis"))) /
+    (graphics::par("csi") * graphics::par("mex")) + 1.2)
+  graphics::par(mar = margin)
+  limits <- range(c(0, facet_tbl$Estimate), finite = TRUE)
+  if (isTRUE(show_ci) && "SE" %in% names(facet_tbl)) {
+    z <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
+    limits <- range(c(limits, facet_tbl$Estimate - z * facet_tbl$SE,
+      facet_tbl$Estimate + z * facet_tbl$SE), finite = TRUE)
+  }
+  mids <- barplot(
     height = facet_tbl$Estimate,
     names.arg = labels,
     horiz = TRUE,
     las = 1,
     main = title,
     xlab = "Estimate",
+    xlim = limits,
     col = pal["facet_bar"],
     border = "white"
   )
-  graphics::abline(v = 0, lty = 2, col = "gray40")
+  abline(v = 0, lty = 2, col = "gray40")
   if (isTRUE(show_ci) && "SE" %in% names(facet_tbl)) {
     z <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
     ci_ok <- is.finite(facet_tbl$SE) & facet_tbl$SE > 0
     if (any(ci_ok)) {
       ci_lo <- facet_tbl$Estimate[ci_ok] - z * facet_tbl$SE[ci_ok]
       ci_hi <- facet_tbl$Estimate[ci_ok] + z * facet_tbl$SE[ci_ok]
-      graphics::arrows(
+      arrows(
         x0 = ci_lo,
         y0 = mids[ci_ok],
         x1 = ci_hi,
@@ -3216,6 +3234,27 @@ draw_facet_plot <- function(facet_tbl,
 #' Start with `plot(fit)`: it draws a Wright map of person abilities, rater
 #' severities, other facet locations, and category thresholds on one logit
 #' scale. No plot options are needed for this first view.
+#'
+#' For adjusted-score comparisons, use `plot(fit, type = "fair_average",
+#' show_ci = TRUE)`. `metric = "FairM"` uses mean reference measures;
+#' `metric = "FairZ"` uses a zero reference, not a z-score. PCM averages
+#' expectations over administered scales with the table's observation weights
+#' and `totalscore` selection. Its conditional delta-method intervals use the
+#' same retained observations as the table: finite direct anchors in ordinary
+#' additive RSM/PCM JML are retained even with all-minimum/all-maximum responses,
+#' including when `totalscore = FALSE`. The intervals use the
+#' derivative of that same average. RSM/PCM intervals hold thresholds, other
+#' effects and reference means fixed; they are diagnostic approximations,
+#' not full calibration-uncertainty intervals. Inspect the returned data and
+#' notes for the interval method and unavailable rows. See [fair_average_table()]
+#' for reference definitions and [plot_fair_average] for view-specific controls.
+#' For ordinary additive RSM/PCM JML, `xtreme = .3, xtreme_method = "facets"`
+#' requests conditional total-score extrapolation of extreme measures and
+#' their fair scores. Primary estimates and fixed anchors are retained.
+#' Group-mean anchors are unsupported. The measure SE describes the corrected
+#' total; fair-score intervals remain unavailable for positive `xtreme`.
+#' The default `xtreme_method = "display"` retains the old average-score
+#' display convention and leaves fair scores unchanged.
 #'
 #' This S3 plotting method provides the core fit-family visuals for
 #' `mfrmr`. When `type` is omitted, it returns the Wright map alone as

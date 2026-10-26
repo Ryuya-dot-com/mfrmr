@@ -859,7 +859,7 @@ compute_facet_icc <- function(data, facets, score,
   lmer_warnings <- character(0)
   fit <- tryCatch(
     withCallingHandlers(
-      lme4::lmer(formula, data = data, REML = reml, na.action = stats::na.fail),
+      .mfrm_icc_lmer(formula, data = data, REML = reml, na.action = stats::na.fail),
       warning = function(w) {
         lmer_warnings <<- c(lmer_warnings, conditionMessage(w))
         invokeRestart("muffleWarning")
@@ -1031,7 +1031,7 @@ compute_facet_icc <- function(data, facets, score,
     parallel::clusterEvalQ(cl, loadNamespace("lme4"))
   }
   b <- withCallingHandlers(
-    lme4::bootMer(fit, FUN = icc_of, nsim = boot_reps, seed = boot_seed,
+    .mfrm_boot_mer(fit, FUN = icc_of, nsim = boot_reps, seed = boot_seed,
                   type = "parametric", use.u = FALSE,
                   parallel = boot_parallel, ncpus = boot_ncpus, cl = cl,
                   .progress = if (interactive() && boot_parallel == "no") "txt" else "none"),
@@ -1637,8 +1637,8 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
   tbl <- as.data.frame(x$table, stringsAsFactors = FALSE)
   attr(tbl, "notes") <- x$notes
   if (is.null(tbl) || nrow(tbl) == 0L) {
-    graphics::plot.new()
-    graphics::text(0.5, 0.5, "Review table empty.")
+    plot.new()
+    text(0.5, 0.5, "Review table empty.")
     return(invisible(tbl))
   }
   band_colors <- c(
@@ -1666,7 +1666,7 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
   old_par <- graphics::par()["mar"]
   on.exit(graphics::par(old_par), add = TRUE)
   graphics::par(mar = c(4, max(8, min(18, max(nchar(labels)) * 0.55)), 3, 1))
-  graphics::barplot(
+  barplot(
     height = tbl$N,
     names.arg = labels,
     horiz = TRUE,
@@ -1678,13 +1678,13 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
     main = "",
     cex.names = 0.8
   )
-  graphics::abline(
+  abline(
     v = c(as.numeric(thr$sparse),
           as.numeric(thr$marginal),
           as.numeric(thr$standard)),
     lty = 2, col = style$neutral
   )
-  graphics::legend(
+  legend(
     "bottomright", bty = "n", cex = 0.8,
     legend = c(sprintf("< %s sparse", thr$sparse),
                sprintf("< %s marginal", thr$marginal),
@@ -1721,8 +1721,8 @@ plot.mfrm_facet_nesting <- function(x,
   style <- resolve_plot_preset(preset)
   pair <- as.data.frame(x$pairwise_table, stringsAsFactors = FALSE)
   if (is.null(pair) || nrow(pair) == 0L) {
-    graphics::plot.new()
-    graphics::text(0.5, 0.5, "At least two facets required.")
+    plot.new()
+    text(0.5, 0.5, "At least two facets required.")
     return(invisible(NULL))
   }
   facets <- x$facets
@@ -1741,7 +1741,7 @@ plot.mfrm_facet_nesting <- function(x,
   old_par <- graphics::par()["mar"]
   on.exit(graphics::par(old_par), add = TRUE)
   graphics::par(mar = c(5, 5, 3, 2))
-  graphics::image(
+  image(
     x = seq_len(n), y = seq_len(n),
     z = m,
     col = cols,
@@ -1751,11 +1751,11 @@ plot.mfrm_facet_nesting <- function(x,
     ylab = "Nested facet (row)",
     main = ""
   )
-  graphics::axis(1, at = seq_len(n), labels = facets, las = 2, cex.axis = 0.8)
-  graphics::axis(2, at = seq_len(n), labels = facets, las = 1, cex.axis = 0.8)
+  axis(1, at = seq_len(n), labels = facets, las = 2, cex.axis = 0.8)
+  axis(2, at = seq_len(n), labels = facets, las = 1, cex.axis = 0.8)
   for (i in seq_len(n)) for (j in seq_len(n)) {
     if (is.finite(m[i, j])) {
-      graphics::text(j, i, sprintf("%.2f", m[i, j]), cex = 0.75,
+      text(j, i, sprintf("%.2f", m[i, j]), cex = 0.75,
                      col = if (m[i, j] > 0.6) "white" else "black")
     }
   }
@@ -1957,7 +1957,7 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
     rnames <- as.character(mat$LevelA)
     mat_num <- as.matrix(mat[, -1L, drop = FALSE])
     rownames(mat_num) <- rnames
-    graphics::image(
+    image(
       x = seq_len(nrow(mat_num)),
       y = seq_len(ncol(mat_num)),
       z = mat_num,
@@ -1967,9 +1967,9 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
       main = "",
       col = grDevices::hcl.colors(20, palette = "YlGnBu", rev = TRUE)
     )
-    graphics::axis(1L, at = seq_len(nrow(mat_num)),
+    axis(1L, at = seq_len(nrow(mat_num)),
                    labels = rownames(mat_num), las = 2L, cex.axis = 0.7)
-    graphics::axis(2L, at = seq_len(ncol(mat_num)),
+    axis(2L, at = seq_len(ncol(mat_num)),
                    labels = colnames(mat_num), las = 2L, cex.axis = 0.7)
   } else if (type == "icc") {
     if (is.null(x$icc) || nrow(x$icc) == 0L) {
@@ -1999,7 +1999,7 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
     }
     attr(x, "mfrmr_notes") <- data.frame(
       Type = "description", Text = main_txt, stringsAsFactors = FALSE)
-    mids <- graphics::barplot(
+    mids <- barplot(
       height = icc_tbl$ICC,
       names.arg = icc_tbl$Facet,
       main = "",
@@ -2010,7 +2010,7 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
       valid <- is.finite(icc_tbl$ICC_CI_Lower) & is.finite(icc_tbl$ICC_CI_Upper)
       nonzero <- valid & icc_tbl$ICC_CI_Upper > icc_tbl$ICC_CI_Lower
       if (any(nonzero)) {
-        graphics::arrows(
+        arrows(
           x0 = mids[nonzero], y0 = icc_tbl$ICC_CI_Lower[nonzero],
           x1 = mids[nonzero], y1 = icc_tbl$ICC_CI_Upper[nonzero],
           angle = 90, code = 3, length = 0.05, col = "black", lwd = 1.5
@@ -2018,7 +2018,7 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
       }
       flat <- valid & icc_tbl$ICC_CI_Upper == icc_tbl$ICC_CI_Lower
       if (any(flat)) {
-        graphics::segments(mids[flat] - 0.05, icc_tbl$ICC_CI_Lower[flat],
+        segments(mids[flat] - 0.05, icc_tbl$ICC_CI_Lower[flat],
                            mids[flat] + 0.05, icc_tbl$ICC_CI_Upper[flat], lwd = 1.5)
       }
     }

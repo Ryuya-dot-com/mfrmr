@@ -61,7 +61,7 @@ test_that("saved trees convert without clustering, recutting or changing session
   local_mocked_bindings(mfrm_cluster_hierarchical = function(...) stop("Unexpected clustering"),
     cluster_external_features = function(...) stop("Unexpected clustering"))
   local_mocked_bindings(hclust = function(...) stop("Unexpected tree"),
-    cutree = function(...) stop("Unexpected partition"), .package = "stats")
+    cutree = function(...) stop("Unexpected partition"), .package = "mfrmr")
   withr::local_options(mfrmr.plot_preset = "invalid")
   device <- grDevices::dev.cur()
   theme <- ggplot2::theme_get()

@@ -13,6 +13,31 @@ gmfrm_numeric_gradient <- function(f, x, h = 1e-5) {
   }, numeric(1))
 }
 
+test_that("two-family kernel reuse preserves changing E-step counts and invalid trials", {
+  evaluations <- 0L
+  original <- mfrm_jml_probability_bundle
+  local_mocked_bindings(mfrm_jml_probability_bundle = function(...) {
+    evaluations <<- evaluations + 1L
+    original(...)
+  }, .package = "mfrmr")
+  p <- gmfrm_test_problem()$problem
+  x <- p$start + seq(-.1, .1, length.out = length(p$start))
+  initial <- evaluations
+  state <- p$marginal(x)
+  expect_identical(evaluations - initial, 1L)
+  first <- p$complete(x, state$counts)
+  doubled <- p$complete(x, 2 * state$counts)
+  expect_identical(evaluations - initial, 1L)
+  expect_equal(doubled$value, 2 * first$value, tolerance = 0)
+  expect_equal(doubled$gradient, 2 * first$gradient, tolerance = 0)
+  changed <- x; changed[1] <- changed[1] + .2
+  expect_false(identical(p$kernel(changed), p$kernel(x)))
+  bad <- x; bad[grepl("^log_slope:Rater", names(bad))] <- 1000
+  expect_null(p$kernel(bad))
+  expect_identical(p$marginal(bad)$value, Inf)
+  expect_identical(p$marginal(x), state)
+})
+
 test_that("common product parameters retain owners and reject non-product crossings", {
   p <- gmfrm_test_problem()$problem
   setup <- p$common

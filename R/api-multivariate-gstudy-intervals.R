@@ -509,7 +509,7 @@ confint.mfrm_multivariate_gstudy <- function(object, parm = NULL, level = .95,
   if (method == "residual_contrast") {
     if (!missing(draws) || !missing(seed))
       stop("`draws` and `seed` apply only to `method = 'gci'`.", call. = FALSE)
-    return(.mfrm_mvgt_residual_intervals(object, parm, score, weights, level))
+    return(.mfrm_gstudy_interval_context(.mfrm_mvgt_residual_intervals(object, parm, score, weights, level), object))
   }
   if (is.character(score) && length(score) == 2L && is.null(weights)) {
     if (!method %in% c("gci", "regression_region", "reml_profile"))
@@ -517,14 +517,14 @@ confint.mfrm_multivariate_gstudy <- function(object, parm = NULL, level = .95,
     if (method != "gci" && (!missing(draws) || !missing(seed)))
       stop("`draws` and `seed` apply only to `method = 'gci'`.", call. = FALSE)
     if (method == "reml_profile")
-      return(.mfrm_mvgt_covariance_profile(object, parm, score, level))
+      return(.mfrm_gstudy_interval_context(.mfrm_mvgt_covariance_profile(object, parm, score, level), object))
     out <- .mfrm_mvgt_covariance_intervals(object, score, level, method, draws, seed)
-    return(out[.mfrm_mvgt_component_selection(parm, out$Source), , drop = FALSE])
+    return(.mfrm_gstudy_interval_context(out[.mfrm_mvgt_component_selection(parm, out$Source), , drop = FALSE], object))
   }
   if (!method %in% c("auto", "mls", "reml_profile") || !missing(draws) || !missing(seed))
     stop("Single-score or composite component intervals use `method = 'auto', 'mls', 'reml_profile' or residual-only 'residual_contrast', without draws or seed.", call. = FALSE)
   if (method == "reml_profile")
-    return(.mfrm_mvgt_component_profile(object, parm, score, weights, level))
+    return(.mfrm_gstudy_interval_context(.mfrm_mvgt_component_profile(object, parm, score, weights, level), object))
   projection <- .mfrm_mvgt_anova_projection(object, score, weights)
   design <- projection$design
   sources <- rownames(design$A)
@@ -570,7 +570,7 @@ confint.mfrm_multivariate_gstudy <- function(object, parm = NULL, level = .95,
     "Raw estimates and endpoints are retained. Lower/Upper intersect the interval with nonnegative variances; consult Status for empty or unavailable intervals.",
     "Positive intervals whose width or endpoints cannot be represented remain unavailable with an explicit Status; a rounded zero width is not exact population knowledge.",
     "SE uses the df + 2 moment correction. Weights are used as supplied; saveRDS() preserves assumptions and source context.")
-  out
+  .mfrm_gstudy_interval_context(out, object)
 }
 
 # Validate and project stored ANOVA summaries for both uncertainty methods.

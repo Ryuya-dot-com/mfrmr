@@ -26,6 +26,11 @@ Full FACETS-style score-side contract review remains blocked. Scorefile
 export, design forecasting, diagnostic/signal-detection screening, and
 linking synthesis use their own caveated \code{GPCM} routes and should not be
 treated as automatic operational-scoring evidence.
+
+See \code{vignette("mfrmr-networks-and-reporting")} for Lamprianou-inspired network
+views, the FACETS/ConQuest reporting crosswalk and speaking/writing examples
+combining MFRM with G/D studies. \code{\link[=plot_data]{plot_data()}} supports long-format extraction
+and original-value cluster profiles for custom distribution plots.
 }
 \section{Start with the reporting question}{
 
@@ -60,6 +65,25 @@ Use \code{\link[=visual_reporting_template]{visual_reporting_template()}} for co
 sentence starters, then verify availability with
 \code{reporting_checklist()$visual_scope}.
 }
+}
+
+\section{Editable one-family GPCM report}{
+
+Copy the installed \code{templates/gpcm-report.Rmd} using
+\code{system.file("templates", "gpcm-report.Rmd", package = "mfrmr")}, then render
+it with \code{\link[rmarkdown:render]{rmarkdown::render()}}. The default synthetic example produces an
+HTML report, separation/Strata/reliability and fit tables, a Wright map,
+category-probability curves, ordinal Krippendorff's alpha, CSVs and an RDS
+analysis. Set \code{ratings_csv}, \code{rating_min}, \code{rating_max} and \code{output_dir}
+through the template's parameters for your data. It expects columns Person,
+Rater, Criterion and Score, with one rating per cell; repeated occasions
+require an explicit measurement unit and agreement keys.
+The model is one-family GPCM MML with criterion-owned steps and slopes.
+Alpha is calculated separately from observed ratings; \code{\link[=mfrm_report]{mfrm_report()}} does
+not automatically include it. Fit review states and precision limitations
+remain visible. Complete the study-context and interpretation prompts before
+treating the rendered document as a manuscript. See
+\code{vignette("mfrmr-reporting-and-apa")} for the output map and full RSM lesson.
 }
 
 \section{Recommended reporting route}{

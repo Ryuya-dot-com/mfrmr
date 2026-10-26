@@ -109,16 +109,16 @@ plot.mfrm_multivariate_d_comparison <- function(x, type = c("coefficients", "sem
       axis_labels <- vapply(seq_len(nrow(x$design_grid)), function(i)
         paste(paste(names(x$design_grid), unlist(x$design_grid[i, ]), sep = " = "), collapse = "\n"), character(1))
       axis_labels[x$reference] <- paste0(axis_labels[x$reference], "\n(reference)")
-      graphics::plot(tab$Scenario, tab$Value, type = "n", ylim = limits, xaxt = "n", yaxt = "n",
+      plot(tab$Scenario, tab$Value, type = "n", ylim = limits, xaxt = "n", yaxt = "n",
         xlab = "", ylab = "", main = labels[j])
-      graphics::mtext(if (type == "coefficients") "Dependability" else "SEM (score units)",
+      mtext(if (type == "coefficients") "Dependability" else "SEM (score units)",
         side = 2, line = 4.2)
-      graphics::axis(1, at = tab$Scenario, labels = axis_labels, cex.axis = .75, padj = 1)
-      if (type == "coefficients") graphics::axis(2, at = seq(0, 1, .25), las = 1) else graphics::axis(2, las = 1)
+      axis(1, at = tab$Scenario, labels = axis_labels, cex.axis = .75, padj = 1)
+      if (type == "coefficients") axis(2, at = seq(0, 1, .25), las = 1) else axis(2, las = 1)
       graphics::grid(nx = NA, ny = NULL, col = style$grid)
-      graphics::lines(tab$Scenario, tab$Value, lwd = 2)
-      graphics::points(tab$Scenario, tab$Value, pch = ifelse(tab$IsReference, 18, 16), cex = 1.2)
-      if (!any(is.finite(tab$Value))) graphics::text(mean(tab$Scenario), mean(limits), "Point projections unavailable")
+      lines(tab$Scenario, tab$Value, lwd = 2)
+      points(tab$Scenario, tab$Value, pch = ifelse(tab$IsReference, 18, 16), cex = 1.2)
+      if (!any(is.finite(tab$Value))) text(mean(tab$Scenario), mean(limits), "Point projections unavailable")
       next
     }
     tab <- table[table$Metric == metrics[j], , drop = FALSE]
@@ -127,16 +127,16 @@ plot.mfrm_multivariate_d_comparison <- function(x, type = c("coefficients", "sem
     limits <- range(c(0, extent[is.finite(extent)]))
     if (diff(limits) == 0) limits <- limits + c(-.05, .05)
     direction <- if (type == "coefficients") "Higher favors comparison" else "Lower favors comparison"
-    graphics::plot(limits, c(.5, nrow(tab) + .5), type = "n", yaxt = "n", ylab = "",
+    plot(limits, c(.5, nrow(tab) + .5), type = "n", yaxt = "n", ylab = "",
       xlab = paste("Difference from reference |", direction), main = labels[j])
-    graphics::axis(2, at = position, labels = ifelse(tab$Status == "Available", tab$Plan,
+    axis(2, at = position, labels = ifelse(tab$Status == "Available", tab$Plan,
       paste0(tab$Plan, " *")), las = 1, cex.axis = .8)
-    graphics::abline(v = 0, lty = 2, col = "grey50")
+    abline(v = 0, lty = 2, col = "grey50")
     ok <- tab$Status == "Available"
-    graphics::segments(tab$Lower[ok], position[ok], tab$Upper[ok], position[ok], lwd = 2)
+    segments(tab$Lower[ok], position[ok], tab$Upper[ok], position[ok], lwd = 2)
     finite <- is.finite(tab$Difference)
-    graphics::points(tab$Difference[finite], position[finite], pch = ifelse(ok[finite], 16, 1))
-    if (!any(finite)) graphics::text(mean(limits), mean(position), "Point projections unavailable")
+    points(tab$Difference[finite], position[finite], pch = ifelse(ok[finite], 16, 1))
+    if (!any(finite)) text(mean(limits), mean(position), "Point projections unavailable")
   }
   invisible(out)
 }

@@ -38,8 +38,9 @@ mfrm_gpcm_response_evaluator <- function(prep, config, newdata) {
     slope <- Reduce(`*`, components)
     if (any(!is.finite(slope) | slope <= 0)) stop("Predicted slopes must be finite and positive.")
     cumulative <- t(apply(params$steps_mat, 1L, function(s) c(0, cumsum(s))))
+    predictor_offset <- compute_base_eta(idx, params, config)
     bundle <- mfrm_jml_probability_bundle(
-      eta = newdata$Theta + compute_base_eta(idx, params, config),
+      eta = newdata$Theta + predictor_offset,
       score_k = rep(0L, nrow(newdata)), model = "GPCM", step_cum = cumulative,
       criterion_idx = idx$step_idx, slopes = slope, slope_idx = seq_len(nrow(newdata)),
       include_log_probs = TRUE)
@@ -48,6 +49,7 @@ mfrm_gpcm_response_evaluator <- function(prep, config, newdata) {
     variance <- mfrm_category_variance(bundle$probs)
     list(probabilities = bundle$probs, log_probabilities = bundle$log_probs,
       slope_components = components, effective_slope = slope, variance = variance,
+      predictor_offset = predictor_offset, step_cum = cumulative[idx$step_idx, , drop = FALSE],
       information = slope^2 * variance)
   }
   list(newdata = newdata, contexts = contexts, evaluate = evaluate)

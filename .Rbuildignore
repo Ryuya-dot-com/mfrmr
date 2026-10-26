@@ -19,6 +19,7 @@
 ^\.gitignore$
 ^_pkgdown\.yml$
 ^pkgdown$
+^vignettes/articles$
 ^CITATION\.cff$
 ^ROADMAP\.md$
 ^CODE_OF_CONDUCT\.md$

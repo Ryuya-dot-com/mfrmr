@@ -222,7 +222,7 @@ import_mirt_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
 
 .mirt_extract_items <- function(fit) {
   irt_pars <- tryCatch(
-    mirt::coef(fit, simplify = TRUE, IRTpars = TRUE)$items,
+    .mfrm_mirt_coef(fit, simplify = TRUE, IRTpars = TRUE)$items,
     error = function(e) NULL
   )
   if (is.null(irt_pars) || !is.matrix(irt_pars)) {

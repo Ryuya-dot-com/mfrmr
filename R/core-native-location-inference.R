@@ -9,17 +9,47 @@ mfrm_native_location_identity <- function(fit) {
     steps = fit$steps, slopes = fit$slopes,
     readiness = mfrmr_get_readiness_record(fit),
     optimizer = fit$opt$optimizer_diagnostics)
+  if (!is.null(fit$population$fixed_sd)) out$population$fixed_sd <- fit$population$fixed_sd
   if (length(fit$config$interaction_specs)) out$interactions <- list(
     specifications = fit$config$interaction_specs, effects = fit$interactions$effects)
   out
 }
 
-mfrm_native_location_source <- function(fit, comparison_review = NULL) {
+mfrm_native_location_source <- function(fit, comparison_review = NULL, interaction = NULL) {
   cfg <- fit$config
   pop <- cfg$population_spec
   active <- isTRUE(pop$active)
   gpcm <- identical(cfg$model, "GPCM")
   comparison <- !is.null(comparison_review)
+  joint <- !is.null(interaction)
+  if (joint) {
+    if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_comparison_fit") ||
+        !cfg$model %in% c("RSM", "PCM") || !identical(cfg$method, "MML") ||
+        active || length(cfg$dummy_facets) || !identical(cfg$facet_shrinkage, "none") ||
+        mfrmr_adaptive_integration(cfg) || !is.character(interaction) ||
+        length(interaction) != 1L || is.na(interaction) ||
+        length(cfg$interaction_specs) != 1L || !interaction %in% names(cfg$interaction_specs))
+      stop("Joint cell intervals require one fitted two-facet RSM/PCM interaction, full direct fixed-grid MML, fixed N(0,1), and no shrinkage or dummy facets.", call. = FALSE)
+    anchors <- extract_anchor_tables(cfg)
+    if (nrow(anchors$anchors) || nrow(anchors$groups))
+      stop("Joint cell intervals do not yet support anchors or group constraints.", call. = FALSE)
+    rebuilt <- build_facet_interaction_specs(fit$prep, interaction,
+      cfg$interaction_specs[[interaction]]$min_obs_per_interaction, "silent")
+    if (!isTRUE(all.equal(cfg$interaction_specs, rebuilt)))
+      stop("Saved interaction coding, constraints and counts must match the fitted data.", call. = FALSE)
+  }
+  fixed_sd <- pop$fixed_sd
+  fixed_variance <- !is.null(fixed_sd)
+  anchor_origin <- fixed_variance && !identical(cfg$noncenter_facet, "Person")
+  if (!identical(fit$population$fixed_sd, fixed_sd))
+    stop("Saved fixed population SD metadata must match the fitted specification.", call. = FALSE)
+  if (fixed_variance && (!active || !cfg$model %in% c("RSM", "PCM") ||
+      !is.numeric(fixed_sd) || is.complex(fixed_sd) || length(fixed_sd) != 1L ||
+      !is.finite(fixed_sd) || fixed_sd <= 0 || !is.finite(fixed_sd^2) || fixed_sd^2 <= 0 ||
+      !identical(fit$population$fixed_sd, fixed_sd) ||
+      !isTRUE(all.equal(pop$sigma2, fixed_sd^2, tolerance = 1e-12)))) {
+    stop("Saved fixed population SD must be positive, finite and consistent with the RSM/PCM population variance.", call. = FALSE)
+  }
   if (comparison) {
     if (!inherits(fit, "mfrm_fit") || !cfg$model %in% c("RSM", "PCM") ||
         !identical(cfg$method, "MML") || mfrm_has_jml_adjustment(fit) ||
@@ -31,16 +61,32 @@ mfrm_native_location_source <- function(fit, comparison_review = NULL) {
   }
   if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit") ||
       !identical(cfg$method, "MML") || !cfg$model %in% c("RSM", "PCM", "GPCM") ||
-      (!active && !gpcm && !comparison) || mfrm_has_product_slopes(fit) ||
+      (!active && !gpcm && !comparison && !joint) || mfrm_has_product_slopes(fit) ||
       !identical(cfg$estimation_control$mml_engine_used, "direct") ||
       !length(fit$prep$data$Weight) || any(!is.finite(fit$prep$data$Weight)) ||
-      any(fit$prep$data$Weight != 1) || (!comparison && length(cfg$interaction_specs))) {
-    stop(if (comparison) "Interaction intervals require direct MML and unit weights." else
+      any(fit$prep$data$Weight != 1) || (!comparison && !joint && length(cfg$interaction_specs))) {
+    stop(if (comparison || joint) "Interaction intervals require direct MML and unit weights." else
       "Native location intervals require direct MML, unit weights, no interactions, and an estimated normal RSM/PCM population or one-family GPCM.", call. = FALSE)
   }
+  if (anchor_origin) {
+    anchor_tables <- extract_anchor_tables(cfg)
+    direct <- anchor_tables$anchors
+    if (!cfg$noncenter_facet %in% cfg$facet_names ||
+        !identical(pop$design_columns, "(Intercept)") ||
+        !is.matrix(pop$design_matrix) || anyNA(pop$design_matrix) ||
+        any(pop$design_matrix != 1) || length(cfg$dummy_facets) ||
+        nrow(anchor_tables$groups) ||
+        !nrow(direct) ||
+        !any(direct$Facet == cfg$noncenter_facet & is.finite(direct$Anchor)) ||
+        any(direct$Facet == "Person"))
+      stop("Anchor-origin intervals require an intercept-only fixed-SD RSM/PCM population and a direct anchor on the uncentered facet, without groups or dummy facets.", call. = FALSE)
+  }
   if (!comparison) for (facet in cfg$facet_names) {
+    retained <- cfg$facet_specs[[facet]]
     expected <- build_facet_constraint(fit$prep$levels[[facet]],
-      centering_scope = cfg$facet_specs[[facet]]$centering_scope %||% "remainder")
+      anchors = if (anchor_origin) retained$anchors else NULL,
+      centered = if (anchor_origin || joint) !identical(facet, cfg$noncenter_facet) else TRUE,
+      centering_scope = retained$centering_scope %||% "remainder")
     if (!identical(as.character(cfg$facet_levels[[facet]]), expected$levels) ||
         !isTRUE(all.equal(cfg$facet_specs[[facet]], expected))) {
       stop("Native locations require matching level coding and sum-to-zero facet constraints without anchors or groups.", call. = FALSE)
@@ -78,7 +124,7 @@ mfrm_native_location_source <- function(fit, comparison_review = NULL) {
   tables <- list(locations = build_other_facet_table(cfg, fit$prep, params),
     steps = build_step_table(cfg, fit$prep, params))
   saved <- list(locations = fit$facets$others, steps = fit$steps)
-  if (comparison) {
+  if (comparison || joint) {
     tables$interactions <- build_interaction_effect_table(cfg, fit$prep, params)
     saved$interactions <- fit$interactions$effects
   }
@@ -119,6 +165,7 @@ mfrm_native_location_source <- function(fit, comparison_review = NULL) {
 mfrm_native_location_boundary_candidate <- function(fit, inference) {
   cfg <- fit$config
   if (!cfg$model %in% c("RSM", "PCM") || !isTRUE(cfg$population_spec$active) ||
+      !is.null(cfg$population_spec$fixed_sd) ||
       !isTRUE(inference$check$eligible)) return(inference)
   # A single feasible boundary candidate can disqualify an interior fit;
   # failing to improve it does not exclude an optimized boundary maximum.

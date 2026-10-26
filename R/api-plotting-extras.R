@@ -99,14 +99,14 @@ plot_threshold_ladder <- function(fit,
     x_pos <- seq_along(groups)
     y_lim <- if (any(is.finite(rows$Threshold))) range(rows$Threshold, finite = TRUE) else c(-1, 1)
     y_lim <- y_lim + c(-0.15, 0.15) * max(diff(y_lim), 1)
-    graphics::plot(
+    plot(
       x = numeric(0), y = numeric(0),
       xlim = c(0.5, n_grp + 0.5), ylim = y_lim,
       xaxt = "n", xlab = context$StepOwner, ylab = "Step offset (logit)",
       main = ""
     )
-    graphics::axis(1, at = x_pos, labels = groups, las = 2, cex.axis = 0.85)
-    graphics::abline(h = 0, lty = 2, col = style$neutral)
+    axis(1, at = x_pos, labels = groups, las = 2, cex.axis = 0.85)
+    abline(h = 0, lty = 2, col = style$neutral)
     for (i in seq_along(groups)) {
       sub <- rows[rows$Group == groups[i], , drop = FALSE]
       sub <- sub[order(seq_len(nrow(sub))), , drop = FALSE]
@@ -121,15 +121,15 @@ plot_threshold_ladder <- function(fit,
           } else {
             style$accent_primary
           }
-          graphics::segments(x, tau_vec[k], x, tau_vec[k + 1L],
+          segments(x, tau_vec[k], x, tau_vec[k + 1L],
                              col = col_seg, lwd = 2)
         }
       }
-      graphics::points(rep(x, length(tau_vec)), tau_vec,
+      points(rep(x, length(tau_vec)), tau_vec,
                        pch = 19, col = style$accent_primary)
-      graphics::text(x + 0.15, tau_vec, labels = sub$Step,
+      text(x + 0.15, tau_vec, labels = sub$Step,
                      cex = 0.7, adj = 0)
-      if (any(!is.finite(tau_vec))) graphics::text(x, mean(y_lim),
+      if (any(!is.finite(tau_vec))) text(x, mean(y_lim),
         paste(sub$Step[!is.finite(tau_vec)], "unavailable", collapse = "; "), cex = 0.65)
     }
   }
@@ -358,15 +358,15 @@ plot_person_fit <- function(fit,
     on.exit(graphics::par(mar = old_mar), add = TRUE)
     graphics::par(mar = c(max(old_mar[1], 5), old_mar[2], 1.5, old_mar[4]))
     if (identical(fit_index, "meansquare") && !any(plot_available)) {
-      graphics::plot.new()
-      graphics::text(.5, .5, "No complete Infit/Outfit pairs are available")
+      plot.new()
+      text(.5, .5, "No complete Infit/Outfit pairs are available")
     } else if (identical(fit_index, "meansquare")) {
       cex_size <- 0.6 + 1.6 * sqrt(m$N / max(m$N, na.rm = TRUE))
       x_rng <- range(c(m$Infit, lower, upper), finite = TRUE)
       y_rng <- range(c(m$Outfit, lower, upper), finite = TRUE)
       x_pad <- if (diff(x_rng) > 0) c(-0.05, 0.05) * diff(x_rng) else c(-0.1, 0.1)
       y_pad <- if (diff(y_rng) > 0) c(-0.05, 0.05) * diff(y_rng) else c(-0.1, 0.1)
-      graphics::plot(
+      plot(
         x = m$Infit, y = m$Outfit,
         xlab = "Infit MnSq", ylab = "Outfit MnSq",
         main = "",
@@ -374,12 +374,12 @@ plot_person_fit <- function(fit,
         cex = cex_size,
         xlim = x_rng + x_pad, ylim = y_rng + y_pad
       )
-      graphics::abline(h = 1, v = 1, lty = 3, col = style$neutral)
-      graphics::abline(h = c(lower, upper), v = c(lower, upper),
+      abline(h = 1, v = 1, lty = 3, col = style$neutral)
+      abline(h = c(lower, upper), v = c(lower, upper),
                        lty = 2, col = style$grid)
       n_lbl <- min(top_n_label, nrow(m))
       if (n_lbl > 0L) {
-        graphics::text(
+        text(
           x = m$Infit[seq_len(n_lbl)],
           y = m$Outfit[seq_len(n_lbl)],
           labels = as.character(m$Level[seq_len(n_lbl)]),
@@ -390,14 +390,14 @@ plot_person_fit <- function(fit,
       ranked <- m[is.finite(m$ReportValue), , drop = FALSE]
       ranked <- ranked[order(ranked$ReportValue), , drop = FALSE]
       if (nrow(ranked) == 0L) {
-        graphics::plot.new()
-        graphics::text(.5, .5, "No finite lz/lz* report index available")
+        plot.new()
+        text(.5, .5, "No finite lz/lz* report index available")
       } else {
         y <- seq_len(nrow(ranked))
         x_rng <- range(c(ranked$ReportValue, -z_1pct, -z_5pct, z_5pct, z_1pct),
                        finite = TRUE)
         x_pad <- if (diff(x_rng) > 0) c(-0.08, 0.08) * diff(x_rng) else c(-0.5, 0.5)
-        graphics::plot(
+        plot(
           x = ranked$ReportValue, y = y,
           xlab = "Person-fit report index",
           ylab = "Persons ordered by report index",
@@ -407,14 +407,14 @@ plot_person_fit <- function(fit,
           cex = 0.85 + 1.2 * sqrt(ranked$N / max(ranked$N, na.rm = TRUE)),
           xlim = x_rng + x_pad
         )
-        graphics::abline(v = 0, lty = 3, col = style$neutral)
-        graphics::abline(v = c(-z_5pct, z_5pct), lty = 2, col = style$grid)
-        graphics::abline(v = c(-z_1pct, z_1pct), lty = 3, col = style$grid)
+        abline(v = 0, lty = 3, col = style$neutral)
+        abline(v = c(-z_5pct, z_5pct), lty = 2, col = style$grid)
+        abline(v = c(-z_1pct, z_1pct), lty = 3, col = style$grid)
         label_order <- order(abs(ranked$ReportValue), decreasing = TRUE)
         n_lbl <- min(top_n_label, length(label_order))
         if (n_lbl > 0L) {
           idx <- label_order[seq_len(n_lbl)]
-          graphics::text(
+          text(
             x = ranked$ReportValue[idx],
             y = y[idx],
             labels = as.character(ranked$Level[idx]),
@@ -745,7 +745,7 @@ plot_rater_severity_profile <- function(fit,
                           max(old_mar[2], label_margin), old_mar[3:4]))
     y <- seq_len(nrow(m))
     xrange <- geometry$xrange
-    graphics::plot(
+    plot(
       x = m$Estimate, y = y,
       type = "n",
       xlim = xrange,
@@ -756,25 +756,25 @@ plot_rater_severity_profile <- function(fit,
     )
     if (isTRUE(show_bands)) {
       usr <- graphics::par("usr")
-      graphics::rect(-0.5, usr[3], 0.5, usr[4], border = NA,
+      rect(-0.5, usr[3], 0.5, usr[4], border = NA,
                      col = grDevices::adjustcolor(band_colors[1L], alpha.f = 0.10))
-      graphics::rect(-1.0, usr[3], -0.5, usr[4], border = NA,
+      rect(-1.0, usr[3], -0.5, usr[4], border = NA,
                      col = grDevices::adjustcolor(band_colors[2L], alpha.f = 0.08))
-      graphics::rect(0.5, usr[3], 1.0, usr[4], border = NA,
+      rect(0.5, usr[3], 1.0, usr[4], border = NA,
                      col = grDevices::adjustcolor(band_colors[3L], alpha.f = 0.08))
     }
-    graphics::abline(v = 0, lty = 2, col = style$neutral)
+    abline(v = 0, lty = 2, col = style$neutral)
     valid <- geometry$interval
     if (any(valid)) {
-      graphics::segments(m$CI_Lower[valid], y[valid],
+      segments(m$CI_Lower[valid], y[valid],
                          m$CI_Upper[valid], y[valid],
                          col = style$accent_primary, lwd = 2)
     }
-    graphics::points(m$Estimate[geometry$shown], y[geometry$shown],
+    points(m$Estimate[geometry$shown], y[geometry$shown],
       pch = geometry$shape[geometry$shown], col = style$accent_primary)
-    if (any(!geometry$shown)) graphics::text(mean(xrange), y[!geometry$shown],
+    if (any(!geometry$shown)) text(mean(xrange), y[!geometry$shown],
       "Unavailable", col = style$neutral, cex = 0.85)
-    graphics::axis(2, at = y, labels = as.character(m$Level), las = 1,
+    axis(2, at = y, labels = as.character(m$Level), las = 1,
                    cex.axis = 0.85)
   }
 
@@ -997,26 +997,26 @@ plot_dif_summary <- function(x,
       x_range <- x_range[1] + c(-1, 1)
     }
     xlim <- x_range + c(-0.05, 0.05) * diff(x_range)
-    graphics::plot(
+    plot(
       x = tbl$Effect, y = y, type = "n",
       xlim = xlim, yaxt = "n",
       xlab = axis_label, ylab = "",
       main = ""
     )
-    graphics::abline(v = 0, lty = 2, col = style$neutral)
+    abline(v = 0, lty = 2, col = style$neutral)
     if (length(effect_thresholds) > 0L) {
       for (thr in effect_thresholds) {
-        graphics::abline(v = c(-thr, thr), lty = 3, col = style$warn)
+        abline(v = c(-thr, thr), lty = 3, col = style$warn)
       }
     }
     if (!is.null(ci_level) && any(is.finite(tbl$CI_Lower) & is.finite(tbl$CI_Upper))) {
-      graphics::segments(tbl$CI_Lower, y, tbl$CI_Upper, y,
+      segments(tbl$CI_Lower, y, tbl$CI_Upper, y,
                          col = style$neutral, lwd = 1)
     }
-    graphics::segments(0, y, tbl$Effect, y,
+    segments(0, y, tbl$Effect, y,
                        col = tbl$Color, lwd = 5)
-    graphics::points(tbl$Effect, y, pch = 19, col = tbl$Color)
-    graphics::axis(2, at = y, labels = tbl$Pair, las = 1, cex.axis = 0.7)
+    points(tbl$Effect, y, pch = 19, col = tbl$Color)
+    axis(2, at = y, labels = tbl$Pair, las = 1, cex.axis = 0.7)
   }
 
   payload <- data.frame(
@@ -1264,10 +1264,10 @@ plot_apa_figure_one <- function(fit,
                                 preset = preset, draw = TRUE)
     plot_threshold_ladder(fit, preset = preset, draw = TRUE)
     apply_plot_preset(style)
-    graphics::plot.new()
+    plot.new()
     display_lines <- unlist(lapply(summary_lines, strwrap,
       width = max(25L, floor(graphics::par("pin")[1] * 15))), use.names = FALSE)
-    graphics::text(
+    text(
       x = 0, y = seq(0.95, 0.05, length.out = length(display_lines)),
       labels = display_lines, adj = 0, cex = 0.9
     )

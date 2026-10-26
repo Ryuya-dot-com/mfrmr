@@ -169,7 +169,8 @@ test_that("fit plot presentation flags retain notes and numerical payloads", {
     title = function(main = NULL, ...) {
       text_drawn <<- c(text_drawn, as.character(main))
       original_title(main = main, ...)
-    }, .package = "graphics")
+    }, .package = "mfrmr")
+  local_graphics_headings(function(main) text_drawn <<- c(text_drawn, as.character(main)))
   for (type in c("wright", "facets", "pathway", "ccc", "fit_pathway", "person", "step", "facet")) {
     args <- list(x = fit, type = if (type == "facets") "wright" else type,
                  title = "Custom heading", top_n = 2)

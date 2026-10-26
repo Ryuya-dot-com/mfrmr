@@ -639,7 +639,11 @@ test_that("summary table bundle role registry covers every supported spec role",
       unname(mfrmr:::summary_table_bundle_spec(obj)$roles)
     )
   }
-  emitted_roles <- unique(emitted_roles)
+  # The report class also carries complete non-MFRM study evidence.
+  g <- mfrm_g_study(mfrmr_example_gtheory_crossed, c("Content", "Organization"))
+  study_summary <- summary(mfrm_report(g))
+  emitted_roles <- unique(c(emitted_roles,
+    unname(mfrmr:::summary_table_bundle_spec(study_summary)$roles)))
   registry <- mfrmr:::summary_table_bundle_appendix_role_registry()
 
   expect_setequal(registry$Role, emitted_roles)

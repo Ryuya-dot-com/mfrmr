@@ -1455,6 +1455,20 @@ mfrmr_interval_guide <- function(scope = c(
     stringsAsFactors = FALSE
   ))
 
+  out <- rbind(out, data.frame(
+    Route = "Binary rater-network coefficient intervals",
+    Scope = "table,visual,reporting",
+    PrimaryHelper = "fit_rater_network(...); confint(model, level = 0.95)",
+    DisplayRoute = "summary(model); plot(model, type = 'coefficients'); mfrm_report(model)",
+    DefaultLevel = .95,
+    IntervalColumns = "Percentage-labelled bounds; diagnostics and notes attributes",
+    Basis = "Approximate pointwise normal ERGM coefficient intervals in conditional log-odds coordinates.",
+    UseFor = "Prespecified binary network configurations or node covariates, after estimation diagnostics.",
+    InterpretationBoundary = "Not MFRM parameters, causal halo or estimated-edge uncertainty; backend failure keeps missing bounds.",
+    GPCMStatus = "Network likelihood, not a GPCM rating likelihood",
+    Notes = "Changing confint level does not change the stored 95% coefficient table/plot. Review MCMC and GOF; numerical availability is not convergence certification.",
+    stringsAsFactors = FALSE))
+
   if (identical(scope, "all")) {
     return(out)
   }
