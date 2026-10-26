@@ -75,8 +75,8 @@ measurement scale, how closely ratings follow the model, and how much raters
 agree on observed scores. It includes the tables, two figures and underlying
 files needed to develop a Methods and Results section.
 
-**Current fit:** `r fit_summary$decision$Interpretation[1]`.
-**Formal-inference status:** `r fit_summary$decision$FormalInference[1]`.
+**Current analysis:** `r report$decision$Interpretation[1]`.
+**Formal-inference status:** `r report$decision$FormalInference[1]`.
 This status is retained in the saved analysis. A review status does not turn
 the descriptive tables into confirmatory evidence.
 
@@ -270,7 +270,7 @@ not automatically a gap. The generated report is a draft, not a completed paper.
 <summary>Numerical review and claim-specific checks</summary>
 
 ```{r review}
-knitr::kable(fit_summary$decision)
+knitr::kable(report$decision)
 knitr::kable(report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")])
 ```
 

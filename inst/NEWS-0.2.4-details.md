@@ -41,6 +41,10 @@ results. A wording or display correction alone does not require refitting.
   population mean/variance, exports those settings, and explains when to add
   pairwise kappa. Its previous fixed-standard-normal Methods wording was wrong;
   fitted estimates and algorithms are unchanged.
+  The template now takes its inference decision from the assembled report,
+  including the collected precision diagnostics. Model-export errors explain
+  when an estimated population is unsupported; switching to a fixed N(0,1)
+  population changes the model rather than merely enabling a file format.
 
 - The README and release highlights now lead with assessment tasks and link
   to specialist guides. An editable one-family GPCM report template combines

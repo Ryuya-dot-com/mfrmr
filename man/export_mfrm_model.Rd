@@ -51,6 +51,11 @@ a fixed standard-normal Person population and no facet interactions or
 post-fit shrinkage. Unsupported specifications fail before files are written.
 }
 \details{
+The default one-family GPCM estimates its population mean and variance and
+cannot currently be exported. Choosing \code{gpcm_mml_identification =
+"fixed_standard_normal"} changes the model; it is not a file-format
+conversion. Keep the original fit when its estimated population is intended.
+
 Both formats retain the category ladder, facet signs, facet centering and
 RSM/PCM step ownership of the source specification. RSM/PCM adjacent-category log odds
 are \verb{theta + signed facet locations - step}. Steps follow their declared

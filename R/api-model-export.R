@@ -23,6 +23,11 @@
 #'   sensitivity. Not used by RSM/PCM models.
 #'
 #' @details
+#' The default one-family GPCM estimates its population mean and variance and
+#' cannot currently be exported. Choosing `gpcm_mml_identification =
+#' "fixed_standard_normal"` changes the model; it is not a file-format
+#' conversion. Keep the original fit when its estimated population is intended.
+#'
 #' Both formats retain the category ladder, facet signs, facet centering and
 #' RSM/PCM step ownership of the source specification. RSM/PCM adjacent-category log odds
 #' are `theta + signed facet locations - step`. Steps follow their declared
@@ -230,10 +235,17 @@ mfrm_model_export_data <- function(fit, location_prior_sd, step_prior_sd,
         !identical(cfg$step_facet, cfg$slope_facet[2L])) stop(
       "Two-family slope levels or step ownership disagree with the fitted specification.", call. = FALSE)
   }
-  if (isTRUE(cfg$population_spec$active) ||
-      length(cfg$interaction_specs) || length(cfg$dummy_facets) ||
+  if (isTRUE(cfg$population_spec$active)) {
+    stop(paste(
+      "This fit estimates its latent population (mean, variance and/or regression coefficients).",
+      "Model export currently requires a fixed N(0,1) population.",
+      "Choosing fixed_standard_normal changes the model; it is not a file-format conversion.",
+      "Keep the original fit: export preserving its estimated population is not yet supported."
+    ), call. = FALSE)
+  }
+  if (length(cfg$interaction_specs) || length(cfg$dummy_facets) ||
       !identical(cfg$facet_shrinkage %||% "none", "none")) {
-    stop("Model export does not support population regression, interactions, dummy facets or shrinkage.",
+    stop("Model export does not support interactions, dummy facets or shrinkage.",
          call. = FALSE)
   }
   specs <- c(list(cfg$theta_spec), cfg$facet_specs)

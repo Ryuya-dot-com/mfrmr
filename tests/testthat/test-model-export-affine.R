@@ -81,6 +81,18 @@ test_that("new export routes remain self-contained and validate before writing",
   expect_false(dir.exists(folder))
 })
 
+test_that("default GPCM export explains the population restriction without changing the fit", {
+  fit <- readRDS(test_path("fixtures", "anchored-gpcm.rds"))$shared$fit
+  before <- serialize(fit, NULL)
+  for (format in c("stan", "brms")) {
+    folder <- tempfile()
+    expect_error(export_mfrm_model(fit, folder, format),
+      "estimates its latent population.*fixed N\\(0,1\\).*changes the model.*Keep the original fit")
+    expect_false(dir.exists(folder))
+  }
+  expect_identical(serialize(fit, NULL), before)
+})
+
 test_that("fully fixed blocks and binary steps do not introduce sampled nuisance coordinates", {
   f <- affine_export_fixture("PCM", anchored = FALSE)
   for (facet in f$config$facet_names) {
