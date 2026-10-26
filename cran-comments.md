@@ -83,3 +83,13 @@ time limits. It needs matching five-environment CI and pkgdown results on the
 existing draft PR. Remote incoming checks, hosted links and browser
 interaction/layout verification also remain open. No merge into main, site
 deployment or CRAN submission/acceptance is claimed by these local results.
+
+The later saved-summary head completed macOS checking with 14,472 passing
+assertions, three established skips, and one failure: the exact S3-registration
+test still expected the pre-summary method set. All four new methods were
+registered; the expectation list is now updated. Windows/Linux did not start
+because that macOS prerequisite failed. The same head's pkgdown build stopped
+at the new figure's missing alt-text registration; its examples and pages
+generated, and the corrected post-reference hook passes locally. These scoped
+repairs still require matching remote checks; they do not resolve the earlier
+Windows subprocess crash.

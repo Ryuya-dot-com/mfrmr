@@ -84,6 +84,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "export_mfrm_tables",
     "export_mfrm_bundle",
     "export_mfrm_model",
+    "read_mfrm_posterior",
     "export_summary_appendix",
     "extract_mfrm_sim_spec",
     "facet_quality_dashboard",
@@ -178,6 +179,10 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
 
   s3 <- grep("^S3method\\(", ns_lines, value = TRUE)
   expected_s3 <- c(
+    "S3method(confint,mfrm_posterior_summary)",
+    "S3method(plot,mfrm_posterior_summary)",
+    "S3method(print,mfrm_posterior_summary)",
+    "S3method(summary,mfrm_posterior_summary)",
     "S3method(coef,mfrm_network_ergm)",
     "S3method(confint,mfrm_network_ergm)",
     "S3method(vcov,mfrm_network_ergm)",
