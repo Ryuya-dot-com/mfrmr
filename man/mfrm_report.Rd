@@ -233,6 +233,11 @@ using bundled data and a saved report archive.
 
 \section{G/D-study and residual-exploration reports}{
 
+Saved Stan/brms summaries read by \code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}} also enter this
+route directly. Reports retain their credible-interval level, fixed values,
+priors, model-data identity and sampling review. They do not calculate new
+intervals, native MML diagnostics, prior sensitivity or posterior predictions.
+
 Pass \code{\link[=mfrm_g_study]{mfrm_g_study()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}
 or \code{\link[=mfrm_residual_network]{mfrm_residual_network()}} output directly, without \code{mfrm_results()}.
 The non-rater styles all preserve the same complete domain-specific tables

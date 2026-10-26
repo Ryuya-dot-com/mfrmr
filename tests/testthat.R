@@ -14,6 +14,8 @@ cran_light_tests <- c(
   "api-migration",
   "model-export",
   "model-export-affine",
+  "model-export-summary",
+  "posterior-summary",
   "adaptive-fitting",
   "adaptive-quadrature-review",
   "calibration-public-api",

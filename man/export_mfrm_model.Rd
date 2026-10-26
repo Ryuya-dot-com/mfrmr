@@ -134,6 +134,9 @@ separately from divergences. These checks follow the
 and are not a certificate of validity. Review all varying coordinates,
 model fit and priors. The larger endpoint MCSE divided by interval width
 measures simulation precision; no universal acceptable fraction is imposed.
+Read the matching summary and model-data files with \code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}}
+to use \code{summary()}, \code{plot()}, stored credible intervals and \code{\link[=mfrm_report]{mfrm_report()}}
+without either sampling backend. Keep \code{fit.rds} for joint-draw calculations.
 Generated brms callbacks support \code{log_lik()}, \code{posterior_predict()} and
 \code{posterior_epred()}; the last returns category probabilities.
 

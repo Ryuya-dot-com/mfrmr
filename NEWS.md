@@ -28,7 +28,9 @@ figures, tables and an editable report while keeping its assumptions visible.
 You can also continue a supported RSM/PCM or single-family GPCM analysis in
 Stan or brms, keeping fixed anchors and choosing explicit priors.
 `export_mfrm_model()` writes the code, data and parameter maps; two-family
-GPCM export supports Stan. See [model export](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.html).
+GPCM export supports Stan. `read_mfrm_posterior()` brings saved summaries back
+to figures and reports, with credible intervals and sampling review retained.
+See [model export](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.html).
 
 Other additions include automatic integration with a user-set maximum and
 fitting progress for supported MML routes, plus signed agreement networks,

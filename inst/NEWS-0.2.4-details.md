@@ -2042,6 +2042,17 @@ uncertainty, subgroup comparisons and design planning.
   not certify inference validity or frequentist coverage. Priors, likelihoods
   and sampler settings are unchanged.
 
+* `read_mfrm_posterior()` connects the matching exported summary/model-data
+  pair to `summary()`, `plot()`, `confint()` and `mfrm_report()`, including
+  ggplot conversion, long plot tables and appendix exports. Fixed values,
+  credible-interval semantics, priors and sampling review survive saved reuse.
+  The reader requires a model-data checksum from the current summary runner;
+  regenerate older development summaries with the current `run.R` and
+  `summarize.R` using `--summarize`. No new sampling is needed. This is a
+  read-only marginal-summary object, not a native fit or a joint-draw interface;
+  new interval levels, contrasts, predictions and native MML diagnostics are
+  not reconstructed. A small synthetic example is included.
+
 * `mfrmr_interval_guide("gpcm")` now includes one-family location intervals,
   experimental two-family component intervals, slope profiles and corrected-JML
   root uncertainty. The latter has no default confidence level or structural

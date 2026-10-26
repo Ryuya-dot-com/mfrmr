@@ -1924,6 +1924,11 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     rlang::check_dots_empty()
     return(mfrm_gg_facet_intervals(x))
   }
+  if (identical(x$name, "posterior_intervals")) {
+    rlang::check_dots_empty()
+    if (!is.null(component)) stop("Use plot_data() to select posterior tables; as_ggplot() preserves the selected interval view.", call. = FALSE)
+    return(.mfrm_gg_posterior_intervals(x))
+  }
   if (identical(x$name, "dstudy_intervals")) {
     rlang::check_dots_empty()
     if (!is.null(component)) stop("Use plot_data() to select tables; as_ggplot() preserves all interval rows.", call. = FALSE)

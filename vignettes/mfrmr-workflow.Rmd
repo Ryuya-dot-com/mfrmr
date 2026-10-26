@@ -856,6 +856,26 @@ for estimated values can still require sampling review. Both formats support
 `Rscript run.R --summarize` to rebuild these reports from saved draws without
 sampling again. A clean sampling screen does not establish model validity.
 
+Bring those summaries back into mfrmr with `read_mfrm_posterior()`. This small
+included example has short chains and intentionally retains a sampling-review
+status. It demonstrates the reporting path without fitting or requiring Stan.
+
+```{r saved-posterior-return}
+posterior <- read_mfrm_posterior(system.file(
+  "extdata", "posterior-example", package = "mfrmr"))
+summary(posterior)
+posterior_plot <- plot(posterior, quantity = "location", draw = FALSE)
+posterior_report <- mfrm_report(posterior, style = "apa")
+```
+
+For your analysis, supply the export directory instead. Use
+`as_ggplot(posterior_plot)` for an editable figure,
+`plot_data(posterior_plot, "table")` for its long table, and
+`mfrm_report(posterior, output = "html")` for the full report. `confint(posterior)`
+retrieves saved 95% **credible** intervals, keeping fixed values and review
+flags. Other levels, contrasts, predictions and density/raincloud plots need
+the backend's joint draws; they cannot be recovered from this summary.
+
 | Question | Follow-up |
 | --- | --- |
 | How uncertain is a specified difference between two raters? | `mfrm_facet_intervals()` uses their covariance; choose the model-based or sandwich method for the sampling assumptions. Attach the result with `mfrm_results(fit, intervals = ...)`. See `mfrmr-facet-intervals`; an ordinary Wright map does not switch to sandwich intervals. |

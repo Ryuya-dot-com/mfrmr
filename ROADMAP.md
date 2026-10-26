@@ -1257,7 +1257,7 @@ adoption. Matching a model name is not sufficient.
 
 | Stage and tentative version range | Intended deliverable | Boundary for the first release of that capability |
 | --- | --- | --- |
-| Interoperability: first 0.2.5 candidates | Reusable model specifications, portable Stan bundles and a checked path from external draws to parameter summaries, figures and reports. Clarify supported TAM imports and ConQuest comparisons. | Reuse current exporters and mappings. Start with RSM/PCM result return, then extend it to the existing one-family GPCM export. An imported table is not a native calibration or joint uncertainty estimate. |
+| Interoperability: first 0.2.5 candidates | Reusable model specifications and a checked path from joint external draws to new contrasts and posterior targets. Clarify supported TAM imports and ConQuest comparisons. | Extend the existing read-only saved-summary return for exported RSM/PCM/GPCM. An imported marginal summary is not a native calibration or joint uncertainty estimate. |
 | Bayesian workflows: subsequent 0.2.5 candidates | Optional fitting and scoring through CmdStan/cmdstanr, with explicit priors and joint calibration uncertainty. | Build on the same export/result path. Add new-Person scoring, external calibration uncertainty and broader slope families as separately qualified increments; preserve current MML defaults. |
 | Rubric profiles: 0.3.x candidates | Prespecified multidimensional MFRM/GMFRM, joint Person-profile uncertainty and criterion/rater feedback. | Start with low-dimensional simple structure and unit slopes, then admit free-slope variants. Identification, numerical accuracy and usefulness of subscores need separate evidence. |
 | Rating processes: later 0.3.x / 0.4.x candidates | Direct centrality, restricted rater classes, and response-time/rating-time extensions chosen for specific assessment questions. | Qualify the branches separately. A combined model with every effect is not the initial goal. |
@@ -1280,7 +1280,7 @@ meaning of its scores and uncertainty. These are different operations.
 | --- | --- | --- |
 | TAM | `import_tam_fit()` imports supported unidimensional MML results for summaries and point-only Wright maps. Multifacet conditions become `DesignCell` locations; separate facet effects and their joint covariance are not reconstructed. | Extend source-aware reporting first; recover separate facets or transformed uncertainty only with an identified parameter map and the required joint covariance. |
 | ConQuest | `build_conquest_overlap_bundle()` and `review_conquest_overlap()` support a narrow binary, single-facet latent-regression comparison. Broader research comparisons do not expand this public API. | Add matched polytomous additive RSM/PCM cases before more general GPCM exchange. Reuse `conquestr` where suitable for execution and reading, retaining original outputs and settings. |
-| Stan/brms | `export_mfrm_model()` writes code, data, parameter/category maps and a runner. RSM/PCM and one-family GPCM support both formats, including supported fixed facet/group anchors; two-family GPCM supports Stan. Stan runners save draws, diagnostics and posterior interval summaries. | Return those results to common reporting and plotting, and support data/specification input without a preliminary MML fit. |
+| Stan/brms | `export_mfrm_model()` writes model bundles. RSM/PCM and one-family GPCM support both formats, including supported fixed facet/group anchors; two-family GPCM supports Stan. `read_mfrm_posterior()` connects saved summaries to figures, credible intervals and shared reports. | Preserve estimated-population GPCM specifications, then extend joint-draw contrasts, new credible levels and prediction. Support data/specification input without a preliminary MML fit. |
 
 [ConQuest](https://www.acer.org/au/conquest) already includes multidimensional,
 multifaceted and Bayesian estimation. [TAM](https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html)
@@ -1297,13 +1297,15 @@ is not propagated. Person anchors and native two-family anchored fitting
 remain outside the source-model scope.
 It preserves the response likelihood and adds explicit structural priors;
 its posterior is not the original MML estimate or confidence interval.
-An integrated Bayesian result object remains planned; code export alone does
-not connect posterior draws to every native reporting or scoring method.
+The read-only `mfrm_posterior_summary` connects saved marginal summaries to
+`summary()`, `plot()`, `confint()`, long plot tables and `mfrm_report()`.
+It checks the matching model-data identity and retains sampling review;
+`confint()` retrieves the stored 95% credible interval. It does not provide
+native MML diagnostics, joint draws, new interval levels or scoring.
 
-The first returned Bayesian results should connect to `summary()`, `plot()`,
-`confint()`, long plot tables and the shared report route, with posterior
-credible intervals explicitly identified. Preserve joint draws, chain/iteration
-identity, priors, mappings and numerical diagnostics during saved reuse.
+Further Bayesian result work should preserve joint draws and chain/iteration
+identity for new posterior targets while extending the existing report route.
+Priors, mappings and numerical diagnostics must remain explicit during reuse.
 Classical G/D coefficients and model-based predictive planning keep separate
 targets; shared data or reports do not make them interchangeable.
 

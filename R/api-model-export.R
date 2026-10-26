@@ -107,6 +107,9 @@
 #' and are not a certificate of validity. Review all varying coordinates,
 #' model fit and priors. The larger endpoint MCSE divided by interval width
 #' measures simulation precision; no universal acceptable fraction is imposed.
+#' Read the matching summary and model-data files with [read_mfrm_posterior()]
+#' to use `summary()`, `plot()`, stored credible intervals and [mfrm_report()]
+#' without either sampling backend. Keep `fit.rds` for joint-draw calculations.
 #' Generated brms callbacks support `log_lik()`, `posterior_predict()` and
 #' `posterior_epred()`; the last returns category probabilities.
 #'

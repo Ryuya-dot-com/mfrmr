@@ -96,6 +96,9 @@
     route("Show pooled fixed-facet intervals after multiple imputation", "mfrm_pooled",
       'plot(x, draw = FALSE)', "pooled_facet_intervals", "table", "dedicated",
       "Saved pointwise MI t intervals; no repooling. Missingness and imputation-model assumptions remain."),
+    route("Report saved external posterior intervals", "mfrm_posterior_summary",
+      'plot(x, quantity = "location", draw = FALSE)', "posterior_intervals", "table", "dedicated",
+      "Saved 95% credible intervals with fixed values and sampling review retained; no new posterior computation or inference certification."),
     route("Inspect all residual associations and missing pairs", "mfrm_residual_network",
       'plot(x, type = "matrix", draw = FALSE)', "local_dependence_heatmap", "matrix", "dedicated",
       "Signed Pearson correlations of Person-by-facet standardized-residual means; retain pair overlap and unavailable cells. No calibrated local-independence test."),
@@ -165,7 +168,7 @@
     mfrm_imputed_clusters = "mfrm_cluster_imputed", mfrm_pca = "mfrm_pca",
     mfrm_bundle = "subset_connectivity_report", mfrm_d_study = "mfrm_d_study", mfrm_multivariate_d_study = "mfrm_d_study",
     mfrm_multivariate_gstudy = "mfrm_g_study", mfrm_residual_network = "mfrm_residual_network",
-    mfrm_population_intervals = "mfrm_population_intervals",
+    mfrm_population_intervals = "mfrm_population_intervals", mfrm_posterior_summary = "read_mfrm_posterior",
     mfrm_bias_collection = "estimate_all_bias",
     mfrm_multivariate_d_comparison = "mfrm_multivariate_d_compare", mfrm_information = "compute_information")
   out$ResultFunction <- unname(creators[out$InputClass])

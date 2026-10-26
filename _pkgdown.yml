@@ -216,6 +216,8 @@ reference:
       - build_mfrm_replay_script
       - export_mfrm_bundle
       - export_mfrm_model
+      - read_mfrm_posterior
+      - plot.mfrm_posterior_summary
       - apa_table
       - as_kable
       - as_flextable

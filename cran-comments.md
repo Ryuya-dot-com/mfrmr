@@ -1,8 +1,14 @@
 # Unreleased 0.2.4 candidate — not for submission
 
-## Current artifact
+## Current source and earlier checked artifact
 
-Candidate SHA256: `80dc20208abb7fd12ddcbec42900a585735f903d593b2a07de9303242992cdbe`.
+The current source additionally labels exported Bayesian summaries, retains
+sampling-review decisions, and connects saved summaries to plots, credible
+intervals and shared reports. Its final source-tarball qualification is pending.
+The complete local check below applies to the earlier export-repair artifact,
+not to these later reporting changes.
+
+Earlier artifact SHA256: `80dc20208abb7fd12ddcbec42900a585735f903d593b2a07de9303242992cdbe`.
 
 This candidate connects measurement, assessment planning and reporting. It
 also closes the single-family GPCM and fixed-anchor model-export gaps:
@@ -17,7 +23,7 @@ not distributed or tracked.
 
 ## Local checks and source attribution
 
-The artifact above completes macOS arm64/R 4.6.1 `R CMD check --as-cran
+The earlier artifact above completes macOS arm64/R 4.6.1 `R CMD check --as-cran
 --timings` with **0 errors, 0 warnings and 1 NOTE**. The NOTE is the macOS
 `xcrun_db` temporary-file residue. All **14,315** ordinary assertions pass,
 with three established CRAN-profile research skips. Examples, vignette
@@ -44,6 +50,12 @@ changed articles were rebuilt; other article sources matched their retained
 outputs, with the complete vignette index preserved. The normal check then
 rebuilt the packaged vignettes. No complete NOT_CRAN research suite was rerun.
 
+The later reporting changes pass focused regression tests, installed help
+examples, saved Stan/brms summary replay, and a fresh-session portable-result
+replay without loading either sampling backend. Both base and ggplot figures
+were inspected. Likelihoods, priors and sampler settings are unchanged; the
+earlier density/gradient checks remain applicable to those unchanged models.
+
 ## Dependencies and URLs
 
 The October 26 CRAN source index contains 25,559 packages and lists no reverse
@@ -63,7 +75,11 @@ URL result; no blanket URL exclusions were added.
 
 ## Still required before submission
 
-The changed source needs matching five-environment CI and pkgdown results on
-the existing draft PR. Remote incoming checks, hosted links and browser
+The export-repair head has successful pkgdown, macOS and three Ubuntu checks.
+Its Windows check failed when the R subprocess running the numeric-feature
+workflow tests crashed; the underlying cause is unresolved. The current source
+adds a failure-only diagnostic replay without dropping those tests or changing
+time limits. It needs matching five-environment CI and pkgdown results on the
+existing draft PR. Remote incoming checks, hosted links and browser
 interaction/layout verification also remain open. No merge into main, site
 deployment or CRAN submission/acceptance is claimed by these local results.

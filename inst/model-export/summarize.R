@@ -133,7 +133,9 @@ summarize_mfrm_draws <- function(draws, bundle, sampler, backend) {
     Why = if (any(flagged)) paste(why[flagged], collapse = "; ") else "Listed sampling checks detected no flags.",
     NextAction = if (any(flagged)) "Read sampling-review.csv before interpreting estimates or intervals." else
       "Review model fit, priors and target-specific Monte Carlo error before reporting.")
-  result <- list(parameters = p, sampler = sampler, decision = decision, checks = checks,
+  result <- list(schema_version = 1L, chains = as.integer(dim(draws)[2L]),
+    model_data_md5 = if (file.exists("model-data.rds")) unname(tools::md5sum("model-data.rds")) else NA_character_,
+    parameters = p, sampler = sampler, decision = decision, checks = checks,
     backend = backend, interval = "equal-tailed posterior credible interval for varying parameters", level = .95,
     notes = c("Sampling checks are a screen, not a certificate of validity or calibrated coverage.",
       "Fixed anchors and constraint-determined values have no estimated interval; calibration uncertainty is not propagated.",

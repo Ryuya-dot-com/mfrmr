@@ -5603,6 +5603,11 @@ mfrm_report_html <- function(report) {
 #' using bundled data and a saved report archive.
 #'
 #' @section G/D-study and residual-exploration reports:
+#' Saved Stan/brms summaries read by [read_mfrm_posterior()] also enter this
+#' route directly. Reports retain their credible-interval level, fixed values,
+#' priors, model-data identity and sampling review. They do not calculate new
+#' intervals, native MML diagnostics, prior sensitivity or posterior predictions.
+#'
 #' Pass [mfrm_g_study()], [mfrm_d_study()], [mfrm_multivariate_d_compare()]
 #' or [mfrm_residual_network()] output directly, without `mfrm_results()`.
 #' The non-rater styles all preserve the same complete domain-specific tables
@@ -5944,7 +5949,7 @@ mfrm_report <- function(x,
   }
   if (!is.null(intervals)) stop("Saved `intervals` apply only to G/D-study reports.", call. = FALSE)
   if (!inherits(x, "mfrm_results")) {
-    stop("`x` must be mfrm_results, a G/D-study, a paired D-study comparison, a residual/rater/halo network, an ERGM result, bias estimates, or an anchor/linking/model-choice review. Call `mfrm_results()` first for a supported fitted model.", call. = FALSE)
+    stop("`x` must be mfrm_results, a saved posterior summary, a G/D-study, a paired D-study comparison, a residual/rater/halo network, an ERGM result, bias estimates, or an anchor/linking/model-choice review. Use `mfrm_results()` for a supported native fit or `read_mfrm_posterior()` for an exported Bayesian summary.", call. = FALSE)
   }
   style <- match.arg(tolower(as.character(style[1])), c("qc", "apa", "validation", "reviewer", "technical", "rater"))
   output <- match.arg(tolower(as.character(output[1])), c("object", "markdown", "html", "tables"))
@@ -7223,6 +7228,8 @@ mfrm_results <- function(fit,
                          response_diagnostics = NULL,
                          calibration_intervals = c("none", "normal"),
                          calibration_level = .95) {
+  if (inherits(fit, "mfrm_posterior_summary"))
+    stop("Send saved posterior summaries directly to mfrm_report(), plot() or confint(). mfrm_results() requires a supported native fit and does not reconstruct native diagnostics from marginal posterior summaries.", call. = FALSE)
   if (inherits(fit, "mfrm_cml_fit") ||
       (inherits(fit, "mfrm_comparison_fit") && identical(fit$config$method, "CML"))) {
     stop(paste0("mfrm_results() does not support CML fits. Use summary(fit) for structural estimates ",

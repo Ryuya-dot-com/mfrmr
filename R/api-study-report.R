@@ -1,6 +1,7 @@
 .mfrm_study_report_classes <- function() c("mfrm_multivariate_gstudy",
   "mfrm_multivariate_d_study", "mfrm_multivariate_d_comparison", "mfrm_residual_network",
   "mfrm_rater_network", "mfrm_halo_network", "mfrm_network_ergm",
+  "mfrm_posterior_summary",
   .mfrm_review_report_classes())
 
 .mfrm_review_report_classes <- function() c("mfrm_bias", "mfrm_anchor_review",
@@ -50,7 +51,28 @@
     roles[name] <<- role; descriptions[name] <<- description
   }
   notes <- character(); saved_intervals <- NULL
-  if (inherits(x, .mfrm_review_report_classes())) {
+  if (inherits(x, "mfrm_posterior_summary")) {
+    .mfrm_validate_posterior(x)
+    title <- "External Bayesian measurement summary"
+    add("source_model", x$source, "study_design", "Exported model, response scale and stored credible level")
+    add("posterior_decision", x$decision, "study_diagnostics", "Saved sampling screen; not inference certification")
+    add("parameters", x$parameters, "study_estimates", "All mapped posterior summaries and internal sampling coordinates")
+    add("sampling_review", x$checks, "study_diagnostics", "Sampling criteria, flags and next actions")
+    add("sampler_diagnostics", x$sampler, "study_diagnostics", "Per-chain sampling diagnostics")
+    add("parameter_map", x$parameter_map, "study_design", "Original identities, fixed constraints, references and directions")
+    add("categories", x$categories, "study_design", "Original and internal score categories")
+    add("priors", data.frame(Prior = names(x$priors),
+      Value = vapply(x$priors, function(v) paste(v, collapse = ", "), character(1))),
+      "study_design", "Declared priors; sensitivity is not assessed by this report")
+    constraints <- unlist(x$constraints, use.names = TRUE)
+    if (length(constraints)) add("constraints", data.frame(Setting = names(constraints), Value = unname(constraints)),
+      "study_design", "Retained facet/group/step constraint specifications")
+    notes <- c(x$notes, "This report contains stored marginal posterior summaries, not joint draws or native MML diagnostics.",
+      "Report the likelihood, priors, population and anchor constraints, sampling diagnostics, prior sensitivity and posterior predictive checks separately.")
+    issue <- paste(x$decision$Interpretation, x$decision$Why)
+    route <- "report$tables$sampling_review; plot(x); confint(x)"
+    title_route <- "export_mfrm_model() -> external sampling -> read_mfrm_posterior()"
+  } else if (inherits(x, .mfrm_review_report_classes())) {
     # Keep the established summary/export route, with full source tables below.
     b <- build_summary_table_bundle(x, include_empty = TRUE,
       top_n = .Machine$integer.max)
@@ -236,6 +258,12 @@
   first <- data.frame(Area = "Overall", Status = "review", Readiness = "Interpretation requires study context",
     MainIssue = issue, NextAction = "Complete the study-specific Methods and Results interpretation.",
     PrimaryRoute = route)
+  if (inherits(x, "mfrm_posterior_summary")) {
+    first$Readiness <- x$decision$Interpretation
+    first$NextAction <- if (x$decision$Status == "sampling_review_required")
+      "Read report$tables$sampling_review; resolve recorded sampling concerns before interpretation." else
+        "Review priors, posterior predictive fit and the study context before reporting."
+  }
   index <- data.frame(Area = unname(descriptions), EvidenceStatus = "stored",
     PrimaryTable = names(tables), Role = unname(roles), PlotRoute = "plot(report$source)")
   markdown <- c(paste0("# ", title), "", issue,
