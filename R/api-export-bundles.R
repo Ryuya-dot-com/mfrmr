@@ -6322,6 +6322,11 @@ export_summary_table_selection_summary <- function(selection_catalog,
                                                   preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   preset <- match.arg(preset)
   selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
+  if ("Preset" %in% names(selection_catalog)) {
+    selection_catalog <- selection_catalog[
+      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
+    ]
+  }
   if (nrow(selection_catalog) == 0L) {
     return(data.frame())
   }
@@ -6359,6 +6364,11 @@ export_summary_table_selection_table_summary <- function(selection_catalog,
                                                          preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   preset <- match.arg(preset)
   selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
+  if ("Preset" %in% names(selection_catalog)) {
+    selection_catalog <- selection_catalog[
+      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
+    ]
+  }
   selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
   if (nrow(selection_catalog) == 0L || !"Table" %in% names(selection_catalog)) {
     return(data.frame())
@@ -6488,6 +6498,11 @@ export_summary_table_selection_handoff_summary <- function(selection_catalog,
                                                            preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   preset <- match.arg(preset)
   selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
+  if ("Preset" %in% names(selection_catalog)) {
+    selection_catalog <- selection_catalog[
+      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
+    ]
+  }
   selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
   if (nrow(selection_catalog) == 0L || !"AppendixSection" %in% names(selection_catalog)) {
     return(data.frame())
@@ -6523,6 +6538,11 @@ export_summary_table_selection_handoff_bundle_summary <- function(selection_cata
                                                                   preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   preset <- match.arg(preset)
   selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
+  if ("Preset" %in% names(selection_catalog)) {
+    selection_catalog <- selection_catalog[
+      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
+    ]
+  }
   selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
   if (nrow(selection_catalog) == 0L ||
       !"AppendixSection" %in% names(selection_catalog) ||
@@ -6567,6 +6587,11 @@ export_summary_table_selection_handoff_preset_summary <- function(selection_cata
                                                                   preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   preset <- match.arg(preset)
   selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
+  if ("Preset" %in% names(selection_catalog)) {
+    selection_catalog <- selection_catalog[
+      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
+    ]
+  }
   selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
   if (nrow(selection_catalog) == 0L) {
     return(data.frame())
@@ -6595,6 +6620,11 @@ export_summary_table_selection_handoff_role_summary <- function(selection_catalo
                                                                 preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   preset <- match.arg(preset)
   selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
+  if ("Preset" %in% names(selection_catalog)) {
+    selection_catalog <- selection_catalog[
+      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
+    ]
+  }
   selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
   if (nrow(selection_catalog) == 0L || !"Role" %in% names(selection_catalog)) {
     return(data.frame())
@@ -6630,6 +6660,11 @@ export_summary_table_selection_handoff_role_section_summary <- function(selectio
                                                                         preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   preset <- match.arg(preset)
   selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
+  if ("Preset" %in% names(selection_catalog)) {
+    selection_catalog <- selection_catalog[
+      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
+    ]
+  }
   selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
   if (nrow(selection_catalog) == 0L ||
       !"Role" %in% names(selection_catalog) ||
@@ -6671,6 +6706,11 @@ export_summary_table_selection_role_summary <- function(selection_catalog,
                                                         preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   preset <- match.arg(preset)
   selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
+  if ("Preset" %in% names(selection_catalog)) {
+    selection_catalog <- selection_catalog[
+      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
+    ]
+  }
   selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
   if (nrow(selection_catalog) == 0L || !"Role" %in% names(selection_catalog)) {
     return(data.frame())
@@ -6707,6 +6747,11 @@ export_summary_table_selection_section_summary <- function(selection_catalog,
                                                            preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   preset <- match.arg(preset)
   selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
+  if ("Preset" %in% names(selection_catalog)) {
+    selection_catalog <- selection_catalog[
+      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
+    ]
+  }
   selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
   if (nrow(selection_catalog) == 0L || !"AppendixSection" %in% names(selection_catalog)) {
     return(data.frame())

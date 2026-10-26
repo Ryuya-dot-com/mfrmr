@@ -31,8 +31,26 @@ test_that("saved simulation consumers and recipe loading never regenerate respon
   sys.source(system.file("examples", "simulation-results.R", package = "mfrmr",
     mustWork = TRUE), envir = recipe)
   expect_true(is.function(recipe$simulation_result_examples))
-  for (x in saved[setdiff(names(saved), "generation_warnings")]) {
-    expect_true(is.list(summary(x)))
+  for (name in setdiff(names(saved), "generation_warnings")) {
+    result <- summary(saved[[name]])
+    expect_true(is.list(result))
+    if (name == "design") {
+      selection <- result$structural_design_review$selection_summary
+      expect_identical(selection$Preset, c("all", "recommended", "compact",
+        "methods", "results", "diagnostics", "reporting"))
+      expect_identical(selection$TablesAvailable, rep(23L, 7))
+      expect_identical(selection$TablesSelected, c(23L, 4L, 3L, 3L, 0L, 4L, 0L))
+      active <- saved$design$planning_schema$structural_design_review
+      selected <- plot(active, type = "selection_bundles",
+        appendix_preset = "compact", draw = FALSE)
+      expect_identical(selected$data$table$TablesSelected, 3L)
+      expect_equal(selected$data$table$SelectionFraction, 3 / 23)
+      roles <- plot(active, type = "selection_roles",
+        appendix_preset = "recommended", draw = FALSE)
+      expect_equal(sum(roles$data$table$Tables), 4L)
+      expect_error(plot(active, type = "selection_roles",
+        appendix_preset = "reporting", draw = FALSE), "No structural-design")
+    }
   }
   plots <- list(
     recovery = plot(saved$recovery, type = "summary", metric = "rmse", draw = FALSE),

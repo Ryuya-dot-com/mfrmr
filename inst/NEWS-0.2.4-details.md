@@ -29,6 +29,15 @@ results. A wording or display correction alone does not require refitting.
 
 ## Changes by function and workflow
 
+- Structural design summaries now count appendix tables separately for each
+  preset (`"all"`, `"recommended"`, `"compact"` and manuscript sections).
+  Previously, some counts and fractions pooled rows from all presets and
+  repeated the pooled result under each label. This also affected their
+  selection plots. Correct filtering removes redundant grouping work.
+  Recreate affected summaries, plots and report bundles from the original
+  design or simulation result; fitted estimates and simulation runs do not
+  need to be repeated. A single-preset appendix export was already filtered.
+
 - `build_conquest_overlap_bundle(fit = ...)` now records the quadrature-point
   count from the supplied fit, rather than the helper's default. Rebuild an
   affected bundle to correct its settings table; this does not require

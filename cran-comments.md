@@ -25,12 +25,17 @@ and check times were 254 and 3,840 seconds.
   Fixed-grid MML also reduces repeated grouping without changing numerical
   controls. Updated Windows timings and R-devel checks remain outstanding.
 
-macOS arm64, R 4.6.1: the updated implementation passed a full
+macOS arm64, R 4.6.1: a preceding candidate passed a full
 `R CMD check --as-cran --timings` with 0 errors, 0 warnings and 1 NOTE for
 macOS `xcrun_db` temporary-file detritus. The command took 551 seconds,
 including installation. Examples, tests, vignette rebuilding and PDF/HTML
-manuals passed. Subsequent changes affect example inputs, help and test setup;
-the executable production R code is unchanged. The saved-example test file,
+manuals passed. Subsequent changes affect example inputs, help, test setup
+and appendix-selection summaries. The latter now filter each requested preset
+before counting tables, correcting pooled counts and reducing repeated work.
+Five affected test files pass 1,558 assertions on macOS R 4.6.1; the focused
+regression passes 121 assertions on macOS R 4.5.2 and after installing the
+updated archive on macOS R 4.6.1. Exported CSV counts also match the selections.
+The saved-example test file,
 including fresh regeneration, passes 192 assertions on both macOS R 4.5.2 and
 R 4.6.1. Ordinary checks omit regeneration and pass 119 assertions with one
 intentional skip. This is scoped follow-up validation, not a second full
