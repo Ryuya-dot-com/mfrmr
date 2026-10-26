@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Updated 2026-10-26. **0.2.4 is an unreleased candidate.** Its purpose is to
+Updated 2026-10-26. **mfrmr 0.2.4 is a release candidate and has not been released.** Its purpose is to
 connect rating-based measurement, assessment planning and useful feedback.
 The immediate priority is to finish these workflows with their meanings intact,
 then qualify and publish the matching package and documentation.
