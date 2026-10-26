@@ -149,10 +149,10 @@ and missing intervals. A slope value of one is not a rater-quality threshold.
 \examples{
 # How do category probabilities vary with ability in one rating context?
 ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-  model = "GPCM", method = "MML", step_facet = "Criterion",
-  slope_facet = "Rater", rating_min = 1, rating_max = 4,
-  category_policy = "preserve", quad_points = 61)
+# Reuse the synthetic GPCM fit; estimation uses 61 quadrature points.
+# Full regeneration recipe: examples/measurement-fits.R in the package.
+fit <- readRDS(system.file("examples", "measurement-fits.rds",
+  package = "mfrmr", mustWork = TRUE))$gpcm
 # Select actual labels from the example; replace them with your context.
 grid <- expand.grid(Theta = seq(-2, 2, length.out = 21),
   Rater = unique(ratings$Rater)[1],

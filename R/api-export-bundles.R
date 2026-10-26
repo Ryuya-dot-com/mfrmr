@@ -2636,9 +2636,11 @@ conquest_overlap_component_sensitivity <- function(component) {
 #'   [reference_case_benchmark()], [build_mfrm_replay_script()],
 #'   [export_mfrm_bundle()]
 #' @examples
-#' bundle <- build_conquest_overlap_bundle(
-#'   quad_points = 31, maxit = 2000, reltol = 1e-10
-#' )
+#' # Synthetic latent-regression fit; the full regeneration recipe is
+#' # examples/measurement-fits.R in the package (31 nodes, maxit = 2000).
+#' fit <- readRDS(system.file("examples", "measurement-fits.rds",
+#'   package = "mfrmr", mustWork = TRUE))$conquest
+#' bundle <- build_conquest_overlap_bundle(fit = fit)
 #' bundle$summary[, c("Case", "Facet", "Covariate", "Persons", "Items")]
 #' summary(bundle)$mfrmr_fit_status
 #' summary(bundle)$conquest_command_scope
@@ -2676,7 +2678,7 @@ build_conquest_overlap_bundle <- function(fit = NULL,
   pop <- fit$population
   mfrmr_fit_status <- conquest_overlap_mfrmr_fit_status(fit)
   mfrmr_quad_points <- suppressWarnings(as.integer(
-    fit$config$quad_points %||% quad_points %||% 31L
+    fit$config$estimation_control$quad_points %||% fit$config$quad_points
   ))
   if (length(mfrmr_quad_points) != 1L ||
       !is.finite(mfrmr_quad_points) || mfrmr_quad_points < 1L) {
@@ -3781,7 +3783,11 @@ normalize_conquest_overlap_exports <- function(bundle,
 #' @return A named list with class `mfrm_conquest_overlap_tables`.
 #' @seealso [normalize_conquest_overlap_tables()], [review_conquest_overlap()]
 #' @examples
-#' bundle <- build_conquest_overlap_bundle()
+#' # Reuse the synthetic fit; normalize the extracted tables below.
+#' # Regeneration recipe: examples/measurement-fits.R in the package.
+#' fit <- readRDS(system.file("examples", "measurement-fits.rds",
+#'   package = "mfrmr", mustWork = TRUE))$conquest_quick
+#' bundle <- build_conquest_overlap_bundle(fit = fit)
 #' tmp_dir <- tempdir()
 #' pop_path <- file.path(tmp_dir, "cq_pop.csv")
 #' item_path <- file.path(tmp_dir, "cq_item.tsv")

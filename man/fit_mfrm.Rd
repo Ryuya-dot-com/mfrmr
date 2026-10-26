@@ -2307,7 +2307,7 @@ Unsupported explicit arguments are rejected even when equal to a default.
 Ordinary \code{mfrm_fit} scoring, diagnostics and consolidated reports are not
 attached to this separate class. These restrictions do not affect imported
 eRm fits. See Mair and Hatzinger (2007),
-\url{https://www.jstatsoft.org/article/view/v020i09}, for the linear Rasch-family
+\doi{10.18637/jss.v020.i09}, for the linear Rasch-family
 CML framework.
 }
 
@@ -2413,7 +2413,7 @@ are rejected, including unsupported arguments set to their default values.
 The estimable-function criterion is discussed by Lenth (2015),
 \url{https://journal.r-project.org/articles/RJ-2015-016/}. Recession directions
 and finite-MLE existence in exponential families are distinguished by
-Geyer (2009), \url{https://www.stat.umn.edu/geyer/gdor/}. These principles do not
+Geyer (2009), \doi{10.1214/08-EJS349}. These principles do not
 establish global MML identification or finite-sample inference here.
 }
 

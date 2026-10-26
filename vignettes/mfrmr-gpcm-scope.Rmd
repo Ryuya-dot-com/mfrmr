@@ -2460,7 +2460,7 @@ composites and designs, but a high G coefficient is not the probability of
 selecting the correct champion. Their linear composite weights do not
 implement the score-dependent trimming of competition panels.
 
-Sport applications have precedents. [Looney (1997)](https://pubmed.ncbi.nlm.nih.gov/9661718/)
+Sport applications have precedents. Looney (1997)[^looney1997]
 applied many-facet Rasch analysis to 1994 Olympic figure skating under the
 then-used rank aggregation system; that study does not validate current
 scoring rules or this GMFRM implementation. In gymnastics,
@@ -2470,6 +2470,9 @@ judge evaluation. Their comparison scores approximate performance quality;
 agreement with a panel is not independent proof of truth. These studies
 motivate checks of score meaning, judging variability and decision consequences,
 rather than automatic exclusion of a judge whose marks change the podium.
+
+[^looney1997]: Looney, M. A. (1997). Objective measurement of figure skating
+    performance. *Journal of Outcome Measurement, 1*(2), 143–163. PMID: 9661718.
 
 ### Can EM estimate two slope families?
 

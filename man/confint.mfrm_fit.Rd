@@ -451,10 +451,10 @@ reported separately from mathematical unboundedness.
 \examples{
 # Compare intervals for free coefficients and relative discriminations.
 ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-  model = "GPCM", method = "MML", step_facet = "Criterion",
-  slope_facet = "Rater", rating_min = 1, rating_max = 4,
-  category_policy = "preserve", quad_points = 61)
+# Reuse the synthetic GPCM fit; estimation uses 61 quadrature points.
+# Full regeneration recipe: examples/measurement-fits.R in the package.
+fit <- readRDS(system.file("examples", "measurement-fits.rds",
+  package = "mfrmr", mustWork = TRUE))$gpcm
 # The default matches coef(fit): steps, locations and log slopes.
 coefficients_ci <- confint(fit, level = 0.95)
 head(coefficients_ci)

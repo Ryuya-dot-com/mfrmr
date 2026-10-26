@@ -22,6 +22,11 @@ results. A wording or display correction alone does not require refitting.
 
 ## Changes by function and workflow
 
+- `build_conquest_overlap_bundle(fit = ...)` now records the quadrature-point
+  count from the supplied fit, rather than the helper's default. Rebuild an
+  affected bundle to correct its settings table; this does not require
+  refitting or change the fitted estimates.
+
 - ERGM results now support `coef()`, `vcov()` and `confint()` alongside
   `summary()`, `plot()` and reporting. Coefficient intervals retain unavailable
   states and conditional-network limitations. GPCM bootstrap and curve-interval

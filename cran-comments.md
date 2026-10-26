@@ -2,31 +2,35 @@
 
 ## Changes
 
-This update connects many-facet measurement, generalizability and decision
-studies, and rater feedback to shared tables, figures and reports. It also
-adds supported single-family GPCM and fixed-anchor exports to Stan/brms,
-with saved posterior summaries available for reporting.
-
-Retired standalone drawing helpers are replaced by `plot()` methods.
-NEWS and the migration guide document the replacements and corrections
-that require rebuilding older results.
+This update connects many-facet measurement, G/D studies and rater feedback
+to shared tables, figures and reports. It adds supported single-family GPCM
+and fixed-anchor exports to Stan/brms. NEWS and the migration guide explain
+retired plotting helpers and corrections affecting saved analyses.
 
 ## Checks
 
-macOS arm64, R 4.6.1: `R CMD check --as-cran --timings` completed with
-0 errors, 0 warnings and 2 NOTEs. Examples, tests, vignette rebuilding and
-PDF/HTML manuals passed.
+Windows Server 2022, R 4.5.3 (win-builder, R-oldrelease): the preceding
+candidate completed with 0 errors, 0 warnings and 2 NOTEs. Tests, vignette
+rebuilding and PDF/HTML manuals passed.
+Installation took 240 seconds and checking took 3,669 seconds.
 
-- `confint.mfrm_fit` took 5.007 seconds elapsed (4.997 seconds CPU), just over
-  the example timing threshold.
-- The macOS temporary directory contained an `xcrun_db` file.
+- Incoming URL checks: publisher links with verified DOIs now use those
+  DOIs. Two references without a DOI listed in PubMed retain complete
+  citations and PMIDs. The README roadmap link now uses its repository URL.
+- Example timings: 21 examples took 10.4–37.1 seconds. Four affected examples
+  now reuse packaged synthetic fits with regeneration code; their interval,
+  curve and export calculations remain executable with unchanged settings.
+  Their numerical outputs were checked against the preceding examples.
 
-Remote incoming and system-clock checks were disabled locally after DNS
-failures; online repository queries were also unavailable in that run.
+macOS arm64, R 4.6.1: the preceding candidate passed a full
+`R CMD check --as-cran --timings` with 0 errors, 0 warnings and 2 NOTEs
+(a 5.007-second example and macOS `xcrun_db` temporary-file detritus).
+The revised R sources, help and rebuilt articles passed a scoped check with
+0 errors, 0 warnings and the `xcrun_db` NOTE; affected tests and examples were
+checked separately. This was not another full test run. Remote incoming and
+system-clock checks were disabled locally after DNS failures.
 
-Standard R CMD checks passed on macOS and Windows with R-release, and on
-Ubuntu with R-release, R-devel and R-oldrel. These checks excluded PDF manual
-building and `donttest` examples.
+Updated Windows/R-devel results are not yet available.
 
 ## Reverse dependencies
 

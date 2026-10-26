@@ -91,7 +91,11 @@ that the files were treated as extracted tables, not raw ConQuest report
 text, and to check duplicate-ID / non-numeric-estimate pre-review flags.
 }
 \examples{
-bundle <- build_conquest_overlap_bundle()
+# Reuse the synthetic fit; normalize the extracted tables below.
+# Regeneration recipe: examples/measurement-fits.R in the package.
+fit <- readRDS(system.file("examples", "measurement-fits.rds",
+  package = "mfrmr", mustWork = TRUE))$conquest_quick
+bundle <- build_conquest_overlap_bundle(fit = fit)
 tmp_dir <- tempdir()
 pop_path <- file.path(tmp_dir, "cq_pop.csv")
 item_path <- file.path(tmp_dir, "cq_item.tsv")

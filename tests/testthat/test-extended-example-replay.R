@@ -1,3 +1,37 @@
+test_that("saved measurement fits retain controls and support consumers without refitting", {
+  x <- readRDS(system.file("examples", "measurement-fits.rds",
+    package = "mfrmr", mustWork = TRUE))
+  before <- serialize(x, NULL)
+  expect_equal(vapply(x, function(f) f$config$estimation_control$quad_points,
+    numeric(1)), c(gpcm = 61, conquest = 31, conquest_quick = 7))
+  expect_equal(x$gpcm$config$slope_facet, "Rater")
+  expect_equal(x$gpcm$config$step_facet, "Criterion")
+  expect_identical(environment(x$gpcm$population$formula), baseenv())
+  blocked <- function(...) stop("Unexpected refitting")
+  local_mocked_bindings(fit_mfrm = blocked, .package = "mfrmr")
+  recipe <- new.env(parent = baseenv())
+  sys.source(system.file("examples", "measurement-fits.R", package = "mfrmr",
+    mustWork = TRUE), envir = recipe)
+  expect_true(is.function(recipe$measurement_fit_examples))
+  ci <- confint(x$gpcm, parm = "slopes")
+  expect_true(is.matrix(ci))
+  expect_true(any(is.finite(ci)))
+  for (name in c("conquest", "conquest_quick")) {
+    b <- build_conquest_overlap_bundle(x[[name]], quad_points = 99)
+    expect_equal(b$summary$MfrmrQuadraturePoints,
+      x[[name]]$config$estimation_control$quad_points)
+    expect_equal(b$summary$Persons, 60)
+    expect_equal(b$summary$Items, 6)
+  }
+  legacy <- x$conquest
+  legacy$config$quad_points <- legacy$config$estimation_control$quad_points
+  legacy$config$estimation_control$quad_points <- NULL
+  expect_equal(build_conquest_overlap_bundle(legacy)$summary$MfrmrQuadraturePoints, 31)
+  legacy$config$quad_points <- NULL
+  expect_error(build_conquest_overlap_bundle(legacy), "quadrature-point count is unavailable")
+  expect_identical(serialize(x, NULL), before)
+})
+
 test_that("packaged extended examples are coherent and replay without recomputation", {
   path <- system.file("examples", "extended-models.rds", package = "mfrmr", mustWork = TRUE)
   x <- readRDS(path)

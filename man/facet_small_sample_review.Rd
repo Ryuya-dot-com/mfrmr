@@ -105,7 +105,7 @@ Linacre, J. M. (1994). Sample size and item calibration stability.
 Jones, E., & Wind, S. A. (2018). Using repeated ratings to improve
 measurement precision in incomplete rating designs. \emph{Journal of
 Applied Measurement, 19}(2), 148-161.
-\url{https://pubmed.ncbi.nlm.nih.gov/29894984/}
+PMID: 29894984.
 }
 \seealso{
 \code{\link[=detect_facet_nesting]{detect_facet_nesting()}}, \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}},

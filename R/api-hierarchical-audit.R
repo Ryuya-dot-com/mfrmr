@@ -409,7 +409,7 @@ detect_facet_nesting <- function(data, facets, person = NULL,
 #' Jones, E., & Wind, S. A. (2018). Using repeated ratings to improve
 #' measurement precision in incomplete rating designs. *Journal of
 #' Applied Measurement, 19*(2), 148-161.
-#' \url{https://pubmed.ncbi.nlm.nih.gov/29894984/}
+#' PMID: 29894984.
 #'
 #' @examples
 #' toy <- load_mfrmr_data("example_operational")

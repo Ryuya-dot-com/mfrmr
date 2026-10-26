@@ -147,7 +147,7 @@ and follow [NEWS](NEWS.md) and **Updating saved analyses for 0.2.4** in
 Native measurement models use one ordered score scale and one latent person
 dimension. Two-family GPCM and other experimental routes have separate limits
 in the model guides. G/D studies concern variation in defined observed scores.
-The [roadmap](ROADMAP.md) separates current capabilities from future work.
+The [roadmap](https://github.com/Ryuya-dot-com/mfrmr/blob/main/ROADMAP.md) separates current capabilities from future work.
 
 Use `citation("mfrmr")` and the methodological references in the relevant help.
 Licensed under the [MIT License](https://opensource.org/licenses/MIT).
