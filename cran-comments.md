@@ -9,15 +9,17 @@ retired plotting helpers and corrections affecting saved analyses.
 
 ## Checks
 
-Windows Server 2022, R 4.5.3 (win-builder, R-oldrelease): the preceding
-candidate completed with 0 errors, 0 warnings and 2 NOTEs. Tests, vignette
-rebuilding and PDF/HTML manuals passed.
-Installation took 240 seconds and checking took 3,669 seconds.
+Windows Server 2022 (win-builder): the preceding candidate completed on
+R-oldrelease 4.5.3 and R-release 4.6.1, each with 0 errors, 0 warnings and
+2 NOTEs. Tests, vignette rebuilding and PDF/HTML manuals passed in both.
+Installation/check times were 240/3,669 seconds on R-oldrelease and
+169/2,761 seconds on R-release.
 
 - Incoming URL checks: publisher links with verified DOIs now use those
   DOIs. Two references without a DOI listed in PubMed retain complete
   citations and PMIDs. The README roadmap link now uses its repository URL.
-- Example timings: 21 examples took 10.4–37.1 seconds. Four affected examples
+- Example timings: 21 examples exceeded 10 seconds on R-oldrelease and 10
+  on R-release (maximum 37.1 and 26.5 seconds, respectively). Four examples
   now reuse packaged synthetic fits with regeneration code; their interval,
   curve and export calculations remain executable with unchanged settings.
   Their numerical outputs were checked against the preceding examples.
