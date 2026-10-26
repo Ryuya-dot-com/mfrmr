@@ -206,15 +206,15 @@ language can be used in reporting, follow with
 
 2.  Run `compute_information(fit)`.
 
-3.  Plot with `plot_information(info, type = "tif")`.
+3.  Plot with `plot(info, type = "tif")`.
 
 4.  If needed, inspect facet contributions with
-    `plot_information(info, type = "iif", facet = "Rater")`.
+    `plot(info, type = "iif", facet = "Rater")`.
 
 ## See also
 
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-[`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md)
 
 ## Examples
 

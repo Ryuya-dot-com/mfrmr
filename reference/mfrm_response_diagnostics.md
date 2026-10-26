@@ -24,7 +24,7 @@ print(x, ...)
 
 ## Arguments
 
-- fit:
+- fit :
 
   A numerically ready native RSM MML
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
@@ -35,21 +35,21 @@ print(x, ...)
   MML fit, or a shared-owner GPCM fit with an explicit
   `jml_correction_order` and an available point solution.
 
-- rows:
+- rows :
 
   Distinct original input row numbers to return, or `NULL` for all
   assigned rows. This selects outputs only: every observed source rating
   still informs the joint posterior or saved JML Person profile. Groups
   summarize the selected rows; selection does not refit the model.
 
-- group_by:
+- group_by :
 
   Fitted identifier columns to summarize separately. `NULL` uses all
   Person, testlet/rater and fixed-facet columns. No grouping by score.
   Corrected JML lists the fixed facets first, then Person, so the
   default plot shows the first declared facet.
 
-- quad_points:
+- quad_points :
 
   Normal quadrature order, 7 to 121 for testlets or 7 to 241 for
   ordinary RSMs, two-family GPCMs or shared raters. Defaults to the
@@ -57,11 +57,11 @@ print(x, ...)
   category probability must change by no more than `1e-7`. Omit this
   argument for corrected JML, which performs no integration.
 
-- object, x:
+- object, x :
 
   A saved response-diagnostics result.
 
-- ...:
+- ... :
 
   Unused.
 

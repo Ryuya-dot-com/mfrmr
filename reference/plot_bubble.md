@@ -27,27 +27,27 @@ plot_bubble(
 
 ## Arguments
 
-- x:
+- x :
 
   Output from
   [`fit_mfrm`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   or
   [`diagnose_mfrm`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
 
-- diagnostics:
+- diagnostics :
 
   Optional output from
   [`diagnose_mfrm`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   when `x` is an `mfrm_fit` object. If omitted, diagnostics are computed
   automatically.
 
-- fit_stat:
+- fit_stat :
 
   Fit statistic for the y-axis: `"Infit"` (default) or `"Outfit"`.
   Ignored when `view = "infit_outfit"` because that view always plots
   Infit on x and Outfit on y.
 
-- view:
+- view :
 
   Layout. `"measure"` (default, the historical mfrmr layout) plots
   Measure (logit) on x and the chosen `fit_stat` MnSq on y.
@@ -55,52 +55,52 @@ plot_bubble(
   the Winsteps Table 30.2 "Most-misfitting Persons / Items" scatter that
   many MFRM and Rasch users expect, and defaults `bubble_size = "N"`.
 
-- bubble_size:
+- bubble_size :
 
   Variable controlling bubble radius: `"SE"` (default for
   `view = "measure"`), `"N"` (observation count; default for
   `view = "infit_outfit"`), or `"equal"` (uniform size).
 
-- facets:
+- facets :
 
   Character vector of facets to include. `NULL` (default) includes every
   row allowed by `include_person`.
 
-- include_person:
+- include_person :
 
   If `TRUE`, person measures may be included in the chart (and in
   `facets` filtering). The default is `FALSE` because person rows
   commonly overwhelm facet-level patterns.
 
-- fit_range:
+- fit_range :
 
   Numeric length-2 vector defining the heuristic fit-review band shown
   as a shaded region (default `c(0.5, 1.5)`).
 
-- top_n:
+- top_n :
 
   Maximum number of elements to plot (default 60).
 
-- main:
+- main :
 
   Compatibility title argument. Omitted or `NULL` keeps the default
   title. Existing calls remain supported without a deprecation warning.
   For new code, prefer `title`; do not supply both arguments.
 
-- palette:
+- palette :
 
   Optional named colour vector keyed by facet name.
 
-- draw:
+- draw :
 
   If `TRUE` (default), render the plot using base graphics.
 
-- preset:
+- preset :
 
   Visual preset (`"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`).
 
-- title:
+- title :
 
   Plot title. Omit it to keep the default, supply one character string
   to replace it, or use `NULL` (or `""`) to suppress it. This changes
@@ -167,8 +167,15 @@ range. Points are colored by facet for easy identification.
 2.  Compute diagnostics once with
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
 
-3.  Call `plot_bubble(fit, diagnostics = diag)` to inspect the most
-    extreme elements.
+3.  Call `plot(fit, type = "bubble", diagnostics = diag)` to inspect the
+    most extreme elements.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -214,7 +221,6 @@ or diagnostic thresholds.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -233,14 +239,13 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # Compare facet estimates (horizontal axis) with Infit (vertical axis)
-plot_bubble(fit, diagnostics = diagnostics)
+plot(fit, type = "bubble", diagnostics = diagnostics)
 
 # Above the review band: more response variation than expected; below: less
 # By default, larger bubbles indicate greater precision, not greater misfit
 
 # Optional: compare Infit (horizontal) and Outfit (vertical) directly
-plot_bubble(fit, diagnostics = diagnostics, view = "infit_outfit")
+plot(fit, type = "bubble", diagnostics = diagnostics, view = "infit_outfit")
 
 # Here bubble size represents observation count; bands are review aids
-# }
 ```

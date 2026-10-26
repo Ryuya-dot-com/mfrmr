@@ -83,6 +83,13 @@ contrast. Residual differences do not isolate differential functioning.
 Linked refit intervals omit estimated-anchor uncertainty and cross-refit
 covariance.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## Session plot defaults
 
 Set `options(mfrmr.plot_preset = "publication")` to choose a session
@@ -122,31 +129,5 @@ or diagnostic thresholds.
 
 [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
 [`analyze_dif()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
-[`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md).
-
-## Examples
-
-``` r
-# \donttest{
-toy <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-dff <- analyze_dff(fit, diagnostics = diag,
-                   facet = "Rater", group = "Group", data = toy)
-unique(dff$dif_table$ClassificationSystem)
-#> [1] "descriptive"
-p <- plot_dif_summary(dff, draw = FALSE)
-head(p$data$data)
-#>          Pair      Effect SE CI_Lower CI_Upper    Classification
-#> 1 R01 | A | B  0.16845853 NA       NA       NA Residual contrast
-#> 2 R02 | A | B -0.13221860 NA       NA       NA Residual contrast
-#> 3 R03 | A | B -0.11261117 NA       NA       NA Residual contrast
-#> 4 R04 | A | B  0.07637118 NA       NA       NA Residual contrast
-#>   ClassificationSystem   Color
-#> 1          descriptive #6b7280
-#> 2          descriptive #6b7280
-#> 3          descriptive #6b7280
-#> 4          descriptive #6b7280
-# }
-```
+[plot(x, type =
+"heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md).

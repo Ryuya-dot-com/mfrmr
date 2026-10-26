@@ -27,6 +27,9 @@ displacement_table(
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+  Must match this fitted analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics.
 
 - facets:
 
@@ -82,8 +85,8 @@ instability in anchor assumptions.
 
 2.  Inspect `summary(disp)` then detailed rows.
 
-3.  Visualize with
-    [`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md).
+3.  Visualize with [plot(x, type =
+    "displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 ## Output columns
 
@@ -121,6 +124,15 @@ The `table` data.frame contains:
 
   Logical; `TRUE` when displacement exceeds thresholds.
 
+## Saved-result reuse
+
+The returned `fit_identity` records the fitted analysis for reuse with
+reports and exports. Recreate older results from the saved fit and
+matching diagnostics using the original screening options; no model
+refit is needed. See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+for migration instructions.
+
 ## See also
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
@@ -130,14 +142,13 @@ The `table` data.frame contains:
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 disp <- displacement_table(fit, anchored_only = FALSE)
 summary(disp)
 #> mfrmr Displacement Summary 
 #>   Class: mfrm_displacement
-#>   Components: 3
+#>   Components: 4
 #> 
 #> Displacement summary
 #>  Levels AnchoredLevels FlaggedLevels FlaggedAnchoredLevels MaxAbsDisplacement
@@ -146,17 +157,17 @@ summary(disp)
 #>                    0                      0.5             2
 #> 
 #> Displacement rows: table
-#>   Facet        Level WeightedN ResidualSum Information Displacement
-#>  Person <suppressed>        16           0       3.461            0
-#>  Person <suppressed>        16           0       6.761            0
-#>  Person <suppressed>        16           0       9.206            0
-#>  Person <suppressed>        16           0       9.206            0
-#>  Person <suppressed>        16           0       9.206            0
-#>  Person <suppressed>        16           0       9.183            0
-#>  Person <suppressed>        16           0       9.453            0
-#>  Person <suppressed>        16           0       9.453            0
-#>  Person <suppressed>        16           0       4.967            0
-#>  Person <suppressed>        16           0       6.553            0
+#>   Facet        Level WeightedN ResidualSum Information FacetSign Displacement
+#>  Person <suppressed>        16           0       3.461         1            0
+#>  Person <suppressed>        16           0       6.761         1            0
+#>  Person <suppressed>        16           0       9.206         1            0
+#>  Person <suppressed>        16           0       9.206         1            0
+#>  Person <suppressed>        16           0       9.206         1            0
+#>  Person <suppressed>        16           0       9.183         1            0
+#>  Person <suppressed>        16           0       9.453         1            0
+#>  Person <suppressed>        16           0       9.453         1            0
+#>  Person <suppressed>        16           0       4.967         1            0
+#>  Person <suppressed>        16           0       6.553         1            0
 #>  DisplacementSE DisplacementT Estimate    SE  N AnchorValue AnchorStatus
 #>           0.538             0    2.684 0.538 16          NA             
 #>           0.385             0   -1.665 0.385 16          NA             
@@ -192,5 +203,4 @@ summary(disp)
 p_disp <- plot(disp, draw = FALSE)
 p_disp$data$plot
 #> [1] "lollipop"
-# }
 ```

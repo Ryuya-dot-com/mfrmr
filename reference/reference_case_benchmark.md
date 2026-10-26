@@ -145,7 +145,6 @@ remains visible.
 ## Examples
 
 ``` r
-# \donttest{
 bench <- reference_case_benchmark(
   cases = "synthetic_truth",
   method = "JML",
@@ -228,5 +227,4 @@ summary(bench)
 #>    external validation against commercial software or published studies.
 #>  - Non-MML benchmark runs remain useful for stability review, but
 #>    formal-inference expectations should be interpreted more conservatively.
-# }
 ```

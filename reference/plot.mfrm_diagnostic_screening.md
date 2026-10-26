@@ -74,21 +74,22 @@ after drawing.
 ## Examples
 
 ``` r
-# \donttest{
-diag_eval <- evaluate_mfrm_diagnostic_screening(
-  design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
-  reps = 1,
-  maxit = 30,
-  include_report = TRUE,
-  seed = 123
-)
-#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
-#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+diag_eval <- saved$diagnostic_screening
 plot(diag_eval, type = "overview", draw = FALSE)
 #> <mfrm_plot_data>
 #>   name     : diagnostic_screening
 #>   title    : MFRM diagnostic screening overview
 #>   subtitle : Metric family: rate
+#>   notes    :
+#>     [interpretation_note] Diagnostic-screening plots summarize simulation
+#>     operating characteristics. They compare screening and reporting signals
+#>     across design/scenario conditions and should not be read as calibrated
+#>     inferential tests.
 #>   data     :
 #>     $type : character [1]
 #>     $metric : character [1]
@@ -113,10 +114,10 @@ plot(diag_eval, type = "overview", draw = FALSE)
 #>     $plot_long : data.frame [14 x 57]
 #>     $plot_table : data.frame [14 x 57]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 14 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 plot_data(diag_eval, type = "overview", component = "plot_long")
 #> # A tibble: 14 × 57
 #>    design_id Scenario       ScenarioClass Model DependenceFacet n_person n_rater
@@ -238,6 +239,11 @@ plot(diag_eval, type = "report", metric = "rate", draw = FALSE)
 #>   name     : diagnostic_screening
 #>   title    : MFRM diagnostic screening report
 #>   subtitle : Metric family: rate
+#>   notes    :
+#>     [interpretation_note] Diagnostic-screening plots summarize simulation
+#>     operating characteristics. They compare screening and reporting signals
+#>     across design/scenario conditions and should not be read as calibrated
+#>     inferential tests.
 #>   data     :
 #>     $type : character [1]
 #>     $metric : character [1]
@@ -262,9 +268,8 @@ plot(diag_eval, type = "report", metric = "rate", draw = FALSE)
 #>     $plot_long : data.frame [8 x 27]
 #>     $plot_table : data.frame [8 x 27]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 8 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
-# }
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 ```

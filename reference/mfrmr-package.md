@@ -6,11 +6,37 @@ many-facet ordered-response measurement models: the Rasch-family `RSM` /
 level-specific discriminations. MML permits a different facet to supply
 category steps; JML requires the same facet for both roles.
 [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
-supplies approximate relative-slope intervals for eligible MML fits;
-model ranking and matched PCM/GPCM tests use separate checks in
+with `parm = "slopes"` supplies approximate relative-slope intervals for
+eligible MML fits; model ranking and matched PCM/GPCM tests use separate
+checks in
 [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-explains the supported uses.
+explains the supported uses. An experimental two-family `GPCM` route
+also provides estimation and conditional scoring, with explicit
+uncertainty limitations. Native RSM/PCM conditional maximum likelihood
+(`CML`) conditions on Person totals without assuming an ability
+distribution. Its separate result class supplies structural contrast
+intervals through
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md),
+without Person abilities, a population SD or ordinary fit diagnostics.
+See
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+for the supported conditional estimation scope.
+
+For assessment planning from observed scores,
+[`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md)
+and
+[`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md)
+separate sources of variation and project dependability for specified
+future rating plans. For rater feedback and assessment decisions,
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
+[`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
+and
+[`classification_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/classification_table.md)
+provide their respective reports, agreement measures and fixed-plan
+classification summaries. These analyses have different assumptions and
+uncertainty targets; follow the linked help for the question you want to
+answer.
 
 ## Details
 
@@ -30,13 +56,16 @@ Start with the complete script in the Examples section:
 Each data row is one rating event. The `person`, `facets`, and `score`
 arguments name columns. The example uses marginal maximum likelihood
 (`MML`) and a rating-scale model (`RSM`) with shared category
-thresholds. `head(toy)` displays the first six rows. Only `Person`,
+thresholds. `head(ratings)` displays the first six rows. Only `Person`,
 `Rater`, `Criterion`, and `Score` are used by this model; the example's
 `Study` and `Group` columns are additional labels. `<-` saves an object,
 and `$` selects a named part: `results$person_overview` displays one
 table from the saved summary. The overview tables summarize
 distributions; `as.data.frame(fit)` returns individual person, rater,
-and criterion estimates.
+and criterion estimates. The assignment
+`ratings <- load_mfrmr_data("example_operational")` reads an existing
+synthetic dataset supplied with mfrmr. You do not need to create
+`ratings` first; the name on the left stores what the function returns.
 
 Before interpreting or reporting estimates, read `results$decision` and
 follow its `NextAction`. The default summary does not compute
@@ -44,7 +73,69 @@ diagnostics. For your own data, first inspect the design and score
 categories with
 [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
 
+## Optional packages
+
+The basic example below uses packages installed with mfrmr. Its base-R
+plots do not need ggplot2. Additional packages support particular
+features; you do not need to install all suggested packages to get
+started.
+
+- [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+  needs ggplot2 for ggplot2 rendering.
+
+- [`as_kable()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_kable.md)
+  needs knitr and
+  [`as_flextable()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_flextable.md)
+  needs flextable for their respective table formats.
+
+- [`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
+  needs RTMB version 2.0 or later for shared random-rater estimation.
+
+- Corrected JML in
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
+  requested with `jml_correction_order`, needs nleqslv to solve the
+  adjusted equations.
+
+- [`ordinal_logistic_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/ordinal_logistic_table.md)
+  needs ordinal for ordinal-logistic DIF.
+
+These are common examples; other optional analyses name their
+dependencies in their own help. A missing-package message identifies
+what to install. For example, use `install.packages("ggplot2")` if you
+want
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md).
+
+A saved
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+bundle can be reopened with
+[`base::readRDS()`](https://rdrr.io/r/base/readRDS.html) and passed to
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+without refitting or installing optional estimation packages. Reporting
+reuses stored results and retains unavailable diagnostics as
+unavailable. Updating an analysis or computing new diagnostics is a
+separate operation and may need the original dependencies. Save the
+complete bundle with
+[`base::saveRDS()`](https://rdrr.io/r/base/readRDS.html) and retain its
+matching package version/source; see "Updating saved analyses for 0.2.4"
+in
+[mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
+before reusing older saved analyses.
+
+## Measurement scale
+
+Native response models use the logistic metric (L-metric), with scaling
+constant \\D = 1\\; no extra 1.7 normal-ogive approximation factor is
+used. This is distinct from choosing a normal ability distribution. See
+the "Logistic metric (D = 1)" section of
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+for logit interpretation with fixed or varying slopes and comparison
+with other software.
+
 ## Where to go next
+
+- [mfrmr_methods_reference](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_methods_reference.md)
+  for the question-to-calculation map, plain-language explanations and
+  links to the methodological literature.
 
 - [mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
   and
@@ -65,6 +156,10 @@ categories with
 
 - [mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
   for linking and differential facet functioning.
+
+- [`classification_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/classification_table.md)
+  for fixed-plan future classification accuracy, consistency and
+  conditional precision under ordinary RSM/PCM calibration.
 
 - [gpcm_capability_matrix](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
   for the `GPCM` extension.
@@ -208,27 +303,34 @@ Function families:
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
   `summary(diag)`,
   [`analyze_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_residual_pca.md),
-  [`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md)
+  [plot(x, type =
+  "residual_pca")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 - Bias and interaction:
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
   [`estimate_all_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_all_bias.md),
   `summary(bias)`,
   [`bias_interaction_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/bias_interaction_report.md),
-  [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md)
+  [plot(x, type =
+  "bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 - Differential functioning:
   [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
   [`analyze_dif()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
+  [`mantel_haenszel_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/mantel_haenszel_table.md)
+  for separately matched binary responses,
+  [`ordinal_logistic_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/ordinal_logistic_table.md)
+  for matched cumulative-logit comparisons,
   [`dif_interaction_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/dif_interaction_table.md),
-  [`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md),
+  [plot(x, type =
+  "heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md),
   [`dif_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/dif_report.md)
 
 - Design simulation:
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md),
   [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md),
   [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md),
-  [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md),
+  [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md),
   [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md),
   [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md),
   [`evaluate_mfrm_signal_detection()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_signal_detection.md),
@@ -261,25 +363,30 @@ Function families:
   [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md),
   [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md),
   [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md),
-  [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md)
 
 - Case review:
   [`build_misfit_casebook()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_misfit_casebook.md),
-  [`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-  [`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-  [`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
-  [`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md)
+  [plot(x, type =
+  "unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 - Linking and scale maintenance:
   [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md),
   [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md),
   [`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md),
   [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md),
-  [`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md)
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md)
 
 - Dashboards:
   [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md),
-  [`plot_facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facet_quality_dashboard.md)
+  [plot(x, type =
+  "facet_dashboard")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 - Export / reproducibility:
   [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md),
@@ -296,7 +403,8 @@ Function families:
 
 - Equivalence:
   [`analyze_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_facet_equivalence.md),
-  [`plot_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facet_equivalence.md)
+  [plot(x, type =
+  "facet_equivalence")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 - Data and anchors:
   [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md),
@@ -449,7 +557,8 @@ Core object classes are:
     [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md),
     [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md),
     [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md),
-    [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
+    [plot(x, type =
+    "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
     [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
     [`category_structure_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_structure_report.md),
     [`category_curves_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_curves_report.md),
@@ -528,8 +637,9 @@ family's slopes have geometric mean one and the second family's slopes
 are free. Fixed-grid EM and adaptive direct MML supply summaries and
 conditional fitted curves without intervals. Both support separately
 checked experimental component log-Wald and location/contrast intervals
-and descriptive posterior residuals; component profiles require
-fixed-grid EM.
+and descriptive posterior residuals; component profiles preserve the
+fitted fixed-grid or adaptive integration and require separate numerical
+checks.
 [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
 and the portable calibration workflow supply experimental conditional
 new-Person EAP and posterior intervals, excluding calibration
@@ -609,6 +719,21 @@ EM template but use the selected gradient-based M-step rather than B&A's
 probit IRLS, because the target is the polytomous Rasch family rather
 than B&A's 2PL probit model.
 
+**Conditional Maximum Likelihood (CML)**
+
+For supported RSM/PCM models, CML conditions on each Person's total and
+observed assignments, removing ability parameters without specifying
+their population distribution. A generalized
+elementary-symmetric-function recursion evaluates the conditional
+likelihood and information. Identification and finite-MLE checks precede
+structural contrast intervals; their Wald interpretation is asymptotic,
+not a general finite-sample coverage guarantee. The separate
+`mfrm_cml_fit` and comparison-only results supply no Person abilities or
+population SD. Use
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+for their native-scale intervals. CML does not support GPCM or ordinary
+diagnostics.
+
 **Joint Maximum Likelihood (JML)**
 
 JML estimates all person and facet parameters simultaneously as fixed
@@ -625,7 +750,9 @@ use `"JML"` as the public label.
 
 See
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-for practical guidance on choosing between the two.
+for practical guidance on choosing an estimator. General GPCM inference
+uses MML; JML remains useful for descriptive point estimates and FACETS
+comparisons.
 
 ## Strict marginal diagnostics
 
@@ -689,10 +816,12 @@ heuristic two- and three-standard-deviation reference bands (Wright &
 Linacre, 1994; see also Wilson & Hilferty, 1931), not calibrated 5\\
 tests. Parameter estimation, sparse cells, the selected df convention,
 and repeated screening across elements all affect that interpretation.
-ZSTD is reported alongside every Infit and Outfit value. ZSTD is
-withheld (`NA`) when the applicable df falls below 1, where the
-Wilson-Hilferty transformation is numerically unstable; FACETS/Winsteps
-under `WHEXACT` can continue with a linear approximation on such cells.
+Diagnostics default to FACETS fourth-moment df, admitting df \> 0 and
+capping ZSTD at +/-9. The explicit engine convention withholds df \< 1.
+`whexact = FALSE` uses the expression above (FACETS YES); `TRUE` removes
+its additive q/3 term (FACETS NO). Both use a cube root. The former
+linear TRUE transformation is available only as
+`whexact = "legacy_linear"`.
 
 **Residual basis under MML vs JMLE engines**
 
@@ -740,6 +869,17 @@ element ordering. In `mfrmr`, `Reliability` is the model-based value and
 For `MML`, these are anchored to observed-information `ModelSE`
 estimates for non-person facets; `JML` keeps them as exploratory
 summaries.
+
+The facet's role determines the interpretation. High Person separation
+reliability indicates distinguishable abilities. High rater separation
+reliability indicates distinguishable severities, **not agreement**
+between raters. When raters are intended to be interchangeable, reliable
+severity differences merit review rather than a high-reliability quality
+label. Low rater separation reliability can also result from imprecise
+estimates; it does not establish agreement or equivalence. The index
+neither tests every rater pair nor quantifies the practical size of
+severity differences. Its Person interpretation is analogous to test
+reliability, but it is not numerically identical to Cronbach's alpha.
 
 For the person facet under `MML`, the same \\G\\ and \\R\\ formulas are
 applied to EAP person measures with posterior SDs in the error slot. EAP
@@ -891,7 +1031,7 @@ observed score support across the fitted data, so it should not be
 described as a fully mixed-category model with arbitrary item-specific
 category counts.
 
-**MML vs JML**
+**MML, CML and JML**
 
 Marginal Maximum Likelihood (MML) integrates over the person ability
 distribution using Gauss-Hermite quadrature and does not directly
@@ -907,7 +1047,10 @@ model. JML does not assume a parametric person distribution and can be
 lighter computationally, but structural-parameter bias can persist as
 the number of persons increases when the number of ratings or items per
 person remains fixed. Sample size alone therefore does not determine the
-preferred route.
+preferred route. For supported RSM/PCM structural contrasts, CML instead
+conditions out Person ability without a population model. It estimates
+neither abilities nor a population SD; same-fit population-SD
+standardization requires MML.
 
 See
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
@@ -967,13 +1110,12 @@ Authors:
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package
 library(mfrmr)
 
 # Load example ratings and look at the first six rows
-toy <- load_mfrmr_data("example_operational")
-head(toy)
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
 #>                Study Person Rater    Criterion Score Group
 #> 1 OperationalExample   P001   R01     Language     4     A
 #> 2 OperationalExample   P001   R01 Organization     2     A
@@ -984,10 +1126,11 @@ head(toy)
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
@@ -1020,5 +1163,4 @@ results$decision
 #> 1              No        ready Formal precision support has not been evaluated.
 #>                                                                                                                                                   NextAction
 #> 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.
-# }
 ```

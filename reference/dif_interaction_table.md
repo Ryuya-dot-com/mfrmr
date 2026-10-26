@@ -44,7 +44,10 @@ dif_interaction_table(
 
   Optional data frame with the group column. If `NULL` (default), the
   data stored in `fit$prep$data` is used, but it must contain the
-  `group` column.
+  `group` column. All fitted response columns, including the weight
+  column if used, are required. Subsets and repeated responses follow
+  [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)'s
+  response-matching contract; unmatched rows remain visible in `$cases`.
 
 - min_obs:
 
@@ -73,6 +76,8 @@ Object of class `mfrm_dif_interaction` with:
 
 - `table`: tibble with per-cell statistics and flags.
 
+- `cases`: requested-row matching and exclusion audit.
+
 - `summary`: tibble summarizing flagged and sparse cell counts.
 
 - `gpcm_boundary`: for `GPCM` fits, a capability-boundary table.
@@ -86,6 +91,9 @@ model rather than re-estimating it. For each facet-level x group-value
 cell, it computes:
 
 - N: number of observations in the cell
+
+- NPersons: number of distinct Persons in the cell, not an independence
+  certificate
 
 - ObsScore: sum of observed scores
 
@@ -115,6 +123,9 @@ For plot selection and follow-up diagnostics, see
 ## Interpreting output
 
 - `$table`: the full interaction table with one row per cell.
+
+- `$cases`: requested-row matching and exclusion audit, also kept by
+  [`summary()`](https://rdrr.io/r/base/summary.html).
 
 - `$summary`: overview counts of flagged and sparse cells.
 
@@ -152,21 +163,21 @@ fitted model; no refit is needed.
 
 3.  Inspect `$table` for flagged cells.
 
-4.  Visualize with
-    [`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md).
+4.  Visualize with [plot(x, type =
+    "heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md).
 
 ## See also
 
 [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
 [`analyze_dif()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
-[`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md),
+[plot(x, type =
+"heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md),
 [`dif_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/dif_report.md),
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -191,5 +202,4 @@ head(int$table[, c("Level", "GroupValue", "ObsExpAvg", "flag_bias")])
 #> 4 R02   B             0.0661 FALSE    
 #> 5 R03   A            -0.0563 FALSE    
 #> 6 R03   B             0.0563 FALSE    
-# }
 ```

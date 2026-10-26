@@ -90,7 +90,6 @@ publication graphics.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 tbl <- apa_table(fit, which = "summary")
@@ -105,5 +104,4 @@ if (interactive()) {
     label_angle = 45
   )
 }
-# }
 ```

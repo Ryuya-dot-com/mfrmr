@@ -91,7 +91,10 @@ invisibly. [`summary()`](https://rdrr.io/r/base/summary.html) returns a
 `summary.mfrm_calibration_score` containing `overview`, `estimates`,
 `review`, `row_review`, `settings`, and `notes`. When adaptive
 integration was requested and scored rows exist, it also retains
-unrounded `quadrature_review` and a compact `quadrature_overview`.
+unrounded `quadrature_review` and a compact `quadrature_overview`. When
+cut scores were requested, `decisions` preserves every probability, cut
+boundary and actual scoring prior without rounding; unavailable Persons
+remain in that table with `NA` probabilities.
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns an
 `mfrm_plot_data` with the selected plotting table, selection accounting,
 unplotted Person dispositions, interpretation guidance, and plotting
@@ -132,7 +135,13 @@ their original endpoints; printed results and interval plots explain
 that their posterior mass can differ from the requested level. Its print
 method shows at most ten rows from each table so routine console output
 stays compact. Base and ggplot2 renderers distinguish scored and review
-states by shape as well as colour.
+states by shape as well as colour. `as_ggplot(p)` and
+`as_ggplot(p, component = "data")` preserve the same selected view,
+saved bounds, review symbols and unplotted dispositions. Use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+to extract other components. Changing the interval level requires an
+explicit scoring call; conversion does not recompute intervals. Notes
+remain in the returned object and are not automatically drawn.
 
 ## Session plot defaults
 
@@ -175,49 +184,158 @@ or diagnostic thresholds.
 [mfrm_calibration_capabilities](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_capabilities.md),
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md),
 [`plot_data_components()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data_components.md),
-[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md),
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md),
+[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md),
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md),
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+for conditional-decision interpretation
 
 ## Examples
 
 ``` r
-# \donttest{
 dat <- load_mfrmr_data("example_core")
 ids <- unique(dat$Person)
 training <- dat[dat$Person %in% ids[1:18], , drop = FALSE]
 fit <- fit_mfrm(
   training, "Person", c("Rater", "Criterion"), "Score",
-  model = "RSM", method = "MML", quad_points = 5, maxit = 20
+  model = "RSM", method = "MML", quad_points = 31
 )
 q_review <- mml_quadrature_sensitivity(
-  fit, training, quad_points = c(5, 7), theta_points = 41
+  fit, training, quad_points = c(31, 61), theta_points = 41
 )
-fit <- q_review$fits$q7
+summary(q_review) # Inspect movement; these grids are not universal cutoffs.
+#> RSM-MML quadrature sensitivity summary
+#>  ReferenceNodes ComparedGrids AllEstimationConverged AllHessiansFullRank
+#>              31             2                   TRUE                TRUE
+#>  MaxNLLAbsChangePerPerson MaxMeasurementParameterAbsChange MaxSlopeAbsChange
+#>                   0.00019                          0.00174                NA
+#>  MaxPopulationSDAbsChange MaxProbabilityAbsChange MaxEAPAbsChange
+#>                         0                 0.00059          0.0071
+#>  MaxPosteriorSDAbsChange
+#>                  0.01019
+#> 
+#> Grid comparisons
+#>  Model ReferenceNodes Nodes IsReference NLLChangePerPerson
+#>    RSM             31    31        TRUE            0.00000
+#>    RSM             31    61       FALSE           -0.00019
+#>  NLLAbsChangePerPerson MeasurementParameterMaxAbsChange SlopeMaxAbsChange
+#>                0.00000                          0.00000                NA
+#>                0.00019                          0.00174                NA
+#>  RawSlopeSEMaxAbsChange SlopeIntervalMaxAbsChange
+#>                      NA                        NA
+#>                      NA                        NA
+#>  SlopeIntervalEligibilityChanged PopulationSDAbsChange
+#>                               NA                     0
+#>                               NA                     0
+#>  RawPopulationSDSEAbsChange ProbabilityMaxAbsChange EAPMaxAbsChange
+#>                          NA                 0.00000          0.0000
+#>                          NA                 0.00059          0.0071
+#>  PosteriorSDMaxAbsChange
+#>                  0.00000
+#>                  0.01019
+#> No automatic stability classification or readiness change is applied.
+fit <- q_review$fits$q61
 calibration <- freeze_mfrm_calibration(
   validate_mfrm_calibration(extract_mfrm_calibration(
-    fit, quadrature_review = q_review
+    fit, quadrature_review = q_review, scoring_quad_points = 121
   ))
 )
 new_rows <- dat[dat$Person %in% ids[19:20], , drop = FALSE]
-scores <- score_mfrm_calibration(calibration, new_rows)
+scores <- score_mfrm_calibration(calibration, new_rows,
+  cut_scores = c(Basic = -0.5, Advanced = 0.8))
 summary(scores)
 #> mfrmr Portable Calibration Score Summary
-#>   Calibration: mfrmr-calibration-v1:rsm:mml:20261002045420509003
+#>   Calibration: mfrmr-calibration-v1:rsm:mml:20261026090425686245
 #>   Model / estimator: RSM / MML
 #>   Persons: 2 scored (0 requiring review); 0 not scored
 #> 
 #> Posterior estimates (2 of 2)
-#>   P019: estimate 0.959, SD 0.328, interval [0.331, 1.605], scored
-#>   P020: estimate -0.389, SD 0.311, interval [-0.988, 0.213], scored
+#>   P019: estimate 0.934, SD 0.323, interval [0.314, 1.579], scored
+#>   P020: estimate -0.381, SD 0.302, interval [-0.978, 0.209], scored
 #> 
 #> Response-row disposition
 #>   32 input; 32 scored; 0 omitted; 0 refused; missing-response policy: error
+#> 
+#> Conditional decision probabilities (first 10; full table in $decisions)
+#>  Person         Type    Label Lower Upper  Probability PriorMean PriorSD
+#>    P019    above_cut    Basic  -0.5   Inf 9.999982e-01         0       1
+#>    P019    above_cut Advanced   0.8   Inf 6.568698e-01         0       1
+#>    P019 ability_band    Band1  -Inf  -0.5 1.769806e-06         0       1
+#>    P019 ability_band    Band2  -0.5   0.8 3.431284e-01         0       1
+#>    P019 ability_band    Band3   0.8   Inf 6.568698e-01         0       1
+#>    P020    above_cut    Basic  -0.5   Inf 6.546008e-01         0       1
+#>    P020    above_cut Advanced   0.8   Inf 4.590082e-05         0       1
+#>    P020 ability_band    Band1  -Inf  -0.5 3.453992e-01         0       1
+#>    P020 ability_band    Band2  -0.5   0.8 6.545549e-01         0       1
+#>    P020 ability_band    Band3   0.8   Inf 4.590082e-05         0       1
+#>                 Status Reason                                Uncertainty
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>   Decision probabilities describe Lower < ability <= Upper on the calibration
+#>   scale. Calibration, population estimates and supplied cut scores are held
+#>   fixed. Probability accuracy depends on the scoring prior matching the target
+#>   population; numerical checks do not validate that match. Uncertainty in an
+#>   estimated prior is excluded, and a larger calibration sample does not correct
+#>   a mismatched scoring prior. They are not Person-difference tests or
+#>   probabilities of passing a future administration. Cut labels do not establish
+#>   CEFR alignment. Very small tails have absolute, not relative, numerical
+#>   accuracy.
 #> 
 #> Interval interpretation
 #>   95% intervals: continuous posterior quantiles.
 #>   Posterior SDs and intervals are conditional on the frozen point calibration
 #>   and exclude calibration-parameter uncertainty.
-plot(scores, type = "interval")
-
+apa_table(scores, which = "decisions")
+#> Conditional ability decision probabilities
+#>  Person         Type    Label Lower Upper  Probability PriorMean PriorSD
+#>    P019    above_cut    Basic  -0.5   Inf 9.999982e-01         0       1
+#>    P019    above_cut Advanced   0.8   Inf 6.568698e-01         0       1
+#>    P019 ability_band    Band1  -Inf  -0.5 1.769806e-06         0       1
+#>    P019 ability_band    Band2  -0.5   0.8 3.431284e-01         0       1
+#>    P019 ability_band    Band3   0.8   Inf 6.568698e-01         0       1
+#>    P020    above_cut    Basic  -0.5   Inf 6.546008e-01         0       1
+#>    P020    above_cut Advanced   0.8   Inf 4.590082e-05         0       1
+#>    P020 ability_band    Band1  -Inf  -0.5 3.453992e-01         0       1
+#>    P020 ability_band    Band2  -0.5   0.8 6.545549e-01         0       1
+#>    P020 ability_band    Band3   0.8   Inf 4.590082e-05         0       1
+#>                 Status Reason                                Uncertainty
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#> Note. Decision probabilities describe Lower < ability <= Upper on the calibration scale. Calibration, population estimates and supplied cut scores are held fixed. Probability accuracy depends on the scoring prior matching the target population; numerical checks do not validate that match. Uncertainty in an estimated prior is excluded, and a larger calibration sample does not correct a mismatched scoring prior. They are not Person-difference tests or probabilities of passing a future administration. Cut labels do not establish CEFR alignment. Very small tails have absolute, not relative, numerical accuracy.
+build_summary_table_bundle(scores)$table_index
+#>        Table Rows Cols                  Role
+#> 1   overview    1   12   prediction_overview
+#> 2  estimates    2   17        unit_estimates
+#> 3     review    0   11    score_dispositions
+#> 4 row_review    1    5 prediction_row_review
+#> 5   settings    9    2      scoring_settings
+#> 6      notes    7    1  interpretation_notes
+#> 7  decisions   10   11 conditional_decisions
+#>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Description
+#> 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Scoring-batch counts and the frozen calibration identity.
+#> 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             Conditional posterior summaries for scored Persons.
+#> 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 Every review or unavailable Person disposition, including missing-only Persons.
+#> 4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Response-row scoring and omission counts.
+#> 5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Saved scoring settings; no calibration or scoring is repeated.
+#> 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                Interpretation of conditional scores and recorded review states.
+#> 7 Decision probabilities describe Lower < ability <= Upper on the calibration scale. Calibration, population estimates and supplied cut scores are held fixed. Probability accuracy depends on the scoring prior matching the target population; numerical checks do not validate that match. Uncertainty in an estimated prior is excluded, and a larger calibration sample does not correct a mismatched scoring prior. They are not Person-difference tests or probabilities of passing a future administration. Cut labels do not establish CEFR alignment. Very small tails have absolute, not relative, numerical accuracy.
+plot(scores, type = "interval", draw = FALSE)
 plot(scores, type = "edge_mass", draw = FALSE)
-# }
 ```

@@ -57,15 +57,27 @@ plot_local_dependence_heatmap(
 ## Value
 
 An `mfrm_plot_data` whose `data` slot bundles the symmetric residual
-`matrix`, one row per unordered pair in `pairs`, and the threshold used.
+`matrix`, one row per unordered pair in `pairs`, and the minimum overlap
+`min_pairs`. Interpretation notes are available through
+`plot_data(p, "notes")`. Save the complete payload with
+[`base::saveRDS()`](https://rdrr.io/r/base/readRDS.html);
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+converts its saved matrix without recalculating residuals.
 
 ## Details
 
-This helper complements
-[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md):
+This helper complements [plot(x, type =
+"marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md):
 the marginal version uses posterior-integrated agreement residuals on a
 top-N pair list, while this view shows every pair on a shared color
 scale so an analyst can scan for diagonal blocks or hotspots.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -104,21 +116,21 @@ or diagnostic thresholds.
 
 ## See also
 
-[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md),
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
+[plot(x, type =
+"marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 300)
-p <- plot_local_dependence_heatmap(fit, draw = FALSE)
+p <- plot(fit, type = "local_dependence", draw = FALSE)
 dim(p$data$matrix)
 #> [1] 4 4
 # Inspect large absolute correlations alongside shared-person counts.
 # Unavailable pairs are not evidence of local independence.
-# }
 ```

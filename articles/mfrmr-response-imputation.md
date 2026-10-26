@@ -209,7 +209,9 @@ are more precise simulation summaries than the category frequencies from
 just 40 completions. Labels show percentages as well as color, so the
 figure can be read without distinguishing colors. Each row is a marginal
 prediction; dependence between rows is preserved in the joint
-completions.
+completions. The figure shows predicted category probabilities for the
+missing assigned ratings; its description stays outside the plotting
+area.
 
 ``` r
 
@@ -217,7 +219,7 @@ probabilities <- example$probability_mean
 n <- nrow(probabilities)
 image(1:4, seq_len(n), t(probabilities[n:1, , drop = FALSE]),
       zlim = c(0, 1), col = colorRampPalette(c("#ffffd9", "#7fcdbb", "#41b6c4"))(64), axes = FALSE,
-      xlab = "Score", ylab = "", main = "Predicted category probabilities")
+      xlab = "Score", ylab = "", main = "")
 axis(1, at = 1:4)
 axis(2, at = seq_len(n), labels = rev(impute_ids), las = 1, cex.axis = .7)
 for (j in 1:4) text(j, seq_len(n),
@@ -344,10 +346,12 @@ contrast <- matrix(0, 1, length(levels),
 contrast[1, c("R04", "R01")] <- c(1, -1)
 pooled <- pool_mfrm_imputed(analyses, facet = "Rater", contrasts = contrast)
 summary(pooled)
-#>          Target  Estimate        SE     Lower     Upper       DF WithinVariance
-#> 1 R04 minus R01 0.4681867 0.1457127 0.1824438 0.7539296 2284.941     0.01845829
-#>   BetweenVariance TotalVariance MissingVarianceFraction MonteCarloSE Status
-#> 1     0.002706235    0.02123218               0.1306456  0.008225319 pooled
+#>          Target  Estimate        SE     Lower     Upper       DF IntervalReason
+#> 1 R04 minus R01 0.4681867 0.1457127 0.1824438 0.7539296 2284.941      available
+#>   WithinVariance BetweenVariance TotalVariance MissingVarianceFraction
+#> 1     0.01845829     0.002706235    0.02123218               0.1306456
+#>   MonteCarloSE Status
+#> 1  0.008225319 pooled
 ```
 
 ``` r
@@ -397,14 +401,23 @@ variation across imputations. `TotalVariance` includes both, with the
 finite-imputation factor `1 + 1/m`. `SE` and the pointwise t interval
 use that total. `MonteCarloSE` instead quantifies simulation error in
 the pooled point estimate. `MissingVarianceFraction` is not the
-percentage of missing scores.
+percentage of missing scores. The finite-imputation correction and
+`MonteCarloSE` assume independent completion draws. Duplicating
+completed datasets does not add Monte Carlo information. MCMC-based
+completions require sampling review; the example above uses draws spread
+across its retained chains, without claiming exact independence.
 
 The default `df_complete = Inf` uses large-sample complete-data
 inference. There is no automatic conversion of rating-row counts into
 independent sample size. A finite `df_complete` is available when the
 target has a justified complete-data degrees-of-freedom approximation;
 it does not create one. Fixed constraints are reported as fixed, without
-confidence intervals.
+confidence intervals. `IntervalReason` distinguishes these fixed targets
+from numerical resolution or range limits. In those numerical cases, the
+estimate and variance remain available while interval bounds are
+missing. A rounded zero-width interval is not evidence of perfect
+precision. Saved `notes` and plot data retain these assumptions and
+qualifications.
 
 These are model-based MI intervals, treating any supplied anchors as
 known. They do not guarantee finite-sample coverage, robustness to

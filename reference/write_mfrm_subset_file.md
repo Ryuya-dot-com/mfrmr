@@ -28,7 +28,10 @@ write_mfrm_subset_file(
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
-  Supplying it avoids recomputing subset connectivity.
+  Supplying it avoids recomputing subset connectivity. Must match this
+  fitted analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics.
 
 - path:
 
@@ -67,8 +70,10 @@ A bundle with `table`, `nodes`, `summary`, `written_files`, and
 
 Subsets are connected components in the observation design graph. The
 graph links `Person` and all modeled facet levels that co-occur in an
-observation. Multiple subsets mean the scale is not fully connected
-unless external anchoring or a deliberate separate-calibration design
+observation. A single co-observation graph component does not prove
+common-scale identification; shared other facets can conceal confounded
+panels. Consult the fitted estimability audit. Multiple graph subsets
+require external anchoring or a deliberate separate-calibration design
 justifies it.
 
 ## See also
@@ -80,7 +85,6 @@ justifies it.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
@@ -92,8 +96,7 @@ data.frame(
   File = basename(out$written_files$Path)
 )
 #>        Component                       File
-#> 1 subset_summary       file1b2d5b0e7b29.csv
-#> 2   subset_nodes file1b2d5b0e7b29_nodes.csv
+#> 1 subset_summary       file1cd560e0b132.csv
+#> 2   subset_nodes file1cd560e0b132_nodes.csv
 # Full paths remain in out$written_files$Path.
-# }
 ```

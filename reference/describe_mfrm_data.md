@@ -26,7 +26,9 @@ describe_mfrm_data(
   agreement_top_n = NULL,
   expected_design = NULL,
   min_linking_persons = 2L,
-  category_policy = NULL
+  category_policy = NULL,
+  repeated_ratings = c("review", "independent"),
+  comparisons = NULL
 )
 ```
 
@@ -34,7 +36,9 @@ describe_mfrm_data(
 
 - data:
 
-  A data.frame in long format (one row per rating event).
+  A data.frame in long format (one row per rating event). Grouped or
+  rowwise tibbles are treated as one table; only the selected model
+  columns enter row filtering and the design review.
 
 - person:
 
@@ -42,15 +46,22 @@ describe_mfrm_data(
 
 - facets:
 
-  Character vector of facet column names.
+  Character vector of facet column names. The reserved data and
+  parameter names listed in
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  cannot name facets; rename such columns before analysis.
 
 - score:
 
-  Column name for observed score.
+  Column name for observed score. The category-code and near-integer
+  normalization rules are the same as in
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
 - weight:
 
-  Optional weight/frequency column name.
+  Optional weight/frequency column name, with the numeric precision and
+  finite-sum rules of
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
 - rating_min:
 
@@ -135,6 +146,27 @@ describe_mfrm_data(
   `describe_mfrm_data()` and
   [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md).
 
+- repeated_ratings:
+
+  Treatment of repeated Person-by-facet cells. `"review"` (default)
+  retains the duplicate-cell warning and ordinary MML/JML input-review
+  state. Use `"independent"` only to declare that the rows are distinct,
+  conditionally independent rating events under the specified model.
+  Every row and its weight are retained; this argument does not
+  aggregate scores, add a facet, change the likelihood or establish
+  independence from the data. Other input, numerical and inference
+  checks still apply. The declaration is saved in preparation notes,
+  configuration and replay settings. Corrected JML already requires
+  conditionally independent repeated ratings; the argument records that
+  assumption explicitly there. It is not supported by the two-family
+  GPCM route.
+
+- comparisons:
+
+  Optional named specification for a prospective facet-by-origin
+  interaction review. See "Comparison-specific review". Default `NULL`
+  performs no model/target review or fitting.
+
 ## Value
 
 A list of class `mfrm_data_description` with:
@@ -199,6 +231,10 @@ A list of class `mfrm_data_description` with:
 - `score_support`: minimal prepared score-support metadata used by
   `summary(ds)$caveats`
 
+- `comparison_review`: optional prospective interaction review,
+  including all requested rows and their explicit weights; also retained
+  by [`summary()`](https://rdrr.io/r/base/summary.html).
+
 ## Details
 
 Set `rating_min` and `rating_max` from the rubric, including categories
@@ -225,6 +261,101 @@ structure in the review. Numeric descriptives of score and weight use
   criterion is not given a prior or automatically shrunk by
   choosing MML. Review the fitted boundary and precision evidence before
   interpretation.
+
+## Comparison-specific review
+
+Use
+`comparisons = list(facet = ..., group = ..., groups = c("A", "B"), contrasts = W, model = "RSM", method = "JML")`
+to review explicitly declared interaction comparisons before estimation.
+Both `facet` and `group` must occur in `facets`; each Person/recording
+must keep one origin group. `groups` gives the subtraction order,
+including when additional neutral origins are present. Unit weights and
+preserved categories are required. `W` is a numeric matrix with unique
+comparison row names and every reviewed facet level as a named column,
+including zero weights. Each nonzero row must sum to zero. For four
+raters, weights `c(.75, -.25, -.25, -.25)` compare the first rater's
+A-minus-B interaction with the equal-weight panel; `c(1, -1, 0, 0)`
+compares the first two raters' A-minus-B interactions. These are
+different targets.
+
+The prospective model has centered measurement facets, a zero-valued
+group main facet, and the named facet-by-group interaction with zero
+marginal sums. JML has free Person locations. Choose `model = "PCM"`
+with an explicit `step_facet` for facet-owned steps. Optional
+`positive_facets` records the location orientation. Anchors, extra
+interactions and nonunit weights are outside this review. GPCM
+interaction requests return `unsupported`, not an additive-model
+substitute.
+
+`method = "MML"` uses a fixed common standard-normal population unless
+`population_formula` is supplied (an intercept or the origin group
+only). `ConditionalState` refers to the linear response map;
+`FreePersonState` reviews the same response structure with unrestricted
+Persons. A same-law alias remains unidentified after mixing. A positive
+conditional rank alone does not certify the marginal model: those MML
+rows have `State = "not_evaluated"`. No fit or numerical marginal-rank
+calculation is performed. JML rows distinguish
+`all_parameters_identified`, `target_identified_only`, and
+`target_unidentified`. Numerically sensitive or oversized dense maps
+remain `not_evaluated`.
+
+`IdentificationBasis` interprets these checks for each requested target:
+`free_person_response_model` means the declared response map identifies
+it even with unrestricted Person locations. `population_restriction`
+means an unrestricted-Person alias is removed only after imposing the
+declared population restrictions in the conditional map. This does
+**not** certify marginal identification, and the corresponding MML
+`State` stays `not_evaluated`. `conditional_support` identifies a CML
+target from response patterns at the observed totals. `unidentified`,
+`not_evaluated` and `unsupported` remain separate.
+`IdentificationDetail` explains the scope; `Basis` retains the broader
+estimator/model basis.
+
+A fixed common N(0,1) population or estimated common normal population
+(`~1`) restricts origin groups to the same ability distribution. This is
+substantive, not arbitrary scale coding. Origin regression relaxes only
+the means allowed by its design and retains a common residual SD.
+Interpret the zero origin main effect jointly with those restrictions. A
+contrast identified in a free-Person response map does not make its MML
+estimator distribution-free. All conclusions still depend on the
+declared response model, including equal slopes and shared/facet-owned
+step restrictions.
+
+`method = "CML"` instead reviews conditional support at the actual
+Person totals and rating rosters. A dynamic program spans differences
+between all possible patterns at those totals, so extreme scores and
+unavailable category combinations do not manufacture information.
+`State` and `ConditionalState` distinguish full identification,
+target-only identification and unidentified targets; `FreePersonState`
+is the separate unrestricted-Person response-map review. Person-constant
+main effects disappear, and no population distribution or SD is
+estimated. Population formulas are not accepted for CML.
+
+Read `$comparison_review$table`, `$weights`, `$cells` and `$notes`
+together. The table preserves group direction, model, step owner and
+counts; counts cover nonzero-weight facet levels, while `cells` includes
+empty cells. `$fit_arguments` records the prospective structural
+settings; use matching input preparation when fitting. An identified
+target does not permit fitting a rejected full parameterization.
+`Estimate` stays missing and formal inference is unavailable. Save the
+review with its retained response rows. Pass it as `comparison_review`
+to
+[`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
+to preserve this separate prospective question alongside residual/refit
+effects; it does not certify those different effects. See
+[`vignette("mfrmr-linking-and-dff")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.md)
+for a school-assignment example and
+[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
+for interpretation. A matching, fully supported joint fit can return
+descriptive contrasts via
+[`interaction_effect_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interaction_effect_table.md)
+or `summary(fit, comparison_review = review)`. These explicit calls add
+retained-point numerical checks, not partial estimation or formal
+uncertainty. To fit selected CML contrasts and obtain
+conditional-information Wald intervals, use
+`fit_mfrm(fit_scope = "comparisons", comparison_review = review)` with
+the CML review's `$fit_arguments`; see the comparison-only section of
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
 ## Interpreting output
 
@@ -278,8 +409,10 @@ categories.
   with explicit `columns` and `codes`.
 
 - **Repeated person-by-facet cells:** inspect `duplicate_cell_detail`.
-  Correct accidental duplicates; include a task or occasion facet when
-  ratings represent distinct events in the design.
+  Correct accidental duplicates; declare
+  `repeated_ratings = "independent"` for distinct conditionally
+  independent events, or model dependence. Include a task or occasion
+  facet when ratings represent distinct events in the design.
 
 - **Unused category or disconnected design:** inspect
   `score_distribution` and `design_connectivity`. Review the rubric and
@@ -319,8 +452,8 @@ example, see
 
 ``` r
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
-head(toy)
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
 #>                Study Person Rater    Criterion Score Group
 #> 1 OperationalExample   P001   R01     Language     4     A
 #> 2 OperationalExample   P001   R01 Organization     2     A
@@ -331,7 +464,7 @@ head(toy)
 
 # Check the data before fitting; the intended score categories are 1 to 4
 data_review <- describe_mfrm_data(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
@@ -384,5 +517,5 @@ review$overview
 review$notes
 #> [1] "No missing values were detected in selected input columns."                                                                                                  
 #> [2] "Structural missingness was not assessed because `expected_design` was not supplied. Absent rows cannot be distinguished from cells that were never assigned."
-# For the next fit, use data = toy; data_review is a set of checks, not ratings
+# For the next fit, use data = ratings; data_review is a set of checks, not ratings
 ```

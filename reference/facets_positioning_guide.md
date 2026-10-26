@@ -82,11 +82,11 @@ facets_positioning_guide()
 #> 4 Describe mfrmr as a native R RSM/PCM analysis, diagnostic, and reporting environment, not as a general FACETS operational-calibration replacement.
 #> 5                                                         Report estimates, standard errors, fit summaries, and plots from documented mfrmr objects.
 #> 6                                                             Use package-native extensions as additional evidence and label them as mfrmr analyses.
-#>                                                                                PrimaryRoute
-#> 1                                        fit_mfrm(); diagnose_mfrm(); reporting_checklist()
-#> 2                 facets_feature_coverage(); run_mfrm_facets(); facets_output_file_bundle()
-#> 3   read_facets_fit_table(); facets_fit_review(); fit_measures_table(df_sensitivity = TRUE)
-#> 4                               fit_mfrm(); facets_feature_coverage(); mfrmr_output_guide()
-#> 5                       build_summary_table_bundle(); build_visual_summaries(); plot_data()
-#> 6 gpcm_capability_matrix(); mfrm_d_study(); mfrm_network_analysis(); plot_data_components()
+#>                                                                                                                PrimaryRoute
+#> 1                                                                        fit_mfrm(); diagnose_mfrm(); reporting_checklist()
+#> 2                                                 facets_feature_coverage(); run_mfrm_facets(); facets_output_file_bundle()
+#> 3                                   read_facets_fit_table(); facets_fit_review(); fit_measures_table(df_sensitivity = TRUE)
+#> 4                                                               fit_mfrm(); facets_feature_coverage(); mfrmr_output_guide()
+#> 5                                                       build_summary_table_bundle(); build_visual_summaries(); plot_data()
+#> 6 gpcm_capability_matrix(); mfrm_g_study(); mfrm_d_study(); mfrm_d_study(); mfrm_network_analysis(); plot_data_components()
 ```

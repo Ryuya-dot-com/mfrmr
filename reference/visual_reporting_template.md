@@ -76,23 +76,23 @@ visual_reporting_template()
 #> 14          Rater agreement heatmap diagnostic
 #> 15             Response-time review diagnostic
 #> 16 Empirical-Bayes shrinkage funnel   appendix
-#>                                                                PrimaryHelper
-#> 1                         plot(fit, type = "wright", preset = "publication")
-#> 2                        plot(fit, type = "pathway", preset = "publication")
-#> 3                            plot(fit, type = "ccc", preset = "publication")
-#> 4                              plot(fit, type = "ccc_surface", draw = FALSE)
-#> 5  compute_information(fit) -> plot_information(..., preset = "publication")
-#> 6  plot_qc_dashboard(fit, diagnostics = diagnostics, preset = "publication")
-#> 7                                     plot_unexpected(); plot_displacement()
-#> 8                              plot_marginal_fit(); plot_marginal_pairwise()
-#> 9            plot_bias_interaction(); plot_dif_heatmap(); plot_dif_summary()
-#> 10                             analyze_residual_pca() -> plot_residual_pca()
-#> 11                    plot_guttman_scalogram(fit, diagnostics = diagnostics)
-#> 12                          plot_residual_qq(fit, diagnostics = diagnostics)
-#> 13                       plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b))
-#> 14              plot_rater_agreement_heatmap(fit, diagnostics = diagnostics)
-#> 15                 response_time_review(...); plot_response_time_review(...)
-#> 16     plot_shrinkage_funnel(fit_eb, show_ci = TRUE, preset = "publication")
+#>                                                                                                                                                      PrimaryHelper
+#> 1                                                                                                               plot(fit, type = "wright", preset = "publication")
+#> 2                                                                                                              plot(fit, type = "pathway", preset = "publication")
+#> 3                                                                                                                  plot(fit, type = "ccc", preset = "publication")
+#> 4                                                                                                                    plot(fit, type = "ccc_surface", draw = FALSE)
+#> 5                                                                                                    compute_information(fit) -> plot(..., preset = "publication")
+#> 6                                                                                        plot(fit, type = "qc", diagnostics = diagnostics, preset = "publication")
+#> 7                                                                                                     plot(x, type = "unexpected"); plot(x, type = "displacement")
+#> 8                                                                                              plot(x, type = "marginal_fit"); plot(x, type = "marginal_pairwise")
+#> 9                                                                                     plot(x, type = "bias"); plot(x, type = "heatmap"); plot(x, type = "summary")
+#> 10                                                                                                        analyze_residual_pca() -> plot(x, type = "residual_pca")
+#> 11                                                                                                          plot(fit, type = "guttman", diagnostics = diagnostics)
+#> 12                                                                                                      plot(fit, type = "residual_qq", diagnostics = diagnostics)
+#> 13 plot((list(T1 = fit_a, T2 = fit_b))[[1L]], type = "trajectory", comparison = (list(T1 = fit_a, T2 = fit_b))[-1L], labels = names(list(T1 = fit_a, T2 = fit_b)))
+#> 14                                                                                      plot(fit, type = "agreement", view = "heatmap", diagnostics = diagnostics)
+#> 15                                                                                                                         response_time_review(...); plot(timing)
+#> 16                                                                       plot(fit_eb, type = "shrinkage", view = "funnel", show_ci = TRUE, preset = "publication")
 #>                                                                                    DefaultPlacement
 #> 1                      Main text when targeting, spread, or shared-logit interpretation is central.
 #> 2                 Main text or category-functioning subsection for ordered-category interpretation.
@@ -195,34 +195,34 @@ visual_reporting_template()
 #> 14         Switch between metric = "exact" and metric = "correlation" and check that both tell a consistent story.
 #> 15 Start with the distribution plot, then inspect whether rapid/slow rates concentrate in persons or facet levels.
 #> 16            Start with the longest raw-to-shrunken segments and compare their CI width before and after pooling.
-#>                                                           ThreeDPolicy
-#> 1                      2D recommended; 3D Wright maps are discouraged.
-#> 2                                                   2D report default.
-#> 3                                                   2D report default.
-#> 4  advanced surface data only; no package-native interactive renderer.
-#> 5           2D curve route active; 3D information surface is deferred.
-#> 6                               2D dashboard only; 3D not recommended.
-#> 7                                    2D point/profile views preferred.
-#> 8                                      2D heatmap/bar views preferred.
-#> 9                                  2D heatmap/profile views preferred.
-#> 10                                        2D scree/loadings preferred.
-#> 11                              2D matrix display; 3D not recommended.
-#> 12                                  2D Q-Q display; 3D not applicable.
-#> 13                          2D trajectory display; 3D not recommended.
-#> 14                             2D heatmap display; 3D not recommended.
-#> 15       2D distribution and grouped dot displays; 3D not recommended.
-#> 16                  2D caterpillar/funnel display; 3D not recommended.
+#>                                                                  ThreeDPolicy
+#> 1                             2D recommended; 3D Wright maps are discouraged.
+#> 2                                                          2D report default.
+#> 3                                                          2D report default.
+#> 4         advanced surface data only; no package-native interactive renderer.
+#> 5  2D information curves available; no package-native 3D information surface.
+#> 6                                      2D dashboard only; 3D not recommended.
+#> 7                                           2D point/profile views preferred.
+#> 8                                             2D heatmap/bar views preferred.
+#> 9                                         2D heatmap/profile views preferred.
+#> 10                                               2D scree/loadings preferred.
+#> 11                                     2D matrix display; 3D not recommended.
+#> 12                                         2D Q-Q display; 3D not applicable.
+#> 13                                 2D trajectory display; 3D not recommended.
+#> 14                                    2D heatmap display; 3D not recommended.
+#> 15              2D distribution and grouped dot displays; 3D not recommended.
+#> 16                         2D caterpillar/funnel display; 3D not recommended.
 visual_reporting_template("manuscript")
 #>                     FigureFamily      Scope
 #> 1                     Wright map manuscript
 #> 2                    Pathway map manuscript
 #> 3 Category characteristic curves manuscript
 #> 5             Information curves manuscript
-#>                                                               PrimaryHelper
-#> 1                        plot(fit, type = "wright", preset = "publication")
-#> 2                       plot(fit, type = "pathway", preset = "publication")
-#> 3                           plot(fit, type = "ccc", preset = "publication")
-#> 5 compute_information(fit) -> plot_information(..., preset = "publication")
+#>                                                   PrimaryHelper
+#> 1            plot(fit, type = "wright", preset = "publication")
+#> 2           plot(fit, type = "pathway", preset = "publication")
+#> 3               plot(fit, type = "ccc", preset = "publication")
+#> 5 compute_information(fit) -> plot(..., preset = "publication")
 #>                                                                    DefaultPlacement
 #> 1      Main text when targeting, spread, or shared-logit interpretation is central.
 #> 2 Main text or category-functioning subsection for ordered-category interpretation.
@@ -253,11 +253,11 @@ visual_reporting_template("manuscript")
 #> 2 Check whether the dominant-category bands progress in the expected order.
 #> 3   Check whether every retained category has a visible peak or clear role.
 #> 5   Check whether the information peak covers the theta region of interest.
-#>                                                 ThreeDPolicy
-#> 1            2D recommended; 3D Wright maps are discouraged.
-#> 2                                         2D report default.
-#> 3                                         2D report default.
-#> 5 2D curve route active; 3D information surface is deferred.
+#>                                                                 ThreeDPolicy
+#> 1                            2D recommended; 3D Wright maps are discouraged.
+#> 2                                                         2D report default.
+#> 3                                                         2D report default.
+#> 5 2D information curves available; no package-native 3D information surface.
 visual_reporting_template("surface")
 #>                   FigureFamily   Scope
 #> 4 Category probability surface surface
@@ -295,39 +295,51 @@ mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
 #> 15                           Facet ICC interval review
 #> 16                Fixed-facet model/sandwich intervals
 #> 17                   Assigned-score MI facet intervals
-#> 18 Observed random-rater explicit normal approximation
-#> 19           Observed random-rater bootstrap intervals
-#> 21                     Testlet fixed-facet calibration
-#> 22                   Testlet conditional Person scores
-#> 24              Shared-rater conditional Person scores
-#> 25                       GPCM relative-slope intervals
-#> 26                              GPCM curve uncertainty
-#> 27                      GPCM bootstrap slope intervals
-#>                                                                                                                  PrimaryHelper
-#> 2                                                          fit_measures_table(...); plot(type = "measure_ci", ci_level = 0.95)
-#> 3                                                                  plot(fit, type = "wright", show_ci = TRUE, ci_level = 0.95)
-#> 4                                                                    plot_wright_unified(fit, show_ci = TRUE, ci_level = 0.95)
-#> 5                                                                            plot_rater_severity_profile(fit, ci_level = 0.95)
-#> 6                                                                                    plot_apa_figure_one(fit, ci_level = 0.95)
-#> 7       plot_fair_average(fit, show_ci = TRUE, ci_level = 0.95); fair_average_table(fit_gpcm, fair_se = TRUE, ci_level = 0.95)
-#> 8                                                                  plot_bias_interaction(..., show_ci = TRUE, ci_level = 0.95)
-#> 9                                                                      plot_displacement(..., show_ci = TRUE, ci_level = 0.95)
-#> 10                                                                                                       plot_dif_summary(...)
-#> 11                                                        analyze_facet_equivalence(ci_level = 0.95); plot_facet_equivalence()
-#> 12                                                                detect_anchor_drift(...); plot_anchor_drift(ci_level = 0.95)
-#> 13                                                                                 plot_rater_trajectory(..., ci_level = 0.95)
-#> 14 plot_shrinkage_funnel(..., show_ci = TRUE, ci_level = 0.95); plot(fit, type = "shrinkage", show_ci = TRUE, ci_level = 0.95)
-#> 15                           compute_facet_icc(ci_method = "boot", ci_level = 0.95); plot(analyze_hierarchical_structure(...))
-#> 16                                                            mfrm_facet_intervals(fit, facet, method = "model", level = 0.95)
-#> 17                                                                         pool_mfrm_imputed(analyses, facet, ci_level = 0.95)
-#> 18                                                                                 confint(fit, parm = "raters", level = 0.95)
-#> 19                                                      mfrm_random_rater_intervals(fit, nsim = 499, seed = 123, level = 0.95)
-#> 21                                                                            confint(fit, parm = 'calibration', level = 0.95)
-#> 22                                                                                               predict(testlet_fit, newdata)
-#> 24                                                                                 score_mfrm_random_rater(fit, persons = ids)
-#> 25                                                                                 confint(fit, parm = "slopes", level = 0.95)
-#> 26                                                                                             mfrm_curve_intervals(fit, grid)
-#> 27                                                                               confint(bootstrap_mfrm_gpcm(fit, seed = 123))
+#> 18               CML conditional-information intervals
+#> 19                  MML interaction-contrast intervals
+#> 20             Conditional-normal population intervals
+#> 21 Observed random-rater explicit normal approximation
+#> 22           Observed random-rater bootstrap intervals
+#> 24                     Testlet fixed-facet calibration
+#> 25                   Testlet conditional Person scores
+#> 27              Shared-rater conditional Person scores
+#> 28                       GPCM relative-slope intervals
+#> 29                     GMFRM component-slope intervals
+#> 30                        GPCM slope profile intervals
+#> 32                              GPCM curve uncertainty
+#> 33                      GPCM bootstrap slope intervals
+#> 34          Binary rater-network coefficient intervals
+#>                                                                                                                                      PrimaryHelper
+#> 2                                                                              fit_measures_table(...); plot(type = "measure_ci", ci_level = 0.95)
+#> 3                                                                                      plot(fit, type = "wright", show_ci = TRUE, ci_level = 0.95)
+#> 4                                                                    plot(fit, type = "wright", view = "unified", show_ci = TRUE, ci_level = 0.95)
+#> 5                                                                                              plot(fit, type = "rater_severity", ci_level = 0.95)
+#> 6                                                                                                 plot(fit, type = "apa_summary", ci_level = 0.95)
+#> 7                 plot(fit, type = "fair_average", show_ci = TRUE, ci_level = 0.95); fair_average_table(fit_gpcm, fair_se = TRUE, ci_level = 0.95)
+#> 8                                                                                        plot(..., type = "bias", show_ci = TRUE, ci_level = 0.95)
+#> 9                                                                                plot(..., type = "displacement", show_ci = TRUE, ci_level = 0.95)
+#> 10                                                                                                                     plot(..., type = "summary")
+#> 11                                                                 analyze_facet_equivalence(ci_level = 0.95); plot(x, type = "facet_equivalence")
+#> 12                                                                         detect_anchor_drift(...); plot(drift, type = "forest", ci_level = 0.95)
+#> 13                                            plot(fits[[1L]], type = "trajectory", comparison = fits[-1L], labels = names(fits), ci_level = 0.95)
+#> 14 plot(..., type = "shrinkage", view = "funnel", show_ci = TRUE, ci_level = 0.95); plot(fit, type = "shrinkage", show_ci = TRUE, ci_level = 0.95)
+#> 15                                               compute_facet_icc(ci_method = "boot", ci_level = 0.95); plot(analyze_hierarchical_structure(...))
+#> 16                                                                                mfrm_facet_intervals(fit, facet, method = "model", level = 0.95)
+#> 17                                                                                             pool_mfrm_imputed(analyses, facet, ci_level = 0.95)
+#> 18                                                                                                         mfrm_facet_intervals(fit, level = 0.95)
+#> 19                                                     mfrm_facet_intervals(fit, comparison_review = review, scale = "standardized", level = 0.95)
+#> 20                                                                                     mfrm_population_intervals(fit, level = 0.95, contrasts = L)
+#> 21                                                                                                     confint(fit, parm = "raters", level = 0.95)
+#> 22                                                                          mfrm_random_rater_intervals(fit, nsim = 499, seed = 123, level = 0.95)
+#> 24                                                                                                confint(fit, parm = 'calibration', level = 0.95)
+#> 25                                                                                                                   predict(testlet_fit, newdata)
+#> 27                                                                                                     score_mfrm_random_rater(fit, persons = ids)
+#> 28                                                                                                     confint(fit, parm = "slopes", level = 0.95)
+#> 29                                                                                                     confint(fit, parm = "slopes", level = 0.95)
+#> 30                                                         confint(fit, parm = "slopes", method = "profile", slope = selected_slope, level = 0.95)
+#> 32                                                                                                                 mfrm_curve_intervals(fit, grid)
+#> 33                                                                                                   confint(bootstrap_mfrm_gpcm(fit, seed = 123))
+#> 34                                                                                            fit_rater_network(...); confint(model, level = 0.95)
 #>    DefaultLevel
 #> 2          0.95
 #> 3          0.95
@@ -347,10 +359,16 @@ mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
 #> 17         0.95
 #> 18         0.95
 #> 19         0.95
+#> 20         0.95
 #> 21         0.95
 #> 22         0.95
 #> 24         0.95
 #> 25         0.95
-#> 26         0.95
 #> 27         0.95
+#> 28         0.95
+#> 29         0.95
+#> 30         0.95
+#> 32         0.95
+#> 33         0.95
+#> 34         0.95
 ```

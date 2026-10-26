@@ -60,9 +60,16 @@ fits (see
 [mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
 for the supported linking route), or (ii) harmonizing the scale post-hoc
 with a Stocking-Lord type transformation and reviewing the result via
-[`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md).
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md).
 The trajectory plot itself does not perform linking; it only visualizes
 the supplied fits on their as-fit scales.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -101,19 +108,19 @@ or diagnostic thresholds.
 
 ## See also
 
-[`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md),
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md),
 [mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit_a <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                   method = "JML", maxit = 300)
 fit_b <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                   method = "JML", maxit = 300)
-p <- plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b), draw = FALSE)
+p <- plot(fit_a, type = "trajectory", comparison = list(T2 = fit_b),
+  labels = c("T1", "T2"), draw = FALSE)
 head(p$data$data)
 #>      Wave Level   Estimate         SE      CI_Lower     CI_Upper
 #> T1.1   T1   R01 -0.1957463 0.09729871 -0.3864482600 -0.005044321
@@ -128,5 +135,4 @@ head(p$data$data)
 #   "calibration drift" signal. Without anchor linking the per-wave
 #   logits are on different scales and the picture cannot be read
 #   as drift; see the Anchor-linking caveat in the docstring.
-# }
 ```

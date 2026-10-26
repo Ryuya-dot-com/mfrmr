@@ -148,7 +148,6 @@ not as a formal validity adjudication.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 rasch_fit <- fit_mfrm(
   toy,
@@ -286,5 +285,4 @@ review$top_reweighted_levels
 #> #   InfoShareDelta <dbl>, ExposureShareDelta <dbl>, IntegratedInfoRatio <dbl>,
 #> #   AbsInfoShareDelta <dbl>, AbsLogInfoRatio <dbl>, SlopeEstimate <dbl>,
 #> #   SlopeLogEstimate <dbl>, SlopeDirection <chr>, SlopeExposure <dbl>, …
-# }
 ```

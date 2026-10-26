@@ -21,22 +21,22 @@ plot(
 
 ## Arguments
 
-- x:
+- x :
 
   A result from
   [`mfrm_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_pca.md).
 
-- type:
+- type :
 
   `"scree"` (default), `"scores"`, or `"loadings"`.
 
-- components:
+- components :
 
   For scores, two distinct retained component numbers. For loadings, one
   retained component number. Defaults to `c(1, 2)` for scores and `1`
   for loadings. Unavailable axes cause an error.
 
-- groups:
+- groups :
 
   Optional
   [`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md),
@@ -49,22 +49,22 @@ plot(
   colour and point shape, including monochrome output. Shapes repeat
   after six groups; inspect the ID-aligned table for crowded views.
 
-- labels:
+- labels :
 
   Whether to display entity IDs on silhouettes or heatmaps. The default
   displays them for at most 50 entities. No entities are sampled when
   labels are hidden. Profile plots always label groups and levels.
 
-- draw:
+- draw :
 
   Draw the plot when `TRUE`; `FALSE` only returns plotted values.
 
-- preset:
+- preset :
 
   Plot style: `"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`.
 
-- ...:
+- ... :
 
   Reserved for future use; additional arguments are rejected.
 

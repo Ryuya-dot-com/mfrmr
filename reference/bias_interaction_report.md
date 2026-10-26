@@ -120,6 +120,19 @@ Preferred bundle API for interaction-bias diagnostics. The function can:
 
 - estimate internally from `mfrm_fit` + facet specification.
 
+Save the complete result with
+[`base::saveRDS()`](https://rdrr.io/r/base/readRDS.html);
+`plot(out, type = "scatter")` and `type = "ranked"` reuse its flags and
+thresholds. Rebuild the report from the saved bias estimates to change
+screening rules; conflicting plotting-time thresholds are rejected. Both
+views support
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md),
+including conditional bounds requested with `show_ci = TRUE`. Heatmaps,
+histograms and facet profiles use base graphics or custom
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+graphics. Export the bundle's data frames with
+[`utils::write.csv()`](https://rdrr.io/r/utils/write.table.html).
+
 ## Interpreting output
 
 Focus on ranked rows where multiple screening criteria converge:
@@ -131,8 +144,8 @@ Focus on ranked rows where multiple screening criteria converge:
 - small screening tail area
 
 The bundle is optimized for downstream
-[`summary()`](https://rdrr.io/r/base/summary.html) and
-[`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md)
+[`summary()`](https://rdrr.io/r/base/summary.html) and [plot(x, type =
+"bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 views.
 
 ## Typical workflow
@@ -143,19 +156,19 @@ views.
 
 2.  Build `bias_interaction_report(...)`.
 
-3.  Review `summary(out)` and visualize with
-    [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md).
+3.  Review `summary(out)` and visualize with [plot(x, type =
+    "bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 ## See also
 
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
 [`build_fixed_reports()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_fixed_reports.md),
-[`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md)
+[plot(x, type =
+"bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -164,7 +177,7 @@ out <- bias_interaction_report(bias, top_n = 10)
 summary(out)
 #> mfrmr Bias Interaction Summary 
 #>   Class: mfrm_bias_interaction
-#>   Components: 14
+#>   Components: 15
 #> 
 #> Interaction summary
 #>  InteractionFacets InteractionOrder InteractionMode FacetA    FacetB Cells
@@ -185,16 +198,16 @@ summary(out)
 #>  Rater x Criterion                2        pairwise  Rater Criterion    R03
 #>  Rater x Criterion                2        pairwise  Rater Criterion    R02
 #>        Level2 ObsExpAverage BiasSize    SE      t  Prob ObservedCount LRChiSq
-#>      Accuracy             0   -1.102 0.333 -3.310 0.003            24      NA
-#>      Accuracy             0    0.777 0.308  2.521 0.019            24      NA
-#>  Organization             0    0.683 0.300  2.281 0.032            24      NA
-#>  Organization             0   -0.362 0.293 -1.235 0.229            24      NA
-#>  Organization             0   -0.313 0.296 -1.059 0.301            24      NA
-#>       Content             0   -0.277 0.301 -0.921 0.367            24      NA
-#>      Accuracy             0    0.247 0.288  0.857 0.401            24      NA
-#>      Language             0    0.234 0.297  0.788 0.439            24      NA
-#>       Content             0    0.247 0.315  0.783 0.442            24      NA
-#>      Language             0   -0.208 0.294 -0.709 0.485            24      NA
+#>      Accuracy        -0.469   -1.102 0.333 -3.310 0.003            24      NA
+#>      Accuracy         0.371    0.777 0.308  2.521 0.019            24      NA
+#>  Organization         0.326    0.683 0.300  2.281 0.032            24      NA
+#>  Organization        -0.169   -0.362 0.293 -1.235 0.229            24      NA
+#>  Organization        -0.146   -0.313 0.296 -1.059 0.301            24      NA
+#>       Content        -0.123   -0.277 0.301 -0.921 0.367            24      NA
+#>      Accuracy         0.124    0.247 0.288  0.857 0.401            24      NA
+#>      Language         0.112    0.234 0.297  0.788 0.439            24      NA
+#>       Content         0.106    0.247 0.315  0.783 0.442            24      NA
+#>      Language        -0.099   -0.208 0.294 -0.709 0.485            24      NA
 #>  LRDF LRProb ProfileCILower ProfileCIUpper ProfileCILevel ProfileCIStatus
 #>    NA     NA             NA             NA             NA            <NA>
 #>    NA     NA             NA             NA             NA            <NA>
@@ -242,5 +255,4 @@ summary(out)
 p_bi <- plot(out, draw = FALSE)
 p_bi$data$plot
 #> [1] "scatter"
-# }
 ```

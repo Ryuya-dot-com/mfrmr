@@ -92,30 +92,30 @@ Use existing package-native outputs in this order:
 
 ## GPCM boundary
 
-This helper is currently intended for the documented `RSM` / `PCM`
-linking workflow. If the supplied drift/chain sources resolve to `GPCM`,
-the helper stops with a package-level message rather than silently
-implying support.
+This helper summarizes the documented `RSM` / `PCM` linking workflow.
+When supplied drift/chain sources resolve to `GPCM`, it retains an
+explicitly exploratory review and marks that scope as
+`supported_with_caveat`. This does not establish score
+interchangeability, invariance or a common scale across administrations.
 
 ## See also
 
 [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md),
 [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md),
 [`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md),
-[`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md),
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md),
 [mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 # Deliberately linked teaching waves: common labels below represent the
 # same rater and criterion identities by construction.
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
-# Two balanced 12-Person waves retain every Rater and Criterion.
-d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
-d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
+# Two balanced 24-Person waves retain every Rater and Criterion.
+d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
+d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
                  method = "MML", quad_points = 7, maxit = 30)
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
@@ -142,10 +142,10 @@ summary(review)
 #>  - Chain review flagged 1 adjacent-link instability rows.
 #> 
 #> Next Actions
-#>  - Inspect detect_anchor_drift() and plot_anchor_drift(drift, type = "drift")
-#>    for wave-level follow-up.
-#>  - Inspect build_equating_chain() and plot_anchor_drift(chain, type = "chain")
-#>    before using cumulative offsets operationally.
+#>  - Inspect detect_anchor_drift() and plot(drift, type = "drift") for wave-level
+#>    follow-up.
+#>  - Inspect build_equating_chain() and plot(chain, type = "chain") before using
+#>    cumulative offsets operationally.
 #> 
 #> Top Linking Risks
 #>      Facet Level  Wave           Link
@@ -153,9 +153,9 @@ summary(review)
 #>      Rater  <NA> Wave2           <NA>
 #>       <NA>  <NA>  <NA> Wave1 -> Wave2
 #>                                                          Signal Magnitude
-#>  Retained common-element support is below the package guideline      1.00
-#>  Retained common-element support is below the package guideline      1.00
-#>              Thin retained support in an adjacent screened link      0.48
+#>  Retained common-element support is below the package guideline     1.000
+#>  Retained common-element support is below the package guideline     1.000
+#>              Thin retained support in an adjacent screened link     0.187
 #>                                                                                         Guidance
 #>              Treat drift flags as low-support until more retained common elements are available.
 #>              Treat drift flags as low-support until more retained common elements are available.
@@ -164,8 +164,8 @@ summary(review)
 #> Plot Follow-up
 #>        ReviewArea Available                                 PlotHelper
 #>   Anchor adequacy      TRUE plot(anchor_review, type = "issue_counts")
-#>  Wave-level drift      TRUE   plot_anchor_drift(drift, type = "drift")
-#>    Screened chain      TRUE   plot_anchor_drift(chain, type = "chain")
+#>  Wave-level drift      TRUE                plot(drift, type = "drift")
+#>    Screened chain      TRUE                plot(chain, type = "chain")
 #>                                                                            Trigger
 #>                            Use when anchor issues or overlap warnings are present.
 #>  Use when fitted waves show flagged drift or thin retained common-element support.
@@ -197,5 +197,4 @@ review$group_view_index
 #> 2 by_link              1 Concentrated linking risks by adjacent screened link.
 #> 3 by_facet             2 Concentrated linking risks by facet.                 
 #> 4 by_source_family     2 Volume and priority by evidence source family.       
-# }
 ```

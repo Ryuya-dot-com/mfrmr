@@ -1,12 +1,9 @@
 # Analyze the hierarchical structure of a rating design
 
 One-stop review that combines the nesting, cross-tabulation, ICC, and
-design-effect reports into a single object. Designed to be reused by the
-publication-workflow surface: its summary feeds into
-[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
-and its tables are picked up by
-[`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md)
-for reproducibility bundles.
+design-effect reports into a single object. Its summary feeds into
+[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
+after checking the reviewed data against the fit.
 
 ## Usage
 
@@ -32,29 +29,29 @@ analyze_hierarchical_structure(
 
 ## Arguments
 
-- data:
+- data :
 
   Data frame in long format, or an `mfrm_fit` (its `prep$data` is used).
 
-- facets:
+- facets :
 
   Character vector of facet column names. When `data` is an `mfrm_fit`,
   defaults to `fit$prep$facet_names`.
 
-- person:
+- person :
 
   Person column name. Defaults to `"Person"`.
 
-- score:
+- score :
 
   Score column name. Defaults to `"Score"`.
 
-- compute_icc:
+- compute_icc :
 
   Logical; if `TRUE` and `lme4` is available, adds ICC and design-effect
   tables.
 
-- ci_method:
+- ci_method :
 
   ICC confidence-interval method passed through to
   [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md).
@@ -63,34 +60,34 @@ analyze_hierarchical_structure(
   profile-likelihood interval. Deprecated alias: `icc_ci_method` (kept
   for backward compatibility, emits a lifecycle warning).
 
-- ci_level:
+- ci_level :
 
   Confidence level when `ci_method != "none"`; default `0.95`.
   Deprecated alias: `icc_ci_level`.
 
-- ci_boot_reps:
+- ci_boot_reps :
 
   Number of bootstrap replicates when `ci_method = "boot"`. Default
   `1000`. Deprecated alias: `icc_ci_boot_reps`.
 
-- ci_boot_seed:
+- ci_boot_seed :
 
   Optional RNG seed for reproducible bootstrap CIs. Deprecated alias:
   `icc_ci_boot_seed`.
 
-- igraph_layout:
+- igraph_layout :
 
   Logical; if `TRUE` and `igraph` is available, adds a connectivity
   component summary using a bipartite graph over person x facet levels.
 
-- icc_ci_method, icc_ci_level, icc_ci_boot_reps, icc_ci_boot_seed:
+- icc_ci_method, icc_ci_level, icc_ci_boot_reps, icc_ci_boot_seed :
 
   Deprecated compatibility spellings of the `ci_*` arguments above.
   Supplying a non-`NULL` value routes through
   [`lifecycle::deprecate_warn()`](https://lifecycle.r-lib.org/reference/deprecate_soft.html)
   and overrides the canonical `ci_*` argument.
 
-- missing:
+- missing :
 
   Missing-value policy for the ICC and design-effect tables, passed to
   [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md).
@@ -127,6 +124,18 @@ A list of class `mfrm_hierarchical_structure` with:
   for downstream reporting helpers that need to label rows by review
   scope).
 
+- `data_identity`: reviewed column roles, input row count and a compact
+  fingerprint for reuse checks. The optional person column also
+  contributes to nesting pair counts; `summary$NFacets` counts the
+  requested `facets`.
+
+`plot(x, type = "icc")` draws variance shares and any available
+intervals without an embedded title or footnote. Save its returned
+object as `p` and use `plot_data(p, "notes")` to read the interval
+method or the reason bounds are unavailable. These notes survive
+[`saveRDS()`](https://rdrr.io/r/base/readRDS.html)/[`readRDS()`](https://rdrr.io/r/base/readRDS.html);
+they do not change the underlying ICC estimates.
+
 ## Interpreting output
 
 - `nesting`: a
@@ -159,14 +168,32 @@ A list of class `mfrm_hierarchical_structure` with:
 
 3.  Read `summary(x)` for the condensed view.
 
-4.  Feed the object to
+4.  Pass it as `hierarchical_structure` to
     [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-    and
+    and save the review with
+    [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) when its full
+    tables are needed later.
     [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md)
-    to record the review in publication bundles.
-    [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
-    uses the fit-level `FacetSampleSizeFlag` to add a Methods sentence
-    automatically.
+    records a separate fit-level rating-count review; it does not accept
+    or archive this structural-review object.
+
+## Saved-result reuse
+
+A reporting checklist checks the reviewed column roles and retained
+rating rows, including scores when an ICC table was computed. It accepts
+a subset of fitted facets and reports that scope explicitly. Reviews
+from raw data also work when the selected columns and rows match, using
+either canonical `Person`/`Score` names or the fit's original
+source-column names. Row order, unused factor levels, unused columns and
+MFRM estimates do not affect this match. Nesting and row counts are
+unweighted; when ICC is absent, the match does not depend on scores.
+These rules do not establish that a partial review covers all facets or
+that the design supports valid inference. A review of additional rows,
+other strata or columns absent from the fit remains usable on its own,
+but cannot mark this fit's checklist item as available. Recreate older
+reviews without `data_identity` from the saved fit or matching retained
+rows and original options; no MFRM refit is needed. See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md).
 
 ## References
 
@@ -214,7 +241,6 @@ summary(hs)
 #>  Person Criterion                 0                 0   crossed
 #>   Rater Criterion                 0                 0   crossed
 
-# \donttest{
 # Full review when lme4 and igraph are available.
 if (requireNamespace("lme4", quietly = TRUE) &&
     requireNamespace("igraph", quietly = TRUE)) {
@@ -269,6 +295,4 @@ if (requireNamespace("lme4", quietly = TRUE) &&
 #>   Components: 1 
 #>   Largest component: 56 
 #>   Isolates: 0 
-
-# }
 ```

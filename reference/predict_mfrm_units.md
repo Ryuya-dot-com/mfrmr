@@ -21,13 +21,14 @@ predict_mfrm_units(
   n_draws = 0,
   seed = NULL,
   adaptive_quad_points = NULL,
-  scoring_prior = NULL
+  scoring_prior = NULL,
+  cut_scores = NULL
 )
 ```
 
 ## Arguments
 
-- fit:
+- fit :
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
@@ -36,34 +37,34 @@ predict_mfrm_units(
   (`posterior_basis = "population_model"`), score the target persons
   with the same background-variable contract via `person_data`.
 
-- new_data:
+- new_data :
 
   Long-format data for the future or partially observed units to be
   scored.
 
-- person:
+- person :
 
   Optional person column in `new_data`. Defaults to the person column
   recorded in `fit`.
 
-- facets:
+- facets :
 
   Optional facet-column mapping for `new_data`. Supply either an unnamed
   character vector in the calibrated facet order or a named vector whose
   names are the calibrated facet names and whose values are the column
   names in `new_data`.
 
-- score:
+- score :
 
   Optional score column in `new_data`. Defaults to the score column
   recorded in `fit`.
 
-- weight:
+- weight :
 
   Optional weight column in `new_data`. Defaults to the weight column
   recorded in `fit`, if any.
 
-- person_data:
+- person_data :
 
   Optional one-row-per-person data.frame with the background variables
   required by a latent-regression fit. Ignored for ordinary
@@ -77,13 +78,13 @@ predict_mfrm_units(
   design matrix. Fitted standardization and polynomial/spline bases are
   also reused; they are not re-estimated from the scoring cohort.
 
-- person_id:
+- person_id :
 
   Optional person-ID column in `person_data`. Defaults to `person` when
   that column exists, otherwise `"Person"` for the canonical scoring
   layout.
 
-- population_policy:
+- population_policy :
 
   How missing background data are handled when `fit` uses the
   latent-regression branch. `"error"` (default) requires complete
@@ -91,41 +92,41 @@ predict_mfrm_units(
   persons lacking complete covariates and records that omission in
   `population_review`.
 
-- interval_level:
+- interval_level :
 
   Posterior interval level returned in `Lower`/`Upper`.
 
-- scoring_quad_points:
+- scoring_quad_points :
 
   Number of Gauss-Hermite nodes used only for this scoring call. It is
   independent of the quadrature order used while fitting `fit`; the
   default is 31 and values below 2 are refused. The fixed or adaptive
   integration mode is inherited from `fit`.
 
-- readiness_policy:
+- readiness_policy :
 
   How a source fit that is not scoring-ready is handled. `"error"`
   (default) refuses scoring. `"review"` permits an explicitly
   review-only fitted-object calculation and labels the returned
   estimates and settings accordingly; it does not make the source fit
-  ready. GPCM MML and intercept-only normal population models may pass
-  the conditional-scoring checks described below even when their global
-  inference audit remains incomplete. Population models with background
-  covariates still require explicit review. Invalid calibration
-  parameters or inconsistent stored prior parameters are refused under
-  either policy. Older population results without the new check records
-  retain their review-only restriction.
+  ready. GPCM MML and RSM/PCM normal population models may pass the
+  conditional-scoring checks described below even when their global
+  inference audit remains incomplete. GPCM population models with
+  background covariates still require explicit review. Invalid
+  calibration parameters or inconsistent stored prior parameters are
+  refused under either policy. Older population results without the new
+  check records retain their review-only restriction.
 
-- n_draws:
+- n_draws :
 
   Optional number of quadrature-grid posterior draws to return per
   scored person. Use 0 to skip draws.
 
-- seed:
+- seed :
 
   Optional seed for reproducible posterior draws.
 
-- adaptive_quad_points:
+- adaptive_quad_points :
 
   Optional vector of at least two distinct integer orders \>= 3, for
   example `c(31, 61)`. Adds `quadrature_review`, comparing a fixed-prior
@@ -137,7 +138,7 @@ predict_mfrm_units(
   check numerical score accuracy, including ordinary RSM/PCM with the
   retained prior; see below.
 
-- scoring_prior:
+- scoring_prior :
 
   Optional `list(mean = ..., sd = ...)` specifying one normal scoring
   prior shared by all scored persons, on the unchanged calibration
@@ -149,13 +150,32 @@ predict_mfrm_units(
   does not refit the calibration, estimate a new population, or bypass
   source checks. Numerical scoring checks run under the supplied prior.
 
+- cut_scores :
+
+  Optional finite, strictly increasing ability cuts with optional
+  distinct names. Requires ordinary RSM/PCM and unit weights. A
+  `decisions` table returns continuous probabilities above cuts and
+  within bands (`Lower < ability <= Upper`), conditional on the point
+  calibration and actual scoring prior. Calibration/population and
+  cut-score estimation uncertainty are excluded. This is not a
+  Person-difference test or a probability of passing a future
+  administration. Cut labels alone do not establish CEFR alignment. Tiny
+  tails have absolute, not relative, numerical accuracy. Use
+  `apa_table(x, which = "decisions")` or export the saved table.
+
 ## Value
 
 An object of class `mfrm_unit_prediction` with components:
 
 - `estimates`: posterior summaries by person
 
+- `decisions`: optional cut-score and ability-band probabilities, with
+  boundaries, labels, priors, availability and uncertainty basis
+
 - `draws`: optional quadrature-grid posterior draws
+
+- `fit_identity`: source calibration, fitted population coding and
+  scoring status used to check reuse with fit-level exports
 
 - `row_review`: row-level preparation review for `new_data`
 
@@ -278,15 +298,20 @@ review-only labels remain visible.
 
 A finite calibration can define a person's posterior score without
 proving that the calibration is the unique global optimum. For
-one-family GPCM MML and models with an estimated intercept-only normal
+one-family GPCM MML and models with an estimated RSM/PCM normal
 population, this function checks the current likelihood, gradient and
 unregularized joint information using the same local-solution machinery
 as
 [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
 Detected identification deficiencies, inadequate categories and failed
-convergence do not pass. Boundary and identification audits labelled
-"not evaluated" remain so; they are not relabelled as completed by these
-local checks.
+convergence do not pass. RSM/PCM regressions additionally require the
+consistent full-rank source, unit weights, direct MML and centered
+unanchored facets/steps used by
+[`mfrm_population_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_population_intervals.md).
+Scoring reuses the fitted predictor coding and conditional residual
+variance; no population uncertainty is propagated. Boundary and
+identification audits labelled "not evaluated" remain so; they are not
+relabelled as completed by these local checks.
 
 Shared-owner GPCM JML can also use conditional scoring with unit weights
 and no anchors/interactions. Fresh joint objective/gradient and
@@ -490,8 +515,89 @@ and saved settings.
 [`extract_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
 provides the corresponding portable route.
 
+## Conditional ability decisions
+
+Supply `cut_scores` on the calibration's ability scale to obtain
+`decisions`, with one row per Person and requested event.
+`Type = "above_cut"` gives \\P(\theta \> c \mid y, \widehat\psi)\\;
+`Type = "ability_band"` gives the probability between successive cuts,
+including the two outer bands. `Lower < ability <= Upper` defines every
+row. `Label` uses the supplied cut names (or `Cut1`, ...) and `Band1`,
+... in increasing order. These events overlap: only the ability-band
+probabilities sum to one.
+
+`PriorMean` and `PriorSD` record the actual Person-specific normal
+prior; `Status` and `Reason` retain scoring availability.
+`available_conditional` means the applicable numerical checks passed,
+not that the model or the cut's substantive meaning has been validated.
+`review_only` requires inspection before interpretation. Source-roster
+scoring may return `prior_only` for missing-only Persons; portable
+scoring instead retains them as `unavailable` with `NA` probabilities.
+Fitted-object scoring omits Persons with no retained rows; inspect its
+row and population reviews. A Person absent from the input is never
+invented.
+
+Probabilities integrate the continuous posterior, rather than counting
+[`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md)
+draws or applying a normal approximation to EAP/SD. They condition on
+point calibration, population/prior parameters and supplied cuts, as
+recorded in `Uncertainty`. They do not propagate estimation error,
+compare two Persons or predict passing a future test. CEFR labels
+require externally justified cuts on this same scale. Very small tails
+have absolute, not relative, numerical accuracy; a returned zero or one
+is not a claim of impossibility or certainty.
+
+Review the scoring population as well as the calibration. An estimated
+normal prior is treated as known during scoring; its sampling
+uncertainty can matter especially with a small calibration cohort. A
+larger calibration cohort can improve parameter precision without
+correcting a prior that mismatches a new population's mean, spread or
+shape. Passing numerical checks does not establish that probabilities
+are accurate for that new population. A fixed reference prior is not a
+universal remedy: justify it for the target population on the
+calibration scale. If a prior override is supported, comparing
+externally justified alternatives is a sensitivity analysis, not
+evidence that the alternative giving the preferred classification is
+valid. Population-averaged accuracy also does not guarantee accuracy
+near each cut, within every subgroup or for each individual Person.
+
+Use
+[`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+for eligible ordinary RSM MML source Persons, `predict_mfrm_units()` for
+ordinary RSM/PCM MML or JML fitted-object scoring, and
+[`score_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+for eligible continuous-posterior RSM/PCM artifacts. Each route retains
+its existing source and population restrictions. Unit weights are
+required; GPCM, shared-rater and testlet cut probabilities are not
+supported. JML uses a separate scoring prior, not a population estimated
+by JML. `NULL` leaves the existing output unchanged.
+
+`summary(x)$decisions` and
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+with `which = "decisions"` reuse saved probabilities without rounding
+them. Fitted-object and portable score batches also support
+[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
+and
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
+Save the complete result with
+[`saveRDS()`](https://rdrr.io/r/base/readRDS.html) to retain cuts,
+priors and review states for later reporting. Existing score plots
+display EAPs and intervals, not these event probabilities.
+
+## Saved-result reuse
+
+Fit-level export and replay helpers check that supplied scores describe
+the same calibration, fitted population coding and scoring status.
+Recreate older scores from the saved fit and original scoring
+inputs/settings; the calibration does not need refitting. See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md).
+
 ## See also
 
+[`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md),
+[`score_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md),
+[`classification_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/classification_table.md),
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md),
 [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_population.md),
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
 [summary.mfrm_unit_prediction](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_unit_prediction.md)
@@ -505,8 +611,7 @@ toy_fit <- fit_mfrm(
   toy[toy$Person %in% keep_people, , drop = FALSE],
   "Person", c("Rater", "Criterion"), "Score",
   method = "MML",
-  quad_points = 5,
-  maxit = 30
+  quad_points = 61
 )
 raters <- unique(toy$Rater)[1:2]
 criteria <- unique(toy$Criterion)[1:2]
@@ -516,24 +621,108 @@ new_units <- data.frame(
   Criterion = c(criteria[1], criteria[2], criteria[1], criteria[2]),
   Score = c(2, 3, 2, 4)
 )
-pred_units <- predict_mfrm_units(toy_fit, new_units, n_draws = 0)
+# Illustrative boundaries only: these labels do not establish CEFR levels.
+cuts <- c(Basic = -0.5, Advanced = 0.8)
+pred_units <- predict_mfrm_units(toy_fit, new_units,
+  scoring_quad_points = 121, cut_scores = cuts)
 summary(pred_units)$estimates[, c("Person", "Estimate", "Lower", "Upper")]
 #> # A tibble: 2 × 4
 #>   Person Estimate Lower Upper
 #>   <chr>     <dbl> <dbl> <dbl>
-#> 1 NEW01    -0.17  -1.50  1.18
-#> 2 NEW02     0.301 -1.04  1.68
+#> 1 NEW01    -0.162 -1.48  1.17
+#> 2 NEW02     0.3   -1.02  1.67
+pred_units$decisions
+#>    Person         Type    Label Lower Upper Probability PriorMean PriorSD
+#> 1   NEW01    above_cut    Basic  -0.5   Inf  0.69210796         0       1
+#> 2   NEW01    above_cut Advanced   0.8   Inf  0.07706642         0       1
+#> 3   NEW01 ability_band    Band1  -Inf  -0.5  0.30789204         0       1
+#> 4   NEW01 ability_band    Band2  -0.5   0.8  0.61504154         0       1
+#> 5   NEW01 ability_band    Band3   0.8   Inf  0.07706642         0       1
+#> 6   NEW02    above_cut    Basic  -0.5   Inf  0.88022925         0       1
+#> 7   NEW02    above_cut Advanced   0.8   Inf  0.22964641         0       1
+#> 8   NEW02 ability_band    Band1  -Inf  -0.5  0.11977075         0       1
+#> 9   NEW02 ability_band    Band2  -0.5   0.8  0.65058285         0       1
+#> 10  NEW02 ability_band    Band3   0.8   Inf  0.22964641         0       1
+#>                   Status Reason                                Uncertainty
+#> 1  available_conditional        conditional_on_point_calibration_and_prior
+#> 2  available_conditional        conditional_on_point_calibration_and_prior
+#> 3  available_conditional        conditional_on_point_calibration_and_prior
+#> 4  available_conditional        conditional_on_point_calibration_and_prior
+#> 5  available_conditional        conditional_on_point_calibration_and_prior
+#> 6  available_conditional        conditional_on_point_calibration_and_prior
+#> 7  available_conditional        conditional_on_point_calibration_and_prior
+#> 8  available_conditional        conditional_on_point_calibration_and_prior
+#> 9  available_conditional        conditional_on_point_calibration_and_prior
+#> 10 available_conditional        conditional_on_point_calibration_and_prior
+apa_table(pred_units, which = "decisions")
+#> Conditional ability decision probabilities
+#>  Person         Type    Label Lower Upper Probability PriorMean PriorSD
+#>   NEW01    above_cut    Basic  -0.5   Inf  0.69210796         0       1
+#>   NEW01    above_cut Advanced   0.8   Inf  0.07706642         0       1
+#>   NEW01 ability_band    Band1  -Inf  -0.5  0.30789204         0       1
+#>   NEW01 ability_band    Band2  -0.5   0.8  0.61504154         0       1
+#>   NEW01 ability_band    Band3   0.8   Inf  0.07706642         0       1
+#>   NEW02    above_cut    Basic  -0.5   Inf  0.88022925         0       1
+#>   NEW02    above_cut Advanced   0.8   Inf  0.22964641         0       1
+#>   NEW02 ability_band    Band1  -Inf  -0.5  0.11977075         0       1
+#>   NEW02 ability_band    Band2  -0.5   0.8  0.65058285         0       1
+#>   NEW02 ability_band    Band3   0.8   Inf  0.22964641         0       1
+#>                 Status Reason                                Uncertainty
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#> Note. Decision probabilities describe Lower < ability <= Upper on the calibration scale. Calibration, population estimates and supplied cut scores are held fixed. Probability accuracy depends on the scoring prior matching the target population; numerical checks do not validate that match. Uncertainty in an estimated prior is excluded, and a larger calibration sample does not correct a mismatched scoring prior. They are not Person-difference tests or probabilities of passing a future administration. Cut labels do not establish CEFR alignment. Very small tails have absolute, not relative, numerical accuracy.
 # Compare assumptions on the same response rows, without refitting.
 alternative <- predict_mfrm_units(
-  toy_fit, new_units, scoring_prior = list(mean = 0.5, sd = 1.5)
+  toy_fit, new_units, scoring_prior = list(mean = 0.5, sd = 1.5),
+  scoring_quad_points = 121, cut_scores = cuts
 )
 comparison <- dplyr::bind_rows(
   "Retained prior" = pred_units$estimates,
   "Alternative prior" = alternative$estimates, .id = "Scenario"
 )
-ggplot2::ggplot(comparison, ggplot2::aes(Scenario, Estimate)) +
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  ggplot2::ggplot(comparison, ggplot2::aes(Scenario, Estimate)) +
   ggplot2::geom_pointrange(ggplot2::aes(ymin = Lower, ymax = Upper)) +
   ggplot2::facet_wrap(~ Person) + ggplot2::theme_minimal() +
   ggplot2::labs(x = NULL, y = "Posterior EAP",
     caption = "95% posterior intervals conditional on calibration and each prior")
+}
+
+# Retain the complete result; summaries and tables do not score again.
+saved <- tempfile(fileext = ".rds")
+saveRDS(pred_units, saved)
+apa_table(readRDS(saved), which = "decisions")
+#> Conditional ability decision probabilities
+#>  Person         Type    Label Lower Upper Probability PriorMean PriorSD
+#>   NEW01    above_cut    Basic  -0.5   Inf  0.69210796         0       1
+#>   NEW01    above_cut Advanced   0.8   Inf  0.07706642         0       1
+#>   NEW01 ability_band    Band1  -Inf  -0.5  0.30789204         0       1
+#>   NEW01 ability_band    Band2  -0.5   0.8  0.61504154         0       1
+#>   NEW01 ability_band    Band3   0.8   Inf  0.07706642         0       1
+#>   NEW02    above_cut    Basic  -0.5   Inf  0.88022925         0       1
+#>   NEW02    above_cut Advanced   0.8   Inf  0.22964641         0       1
+#>   NEW02 ability_band    Band1  -Inf  -0.5  0.11977075         0       1
+#>   NEW02 ability_band    Band2  -0.5   0.8  0.65058285         0       1
+#>   NEW02 ability_band    Band3   0.8   Inf  0.22964641         0       1
+#>                 Status Reason                                Uncertainty
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#>  available_conditional        conditional_on_point_calibration_and_prior
+#> Note. Decision probabilities describe Lower < ability <= Upper on the calibration scale. Calibration, population estimates and supplied cut scores are held fixed. Probability accuracy depends on the scoring prior matching the target population; numerical checks do not validate that match. Uncertainty in an estimated prior is excluded, and a larger calibration sample does not correct a mismatched scoring prior. They are not Person-difference tests or probabilities of passing a future administration. Cut labels do not establish CEFR alignment. Very small tails have absolute, not relative, numerical accuracy.
+unlink(saved)
 ```

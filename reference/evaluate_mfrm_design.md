@@ -31,7 +31,9 @@ evaluate_mfrm_design(
   sim_spec = NULL,
   seed = NULL,
   progress = interactive(),
-  parallel = c("no", "future")
+  parallel = c("no", "future"),
+  file = NULL,
+  file_refit = c("never", "on_change", "always")
 )
 ```
 
@@ -199,6 +201,22 @@ evaluate_mfrm_design(
   replications within each design row; actual worker concurrency depends
   on the active future plan.
 
+- file:
+
+  Optional RDS path for saving and reusing the simulation. A missing
+  `.rds` extension is appended. Its parent directory must already exist.
+  `NULL` (default) performs no file reads or writes.
+
+- file_refit:
+
+  File reuse policy. `"never"` (default) loads a matching completed
+  result or resumes matching saved trials; incompatible files produce an
+  error. `"on_change"` restarts when inputs or implementation/
+  environment differ. `"always"` replaces the file with a new run.
+  Unlike `brms::brm(file_refit = "never")`, this function checks
+  compatibility even under `"never"`; it does not silently return a
+  different analysis.
+
 ## Value
 
 An object of class `mfrm_design_evaluation` with components:
@@ -247,6 +265,9 @@ An object of class `mfrm_design_evaluation` with components:
 - `ademp`: simulation-study metadata (aims, DGM, estimands, methods,
   performance measures)
 
+- `reproducibility`: file identity, original inputs and per-trial seeds
+  when `file` is supplied.
+
 ## Details
 
 This helper runs a compact Monte Carlo design study for common
@@ -264,6 +285,26 @@ For each design condition, the function:
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
 
 4.  stores recovery and precision summaries by facet
+
+Severity recovery compares relative locations after aligning group means
+within each trial. PCM/GPCM generating step means are absorbed into the
+owning facet truth before comparison, consistently with the fitted
+identification. `MeanSeverityRMSE` is the mean of available trial RMSEs,
+with MCSE across trials; it differs from a pooled-row RMSE.
+`SeverityBias` averages to zero by construction and cannot demonstrate
+unbiased individual estimates. `RecoveryAvailableReps` counts finite
+trial recovery metrics; review it alongside all-trial convergence and
+failures.
+
+Older PCM/GPCM results without this truth-coordinate review retain their
+historical tables. New summaries and recommendations withhold their
+recovery metrics with
+`RecoveryBasis = "legacy_step_location_truth_unverified"`.
+Re-summarizing cannot reconstruct the missing trial-level
+truth/estimates; rerun in a new file for corrected recovery, preserving
+the old evidence. Other saved diagnostics remain available. Numerical
+agreement and successful examples do not establish finite-sample
+performance or population forecasting.
 
 The result is intended for planning questions such as:
 
@@ -324,7 +365,7 @@ characteristics. The route remains a role-based person x rater-like x
 criterion-like planner: it does not validate diagnostic-screening or
 signal-detection rules, does not provide a fully arbitrary-facet
 planner, and does not replace
-[`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
 for slope-recovery adequacy review.
 
 Recovery metrics are reported only when the generator and fitted model
@@ -373,8 +414,15 @@ Facet-level simulation results include:
 Start with `summary(x)$design_summary`, then plot one focal metric at a
 time (for example rater `Separation` or criterion `SeverityRMSE`).
 
-Higher separation/reliability is generally better, whereas lower
-`SeverityRMSE`, `MeanMisfitRate`, and `MeanElapsedSec` are preferable.
+Person separation/reliability describes how well the design
+distinguishes persons under the model. High rater separation/reliability
+instead means that severity differences are distinguishable; it does not
+mean agreement or better calibration. Low rater separation can reflect
+similar severity or inadequate precision. Interpret each facet against
+its purpose rather than maximizing every separation coefficient.
+Recovery RMSE and elapsed time concern accuracy and cost; a low
+misfit-screen rate alone does not establish useful detection, since
+sensitivity and false flags differ.
 
 When choosing among designs, look for the point where increasing
 `n_person` or `raters_per_person` yields diminishing returns in
@@ -394,7 +442,15 @@ review from
 [`mfrm_generalizability()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_generalizability.md)
 with D-study projections from
 [`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md).
-Read `IdentificationStatus`, `GStatus`, and `PhiStatus` before using the
+The complementary multivariate observed-score route is
+[`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md)
+-\>
+[`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md).
+See
+[mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
+for choosing between simulation and G-theory: neither is automatically
+required by the other, and neither replaces the other's estimand. Read
+`IdentificationStatus`, `GStatus`, and `PhiStatus` before using the
 projected coefficients: boundary or singular mixed-model fits are
 design-identification warnings rather than high-stakes-ready reliability
 evidence.
@@ -418,6 +474,47 @@ study.
   research in psychology: A standardized template for planning,
   preregistration, and reporting*. Psychological Methods.
 
+## Saving and resuming simulations
+
+Pass the same `file` and analysis arguments on a subsequent call to
+reuse the completed result without generation or fitting, or to resume
+an interrupted run. The identity includes generator
+inputs/specification, fitting controls, requested replications, seed,
+RNG kind, package R code and native library fingerprints, relevant
+numerical/diagnostic R options, R/platform, numerical libraries and
+dependency versions. Changing `reps` starts a different study; extension
+of an existing study is not supported. `progress` and `parallel` do not
+change the identity. Cached results retain the settings of their
+original run.
+
+Recovery runs and serial design evaluations save after every finished
+trial. Future design evaluations save after a whole design row returns;
+an interrupted row may need to run again. A partially completed
+optimizer is not resumed. Fit failures are completed attempts and are
+saved too; resuming does not redraw failures until they succeed. An
+unexpected error outside the recorded fit/diagnostic failure routes
+stops the call and leaves earlier checkpoints available. These files do
+not change the interpretation or eligibility of the underlying estimates
+and intervals.
+
+Per-trial seeds are allocated before computation and retained even when
+`seed = NULL`; an explicit seed is preferable for reproducing a new run
+in another file. Each trial controls generation, fitting and diagnostics
+with its own seed. A matching environment is required for automatic
+reuse; recorded seeds alone do not guarantee identical floating-point
+results on other systems. Keep the analysis script and software
+environment as well.
+
+After completion, `readRDS(file)` returns the usual result object with
+an additional `reproducibility` component containing identity, inputs
+and trial seeds. Before completion the file is an internal checkpoint;
+resume through the same public function. Writes use a temporary file in
+the same directory and checked replacement. A `.lock` directory prevents
+concurrent writers. Normal returns/errors release it; after process
+termination, remove a remaining lock only after checking that no writer
+is active. Unreadable files are never silently reused or replaced by
+`"on_change"`.
+
 ## See also
 
 [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md),
@@ -427,7 +524,6 @@ study.
 ## Examples
 
 ``` r
-# \donttest{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
   design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 2),
   reps = 1,
@@ -439,12 +535,12 @@ s_eval$design_summary[, c("Facet", "n_person", "MeanSeparation", "MeanSeverityRM
 #> # A tibble: 6 × 4
 #>   Facet     n_person MeanSeparation MeanSeverityRMSE
 #>   <chr>        <int>          <dbl>            <dbl>
-#> 1 Criterion        8           1.18           0.502 
-#> 2 Criterion       12           1.98           0.406 
-#> 3 Person           8           5.19           4.89  
-#> 4 Person          12           1.61           0.631 
-#> 5 Rater            8           2.05           0.649 
-#> 6 Rater           12           0              0.0747
+#> 1 Criterion        8           0              0.102 
+#> 2 Criterion       12           0              0.0102
+#> 3 Person           8           1.13           1.20  
+#> 4 Person          12           1.55           0.688 
+#> 5 Rater            8           2.62           0.844 
+#> 6 Rater           12           0              0.140 
 p_eval <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 names(p_eval)
 #>  [1] "plot"                    "facet"                  
@@ -454,5 +550,4 @@ names(p_eval)
 #>  [9] "design_variable_aliases" "design_descriptor"      
 #> [11] "planning_scope"          "planning_constraints"   
 #> [13] "planning_schema"         "data"                   
-# }
 ```

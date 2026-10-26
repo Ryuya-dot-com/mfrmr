@@ -54,6 +54,12 @@ dispatched through
 ## Interpreting output
 
 - `header` / `data_spec`: run identity and model settings.
+  `CenteringScope` is `"facet"` for whole-facet centering or
+  `"remainder"` for the legacy constraint on ungrouped, unanchored
+  levels. It applies only to centered facets; `NonCenteredFacet` remains
+  separate. Older native fits without convention metadata retain
+  `"remainder"`; an input without a stored constraint specification is
+  `"not_recorded"`.
 
 - `facet_labels`: facet sizes and labels.
 
@@ -90,8 +96,8 @@ summary(out)
 #>   Components: 6
 #> 
 #> Specification header
-#>            Engine   Title DataFile OutputFile Model Method
-#>  mfrmr 0.2.4.9000 Toy run                       RSM    MML
+#>       Engine   Title DataFile OutputFile Model Method
+#>  mfrmr 0.2.4 Toy run                       RSM    MML
 #> 
 #> Specification rows: data_spec
 #>           Setting  Value
@@ -101,10 +107,10 @@ summary(out)
 #>         RatingMin      1
 #>         RatingMax      4
 #>  NonCenteredFacet Person
+#>    CenteringScope  facet
 #>    PositiveFacets       
 #>       DummyFacets       
 #>         StepFacet       
-#>      WeightColumn       
 #> 
 #> Notes
 #>  - Model specification summary for method and run documentation.

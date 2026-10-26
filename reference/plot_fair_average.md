@@ -16,48 +16,48 @@ plot_fair_average(
   ci_level = 0.95,
   draw = TRUE,
   preset = c("standard", "publication", "compact", "monochrome"),
-  show_title = TRUE,
-  show_notes = TRUE,
+  show_title = FALSE,
+  show_notes = FALSE,
   ...
 )
 ```
 
 ## Arguments
 
-- x:
+- x :
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   or
   [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md).
 
-- diagnostics:
+- diagnostics :
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   when `x` is `mfrm_fit`.
 
-- facet:
+- facet :
 
   Optional facet name or names. Use `"Person"` for ability-to-score
   relationships.
 
-- metric:
+- metric :
 
   Adjusted-score metric. Accepts legacy names (`"FairM"`, `"FairZ"`) and
   package-native names (`"AdjustedAverage"`,
   `"StandardizedAdjustedAverage"`).
 
-- plot_type:
+- plot_type :
 
   `"difference"`, `"scatter"`, or `"measure"` (Measure on x, fair score
   on y).
 
-- top_n:
+- top_n :
 
   Maximum levels shown for `"difference"` plot.
 
-- show_ci:
+- show_ci :
 
   Draw approximate fair-score intervals. RSM/PCM propagate only the
   focal measure SE, holding thresholds, other effects and reference
@@ -71,31 +71,31 @@ plot_fair_average(
   `CI_ReportingUse` distinguishes diagnostic-only and unavailable
   intervals, including stored bundles.
 
-- ci_level:
+- ci_level :
 
   Confidence level used when `show_ci = TRUE`; default `0.95`. The
   returned plot-data object gains `CI_Lower`, `CI_Upper`, and `CI_Level`
   columns for downstream reuse.
 
-- draw:
+- draw :
 
   If `TRUE`, draw with base graphics.
 
-- preset:
+- preset :
 
   Visual preset (`"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`).
 
-- show_title:
+- show_title :
 
   Show the figure title. The title remains in the return value.
 
-- show_notes:
+- show_notes :
 
   Show short figure annotations. Full interpretation and uncertainty
   notes remain in `data$notes` and the ggplot `mfrmr_notes` attribute.
 
-- ...:
+- ... :
 
   Additional arguments passed to
   [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
@@ -117,19 +117,30 @@ non-person rows it also uses the mean estimated person measure. FairZ
 uses zero reference measures instead. **FairZ is not a z-score.** The
 historical alias `StandardizedAdjustedAverage` refers to the reference
 environment, not z-standardization. Both metrics use fitted internal
-score coding. PCM/GPCM use an element's own thresholds for the step
-facet and the mean threshold profile for other facets. GPCM uses an
-element's own slope for the slope facet and slope 1 otherwise. These are
-reporting conventions, not averages of predictions over the observed
-person/assignment distribution.
+score coding. PCM averages expectations over the administered rating
+scales using the same observation weights and `totalscore` selection as
+the fair-score table. Its conditional derivative averages the
+within-scale score variances. In ordinary additive RSM/PCM JML, finite
+direct anchors remain eligible in both the fair score and its
+conditional derivative when `totalscore = FALSE`, even if their observed
+responses are all minimum or all maximum. GPCM uses an element's own
+thresholds for the step facet and the mean threshold profile for other
+facets, with its own slope for the slope facet and slope 1 otherwise.
+Person and other-facet measures remain at the chosen reference; these
+scores do not average over the observed person distribution.
 
 `plot_type = "measure"` connects measures (person ability or facet
 effects) to the reported fair score. Select `facet = "Person"` for an
 ability-to-score view. Points reuse the table values, without fitting a
 trend across different reference profiles. This transformation is not
 independent validation of the fitted model. `umean`/`uscale` change
-Measure units, not score units; `xtreme` changes the reported Measure
-only and disables conditional intervals.
+Measure units, not score units; Positive `xtreme` disables conditional
+fair-score intervals. With the default `xtreme_method = "display"`, it
+changes only the reported Measure. `xtreme_method = "facets"` also uses
+the extrapolated measure in that element's fair scores; its measure SE
+describes information at a corrected total, not uncertainty of the
+original infinite MLE. See
+[`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md).
 
 `"difference"` ranks absolute observed-minus-fair gaps; `"scatter"`
 compares observed averages against fair scores with an identity line.
@@ -147,6 +158,13 @@ For a plot-selection guide and a longer walkthrough, see
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 and
 [`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md).
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -186,15 +204,17 @@ or diagnostic thresholds.
 ## See also
 
 [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md),
-[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-[`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
+[plot(x, type =
+"unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -213,14 +233,13 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # How do the observed and reference-adjusted person averages compare?
-plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
-                  metric = "FairM", plot_type = "scatter")
+plot(fit, type = "fair_average", diagnostics = diagnostics,
+  facet = "Person", metric = "FairM", view = "scatter")
 
 
 # Optional: inspect the gap (observed average minus FairM)
-plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
-                  metric = "FairM", plot_type = "difference")
+plot(fit, type = "fair_average", diagnostics = diagnostics,
+  facet = "Person", metric = "FairM", view = "difference")
 
 # A positive gap means the observed average is higher than the model-based FairM
-# }
 ```

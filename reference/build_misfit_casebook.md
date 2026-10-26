@@ -27,6 +27,9 @@ build_misfit_casebook(
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+  Must match this fitted analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics.
 
 - unexpected:
 
@@ -110,20 +113,32 @@ exploratory screening semantics from the underlying residual and strict
 marginal sources; it should not be read as a formal inferential case
 test.
 
+## Saved-result reuse
+
+Supplied screening results must describe this fitted analysis. Results
+from another fit or older results without identity metadata are refused.
+See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+to recreate them from the saved fit and matching diagnostics without
+refitting the model.
+
 ## See also
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`unexpected_response_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/unexpected_response_table.md),
 [`displacement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/displacement_table.md),
-[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-[`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-[`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
-[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md)
+[plot(x, type =
+"unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 # A balanced slice retains every Rater and Criterion while running quickly.
 toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
@@ -136,9 +151,9 @@ summary(casebook)
 #> 
 #> Overview
 #>  Model DiagnosticMode    ReviewStatus AdministrationID WaveID TotalCases
-#>    RSM           both review_required             <NA>   <NA>         49
+#>    RSM           both review_required             <NA>   <NA>          3
 #>  RollupRows GroupViews TopCaseRows SourcesAvailable GPCMSupport
-#>          14          7          10                2    deferred
+#>           3          7           3                2    deferred
 #> 
 #> Status
 #>            Item           Value
@@ -148,109 +163,43 @@ summary(casebook)
 #> 
 #> Key Warnings
 #>  - Strict pairwise screening contributed 1 flagged pair rows.
-#>  - Unexpected-response screening contributed 47 case rows.
+#>  - Unexpected-response screening contributed 1 case rows.
 #> 
 #> Next Actions
-#>  - Use plot_marginal_pairwise(diagnostics, draw = FALSE) to inspect the
-#>    strongest pairwise local-dependence signals.
-#>  - Use plot_unexpected(unexpected, draw = FALSE) to review the most surprising
-#>    person-level observations.
+#>  - Use plot(diagnostics, type = "marginal_pairwise", draw = FALSE) to inspect
+#>    the strongest pairwise local-dependence signals.
+#>  - Use plot(unexpected, type = "unexpected", draw = FALSE) to review the most
+#>    surprising person-level observations.
 #> 
 #> Case Rollup
 #>  AdministrationID WaveID  RollupType                     RollupKey
 #>              <NA>   <NA>      person                          P004
-#>              <NA>   <NA>      person                          P007
-#>              <NA>   <NA>      person                          P010
-#>              <NA>   <NA>      person                          P011
-#>              <NA>   <NA>      person                          P012
-#>              <NA>   <NA>      person                          P001
-#>              <NA>   <NA>      person                          P005
-#>              <NA>   <NA>      person                          P009
-#>              <NA>   <NA>      person                          P003
-#>              <NA>   <NA>      person                          P002
-#>              <NA>   <NA>      person                          P008
-#>              <NA>   <NA>      person                          P006
 #>              <NA>   <NA>  facet_pair Criterion::Accuracy::Language
 #>              <NA>   <NA> facet_level                  Person::P004
 #>                         RollupLabel  SourceFamily     Facet SupportBasis
 #>                        Person: P004    unexpected      <NA>       legacy
-#>                        Person: P007    unexpected      <NA>       legacy
-#>                        Person: P010    unexpected      <NA>       legacy
-#>                        Person: P011    unexpected      <NA>       legacy
-#>                        Person: P012    unexpected      <NA>       legacy
-#>                        Person: P001    unexpected      <NA>       legacy
-#>                        Person: P005    unexpected      <NA>       legacy
-#>                        Person: P009    unexpected      <NA>       legacy
-#>                        Person: P003    unexpected      <NA>       legacy
-#>                        Person: P002    unexpected      <NA>       legacy
-#>                        Person: P008    unexpected      <NA>       legacy
-#>                        Person: P006    unexpected      <NA>       legacy
 #>  Criterion pair: Accuracy::Language marginal_pair Criterion marginal_fit
 #>                        Person: P004   element_fit    Person       legacy
 #>  InterpretationTier
 #>  operational_review
-#>  operational_review
-#>  operational_review
-#>  operational_review
-#>  operational_review
-#>  operational_review
-#>  operational_review
-#>  operational_review
-#>  operational_review
-#>  operational_review
-#>  operational_review
-#>  operational_review
 #>         exploratory
 #>  operational_review
 #>                                                 PrimaryPlotRoute SupportStatus
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                        plot_unexpected(unexpected, draw = FALSE)     supported
-#>                plot_marginal_pairwise(diagnostics, draw = FALSE)     supported
-#>  plot_qc_dashboard(fit, diagnostics = diagnostics, draw = FALSE)     supported
+#>              plot(unexpected, type = "unexpected", draw = FALSE)     supported
+#>      plot(diagnostics, type = "marginal_pairwise", draw = FALSE)     supported
+#>  plot(fit, type = "qc", diagnostics = diagnostics, draw = FALSE)     supported
 #>  Cases DistinctSourceRows PersonsFlagged MaxPriority MeanPriority EvidenceN
-#>      4                  4              1       6.217        3.973         4
-#>      5                  5              1       5.701        3.106         5
-#>      4                  4              1       4.770        3.216         4
-#>      5                  5              1       4.414        3.271         5
-#>      5                  5              1       4.329        3.197         5
-#>      6                  6              1       3.883        3.068         6
-#>      6                  6              1       3.756        3.029         6
-#>      3                  3              1       3.673        2.772         3
-#>      3                  3              1       3.498        2.928         3
-#>      3                  3              1       2.965        2.540         3
-#>      1                  1              1       2.556        2.556         1
-#>      2                  2              1       2.553        2.501         2
+#>      1                  1              1       6.217        6.217         1
 #>      1                  1              0       2.042        2.042         1
 #>      1                  1              0       0.487        0.487         1
 #>                               TopCaseID
 #>                          unexpected:160
-#>                           unexpected:55
-#>                          unexpected:130
-#>                           unexpected:95
-#>                           unexpected:48
-#>                          unexpected:181
-#>                            unexpected:5
-#>                          unexpected:177
-#>                          unexpected:123
-#>                          unexpected:146
-#>                            unexpected:8
-#>                            unexpected:6
 #>  pairwise:Criterion::Accuracy::Language
 #>                element_fit:Person::P004
 #> 
 #> Grouping Views
 #>                   View Rows
-#>              by_person   12
+#>              by_person    1
 #>         by_facet_level    1
 #>          by_facet_pair    1
 #>       by_source_family    3
@@ -271,9 +220,12 @@ summary(casebook)
 #>                              Case-rollup rows restricted to facet `Person`.
 #> 
 #> Plot Follow-up
-#>   SourceFamily Available                                        PlotHelper
-#>  marginal_pair      TRUE plot_marginal_pairwise(diagnostics, draw = FALSE)
-#>     unexpected      TRUE         plot_unexpected(unexpected, draw = FALSE)
+#>   SourceFamily Available
+#>  marginal_pair      TRUE
+#>     unexpected      TRUE
+#>                                                   PlotHelper
+#>  plot(diagnostics, type = "marginal_pairwise", draw = FALSE)
+#>          plot(unexpected, type = "unexpected", draw = FALSE)
 #>                                                      Trigger
 #>  Use when strict pairwise local-dependence rows are flagged.
 #>  Use when person-level unexpected responses dominate review.
@@ -284,9 +236,9 @@ summary(casebook)
 #>  marginal_pair marginal_fit        exploratory
 #>    element_fit       legacy operational_review
 #>                                                 PrimaryPlotRoute Cases
-#>                        plot_unexpected(unexpected, draw = FALSE)    47
-#>                plot_marginal_pairwise(diagnostics, draw = FALSE)     1
-#>  plot_qc_dashboard(fit, diagnostics = diagnostics, draw = FALSE)     1
+#>              plot(unexpected, type = "unexpected", draw = FALSE)     1
+#>      plot(diagnostics, type = "marginal_pairwise", draw = FALSE)     1
+#>  plot(fit, type = "qc", diagnostics = diagnostics, draw = FALSE)     1
 #>  MaxPriority
 #>        6.217
 #>        2.042
@@ -305,72 +257,38 @@ summary(casebook)
 #>              Displacement rows are available for operational follow-up.
 #> 
 #> Top Cases
-#>          CaseID                 CaseType SourceFamily
-#>  unexpected:160 unexpected_response_case   unexpected
-#>   unexpected:55 unexpected_response_case   unexpected
-#>  unexpected:130 unexpected_response_case   unexpected
-#>   unexpected:28 unexpected_response_case   unexpected
-#>   unexpected:95 unexpected_response_case   unexpected
-#>   unexpected:48 unexpected_response_case   unexpected
-#>  unexpected:181 unexpected_response_case   unexpected
-#>  unexpected:179 unexpected_response_case   unexpected
-#>    unexpected:5 unexpected_response_case   unexpected
-#>  unexpected:177 unexpected_response_case   unexpected
-#>                  SourceTable SourceRowKey AdministrationID WaveID PrimaryUnit
-#>  unexpected_response_table()          160             <NA>   <NA>        P004
-#>  unexpected_response_table()           55             <NA>   <NA>        P007
-#>  unexpected_response_table()          130             <NA>   <NA>        P010
-#>  unexpected_response_table()           28             <NA>   <NA>        P004
-#>  unexpected_response_table()           95             <NA>   <NA>        P011
-#>  unexpected_response_table()           48             <NA>   <NA>        P012
-#>  unexpected_response_table()          181             <NA>   <NA>        P001
-#>  unexpected_response_table()          179             <NA>   <NA>        P011
-#>  unexpected_response_table()            5             <NA>   <NA>        P005
-#>  unexpected_response_table()          177             <NA>   <NA>        P009
-#>     PrimaryUnitType Person Facet Level Category PairKey         ContextKey Wave
-#>  person_observation   P004  <NA>  <NA>        1    <NA>     R02 | Accuracy <NA>
-#>  person_observation   P007  <NA>  <NA>        1    <NA> R01 | Organization <NA>
-#>  person_observation   P010  <NA>  <NA>        1    <NA>     R03 | Language <NA>
-#>  person_observation   P004  <NA>  <NA>        2    <NA>      R03 | Content <NA>
-#>  person_observation   P011  <NA>  <NA>        4    <NA> R04 | Organization <NA>
-#>  person_observation   P012  <NA>  <NA>        1    <NA>      R04 | Content <NA>
-#>  person_observation   P001  <NA>  <NA>        1    <NA>     R04 | Accuracy <NA>
-#>  person_observation   P011  <NA>  <NA>        1    <NA>     R03 | Accuracy <NA>
-#>  person_observation   P005  <NA>  <NA>        2    <NA>      R01 | Content <NA>
-#>  person_observation   P009  <NA>  <NA>        3    <NA>     R03 | Accuracy <NA>
-#>                      Signal            Direction Magnitude ReviewPriority
-#>  Unexpected response screen  Lower than expected     6.217          6.217
-#>  Unexpected response screen  Lower than expected     5.701          5.701
-#>  Unexpected response screen  Lower than expected     4.770          4.770
-#>  Unexpected response screen  Lower than expected     4.672          4.672
-#>  Unexpected response screen Higher than expected     4.414          4.414
-#>  Unexpected response screen  Lower than expected     4.329          4.329
-#>  Unexpected response screen  Lower than expected     3.883          3.883
-#>  Unexpected response screen  Lower than expected     3.858          3.858
-#>  Unexpected response screen  Lower than expected     3.756          3.756
-#>  Unexpected response screen Higher than expected     3.673          3.673
+#>                                  CaseID                       CaseType
+#>                          unexpected:160       unexpected_response_case
+#>  pairwise:Criterion::Accuracy::Language pairwise_local_dependence_case
+#>                element_fit:Person::P004               element_fit_case
+#>   SourceFamily                                 SourceTable
+#>     unexpected                 unexpected_response_table()
+#>  marginal_pair diagnostics$marginal_fit$pairwise$top_pairs
+#>    element_fit                             diagnostics$fit
+#>                   SourceRowKey AdministrationID WaveID          PrimaryUnit
+#>                            160             <NA>   <NA>                 P004
+#>  Criterion::Accuracy::Language             <NA>   <NA> Accuracy vs Language
+#>                   Person::P004             <NA>   <NA>         Person: P004
+#>     PrimaryUnitType Person     Facet Level Category            PairKey
+#>  person_observation   P004      <NA>  <NA>        1               <NA>
+#>          facet_pair   <NA> Criterion  <NA>       NA Accuracy::Language
+#>         facet_level   <NA>    Person  P004       NA               <NA>
+#>               ContextKey Wave                                  Signal
+#>           R02 | Accuracy <NA>              Unexpected response screen
+#>                Criterion <NA> Strict pairwise local-dependence screen
+#>  Infit=1.56, Outfit=1.63 <NA>              MnSq misfit (band 0.5-1.5)
+#>                               Direction Magnitude ReviewPriority
+#>                     Lower than expected     6.217          6.217
+#>  Lower than expected adjacent agreement     2.042          2.042
+#>                  Outfit MnSq above band     0.487          0.487
 #>  WithinSourceRank EvidenceN SupportBasis InterpretationTier
 #>                 1         1       legacy operational_review
-#>                 2         1       legacy operational_review
-#>                 3         1       legacy operational_review
-#>                 4         1       legacy operational_review
-#>                 5         1       legacy operational_review
-#>                 6         1       legacy operational_review
-#>                 7         1       legacy operational_review
-#>                 8         1       legacy operational_review
-#>                 9         1       legacy operational_review
-#>                10         1       legacy operational_review
-#>                           PrimaryPlotRoute SupportStatus
-#>  plot_unexpected(unexpected, draw = FALSE)     supported
-#>  plot_unexpected(unexpected, draw = FALSE)     supported
-#>  plot_unexpected(unexpected, draw = FALSE)     supported
-#>  plot_unexpected(unexpected, draw = FALSE)     supported
-#>  plot_unexpected(unexpected, draw = FALSE)     supported
-#>  plot_unexpected(unexpected, draw = FALSE)     supported
-#>  plot_unexpected(unexpected, draw = FALSE)     supported
-#>  plot_unexpected(unexpected, draw = FALSE)     supported
-#>  plot_unexpected(unexpected, draw = FALSE)     supported
-#>  plot_unexpected(unexpected, draw = FALSE)     supported
+#>                 1         1 marginal_fit        exploratory
+#>                 1         1       legacy operational_review
+#>                                                 PrimaryPlotRoute SupportStatus
+#>              plot(unexpected, type = "unexpected", draw = FALSE)     supported
+#>      plot(diagnostics, type = "marginal_pairwise", draw = FALSE)     supported
+#>  plot(fit, type = "qc", diagnostics = diagnostics, draw = FALSE)     supported
 #> 
 #> Support Status
 #>      Scope    Status
@@ -388,24 +306,16 @@ summary(casebook)
 #>  - Repeated signals across strict marginal, unexpected-response, and
 #>    displacement sources deserve priority.
 casebook$top_cases
-#> # A tibble: 10 × 26
-#>    CaseID CaseType SourceFamily SourceTable SourceRowKey AdministrationID WaveID
-#>    <chr>  <chr>    <chr>        <chr>       <chr>        <chr>            <chr> 
-#>  1 unexp… unexpec… unexpected   unexpected… 160          NA               NA    
-#>  2 unexp… unexpec… unexpected   unexpected… 55           NA               NA    
-#>  3 unexp… unexpec… unexpected   unexpected… 130          NA               NA    
-#>  4 unexp… unexpec… unexpected   unexpected… 28           NA               NA    
-#>  5 unexp… unexpec… unexpected   unexpected… 95           NA               NA    
-#>  6 unexp… unexpec… unexpected   unexpected… 48           NA               NA    
-#>  7 unexp… unexpec… unexpected   unexpected… 181          NA               NA    
-#>  8 unexp… unexpec… unexpected   unexpected… 179          NA               NA    
-#>  9 unexp… unexpec… unexpected   unexpected… 5            NA               NA    
-#> 10 unexp… unexpec… unexpected   unexpected… 177          NA               NA    
+#> # A tibble: 3 × 26
+#>   CaseID  CaseType SourceFamily SourceTable SourceRowKey AdministrationID WaveID
+#>   <chr>   <chr>    <chr>        <chr>       <chr>        <chr>            <chr> 
+#> 1 unexpe… unexpec… unexpected   unexpected… 160          NA               NA    
+#> 2 pairwi… pairwis… marginal_pa… diagnostic… Criterion::… NA               NA    
+#> 3 elemen… element… element_fit  diagnostic… Person::P004 NA               NA    
 #> # ℹ 19 more variables: PrimaryUnit <chr>, PrimaryUnitType <chr>, Person <chr>,
 #> #   Facet <chr>, Level <chr>, Category <int>, PairKey <chr>, ContextKey <chr>,
 #> #   Wave <chr>, Signal <chr>, Direction <chr>, Magnitude <dbl>,
 #> #   ReviewPriority <dbl>, WithinSourceRank <int>, EvidenceN <int>,
 #> #   SupportBasis <chr>, InterpretationTier <chr>, PrimaryPlotRoute <chr>,
 #> #   SupportStatus <chr>
-# }
 ```

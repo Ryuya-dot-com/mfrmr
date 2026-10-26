@@ -18,7 +18,9 @@ fair_average_table(
   omit_unobserved = FALSE,
   xtreme = 0,
   fair_se = FALSE,
-  ci_level = 0.95
+  ci_level = 0.95,
+  xtreme_method = c("display", "facets"),
+  reference_plan = NULL
 )
 ```
 
@@ -42,8 +44,11 @@ fair_average_table(
 
 - totalscore:
 
-  Include all observations for score totals (`TRUE`) or apply legacy
-  extreme-row exclusion (`FALSE`).
+  Include all observations for score totals (`TRUE`) or apply
+  extreme-row exclusion (`FALSE`). In ordinary additive RSM/PCM JML,
+  finite direct anchors remain eligible even with
+  all-minimum/all-maximum responses, under both `xtreme_method`
+  conventions.
 
 - umean:
 
@@ -73,11 +78,10 @@ fair_average_table(
 
 - xtreme:
 
-  Display adjustment in score units for all-minimum/all-maximum rows;
-  default `0` leaves fitted measures unchanged. A positive value
-  replaces the displayed `Measure` by inversion of an expected score
-  that far from the endpoint. It does not adjust responses, refit the
-  model or correct JML bias.
+  Nonnegative correction smaller than the score range for
+  all-minimum/all-maximum rows. Default `0` leaves measures unchanged.
+  Its units depend on `xtreme_method`; no responses or primary estimates
+  are changed, and this does not correct JML bias.
 
 - fair_se:
 
@@ -91,6 +95,33 @@ fair_average_table(
 - ci_level:
 
   Confidence level used when `fair_se = TRUE`; default `0.95`.
+
+- xtreme_method:
+
+  `"display"` (default) retains the historical average-score display
+  adjustment. `"facets"` uses conditional total-score extrapolation for
+  ordinary additive RSM/PCM JML, without group-mean anchors. Supply
+  `xtreme = .3` explicitly to use the usual FACETS main correction.
+
+- reference_plan:
+
+  Optional data frame of non-Person facet columns, using the fitted
+  facet names, and an optional positive `Weight` column. For ordinary
+  additive RSM/PCM JML, adds `reference_scores`: each Person's expected
+  average on this same plan, using its fitted facet locations and scale
+  profiles. Weights are normalized to sum to one. This distinct target
+  does not replace FairM/FairZ or their administered PCM scale mixture.
+  Primary estimates are used, irrespective of display/extrapolation
+  settings. Scores use internal score units, unaffected by `umean` or
+  `uscale`. The result retains the fit for
+  [`confint.mfrm_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fair_average.md).
+  For an explicit `mfrm_jeffreys_fit`, this argument is required and the
+  result contains only common-plan `reference_scores`, the plan, fit and
+  estimator identity. Other arguments beyond `fit` and `reference_plan`
+  are refused: ordinary FairM/FairZ diagnostics do not apply. Inspect
+  `summary(result)`; use `plot(confint(result, ...))` for supported
+  interval plots. Direct FairM/FairZ plotting is unavailable for this
+  result.
 
 ## Value
 
@@ -113,29 +144,61 @@ compatibility, and package-native aliases such as `AdjustedAverage`,
 `StandardizedAdjustedAverage`, `ModelBasedSE`, and `FitAdjustedSE` are
 appended to the formatted outputs.
 
-For the Rasch-family `RSM` / `PCM` branch, these tables follow the
-standard FACETS Linacre construction: fair averages are
-Rasch-measure-to-score transformations evaluated in a standardized
-mean/zero-facet environment. FairM uses mean other-facet measures (and
-mean person measure for non-person rows); FairZ uses zero references.
-Neither integrates over the observed assignment/person distribution.
-FairZ and its historical alias `StandardizedAdjustedAverage` are
-expected scores, not z-scores. If a free JML Person measure is infinite,
-the mean Person reference is unavailable: non-Person FairM values are
-`NA`, with the reason recorded in `FairMReference`. Finite optimizer
-traces are not substituted into that mean. FairZ uses a zero Person
-reference and does not require this mean.
+`RSM` fair scores use the shared scale. `PCM` retains each observation's
+step profile, converts the reference predictor to an expected score,
+then averages with rating weights. Averaging thresholds before
+conversion is not equivalent. FairM replaces other element locations by
+their means; FairZ replaces them by zero. The PCM scale exposure is
+retained, so fair scores can still depend on which scales were
+administered. The Person reference excludes nonfinite primary estimates
+and records eligible/excluded counts. With no finite Person reference,
+non-Person FairM is unavailable. FairZ does not need a Person mean.
+Neither target integrates over Person ability; these are expected
+scores, not z-scores.
 
 With `xtreme > 0`, `PrimaryMeasure` retains the fitted measure,
 including infinite JML estimates and fixed anchors, on the requested
-reporting scale. `MeasureBasis` identifies display-only replacements and
-`ExtremeAdjustment` records their amount in score units. The displayed
-`Measure` may differ from a fixed anchor; the anchor itself is
-unchanged. Measure SEs are unavailable on replaced rows because the
-original SE does not describe the display adjustment. Fair-score
-calculations do not use the replacement. Recompute older diagnostics and
+reporting scale. Fixed anchors retain their measure in both columns.
+With `xtreme_method = "display"`, an expected average that is `xtreme`
+from the endpoint is inverted. Measure SEs are unavailable on replaced
+rows and fair-score calculations do not use that replacement. For
+ordinary additive RSM/PCM JML, a directly anchored element is not
+classified as an unanchored extreme for row exclusion. Its observations
+remain eligible when `totalscore = FALSE`, unless another unanchored
+extreme element requires their exclusion. This rule also preserves the
+PCM scale mixture used in fair scores and does not depend on the display
+adjustment. Recreate older affected fair-score tables and plots from the
+saved fit and matching diagnostics; refitting the calibration is
+unnecessary.
+
+With `xtreme_method = "facets"`, the weighted total is moved inward by
+`xtreme` times the smallest positive weight among that element's
+eligible observations. Responses involving another unanchored extreme
+element are excluded. The resulting weighted score equation is solved
+using the actual administered calibration and PCM scales. Its reciprocal
+square-root conditional information supplies the reporting SE. The
+replacement enters that element's FairM/FairZ, while reference locations
+retain their original basis. `ExtremeAdjustment` records a
+weighted-total correction in this mode, versus an average-score
+correction in `"display"` mode. `MeasureBasis` and `MeasureSEBasis`
+identify the reported quantities. These are finite reporting values and
+conditional SEs at an adjusted total, not finite MLEs or SEs for the
+original extreme response pattern. Fair-score intervals remain
+unavailable when `xtreme > 0`.
+
+Binary unit/replication-weight examples and a fixed-scale PCM kernel
+were checked against FACETS 4.5.0. This is not whole-program
+equivalence: partial anchor examples can leave native score residuals
+and shifted final measures, which this conditional calculation does not
+reproduce. Group-mean anchors, fitted interactions, corrected JML, MML
+and GPCM are outside this route. Recompute older diagnostics and
 recreate saved tables from the existing fit before summarizing or
-plotting them; no model refit is needed.
+plotting them; no model refit is needed. With an extreme fixed Person
+plus an informative interior Person anchor, matched RSM/PCM examples
+also agree for conditional fair scores at the reported native
+calibration. Main estimates can still differ and native iteration limits
+or nonzero free-element score residuals must not be interpreted as
+calibration agreement.
 
 `GPCM` fits are supported under a slope-aware element-conditional
 construction. For each slope-facet element \\j^\star\\ the per-row
@@ -144,13 +207,15 @@ fair-average is the GPCM expected score \$\$\mathrm{FA}\_{p, j^\star} =
 \boldsymbol{\delta}\_{j^\star})\$\$ computed at that element's own
 discrimination \\a\_{j^\star}\\ and threshold structure. Rows for
 non-slope facets (Person, Rater, ...) use the geometric-mean-one slope
-by the GPCM identification convention, so those rows remain continuous
-with the standard PCM Linacre fair-average and reduce to it exactly when
-all slopes equal one. This is an identification-based reporting
-convention for the package's `GPCM` route, not a unique
-free-discrimination score-side analogue to FACETS fair averages. Do not
-report it as FACETS score-side equivalence or as an operational scoring
-rule unless that convention is substantively justified.
+by the GPCM identification convention and average the threshold profiles
+before score conversion. At unit slope the conversion reduces to the PCM
+kernel, but this aggregation need not equal PCM's average of
+administered-scale expectations for non-step-facet rows. This is an
+identification-based reporting convention for the package's `GPCM`
+route, not a unique free-discrimination score-side analogue to FACETS
+fair averages. Do not report it as FACETS score-side equivalence or as
+an operational scoring rule unless that convention is substantively
+justified.
 
 Standard errors on the fair-average value itself are opt-in for MML
 `GPCM` fits via `fair_se = TRUE`. The `Model S.E.`, `ModelBasedSE`,
@@ -172,6 +237,12 @@ under distinct columns such as `Fair(M) S.E.`, `Fair(M) CI Lower`, and
 
 Observed-vs-fair gaps also reflect person mix and assignment. They are
 descriptive follow-up prompts, not standalone evidence of rater bias.
+Ordinary additive RSM/PCM JML tables also retain `PTMEAExpected` and its
+availability metadata when present in the matching diagnostics. This is
+a conditional reference for observed `PtMea Corr`, not an inferential
+cutoff; see
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+for its finite-count correction and weighting basis.
 
 ## Typical workflow
 
@@ -179,8 +250,8 @@ descriptive follow-up prompts, not standalone evidence of rater bias.
 
 2.  Inspect `summary(t12)` and `t12$stacked`.
 
-3.  Visualize with
-    [`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md).
+3.  Visualize with [plot(x, type =
+    "fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 ## Output columns
 
@@ -237,6 +308,11 @@ The `stacked` data.frame contains the following columns, selected by
   Whether the displayed measure was replaced and the replacement amount
   in score units.
 
+- MeasureSEBasis:
+
+  In `raw_by_facet`, distinguishes conditional information at a
+  corrected total from fitted-measure uncertainty.
+
 - FairMReference:
 
   The mean reference used for FairM, or why that reference is
@@ -270,8 +346,8 @@ measure-level `ModelBasedSE` / `Model S.E.` columns as \\\pm 1.96 \cdot
 availability (`ok` or `regularized`) does not establish inferential
 validity. `FairCIReportingUse` distinguishes diagnostic-only and
 unavailable rows. Full-refit coverage remains unverified. For RSM/PCM,
-this table does not supply fair-score SEs;
-[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
+this table does not supply fair-score SEs; [plot(x, type =
+"fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 can compute a conditional interval from a fitted model by propagating
 only the focal measure SE. Summaries identify `FairMetric`: FairM for
 mean/both reference tables, FairZ for zero-reference tables, with
@@ -289,7 +365,7 @@ does not accept this bundle.
   Press.
 
 - Linacre, J. M. (2026). *A user's guide to FACETS, version 4.5.0*.
-  Winsteps.com. (FACETS Table 12 corresponds to the fair-average
+  Winsteps.com. (FACETS Table 7 corresponds to the fair-average
   construction implemented here for `RSM` / `PCM` fits; the slope-aware
   element-conditional construction for `GPCM` is documented in this help
   page.)
@@ -315,7 +391,6 @@ does not accept this bundle.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -348,5 +423,20 @@ head(fair$raw_by_facet$Person[, c("Level", "ObservedAverage", "FairM")])
 #> 6 P025             3     3.02
 # FairM uses the mean reference for the other facets; it is in score units
 # It is a conditional model prediction, not a guarantee of fairness
-# }
+
+# For an ordinary JML fit, request total-score extrapolation explicitly
+jml <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML")
+extreme_report <- fair_average_table(jml, xtreme = .3, xtreme_method = "facets")
+head(extreme_report$raw_by_facet$Person[, c("Level", "PrimaryMeasure",
+     "Measure", "MeasureBasis", "ModelSE", "MeasureSEBasis")])
+#> # A tibble: 6 × 6
+#>   Level PrimaryMeasure Measure MeasureBasis    ModelSE MeasureSEBasis           
+#>   <chr>          <dbl>   <dbl> <chr>             <dbl> <chr>                    
+#> 1 P015            2.37    2.37 Fitted estimate   0.764 Fitted measure or unavai…
+#> 2 P045            2.26    2.26 Fitted estimate   0.769 Fitted measure or unavai…
+#> 3 P036            1.65    1.65 Fitted estimate   0.585 Fitted measure or unavai…
+#> 4 P030            1.59    1.59 Fitted estimate   0.584 Fitted measure or unavai…
+#> 5 P027            1.44    1.44 Fitted estimate   0.548 Fitted measure or unavai…
+#> 6 P013            1.16    1.16 Fitted estimate   0.555 Fitted measure or unavai…
+# ModelSE describes the adjusted total when MeasureBasis says extrapolation
 ```

@@ -37,17 +37,17 @@ facets_term_crosswalk()
 #> 8                   Graphfile=     graph output table
 #> 9                  Anchorfile=           anchor table
 #> 10                   Positive=      facet orientation
-#>                                                          mfrmrRoute
-#> 1                                fit_measures_table(); summary(fit)
-#> 2  fit_measures_table(); plot(fit, type = "wright", show_ci = TRUE)
-#> 3                             diagnose_mfrm(); fit_measures_table()
-#> 4                             diagnose_mfrm(); fit_measures_table()
-#> 5  facets_fit_df_guide(); fit_measures_table(df_sensitivity = TRUE)
-#> 6                                  fit_mfrm(model = "RSM" or "PCM")
-#> 7                 plot_wright_unified(); plot(fit, type = "wright")
-#> 8                      facets_output_file_bundle(include = "graph")
-#> 9                      make_anchor_table(); fit_mfrm(anchors = ...)
-#> 10           fit_mfrm(positive_facets = ...); plot_wright_unified()
+#>                                                                     mfrmrRoute
+#> 1                                           fit_measures_table(); summary(fit)
+#> 2             fit_measures_table(); plot(fit, type = "wright", show_ci = TRUE)
+#> 3                                        diagnose_mfrm(); fit_measures_table()
+#> 4                                        diagnose_mfrm(); fit_measures_table()
+#> 5             facets_fit_df_guide(); fit_measures_table(df_sensitivity = TRUE)
+#> 6                                             fit_mfrm(model = "RSM" or "PCM")
+#> 7       plot(x, type = "wright", view = "unified"); plot(fit, type = "wright")
+#> 8                                 facets_output_file_bundle(include = "graph")
+#> 9                                 make_anchor_table(); fit_mfrm(anchors = ...)
+#> 10 fit_mfrm(positive_facets = ...); plot(x, type = "wright", view = "unified")
 #>                        Relationship
 #> 1           substantive counterpart
 #> 2           substantive counterpart

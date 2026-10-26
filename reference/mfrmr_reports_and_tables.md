@@ -4,7 +4,90 @@ Quick guide to choosing the right report or table helper in `mfrmr`. Use
 this page when you know the reporting question but have not yet decided
 which bundle, table, or reporting helper to call.
 
+## Recommended report route
+
+For ordinary MML/JML `mfrm_fit` results, start here. The Examples
+section follows the same route with bundled data.
+
+1.  Inspect `summary(fit)$decision` before interpreting the estimates.
+
+2.  Collect `res <- mfrm_results(fit)`. By default it computes missing
+    requested diagnostics. Pass existing matching checks through
+    `diagnostics = diagnostics` to reuse them; `compute = "never"`
+    leaves missing diagnostics unavailable. Saved intervals are explicit
+    attachments.
+
+3.  Read `summary(res)$triage` and `$next_actions`; use `$plot_map` to
+    find supported figures. A failed or unavailable component needs its
+    own explanation, not an automatically substituted analysis.
+
+4.  Choose `mfrm_report(res)` for an analyst report, `plot(res, ...)`
+    for a supported figure, or
+    [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+    for tables and an archive. Save the complete object with
+    `saveRDS(res, file)` for later R use. Reopen with `readRDS(file)`;
+    reading or displaying saved outputs does not refit the model.
+    Reports and figures are optional, not required to save.
+
+Native CML and comparison-only fits do not supply ordinary consolidated
+reports. Read `summary(fit)`; for CML use
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md),
+then `summary(ci)`, `plot(ci)`,
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+and `saveRDS(ci, file)`. G/D-study and observed-agreement results also
+have their own summary and saving routes. For GPCM or extended
+measurement models,
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+states the supported sections and attachments; model-specific
+uncertainty limits remain in the collected results.
+
+Individual helpers below answer additional questions.
+[`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
+drafts manuscript text;
+[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
+collects selected tables for
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
+Neither is a prerequisite for
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md).
+Use `mfrmr_output_guide("beginner")` for a compact question-to-function
+map, or the full guide for specialist routes.
+
+## Choose what to save
+
+- [`export_mfrm_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_tables.md):
+  core CSV tables from a fitted model. Supplied matching diagnostics
+  enrich the tables; this call does not compute them.
+
+- [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md):
+  selected tables/reports and, by default, the complete results RDS plus
+  a script that reloads it without refitting.
+
+- [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md):
+  fit-level tables, optional diagnostics and a refitting recipe. Its
+  `"script"` component reruns the analysis; it does not preserve a
+  fitted R object. Supply the original data for a colocated replay CSV,
+  or replace the script's data-path placeholder yourself.
+
+- [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md):
+  selected summary tables for a manuscript. Display rounding follows
+  `digits`; retain the source R object for reuse.
+
+No export certifies estimates as usable or changes their uncertainty
+target. Inspect availability and caveat fields along with estimates. For
+G/D-study or native CML objects, use
+[`saveRDS()`](https://rdrr.io/r/base/readRDS.html) for the complete
+object and [`write.csv()`](https://rdrr.io/r/utils/write.table.html) for
+a selected supported summary table; the MFRM exporters do not widen
+their accepted model classes.
+
 ## Start with the question
+
+- "How can I read assessment-plan estimates and uncertainty together?"
+  Use
+  [`summary.mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_multivariate_d_study.md)
+  with `intervals = TRUE` and `assumption = "normal"`, or supply saved
+  intervals. Its `table`, `intervals` and `notes` retain methods, design
+  and interpretation limits.
 
 - "How should I document the model setup and run settings?" Use
   [`specifications_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/specifications_report.md).
@@ -36,10 +119,10 @@ which bundle, table, or reporting helper to call.
   Use
   [`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md)
   and
-  [`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md).
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md).
 
-- "What should go into the manuscript text and tables?" For `RSM` /
-  `PCM`, use
+- "What should go into the manuscript text and tables?" For ordinary
+  MML/JML `RSM` / `PCM`, use
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
   [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md),
   and
@@ -57,9 +140,22 @@ which bundle, table, or reporting helper to call.
   design-forecasting evidence use their own caveated or blocked `GPCM`
   routes.
 
+- "How can I estimate my model in Stan or brms?"
+  [`export_mfrm_model()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.md)
+  writes code, data, mappings and explicit Bayesian priors for supported
+  ordinary MML specifications. Export does not run a sampler; posterior
+  credible intervals are distinct from MML intervals. After sampling,
+  use
+  [`read_mfrm_posterior()`](https://ryuya-dot-com.github.io/mfrmr/reference/read_mfrm_posterior.md)
+  to read the saved summary, inspect its sampling review, and continue
+  with [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+  [`confint()`](https://rdrr.io/r/stats/confint.html) and
+  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md).
+  The summary does not contain joint posterior draws.
+
 - "Did a simulation recover the known generating parameters well
   enough?" Use
-  [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+  [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
   for the recovery study,
   [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)
   for the adequacy checklist, and then
@@ -67,52 +163,6 @@ which bundle, table, or reporting helper to call.
   or
   [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
   for the appendix handoff.
-
-## Recommended report route
-
-1.  Start with
-    [`specifications_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/specifications_report.md)
-    and
-    [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
-    to document the run and confirm usable data.
-
-2.  Continue with
-    [`estimation_iteration_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimation_iteration_report.md)
-    and
-    [`precision_review_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/precision_review_report.md)
-    to judge convergence and inferential strength.
-
-3.  Use
-    [`facet_statistics_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_statistics_report.md)
-    and
-    [`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md)
-    to describe spread, linkage, and measurability.
-
-4.  Add
-    [`rating_scale_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rating_scale_table.md),
-    [`category_structure_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_structure_report.md),
-    and
-    [`category_curves_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_curves_report.md)
-    to document scale functioning.
-
-5.  For `RSM` / `PCM`, finish with
-    [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-    and
-    [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
-    for manuscript-oriented output, then
-    [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
-    for reusable handoff tables or
-    [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
-    for direct appendix export. For `GPCM`, the same report/export route
-    is available only as a caveated sensitivity-reporting layer with
-    `gpcm_boundary`; keep FACETS-style score-side review and design
-    forecasting on their separate capability rows.
-
-If you are unsure which helper to call, start with
-[`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md).
-It returns a compact purpose-to-helper table that separates `*_table`,
-`*_report`, `*_review`, `*_bundle`, `export_*`, and compatibility
-routes.
 
 ## Which output answers which question
 
@@ -208,6 +258,27 @@ routes.
   [`summary()`](https://rdrr.io/r/base/summary.html) to a formatted
   handoff table without rebuilding the analysis object path.
 
+## Read availability and method limits separately
+
+An available table or a passed numerical check does not establish that
+its intervals have accurate repeated-sample coverage. For implemented
+experimental methods, incomplete qualification means that a stated
+statistical property remains unestablished; inspect the specific
+limitation before interpreting it. Corrected JML retains this
+explanation in `interpretation_notes`, two-family GPCM in
+`gpcm_interpretation_notes`, and attached population intervals in
+`population_<name>_interpretation_notes`. These tables accompany the
+other result tables in reports and CSV exports; keep them with the
+estimates.
+
+An `IntervalStatus` of `Incomplete` has a different meaning: only one
+endpoint was computed. It is neither an infinite bound nor a qualified
+one-sided interval. `Unavailable` means the requested result was not
+supplied; inspect its reason. `CIEligible`, where present, concerns that
+interval procedure's checks, not a universal coverage guarantee. Keep
+numerical status, method limitations and unavailable results when saving
+or sharing an analysis.
+
 ## Practical interpretation rules
 
 - Use bundle summaries first, then drill down into component tables.
@@ -237,7 +308,10 @@ routes.
   [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
   when a report still needs missing diagnostics or clearer caveats.
 
-## Typical workflow
+## Additional task-specific workflows
+
+These extend the basic route for eligible ordinary fits; they are not
+extra steps required for every report and do not apply to native CML.
 
 - Run documentation:
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
@@ -288,7 +362,7 @@ routes.
   with `gpcm_boundary` retained in report/export objects.
 
 - Recovery simulation handoff:
-  [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+  [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
   -\> [`plot()`](https://rdrr.io/r/graphics/plot.default.html) /
   [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)
   -\>
@@ -316,20 +390,28 @@ routes.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
+
+summary(fit)$decision # Review the fit before interpreting it
+#>                                                           Interpretation
+#> 1 Fit-readiness requirements satisfied; formal precision review required
+#>   FormalInference FitReadiness                                              Why
+#> 1              No        ready Formal precision support has not been evaluated.
+#>                                                                                                                                                   NextAction
+#> 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.
 
 # Build the comprehensive results and report
 res <- mfrm_results(fit)
@@ -468,5 +550,46 @@ subset(estimates, Facet == "Criterion")   # All criteria
 #> 55 Criterion      Content -0.3441471    <NA>
 #> 56 Criterion     Language  0.1204520    <NA>
 #> 57 Criterion Organization  0.2236950    <NA>
-# }
+
+# Keep the full result, including methods and unavailable-output reasons
+file <- tempfile(fileext = ".rds") # Choose a lasting path for your analysis
+saveRDS(res, file)
+saved <- readRDS(file)
+summary(saved)$triage # No refitting or repeated diagnostic calculation
+#>                      Area Severity                        Signal
+#> 5             Diagnostics   review   diagnostic_warnings_present
+#> 10 Precision / separation   review    precision_review_available
+#> 2             Data review       ok           data_readiness_pass
+#> 3   Design / connectivity       ok                 design_linked
+#> 8    Diagnostic dashboard       ok             qc_plot_available
+#> 1           Numerical fit       ok      numerical_readiness_pass
+#> 11              Reporting       ok reporting_checklist_available
+#> 6    Section availability       ok  requested_sections_available
+#> 4               Stability       ok      stability_readiness_pass
+#> 9                  Tables       ok              tables_collected
+#> 7              Wright map       ok required_wright_map_available
+#>                                                                              Route
+#> 5                                            summary(res$diagnostics)$key_warnings
+#> 10                                        summary(res$components$precision_review)
+#> 2                                                           summary(res)$readiness
+#> 3                                                           summary(res)$readiness
+#> 8                                   plot(res, type = "qc", preset = "publication")
+#> 1                                                           summary(res)$readiness
+#> 11                                     summary(res$components$reporting_checklist)
+#> 6                                                              summary(res)$status
+#> 4                                                           summary(res)$readiness
+#> 9                                                  build_summary_table_bundle(res)
+#> 7  plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
+#>                                                                                                                                                                                         Detail
+#> 5                                                                                                                           Unexpected responses flagged: 1. | Flagged displacement levels: 1.
+#> 10                                                                          Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.
+#> 2                                                                                                                    Data status is `pass`. No preparation warning or review row was retained.
+#> 3                            Design status is `pass_linked`. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
+#> 8                                                                                                   The QC dashboard is available as a focused follow-up after the required Wright-map review.
+#> 1                                                                                                                           Numerical status is `pass`. Optimizer returned convergence code 0.
+#> 11 Reporting checklist is available; the associated reporting status is `ready_for_diagnostics_and_reporting_follow_up`. Reporting status is the strictest applicable upstream workflow state.
+#> 6                                                                                                                                    Requested sections that could be computed were available.
+#> 4                                                                                                        Stability status is `pass`. No boundary-constant non-person facet level was detected.
+#> 9                                                                                                                          121 data-frame table(s) were collected for appendix or handoff use.
+#> 7                                                 The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots.
 ```

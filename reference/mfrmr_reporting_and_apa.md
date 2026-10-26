@@ -4,8 +4,16 @@ Package-native guide to moving from fitted model objects to
 manuscript-draft text, tables, notes, and revision checklists in
 `mfrmr`.
 
-This guide currently applies fully to diagnostics-based `RSM` / `PCM`
-workflows. `GPCM` fits support
+This guide applies to ordinary MML/JML `RSM` / `PCM` reporting, with the
+estimator-specific limits on structural inference. Native CML and
+comparison-only fits do not supply this consolidated reporting workflow.
+For CML, use `summary(fit)` and
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md),
+then `summary(ci)`, `plot(ci)`,
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+and `saveRDS(ci, file)`; see
+[`vignette("mfrmr-facet-intervals", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facet-intervals.md).
+Ordinary one-family `GPCM` fits support
 [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
 [`precision_review_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/precision_review_report.md),
 direct curve/graph and residual table helpers, and caveated
@@ -26,6 +34,14 @@ score-side contract review remains blocked. Scorefile export, design
 forecasting, diagnostic/signal-detection screening, and linking
 synthesis use their own caveated `GPCM` routes and should not be treated
 as automatic operational-scoring evidence.
+
+See
+[`vignette("mfrmr-networks-and-reporting")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.md)
+for Lamprianou-inspired network views, the FACETS/ConQuest reporting
+crosswalk and speaking/writing examples combining MFRM with G/D studies.
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+supports long-format extraction and original-value cluster profiles for
+custom distribution plots.
 
 ## Start with the reporting question
 
@@ -81,6 +97,29 @@ as automatic operational-scoring evidence.
   [`visual_reporting_template()`](https://ryuya-dot-com.github.io/mfrmr/reference/visual_reporting_template.md)
   for conservative caption and results sentence starters, then verify
   availability with `reporting_checklist()$visual_scope`.
+
+## Editable one-family GPCM report
+
+Copy the installed `templates/gpcm-report.Rmd` using
+`system.file("templates", "gpcm-report.Rmd", package = "mfrmr")`, then
+render it with
+[`rmarkdown::render()`](https://pkgs.rstudio.com/rmarkdown/reference/render.html).
+The default synthetic example produces an HTML report,
+separation/Strata/reliability and fit tables, a Wright map,
+category-probability curves, ordinal Krippendorff's alpha, CSVs and an
+RDS analysis. Set `ratings_csv`, `rating_min`, `rating_max` and
+`output_dir` through the template's parameters for your data. It expects
+columns Person, Rater, Criterion and Score, with one rating per cell;
+repeated occasions require an explicit measurement unit and agreement
+keys. The model is one-family GPCM MML with criterion-owned steps and
+slopes. Alpha is calculated separately from observed ratings;
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+does not automatically include it. Fit review states and precision
+limitations remain visible. Complete the study-context and
+interpretation prompts before treating the rendered document as a
+manuscript. See
+[`vignette("mfrmr-reporting-and-apa")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-reporting-and-apa.md)
+for the output map and full RSM lesson.
 
 ## Recommended reporting route
 
@@ -146,10 +185,10 @@ or
 [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
 These narrower tools remain useful and are not replaced by the general
 report. For `GPCM`, keep the `gpcm_boundary` caveats with APA/QC/export
-output. When strict marginal rows are available,
-[`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md)
-and
-[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md)
+output. When strict marginal rows are available, [plot(x, type =
+"marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+and [plot(x, type =
+"marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 support local-misfit follow-up. When candidate models are compared, keep
 the comparison as a reporting review:
 [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
@@ -357,11 +396,14 @@ Communications Board task force report. *American Psychologist, 73*(1),
   as the writing engine.
 
 - Use the checklist's `"Visual Displays"` rows to decide whether the
-  next follow-up should be
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
-  [`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
-  [`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md),
-  [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md),
+  next follow-up should be [plot(x, type =
+  "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "residual_pca")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
   or another public plot.
 
 - Use
@@ -411,7 +453,10 @@ when the goal is a file bundle for a project folder, coauthor handoff,
 or supplementary-methods archive. The bundle is not deidentified; review
 every file under the study's data-handling policy before any handoff.
 
-## Typical workflow
+## Additional task-specific workflows
+
+Use these when the reporting question calls for extra manuscript or
+appendix assembly, after choosing the supported route above.
 
 - Manuscript-first route:
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
@@ -499,7 +544,6 @@ every file under the study's data-handling policy before any handoff.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -564,5 +608,4 @@ tbl # Prints the table, caption, and note; review them before using in a paper
 #> Note. No population model was requested; MML used an unconditional normal person distribution.
 
 # For individual estimates, see as.data.frame(fit)
-# }
 ```

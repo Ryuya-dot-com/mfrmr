@@ -85,7 +85,6 @@ documented fields.
 ## Examples
 
 ``` r
-# \donttest{
 if (requireNamespace("eRm", quietly = TRUE)) {
   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
@@ -97,5 +96,4 @@ if (requireNamespace("eRm", quietly = TRUE)) {
 #> 1   PCM    CML    eRm 20      20      1         NA -38.17201  NA  NA      TRUE
 #>   ConvergenceStatus
 #> 1          imported
-# }
 ```

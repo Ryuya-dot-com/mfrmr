@@ -73,7 +73,9 @@ normalize_conquest_overlap_files(
 - conquest_item_estimate:
 
   Column in `item_file` that stores item estimates. `"auto"` tries
-  aliases such as `Estimate`, `Est`, and `Facility`.
+  `Estimate` and `Est`. `Facility` is not an automatic alias: establish
+  whether it is a difficulty, easiness, or raw proportion and convert it
+  to the required logit difficulty before review.
 
 - conquest_case_person:
 
@@ -125,7 +127,6 @@ text, and to check duplicate-ID / non-numeric-estimate pre-review flags.
 ## Examples
 
 ``` r
-# \donttest{
 bundle <- build_conquest_overlap_bundle()
 tmp_dir <- tempdir()
 pop_path <- file.path(tmp_dir, "cq_pop.csv")
@@ -173,29 +174,37 @@ summary(normalized)$normalization_scope
 #> 2     Raw ConQuest text parsing      not performed
 #> 3               Bundle matching deferred to review
 #> 4        Pre-review table check      none detected
+#> 5 Generated estimation metadata            unknown
 #>                                                             Evidence
 #> 1                                             69 standardized row(s)
-#> 2            already extracted CSV/TSV/TXT or data.frame inputs only
+#> 2      estimates are extracted from CSV/TSV/TXT or data.frame inputs
 #> 3 review_conquest_overlap() matches rows against the exported bundle
 #> 4                  0 duplicate ID(s); 0 non-numeric estimate cell(s)
-#>                                                                               Interpretation
-#> 1        Population, item, and case tables have been converted to the mfrmr review contract.
-#> 2             This object does not prove that raw ConQuest report text was parsed correctly.
-#> 3 Identifier matching and numerical comparison are intentionally handled by the review step.
-#> 4        Resolve duplicate IDs or non-numeric estimates before treating the review as clean.
+#> 5       optional report_file in normalize_conquest_overlap_exports()
+#>                                                                                                                   Interpretation
+#> 1                                            Population, item, and case tables have been converted to the mfrmr review contract.
+#> 2                       No general report parser is used; optional generated estimation metadata are described separately below.
+#> 3                                     Identifier matching and numerical comparison are intentionally handled by the review step.
+#> 4                                            Resolve duplicate IDs or non-numeric estimates before treating the review as clean.
+#> 5 Stopping/model metadata are separate from estimate extraction; they do not establish numerical precision or common input data.
 review <- review_conquest_overlap(bundle, normalized)
 summary(review)$summary
 #>   PopulationParametersExpected PopulationParametersCompared PopulationMae
-#> 1                            3                            2  4.163336e-16
-#>   PopulationMaxAbsDifference PopulationMaxAbsParameter ItemRowsExpected
-#> 1               4.440892e-16                         X                6
-#>   ItemRowsCompared ItemCenteredCorrelation ItemCenteredMae
-#> 1                6                       1    5.019133e-16
+#> 1                            3                            2  3.330669e-16
+#>   PopulationMaxAbsDifference PopulationMaxAbsParameter InterceptCompared
+#> 1               4.440892e-16                    sigma2             FALSE
+#>   InterceptAlignedDifference ItemRowsExpected ItemRowsCompared
+#> 1                         NA                6                6
+#>   ItemCenteringRows ItemCenteredCorrelation ItemCenteredMae
+#> 1                 6                       1    1.262879e-15
 #>   ItemCenteredMaxAbsDifference ItemCenteredMaxAbsItem CaseRowsExpected
-#> 1                 1.554312e-15                   I006               60
-#>   CaseRowsCompared CaseCorrelation     CaseMae CaseMaxAbsDifference
-#> 1               60               1 6.88743e-16         4.884981e-15
-#>   AttentionItems AttentionMissing AttentionDuplicate AttentionNonNumeric
-#> 1              0                0                  0                   0
-# }
+#> 1                 3.774758e-15                   I006               60
+#>   CaseRowsCompared CaseCorrelation CaseMae CaseMaxAbsDifference   CaseRawMae
+#> 1                0              NA      NA                   NA 6.632137e-16
+#>   CaseRawMaxAbsDifference LocationShift LocationStatus ExternalEstimationStatus
+#> 1            4.884981e-15            NA        unknown                  unknown
+#>   ExternalPrecisionStatus AttentionItems AttentionMissing AttentionDuplicate
+#> 1            not_assessed              1                0                  0
+#>   AttentionNonNumeric AttentionUnexpected
+#> 1                   0                   0
 ```

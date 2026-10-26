@@ -28,7 +28,8 @@ run_mfrm_facets(
   optimizer = c("auto", "BFGS", "L-BFGS-B"),
   mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L,
-  mml_integration = c("fixed", "adaptive")
+  mml_integration = c("fixed", "adaptive"),
+  centering_scope = c("facet", "remainder", "anchor_origin")
 )
 
 mfrmRFacets(
@@ -51,7 +52,8 @@ mfrmRFacets(
   reltol = 1e-09,
   mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L,
-  mml_integration = c("fixed", "adaptive")
+  mml_integration = c("fixed", "adaptive"),
+  centering_scope = c("facet", "remainder", "anchor_origin")
 )
 ```
 
@@ -157,6 +159,13 @@ mfrmRFacets(
   `"fixed"` (default) or `"adaptive"`. Adaptive integration requires the
   direct MML engine.
 
+- centering_scope:
+
+  Whole-facet (default), legacy remainder, or explicit
+  direct/group-anchor-origin centering for ordinary additive RSM/PCM
+  JML; passed to
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+
 ## Value
 
 A list with components:
@@ -217,8 +226,8 @@ structure is needed.
   [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   and returns fit-level visual bundles (e.g., Wright/pathway/CCC).
 
-- `plot(out, type = "qc")` delegates to
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
+- `plot(out, type = "qc")` delegates to [plot(x, type =
+  "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   and returns a QC dashboard plot object.
 
 ## Interpreting output
@@ -276,7 +285,6 @@ one-shot wrapper.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 
@@ -316,5 +324,4 @@ if (interactive()) {
   )
   out_mml$fit$summary[, c("Model", "Method", "MethodUsed")]
 }
-# }
 ```

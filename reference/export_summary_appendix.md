@@ -126,6 +126,18 @@ that
 supports, exports their table bundles as CSV, and optionally assembles a
 lightweight HTML appendix page.
 
+Inspect `written_files` for the actual file paths. An analysis table
+whose name conflicts with bundle metadata (for example, `overview`) is
+retained with a `table_` prefix, with a numeric suffix if needed for
+uniqueness. Metadata keeps its existing filename; the analysis table is
+also retained in HTML. Summary rounding follows `digits`; retain the
+source R object for full-precision reuse. ZIP archives contain only
+files written by this call. With `overwrite = TRUE` an existing ZIP is
+replaced after the new archive is built and checked; obsolete members
+are not carried forward. If ZIP creation fails, any older ZIP is
+retained, `summary$ZipWritten` is zero and `notes` explains the failure.
+Other files in the destination folder are left in place.
+
 Fit-level caveats are exported through the `analysis_caveats` role, and
 pre-fit score-support caveats are exported through the
 `score_category_caveats` role. Both roles are classified as diagnostics,
@@ -140,7 +152,7 @@ keep df/ZSTD sensitivity and optional external FACETS matching tables in
 the same precision-review section.
 
 Parameter-recovery studies can be exported by passing
-[`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
 or
 [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)
 output directly. The exported bundle keeps the ADEMP-style simulation
@@ -176,7 +188,6 @@ hand off appendix-ready tables, catalogs, and reporting maps.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
@@ -190,6 +201,5 @@ appendix <- export_summary_appendix(
 )
 appendix$summary
 #>   BundlesWritten FilesWritten CsvWritten TextWritten HtmlWritten ZipWritten
-#> 1              2           46         43           2           1          0
-# }
+#> 1              2           50         47           2           1          0
 ```

@@ -25,42 +25,42 @@ plot_person_fit(
 
 ## Arguments
 
-- fit:
+- fit :
 
   An `mfrm_fit` from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
-- diagnostics:
+- diagnostics :
 
   Optional
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   output. When omitted, `diagnose_mfrm(fit, residual_pca = "none")` is
   run internally.
 
-- lower:
+- lower :
 
   Lower fit threshold (default `0.5`, Linacre 2002).
 
-- upper:
+- upper :
 
   Upper fit threshold (default `1.5`).
 
-- top_n_label:
+- top_n_label :
 
   Maximum number of persons whose label is drawn. The default
   mean-square view uses largest `|Infit - 1| + |Outfit - 1|`;
   `fit_index = "loglik"` uses largest absolute report index. Default
   `12`.
 
-- preset:
+- preset :
 
   Visual preset, including `"monochrome"`.
 
-- draw:
+- draw :
 
   If `TRUE`, draw with base graphics.
 
-- fit_index:
+- fit_index :
 
   Plot focus. `"meansquare"` keeps the Infit/Outfit bubble plot.
   `"loglik"` draws the report index selected by
@@ -83,6 +83,13 @@ amber and red corners are candidates for review (overfit / underfit)
 using
 [`unexpected_response_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/unexpected_response_table.md)
 for follow-up.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -128,7 +135,6 @@ or diagnostic thresholds.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -147,9 +153,8 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # Compare each person's Infit and Outfit with the reference value of 1
-plot_person_fit(fit, diagnostics = diagnostics)
+plot(fit, type = "person_fit", diagnostics = diagnostics)
 
 # Values above 1 indicate more response variation than expected, below 1 less
 # The reference bands flag patterns for review, not automatic exclusion
-# }
 ```

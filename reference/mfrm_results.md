@@ -27,7 +27,7 @@ mfrm_results(
 
 ## Arguments
 
-- fit:
+- fit :
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
@@ -39,11 +39,16 @@ mfrm_results(
   score columns can be inferred unambiguously from common names such as
   `Person` and `Score`; remaining measurement columns must use
   recognizable facet-role names. Ambiguous extra columns are rejected
-  rather than guessed as facets. Imported source-package fits use their
-  own [`summary()`](https://rdrr.io/r/base/summary.html) and point-only
+  rather than guessed as facets. Native CML and comparison-only fits are
+  excluded; use their [`summary()`](https://rdrr.io/r/base/summary.html)
+  and the CML interval object's
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+  [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+  and RDS saving. Imported source-package fits use their own
+  [`summary()`](https://rdrr.io/r/base/summary.html) and point-only
   Wright map; comprehensive reports require a native mfrmr fit.
 
-- include:
+- include :
 
   Result sections or purpose presets to include. Purpose presets are
   `"standard"`, `"publication"`, `"validation"`, `"facets"`, `"bias"`,
@@ -55,35 +60,35 @@ mfrm_results(
   selects `c("fit", "plots")`. Explicit presets and sections remain
   scope-checked.
 
-- response_time:
+- response_time :
 
   Optional response-time column name. When `NULL` and `include` contains
   `"response_time"`, conservative column names such as `ResponseTime`,
   `response_time`, or `RT` are detected when available.
 
-- response_time_data:
+- response_time_data :
 
   Optional original long-format data containing the timing column.
   Required for already fitted objects unless the timing column is still
   present in `fit$prep$data`.
 
-- response_time_facets:
+- response_time_facets :
 
   Optional facet columns for response-time summaries. Defaults to the
   fitted model's source facet columns when available.
 
-- response_time_score:
+- response_time_score :
 
   Optional score column for response-time summaries. Defaults to the
   fitted model's source score column when available.
 
-- output:
+- output :
 
   Return format: `"object"` for an `mfrm_results` object, `"summary"`
   for its compact summary, `"tables"` for a named list of available data
   frames, or `"html"` for a temporary HTML report.
 
-- diagnostics:
+- diagnostics :
 
   Optional matching output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
@@ -92,17 +97,23 @@ mfrm_results(
   object is also accepted as an alias for `response_diagnostics`; do not
   supply it twice.
 
-- compute:
+- compute :
 
   Diagnostic computation policy. `"auto"` preserves the standard
   behavior; `"never"` collects only sections that can be built without
   computing diagnostics and marks every requested dependent section as
   `"not_computed"`. Matching supplied or stored diagnostics are still
-  reused under `"never"`. For two-family GPCM fits, both settings
-  collect saved results without fitting, integration or diagnostic
-  calculation; ordinary diagnostics remain `"not_available"`.
+  reused under `"never"`. The `"fit"` and `"pathway"` result plots reuse
+  these diagnostics too. Under `"never"`, if none are available, their
+  expected-score curves omit fit-statistic tables. To include those
+  tables, supply matching `diagnostics` or rebuild the result with
+  `compute = "auto"`; explicitly requesting
+  `include_fit_measures = TRUE` without diagnostics under `"never"`
+  gives an error. For two-family GPCM fits, both settings collect saved
+  results without fitting, integration or diagnostic calculation;
+  ordinary diagnostics remain `"not_available"`.
 
-- predictions:
+- predictions :
 
   Optional saved predictions for a testlet or random-rater fit: the
   result of `predict(fit, ...)`. Matching calibration, column roles,
@@ -111,7 +122,7 @@ mfrm_results(
   fit before attachment; the fit itself does not need to be
   re-estimated.
 
-- intervals:
+- intervals :
 
   Optional saved
   [`mfrm_random_rater_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_random_rater_intervals.md)
@@ -123,27 +134,34 @@ mfrm_results(
   fitted data, parameters, population and integration settings. For
   native RSM/PCM fits, accepts a saved
   [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
-  result or a named list of them. No bootstrap or interval calculation
-  is run by this function.
+  or
+  [`mfrm_population_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_population_intervals.md)
+  result, or a named list combining these. Population intervals are
+  delivered in tables, with their saved cautions in
+  `population_<name>_interpretation_notes`. No bootstrap or interval
+  calculation is run by this function.
 
-- scores:
+- scores :
 
   Optional saved
   [`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
   result for an extension, or
   [`score_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_random_rater.md)
-  output, with matching source calibration. Two-family GPCM also accepts
+  output, with matching source calibration. Native one- and two-family
+  GPCM accept saved
   [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
-  output or a format-6
+  output with matching calibration, population and source identity.
+  Two-family GPCM also accepts a format-6
   [`score_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
-  result with matching saved source identity. For testlets this is an
-  alias for `predictions`; supply it once. Shared raters can also attach
-  response `predictions` and rater `intervals`. No Person scoring is run
-  here. Complete source-roster identity is required for the additional
+  result. One-family portable scores keep their standalone
+  reporting/export methods. For testlets this is an alias for
+  `predictions`; supply it once. Shared raters can also attach response
+  `predictions` and rater `intervals`. No Person scoring is run here.
+  Complete source-roster identity is required for the additional
   model-aware map routes; see
   [mfrmr_model_maps](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_model_maps.md).
 
-- comparison:
+- comparison :
 
   Optional descriptive extended-model result from
   [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
@@ -155,7 +173,7 @@ mfrm_results(
   retain aligned predictive quantities; select `metric` for other
   indices.
 
-- response_diagnostics:
+- response_diagnostics :
 
   Optional saved
   [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
@@ -176,7 +194,7 @@ mfrm_results(
   re-estimation. The original object is unchanged; newly exported
   results include the recovered metadata.
 
-- calibration_intervals:
+- calibration_intervals :
 
   For testlet and shared-rater fits, `"none"` (default) retains
   calibration estimates and approximate SEs with missing bounds.
@@ -187,7 +205,7 @@ mfrm_results(
   and reports retain the selection. This does not select
   individual-rater or Person intervals.
 
-- calibration_level:
+- calibration_level :
 
   Nominal level for those calibration intervals, between zero and one;
   default 0.95. Nondefault calibration options are unavailable for
@@ -389,11 +407,17 @@ uncertainty and fit meanings are separate.
 
 ## Saved RSM/PCM fixed-facet intervals
 
-Use `intervals = list(raters = ci)` with output from
+For supported MML fits, use `intervals = list(raters = ci)` with output
+from
 [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md).
-The fit must match the saved data, parameters, constraints, population
-and integration settings. Named results give `facet_` plot routes, for
-example `plot(res, type = "facet_raters")`; a single result gives
+Native CML and comparison-only fits are not inputs to this collector.
+For CML, use `summary(fit)` and save the interval result separately with
+`saveRDS(ci, file)`; `summary(ci)`, `plot(ci)` and
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+reuse that result without an ordinary report bundle. The fit must match
+the saved data, parameters, constraints, population and integration
+settings. Named results give `facet_` plot routes, for example
+`plot(res, type = "facet_raters")`; a single result gives
 `facet_inference`. Include `"plots"` to enable those routes.
 [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
 supports customization. Tables, reports and exports preserve the
@@ -439,9 +463,11 @@ estimates and numerical status, with `include = c("fit", "plots")` when
 omitted. Neither `compute` setting fits, integrates or calculates
 diagnostics. The `gpcm_fitted_slopes`, `gpcm_fitted_locations` and
 `gpcm_fitted_steps` tables retain all saved non-Person estimates when
-`"fit"` is included. Locations retain their centering reference; steps
-identify their owner and level and are centered offsets within that
-level. Separately computed experimental
+`"fit"` is included. `gpcm_interpretation_notes` retains the incomplete
+method qualification even when no intervals are attached; it accompanies
+the result/report CSV tables. Locations retain their centering
+reference; steps identify their owner and level and are centered offsets
+within that level. Separately computed experimental
 [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
 results may be attached through `intervals = list(locations = ci)`; step
 intervals remain unavailable. Reports and CSV exports retain these
@@ -451,8 +477,8 @@ Attach saved
 [`mfrm_curve_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_curve_intervals.md)
 results through `intervals`; these contain provisional fitted values
 without intervals. Summary, tables, named curve plots, reports and saved
-exports retain that limitation. Separately requested `confint(fit)`
-results can be attached as
+exports retain that limitation. Separately requested
+`confint(fit, parm = "slopes")` results can be attached as
 `intervals = list(slopes = ci, curves = curves)`. Their experimental
 component-slope approximation, owner identities, numerical checks and
 unavailable outcomes follow the saved tables, plots and report. If
@@ -467,26 +493,70 @@ numerical status. Attach saved conditional new-Person output as
 or the format-6 portable calibration workflow. The source identity must
 match this fit's calibration, data, category/owner coding, integration
 settings and recorded status. Collection does not repeat source checks
-or scoring. Older scores without the identity still support their
-standalone methods; regenerate them before attachment (also re-extract
-an older portable calibration), without re-estimating the fit.
-`person_scores` and `scoring_*` tables retain unrounded estimates,
-conditional interval meanings, source/batch checks, omissions and review
-labels in reports, CSV exports and saved replay. Native scoring records
-omitted row counts but does not enumerate a not-scored Person roster;
-portable scoring retains it. This attachment adds tables and reports; it
-does not add a score plot route. The intervals exclude calibration
-uncertainty; coverage and population transport remain unqualified.
+or scoring. New source identifiers exclude the writing R version and
+attribute insertion order. Older scores without an identity or with a
+version-dependent identity still support their standalone methods;
+regenerate them if attachment is refused (also re-extract an older
+portable calibration), without re-estimating the fit. `person_scores`
+and `scoring_*` tables retain unrounded estimates, conditional interval
+meanings, source/batch checks, omissions and review labels in reports,
+CSV exports and saved replay. Native scoring records omitted row counts
+but does not enumerate a not-scored Person roster; portable scoring
+retains it. This attachment adds tables and reports; it does not add a
+score plot route. The intervals exclude calibration uncertainty;
+coverage and population transport remain unqualified.
 [`extract_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
 provides the separately checked portable route without retaining
 training responses. Ordinary diagnostics, Wright/Pathway maps and model
 comparison are unavailable. The starter export uses the available saved
 curves instead of requesting an unsupported Wright map.
 
+## Saved one-family GPCM Person scores
+
+First compute `scores <- predict_mfrm_units(fit, new_ratings)` under the
+intended scoring prior, then attach them with
+`res <- mfrm_results(fit, scores = scores, include = "fit", compute = "never")`.
+This accepts the existing ordinary MML/JML scoring routes and their
+recorded review restrictions; it does not extend scoring to new designs
+or estimators. Collection checks the fitted calibration, data,
+population coding and numerical state, plus the saved prior, interval
+and integration records. It does not refit, rescore or repeat source
+numerical checks. Older scores without compatible fitted-analysis
+identity or check records must be recreated from the saved fit before
+attachment; no model refit is needed.
+
+`res$tables$person_scores` retains EAP (`Estimate`), posterior `SD`,
+continuous equal-tail posterior bounds (`Lower`, `Upper`), level and
+numerical status. Posterior SD is neither the SD of EAPs across Persons
+nor the population SD or a calibration-parameter SE. These bounds differ
+from the diagnostic EAP +/- normal-multiplier times posterior-SD bands
+elsewhere in the report. Neither route includes calibration/population
+estimation uncertainty or establishes frequentist coverage for fixed
+abilities.
+
+`scoring_priors` retains each Person's fitted and scoring priors,
+including explicit prior overrides and covariate-dependent means. The
+scalar `PriorMean`/`PriorSD` in `scoring_settings` are NA when they
+differ by Person; use `scoring_priors` instead. `scoring_integration`,
+`scoring_row_review` and any `scoring_population_review` retain checks
+and omissions. Native scoring does not enumerate a complete not-scored
+Person roster: `NotScored` is NA. Review-only scores stay review-only
+even when calibration-parameter inference has a different readiness
+state. JML-derived EAP scores are post hoc posterior summaries, not the
+original JML Person estimates.
+
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+and
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+retain all attached tables and complete saved scoring objects. Replay
+reloads them without recomputing. This adds no score plot route;
+ordinary diagnostic maps keep their existing targets and are not
+replaced by the attached scores.
+
 ## Saved GPCM inference
 
 Attach explicitly selected results, for example
-`intervals = list(slopes = confint(fit, scale = "standardized"))`.
+`intervals = list(slopes = confint(fit, parm = "slopes", scale = "standardized"))`.
 Tables retain the target, method, confidence level and multiplicity
 choice;
 [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
@@ -553,17 +623,17 @@ boundaries; they do not add ordinary-model reporting templates.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
@@ -620,6 +690,4 @@ review$next_actions
 
 # Draw the Wright map
 plot(res)
-
-# }
 ```

@@ -49,11 +49,11 @@ basis: `method = "MML"` fits evaluate residuals at shrunken EAP person
 measures, whereas FACETS evaluates them at JMLE estimates, so MnSq
 values themselves can differ before any standardization is applied;
 refit with `method = "JML"` when the comparison requires a JMLE-style
-residual basis. Second, small df: `mfrmr` returns `NA` ZSTD when
-`df < 1` because the Wilson-Hilferty transformation is numerically
-unstable there, while FACETS/Winsteps under `WHEXACT` can continue with
-a linear approximation, so sparse cells can show `NA` against a finite
-external value without indicating a fit difference.
+residual basis. Second, small df: the explicit engine convention
+withholds ZSTD below df=1, whereas the default FACETS convention admits
+positive df and caps ZSTD at +/-9. Both FACETS WHEXACT choices use a
+cube root; NO omits q/3. Small-df availability differences require
+checking the selected convention.
 
 ## See also
 
@@ -76,8 +76,8 @@ facets_fit_df_guide()
 #>  Compare MnSq first; compare ZSTD only after checking df and transformation settings.
 #>                                              RecommendedRoute
 #>  diagnose_mfrm(fit_df_method = "both") -> facets_fit_review()
-#>                                     DefaultMfrmrPrimary
-#>  engine df unless fit_df_method = "facets" is requested
+#>                               DefaultMfrmrPrimary
+#>  FACETS fourth-moment df; engine remains explicit
 #> 
 #> Comparison steps: decision_guide
 #>  Step                                                         Question

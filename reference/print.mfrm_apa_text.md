@@ -47,7 +47,6 @@ breaks.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -58,10 +57,11 @@ apa$report_text
 #> Design and data.
 #> A many-facet rating-scale Rasch model was fit to 768 observations from 48 persons scored on
 #> a 4-category scale (1-4). The design included facets for Rater (n = 4), Criterion (n = 4).
-#> Facet-level sample sizes were strong (smallest level N = 192), though facets were still
-#> estimated as fixed effects with sum-to-zero identification;
-#> `analyze_hierarchical_structure()` is available for nesting and variance-component
-#> follow-up.
+#> The smallest non-person facet-level count was 192 retained rating rows, placing it in the
+#> package's 'strong' screening band. These counts are not counts of independent examinees or
+#> effective sample sizes and do not establish precision or interval coverage. Review
+#> targeting, connectedness and estimator-specific uncertainty alongside
+#> `facet_small_sample_review()`.
 #> 
 #> Estimation settings.
 #> The RSM specification was estimated using JML with mfrmr. Precision summaries were
@@ -74,7 +74,8 @@ apa$report_text
 #> AIC = 1753.898; legacy descriptive BIC = 2013.950; neither enters the common MML ranking
 #> panel. Terminal gradient sup-norm = 0.0001 (review threshold = 0.0001). Constraint
 #> settings: noncenter facet = Person; anchored levels = 0 (facets: none); group anchors = 0
-#> (facets: none); dummy facets = none.
+#> (facets: none); dummy facets = none. Centered facets sum to zero across all levels,
+#> including anchors and group totals.
 #> 
 #> Results.
 #> 
@@ -87,7 +88,7 @@ apa$report_text
 #> 
 #> Facet measures.
 #> Person measures ranged from -2.18 to 2.68 logits (M = 0.00, SD = 1.10). Rater measures
-#> ranged from -0.33 to 0.33 logits (M = 0.00, SD = 0.31). Criterion measures ranged from
+#> ranged from -0.33 to 0.33 logits (M = -0.00, SD = 0.31). Criterion measures ranged from
 #> -0.42 to 0.25 logits (M = 0.00, SD = 0.29).
 #> 
 #> Fit and precision.
@@ -96,18 +97,35 @@ apa$report_text
 #> guidelines differ, and band position is screening evidence rather than a model-validity
 #> decision. MnSq outside [0.5, 1.5]: 1 of 56 classified elements flagged; 0 of 56 elements
 #> unclassified. Largest misfit signals among 56 elements with complete paired statistics:
-#> Person:P023 (|ZSTD| = 3.06); Person:P018 (|ZSTD| = 1.51); Criterion:Organization (|ZSTD| =
-#> 1.43). Criterion exploratory reliability summary = 0.89 (separation = 2.78). Person
-#> exploratory reliability summary = 0.90 (separation = 3.01). Rater exploratory reliability
-#> summary = 0.90 (separation = 3.05). These are Rasch/FACETS-style separation indices
-#> (measure spread relative to measurement error), not inter-rater agreement. Observed
-#> inter-rater agreement is reported separately from separation reliability: for Rater, exact
-#> agreement = 0.36, expected exact agreement = 0.37, adjacent agreement = 0.83. Element-level
-#> 95% approximate intervals (Normal approximation) accompany 56 of 56 estimates; 0 of 56
-#> estimates have intervals eligible for primary reporting.
+#> Person:P023 (|ZSTD| = 2.20); Person:P018 (|ZSTD| = 1.79); Person:P048 (|ZSTD| = 1.60).
+#> Criterion exploratory reliability summary = 0.89 (separation = 2.78). Person exploratory
+#> reliability summary = 0.90 (separation = 3.01). Rater exploratory reliability summary =
+#> 0.90 (separation = 3.05). Separation reliability describes differences among facet
+#> locations relative to their estimation errors. High Person values indicate distinguishable
+#> abilities; high rater values indicate distinguishable severities, not inter-rater
+#> agreement. Low rater values can also reflect imprecision and do not establish agreement.
+#> The index does not test every rater pair or quantify the practical size of severity
+#> differences. Reliability, separation and Strata are approximate compatibility indices using
+#> marginal SEs; joint-information SEs do not validate this variance decomposition. They do
+#> not account for covariance among estimates. EAP-based separation is not posterior-variance
+#> EAP reliability. Model and fit-adjusted values are companion indices, not confidence
+#> limits. Strata describes hypothetical distinguishable strata, not discovered groups. Facet
+#> heterogeneity chi-square summaries use diagonal SE weights, not full-covariance joint
+#> tests. Inter-rater agreement for Rater is reported separately from separation reliability.
+#> Diagnostics match scores within Person and all remaining non-rater facets; each compared
+#> pair contributes one opportunity per matched context. The denominator is 1152
+#> matched-context opportunities across rater pairs, not a count of independent people. 6 of 6
+#> candidate rater pairs have matched scores. Observed exact agreement = 0.36; observed
+#> adjacent agreement (absolute score difference at most 1, including exact matches) = 0.83;
+#> model-expected exact agreement = 0.37. The model-expected baseline uses fitted category
+#> probabilities with calibration fixed; it is not chance agreement or an inferential test. It
+#> assumes conditional independence at the saved Person point score (EAP for MML), rather than
+#> integrating over the Person posterior. These descriptive summaries do not classify rater
+#> quality or establish fairness. Element-level 95% approximate intervals (Normal
+#> approximation) accompany 56 of 56 estimates; 0 of 56 estimates have intervals eligible for
+#> primary reporting.
 #> 
 #> Reporting cautions.
 #> Precision note: this run relies on exploratory precision summaries, so confidence intervals
 #> and reliability summaries should not be treated as formal inferential quantities.
-# }
 ```

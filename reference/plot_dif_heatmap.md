@@ -102,9 +102,16 @@ consume `$data$matrix` to keep code forward-compatible.
     or differential- functioning contrasts with
     [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md).
 
-2.  Plot with `plot_dif_heatmap(...)`.
+2.  Plot with `plot(..., type = "heatmap")`.
 
 3.  Identify extreme cells or contrasts for follow-up.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## See also
 
@@ -112,27 +119,3 @@ consume `$data$matrix` to keep code forward-compatible.
 [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
 [`analyze_dif()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
 [`dif_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/dif_report.md)
-
-## Examples
-
-``` r
-# \donttest{
-toy <- load_mfrmr_data("example_bias")
-
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", model = "RSM", maxit = 300)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-int <- dif_interaction_table(fit, diag, facet = "Rater",
-                             group = "Group", data = toy, min_obs = 2)
-heat <- plot_dif_heatmap(int, metric = "obs_exp", draw = FALSE)
-dim(heat$data$matrix)
-#> [1] 4 2
-# Look for (`metric = "obs_exp"`): cells near 0 are aligned with
-#   model expectation; |Obs - Exp| > 0.5 logits is a substantive
-#   gap. With `metric = "t"` the cell scale becomes a standardized
-#   residual where |t| > 2 is a screening flag, not a standalone
-#   hypothesis test. With `metric = "contrast"` the layout switches
-#   to Level x GroupPair and reads as the pairwise differential-
-#   functioning contrast (use `analyze_dff()`).
-# }
-```

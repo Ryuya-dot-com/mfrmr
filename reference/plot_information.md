@@ -103,47 +103,22 @@ parsing the drawn figure.
 1.  Compute information with
     [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md).
 
-2.  Plot with `plot_information(info)` for the total precision curve.
+2.  Plot with `plot(info)` for the total precision curve.
 
-3.  Use `plot_information(info, type = "iif", facet = "Rater")` for
-    facet-level contributions.
+3.  Use `plot(info, type = "iif", facet = "Rater")` for facet-level
+    contributions.
 
 4.  Use `draw = FALSE` when you want reusable plot data for custom
     graphics or reporting helpers.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## See also
 
 [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md),
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-
-## Examples
-
-``` r
-toy <- load_mfrmr_data("example_operational")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "MML", model = "RSM",
-                 quad_points = 7, maxit = 30)
-info <- compute_information(fit)
-tif_data <- plot_information(info, type = "tif", draw = FALSE)
-head(tif_data$data$plot)
-#> # A tibble: 6 × 3
-#>   Theta Information    SE
-#>   <dbl>       <dbl> <dbl>
-#> 1 -6           2.59 0.621
-#> 2 -5.94        2.75 0.603
-#> 3 -5.88        2.92 0.586
-#> 4 -5.82        3.09 0.569
-#> 5 -5.76        3.28 0.552
-#> 6 -5.7         3.48 0.536
-iif_data <- plot_information(info, type = "iif", facet = "Rater", draw = FALSE)
-head(iif_data$data$plot)
-#> # A tibble: 6 × 5
-#>   Theta Facet Level Information Exposure
-#>   <dbl> <chr> <chr>       <dbl>    <dbl>
-#> 1 -6    Rater R01         0.712       47
-#> 2 -5.94 Rater R01         0.756       47
-#> 3 -5.88 Rater R01         0.802       47
-#> 4 -5.82 Rater R01         0.850       47
-#> 5 -5.76 Rater R01         0.902       47
-#> 6 -5.7  Rater R01         0.956       47
-```

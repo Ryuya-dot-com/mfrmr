@@ -82,3 +82,7 @@ does not score latent abilities from responses or impute missing
 assigned scores. Use
 [`score_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_random_rater.md)
 for conditional Person scoring from a complete joint response roster.
+Supplying a score column in `newdata` does not update rater
+distributions or estimate abilities. Use the scoring function and its
+complete-roster rules when the input is a new batch of observed
+responses.

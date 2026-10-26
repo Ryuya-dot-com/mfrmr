@@ -30,8 +30,9 @@ build_summary_table_bundle(
   `mfrm_population_prediction`, `mfrm_facets_run`, `mfrm_bias`,
   `mfrm_anchor_review`, `mfrm_linking_review`, `mfrm_misfit_casebook`,
   `mfrm_model_choice_review`, `mfrm_weighting_review`,
-  `mfrm_unit_prediction`, or `mfrm_plausible_values` object, one of
-  their [`summary()`](https://rdrr.io/r/base/summary.html) outputs, or a
+  `mfrm_calibration_score`, `mfrm_unit_prediction`, or
+  `mfrm_plausible_values` object, one of their
+  [`summary()`](https://rdrr.io/r/base/summary.html) outputs, or a
   compatible precomputed recovery-evidence summary.
 
 - which:
@@ -113,6 +114,18 @@ manuscript-facing subset before plotting or export.
 
 ## Supported inputs
 
+- [`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md),
+  [`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md),
+  [`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md),
+  [`mfrm_residual_network()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_residual_network.md)
+  or their
+  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+  objects; supply saved intervals to
+  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+  first. These routes retain all evidence tables, including signed
+  estimates, settings and unavailable states, without `top_n`
+  truncation.
+
 - [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   or `summary(fit)`
 
@@ -146,7 +159,7 @@ manuscript-facing subset before plotting or export.
 - [`evaluate_mfrm_signal_detection()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_signal_detection.md)
   or `summary(sig_eval)`
 
-- [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+- [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
   or `summary(rec)`
 
 - [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)
@@ -183,6 +196,10 @@ manuscript-facing subset before plotting or export.
 
 - [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
   or `summary(pred_units)`
+
+- [`score_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  or `summary(scores)`; includes all review dispositions and unrounded
+  conditional decisions when requested
 
 - [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md)
   or `summary(pv)`
@@ -276,7 +293,6 @@ manuscript-facing subset before plotting or export.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
@@ -284,13 +300,13 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 bundle <- build_summary_table_bundle(fit)
 bundle$table_index
 #>                  Table Rows Cols                 Role
-#> 1             overview    1   88         run_overview
-#> 2  population_overview    1   16     population_basis
+#> 1             overview    1   89         run_overview
+#> 2  population_overview    1   17     population_basis
 #> 5    population_coding    0    6    population_coding
 #> 6       facet_overview    2    7   facet_distribution
 #> 7      person_overview    1   10  person_distribution
 #> 8        step_overview    1    5   category_structure
-#> 10   settings_overview    1   33  estimation_settings
+#> 10   settings_overview    1   35  estimation_settings
 #> 11       reporting_map    6    3        reporting_map
 #> 12             caveats    0    8     analysis_caveats
 #> 13      facet_extremes    8    3 extreme_facet_levels
@@ -311,17 +327,16 @@ bundle$table_index
 #> 15                                                                                                   Lowest person measures from the current fit.
 summary(bundle)$role_summary
 #>                    Role Tables TotalRows TotalCols
-#> 12         run_overview      1         1        88
+#> 12         run_overview      1         1        89
 #> 11        reporting_map      1         6         3
 #> 10    population_coding      1         0         6
-#> 9      population_basis      1         1        16
+#> 9      population_basis      1         1        17
 #> 8   person_distribution      1         1        10
 #> 7    facet_distribution      1         2         7
 #> 6    extreme_person_low      1        10        20
 #> 5   extreme_person_high      1        10        20
 #> 4  extreme_facet_levels      1         8         3
-#> 3   estimation_settings      1         1        33
+#> 3   estimation_settings      1         1        35
 #> 2    category_structure      1         1         5
 #> 1      analysis_caveats      1         0         8
-# }
 ```

@@ -25,7 +25,10 @@ facet_statistics_report(
 - diagnostics:
 
   Optional output from
-  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+  for the same `fit`. Mismatched or outdated diagnostics are rejected.
+  Recompute diagnostics after refitting; the model itself does not need
+  to be fitted again.
 
 - metrics:
 
@@ -85,13 +88,13 @@ dispatched through
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`summary.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_fit.md),
-[`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md),
+[plot(x, type =
+"facets_chisq")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [mfrmr_reports_and_tables](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reports_and_tables.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 out <- facet_statistics_report(fit)
@@ -160,17 +163,28 @@ summary(out)
 #>      1.000      1.019    384.048      47         0     1.089      45.462
 #>      0.993      1.019     30.899       3         0     0.089       2.999
 #>      0.993      1.019     30.899       3         0     0.089       2.999
-#>  RandomDF RandomProb
-#>         2      0.223
-#>         2      0.223
-#>         2      0.223
-#>         2      0.223
-#>        46      0.495
-#>        46      0.495
-#>        46      0.495
-#>        46      0.495
-#>         2      0.223
-#>         2      0.223
+#>  RandomDF RandomProb InferenceTier SupportsFormalInference
+#>         2      0.223     screening                   FALSE
+#>         2      0.223     screening                   FALSE
+#>         2      0.223     screening                   FALSE
+#>         2      0.223     screening                   FALSE
+#>        46      0.495     screening                   FALSE
+#>        46      0.495     screening                   FALSE
+#>        46      0.495     screening                   FALSE
+#>        46      0.495     screening                   FALSE
+#>         2      0.223     screening                   FALSE
+#>         2      0.223     screening                   FALSE
+#>                                               StatisticBasis
+#>  Diagonal-SE heterogeneity screen; covariance not propagated
+#>  Diagonal-SE heterogeneity screen; covariance not propagated
+#>  Diagonal-SE heterogeneity screen; covariance not propagated
+#>  Diagonal-SE heterogeneity screen; covariance not propagated
+#>  Diagonal-SE heterogeneity screen; covariance not propagated
+#>  Diagonal-SE heterogeneity screen; covariance not propagated
+#>  Diagonal-SE heterogeneity screen; covariance not propagated
+#>  Diagonal-SE heterogeneity screen; covariance not propagated
+#>  Diagonal-SE heterogeneity screen; covariance not propagated
+#>  Diagonal-SE heterogeneity screen; covariance not propagated
 #> 
 #> Settings
 #>             Setting                           Value
@@ -186,5 +200,4 @@ summary(out)
 p_fs <- plot(out, draw = FALSE)
 p_fs$data$plot
 #> [1] "means"
-# }
 ```

@@ -13,7 +13,8 @@ build_conquest_overlap_bundle(
   overwrite = FALSE,
   quad_points = 7L,
   maxit = 40L,
-  reltol = 1e-09
+  reltol = 1e-09,
+  conquest_control = list()
 )
 ```
 
@@ -63,6 +64,15 @@ build_conquest_overlap_bundle(
   The fitted object's actual value is recorded in the returned summary
   and settings.
 
+- conquest_control:
+
+  Named list of external calculation controls: `nodes = 31L`,
+  `minnode = -6`, `maxnode = 6`, `p_nodes = 2000L`, `seed = 2L`,
+  `convergence = 1e-8`, `deviance_change = 1e-10`, and
+  `iterations = 2000L`. These do not change the native fit. Nodes/range
+  control calibration; `p_nodes` and `seed` control posterior
+  approximation.
+
 ## Value
 
 A named list with class `mfrm_conquest_overlap_bundle`.
@@ -78,29 +88,51 @@ intentionally narrow:
 
 - binary responses only;
 
-- exactly one non-person facet, treated as the item facet;
+- exactly one difficulty-oriented non-person facet, treated as the item
+  facet, with unanchored sum-to-zero locations and default binary steps;
 
-- active latent-regression `MML`;
+- active latent-regression `MML` with estimated residual variance; an
+  explicitly fixed `population_sd` requires a separately matched model;
 
 - exactly one numeric person covariate beyond the intercept;
 
-- complete person-by-item rectangular data.
+- complete person-by-item rectangular data with unit weights;
+
+- no group anchors, dummy facets, interactions or shrinkage.
+
+Unsupported settings are rejected before export; they are not silently
+converted to the template's model. Retained category support must be
+binary, even if a polytomous fit happens to have only two observed score
+values.
 
 The returned bundle standardizes the responses to `{0, 1}`, pivots them
 to a one-row-per-person wide CSV, stores the corresponding person
 covariates, and records the `mfrmr` estimates that should be compared
-externally. It also records the actual `mfrmr` optimizer controls, MML
+externally. The wide CSV uses safe person aliases and the covariate
+alias `X`. `person_map` and `covariate_map` preserve original labels and
+are exported alongside the data. `PersonDataVariable` and `CaseVariable`
+record the covariate columns in `person_data` and `mfrmr_case_eap`;
+`PopulationParameter` records its coefficient label in
+`mfrmr_population`. Suffixes avoid overwriting identifier, estimate or
+variance fields. Keep the bundle for reverse mapping of ConQuest
+exports. Aliases do not deidentify the bundle, which includes original
+person data. Older bundles without maps retain their original-ID
+convention. It also records the actual `mfrmr` optimizer controls, MML
 engine, terminal gradient, convergence status and severity, and
 inference-readiness decision. A fit that is not inference-ready remains
 available for descriptive numerical review. Inspect the source fit's
 readiness checks and supported inferential scope: lack of readiness need
 not mean optimizer failure, and convergence alone does not establish
 readiness. The comparison does not validate standard errors or
-confidence intervals. The generated ConQuest benchmark template fixes
+confidence intervals. The generated ConQuest benchmark template defaults
 its parameter-change criterion at `1e-8`, deviance-change criterion at
 `1e-10`, and iteration ceiling at `2000`; these controls are written
 into the command, summary, and settings so a default stopping rule
-cannot masquerade as an objective discrepancy.
+cannot masquerade as an objective discrepancy. External integration
+controls are independent of native `quad_points`: equal counts do not
+imply equal quadrature rules or precision. Check calibration refinement
+and range sensitivity separately from posterior scoring. Neither 31
+nodes nor a fixed seed guarantees accuracy.
 
 The `conquest_command` component is a conservative starting template,
 not a guaranteed version-invariant automation. The
@@ -145,8 +177,17 @@ quadrature node count does not set this posterior simulation budget.
 Record both controls when comparing Person scores; close calibration
 estimates do not imply identical EAPs. See the [ConQuest command
 reference](https://conquestmanual.acer.org/s4-00.html), `set` and
-`show`. This template leaves those posterior controls at the local
-ConQuest defaults.
+`show`. The template defaults to `p_nodes=2000` and `seed=2`; these give
+reproducibility, not a guarantee of adequate scoring precision. Use
+`conquest_control` to increase the posterior integration budget when
+checking score accuracy, and retain the command with its outputs. The
+command begins with `reset;`, then sets `lconstraints=items` and
+`exit_on_error=yes`. Run it in a fresh ConQuest session: reset clears
+prior analysis settings and the output buffer. It fixes response codes
+to 0/1. The template uses `fit=no` and `stderr=quick`; it does not
+compare fit or full parameter-estimate covariance. `export covariance`
+contains the population variance, not parameter-estimate sampling
+covariance.
 
 ## Comparison targets
 
@@ -182,6 +223,11 @@ includes:
 
 - `person_data`: one-row-per-person covariate table
 
+- `person_map`: original Person labels and safe ConQuest PID aliases
+
+- `covariate_map`: original covariate name and safe ConQuest variable
+  alias
+
 - `item_map`: mapping from exported response columns to original item
   levels
 
@@ -214,7 +260,6 @@ includes:
 ## Examples
 
 ``` r
-# \donttest{
 bundle <- build_conquest_overlap_bundle(
   quad_points = 31, maxit = 2000, reltol = 1e-10
 )
@@ -240,7 +285,7 @@ summary(bundle)$conquest_command_scope
 #> 6            External comparison scope                   not claimed
 #>                                                                 Evidence
 #> 1                                                bundle$conquest_command
-#> 2       no prose or C-style comment markers precede the datafile command
+#> 2     executable commands only, with no prose or C-style comment markers
 #> 3                                    pidwidth and keepswidth are present
 #> 4                      binary Criterion facet with numeric covariate `X`
 #> 5    parameters, reg_coefficients, covariance, and cases EAP CSV outputs
@@ -273,7 +318,7 @@ summary(bundle)$conquest_output_contract
 #> 3                                                     Pass to normalize_conquest_overlap_exports() as the covariance file.
 #> 4                                                       Pass to normalize_conquest_overlap_exports() as the case-EAP file.
 #> 5 Retain for the objective/free-dimension verification; this is the estimate matrixout history, not a parsed report table.
-#> 6                                        Human-readable review only; do not treat this text file as a parsed review table.
+#> 6                                        Optional report_file for stopping/model metadata; estimates still come from CSVs.
 #>                                                                                   DataHandling
 #> 1                                     Review item labels and analysis metadata before sharing.
 #> 2                                Review covariate labels and analysis metadata before sharing.
@@ -289,6 +334,7 @@ summary(bundle)$conquest_output_contract
 #> 5              TRUE
 #> 6             FALSE
 cat(substr(bundle$conquest_command, 1, 120))
-#> datafile conquest_overlap_wide.csv ! filetype=csv, columnlabels=yes, pid=Person, pidwidth=32, responses=I001 to I006, ke
-# }
+#> reset;
+#> set lconstraints=items, exit_on_error=yes, p_nodes=2000, seed=2;
+#> datafile conquest_overlap_wide.csv ! filetype=cs
 ```

@@ -22,55 +22,55 @@ plot_marginal_pairwise(
 
 ## Arguments
 
-- x:
+- x :
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   or
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
 
-- diagnostics:
+- diagnostics :
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   when `x` is `mfrm_fit`.
 
-- metric:
+- metric :
 
   `"exact"` or `"adjacent"`.
 
-- top_n:
+- top_n :
 
   Maximum level pairs shown.
 
-- facet:
+- facet :
 
   Optional facet name used to keep only matching pairwise rows.
 
-- main:
+- main :
 
   Compatibility title argument. Omitted or `NULL` keeps the default
   title. Existing calls remain supported without a deprecation warning.
   For new code, prefer `title`; do not supply both arguments.
 
-- palette:
+- palette :
 
   Optional named color overrides. Recognized names: `ok`, `flag`.
 
-- label_angle:
+- label_angle :
 
   X-axis label angle.
 
-- preset:
+- preset :
 
   Visual preset (`"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`).
 
-- draw:
+- draw :
 
   If `TRUE`, draw with base graphics.
 
-- title:
+- title :
 
   Plot title. Omit it to keep the default, supply one character string
   to replace it, or use `NULL` (or `""`) to suppress it. This changes
@@ -120,8 +120,8 @@ unavailable values or classifications.
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
     with `diagnostic_mode = "both"`.
 
-3.  Use `plot_marginal_pairwise()` to inspect level pairs behind
-    pairwise local-dependence flags.
+3.  Use [`plot()`](https://rdrr.io/r/graphics/plot.default.html) to
+    inspect level pairs behind pairwise local-dependence flags.
 
 4.  Corroborate with legacy diagnostics, design review, and substantive
     interpretation before making claims.
@@ -132,6 +132,13 @@ For a plot-selection guide and a longer walkthrough, see
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 and
 [`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md).
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -171,13 +178,13 @@ or diagnostic thresholds.
 ## See also
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
-[`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
+[plot(x, type =
+"marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -196,12 +203,10 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # Which pairs show more or less exact agreement than the model expects?
-plot_marginal_pairwise(diagnostics)
+plot(diagnostics, type = "marginal_pairwise")
 
 # These are screening results; inspect the rating design before drawing conclusions
 
 # Optional: agreement within one score category
-plot_marginal_pairwise(diagnostics, metric = "adjacent")
-
-# }
+plot(diagnostics, type = "marginal_pairwise", metric = "adjacent")
 ```

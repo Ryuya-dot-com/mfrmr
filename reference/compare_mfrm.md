@@ -102,8 +102,9 @@ metadata. With ordinary models only, an object of class
   `p_value`.
 
 - `evidence_ratios`: data.frame of pairwise Akaike-weight ratios
-  (Model1, Model2, EvidenceRatio). `NULL` when weights cannot be
-  computed.
+  (Model1, Model2, EvidenceRatio, LogEvidenceRatio, RatioReason). `NULL`
+  when comparison is ineligible. Extremely small normalized weights can
+  round to zero.
 
 - `preferred`: named list with the preferred model label by each
   criterion.
@@ -129,7 +130,11 @@ Unknown, unstable or unavailable results remain ineligible with a
 reason. A local check does not prove a global maximum or negligible
 integration error; examine starting-value and
 [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
-results when the decision is close. Positive but ill-conditioned
+results when the decision is close. Known marginal response-dimension
+deficits and complete-pattern first-order rank failures also prevent
+inferential model comparison, even with a positive numerical Hessian.
+More Persons with the same response designs improve precision but cannot
+repair a structural dimension deficit. Positive but ill-conditioned
 information may pass with a caution after numerical refinement,
 unregularized inversion and curvature-scaled gradient checks. A warning
 is emitted and retained in `ICFitCaution`, `ICFitReview` and the
@@ -180,7 +185,9 @@ intentionally conservative. It currently supports the following
 restrictions under shared data and shared constraints:
 
 - `RSM` nested inside `PCM` when the `PCM` fit has an explicit
-  `step_facet`;
+  `step_facet` and retains every `facet_interactions` term in the RSM.
+  The PCM may add interaction terms; omitting an RSM interaction is not
+  repaired by freeing category steps;
 
 - `PCM` nested inside `GPCM` with the same step facet, population
   design, other facet/step constraints and interactions. The only
@@ -315,10 +322,10 @@ scores or resamples either model.
 In addition to the canonical criteria, the function computes:
 
 - **Delta_AIC / Delta_BIC / Delta_SABIC**: difference from the minimum
-  value in the supplied candidate set. A Delta \< 2 is typically
-  considered negligible; 4–7 suggests moderate evidence; \> 10 indicates
-  strong evidence against the higher-scoring model (Burnham & Anderson,
-  2002).
+  value in the supplied candidate set. For AIC, the often-used Delta
+  ranges below 2, 4–7, and above 10 are rough descriptions of decreasing
+  relative support (Burnham & Anderson, 2002), not significance
+  thresholds, adequacy checks, or universal rules for BIC and SABIC.
 
 - **AkaikeWeight / BICWeight / SABICWeight**: relative candidate-set
   weights derived from `exp(-0.5 * Delta)` and normalized only across
@@ -329,7 +336,12 @@ In addition to the canonical criteria, the function computes:
 - **Evidence ratios**: pairwise ratios of Akaike weights, quantifying
   relative support within this candidate set. A ratio of 5 means only
   that one normalized Akaike weight is five times the other; it does not
-  mean that one model is five times more likely to be true.
+  mean that one model is five times more likely to be true. Ratios are
+  computed from AIC differences, so they remain available when both
+  normalized weights round to zero. `LogEvidenceRatio` retains the
+  natural log ratio; `RatioReason` explains `NA` ratios outside numeric
+  range (`"overflow"`, `"underflow"`, or `"nonfinite_difference"`,
+  otherwise `"available"`).
 
 AIC, BIC, and SABIC answer different approximation/penalty questions.
 SABIC is a sensitivity criterion, not a universal tie-breaker. At 22 or
@@ -472,7 +484,6 @@ before using IC or LRT results in reporting.
 ## Examples
 
 ``` r
-# \donttest{
 # Load one dataset for both models
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -519,5 +530,4 @@ comparison$table[, c("Label", "AIC", "Delta_AIC", "BIC", "Delta_BIC")]
 # mml_quadrature_sensitivity() before choosing a model
 # For a PCM/GPCM equal-slope test, see the matched-population example in
 # vignette("mfrmr-gpcm-scope"); request compare_mfrm(..., nested = TRUE).
-# }
 ```

@@ -591,6 +591,92 @@ headings with
 [`ggplot2::labs()`](https://ggplot2.tidyverse.org/reference/labs.html)
 does not remove those records or change the meaning of the fractions.
 
+## Custom distribution plots
+
+Profile means do not show individual variation. Retrieve one
+original-unit value per rater and feature, with group membership and
+inclusion status:
+
+``` r
+
+values <- plot_data(one_completion, "observations", type = "profile",
+  feature = "ExperienceYears")
+head(values)
+#>     ID         Feature Value Cluster Included MissingReason
+#> 1 R001 ExperienceYears    17       1     TRUE          <NA>
+#> 2 R002 ExperienceYears     1       2     TRUE          <NA>
+#> 3 R003 ExperienceYears    13       2     TRUE          <NA>
+#> 4 R004 ExperienceYears     7       3     TRUE          <NA>
+#> 5 R005 ExperienceYears    21       3     TRUE          <NA>
+#> 6 R006 ExperienceYears     2       1     TRUE          <NA>
+```
+
+`Value` is the selected completion’s experience in years.
+`Included = FALSE` retains omitted raters, even when this particular
+feature is observed. In this completed example, missing values have been
+imputed; retain the original `features$missing` record to distinguish
+them from observed attributes. A completion’s values are not repeated
+independent observations, and its arbitrary group labels must not be
+averaged across imputations.
+
+The following raincloud combines a half-density, a box and individual
+points. All plotting choices remain editable in ordinary ggplot2. The
+density is a visual smoothing of a discrete years variable; for small
+groups or ordinal rubric scores prefer points/counts. Group differences
+are partly built into the clustering and are not independent tests
+validating the groups.
+
+``` r
+
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  displayed <- subset(values, Included & is.finite(Value))
+  displayed$Group <- factor(displayed$Cluster)
+  displayed$Position <- as.integer(displayed$Group)
+  clouds <- lapply(split(displayed, displayed$Group), function(d) {
+    if (nrow(d) < 5L || length(unique(d$Value)) < 2L) return(NULL)
+    density <- stats::density(d$Value, from = min(d$Value), to = max(d$Value))
+    center <- d$Position[1]
+    data.frame(X = c(center, center + .38*density$y/max(density$y), center),
+      Value = c(density$x[1], density$x, tail(density$x, 1)),
+      Group = d$Group[1])
+  })
+  clouds <- do.call(rbind, clouds)
+  raincloud <- ggplot2::ggplot(displayed,
+    ggplot2::aes(x = Position, y = Value, group = Group))
+  if (!is.null(clouds)) raincloud <- raincloud +
+    ggplot2::geom_polygon(data = clouds,
+      ggplot2::aes(x = X, y = Value, group = Group, fill = Group),
+      inherit.aes = FALSE, alpha = .35, colour = NA)
+  raincloud <- raincloud +
+    ggplot2::geom_boxplot(width = .08, outlier.shape = NA) +
+    ggplot2::geom_point(ggplot2::aes(x = Position - .15), alpha = .5, size = 1.2,
+      position = ggplot2::position_jitter(width = .045, height = 0, seed = 1)) +
+    ggplot2::scale_x_continuous(breaks = seq_along(levels(displayed$Group)),
+      labels = paste("Group", levels(displayed$Group))) +
+    ggplot2::labs(x = NULL, y = "Rating experience (years)") +
+    ggplot2::theme_minimal() + ggplot2::theme(legend.position = "none")
+  print(raincloud)
+}
+```
+
+![](mfrmr-external-features_files/figure-html/raincloud-1.png)
+
+``` r
+
+write.csv(values, "rater-experience-long.csv", row.names = FALSE)
+saveRDS(one_completion, "feature-groups.rds")
+ggplot2::ggsave("experience-raincloud.pdf", raincloud, width = 7, height = 4.5)
+```
+
+For a selected wide plot table,
+`plot_data(..., format = "long", value_cols = ...)` gathers explicitly
+chosen quantities; other columns remain identifiers or metadata.
+Matrices retain row/column indices and labels, including missing cells.
+The [network/reporting
+lesson](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.md)
+shows how to export node, edge and coordinate tables without adopting a
+fixed figure style.
+
 ## Compare PAM with a hierarchy
 
 A hierarchy asks which groups merge as dissimilarity increases. Fit it
@@ -728,7 +814,16 @@ music performance assessment, [Wesolowski (2019), *Predicting
 Operational Rater-Type Classifications Using Rasch Measurement Theory
 and Random Forests*](https://doi.org/10.1111/jedm.12227), reported
 nonhierarchical k-means clustering of 29 differential rater functioning
-indices, followed by prediction of the resulting labels.
+indices, followed by random-forest prediction of the resulting labels.
+The forest is supervised prediction, not the clustering step. Avoid
+using labels discovered from the full sample as if out-of-bag
+classification alone validated those groups. For **residual** profiles,
+use
+[`mfrm_residual_network()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_residual_network.md)
+then
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md);
+its help explains its different features, common-person correlation
+distances, validation requirements and RF follow-up limitations.
 
 Those analyses ask about patterns of rating behaviour. This tutorial
 instead groups external backgrounds such as experience and specialty.
@@ -1212,26 +1307,59 @@ for further custom graphics.
 
 ### Reopen an analysis without repeating imputation or clustering
 
-Keep the complete imputed analysis to retain every completion, its PCA
-basis and partition, the fitted imputation model, and the co-membership
-summary. A saved plot view also retains the selected display settings.
-The example uses a temporary file; choose a permanent path to continue
-in a later session.
+Keep the comparison result to retain both analyses, every completion,
+its transformation and partition, the fitted imputation model, and the
+co-membership summaries. A saved plot view also retains the selected
+display settings. The same saving route applies to `comparison`,
+`feature_comparison` and `method_comparison` above. The example uses
+temporary files; choose permanent paths to continue in a later session.
 
 ``` r
 
 feature_file <- tempfile(fileext = ".rds")
 feature_view <- plot(first_numeric$pca, type = "scores", groups = first_numeric,
   labels = FALSE, preset = "monochrome", draw = FALSE)
-saveRDS(list(analysis = numeric_reduced, view = feature_view), feature_file)
+saveRDS(list(comparison = numeric_comparison, view = feature_view), feature_file)
 saved_features <- readRDS(feature_file)
-summary(saved_features$analysis)  # Review all completions.
-#>   Imputation Included Excluded MeanSilhouette
-#> 1          1      120        0      0.4118746
-#> 2          2      120        0      0.4118474
-#> 3          3      120        0      0.3786295
-#> 4          4      120        0      0.3871943
-#> 5          5      120        0      0.3811840
+summary(saved_features$comparison)
+#>                  First        Second Partitions Included Pairs
+#> 1 StandardizedFeatures TwoComponents          5      120  7140
+#>   MeanChangedFraction MinChangedFraction MaxChangedFraction MeanAdjustedRand
+#> 1           0.1959384         0.02072829          0.3857143        0.5701576
+saved_features$comparison$analysis_summary  # Each setting and completion.
+#>                Analysis  Method Linkage Imputation K Features Included Excluded
+#> 1  StandardizedFeatures k-means    <NA>          1 3        3      120        0
+#> 2  StandardizedFeatures k-means    <NA>          2 3        3      120        0
+#> 3  StandardizedFeatures k-means    <NA>          3 3        3      120        0
+#> 4  StandardizedFeatures k-means    <NA>          4 3        3      120        0
+#> 5  StandardizedFeatures k-means    <NA>          5 3        3      120        0
+#> 6         TwoComponents k-means    <NA>          1 3        3      120        0
+#> 7         TwoComponents k-means    <NA>          2 3        3      120        0
+#> 8         TwoComponents k-means    <NA>          3 3        3      120        0
+#> 9         TwoComponents k-means    <NA>          4 3        3      120        0
+#> 10        TwoComponents k-means    <NA>          5 3        3      120        0
+#>    MinGroupSize MaxGroupSize MeanSilhouette  Distance                Space
+#> 1            23           55      0.2946332 Euclidean     Numeric features
+#> 2            31           49      0.2921438 Euclidean     Numeric features
+#> 3            30           47      0.2890823 Euclidean     Numeric features
+#> 4            21           51      0.2841480 Euclidean     Numeric features
+#> 5            23           53      0.2742463 Euclidean     Numeric features
+#> 6            27           51      0.4118746 Euclidean Principal components
+#> 7            29           50      0.4118474 Euclidean Principal components
+#> 8            27           52      0.3786295 Euclidean Principal components
+#> 9            34           44      0.3871943 Euclidean Principal components
+#> 10           28           51      0.3811840 Euclidean Principal components
+#>      Scaling Components
+#> 1  Sample SD         NA
+#> 2  Sample SD         NA
+#> 3  Sample SD         NA
+#> 4  Sample SD         NA
+#> 5  Sample SD         NA
+#> 6  Sample SD          2
+#> 7  Sample SD          2
+#> 8  Sample SD          2
+#> 9  Sample SD          2
+#> 10 Sample SD          2
 plot_data(saved_features$view)    # Inspect this first-completion view.
 #> $table
 #>       ID         PC1          PC2 Cluster
@@ -1402,6 +1530,12 @@ plot_data(saved_features$view)    # Inspect this first-completion view.
 #> $plot_name
 #> [1] "feature_pca_scores"
 #> 
+#> $notes
+#>       Type
+#> 1 subtitle
+#>                                                                       Text
+#> 1 Included: 120 | Excluded: 0 | Retained components: 2 | Sample-SD scaling
+#> 
 #> $legend
 #> [1] label     role      aesthetic value    
 #> <0 rows> (or 0-length row.names)
@@ -1409,6 +1543,8 @@ plot_data(saved_features$view)    # Inspect this first-completion view.
 #> $reference_lines
 #> [1] axis     value    label    linetype role    
 #> <0 rows> (or 0-length row.names)
+feature_summary_file <- tempfile(fileext = ".csv")
+write.csv(summary(saved_features$comparison), feature_summary_file, row.names = FALSE)
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   saved_figure <- as_ggplot(saved_features$view)
 }
@@ -1416,8 +1552,10 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 
 Changing a session plotting option does not restyle a saved view. Create
 a new view from the saved analysis to change its preset; changing the
-analysis settings requires a new analysis. These feature results use
-their own [`summary()`](https://rdrr.io/r/base/summary.html),
+analysis settings requires a new analysis. The CSV contains only the
+comparison summary; keep the RDS for its analyses, transformations,
+omitted IDs and assumptions. These feature results use their own
+[`summary()`](https://rdrr.io/r/base/summary.html),
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
 methods. They are separate from

@@ -27,8 +27,8 @@ plot_threshold_ladder(
 - highlight_disorder:
 
   Logical. When `TRUE` (default), draw disordered segments with the
-  preset's `fail` colour and add a subtitle counting the disordered
-  groups.
+  preset's `fail` colour. The number of affected groups is returned in
+  the notes, outside the figure.
 
 - preset:
 
@@ -46,10 +46,27 @@ An `mfrm_plot_data` object with a `data` slot containing columns
 
 ## Interpreting output
 
-Within each ladder, thresholds should ascend monotonically. A disordered
-crossing (highlighted in the fail colour) suggests that the
-corresponding category is rarely the most likely response over any logit
-interval, and is a common trigger for category-collapsing decisions.
+Each ladder shows centered step offsets for one step-owner level,
+including when GPCM slopes belong to a different facet. Slopes do not
+duplicate the threshold families. Disorder describes point estimates;
+inspect owner-level counts, curves and the rubric before considering
+category changes. Missing steps remain unavailable and are not bridged
+by connecting lines. No intervals or full ability-axis crossings are
+calculated. Save the result of
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) to retain its
+model context and interpretation notes. Automatic ggplot conversion of
+this ladder is unavailable; use base graphics or
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+for custom graphics. The saved
+[`rating_scale_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rating_scale_table.md)
+threshold view has its own ggplot conversion.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -99,10 +116,10 @@ or diagnostic thresholds.
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 7, maxit = 30)
-p <- plot_threshold_ladder(fit, draw = FALSE)
+p <- plot(fit, type = "thresholds", draw = FALSE)
 head(p$data$data)
-#>    Group  Step Threshold Disordered
-#> 1 Common tau_1 -1.206865      FALSE
-#> 2 Common tau_2  0.166140      FALSE
-#> 3 Common tau_3  1.040725      FALSE
+#>    Group   Step StepOwner StepIndex Threshold Disordered
+#> 1 Common Step_1    Common         1 -1.206865         NA
+#> 2 Common Step_2    Common         2  0.166140      FALSE
+#> 3 Common Step_3    Common         3  1.040725      FALSE
 ```

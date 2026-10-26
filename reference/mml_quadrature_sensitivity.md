@@ -190,7 +190,6 @@ limitations.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -264,5 +263,4 @@ apa_table(sensitivity, digits = 5)
 #>  PosteriorSDMaxAbsChange
 #>                  0.00000
 #>                  0.01155
-# }
 ```

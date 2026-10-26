@@ -86,7 +86,8 @@ evaluate_mfrm_signal_detection(
 - group_levels:
 
   Group labels used for DIF simulation. The first two levels define the
-  default reference and focal groups.
+  default reference and focal groups. If omitted, inherits the groups
+  stored in `sim_spec`, when present.
 
 - reference_group:
 
@@ -106,7 +107,9 @@ evaluate_mfrm_signal_detection(
 
 - dif_effect:
 
-  True DIF effect size added to the focal group on the target criterion.
+  True DIF effect size added to the focal group on the target
+  criterion's linear predictor. For GPCM, discrimination multiplies this
+  shift in the adjacent-category log odds.
 
 - bias_rater:
 
@@ -123,7 +126,7 @@ evaluate_mfrm_signal_detection(
 - bias_effect:
 
   True interaction-bias effect added to the target `Rater x Criterion`
-  cell.
+  cell's linear predictor, with the same GPCM scaling.
 
 - score_levels:
 
@@ -224,6 +227,8 @@ evaluate_mfrm_signal_detection(
 
   P-value adjustment method passed to
   [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md).
+  Target and non-target screens use the returned adjusted tail areas; an
+  unavailable adjusted value never falls back to an unadjusted one.
 
 - dif_p_cut:
 
@@ -251,7 +256,9 @@ evaluate_mfrm_signal_detection(
 
 - seed:
 
-  Optional seed for reproducible replications.
+  Optional seed for reproducible replications. Trial seeds are allocated
+  before execution and cover generation, fitting and diagnostics. A
+  supplied seed preserves the caller's RNG state.
 
 ## Value
 
@@ -262,10 +269,14 @@ An object of class `mfrm_signal_detection` with:
   included alongside the standard result columns.
 
 - `results`: replicate-level detection results, with the same
-  design-variable alias columns when applicable.
+  design-variable alias columns when applicable. `Seed` identifies the
+  trial; `DIFReferenceGroup`, `DIFFocalGroup`, `DIFContrastDirection`
+  and `DIFContrastScale` identify its contrast. `DIFScreenReason` and
+  `BiasScreenReason` retain target-level unavailability explanations.
 
 - `rep_overview`: run-level status and timing, with the same
-  design-variable alias columns when applicable.
+  design-variable alias columns when applicable, including failed
+  attempts and their stage.
 
 - `design_descriptor`: role-based design-variable metadata used by
   planning summaries and plots
@@ -303,11 +314,11 @@ For each design condition (combination of `n_person`, `n_rater`,
     [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
 
 2.  Injects one known Group \\\times\\ Criterion DIF effect
-    (`dif_effect` logits added to the focal group on the target
-    criterion)
+    (`dif_effect` added to the focal group's linear predictor on the
+    target criterion)
 
 3.  Injects one known Rater \\\times\\ Criterion interaction-bias effect
-    (`bias_effect` logits)
+    (`bias_effect` added to the linear predictor)
 
 4.  Fits and diagnoses the MFRM
 
@@ -371,19 +382,55 @@ bounds are not confidence intervals. These uncertainty calculations
 describe independent simulation replications, not uncertainty about the
 quality of a real rater.
 
+**Direction and scale**: `DIFContrast` is always reference minus focal,
+regardless of the order returned by
+[`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md).
+For `"residual"`, this is a difference in mean observed-minus-expected
+scores. For `"refit"`, it is a difference in facet locations; means and
+absolute means require documented common-scale comparability. Raw
+differences with unavailable linking remain in `results` with
+`DIFContrastComparable = FALSE` and `DIFScaleLinkStatus`. Neither
+contrast is automatically an estimate of the injected `dif_effect`: the
+residual contrast uses score units, and refit locations use difficulty/
+severity orientation and estimated linking anchors. `BiasSize` is a
+fitted additive shift relative to the estimated baseline, not recovery
+against a known unchanged baseline. See
+[`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
+and
+[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
+for the conditioning assumptions.
+
+**Failures and replay**: failures of generation, fitting or diagnostics
+keep their planned trial rows, with `Seed`, `ErrorStage` and `Error` in
+`rep_overview`. Missing outcomes do not count as negative screens.
+Generation failure gives unavailable observation/category counts, not
+zero observations. `ElapsedSec` includes generation and all analysis
+stages. Each later trial keeps its own seed even if an earlier trial
+fails. Save the returned object with
+[`saveRDS()`](https://rdrr.io/r/base/readRDS.html) and preserve the call
+and software environment; this helper does not provide the
+file/checkpoint arguments of
+[`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md).
+Seeds alone do not guarantee identical results across
+software/platforms.
+
 Rebuild older saved summaries and plots from the original evaluation to
 correct unavailable target outcomes and retain full-precision summaries.
 Older runs lack non-target availability counts, so their non-target
 rates are withheld: recovering those cell rates requires rerunning the
-simulation. This function evaluates Group-by-Criterion DIF and
-Rater-by-Criterion bias; it does not evaluate general Rater-by-Group
-differential rater functioning.
+simulation. Runs lacking contrast-direction metadata cannot supply
+signed means; old refit runs lacking comparability metadata cannot
+supply absolute means either. Original stored results and otherwise
+available screening outcomes remain. This function evaluates
+Group-by-Criterion DIF and Rater-by-Criterion bias; it does not evaluate
+general Rater-by-Group differential rater functioning.
 
-**Default effect sizes**: `dif_effect = 0.6` logits corresponds to a
-moderate criterion-linked differential-functioning effect;
-`bias_effect = -0.8` logits represents a substantial rater-criterion
-interaction. Adjust these to match the smallest effect size of practical
-concern for your application.
+**Default effect sizes**: `dif_effect = 0.6` and `bias_effect = -0.8`
+are example shifts of the latent linear predictor, not validated
+small/moderate/ large effect thresholds. Choose values of practical
+concern for the intended assessment. GPCM slopes multiply these shifts
+on the adjacent-logit scale; response-probability changes also depend on
+ability and category thresholds.
 
 This is again a **parametric simulation study**. The function does not
 estimate a new design directly from one observed dataset. Instead, it
@@ -438,7 +485,6 @@ implementation of one published many-facet Rasch simulation design.
 ## Examples
 
 ``` r
-# \donttest{
 sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
   design = list(person = 8, rater = 2, criterion = 2, assignment = 2),
   reps = 1,
@@ -451,6 +497,5 @@ s_sig$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
 #>     <int>        <int>          <int>         <int>          <dbl>
-#> 1       1            1              1             0              1
-# }
+#> 1       1            1              1             0           1.25
 ```

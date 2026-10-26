@@ -130,7 +130,6 @@ Additional class-aware summaries are provided for:
 ## Examples
 
 ``` r
-# \donttest{
 toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -141,13 +140,13 @@ t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
 summary(t4)
 #> mfrmr Unexpected Response Summary 
 #>   Class: mfrm_unexpected
-#>   Components: 3
+#>   Components: 4
 #> 
 #> Threshold summary
 #>  TotalObservations EvaluatedObservations UnavailableObservations UnexpectedN
-#>                192                   192                       0          84
-#>  UnexpectedPercent LowProbabilityN LargeResidualN   Rule AbsZThreshold
-#>              43.75              84             24 either           1.5
+#>                192                   192                       0          24
+#>  UnexpectedPercent LowProbabilityN LargeResidualN     Rule AbsZThreshold
+#>               12.5              24             24 residual           1.5
 #>  ProbThreshold
 #>            0.4
 #> 
@@ -158,24 +157,24 @@ summary(t4)
 #>   55   R01 Organization      1     1        1    2.937   -1.937      -2.548
 #>   48   R04      Content      1     1        1    2.697   -1.697      -2.142
 #>  181   R04     Accuracy      1     1        1    2.660   -1.660      -2.087
-#>  ObsProb MostLikely MostLikelyProb CategoryGap Surprise           Direction
-#>    0.020          3          0.513           2    1.704 Lower than expected
-#>    0.029          3          0.515           2    1.538 Lower than expected
-#>    0.032          3          0.514           2    1.496 Lower than expected
-#>    0.066          3          0.478           2    1.181 Lower than expected
-#>    0.073          3          0.469           2    1.139 Lower than expected
-#>  FlagLowProbability FlagLargeResidual Severity
-#>                TRUE              TRUE    5.519
-#>                TRUE              TRUE    5.139
-#>                TRUE              TRUE    5.045
-#>                TRUE              TRUE    4.323
-#>                TRUE              TRUE    4.226
+#>  ObsProb MostLikely MostLikelyProb MostLikelyCount CategoryGap Surprise
+#>    0.020          3          0.513               1           2    1.704
+#>    0.029          3          0.515               1           2    1.538
+#>    0.032          3          0.514               1           2    1.496
+#>    0.066          3          0.478               1           2    1.181
+#>    0.073          3          0.469               1           2    1.139
+#>            Direction FlagLowProbability FlagLargeResidual Severity
+#>  Lower than expected               TRUE              TRUE    5.519
+#>  Lower than expected               TRUE              TRUE    5.139
+#>  Lower than expected               TRUE              TRUE    5.045
+#>  Lower than expected               TRUE              TRUE    4.323
+#>  Lower than expected               TRUE              TRUE    4.226
 #> 
 #> Settings
-#>    Setting  Value
-#>  abs_z_min    1.5
-#>   prob_max    0.4
-#>       rule either
+#>    Setting    Value
+#>  abs_z_min      1.5
+#>   prob_max      0.4
+#>       rule residual
 #> 
 #> Notes
 #>  - Unexpected-response summary for quick residual screening.
@@ -205,5 +204,4 @@ summary(t11)
 #> 
 #> Notes
 #>  - FACETS-style branch: table columns mirror the output-contract naming.
-# }
 ```

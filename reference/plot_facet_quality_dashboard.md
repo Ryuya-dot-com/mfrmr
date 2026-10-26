@@ -64,7 +64,9 @@ plot_facet_quality_dashboard(
   Legacy opt-in absolute estimate cutoff for marking facet estimates
   near the fitted origin. Default `NULL`; use
   [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
-  for observed category-use screening.
+  for observed category-use screening or
+  [`rater_centrality_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_centrality_table.md)
+  for indirect centrality indices.
 
 - bias_count_warn:
 
@@ -136,6 +138,13 @@ Returned plot data retain those settings, interpretation notes and fit
 readiness. Restricted or older dashboards without readiness are labeled
 `REVIEW ONLY`. Zero observed flags is not a complete diagnostic pass.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## See also
 
 [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md),
@@ -144,12 +153,10 @@ readiness. Restricted or older dashboards without readiness are labeled
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
-p <- plot_facet_quality_dashboard(fit, diagnostics = diag, draw = FALSE)
+p <- plot(fit, type = "facet_dashboard", diagnostics = diag, draw = FALSE)
 p$data$plot
 #> [1] "severity"
-# }
 ```

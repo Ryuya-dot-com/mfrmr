@@ -27,43 +27,47 @@ print(x, ...)
 
 ## Arguments
 
-- object:
+- object :
 
   A ready
   [`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
   result.
 
-- newdata:
+- newdata :
 
   Long-format ratings with the fitted column names. `NULL` reuses the
   source assignment, including missing-score rows. New Person and
-  testlet labels are allowed; every fixed-facet level must be known.
+  testlet labels are allowed; every fixed-facet level must be known. If
+  the testlet column is also a fixed facet, its labels must therefore be
+  known. For example, with `testlet = "Rater"` and `"Rater"` in
+  `facets`, this function cannot score a new rater whose fixed severity
+  was not fitted.
 
-- level:
+- level :
 
   Conditional equal-tail posterior interval probability; default 0.95.
   These are not calibration-adjusted frequentist confidence intervals.
 
-- quad_points:
+- quad_points :
 
   Local-effect quadrature order, 7 to 121. Default uses the fitting
   order; each Person is also checked at `2 * quad_points + 1`.
 
-- missing:
+- missing :
 
   `"fail"` or `"omit"`. Default reuses the fit's missing-score policy
   for source replay and requires explicit omission for new data.
 
-- persons:
+- persons :
 
   Distinct Person IDs to return, or `NULL` for all. This selects outputs
   while retaining the complete supplied scoring roster.
 
-- ...:
+- ... :
 
   Unused.
 
-- x:
+- x :
 
   A scoring result.
 
@@ -76,7 +80,11 @@ prediction-source metadata for
 [`summary()`](https://rdrr.io/r/base/summary.html) reports all statuses;
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
-when `draw = FALSE`. Saved scoring results need no live optimizer.
+when `draw = FALSE`. Saved scoring results need no live optimizer. Keep
+`table$Status` and `table$Reason` with exported scores: `prior_only`
+describes the assumed population without observed responses for that
+Person; `unavailable` withholds the estimate, SD and bounds with a
+recorded cause.
 
 ## Details
 

@@ -36,77 +36,77 @@ print(x, ...)
 
 ## Arguments
 
-- data:
+- data :
 
   Long-format ratings; each row is one assigned rating.
 
-- person, score, testlet:
+- person, score, testlet :
 
   Column names. `testlet` identifies a group within a Person and may
   also occur in `facets`, for example a fixed Rater effect.
 
-- facets:
+- facets :
 
   Fixed-facet column names; default none. A column used as `testlet` is
   not automatically a fixed facet. For example, `testlet = "Task"`
   models local dependence; also specify `facets = "Task"` if the model
   should estimate fixed task difficulties.
 
-- score_levels:
+- score_levels :
 
   Consecutive integer categories in increasing order.
 
-- testlet_variance:
+- testlet_variance :
 
   `NULL` estimates the common local variance. A nonnegative number fixes
   it as known; zero removes local dependence.
 
-- quad_points:
+- quad_points :
 
   Standard-normal quadrature order for both integrals, from 7 to 121;
   default 31. Results are checked at `2 * quad_points + 1`.
 
-- maxit:
+- maxit :
 
   Maximum iterations per optimization start; default 300.
 
-- variance_max:
+- variance_max :
 
   Upper search bound for an estimated variance; default 16. A fit
   reaching this bound is not numerically ready.
 
-- missing:
+- missing :
 
   `"fail"` (default) refuses missing assigned scores; `"omit"` analyzes
   observed rows and records the omissions.
 
-- person_sd:
+- person_sd :
 
   `NULL` (default) estimates the SD of a mean-zero normal ability
   population. A positive number fixes the SD as known. Use `1` to
   reproduce the earlier fixed N(0,1) model; this is a population
   assumption, not merely a choice of units.
 
-- person_variance_max:
+- person_variance_max :
 
   Upper search bound for estimated ability variance (not SD);
   default 16. Reaching it withholds numerical readiness.
 
-- object, x:
+- object, x :
 
   An `mfrm_testlet` result.
 
-- ...:
+- ... :
 
   Unused.
 
-- calibration_intervals:
+- calibration_intervals :
 
   For summaries, `"none"` (default) omits calibration bounds; `"normal"`
   explicitly requests their pointwise normal approximation. Person
   scoring remains a separate conditional output.
 
-- level:
+- level :
 
   Nominal level for explicitly requested summary calibration intervals;
   default 0.95. Numerical and variance-boundary restrictions remain.
@@ -117,7 +117,12 @@ An `mfrm_testlet` object with calibration, covariance, calibration
 table, checks, all optimization runs, input/omission accounting and
 settings. It contains no native pointers; use
 [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) and
-[`readRDS()`](https://rdrr.io/r/base/readRDS.html).
+[`readRDS()`](https://rdrr.io/r/base/readRDS.html). Calibration tables
+retain `IntervalStatus`, `CIEligible` and `InferenceReview` for missing
+or explicitly requested normal bounds; see
+[`confint.mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_testlet.md)
+for the status meanings. A retained point is not certified by interval
+availability. Inspect `checks` before interpreting it.
 
 ## Details
 
@@ -140,7 +145,15 @@ variance are the supported scope; overlapping memberships, PCM,
 correlated effects, random rater effects shared across Persons,
 covariate-dependent ability means and nonnormal ability populations are
 not included. Estimating one ability variance does not establish
-homogeneous populations across assignment groups.
+homogeneous populations across assignment groups. After integrating both
+random effects, different Persons are independent under the model;
+ratings within a Person are not. Regular likelihood inference requires
+an identified interior model and growing information across independent
+Persons. The full calibration information includes every estimated
+variance; treating an estimated variance as known would omit
+nuisance-parameter uncertainty. A positive numerical Hessian alone does
+not prove identification, and fixed-order quadrature agreement does not
+establish an asymptotic approximation rate.
 
 Zero is evaluated explicitly for both estimated variances using their
 one-sided variance scores, including the joint-zero submodel. All

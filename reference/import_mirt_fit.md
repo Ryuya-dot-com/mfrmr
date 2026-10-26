@@ -114,7 +114,10 @@ An `mfrm_imported_fit` object. Slots:
 Item difficulty is the mean of its absolute adjacent-category
 thresholds. Source identification and slopes are retained without
 rescaling. For mirt `gpcmIRT` and `rsm`, the category offset is included
-as `b - c / a`. Person estimates are EAP; the `SE` column contains
+as `b - c / a`. Binary and polytomous items may be mixed; thresholds are
+read using each item's response model and category count. Inapplicable
+padding columns in the source coefficient table are not missing
+estimated thresholds. Person estimates are EAP; the `SE` column contains
 conditional posterior SDs, not sampling SEs. Person labels use retained
 source row names or P-prefixed row positions. Original identifiers
 discarded by mirt cannot be recovered. Imported summaries describe these
@@ -157,7 +160,6 @@ documented fields.
 ## Examples
 
 ``` r
-# \donttest{
 if (requireNamespace("mirt", quietly = TRUE)) {
   response_matrix <- matrix(sample(0:1, 120, replace = TRUE), nrow = 40)
   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
@@ -169,5 +171,4 @@ if (requireNamespace("mirt", quietly = TRUE)) {
 #> 1   RSM    MML   mirt 40      40      1         NA -81.62847 171.2569 178.0125
 #>   Converged ConvergenceStatus
 #> 1      TRUE                ok
-# }
 ```

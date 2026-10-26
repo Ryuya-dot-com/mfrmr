@@ -1,9 +1,9 @@
-# Plot per-rater severity ranking with confidence interval whiskers
+# Plot facet locations with qualified normal uncertainty bands
 
-Ranks the levels of a chosen rater facet by estimated severity and draws
-each level as a horizontal CI whisker around the point estimate.
-Optional descriptive bands mark absolute distances of `0.5` and `1.0`
-logit from zero; they are display aids, not calibration rules.
+Ranks the levels of a chosen facet by fitted location and draws
+available normal uncertainty bounds around each point estimate. Optional
+descriptive bands mark absolute distances of `0.5` and `1.0` logit from
+zero; they are display aids, not calibration rules.
 
 ## Usage
 
@@ -13,7 +13,7 @@ plot_rater_severity_profile(
   diagnostics = NULL,
   facet = "Rater",
   ci_level = 0.95,
-  show_bands = TRUE,
+  show_bands = FALSE,
   preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
@@ -21,61 +21,106 @@ plot_rater_severity_profile(
 
 ## Arguments
 
-- fit:
+- fit :
 
   An `mfrm_fit` from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
-- diagnostics:
+- diagnostics :
 
   Optional
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   output. When omitted, `diagnose_mfrm(fit, residual_pca = "none")` is
-  run internally.
+  run internally. Supplied diagnostics must match the fitted analysis
+  and current precision contract; they are reused without covariance
+  recomputation.
 
-- facet:
+- facet :
 
   Facet name to plot (default `"Rater"`). Any non-Person facet name is
   accepted.
 
-- ci_level:
+- ci_level :
 
   Confidence level used for the whiskers (default `0.95`). Bounds use
-  `+/- z * ModelSE`.
+  `+/- z * ModelSE` (or `SE` only when the `ModelSE` column is absent).
+  A missing `ModelSE` is not replaced rowwise.
 
-- show_bands:
+- show_bands :
 
-  Logical. When `TRUE` (default) draw shaded `+/-0.5` and `+/-1.0` logit
-  guide bands and describe them in the subtitle and legend. Set to
-  `FALSE` to omit both bands and their labels.
+  Logical, default `FALSE`. Explicit `TRUE` draws neutral gray `+/-0.5`
+  and `+/-1.0` logit guides and describes them in the returned
+  annotations. These distances are not equivalence bounds.
 
-- preset:
+- preset :
 
   Visual preset.
 
-- draw:
+- draw :
 
   If `TRUE`, draw with base graphics.
 
 ## Value
 
 An `mfrm_plot_data` object. Its `data$data` table contains columns
-`Level`, `Estimate`, `SE`, `CI_Lower`, `CI_Upper`, and `Band`. The
+`Level`, `Estimate`, `SE`, `CI_Lower`, `CI_Upper`, and `Band`, where
+`Band` contains numerical absolute-location ranges, not judgments about
+severity or quality. The ranges remain in the table when hidden. Other
+columns include `Fixed`, `IntervalStatus`, `SEColumn`, `SE_Method`,
+`PrecisionTier`, `CIUse`, `CIEligible`, `SupportsFormalInference` and
+the normal interval method/level. Source precision labels are retained;
+missing precision metadata cannot qualify an interval for inference. The
 enclosing `data` list retains the facet, confidence level and plot
-annotations; keep these with the table when reporting the results. Fit
-readiness and interpretation notes are retained; restricted fits are
-labeled `REVIEW ONLY` in the title.
+annotations and diagnostics identity check (`source_status`); keep these
+with the table when reporting the results. Fit readiness and
+interpretation notes are returned. Titles and notes are not
+automatically drawn.
 
 ## Interpreting output
 
 Zero is the sum-to-zero reference for the default centered facet;
 describe any different constraints or anchors used in the fit. With the
-default negative facet orientation, higher estimates mean stricter
-scoring. The optional bands and the legacy `Band` labels (`gentle`,
-`moderate`, `strict`) describe absolute magnitude, not the sign of
-severity, operational interchangeability, or a need for training.
-Pairwise claims require the uncertainty of the contrast; check the SE
-basis in the supplied diagnostics.
+default negative facet orientation, higher estimates reduce expected
+coded scores. This means stricter scoring when higher scores represent
+better performance; check the rubric direction before using that
+substantive interpretation. The axis names the selected facet's location
+rather than assuming that lower coded scores are less favorable.
+Returned notes state its fitted sign. The optional guides and numerical
+`Band` ranges describe distance from zero, not the sign of severity,
+operational interchangeability, or a need for training. No guide bands
+are drawn by default. Pairwise claims require the uncertainty of the
+contrast; check the SE basis in the supplied diagnostics. Two locations
+at -0.5 and +0.5 are one logit apart despite lying in the same range. A
+changed origin can change these ranges without changing pairwise
+differences. Use
+[`analyze_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_facet_equivalence.md)
+with a justified practical bound for equivalence; a non-significant
+difference does not establish it.
+
+Here "profile" means an ordered display of facet locations, not a
+likelihood-profile confidence interval. Ordinary JML bands remain
+exploratory; MML fallback, regularized or review-only bands retain their
+restrictions. Plotting does not validate normal-approximation coverage.
+Fixed values use diamonds without sampling intervals. Crosses show
+finite points with unavailable or nonpositive SEs; unavailable estimates
+retain labeled rows. The horizontal range includes finite points even
+without SEs.
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+preserves these states, saved endpoints, guide bands and notes without
+fitting a model or recomputing an interval. Older saved plot payloads
+can reproduce their stored geometry but cannot acquire missing source or
+uncertainty qualifications through conversion. Older saved plots retain
+their original colored guides and `Band` labels (`gentle`, `moderate`,
+`strict`). Those labels never established equivalence. Regenerate the
+plot from the saved fit and matching diagnostics to obtain the neutral
+display; this does not require a new fit.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -116,12 +161,12 @@ or diagnostic thresholds.
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`analyze_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_facet_equivalence.md),
-[`plot_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facet_equivalence.md).
+[plot(x, type =
+"facet_equivalence")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -140,19 +185,16 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # Compare signed severity estimates and their intervals
-severity <- plot_rater_severity_profile(
-  fit, diagnostics = diagnostics, show_bands = FALSE
-)
+severity <- plot(fit, type = "rater_severity", diagnostics = diagnostics, show_bands = FALSE)
 
 severity$data$data[, c("Level", "Estimate", "SE", "CI_Lower", "CI_Upper")]
-#>   Level   Estimate        SE    CI_Lower    CI_Upper
-#> 1   R01 -0.6059776 0.2243521 -1.04569977 -0.16625550
-#> 2   R02 -0.3820356 0.2085513 -0.79078871  0.02671748
-#> 3   R04  0.1799462 0.2226570 -0.25645356  0.61634590
-#> 4   R05  0.1842365 0.2341852 -0.27475809  0.64323116
-#> 5   R03  0.2120388 0.2165999 -0.21248930  0.63656689
-#> 6   R06  0.4117917 0.2494894 -0.07719839  0.90078189
+#>    Level   Estimate        SE    CI_Lower    CI_Upper
+#> 49   R01 -0.6059776 0.2243521 -1.04569977 -0.16625550
+#> 50   R02 -0.3820356 0.2085513 -0.79078871  0.02671748
+#> 52   R04  0.1799462 0.2226570 -0.25645356  0.61634590
+#> 53   R05  0.1842365 0.2341852 -0.27475809  0.64323116
+#> 51   R03  0.2120388 0.2165999 -0.21248930  0.63656689
+#> 54   R06  0.4117917 0.2494894 -0.07719839  0.90078189
 # Higher estimates mean stricter ratings with this example's default orientation
 # The optional magnitude bands are omitted from this first comparison
-# }
 ```

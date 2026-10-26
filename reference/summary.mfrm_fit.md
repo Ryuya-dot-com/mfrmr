@@ -15,7 +15,8 @@ summary(
   detail = NULL,
   diagnostics = NULL,
   compute = c("auto", "never"),
-  include_person = FALSE
+  include_person = FALSE,
+  comparison_review = NULL
 )
 ```
 
@@ -75,6 +76,16 @@ summary(
   Logical. Whether person identifiers may be printed in extreme-person
   tables and requested by the fit-pathway route. The default is `FALSE`
   for privacy-safe console output.
+
+- comparison_review:
+
+  Optional prospective interaction review from
+  [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
+  Explicitly requests fitted contrasts and retained- point numerical
+  checks through
+  [`interaction_effect_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interaction_effect_table.md),
+  saved as `$interaction_comparisons`. It does not fit a model or supply
+  intervals.
 
 ## Value
 
@@ -144,8 +155,17 @@ An object of class `summary.mfrm_fit` with:
 - `interaction_overview`: model-estimated facet-interaction summary when
   the fit was specified with `facet_interactions`
 
+- `interaction_comparisons`: explicitly requested joint-fit contrasts,
+  retaining unavailable rows, the prospective review and numerical
+  checks; absent unless `comparison_review` is supplied
+
 - `settings_overview`: estimation-settings overview that pins the
-  configuration that affects identification/scoring
+  configuration that affects identification/scoring. `CenteringScope`
+  distinguishes whole-facet (`"facet"`) from legacy remainder centering
+  (`"remainder"`), separately from `NoncenterFacet`. Native fits saved
+  before convention metadata retain the legacy interpretation. Recreate
+  this summary from the fit to obtain new fields; reading an old summary
+  does not update it or refit the model
 
 - `attached_diagnostics`: logical flag indicating whether the `mfrm_fit`
   was returned with diagnostics already attached
@@ -350,7 +370,7 @@ The entries below describe the ordinary, uncorrected fitting routes.
     for element-level fit checks. For `GPCM`, continue with
     [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
     /
-    [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
+    [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md)
     or the fitted-object posterior scoring helpers.
 
 ## See also
@@ -361,7 +381,6 @@ The entries below describe the ordinary, uncorrected fitting routes.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package
 library(mfrmr)
 
@@ -434,5 +453,4 @@ subset(estimates, Facet == "Criterion")   # All criteria
 #> 55 Criterion      Content -0.3441471    <NA>
 #> 56 Criterion     Language  0.1204520    <NA>
 #> 57 Criterion Organization  0.2236950    <NA>
-# }
 ```

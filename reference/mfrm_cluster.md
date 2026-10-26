@@ -62,13 +62,21 @@ Silhouette), `cluster_summary`, numeric and categorical `profiles`,
 values describe within-sample separation, not membership probabilities
 or resampling stability.
 [`summary()`](https://rdrr.io/r/base/summary.html) returns the
-cluster-size/silhouette table.
+cluster-size/silhouette table. Numeric profiles report the mean, median
+and sample SD in the original feature units. SD is `NA` for a one-entity
+group and zero for identical values in a group with at least two
+entities. A singleton's silhouette is zero by convention; it is not
+evidence of group separation.
 
 ## Details
 
 Numeric differences are divided by the feature range among included
-entities; nominal features use match/mismatch, ordered factors use their
-declared order, and logical features use symmetric binary differences.
+entities; nominal features use match/mismatch and logical features use
+symmetric binary differences. Ordered factors use equally spaced integer
+codes in their declared level order, divided by the observed code range.
+Unused intermediate levels retain their spacing. The Gower dissimilarity
+is the weighted mean of these feature contributions, dividing by the sum
+of the selected weights. Weights apply to features, not entities.
 Numeric 0/1 features are treated as numeric, not asymmetric
 presence/absence. Every selected feature must vary among included
 entities. Gower scaling, feature types, weights, omission policy, and
@@ -92,6 +100,34 @@ time.
 For feature selection, missingness review, and multiple-imputation
 examples, see
 [`vignette("mfrmr-external-features", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.md).
+
+## Reading clustering metrics
+
+For entity i, a(i) is its mean dissimilarity to other members of its own
+group; b(i) is the smallest mean dissimilarity to any other group.
+Silhouette = (b - a) / max(a, b), between -1 and 1. Values near 1
+indicate compact, separated placement in this fitted geometry; near zero
+indicates a boundary; negative values indicate closer average proximity
+to another group. A singleton receives 0 by convention; zero does not
+establish overlap. A zero denominator also receives 0. Overall means
+weight entities equally; cluster means use that cluster's included
+entities. Excluded IDs have NA. A silhouette is neither a membership
+probability nor evidence of stability.
+
+Gower distance is unitless in `[0, 1]` here: numeric absolute
+differences divided by included-sample ranges, nominal/binary
+mismatches, and ordinal rank differences are combined using the
+specified feature weights. The PAM medoid is an actual included entity
+minimizing within-group total dissimilarity; it is not a feature-wise
+mean. Profile Mean/Median/SD retain original units; categorical
+Proportion uses included group size as denominator. A large group or a
+high silhouette is not a better-performing group. Compare partitions
+under a fixed feature/distance definition; changing the sample, weights
+or scaling changes what these numbers measure. See
+[`cluster::silhouette()`](https://rdrr.io/pkg/cluster/man/silhouette.html)
+and Rousseeuw (1987),
+[doi:10.1016/0377-0427(87)90125-7](https://doi.org/10.1016/0377-0427%2887%2990125-7)
+, for the silhouette definition.
 
 ## See also
 

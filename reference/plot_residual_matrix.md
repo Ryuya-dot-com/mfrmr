@@ -2,8 +2,8 @@
 
 Visualizes the person x element matrix of standardized residuals from
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-as a heatmap. Complements
-[`plot_guttman_scalogram()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_guttman_scalogram.md)
+as a heatmap. Complements [plot(x, type =
+"guttman")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 (which shows raw responses) by exposing the residual structure directly:
 large positive cells show under-prediction, negative cells
 over-prediction.
@@ -56,6 +56,13 @@ plot_residual_matrix(
 An `mfrm_plot_data` whose `data` slot bundles the residual `matrix`
 (rows = Person, columns = facet level) and the long-form `obs` table.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## Session plot defaults
 
 Set `options(mfrmr.plot_preset = "publication")` to choose a session
@@ -93,18 +100,19 @@ or diagnostic thresholds.
 
 ## See also
 
-[`plot_guttman_scalogram()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_guttman_scalogram.md),
-[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
+[plot(x, type =
+"guttman")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 300)
-p <- plot_residual_matrix(fit, top_n_persons = 12, draw = FALSE)
+p <- plot(fit, type = "residual_matrix", top_n_persons = 12, draw = FALSE)
 dim(p$data$matrix)
 #> [1] 12  4
 # Look for: |residual| > 2 or > 3 crosses conventional two- or
@@ -112,5 +120,4 @@ dim(p$data$matrix)
 #   not calibrated 5% or 1% tests (Wright & Linacre 1994). Repeated
 #   high-magnitude cells at one facet level warrant pattern review but
 #   do not by themselves establish scoring drift.
-# }
 ```

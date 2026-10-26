@@ -20,6 +20,9 @@ mfrm_curve_intervals(
 )
 
 # S3 method for class 'mfrm_curve_intervals'
+summary(object, ...)
+
+# S3 method for class 'mfrm_curve_intervals'
 print(x, ...)
 
 # S3 method for class 'mfrm_curve_intervals'
@@ -38,12 +41,12 @@ plot(
 
 ## Arguments
 
-- fit:
+- fit :
 
   A native GPCM MML fit. Two-family fits supply provisional point curves
   only; intervals and covariance adjustments are unavailable.
 
-- newdata:
+- newdata :
 
   Data frame with each fitted non-Person facet and a numeric `Theta`
   column. Each row is one rating context at one known ability value. Use
@@ -51,47 +54,48 @@ plot(
   Previously unobserved combinations of known levels are allowed and
   labelled in the returned `contexts` table.
 
-- type:
+- type :
 
   `"probability"` (one row per category) or `"information"` (one row per
   supplied context/ability). Information is per rating, not a sum over
   all observed exposures as in
   [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md).
 
-- method, clusters, adjust, level, simultaneous:
+- method, clusters, adjust, level, simultaneous :
 
   As in
   [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md).
 
-- x:
+- object, x :
 
   A saved `mfrm_curve_intervals` result.
 
-- ...:
+- ... :
 
   Unused.
 
-- title, subtitle:
+- title, subtitle :
 
-  Optional plot text; NULL removes it.
+  Optional returned text; NULL removes it. Figure text is not drawn. Use
+  `plot_data(p, "title")` and `plot_data(p, "notes")`.
 
-- palette:
+- palette :
 
   Optional vector of colors, one per category/series. Line types
   distinguish series in addition to color. The default is colorblind
   friendly.
 
-- draw:
+- draw :
 
   Draw the ggplot immediately? Default TRUE; FALSE returns it only.
 
-- caption:
+- caption :
 
-  Optional plot caption. If omitted, unavailable intervals are counted
-  and explained, along with unobserved combinations of fitted levels.
-  Two-family point-only curves instead state that calibration intervals
-  are unavailable for the entire plot, without marking every curve
-  point. NULL removes the caption without removing markers or the
+  Optional returned caption. If omitted, unavailable intervals are
+  counted and explained, along with unobserved combinations of fitted
+  levels. Two-family point-only curves instead state that calibration
+  intervals are unavailable for the entire plot, without marking every
+  curve point. NULL removes the caption without removing markers or the
   reasons in the saved table.
 
 ## Value
@@ -101,8 +105,11 @@ A `mfrm_curve_intervals` list with `table`, `settings`, and the exact
 unobserved combination of fitted facet levels (`ObservedContext`). This
 records the retained rating design, not statistical identification or
 interval reliability. Its plot method returns a ggplot with the plotted
-data available in `plot$data`; titles can be omitted and the plot can be
-customized.
+data available in `plot$data`; descriptions and cautions are available
+through `plot_data(p, "notes")`, separately from the figure.
+[`summary()`](https://rdrr.io/r/base/summary.html) returns settings, the
+complete interval table, contexts, numerical cautions and the anchor
+note without recalculating information.
 
 ## Details
 
@@ -132,12 +139,12 @@ Refitting every dataset in the affected unequal-rater-slope condition
 with the updated optimizer left its interval results unchanged. See the
 GPCM scope vignette for the evaluated grid, denominators and source
 limitations; an available interval is not a finite-sample coverage
-certification. Printing and the default plot subtitle identify the
+certification. Printing and the returned plot description identify the
 approximation. Custom plot text may omit that description; retain the
 method and its limitations in the figure legend or accompanying report.
 For one-family curves, crosses mark retained estimates whose intervals
 are unavailable. Two-family curves have no calibration intervals; the
-default subtitle and caption state this without covering curves in
+returned subtitle and caption state this without covering curves in
 crosses. A context with only one supplied ability value retains colored
 points. Panel labels put each facet on its own line. With many rating
 contexts, supply the comparisons of interest in `newdata` or enlarge the
@@ -150,9 +157,14 @@ A numerically verified but ill-conditioned information inverse can
 supply intervals with a warning, as described in
 [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md).
 The warning is saved in `cautions` and the table's `InferenceReview`,
-and appears in printing and the default plot subtitle. A custom
+and appears in printing and the returned plot description. A custom
 subtitle, including NULL, changes the display without removing saved
-diagnostics.
+diagnostics. In a one-family fit with fixed facet anchors or group
+means, model and sandwich intervals condition on those supplied values.
+Their source calibration uncertainty is not propagated. Fixing a facet
+location does not fix its slope, thresholds or whole response curve.
+Availability still depends on the joint-information and numerical checks
+described above.
 
 ## Two slope families
 
@@ -175,9 +187,63 @@ of one is not a rater-quality threshold.
 ## Examples
 
 ``` r
-# After fitting a GPCM:
-# grid <- expand.grid(Theta = seq(-3, 3, length.out = 41),
-#                     Rater = "R01", Criterion = "C01")
-# curves <- mfrm_curve_intervals(fit, grid)
-# plot(curves, title = NULL, subtitle = NULL)
+# How do category probabilities vary with ability in one rating context?
+ratings <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  model = "GPCM", method = "MML", step_facet = "Criterion",
+  slope_facet = "Rater", rating_min = 1, rating_max = 4,
+  category_policy = "preserve", quad_points = 61)
+# Select actual labels from the example; replace them with your context.
+grid <- expand.grid(Theta = seq(-2, 2, length.out = 21),
+  Rater = unique(ratings$Rater)[1],
+  Criterion = unique(ratings$Criterion)[1])
+curves <- mfrm_curve_intervals(fit, grid)
+# At ability zero, read the probabilities of the original score categories.
+subset(curves$table, Theta == 0,
+  select = c(Category, Estimate, Lower, Upper, CIEligible, InferenceReview))
+#>    Category   Estimate      Lower      Upper CIEligible
+#> 41        1 0.04778286 0.02327997 0.09555277       TRUE
+#> 42        2 0.26687841 0.20042971 0.34582863       TRUE
+#> 43        3 0.44514863 0.35944194 0.53424704       TRUE
+#> 44        4 0.24019010 0.17198450 0.32483327       TRUE
+#>                                                                                                        InferenceReview
+#> 41 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. 
+#> 42 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. 
+#> 43 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. 
+#> 44 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. 
+plot(curves)
+
+# Ribbons describe calibration uncertainty at fixed ability, not uncertainty
+# about an individual's ability. They are pointwise, not simultaneous bands.
+file <- tempfile(fileext = ".rds")
+saveRDS(curves, file) # Keep the complete result, including context and notes
+saved <- readRDS(file)
+saved$settings
+#> $type
+#> [1] "probability"
+#> 
+#> $method
+#> [1] "model"
+#> 
+#> $clusters
+#> NULL
+#> 
+#> $adjust
+#> [1] FALSE
+#> 
+#> $level
+#> [1] 0.95
+#> 
+#> $simultaneous
+#> [1] "none"
+#> 
+#> $facets
+#> [1] "Rater"     "Criterion"
+#> 
+#> $point_only
+#> [1] FALSE
+#> 
+#> $target
+#> [1] "Calibration uncertainty at fixed native-scale ability and rating context"
+#> 
 ```

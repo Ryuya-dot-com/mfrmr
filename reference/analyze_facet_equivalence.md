@@ -118,7 +118,12 @@ interval lies strictly inside the bound. `Decision` summarizes all pairs
 as `"all_pairs_equivalent"`, `"partial_pairwise_equivalence"`, or
 `"no_pairwise_equivalence_established"`. No pair may be omitted from the
 all-pairs summary. Heterogeneity and ROPE summaries do not change this
-rule.
+rule. The all-pairs conclusion is an intersection-union decision: if any
+pair is truly outside the bound, declaring all pairs equivalent requires
+falsely passing that pair's test. Its asymptotic type-I error is
+therefore at most alpha when each pair's approximation is valid. This
+does not provide simultaneous confidence intervals or error control for
+selected pairs.
 
 ## Interpreting output
 
@@ -149,6 +154,14 @@ mean.
   forest plot displays these deviations, not the anchored locations. No
   uncertainty in supplied anchor values is propagated.
 
+- `CIReason`, `DeviationCIReason`, and pairwise `CI90Reason` distinguish
+  `"available"`, `"fixed"`, `"numerical_resolution"` (the requested
+  width rounds away), and `"outside_numeric_range"`. Unavailable
+  endpoints are `NA`; estimates and SEs remain.
+  `ROPEStatus = "unavailable"` means the deviation interval could not be
+  displayed, not that it is inside the bound. The fixed-alpha TOST
+  p-values do not depend on the display `ci_level`.
+
 ## Recommended next step
 
 Review numerical integration and the model's uncertainty assumptions
@@ -166,8 +179,8 @@ bound to obtain a desired decision.
 
 3.  Read `summary` and `pairwise`.
 
-4.  Use
-    [`plot_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facet_equivalence.md)
+4.  Use [plot(x, type =
+    "facet_equivalence")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
     for descriptive grand-mean proximity.
 
 ## Output
@@ -189,12 +202,12 @@ Biopharmaceutics, 15*(6), 657-680.
 
 [`facets_chisq_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_chisq_table.md),
 [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md),
-[`plot_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facet_equivalence.md)
+[plot(x, type =
+"facet_equivalence")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 31, maxit = 150)
@@ -210,5 +223,4 @@ head(eq$pairwise[, c("ElementA", "ElementB", "Equivalent")])
 #> 4      R02      R03      FALSE
 #> 5      R02      R04      FALSE
 #> 6      R03      R04       TRUE
-# }
 ```

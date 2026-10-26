@@ -92,18 +92,13 @@ Useful first plots are:
 ## Examples
 
 ``` r
-# \donttest{
-sim_eval <- suppressWarnings(evaluate_mfrm_design(
-  n_person = c(8, 12),
-  n_rater = 2,
-  n_criterion = 2,
-  raters_per_person = 2,
-  reps = 1,
-  maxit = 30,
-  seed = 123
-))
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sim_eval <- saved$design
 p <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 c(p$facet, p$x_var)
 #> [1] "Rater"    "n_person"
-# }
 ```

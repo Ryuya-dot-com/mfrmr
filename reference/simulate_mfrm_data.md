@@ -197,7 +197,9 @@ This function generates synthetic ordered many-facet data under `RSM`,
 3.  Draw criterion difficulties: \\\beta_i \sim N(0,
     \texttt{criterion\\sd}^2)\\
 
-4.  Generate evenly-spaced step thresholds spanning \\\pm\\`step_span/2`
+4.  Unless thresholds are supplied, generate evenly spaced thresholds
+    from `-step_span` to `step_span`; the single binary threshold is
+    zero
 
 5.  For each observation, compute the linear predictor \\\eta =
     \theta_n - \delta_j - \beta_i + \epsilon\\ where \\\epsilon \sim
@@ -209,7 +211,10 @@ This function generates synthetic ordered many-facet data under `RSM`,
 Latent-value generation is explicit:
 
 - `latent_distribution = "normal"` draws centered normal person/rater/
-  criterion values using the supplied standard deviations
+  criterion values using the supplied standard deviations. Values are
+  assigned independently to level IDs, without sorting them by severity
+  or difficulty; zero is the distribution mean, not a forced sample
+  mean.
 
 - `latent_distribution = "empirical"` resamples centered support values
   recorded in `sim_spec$empirical_support`
@@ -218,10 +223,30 @@ Latent-value generation is explicit:
   from the stored latent-regression population model and template person
   covariates rather than from `theta_sd`
 
-When `dif_effects` is supplied, the specified logit shift is added to
-\\\eta\\ for the focal group on the target facet level, creating a known
-DIF signal. Similarly, `interaction_effects` injects a known bias into
-specific facet-level combinations.
+Latent-regression transformations and factor coding retain their
+template basis during generation and refitting.
+`mfrm_population_data$population_formula` is a formula-compatible
+`terms` object carrying this basis, factor levels and contrasts. Pass it
+together with the returned `person_data` when fitting generated data
+manually. Old specifications containing transformed predictors but no
+stored basis must be rebuilt from the original template or source fit.
+Previously saved generated data/results are not silently reinterpreted.
+
+Earlier versions sorted normal rater/criterion draws before assigning
+IDs, imposing an association with ID order and any ID-specific
+steps/slopes. Correcting that ordering changes seeded datasets. Preserve
+old generated data and results for historical reproduction; new runs use
+the corrected generator and a matching saved specification/software
+environment.
+
+When `dif_effects` is supplied, the specified linear-predictor shift is
+added to \\\eta\\ for the focal group on the target facet level,
+creating a known DIF signal. Similarly, `interaction_effects` injects a
+known bias into specific facet-level combinations. For RSM/PCM this is
+also the adjacent-category log-odds shift. For GPCM, the shift in
+adjacent-category log odds is the specified effect multiplied by the
+observation's discrimination. A common injected effect therefore need
+not imply equal response-probability changes across facet levels.
 
 The generator targets the common two-facet rating design (persons
 \\\times\\ raters \\\times\\ criteria). `raters_per_person` controls the
@@ -270,6 +295,29 @@ Assignment handling is also explicit:
   skeleton stored in `sim_spec$design_skeleton`, optionally carrying
   over `Group` and `Weight`
 
+With an active population model, `population_assignment = "matched"` in
+[`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
+or
+[`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md)
+draws covariates and skeleton/profile assignments from the same template
+Person. Independent draws require
+`population_assignment = "independent"`. A population `Group` column
+supplies the response `Group`; it is not drawn a second time.
+Conflicting group labels or unmatched template IDs fail with an
+explanation. Stored specifications without `population_assignment`
+retain independent sampling; rebuild them to request matched sampling.
+The ambiguous case of independently drawn tables both defining `Group`
+now errors.
+
+Skeleton rows retain observation multiplicity. Repeated cells receive
+new, conditionally independent responses given the generated latent
+values and signals. Study runners declare this assumption via
+`repeated_ratings = "independent"` when refitting these generated data.
+This does not establish independence of repeated ratings in the source
+data, or simulate serial, occasion or peer-network dependence. `Weight`
+is passed through to fitting, not interpreted as additional
+independently generated rows.
+
 Sparse linked simulation is intended for planned-missing rating designs
 in which connectivity is maintained through common linking persons. The
 returned `mfrm_sparse_design` attribute summarizes design density,
@@ -295,6 +343,10 @@ Returned data include attributes:
 
 - `mfrm_truth$signals`: injected DIF and interaction signal tables
 
+- `mfrm_truth$population$template_person` and
+  `mfrm_truth$design$template_person`: source template IDs keyed by
+  generated Person, where population or assignment templates are used
+
 - `mfrm_truth$slope_table`: simulated discrimination table for `GPCM`
 
 - `mfrm_population_data`: generated one-row-per-person background data
@@ -303,6 +355,9 @@ Returned data include attributes:
   categorical covariates
 
 - `mfrm_simulation_spec`: generation settings (for reproducibility)
+  including the effective `population_assignment` (`"matched"`,
+  `"independent"` or `"none"`) and the conditional response-independence
+  rule
 
 - `mfrm_sparse_design`: sparse-design diagnostics when
   `assignment = "sparse_linked"`, including design density, planned
@@ -353,7 +408,7 @@ sim <- simulate_mfrm_data(
 )
 head(sim)
 #>             Study Person Rater Criterion Score
-#> 1 SimulatedDesign   P001   R01       C01     2
+#> 1 SimulatedDesign   P001   R01       C01     1
 #> 2 SimulatedDesign   P001   R02       C01     2
 #> 3 SimulatedDesign   P001   R01       C02     3
 #> 4 SimulatedDesign   P001   R02       C02     3

@@ -31,12 +31,21 @@ An object of class `summary.mfrm_signal_detection` with:
 - `overview`: run-level overview
 
 - `detection_summary`: full-precision rates by design, with
-  design-variable aliases when applicable. `DIF*` and `BiasScreen*`
-  columns retain `Planned`, `Available`, `Unavailable`, `Positive`,
-  `MCLower`, `MCUpper`, `AllTrialsLower` and `AllTrialsUpper` for target
-  outcomes. Monte Carlo bounds are exact 95% binomial intervals
-  conditional on availability; all-trial bounds describe unresolved
-  outcomes, not confidence intervals.
+  design-variable aliases when applicable. `DIF*`, `DIFClass*` and
+  `BiasScreen*` columns retain `Planned`, `Available`, `Unavailable`,
+  `Positive`, `MCLower`, `MCUpper`, `AllTrialsLower` and
+  `AllTrialsUpper` for target outcomes. Monte Carlo bounds are exact 95%
+  binomial intervals conditional on availability; all-trial bounds
+  describe unresolved outcomes, not confidence intervals.
+  `DIFNonTarget*`/`BiasNonTarget*` retain summed `Planned` and
+  `Available` cell counts and `AvailableReps`, the number of trials
+  contributing a non-target proportion. Those proportions receive equal
+  weight across contributing trials, even with unequal cell counts;
+  their MCSE is the sample SD of the proportions divided by the square
+  root of `AvailableReps`. `TargetContrastAvailable`,
+  `TargetContrastAbsAvailable`, `TargetBiasAvailable` and
+  `TargetBiasTAvailable` are denominators for the corresponding finite
+  point summaries. All-missing means return `NA`.
 
 - `ademp`: simulation-study metadata carried forward from the original
   object
@@ -73,51 +82,58 @@ An object of class `summary.mfrm_signal_detection` with:
 ## Examples
 
 ``` r
-# \donttest{
-sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
-  n_person = 8,
-  n_rater = 2,
-  n_criterion = 2,
-  raters_per_person = 1,
-  reps = 1,
-  maxit = 30,
-  bias_max_iter = 1,
-  seed = 123
-))
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sig_eval <- saved$signal_detection
 summary(sig_eval)
 #> mfrmr Signal Detection Summary
 #> 
 #> Overview
 #>  Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
-#>        1            1              0             0          0.333
+#>        1            1              1             0          0.345
 #> 
 #> Detection summary (preview)
 #>  design_id n_person n_rater n_criterion raters_per_person DIFTargetLevel
-#>        S01        8       2           2                 1            C02
+#>        S01        8       2           2                 2            C02
 #>  BiasTargetRater BiasTargetCriterion Reps ConvergenceRate McseConvergenceRate
 #>              R02                 C02    1               0                  NA
 #>  DIFPower McseDIFPower DIFClassificationPower McseDIFClassificationPower
 #>        NA           NA                     NA                         NA
-#>  MeanTargetContrast McseTargetContrast MeanTargetContrastAbs
-#>                 NaN                 NA                   NaN
-#>  McseTargetContrastAbs DIFFalsePositiveRate McseDIFFalsePositiveRate
-#>                     NA                   NA                       NA
-#>  BiasScreenRate McseBiasScreenRate MeanTargetBias McseTargetBias
-#>              NA                 NA            NaN             NA
-#>  MeanAbsTargetBias McseAbsTargetBias MeanTargetBiasT McseTargetBiasT
-#>                NaN                NA             NaN              NA
-#>  BiasScreenMetricAvailabilityRate McseBiasScreenMetricAvailabilityRate
-#>                                 0                                   NA
-#>  BiasScreenFalsePositiveRate McseBiasScreenFalsePositiveRate MeanElapsedSec
-#>                           NA                              NA          0.333
-#>  McseElapsedSec DIFPlanned DIFAvailable DIFUnavailable DIFPositive DIFMCLower
-#>              NA          1            0              1           0         NA
-#>  DIFMCUpper DIFAllTrialsLower DIFAllTrialsUpper BiasScreenPlanned
-#>          NA                 0                 1                 1
-#>  BiasScreenAvailable BiasScreenUnavailable BiasScreenPositive BiasScreenMCLower
-#>                    0                     1                  0                NA
-#>  BiasScreenMCUpper BiasScreenAllTrialsLower BiasScreenAllTrialsUpper
-#>                 NA                        0                        1
+#>  MeanTargetContrast McseTargetContrast TargetContrastAvailable
+#>                  NA                 NA                       0
+#>  TargetContrastAbsAvailable MeanTargetContrastAbs McseTargetContrastAbs
+#>                           0                    NA                    NA
+#>  McseDIFFalsePositiveRate DIFFalsePositiveRate BiasScreenRate
+#>                        NA                   NA              0
+#>  McseBiasScreenRate TargetBiasAvailable TargetBiasTAvailable MeanTargetBias
+#>                  NA                   1                    1          0.156
+#>  McseTargetBias MeanAbsTargetBias McseAbsTargetBias MeanTargetBiasT
+#>              NA             0.156                NA           0.278
+#>  McseTargetBiasT BiasScreenMetricAvailabilityRate
+#>               NA                                1
+#>  McseBiasScreenMetricAvailabilityRate McseBiasScreenFalsePositiveRate
+#>                                    NA                              NA
+#>  BiasScreenFalsePositiveRate DIFNonTargetAvailableReps DIFNonTargetPlanned
+#>                            0                         0                   1
+#>  DIFNonTargetAvailable BiasNonTargetAvailableReps BiasNonTargetPlanned
+#>                      0                          1                    3
+#>  BiasNonTargetAvailable MeanElapsedSec McseElapsedSec DIFPlanned DIFAvailable
+#>                       3          0.345             NA          1            0
+#>  DIFUnavailable DIFPositive DIFMCLower DIFMCUpper DIFAllTrialsLower
+#>               1           0         NA         NA                 0
+#>  DIFAllTrialsUpper DIFClassPlanned DIFClassAvailable DIFClassUnavailable
+#>                  1               1                 0                   1
+#>  DIFClassPositive DIFClassMCLower DIFClassMCUpper DIFClassAllTrialsLower
+#>                 0              NA              NA                      0
+#>  DIFClassAllTrialsUpper BiasScreenPlanned BiasScreenAvailable
+#>                       1                 1                   1
+#>  BiasScreenUnavailable BiasScreenPositive BiasScreenMCLower BiasScreenMCUpper
+#>                      0                  0                 0             0.975
+#>  BiasScreenAllTrialsLower BiasScreenAllTrialsUpper
+#>                         0                        0
 #> 
 #> Structural design review
 #>  review_available n_designs recommended_design_id   view  mode surface
@@ -136,8 +152,8 @@ summary(sig_eval)
 #> 
 #> Notes
 #>  - Some design conditions did not converge in every replication.
-#>  - Some design conditions did not yield usable bias-screening t/p metrics in every replication.
 #>  - DIF detection rates are unavailable. Missing test statistics and descriptive residual differences are not negative screening outcomes.
+#>  - DIF contrasts are reference minus focal: residual means are in score units; refit means require documented common-scale comparability. Neither is automatically the injected linear-predictor shift.
 #>  - Bias-side rates are screening summaries derived from `estimate_bias()` output and should not be interpreted as formal power or alpha-calibrated false-positive rates.
 #>  - Target rates condition on available screens. Planned/available counts, exact 95% Monte Carlo bounds and all-trial unresolved-outcome bounds are retained; these do not establish general diagnostic accuracy.
 #>  - Non-target rates average within-replication proportions over available cells; they are not the probability of any false flag across a family.
@@ -146,5 +162,4 @@ summary(sig_eval)
 #>  - Current scalar-argument planning paths allow `n_person`, `n_rater`, `n_criterion`, and `raters_per_person` to vary subject to `raters_per_person <= n_rater`.
 #>  - Named-facet structural design metadata for person count, non-person facet counts, and assignments per person. These deterministic design summaries do not establish arbitrary-facet simulation support or parameter-recovery performance.
 #>  - The structural design review reports deterministic bookkeeping and conservative design guidance, not DIF/bias detection power.
-# }
 ```

@@ -6,14 +6,20 @@ Build an MFRM network review
 
 ``` r
 build_mfrm_network_review(
-  fit,
+  fit = NULL,
   diagnostics = NULL,
   sparse_design = NULL,
   peer_review_design = NULL,
   top_n_subsets = NULL,
   min_observations = 0,
   top_n = 10,
-  include_graph = FALSE
+  include_graph = FALSE,
+  data = NULL,
+  person = NULL,
+  facets = NULL,
+  score = NULL,
+  basis = c("observed", "planned"),
+  weight = NULL
 )
 ```
 
@@ -62,6 +68,34 @@ build_mfrm_network_review(
 
   Logical; if `TRUE`, keep the underlying `igraph` object in the nested
   `source_network` bundle.
+
+- data:
+
+  Optional raw assignment/rating data, supplied instead of `fit`.
+
+- person, facets:
+
+  Names of the person column and one or more facet columns in `data`.
+  Include only Rater in `facets` to inspect person-rater links without a
+  common Criterion node obscuring separate panels.
+
+- score:
+
+  Numeric score column for `basis = "observed"`. Recode study-specific
+  missing markers to `NA` first; no category recoding or estimation is
+  done.
+
+- basis:
+
+  `"observed"` includes rows with complete identifiers and nonmissing
+  finite scores; `"planned"` includes complete assignment rows without
+  scores. Planned networks require `score = NULL` and `weight = NULL`.
+
+- weight:
+
+  Optional numeric weight column for observed raw data. Missing and
+  zero-weight rows do not create edges. Edge weights still count rows,
+  not sampling weights. Negative or infinite weights are refused.
 
 ## Value
 
@@ -118,6 +152,22 @@ common-scale claims.
   *Many-Facet Rasch Designs: How Should Raters be Assigned to
   Examinees?* NCME presentation.
 
+## Before fitting
+
+Supply `data`, `person`, `facets` and `score` instead of `fit`. Known
+levels from incomplete/unscored rows remain as nodes, including
+isolates. A planned assignment roster can be examined with
+`basis = "planned"`; absent assignments cannot be reconstructed from an
+observed-only file. `row_usage` records each input row's inclusion and
+first exclusion reason. With a fit, only its retained rows are available
+here; review original missing assignments before fitting. No prefit
+result supplies an identification audit or model-readiness decision.
+`settings$is_disjoint` describes the source graph, even when subset
+filters omit components; compare source/retained subset counts. Filters
+do not establish linking. See
+[`vignette("mfrmr-networks-and-reporting")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.md)
+for a panel example.
+
 ## See also
 
 [`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md),
@@ -129,7 +179,6 @@ common-scale claims.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
@@ -190,5 +239,4 @@ if (requireNamespace("igraph", quietly = TRUE)) {
 #>  - Sparse-design review rows, when supplied, report planned-missingness and rater-link diagnostics rather than recovery or fit-readiness decisions.
 #>  - Peer-review design rows, when supplied, report assignment structure and reviewer linkage rather than reviewer quality or fairness.
 #>  - 2 empty table(s) were omitted from `tables`; use `include_empty = TRUE` to retain them.
-# }
 ```

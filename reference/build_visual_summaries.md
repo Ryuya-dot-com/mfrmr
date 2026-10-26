@@ -136,13 +136,14 @@ linking routes remain visibly separate capability rows.
 
 [`mfrm_threshold_profiles()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_threshold_profiles.md),
 [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md),
-[`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
-[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md)
+[plot(x, type =
+"marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 # A balanced slice retains every Rater and Criterion while running quickly.
 toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
@@ -226,28 +227,28 @@ summary(vis)
 #>  No direct FACETS equivalent (exploratory category-probability surface data)
 #> 
 #> Public plot routes
-#>                            Visual                  PlotHelper
-#>                        comparison          plot.mfrm_bundle()
-#>                    warning_counts          plot.mfrm_bundle()
-#>                    summary_counts          plot.mfrm_bundle()
-#>                        unexpected           plot_unexpected()
-#>                      fair_average         plot_fair_average()
-#>                      displacement         plot_displacement()
-#>                        interrater plot_interrater_agreement()
-#>                      facets_chisq         plot_facets_chisq()
-#>               strict_marginal_fit         plot_marginal_fit()
-#>  strict_pairwise_local_dependence    plot_marginal_pairwise()
-#>                                                                                        DrawFreeRoute
-#>                                                         plot(vis, type = "comparison", draw = FALSE)
-#>                                                     plot(vis, type = "warning_counts", draw = FALSE)
-#>                                                     plot(vis, type = "summary_counts", draw = FALSE)
-#>             plot_unexpected(unexpected_response_table(fit, diagnostics = diagnostics), draw = FALSE)
-#>                  plot_fair_average(fair_average_table(fit, diagnostics = diagnostics), draw = FALSE)
-#>                  plot_displacement(displacement_table(fit, diagnostics = diagnostics), draw = FALSE)
-#>  plot_interrater_agreement(interrater_agreement_table(fit, diagnostics = diagnostics), draw = FALSE)
-#>                  plot_facets_chisq(facets_chisq_table(fit, diagnostics = diagnostics), draw = FALSE)
-#>                                                         plot_marginal_fit(diagnostics, draw = FALSE)
-#>                                                    plot_marginal_pairwise(diagnostics, draw = FALSE)
+#>                            Visual                          PlotHelper
+#>                        comparison                  plot.mfrm_bundle()
+#>                    warning_counts                  plot.mfrm_bundle()
+#>                    summary_counts                  plot.mfrm_bundle()
+#>                        unexpected        plot(x, type = "unexpected")
+#>                      fair_average      plot(x, type = "fair_average")
+#>                      displacement      plot(x, type = "displacement")
+#>                        interrater         plot(x, type = "agreement")
+#>                      facets_chisq      plot(x, type = "facets_chisq")
+#>               strict_marginal_fit      plot(x, type = "marginal_fit")
+#>  strict_pairwise_local_dependence plot(x, type = "marginal_pairwise")
+#>                                                                                       DrawFreeRoute
+#>                                                        plot(vis, type = "comparison", draw = FALSE)
+#>                                                    plot(vis, type = "warning_counts", draw = FALSE)
+#>                                                    plot(vis, type = "summary_counts", draw = FALSE)
+#>  plot(unexpected_response_table(fit, diagnostics = diagnostics), type = "unexpected", draw = FALSE)
+#>       plot(fair_average_table(fit, diagnostics = diagnostics), type = "fair_average", draw = FALSE)
+#>       plot(displacement_table(fit, diagnostics = diagnostics), type = "displacement", draw = FALSE)
+#>  plot(interrater_agreement_table(fit, diagnostics = diagnostics), type = "agreement", draw = FALSE)
+#>       plot(facets_chisq_table(fit, diagnostics = diagnostics), type = "facets_chisq", draw = FALSE)
+#>                                              plot(diagnostics, type = "marginal_fit", draw = FALSE)
+#>                                         plot(diagnostics, type = "marginal_pairwise", draw = FALSE)
 #>  PlotReturnClass                         Scope
 #>   mfrm_plot_data               bundle overview
 #>   mfrm_plot_data               bundle overview
@@ -269,21 +270,21 @@ vis$plot_payloads$comparison$data$plot
 #> [1] "comparison"
 vis$public_plot_routes[, c("Visual", "PlotHelper", "DrawFreeRoute")]
 #> # A tibble: 13 × 3
-#>    Visual                           PlotHelper                  DrawFreeRoute   
-#>    <chr>                            <chr>                       <chr>           
-#>  1 comparison                       plot.mfrm_bundle()          "plot(vis, type…
-#>  2 warning_counts                   plot.mfrm_bundle()          "plot(vis, type…
-#>  3 summary_counts                   plot.mfrm_bundle()          "plot(vis, type…
-#>  4 unexpected                       plot_unexpected()           "plot_unexpecte…
-#>  5 fair_average                     plot_fair_average()         "plot_fair_aver…
-#>  6 displacement                     plot_displacement()         "plot_displacem…
-#>  7 interrater                       plot_interrater_agreement() "plot_interrate…
-#>  8 facets_chisq                     plot_facets_chisq()         "plot_facets_ch…
-#>  9 strict_marginal_fit              plot_marginal_fit()         "plot_marginal_…
-#> 10 strict_pairwise_local_dependence plot_marginal_pairwise()    "plot_marginal_…
-#> 11 residual_pca_overall             plot_residual_pca()         "plot_residual_…
-#> 12 residual_pca_by_facet            plot_residual_pca()         "plot_residual_…
-#> 13 category_probability_surface     plot.mfrm_fit()             "plot(fit, type…
+#>    Visual                           PlotHelper                     DrawFreeRoute
+#>    <chr>                            <chr>                          <chr>        
+#>  1 comparison                       "plot.mfrm_bundle()"           "plot(vis, t…
+#>  2 warning_counts                   "plot.mfrm_bundle()"           "plot(vis, t…
+#>  3 summary_counts                   "plot.mfrm_bundle()"           "plot(vis, t…
+#>  4 unexpected                       "plot(x, type = \"unexpected\… "plot(unexpe…
+#>  5 fair_average                     "plot(x, type = \"fair_averag… "plot(fair_a…
+#>  6 displacement                     "plot(x, type = \"displacemen… "plot(displa…
+#>  7 interrater                       "plot(x, type = \"agreement\"… "plot(interr…
+#>  8 facets_chisq                     "plot(x, type = \"facets_chis… "plot(facets…
+#>  9 strict_marginal_fit              "plot(x, type = \"marginal_fi… "plot(diagno…
+#> 10 strict_pairwise_local_dependence "plot(x, type = \"marginal_pa… "plot(diagno…
+#> 11 residual_pca_overall             "plot(x, type = \"residual_pc… "plot(analyz…
+#> 12 residual_pca_by_facet            "plot(x, type = \"residual_pc… "plot(analyz…
+#> 13 category_probability_surface     "plot.mfrm_fit()"              "plot(fit, t…
 if (interactive()) {
   plot(
     vis,
@@ -294,5 +295,4 @@ if (interactive()) {
     label_angle = 45
   )
 }
-# }
 ```

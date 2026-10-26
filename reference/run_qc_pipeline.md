@@ -199,21 +199,30 @@ The 10 checks are:
 6.  Follow `qc$recommendations` for remediation.
 
 7.  Visualize with
-    [`plot_qc_pipeline()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_pipeline.md).
+    [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_qc_pipeline.md).
+
+## Saved-result reuse
+
+Supplied screening results must describe this fitted analysis. Results
+from another fit or older results without identity metadata are refused.
+See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+to recreate them from the saved fit and matching diagnostics without
+refitting the model.
 
 ## See also
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
 [`mfrm_threshold_profiles()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_threshold_profiles.md),
-[`plot_qc_pipeline()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_pipeline.md),
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_qc_pipeline.md),
+[plot(x, type =
+"qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("study1")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
@@ -232,7 +241,7 @@ qc
 #>   [SKIP] Reliability               No facet differentiation target specified; low rater separation is not evidence of poor agreement.
 #>   [SKIP] Separation                No facet differentiation target specified; low rater separation is not evidence of poor agreement.
 #>   [FAIL] Element Misfit            139 of 328 elements misfitting (42.4%)
-#>   [FAIL] Unexpected Responses      22.4% unexpected responses
+#>   [PASS] Unexpected Responses      0.5% unexpected responses
 #>   [PASS] Category Structure        Thresholds ordered, min category count = 215
 #>   [PASS] Connectivity              1 disjoint subset(s)
 #>   [WARN] Inter-rater Agreement     Exact agreement = 36.2%
@@ -241,14 +250,13 @@ qc
 #> Recommendations:
 #>   - The fit is not inference-ready. Inspect the convergence status, model specification, data support, starting values, and optimizer diagnostics before changing controls or interpreting estimates. 
 #>   - Review individual element fit statistics and any unavailable values before interpreting the misfit rate. 
-#>   - Inspect unexpected_response_table() for unusual responses and missing residual information. 
 #>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. 
 summary(qc)
 #> --- QC Pipeline Summary ---
 #> Overall: Fail 
 #>   Pass describes the selected screening rules, not a statistical validation.
 #>   Unrequested checks do not affect the overall result.
-#> Pass: 3 | Warn: 2 | Fail: 3 | Skip: 2
+#> Pass: 4 | Warn: 2 | Fail: 2 | Skip: 2
 #> 
 #>                    Check Verdict                                  Value
 #>              Convergence    Warn           Numerical convergence passed
@@ -256,7 +264,7 @@ summary(qc)
 #>              Reliability    Skip                          Not requested
 #>               Separation    Skip                          Not requested
 #>           Element Misfit    Fail                        139/328 (42.4%)
-#>     Unexpected Responses    Fail                                  22.4%
+#>     Unexpected Responses    Pass                                   0.5%
 #>       Category Structure    Pass Order=Nondecreasing, minimum count=215
 #>             Connectivity    Pass                                      1
 #>    Inter-rater Agreement    Warn                                  36.2%
@@ -278,7 +286,7 @@ summary(qc)
 #>                            No facet differentiation target specified; low rater separation is not evidence of poor agreement.
 #>                            No facet differentiation target specified; low rater separation is not evidence of poor agreement.
 #>                                                                                        139 of 328 elements misfitting (42.4%)
-#>                                                                                                    22.4% unexpected responses
+#>                                                                                                     0.5% unexpected responses
 #>                                                                                  Thresholds ordered, min category count = 215
 #>                                                                                                          1 disjoint subset(s)
 #>                                                                                                       Exact agreement = 36.2%
@@ -298,7 +306,6 @@ summary(qc)
 #> Recommendations:
 #>   - The fit is not inference-ready. Inspect the convergence status, model specification, data support, starting values, and optimizer diagnostics before changing controls or interpreting estimates. 
 #>   - Review individual element fit statistics and any unavailable values before interpreting the misfit rate. 
-#>   - Inspect unexpected_response_table() for unusual responses and missing residual information. 
 #>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. 
 qc$verdicts
 #> # A tibble: 10 × 6
@@ -309,10 +316,9 @@ qc$verdicts
 #>  3 Reliability             Skip    Not requested No diffe… No fa… FALSE         
 #>  4 Separation              Skip    Not requested No diffe… No fa… FALSE         
 #>  5 Element Misfit          Fail    139/328 (42.… Pass<=5%… 139 o… TRUE          
-#>  6 Unexpected Responses    Fail    22.4%         Pass<=2%… 22.4%… TRUE          
+#>  6 Unexpected Responses    Pass    0.5%          Pass<=2%… 0.5% … TRUE          
 #>  7 Category Structure      Pass    Order=Nondec… Nondecre… Thres… TRUE          
 #>  8 Connectivity            Pass    1             Pass=1, … 1 dis… TRUE          
 #>  9 Inter-rater Agreement   Warn    36.2%         Pass>=50… Exact… TRUE          
 #> 10 Functioning/Bias Screen Fail    80.0%         Pass<=0%… 80.0%… TRUE          
-# }
 ```

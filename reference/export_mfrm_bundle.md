@@ -43,7 +43,10 @@ export_mfrm_bundle(
   When `NULL`, diagnostics are reused from
   [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)
   when available, otherwise computed with `residual_pca = "none"` (or
-  `"both"` when visual summaries are requested).
+  `"both"` when visual summaries are requested). Must match this fitted
+  analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics.
 
 - bias_results:
 
@@ -157,7 +160,20 @@ and
 [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
 first when you want to inspect a results object before writing files;
 use `export_mfrm_bundle()` when the goal is a project-folder bundle from
-`fit`.
+`fit`. For only the core CSV tables without automatic diagnostics, use
+[`export_mfrm_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_tables.md).
+For a complete saved R result that reloads without refitting, use
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md).
+The optional `"script"` component here is a refitting recipe, not a copy
+of the fitted R object.
+
+The returned `written_files` and optional ZIP include only files written
+by this call. With `overwrite = TRUE`, the ZIP is built afresh and
+checked before replacing an existing archive; obsolete members are not
+retained. If ZIP creation fails, any older ZIP remains in place but is
+not counted as a new output: `summary$ZipWritten` is zero and `notes`
+explains the failure. Unrequested loose files in the folder are left in
+place.
 
 Every bundle is an analysis archive, not a deidentified or automatically
 shareable package. Core tables, anchors, predictions, replay sidecars,
@@ -207,7 +223,7 @@ Common starting points are:
 Depending on `include`, the exporter can write:
 
 - core CSV tables via
-  [`export_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm.md)
+  [`export_mfrm_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_tables.md)
 
 - checklist CSVs via
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
@@ -295,6 +311,18 @@ off to other tools.
 
 4.  Inspect `bundle$written_files` or open the generated HTML file.
 
+## Saved-result reuse
+
+Supplied screening results must describe this fitted analysis. Results
+from another fit or older results without identity metadata are refused.
+See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+to recreate them from the saved fit and matching diagnostics without
+refitting the model. Supplied unit scores, plausible values and
+fit-derived forecasts must also match this calibration. A forecast
+created with `sim_spec` remains a separate scenario; its source is
+recorded without asserting a match to the fit.
+
 ## See also
 
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
@@ -303,14 +331,13 @@ off to other tools.
 [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md),
 [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md),
 [`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_replay_script.md),
-[`export_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm.md),
+[`export_mfrm_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_tables.md),
 [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
 [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
@@ -335,9 +362,8 @@ head(data.frame(
 #> 1      core_person mfrmr_bundle_example_person_estimates.csv
 #> 2      core_facets  mfrmr_bundle_example_facet_estimates.csv
 #> 3     core_summary      mfrmr_bundle_example_fit_summary.csv
-#> 4    core_measures         mfrmr_bundle_example_measures.csv
-#> 5       core_steps  mfrmr_bundle_example_step_parameters.csv
+#> 4       core_steps  mfrmr_bundle_example_step_parameters.csv
+#> 5    core_measures         mfrmr_bundle_example_measures.csv
 #> 6 manifest_summary mfrmr_bundle_example_manifest_summary.csv
 # Full paths and data-handling notes remain in bundle$written_files.
-# }
 ```

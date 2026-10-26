@@ -73,7 +73,6 @@ This method returns a compact cross-object summary that combines:
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
 out <- run_mfrm_facets(
@@ -97,5 +96,4 @@ s$mapping
 #> 2 Score  "Score"           
 #> 3 Facets "Rater, Criterion"
 #> 4 Weight ""                
-# }
 ```

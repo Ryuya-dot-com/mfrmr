@@ -36,8 +36,8 @@ An object of class `summary.mfrm_reporting_checklist` with:
 
 - `facets_positioning`: report-ready FACETS relationship wording
 
-- `visual_scope`: plotting-route and 3D-ready data-handoff summary,
-  including the main `InterpretationCheck` caveat for each visual family
+- `visual_scope`: available plots and data for custom rendering,
+  including the main `InterpretationCheck` caveat for each type of plot
 
 - `priority_summary`: counts by priority/severity
 
@@ -55,7 +55,6 @@ An object of class `summary.mfrm_reporting_checklist` with:
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 7, maxit = 30)
@@ -141,5 +140,4 @@ summary(chk)
 #>  - This summary is a manuscript-preparation guide.
 #>  - DraftReady indicates that the corresponding reporting element can be drafted with the package's documented caveats; it does not certify inferential adequacy.
 #>  - Detailed FACETS positioning, software scope, and visual scope tables are available in `$facets_positioning`, `$software_scope`, and `$visual_scope`.
-# }
 ```

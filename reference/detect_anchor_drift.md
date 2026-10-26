@@ -41,11 +41,13 @@ print(x, ...)
 
 - drift_threshold:
 
-  Absolute screening threshold for flagging (logits, default 0.5).
+  Absolute screening threshold for flagging (logits, default 0.5). A
+  non-negative scalar; `Inf` disables magnitude screening.
 
 - flag_se_ratio:
 
-  Drift/SE ratio screening threshold for flagging (default 2.0).
+  Drift/SE ratio screening threshold for flagging (default 2.0). A
+  non-negative scalar; `Inf` disables SE-ratio flagging.
 
 - reference:
 
@@ -130,7 +132,20 @@ preliminary residual screening would retain no row, the current
 implementation falls back to all finite differences. Use a single
 substantively coherent facet when a common shift across facet blocks is
 not defensible, and inspect `drift_table` rather than treating
-`LinkSupportAdequate` as sufficient evidence.
+`LinkSupportAdequate` as sufficient evidence. The fallback is recorded
+as `ScreeningFallback`, and `Contributing` / `N_Contributing` identify
+the elements actually used in the final offset. Retention and
+contribution are different: a retained row with a missing SE does not
+enter a weighted offset when other rows have usable SEs.
+
+`OffsetStatus` and `OffsetReason` distinguish computed offsets, absent
+or nonfinite common differences, and numerical failure. Missing
+residuals stay missing. `SERatioStatus` explains unavailable SE ratios;
+`FlagBasis` identifies whether the flag used both criteria, only
+residual magnitude, or neither. In the magnitude-only case,
+`Flag = FALSE` is not a negative SE-ratio screen. Summaries report
+unavailable counts, and withhold the complete flagged count when any
+residual flag is unavailable.
 
 Matching `Facet` and `Level` labels are treated as common elements; the
 helper cannot verify that they have invariant meaning across waves. The
@@ -139,6 +154,16 @@ population conventions and must be independently reviewed for fit
 readiness. Offset removal aligns coordinates conditionally on those
 assumptions; it is not proof of scale equivalence.
 
+This is a relative drift screen. For example, if the selected judges'
+estimates all differ from the reference by +0.40 logits, `LinkOffset` is
++0.40 and each residual `Drift` is zero. This does not establish panel
+stability. The offset itself also cannot distinguish real panel change
+from a change of coordinates. Common recorded performances can provide a
+separate reference, but a complete recording-based annual analysis and
+its formal difference intervals are not yet verified here. See the
+annual assessment example in
+[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md).
+
 An element is **flagged** when either condition is met: \$\$\|\Delta_e\|
 \> \texttt{drift\\threshold}\$\$ \$\$\|\Delta_e / SE\_{\Delta_e}\| \>
 \texttt{flag\\se\\ratio}\$\$ The two criteria are joined by `OR`: a
@@ -146,7 +171,11 @@ large absolute residual is flagged even when imprecise, while a smaller
 residual can be flagged by its SE ratio. The ratio uses only the two
 element SEs and omits uncertainty in the estimated `LinkOffset` and any
 cross-fit covariance. It is therefore a descriptive screen, not a formal
-z test with a calibrated error rate.
+z test with a calibrated error rate. Residuals share an estimated
+offset, and contributing elements also enter that offset. Offset
+covariance can either reduce or increase residual uncertainty relative
+to the displayed denominator. The ratio is not guaranteed to be
+conservative.
 
 When `facets` is `NULL`, all non-Person facets are compared. Providing a
 subset (e.g., `facets = "Criterion"`) restricts comparison to those
@@ -201,7 +230,7 @@ facets only.
 
 3.  Call `drift <- detect_anchor_drift(fits)`.
 
-4.  Review `summary(drift)` and `plot_anchor_drift(drift)`.
+4.  Review `summary(drift)` and `plot(drift)`.
 
 5.  Flagged elements may need to be removed from anchor sets or
     investigated for substantive causes (e.g., rater re-training).
@@ -211,20 +240,19 @@ facets only.
 [`anchor_to_baseline()`](https://ryuya-dot-com.github.io/mfrmr/reference/anchor_to_baseline.md),
 [`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md),
 [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md),
-[`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md),
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md),
 [mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 # Deliberately linked teaching waves: common labels below represent the
 # same rater and criterion identities by construction.
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
-# Two balanced 12-Person waves retain every Rater and Criterion.
-d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
-d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
+# Two balanced 24-Person waves retain every Rater and Criterion.
+d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
+d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
                  method = "MML", quad_points = 7, maxit = 30)
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
@@ -241,9 +269,12 @@ summary(drift)
 #> Comparisons: 8 | Flagged: 0 
 #> 
 #> Drift summary by facet and wave:
-#>      Facet  Wave N Mean_Drift Max_Drift N_Flagged
-#>  Criterion Wave2 4     0.0717     0.148         0
-#>      Rater Wave2 4     0.2635     0.480         0
+#>      Facet  Wave N Mean_Drift Max_Drift N_Flagged N_FlaggedAvailable
+#>  Criterion Wave2 4      0.126     0.187         0                  0
+#>      Rater Wave2 4      0.148     0.179         0                  0
+#>  N_Unavailable
+#>              0
+#>              0
 #> 
 #> Common elements:
 #>  Wave1 Wave2 N_Common
@@ -258,18 +289,17 @@ summary(drift)
 #>                FALSE
 head(drift$drift_table[, c("Facet", "Level", "Wave", "Drift", "Flag")])
 #> # A tibble: 6 × 5
-#>   Facet     Level    Wave    Drift Flag 
-#>   <chr>     <chr>    <chr>   <dbl> <lgl>
-#> 1 Rater     R01      Wave2 -0.480  FALSE
-#> 2 Rater     R03      Wave2  0.470  FALSE
-#> 3 Criterion Content  Wave2 -0.148  FALSE
-#> 4 Criterion Language Wave2  0.0828 FALSE
-#> 5 Rater     R04      Wave2  0.0528 FALSE
-#> 6 Rater     R02      Wave2 -0.0518 FALSE
+#>   Facet     Level        Wave   Drift Flag 
+#>   <chr>     <chr>        <chr>  <dbl> <lgl>
+#> 1 Criterion Content      Wave2  0.187 FALSE
+#> 2 Rater     R03          Wave2  0.179 FALSE
+#> 3 Rater     R02          Wave2 -0.178 FALSE
+#> 4 Criterion Organization Wave2 -0.170 FALSE
+#> 5 Rater     R04          Wave2  0.120 FALSE
+#> 6 Rater     R01          Wave2 -0.115 FALSE
 drift$common_elements
 #> # A tibble: 1 × 3
 #>   Wave1 Wave2 N_Common
 #>   <chr> <chr>    <int>
 #> 1 Wave1 Wave2        8
-# }
 ```

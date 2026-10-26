@@ -1,6 +1,7 @@
 # Read a FACETS fit table for fit review
 
-Read a FACETS fit table for fit review
+For standalone plots with source-state checks, use
+[`read_facets_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/read_facets_results.md).
 
 ## Usage
 
@@ -50,7 +51,13 @@ import_facets_fit_table(
 
   File format. `"auto"` detects FACETS `score.N.txt` files from their
   name/header; `"delimited"` reads a CSV/TSV/semicolon table; and
-  `"scorefile"` reads a FACETS score-file table.
+  `"scorefile"` reads a FACETS score-file table, including comma, tab or
+  semicolon exports with facet heading lines. Fixed-field input requires
+  validated all-field headings with element number after the statistics;
+  appended facet fields are separated from the element label.
+  Headerless, element-first and selected-field fixed layouts are
+  rejected. Use named delimited columns for those layouts and for
+  non-ASCII labels.
 
 - facet_col, level_col:
 
@@ -65,8 +72,7 @@ import_facets_fit_table(
 
 - encoding:
 
-  File encoding passed to
-  [`readLines()`](https://rdrr.io/r/base/readLines.html).
+  Source file encoding, explicitly converted to UTF-8.
 
 ## Value
 
@@ -92,9 +98,9 @@ threshold.
 Two common workflows are supported:
 
 - a FACETS score file such as `score.2.txt`, where the facet name is
-  supplied by `facet_map` or inferred as `Facet2`. Both comma-delimited
-  score files with field names and fixed-field score files using the
-  FACETS manual column positions are supported;
+  supplied by `facet_map` or inferred as `Facet2`. Comma, tab and
+  semicolon score files with field names and fixed-field score files
+  using the FACETS manual column positions are supported;
 
 - a CSV/TSV table already exported from FACETS or a harmonization
   script, with FACETS-style column names such as `Infit MnSq`,
@@ -128,14 +134,15 @@ write.csv(
   row.names = FALSE
 )
 read_facets_fit_table(path)
-#> # A tibble: 1 × 27
+#> # A tibble: 1 × 34
 #>   Facet Level Estimate    SE     N Infit Outfit InfitZSTD OutfitZSTD DF_Infit
 #>   <chr> <chr>    <dbl> <dbl> <dbl> <dbl>  <dbl>     <dbl>      <dbl>    <dbl>
 #> 1 Rater R1          NA    NA    NA  1.02   0.98       0.3       -0.2       12
-#> # ℹ 17 more variables: DF_Outfit <dbl>, EstimateRaw <chr>, SERaw <chr>,
+#> # ℹ 24 more variables: DF_Outfit <dbl>, EstimateRaw <chr>, SERaw <chr>,
 #> #   NRaw <chr>, InfitRaw <chr>, OutfitRaw <chr>, InfitZSTDRaw <chr>,
 #> #   OutfitZSTDRaw <chr>, DF_InfitRaw <chr>, DF_OutfitRaw <chr>,
 #> #   InfitZSTDReportedDecimals <int>, OutfitZSTDReportedDecimals <int>,
 #> #   InfitZSTDDisplayState <chr>, OutfitZSTDDisplayState <chr>,
-#> #   ZSTDDisplayFlagState <chr>, SourcePrecisionStatus <chr>, Source <chr>
+#> #   ZSTDDisplayFlagState <chr>, SourcePrecisionStatus <chr>, Source <chr>,
+#> #   SourceRow <int>, ElementID <chr>, ElementLabel <chr>, StatusRaw <chr>, …
 ```

@@ -29,8 +29,8 @@ plot(
     "offset_sensitivity"),
   preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE,
-  show_title = TRUE,
-  show_notes = TRUE,
+  show_title = FALSE,
+  show_notes = FALSE,
   ...
 )
 
@@ -57,7 +57,9 @@ print(x, ...)
 
 - drift_threshold:
 
-  Threshold for flagging large residuals in links.
+  Non-negative scalar threshold for screening and flagging large
+  residuals in links. `Inf` retains all finite differences and disables
+  magnitude flagging.
 
 - x:
 
@@ -214,6 +216,23 @@ the resulting scale placement.
 
 - `$config`: records wave names and analysis parameters.
 
+- `OffsetStatus` / `OffsetReason` explain unavailable link offsets.
+  `ScreeningFallback` records use of all finite differences when no row
+  passed preliminary screening. `N_Contributing` and the element-level
+  `Contributing` flag identify the rows actually used in the final
+  average; retained rows without usable SEs may not contribute.
+
+- `OffsetSDStatus` distinguishes available residual spread from fewer
+  than two retained elements, unavailable offsets, or a numerical
+  failure. A singleton has an undefined sample SD, not an estimated SD
+  of zero. Unavailable `Max_Residual` and flagged counts stay missing
+  rather than representing no drift. Summaries also give the unavailable
+  count and the flagged count among available elements.
+
+- `cumulative$Status` / `Reason` distinguish unavailable preceding links
+  from an unrepresentable cumulative sum. Later offsets do not become
+  zero when a link is unavailable.
+
 - Read `links` before `cumulative`: weak adjacent links can make later
   cumulative offsets less trustworthy.
 
@@ -349,7 +368,7 @@ remain available when figure titles and footers are omitted.
 
 4.  Review `summary(chain)` for link quality.
 
-5.  Visualize with `plot_anchor_drift(chain, type = "chain")`.
+5.  Visualize with `plot(chain, type = "chain")`.
 
 6.  For problematic links, investigate flagged elements in
     `chain$element_detail` and consider removing them from the anchor
@@ -395,20 +414,278 @@ or diagnostic thresholds.
 [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md),
 [`anchor_to_baseline()`](https://ryuya-dot-com.github.io/mfrmr/reference/anchor_to_baseline.md),
 [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md),
-[`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md)
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
-d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
-d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
+d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
+d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 30)
+                 method = "JML")
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 30)
+                 method = "JML")
+# Check convergence before using the estimates for linking.
+summary(fit1)
+#> Many-Facet Measurement Model Summary
+#>   Model: RSM | Method: JML | N: 384 | Persons: 24 | Facets: 2 | Categories: 4
+#> 
+#> Decision
+#>  - Interpretation: Fit-readiness requirements satisfied; formal precision
+#>    review required
+#>  - Formal inference: No
+#>  - Why: Formal precision support has not been evaluated.
+#>  - Next: Run `diagnose_mfrm()` and pass its result as `diagnostics =` to
+#>    evaluate formal precision support; fit readiness alone is not a
+#>    formal-inference decision.
+#>   JML uses observed scores without an extreme-score adjustment or finite-item
+#>   bias correction. Independently free Person measures are infinite for
+#>   all-minimum/all-maximum responses; finite optimizer values are computational
+#>   traces. JML SEs and normal bands remain exploratory.
+#>   Centering: whole declared facet, including anchors and group totals.
+#> 
+#> Visual workflow (in order)
+#>  Priority                   Visual Required Available
+#>         1 mfrmr Wright map with SE     TRUE      TRUE
+#>         2  FACETS-style Wright map    FALSE      TRUE
+#>         3            Infit pathway    FALSE     FALSE
+#>                       Interpretation
+#>  Diagnostic interpretation available
+#>  Diagnostic interpretation available
+#>                          Unavailable
+#>   Plot commands are stored in `$required_visual$Route`.
+#> 
+#> Status
+#>  - Overall status: Fit completed; review diagnostics before reporting
+#>  - Convergence: converged (severity: pass, maximum absolute gradient: 2.25e-05)
+#>  - Estimation path: RSM / JML
+#>  - Reporting readiness: Fit available for diagnostic review; inferential
+#>    strength depends on the estimator and convergence evidence
+#> 
+#> Workflow readiness
+#>       Domain                                         Status
+#>          Fit                                  Checks passed
+#>    Numerical                                  Checks passed
+#>         Data                                  Checks passed
+#>       Design                           Connectivity checked
+#>    Stability                                  Checks passed
+#>  Diagnostics                                   Not assessed
+#>    Reporting Review the stored result before interpretation
+#> 
+#> Key warnings
+#>  - None.
+#> 
+#> Next actions
+#>  - Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate
+#>    formal precision support; fit readiness alone is not a formal-inference
+#>    decision.
+#>  - After reviewing convergence, run `review <- summary(fit, profile = "facets",
+#>    detail = "brief")` for the comprehensive measurement review; FACETS software
+#>    is not required.
+#>  - Then draw the complete native Wright map with `plot(fit, type = "wright",
+#>    show_ci = TRUE, top_n = Inf, preset = "publication")`.
+#>  - MML provides marginal diagnostics; review the resulting fit and uncertainty
+#>    assumptions before using its SEs or intervals.
+#>  - Reuse `review$results$diagnostics`; call `diagnose_mfrm()` again only for
+#>    residual PCA or other custom settings.
+#>  - Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for
+#>    reporting readiness.
+#> 
+#> Fit overview
+#>   LogLik: -399.287 | Information-criterion ranking is unavailable for JML.
+#>   Optimizer code 0: Yes | Status: converged | Fn evals: 176 | Gr evals: 51
+#>   Terminal gradient: maximum absolute = 2.25e-05 | RMS = 7.3e-06 | Review tolerance = 0.0001
+#>   Optimization note: Optimizer returned convergence code 0.
+#> 
+#> Population basis
+#>   JML estimates Person measures jointly with calibration parameters; it does
+#>   not estimate a normal population distribution.
+#> 
+#> Facet overview
+#>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
+#>  Criterion      4            0      0.351      -0.525       0.220 0.745
+#>      Rater      4            0      0.233      -0.239       0.277 0.516
+#> 
+#> Person measure distribution
+#>  Persons DistributionN ReviewExcludedExtremeEAPs  Mean   SD Median    Min   Max
+#>       24            24                         0 0.341 1.21  0.569 -2.241 2.692
+#>   Span                               Interpretation
+#>  4.933 Subject to the fit's interpretation decision
+#> 
+#> Targeting (Person vs facet means; sum-to-zero ID makes Targeting = Person mean)
+#>      Facet PersonMean FacetMean Targeting PersonSD FacetSD SpreadRatio
+#>  Criterion      0.341         0     0.341     1.21   0.351       3.443
+#>      Rater      0.341         0     0.341     1.21   0.233       5.188
+#> 
+#> Step parameter summary
+#>  Steps    Min   Max  Span Monotonic
+#>      3 -1.436 1.379 2.815      TRUE
+#> 
+#> Estimation settings
+#>  StepFacet SlopeFacet NoncenterFacet WeightColumn RatingMin RatingMax
+#>       <NA>       <NA>         Person         <NA>         1         4
+#>  CategoryPolicy ScoreRecoded DummyFacets PositiveFacets FacetInteractions
+#>        collapse        FALSE                                             
+#>  UnusedScoreCategories UnusedScoreCategoryCount
+#>                                               0
+#>   RSM uses one shared set of rating-scale thresholds.
+#>   Full fitting settings are retained in `$settings_overview`.
+#> 
+#> Most extreme facet levels (|estimate|)
+#>      Facet        Level Estimate
+#>  Criterion      Content   -0.525
+#>      Rater          R04    0.277
+#>      Rater          R02   -0.239
+#>  Criterion     Accuracy    0.220
+#>  Criterion Organization    0.162
+#> 
+#> Paper reporting map
+#>                                Area CoveredHere
+#>  Model identification / convergence         yes
+#>        Data structure / missingness          no
+#>    Reliability / fit / residual PCA          no
+#>                Category functioning     partial
+#>     Bias / DIF / interaction checks          no
+#>         Draft reporting / checklist          no
+#>                                                                CompanionOutput
+#>                                                                   summary(fit)
+#>                                               summary(describe_mfrm_data(...))
+#>                                                    summary(diagnose_mfrm(fit))
+#>  rating_scale_table() / category_structure_report() / category_curves_report()
+#>         summary(estimate_bias(...)) / analyze_dff() / related bundle summaries
+#>                        reporting_checklist() / summary(build_apa_outputs(...))
+summary(fit2)
+#> Many-Facet Measurement Model Summary
+#>   Model: RSM | Method: JML | N: 384 | Persons: 24 | Facets: 2 | Categories: 4
+#> 
+#> Decision
+#>  - Interpretation: Fit-readiness requirements satisfied; formal precision
+#>    review required
+#>  - Formal inference: No
+#>  - Why: Formal precision support has not been evaluated.
+#>  - Next: Run `diagnose_mfrm()` and pass its result as `diagnostics =` to
+#>    evaluate formal precision support; fit readiness alone is not a
+#>    formal-inference decision.
+#>   JML uses observed scores without an extreme-score adjustment or finite-item
+#>   bias correction. Independently free Person measures are infinite for
+#>   all-minimum/all-maximum responses; finite optimizer values are computational
+#>   traces. JML SEs and normal bands remain exploratory.
+#>   Centering: whole declared facet, including anchors and group totals.
+#> 
+#> Visual workflow (in order)
+#>  Priority                   Visual Required Available
+#>         1 mfrmr Wright map with SE     TRUE      TRUE
+#>         2  FACETS-style Wright map    FALSE      TRUE
+#>         3            Infit pathway    FALSE     FALSE
+#>                       Interpretation
+#>  Diagnostic interpretation available
+#>  Diagnostic interpretation available
+#>                          Unavailable
+#>   Plot commands are stored in `$required_visual$Route`.
+#> 
+#> Status
+#>  - Overall status: Fit completed; review diagnostics before reporting
+#>  - Convergence: converged (severity: pass, maximum absolute gradient: 2e-05)
+#>  - Estimation path: RSM / JML
+#>  - Reporting readiness: Fit available for diagnostic review; inferential
+#>    strength depends on the estimator and convergence evidence
+#> 
+#> Workflow readiness
+#>       Domain                                         Status
+#>          Fit                                  Checks passed
+#>    Numerical                                  Checks passed
+#>         Data                                  Checks passed
+#>       Design                           Connectivity checked
+#>    Stability                                  Checks passed
+#>  Diagnostics                                   Not assessed
+#>    Reporting Review the stored result before interpretation
+#> 
+#> Key warnings
+#>  - None.
+#> 
+#> Next actions
+#>  - Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate
+#>    formal precision support; fit readiness alone is not a formal-inference
+#>    decision.
+#>  - After reviewing convergence, run `review <- summary(fit, profile = "facets",
+#>    detail = "brief")` for the comprehensive measurement review; FACETS software
+#>    is not required.
+#>  - Then draw the complete native Wright map with `plot(fit, type = "wright",
+#>    show_ci = TRUE, top_n = Inf, preset = "publication")`.
+#>  - MML provides marginal diagnostics; review the resulting fit and uncertainty
+#>    assumptions before using its SEs or intervals.
+#>  - Reuse `review$results$diagnostics`; call `diagnose_mfrm()` again only for
+#>    residual PCA or other custom settings.
+#>  - Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for
+#>    reporting readiness.
+#> 
+#> Fit overview
+#>   LogLik: -418.879 | Information-criterion ranking is unavailable for JML.
+#>   Optimizer code 0: Yes | Status: converged | Fn evals: 151 | Gr evals: 47
+#>   Terminal gradient: maximum absolute = 2e-05 | RMS = 6.46e-06 | Review tolerance = 0.0001
+#>   Optimization note: Optimizer returned convergence code 0.
+#> 
+#> Population basis
+#>   JML estimates Person measures jointly with calibration parameters; it does
+#>   not estimate a normal population distribution.
+#> 
+#> Facet overview
+#>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
+#>  Criterion      4            0      0.250      -0.323       0.281 0.604
+#>      Rater      4            0      0.392      -0.413       0.388 0.801
+#> 
+#> Person measure distribution
+#>  Persons DistributionN ReviewExcludedExtremeEAPs   Mean    SD Median    Min
+#>       24            24                         0 -0.338 0.921 -0.431 -1.824
+#>    Max  Span                               Interpretation
+#>  1.854 3.678 Subject to the fit's interpretation decision
+#> 
+#> Targeting (Person vs facet means; sum-to-zero ID makes Targeting = Person mean)
+#>      Facet PersonMean FacetMean Targeting PersonSD FacetSD SpreadRatio
+#>  Criterion     -0.338         0    -0.338    0.921   0.250       3.689
+#>      Rater     -0.338         0    -0.338    0.921   0.392       2.351
+#> 
+#> Step parameter summary
+#>  Steps    Min   Max  Span Monotonic
+#>      3 -1.283 1.439 2.722      TRUE
+#> 
+#> Estimation settings
+#>  StepFacet SlopeFacet NoncenterFacet WeightColumn RatingMin RatingMax
+#>       <NA>       <NA>         Person         <NA>         1         4
+#>  CategoryPolicy ScoreRecoded DummyFacets PositiveFacets FacetInteractions
+#>        collapse        FALSE                                             
+#>  UnusedScoreCategories UnusedScoreCategoryCount
+#>                                               0
+#>   RSM uses one shared set of rating-scale thresholds.
+#>   Full fitting settings are retained in `$settings_overview`.
+#> 
+#> Most extreme facet levels (|estimate|)
+#>      Facet    Level Estimate
+#>      Rater      R02   -0.413
+#>      Rater      R04    0.388
+#>  Criterion  Content   -0.323
+#>  Criterion Accuracy    0.281
+#>      Rater      R03    0.275
+#> 
+#> Paper reporting map
+#>                                Area CoveredHere
+#>  Model identification / convergence         yes
+#>        Data structure / missingness          no
+#>    Reliability / fit / residual PCA          no
+#>                Category functioning     partial
+#>     Bias / DIF / interaction checks          no
+#>         Draft reporting / checklist          no
+#>                                                                CompanionOutput
+#>                                                                   summary(fit)
+#>                                               summary(describe_mfrm_data(...))
+#>                                                    summary(diagnose_mfrm(fit))
+#>  rating_scale_table() / category_structure_report() / category_curves_report()
+#>         summary(estimate_bias(...)) / analyze_dff() / related bundle summaries
+#>                        reporting_checklist() / summary(build_apa_outputs(...))
+# The four shared levels per facet trigger a thin-support warning.
+# Inspect that warning; matching labels alone do not establish a common scale.
 chain <- build_equating_chain(list(Form1 = fit1, Form2 = fit2))
 #> Warning: Thin linking support between 'Form1' and 'Form2': fewer than 5 retained common elements in Criterion, Rater.
 summary(chain)
@@ -424,8 +701,10 @@ summary(chain)
 #> Link details:
 #>  Link FromID ToID  From    To N_Common N_Retained Min_Common_Per_Facet
 #>     1      1    2 Form1 Form2        8          8                    4
-#>  Min_Retained_Per_Facet Offset_Prelim  Offset Offset_SD Max_Residual
-#>                       4       0.00211 0.00211     0.275        0.498
+#>  Min_Retained_Per_Facet Offset_Prelim   Offset Offset_SD OffsetSDStatus
+#>                       4      -0.00131 -0.00131     0.155      available
+#>  OffsetStatus OffsetReason N_Contributing ScreeningFallback Max_Residual
+#>      computed         <NA>              8             FALSE        0.203
 #>  LinkSupportAdequate    Offset_Method
 #>                FALSE inverse_variance
 #> 
@@ -438,14 +717,13 @@ summary(chain)
 #>                FALSE
 #> 
 #> Cumulative offsets:
-#>   Wave Cumulative_Offset
-#>  Form1           0.00000
-#>  Form2           0.00211
+#>   Wave Cumulative_Offset   Status Reason
+#>  Form1           0.00000 computed   <NA>
+#>  Form2          -0.00131 computed   <NA>
 chain$cumulative
-#> # A tibble: 2 × 2
-#>   Wave  Cumulative_Offset
-#>   <chr>             <dbl>
-#> 1 Form1           0      
-#> 2 Form2           0.00211
-# }
+#> # A tibble: 2 × 4
+#>   Wave  Cumulative_Offset Status   Reason
+#>   <chr>             <dbl> <chr>    <chr> 
+#> 1 Form1           0       computed NA    
+#> 2 Form2          -0.00131 computed NA    
 ```

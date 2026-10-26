@@ -24,6 +24,7 @@ anchor_to_baseline(
   method = NULL,
   anchor_policy = "warn",
   mml_integration = NULL,
+  centering_scope = NULL,
   ...
 )
 
@@ -66,8 +67,9 @@ print(x, ...)
 
 - include_person:
 
-  If `TRUE`, also anchor person estimates. Use only when the same
-  persons are intentionally constrained across runs.
+  If `TRUE`, also export Person values for a receiving JML fit. MML
+  rejects Person anchors. Use only when constant ability for the same
+  Persons is substantively intended; shared Persons need not be fixed.
 
 - weight:
 
@@ -90,6 +92,13 @@ print(x, ...)
   MML integration mode passed to
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
   `NULL` inherits the baseline fit's mode for MML; JML uses `"fixed"`.
+
+- centering_scope:
+
+  `NULL` inherits the baseline's convention. Older fits without this
+  setting retain `"remainder"`. Supply `"facet"` or `"remainder"`
+  explicitly only when that constraint system is intended; see
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
 - ...:
 
@@ -141,8 +150,9 @@ This function automates the baseline-anchored calibration workflow:
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
     on the anchored fit.
 
-4.  Computes element-level differences (new estimate minus baseline
-    estimate) for every common element.
+4.  Compares the fixed non-Person anchor values in the new fit with
+    their supplied values. This checks constraint consistency, not
+    invariance.
 
 The helper refuses a baseline unless its current readiness record has
 `InferenceReady = TRUE`. Also confirm compatible model, score coding,
@@ -152,36 +162,53 @@ object shape and receiving-data anchor compatibility, but does not
 establish those substantive conditions. Fixing parameters can identify
 coordinates; it does not create observed common-rating links.
 
-The `model` and `method` arguments default to the baseline fit's
-settings so the calibration framework remains consistent. Elements
-present in the anchor table but absent from the new data are handled
-according to `anchor_policy`: `"warn"` (default) emits a message,
-`"error"` stops execution, and `"silent"` ignores silently.
+Only `model`, `method`, the centering convention and MML integration
+mode inherit baseline settings automatically. Supply other settings
+explicitly through `...`, including rubric bounds, category policy,
+facet orientation, PCM/GPCM facet roles and any population model.
+RSM/PCM MML without a population model uses a fixed standard-normal
+ability distribution; anchors do not automatically estimate a new
+cohort's mean or variance.
 
-The returned `drift` table is best interpreted as an anchored
-consistency check. When a facet is fixed through `anchor_facets`, those
-anchored levels are constrained in the new run, so their reported
-differences are not an independent drift analysis. For genuine
-cross-wave drift monitoring, fit the waves separately and use
-[`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md)
-on the resulting fits.
+The table fixes locations only: thresholds and GPCM slopes are
+re-estimated. Use
+[`extract_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+and
+[`score_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+when the question is scoring against a complete fixed calibration.
+Partial anchors retain the centering restrictions described in
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md);
+this is not an unrestricted fixed-common-parameter linking
+implementation for arbitrary new levels. Elements present in the anchor
+table but absent from the new data are handled according to
+`anchor_policy`: `"warn"` (default) emits a message, `"error"` stops
+execution, and `"silent"` ignores silently.
 
-Element-level differences are calculated for every element that appears
-in both the baseline and the new calibration: \$\$\Delta_e =
-\hat{\delta}\_{e,\text{new}} - \hat{\delta}\_{e,\text{base}}\$\$ An
-element is **flagged** when \\\|\Delta_e\| \> 0.5\\ logits or
-\\\|\Delta_e / SE\_{\Delta_e}\| \> 2.0\\, where \\SE\_{\Delta_e} =
-\sqrt{SE\_{\mathrm{base}}^2 + SE\_{\mathrm{new}}^2}\\. `SE_Diff` is a
-plug-in independence calculation. It does not propagate baseline-anchor
-uncertainty or cross-fit covariance, and anchored estimates in the new
-fit are constrained rather than independently re-estimated.
-Consequently, `Drift_SE_Ratio` and `Flag` are descriptive consistency
-screens, not formal z tests or calibrated error-rate decisions.
+The returned `drift` table contains only non-Person anchor rows that
+match the new data. Unanchored common levels and Person levels are
+absent. The compared values are fixed by construction, so zero
+differences do not show that raters or tasks remained stable. For
+separate cross-wave screening, fit the waves independently and use
+[`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md),
+retaining its offset and uncertainty limitations.
+
+Differences compare each retained fixed value to the supplied anchor:
+\$\$\Delta_e = \hat{\delta}\_{e,\text{new}} -
+\hat{\delta}\_{e,\text{base}}\$\$ An element is **flagged** when
+\\\|\Delta_e\| \> 0.5\\ logits or \\\|\Delta_e / SE\_{\Delta_e}\| \>
+2.0\\, where \\SE\_{\Delta_e} = \sqrt{SE\_{\mathrm{base}}^2 +
+SE\_{\mathrm{new}}^2}\\. `SE_Diff` is a plug-in independence
+calculation. It does not propagate baseline-anchor uncertainty or
+cross-fit covariance, and anchored estimates in the new fit are
+constrained rather than independently re-estimated. Consequently,
+`Drift_SE_Ratio` and `Flag` are descriptive consistency screens, not
+formal z tests or calibrated error-rate decisions.
 
 ## Which function should I use?
 
 - Use `anchor_to_baseline()` when you have one new dataset and want to
-  place it directly on a baseline scale.
+  place it on baseline coordinates within the documented constraint
+  system.
 
 - Use
   [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md)
@@ -194,13 +221,11 @@ screens, not formal z tests or calibrated error-rate decisions.
 
 ## Interpreting output
 
-- `$drift`: one row per common element with columns `Facet`, `Level`,
-  `Baseline`, `New`, `Drift`, `SE_Baseline`, `SE_New`, `SE_Diff`,
-  `Drift_SE_Ratio`, and `Flag`. Read this as an anchored consistency
-  table. Small absolute differences indicate that the anchored re-fit
-  stayed close to the baseline scale. Flagged rows warrant review, but
-  they are not a substitute for a separate drift study on unanchored
-  common elements.
+- `$drift`: one row per retained non-Person anchor with columns `Facet`,
+  `Level`, `Baseline`, `New`, `Drift`, `SE_Baseline`, `SE_New`,
+  `SE_Diff`, `Drift_SE_Ratio`, and `Flag`. Read this as a
+  constraint-consistency table. Zero differences are expected by
+  construction and provide no independent evidence of stability.
 
 - `$fit`: the full anchored `mfrm_fit` object, usable with
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
@@ -209,9 +234,11 @@ screens, not formal z tests or calibrated error-rate decisions.
 
 - `$diagnostics`: pre-computed diagnostics for the anchored calibration.
 
-- `$baseline_anchors`: the anchor table fed to
-  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-  useful for reviewing which elements were constrained.
+- `$baseline_anchors`: the candidate table fed to
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+  Some rows may be excluded when `anchor_policy` permits unmatched IDs.
+  Inspect `$fit$config$anchor_review$anchors` for the retained direct
+  constraints.
 
 ## Typical workflow
 
@@ -221,8 +248,9 @@ screens, not formal z tests or calibrated error-rate decisions.
 
 3.  Call `res <- anchor_to_baseline(new_data, fit1, ...)`.
 
-4.  Inspect `summary(res)` to confirm the anchored run remains close to
-    the baseline scale.
+4.  Inspect `summary(res)` for numerical readiness and fixed-value
+    consistency; neither establishes anchor invariance or a successful
+    substantive link.
 
 5.  For multi-wave drift monitoring, fit waves separately and pass the
     fits to
@@ -242,28 +270,31 @@ screens, not formal z tests or calibrated error-rate decisions.
 ## Examples
 
 ``` r
-# \donttest{
-# Deliberately linked teaching waves: both retain the same rater and
-# criterion identities from one synthetic calibration design.
-toy <- load_mfrmr_data("example_core")
-people <- unique(toy$Person)
-# Two balanced 12-Person waves retain every Rater and Criterion.
-d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
-d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
+# Packaged synthetic teaching data; no data-generation code is needed.
+ratings <- load_mfrmr_data("example_core")
+people <- unique(ratings$Person)
+# Two balanced 24-Person waves retain every Rater and Criterion.
+d1 <- ratings[ratings$Person %in% people[1:24], , drop = FALSE]
+d2 <- ratings[ratings$Person %in% people[25:48], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "MML", quad_points = 7, maxit = 30)
+                 method = "MML", rating_min = 1, rating_max = 4,
+                 category_policy = "preserve")
 res <- anchor_to_baseline(d2, fit1, "Person",
                           c("Rater", "Criterion"), "Score",
-                          anchor_facets = "Criterion")
+                          anchor_facets = "Criterion", anchor_policy = "error",
+                          rating_min = 1, rating_max = 4,
+                          category_policy = "preserve")
 summary(res)
 #> --- Anchored Fit Summary ---
 #> Inference-ready: TRUE 
 #> Optimizer returned code 0: TRUE | Status: converged 
-#> Anchors used: 4 | Common elements: 4 | Flagged: 0 
+#> Anchor candidates: 4 | Matched non-Person anchors: 4 | Flagged: 0 
 #> 
-#> Drift by facet:
+#> Fixed-anchor differences check constraints, not stability across administrations.
+#> Fixed-anchor differences by facet:
 #>      Facet N Mean_Drift Max_Drift N_Flagged
 #>  Criterion 4          0         0         0
+# These fixed-value differences are not a test of Criterion stability.
 head(res$drift[, c("Facet", "Level", "Drift", "Flag")])
 #> # A tibble: 4 × 4
 #>   Facet     Level        Drift Flag 
@@ -274,10 +305,9 @@ head(res$drift[, c("Facet", "Level", "Drift", "Flag")])
 #> 4 Criterion Organization     0 FALSE
 res$baseline_anchors[1:3, ]
 #> # A tibble: 3 × 3
-#>   Facet     Level     Anchor
-#>   <chr>     <chr>      <dbl>
-#> 1 Criterion Accuracy  0.210 
-#> 2 Criterion Content  -0.443 
-#> 3 Criterion Language  0.0979
-# }
+#>   Facet     Level    Anchor
+#>   <chr>     <chr>     <dbl>
+#> 1 Criterion Accuracy  0.202
+#> 2 Criterion Content  -0.480
+#> 3 Criterion Language  0.130
 ```

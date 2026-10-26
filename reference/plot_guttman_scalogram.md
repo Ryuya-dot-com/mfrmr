@@ -63,6 +63,13 @@ plot_guttman_scalogram(
 An `mfrm_plot_data` object whose `data` slot bundles the scalogram
 matrix and the optional unexpected-response overlay.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## Session plot defaults
 
 Set `options(mfrmr.plot_preset = "publication")` to choose a session
@@ -101,8 +108,9 @@ or diagnostic thresholds.
 ## See also
 
 [`unexpected_response_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/unexpected_response_table.md)
-for the case-level review of the cells flagged in the overlay;
-[`plot_rater_agreement_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_rater_agreement_heatmap.md)
+for the case-level review of the cells flagged in the overlay; [plot(x,
+type = "agreement", view =
+"heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 for a complementary rater-pair view of the same residual structure;
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
 for the underlying diagnostics bundle.
@@ -110,11 +118,10 @@ for the underlying diagnostics bundle.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
-p <- plot_guttman_scalogram(fit, draw = FALSE)
+p <- plot(fit, type = "guttman", draw = FALSE)
 dim(p$data$matrix)
 #> [1] 40  4
 # Look for: a clean monotone "staircase" of higher scores in the
@@ -122,5 +129,4 @@ dim(p$data$matrix)
 #   rows are sorted by person ability. Cells circled by the
 #   unexpected-response overlay break the staircase and warrant
 #   case-level review with `unexpected_response_table()`.
-# }
 ```

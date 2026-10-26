@@ -53,7 +53,8 @@ normalize_conquest_overlap_tables(
 - conquest_item_estimate:
 
   Column in `conquest_item_estimates` that stores item estimates.
-  `"auto"` tries aliases such as `Estimate`, `Est`, and `Facility`.
+  `"auto"` tries `Estimate` and `Est`. Other columns must be specified
+  explicitly and converted to difficulty logits before review.
 
 - conquest_case_person:
 
@@ -152,14 +153,17 @@ summary(normalized)$normalization_scope
 #> 2     Raw ConQuest text parsing      not performed
 #> 3               Bundle matching deferred to review
 #> 4        Pre-review table check      none detected
+#> 5 Generated estimation metadata            unknown
 #>                                                             Evidence
 #> 1                                              7 standardized row(s)
-#> 2            already extracted CSV/TSV/TXT or data.frame inputs only
+#> 2      estimates are extracted from CSV/TSV/TXT or data.frame inputs
 #> 3 review_conquest_overlap() matches rows against the exported bundle
 #> 4                  0 duplicate ID(s); 0 non-numeric estimate cell(s)
-#>                                                                               Interpretation
-#> 1        Population, item, and case tables have been converted to the mfrmr review contract.
-#> 2             This object does not prove that raw ConQuest report text was parsed correctly.
-#> 3 Identifier matching and numerical comparison are intentionally handled by the review step.
-#> 4        Resolve duplicate IDs or non-numeric estimates before treating the review as clean.
+#> 5       optional report_file in normalize_conquest_overlap_exports()
+#>                                                                                                                   Interpretation
+#> 1                                            Population, item, and case tables have been converted to the mfrmr review contract.
+#> 2                       No general report parser is used; optional generated estimation metadata are described separately below.
+#> 3                                     Identifier matching and numerical comparison are intentionally handled by the review step.
+#> 4                                            Resolve duplicate IDs or non-numeric estimates before treating the review as clean.
+#> 5 Stopping/model metadata are separate from estimate extraction; they do not establish numerical precision or common input data.
 ```

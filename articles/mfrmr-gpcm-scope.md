@@ -1,5 +1,12 @@
 # GPCM scope and current limitations
 
+For the choice between RSM, PCM, GPCM and dependence extensions, start
+with [Choose a model and estimator for your
+assessment](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.md).
+It explains which questions warrant additional complexity and compares
+JML, corrected JML, MML and CML. This article then supplies the
+GPCM-specific details.
+
 `mfrmr` includes a Generalized Partial Credit Model (GPCM; Muraki 1992)
 in which one selected facet supplies level-specific discriminations. MML
 permits a different facet to supply category steps; JML requires a
@@ -57,6 +64,80 @@ intervals or ordinary fit tests. Conditional probabilities, descriptive
 residuals and new-Person/portable EAP have separate saved-output routes
 below. The approximate location SEs and conditional Person posterior
 intervals in the ordinary JML workflow answer different questions.
+
+### Does an unavailable interval mean interval estimation is impossible?
+
+No. Distinguish the **target**, the **method**, whether this calculation
+returned bounds, and what supports their interpretation. A rater
+location, a discrimination and a new Person’s ability need different
+uncertainty calculations. Changing a covariance estimate does not change
+the target or remove estimation bias.
+
+| Result | Meaning | What to inspect or do |
+|----|----|----|
+| Complete approximate MML interval | The requested method returned both bounds under its numerical checks. | Read the model, scale and `InferenceReview`; numerical success does not guarantee nominal sampling coverage. |
+| Experimental GMFRM interval with `CIEligible = TRUE` and `CoverageQualified = FALSE` | Bounds are available, while nominal coverage remains unestablished. | Retain the bounds and qualification together in tables, reports and exports. `FALSE` is not a measured coverage rate. |
+| Partial profile interval | One endpoint was computed; the other search remains unresolved. | Inspect `apa_table(ci, which = "profile_endpoints")`. Do not label the missing side infinite or report the computed side as a calibrated one-sided interval. |
+| Corrected-JML `RootSE` | Local variation around the adjusted-equation solution. | Inspect residual-bias limitations and the declared sampling law. Do not construct structural truth intervals as estimate plus or minus 1.96 times RootSE. |
+| Conditional Person posterior interval | Posterior uncertainty with calibration held fixed. | Report that conditioning; this is not full calibration uncertainty or a structural slope interval. |
+| External Bayesian credible interval | Posterior uncertainty under the specified likelihood and priors. | [`export_mfrm_model()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.md) supplies code, not fitted intervals. Check sampling diagnostics, endpoint precision and prior sensitivity after running the external analysis. |
+
+These distinctions also apply when an output has no `CoverageQualified`
+field: its absence does not establish coverage. A legitimately unbounded
+interval is different from an unresolved search. Methods with justified
+approximations can be useful without exact finite-sample guarantees, but
+the approximation and known adverse evidence must remain visible.
+
+The interval guide locates the public routes without fitting a model:
+
+``` r
+
+interval_routes <- mfrmr::mfrmr_interval_guide("gpcm")
+interval_routes[interval_routes$Route %in% c(
+  "Fixed-facet model/sandwich intervals", "GPCM relative-slope intervals",
+  "GMFRM component-slope intervals", "GPCM slope profile intervals",
+  "Corrected-JML local root uncertainty"
+), c("Route", "PrimaryHelper", "GPCMStatus")]
+#>                                   Route
+#> 16 Fixed-facet model/sandwich intervals
+#> 28        GPCM relative-slope intervals
+#> 29      GMFRM component-slope intervals
+#> 30         GPCM slope profile intervals
+#> 31 Corrected-JML local root uncertainty
+#>                                                                              PrimaryHelper
+#> 16                        mfrm_facet_intervals(fit, facet, method = "model", level = 0.95)
+#> 28                                             confint(fit, parm = "slopes", level = 0.95)
+#> 29                                             confint(fit, parm = "slopes", level = 0.95)
+#> 30 confint(fit, parm = "slopes", method = "profile", slope = selected_slope, level = 0.95)
+#> 31                             summary(fit)$tables$uncertainty; summary(fit)$tables$slopes
+#>                                                                                          GPCMStatus
+#> 16 supported_with_caveat one-family MML locations; experimental two-family; no JML or GPCM sandwich
+#> 28                                         supported_with_caveat; eligible one-family GPCM MML only
+#> 29                                           experimental two-family MML only; coverage unqualified
+#> 30                                       experimental one- and two-family MML only; no JML profiles
+#> 31                                experimental corrected JML only; structural intervals unavailable
+```
+
+In particular, one-family MML location intervals use
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md);
+they are separate from `confint(fit, parm = "slopes")`. The location
+helper supplies pointwise Wald intervals using the full joint marginal
+information, including estimated slopes, steps and population
+parameters. Their asymptotic justification requires independent Persons,
+a correctly specified, identified model with an interior true parameter,
+a fixed number of structural parameters, nonsingular limiting
+information and accurate integration and optimization. Adding Persons
+must add information in the relevant directions. The same-fit
+population-SD-standardized contrasts use the full delta method,
+including SD uncertainty and cross-covariance. These are supported
+approximations within the helper’s declared scope; numerical checks do
+not guarantee small-sample coverage or robustness to a misspecified
+ability distribution. GPCM sandwich and JML structural intervals remain
+unavailable, and the optional slope profiles and two-family location
+extensions retain their separate experimental status. The research
+existence of an alternative method does not make it an implemented
+public API. Conversely, an unsupported API route is not a mathematical
+impossibility result for every method.
 
 ## An explicit corrected-JML workflow
 
@@ -268,6 +349,25 @@ has free locations and slopes and owns centered category steps. This is
 an explicit fixed-N(0,1) model choice, not an automatic change to the
 usual GPCM population model.
 
+These constraints fix the units and the division of each effective slope
+into two components. They do not prove that the response data identify
+those components. For example, take two tasks, two raters and binary
+ratings, with each Person providing only one rating. Even if all four
+task-rater crossings are observed across different Persons, there are at
+most four independent response probabilities. The model has six free
+parameters: three locations and three log slopes. More Persons with the
+same assignments cannot identify all six. The marginal-dimension check
+withholds joint-information inference with a reason; it does not turn
+optimizer points into unique estimates.
+
+Several ratings of the same Person can instead supply information
+through their joint response pattern. The required design depends on the
+model; there is no universal number of Persons or ratings that
+guarantees identification. A connected task-rater graph checks the
+component decomposition, whereas identification of the latent response
+distribution requires a separate argument. Passing the package’s
+necessary checks does not supply a global proof.
+
 For an empirical writing-data example, including the observed assignment
 pattern and the limits of the resulting fit, see [Start from an actual
 rating table](#start-from-an-actual-rating-table).
@@ -288,7 +388,7 @@ fit_joint <- fit_mfrm(
   noncenter_facet = "Assessor", gpcm_mml_identification = "fixed_standard_normal",
   mml_engine = "em", rating_min = 0, rating_max = 3,
   category_policy = "preserve", quad_points = 31, maxit = 500,
-  em_score_tol = 1e-6
+  em_score_tol = 1e-6, progress = TRUE
 )
 summary(fit_joint)
 context <- expand.grid(
@@ -297,7 +397,7 @@ context <- expand.grid(
 )
 curves <- mfrm_curve_intervals(fit_joint, context)
 plot(curves) # provisional fitted probabilities; no confidence intervals
-ci_joint <- confint(fit_joint) # experimental component-slope intervals
+ci_joint <- confint(fit_joint, parm = "slopes") # experimental component-slope intervals
 plot(ci_joint)
 apa_table(ci_joint, which = "checks")
 # For a figure without headings or notes:
@@ -314,6 +414,52 @@ numerical BFGS M steps. Inspect the numerical stopping result and retain
 nonconverged outcomes. Numerical convergence alone does not certify
 identification, an adequate quadrature order, interval coverage or the
 one-ability assumption.
+
+To let the package choose the point count up to a ceiling, add these
+arguments to the same
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+call:
+
+``` r
+mml_integration = "auto",
+mml_accuracy_control = list(max_points = 241)
+```
+
+The ceiling includes the finer reference rules used for accuracy checks.
+With the starting order 31, the fixed-EM route can fit/check at 31/61,
+61/121 and, only if needed, 121/241. It stops as soon as the Person
+likelihood, EAP and posterior-SD comparisons and existing
+local-information checks pass. An interval can pass its own checks while
+Person moments still require a finer rule. The automatic route preserves
+EM and its neutral initialization; with `mml_engine="direct"`, it
+instead preserves adaptive integration and the selected `gpcm_mml_start`
+policy at each order. It does not switch engines.
+
+Inspect `fit_joint$config$mml_accuracy$history` and `$per_person` after
+success. If the ceiling is exhausted or a different numerical check
+fails, capture the `mfrmr_mml_accuracy_error` condition to inspect its
+`history` and `last_candidate`; it is not an accuracy-qualified fit.
+`history$Status` is `check_refused` when a prerequisite check stops
+refinement. Inspect the failed rows of `last_candidate$accuracy$checks`
+for the specific check. This status does not establish whether
+integration, optimization or identification caused the failure: a failed
+higher-order information check also stops refinement. Older saved
+histories use `nonintegration_refusal` for the same stopping rule.
+Neither label establishes a boundary or whether increasing points would
+help. The ceiling limits quadrature order, not total time or later
+separately requested inference. Automatic success retains the
+experimental identification, boundary and coverage qualifications.
+
+Use `progress = TRUE` to display the current phase and elapsed time. The
+indicator reports EM iterations, direct objective evaluations, adaptive
+starts, automatic quadrature stages and precision checks. An iteration
+limit or a maximum number of stages is a computation budget, not percent
+completion: the fit can stop early, require another stage or fail a
+check. No remaining-time forecast is reported. Display follows the `cli`
+console settings and is cleared on success, error or interruption; the
+default `progress = FALSE` is silent. Progress is not part of a saved
+calibration. Existing bias-collection and simulation workflows have
+their own progress displays.
 
 To use adaptive integration, keep the same model arguments and replace
 `mml_engine = "em"` with
@@ -336,6 +482,21 @@ results/reports include the comparison table. `maxit` applies separately
 to EM seed iterations and each direct optimizer stage. A better starting
 value does not establish global optimality or coverage.
 
+For an explicit comparison of numerical starting values, pass a named
+list of at least two native free-parameter vectors to `gpcm_mml_start`.
+For example, after the same model has been fitted,
+`p <- fit_joint$opt$par` gives its native coordinates and
+`list(previous = p, neutral = 0 * p)` compares that point with the
+neutral vector. Use those vectors with the adaptive/direct settings
+above; the default EM initialization is then omitted. Both vectors are
+evaluated and optimized under the requested adaptive likelihood. An
+earlier estimate is a starting value only: its convergence status,
+information matrix and inference or scoring qualification do not carry
+over. Preserve the same model/level coding; use native log slopes, not
+printed positive slopes. The exact roster is retained in the fit and
+quadrature-refit inputs. Ordinary interval, scoring and
+portable-calibration checks still apply to the resulting public fit.
+
 If ordinary polishing stops before passing the gradient review, adaptive
 GPCM with a fixed population and at most 64 free parameters can use one
 existing curvature restart. It requires positive, well-conditioned
@@ -354,15 +515,22 @@ and saved reports.
 preserves the chosen engine and integration method and initialization
 policy when refitting at additional orders. Both support separately
 checked experimental component log-Wald intervals through
-`confint(fit)`. Adaptive information differentiates the moving
-integration nodes, their scale and Jacobian, and checks higher-order
-adaptive integration at the saved parameters. Both engines also support
-descriptive posterior residuals. Their response integration preserves
-the fitting method and checks each row at a higher order. **Adaptive
-profiles remain unavailable.** The profile examples below require
-fixed-grid EM. Do not change a saved fit’s integration label to enable
-them. Convergence, stability across orders and sampling coverage are
-separate checks.
+`confint(fit, parm = "slopes")`. Adaptive information differentiates the
+moving integration nodes, their scale and Jacobian, and checks
+higher-order adaptive integration at the saved parameters. Both engines
+also support descriptive posterior residuals. Their response integration
+preserves the fitting method and checks each row at a higher order. An
+explicit component profile is available with either integration method:
+`ci <- confint(fit_joint, parm = "slopes", method = "profile", slope = c(Task = "t1"))`,
+using the actual fitted owner and level names. It reoptimizes the other
+parameters at each fixed log slope. Adaptive nodes, scales and Jacobians
+are recalculated at every trial, and the likelihood and nuisance
+gradients must agree at a higher quadrature order.
+`apa_table(ci, which = "profile_checks")` retains both starts;
+`which = "profile_endpoints"` distinguishes numerical failures from
+completed endpoints. Do not change a saved fit’s integration label to
+switch methods. Convergence, stability across orders and sampling
+coverage are separate checks.
 
 The curve function keeps its existing name and result class, but **does
 not provide intervals for two families**: SEs and bounds are missing and
@@ -373,14 +541,40 @@ reliable. The first and second family’s numerical slopes are retained
 separately in `fit_joint$slopes`; `PrimaryEstimate` remains unavailable
 pending inferential qualification.
 
-For a separate uncertainty check, `confint(fit_joint)` gives
-**experimental component-slope intervals** when its numerical checks
-pass. For example, the task slope describes a task relative to the
-geometric-average task slope; the assessor slope is on the fixed ability
-scale. Neither measures scoring accuracy. A wide interval means that the
-data give little precision about that component. The two sets have
-different scale references: do not rank tasks and assessors together or
-treat one as a universal quality threshold.
+For complete probability curves and cumulative 50% thresholds at chosen
+rating contexts, use
+`category_curves_report(fit_joint, newdata = contexts)`, where
+`contexts` contains each non-Person facet and no `Theta` column. The
+same call supports a one-family GPCM MML fit. Each row identifies a
+separate curve; the returned `curve_profiles$InputRow` links it to the
+saved context. Facet locations, interactions and the effective product
+discrimination remain in the predictor. This differs from the
+zero-location reference profiles returned when `newdata` is omitted
+(which remain unavailable for two-family fits).
+
+Read `cumulative_boundaries$ThurstonianThreshold` for the native-scale
+ability where the probability of the indicated upper category or higher
+is .5. `AdjacentThreshold` instead equates the two adjacent
+probabilities; `AndrichThreshold` is the centered step offset. Positive
+slopes automatically order cumulative thresholds even if an intermediate
+category is never modal. Do not use that ordering alone to conclude that
+categories function well. The calculation searches only `theta_range`;
+missing roots carry a status and are never replaced by an endpoint.
+These roots do not depend on the plotting grid or output rounding. SEs
+and confidence limits are not computed, and source convergence/readiness
+are retained. [`summary()`](https://rdrr.io/r/base/summary.html),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+work on a saved report without recalibration.
+
+For a separate uncertainty check, `confint(fit_joint, parm = "slopes")`
+gives **experimental component-slope intervals** when its numerical
+checks pass. For example, the task slope describes a task relative to
+the geometric-average task slope; the assessor slope is on the fixed
+ability scale. Neither measures scoring accuracy. A wide interval means
+that the data give little precision about that component. The two sets
+have different scale references: do not rank tasks and assessors
+together or treat one as a universal quality threshold.
 
 The approximation uses the inverse full observed marginal information,
 including uncertainty in locations and steps and covariance between the
@@ -389,6 +583,324 @@ SD fixed at one. The default supplies model-based log-Wald intervals,
 without contrasts or cluster adjustments. `simultaneous = "bonferroni"`
 adjusts for all displayed components; no individual unit-slope p-values
 are provided.
+
+These intervals use the standard asymptotic MML/Wald construction; their
+experimental status concerns this implementation’s supported scope and
+finite-sample performance. It does not mean that GMFRM has no
+established inference methods. The approximation requires an
+identifiable interior solution, nonsingular information and appropriate
+independent-Person sampling under the response and population
+assumptions. Passing numerical checks does not establish nominal
+coverage in a small or sparsely linked sample. The asymptotic argument
+holds the number of task/rater parameters fixed as informative
+independent Person records accumulate. A study that also increases the
+number of raters or tasks needs a separate justification. The numerical
+integration and optimization errors must be negligible relative to
+sampling uncertainty; a fixed quadrature order is not an automatic
+guarantee as the sample grows. These requirements also apply to
+one-family MML intervals.
+
+[Uto and Ueno (2020, Sections
+6–7)](https://doi.org/10.1007/s41237-020-00115-7) provide the direct
+product-slope model and Bayesian HMC estimation. Their
+parameter-recovery experiment evaluates RMSE and bias, not interval
+coverage. Posterior credible intervals would additionally depend on
+their structural parameter priors; the current MML intervals are not
+Bayesian credible intervals. Related MML implementations, including
+[`sirt::rm.facets()`](https://alexanderrobitzsch.github.io/sirt/reference/rm.facets.html),
+also provide standard errors, but their slope/intercept restrictions
+must be matched before making numerical comparisons. The present full
+marginal information has an independent reference based on [Louis
+(1982)](https://doi.org/10.1111/j.2517-6161.1982.tb01203.x). Numerical
+agreement with that reference checks the calculation, not its
+finite-sample coverage. A different interval method is not automatically
+required whenever an approximate method has a documented limitation.
+
+### What the paired automatic-integration study supports
+
+The package implements the two-family response equation of [Uto and Ueno
+(2020, equation 9)](https://doi.org/10.1007/s41237-020-00115-7) with
+explicit scale constraints, marginal maximum likelihood, numerical
+diagnostics and conditional scoring. This is a GMFRM implementation; it
+is not a new proposal of that response model or a reproduction of its
+Bayesian estimator. Numerical admission of an experimental interval and
+demonstrated nominal coverage are different claims.
+
+A paired study evaluated 1,200 datasets with fixed-grid EM and adaptive
+direct MML: 2,400 fits of 1,200 simulated datasets. The 12 conditions
+crossed 60, 240 or 960 Persons, two rating assignments and generating
+ability SD .5 or 1, with 100 replications each. The four design/SD
+conditions at a given N share random draws within each replication, so
+the entire set is not independent. Each condition has 100 independent
+replications; pooled comparisons account for the shared replication
+blocks. This original procedure preceded the per-Person optimizer review
+described below; later replays are reported separately. There were three
+tasks, six raters and three score categories. Each source had 6N
+ratings. In the common-Person design, 20% of Persons were rated by all
+six raters and the remainder by one, on all three tasks. In the
+rotating-pair design, every Person was rated by two raters on all tasks.
+The two designs therefore had the same total rating count and different
+overlap. Each rater saw N/3 distinct Persons: 20, 80 or 320. The 6N
+rating rows are not 6N independent Persons.
+
+Both generating populations were normal, with truth transformed to the
+fitted N(0,1) scale. This is not a test of robustness to a wrong
+population shape. The study used no anchors, weights,
+differential-functioning interactions, unobserved assigned scores or
+extra within-task response dependence. Both engines began at 31 points
+with a 241-point ceiling including reference rules. Direct used
+`gpcm_mml_start = "neutral_em"`; its costs include both adaptive starts
+and EM initialization. All attempts, including refusals, remain in the
+delivery denominator.
+
+| Calibration Persons | EM admitted / attempted | Direct admitted / attempted | EM median / 90th percentile seconds | Direct median / 90th percentile seconds |
+|---:|---:|---:|---:|---:|
+| 60 | 253/400 (63.25%) | 277/400 (69.25%) | 13.1 / 27.4 | 29.0 / 93.2 |
+| 240 | 378/400 (94.50%) | 400/400 (100%) | 14.5 / 29.2 | 104.4 / 211.0 |
+| 960 | 399/400 (99.75%) | 400/400 (100%) | 40.6 / 82.4 | 324.0 / 492.5 |
+
+Admission means the automatic numerical checks passed, including those
+needed for the component-slope intervals. It does not establish a global
+maximum, design-wide identification or calibrated decisions. At N=60,
+direct succeeds where EM refuses in 68 sources, while EM succeeds where
+direct refuses in 44; neither engine dominates on every source. The
+paired delivery difference is 6 percentage points, with Monte Carlo SE
+about 2.41 points after averaging the paired difference across the four
+conditions within each of the 100 independent replication blocks.
+
+These elapsed times describe the original full
+fit/check/component-interval workflow on one Mac with ten concurrent
+single-thread workers. They include failures and are not isolated engine
+benchmarks or forecasts for another computer. Later exact calculation
+reuse does not retroactively change this timing record. At N=960, a
+direct attempt took as long as about 32 minutes. `max_points` does not
+cap that duration or optimizer iterations.
+
+Profiling those saved runs attributes about 75–77% of the fixed-EM stage
+cost at N=240/960 to information and precision checks. A subsequent
+exact probability-reuse change shortened one N=60 refusal workflow from
+3.17 to 2.45 seconds; corresponding successful N=240/960 workflows
+changed from 10.93 to 10.59 and 65.89 to 65.19 seconds. These are means
+of two sequential paired repetitions per saved input, including interval
+computation where available, with identical output objects. They
+illustrate the limited scope of that optimization; small timing
+differences are noisy and do not establish a package-wide speedup. The
+numerical admission criteria were not relaxed.
+
+After a successful automatic two-family fit, subsequent slope and
+location intervals reuse its complete numerical qualification in the
+same R session. Only the latest qualified automatic fit is retained, and
+the full fitted object, `mfrmr.max_information_bytes` and
+`mfrmr.use_cpp11_backend` settings must be unchanged. Retained source
+and qualification together must fit within that memory budget. Changed
+inputs or settings, warnings, refusals and a new R session require fresh
+checks. This transient reuse does not alter saved model objects or
+suppress the intervals’ experimental warnings. It avoids repeating
+completed checks; it does not make a previously refused fit eligible.
+
+A separate paired check of this qualification reuse, using two
+sequential single-thread repetitions per saved input, changed the mean
+full workflow time from 10.75 to 7.28 seconds at N=240 and from 67.59 to
+47.17 seconds at N=960. Complete fit and interval objects were
+identical. The N=60 refusal remained a refusal, with times of 2.50 and
+2.57 seconds. These selected examples show savings from eliminating a
+repeated successful check, not a general runtime guarantee or improved
+inferential performance.
+
+The component-slope intervals were pointwise nominal 95% log-Wald
+intervals. In the N=240 rotating-pair, SD=.5 condition, Task t3
+contained truth in 89/100 sources for both engines (Monte Carlo 95%
+interval approximately 81.2–94.4%). This illustrates a coverage
+limitation; it is not a multiplicity-adjusted test across all correlated
+targets. With only 100 replications per condition, a true 95% coverage
+rate has Monte Carlo SE about 2.2 percentage points. The study cannot
+certify coverage within one percentage point of nominal. It evaluates
+component slopes, not all location contrasts, Person-score intervals,
+rater flags or decision thresholds.
+
+Parameter bias also needs its denominator. For example, the N=60
+rotating-pair, SD=.5 direct fits had mean log-slope error -0.435 for
+rater r3 (Monte Carlo SE .128), among only 54 admitted sources. This is
+conditional on admission; the other 46 do not become accurate estimates
+or zero errors. The result does not establish a general bias correction.
+A larger N improves delivery in this grid, but does not by itself
+qualify every slope or feedback decision.
+
+### Saved-input replay after aligning optimizer and interval checks
+
+The revised direct procedure was applied to all 400 retained N=60
+datasets, using the original starting policy, BFGS, `maxit = 500`,
+`reltol = 1e-10`, 31 initial points and a 241-point ceiling. These
+inputs had already been inspected during diagnosis: this is a matched
+replay, not an independent held-out confirmation study. The other 2,000
+original study fits were not repeated. At these settings, the gradient
+threshold is unchanged at N=240/960; one retained control at each of
+those sample sizes reproduced the parameters, objective and complete
+intervals exactly.
+
+| Assignment     | Generating SD | Original admitted / 100 | Revised admitted / 100 |
+|----------------|--------------:|------------------------:|-----------------------:|
+| Common Persons |            .5 |                      56 |                     75 |
+| Rotating pairs |            .5 |                      54 |                     69 |
+| Common Persons |             1 |                      89 |                     98 |
+| Rotating pairs |             1 |                      78 |                     95 |
+
+Overall delivery rose from 277/400 (69.25%) to 337/400 (84.25%): 61
+newly admitted sources and one newly refused source. The paired gain is
+15 percentage points, with Monte Carlo SE 1.81 points from the 100
+replication block means. All 61 gains came from the original
+stationarity refusals. Same-rule likelihoods did not worsen in any of
+449 shared-stage comparisons. The revised procedure still refuses 63
+sources: 23 at direct convergence, 33 at joint information, five at the
+integration ceiling and two at the stationarity check. These are
+stopping locations, not a proof of a unique underlying cause. The weak-
+information example below explains the newly refused source.
+
+Improved delivery does not establish nominal coverage. In the
+rotating-pair, SD=1 condition, rater r1’s interval contained truth in 81
+of 95 admitted sources: 85.3%, with an exact Monte Carlo interval of
+approximately 76.5–91.7%. The original result was 69/78. The 78 sources
+admitted by both procedures retained 69 inclusions; the 17 newly
+admitted sources added 12. Thus the fraction of all 100 attempts that
+both returned an interval and included truth increased from 69% to 81%,
+while coverage conditional on receiving an interval fell. This is a
+descriptive target-specific result, without multiplicity adjustment
+across the examined components. The component intervals remain
+experimental and coverage-unqualified. In the rotating-pair SD=.5
+condition, rater r3’s conditional mean log-slope error also remained
+substantial: about -.422 among 69 admitted sources, compared with -.435
+among the original 54.
+
+The replay used eight concurrent single-thread workers; its elapsed
+times cannot be interpreted as a controlled speed comparison with the
+original study’s ten workers. Extra polishing can add computation. Its
+purpose here is a more adequately finished estimate under the existing
+precision criteria.
+
+### Planning a practical two-family analysis
+
+There is no universal minimum N. The N=240 design is a useful reference
+when planning a comparable calibration study, not a validated minimum or
+a claim that N=240 is sufficient for a different rubric or rater roster.
+N=60 had substantial delivery losses even in correctly specified
+simulated models. Increasing calibration N can improve task/rater
+estimates; it does not remove the uncertainty in a Person scored on only
+a few performances.
+
+Before collecting ratings, specify which quantity must be precise: a
+Person score, a task/rater slope, a severity contrast or a
+classification decision. Then specify an acceptable interval width or
+decision error and examine the proposed assignment, rather than applying
+a Persons-per-parameter rule. Check category use by rater, overlap
+across Persons and tasks, and whether the model’s
+conditional-independence assumption is plausible when several raters
+score the same performance. A connected graph is necessary for the
+component decomposition but does not prove marginal identification.
+Sparse categories or weakly linked rater/task blocks require design
+changes or a scientifically defensible simpler model; deleting failed
+fits is not a remedy.
+
+| Recorded obstacle | What the evidence establishes | Useful response |
+|----|----|----|
+| `max_points` exhausted | The selected integration family did not meet the requested precision within its ceiling. | Inspect likelihood, EAP, posterior-SD and information changes. A larger ceiling or an explicitly chosen adaptive fit is a sensitivity analysis; do not weaken tolerances to obtain a result. |
+| `EM convergence` | In this study all 53 such cases reached 500 EM iterations without meeting the score criterion. | Inspect the saved score trajectory. More iterations may help a decreasing score; a plateau requires a different numerical strategy or model/design review. |
+| `Stationary local maximum` | This combines fresh score, curvature-scaled displacement and inverse-residual checks. Of 69 direct refusals in the original study, 63 failed only the fresh per-Person score threshold. | Inspect the individual diagnostics. The original optimizer tolerance was looser than the per-Person interval criterion at small N. New fits align that review as described below; fresh derivative and curvature checks still apply. This label alone is not proof of nonidentification. |
+| `Joint information` or `Refined quadrature information` | Unregularized usable curvature was not established at the required rule. | Examine category support, curvature, different starting points and refined integration. Do not treat a regularized inverse as equivalent to the required information. |
+
+New two-family adaptive direct fits use the smaller of the ordinary
+total-gradient review tolerance and `N * 1e-6`. This can activate the
+existing bounded polishing stages when `reltol <= 1e-9` (the default or
+stricter) and an optimizer returns code zero before the per-Person score
+is small enough. With a looser requested tolerance, the existing
+automatic-polishing restriction still applies; a failed gradient review
+remains a refusal. The change does not increase the requested iteration
+ceiling for any stage or change the starting-value policy. Each accepted
+polishing stage must preserve or improve the objective within roundoff.
+The fitted controls record this rule; older saved models retain their
+original convergence review. Passing the optimizer review still does not
+establish positive information, adequate integration, global optimality
+or interval coverage. A repaired score failure may reveal a later
+integration failure.
+
+One retained N=60 rotating-pair example also shows why a better
+likelihood need not make an interval available. The improved start
+reduced the negative log likelihood by about 5.8e-6, while one rater
+slope moved from .0032 to .0027. The information matrix remained
+positive definite, but its smallest eigenvalue fell from about 1.26e-6
+to 4.52e-7. The ill-conditioned-information safeguard then rejected a
+standardized Newton displacement of .000188 against its .0001 limit, at
+both 31 and 61 points. This is evidence of a weakly curved,
+insufficiently finished solution under the current numerical rule, not
+proof that no valid interval method can exist. Preserve the
+likelihood-selected solution and its refusal reason. Rater overlap,
+category support and model sensitivity warrant review; increasing the
+integration ceiling alone does not address this example.
+
+Three retained EM refined-information failures illustrate the
+distinction. At the same 31-point fitted parameters, the 61-point
+Hessian had a negative eigenvalue in all three cases. Refitting from 61
+points passed that earlier obstacle and advanced to 121 points, but the
+121/241 comparisons still failed precision checks. Thus integration can
+contribute to an information refusal. These selected probes do not
+establish the cause of every refusal or justify automatically retrying
+every failed check.
+
+Rater severity, rater discrimination and differential rater bias are
+different quantities. A low discrimination estimate is not by itself
+evidence of unfair scoring, nor a high severity estimate a calibrated
+misconduct flag. The current two-family fit excludes bias interactions
+and ordinary
+[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
+tests. Use its supported descriptive response diagnostics and retain all
+uncertainty qualifications. A feedback process requiring validated bias
+screening needs an appropriate supported model and a separately
+justified screening rule.
+
+The current two-family estimator also excludes fixed Person, task and
+rater anchors. Common Persons create overlap; they are not fixed ability
+anchors. Separately standardizing two cohorts to N(0,1) does not
+establish a common operational scale. Reusing a saved calibration to
+score supported new Persons is a separate conditional workflow and does
+not recalibrate new raters or propagate calibration uncertainty. When
+anchors or cohort linking are required, select a route whose anchor and
+uncertainty contracts support the intended operation; do not pass an
+anchor argument that the two-family route rejects. The accepted RSM/PCM
+and scoped one-family MML anchor-related outputs keep their own
+restrictions.
+
+Read older performance evidence by **target, design and procedure**, not
+only by sample size. A separate development comparison used 50 datasets
+per cell in the historical three-task/six-assessor/three-category model.
+For the common-Person assignment and generating ability SD of one, the
+original frozen procedure gave:
+
+| Calibration Persons | Intervals returned / 50 | Assessor r1-r2 contained truth / returned | Task t1 location contained truth / returned | Task t1 slope contained truth / returned |
+|----|---:|---:|---:|---:|
+| 30 | 20/50 | 20/20 | 19/20 | 18/20 |
+| 40 | 31/50 | 30/31 | 28/31 | 29/31 |
+| 60 | 46/50 | 46/46 | 44/46 | 37/46 |
+| 120 | 50/50 | 49/50 | 46/50 | 42/50 |
+| 240 | 50/50 | 49/50 | 43/50 | 48/50 |
+| 480 | 50/50 | 49/50 | 48/50 | 50/50 |
+
+The common-Person assignment includes overlap and singly assigned
+candidates; it is not a complete crossing. These are inspected
+development results, with correlated targets and substantial Monte Carlo
+uncertainty, not independent confirmation or a universal sample-size
+rule. In particular, 20/20 inclusion does not erase the 30 unavailable
+datasets. The separate N20 rank-policy correction returns intervals from
+3/50 retained sources; the other 47 still fail numerical or category
+checks. Fewer Persons than free parameters no longer causes an automatic
+model-Hessian refusal.
+
+Using an already computed, separately qualified source increases N60
+delivery to 50/50, but Task t1 slope inclusion remains 41/50; its
+location inclusion is 48/50. Local profile membership at the true slope
+gives 42/50, which does not demonstrate a coverage repair or completion
+of all interval endpoints. Thus improving convergence or changing to
+profile intervals is not by itself an answer to the sampling question.
+Keep severity contrasts, component slopes and conditional Person
+intervals distinct when deciding what to report.
 
 For one question chosen in advance, you can also examine a **profile
 likelihood interval**. It fixes that component slope at successive
@@ -400,7 +912,7 @@ not automatically remove bias or improve coverage.
 ``` r
 
 # Choose an actual level of the fitted Assessor column, for example "A1":
-# profile <- confint(fit_joint, method = "profile", slope = c(Assessor = "A1"))
+# profile <- confint(fit_joint, parm = "slopes", method = "profile", slope = c(Assessor = "A1"))
 # plot(profile) # likelihood loss, cutoff, and same-target Wald limits
 # apa_table(profile, which = "profile_endpoints")
 # res <- mfrm_results(fit_joint, include = c("fit", "plots"), compute = "never",
@@ -471,7 +983,7 @@ original fit.
 # review <- mml_quadrature_sensitivity(fit_joint, ratings,
 #                                      quad_points = c(121, 181))
 # summary(review)
-# profile_finer <- confint(review$fits$q181, method = "profile",
+# profile_finer <- confint(review$fits$q181, parm = "slopes", method = "profile",
 #                          slope = c(Assessor = "A1"))
 # apa_table(profile_finer, which = "profile_endpoints")
 ```
@@ -485,7 +997,7 @@ profile iteration budget on the same fit:
 
 ``` r
 
-# profile_longer <- confint(fit_joint, method = "profile",
+# profile_longer <- confint(fit_joint, parm = "slopes", method = "profile",
 #                           slope = c(Assessor = "A1"),
 #                           profile_control = list(maxit = 1600))
 ```
@@ -496,7 +1008,7 @@ changed settings and the original outcome; do not select the result
 simply because its interval is narrower or supports a preferred
 conclusion.
 
-The checks re-evaluate the saved model, local score rank, convergence
+The checks re-evaluate the saved model, score derivatives, convergence
 and information. They also increase the quadrature grid from q to 2q-1
 at the saved parameters. **Passing is a numerical result, not a coverage
 guarantee or proof of global identification.** A converged five-point
@@ -511,12 +1023,23 @@ warning, owner identities and checks follow plots, reports and saved
 exports; the original fit’s primary-estimate/readiness fields remain
 unchanged.
 
+Empirical Person-score rank remains a diagnostic, with an additional
+warning when deficient. It is not a prerequisite for the model-based
+interval: the observed Hessian used here is different from the empirical
+outer product of scores. For example, fewer Persons than free parameters
+forces deficient empirical score rank, but does not by itself prove that
+the observed Hessian is singular. A nonsingular Hessian still does not
+establish small-sample coverage or exclude boundary alternatives.
+Full-parameter empirical sandwich inference is unavailable; the
+model-based curvature, stationarity, derivative and integration checks
+still apply.
+
 A **small optimization residual** warning means the retained solution
 has a nonzero marginal score, but its local Newton displacement is at
 most 0.01 in joint SE units. Values above 1e-4 now retain this warning.
 This is an approximation at the saved estimate:
 [`confint()`](https://rdrr.io/r/stats/confint.html) does not refit or
-move it. The other mean-score, information, local-rank and quadrature
+move it. The other mean-score, information, derivative and quadrature
 checks still apply. Do not repeatedly tighten `em_score_tol` without
 inspecting the result: very strict settings can exhaust the EM iteration
 limit at nearly unchanged estimates. A failed **quadrature sensitivity**
@@ -623,6 +1146,85 @@ results support cautious exploration and numerical review, not a general
 guarantee for sparse designs or a recommendation that one allocation is
 better.
 
+### Estimate the same response model in Stan
+
+To inspect prior sensitivity or undertake an external Bayesian analysis,
+[`export_mfrm_model()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.md)
+writes a self-contained Stan bundle from `fit_joint`. Export does not
+refit the MML model or run a sampler.
+
+``` r
+
+stan_bundle <- export_mfrm_model(
+  fit_joint, "gmfrm-stan", format = "stan", log_slope_prior_sd = 1
+)
+model_data <- readRDS(stan_bundle$files[["model-data.rds"]])
+model_data$priors
+model_data$slope_levels
+# Review README.txt and run.R, then run Rscript run.R from the bundle directory.
+```
+
+The exported likelihood retains the product of the two slopes
+multiplying the entire adjacent-category predictor, the fixed N(0,1)
+population, source location constraints and second-owner steps. The
+first family’s log slopes sum to zero. Their normal-coordinate priors
+give each component the specified marginal log-slope SD; constrained
+components are dependent. Second-family log slopes have independent
+normal priors. Locations and step priors remain explicit as in ordinary
+model export. The defaults are starting choices for prior review, not a
+demonstrated correction for MML coverage.
+
+After sampling, `component_slopes` and `log_component_slopes` map to the
+owners and levels in `slope-levels.csv`. `run.R` saves draws in
+`fit.rds` before reporting. Its `parameter-summary.csv` contains
+explicit equal-tailed 95% credible bounds, endpoint Monte Carlo SEs,
+R-hat and bulk/tail ESS for both reported parameters and free sampling
+coordinates. `sampler-diagnostics.csv` records each chain’s divergences,
+tree-depth hits and E-BFMI; `posterior-summary.rds` retains these tables
+and interpretation notes. Read `summary-decision.csv` first for the
+sampling review and next action; `sampling-review.csv` records the
+checks and criteria. The parameter table joins original labels and
+reference/direction notes, with `value_role` and `interval_status`
+beside the numbers. Fixed values have no estimated SD or interval; their
+uncertainty fields are `NA`, not evidence of perfect precision.
+
+From the exported directory, run `Rscript run.R --summarize` to rebuild
+these reports without compiling or sampling. It replaces the report
+files and preserves the saved draws. Bounds remain visible when
+diagnostics warn: `interval_computed` means finite endpoints for a
+varying parameter, not qualified inference. Endpoint MCSE measures
+simulation error in a reported bound, whereas posterior SD describes
+model-based uncertainty. `endpoint_mcse_fraction` is the larger endpoint
+MCSE divided by interval width; its acceptable size depends on the
+required precision. Good precision for one parameter cannot override
+divergent transitions or poor exploration elsewhere. Constant draws
+yield NA diagnostics; check whether a model constraint fixes the
+component or sampling is stuck.
+
+Inspect all coordinates and chains, prior sensitivity and model fit
+before interpreting posterior intervals. These are Bayesian credible
+intervals, not MML confidence intervals or proof of frequentist
+coverage. Predictions condition on the sampled abilities of the existing
+Persons.
+
+This uses the response equation of Uto and Ueno (2020), equation 9,
+while preserving mfrmr’s **logistic metric (L-metric), with D = 1**. It
+does not copy their Appendix’s extra 1.7 multiplier or its prior
+construction. Fixed N(0,1) abilities do not imply a normal-ogive link.
+When ability, locations, steps and the first slope family are held
+fixed, an otherwise matching D = 1.7 parameterization needs
+second-family slopes equal to the mfrmr slopes divided by 1.7 to
+preserve response probabilities. Dividing both families by 1.7 would not
+preserve them. Bayesian equivalence additionally requires transforming
+the priors; retaining the same normal log-slope priors changes the
+model. One-family GPCM exports to Stan or brms with its own
+geometric-mean-one slope constraint; two-family brms remains
+unsupported. Supported fixed facet anchors and group means are retained
+when exporting a one-family fit. These anchors carry no external
+calibration uncertainty. Native two-family fitting still excludes
+anchors. The files contain ratings and original labels and need review
+before sharing.
+
 ### Inspect observed ratings with posterior residuals
 
 Suppose you want to describe where a judge’s observed scores differ from
@@ -718,7 +1320,24 @@ The posterior intervals exclude calibration uncertainty. They do not
 establish frequentist coverage, population transport, global
 identification, boundary absence or decision accuracy. Saved scores
 retain the calibration roles, category coding, numerical checks and
-limitations without recalculation.
+limitations without recalculation. Their 95% posterior probability also
+differs from containing the fixed true ability in 95% of repeated
+samples at every ability value. With a known correct calibration and
+population law, exact posterior probability averages to 95% over that
+population; substituting an estimated calibration need not preserve that
+property. Tail-specific shrinkage and population-average performance are
+therefore separate questions.
+
+For example, the retained common-Person SD1 study at calibration N=480
+returned all 3,000 held-out population intervals and included truth in
+94.2% (Monte Carlo SE 0.50 percentage points, based on 50 calibration
+replicates). Separate fixed-ability panels gave 84.1%, 98.0% and 86.1%
+inclusion at z=-2, 0 and 2. At calibration N=60 the population result
+was 91.2% (MCSE 0.64 percentage points), again with all 3,000 intervals
+returned under the prespecified integration-refinement rule. These
+development results do not identify calibration uncertainty as the sole
+cause, establish population transport, or justify treating Persons
+sharing a calibration as independent replicates.
 [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md)
 uses the same checked route for discrete posterior draws; these do not
 establish a downstream population-analysis method. Attach saved scores
@@ -936,8 +1555,8 @@ different targets:
 
 | Question and API | Evidence and reporting limit |
 |----|----|
-| Relative or population-standardized discrimination: `confint(fit)` | Joint-information and independent-cluster sandwich calculations have numerical checks and simulation evidence for specified designs. Historical studies do not establish current-estimator coverage for every changed numerical branch. |
-| A specified ratio or difference: `confint(fit, contrasts = ...)` | Use the declared scale and full covariance. Evidence for relative contrasts does not transfer automatically to standardized differences; the latter have a separate saved-fit evaluation below. |
+| Relative or population-standardized discrimination: `confint(fit, parm = "slopes")` | Joint-information and independent-cluster sandwich calculations have numerical checks and simulation evidence for specified designs. Historical studies do not establish current-estimator coverage for every changed numerical branch. |
+| A specified ratio or difference: `confint(fit, parm = "slopes", contrasts = ...)` | Use the declared scale and full covariance. Evidence for relative contrasts does not transfer automatically to standardized differences; the latter have a separate saved-fit evaluation below. |
 | Category probability at fixed ability: [`mfrm_curve_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_curve_intervals.md) | Numerical transformations are checked, but nominal coverage failed in some small incomplete designs, including Bonferroni families. Report these as approximate calibration-uncertainty intervals, not validated 95% bands. |
 | Information per rating: `mfrm_curve_intervals(..., type = "information")` | Its own saved-fit evaluation is available below. This is neither total test information nor uncertainty in an estimated Person score. |
 | Matched-model selection or equal slopes: [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md) | AIC/BIC ranking and the asymptotic PCM/GPCM test require their separate likelihood, nesting and numerical checks. The historical null study does not establish performance for arbitrary sparse designs. |
@@ -977,6 +1596,28 @@ Working on the log scale keeps bounds positive and accounts for the
 dependent slope coordinates. Inverting only the slope block of the
 information matrix would ignore estimation of the other parameters and
 generally understate uncertainty.
+
+Scale constraints alone do not guarantee that the data identify the
+model. For example, suppose every Person answers the same two binary
+items once. The four response patterns have only three independent
+probabilities. The default GPCM still estimates four quantities: one
+item-location contrast, one relative log-slope contrast, and the ability
+population mean and variance. Increasing the number of Persons cannot
+resolve this deficit. The package retains descriptive optimizer points
+but withholds joint covariance, regular intervals and inferential model
+comparison with an explanation. A simpler model or additional
+informative response designs may resolve the problem; merely increasing
+quadrature or optimization effort cannot.
+
+This dimension check uses each distinct rating roster and
+population-covariate row, including the number of independent repeated
+responses. It does not require more Persons than parameters and does not
+enumerate every response pattern. Passing this necessary check is not a
+global identification proof. A recorded complete-pattern first-order
+rank failure also prevents regular information-based inference; a tiny
+positive numerical Hessian eigenvalue cannot override it. An observed
+score subset with deficient rank is a different, inconclusive diagnostic
+and is not used as an automatic model-information veto.
 
 The current likelihood and gradient must match a numerically adequate
 fit, and the information must be positive without regularization. Unit
@@ -1049,24 +1690,24 @@ fit <- fit_mfrm(
 
 ``` r
 
-confint(fit, scale = "standardized")
-#> Approximate 95% intervals: standardized GPCM slopes
-#>  Level Estimate  Lower Upper
-#>    C01   0.8156 0.5422 1.227
-#>    C02   1.2677 0.8928 1.800
-#>    C03   1.2044 0.8418 1.723
+confint(fit, parm = "slopes", scale = "standardized")
+#> Approximate 95% interval results: standardized GPCM slopes
+#>  Level Estimate  Lower Upper    Status
+#>    C01    1.010 0.6926 1.473 Available
+#>    C02    1.150 0.7851 1.684 Available
+#>    C03    1.207 0.8332 1.748 Available
 #> Joint-information log-Wald approximation 
 #> Pointwise intervals.
 slope_levels <- fit$slopes$SlopeFacet
 comparison <- matrix(0, 1, length(slope_levels),
                      dimnames = list("first versus second", slope_levels))
 comparison[1, 1:2] <- c(1, -1)
-ratio <- confint(fit, contrasts = comparison)
-difference <- confint(fit, contrasts = comparison,
+ratio <- confint(fit, parm = "slopes", contrasts = comparison)
+difference <- confint(fit, parm = "slopes", contrasts = comparison,
                       contrast_scale = "difference")
 attr(ratio, "diagnostics")[, c("Estimate", "CI_Lower", "CI_Upper", "PValue")]
-#>                      Estimate  CI_Lower CI_Upper    PValue
-#> first versus second 0.6433412 0.3856266 1.073287 0.0911965
+#>                     Estimate  CI_Lower CI_Upper    PValue
+#> first versus second 0.878472 0.5281628 1.461127 0.6176768
 ```
 
 The ratio null is one; the difference null is zero. More rows specify a
@@ -1081,12 +1722,12 @@ is outside these MML methods.
 
 ``` r
 
-confint(fit, method = "sandwich", simultaneous = "bonferroni")
-#> Approximate 95% intervals: relative GPCM slopes
-#>  Level Estimate  Lower Upper
-#>    C01   0.7581 0.5201 1.105
-#>    C02   1.1783 0.7823 1.775
-#>    C03   1.1195 0.8035 1.560
+confint(fit, parm = "slopes", method = "sandwich", simultaneous = "bonferroni")
+#> Approximate 95% interval results: relative GPCM slopes
+#>  Level Estimate  Lower Upper    Status
+#>    C01   0.9026 0.6012 1.355 Available
+#>    C02   1.0275 0.6727 1.569 Available
+#>    C03   1.0783 0.7362 1.579 Available
 #> Cluster-sandwich log-Wald approximation 
 #> Bonferroni family: all targets requested in this call.
 # If Persons belong to independent schools, supply a complete Person/Cluster
@@ -1128,7 +1769,7 @@ coverage.
 ``` r
 
 # Choose a level from fit$slopes$SlopeFacet before looking for a favorable result.
-ci <- confint(fit, method = "profile", slope = "R01")
+ci <- confint(fit, parm = "slopes", method = "profile", slope = "R01")
 print(ci)
 plot(ci, type = "profile")
 # Hide text when composing a larger figure:
@@ -1196,11 +1837,21 @@ interval of 83.3%–95.7%, and some intervals were extremely wide.
 
 Of the 47 unresolved profiles, 11 failed before profiling (source
 integration, information or category checks) and 36 failed during
-constrained searches. These are limitations of this numerical procedure
-on the stored calibrations; they do not show that a statistical interval
-cannot exist. No failed case was replaced, and no tolerance was relaxed.
-Times include the interval method’s checks, exclude original fitting,
-and were measured with two local workers.
+constrained searches. Those 36 calls did return result objects: 32
+retain one computed endpoint (12 lower-only, 20 upper-only), and four
+retain neither endpoint. Thus 53 is the count of complete finite
+intervals, not the count of returned objects. Computed endpoints and
+warnings remain available in the result;
+`apa_table(ci, which = "profile_endpoints")` shows each side’s status. A
+missing opposite endpoint does not turn the computed side into a
+separately calibrated one-sided confidence interval. Of the 47
+incomplete profiles, 45 have a separately available log-Wald interval;
+retain its method and cautions when displaying it, rather than labelling
+it as the missing profile interval. These are limitations of this
+numerical procedure on the stored calibrations; they do not show that a
+statistical interval cannot exist. No failed case was replaced, and no
+tolerance was relaxed. Times include the interval method’s checks,
+exclude original fitting, and were measured with two local workers.
 
 These previously analysed data provide a diagnostic comparison, not
 independent confirmation of the current estimator. They do not assess
@@ -1528,7 +2179,7 @@ a larger recommended scoring weight.
 
 ``` r
 
-ci <- confint(fit, scale = "standardized")
+ci <- confint(fit, parm = "slopes", scale = "standardized")
 results <- mfrm_results(fit, intervals = list(slopes = ci, curves = curves),
                         include = c("fit", "plots"), compute = "never")
 plot(results, type = "gpcm_slopes", title = NULL)
@@ -1544,37 +2195,41 @@ quality.](mfrmr-gpcm-scope_files/figure-html/gpcm-saved-inference-1.png)
 apa_table(ci)
 #> GPCM inference
 #>  SlopeFacet Estimate   SE LogSE CI_Lower CI_Upper NullValue PValue CIEligible
-#>         C01     0.82 0.17  0.21     0.54     1.23         1   0.33       TRUE
-#>         C02     1.27 0.23  0.18     0.89     1.80         1   0.18       TRUE
-#>         C03     1.20 0.22  0.18     0.84     1.72         1   0.31       TRUE
+#>         C01     1.01 0.19  0.19     0.69     1.47         1   0.96       TRUE
+#>         C02     1.15 0.22  0.19     0.79     1.68         1   0.47       TRUE
+#>         C03     1.21 0.23  0.19     0.83     1.75         1   0.32       TRUE
+#>                  CIUse
+#>  approximate_pointwise
+#>  approximate_pointwise
+#>  approximate_pointwise
 #>                                                                                                       InferenceReview
 #>  Approximate inference for standardized GPCM slopes with model covariance; finite-sample coverage is not guaranteed. 
 #>  Approximate inference for standardized GPCM slopes with model covariance; finite-sample coverage is not guaranteed. 
 #>  Approximate inference for standardized GPCM slopes with model covariance; finite-sample coverage is not guaranteed. 
-#>                    Target                                   Method
-#>  standardized GPCM slopes Joint-information log-Wald approximation
-#>  standardized GPCM slopes Joint-information log-Wald approximation
-#>  standardized GPCM slopes Joint-information log-Wald approximation
-#>  ConfidenceLevel Adjustment
-#>              95%  Pointwise
-#>              95%  Pointwise
-#>              95%  Pointwise
+#>  IntervalStatus                   Target
+#>       Available standardized GPCM slopes
+#>       Available standardized GPCM slopes
+#>       Available standardized GPCM slopes
+#>                                    Method ConfidenceLevel Adjustment
+#>  Joint-information log-Wald approximation             95%  Pointwise
+#>  Joint-information log-Wald approximation             95%  Pointwise
+#>  Joint-information log-Wald approximation             95%  Pointwise
 #> Note. Approximate inference under the stated target and method; unavailable outcomes remain present. No rater-quality or scoring-weight decision is implied.
 head(plot_data(results, type = "gpcm_curves", component = "table"))
-#>   Theta Rater Criterion InputRow Category   Estimate          SE       Lower
-#> 1 -3.00   R01       C01        1        1 0.60325691 0.066981814 0.467678416
-#> 2 -3.00   R01       C01        1        2 0.38214029 0.061204608 0.271200772
-#> 3 -3.00   R01       C01        1        3 0.01460280 0.007433955 0.005354808
-#> 4 -2.85   R01       C01        2        1 0.57466763 0.065516836 0.444124935
-#> 5 -2.85   R01       C01        2        2 0.40786940 0.059305024 0.298581102
-#> 6 -2.85   R01       C01        2        3 0.01746298 0.008336183 0.006811562
+#>   Theta Rater Criterion InputRow Category    Estimate          SE        Lower
+#> 1 -3.00   R01       C01        1        1 0.773143398 0.058068767 0.6404330655
+#> 2 -3.00   R01       C01        1        2 0.223181614 0.055817750 0.1325911808
+#> 3 -3.00   R01       C01        1        3 0.003674988 0.002602766 0.0009149143
+#> 4 -2.85   R01       C01        2        1 0.748082017 0.059519815 0.6152402918
+#> 5 -2.85   R01       C01        2        2 0.247256280 0.056881483 0.1528661129
+#> 6 -2.85   R01       C01        2        3 0.004661703 0.003116735 0.0012539052
 #>        Upper CIEligible
-#> 1 0.72463594       TRUE
-#> 2 0.50689748       TRUE
-#> 3 0.03919313       TRUE
-#> 4 0.69556768       TRUE
-#> 5 0.52709923       TRUE
-#> 6 0.04403185       TRUE
+#> 1 0.86704136       TRUE
+#> 2 0.35064582       TRUE
+#> 3 0.01463953       TRUE
+#> 4 0.84650189       TRUE
+#> 5 0.37418543       TRUE
+#> 6 0.01717180       TRUE
 #>                                                                                                       InferenceReview
 #> 1 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. 
 #> 2 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. 
@@ -1597,6 +2252,42 @@ code, `res` denotes your result object (`res <- results` here); choose
 the file path before saving. The starter export index also links the
 saved GPCM inference figures alongside the ordinary maps, with separate
 interpretation guidance.
+
+For separately computed one-family Person scores, use the same
+collector:
+
+``` r
+
+# new_ratings contains response rows for the Persons being scored, using known
+# facet levels and the fitted category coding.
+# scores <- predict_mfrm_units(fit, new_ratings)
+# scored_results <- mfrm_results(fit, scores = scores,
+#   include = "fit", compute = "never")
+# scored_results$tables$person_scores
+# scored_results$tables$scoring_priors
+# scored_report <- mfrm_report(scored_results)
+# export_mfrm_results(scored_results, output_dir = "person_results",
+#   include = c("tables", "report", "replay"), acknowledge_sensitive = TRUE)
+```
+
+Here `Estimate` is EAP and `SD` is the Person’s posterior SD. It is
+different from population SD, the SD of EAPs across Persons, and a
+calibration-parameter standard error. `Lower`/`Upper` are continuous
+equal-tail posterior intervals at the saved level; the ordinary
+diagnostic normal bands remain separate. Both condition on the point
+calibration and scoring prior and exclude their estimation uncertainty.
+Posterior probability is not a guarantee of repeated- sampling coverage
+for each fixed ability.
+
+The attachment checks source calibration, population coding, prior and
+numerical records without rescoring. `scoring_priors` preserves retained
+and selected priors by Person, including an explicit `scoring_prior`
+override or differing covariate-based means. Review-only scores and
+omission records remain visible. Native scoring does not enumerate an
+entire not-scored roster, so `NotScored` is unknown rather than zero.
+Reports and saved replay retain the complete scoring object. This does
+not add a score plot route or change diagnostic maps. One-family
+portable calibration scores still use their standalone methods.
 
 The same stored values are available through `mfrm_report(results)` and
 `export_mfrm_results(results, ...)`. Named results define lowercase plot
@@ -1810,8 +2501,62 @@ component-slope evidence. Attach it through
 `mfrm_results(fit, intervals = list(locations = ci))` and select
 `plot(res, type = "gpcm_locations")`. Location differences do not imply
 uniform expected-rating differences when slopes or category steps also
-vary. Neither interval route establishes a rule for feedback decisions;
-curve intervals remain unavailable. Individual two-family sheets can now
+vary.
+
+For a comparison in population SD units, supply an explicit zero-sum
+contrast:
+
+``` r
+
+levels <- fit$config$facet_levels$Rater
+C <- matrix(c(1, -1, rep(0, length(levels) - 2)), nrow = 1,
+            dimnames = list("First minus second rater", levels))
+ci <- mfrm_facet_intervals(fit, "Rater", contrasts = C,
+                          scale = "standardized")
+ci$table
+plot_data(plot(ci, draw = FALSE), "notes")
+```
+
+The standardized target is $`d/\sigma`$, where $`d`$ is the native
+severity contrast and $`\sigma`$ is the population SD. When SD is
+estimated, the full joint delta method includes both its uncertainty and
+its covariance with the contrast. Dividing native limits by the fitted
+SD would omit these terms. This option supports the existing model-based
+RSM/PCM and GPCM routes with fixed N(0,1) or an estimated intercept-only
+normal population. A regression’s residual SD is not a marginal
+population SD, so latent regression is excluded. In the fixed-N(0,1)
+two-family model the known SD is one and the contrast is numerically
+unchanged. The saved result records the scale, native estimate, Jacobian
+and SD. Plot axes identify population SD units; explanations remain
+returned notes. Numerical eligibility does not establish finite-sample
+coverage, and a near-zero SD can make the ratio unstable. These
+contrasts align ability units; they do not make different models’
+expected-rating differences equal.
+
+A retained comparison illustrates why model complexity and interval
+usefulness need separate checks. It used eight PCM-truth conditions,
+fifty datasets each, three raters, three criteria and two raters per
+Person, comparing PCM with Criterion-slope GPCM while both estimated the
+normal population. The equal-slope truth belongs to both models. At N20
+and generating SD1, Criterion-difference RMSE on the same 47
+interval-returning datasets was .3113 for PCM and .4006 for GPCM; the
+paired MSE increase was .06357 (Monte Carlo SE .02815). Rater-difference
+RMSE instead decreased from .4142 to .3846. Extra slopes did not
+consistently improve these targets.
+
+At N20 and generating SD.5, Criterion intervals contained truth in 43/44
+PCM and 39/41 GPCM returns, but mean widths were 6.98 and 8.24
+population SD units. The corresponding returned-and-containing counts
+were 43/50 and 39/50. Already refused near-boundary fits also produced
+extreme finite ratio points; these were retained in the all-attempt
+results. Thus high coverage among returned intervals does not by itself
+establish useful precision. These are descriptive saved-source results,
+not independent coverage confirmation, current-source readmission, or a
+rule for selecting a model. They do not show whether simplifying a model
+with genuinely unequal slopes is beneficial.
+
+Neither interval route establishes a rule for feedback decisions; curve
+intervals remain unavailable. Individual two-family sheets can now
 collect the saved descriptive evidence through
 `mfrm_report(..., style = "rater", facet = "Rater", rater = "r1")`.
 Select the actual fitted facet and level; the sheet does not classify
@@ -2276,8 +3021,8 @@ their G-study covariances.
 | Question | Existing route | Interpretation |
 |----|----|----|
 | How do category responses and rater effects vary with ability? | [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md) and its response/diagnostic outputs | A latent response model; the provisional two-family route has a narrower output scope than one-family GPCM. |
-| How much observed-score variation comes from persons, raters, tasks and their interactions across criteria? | [`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md) | Score-specific variance and between-score covariance components. |
-| What changes when the assessment uses more raters/tasks or different prespecified score weights? | [`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md) and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | G, Phi and SEM for the declared future design. |
+| How much observed-score variation comes from persons, raters, tasks and their interactions across criteria? | [`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md) | Score-specific variance and between-score covariance components. |
+| What changes when the assessment uses more raters/tasks or different prespecified score weights? | [`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md) and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | G, Phi and SEM for the declared future design. |
 | How uncertain is the difference between two prespecified plans? | [`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md) | Approximate paired intervals under explicit normal random-effect assumptions for two common crossed facets. |
 
 Start the G-study from numeric score columns and the declared design,
@@ -2426,7 +3171,7 @@ which remains a location effect.
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
   model = "GPCM", method = "MML",
   step_facet = "Rater", slope_facet = "Criterion")
-slopes <- confint(fit)
+slopes <- confint(fit, parm = "slopes")
 grid <- expand.grid(Theta = seq(-2, 2, length.out = 21),
                     Rater = "R01", Criterion = "C01") # use your fitted labels
 curves <- mfrm_curve_intervals(fit, grid)
@@ -2606,7 +3351,7 @@ comparison, not numerical convergence alone:
 
 For a JML question, follow that table with recovery conditions rather
 than an IC or LRT claim.
-[`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
 already distinguishes `unit_slopes`, `near_flat`, `moderate`, and
 `high_dispersion` generator conditions. The unit-slope condition asks
 how often harmless sampling and optimizer variation can create an
@@ -2622,6 +3367,63 @@ in `$lrt` is returned only when the numerical and likelihood checks also
 pass; otherwise read `$comparison_basis$lrt_reason`. Older saved
 comparisons must be rebuilt to obtain the new decision. Weighting
 consequences still need substantive review.
+
+### Save the comparison and carry its limitations into reporting
+
+Start with `comparison$comparison_basis`, then read the criteria and
+test. For example, two fits can have the same number of Persons and
+ratings but different response data. In that case `same_data` and
+`ICComparable` are false: raw criteria may remain visible, but criterion
+differences, weights, preferences and the LRT are withheld.
+`nested = TRUE` does not override this decision. A structurally nested
+response kernel alone is insufficient.
+
+The ordinary PCM/GPCM reporting route uses
+[`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md)
+and
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
+The review retains comparison warnings alongside its tables. It does not
+request the LRT; retain the separate `comparison` object above to
+preserve that explicitly requested test and its reason. The `comparison`
+argument to
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+is for the separate descriptive testlet/shared-rater workflow, not this
+ordinary IC/LRT result.
+
+``` r
+
+tables <- build_summary_table_bundle(review)
+tables$tables$comparison_table
+tables$tables$comparison_warnings
+export_summary_appendix(tables, output_dir = "model-comparison",
+                        prefix = "pcm-gpcm", include_html = TRUE)
+
+curves <- plot(fit_pcm, comparison = fit_gpcm, type = "ccc", view = "difference", labels = c("PCM", "GPCM"), draw = FALSE)
+curves$data$notes
+as_ggplot(curves)
+
+saveRDS(list(comparison = comparison, review = review, curves = curves),
+        "pcm-gpcm-comparison.rds")
+saved <- readRDS("pcm-gpcm-comparison.rds")
+saved$comparison$comparison_basis
+as_ggplot(saved$curves)
+```
+
+The saved comparison preserves unrounded values; appendix summaries may
+round them for presentation. Reloading these objects does not refit
+either model. Rebuilding
+[`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
+checks the retained solution again, including its likelihood, gradient
+and information; it does not rerun the optimizer.
+
+Paired plots show descriptive differences on the fitted coordinates.
+Their checks concern score coding, constraints, estimator and coordinate
+basis; they do not require identical response data or establish IC/LRT
+eligibility. A drawable comparison therefore does not authorize model
+ranking. By default, titles and notes are omitted from the figure and
+retained in its returned data. Read `data$notes` and
+`data$fit_readiness` before interpreting the plot; visual differences
+have no difference intervals or equivalence test.
 
 ## Response-family boundary
 
@@ -2666,13 +3468,14 @@ narrower model.
 
 Muraki (1992) supplies the GPCM response model and an MML-EM estimation
 route; it is not a source for the present JML implementation. The
-present mfrmr JML route is an identified fixed-effects, unpenalized
-joint likelihood with post-fit boundary/recession auditing. This differs
-from penalized JML for GPCM (Wijayanto et al. 2021), whose quadratic
-regularization changes the objective, and from software routes that
-impose finite parameter boxes. A penalized, adjusted, or box-constrained
-point estimate can be a useful comparator, but it is not the maximizer
-of mfrmr’s original unpenalized JML objective.
+present mfrmr JML route uses constrained fixed-effects coordinates and
+an unpenalized joint likelihood, with separate identification and
+boundary/recession auditing. This differs from penalized JML for GPCM
+(Wijayanto et al. 2021), whose quadratic regularization changes the
+objective, and from software routes that impose finite parameter boxes.
+A penalized, adjusted, or box-constrained point estimate can be a useful
+comparator, but it is not the maximizer of mfrmr’s original unpenalized
+JML objective.
 
 This distinction matters even when all methods return finite numbers.
 With a fixed number of observations per person, jointly estimated person
@@ -2684,6 +3487,35 @@ evidence, boundary handling, numerical convergence, and cross-software
 agreement as separate checks. Under JML, the geometric-mean constraint
 resolves the scale of the jointly estimated person coordinates and
 slopes.
+
+### Why total-score conditioning does not remove ability
+
+For two binary ratings with adjacent log odds $`a_j(\theta-d_j)`$, the
+two patterns $`(1,0)`$ and $`(0,1)`$ have the same total, but their log
+probability ratio is
+
+``` math
+\log\frac{P(1,0\mid\theta)}{P(0,1\mid\theta)}
+  = (a_1-a_2)\theta-a_1d_1+a_2d_2.
+```
+
+The ability term disappears when the slopes are equal. With unknown
+unequal slopes it remains, so the ordinary total is not sufficient for
+ability. The analogous polytomous joint likelihood contains
+$`\theta\sum_j a_j y_j`$. If the slopes were known, that weighted total
+would be sufficient for ability; substituting estimated slopes does not
+give the RSM/PCM conditional-likelihood argument.
+
+This does not mean that every possible conditional method is impossible.
+For example, when ratings share slope owners, conditioning on the vector
+of totals within each owner makes $`\sum_j a_j y_j`$ constant and
+removes ability. It also conditions away more information: if each owner
+supplies one rating, that vector fixes the complete response and leaves
+no conditional variation. Identification and usefulness of any remaining
+comparisons require their own analysis. mfrmr implements total-score CML
+for additive RSM/PCM, not this different GPCM conditional procedure. Use
+the supported MML route for GPCM structural inference, retaining its
+population-model assumptions.
 
 ## Report wording templates
 
@@ -2788,7 +3620,7 @@ gpcm_capability_matrix("deferred")[, c("Area", "Status", "Boundary", "Recommende
 #> 
 #> Route preview
 #>                                                      Area   Status
-#>               Posterior-predictive and Bayesian workflows deferred
+#>             Native MCMC and posterior-predictive sampling deferred
 #>  Formal structural confidence intervals for corrected JML deferred
 #> 
 #> Filter by status, for example gpcm_capability_matrix("supported_with_caveat").
@@ -2855,13 +3687,13 @@ diagnostic benchmark.
 
 ### Model structure: which effect does discrimination change?
 
-TAM and ConQuest both support more flexible slope designs than the
-current mfrmr interface. That does not make every many-facet GPCM in
-these programs the same model.
+TAM and ConQuest support flexible slope designs. That does not make
+every many-facet GPCM in these programs the same model.
 
 | Route | Where slopes are assigned | Relationship to current mfrmr |
 |----|----|----|
 | `mfrmr::fit_mfrm(model = "GPCM")` | One selected facet supplies positive relative slopes. MML permits a different step owner; JML requires the same owner. | Each slope multiplies the complete adjacent-category predictor. |
+| Experimental mfrmr two-family MML | Two ordered facets supply positive component slopes, with an identified fixed-normal population. | Their product multiplies the complete adjacent-category predictor, including facet locations and steps. |
 | TAM `tam.mml.2pl()` | Item slopes, shared slope groups or a design `E`; Example 14c combines this with a facet intercept design `A`. | The example has slopes on ability and separately additive facet intercepts. `tam.mml.mfr()` alone does not estimate slopes. |
 | ConQuest `scoresfree` | By default, one slope for each generalized item, meaning a combination of facets; a `C` design can constrain sharing. | Sharing slopes by criterion still does not impose their products with estimated rater effects in the intercept design. |
 
@@ -2899,6 +3731,16 @@ log-odds effect at every criterion. These are different assumptions
 about how rater severity acts. Changing which facet supplies slopes and
 steps does not by itself change this assumption.
 
+With two slope families and Rater-owned steps, the experimental native
+predictor is $`a_i c_r(\theta_p-d_i-\rho_r-\tau_{rk})`$. A generalized
+item for each Task–Rater context can represent its probabilities at
+fixed parameter values. Free estimation must additionally preserve the
+product structure of the slopes and the shared, slope-dependent
+intercepts. Giving every context its own free slope and steps removes
+these restrictions and fits a different model. Consequently, a
+fixed-calibration probability or scoring check is useful but does not
+establish free-estimator equivalence.
+
 `sirt::rm.facets()` provides a useful second MML reference: it estimates
 item and/or rater slopes under product-one centering and an estimated
 normal trait spread. Its item-only GPCM and equal-discrimination
@@ -2906,13 +3748,15 @@ many-facet reductions are candidate matched comparisons after category,
 threshold, quadrature, and centering conventions are aligned. Its
 general free-slope rater kernel is not the current mfrmr kernel: sirt
 uses the product of item and rater slopes on the trait term while rater
-severity remains a separate location term, whereas mfrmr assigns one
-slope owner and multiplies the complete adjacent- category predictor.
-Such results are different-model sensitivity evidence, not automatic
-numerical validation. `immer` provides PCM-design JML/CML/CCML routes
-and a hierarchical rater model, not a direct free-GPCM many-facet match.
-Its role is consequently a unit-slope reduction or alternative-model
-sensitivity analysis rather than free-slope numerical validation.
+severity remains a separate location term, whereas mfrmr multiplies the
+complete adjacent-category predictor in its one-family route; the
+experimental two-family route uses the same full action with a product
+slope. Such results are different-model sensitivity evidence, not
+automatic numerical validation. `immer` provides PCM-design JML/CML/CCML
+routes and a hierarchical rater model, not a direct free-GPCM many-facet
+match. Its role is consequently a unit-slope reduction or
+alternative-model sensitivity analysis rather than free-slope numerical
+validation.
 
 ### Exact overlap and what has been checked
 
@@ -3090,7 +3934,7 @@ In practice, this means:
 
 1.  Build or extract an explicit `mfrm_sim_spec`.
 2.  Run
-    [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+    [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
     for the direct parameter-recovery question.
 3.  Run
     [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)
@@ -3116,8 +3960,7 @@ stated constraints:
   [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md),
   [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md),
   [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md),
-  and
-  [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md).
+  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html).
 - **Curve and category views** via
   `plot(fit, type = c("wright", "pathway", "ccc", "ccc_surface"))`,
   [`category_structure_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_structure_report.md),
@@ -3128,7 +3971,7 @@ stated constraints:
   and
   [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md).
 - **Direct recovery checks** via
-  [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+  [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
   and
   [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md),
   including fitted GPCM slope recovery on the log-slope scale.
@@ -3146,9 +3989,9 @@ screens rather than as Rasch-style invariance evidence:
   [`rating_scale_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rating_scale_table.md),
   [`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md),
   [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md),
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
-  [`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
-  [`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md).
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html).
 - [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
   and
   [`precision_review_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/precision_review_report.md)
@@ -3173,11 +4016,10 @@ screens rather than as Rasch-style invariance evidence:
   [`analyze_dif()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
   [`dif_interaction_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/dif_interaction_table.md),
   [`dif_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/dif_report.md),
-  [`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md),
-  and
-  [`plot_dif_summary()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_summary.md)
-  provide GPCM DFF/DIF screening and reporting surfaces with explicit
-  `gpcm_boundary` rows.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html), and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) provide GPCM
+  DFF/DIF screening and reporting surfaces with explicit `gpcm_boundary`
+  rows.
 - [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md),
   [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md),
   [`run_qc_pipeline()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_qc_pipeline.md),
@@ -3306,9 +4148,9 @@ diag_gpcm <- diagnose_mfrm(fit_gpcm)
 summary(diag_gpcm)
 
 info <- compute_information(fit_gpcm)
-plot_information(info)
+plot(info)
 
-rec_gpcm <- evaluate_mfrm_recovery(
+rec_gpcm <- simulate_mfrm_recovery(
   sim_spec = build_mfrm_sim_spec(
     n_person = 30,
     n_rater = 3,
@@ -3390,6 +4232,5 @@ full FACETS score-side review remains on the `RSM` / `PCM` route.
 Score-side semantics for free-discrimination polytomous models differ
 from the Rasch-family route. Use the current matrix returned by
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-as the workflow contract and
-[`gpcm_score_side_contract()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_score_side_contract.md)
+as the workflow contract and `gpcm_capability_matrix(view = 'scores')`
 for score-side alternatives.

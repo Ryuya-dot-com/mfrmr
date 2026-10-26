@@ -68,6 +68,12 @@ overlapping groups.
 
 ## Fit and check the calibration
 
+The following call fits the model. To avoid repeating this calculation
+whenever the tutorial is rendered, the displayed results use the
+packaged synthetic example fitted with these data and settings. Run the
+call yourself to estimate a new calibration; reading the saved example
+is not a new estimation check.
+
 ``` r
 
 testlet_fit <- fit_mfrm_testlet(
@@ -75,24 +81,31 @@ testlet_fit <- fit_mfrm_testlet(
   facets = c("Rater", "Criterion"), score_levels = 1:4,
   quad_points = 121
 )
+```
+
+``` r
+
+saved_example <- readRDS(system.file("examples", "extended-models.rds",
+                                      package = "mfrmr", mustWork = TRUE))$testlet
+testlet_fit <- saved_example$fit
 testlet_fit$checks
 #> $LogLikDifference
 #> [1] 4.69413e-10
 #> 
 #> $GradientDifference
-#> [1] 2.796461e-08
+#> [1] 2.796458e-08
 #> 
 #> $MomentDifference
-#> [1] 2.454624e-09
+#> [1] 2.454623e-09
 #> 
 #> $MaxProjectedGradient
-#> [1] 4.308771e-06
+#> [1] 4.306714e-06
 #> 
 #> $VarianceScore
-#> [1] 2.00692e-06
+#> [1] 2.006723e-06
 #> 
 #> $PersonVarianceScore
-#> [1] 1.742346e-06
+#> [1] 1.741695e-06
 #> 
 #> $Convergence
 #> [1] 0
@@ -143,6 +156,15 @@ still assumes a common normal population independent of assignment; it
 does not repair skewness or different ability populations across rater
 panels.
 
+After integrating ability and local effects, **different persons are
+independent under this model**. Their individual ratings are not
+independent replications. More persons can provide information about the
+common variances when the design separates ability from local
+dependence; adding criteria in one block is not equivalent. Normal
+calibration intervals require an identified interior model with adequate
+information. Their information matrix includes both estimated variances,
+rather than treating fitted variances as known.
+
 `NumericalReady` checks optimization, search boundaries, and agreement
 with a higher integration order. `InformationPositive` checks usable
 local curvature. The default order is 31; this example uses 121. Inspect
@@ -187,7 +209,7 @@ not demonstrate better accuracy when the true abilities are unknown.
 ``` r
 
 subset(testlet_fit$calibration_table, Facet == "Rater")
-#>     Parameter Facet Level   Estimate         SE Upper Lower
+#>     Parameter Facet Level   Estimate         SE Lower Upper
 #> 1 Fixed facet Rater   R01 -0.1855659 0.08667868    NA    NA
 #> 2 Fixed facet Rater   R02 -0.3128540 0.08794701    NA    NA
 #> 3 Fixed facet Rater   R03  0.1822338 0.08672443    NA    NA
@@ -212,6 +234,83 @@ confint(testlet_fit, parm = "calibration", level = .95)
 #> [1] "Observed-information normal approximation"
 #> attr(,"target")
 #> [1] "Fixed-facet and step calibration parameters"
+#> attr(,"diagnostics")
+#>      Parameter     Facet        Level    Estimate         SE       Lower
+#> 1  Fixed facet     Rater          R01 -0.18556593 0.08667868 -0.35545302
+#> 2  Fixed facet     Rater          R02 -0.31285402 0.08794701 -0.48522699
+#> 3  Fixed facet     Rater          R03  0.18223377 0.08672443  0.01225702
+#> 4  Fixed facet     Rater          R04  0.31618617 0.08790111  0.14390317
+#> 5  Fixed facet Criterion     Accuracy  0.23698253 0.08339259  0.07353605
+#> 6  Fixed facet Criterion      Content -0.39556320 0.08562617 -0.56338741
+#> 7  Fixed facet Criterion     Language  0.09277729 0.08237631 -0.06867730
+#> 8  Fixed facet Criterion Organization  0.06580338 0.08228643 -0.09547507
+#> 9         Step     Score            2 -1.24114585 0.20044551 -1.63401182
+#> 10        Step     Score            3 -0.05217142 0.17352890 -0.39228181
+#> 11        Step     Score            4  1.30291300 0.19996036  0.91099789
+#>          Upper IntervalStatus CIEligible
+#> 1  -0.01567884      available       TRUE
+#> 2  -0.14048105      available       TRUE
+#> 3   0.35221053      available       TRUE
+#> 4   0.48846918      available       TRUE
+#> 5   0.40042901      available       TRUE
+#> 6  -0.22773899      available       TRUE
+#> 7   0.25423189      available       TRUE
+#> 8   0.22708182      available       TRUE
+#> 9  -0.84827987      available       TRUE
+#> 10  0.28793898      available       TRUE
+#> 11  1.69482810      available       TRUE
+#>                                                                                         InferenceReview
+#> 1  Explicit pointwise normal approximation; numerical availability does not establish nominal coverage.
+#> 2  Explicit pointwise normal approximation; numerical availability does not establish nominal coverage.
+#> 3  Explicit pointwise normal approximation; numerical availability does not establish nominal coverage.
+#> 4  Explicit pointwise normal approximation; numerical availability does not establish nominal coverage.
+#> 5  Explicit pointwise normal approximation; numerical availability does not establish nominal coverage.
+#> 6  Explicit pointwise normal approximation; numerical availability does not establish nominal coverage.
+#> 7  Explicit pointwise normal approximation; numerical availability does not establish nominal coverage.
+#> 8  Explicit pointwise normal approximation; numerical availability does not establish nominal coverage.
+#> 9  Explicit pointwise normal approximation; numerical availability does not establish nominal coverage.
+#> 10 Explicit pointwise normal approximation; numerical availability does not establish nominal coverage.
+#> 11 Explicit pointwise normal approximation; numerical availability does not establish nominal coverage.
+#> attr(,"checks")
+#> attr(,"checks")$LogLikDifference
+#> [1] 4.69413e-10
+#> 
+#> attr(,"checks")$GradientDifference
+#> [1] 2.796458e-08
+#> 
+#> attr(,"checks")$MomentDifference
+#> [1] 2.454623e-09
+#> 
+#> attr(,"checks")$MaxProjectedGradient
+#> [1] 4.306714e-06
+#> 
+#> attr(,"checks")$VarianceScore
+#> [1] 2.006723e-06
+#> 
+#> attr(,"checks")$PersonVarianceScore
+#> [1] 1.741695e-06
+#> 
+#> attr(,"checks")$Convergence
+#> [1] 0
+#> 
+#> attr(,"checks")$SearchBoundary
+#> [1] FALSE
+#> 
+#> attr(,"checks")$EstimatedVarianceBoundary
+#> [1] FALSE
+#> 
+#> attr(,"checks")$EstimatedPersonVarianceBoundary
+#> [1] FALSE
+#> 
+#> attr(,"checks")$NumericalReady
+#> [1] TRUE
+#> 
+#> attr(,"checks")$InformationPositive
+#> [1] TRUE
+#> 
+#> attr(,"checks")$MinInformationEigenvalue
+#> [1] 14.35578
+#> 
 #> attr(,"note")
 #> [1] "Pointwise approximation only; nominal coverage is not established. Missing bounds retain numerical, information, boundary or SE restrictions. No variance, Person-difference or rater-quality inference."
 plot(testlet_fit, facet = "Rater", intervals = "normal", level = .95)
@@ -253,10 +352,10 @@ scores$table
 #> 3   P003       16        4 1.0950556     0.3379523  0.447620707 1.773399
 #> 4   P004       16        4 0.7909065     0.3236000  0.166906739 1.436372
 #>                  Status IntegrationDifference Reason
-#> 1 available_conditional          1.885644e-15       
-#> 2 available_conditional          1.887379e-15       
-#> 3 available_conditional          3.552714e-15       
-#> 4 available_conditional          3.552714e-15
+#> 1 available_conditional          1.594211e-15       
+#> 2 available_conditional          1.554312e-15       
+#> 3 available_conditional          3.663736e-15       
+#> 4 available_conditional          6.661338e-16
 plot(scores)
 ```
 
@@ -375,11 +474,16 @@ review$table
 #> 2   P002       16        4 1.4255340     0.3581934  0.744853076 2.150047
 #> 3   P003       16        4 1.0950556     0.3379523  0.447620707 1.773399
 #> 4   P004        0        0 0.0000000     0.9823014 -1.925275381 1.925275
-#>                  Status IntegrationDifference Reason
-#> 1 available_conditional          1.974549e-15       
-#> 2 available_conditional          1.887379e-15       
-#> 3 available_conditional          3.552714e-15       
+#>                  Status IntegrationDifference
+#> 1 available_conditional          3.330669e-15
+#> 2 available_conditional          1.554312e-15
+#> 3 available_conditional          3.663736e-15
 #> 4            prior_only          0.000000e+00
+#>                                                                                                                                        Reason
+#> 1                                                                                                                                            
+#> 2                                                                                                                                            
+#> 3                                                                                                                                            
+#> 4 No observed responses for this Person; the estimate, SD and interval describe only the assumed population, not measured individual ability.
 review$data_usage
 #>    Input Observed  Omitted 
 #>       64       47       17
@@ -424,6 +528,13 @@ estimate. To score additional ratings for an existing person, supply
 that person’s complete set with the correct shared memberships. Do not
 duplicate the old rows when assembling it.
 
+The fixed-facet restriction still applies when a column has two roles.
+Here `Rater` is both the testlet label and a fixed facet. A new Person
+rated by the known raters can be scored, but a new rater label has no
+fitted fixed severity and is refused. A separate testlet column that is
+not a fixed facet may use new labels. Changing labels is not a
+substitute for choosing which ratings actually share a local effect.
+
 ``` r
 
 path <- tempfile(fileext = ".rds")
@@ -438,10 +549,10 @@ plot_data(saved_plot)$table
 #> 3   P003       16        4 1.0950556     0.3379523  0.447620707 1.773399
 #> 4   P004       16        4 0.7909065     0.3236000  0.166906739 1.436372
 #>                  Status IntegrationDifference Reason
-#> 1 available_conditional          1.885644e-15       
-#> 2 available_conditional          1.887379e-15       
-#> 3 available_conditional          3.552714e-15       
-#> 4 available_conditional          3.552714e-15
+#> 1 available_conditional          1.594211e-15       
+#> 2 available_conditional          1.554312e-15       
+#> 3 available_conditional          3.663736e-15       
+#> 4 available_conditional          6.661338e-16
 ```
 
 ## Connect to the common graphics and table workflow
@@ -534,11 +645,21 @@ plot_data_components(scores)
 #> 16                                                                                                                                                                             axis, value, label, linetype, role
 score_table <- plot_data(scores, component = "table")
 plot_data(testlet_fit, component = "table", facet = "Rater")
-#>     Parameter Facet Level   Estimate         SE Upper Lower
-#> 1 Fixed facet Rater   R01 -0.1855659 0.08667868    NA    NA
-#> 2 Fixed facet Rater   R02 -0.3128540 0.08794701    NA    NA
-#> 3 Fixed facet Rater   R03  0.1822338 0.08672443    NA    NA
-#> 4 Fixed facet Rater   R04  0.3161862 0.08790111    NA    NA
+#>     Parameter Facet Level   Estimate         SE Lower Upper IntervalStatus
+#> 1 Fixed facet Rater   R01 -0.1855659 0.08667868    NA    NA  not_requested
+#> 2 Fixed facet Rater   R02 -0.3128540 0.08794701    NA    NA  not_requested
+#> 3 Fixed facet Rater   R03  0.1822338 0.08672443    NA    NA  not_requested
+#> 4 Fixed facet Rater   R04  0.3161862 0.08790111    NA    NA  not_requested
+#>   CIEligible
+#> 1      FALSE
+#> 2      FALSE
+#> 3      FALSE
+#> 4      FALSE
+#>                                                                                           InferenceReview
+#> 1 Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 2 Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 3 Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 4 Normal intervals were not requested. Use the documented confint() target to request this approximation.
 stopifnot(identical(score_table, scores$table))
 ```
 
@@ -644,23 +765,23 @@ model_comparison$checks
 #> 8      Blocked source readiness withholds differences; parameter exclusions remain in the effects table.
 model_comparison$effects
 #>       Facet        Level SourceReference SourceComparison CenterReference
-#> 1 Criterion     Accuracy      0.23250785       0.23698253    0.000000e+00
-#> 2 Criterion      Content     -0.38809689      -0.39556320    0.000000e+00
-#> 3 Criterion     Language      0.09102647       0.09277729    0.000000e+00
-#> 4 Criterion Organization      0.06456257       0.06580338    0.000000e+00
-#> 5     Rater          R01     -0.18292092      -0.18556593    6.938894e-18
-#> 6     Rater          R02     -0.30735556      -0.31285402    6.938894e-18
-#> 7     Rater          R03      0.17863651       0.18223377    6.938894e-18
-#> 8     Rater          R04      0.31163997       0.31618617    6.938894e-18
+#> 1 Criterion     Accuracy      0.23250785       0.23698253               0
+#> 2 Criterion      Content     -0.38809689      -0.39556320               0
+#> 3 Criterion     Language      0.09102647       0.09277729               0
+#> 4 Criterion Organization      0.06456257       0.06580338               0
+#> 5     Rater          R01     -0.18292092      -0.18556593               0
+#> 6     Rater          R02     -0.30735556      -0.31285402               0
+#> 7     Rater          R03      0.17863651       0.18223377               0
+#> 8     Rater          R04      0.31163997       0.31618617               0
 #>   CenterComparison   Reference  Comparison        Mean   Difference
-#> 1     2.081668e-17  0.23250785  0.23698253  0.23474519  0.004474682
-#> 2     2.081668e-17 -0.38809689 -0.39556320 -0.39183004 -0.007466312
-#> 3     2.081668e-17  0.09102647  0.09277729  0.09190188  0.001750824
-#> 4     2.081668e-17  0.06456257  0.06580338  0.06518297  0.001240805
-#> 5     2.775558e-17 -0.18292092 -0.18556593 -0.18424342 -0.002645009
-#> 6     2.775558e-17 -0.30735556 -0.31285402 -0.31010479 -0.005498464
-#> 7     2.775558e-17  0.17863651  0.18223377  0.18043514  0.003597266
-#> 8     2.775558e-17  0.31163997  0.31618617  0.31391307  0.004546207
+#> 1    -1.387779e-17  0.23250785  0.23698253  0.23474519  0.004474682
+#> 2    -1.387779e-17 -0.38809689 -0.39556320 -0.39183004 -0.007466312
+#> 3    -1.387779e-17  0.09102647  0.09277729  0.09190188  0.001750824
+#> 4    -1.387779e-17  0.06456257  0.06580338  0.06518297  0.001240805
+#> 5    -3.469447e-17 -0.18292092 -0.18556593 -0.18424342 -0.002645009
+#> 6    -3.469447e-17 -0.30735556 -0.31285402 -0.31010479 -0.005498464
+#> 7    -3.469447e-17  0.17863651  0.18223377  0.18043514  0.003597266
+#> 8    -3.469447e-17  0.31163997  0.31618617  0.31391307  0.004546207
 #>          ReferenceKind       ComparisonKind                Status Reason
 #> 1 Fixed facet estimate Fixed facet estimate available_descriptive       
 #> 2 Fixed facet estimate Fixed facet estimate available_descriptive       
@@ -997,7 +1118,7 @@ summary(report, view = "reader")
 #>                  Overall caveat            Target-specific review
 #>         Numerical checks     ok                    Numerical only
 #>  Interval interpretation caveat Conditional on stated assumptions
-#>    Model-fit diagnostics caveat                  Descriptive only
+#>       Response residuals caveat                  Descriptive only
 #>                                                                                                                                                                                                              MainIssue
 #>                                                                                                                                                                Numerical checks satisfied; model adequacy not assessed
 #>                                                                                                                                                               Numerical convergence does not establish model adequacy.
@@ -1021,7 +1142,7 @@ summary(report, view = "reader")
 #> Immediate actions
 #>                     Area Status
 #>  Interval interpretation caveat
-#>    Model-fit diagnostics caveat
+#>       Response residuals caveat
 #>                                                                                                                                                                                                              MainIssue
 #>                                                                                                                                                      Read the target and uncertainty basis for each reported quantity.
 #>  768 of 768 selected rows have standardized residuals; 0 unresolved, 0 missing scores, 0 zero-variance rows. 0 source rows were not selected. Same-data description with calibration fixed; no calibrated fit cutoffs.

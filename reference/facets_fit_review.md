@@ -33,6 +33,9 @@ facets_fit_review(
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
   If it does not contain FACETS-style fit columns, diagnostics are
   recomputed with `fit_df_method = "both"` and `residual_pca = "none"`.
+  Must match this fitted analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics.
 
 - facets_fit:
 
@@ -136,7 +139,6 @@ table.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
@@ -193,5 +195,4 @@ summary(review)
 #> 
 #> Further detail
 #>  - Complete comparison rows remain in `$df_sensitivity` and `$df_sensitive`.
-# }
 ```

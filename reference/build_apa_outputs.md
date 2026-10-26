@@ -96,8 +96,8 @@ By default, `report_text` includes:
   criteria are explicitly labelled screening/review-only rather than
   automatic ranking
 
-- anchor/constraint summary (`noncenter_facet`, anchored levels, group
-  anchors, dummy facets)
+- anchor/constraint summary (`noncenter_facet`, centering convention,
+  anchored levels, group anchors, dummy facets)
 
 - latent-regression population-model wording when `fit` has an active
   `population_formula`
@@ -109,6 +109,20 @@ By default, `report_text` includes:
 
 - facet reliability/separation, residual PCA summary, and bias-screen
   counts
+
+- stored inter-rater agreement, its matched-opportunity denominator and
+  unavailable outcomes, separately from separation reliability
+
+Agreement wording uses the rater facet in the stored diagnostics
+summary; `context$rater_facet` does not recalculate or relabel that
+summary. The model-expected baseline uses fitted category probabilities
+with calibration fixed, not marginal-frequency chance agreement.
+Adjacent agreement includes exact matches and differences of at most 1
+on the compared score scale. Missing expected values remain explicit,
+including the stored number of opportunities without valid
+probabilities. An absent summary does not establish agreement. See
+[`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
+for the matching, repeated-rating and denominator conventions.
 
 ## Interpreting output
 
@@ -173,6 +187,15 @@ supplied, `bias_results` must come from
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
 or another package-native bias helper that provides a table component.
 
+## Saved-result reuse
+
+Supplied screening results must describe this fitted analysis. Results
+from another fit or older results without identity metadata are refused.
+See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+to recreate them from the saved fit and matching diagnostics without
+refitting the model.
+
 ## See also
 
 [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md),
@@ -183,7 +206,6 @@ or another package-native bias helper that provides a table component.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -242,11 +264,12 @@ cat(apa$report_text)
 #> Design and data.
 #> The analysis focused on Synthetic writing assessment in Demonstration dataset. A many-facet
 #> rating-scale Rasch model was fit to 282 observations from 48 persons scored on a 4-category
-#> scale (1-4). The design included facets for Rater (n = 6), Criterion (n = 3). Facet-level
-#> sample sizes met the package's `standard` band (smallest level N = 38), an mfrmr-specific
-#> watermark adapted from Linacre's (1994) 30/100 guidance; facets were nonetheless estimated
-#> as fixed effects with sum-to-zero identification (see `facet_small_sample_review()`). The
-#> rating scale was described as 1-4 rating scale.
+#> scale (1-4). The design included facets for Rater (n = 6), Criterion (n = 3). The smallest
+#> non-person facet-level count was 38 retained rating rows, placing it in the package's
+#> 'standard' screening band. These counts are not counts of independent examinees or
+#> effective sample sizes and do not establish precision or interval coverage. Review
+#> targeting, connectedness and estimator-specific uncertainty alongside
+#> `facet_small_sample_review()`. The rating scale was described as 1-4 rating scale.
 #> 
 #> Estimation settings.
 #> The RSM specification was estimated using MML with mfrmr. Model-based precision summaries
@@ -260,7 +283,8 @@ cat(apa$report_text)
 #> -347.240, canonical MML AIC = 712.480, Person-BIC = 729.320, Sclove SABIC = 701.085). MML
 #> integration used fixed Gauss-Hermite quadrature (q=31). Terminal gradient sup-norm = 0.0000
 #> (review threshold = 0.0001). Constraint settings: noncenter facet = Person; anchored levels
-#> = 0 (facets: none); group anchors = 0 (facets: none); dummy facets = none.
+#> = 0 (facets: none); group anchors = 0 (facets: none); dummy facets = none. Centered facets
+#> sum to zero across all levels, including anchors and group totals.
 #> 
 #> Results.
 #> 
@@ -282,16 +306,34 @@ cat(apa$report_text)
 #> guidelines differ, and band position is screening evidence rather than a model-validity
 #> decision. MnSq outside [0.5, 1.5]: 18 of 57 classified elements flagged; 0 of 57 elements
 #> unclassified. Largest misfit signals among 57 elements with complete paired statistics:
-#> Person:P026 (|ZSTD| = 2.46); Person:P022 (|ZSTD| = 2.42); Person:P016 (|ZSTD| = 2.08).
-#> Criterion reliability = 0.87 (separation = 2.56). Person reliability = 0.66 (separation =
-#> 1.41). Rater reliability = 0.68 (separation = 1.45). These are Rasch/FACETS-style
-#> separation indices (measure spread relative to measurement error), not inter-rater
-#> agreement. The Person row uses EAP measures with posterior SDs, which yields a conservative
-#> summary that is not numerically comparable to JMLE-based person reliability from FACETS.
-#> Observed inter-rater agreement is reported separately from separation reliability: for
-#> Rater, exact agreement = 0.39, expected exact agreement = 0.35, adjacent agreement = 0.86.
-#> Element-level 95% approximate intervals (Normal approximation) accompany 57 of 57
-#> estimates; 57 of 57 estimates have intervals eligible for primary reporting.
+#> Person:P022 (|ZSTD| = 2.88); Person:P026 (|ZSTD| = 2.84); Criterion:Content (|ZSTD| =
+#> 2.27). Criterion reliability = 0.87 (separation = 2.56). Person reliability = 0.66
+#> (separation = 1.41). Rater reliability = 0.68 (separation = 1.45). Separation reliability
+#> describes differences among facet locations relative to their estimation errors. High
+#> Person values indicate distinguishable abilities; high rater values indicate
+#> distinguishable severities, not inter-rater agreement. Low rater values can also reflect
+#> imprecision and do not establish agreement. The index does not test every rater pair or
+#> quantify the practical size of severity differences. Reliability, separation and Strata are
+#> approximate compatibility indices using marginal SEs; joint-information SEs do not validate
+#> this variance decomposition. They do not account for covariance among estimates. EAP-based
+#> separation is not posterior-variance EAP reliability. Model and fit-adjusted values are
+#> companion indices, not confidence limits. Strata describes hypothetical distinguishable
+#> strata, not discovered groups. Facet heterogeneity chi-square summaries use diagonal SE
+#> weights, not full-covariance joint tests. The Person row uses EAP measures with posterior
+#> SDs, which yields a conservative summary that is not numerically comparable to JMLE-based
+#> person reliability from FACETS. Inter-rater agreement for Rater is reported separately from
+#> separation reliability. Diagnostics match scores within Person and all remaining non-rater
+#> facets; each compared pair contributes one opportunity per matched context. The denominator
+#> is 138 matched-context opportunities across rater pairs, not a count of independent people.
+#> 6 of 15 candidate rater pairs have matched scores. Observed exact agreement = 0.39;
+#> observed adjacent agreement (absolute score difference at most 1, including exact matches)
+#> = 0.86; model-expected exact agreement = 0.35. The model-expected baseline uses fitted
+#> category probabilities with calibration fixed; it is not chance agreement or an inferential
+#> test. It assumes conditional independence at the saved Person point score (EAP for MML),
+#> rather than integrating over the Person posterior. These descriptive summaries do not
+#> classify rater quality or establish fairness. Element-level 95% approximate intervals
+#> (Normal approximation) accompany 57 of 57 estimates; 57 of 57 estimates have intervals
+#> eligible for primary reporting.
 #> 
 #> Residual structure.
 #> Overall categories: 0 flagged among 4 classified; 0 of 4 unavailable. Step/scale groups: 0
@@ -313,5 +355,4 @@ cat(apa$report_text)
 #> interchangeable with JMLE-based engines such as FACETS. Refit with method = "JML" when a
 #> JMLE-style residual basis is required for external comparison.
 # Adapt the text to the study question, design, and evidence before using it
-# }
 ```

@@ -1,4 +1,4 @@
-# GPCM Workflow Availability
+# GPCM workflow and score availability
 
 Check which `GPCM` workflows can be used in `mfrmr`, the limits that
 apply to each workflow, and the recommended alternative when a route is
@@ -41,7 +41,8 @@ for conditional scoring.
 
 ``` r
 gpcm_capability_matrix(
-  status = c("all", "supported", "supported_with_caveat", "blocked", "deferred")
+  status = "all",
+  view = c("workflows", "scores", "unavailable")
 )
 ```
 
@@ -49,13 +50,22 @@ gpcm_capability_matrix(
 
 - status:
 
-  Which rows to return: `"all"` (default), `"supported"`,
-  `"supported_with_caveat"`, `"blocked"`, or `"deferred"`.
+  Which rows to return. For `view = "workflows"` or `"unavailable"`, use
+  `"all"` (default), `"supported"`, `"supported_with_caveat"`,
+  `"blocked"`, or `"deferred"`. For `view = "scores"`, use `"all"`,
+  `"available_with_caveat"`, `"supporting_route"`, or `"unavailable"`.
+
+- view:
+
+  The table to read: `"workflows"` (default) gives the general map;
+  `"scores"` describes package-native versus FACETS-style score
+  quantities; `"unavailable"` lists blocked/deferred routes and
+  alternatives.
 
 ## Value
 
-A data.frame of class `mfrmr_gpcm_capabilities` with one row per
-workflow family and columns:
+For `view = "workflows"`, a data.frame of class
+`mfrmr_gpcm_capabilities` with one row per workflow family and columns:
 
 - `Area`
 
@@ -66,6 +76,11 @@ workflow family and columns:
 - `Boundary`
 
 - `RecommendedRoute`
+
+For `view = "scores"`, an ordinary data.frame with `Capability`,
+`Status`, `Limitation` and `Alternative`. For `view = "unavailable"`, an
+ordinary data.frame with `Area`, `Helper`, `Status`, `Boundary` and
+`RecommendedRoute`.
 
 ## Details
 
@@ -83,6 +98,23 @@ workflow family and columns:
 Read `Boundary` before interpreting a caveated result. For a blocked or
 deferred row, use `RecommendedRoute` to choose a supported analysis or a
 Rasch-family alternative.
+
+In the score view, `available_with_caveat` denotes an available quantity
+within its `Limitation`, `supporting_route` denotes related evidence or
+a reference model rather than a replacement for that quantity, and
+`unavailable` denotes a quantity not supplied. Package-native GPCM
+scores and uncertainty are not FACETS score-side equivalents. These
+statuses are kept separate from the general workflow statuses to
+preserve their meaning.
+
+In 0.2.4, this is the single public entry for all three tables. Replace
+`gpcm_score_side_contract(status)` with
+`gpcm_capability_matrix(status, view = "scores")`, and
+`gpcm_runtime_guard_coverage()` with
+`gpcm_capability_matrix(view = "unavailable")`. Each view retains its
+former column schema and status meanings. These tables describe
+supported routes; they do not inspect a particular fit or certify its
+inferential eligibility.
 
 ## Connected outputs and unavailable extensions
 
@@ -103,14 +135,18 @@ and
 A plot of locations or fit statistics is not a plot of slope
 uncertainty.
 [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
-separately supplies experimental native-scale model intervals for
+separately supplies native-scale model-information Wald intervals for
 one-family MML locations and within-facet contrasts. Direct
 fixed/adaptive MML, centered additive facets/steps and unit weights are
 required, with an estimated intercept-only normal population or the
 explicit fixed-N(0,1) restriction. Shared/separate slope and step owners
 are supported. Full-information and finer-grid checks preserve refusal
-reasons; sampling coverage and standardized-location intervals remain
-unqualified.
+reasons; regular asymptotic validity assumes a correctly specified,
+identified interior marginal model with nonsingular limiting
+information. Finite-sample coverage is not guaranteed. Explicit zero-sum
+contrasts can be standardized by the same fit's population SD using the
+full delta method; individual standardized-location intervals are not
+supplied.
 
 Portable calibration has its own row and
 [`mfrm_calibration_capabilities()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_capabilities.md)
@@ -131,23 +167,25 @@ unavailable intervals. Attach them with
 `mfrm_results(fit, intervals = curves)` for reports and saved exports.
 Without attachments, `mfrm_results(fit)` collects the saved fit and its
 numerical status; neither call calculates new diagnostics. Separately
-use `ci <- confint(fit)` for experimental component log-Wald intervals
-and attach `intervals = list(slopes = ci, curves = curves)`. Local
-numerical checks do not establish global identification or sampling
-coverage; failed checks retain missing bounds. For fixed-grid EM, an
-explicit `confint(fit, method = "profile", slope = c(Task = "t1"))`
+use `ci <- confint(fit, parm = "slopes")` for experimental component
+log-Wald intervals and attach
+`intervals = list(slopes = ci, curves = curves)`. Local numerical checks
+do not establish global identification or sampling coverage; failed
+checks retain missing bounds. An explicit
+`confint(fit, parm = "slopes", method = "profile", slope = c(Task = "t1"))`
 profiles one two-family component, using the actual owner/level names.
-It retains nuisance reoptimization, numerical checks, unavailable
-endpoints and a same-target Wald comparison. Neither method has
-qualified coverage. Use
+It preserves the fitted fixed or adaptive integration method; adaptive
+nodes, scales and Jacobians are recomputed throughout the constrained
+searches. It retains nuisance reoptimization, numerical checks,
+unavailable endpoints and a same-target Wald comparison. Neither method
+has qualified coverage. Use
 [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
 to compare refits with the same engine and integration method. Both
 routes retain each order's experimental log-Wald checks. Optional
 `adaptive_quad_points` also adds fixed-calibration integration checks
 for two families; the posterior moments in that review are numerical
 diagnostics, not a Person-scoring workflow. Person-score comparisons
-remain unavailable for two families. Adaptive two-family fitting does
-not yet supply profile intervals. For both engines,
+remain unavailable for two families. For both engines,
 [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
 supplies same-data posterior predictive residuals with fixed
 calibration, including descriptive Infit/Outfit without reference
@@ -192,11 +230,19 @@ One-family GPCM EM/hybrid requests fall back to direct and record the
 engine in `fit$summary`.
 
 The provisional two-slope-family GMFRM route uses fixed-standard-normal
-MML with numerical generalized EM. It requires an explicit EM request;
-direct and hybrid are not available for this route. EM is not a defining
-property of GMFRM. See the GPCM scope vignette for the distinction
-between the model, estimation method and algorithm, with links to
-Muraki, TAM and sirt.
+MML with fixed-grid generalized EM (`mml_engine = "em"`) or adaptive
+direct optimization
+(`mml_engine = "direct", mml_integration = "adaptive"`).
+`mml_integration = "auto"` preserves the selected engine and increases
+integration points up to
+`mml_accuracy_control = list(max_points = ...)`, including reference
+rules, while retaining the numerical and information checks. Fixed
+integration remains the package default; two-family direct fitting
+requires explicit adaptive or automatic integration. Adaptive EM and
+two-family hybrid fitting are unavailable. EM is not a defining property
+of GMFRM. See the GPCM scope vignette for the distinction between the
+model, estimation method and algorithm, with links to Muraki, TAM and
+sirt.
 
 ## Applications of two slope families
 
@@ -326,21 +372,22 @@ These decisions are separate, and do not follow from unidimensionality:
 
 - **Slope intervals:**
   [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
-  uses the inverse joint observed information, including estimated
-  population parameters, and the sum-zero log-slope transformation. It
-  checks likelihood consistency, convergence, positive unregularized
-  information, unit weights and a grid of at least 31 points. The
-  exponentiated log-Wald limits are pointwise model-based approximations
-  for geometric-mean-one relative slopes by default. Explicit options
-  add population-SD-standardized slopes, named ratios or differences,
-  Bonferroni adjustment and independent-cluster sandwich covariance. An
-  experimental `method = "profile"` with one named `slope` reoptimizes
-  all nuisance parameters, including the normal population, and retains
-  endpoint failures and a saved likelihood plot. Its initial scope
-  excludes anchors, interactions, covariates and standardized targets.
-  Profile coverage and superiority over Wald have not been established.
-  Small samples and misspecification can still affect coverage. Failed
-  checks retain missing limits and a reason.
+  with `parm = "slopes"` uses the inverse joint observed information,
+  including estimated population parameters, and the sum-zero log-slope
+  transformation. It checks likelihood consistency, convergence,
+  positive unregularized information, unit weights and a grid of at
+  least 31 points. The exponentiated log-Wald limits are pointwise
+  model-based approximations for geometric-mean-one relative slopes by
+  default. Explicit options add population-SD-standardized slopes, named
+  ratios or differences, Bonferroni adjustment and independent-cluster
+  sandwich covariance. An experimental `method = "profile"` with one
+  named `slope` reoptimizes all nuisance parameters, including the
+  normal population, and retains endpoint failures and a saved
+  likelihood plot. Its initial scope excludes anchors, interactions,
+  covariates and standardized targets. Profile coverage and superiority
+  over Wald have not been established. Small samples and
+  misspecification can still affect coverage. Failed checks retain
+  missing limits and a reason.
   [`bootstrap_mfrm_gpcm()`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md)
   provides fitted-model bootstrap intervals or a matched PCM/GPCM test;
   [`mfrm_curve_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_curve_intervals.md)
@@ -437,16 +484,17 @@ Transformed intervals require the joint parameter covariance.
 Multiplying relative-slope interval endpoints by an estimated population
 SD omits its uncertainty and covariance with the slopes. Use
 [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
-with `scale = "standardized"` for the full transformation; with
-covariates the SD is the residual population SD. TAM's documented
-`tam.se()` omits parameter covariances; ConQuest distinguishes the
-covariance of parameter estimates from the latent-population covariance.
-Neither marginal SEs nor a latent-population covariance matrix replace
-the required joint matrix. Numerical replication requires matching data,
-model and identification. IC selection can compare different, nonnested
-models on compatible likelihoods; verify each model's free-parameter
-count and integration accuracy. A likelihood-ratio test additionally
-requires a nested null. Consult
+with `parm = "slopes", scale = "standardized"` for the full
+transformation; with covariates the SD is the residual population SD.
+TAM's documented `tam.se()` omits parameter covariances; ConQuest
+distinguishes the covariance of parameter estimates from the
+latent-population covariance. Neither marginal SEs nor a
+latent-population covariance matrix replace the required joint matrix.
+Numerical replication requires matching data, model and identification.
+IC selection can compare different, nonnested models on compatible
+likelihoods; verify each model's free-parameter count and integration
+accuracy. A likelihood-ratio test additionally requires a nested null.
+Consult
 [`vignette("mfrmr-gpcm-scope")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md)
 for examples, sources and the scope of existing numerical comparisons.
 These do not supply a general GPCM import or comparison API.
@@ -537,4 +585,62 @@ gpcm_capability_matrix("blocked")
 #> 
 #> Filter by status, for example gpcm_capability_matrix("supported_with_caveat").
 #> Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.
+gpcm_capability_matrix(view = "scores")
+#>                            Capability                Status
+#> 1       Package-native score estimand available_with_caveat
+#> 2   Slope-aware expected-score fields available_with_caveat
+#> 3            Native score uncertainty available_with_caveat
+#> 4 FACETS-compatible score uncertainty           unavailable
+#> 5 Structural fair-average uncertainty      supporting_route
+#> 6  Equal-discrimination PCM reference      supporting_route
+#> 7     Package-native scorefile export available_with_caveat
+#> 8       Full FACETS score-side review           unavailable
+#> 9            Reporting interpretation available_with_caveat
+#>                                                                                                                                                                                       Limitation
+#> 1                                                            Expected-score and residual quantities are package-native GPCM outputs, not Rasch measure-to-score or FACETS-equivalent quantities.
+#> 2                                                                               Expected-score fields use the fitted slope structure and therefore depend on the declared step and slope facets.
+#> 3                                                                       Uncertainty fields require the relevant MML diagnostics; otherwise the scorefile reports an explicit unavailable status.
+#> 4                                                                                             No FACETS-compatible free-discrimination score-side uncertainty definition is currently available.
+#> 5 Structural fair-average SEs condition on Person EAP/reference means and remain diagnostic-only (FairCIEligible = FALSE); full-refit coverage and FACETS score-side equivalence are unverified.
+#> 6                                                           Unit-slope agreement with PCM is an interpretation reference, not evidence that every free-slope score quantity is Rasch-equivalent.
+#> 7                                                                                                               The exported scorefile is package-native and must retain its GPCM caveat fields.
+#> 8                                                                                                           The full FACETS-style score-side review is unavailable for free-discrimination GPCM.
+#> 9                                                                                                 GPCM score-side output is sensitivity evidence, not an automatic operational scoring decision.
+#>                                                                                                                              Alternative
+#> 1                                  Use `facets_output_file_bundle(include = "score")` and report the package-native estimand explicitly.
+#> 2                                 Inspect the fitted step and slope summaries before interpreting exported expected scores or residuals.
+#> 3                Use an MML fit when uncertainty is required, or report the explicit unavailable status without substituting another SE.
+#> 4             Use the package-native scorefile with caveats; use an `RSM` or `PCM` fit when a full FACETS score-side review is required.
+#> 5 Use `fair_average_table(fit, fair_se = TRUE)` directly and label the result as slope-aware element-conditional diagnostic uncertainty.
+#> 6                                           Fit a `PCM` reference when equal-discrimination score semantics are required for comparison.
+#> 7                                           Use `facets_output_file_bundle(include = "score")` and retain all status and caveat columns.
+#> 8                                                          Keep full `facets_output_contract_review()` work on the `RSM` or `PCM` route.
+#> 9                                                Report GPCM as a slope-aware sensitivity analysis and keep operational claims separate.
+gpcm_capability_matrix("unavailable", view = "scores")
+#>                            Capability      Status
+#> 1 FACETS-compatible score uncertainty unavailable
+#> 2       Full FACETS score-side review unavailable
+#>                                                                                           Limitation
+#> 1 No FACETS-compatible free-discrimination score-side uncertainty definition is currently available.
+#> 2               The full FACETS-style score-side review is unavailable for free-discrimination GPCM.
+#>                                                                                                                  Alternative
+#> 1 Use the package-native scorefile with caveats; use an `RSM` or `PCM` fit when a full FACETS score-side review is required.
+#> 2                                              Keep full `facets_output_contract_review()` work on the `RSM` or `PCM` route.
+gpcm_capability_matrix(view = "unavailable")
+#>                                                       Area
+#> 1                 FACETS output-contract score-side review
+#> 2            Native MCMC and posterior-predictive sampling
+#> 3 Formal structural confidence intervals for corrected JML
+#>                            Helper   Status
+#> 1 facets_output_contract_review()  blocked
+#> 2                            <NA> deferred
+#> 3                            <NA> deferred
+#>                                                                                                                                                                                                                                                                                                                                                   Boundary
+#> 1                                                                                     Limited to direct scorefile export rather than the full FACETS-style output-contract review. Direct scorefile export is available with caveats, but contract-wide coverage and metric claims still require a broader free-discrimination score-side review contract.
+#> 2 mfrmr does not run native GPCM MCMC or posterior-predictive sampling. export_mfrm_model() writes Stan/brms code for eligible one-family MML sources and Stan code for two-family sources, adding explicit structural priors and retaining supported fixed constraints. Conditional posterior response diagnostics are a different, non-MCMC calculation.
+#> 3                                 Formal corrected-JML structural intervals are unavailable. The explicit corrected estimator reports local adjusted-equation RootSE, not established structural coverage. Uncorrected JML location SEs and post-hoc Person intervals answer different questions. None is a bias-corrected structural confidence interval.
+#>                                                                                                                                                                                                                                                                                             RecommendedRoute
+#> 1                                                                                                 Use direct fair-average tables and graph-only compatibility outputs; use package-native scorefile export with its stated caveats, and keep full FACETS output-contract reviews on the `RSM` / `PCM` route.
+#> 2 Use MML and conditional posterior scoring for their stated targets. Use export_mfrm_model(format = 'stan' or 'brms') for eligible one-family sources, or format = 'stan' for two-family sources. Then review priors, sampler diagnostics and posterior fit; code export is not native Bayesian estimation.
+#> 3                                                                                                                          Use current JML outputs within their descriptive scope, or explicitly choose MML inference if its population assumptions suit the analysis; do not transfer MML intervals to JML.
 ```

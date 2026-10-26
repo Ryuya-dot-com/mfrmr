@@ -14,7 +14,7 @@ summary(object, digits = 3, top_n = 10, ...)
 - object:
 
   Output from
-  [`build_peer_review_design_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_peer_review_design_review.md).
+  [`review_peer_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_peer_design.md).
 
 - digits:
 
@@ -34,4 +34,4 @@ An object of class `summary.mfrm_peer_review_design_review`.
 
 ## See also
 
-[`build_peer_review_design_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_peer_review_design_review.md)
+[`review_peer_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_peer_design.md)

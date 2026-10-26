@@ -140,6 +140,13 @@ contribute non-trivial heterogeneity beyond measurement error.
 
 3.  Cross-check with inter-rater and element-level fit diagnostics.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## Session plot defaults
 
 Set `options(mfrmr.plot_preset = "publication")` to choose a session
@@ -178,26 +185,21 @@ or diagnostic thresholds.
 ## See also
 
 [`facets_chisq_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_chisq_table.md),
-[`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
+[plot(x, type =
+"agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-p <- plot_facets_chisq(fit, draw = FALSE)
+p <- plot(fit, type = "facets_chisq", draw = FALSE)
 if (interactive()) {
-  plot_facets_chisq(
-    fit,
-    draw = TRUE,
-    plot_type = "fixed",
-    preset = "publication",
-    main = "Facet Chi-square (Customized)",
+  plot(fit, type = "facets_chisq", draw = TRUE, view = "fixed",
+    preset = "publication", main = "Facet Chi-square (Customized)",
     palette = c(fixed_ok = "#2b8cbe", fixed_flag = "#cb181d"),
-    label_angle = 45
-  )
+    label_angle = 45)
 }
-# }
 ```

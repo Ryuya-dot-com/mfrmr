@@ -63,33 +63,23 @@ An object of class `summary.mfrm_population_prediction` with:
 ## Examples
 
 ``` r
-# \donttest{
-spec <- build_mfrm_sim_spec(
-  n_person = 16,
-  n_rater = 3,
-  n_criterion = 2,
-  raters_per_person = 2,
-  assignment = "rotating"
-)
-pred <- predict_mfrm_population(
-  sim_spec = spec,
-  design = list(person = 18),
-  reps = 1,
-  maxit = 30,
-  seed = 123
-)
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+pred <- saved$population
 s <- summary(pred)
 s$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
 #>     <dbl>        <dbl>          <dbl>         <dbl>          <dbl>
-#> 1       1            1              1             1           1.15
+#> 1       1            1              1             1          0.341
 s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
 #> # A tibble: 3 × 3
 #>   Facet     MeanSeparation McseSeparation
 #>   <chr>              <dbl>          <dbl>
 #> 1 Criterion           0                NA
-#> 2 Person              1.36             NA
+#> 2 Person              1.25             NA
 #> 3 Rater               0                NA
-# }
 ```

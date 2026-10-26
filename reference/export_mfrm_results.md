@@ -46,11 +46,13 @@ export_mfrm_results(
 - include:
 
   Export components. `"default"` expands to `"summary"`, `"tables"`,
-  `"html"`, `"rds"`, `"replay"`, and `"manifest"`. Add `"report"` to
-  write
+  `"html"`, `"rds"`, `"replay"`, and `"manifest"`. `"replay"` always
+  includes `"rds"` to reload the complete saved result. Add `"report"`
+  to write
   [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
   tables plus Markdown and HTML; add `"plots"` to write available plot
-  routes as PNG files, or use `"all"`.
+  routes as PNG files with separate title/notes CSV files, or use
+  `"all"`.
 
 - preset:
 
@@ -108,19 +110,41 @@ The helper writes:
 
 - an `.rds` copy of the `mfrm_results` object;
 
-- a replay `.R` script, reloading the saved result when additional
-  inference or posterior diagnostics are attached;
+- a replay `.R` script that reloads the complete exported result;
+
+- optional PNG figures and matching `_plot_{type}_notes.csv` files. Each
+  CSV retains
+  [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+  notes and their source-specific columns, with suggested titles
+  identified by `Type = "title"`. Titles and explanatory notes remain
+  outside the image; the starter index links each PNG to its CSV. A
+  multi-plot `fit` bundle produces one PNG/CSV pair per member, named
+  `_plot_fit_wright_map`, `_plot_fit_pathway_map` and
+  `_plot_fit_category_characteristic_curves`, rather than one combined
+  PNG;
 
 - a written-files manifest and compact export summary.
 
-For testlet, random-rater and ordinary results with saved posterior
-response diagnostics, GPCM inference or RSM/PCM fixed-facet intervals,
-replay reloads the exported RDS without refitting, rescoring or
-resampling. Requesting `"replay"` also includes `"rds"`. Run the script
-from the exported folder. Stored prediction settings, unavailable rows,
-numerical checks and interval meanings travel with the result. A
-bootstrap interval may have infinite endpoints; exports retain them
-instead of substituting finite ordinary intervals.
+For every supported result type, replay reloads the exported RDS without
+reconstructing the analysis, refitting, rescoring or resampling.
+Requesting `"replay"` also includes `"rds"`; source-session variables
+such as `fit` and `diagnostics` are not required. Run the script with
+`source("path/to/prefix_replay.R", chdir = TRUE)`, replacing the path
+with the exported script's location, or run it from the exported folder.
+Use
+[`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
+for a separate refitting script. Result CSV files use UTF-8; when
+importing with base R, use
+`read.csv(path, encoding = "UTF-8", check.names = FALSE)` to preserve
+user-supplied names across locales.
+
+Use
+[`export_mfrm_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_tables.md)
+when only the fit's core CSV tables are needed. Stored prediction
+settings, unavailable rows, numerical checks and interval meanings
+travel with the result. A bootstrap interval may have infinite
+endpoints; exports retain them instead of substituting finite ordinary
+intervals.
 
 All presets, including `"starter"`, are analysis archives. In
 particular, the default `.rds` file retains the complete result object,
@@ -140,6 +164,16 @@ manifest. Its Infit pathway includes a bounded selection of person rows
 so person fit can be reviewed without replacing the required Wright-map
 first screen.
 
+With `overwrite = TRUE`, a requested ZIP is rebuilt from files written
+by this call; members from an older archive are not retained. ZIP
+command or content-check failure leaves any older ZIP in place, sets
+`ZipWritten` to `FALSE`, and explains the failure in `zip_note`. That
+older archive is not listed as a new output. Unrequested loose files in
+`output_dir` are neither deleted nor included. The on-disk file manifest
+and export summary describe the non-ZIP artifacts, including any
+plot-error CSV; the returned `written_files` and `summary` additionally
+record a successful ZIP.
+
 ## See also
 
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md),
@@ -150,17 +184,17 @@ first screen.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
@@ -201,5 +235,4 @@ exported$plot_errors
 #> <0 rows> (or 0-length row.names)
 # Full paths remain in exported$written_files$Path.
 # Open index.html in output_dir to read the report.
-# }
 ```

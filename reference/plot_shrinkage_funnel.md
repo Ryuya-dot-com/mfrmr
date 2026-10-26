@@ -69,6 +69,13 @@ or a `fit_mfrm(..., facet_shrinkage = "empirical_bayes")` run, so that
 `fit$facets$others` carries `Estimate`, `ShrunkEstimate`, and
 `ShrinkageFactor` columns.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## Session plot defaults
 
 Set `options(mfrmr.plot_preset = "publication")` to choose a session
@@ -112,12 +119,11 @@ or diagnostic thresholds.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 300)
 fit_eb <- apply_empirical_bayes_shrinkage(fit)
-p <- plot_shrinkage_funnel(fit_eb, draw = FALSE)
+p <- plot(fit_eb, type = "shrinkage", view = "funnel", draw = FALSE)
 head(p$data$table)
 #>   Facet Level RawEstimate         SE ShrunkEstimate   ShrunkSE ShrinkageFactor
 #> 2 Rater   R02  -0.3287812 0.09769555     -0.2861288 0.09113855       0.1297287
@@ -139,5 +145,4 @@ head(p$data$table)
 #   prior pulled the estimate strongly; this is most pronounced for
 #   small-N levels. ShrinkageFactor near 1 means most of the
 #   movement was driven by the prior rather than the data.
-# }
 ```

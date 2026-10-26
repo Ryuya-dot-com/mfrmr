@@ -128,6 +128,10 @@ An object of class `mfrm_plausible_values` with components:
 
 - `values`: one row per person per draw
 
+- `fit_identity`: source calibration, fitted population coding and
+  scoring status retained from
+  [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+
 - `estimates`: companion posterior EAP summaries
 
 - `row_review`: row-preparation review
@@ -216,6 +220,14 @@ reference prior for this post hoc scoring layer.
 
 - Mislevy, R. J. (1991). *Randomization-based inference about latent
   variables from complex samples*. Psychometrika, 56(2), 177-196.
+
+## Saved-result reuse
+
+Fit-level export and replay helpers check the source calibration and
+scoring status of supplied draws. Recreate older results from the saved
+fit and original scoring inputs/settings, including the seed. This
+repeats drawing values without refitting the calibration. See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md).
 
 ## See also
 

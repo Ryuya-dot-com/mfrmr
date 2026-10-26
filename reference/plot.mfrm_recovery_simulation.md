@@ -25,7 +25,7 @@ plot(
 - x:
 
   Output from
-  [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md).
+  [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md).
 
 - y:
 
@@ -33,10 +33,11 @@ plot(
 
 - type:
 
-  Plot route: `"summary"` draws a metric from `x$recovery_summary`,
-  `"coverage"` draws 95% coverage by parameter group, `"errors"` draws
-  row-level recovery-error distributions, `"scatter"` draws truth
-  against estimated values, and `"replications"` summarizes run status.
+  Plot route: `"summary"` draws a metric from
+  `summary(x)$recovery_summary`, `"coverage"` draws 95% coverage by
+  parameter group, `"errors"` draws row-level recovery-error
+  distributions, `"scatter"` draws truth against estimated values, and
+  `"replications"` summarizes run status.
 
 - metric:
 
@@ -80,30 +81,54 @@ These plots are intended as simulation-review graphics. They do not
 replace the row-level `x$recovery` table or the ADEMP metadata; they
 make the main recovery estimands easier to inspect during
 model-development and design checks. Coverage is displayed only for
-parameter groups with available standard errors.
+groups with valid centered structural intervals, conditional on
+availability. Summary/coverage routes refresh aggregates from saved
+rows; their `data$availability_table` preserves all selected groups,
+including those omitted from drawing. Inspect counts, availability
+rates, MCSEs and `CIReasons` there and in `summary(x)`. A wholly
+unavailable coverage plot gives an informative error; it does not draw
+missing coverage as zero. See
+[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
+for the target and the treatment of legacy saved intervals. A zero
+mean-aligned bias is an identification identity, not evidence of
+unbiased estimation.
 
 ## See also
 
-[`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md),
+[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md),
 [`summary()`](https://rdrr.io/r/base/summary.html)
 
 ## Examples
 
 ``` r
-# \donttest{
-rec <- evaluate_mfrm_recovery(
-  n_person = 12,
-  n_rater = 2,
-  n_criterion = 2,
-  reps = 1,
-  maxit = 30,
-  seed = 123
-)
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+rec <- saved$recovery
 plot(rec, type = "summary", metric = "rmse", draw = FALSE)
 #> <mfrm_plot_data>
 #>   name     : recovery_simulation
 #>   title    : Parameter recovery: RMSE
 #>   subtitle : Summary by parameter type, facet, and comparison scale
+#>   notes    :
+#>     [note] MCSE uses independent simulation trials, with a ratio
+#>     linearization for unequal numbers of available parameter rows; fewer
+#>     than two contributing trials gives NA.
+#>     [note] Coverage95 is conditional on available centered facet intervals.
+#>     Report ExpectedRows, CoverageRows, CoverageAvailabilityRate and
+#>     FailedReps alongside it; unavailable intervals are not counted as
+#>     noncoverage.
+#>     [note] Mean-aligned location Bias and complete identified log-slope
+#>     group Bias are zero by construction; they are not evidence of truth
+#>     centering and receive BiasStatus = not_assessed. RMSE describes
+#>     within-group relative recovery.
+#>     [note] Some fitted models did not report convergence; inspect
+#>     `rep_overview` before interpreting recovery summaries.
+#>     [note] Some planned targets have no supported centered structural
+#>     interval. RawSE preserves source uncertainty, including Person-score
+#>     uncertainty, without treating it as an interval for this target.
 #>   data     :
 #>     $type : character [1]
 #>     $metric : character [1]
@@ -111,11 +136,11 @@ plot(rec, type = "summary", metric = "rmse", draw = FALSE)
 #>     $comparison : character [1]
 #>     $parameter_type : NULL
 #>     $facet : NULL
-#>     $plot_table : data.frame [4 x 22]
+#>     $plot_table : data.frame [4 x 41]
+#>     $availability_table : data.frame [4 x 39]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 0 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
-# }
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 ```

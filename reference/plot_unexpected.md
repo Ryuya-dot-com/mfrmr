@@ -8,10 +8,10 @@ Plot unexpected responses using base R
 plot_unexpected(
   x,
   diagnostics = NULL,
-  abs_z_min = 2,
+  abs_z_min = 3,
   prob_max = 0.3,
   top_n = 100,
-  rule = c("either", "both"),
+  rule = c("residual", "either", "both"),
   plot_type = c("scatter", "severity"),
   main = NULL,
   palette = NULL,
@@ -39,7 +39,7 @@ plot_unexpected(
 
 - abs_z_min:
 
-  Absolute standardized-residual cutoff.
+  Absolute standardized-residual cutoff (default 3).
 
 - prob_max:
 
@@ -51,7 +51,7 @@ plot_unexpected(
 
 - rule:
 
-  Flagging rule (`"either"` or `"both"`).
+  Flagging rule: `"residual"` (default), `"either"`, or `"both"`.
 
 - plot_type:
 
@@ -105,7 +105,11 @@ absolute standardised residual \\\|Z\|\\ and the negative log
 probability \\-\log\_{10} P\_{\mathrm{obs}}\\. Higher severity indicates
 responses that are more surprising under the fitted model.
 
+Saved table bundles retain their recorded rule and thresholds. A fully
+evaluated screen with no flags returns an empty display and its summary.
 The `rule` parameter controls flagging logic:
+
+- `"residual"`: flag by the absolute standardized residual alone.
 
 - `"either"`: flag if \\\|Z\| \ge\\ `abs_z_min` **or**
   \\P\_{\mathrm{obs}} \le\\ `prob_max`.
@@ -164,6 +168,13 @@ For a plot-selection guide and a longer walkthrough, see
 and
 [`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md).
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## Session plot defaults
 
 Set `options(mfrmr.plot_preset = "publication")` to choose a session
@@ -202,30 +213,25 @@ or diagnostic thresholds.
 ## See also
 
 [`unexpected_response_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/unexpected_response_table.md),
-[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md),
-[`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
+[plot(x, type =
+"fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-p <- plot_unexpected(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
+p <- plot(fit, type = "unexpected", abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
 if (interactive()) {
-  plot_unexpected(
-    fit,
-    abs_z_min = 1.5,
-    prob_max = 0.4,
-    top_n = 10,
-    plot_type = "severity",
-    preset = "publication",
+  plot(fit, type = "unexpected", abs_z_min = 1.5, prob_max = 0.4,
+    top_n = 10, view = "severity", preset = "publication",
     main = "Unexpected Response Severity (Customized)",
     palette = c(higher = "#d95f02", lower = "#1b9e77", bar = "#2b8cbe"),
-    label_angle = 45
-  )
+    label_angle = 45)
 }
-# }
 ```

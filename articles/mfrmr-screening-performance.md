@@ -144,13 +144,20 @@ screen$by_family[screen$by_family$Targets > 0, ]
 #>   AllTrialsUpper
 #> 1              0
 unique(observed[c("Replicate", "FitReady", "Message")])
-#>   Replicate FitReady Message
-#> 1         1     TRUE        
-#> 2         2     TRUE        
-#> 3         3     TRUE        
-#> 4         4     TRUE        
-#> 5         5     TRUE        
+#>   Replicate FitReady
+#> 1         1     TRUE
+#> 2         2     TRUE
+#> 3         3    FALSE
+#> 4         4     TRUE
+#> 5         5     TRUE
 #> 6         6     TRUE
+#>                                                                                                                                                                                                                                                                                          Message
+#> 1                                                                                                                                                                                                                                                                                               
+#> 2                                                                                                                                                                                                                                                                                               
+#> 3 Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
+#> 4                                                                                                                                                                                                                                                                                               
+#> 5                                                                                                                                                                                                                                                                                               
+#> 6
 ```
 
 R’s logical `|` retains an available positive when the other index is
@@ -206,26 +213,26 @@ subset(sensitivity$by_family, Targets > 0)
 #> 19 Rotating null Any unaffected target flagged       4               6       6
 #> 21 Rotating null Any unaffected target flagged       4               6       6
 #> 23 Rotating null Any unaffected target flagged       4               6       6
-#>    Available Unavailable Positive      Rate      MCSE    MCLower   MCUpper
-#> 1          6           0        0 0.0000000 0.0000000 0.00000000 0.4592581
-#> 3          6           0        0 0.0000000 0.0000000 0.00000000 0.4592581
-#> 5          6           0        0 0.0000000 0.0000000 0.00000000 0.4592581
-#> 7          6           0        0 0.0000000 0.0000000 0.00000000 0.4592581
-#> 9          6           0        2 0.3333333 0.1924501 0.04327187 0.7772219
-#> 11         6           0        2 0.3333333 0.1924501 0.04327187 0.7772219
-#> 13         6           0        0 0.0000000 0.0000000 0.00000000 0.4592581
-#> 15         6           0        6 1.0000000 0.0000000 0.54074187 1.0000000
-#> 17         6           0        6 1.0000000 0.0000000 0.54074187 1.0000000
-#> 19         6           0        0 0.0000000 0.0000000 0.00000000 0.4592581
-#> 21         6           0        0 0.0000000 0.0000000 0.00000000 0.4592581
-#> 23         6           0        0 0.0000000 0.0000000 0.00000000 0.4592581
+#>    Available Unavailable Positive      Rate      MCSE   MCLower   MCUpper
+#> 1          6           0        0 0.0000000 0.0000000 0.0000000 0.4592581
+#> 3          6           0        0 0.0000000 0.0000000 0.0000000 0.4592581
+#> 5          6           0        0 0.0000000 0.0000000 0.0000000 0.4592581
+#> 7          6           0        0 0.0000000 0.0000000 0.0000000 0.4592581
+#> 9          6           0        4 0.6666667 0.1924501 0.2227781 0.9567281
+#> 11         6           0        4 0.6666667 0.1924501 0.2227781 0.9567281
+#> 13         6           0        0 0.0000000 0.0000000 0.0000000 0.4592581
+#> 15         6           0        6 1.0000000 0.0000000 0.5407419 1.0000000
+#> 17         6           0        6 1.0000000 0.0000000 0.5407419 1.0000000
+#> 19         6           0        0 0.0000000 0.0000000 0.0000000 0.4592581
+#> 21         6           0        0 0.0000000 0.0000000 0.0000000 0.4592581
+#> 23         6           0        0 0.0000000 0.0000000 0.0000000 0.4592581
 #>    AllTrialsLower AllTrialsUpper Profile Lower Upper Direction
 #> 1       0.0000000      0.0000000 0.5-1.5   0.5   1.5  underfit
 #> 3       0.0000000      0.0000000 0.5-1.5   0.5   1.5   overfit
 #> 5       0.0000000      0.0000000 0.5-1.5   0.5   1.5    either
 #> 7       0.0000000      0.0000000 0.7-1.3   0.7   1.3  underfit
-#> 9       0.3333333      0.3333333 0.7-1.3   0.7   1.3   overfit
-#> 11      0.3333333      0.3333333 0.7-1.3   0.7   1.3    either
+#> 9       0.6666667      0.6666667 0.7-1.3   0.7   1.3   overfit
+#> 11      0.6666667      0.6666667 0.7-1.3   0.7   1.3    either
 #> 13      0.0000000      0.0000000 0.8-1.2   0.8   1.2  underfit
 #> 15      1.0000000      1.0000000 0.8-1.2   0.8   1.2   overfit
 #> 17      1.0000000      1.0000000 0.8-1.2   0.8   1.2    either

@@ -32,7 +32,12 @@ confint(object, parm = "calibration", level = 0.95, ...)
 ## Value
 
 A matrix with `Lower` and `Upper`, one row per fixed-facet level or
-step, and attributes `level`, `method`, `target` and `note`.
+step, and attributes `level`, `method`, `target`, `note`, `checks` and
+`diagnostics`. `attr(ci, "diagnostics")` retains each estimate, SE,
+`IntervalStatus`, `CIEligible` and plain-language `InferenceReview`;
+`checks` retains the source checks without recomputing them. Save the
+whole object with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html);
+for CSV, export the diagnostics table to retain reasons.
 
 ## Details
 
@@ -50,6 +55,22 @@ approximation in those outputs; their level arguments retain its nominal
 interpretation.
 [`predict.mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict.mfrm_testlet.md)
 supplies the separate conditional Person-scoring intervals.
+
+## Reading missing bounds
+
+`estimated_variance_boundary` means an estimated variance is at zero;
+regular normal inference is withheld even when a point is retained.
+`numerical_review_failed` means numerical readiness or positive
+information has not been established; `InferenceReview` retains all
+detected reasons, including any simultaneous boundary. Increasing
+iterations alone does not repair a variance-boundary restriction.
+Inspect `attr(ci, "checks")` first. `invalid_estimate_or_se` and
+`nonfinite_bounds` identify row-specific calculation failures. Missing
+bounds are neither zero uncertainty nor infinite endpoints. Retaining a
+point does not certify its reliability. Default calibration tables also
+distinguish `not_requested` from `unsupported_target` (population
+SDs/variances). `CIEligible` is true only for a returned normal
+interval; it is not a coverage guarantee.
 
 ## See also
 

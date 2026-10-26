@@ -279,7 +279,6 @@ under the evaluated role-based design.
 ## Examples
 
 ``` r
-# \donttest{
 diag_eval <- evaluate_mfrm_diagnostic_screening(
   design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
   reps = 1,
@@ -313,5 +312,4 @@ diag_eval$scenario_contrast
 #> #   MeanMarginalFlaggedGroups_Scenario <dbl>,
 #> #   MeanPairwiseFlaggedLevelPairs_Scenario <dbl>,
 #> #   PairwiseAnyFlagRate_Scenario <dbl>, …
-# }
 ```

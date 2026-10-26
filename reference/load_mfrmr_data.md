@@ -1,6 +1,6 @@
-# Load a packaged simulation dataset
+# Load a packaged ordered-response MFRM dataset
 
-Load a packaged simulation dataset
+Load a packaged ordered-response MFRM dataset
 
 ## Usage
 
@@ -22,13 +22,21 @@ load_mfrmr_data(
 
 ## Value
 
-A data.frame in long format.
+A data.frame in long format: each row is one rating, not one Person.
 
 ## Details
 
-`load_mfrmr_data("<key>")` is the canonical loader for the packaged
-datasets and the entry point used across the package help and vignettes.
-The equivalent base-R alternative
+For a first MFRM analysis, run
+`ratings <- load_mfrmr_data("example_operational")`. This reads data
+already included in mfrmr; no CSV, download or data-generation code is
+needed. `ratings` is a name you choose for the returned table. It is not
+a second dataset to create. Older examples may name the same object
+`toy` or `d`. Start by reading `head(ratings)`, `names(ratings)` and
+`table(ratings$Score)`.
+
+`load_mfrmr_data("<key>")` is the canonical loader for packaged
+ordered-response MFRM datasets and the entry point used across the
+package help and vignettes. The equivalent base-R alternative
 `data("<object-name>", package = "mfrmr")` remains available for users
 who prefer the full [`data()`](https://rdrr.io/r/utils/data.html)
 spelling; both paths return identical long-format data frames.
@@ -36,7 +44,15 @@ spelling; both paths return identical long-format data frames.
 All returned datasets include the core long-format columns `Study`,
 `Person`, `Rater`, `Criterion`, and `Score`. Some datasets, such as the
 packaged documentation examples, also include auxiliary variables like
-`Group` for DIF/bias demonstrations.
+`Group` for DIF/bias demonstrations. The supplied ratings are synthetic
+teaching data, not empirical records. For observed-score G-theory
+examples with multiple score columns, see
+[mfrmr_gtheory_data](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_gtheory_data.md);
+for agreement examples, see
+[mfrmr_agreement_data](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_agreement_data.md).
+Those datasets use [`data()`](https://rdrr.io/r/utils/data.html) because
+their row/column roles differ from the ordered-response MFRM tables
+returned here.
 
 ## Interpreting output
 
@@ -72,8 +88,8 @@ interpretable.
 library(mfrmr)
 
 # Load synthetic ratings and inspect their columns and score frequencies
-toy <- load_mfrmr_data("example_operational")
-head(toy)
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
 #>                Study Person Rater    Criterion Score Group
 #> 1 OperationalExample   P001   R01     Language     4     A
 #> 2 OperationalExample   P001   R01 Organization     2     A
@@ -81,15 +97,15 @@ head(toy)
 #> 4 OperationalExample   P001   R02     Language     3     A
 #> 5 OperationalExample   P001   R02 Organization     2     A
 #> 6 OperationalExample   P002   R01      Content     3     A
-names(toy)
+names(ratings)
 #> [1] "Study"     "Person"    "Rater"     "Criterion" "Score"     "Group"    
-table(toy$Score)
+table(ratings$Score)
 #> 
 #>  1  2  3  4 
 #> 62 96 78 46 
 
 # Optional: base R's data() loads the same dataset under its full name
 data("mfrmr_example_operational", package = "mfrmr")
-identical(toy, mfrmr_example_operational) # TRUE: both contain the same data
+identical(ratings, mfrmr_example_operational) # TRUE: both contain the same data
 #> [1] TRUE
 ```

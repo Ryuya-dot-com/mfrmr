@@ -26,6 +26,7 @@ plot_wright_unified(
   wright_range = NULL,
   extreme_placement = c("ends", "estimate"),
   persons_per_star = NULL,
+  highlight = NULL,
   ...
 )
 ```
@@ -130,6 +131,20 @@ plot_wright_unified(
   Number of persons represented by one `*`; `NULL` selects a compact
   value automatically.
 
+- highlight:
+
+  Optional named list of non-person facet level IDs, for example
+  `list(Rater = c("R01", "R02"))`, for Wright maps only (including
+  `view = "unified"` and the Wright component of a bundle). Selected
+  labels receive a `> ` prefix in both renderers and saved ggplot
+  conversion. Levels outside the usual `top_n` selection are added, so
+  the displayed count may exceed that limit. Fitted locations and
+  uncertainty do not change; the automatic scale uses all fitted
+  locations before compaction. Selection is not a statistical flag.
+  Inspect `locations$Highlighted`, `retention` and `notes` in the
+  returned plot data. Unknown IDs or levels without finite locations are
+  rejected. `NULL` selects no levels.
+
 - ...:
 
   Additional graphical parameters.
@@ -204,7 +219,7 @@ warns and prefixes the returned subtitle and drawn title with
 1.  Fit a model with
     [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
-2.  Plot with `plot_wright_unified(fit)`.
+2.  Plot with `plot(fit, type = "wright", view = "unified")`.
 
 3.  Compare person distribution with facet level locations.
 
@@ -213,9 +228,9 @@ warns and prefixes the returned subtitle and drawn title with
 
 ## When to use this instead of plot_information
 
-Use `plot_wright_unified()` when your main question is targeting or
-coverage on the shared logit scale. Use
-[`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
+Use [`plot()`](https://rdrr.io/r/graphics/plot.default.html) when your
+main question is targeting or coverage on the shared logit scale. Use
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md)
 when your main question is measurement precision across theta.
 
 ## Further guidance
@@ -224,6 +239,13 @@ For a plot-selection guide and a longer walkthrough, see
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 and
 [`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md).
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -273,7 +295,7 @@ toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", model = "RSM", maxit = 30)
-map_data <- plot_wright_unified(fit, draw = FALSE)
+map_data <- plot(fit, type = "wright", view = "unified", draw = FALSE)
 names(map_data)
 #>  [1] "persons"               "facets"                "thresholds"           
 #>  [4] "facet_names"           "y_lim"                 "title"                
@@ -281,18 +303,13 @@ names(map_data)
 #> [10] "person"                "person_exclusions"     "person_hist"          
 #> [13] "person_stats"          "locations"             "label_points"         
 #> [16] "group_summary"         "group_levels"          "y_range"              
-#> [19] "display_settings"      "label_limit"           "retention"            
-#> [22] "retention_note"        "show_ci"               "uncertainty_display"  
-#> [25] "legend"                "subtitle"              "fit_readiness"        
-#> [28] "interpretation_status" "interpretation_note"  
-facets_map <- plot_wright_unified(
-  fit,
-  renderer = "facets",
-  category_labels = c(
+#> [19] "display_settings"      "label_limit"           "highlight"            
+#> [22] "retention"             "retention_note"        "show_ci"              
+#> [25] "uncertainty_display"   "legend"                "subtitle"             
+#> [28] "fit_readiness"         "interpretation_status" "interpretation_note"  
+facets_map <- plot(fit, type = "wright", view = "unified", renderer = "facets", category_labels = c(
     `1` = "Beginning", `2` = "Developing", `3` = "Secure", `4` = "Advanced"
-  ),
-  draw = FALSE
-)
+  ), draw = FALSE)
 facets_map$facets_style$settings
 #> # A tibble: 1 × 15
 #>   Renderer WrightStyle  VisualCorrespondence  LowerLogit UpperLogit RowsPerLogit

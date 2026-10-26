@@ -13,20 +13,25 @@ checklist can act as a plot-readiness router rather than just a
 manuscript checklist.
 
 This guide is primarily written for diagnostics-based `RSM` / `PCM`
-workflows. `GPCM` fits also use the residual-based diagnostics stack
-through
+workflows. Ordinary one-family `GPCM` fits also use the residual-based
+diagnostics stack through
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
-[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-[`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-[`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
-[`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md),
-[`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md),
-and
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
+[plot(x, type =
+"unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"facets_chisq")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"residual_pca")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+and [plot(x, type =
+"qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 plus the posterior-scoring, design-weighted-information path via
 [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
 /
-[`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md),
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md),
 and the Wright / pathway / CCC fit plots. Two `GPCM`-specific caveats
 apply when interpreting these residual-based screens:
 
@@ -37,8 +42,8 @@ apply when interpreting these residual-based screens:
   invariance.
 
 - FACETS-style fair averages are a Rasch-family measure-to-score
-  transformation. Under `GPCM` the fair-average panel of
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
+  transformation. Under `GPCM` the fair-average panel of [plot(x, type =
+  "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   therefore renders with an explicit "unavailable" status, and the
   broader compatibility-export helpers stay outside the documented
   `GPCM` boundary.
@@ -46,7 +51,10 @@ apply when interpreting these residual-based screens:
 Use
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
 for the formal per-helper boundary before choosing a `GPCM` follow-up
-plot route.
+plot route. Two-family GPCM and corrected JML use their separate
+[`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+routes; the shared `mfrm_fit` class does not authorize the ordinary
+diagnostics or Wright/Pathway displays above.
 
 Portable fixed-calibration score batches have a separate review route.
 Use `summary(scores)` and `plot(scores)` as described in
@@ -91,18 +99,26 @@ or diagnostic thresholds.
 
 ## Titles and compatibility
 
-The development version adds `title` to
-[`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
-[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md),
-[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-[`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
-[`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md),
-[`plot_bubble()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bubble.md),
-[`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md)
-and
-[`plot_facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facet_quality_dashboard.md).
-Omission keeps the default title; `title = "Scoring patterns"` replaces
-it; `title = NULL` or `title = ""` suppresses it. The dashboard's S3
+The development version adds `title` to [plot(x, type =
+"marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"facets_chisq")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"bubble")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+and [plot(x, type =
+"facet_dashboard")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
+Omission retains default title metadata; `title = "Scoring patterns"`
+replaces it; `title = NULL` or `title = ""` suppresses that metadata.
+Titles and explanatory notes are returned outside the figure by default;
+display controls below govern explicit drawing. The dashboard's S3
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method forwards
 these controls. Use exact argument names.
 
@@ -143,53 +159,163 @@ A saved plot payload also retains its rendering choices. With
 To change labels on the converted ggplot, use
 `as_ggplot(p) + ggplot2::labs(title = NULL)`.
 
-Title suppression depends on the entry point. Ordinary fitted-model
-plots retain the historical `title = NULL` meaning (automatic title);
-use `show_title = FALSE` to hide it and `show_notes = FALSE` to hide
-notes. Fixed-facet interval plots and the helpers listed above accept
-`title = NULL` to hide the title. These distinctions preserve existing
-scripts. Hiding annotations does not remove numerical cautions from the
-saved results or establish stronger inference.
+Figures omit titles, subtitles and explanatory footnotes by default.
+Keep the returned object: `p <- plot(fit)`, then use
+`plot_data(p, "title")` and `plot_data(p, "notes")` to prepare the title
+and notes separately in a manuscript. Printing a returned
+`mfrm_plot_data` object also displays notes in the console. The same
+notes accessor works for mfrmr ggplots and after saving and reloading
+the returned object. Axis labels, legends, panel identifiers and
+data/status symbols remain. `title`, `main`, `subtitle` and `caption`
+now supply metadata by default. Entry points with `show_title` and
+`show_notes` allow explicit opt-in display; both switches default to
+`FALSE`. For ggplot customization, use `ggplot2::labs(title = "...")`.
+Numerical warnings and saved diagnostics remain available regardless of
+these presentation choices.
+
+## Read score direction and diagnostic terms first
+
+A logit is a model coordinate, not a label for good or bad performance.
+Record the wording of both ends of the rubric before interpreting a
+plot. In the ordinary positive-discrimination models, a higher Person
+location predicts higher **coded scores**, holding other effects fixed:
+
+|  |  |
+|----|----|
+| Comprehensibility coding | Meaning of a higher Person location |
+| 1 = difficult to understand; 4 = easy to understand | Easier to understand |
+| 1 = easy to understand; 4 = difficult to understand | More difficult to understand |
+
+For a default negatively oriented Rater facet, a higher Rater location
+instead predicts **lower** coded scores. This is more severe under the
+first rubric, but more favorable under the second. A facet declared in
+`positive_facets` has the opposite parameter orientation. That argument
+does not reverse the outcome categories or make a Person score mean
+"better". Relabeling categories or flipping a graphical axis also does
+not recode the fitted model. To reverse a numeric 1–4 rubric, recode as
+`5 - Score` before fitting, retaining the original data and consistent
+category meanings across criteria. Existing anchors must use the same
+coding and scale; changing coding is not just editing a figure.
+
+The fitted-model plotting notes state recorded facet directions without
+guessing the rubric meaning. Use `p <- plot(fit, type = "wright")`,
+`print(p)` and `plot_data(p, "notes")`; keep the rubric wording with the
+analysis when saving it. The package does not infer that a column called
+Comprehensibility measures ease rather than difficulty. An older saved
+plot retains its original notes; regenerate the plot from its saved fit
+to obtain new guidance. An imported model requires its source
+orientation.
+
+**Overfit and underfit.** Infit and Outfit mean squares compare squared
+residuals with the variation expected under the selected model. Their
+reference is 1: smaller values describe less residual variation
+(overfit), larger values more variation (underfit). Infit weights
+observations by information; Outfit is more sensitive to unexpected
+responses far from the person's fitted location. ZSTD uses a different,
+zero-centered reference. Displayed bands are review limits, not
+universal acceptability rules, and a tiny deviation from 1 is not
+automatically flagged.
+
+In a speech contest, trained judges can have similar severity estimates
+or high agreement while their fit is near 1. Those features alone do not
+imply overfit. If low mean squares occur, review actual residuals,
+category use, shared performances and whether judgments were made
+independently. Training is one contextual explanation to investigate,
+not a demonstrated cause or a reason to dismiss the result. Joint
+discussion/copying can introduce dependence; consistent independent
+application of a rubric is a different process. Overfit is not the
+machine-learning meaning of fitting too many parameters. Neither overfit
+nor underfit alone identifies halo, unfairness, judge incompetence or a
+rule for deleting ratings.
+
+**Bias in a bias plot.**
+[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
+estimates an additional shift for a combination, such as Judge A scoring
+Content, after holding the baseline Person/facet/step/slope estimates
+fixed. It concerns a conditional interaction departure, not the judge's
+overall severity, statistical bias of an estimator, or proof of
+prejudice or unfairness. In mfrmr, positive `Bias Size` increases
+expected coded scores and negative values decrease them. Under a
+high-is-good rubric, positive bias thus favors that cell, whereas
+positive default Rater severity reduces its score. FACETS output can use
+different configured bias directions; compare definitions before
+comparing signs. The facet-profile plot averages **absolute** bias and
+cannot show which cells are favored. Read signed cell rows, exposure,
+uncertainty and the scoring context. Conditional intervals omit
+calibration uncertainty and the flags remain screening evidence.
+
+**Step.** A Step is an adjacent-category transition parameter: a 1–4
+rubric has transitions 1 to 2, 2 to 3 and 3 to 4. In the default
+unit-slope RSM, \\\log\\P(Y=k)/P(Y=k-1)\\=\theta-\delta-\beta-\tau_k\\.
+At \\\theta=\delta+\beta+\tau_k\\, the two adjacent categories have
+equal probability. Other categories may also occur, so neither
+probability need be 0.5. A Step is not a learning stage, the mean Person
+location observed in that category, a cumulative 50-percent threshold,
+or a pass/fail cut. Stored \\\tau_k\\ offsets differ from full
+ability-axis crossings when facet effects are nonzero. The ordinary
+CCC/Wright step reference fixes other additive effects at zero;
+[plot.mfrm_fit](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+documents that profile. RSM shares steps; PCM/GPCM assigns them to a
+selected owner. Check the owner's counts and curves before interpreting
+disorder or merging categories. See
+[`rating_scale_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rating_scale_table.md)
+and
+[mfrmr_methods_reference](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_methods_reference.md)
+for calculations and the Andrich/Masters references.
+
+These distinctions follow the official FACETS [facet
+orientation](https://winsteps.com/facetman64/positive.htm), [fit
+report](https://winsteps.com/facetman64/table7.htm) and [bias
+report](https://winsteps.com/facetman64/table13.htm) descriptions, and
+the Winsteps [adjacent-category threshold
+explanation](https://www.winsteps.com/winman/table2_4.htm). mfrmr's
+specific sign, reference-profile and uncertainty rules remain those
+documented in its own function help.
 
 ## Start with the question
 
 - "Do persons and facet levels overlap on the same logit scale?" Use
-  `plot(fit, type = "wright")` or
-  [`plot_wright_unified()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_wright_unified.md).
+  `plot(fit, type = "wright")` or [plot(x, type = "wright", view =
+  "unified")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "Where do score categories transition across theta?" Use
   `plot(fit, type = "pathway")` and `plot(fit, type = "ccc")`.
 
 - "How do measures and observed scores relate to Fair Scores?" Use
-  [`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
-  with `plot_type = "measure"`, `"scatter"`, or `"difference"`. FairZ is
-  a zero-reference expected score, not a z-score.
+  [plot(x, type =
+  "fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+  with `view = "measure"`, `"scatter"`, or `"difference"`. FairZ is a
+  zero-reference expected score, not a z-score.
 
 - "Is the design linked well enough across subsets or administrations?"
   Use `plot(subset_connectivity_report(...), type = "design_matrix")`,
   [`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md),
   [`build_mfrm_network_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_network_review.md),
   `plot(..., type = "network")`, and
-  [`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md).
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md).
 
-- "Which responses or levels look locally problematic?" Use
-  [`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md)
-  and
-  [`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md).
+- "Which responses or levels look locally problematic?" Use [plot(x,
+  type =
+  "unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+  and [plot(x, type =
+  "displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "Which facet/category cells drive strict marginal misfit?" Use
-  [`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md).
+  [plot(x, type =
+  "marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "Which level pairs drive strict local-dependence follow-up?" Use
-  [`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md).
+  [plot(x, type =
+  "marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "Do raters agree within observed shared scoring contexts?" Use
-  [`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md)
+  [plot(x, type =
+  "agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   and
   [`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md).
 
-- "Do facet levels separate meaningfully?" Use
-  [`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md).
+- "Do facet levels separate meaningfully?" Use [plot(x, type =
+  "facets_chisq")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "Do criteria within the same rater move together in a halo-like way?"
   Use
@@ -197,69 +323,75 @@ saved results or establish stronger inference.
   and `plot(..., type = "edge_distribution")`.
 
 - "Is there notable residual structure after the main Rasch dimension?"
-  Use
-  [`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md).
+  Use [plot(x, type =
+  "residual_pca")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "Which interaction cells or facet levels drive bias screening
-  results?" Use
-  [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md).
+  results?" Use [plot(x, type =
+  "bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "Which group-by-facet contrasts drive DFF / DIF screening results?"
-  Use
-  [`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md)
-  and
-  [`plot_dif_summary()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_summary.md)
+  Use [plot(x, type =
+  "heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md)
+  and [plot(x, type =
+  "summary")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md)
   after
   [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md).
 
 - "Do person response rows follow the expected Guttman-style ordering
-  once persons and items are sorted on the logit scale?" Use
-  [`plot_guttman_scalogram()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_guttman_scalogram.md)
+  once persons and items are sorted on the logit scale?" Use [plot(x,
+  type =
+  "guttman")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   as a teaching-oriented screen.
 
 - "Do person-level standardized residuals look Gaussian, or are there
-  heavy tails that warrant follow-up?" Use
-  [`plot_residual_qq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_qq.md).
+  heavy tails that warrant follow-up?" Use [plot(x, type =
+  "residual_qq")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "Is rater severity drifting across waves or training sessions
   (assuming the waves are already on a common anchored scale)?" Use
-  [`plot_rater_trajectory()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_rater_trajectory.md)
+  `plot(fits[[1L]], type = "trajectory", comparison = fits[-1L], labels = names(fits))`
+  (see
+  [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md))
   together with
-  [`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md)
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md)
   for the linking-scale review.
 
 - "I have many raters and want a compact pairwise agreement /
-  correlation overview instead of the bar chart?" Use
-  [`plot_rater_agreement_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_rater_agreement_heatmap.md).
+  correlation overview instead of the bar chart?" Use [plot(x, type =
+  "agreement", view =
+  "heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "Do response times suggest rapid responding, slow responding, or
   timing patterns by person, facet, or score category?" Use
   [`response_time_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/response_time_review.md)
   and
-  [`plot_response_time_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_response_time_review.md)
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_response_time_review.md)
   as a descriptive QC layer outside the MFRM likelihood.
 
 - "Are there pairs of facet levels whose residuals co-move beyond the
-  main-effects MFRM? (Q3-style local-dependence screen)" Use
-  [`plot_local_dependence_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_local_dependence_heatmap.md).
+  main-effects MFRM? (Q3-style local-dependence screen)" Use [plot(x,
+  type =
+  "local_dependence")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "How distinguishable is each facet on a single page (separation,
-  strata, reliability)?" Use
-  [`plot_reliability_snapshot()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_reliability_snapshot.md).
+  strata, reliability)?" Use [plot(x, type =
+  "reliability")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "Where do persons with the largest residual aggregates accumulate
-  across facet levels?" Use
-  [`plot_residual_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_matrix.md).
+  across facet levels?" Use [plot(x, type =
+  "residual_matrix")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - "How much did empirical-Bayes shrinkage move each facet level?" Use
-  [`plot_shrinkage_funnel()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_shrinkage_funnel.md)
+  [plot(x, type = "shrinkage", view =
+  "funnel")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   on a fit augmented via
   [`apply_empirical_bayes_shrinkage()`](https://ryuya-dot-com.github.io/mfrmr/reference/apply_empirical_bayes_shrinkage.md).
 
-- "I need one compact triage screen first." Use
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
-  for `RSM` / `PCM`. The `GPCM` branch can also call
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
+- "I need one compact triage screen first." Use [plot(x, type =
+  "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+  for `RSM` / `PCM`. The `GPCM` branch can also call [plot(x, type =
+  "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
   but its fair-average panel reports an explicit unavailability
   indicator because that panel's score-metric semantics are limited to
   the Rasch-family branch.
@@ -307,30 +439,35 @@ logits, or causal halo evidence.
     first and read the `"Visual Displays"` rows as the plot-readiness
     layer.
 
-2.  Start with
-    [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
+2.  Start with [plot(x, type =
+    "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
     for one-page triage.
 
-3.  Move to
-    [`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-    [`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-    [`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
-    [`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md),
-    and
-    [`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md)
+3.  Move to [plot(x, type =
+    "unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+    [plot(x, type =
+    "displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+    [plot(x, type =
+    "marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+    [plot(x, type =
+    "marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+    and [plot(x, type =
+    "agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
     for flagged local issues.
 
 4.  Use `plot(fit, type = "wright")`, `plot(fit, type = "pathway")`, and
-    [`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md)
-    for structural interpretation.
+    `plot(fit, type = "wright", view = "unified")` for structural
+    interpretation.
 
-5.  Use
-    [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md),
-    [`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md),
-    [`plot_dif_summary()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_summary.md),
-    [`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md),
+5.  Use [plot(x, type =
+    "bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+    [plot(x, type =
+    "heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md),
+    [plot(x, type =
+    "summary")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md),
+    [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md),
     and
-    [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
+    [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md)
     when the checklist or dashboard points to interaction,
     differential-functioning, linking, or precision follow-up.
 
@@ -376,28 +513,33 @@ and caption boundary attached to the package-native plot.
 The plotting layer supports the following public follow-up roles when
 the fitted object contains the required data:
 
-- First-pass triage:
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
+- First-pass triage: [plot(x, type =
+  "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   or the `"Visual Displays"` rows from
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md).
 
 - Structural interpretation: `plot(fit, type = "wright")`,
-  `plot(fit, type = "pathway")`, `plot(fit, type = "ccc")`, and
-  [`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md).
+  `plot(fit, type = "pathway")`, `plot(fit, type = "ccc")`, and [plot(x,
+  type =
+  "residual_pca")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
-- Local issue follow-up:
-  [`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-  [`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-  [`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
-  [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md),
-  [`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md),
-  and
-  [`plot_dif_summary()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_summary.md).
+- Local issue follow-up: [plot(x, type =
+  "unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md),
+  and [plot(x, type =
+  "summary")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md).
 
-- Strict marginal follow-up:
-  [`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md)
-  and
-  [`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md)
+- Strict marginal follow-up: [plot(x, type =
+  "marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+  and [plot(x, type =
+  "marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   for `diagnostic_mode = "both"`.
 
 - Reporting/export handoff:
@@ -454,119 +596,117 @@ Wright map is meant to support.
   Category probability curves. Best for checking whether categories peak
   in sequence.
 
-- [`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Observation-level surprises. Best for case review and local misfit
   triage.
 
-- [`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Level-wise anchor movement. Best for anchor robustness and residual
   calibration tension.
 
-- [`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Posterior-integrated first-order category residuals. Best for seeing
   which facet/category cells drive strict marginal flags.
 
-- [`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Posterior-integrated exact/adjacent agreement residuals. Best for
   exploratory local-dependence follow-up after strict marginal flags.
 
-- [`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Exact agreement, expected agreement, pairwise correlation, and
   agreement gaps. Best for rater consistency.
 
-- [`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Facet variability and chi-square summaries. Best for checking whether
   a facet contributes meaningful spread.
 
-- [`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Residual structure after the Rasch dimension is removed. Best for
   exploratory residual-structure review, not as a standalone
   unidimensionality test.
 
-- [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Interaction-bias screening views for cells and facet profiles. Best
   for systematic departure from the additive main-effects model.
 
-- [`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md)
-  /
-  [`plot_dif_summary()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_summary.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) /
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) :
 
   DFF / DIF screening views for facet-level x group contrasts. Best for
   showing which facet and group pair is involved before writing
   substantive interpretations.
 
-- [`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Anchor drift and screened linking-chain visuals. Best for multi-form
   or multi-wave linking review after checking retained common-element
   support.
 
-- [`plot_guttman_scalogram()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_guttman_scalogram.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Person x facet-level response matrix with unexpected-response overlay.
   Best for teaching-oriented scalogram intuition and visual triage of
   where the data depart from the expected ordering.
 
-- [`plot_residual_qq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_qq.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Normal Q-Q plot of person-level standardized residual aggregates. Best
   for checking the tail behavior of residuals as exploratory follow-up
   after a fit screen.
 
-- [`plot_rater_trajectory()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_rater_trajectory.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Per-rater severity trajectory across named waves / occasions. Best for
   rater-training or drift feedback when the supplied fits have already
   been placed on a common anchored scale; the helper itself does not
   perform linking.
 
-- [`plot_rater_agreement_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_rater_agreement_heatmap.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Compact pairwise rater x rater heatmap of exact agreement (default) or
   Pearson-style correlation. Best when the rater count makes the
-  bar-chart form of
-  [`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md)
+  bar-chart form of [plot(x, type =
+  "agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   too busy.
 
 - [`response_time_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/response_time_review.md)
-  /
-  [`plot_response_time_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_response_time_review.md):
+  / [`plot()`](https://rdrr.io/r/graphics/plot.default.html) :
 
   Descriptive response-time screening by person, facet, and score
   category. Best for reviewing rapid/slow response patterns alongside
   MFRM diagnostics; it is not a joint speed-accuracy model and does not
   change fitted measures.
 
-- [`plot_local_dependence_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_local_dependence_heatmap.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Standardized, aggregated-residual Q3-style heatmap of pairwise
   residual correlations between facet levels. Best for exploratory
   local-dependence screening; pairs with very strong off-diagonal
   residual correlation merit content-level review.
 
-- [`plot_reliability_snapshot()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_reliability_snapshot.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   One-figure facet x reliability / separation / strata bar overview
   built from `diagnostics$reliability`. Best as a single small figure
   for "which facets are statistically distinguishable?".
 
-- [`plot_residual_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_matrix.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Person x facet-level standardized residual heatmap. Best as a
-  follow-up to
-  [`plot_guttman_scalogram()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_guttman_scalogram.md)
+  follow-up to [plot(x, type =
+  "guttman")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   when the residual sign and magnitude matter, not just the response
   code.
 
-- [`plot_shrinkage_funnel()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_shrinkage_funnel.md):
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Empirical-Bayes shrinkage caterpillar / funnel showing raw versus
   shrunken facet estimates. Best on fits produced via
@@ -589,8 +729,8 @@ workflows, so column subsets and column names differ.
 
 - Wright (variable) map:
 
-  `plot(fit, type = "wright")` and
-  [`plot_wright_unified()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_wright_unified.md)
+  `plot(fit, type = "wright")` and [plot(x, type = "wright", view =
+  "unified")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   correspond to FACETS Table 6 / Winsteps "Person-Item map".
 
 - Pathway / probability curves:
@@ -602,7 +742,7 @@ workflows, so column subsets and column names differ.
 - Test / item information:
 
   [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md) +
-  [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md)
   correspond to Winsteps Table 17 ("Test characteristic curve, test
   information function").
 
@@ -616,7 +756,8 @@ workflows, so column subsets and column names differ.
 - Bias / interaction:
 
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md) +
-  [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md)
+  [plot(x, type =
+  "bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   correspond to FACETS Table 14 ("Bias / Interaction calibration
   report").
 
@@ -625,26 +766,28 @@ workflows, so column subsets and column names differ.
   [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
   /
   [`analyze_dif()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md) +
-  [`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md)
-  /
-  [`plot_dif_summary()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_summary.md)
+  [plot(x, type =
+  "heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md)
+  / [plot(x, type =
+  "summary")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md)
   cover the FACETS DIF / bias-by-group route and the Winsteps DIF (Table
   30 group differences) report.
 
 - Inter-rater agreement:
 
   [`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md) +
-  [`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md)
-  /
-  [`plot_rater_agreement_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_rater_agreement_heatmap.md)
+  [plot(x, type =
+  "agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+  / [plot(x, type = "agreement", view =
+  "heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   correspond to FACETS Table 7-style observed-vs-expected agreement
   reports.
 
 - Anchoring / linking:
 
-  [`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md)
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md)
   and
-  [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md)
   cover the FACETS / Winsteps anchored-run review route; full
   equating-chain helpers are exposed via
   [`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md).
@@ -701,15 +844,15 @@ workflows, so column subsets and column names differ.
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   -\>
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-  -\>
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md).
+  -\> [plot(x, type =
+  "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - Strict marginal follow-up:
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-  with `diagnostic_mode = "both"` -\>
-  [`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md)
-  -\>
-  [`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md).
+  with `diagnostic_mode = "both"` -\> [plot(x, type =
+  "marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+  -\> [plot(x, type =
+  "marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - Scale and targeting review: `plot(fit, type = "wright")` -\>
   `plot(fit, type = "pathway")` -\> `plot(fit, type = "ccc")`.
@@ -721,28 +864,28 @@ workflows, so column subsets and column names differ.
   /
   [`build_mfrm_network_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_network_review.md)
   / `plot(..., type = "network")` -\>
-  [`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md).
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md).
 
 - Interaction review:
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-  -\>
-  [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md)
+  -\> [plot(x, type =
+  "bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   -\>
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md).
 
 - DFF / DIF review:
   [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
-  -\>
-  [`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md)
-  /
-  [`plot_dif_summary()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_summary.md)
+  -\> [plot(x, type =
+  "heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md)
+  / [plot(x, type =
+  "summary")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md)
   -\> inspect the explicit facet, level, and group-pair columns before
   writing interpretation.
 
 ## Figures with separate titles and interpretation
 
-Wright, expected-score pathway, CCC, and
-[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
+Wright, expected-score pathway, CCC, and [plot(x, type =
+"fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 displays accept `show_title = FALSE` and `show_notes = FALSE`. These
 options hide figure annotations while retaining axes, legends,
 structural panel labels, and the original title and notes in the
@@ -769,8 +912,8 @@ structural table SEs for non-Person rows, conditioning on Person
 EAP/reference means. `fair_average_table(fair_se = TRUE)` does not
 provide RSM/PCM fair-score SEs. See
 [`mfrmr_interval_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_interval_guide.md)
-and
-[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
+and [plot(x, type =
+"fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 for the status columns and the observed-minus-fair gap caveat.
 
 ## Non-Latin and long labels
@@ -800,30 +943,47 @@ For a longer, plot-first walkthrough, run
 [gpcm_capability_matrix](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md),
 [`visual_reporting_template()`](https://ryuya-dot-com.github.io/mfrmr/reference/visual_reporting_template.md),
 [`mfrmr_interval_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_interval_guide.md),
+[plot(x, type =
+"guttman")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"facets_chisq")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"residual_pca")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md),
+[plot(x, type =
+"summary")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md),
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md),
 [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
-[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-[`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-[`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
-[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md),
-[`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
-[`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md),
-[`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md),
-[`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md),
-[`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md),
-[`plot_dif_summary()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_summary.md),
-[`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md),
-[`plot_guttman_scalogram()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_guttman_scalogram.md),
-[`plot_residual_qq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_qq.md),
-[`plot_rater_trajectory()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_rater_trajectory.md),
-[`plot_rater_agreement_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_rater_agreement_heatmap.md),
+[plot(x, type =
+"residual_qq")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+`plot(fits[[1L]], type = "trajectory", comparison = fits[-1L], labels = names(fits))`
+(see
+[`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)),
+[plot(x, type = "agreement", view =
+"heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [`response_time_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/response_time_review.md),
-[`plot_response_time_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_response_time_review.md)
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_response_time_review.md)
+
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -854,11 +1014,9 @@ review$decision
 #> 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.
 
 # Inspect an overview of model-fit issues
-plot_qc_dashboard(fit, diagnostics = diagnostics)
+plot(fit, type = "qc", diagnostics = diagnostics)
 
 
 # Follow up on observed versus model-expected category frequencies
-plot_marginal_fit(diagnostics)
-
-# }
+plot(diagnostics, type = "marginal_fit")
 ```

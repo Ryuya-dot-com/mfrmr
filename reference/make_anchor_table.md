@@ -9,7 +9,7 @@ make_anchor_table(
   fit,
   facets = NULL,
   include_person = FALSE,
-  digits = 6,
+  digits = NULL,
   readiness_policy = c("error", "review")
 )
 ```
@@ -29,11 +29,13 @@ make_anchor_table(
 
   Include person estimates as candidate anchors. Use only when cross-run
   person identity and the intended longitudinal constraint are
-  substantively justified.
+  substantively justified. Fixed Person values are supported only by a
+  receiving JML fit; MML rejects Person anchors.
 
 - digits:
 
-  Rounding digits for anchor values.
+  `NULL` (default) preserves the fitted numeric values. A nonnegative
+  integer explicitly rounds them for display or external use.
 
 - readiness_policy:
 
@@ -52,7 +54,12 @@ This function performs a mechanical conversion from fitted estimates to
 the `Facet`/`Level`/`Anchor` schema accepted by
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 The returned rows are candidate direct constraints, not an approved
-anchor set.
+anchor set. `Anchor` uses the internal, untransformed location metric.
+The table does not include category thresholds, GPCM slopes, model
+settings or source SEs; it is not a complete saved calibration. See
+[`extract_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+for that separate workflow. Fixing an estimated value does not propagate
+its source uncertainty into the new fit.
 
 By default, the function refuses export when the source fit is not
 inference-ready under the current readiness contract. Set
@@ -66,9 +73,11 @@ on the receiving data. That review checks schema and receiving-data
 support; it does not validate the source fit or the substantive
 invariance assumption.
 
-The `digits` parameter controls rounding precision. Use at least 4
-digits for research applications; excessive rounding (e.g., 1 digit) can
-introduce avoidable calibration error.
+Keep `digits = NULL` for recalibration. Rounding individual anchors can
+break their joint sum or group-mean constraint, even at six decimal
+places. Explicitly rounded values are different constraints and must be
+reviewed before reuse; the fitter does not silently recenter supplied
+anchors.
 
 ## Interpreting output
 
@@ -76,7 +85,7 @@ introduce avoidable calibration error.
 
 - `Level`: specific element/level name inside that facet.
 
-- `Anchor`: fixed logit value (rounded by `digits`).
+- `Anchor`: fixed logit value (rounded only when `digits` is supplied).
 
 ## Typical workflow
 
@@ -97,23 +106,22 @@ introduce avoidable calibration error.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", quad_points = 7, maxit = 30
+  ratings, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", rating_min = 1, rating_max = 4,
+  category_policy = "preserve"
 )
-anchors_tbl <- make_anchor_table(fit)
-head(anchors_tbl)
+# Select a facet deliberately; matching labels alone do not prove invariance.
+anchors_tbl <- make_anchor_table(fit, facets = "Rater")
+anchors_tbl
 #> # A tibble: 6 × 3
-#>   Facet     Level        Anchor
-#>   <chr>     <chr>         <dbl>
-#> 1 Criterion Content      -0.339
-#> 2 Criterion Language      0.118
-#> 3 Criterion Organization  0.221
-#> 4 Rater     R01          -0.597
-#> 5 Rater     R02          -0.334
-#> 6 Rater     R03           0.259
-summary(anchors_tbl$Anchor)
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#> -0.5968 -0.3339  0.1349  0.0000  0.2207  0.3678 
+#>   Facet Level Anchor
+#>   <chr> <chr>  <dbl>
+#> 1 Rater R01   -0.606
+#> 2 Rater R02   -0.382
+#> 3 Rater R03    0.212
+#> 4 Rater R04    0.180
+#> 5 Rater R05    0.184
+#> 6 Rater R06    0.412
 ```

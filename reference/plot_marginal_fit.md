@@ -22,58 +22,58 @@ plot_marginal_fit(
 
 ## Arguments
 
-- x:
+- x :
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   or
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
 
-- diagnostics:
+- diagnostics :
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   when `x` is `mfrm_fit`.
 
-- plot_type:
+- plot_type :
 
   `"std_residual"` or `"prop_diff"`.
 
-- top_n:
+- top_n :
 
   Maximum cells shown.
 
-- facet:
+- facet :
 
   Optional facet name used to keep only matching facet-level rows. When
   `NULL`, the plot uses the mixed top-cell table returned by the strict
   marginal screen.
 
-- main:
+- main :
 
   Compatibility title argument. Omitted or `NULL` keeps the default
   title. Existing calls remain supported without a deprecation warning.
   For new code, prefer `title`; do not supply both arguments.
 
-- palette:
+- palette :
 
   Optional named color overrides. Recognized names: `positive`,
   `negative`, `flag`.
 
-- label_angle:
+- label_angle :
 
   X-axis label angle.
 
-- preset:
+- preset :
 
   Visual preset (`"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`).
 
-- draw:
+- draw :
 
   If `TRUE`, draw with base graphics.
 
-- title:
+- title :
 
   Plot title. Omit it to keep the default, supply one character string
   to replace it, or use `NULL` (or `""`) to suppress it. This changes
@@ -126,8 +126,8 @@ cells deserve follow-up, but it is not a standalone inferential test.
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
     with `diagnostic_mode = "both"`.
 
-3.  Use `plot_marginal_fit()` to inspect the largest strict marginal
-    cells.
+3.  Use [`plot()`](https://rdrr.io/r/graphics/plot.default.html) to
+    inspect the largest strict marginal cells.
 
 4.  Follow up with
     [`rating_scale_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rating_scale_table.md)
@@ -139,6 +139,13 @@ For a plot-selection guide and a longer walkthrough, see
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 and
 [`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md).
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -179,13 +186,13 @@ or diagnostic thresholds.
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`rating_scale_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rating_scale_table.md),
-[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md),
+[plot(x, type =
+"marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -204,13 +211,11 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # Which score categories occur more or less often than the model expects?
-plot_marginal_fit(diagnostics)
+plot(diagnostics, type = "marginal_fit")
 
 # Positive bars: more frequent than expected; negative bars: less frequent
 
 # Optional: show observed-minus-expected proportions instead
 # Run this command separately to inspect the second figure
-plot_marginal_fit(diagnostics, plot_type = "prop_diff")
-
-# }
+plot(diagnostics, type = "marginal_fit", view = "prop_diff")
 ```

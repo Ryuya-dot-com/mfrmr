@@ -62,16 +62,21 @@ returned plot data includes package-native `title`, `subtitle`,
 
 ## Details
 
-Three plot types are supported:
+Four plot types are supported:
 
 - **`"drift"`** (for `mfrm_anchor_drift` objects): A dot plot of each
-  element's drift value, grouped by facet. Horizontal reference lines
-  mark the drift threshold. Red points indicate flagged elements.
+  element's drift value. Vertical reference lines mark the drift
+  threshold. The preset's warning colour indicates flagged elements.
 
 - **`"heatmap"`** (for `mfrm_anchor_drift` objects): A wave-by-element
   heat matrix showing drift magnitude. Darker cells represent larger
   absolute drift. Useful for spotting systematic patterns (e.g., all
   criteria shifting in the same direction).
+
+- **`"forest"`** (for `mfrm_anchor_drift` objects): Per-wave estimates
+  with approximate normal whiskers from their available SEs. These are
+  not intervals for between-wave differences; linking-offset uncertainty
+  and cross-wave covariance are not included.
 
 - **`"chain"`** (for `mfrm_equating_chain` objects): A line plot of
   cumulative offsets across the screened linking chain. A flatter line
@@ -96,14 +101,17 @@ Three plot types are supported:
 calibration waves, after accounting for the screened common-element link
 offset. An element is flagged when its absolute drift exceeds a
 threshold (typically 0.5 logits) **and** the drift-to-SE ratio exceeds a
-secondary criterion (typically 2.0), ensuring that only practically
-noticeable and relatively precise shifts are flagged.
+secondary criterion (typically 2.0). These are heuristic screening
+rules, not a calibrated test of change. Subtracting a common offset can
+remove a panel-wide shift; unflagged elements do not establish absence
+of annual drift.
 
-- In drift and heatmap plots, red or dark-shaded elements exceed both
-  thresholds. Common causes include rater drift over time, item exposure
-  effects, or curriculum changes.
+- Drift dots distinguish flagged elements. Heatmap shading shows
+  magnitude, not whether both screening thresholds were exceeded.
+  Possible explanations require substantive review, including changes in
+  scoring or exposure.
 
-- In chain plots, uneven spacing between waves suggests differential
+- In chain plots, uneven changes between waves indicate differential
   shifts in the screened linking offsets. The \\y\\-axis shows
   cumulative logit-scale offsets; flatter segments indicate more stable
   adjacent links. Steep segments should be checked alongside
@@ -132,6 +140,13 @@ For a plot-selection guide and a longer walkthrough, see
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 and
 [`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md).
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -172,41 +187,8 @@ or diagnostic thresholds.
 
 [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md),
 [`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md),
-[`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md),
-[`plot_bubble()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bubble.md),
+[plot(x, type =
+"heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md),
+[plot(x, type =
+"bubble")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
-
-## Examples
-
-``` r
-# \donttest{
-toy <- load_mfrmr_data("example_core")
-people <- unique(toy$Person)
-d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
-d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
-fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 30)
-fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 30)
-drift <- detect_anchor_drift(list(W1 = fit1, W2 = fit2))
-#> Warning: Thin linking support between 'W1' and 'W2': fewer than 5 retained common elements in Criterion, Rater.
-drift_plot <- plot_anchor_drift(drift, type = "drift", draw = FALSE)
-class(drift_plot)
-#> [1] "mfrm_plot_data" "list"          
-names(drift_plot$data)
-#> [1] "plot"            "table"           "title"           "subtitle"       
-#> [5] "legend"          "reference_lines" "preset"          "plot_name"      
-chain <- build_equating_chain(list(F1 = fit1, F2 = fit2))
-#> Warning: Thin linking support between 'F1' and 'F2': fewer than 5 retained common elements in Criterion, Rater.
-chain_plot <- plot_anchor_drift(chain, type = "chain", draw = FALSE)
-head(chain_plot$data$table)
-#> # A tibble: 2 × 2
-#>   Wave  Cumulative_Offset
-#>   <chr>             <dbl>
-#> 1 F1              0      
-#> 2 F2              0.00211
-if (interactive()) {
-  plot_anchor_drift(drift, type = "heatmap", preset = "publication")
-}
-# }
-```

@@ -41,6 +41,13 @@ plot_residual_qq(
 An `mfrm_plot_data` object with a `data` slot containing `Person`,
 `Theoretical`, `Sample` columns.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## Session plot defaults
 
 Set `options(mfrmr.plot_preset = "publication")` to choose a session
@@ -79,11 +86,10 @@ or diagnostic thresholds.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
-p <- plot_residual_qq(fit, draw = FALSE)
+p <- plot(fit, type = "residual_qq", draw = FALSE)
 head(p$data$data)
 #>   Person Theoretical      Sample
 #> 1   P023   -2.310991 -0.37251225
@@ -94,8 +100,7 @@ head(p$data$data)
 #> 6   P004   -1.202508 -0.08291038
 # Look for: points hugging the y = x reference line. Heavy upper-
 #   right tails indicate persons whose residual aggregates exceed
-#   the standard normal expectation; pair with `plot_unexpected()`
+#   the standard normal expectation; pair with `plot()`
 #   for case-level follow-up. This is an exploratory screen; do
 #   not treat tail behaviour as a definitive normality test.
-# }
 ```

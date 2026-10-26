@@ -1,9 +1,10 @@
-# Review per-facet-level sample adequacy
+# Review rating counts for each facet level
 
 Reports per-level observation counts, SE, and fit statistics for every
 level of every facet in a fitted MFRM model, and classifies each level
-as `"sparse"`, `"marginal"`, `"standard"`, or `"strong"` against the
-Linacre sample-size bands.
+as `"sparse"`, `"marginal"`, `"standard"`, or `"strong"` using
+configurable count bands. These labels identify levels to inspect; they
+do not establish measurement precision or sample adequacy.
 
 ## Usage
 
@@ -26,17 +27,17 @@ facet_small_sample_review(
 
   Optional
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-  output. When supplied, per-level `Infit`, `Outfit`, and `ModelSE` are
-  added to the report.
+  output from the same `fit`. When supplied, per-level `Infit` and
+  `Outfit` are added. `Estimate` and `SE` come from the fitted facet
+  tables; unavailable SEs remain missing.
 
 - thresholds:
 
   Named numeric vector of count bands. Defaults are
-  `c(sparse = 10, marginal = 30, standard = 50)`. These are adapted from
-  Linacre (1994): the 30-level band preserves Linacre's approximately
-  `+-1.0 logit at 95% CI` line, while the `sparse < 10` floor and the
-  `standard = 50` watermark are mfrmr-specific screening choices below
-  Linacre's 30-examinee minimum and between Linacre's 30 and 100
+  `c(sparse = 10, marginal = 30, standard = 50)`. Supply exactly these
+  three names with finite, positive values satisfying
+  `sparse < marginal < standard`; their order in the vector is
+  immaterial. The defaults are package screening choices, not precision
   thresholds.
 
 ## Value
@@ -48,39 +49,40 @@ A list of class `mfrm_facet_sample_review` with:
 
 - `summary`: counts of levels in each sample-size category, by facet.
 
-- `facet_summary`: smallest observed level count per facet.
+- `facet_summary`: count range and lowest count band per facet.
 
 - `thresholds`: the applied count bands.
 
+- `notes`: count definition and interpretation limits, also shown by
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html).
+
 ## Details
 
-In mfrmr every facet is a fixed effect (see
-[`?fit_mfrm`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-"Fixed effects assumption"), so a level with very few ratings
-contributes an estimate with wide SE but no shrinkage toward the facet
-mean. This helper surfaces those levels up front so users can decide
-whether to drop them, pool them, or move to a hierarchical model outside
-mfrmr.
+`N` counts retained rating rows for a level in `fit$prep$data`, without
+summing observation weights. For a rater it counts ratings, not distinct
+examinees; for a person it counts that person's ratings. Repeated or
+dependent ratings need not supply independent information. Review the
+counts alongside targeting, connectedness, category use, the estimation
+method, and available uncertainty estimates before drawing conclusions.
 
 ## Interpreting output
 
-- `"sparse"` (n \< 10): level-level estimate is unstable; SE will be
-  wide; consider combining with adjacent levels or treating as
-  exploratory only.
+With the default thresholds, the four labels mean only `N < 10`,
+`10 <= N < 30`, `30 <= N < 50`, and `N >= 50`, respectively.
+`WorstCategory` is the lowest count band represented within a facet.
+Neither `"standard"` nor `"strong"` guarantees narrow intervals, correct
+coverage, good targeting, or suitability for publication. Do not pool or
+discard levels solely because of a count label.
 
-- `"marginal"` (10 \<= n \< 30): below Linacre (1994) 95% CI +-1.0 logit
-  threshold; usable as screening only.
-
-- `"standard"` (30 \<= n \< 50): meets baseline stability; reasonable
-  for publication if fit statistics are acceptable.
-
-- `"strong"` (n \>= 50): well-targeted; facet estimate is robust.
-
-Because mfrmr has no shrinkage by default, sparse and marginal levels do
-not "borrow strength" from other levels. Jones and Wind (2018) report
-that rater estimates are particularly sensitive to thin linking; the
-`Facet = "Person"` row is usually less of a concern because the person
-prior integrates out the uncertainty.
+Linacre (1994) relates Rasch item/person precision to sample size under
+targeting and model assumptions. Those guidelines do not establish a
+precision guarantee for these raw many-facet rating counts. Jones and
+Wind (2018) study repeated ratings in incomplete designs and highlight
+examinee precision. Integrating over a population distribution in MML
+does not remove uncertainty in individual person scores. Interpret `SE`
+according to the fitted estimator; this count review adds no interval
+qualification or hierarchical model.
 
 ## Typical workflow
 
@@ -103,15 +105,14 @@ prior integrates out the uncertainty.
 
 ## References
 
-Linacre, J. M. (2026). *A User's Guide to FACETS, Version 4.5.0*.
-Winsteps.com.
-
 Linacre, J. M. (1994). Sample size and item calibration stability.
 *Rasch Measurement Transactions, 7*(4), 328.
+<https://rasch.org/rmt/rmt74m.htm>
 
 Jones, E., & Wind, S. A. (2018). Using repeated ratings to improve
 measurement precision in incomplete rating designs. *Journal of Applied
 Measurement, 19*(2), 148-161.
+<https://pubmed.ncbi.nlm.nih.gov/29894984/>
 
 ## See also
 
@@ -131,11 +132,14 @@ review <- facet_small_sample_review(fit)
 summary(review)
 #> mfrm_facet_sample_review
 #> 
+#> N counts retained rating rows per level, not distinct persons, weight sums, or effective sample sizes.
+#> Count bands are screening labels; they do not establish precision, interval coverage, or targeting. 
+#> 
 #> Per-facet summary:
 #>      Facet Levels MinN MedianN MaxN WorstCategory
 #>  Criterion      3   94      94   94        strong
 #>     Person     48    5       6    6        sparse
-#>      Rater      6   38      47   56        strong
+#>      Rater      6   38      47   56      standard
 #> 
 #> Sample-size category counts by facet:
 #>      Facet sparse marginal standard strong
@@ -203,5 +207,5 @@ strict$facet_summary
 #>       Facet Levels MinN MedianN MaxN WorstCategory
 #> 1 Criterion      3   94      94   94      standard
 #> 2    Person     48    5       6    6        sparse
-#> 3     Rater      6   38      47   56      standard
+#> 3     Rater      6   38      47   56      marginal
 ```

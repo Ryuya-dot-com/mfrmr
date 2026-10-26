@@ -139,7 +139,10 @@ missing values must already be `NA`. Identifiers, assignment indicators
 and observed values must not change. Only selected scores may be filled;
 missing auxiliary predictors may also be completed. For a `mids` input,
 its original data and score `where` selection must agree with this
-review.
+review. Numeric identifiers must remain distinct when converted to text.
+Numeric observed predictors are compared exactly, without rounding to
+text, and must remain numeric in completions; integer/double storage may
+differ.
 
 A sparse assignment and a missing assigned score are different events.
 Neither absent roster rows nor explicit unassigned rows are imputed. An

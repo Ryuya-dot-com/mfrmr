@@ -27,7 +27,7 @@ summary(object, ...)
 
 ## Arguments
 
-- x:
+- x :
 
   A table reviewed with
   [`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md).
@@ -35,36 +35,36 @@ summary(object, ...)
   [`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md),
   a result from `mfrm_pca()` is also accepted.
 
-- components:
+- components :
 
   Number of leading principal components to retain. `NULL` retains the
   numerical rank, using `sqrt(.Machine$double.eps)` relative to the
   largest singular value. A requested count cannot exceed that rank.
 
-- scale:
+- scale :
 
   Divide centered numeric features by their sample standard deviations
   (`TRUE`, default). With `FALSE`, distances retain the original feature
   units. Numeric coding must have a meaningful Euclidean interpretation;
   factors, ordered factors, characters and logical features are refused.
 
-- weights:
+- weights :
 
   Optional named, strictly positive finite numeric vector with one
   weight per selected feature. Defaults to equal weights. Names, not
   vector order, identify features. Remove a feature to exclude it.
 
-- missing:
+- missing :
 
   Either `"error"` (default) or `"omit"`. The latter excludes incomplete
   entities explicitly, retaining their IDs, reasons, and missing group
   membership in the result. No values are imputed.
 
-- ...:
+- ... :
 
   Reserved for method compatibility.
 
-- object:
+- object :
 
   An object returned by `mfrm_pca()`.
 

@@ -18,7 +18,8 @@ route, and claim-boundary columns.
 
 ## See also
 
-[`plot_wright_unified()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_wright_unified.md),
+[plot(x, type = "wright", view =
+"unified")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md),
 [`facets_term_crosswalk()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_term_crosswalk.md),
 [`facets_feature_coverage()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_feature_coverage.md)
@@ -36,12 +37,12 @@ facets_visual_contract()
 #> 6             DIF/bias visual review               partial
 #> 7        Graphfile and R/Web handoff               partial
 #>                                                                                 FirstMfrmrRoute
-#> 1                                                 plot_wright_unified(fit, renderer = "facets")
-#> 2                                 plot_wright_unified(fit, renderer = "native", show_ci = TRUE)
+#> 1                             plot(fit, type = "wright", view = "unified", renderer = "facets")
+#> 2             plot(fit, type = "wright", view = "unified", renderer = "native", show_ci = TRUE)
 #> 3                                             rating_scale_table(); category_structure_report()
 #> 4                                                                   plot(fit, type = "pathway")
 #> 5 plot(fit, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12)
-#> 6                                                                       plot_bias_interaction()
+#> 6                                                                        plot(x, type = "bias")
 #> 7                                         facets_output_file_bundle(); plot_data(); as_ggplot()
 #>                                             EditableDataRoute
 #> 1        plot(..., draw = FALSE)$data$facets_style$ruler_rows

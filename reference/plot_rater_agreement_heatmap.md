@@ -5,7 +5,8 @@ Cells are coloured by the chosen agreement metric: exact agreement
 proportion by default, or the Pearson-style `Corr` column from
 [`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
 when `metric = "correlation"`. The plot is a compact alternative to
-[`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md)'s
+[plot(x, type =
+"agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)'s
 bar chart when the rater count exceeds ~6 pairs.
 
 ## Usage
@@ -57,7 +58,22 @@ plot_rater_agreement_heatmap(
 ## Value
 
 An `mfrm_plot_data` object whose `data` slot bundles the rater x rater
-matrix and the raw pairwise rows.
+matrix, raw pairwise rows, matching settings and palette.
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+preserves the selected metric, facet labels and unavailable cells, with
+a fixed 0–1 exact-agreement or -1–1 correlation scale. The
+`"monochrome"` preset applies to both renderers. Self comparisons are
+unavailable, not estimated perfect agreement. Save the plot payload with
+[`base::saveRDS()`](https://rdrr.io/r/base/readRDS.html) to convert it
+without recomputing diagnostics; interpretation notes remain in
+`plot_data(p, "notes")`.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -97,8 +113,8 @@ or diagnostic thresholds.
 ## See also
 
 [`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
-for the underlying numeric table;
-[`plot_guttman_scalogram()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_guttman_scalogram.md)
+for the underlying numeric table; [plot(x, type =
+"guttman")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 for a complementary person-by-element view of residual structure;
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
 for the diagnostics bundle the heatmap reads from.
@@ -106,11 +122,10 @@ for the diagnostics bundle the heatmap reads from.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
-p <- plot_rater_agreement_heatmap(fit, draw = FALSE)
+p <- plot(fit, type = "agreement", view = "heatmap", draw = FALSE)
 dim(p$data$matrix)
 #> [1] 4 4
 # Look for (default `metric = "exact"`):
@@ -121,6 +136,6 @@ dim(p$data$matrix)
 # - With `metric = "correlation"` the colour scale switches to
 #   `[-1, 1]`; positive cells = pairs agree on relative ordering,
 #   negative cells = pairs systematically rank persons in opposite
-#   directions and are the highest-priority review cases.
-# }
+#   directions. Review context, exposure and sample size before deciding
+#   whether any rater needs follow-up.
 ```

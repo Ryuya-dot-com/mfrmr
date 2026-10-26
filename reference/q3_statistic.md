@@ -43,8 +43,8 @@ q3_statistic(
   Minimum number of persons with finite aggregated residuals at both
   levels required to retain a pair; a single integer of at least three.
   Unavailable pairs remain in the table with `NA` correlations and flags
-  (mirrors
-  [`plot_local_dependence_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_local_dependence_heatmap.md)).
+  (mirrors [plot(x, type =
+  "local_dependence")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)).
 
 - yen_threshold:
 
@@ -100,6 +100,23 @@ An object of class `mfrm_q3` containing:
 - `facet`:
 
   The facet whose levels were paired.
+
+- `notes`:
+
+  Residual aggregation and interpretation qualifications, retained with
+  the saved result.
+
+Save the complete result with
+[`base::saveRDS()`](https://rdrr.io/r/base/readRDS.html) and export
+`q3$pairs` or `q3$summary` with
+[`utils::write.csv()`](https://rdrr.io/r/utils/write.table.html). There
+is no dedicated `plot(q3)` method. To obtain its companion matrix, use
+`plot(fit, type = "local_dependence", diagnostics = diagnostics, facet = facet, min_pairs = min_pairs, draw = FALSE)`
+with the same inputs. Save that plot payload separately for conversion
+with
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+without recalculation. The heatmap displays correlations; it does not
+apply the three flag rules.
 
 ## Statistic definition and distinction from Yen (1984)
 
@@ -176,13 +193,13 @@ for complementary checks and the limits of exploratory network analysis.
 
 ## See also
 
-[`plot_local_dependence_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_local_dependence_heatmap.md),
+[plot(x, type =
+"local_dependence")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
@@ -210,5 +227,4 @@ head(q3$pairs)
 #> 4  stricter heuristic (|Q3-style| > 0.30)
 #> 6 fixed absolute rule (|Q3-style| > 0.20)
 #> 1        relative-to-mean (offset > 0.20)
-# }
 ```

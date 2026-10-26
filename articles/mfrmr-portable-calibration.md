@@ -5,6 +5,27 @@ model, validates and freezes it, saves it, and then scores new Persons
 without the source fit or training responses. The scoring phase uses
 only the saved artifact and the new response rows.
 
+For example, after calibrating a rubric and its raters, you may receive
+ratings for a new class. The frozen calibration lets you score that
+class on the stored scale. It does not estimate the severity of new
+raters or establish that the original scoring prior suits the new class.
+
+Choose the object to save according to what you want to do later:
+
+| Later task | Object and saving route | What it preserves |
+|----|----|----|
+| Revisit the fitted analysis and reports | Fitted model or [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md) via [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) | The retained analysis, diagnostics and attached results; it may contain response-level data. |
+| Score new response rows without the training fit | Frozen `mfrm_calibration` via [`save_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md) | Calibrated coordinates, scoring basis and checks; no training responses or Person estimates. |
+| Reproduce an already scored batch’s tables and figures | `mfrm_calibration_score` via [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) | Scores, intervals, dispositions and actual scoring settings; no rescoring is needed. |
+
+CSV exports are useful tables, but do not replace these complete
+objects. Validation checks the saved parameters, scoring settings and
+model checks; freezing makes that calibration available for scoring.
+These steps do not establish model fit, absence of bias or validity for
+a new population. A new Person can use known calibrated facet levels; an
+unknown rater, task or category requires an appropriate calibration
+workflow, not relabeling it as an existing level.
+
 The portable workflow is deliberately narrower than fitted-object
 scoring. It supports one observed score scale and one latent dimension.
 `RSM` and `PCM` MML use the fixed standard-normal calibration basis
@@ -63,6 +84,47 @@ use its recorded non-Person facet levels. Preserving an interaction for
 scoring does not establish its statistical significance or the model’s
 suitability for another population.
 
+For an anchored calibration, inspect `frozen$constraints$identification`
+and `frozen$constraints$anchors` after the freezing step below. New
+exports record whether a facet uses whole-facet centering, legacy
+remainder centering, or no centering. For example, if four raters sum to
+zero and the first three have mean 0.10, the fourth must be -0.30. The
+other members can still differ in severity; freezing then holds all
+their calibrated values fixed for scoring.
+
+The returned Person `SD` and posterior intervals condition on those
+fixed values and the scoring prior. They do not include uncertainty in
+the original calibration or the supplied anchors, and are not rater SEs.
+Use
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+for supported facet uncertainty. To score supplied rows directly from an
+anchored fit, use
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md);
+[`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+has a narrower, unanchored ordinary-model scope.
+
+An old calibration is not migrated merely by loading it. Its original
+values and labels remain intact. Older generic identification labels do
+not fully describe centering; retain the source fit, or re-extract that
+fit for explicit labels. Re-extraction documents its original
+convention; changing the convention requires a corresponding
+recalibration.
+
+If you have only the old calibration file, its generic constraint label
+is not enough to infer the missing convention. Keep the file unchanged
+and use its documented scoring interpretation. Re-extraction requires
+the source fit and the current checks, including the applicable
+quadrature review. If that review is missing, the source fit alone is
+insufficient for RSM/PCM MML extraction: completing the review requires
+the original data and additional fits at the chosen integration orders.
+Re-extraction creates a new artifact; do not overwrite the original or
+edit its integrity fields. For a change of convention, refit from the
+original ratings and extract from that new fit. The linking vignette’s
+migration example separates reopening, reproducing and changing an
+analysis. Regenerating a summary from an existing fit can display the
+convention; loading an already saved summary alone does not add fields
+to it.
+
 ``` r
 
 library(mfrmr)
@@ -107,41 +169,40 @@ training <- synthetic[
   drop = FALSE
 ]
 
-fit <- suppressWarnings(fit_mfrm(
+fit <- fit_mfrm(
   training,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
   model = "RSM",
   method = "MML",
-  quad_points = 5,
-  maxit = 20
-))
+  quad_points = 31
+)
 
-quadrature_review <- suppressWarnings(mml_quadrature_sensitivity(
+quadrature_review <- mml_quadrature_sensitivity(
   fit,
   training,
-  quad_points = c(5, 7),
+  quad_points = c(31, 61),
   theta_points = 41
-))
+)
 summary(quadrature_review)
 #> RSM-MML quadrature sensitivity summary
 #>  ReferenceNodes ComparedGrids AllEstimationConverged AllHessiansFullRank
-#>               5             2                   TRUE                TRUE
+#>              31             2                   TRUE                TRUE
 #>  MaxNLLAbsChangePerPerson MaxMeasurementParameterAbsChange MaxSlopeAbsChange
-#>                   0.09056                          0.06055                NA
+#>                   0.00019                          0.00174                NA
 #>  MaxPopulationSDAbsChange MaxProbabilityAbsChange MaxEAPAbsChange
-#>                         0                 0.01598         0.47415
+#>                         0                 0.00059          0.0071
 #>  MaxPosteriorSDAbsChange
-#>                  0.29125
+#>                  0.01019
 #> 
 #> Grid comparisons
 #>  Model ReferenceNodes Nodes IsReference NLLChangePerPerson
-#>    RSM              5     5        TRUE            0.00000
-#>    RSM              5     7       FALSE           -0.09056
+#>    RSM             31    31        TRUE            0.00000
+#>    RSM             31    61       FALSE           -0.00019
 #>  NLLAbsChangePerPerson MeasurementParameterMaxAbsChange SlopeMaxAbsChange
 #>                0.00000                          0.00000                NA
-#>                0.09056                          0.06055                NA
+#>                0.00019                          0.00174                NA
 #>  RawSlopeSEMaxAbsChange SlopeIntervalMaxAbsChange
 #>                      NA                        NA
 #>                      NA                        NA
@@ -149,19 +210,19 @@ summary(quadrature_review)
 #>                               NA                     0
 #>                               NA                     0
 #>  RawPopulationSDSEAbsChange ProbabilityMaxAbsChange EAPMaxAbsChange
-#>                          NA                 0.00000         0.00000
-#>                          NA                 0.01598         0.47415
+#>                          NA                 0.00000          0.0000
+#>                          NA                 0.00059          0.0071
 #>  PosteriorSDMaxAbsChange
 #>                  0.00000
-#>                  0.29125
+#>                  0.01019
 #> No automatic stability classification or readiness change is applied.
-fit <- quadrature_review$fits$q7
+fit <- quadrature_review$fits$q61
 
 draft <- extract_mfrm_calibration(
   fit,
   calibration_id = "portable-rsm-example",
   source_fit_id = "synthetic-rsm-fit",
-  scoring_quad_points = 31,
+  scoring_quad_points = 121,
   quadrature_review = quadrature_review
 )
 review_mfrm_calibration(draft)
@@ -183,12 +244,12 @@ save_mfrm_calibration(frozen, artifact_file)
 ```
 
 The fit-time quadrature and the scoring-time quadrature are distinct.
-The two small fit grids above keep this example quick; they are not
-recommendations for substantive work. Inspect the continuous movement on
+The two fit grids above illustrate a numerical sensitivity review; they
+are not universal sufficient orders. Inspect continuous movement on
 grids chosen for the application and extend them when needed. Public
 extraction accepts the exact highest-grid fit in that review but does
 not decide whether its movement is small enough. The artifact separately
-records the 31-point grid used for later posterior scoring, and the
+records the 121-point grid used for later posterior scoring, and the
 response-linked review should be archived outside the portable artifact
 when it is needed for an audit trail.
 
@@ -221,25 +282,26 @@ invisible(gc())
 
 calibration <- load_mfrm_calibration(artifact_file)
 scores <- score_mfrm_calibration(
-  calibration, new_rows, adaptive_quad_points = c(31, 61)
+  calibration, new_rows, adaptive_quad_points = c(31, 61),
+  cut_scores = c(Basic = -0.5, Advanced = 0.8)
 )
 summary(scores)
 #> mfrmr Portable Calibration Score Summary
 #> 
 #> Fixed-parameter integration review (adaptive minus fixed)
 #>  FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange
-#>          31            31       2           0             0.002445619
-#>          31            61       2           0             0.002445619
+#>         121            31       2           0            6.549072e-11
+#>         121            61       2           0            6.549072e-11
 #>  MaxAbsEAPChange MaxAbsSDChange
-#>      0.002926627     0.00356594
-#>      0.002926627     0.00356594
+#>     5.946027e-10   3.467933e-10
+#>     5.946028e-10   3.467932e-10
 #>   Calibration: portable-rsm-example
 #>   Model / estimator: RSM / MML
 #>   Persons: 2 scored (1 requiring review); 0 not scored
 #> 
 #> Posterior estimates (2 of 2)
-#>   NEW_PERSON_1: estimate 0.959, SD 0.328, interval [0.331, 1.605], scored
-#>   NEW_PERSON_2: estimate 3.135, SD 0.529, interval [2.171, 4.244], review
+#>   NEW_PERSON_1: estimate 0.934, SD 0.323, interval [0.314, 1.579], scored
+#>   NEW_PERSON_2: estimate 3.107, SD 0.53, interval [2.141, 4.219], review
 #>   required
 #> 
 #> Persons requiring review or not scored (1 of 1)
@@ -247,6 +309,50 @@ summary(scores)
 #> 
 #> Response-row disposition
 #>   32 input; 32 scored; 0 omitted; 0 refused; missing-response policy: error
+#> 
+#> Conditional decision probabilities (first 10; full table in $decisions)
+#>        Person         Type    Label Lower Upper  Probability PriorMean
+#>  NEW_PERSON_1    above_cut    Basic  -0.5   Inf 9.999982e-01         0
+#>  NEW_PERSON_1    above_cut Advanced   0.8   Inf 6.568698e-01         0
+#>  NEW_PERSON_1 ability_band    Band1  -Inf  -0.5 1.769806e-06         0
+#>  NEW_PERSON_1 ability_band    Band2  -0.5   0.8 3.431284e-01         0
+#>  NEW_PERSON_1 ability_band    Band3   0.8   Inf 6.568698e-01         0
+#>  NEW_PERSON_2    above_cut    Basic  -0.5   Inf 1.000000e+00         0
+#>  NEW_PERSON_2    above_cut Advanced   0.8   Inf 1.000000e+00         0
+#>  NEW_PERSON_2 ability_band    Band1  -Inf  -0.5 5.375371e-21         0
+#>  NEW_PERSON_2 ability_band    Band2  -0.5   0.8 3.306671e-08         0
+#>  NEW_PERSON_2 ability_band    Band3   0.8   Inf 1.000000e+00         0
+#>  PriorSD                Status                       Reason
+#>        1 available_conditional                             
+#>        1 available_conditional                             
+#>        1 available_conditional                             
+#>        1 available_conditional                             
+#>        1 available_conditional                             
+#>        1           review_only ALL_RESPONSES_UPPER_ENDPOINT
+#>        1           review_only ALL_RESPONSES_UPPER_ENDPOINT
+#>        1           review_only ALL_RESPONSES_UPPER_ENDPOINT
+#>        1           review_only ALL_RESPONSES_UPPER_ENDPOINT
+#>        1           review_only ALL_RESPONSES_UPPER_ENDPOINT
+#>                                 Uncertainty
+#>  conditional_on_point_calibration_and_prior
+#>  conditional_on_point_calibration_and_prior
+#>  conditional_on_point_calibration_and_prior
+#>  conditional_on_point_calibration_and_prior
+#>  conditional_on_point_calibration_and_prior
+#>  conditional_on_point_calibration_and_prior
+#>  conditional_on_point_calibration_and_prior
+#>  conditional_on_point_calibration_and_prior
+#>  conditional_on_point_calibration_and_prior
+#>  conditional_on_point_calibration_and_prior
+#>   Decision probabilities describe Lower < ability <= Upper on the calibration
+#>   scale. Calibration, population estimates and supplied cut scores are held
+#>   fixed. Probability accuracy depends on the scoring prior matching the
+#>   target population; numerical checks do not validate that match. Uncertainty
+#>   in an estimated prior is excluded, and a larger calibration sample does not
+#>   correct a mismatched scoring prior. They are not Person-difference tests or
+#>   probabilities of passing a future administration. Cut labels do not
+#>   establish CEFR alignment. Very small tails have absolute, not relative,
+#>   numerical accuracy.
 #> 
 #> Interval interpretation
 #>   95% intervals: continuous posterior quantiles.
@@ -274,7 +380,14 @@ unlink(artifact_file)
 The base and optional ggplot2 renderers distinguish scored and review
 states by shape as well as colour. The complete score and review tables
 remain in the summary object even though its console printout shows only
-a compact preview.
+a compact preview. `as_ggplot(plot(scores, draw = FALSE))` and an
+explicit `component = "data"` preserve the same selected display and
+saved endpoints. Use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+for other components; drawing does not change the requested interval
+level. For overlapping review labels in precision or edge-mass plots,
+use `label_review = FALSE` and inspect `summary(scores)$review` for
+Person IDs. The colour and shape still identify review points.
 
 The interval figure is the first score-batch review. Orange triangles
 identify Persons whose `Disposition` is `scored_review`; inspect their
@@ -302,6 +415,113 @@ source-fit quality, reliability, calibration transport, or validity.
 Every interval and posterior SD remains conditional on the frozen point
 calibration and excludes calibration-parameter uncertainty.
 
+### Conditional ability-level probabilities
+
+The cuts above are illustrative, not CEFR boundaries or recommended
+passing scores. Supply boundaries justified externally on the same
+calibration scale. `above_cut` gives the posterior probability above a
+cut; `ability_band` gives the probability in `Lower < ability <= Upper`.
+Only the band probabilities sum to one. `Basic` and `Advanced` name
+cuts, while `Band1`, `Band2` and `Band3` name the successive regions.
+These are continuous posterior integrals, not counts of plausible-value
+draws or a normal approximation around the EAP.
+
+``` r
+
+decision_table <- apa_table(scores, which = "decisions")
+decision_table$table[, c("Person", "Type", "Label", "Lower", "Upper",
+                         "Probability", "Status", "Reason")]
+#>          Person         Type    Label Lower Upper  Probability
+#> 1  NEW_PERSON_1    above_cut    Basic  -0.5   Inf 9.999982e-01
+#> 2  NEW_PERSON_1    above_cut Advanced   0.8   Inf 6.568698e-01
+#> 3  NEW_PERSON_1 ability_band    Band1  -Inf  -0.5 1.769806e-06
+#> 4  NEW_PERSON_1 ability_band    Band2  -0.5   0.8 3.431284e-01
+#> 5  NEW_PERSON_1 ability_band    Band3   0.8   Inf 6.568698e-01
+#> 6  NEW_PERSON_2    above_cut    Basic  -0.5   Inf 1.000000e+00
+#> 7  NEW_PERSON_2    above_cut Advanced   0.8   Inf 1.000000e+00
+#> 8  NEW_PERSON_2 ability_band    Band1  -Inf  -0.5 5.375371e-21
+#> 9  NEW_PERSON_2 ability_band    Band2  -0.5   0.8 3.306671e-08
+#> 10 NEW_PERSON_2 ability_band    Band3   0.8   Inf 1.000000e+00
+#>                   Status                       Reason
+#> 1  available_conditional                             
+#> 2  available_conditional                             
+#> 3  available_conditional                             
+#> 4  available_conditional                             
+#> 5  available_conditional                             
+#> 6            review_only ALL_RESPONSES_UPPER_ENDPOINT
+#> 7            review_only ALL_RESPONSES_UPPER_ENDPOINT
+#> 8            review_only ALL_RESPONSES_UPPER_ENDPOINT
+#> 9            review_only ALL_RESPONSES_UPPER_ENDPOINT
+#> 10           review_only ALL_RESPONSES_UPPER_ENDPOINT
+
+saved_scores <- tempfile(fileext = ".rds")
+saveRDS(scores, saved_scores)
+restored_scores <- readRDS(saved_scores)
+# The appendix retains estimates, review dispositions, cuts and exact probabilities.
+appendix_dir <- tempfile()
+appendix <- export_summary_appendix(restored_scores, output_dir = appendix_dir,
+                                   include_html = FALSE)
+unlink(appendix_dir, recursive = TRUE)
+unlink(saved_scores)
+```
+
+Review `Status` and `Reason` before interpretation. An extreme response
+pattern can remain `review_only`; a portable Person with no scored
+responses is `unavailable`, with `NA` probabilities.
+`available_conditional` records passing applicable numerical checks, not
+the validity of a classification rule.
+
+The complete object retains each prior in `PriorMean`/`PriorSD` and the
+fixed uncertainty basis. Summary, APA table and CSV export preserve
+these values without rescoring. Existing interval figures continue to
+show EAPs and intervals, not the cut probabilities.
+
+These probabilities hold calibration, population/prior parameters and
+cuts fixed. They exclude calibration-estimation error, are not tests of
+Person differences, and do not predict passing a later administration.
+Tiny tails have absolute rather than relative numerical accuracy, so a
+returned zero or one does not establish impossibility or certainty.
+
+When reopening an older artifact, inspect
+[`review_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+if it reports missing or inconsistent records. Keep the original file
+and follow the specific message: missing checks of the original model
+require re-extraction from a saved fit that passes current checks;
+incomplete score records require rescoring from a valid frozen
+calibration. Do not change saved check results to force acceptance.
+Model refitting is not automatically required. This is separate from a
+valid legacy grid-interval file, whose original algorithm and interval
+limitations remain explicit.
+
+Before reusing a calibration, identify the population to which the new
+Persons belong and why the retained scoring prior is appropriate on this
+ability scale. For example, a calibration from a broad intake may be
+used to score an advanced class or a group with a much narrower ability
+range. Accurate item and rater parameters do not make the original prior
+appropriate for those groups. Increasing the calibration sample does not
+remove that mismatch. When the prior was estimated from a small cohort,
+its sampling uncertainty is also absent from the reported probabilities.
+
+`PriorMean` and `PriorSD` show the distribution actually used, not
+evidence that it represents the new group. A fixed reference prior is
+not generally better than an estimated prior. Where a route permits
+`scoring_prior`, compare only alternatives justified for the target
+population and retain that justification with the saved result. Such a
+comparison describes sensitivity; choosing the prior that gives the
+desired classification does not validate the decision.
+Population-averaged accuracy does not guarantee accurate probabilities
+in every subgroup, close to a cut, or for each individual Person.
+
+The same option is available for ordinary RSM/PCM
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+and eligible ordinary RSM MML
+[`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md).
+Each route keeps its existing source, prior and missing-data rules;
+source-roster missing-only Persons may be `prior_only`. JML supplies a
+separate reference prior rather than estimating a population
+distribution. Unit weights and continuous-posterior artifacts are
+required. The GPCM examples later in this article do not support cuts.
+
 A small edge mass does not guarantee accurate integration: a narrow
 posterior can fall between nodes near the middle of the grid. The
 optional `adaptive_quad_points` above adds a separate numerical
@@ -313,26 +533,26 @@ parameters and prior fixed.
 
 summary(scores)$quadrature_overview
 #>   FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange
-#> 1         31            31       2           0             0.002445619
-#> 2         31            61       2           0             0.002445619
+#> 1        121            31       2           0            6.549072e-11
+#> 2        121            61       2           0            6.549072e-11
 #>   MaxAbsEAPChange MaxAbsSDChange
-#> 1     0.002926627     0.00356594
-#> 2     0.002926627     0.00356594
+#> 1    5.946027e-10   3.467933e-10
+#> 2    5.946028e-10   3.467932e-10
 # Keep full precision when inspecting individual differences.
 head(scores$quadrature_review[c(
   "Person", "AdaptiveNodes", "EAPChange", "PosteriorSDChange",
   "AdaptiveEAPChangeFromPrevious", "AdaptiveSDChangeFromPrevious", "Status"
 )])
 #>         Person AdaptiveNodes     EAPChange PosteriorSDChange
-#> 1 NEW_PERSON_1            31 -2.926627e-03      -3.56594e-03
-#> 2 NEW_PERSON_1            61 -2.926627e-03      -3.56594e-03
-#> 3 NEW_PERSON_2            31 -1.563277e-05       1.99646e-05
-#> 4 NEW_PERSON_2            61 -1.563277e-05       1.99646e-05
+#> 1 NEW_PERSON_1            31 -5.946027e-10      3.467933e-10
+#> 2 NEW_PERSON_1            61 -5.946028e-10      3.467932e-10
+#> 3 NEW_PERSON_2            31 -7.105427e-15     -1.016964e-13
+#> 4 NEW_PERSON_2            61  1.776357e-15     -9.769963e-15
 #>   AdaptiveEAPChangeFromPrevious AdaptiveSDChangeFromPrevious   Status
 #> 1                            NA                           NA computed
-#> 2                 -1.332268e-15                -2.220446e-16 computed
+#> 2                 -1.110223e-16                -5.551115e-17 computed
 #> 3                            NA                           NA computed
-#> 4                  7.105427e-15                 1.005862e-13 computed
+#> 4                  8.881784e-15                 9.192647e-14 computed
 ```
 
 Check fixed-versus-adaptive differences and changes between adaptive

@@ -36,23 +36,23 @@ A plotting-data object of class `mfrm_plot_data`.
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) dispatches by
 bundle class:
 
-- `mfrm_unexpected` -\>
-  [`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md)
+- `mfrm_unexpected` -\> [plot(x, type =
+  "unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
-- `mfrm_fair_average` -\>
-  [`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
+- `mfrm_fair_average` -\> [plot(x, type =
+  "fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
-- `mfrm_displacement` -\>
-  [`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md)
+- `mfrm_displacement` -\> [plot(x, type =
+  "displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
-- `mfrm_interrater` -\>
-  [`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md)
+- `mfrm_interrater` -\> [plot(x, type =
+  "agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
-- `mfrm_facets_chisq` -\>
-  [`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md)
+- `mfrm_facets_chisq` -\> [plot(x, type =
+  "facets_chisq")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
-- `mfrm_bias_interaction` -\>
-  [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md)
+- `mfrm_bias_interaction` -\> [plot(x, type =
+  "bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 - `mfrm_bias_count` -\> bias-count plots (cell counts / low-count rates)
 
@@ -76,8 +76,8 @@ bundle class:
   including `type = "score_se"` when scorefile SE columns are available
 
 - `mfrm_residual_pca` -\> residual PCA scree, parallel-analysis, or
-  loadings views via
-  [`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md)
+  loadings views via [plot(x, type =
+  "residual_pca")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 - `mfrm_specifications` -\> facet/anchor/convergence plots
 
@@ -119,6 +119,12 @@ only for interpretable in-range boundaries by default; use
 suppress those vertical boundary lines. Use
 `plot_data(x, component = "plot_long")` on a category-curve bundle when
 you want one ggplot2/plotly-friendly table across all curve families.
+Keep curve families and groups separate in custom figures. Automatic
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+conversion supports rating-scale counts/thresholds and
+category-structure counts; it is unavailable for category-curve bundles
+and category-structure boundary views. Step displays use point estimates
+and do not turn stored step SEs into crossing, gap or curve intervals.
 
 ## Interpreting output
 
@@ -135,6 +141,41 @@ base graphics.
 
 3.  Call `plot(bundle, type = ..., draw = FALSE)` to obtain reusable
     plot data.
+
+## Network display controls
+
+For subset, design, rater and halo bundles with `type = "network"`, use
+`layout` (a two-column coordinate matrix, optionally row-named by all
+node IDs, or a function of the displayed igraph), `display_min_weight`
+(absolute edge weight for the picture only), and `graphical` (a named
+list of plot.igraph arguments, such as vertex.size, vertex.label,
+vertex.color, edge.curved). Unnamed vectors and coordinates follow the
+returned `nodes` order. All nodes, including isolates, remain. Edge
+vectors in `graphical` follow the displayed `edges` order, after any
+display filter. The default is a deterministic circle; positions do not
+estimate anything. Labels are hidden by default above 80 nodes; set
+vertex.label explicitly to override. Supply the same named layout to
+compare views. Constructor filters such as `min_weight` change
+calculated metrics; `display_min_weight` does not. Returned
+`source_edges` retain the calculated graph, `edges` the displayed graph,
+and `coordinates` the actual positions. Titles are metadata by default;
+add a title explicitly via `graphical`. See
+[`vignette("mfrmr-networks-and-reporting")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.md)
+for bipartite assignment, directional disagreement and
+rater-by-criterion examples inspired by Lamprianou. With
+[`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md)
+and `weight_metric = "DirectionalMagnitude"`,
+`type = "fit", metric = "SWS"` (or `"PUS"`) shows the published network
+inconsistency index. The returned table retains unavailable
+rows/statuses; there are no calibrated reference cutoffs. An entirely
+unavailable index draws an unavailable message and retains the original
+rows/statuses in the returned table, rather than substituting zero. For
+signed alpha, `type = "matrix"` returns all eligible signed pair
+coefficients before graph filtering, retaining zero and undefined values
+separately. Network drawings use magnitude for edge width and dashed
+lines for negative agreement. Use
+[`plot.mfrm_network_ergm()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_network_ergm.md)
+for ERGM coefficient intervals and simulated GOF.
 
 ## Session plot defaults
 
@@ -173,15 +214,16 @@ or diagnostic thresholds.
 
 ## See also
 
-[`summary()`](https://rdrr.io/r/base/summary.html),
-[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md),
-[`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md)
+[`summary()`](https://rdrr.io/r/base/summary.html), [plot(x, type =
+"unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -212,5 +254,4 @@ if (interactive()) {
     label_angle = 45
   )
 }
-# }
 ```

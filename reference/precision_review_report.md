@@ -111,7 +111,6 @@ refitting.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -147,5 +146,4 @@ review$checks # Check statuses and reasons before making precision claims
 #> 5                                                                                                     Among available pairs, fit-adjusted reliability values were not larger than the model-based values.
 #> 6                                                                                                                    Each facet had sample/population summaries for both model and fit-adjusted SE modes.
 #> 7                                                                                                                     Person uncertainty uses posterior SDs; facet uncertainty uses observed information.
-# }
 ```

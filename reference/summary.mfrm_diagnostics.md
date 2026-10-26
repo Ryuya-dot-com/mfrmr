@@ -191,7 +191,6 @@ review:
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -218,25 +217,27 @@ diagnostic_summary$decision
 #> 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.
 
 diagnostic_summary$key_warnings # Issues to investigate, if present
-#> [1] "Unexpected responses flagged: 60."                                                                                                 
+#> [1] "Unexpected responses flagged: 1."                                                                                                  
 #> [2] "Flagged displacement levels: 1."                                                                                                   
 #> [3] "MnSq screening flagged 18 element(s) outside the configured 0.5-1.5 band."                                                         
 #> [4] "Person-level fit warnings: 18 row(s); identifiers suppressed. Use `include_person = TRUE` only under appropriate privacy controls."
 #> [5] "Strict marginal fit flagged 1 group-level summaries."                                                                              
 diagnostic_summary$top_fit      # Most unusual residual-based fit statistics
-#> # A tibble: 10 × 9
-#>    Facet     Level   Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit  AbsZ
-#>    <chr>     <fct>   <dbl>  <dbl>     <dbl>      <dbl>    <dbl>     <dbl> <dbl>
-#>  1 Person    P026    0.126  0.117     -1.90      -2.46     4.06         6  2.46
-#>  2 Person    P022    0.126  0.123     -1.94      -2.42     4.23         6  2.42
-#>  3 Person    P016    2.66   2.53       1.68       2.08     2.94         6  2.08
-#>  4 Criterion Content 0.730  0.743     -1.56      -1.89    58.5         94  1.89
-#>  5 Rater     R05     0.648  0.640     -1.34      -1.87    25.1         44  1.87
-#>  6 Person    P035    0.239  0.237     -1.45      -1.79     4.36         6  1.79
-#>  7 Person    P008    0.251  0.250     -1.40      -1.73     4.34         6  1.73
-#>  8 Person    P025    2.22   2.18       1.55       1.73     4.18         6  1.73
-#>  9 Person    P012    2.01   2.17       1.35       1.72     4.05         6  1.72
-#> 10 Person    P017    0.265  0.285     -1.25      -1.59     3.85         6  1.59
+#> # A tibble: 10 × 13
+#>    Facet     Level   Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit
+#>    <chr>     <fct>   <dbl>  <dbl>     <dbl>      <dbl>    <dbl>     <dbl>
+#>  1 Person    P022    0.126  0.123     -2.86      -2.88     8.20      8.17
+#>  2 Person    P026    0.126  0.117     -2.78      -2.84     7.75      7.71
+#>  3 Criterion Content 0.730  0.743     -2.27      -2.09   119.      113.  
+#>  4 Person    P035    0.239  0.237     -2.24      -2.25     8.90      8.91
+#>  5 Person    P016    2.66   2.53       2.19       2.06     5.95      5.85
+#>  6 Person    P008    0.251  0.250     -2.16      -2.17     8.79      8.79
+#>  7 Person    P025    2.22   2.18       2.09       2.03     8.94      8.92
+#>  8 Rater     R05     0.648  0.640     -1.98      -1.97    51.5      48.5 
+#>  9 Person    P012    2.01   2.17       1.72       1.91     7.85      7.78
+#> 10 Person    P017    0.265  0.285     -1.90      -1.79     7.42      7.33
+#> # ℹ 5 more variables: InfitZSTD_FACETS <dbl>, OutfitZSTD_FACETS <dbl>,
+#> #   DF_Infit_FACETS <dbl>, DF_Outfit_FACETS <dbl>, AbsZ <dbl>
 
 # Distinguish residual-based checks from marginal model checks
 diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
@@ -247,5 +248,4 @@ diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
 #> 2 strict_marginal_fit              computed      latent_integrated_first_order_…
 #> 3 strict_pairwise_local_dependence computed      latent_integrated_second_order…
 #> 4 posterior_predictive_follow_up   not_available posterior_predictive_replicati…
-# }
 ```

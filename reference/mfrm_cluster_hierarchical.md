@@ -29,64 +29,64 @@ plot(
 
 ## Arguments
 
-- x:
+- x :
 
   For clustering, a table reviewed with
   [`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md).
   For plotting, an `mfrm_hierarchical_clusters` result.
 
-- k:
+- k :
 
   Number of groups, an integer from 2 to one less than the number of
   included entities, and no greater than their number of distinct
   profiles. The number is chosen by the user, not optimized
   automatically.
 
-- weights:
+- weights :
 
   Optional named, strictly positive finite numeric vector with one
   weight per selected feature. Defaults to equal weights. Names, not
   vector order, identify features. Remove a feature to exclude it.
 
-- missing:
+- missing :
 
   Either `"error"` (default) or `"omit"`. The latter excludes incomplete
   entities explicitly, retaining their IDs, reasons, and missing group
   membership in the result. No values are imputed.
 
-- linkage:
+- linkage :
 
   `"average"` (default, UPGMA) or `"complete"`. Average linkage uses the
   mean dissimilarity over all cross-group pairs; complete linkage uses
   their maximum. Neither is selected automatically from the data.
 
-- type:
+- type :
 
   `"dendrogram"` (default), `"silhouette"`, or `"profile"`.
 
-- feature:
+- feature :
 
   A single selected feature name, required for `type = "profile"`.
   Numeric features show means and medians in their original units;
   categorical features show within-group proportions in the original
   level order (including unused factor levels).
 
-- labels:
+- labels :
 
   Whether to display entity IDs on dendrograms and silhouettes. The
   default labels at most 50 included entities. Hiding labels does not
   remove entities. Profile plots always label groups and levels.
 
-- draw:
+- draw :
 
   Draw the plot when `TRUE`; `FALSE` only returns plotted values.
 
-- preset:
+- preset :
 
   Plot style: `"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`.
 
-- ...:
+- ... :
 
   Reserved for future use; additional arguments are rejected.
 
@@ -156,6 +156,34 @@ For multiple imputations, use
 Each completion retains its own tree; no pooled tree or branch support
 is estimated. See
 [`vignette("mfrmr-external-features", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.md).
+
+## Reading clustering metrics
+
+For entity i, a(i) is its mean dissimilarity to other members of its own
+group; b(i) is the smallest mean dissimilarity to any other group.
+Silhouette = (b - a) / max(a, b), between -1 and 1. Values near 1
+indicate compact, separated placement in this fitted geometry; near zero
+indicates a boundary; negative values indicate closer average proximity
+to another group. A singleton receives 0 by convention; zero does not
+establish overlap. A zero denominator also receives 0. Overall means
+weight entities equally; cluster means use that cluster's included
+entities. Excluded IDs have NA. A silhouette is neither a membership
+probability nor evidence of stability.
+
+Gower distance is unitless in `[0, 1]` here: numeric absolute
+differences divided by included-sample ranges, nominal/binary
+mismatches, and ordinal rank differences are combined using the
+specified feature weights. The PAM medoid is an actual included entity
+minimizing within-group total dissimilarity; it is not a feature-wise
+mean. Profile Mean/Median/SD retain original units; categorical
+Proportion uses included group size as denominator. A large group or a
+high silhouette is not a better-performing group. Compare partitions
+under a fixed feature/distance definition; changing the sample, weights
+or scaling changes what these numbers measure. See
+[`cluster::silhouette()`](https://rdrr.io/pkg/cluster/man/silhouette.html)
+and Rousseeuw (1987),
+[doi:10.1016/0377-0427(87)90125-7](https://doi.org/10.1016/0377-0427%2887%2990125-7)
+, for the silhouette definition.
 
 ## Session plot defaults
 

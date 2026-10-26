@@ -39,7 +39,8 @@ build_mfrm_sim_spec(
   population_formula = NULL,
   population_coefficients = NULL,
   population_sigma2 = NULL,
-  population_covariates = NULL
+  population_covariates = NULL,
+  population_assignment = c("matched", "independent")
 )
 
 # S3 method for class 'mfrm_sim_spec'
@@ -193,6 +194,10 @@ print(x, ...)
   to keep the template-person order instead of resampling templates,
   which is used by
   [`build_peer_review_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_peer_review_sim_spec.md).
+  This flag must be uniform across the skeleton. Every row is retained,
+  including repeated Person-by-facet cells. Each generates a separate
+  conditionally independent response; `Weight` is carried into fitting
+  and does not multiply the number of generated responses.
 
 - sparse_controls:
 
@@ -239,7 +244,29 @@ print(x, ...)
   expanded through the same
   [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
   contract used by latent-regression fitting. During simulation,
-  template rows are resampled to the requested `n_person`.
+  template rows are resampled with replacement to the requested
+  `n_person`. Transformations such as
+  [`scale()`](https://rdrr.io/r/base/scale.html),
+  [`poly()`](https://rdrr.io/r/stats/poly.html) and splines retain the
+  basis learned from the full template; they are not recomputed for each
+  simulated sample. Stored factor levels and contrasts also carry
+  through the study runners' refits. A resampled cohort can still have a
+  rank-deficient design and fail fitting; that trial remains a failure
+  rather than being redrawn until it succeeds.
+
+- population_assignment:
+
+  How an active population model is associated with `"resampled"` or
+  `"skeleton"` assignments. The default `"matched"` draws one template
+  Person jointly for covariates and assignments. Both tables must cover
+  the same `TemplatePerson` IDs, with matching `Group` labels if present
+  in both. `"independent"` samples covariate rows separately and
+  intentionally breaks these associations. In that case both tables
+  cannot define `Group`; rename a covariate if it represents a different
+  grouping. For other assignment designs this setting has no effect.
+  Population-template `Group`, when present, supplies the response
+  group; `group_levels` must include all template labels and does not
+  rebalance them.
 
 - x:
 
@@ -374,7 +401,6 @@ how to generate them.
 ## Examples
 
 ``` r
-# \donttest{
 spec <- build_mfrm_sim_spec(
   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
   assignment = "rotating"
@@ -385,5 +411,4 @@ spec$assignment
 #> [1] "rotating"
 nrow(spec$threshold_table)
 #> [1] 3
-# }
 ```

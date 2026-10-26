@@ -31,7 +31,10 @@ facet_quality_dashboard(
 - diagnostics:
 
   Optional output from
-  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+  for the same `fit`. Mismatched or outdated diagnostics are rejected.
+  Recompute diagnostics after refitting; the model itself does not need
+  to be fitted again.
 
 - facet:
 
@@ -65,7 +68,9 @@ facet_quality_dashboard(
   origin proximity is not evidence that a rater avoids extreme score
   categories. Use
   [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
-  for observed category-use and restriction-of-range screening.
+  for observed category-use screening and
+  [`rater_centrality_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_centrality_table.md)
+  for model-based indirect centrality indices.
 
 - bias_count_warn:
 
@@ -119,8 +124,11 @@ complementary criteria:
   \\\|\mathrm{Estimate}\| \<\\ `central_tendency_max` logits are marked.
   This only describes proximity to the fitted origin and must not be
   interpreted as central-category use or restriction of range. Those are
-  response-pattern questions handled by
-  [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md).
+  response-pattern questions; see
+  [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
+  and
+  [`rater_centrality_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_centrality_table.md)
+  for their distinct descriptive indices.
 
 - **Bias**: elements involved in \\\ge\\ `bias_count_warn`
   screen-positive interaction cells (from
@@ -181,16 +189,25 @@ The returned object is a bundle-like list with class
 - `bias_results`: the `mfrm_bias` bundle (or list of bundles) when
   `bias_results` was supplied; `NULL` otherwise
 
+## Saved-result reuse
+
+Supplied screening results must describe this fitted analysis. Results
+from another fit or older results without identity metadata are refused.
+See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+to recreate them from the saved fit and matching diagnostics without
+refitting the model.
+
 ## See also
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
+[plot(x, type =
+"qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy <- toy[toy$Person %in% unique(toy$Person)[1:8], ]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -233,5 +250,4 @@ summary(dash)
 #>  - Stored fit readiness plus numerical, data-support, connectivity, and stability checks passed. Treat this display as diagnostic evidence, not automatic publication approval.
 #>  - Legacy CentralTendencyFlag is disabled by default because origin proximity does not diagnose observed category avoidance or range restriction.
 #>  - No level-level flags were triggered under the current thresholds.
-# }
 ```

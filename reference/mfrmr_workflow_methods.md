@@ -5,12 +5,121 @@ and read the summary. The Examples section contains a complete runnable
 script. The later sections describe diagnostics, reporting, and
 specialist routes.
 
+See
+[`vignette("mfrmr-networks-and-reporting")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.md)
+for Lamprianou-inspired network views, the FACETS/ConQuest reporting
+crosswalk and speaking/writing examples combining MFRM with G/D studies.
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+supports long-format extraction and original-value cluster profiles for
+custom distribution plots.
+
+## Connect the question to the result
+
+These are alternative or complementary branches, not requirements to run
+every function. Start from the intended score, rating unit, rubric
+endpoints and the decision the study needs to support.
+
+|  |  |
+|----|----|
+| Question | Connected route |
+| What was rated, and can the groups be linked? | [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md) and [`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md) with raw data/column arguments before fitting; [`build_mfrm_network_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_network_review.md) adds graph summaries. Graph connectivity does not establish identification. |
+| How do persons and named facets differ? | [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md) -\> [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md) and eligible intervals -\> [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md) -\> [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md). Keep Separation, Strata and Reliability distinct from observed agreement. |
+| How many raters/tasks does the reported score need? | [`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md) -\> [`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md) -\> [`summary()`](https://rdrr.io/r/base/summary.html), [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and eligible [`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md). No MFRM fit is required. |
+| Do raters agree? | Matched units -\> [`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_kappa_table.md) for pairs, [`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/krippendorff_alpha_table.md) for a declared panel target, or a justified ICC/AC2 definition. Retain overlap and exclusions. |
+| Can a scale be reused? | [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md) -\> anchored fit / [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md) -\> plots and [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md). Retain anchor provenance, scale and uncertainty. |
+| Does a combination or group need follow-up? | Specified [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md) or [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md) -\> signed tables and plots -\> matching reporting tools. A screen is not a fairness verdict. |
+| Does model choice change the answer? | Comparable fits -\> [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md) -\> [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md) -\> [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md). AIC and LRT have different eligibility conditions. |
+| What remains unexplained? | [`analyze_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_residual_pca.md) / [`q3_statistic()`](https://ryuya-dot-com.github.io/mfrmr/reference/q3_statistic.md) for residual structure; separately [`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md) and clustering for declared entity attributes. [`mfrm_residual_network()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_residual_network.md) supplies signed residual correlations and optional hierarchical groups, followed by [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md). It is not EGA. |
+
+A Criterion facet in one-dimensional MFRM adjusts criterion locations
+and, when specified, steps/slopes; it does not create separate Person
+dimensions. Several `scores` in
+[`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md)
+are fixed score components with source-specific covariance matrices, not
+additional random facets. Read
+[`vignette("mfrmr-gtheory")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gtheory.md)
+for the criterion/facet distinction and the report structure. Pass G/D
+objects directly to
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+and
+[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md);
+supplied saved intervals retain source context. The editable
+`templates/gtheory-report.Rmd` joins tables, plots and exports.
+
+Higher coded scores need not mean better performance. For
+Comprehensibility, record whether they mean greater ease or greater
+difficulty. `positive_facets` changes parameter orientation, not outcome
+coding. Keep coding consistent with anchors and report labels; see
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md).
+The
+[`vignette("mfrmr-networks-and-reporting")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.md)
+supplies richer network and custom distribution examples, plus
+literature-based reporting connections. The workflow vignette places
+assignment networks at design review and score networks alongside
+observed agreement. Neither is a residual graph.
+
+The question-to-report map in
+[`vignette("mfrmr-reporting-and-apa")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-reporting-and-apa.md)
+identifies which sections exist, which remain standalone, and what to
+report together.
+
+## Choose a reading path
+
+To choose a model and estimator before fitting, read
+[`vignette("mfrmr-model-choice", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.md)
+or the [online decision
+guide](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.html).
+It connects assessment questions to the available routes and explains
+why starting with the most complex model is not automatically
+preferable.
+
+For a first analysis, read **Start here**, run the Examples, then read
+**From the first summary to diagnostics**. You do not need to work
+through every specialist route. For your own file, use **Use your own
+ratings** and the workflow vignette's CSV lesson. For an unfamiliar
+result or formula, open
+[mfrmr_methods_reference](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_methods_reference.md):
+it links questions to calculations, their limits and original
+references. Use
+[`mfrmr_interval_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_interval_guide.md)
+when the question specifically concerns uncertainty.
+
+## Choose by purpose and design
+
+For named rater/task severity comparisons, consider fixed-facet RSM/PCM;
+CML avoids an ability-distribution assumption when structural
+comparisons are the target, but estimates neither Person scores nor a
+population SD. MML is the route for supported population and GPCM
+structural inference, with explicit population assumptions. JML is
+useful for joint points and matched FACETS comparisons; fixed-exposure
+bias limits structural inference. Corrected JML is an experimental
+shared-owner GPCM route, not a general RSM/PCM correction or a guarantee
+of true-parameter interval coverage.
+
+Use PCM when separate category-step patterns answer the question; use
+GPCM when discrimination differences matter and the design can
+distinguish them. Free slopes do not automatically model dependence.
+Known Person-specific block dependence or a shared sampled-rater
+population can instead justify
+[`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+or
+[`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
+from the outset. These extensions have different targets and supported
+outputs. A larger model can contain a simpler one without estimating its
+restrictions exactly in finite samples; extra effects require
+information and can add uncertainty. Choose the structure justified by
+the question and design, not complexity alone. See
+[mfrmr_methods_reference](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_methods_reference.md)
+for assumptions and
+[`mfrmr_interval_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_interval_guide.md)
+for uncertainty availability.
+
 ## Start here
 
 1.  Load the package with
     [`library(mfrmr)`](https://ryuya-dot-com.github.io/mfrmr/) and
     example ratings with
-    `toy <- load_mfrmr_data("example_operational")`.
+    `ratings <- load_mfrmr_data("example_operational")`.
 
 2.  Fit with
     [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
@@ -31,11 +140,33 @@ for individual person, rater, and criterion estimates, identified by
 not compute diagnostics. For your own data, first check the rating
 design and score categories with
 [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
-`head(toy)` shows the input rows; `Study` and `Group` are extra labels
-unused by this model. `<-` saves an object and `$` selects a named part
-of it.
+`head(ratings)` shows the input rows; `Study` and `Group` are extra
+labels unused by this model. `<-` saves an object and `$` selects a
+named part of it. `ratings` is the name used in this example, not a
+required object that you must prepare beforehand. The loading line
+creates it from packaged synthetic data. Use that line first; after the
+example works, replace it with your own data import and review the
+column names and score categories.
 
 ## From the first summary to diagnostics
+
+The ordinary workflow below uses MML/JML `mfrm_fit` results. Native
+`fit_mfrm(method = "CML", category_policy = "preserve")` instead returns
+a dedicated RSM/PCM structural-parameter result: use
+`summary(fit)$locations`, `summary(fit)$steps` and
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md),
+then `plot(ci)` and RDS saving. CML conditions out Person abilities and
+estimates no population SD; ordinary scoring, diagnostics and
+consolidated reports do not apply. See
+[`vignette("mfrmr-facet-intervals")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facet-intervals.md)
+for its executable comparison example. For a deficient school/rater
+assignment, declare CML comparisons with
+[`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
+and use `fit_scope = "comparisons"`; `summary(fit)` then reports only
+requested contrasts, with conditional-information intervals for
+identifiable targets and missing values for others. See
+[`vignette("mfrmr-linking-and-dff")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.md)
+for that separate workflow.
 
 A `FormalInference = "No"` entry in `results$decision` can mean that
 precision has not yet been reviewed. Read `Why` and `NextAction` to
@@ -111,9 +242,9 @@ uses partitioning around medoids (PAM) for mixed attributes; it does not
 automatically choose a clustering algorithm. For a dendrogram, use
 [`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md).
 A G-study
-([`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md))
+([`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md))
 estimates sources of variation in observed scores; a D-study
-([`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md))
+([`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md))
 uses them to compare future rater/task plans. Neither needs an MFRM fit.
 
 ## Updating earlier scripts
@@ -126,14 +257,19 @@ uses them to compare future rater/task plans. Neither needs an MFRM fit.
 | `keep_original = TRUE` | `category_policy = "preserve"` | Same category ladder in fitting, data review and anchor review. |
 | `keep_original = FALSE` | `category_policy = "collapse"` | Same collapsing of gaps; still the default when no policy is supplied. |
 
-The old calls remain supported, including positional arguments. Saved
-objects retain their classes and
+The old calls **in this table** remain supported, including positional
+arguments. Saved objects retain their classes and
 [`summary()`](https://rdrr.io/r/base/summary.html)/[`plot()`](https://rdrr.io/r/graphics/plot.default.html)
 methods. Do not pass conflicting old/new category choices. See
 [`compatibility_alias_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/compatibility_alias_table.md)
 for the complete migration map. This does not change what
 [`predict()`](https://rdrr.io/r/stats/predict.html) returns: use the
-ability-scoring or response-prediction route named for your model.
+ability-scoring or response-prediction route named for your model. The
+former standalone drawing `plot_*()` functions have a different policy:
+they are no longer exported in 0.2.4. Use result-object
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md)
+to update those calls.
 
 A **calibration** is the fitted set of model parameters, such as rater
 severity and category thresholds. A **conditional** ability interval
@@ -287,14 +423,22 @@ fit.
 
 ## Choose which ratings share an effect
 
-The routine fit/diagnose/results/report workflow on this page is for
+The routine fit/diagnose/results/report workflow starts with ordinary
+RSM/PCM. Other
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-objects. Use `mfrmr_output_guide("models")` to compare:
+models share the `mfrm_fit` class but have different restrictions. Check
+[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
+and
+[`vignette("mfrmr-gpcm-scope", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md)
+for one-family GPCM, two-family GPCM or corrected JML; the latter two do
+not supply ordinary fit tests or Wright/Pathway maps. Use
+`mfrmr_output_guide("models")` to compare:
 
 - **Fixed facets:**
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-  describes the specified rater and task levels. Its native diagnostics,
-  Wright map and comprehensive reports use the `mfrm_fit` result.
+  describes the specified rater and task levels. For supported ordinary
+  models, native diagnostics, Wright maps and comprehensive reports use
+  the matching `mfrm_fit` result.
 
 - **Shared random raters:**
   [`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
@@ -316,6 +460,28 @@ objects. Use `mfrmr_output_guide("models")` to compare:
   A Rater column can specify fixed severity and local within-Person
   membership. See
   [`vignette("mfrmr-testlets", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlets.md).
+
+Choose the next call from the input and the quantity you need:
+
+|  |  |
+|----|----|
+| Input and purpose | Entry |
+| Source responses; estimate abilities in either extension | [`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md) |
+| Supplied shared-rater responses; estimate abilities | `score_mfrm_random_rater(newdata = ...)` |
+| Supplied testlet responses; estimate abilities | `predict(testlet_fit, newdata = ...)` |
+| Supplied abilities; predict shared-rater rating probabilities | `predict(random_fit, ability = ...)` |
+
+For the last row, choose `rater = "observed"` or `rater = "new"`
+explicitly. There is no corresponding supplied-ability prediction route
+for testlets.
+
+A supplied scoring roster replaces source responses. In the shared-rater
+model, an existing rater ID alone does not retain that rater's earlier
+responses or saved conditional distribution; include all intended
+responses once. In the testlet model, a column used both for local
+membership and as a fixed facet still requires known fixed levels: a new
+Person can be scored, but a new fixed rater cannot be introduced by
+changing its testlet label.
 
 Shared-rater ability scoring can be slow because each Person's
 calculation uses the complete rating table. Start with a few actual IDs
@@ -365,9 +531,9 @@ does not require refitting.
 
 To compare tasks, raters or score weights using numeric observed scores,
 start with
-[`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+[`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md)
 and
-[`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md).
+[`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md).
 Their help covers crossed facets, task-specific rater teams, incomplete
 source designs and reading G/Phi/SEM plots. For prespecified plan
 differences under normal random effects with two crossed facets, see
@@ -383,11 +549,12 @@ describe a single latent ability. Both provisional two-family MML
 engines support summaries and conditional fitted curves with saved
 reports, separately checked experimental component log-Wald and
 location/contrast intervals, and descriptive posterior residuals.
-Component profiles require fixed-grid EM. Separately checked
-fitted-object and portable new-Person EAP intervals condition on the
-calibration and prior; they exclude calibration uncertainty and have
-unqualified coverage and population transport. Neither inherits the
-one-family diagnostic/inference workflow below. See
+Component profiles preserve the fitted fixed-grid or adaptive
+integration; every constrained solution needs its own numerical checks.
+Separately checked fitted-object and portable new-Person EAP intervals
+condition on the calibration and prior; they exclude calibration
+uncertainty and have unqualified coverage and population transport.
+Neither inherits the one-family diagnostic/inference workflow below. See
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
 and the Two slope families section in
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
@@ -402,6 +569,47 @@ Their G-study omitted raters, so its generalization scope differs from a
 person-by-rater-by-task analysis. For the relationship and literature,
 see
 [`vignette("mfrmr-gpcm-scope", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md).
+
+**Does MFRM simulation replace a G-study?** Not automatically, and an
+analysis need not use both. Choose the score and decision first:
+
+- A G/D-study asks how a specified observed mean/composite generalizes
+  over sampled tasks, raters or other supported conditions. Its variance
+  and covariance components include interactions; relative and absolute
+  error definitions determine G, Phi and SEM. Future counts reweight
+  these components without repeatedly generating ratings and refitting
+  MFRM.
+
+- [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md)
+  generates ordered ratings under a declared MFRM specification, refits
+  models and summarizes recovery, separation and fit screens. It asks
+  how that procedure behaves under those assumptions. Increasing
+  repetitions reduces Monte Carlo error, not uncertainty about an
+  incorrect generating model or whether future raters are exchangeable.
+
+- If the decision concerns calibrated latent scores, a suitably
+  specified simulation may be sufficient. If it concerns the
+  dependability of a raw mean or composite, a G-study provides that
+  target directly. Simulation can also evaluate an observed-score
+  target, but it must explicitly define the score, sampling universe,
+  dependence and error criterion; a facet separation coefficient is not
+  a substitute for G or Phi.
+
+For example, adding equally severe raters may improve Person precision
+without removing Person-by-Task variation. An additive MFRM generator
+does not acquire that latent interaction simply by increasing facet
+counts; a G-study estimates observed-score interaction components, whose
+scale is different from a latent interaction variance. Neither method
+validates its own assumptions merely by reproducing its own generated
+data. These APIs do not fit a joint MFRM/G-theory model. The current
+simulation planner uses Person, rater-like and criterion-like roles;
+changing their names or level counts does not provide an arbitrary-facet
+planner. The multivariate G-study separately supports one or two random
+measurement facets. See
+[`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
+and
+[`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md)
+for the respective design boundaries.
 
 To group persons, raters or tasks by external attributes, use
 [`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md)
@@ -430,11 +638,19 @@ for fitted PCA, partitions and D-studies. Save the full analysis with
 inputs. Export a chosen summary with
 `write.csv(summary(result), ..., row.names = FALSE)` and keep the full
 source object for its settings, excluded rows and assumptions.
-Multivariate D-study scenario plots support
+Multivariate G-study component panels/covariance heatmaps and D-study
+curves support
 [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md),
-preserving G/Phi or SEM panels. Plan-difference intervals, PCA and
-clustering instead use their base plots or explicit custom graphics from
-[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+retaining score identities, G/Phi or SEM, facet-count panels and
+unavailable values. Plan-difference plots use base graphics or custom
+graphics from
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md);
+automatic conversion is unavailable. PCA scree/scores/loadings, saved
+dendrograms, imputation co-membership, silhouettes and
+numeric/categorical cluster profiles have dedicated
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+conversions. Use `mfrmr_output_guide("plots")` to choose a supported
+view; data extraction alone does not guarantee equivalent graphics.
 
 ## Missing scores on assigned ratings
 
@@ -457,9 +673,14 @@ routes; use [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) for the
 complete analysis or `write.csv(summary(pooled), ...)` for a selected
 table. It is not an
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
-input and does not support
-[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md).
-Selecting a plot `component` cannot supply a missing conversion.
+input.
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+supports the saved pooled interval view, including
+`component = "table"`, and preserves its t intervals, fixed targets and
+inference settings. Use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+for other components; conversion does not refit or pool the analyses
+again.
 
 ## Updating saved analyses for 0.2.4
 
@@ -503,6 +724,20 @@ diagnostics or scoring does not itself require a new calibration fit.
   distinguished; it is no longer a default rater-quality requirement.
   Missing results remain unavailable and cannot be treated as passes.
 
+- **Model comparisons:** rerun
+  [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
+  on the existing eligible fits, retaining the original comparison
+  settings, then rebuild dependent
+  [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md)
+  and
+  [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
+  results. The corrected RSM/PCM nesting review requires every RSM
+  interaction to be retained in the PCM. More category-step parameters
+  do not establish nesting. An affected pair can retain an eligible
+  information-criterion comparison while losing its invalid chi-square
+  test. This correction does not require refitting; printing an old
+  comparison leaves its stored decision unchanged.
+
 - **Group comparisons and equivalence:** recreate residual
   [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
   /
@@ -515,8 +750,7 @@ diagnostics or scoring does not itself require a new calibration fit.
   [`analyze_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_facet_equivalence.md)
   from an eligible MML fit with matching current diagnostics and the
   original practical bound; old equivalence bundles cannot supply the
-  required joint covariance. Rebuild model-choice and weighting reviews
-  from their source fits as well.
+  required joint covariance.
 
 - **ICC and design effects:** rerun
   [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md)
@@ -558,12 +792,12 @@ diagnostics or scoring does not itself require a new calibration fit.
 
 - **Multivariate G/D studies:** to apply metric-specific G/Phi/SEM
   availability rules, rerun
-  [`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md)
+  [`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md)
   from the saved G-study with the original planned counts and score
   weights. Changing only future counts or weights also reuses that
   G-study. Recreate dependent plan comparisons, plots and exports after
   recalculation; replotting alone preserves stored numbers. Refit
-  [`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+  [`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md)
   when changing the source data or G-study model, replacing an object
   with missing or incompatible design metadata, or correcting an earlier
   G-study affected by the single-score MINQUE(0) or period-containing
@@ -662,34 +896,37 @@ interpretation limits; updating an object does not broaden those limits.
 
 ## Next steps for reporting
 
-For the clearest default route in `RSM` / `PCM`, use
-[`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
--\>
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-with `method = "MML"` -\> `summary(fit, profile = "fit")` -\>
-`review <- summary(fit, profile = "facets")` -\> optionally view
-targeting with `plot(fit, type = "wright", show_ci = TRUE)` -\> reuse
-`review$results$diagnostics`; call
-[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-again only when residual PCA or other custom settings are needed -\>
-[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
--\>
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
-and, when flagged,
-[`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md)
-/
-[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md)
--\>
+For ordinary MML/JML `mfrm_fit` results, use one basic route:
+`summary(fit)` -\> `res <- mfrm_results(fit)` -\> `summary(res)`. The
+summary's `triage` and `next_actions` identify what needs attention;
+`plot_map` lists supported figures. The collector computes missing
+requested diagnostics by default. If you already have matching
+diagnostics, pass them as `diagnostics = diagnostics`;
+`compute = "never"` keeps absent diagnostics unavailable rather than
+computing them. It does not certify readiness.
+
+From `res`, choose
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+for a report, `plot(res, ...)` for a supported figure,
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+for an analyst archive, or `saveRDS(res, file)` for later R use. These
+are optional branches, not a checklist that must be run in full. The
+worked example in
+[mfrmr_reports_and_tables](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reports_and_tables.md)
+follows this route.
 [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
--\>
+and
 [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
--\>
-[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
-or
-[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
-The `"facets"` profile name is historical: it provides a comprehensive
-measurement review and does not require FACETS, TAM, or sirt knowledge
-or software.
+serve additional manuscript/table assembly; they are not prerequisites
+for the ordinary report.
+
+CML and comparison-only fits use their separate structural/comparison
+workflow above. For GPCM and extended models, consult
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+for the supported sections and attachments before collecting a report.
+If an earlier script uses `summary(fit, profile = "facets")`, reuse its
+`$results` or `$results$diagnostics`. The historical profile name does
+not require FACETS, TAM, or sirt software.
 
 Use `JML` only when its fixed-person-parameter estimand is
 methodologically intended, for example for a JMLE-oriented external
@@ -711,7 +948,7 @@ when adjacent-link review is needed -\>
 [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
 -\> inspect `review$group_view_index` for stable wave / link / facet
 rollups and `summary(review)$plot_routes` for the next plot helper -\>
-[`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md)
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md)
 or `plot(anchor_review, ...)` for the specific flagged evidence family.
 
 For `GPCM`, use
@@ -728,12 +965,14 @@ into:
 [`build_misfit_casebook()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_misfit_casebook.md)
 -\> inspect `casebook$group_view_index`, `casebook$group_views`, and
 `summary(casebook)$plot_routes` for stable person / facet / wave rollups
-and the next plot helper -\>
-[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-[`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-[`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
-or
-[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md)
+and the next plot helper -\> [plot(x, type =
+"unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+or [plot(x, type =
+"marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 according to `casebook$plot_map` -\>
 [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
 /
@@ -807,6 +1046,17 @@ marked as not assessed; mfrmr does not assume a complete crossing.
 
 ## Typical workflow
 
+The steps below describe ordinary MML/JML `mfrm_fit` results. Native CML
+uses the separate route in **From the first summary to diagnostics**:
+read its structural or comparison summary, create
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md),
+and use the interval object's plots/tables and RDS saving. CML has no
+Person abilities or population SD and does not support the ordinary
+diagnostic, Wright-map or consolidated-report steps.
+[`mfrmr_interval_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_interval_guide.md)
+also maps full MML interaction contrasts and their explicit
+population-SD standardization.
+
 1.  Review the long-format data and intended score support with
     [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
 
@@ -815,21 +1065,23 @@ marked as not assessed; mfrmr does not assume a complete crossing.
     Choose `MML` or `JML` from the prespecified estimand and
     assumptions; do not select `JML` merely to shorten runtime.
 
-3.  Read `summary(fit, profile = "fit")`, then request
-    `summary(fit, profile = "facets")`. To inspect targeting and
-    uncertainty, draw `plot(fit, type = "wright", show_ci = TRUE)`.
+3.  Read `summary(fit)$decision`. For a usable ordinary fit, collect
+    `res <- mfrm_results(fit)` and inspect `summary(res)$triage` and
+    `$next_actions`. The same `res` supports reporting and saving; use
+    `$plot_map` to select an optional figure.
 
 4.  (Optional) Use
     [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)
     or
     [`mfrmRFacets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)
-    for a legacy-compatible one-shot workflow wrapper.
+    only when a legacy-compatible one-shot wrapper is needed.
 
-5.  For `RSM` / `PCM`, build diagnostics with
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
-    For final reporting, prefer `diagnostic_mode = "both"` so the legacy
-    residual path and the strict marginal screen remain visible side by
-    side. For `GPCM`, diagnostics are now available through
+5.  For a focused diagnostic question, reuse `res$diagnostics`. Call
+    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+    separately when its settings need to change. For final reporting,
+    prefer `diagnostic_mode = "both"` so the legacy residual path and
+    the strict marginal screen remain visible side by side. For `GPCM`,
+    diagnostics are now available through
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
     together with
     [`analyze_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_residual_pca.md),
@@ -840,8 +1092,8 @@ marked as not assessed; mfrmr does not assume a complete crossing.
     [`rating_scale_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rating_scale_table.md),
     [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md),
     [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
-    and
-    [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
+    and [plot(x, type =
+    "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
     – the fair-average panel of the dashboard reports an explicit
     unavailability indicator under GPCM. Use
     [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
@@ -858,7 +1110,7 @@ marked as not assessed; mfrmr does not assume a complete crossing.
     design-weighted information via
     [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
     /
-    [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md),
+    [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md),
     Wright/pathway/CCC plots via
     [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
     direct category reports via
@@ -872,7 +1124,7 @@ marked as not assessed; mfrmr does not assume a complete crossing.
     [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
     are also available when the simulation specification stores both
     thresholds and slopes. Use
-    [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+    [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
     and
     [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)
     for direct recovery checks plus caveated role-based design
@@ -910,7 +1162,11 @@ marked as not assessed; mfrmr does not assume a complete crossing.
     only as an exploratory index over direct anchor/drift/chain
     evidence.
 
-8.  Generate reporting bundles:
+8.  For ordinary reports and saving, use
+    [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
+    [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+    or `saveRDS(res, file)`. For additional manuscript and appendix
+    assembly, select the relevant helper:
     [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md),
     [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md),
     [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md),
@@ -946,7 +1202,7 @@ marked as not assessed; mfrmr does not assume a complete crossing.
     /
     [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md)
     -\>
-    [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+    [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
     -\>
     [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)
     /
@@ -988,16 +1244,16 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   -\>
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-  -\>
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
+  -\> [plot(x, type =
+  "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   -\>
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
   when you want the package to route the next figures. `GPCM`:
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   -\>
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-  -\>
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
+  -\> [plot(x, type =
+  "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   /
   [`unexpected_response_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/unexpected_response_table.md)
   -\>
@@ -1005,7 +1261,7 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   -\>
   [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
   -\>
-  [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md)
   -\>
   [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   /
@@ -1024,8 +1280,9 @@ marked as not assessed; mfrmr does not assume a complete crossing.
 
 - Linking and coverage review:
   [`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md)
-  -\> `plot(..., type = "design_matrix")` -\>
-  [`plot_wright_unified()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_wright_unified.md).
+  -\> `plot(..., type = "design_matrix")` -\> [plot(x, type = "wright",
+  view =
+  "unified")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - Manuscript prep: `RSM` / `PCM`:
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
@@ -1054,7 +1311,7 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   -\>
   [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
   /
-  [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md)
   when you want to inspect whether `GPCM` is introducing substantively
   acceptable discrimination-based reweighting relative to the
   Rasch-family reference. Eligible MML comparisons require a common grid
@@ -1063,8 +1320,9 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   likelihood and solution checks; `nested = TRUE` additionally checks
   the PCM/GPCM equal-slope test;
   [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
-  separately checks approximate slope intervals, with explicit
-  standardized-scale, contrast, sandwich and Bonferroni options.
+  with `parm = "slopes"` separately checks approximate slope intervals,
+  with explicit standardized-scale, contrast, sandwich and Bonferroni
+  options.
   [`bootstrap_mfrm_gpcm()`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md)
   supplies a fitted-model bootstrap alternative;
   [`mfrm_curve_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_curve_intervals.md)
@@ -1084,7 +1342,7 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   or
   [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md)
   -\>
-  [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+  [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
   -\>
   [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)
   for parameter-recovery checks, then
@@ -1109,7 +1367,7 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md),
   and
   [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md),
-  [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md),
+  [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md),
   [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md),
   caveated role-based design evaluation and population forecasting,
   diagnostic/signal-detection design screening, residual diagnostics,
@@ -1139,13 +1397,15 @@ This help page is a map, not an estimator:
 - `mfrm_fit`: `summary(fit)` and `plot(fit, ...)`.
 
 - `mfrm_diagnostics`: `summary(diag)`; plotting via dedicated helpers
-  such as
-  [`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-  [`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md).
+  such as [plot(x, type =
+  "unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+  [plot(x, type =
+  "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
-- `mfrm_bias`: `summary(bias)` and
-  [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md).
+- `mfrm_bias`: `summary(bias)` and [plot(x, type =
+  "bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - `mfrm_data_description`: `summary(ds)` and `plot(ds, ...)`.
 
@@ -1164,7 +1424,7 @@ This help page is a map, not an estimator:
   information follow-up routed through
   [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
   and
-  [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md)
   according to `review$plot_map`, and appendix/report handoff available
   through
   [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
@@ -1175,7 +1435,7 @@ This help page is a map, not an estimator:
   grouping views available through `review$group_view_index` and
   `review$group_views`, and plotting routed through
   `summary(review)$plot_routes`,
-  [`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md),
+  [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md),
   and `plot(anchor_review, ...)` according to `review$plot_map`.
 
 - `mfrm_facets_run`: `summary(run)` and
@@ -1263,13 +1523,12 @@ base-R plots from component tables.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package
 library(mfrmr)
 
 # Load example ratings and look at the first six rows
-toy <- load_mfrmr_data("example_operational")
-head(toy)
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
 #>                Study Person Rater    Criterion Score Group
 #> 1 OperationalExample   P001   R01     Language     4     A
 #> 2 OperationalExample   P001   R01 Organization     2     A
@@ -1280,7 +1539,7 @@ head(toy)
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
@@ -1318,5 +1577,4 @@ results$decision
 #> 1              No        ready Formal precision support has not been evaluated.
 #>                                                                                                                                                   NextAction
 #> 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.
-# }
 ```

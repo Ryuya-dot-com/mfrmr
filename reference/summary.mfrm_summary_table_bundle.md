@@ -114,7 +114,6 @@ plotting or appendix export.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
@@ -133,28 +132,28 @@ summary(bundle)
 #> 
 #> Role summary
 #>                  Role Tables TotalRows TotalCols
-#>          run_overview      1         1        88
+#>          run_overview      1         1        89
 #>         reporting_map      1         6         3
 #>     population_coding      1         0         6
-#>      population_basis      1         1        16
+#>      population_basis      1         1        17
 #>   person_distribution      1         1        10
 #>    facet_distribution      1         2         7
 #>    extreme_person_low      1        10        20
 #>   extreme_person_high      1        10        20
 #>  extreme_facet_levels      1         8         3
-#>   estimation_settings      1         1        33
+#>   estimation_settings      1         1        35
 #>    category_structure      1         1         5
 #>      analysis_caveats      1         0         8
 #> 
 #> Table catalog
 #>                Table Rows Cols                 Role
-#>             overview    1   88         run_overview
-#>  population_overview    1   16     population_basis
+#>             overview    1   89         run_overview
+#>  population_overview    1   17     population_basis
 #>    population_coding    0    6    population_coding
 #>       facet_overview    2    7   facet_distribution
 #>      person_overview    1   10  person_distribution
 #>        step_overview    1    5   category_structure
-#>    settings_overview    1   33  estimation_settings
+#>    settings_overview    1   35  estimation_settings
 #>        reporting_map    6    3        reporting_map
 #>              caveats    0    8     analysis_caveats
 #>       facet_extremes    8    3 extreme_facet_levels
@@ -233,9 +232,9 @@ summary(bundle)
 #>       facet_extremes    8    3              1             0
 #>        reporting_map    6    3              0             0
 #>       facet_overview    2    7              6             0
-#>             overview    1   88             40            14
-#>    settings_overview    1   33              5             6
-#>  population_overview    1   16              5             5
+#>             overview    1   89             40            14
+#>    settings_overview    1   35              5             6
+#>  population_overview    1   17              5             5
 #>                  Role
 #>   extreme_person_high
 #>    extreme_person_low
@@ -363,5 +362,4 @@ summary(bundle)
 #> Notes
 #>  - No immediate warnings from fit-level summary checks.
 #>  - 3 empty table(s) were omitted from `tables`; use `include_empty = TRUE` to retain them.
-# }
 ```

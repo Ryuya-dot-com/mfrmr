@@ -2,8 +2,8 @@
 
 Visualizes the output from
 [`run_qc_pipeline()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_qc_pipeline.md)
-as either a traffic-light bar chart or a detail panel showing values
-versus thresholds.
+as either a traffic-light bar chart or a panel containing each check's
+explanation.
 
 ## Usage
 
@@ -43,9 +43,9 @@ Two plot types are provided for visual triage of QC results:
   (Fail). Provides an at-a-glance summary of the current QC review
   state.
 
-- **`"detail"`**: A panel showing each check's observed value and its
-  pass/warn/fail thresholds. Useful for understanding how close a
-  borderline result is to the next verdict level.
+- **`"detail"`**: A panel showing the saved `Detail` text beside each
+  verdict. Read this explanation and the returned table to understand
+  why a check was flagged or unavailable.
 
 ## Interpretation
 
@@ -66,24 +66,17 @@ fit. High rater separation is not high agreement, and no colour
 establishes statistical validity or justifies deleting raters or
 collapsing categories without further review.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## See also
 
 [`run_qc_pipeline()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_qc_pipeline.md),
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
+[plot(x, type =
+"qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
-
-## Examples
-
-``` r
-# \donttest{
-toy <- load_mfrmr_data("study1")
-# These observed data trigger a category-support warning: the QC plot
-# displays that review requirement; convergence does not remove it.
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
-#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
-qc <- run_qc_pipeline(fit)
-plot_qc_pipeline(qc, draw = FALSE)
-# }
-```

@@ -37,11 +37,14 @@ analyze_residual_pca(
 
 - facets:
 
-  Optional subset of facets for facet-specific PCA.
+  Optional subset of facets. This selects the facet-specific analyses
+  and the facets combined to define columns in the overall PCA.
 
 - pca_max_factors:
 
-  Maximum number of retained components.
+  Maximum number of components retained for loadings, subject to matrix
+  dimensions; `"auto"` caps this at 10. Variance tables retain the full
+  eigenvalue spectrum, not only those loading columns.
 
 - parallel:
 
@@ -175,13 +178,20 @@ For `mode = "facet"` or `"both"`, `by_facet_table` additionally includes
 a `Facet` column.
 
 `summary(pca)` is supported through
-[`summary()`](https://rdrr.io/r/base/summary.html). `plot(pca)` is
-dispatched through
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) for class
-`mfrm_residual_pca`. Available types include `"overall_scree"`,
-`"facet_scree"`, `"overall_parallel_scree"`, `"facet_parallel_scree"`,
-`"overall_parallel_excess"`, `"facet_parallel_excess"`,
-`"overall_loadings"`, and `"facet_loadings"`.
+[`summary()`](https://rdrr.io/r/base/summary.html). `plot(pca)`
+dispatches on class `mfrm_residual_pca`. Use `type = "scree"`,
+`"parallel_scree"`, `"parallel_excess"` or `"loadings"`, with
+`mode = "overall"` or `mode = "facet", facet = "Criterion"`. Existing
+prefixed spellings such as `"facet_scree"` remain supported. Plotting a
+saved PCA does not generate or refit a parallel reference. Save the
+complete result with
+[`base::saveRDS()`](https://rdrr.io/r/base/readRDS.html), including
+`errors`, `warnings`, `parallel_status` and any `bootstrap_trials`;
+export the desired tables separately with
+[`utils::write.csv()`](https://rdrr.io/r/utils/write.table.html).
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+converts a saved plot payload without redoing PCA. A blank unavailable
+plot is not evidence of an absence of residual structure.
 
 ## Interpreting output
 
@@ -195,10 +205,13 @@ Use `overall_table` first:
 
 Then inspect `by_facet_table`:
 
-- helps localize which facet contributes most to residual structure.
+- describes patterns within each facet-level residual matrix. Different
+  numbers of columns, aggregation and overlaps prevent treating
+  eigenvalues across facets as a ranking of their contributions to a
+  single decomposition.
 
-Finally, inspect loadings via
-[`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md)
+Finally, inspect loadings via [plot(x, type =
+"residual_pca")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 to identify which variables/elements drive each component.
 
 ## Model-generated reference
@@ -259,6 +272,18 @@ associations, not automatically latent dimensions. See
 [`vignette("mfrmr-visual-diagnostics")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md)
 for alternatives and their scope.
 
+## Typical workflow
+
+1.  Fit model and run
+    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+    with `residual_pca = "none"` or `"both"`.
+
+2.  Call `analyze_residual_pca(..., mode = "both")`.
+
+3.  Review `summary(pca)`, then plot scree/loadings.
+
+4.  Cross-check with fit/misfit diagnostics before conclusions.
+
 ## References
 
 The residual-PCA idea follows the Rasch residual-structure literature,
@@ -278,10 +303,13 @@ fitted-model test.
 
 - Horn, J. L. (1965). A rationale and test for the number of factors in
   factor analysis. *Psychometrika*, 30, 179-185.
+  [doi:10.1007/BF02289447](https://doi.org/10.1007/BF02289447) .
 
 - Glorfeld, L. W. (1995). An improvement on Horn's parallel analysis
   methodology for selecting the correct number of factors to retain.
   *Educational and Psychological Measurement*, 55, 377-393.
+  [doi:10.1177/0013164495055003002](https://doi.org/10.1177/0013164495055003002)
+  .
 
 - Hayton, J. C., Allen, D. G., & Scarpello, V. (2004). Factor retention
   decisions in exploratory factor analysis: A tutorial on parallel
@@ -292,11 +320,15 @@ fitted-model test.
   Methods*, 16, 209-220.
 
 - Linacre, J. M. (1998). *Structure in Rasch residuals: Why principal
-  components analysis (PCA)?* Rasch Measurement Transactions, 12(2),
-  636.
+  components analysis (PCA)?* Rasch Measurement Transactions,
+  12(2), 636. <https://www.rasch.org/rmt/rmt122m.htm>
 
 - Linacre, J. M. (1998). *Detecting multidimensionality: Which residual
   data-type works best?* Journal of Outcome Measurement, 2(3), 266-283.
+
+Applications and broader measurement discussions below provide context;
+they do not validate this implementation's residual aggregation,
+reference cutoffs or automatic dimensionality decisions:
 
 - Eckes, T. (2005). Examining rater effects in TestDaF writing and
   speaking performance assessments: A many-facet Rasch analysis.
@@ -317,28 +349,16 @@ fitted-model test.
 - Tseng, W.-T. (2016). Measuring English vocabulary size via
   computerized adaptive testing. *Computers & Education*, 97, 69-85.
 
-## Typical workflow
-
-1.  Fit model and run
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-    with `residual_pca = "none"` or `"both"`.
-
-2.  Call `analyze_residual_pca(..., mode = "both")`.
-
-3.  Review `summary(pca)`, then plot scree/loadings.
-
-4.  Cross-check with fit/misfit diagnostics before conclusions.
-
 ## See also
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
-[`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md),
+[plot(x, type =
+"residual_pca")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "both")
@@ -364,7 +384,7 @@ summary(pca)
 #>   9      0.949      0.059
 #>  10      0.846      0.053
 #> Residual PCA is exploratory residual-structure screening (overall and/or by facet), not a standalone dimensionality test or an automatic decision about dimensions or subscores. 
-p <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
+p <- plot(pca, type = "residual_pca", mode = "overall", view = "scree", draw = FALSE)
 p$data$plot
 #> [1] "scree"
 head(p$data)
@@ -426,5 +446,4 @@ head(pca$overall_table)
 #> 4         4   1.519039 0.09493995  0.4482327
 #> 5         5   1.289992 0.08062450  0.5288572
 #> 6         6   1.157287 0.07233045  0.6011876
-# }
 ```

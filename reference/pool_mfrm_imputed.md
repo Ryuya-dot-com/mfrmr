@@ -80,6 +80,10 @@ inferential interval or degrees of freedom. No imputation is omitted.
 `information_review` retains any numerical-refinement review at each
 imputation's list position. `cautions` identifies affected imputations;
 when present, `InferenceCaution` also accompanies the pooled table.
+`IntervalReason` distinguishes available intervals, fixed targets,
+numerical resolution loss and intervals outside the numeric range. An
+unavailable interval retains its point estimate and variance. `notes`
+records the imputation and inference assumptions for saved reuse.
 
 ## Details
 
@@ -90,7 +94,14 @@ t-reference degrees of freedom are `(m - 1) / lambda^2`, with
 `lambda = (1 + 1/m) B / T`, before any finite complete-data adjustment.
 A zero between-imputation variance has infinite large-sample degrees of
 freedom. Full covariances are transformed before scalar inference, so
-rater differences include covariance between the two estimates.
+rater differences include covariance between the two estimates. The
+finite-data adjustment uses
+\\\nu\_{obs}=\nu\_{com}(\nu\_{com}+1)/(\nu\_{com}+3)\\\bar U/T\\ and
+\\1/\nu=1/\nu\_{old}+1/\nu\_{obs}\\. These t references are
+approximations, not exact finite-sample pivots for an MFRM. Positive
+interval widths that cannot be distinguished from zero at the returned
+estimate, and endpoints outside floating-point range, are withheld with
+a reason rather than reported as zero uncertainty or infinite bounds.
 
 All fits must share categories, facet levels, signs, anchors,
 interactions and identification. Known anchors are fixed and their
@@ -114,7 +125,11 @@ It compares joint RSM predictive completions with direct observed-score
 inference. Proper calibration priors in the imputer and MML estimates in
 the completed-data analyses do not give exactly identical Bayesian
 moments: that interpretation is a large-sample approximation requiring
-review.
+review. The finite-imputation correction and `MonteCarloSE` assume
+independent completed-data draws. Repeating completions is not
+additional Monte Carlo evidence; correlated MCMC draws require sampling
+review. Identical completed values can occur legitimately and are not
+automatically rejected.
 
 Congeniality concerns the imputation distribution and the complete-data
 analysis together, including its variance estimator. Preserving

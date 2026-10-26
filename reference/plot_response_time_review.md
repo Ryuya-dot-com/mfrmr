@@ -55,6 +55,13 @@ plot_response_time_review(
 Invisibly, an `mfrm_plot_data` object containing the plot table,
 thresholds, overview, and interpretation notes.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## Session plot defaults
 
 Set `options(mfrmr.plot_preset = "publication")` to choose a session
@@ -105,6 +112,6 @@ rt <- response_time_review(
   toy, person = "Person", facets = c("Rater", "Criterion"),
   score = "Score", time = "ResponseTime"
 )
-plot_response_time_review(rt, type = "distribution", draw = FALSE)
-plot_response_time_review(rt, type = "person", draw = FALSE)
+plot(rt, type = "distribution", draw = FALSE)
+plot(rt, type = "person", draw = FALSE)
 ```

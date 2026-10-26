@@ -37,16 +37,19 @@ plot(
 
   Saved
   [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
-  or
+  output from `parm = "slopes"`, or
   [`bootstrap_mfrm_gpcm()`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md)
   output.
 
 - title, subtitle:
 
-  Optional plot text; NULL removes it. The interval subtitle defaults to
-  the saved target, method, confidence level and any saved numerical or
-  bootstrap cautions. Custom text overrides this default, while the
-  diagnostics remain in the plot data and interval tables.
+  Optional returned metadata; NULL removes it. The interval description
+  defaults to the saved target, method, confidence level and any saved
+  numerical or bootstrap cautions. Custom text overrides this default,
+  while the diagnostics remain in the plot data and interval tables.
+  Titles and notes are not drawn. Use `plot_data(p, "notes")` for
+  descriptions and cautions, and `plot_data(p, "title")` for the
+  suggested figure title.
 
 - reference:
 
@@ -72,7 +75,7 @@ plot(
 
 - caption:
 
-  For saved slope intervals, optional caption. NULL removes it.
+  For saved slope intervals, optional returned caption. NULL removes it.
   Two-family intervals state the distinct family references by default.
   Profile plots supply a default explanation of line styles and missing
   coordinates when omitted.
@@ -87,9 +90,14 @@ No fitting or resampling is performed.
 
 Crosses retain unavailable intervals. Open circles retain intervals with
 infinite endpoints; the plot does not replace them with finite bounds.
-The accompanying table contains all bounds and failure reasons. For a
-bootstrap LRT, a histogram shows resolved null statistics and a line the
-observed statistic. The annotation counts every unresolved replicate.
+Incomplete intervals retain the computed endpoint as a tick, without a
+connecting interval line. A missing endpoint is not an infinite endpoint
+or a calibrated one-sided interval. Finite review-only bounds use a
+dashed line. The table retains `IntervalStatus`, `CIEligible`, `CIUse`
+(when saved), all bounds and failure reasons; returned notes explain the
+display. For a bootstrap LRT, a histogram shows resolved null statistics
+and a line the observed statistic. The returned notes count every
+unresolved replicate.
 
 Use
 [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
@@ -116,7 +124,7 @@ more reliable.
 ## Examples
 
 ``` r
-# ci <- confint(fit, scale = "standardized", method = "sandwich")
+# ci <- confint(fit, parm = "slopes", scale = "standardized", method = "sandwich")
 # plot(ci, title = NULL)
 # apa_table(ci)
 # plot_data(ci, "table")

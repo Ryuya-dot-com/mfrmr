@@ -23,7 +23,7 @@ plot(
   include_fit_measures = TRUE,
   fit_stat = c("Infit", "Outfit"),
   fit_scale = c("mnsq", "zstd"),
-  zstd_method = c("engine", "facets"),
+  zstd_method = c("facets", "engine"),
   include_person = FALSE,
   person_subset = NULL,
   top_n_person = 30,
@@ -41,21 +41,26 @@ plot(
   wright_range = NULL,
   extreme_placement = c("ends", "estimate"),
   persons_per_star = NULL,
-  show_title = TRUE,
-  show_notes = TRUE,
+  show_title = FALSE,
+  show_notes = FALSE,
   ...,
-  level = NULL
+  level = NULL,
+  view = NULL,
+  metric = NULL,
+  comparison = NULL,
+  labels = NULL,
+  highlight = NULL
 )
 ```
 
 ## Arguments
 
-- x:
+- x :
 
   An `mfrm_fit` object from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
-- type:
+- type :
 
   Plot type. Omit `type` (or use `NULL` / `"wright"`) for the primary
   native Wright map. Use `"bundle"`, `"all"`, or `"default"` for the
@@ -63,13 +68,16 @@ plot(
   `"step"`, `"wright"`, `"pathway"`, `"fit_pathway"`, `"ccc"`,
   `"ccc_surface"`, or `"category_surface"`. `"pathway"` is the
   theta-to-expected-score display; `"fit_pathway"` is the
-  fit-statistic-to-measure display.
+  fit-statistic-to-measure display. Additional diagnostic and reporting
+  views are listed under "Single-fit views" in
+  [mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md),
+  with replacements for all former helpers.
 
-- facet:
+- facet :
 
   Optional facet name for `type = "facet"`.
 
-- top_n:
+- top_n :
 
   Maximum number of non-person facet locations retained by the native
   Wright map for compact displays. Step transitions are always retained
@@ -79,29 +87,31 @@ plot(
   FACETS-style payload always retains every fitted facet and step
   location.
 
-- theta_range:
+- theta_range :
 
   Numeric length-2 range for pathway, CCC, and category-surface plot
   data.
 
-- theta_points:
+- theta_points :
 
   Number of theta grid points used for pathway, CCC, and
   category-surface plot data.
 
-- title:
+- title :
 
   Optional custom title.
 
-- palette:
+- palette :
 
   Optional color overrides.
 
-- label_angle:
+- label_angle :
 
-  Rotation angle for x-axis labels where applicable.
+  Rotation angle for x-axis labels where applicable. Native Wright maps
+  reserve bottom space for full labels when abbreviating them would make
+  different groups indistinguishable.
 
-- show_ci:
+- show_ci :
 
   Whether to add approximate confidence intervals when available. `NULL`
   selects the display-specific default: `TRUE` for the primary native
@@ -110,11 +120,11 @@ plot(
   explicitly setting `show_ci = TRUE` creates a hybrid display:
   FACETS-style ruler grammar with mfrmr uncertainty intervals.
 
-- ci_level:
+- ci_level :
 
   Confidence level used when `show_ci = TRUE`.
 
-- group:
+- group :
 
   Optional grouping for `type = "wright"` to overlay per-group
   person-density curves (DIF / DFF screening view). Either a column name
@@ -125,7 +135,7 @@ plot(
   source data alongside, use
   `plot(fit, type = "wright", group = "MyCol", group_data = <df>)`.
 
-- diagnostics:
+- diagnostics :
 
   Optional matching output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
@@ -134,79 +144,83 @@ plot(
   metadata reuse matching rows from `diagnostics$measures` without
   replacing fitted coordinates, while pathway plot data reuse
   `fit_measures`, `fit_status`, and `curve_fit_status` instead of
-  recomputing diagnostics.
+  recomputing diagnostics. Must match this fitted analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics.
 
-- include_fit_measures:
+- include_fit_measures :
 
   If `TRUE` (default), pathway plot data include tidy fit-measure and
   fit-status tables for custom R graphics. Set to `FALSE` when only the
   curve coordinates are needed.
 
-- fit_stat:
+- fit_stat :
 
   For `type = "fit_pathway"`, the horizontal fit statistic: `"Infit"`
   (default) or `"Outfit"`.
 
-- fit_scale:
+- fit_scale :
 
   For `type = "fit_pathway"`, use mean squares (`"mnsq"`) or
   standardized fit (`"zstd"`) on the horizontal axis.
 
-- zstd_method:
+- zstd_method :
 
-  For a ZSTD fit pathway, use the package engine degrees of freedom
-  (`"engine"`, default) or the FACETS/Wright-Masters companion
-  calculation (`"facets"`). The latter is a comparison aid, not a claim
-  of complete FACETS output equivalence.
+  For a ZSTD fit pathway, `"facets"` (default) uses the
+  FACETS/Wright-Masters fourth-moment df, matching
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+  `"engine"` retains the former package-native df convention. Neither
+  establishes complete FACETS output equivalence. Refreshing companions
+  from supplied diagnostics preserves their recorded WHEXACT choice.
 
-- include_person:
+- include_person :
 
   If `TRUE`, include person rows in a fit pathway.
 
-- person_subset:
+- person_subset :
 
   Optional character vector of person IDs retained in a fit pathway
   before ranking.
 
-- top_n_person:
+- top_n_person :
 
   Maximum person rows retained in a fit pathway, ranked by distance from
   expected fit. Use `Inf` for all selected persons.
 
-- person_labels:
+- person_labels :
 
   Person-label policy for a fit pathway: `"flagged"` (default), `"all"`,
   or `"none"`.
 
-- facet_labels:
+- facet_labels :
 
   Facet-level label policy for a fit pathway: `"all"` (default),
   `"flagged"`, or `"none"`. This changes drawn labels only; all retained
   facet rows remain in the draw-free table.
 
-- panel:
+- panel :
 
   Fit-pathway layout: `"combined"` (distinguish persons by shape) or
   `"facet"` (one base-graphics panel per facet).
 
-- fit_range:
+- fit_range :
 
   Mean-square review lines for a fit pathway.
 
-- zstd_cut:
+- zstd_cut :
 
   Absolute ZSTD review line for a fit pathway.
 
-- draw:
+- draw :
 
   If `TRUE`, draw the plot with base graphics.
 
-- preset:
+- preset :
 
   Visual preset (`"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`).
 
-- renderer:
+- renderer :
 
   Wright-map renderer. Use `"native"` (default) or `"facets"` for the
   FACETS Table 6-style visual layout. This is the canonical selector for
@@ -214,7 +228,7 @@ plot(
   facet uncertainty by default. The closest FACETS-style visual uses
   `show_ci = FALSE`.
 
-- wright_style:
+- wright_style :
 
   Wright-map renderer. `"native"` preserves the package's histogram,
   point, range, and facet-SE display. `"facets_style"` adds a FACETS
@@ -225,53 +239,94 @@ plot(
   `show_ci = TRUE` to that style is an mfrmr/FACETS hybrid rather than
   the closest FACETS-style view.
 
-- category_labels:
+- category_labels :
 
   Optional score rubric labels used by `wright_style = "facets_style"`.
   Supply a named character vector keyed by original score, an unnamed
   vector with one label per retained category, or a data frame with
   `Score` and `Label` columns.
 
-- rows_per_logit:
+- rows_per_logit :
 
   Number of FACETS-style ruler rows per logit.
 
-- wright_range:
+- wright_range :
 
   Optional finite increasing length-2 logit range for the FACETS-style
   ruler. `NULL` derives a range that contains the fitted data.
 
-- extreme_placement:
+- extreme_placement :
 
   In the FACETS-style renderer, place extreme-score persons at the ruler
   `"ends"` or retain their fitted `"estimate"`.
 
-- persons_per_star:
+- persons_per_star :
 
   Number of persons represented by one `*` in the FACETS-style frequency
   column. `NULL` chooses a compact value automatically.
 
-- show_title:
+- show_title :
 
-  Logical; display the main plot title. Structural panel headings, axis
-  labels, legends, and data labels remain visible.
+  Logical; display the main plot title (default `FALSE`). Structural
+  panel headings, axis labels, legends, and data labels remain visible.
 
-- show_notes:
+- show_notes :
 
   Logical; display explanatory subtitles, footnotes, and review-only
   title markers. Notes remain available in the returned object, and R
-  warnings are still issued when this is `FALSE`.
+  warnings are still issued. Default `FALSE`; use
+  `plot_data(p, "notes")` for the descriptions and cautions outside the
+  figure.
 
-- ...:
+- ... :
 
-  Additional arguments ignored for S3 compatibility.
+  View-specific controls listed in
+  [mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md).
+  The consolidated routes reject irrelevant or duplicated arguments.
 
-- level:
+- level :
 
   Named alternative to `ci_level`, a single number strictly between 0
   and 1. Supply only one of these names, even when equal. Both omitted
   retain 0.95. This controls the fitted-model plot intervals; attached
   interval results retain the level chosen when they were computed.
+
+- view :
+
+  Optional display variant for consolidated routes: for example,
+  `"pairs"` or `"heatmap"` for agreement, `"unified"` for the former
+  unified Wright helper, or `"funnel"` for shrinkage. See
+  [mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md).
+
+- metric :
+
+  Quantity for a consolidated route, for example `"reliability"`,
+  `"separation"` or `"strata"`, or `"exact"` / `"correlation"` for
+  agreement.
+
+- comparison :
+
+  Another fitted model for paired Wright/CCC displays, or an ordered
+  list of additional fits for `type = "trajectory"`. Plotting does not
+  equate their scales or perform a model-selection test.
+
+- labels :
+
+  Labels for paired models or all trajectory waves, reference first.
+
+- highlight :
+
+  Optional named list of non-person facet level IDs, for example
+  `list(Rater = c("R01", "R02"))`, for Wright maps only (including
+  `view = "unified"` and the Wright component of a bundle). Selected
+  labels receive a `> ` prefix in both renderers and saved ggplot
+  conversion. Levels outside the usual `top_n` selection are added, so
+  the displayed count may exceed that limit. Fitted locations and
+  uncertainty do not change; the automatic scale uses all fitted
+  locations before compaction. Selection is not a statistical flag.
+  Inspect `locations$Highlighted`, `retention` and `notes` in the
+  returned plot data. Unknown IDs or levels without finite locations are
+  rejected. `NULL` selects no levels.
 
 ## Value
 
@@ -289,6 +344,31 @@ convention.
 Start with `plot(fit)`: it draws a Wright map of person abilities, rater
 severities, other facet locations, and category thresholds on one logit
 scale. No plot options are needed for this first view.
+
+For adjusted-score comparisons, use
+`plot(fit, type = "fair_average", show_ci = TRUE)`. `metric = "FairM"`
+uses mean reference measures; `metric = "FairZ"` uses a zero reference,
+not a z-score. PCM averages expectations over administered scales with
+the table's observation weights and `totalscore` selection. Its
+conditional delta-method intervals use the same retained observations as
+the table: finite direct anchors in ordinary additive RSM/PCM JML are
+retained even with all-minimum/all-maximum responses, including when
+`totalscore = FALSE`. The intervals use the derivative of that same
+average. RSM/PCM intervals hold thresholds, other effects and reference
+means fixed; they are diagnostic approximations, not full
+calibration-uncertainty intervals. Inspect the returned data and notes
+for the interval method and unavailable rows. See
+[`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
+for reference definitions and
+[plot_fair_average](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
+for view-specific controls. For ordinary additive RSM/PCM JML,
+`xtreme = .3, xtreme_method = "facets"` requests conditional total-score
+extrapolation of extreme measures and their fair scores. Primary
+estimates and fixed anchors are retained. Group-mean anchors are
+unsupported. The measure SE describes the corrected total; fair-score
+intervals remain unavailable for positive `xtreme`. The default
+`xtreme_method = "display"` retains the old average-score display
+convention and leaves fair scores unchanged.
 
 This S3 plotting method provides the core fit-family visuals for
 `mfrmr`. When `type` is omitted, it returns the Wright map alone as an
@@ -357,14 +437,31 @@ non-interpretable trace cannot collapse the display. The exact excluded
 rows and reason remain in `data$person_exclusions`, and the omission is
 stated in `data$retention_note`.
 
+`type = "unexpected"` uses the same default as
+[`unexpected_response_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/unexpected_response_table.md):
+`abs_z_min = 3, rule = "residual"`. The optional `rule = "either"` or
+`"both"` also uses `prob_max`. Saved table plots retain the recorded
+thresholds. A fully evaluated screen with no flags yields an empty
+display and retains its screening summary.
+
 `type = "wright"` shows persons, facet levels, and step thresholds on a
 shared logit scale. Estimates are plotted as fitted, so the sign
-convention follows the fit: higher person values indicate higher
-ability, and higher non-person facet values indicate greater
-severity/difficulty under the default negative facet orientation. Facets
-listed in `fit_mfrm(positive_facets = ...)` are reversed (higher values
-raise expected scores); state the active orientation in figure captions
-when reporting.
+convention follows the fit: higher Person values predict higher coded
+scores in these positive-discrimination models. Whether that means more
+comprehensible or less comprehensible speech depends on the rubric
+coding. Under the default negative orientation, higher non-Person facet
+values reduce expected coded scores; calling this greater
+severity/difficulty presumes that higher scores represent better
+performance. Facets listed in `fit_mfrm(positive_facets = ...)` are
+reversed (higher values raise expected scores); state the active
+orientation in figure captions when reporting. The returned `notes`,
+also shown by [`print()`](https://rdrr.io/r/base/print.html), state the
+recorded facet directions and the score-coding caveat. Missing
+orientation in an older or imported result is not guessed. Category
+labels do not recode the data. See
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
+for reverse-coded comprehensibility, fit, conditional bias and Step
+explanations.
 
 Set `renderer = "facets"` (equivalently,
 `wright_style = "facets_style"`) for a line-printer-inspired common
@@ -421,6 +518,34 @@ tables so retained zero-frequency categories and manuscript-use
 boundaries remain visible to beginners. The remaining types (`"facet"`,
 `"person"`, `"step"`, `"shrinkage"`) provide compact location-specific
 displays.
+
+## Facet locations and practical equivalence
+
+`plot(fit, type = "rater_severity", facet = "Rater")` orders locations
+and shows available normal uncertainty intervals. Pass matching
+`diagnostics` to reuse their precision metadata. The default has no
+magnitude bands; `show_bands = TRUE` explicitly adds gray guides at
++/-0.5 and +/-1.0 logits. These distances from the fitted zero are not
+equivalence bounds, evidence of homogeneity or calibration standards.
+The returned `data` table uses numerical absolute-location ranges in
+`Band`; a common range does not imply small pairwise differences.
+
+Use `p <- plot(fit, type = "rater_severity", diagnostics = diagnostics)`
+and
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+to read `"data"` and `"notes"`. Intervals retain their `CIUse`,
+`SE_Method` and `IntervalStatus`; individual whisker overlap is not a
+contrast interval.
+[`analyze_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_facet_equivalence.md)
+separately examines pairwise differences with their full covariance and
+a prespecified practical bound in its supported MML scope. It does not
+use the profile's guides. The zero depends on the model
+constraints/anchors, so read the signed differences and their
+uncertainty instead of inferring quality from color. Older saved
+profiles retain their original colors and labels when converted with
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md);
+regenerate the figure from the saved fit and matching diagnostics for
+the new display. No refitting is needed.
 
 ## Corrected JML plots
 
@@ -515,14 +640,12 @@ or diagnostic thresholds.
 ## See also
 
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-[`plot_wright_unified()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_wright_unified.md),
-[`plot_bubble()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bubble.md),
+plot(x, type = "wright", view = "unified"), plot(x, type = "bubble"),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -552,7 +675,7 @@ plot(fit, type = "ccc")
 # Optional: get plot data instead of drawing a figure
 wright <- plot(fit, draw = FALSE)
 head(wright$data$locations)
-#> # A tibble: 6 × 38
+#> # A tibble: 6 × 39
 #>   Group Label PlotType    Estimate    SE Fixed CI_Level SE_Method  PrecisionTier
 #>   <fct> <chr> <chr>          <dbl> <dbl> <lgl>    <dbl> <chr>      <chr>        
 #> 1 Rater R01   Facet level   -0.606 0.181 FALSE     0.95 Observati… exploratory  
@@ -561,12 +684,26 @@ head(wright$data$locations)
 #> 4 Rater R05   Facet level    0.184 0.199 FALSE     0.95 Observati… exploratory  
 #> 5 Rater R03   Facet level    0.212 0.179 FALSE     0.95 Observati… exploratory  
 #> 6 Rater R06   Facet level    0.412 0.219 FALSE     0.95 Observati… exploratory  
-#> # ℹ 29 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
+#> # ℹ 30 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
 #> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
 #> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,
-#> #   StepIndex <int>, BoundarySeparated <lgl>, XBase <dbl>, X <dbl>,
-#> #   OriginalEstimate <dbl>, BelowRange <lgl>, AboveRange <lgl>,
+#> #   StepIndex <int>, BoundarySeparated <lgl>, Highlighted <lgl>, XBase <dbl>,
+#> #   X <dbl>, OriginalEstimate <dbl>, BelowRange <lgl>, AboveRange <lgl>,
 #> #   DisplayEstimate <dbl>, DisplayLabel <chr>, OriginalCI_Lower <dbl>,
 #> #   OriginalCI_Upper <dbl>, DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, …
-# }
+# Find a named judge without refitting or dropping the surrounding scale
+judge <- as.character(toy$Rater[1])
+focused <- plot(fit, highlight = list(Rater = judge), draw = FALSE)
+subset(plot_data(focused, "locations"), Highlighted)
+#> # A tibble: 1 × 39
+#>   Group Label PlotType    Estimate    SE Fixed CI_Level SE_Method  PrecisionTier
+#>   <fct> <chr> <chr>          <dbl> <dbl> <lgl>    <dbl> <chr>      <chr>        
+#> 1 Rater R01   Facet level   -0.606 0.181 FALSE     0.95 Observati… exploratory  
+#> # ℹ 30 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
+#> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
+#> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,
+#> #   StepIndex <int>, BoundarySeparated <lgl>, Highlighted <lgl>, XBase <dbl>,
+#> #   X <dbl>, OriginalEstimate <dbl>, BelowRange <lgl>, AboveRange <lgl>,
+#> #   DisplayEstimate <dbl>, DisplayLabel <chr>, OriginalCI_Lower <dbl>,
+#> #   OriginalCI_Upper <dbl>, DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, …
 ```

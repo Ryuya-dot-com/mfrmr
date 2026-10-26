@@ -29,7 +29,7 @@ print(x, ...)
 
 ## Arguments
 
-- roster:
+- roster :
 
   Data frame with `Condition`, `Replicate`, `Target` identifiers and
   logical `Affected`: `TRUE` denotes the prespecified departure that the
@@ -39,7 +39,7 @@ print(x, ...)
   or methods in separate conditions. Identifiers are matched exactly as
   character labels.
 
-- measures:
+- measures :
 
   Data frame with `Condition`, `Replicate`, `Target`, `Infit` and
   `Outfit`. Include `InfitZSTD` and `OutfitZSTD` when requesting the
@@ -48,40 +48,40 @@ print(x, ...)
   source columns, such as numerical readiness, are retained without
   filtering.
 
-- thresholds:
+- thresholds :
 
   Data frame with unique nonempty `Profile` labels and numeric `Lower`,
   `Upper` bounds satisfying `0 < Lower < Upper`. Profiles are compared
   in supplied order, without selecting an optimum.
 
-- rule:
+- rule :
 
   Nonempty description of the prespecified screen, including its
   thresholds, comparison family and any selection/refitting procedure.
 
-- statistic:
+- statistic :
 
   `"either"` (default) flags Infit OR Outfit; `"infit"` or `"outfit"`
   uses only the specified index.
 
-- zstd_cut:
+- zstd_cut :
 
   `NULL` (default) uses only mean squares. A positive finite number adds
   directional ZSTD flags with inclusive boundaries. This is an explicit
   alternative rule, not a significance calibration. Record the chosen df
   convention and residual definition in `rule`.
 
-- level:
+- level :
 
   Confidence level for exact binomial Monte Carlo intervals; default
   0.95. These describe simulation uncertainty, not an interval for rater
   severity or a guarantee of screening accuracy.
 
-- ...:
+- ... :
 
   Unused by print and summary.
 
-- x, object:
+- x, object :
 
   An `mfrm_screening_sensitivity` object.
 

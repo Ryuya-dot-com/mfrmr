@@ -36,11 +36,13 @@ reporting_checklist(
 - hierarchical_structure:
 
   Optional output from
-  [`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md).
-  When supplied, the "Hierarchical structure review" checklist item is
-  flipped to `DraftReady = TRUE` and its `Detail` column surfaces the
-  number of nested / crossed facet pairs and whether the ICC table is
-  available.
+  [`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md)
+  for matching retained rating rows. The reviewed facets may be a subset
+  of the fitted facets. After checking the data identity, the
+  "Hierarchical structure review" item is marked `DraftReady = TRUE`;
+  `Detail` names the reviewed columns, row count, nested / crossed pairs
+  and ICC availability. This indicates available material within that
+  scope, not a complete design assessment.
 
 - include_references:
 
@@ -115,8 +117,9 @@ backward-compatible alias.
   formal inferential adequacy.
 
 - `fit_readiness`, `fit_readiness_components`, and
-  `fit_readiness_parameters`: exact source-fit v3 readiness provenance;
-  these fields are not re-derived from checklist completeness.
+  `fit_readiness_parameters`: the fitted model's recorded numerical
+  checks and restrictions on inference, overall and by component or
+  parameter. Checklist completeness does not change these records.
 
 - `section_summary`: available items by section.
 
@@ -135,9 +138,11 @@ backward-compatible alias.
   a FACETS numerical clone and separates native estimation from
   FACETS-style handoff or external-table review.
 
-- `visual_scope`: plotting-route summary that separates report-default
-  2D figures from exploratory surface/3D-ready data handoffs, including
-  a short `InterpretationCheck` for the main user-facing caveat.
+- `visual_scope`: available plots and their interpretation limits. It
+  distinguishes 2D figures from category-surface data for custom
+  rendering; data availability does not mean an interactive 3D renderer
+  is provided. `InterpretationCheck` gives the main caveat for each type
+  of plot.
 
 - `references`: abbreviated background citations and topics when
   requested, not a complete bibliography. Verify full records for the
@@ -197,6 +202,19 @@ operational review:
     instead of treating `reporting_checklist()` as the single review
     hub.
 
+## Saved-result reuse
+
+Supplied screening results must describe this fitted analysis. Results
+from another fit or older results without identity metadata are refused.
+See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+to recreate them from the saved fit and matching diagnostics without
+refitting the model. Structural reviews are checked against the reviewed
+data, not the model's estimates. Row order and unused columns do not
+affect this match. Reviews of additional input rows or unrecorded
+grouping columns remain standalone analyses; they cannot establish
+availability for this fit's checklist.
+
 ## See also
 
 [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md),
@@ -209,7 +227,6 @@ operational review:
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -268,5 +285,4 @@ subset(checklist$checklist, !DraftReady,
 #> 31                                                                    Run bias or DIF screening before discussing interaction-level visuals.
 # DraftReady is TRUE/FALSE; TRUE means draft material is available with caveats
 # Choose follow-up analyses for your question, not merely to make every row TRUE
-# }
 ```

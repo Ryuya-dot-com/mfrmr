@@ -28,7 +28,9 @@ facets_output_contract_review(
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
   If omitted, diagnostics are computed internally with
-  `residual_pca = "none"`.
+  `residual_pca = "none"`. Must match this fitted analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics.
 
 - bias_results:
 
@@ -139,6 +141,15 @@ dispatched through
 3.  For unresolved rows, use the documented package-native alternative
     or retain the scope limitation in the report.
 
+## Saved-result reuse
+
+Supplied screening results must describe this fitted analysis. Results
+from another fit or older results without identity metadata are refused.
+See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+to recreate them from the saved fit and matching diagnostics without
+refitting the model.
+
 ## See also
 
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
@@ -149,7 +160,6 @@ dispatched through
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -209,5 +219,4 @@ summary(contract_review)
 #>  - Local directory details are suppressed in this summary; the source bundle
 #>    retains complete provenance.
 p <- plot(contract_review, draw = FALSE)
-# }
 ```

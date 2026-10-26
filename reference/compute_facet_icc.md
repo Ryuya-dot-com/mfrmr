@@ -179,7 +179,11 @@ The `InterpretationScale` column explicitly records which scale applies
 to each row, so downstream reporting does not confuse the two. FACETS
 (Linacre, 2026) reports rater separation/reliability on the Rasch metric
 instead of an ICC; mfrmr surfaces both, with the Rasch-metric version in
-`diagnostics$reliability` and this variance-share view here.
+`diagnostics$reliability` and this variance-share view here. For
+agreement or consistency between specific pairs on common units, use
+[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_icc_table.md)
+instead. A small rater variance share here does not establish pairwise
+agreement; residual disagreement can still be large.
 
 Set `ci_method = "boot"` to request intervals alongside the point
 estimates. The `Interpretation` column still uses point estimates. The
@@ -239,6 +243,7 @@ mixed-effects models using lme4. *Journal of Statistical Software,
 ## See also
 
 [`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md),
+[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_icc_table.md),
 [`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md),
 [`detect_facet_nesting()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_facet_nesting.md),
 [`facet_small_sample_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_small_sample_review.md).
@@ -246,7 +251,6 @@ mixed-effects models using lme4. *Journal of Statistical Software,
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 if (requireNamespace("lme4", quietly = TRUE)) {
   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
@@ -256,7 +260,7 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   # - Person ICC reads as Koo & Li (2016) reliability: < 0.5 poor,
   #   0.5-0.75 moderate, 0.75-0.9 good, > 0.9 excellent.
   # - Rater / Criterion ICC reads as variance share, NOT reliability;
-  #   here SMALL values are desirable (raters / items agree), and
+  #   small values indicate limited systematic facet differences, and
   #   shares > 0.10 hint at meaningful systematic facet differences.
   # - `Interpretation` summarises the variance-share band the helper
   #   has assigned to each row.
@@ -278,5 +282,4 @@ if (requireNamespace("lme4", quietly = TRUE)) {
 #>             0
 #>             0
 #>             0
-# }
 ```

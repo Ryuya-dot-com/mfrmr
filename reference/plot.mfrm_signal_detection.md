@@ -34,7 +34,9 @@ plot(
   Metric to plot. For `signal = "bias"`, prefer `metric = "screen_rate"`
   for the screening hit rate. The older `metric = "power"` spelling is
   retained as a backwards-compatible alias that maps to
-  `BiasScreenRate`.
+  `BiasScreenRate`. `"estimate"` plots the signed reference-minus-focal
+  DIF contrast or the additive bias shift. A refit contrast requires
+  common-scale linking.
 
 - x_var:
 
@@ -66,7 +68,11 @@ labels (`x_label`, `group_label`), `design_variable_aliases`,
 `design_descriptor`, `planning_scope`, `planning_constraints`,
 `planning_schema`, `display_metric`, and `interpretation_note` so
 callers can label bias-side plots as screening summaries rather than
-formal power/error-rate displays.
+formal power/error-rate displays. `summary_table` retains per-design
+means and availability denominators; `notes` retains interpretation and
+legacy-result restrictions. If additional design variables are
+collapsed, each plotted point is an equally weighted average of
+available design-level means, not a pooled trial/cell rate.
 
 ## See also
 
@@ -76,17 +82,12 @@ formal power/error-rate displays.
 ## Examples
 
 ``` r
-# \donttest{
-sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
-  n_person = 8,
-  n_rater = 2,
-  n_criterion = 2,
-  raters_per_person = 1,
-  reps = 1,
-  maxit = 30,
-  bias_max_iter = 1,
-  seed = 123
-))
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sig_eval <- saved$signal_detection
 plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALSE)
 #> $plot
 #> [1] "signal_detection"
@@ -8386,6 +8387,9 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>   name     : structural_design_grid_schema
 #>   title    : Deterministic Named-Facet Design Grid
 #>   subtitle : The deterministic named-facet structural review does not yet have complete default facet counts and assignment counts, so no deterministic design grid can be materialized.
+#>   notes    :
+#>     [note] Draw-free plotting data are unavailable until the named-facet
+#>     design grid can be materialized.
 #>   data     :
 #>     $plot_available : logical [1]
 #>     $reason : character [1]
@@ -8401,16 +8405,19 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>     $grid_recommendation : list (10 slots)
 #>     $note : character [1]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 0 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 #> 
 #> $planning_schema$structural_design_schema$report_bundle$plots$public
 #> <mfrm_plot_data>
 #>   name     : structural_design_grid_schema
 #>   title    : Deterministic Named-Facet Design Grid
 #>   subtitle : The deterministic named-facet structural review does not yet have complete default facet counts and assignment counts, so no deterministic design grid can be materialized.
+#>   notes    :
+#>     [note] Draw-free plotting data are unavailable until the named-facet
+#>     design grid can be materialized.
 #>   data     :
 #>     $plot_available : logical [1]
 #>     $reason : character [1]
@@ -8426,16 +8433,19 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>     $grid_recommendation : list (10 slots)
 #>     $note : character [1]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 0 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 #> 
 #> $planning_schema$structural_design_schema$report_bundle$plots$design
 #> <mfrm_plot_data>
 #>   name     : structural_design_grid_schema
 #>   title    : Deterministic Named-Facet Design Grid
 #>   subtitle : The deterministic named-facet structural review does not yet have complete default facet counts and assignment counts, so no deterministic design grid can be materialized.
+#>   notes    :
+#>     [note] Draw-free plotting data are unavailable until the named-facet
+#>     design grid can be materialized.
 #>   data     :
 #>     $plot_available : logical [1]
 #>     $reason : character [1]
@@ -8451,10 +8461,10 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>     $grid_recommendation : list (10 slots)
 #>     $note : character [1]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 0 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 #> 
 #> 
 #> $planning_schema$structural_design_schema$report_bundle$note
@@ -9429,6 +9439,9 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>   name     : structural_design_grid_schema
 #>   title    : Deterministic Named-Facet Design Grid
 #>   subtitle : The deterministic named-facet structural review does not yet have complete default facet counts and assignment counts, so no deterministic design grid can be materialized.
+#>   notes    :
+#>     [note] Draw-free plotting data are unavailable until the named-facet
+#>     design grid can be materialized.
 #>   data     :
 #>     $plot_available : logical [1]
 #>     $reason : character [1]
@@ -9444,10 +9457,10 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>     $grid_recommendation : list (10 slots)
 #>     $note : character [1]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 0 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 #> 
 #> $planning_schema$structural_design_schema$review$report_consumer
 #> $planning_schema$structural_design_schema$review$report_consumer$consumer_contract
@@ -11300,6 +11313,9 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>   name     : structural_design_grid_schema
 #>   title    : Deterministic Named-Facet Design Grid
 #>   subtitle : The deterministic named-facet structural review does not yet have complete default facet counts and assignment counts, so no deterministic design grid can be materialized.
+#>   notes    :
+#>     [note] Draw-free plotting data are unavailable until the named-facet
+#>     design grid can be materialized.
 #>   data     :
 #>     $plot_available : logical [1]
 #>     $reason : character [1]
@@ -11315,10 +11331,10 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>     $grid_recommendation : list (10 slots)
 #>     $note : character [1]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 0 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 #> 
 #> $planning_schema$structural_design_schema$compact_review_plot$note
 #> [1] "Draw-free plot data from the deterministic structural-design review. This preserves the existing plot contract while routing access through the review layer."
@@ -19724,6 +19740,9 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>   name     : structural_design_grid_schema
 #>   title    : Deterministic Named-Facet Design Grid
 #>   subtitle : The deterministic named-facet structural review does not yet have complete default facet counts and assignment counts, so no deterministic design grid can be materialized.
+#>   notes    :
+#>     [note] Draw-free plotting data are unavailable until the named-facet
+#>     design grid can be materialized.
 #>   data     :
 #>     $plot_available : logical [1]
 #>     $reason : character [1]
@@ -19739,16 +19758,19 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>     $grid_recommendation : list (10 slots)
 #>     $note : character [1]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 0 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 #> 
 #> $planning_schema$structural_design_report_bundle$plots$public
 #> <mfrm_plot_data>
 #>   name     : structural_design_grid_schema
 #>   title    : Deterministic Named-Facet Design Grid
 #>   subtitle : The deterministic named-facet structural review does not yet have complete default facet counts and assignment counts, so no deterministic design grid can be materialized.
+#>   notes    :
+#>     [note] Draw-free plotting data are unavailable until the named-facet
+#>     design grid can be materialized.
 #>   data     :
 #>     $plot_available : logical [1]
 #>     $reason : character [1]
@@ -19764,16 +19786,19 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>     $grid_recommendation : list (10 slots)
 #>     $note : character [1]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 0 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 #> 
 #> $planning_schema$structural_design_report_bundle$plots$design
 #> <mfrm_plot_data>
 #>   name     : structural_design_grid_schema
 #>   title    : Deterministic Named-Facet Design Grid
 #>   subtitle : The deterministic named-facet structural review does not yet have complete default facet counts and assignment counts, so no deterministic design grid can be materialized.
+#>   notes    :
+#>     [note] Draw-free plotting data are unavailable until the named-facet
+#>     design grid can be materialized.
 #>   data     :
 #>     $plot_available : logical [1]
 #>     $reason : character [1]
@@ -19789,10 +19814,10 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>     $grid_recommendation : list (10 slots)
 #>     $note : character [1]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 0 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 #> 
 #> 
 #> $planning_schema$structural_design_report_bundle$note
@@ -20767,6 +20792,9 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>   name     : structural_design_grid_schema
 #>   title    : Deterministic Named-Facet Design Grid
 #>   subtitle : The deterministic named-facet structural review does not yet have complete default facet counts and assignment counts, so no deterministic design grid can be materialized.
+#>   notes    :
+#>     [note] Draw-free plotting data are unavailable until the named-facet
+#>     design grid can be materialized.
 #>   data     :
 #>     $plot_available : logical [1]
 #>     $reason : character [1]
@@ -20782,10 +20810,10 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>     $grid_recommendation : list (10 slots)
 #>     $note : character [1]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 0 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 #> 
 #> $planning_schema$structural_design_compact_review$report_consumer
 #> $planning_schema$structural_design_compact_review$report_consumer$consumer_contract
@@ -22638,6 +22666,9 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>   name     : structural_design_grid_schema
 #>   title    : Deterministic Named-Facet Design Grid
 #>   subtitle : The deterministic named-facet structural review does not yet have complete default facet counts and assignment counts, so no deterministic design grid can be materialized.
+#>   notes    :
+#>     [note] Draw-free plotting data are unavailable until the named-facet
+#>     design grid can be materialized.
 #>   data     :
 #>     $plot_available : logical [1]
 #>     $reason : character [1]
@@ -22653,10 +22684,10 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>     $grid_recommendation : list (10 slots)
 #>     $note : character [1]
 #>     $plot_name : character [1]
-#>   legend   : 4 entries
+#>   legend   : 0 entries
 #>   ref lines: 0
-#> Re-render via ggplot2 / plotly using `x$data`; or pass the
-#> originating `draw = FALSE` plot helper its inverse to draw it.
+#> Use `plot_data()` to extract the saved values and notes.
+#> For supported views, `as_ggplot()` redraws this saved result.
 #> 
 #> $planning_schema$structural_design_compact_review_plot$note
 #> [1] "Draw-free plot data from the deterministic structural-design review. This preserves the existing plot contract while routing access through the review layer."
@@ -23148,7 +23179,27 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #> data frame with 0 columns and 0 rows
 #> 
 #> $notes
-#> character(0)
+#> [1] "Some design conditions did not converge in every replication."                                                                                                                                                
+#> [2] "DIF detection rates are unavailable. Missing test statistics and descriptive residual differences are not negative screening outcomes."                                                                       
+#> [3] "DIF contrasts are reference minus focal: residual means are in score units; refit means require documented common-scale comparability. Neither is automatically the injected linear-predictor shift."         
+#> [4] "Bias-side rates are screening summaries derived from `estimate_bias()` output and should not be interpreted as formal power or alpha-calibrated false-positive rates."                                        
+#> [5] "Target rates condition on available screens. Planned/available counts, exact 95% Monte Carlo bounds and all-trial unresolved-outcome bounds are retained; these do not establish general diagnostic accuracy."
+#> [6] "Non-target rates average within-replication proportions over available cells; they are not the probability of any false flag across a family."                                                                
+#> [7] "MCSE columns summarize finite-replication uncertainty around the reported means and rates."                                                                                                                   
+#> [8] "Lines average design-level means equally when additional design variables are collapsed; summary_table retains individual designs and denominators."                                                          
+#> 
+#> $summary_table
+#> # A tibble: 1 × 69
+#>   design_id n_person n_rater n_criterion raters_per_person DIFTargetLevel
+#>   <chr>        <int>   <int>       <int>             <int> <chr>         
+#> 1 S01              8       2           2                 2 C02           
+#> # ℹ 63 more variables: BiasTargetRater <chr>, BiasTargetCriterion <chr>,
+#> #   Reps <int>, ConvergenceRate <dbl>, McseConvergenceRate <dbl>,
+#> #   DIFPower <dbl>, McseDIFPower <dbl>, DIFClassificationPower <dbl>,
+#> #   McseDIFClassificationPower <dbl>, MeanTargetContrast <dbl>,
+#> #   McseTargetContrast <dbl>, TargetContrastAvailable <int>,
+#> #   TargetContrastAbsAvailable <int>, MeanTargetContrastAbs <dbl>,
+#> #   McseTargetContrastAbs <dbl>, McseDIFFalsePositiveRate <dbl>, …
 #> 
 #> $data
 #> # A tibble: 1 × 3
@@ -23156,5 +23207,4 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #>      <int> <dbl> <chr>      
 #> 1        8    NA All designs
 #> 
-# }
 ```

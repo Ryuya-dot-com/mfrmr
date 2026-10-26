@@ -77,10 +77,12 @@ results. In the difference view, intervals are not simultaneous over
 plans or metrics. A point without an interval is retained as an open
 circle; an asterisk marks rows with unavailable intervals. Missing
 values are never replaced by zero. Each difference panel has its own
-horizontal scale. Original score units apply to SEM differences. The
-figure identifies the score/composite, its weights and the reference
-counts. All plotted plans are future complete crossed plans, even when
-the source design is incomplete.
+horizontal scale. Original score units apply to SEM differences.
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+identifies the score/composite, its weights and the reference counts.
+Explanatory notes and a suggested title are returned rather than drawn.
+All plotted plans are future complete crossed plans, even when the
+source design is incomplete.
 
 ## Session plot defaults
 

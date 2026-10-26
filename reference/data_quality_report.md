@@ -20,42 +20,42 @@ data_quality_report(
 
 ## Arguments
 
-- fit:
+- fit :
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
-- data:
+- data :
 
   Optional raw data frame used for row-level review.
 
-- person:
+- person :
 
   Optional person column name in `data`.
 
-- facets:
+- facets :
 
   Optional facet column names in `data`.
 
-- score:
+- score :
 
   Optional score column name in `data`.
 
-- weight:
+- weight :
 
   Optional weight column name in `data`.
 
-- min_category_count:
+- min_category_count :
 
   Minimum raw or weighted count used to label a non-zero facet-level
   score category as sparse. Default `10`.
 
-- dominant_category_cutoff:
+- dominant_category_cutoff :
 
   Proportion in `(0, 1]` used to flag a facet level whose responses are
   dominated by one score category. Default `0.95`.
 
-- include_fixed:
+- include_fixed :
 
   If `TRUE`, include a legacy-compatible fixed-width text block.
 
@@ -156,7 +156,6 @@ model.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -215,6 +214,4 @@ summary(quality)
 
 # Draw the data-quality overview
 plot(quality)
-
-# }
 ```

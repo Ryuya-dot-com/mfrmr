@@ -66,6 +66,12 @@ tests or binary classifications.
 
 - `$config`: analysis configuration inherited from the input.
 
+- `$comparison_review`: when supplied to
+  [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
+  its separate prospective interaction review, retained without treating
+  its states as classifications of the residual/refit contrasts. Also
+  retained by [`summary()`](https://rdrr.io/r/base/summary.html).
+
 ## GPCM boundary
 
 If the input comes from a `GPCM` fit, the narrative includes a `GPCM`
@@ -106,13 +112,13 @@ from unwanted measurement bias is grounded in:
 [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
 [`analyze_dif()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
 [`dif_interaction_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/dif_interaction_table.md),
-[`plot_dif_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_dif_heatmap.md),
+[plot(x, type =
+"heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md),
 [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -123,5 +129,4 @@ dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 rpt <- dif_report(dif)
 cat(rpt$narrative)
 #> Mean observed-minus-expected scores were compared for the Rater facet across levels of Group. 4 of 4 group comparisons had sufficient observations to report a residual difference. Differences are in score units. They do not isolate differential functioning: group residual means can differ even when response parameters are the same. No p-values, confidence intervals or positive/negative classifications are provided.
-# }
 ```

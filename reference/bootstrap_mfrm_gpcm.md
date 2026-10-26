@@ -23,6 +23,9 @@ confint(
 )
 
 # S3 method for class 'mfrm_gpcm_bootstrap'
+summary(object, ...)
+
+# S3 method for class 'mfrm_gpcm_bootstrap'
 print(x, ...)
 ```
 
@@ -85,7 +88,11 @@ information diagnostics already computed; missing fields mean not
 recorded, not a successful check. No extra information calculation is
 performed for recording. Older saved results may lack these fields. LRT
 results also have `comparison` and `test`. Printing or changing the
-interval level never refits. Failed replicates remain present. If a
+interval level never refits. Failed replicates remain present.
+[`summary()`](https://rdrr.io/r/base/summary.html) returns
+planned/available/unresolved counts, settings and either the saved
+likelihood-ratio test or default slope intervals, plus retained
+numerical cautions. It does not refit or discard unresolved trials. If a
 saved analysis records selected refit updates in `settings$recheck`,
 printing and slope intervals retain a caution that it is not a complete
 rerun under one procedure. Sampling tables preserve that record and any

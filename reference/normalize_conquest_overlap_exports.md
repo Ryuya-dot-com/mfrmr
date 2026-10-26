@@ -14,7 +14,8 @@ normalize_conquest_overlap_exports(
   delimiter = c("auto", "comma", "tab", "semicolon", ",", "\t", ";"),
   conquest_version = NULL,
   conquest_edition = NULL,
-  run_date = NULL
+  run_date = NULL,
+  report_file = NULL
 )
 ```
 
@@ -60,6 +61,14 @@ normalize_conquest_overlap_exports(
   Optional external-run date coercible to `Date`. Supply the date of the
   ConQuest run, not the normalization date.
 
+- report_file:
+
+  Optional generated English `show parameters` review text. The
+  estimation summary supplies stopping status and checks the person
+  count, item model, covariate and ITEMS constraint. Missing reports
+  leave external convergence unknown. This is not a general report
+  parser.
+
 ## Value
 
 An object of class `mfrm_conquest_overlap_tables` with normalized
@@ -78,6 +87,19 @@ arbitrary ConQuest reports.
 
 After normalization, pass the returned object directly to
 [`review_conquest_overlap()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_conquest_overlap.md).
+Parameter and regressor indices must be unique integers in the generated
+model's coordinate range; row order may differ. Present dimension
+columns must identify dimension 1. Population variance must be finite
+and nonnegative; a zero boundary value is retained for descriptive
+review, not accepted as evidence of regular inference. Malformed exports
+are rejected before labels are assigned. This validation does not
+establish successful estimation. Present item labels must agree with the
+item map. IDs are read as text, including leading zeros, long integers
+and the literal ID `NA`. New bundle aliases are restored through
+`person_map`; unknown aliases are rejected. Keep all files from the same
+run: checks cannot establish that response cells or covariate values
+were unchanged. `criterion_met` describes the reported stopping rule,
+not integration accuracy or inferential readiness.
 
 ## See also
 
@@ -96,7 +118,8 @@ cq <- normalize_conquest_overlap_exports(
   "conquest-overlap/conquest_overlap_conquest_parameters.csv",
   "conquest-overlap/conquest_overlap_conquest_reg_coefficients.csv",
   "conquest-overlap/conquest_overlap_conquest_covariance.csv",
-  "conquest-overlap/conquest_overlap_conquest_cases_eap.csv"
+  "conquest-overlap/conquest_overlap_conquest_cases_eap.csv",
+  report_file = "conquest-overlap/conquest_overlap_conquest_parameters_review.txt"
 )
 review_conquest_overlap(bundle, cq)
 } # }

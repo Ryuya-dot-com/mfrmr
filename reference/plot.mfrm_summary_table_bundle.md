@@ -144,7 +144,6 @@ for numeric QC.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
@@ -152,5 +151,4 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 bundle <- build_summary_table_bundle(fit)
 plot(bundle, draw = FALSE)
 plot(bundle, type = "numeric_profile", which = "facet_overview", draw = FALSE)
-# }
 ```

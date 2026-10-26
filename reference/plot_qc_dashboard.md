@@ -25,61 +25,61 @@ plot_qc_dashboard(
 
 ## Arguments
 
-- fit:
+- fit :
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
-- diagnostics:
+- diagnostics :
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
 
-- threshold_profile:
+- threshold_profile :
 
   Threshold profile name (`strict`, `standard`, `lenient`).
 
-- thresholds:
+- thresholds :
 
   Optional named threshold overrides.
 
-- abs_z_min:
+- abs_z_min :
 
   Absolute standardized-residual cutoff for unexpected panel.
 
-- prob_max:
+- prob_max :
 
   Maximum observed-category probability cutoff for unexpected panel.
 
-- rater_facet:
+- rater_facet :
 
   Optional rater facet used in inter-rater panel.
 
-- interrater_exact_warn:
+- interrater_exact_warn :
 
   Warning threshold for inter-rater exact agreement.
 
-- interrater_corr_warn:
+- interrater_corr_warn :
 
   Warning threshold for inter-rater correlation.
 
-- fixed_p_max:
+- fixed_p_max :
 
   Warning cutoff for fixed-effect facet chi-square p-values.
 
-- random_p_max:
+- random_p_max :
 
   Warning cutoff for random-effect facet chi-square p-values.
 
-- top_n:
+- top_n :
 
   Maximum elements displayed in displacement panel.
 
-- draw:
+- draw :
 
   If `TRUE`, draw with base graphics.
 
-- preset:
+- preset :
 
   Visual preset (`"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`).
@@ -117,11 +117,16 @@ reusing the Rasch-only compatibility calculation.
 
 This function draws a fixed 3\\\times\\3 panel grid (no `plot_type`
 argument). For individual panel control, use the dedicated helpers:
-[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md),
-[`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-[`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
-[`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md).
+[plot(x, type =
+"unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"facets_chisq")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 ## Interpreting output
 
@@ -145,20 +150,27 @@ Recommended panel order for fast review:
     the current SE approximation.
 
 Treat this dashboard as a screening layer; follow up with dedicated
-helpers
-([`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-[`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-[`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
-[`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md))
-for detailed diagnosis.
+helpers ([`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html)) for detailed
+diagnosis.
 
 ## Typical workflow
 
 1.  Fit and diagnose model.
 
-2.  Run `plot_qc_dashboard()` for one-page triage.
+2.  Run [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
+    one-page triage.
 
 3.  Drill into flagged panels using dedicated functions.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -197,17 +209,21 @@ or diagnostic thresholds.
 
 ## See also
 
-[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
-[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md),
-[`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md),
-[`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
-[`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md),
+[plot(x, type =
+"unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"facets_chisq")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -236,7 +252,7 @@ review$decision
 #> 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.
 
 # Draw the dashboard and save its data
-qc <- plot_qc_dashboard(fit, diagnostics = diagnostics)
+qc <- plot(fit, type = "qc", diagnostics = diagnostics)
 
 
 # Inspect the counts behind the category panel
@@ -248,6 +264,5 @@ qc$data$category_stats[, c("Category", "Count", "ExpectedCount")]
 #> 2        2    96          99.0
 #> 3        3    78          80.1
 #> 4        4    46          45.6
-# Use focused plots such as plot_marginal_fit(diagnostics) to investigate a panel
-# }
+# Use focused plots such as plot(diagnostics, type = "marginal_fit") to investigate a panel
 ```

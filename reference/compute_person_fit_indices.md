@@ -158,7 +158,6 @@ earlier approximation.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -198,5 +197,4 @@ subset(person_fit, ReportFlag,
 #> 25 lz is an uncorrected, unweighted response-pattern screen. The implemented correction does not apply to MML/EAP person scores.
 # With MML/EAP scores, lz_star is unavailable; lz is an uncorrected screening index
 # A flag alone does not establish invalid responses or justify excluding a person
-# }
 ```

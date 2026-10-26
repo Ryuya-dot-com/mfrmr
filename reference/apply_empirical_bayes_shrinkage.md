@@ -37,14 +37,17 @@ apply_empirical_bayes_shrinkage(
 
   Optional numeric scalar. When supplied, the shrinkage variance is
   fixed at `facet_prior_sd^2` instead of being estimated from the data.
-  Useful when a prior is elicited from expert knowledge or a previous
-  fit.
+  Its square must be representable, and positive when the supplied SD is
+  positive. Useful when a prior is elicited from expert knowledge or a
+  previous fit.
 
 - shrink_person:
 
-  Logical. When `TRUE`, the same empirical-Bayes shrinkage is also
-  applied to `fit$facets$person`. Default `FALSE`, since MML person
-  estimates already reflect a N(0, sigma^2) prior.
+  Logical. When `TRUE`, the same empirical-Bayes adjustment is also
+  applied to ordinary-JML Person estimates with available sampling SEs.
+  Default `FALSE`. Other estimators are refused: MML EAP estimates
+  already use a population prior, and their posterior SDs are not
+  sampling SEs for a second normal-model update.
 
 ## Value
 
@@ -60,7 +63,11 @@ cross-level covariance and the fitted identification/anchor constraints.
 It is neither a calibrated SE nor a guaranteed lower bound. Unequal
 shrinkage can break the original sum-to-zero constraint. Original
 estimates, anchors and predictions are unchanged; this helper does not
-refit a hierarchical MFRM.
+refit a hierarchical MFRM. The normal-normal formula is exact for an
+independent Gaussian observation with a known Gaussian prior variance.
+Applying it to jointly calibrated MFRM estimates is a descriptive
+approximation; a James-Stein improvement in risk is not established for
+this adjustment.
 
 A zero estimated prior variance fully pools eligible estimates at zero
 and gives zero plug-in SE; this does not establish perfect precision.
@@ -68,17 +75,22 @@ Optional plot whiskers are descriptive normal bands. Their legacy `CI`
 column names do not confer confidence-interval coverage;
 `SupportsFormalInference` is false. Invalid estimate/SE pairs retain
 their original values with unavailable shrinkage factors. With fewer
-than three valid pairs no shrinkage is applied.
+than three valid pairs no shrinkage is applied. Unrepresentable moment
+variances also leave the original values unchanged, with unavailable
+factors and an explanatory `Note` in the report.
 
 The report records complete-pair counts and mean shrinkage over those
 pairs. `EffectiveDF` sums retained weights over eligible levels,
 conditional on the chosen prior variance; it is not model degrees of
 freedom for testing or IC. Reapply this helper to existing fits to
 refresh old reports; no MFRM refit is needed. Regenerate previously
-saved plots and exports as well. Reapplication replaces the previous
-adjustment; `shrink_person = FALSE` removes any previous Person
-shrinkage columns. The original fitting inputs remain recorded
-separately from the latest post-fit shrinkage settings.
+saved plots and exports as well. Updated reports carry
+`CalculationVersion = 2`: positive prior variances no longer produce
+zero plug-in SE merely because a shrinkage factor rounded to one.
+Reapplication replaces the previous adjustment; `shrink_person = FALSE`
+removes any previous Person shrinkage columns. The original fitting
+inputs remain recorded separately from the latest post-fit shrinkage
+settings.
 [`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_replay_script.md)
 replays the adjustment after fitting, preserving whether diagnostic SEs
 were attached by
@@ -126,7 +138,6 @@ applications. *Journal of the American Statistical Association,
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
@@ -141,6 +152,9 @@ fit_eb$shrinkage_report
 #>                                                                                                                                                             Interpretation
 #> 1 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
 #> 2 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
+#>   CalculationVersion
+#> 1                  2
+#> 2                  2
 # Look for:
 # - `Tau2` is the estimated between-level prior variance per facet.
 #   `Tau2 = 0` fully pools eligible estimates at zero
@@ -160,5 +174,4 @@ head(fit_eb$facets$others[, c("Facet", "Level", "Estimate",
 #> 6 Criterion  Content -0.4150443     -0.3508124       0.1547591
 # Look for: rows where `ShrinkageFactor` is large (close to 1) had
 #   their estimates pulled most strongly toward the facet mean (0).
-# }
 ```

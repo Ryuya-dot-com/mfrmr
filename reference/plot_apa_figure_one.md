@@ -68,6 +68,13 @@ not passed its numerical, data, design, and stability checks produce one
 warning and a visible `"REVIEW ONLY"` label. Resolve that review before
 treating the composite as report-ready evidence.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## Session plot defaults
 
 Set `options(mfrmr.plot_preset = "publication")` to choose a session
@@ -106,23 +113,22 @@ or diagnostic thresholds.
 ## See also
 
 [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
-(`type = "wright"`),
-[`plot_rater_severity_profile()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_rater_severity_profile.md),
-[`plot_threshold_ladder()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_threshold_ladder.md),
+(`type = "wright"`), [plot(x, type =
+"rater_severity")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"thresholds")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md).
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
-p <- plot_apa_figure_one(fit, draw = FALSE)
+p <- plot(fit, type = "apa_summary", draw = FALSE)
 names(p$data)
 #>  [1] "data"                  "title"                 "subtitle"             
-#>  [4] "preset"                "plot_name"             "legend"               
-#>  [7] "reference_lines"       "fit_readiness"         "interpretation_status"
-#> [10] "interpretation_note"  
-# }
+#>  [4] "preset"                "plot_name"             "notes"                
+#>  [7] "legend"                "reference_lines"       "fit_readiness"        
+#> [10] "interpretation_status" "interpretation_note"  
 ```

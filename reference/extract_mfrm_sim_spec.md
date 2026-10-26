@@ -11,7 +11,8 @@ extract_mfrm_sim_spec(
   latent_distribution = c("normal", "empirical"),
   source_data = NULL,
   person = NULL,
-  group = NULL
+  group = NULL,
+  population_assignment = c("matched", "independent")
 )
 ```
 
@@ -52,6 +53,20 @@ extract_mfrm_sim_spec(
   Optional group column name in `source_data` to merge into the returned
   `design_skeleton` as person-level metadata.
 
+- population_assignment:
+
+  How an active population model is associated with `"resampled"` or
+  `"skeleton"` assignments. The default `"matched"` draws one template
+  Person jointly for covariates and assignments. Both tables must cover
+  the same `TemplatePerson` IDs, with matching `Group` labels if present
+  in both. `"independent"` samples covariate rows separately and
+  intentionally breaks these associations. In that case both tables
+  cannot define `Group`; rename a covariate if it represents a different
+  grouping. For other assignment designs this setting has no effect.
+  Population-template `Group`, when present, supplies the response
+  group; `group_levels` must include all template labels and does not
+  rebalance them.
+
 ## Value
 
 An object of class `mfrm_sim_spec`.
@@ -82,7 +97,22 @@ point for later simulation studies. It extracts:
 This is intended as a **fit-derived parametric starting point**, not as
 a claim that the fitted object perfectly recovers the true
 data-generating mechanism. Users should review and, if necessary, edit
-the returned specification before using it for design planning.
+the returned specification before using it for design planning. Observed
+skeleton rows retain repeated rating occasions. Remove accidental
+duplicate source rows before fitting; the generator cannot distinguish
+them from intentional repeated ratings. Covariates and assignment
+templates are linked by `TemplatePerson` under
+`population_assignment = "matched"`.
+
+Without an active population regression, `theta_sd` is the empirical SD
+of the reported Person estimates, including any shrinkage in those
+estimates. It is not an estimate of the latent population SD corrected
+for measurement error. The empirical option resamples centered estimates
+independently of their original IDs; it is not a draw from the source
+posterior. With an active population model, its coefficients, residual
+variance and fitted transformation basis replace this Person-spread
+approximation. Neither route propagates uncertainty in the source fit's
+generating parameters.
 
 `GPCM` fits with the same slope and step owner are supported here for
 direct data generation and parameter-recovery checks, provided that the
@@ -114,7 +144,6 @@ observed design and estimated spread in the fitted run.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- simulate_mfrm_data(
   n_person = 8,
   n_rater = 3,
@@ -135,5 +164,4 @@ head(spec$threshold_table)
 #> 1 Common            1 Step_1   -2.79 
 #> 2 Common            2 Step_2   -0.583
 #> 3 Common            3 Step_3    3.37 
-# }
 ```

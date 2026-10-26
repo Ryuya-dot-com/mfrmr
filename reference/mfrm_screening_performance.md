@@ -21,7 +21,7 @@ print(x, ...)
 
 ## Arguments
 
-- roster:
+- roster :
 
   Data frame with `Condition`, `Replicate`, `Target` identifiers and
   logical `Affected`: `TRUE` denotes the prespecified departure that the
@@ -31,7 +31,7 @@ print(x, ...)
   or methods in separate conditions. Identifiers are matched exactly as
   character labels.
 
-- results:
+- results :
 
   Data frame with the same three identifier columns and logical `Flag`
   (`TRUE`, `FALSE` or `NA`). Omitted result rows remain unavailable.
@@ -39,22 +39,22 @@ print(x, ...)
   in the source results, for example numerical status and failure
   messages.
 
-- rule:
+- rule :
 
   Nonempty description of the prespecified screen, including its
   thresholds, comparison family and any selection/refitting procedure.
 
-- level:
+- level :
 
   Confidence level for exact binomial Monte Carlo intervals; default
   0.95. These describe simulation uncertainty, not an interval for rater
   severity or a guarantee of screening accuracy.
 
-- ...:
+- ... :
 
   Unused by print and summary methods.
 
-- x, object:
+- x, object :
 
   An object returned by `mfrm_screening_performance()`.
 

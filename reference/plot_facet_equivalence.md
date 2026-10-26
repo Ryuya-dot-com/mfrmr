@@ -89,6 +89,13 @@ conclusions.
 
 3.  Use `type = "rope"` for a descriptive proximity view.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## See also
 
 [`analyze_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_facet_equivalence.md)
@@ -96,13 +103,11 @@ conclusions.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 31, maxit = 150)
 eq <- analyze_facet_equivalence(fit, facet = "Rater")
-pdat <- plot_facet_equivalence(eq, type = "forest", draw = FALSE)
+pdat <- plot(eq, type = "facet_equivalence", view = "forest", draw = FALSE)
 c(pdat$facet, pdat$type)
 #> [1] "Rater"  "forest"
-# }
 ```

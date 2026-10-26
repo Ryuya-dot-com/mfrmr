@@ -63,14 +63,13 @@ Compact summary helper for QA of table data before manuscript export.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 tbl <- apa_table(fit, which = "summary")
 summary(tbl)
 #> APA Table Summary
 #>  Branch Style   Which Rows Columns NumericColumns MissingValues
-#>     apa   apa summary    1      88             40            14
+#>     apa   apa summary    1      89             40            14
 #> 
 #> Caption
 #>  - Table 1
@@ -89,5 +88,4 @@ summary(tbl)
 #>      EMIterations 0     NA NA     NA     NA
 #>  EMRelativeChange 0     NA NA     NA     NA
 #>   EffectiveReltol 1    0.0 NA    0.0    0.0
-# }
 ```

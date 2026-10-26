@@ -121,6 +121,9 @@ An object of class `mfrm_population_prediction` with components:
   [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md)
   result
 
+- `fit_identity`: source-fit metadata for fit-derived forecasts; `NULL`
+  for an explicitly supplied simulation specification
+
 - `sim_spec`: simulation specification used for the forecast
 
 - `facet_names`: public non-person facet names carried by the simulation
@@ -174,7 +177,11 @@ parametric starting point with
 and then evaluates the requested future design under that explicit
 data-generating mechanism. This should be interpreted as a fit-based
 forecast under modeling assumptions, not as a guaranteed out-of-sample
-prediction.
+prediction. Generating parameters are held fixed at the values in that
+specification. Monte Carlo SEs describe simulation precision conditional
+on these values; they do not include source-fit uncertainty or
+uncertainty about whether the generating assumptions describe a future
+administration.
 
 When that fit-derived or manually built simulation specification stores
 an active latent-regression population generator, the helper still
@@ -239,6 +246,19 @@ published many-facet forecasting procedure.
   research in psychology: A standardized template for planning,
   preregistration, and reporting*. Psychological Methods.
 
+## Saved-result reuse
+
+Fit-derived forecasts must match the source fit when supplied to archive
+or replay helpers. Explicit `sim_spec` forecasts remain separate
+scenarios; attaching them does not establish that their assumptions
+match the fit. Fit-derived forecasts with a fixed `population_sd` are
+unavailable: the design-simulation refits do not preserve that variance
+constraint or an anchor-defined origin. An explicit `sim_spec` can
+describe a separate forecasting scenario, but does not reproduce those
+source-fit constraints. See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+for migration and replay behavior.
+
 ## See also
 
 [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md),
@@ -249,7 +269,6 @@ published many-facet forecasting procedure.
 ## Examples
 
 ``` r
-# \donttest{
 spec <- build_mfrm_sim_spec(
   n_person = 16,
   n_rater = 3,
@@ -270,7 +289,6 @@ s_pred$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
 #>   Facet     MeanSeparation McseSeparation
 #>   <chr>              <dbl>          <dbl>
 #> 1 Criterion           0                NA
-#> 2 Person              1.36             NA
+#> 2 Person              1.25             NA
 #> 3 Rater               0                NA
-# }
 ```

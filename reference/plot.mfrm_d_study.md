@@ -25,6 +25,7 @@ plot(
   main = NULL,
   palette = NULL,
   preset = c("standard", "publication", "compact", "monochrome"),
+  reference = NULL,
   ...
 )
 ```
@@ -94,6 +95,12 @@ plot(
   Plot style: `"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`.
 
+- reference:
+
+  Optional distinct finite numeric reference values for curves, between
+  0 and 1 for coefficients or nonnegative for error variance. `NULL`
+  draws no guides. Not supported for surface plots.
+
 - ...:
 
   Reserved for method compatibility.
@@ -113,9 +120,12 @@ chosen comparisons.
 Points represent requested scenarios; connecting lines and contours are
 visual guides. Missing estimates remain missing and break curves. If
 none are available, inspect the D-study table and source variance
-components. Coefficient curves show 0.70 and 0.80 reference lines; these
-are not universal acceptance criteria. Heatmaps include a numeric color
-key; exact values remain in the table.
+components. No reference lines are drawn by default. Specify
+`reference = c(0.70, 0.80)` to reproduce the earlier coefficient guides.
+User-chosen guides are not universal acceptance criteria or confidence
+bounds; their values and interpretation remain in the returned plot
+data. Heatmaps include a numeric color key; exact values remain in the
+table.
 
 The main-effects G-study combines unmodeled interactions in its
 residual. Different residual-scaling curves describe assumptions, not
@@ -123,9 +133,9 @@ confidence bounds. All projections hold estimated components fixed.
 Check source fit warnings before interpreting even large coefficients.
 For supported designs with separately estimated interactions, including
 a single score, use
-[`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+[`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md)
 and
-[`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md).
+[`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md).
 
 ## Session plot defaults
 

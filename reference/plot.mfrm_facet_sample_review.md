@@ -1,11 +1,12 @@
 # Plot a facet sample-size review
 
 Per-level observation counts rendered as a horizontal bar chart coloured
-by the Linacre sample-size band assigned in
+by the count band assigned in
 [`facet_small_sample_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_small_sample_review.md).
 Vertical dashed lines mark the sparse / marginal / standard thresholds
-so reviewers see where every facet level sits relative to the Linacre
-(1994) guidance.
+so reviewers see where every facet level sits relative to the selected
+screening thresholds. Counts and colours do not establish measurement
+precision.
 
 ## Usage
 
@@ -40,7 +41,8 @@ plot(
 
 ## Value
 
-Invisibly, the data.frame used for the plot.
+Invisibly, the data.frame used for the plot, with the review's
+interpretation limits in its `notes` attribute.
 
 ## Session plot defaults
 

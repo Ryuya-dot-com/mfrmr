@@ -27,7 +27,10 @@ write_mfrm_residual_file(
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
-  Supplying it avoids recomputing observation diagnostics.
+  Supplying it avoids recomputing observation diagnostics. Must match
+  this fitted analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics.
 
 - path:
 
@@ -40,7 +43,8 @@ write_mfrm_residual_file(
 
 - digits:
 
-  Rounding digits for numeric columns.
+  Rounding digits for numeric columns. `ConditionalVariance` retains
+  full precision so small positive variances are not exported as zero.
 
 - overwrite:
 
@@ -60,7 +64,12 @@ A bundle with `table`, `summary`, `written_files`, and `settings`.
 The exported table is observation-level and model-native. It includes
 the observed score, expected score, residual, standardized residual,
 variance, score information, observed-category probability, and modeled
-person measure when those quantities are available.
+person measure when those quantities are available. Current diagnostics
+also retain the primary Person estimate and diagnostic basis, the
+unthresholded `ConditionalVariance`, `PearsonAvailable`,
+`ResponseStatus` and `ResponseReason`; see
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+for their interpretation and the legacy small-variance cutoff.
 
 This writer is separate from
 [`facets_output_file_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_output_file_bundle.md)
@@ -76,7 +85,6 @@ bundle.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
@@ -88,7 +96,6 @@ data.frame(
   File = basename(out$written_files$Path)
 )
 #>       Component                 File
-#> 1 residual_file file1b2d6a7b4a75.csv
+#> 1 residual_file file1cd53fec2f9d.csv
 # Full paths remain in out$written_files$Path.
-# }
 ```

@@ -19,6 +19,9 @@ measurable_summary_table(fit, diagnostics = NULL)
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+  Must match this fitted analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics.
 
 ## Value
 
@@ -123,9 +126,14 @@ The `category_stats` data.frame contains:
 
   Observed count and percentage.
 
-- Infit, Outfit, InfitZSTD, OutfitZSTD:
+- Infit, Outfit:
 
-  Category-level fit.
+  Descriptive category residual mean squares.
+
+- InfitZSTD, OutfitZSTD:
+
+  Unavailable (NA); conditioning on the observed category does not
+  preserve a universal unit-residual reference.
 
 - ExpectedCount, DiffCount, LowCount:
 
@@ -141,7 +149,6 @@ The `category_stats` data.frame contains:
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 t5 <- measurable_summary_table(fit)
@@ -168,5 +175,4 @@ summary(t5)
 p_t5 <- plot(t5, draw = FALSE)
 p_t5$data$plot
 #> [1] "facet_coverage"
-# }
 ```

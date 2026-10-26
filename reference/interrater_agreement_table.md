@@ -53,17 +53,35 @@ interrater_agreement_table(
 
 - top_n:
 
-  Optional maximum number of pair rows to keep.
+  Optional maximum number of pair rows to keep, after ordering by flag,
+  exact agreement and correlation. The summary still describes all
+  candidate pairs. Leave `NULL` to retain the complete pair audit.
 
 ## Value
 
-A named list with:
+An `mfrm_interrater` bundle (a named list) with:
 
 - `summary`: one-row inter-rater summary
 
 - `pairs`: pair-level agreement table
 
+- `notes`: interpretation and availability qualifications
+
 - `settings`: applied options and thresholds
+
+Use `summary(ir)` or `ir$summary` to inspect a result and `plot(ir)` for
+its saved agreement figure. Save the full bundle with
+[`base::saveRDS()`](https://rdrr.io/r/base/readRDS.html) and reopen with
+[`base::readRDS()`](https://rdrr.io/r/base/readRDS.html); export
+`ir$pairs` and `ir$summary` separately with
+[`utils::write.csv()`](https://rdrr.io/r/utils/write.table.html).
+Reopening performs no fitting.
+`plot(ir, type = "agreement", metric = "correlation")` selects the
+correlation view; `metric = "difference"` selects observed-score gaps.
+These plots retain the saved flag thresholds. Changing them requires
+recreating this result from the existing fit, not fitting a new model.
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+converts a saved plot payload without recomputation.
 
 ## Details
 
@@ -73,13 +91,42 @@ package-native and does not require knowledge of legacy report
 numbering. When fitted category probabilities are available, expected
 exact agreement for a matched context is the model-implied quantity
 \\\sum_k P\_{r1}(X=k)P\_{r2}(X=k)\\. It is not a marginal-frequency
-chance agreement statistic. Observed exact agreement uses equality of
-the package's observed score categories. Repeated ratings in a
-rater/context cell are averaged using observation weights; comparisons
-then describe those means, and expected exact agreement is withheld for
-the repeated cells. The current function does not translate category
-positions across multiple independent scales, apply an agreement-based
-SE inflation, or establish numerical equivalence with FACETS Table 7.
+chance agreement statistic. This product assumes conditional
+independence at the saved Person point score and fitted structural
+parameters. MML uses the saved EAP: it does not integrate either the
+product or its factors over the Person posterior. Calibration and
+population uncertainty are not propagated. Nonfinite primary
+Person/facet/step estimates or unavailable GPCM slopes withhold the
+affected expectations; finite internal optimizer proxies are not
+substituted and limiting boundary probabilities are not calculated here.
+`ExpectedReason` records unavailable primary estimates, repeated
+ratings, unavailable probabilities or absent matched scores. Observed
+exact agreement uses equality of the package's observed score
+categories. Repeated ratings in a rater/context cell are averaged using
+observation weights; comparisons then describe those means, and expected
+exact agreement is withheld for the repeated cells. The current function
+does not translate category positions across multiple independent
+scales, apply an agreement-based SE inflation, or establish numerical
+equivalence with FACETS Table 7. For two-way observed-score ICCs without
+an MFRM fit, use
+[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_icc_table.md).
+That function requires one rating per rater/unit and an explicit choice
+of agreement/consistency and single/average ratings. The raw-score
+kappa, alpha and AC2 helpers also reject repeated rater-unit cells; they
+do not inherit this function's averaging convention. See
+[mfrmr_methods_reference](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_methods_reference.md)
+for choosing among these targets.
+
+Within a pair, every matched context with two finite scores contributes
+one opportunity, after any within-cell averaging. Observation weights
+affect that averaging, not the weight assigned to the resulting context.
+Overall exact/adjacent agreement divides the corresponding counts by the
+total opportunities across pairs. A context with finite compared scores
+from m judges contributes m(m-1)/2 opportunities, so this is not equal
+weighting of distinct contexts or independent evidence from that many
+people. Pairwise correlation is computed from the matched scores, and
+`MeanCorr` weights each available correlation by its pair's
+matched-context count. It is not a panel ICC.
 
 ## Interpreting output
 
@@ -105,8 +152,8 @@ plots and exports.
 
 2.  Review `summary(ir)` and top flagged rows in `ir$pairs`.
 
-3.  Visualize with
-    [`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md).
+3.  Visualize with [plot(x, type =
+    "agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 ## Output columns
 
@@ -116,9 +163,10 @@ The `pairs` data.frame contains:
 
   Rater pair identifiers.
 
-- N:
+- N, OpportunityCount:
 
-  Number of matched-context observations for this pair.
+  Number of matched contexts with two finite scores for this pair, after
+  any repeated-cell averaging.
 
 - Exact:
 
@@ -132,7 +180,8 @@ The `pairs` data.frame contains:
 
 - Adjacent:
 
-  Proportion of adjacent (+/- 1 category) agreements.
+  Proportion whose absolute compared-score difference is at most 1,
+  including exact agreements.
 
 - MeanDiff:
 
@@ -150,9 +199,26 @@ The `pairs` data.frame contains:
 
   Logical; `TRUE` when Exact \< `exact_warn` or Corr \< `corr_warn`.
 
-- OpportunityCount, ExactCount, ExpectedExactCount, AdjacentCount:
+- ExactCount, AdjacentCount:
 
-  Raw counts behind the agreement proportions.
+  Observed counts behind the proportions.
+
+- ExpectedExactCount:
+
+  Sum of model-implied exact-agreement probabilities over matched
+  contexts; it may be fractional. Unavailable if any such context lacks
+  valid probabilities.
+
+- ExpectedAvailableContexts, ExpectedUnavailableContexts:
+
+  Counts of matched contexts with and without valid fitted
+  probabilities.
+
+- ExpectedReason:
+
+  `available`, or semicolon-separated reasons:
+  `primary_estimate_unavailable`, `repeated_ratings`,
+  `fitted_probabilities_unavailable`, or `no_matched_scores`.
 
 The `summary` data.frame contains:
 
@@ -165,9 +231,14 @@ The `summary` data.frame contains:
   All candidate rater pairs, those with matched scores, and those
   without.
 
-- TotalPairs:
+- TotalPairs, OpportunityCount:
 
-  Total matched-context opportunities across rater pairs.
+  Total matched-context opportunities across rater pairs, not the number
+  of distinct people or contexts.
+
+- Contexts:
+
+  Distinct contexts with at least two finite compared scores.
 
 - ExactAgreement:
 
@@ -179,7 +250,8 @@ The `summary` data.frame contains:
 
 - MeanCorr:
 
-  Mean pairwise correlation.
+  Mean available pairwise correlation weighted by each pair's
+  matched-context count; unavailable correlations are excluded.
 
 - FlaggedPairs, FlaggedShare:
 
@@ -200,13 +272,17 @@ The `summary` data.frame contains:
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`facets_chisq_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_chisq_table.md),
-[`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
+[plot(x, type =
+"agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_icc_table.md),
+[`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_kappa_table.md),
+[`gwet_ac2_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/gwet_ac2_table.md),
+[`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/krippendorff_alpha_table.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -228,18 +304,18 @@ agreement$summary
 #> 1      Rater      6    15              6                9                6
 #>   UnavailableCorrelationPairs RepeatedCells ExpectedAvailableContexts
 #> 1                           9             0                       138
-#>   ExpectedUnavailableContexts Contexts TotalPairs OpportunityCount
-#> 1                           0      138        138              138
-#>   ExactAgreements ExpectedAgreements ExactAgreement ExpectedExactAgreement
-#> 1              54           48.40589      0.3913043              0.3507673
-#>   AgreementMinusExpected AdjacentAgreements AdjacentAgreement MeanAbsDiff
-#> 1             0.04053701                118         0.8550725   0.7826087
-#>    MeanCorr RaterSeparation RaterStrata RaterReliability RaterRealSeparation
-#> 1 0.4008957        1.448979    2.265305        0.6773715            1.447168
-#>   RaterRealReliability ClassifiedPairs UnclassifiedPairs FlaggedPairs
-#> 1            0.6768246               6                 9            5
-#>   FlaggedShare
-#> 1           NA
+#>   ExpectedUnavailableContexts ExpectedReason Contexts TotalPairs
+#> 1                           0      available      138        138
+#>   OpportunityCount ExactAgreements ExpectedAgreements ExactAgreement
+#> 1              138              54           48.40589      0.3913043
+#>   ExpectedExactAgreement AgreementMinusExpected AdjacentAgreements
+#> 1              0.3507673             0.04053701                118
+#>   AdjacentAgreement MeanAbsDiff  MeanCorr RaterSeparation RaterStrata
+#> 1         0.8550725   0.7826087 0.4008957        1.448979    2.265305
+#>   RaterReliability RaterRealSeparation RaterRealReliability ClassifiedPairs
+#> 1        0.6773715            1.447168            0.6768246               6
+#>   UnclassifiedPairs FlaggedPairs FlaggedShare
+#> 1                 9            5           NA
 agreement$pairs[, c("Rater1", "Rater2", "N", "Exact", "Corr", "MeanDiff")]
 #>    Rater1 Rater2  N     Exact      Corr   MeanDiff
 #> 1     R05    R06 20 0.3000000 0.5959734  0.2500000
@@ -260,5 +336,4 @@ agreement$pairs[, c("Rater1", "Rater2", "N", "Exact", "Corr", "MeanDiff")]
 # N is the number of matched ratings; Exact is the fraction with identical scores
 # MeanDiff = Rater1 minus Rater2: positive means Rater1 assigned higher scores
 # These observed-score comparisons are distinct from fitted rater severity
-# }
 ```

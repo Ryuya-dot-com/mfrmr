@@ -1,6 +1,6 @@
-# Build a legacy-compatible output-file bundle (`GRAPH=` / `SCORE=`)
+# Build native graph and observation-score output files
 
-Build a legacy-compatible output-file bundle (`GRAPH=` / `SCORE=`)
+Build native graph and observation-score output files
 
 ## Usage
 
@@ -33,7 +33,11 @@ facets_output_file_bundle(
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-  (used for score file).
+  (used for score file). Must match this fitted analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics. Exported score rows are
+  observations, whereas FACETS Scorefile rows are elements. These
+  formats are not interchangeable.
 
 - include:
 
@@ -49,7 +53,9 @@ facets_output_file_bundle(
 
 - digits:
 
-  Rounding digits for numeric fields.
+  Rounding digits for numeric fields. `ConditionalVariance` in the score
+  table and delimited export retains full precision so small positive
+  variances remain distinguishable from zero.
 
 - score_se_method:
 
@@ -140,8 +146,11 @@ or
 [`category_structure_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_structure_report.md)
 for scale outputs, then use
 [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
-for file handoff. Use `facets_output_file_bundle()` only when a
-legacy-compatible graphfile or scorefile contract is required.
+for file handoff. Use `facets_output_file_bundle()` for its native
+graph/observation-row contract. Its score file is not the element-level
+FACETS Scorefile format; use
+[`read_facets_fit_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/read_facets_fit_table.md)
+to import actual FACETS element output.
 
 ## GPCM boundary
 
@@ -161,8 +170,8 @@ carries explicit score-side caveat columns. It is not a FACETS
 score-side equivalence file, does not export FACETS-equivalent
 score-side standard errors, and does not establish an operational
 score-scale decision. Use
-[`gpcm_score_side_contract()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_score_side_contract.md)
-and
+[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
+with `view = "scores"` and
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
 for the current scope.
 
@@ -188,7 +197,6 @@ for the current scope.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
@@ -213,28 +221,50 @@ summary(out)
 #>    R01   Content        3    1.848    1.152       1.539 0.560      1       2
 #>    R01   Content        3    2.309    0.691       0.853 0.656      1       2
 #>    R01   Content        2    3.282   -1.282      -1.832 0.490      1       1
-#>  PersonMeasure ScoreSlope ScoreInformation ObservedScoreDerivative PrObserved
-#>          0.684          1            0.490                  -0.282      0.456
-#>          1.672          1            0.282                  -0.662      0.281
-#>          1.257          1            0.367                   0.472      0.585
-#>          0.901          1            0.444                  -0.384      0.424
-#>          0.901          1            0.444                  -1.384      0.088
-#>         -1.522          1            0.586                   1.070      0.200
-#>          0.901          1            0.444                  -0.384      0.424
-#>         -1.665          1            0.560                   1.152      0.171
-#>         -0.918          1            0.656                   0.691      0.342
-#>          0.684          1            0.490                  -1.282      0.118
-#>  ObsProb
-#>    0.456
-#>    0.281
-#>    0.585
-#>    0.424
-#>    0.088
-#>    0.200
-#>    0.424
-#>    0.171
-#>    0.342
-#>    0.118
+#>  PersonMeasure PrimaryPersonMeasure PersonMeasureBasis ConditionalVariance
+#>          0.684                0.684      JML optimizer               0.490
+#>          1.672                1.672      JML optimizer               0.282
+#>          1.257                1.257      JML optimizer               0.367
+#>          0.901                0.901      JML optimizer               0.444
+#>          0.901                0.901      JML optimizer               0.444
+#>         -1.522               -1.522      JML optimizer               0.586
+#>          0.901                0.901      JML optimizer               0.444
+#>         -1.665               -1.665      JML optimizer               0.560
+#>         -0.918               -0.918      JML optimizer               0.656
+#>          0.684                0.684      JML optimizer               0.490
+#>  PearsonAvailable   ResponseStatus
+#>              TRUE available_plugin
+#>              TRUE available_plugin
+#>              TRUE available_plugin
+#>              TRUE available_plugin
+#>              TRUE available_plugin
+#>              TRUE available_plugin
+#>              TRUE available_plugin
+#>              TRUE available_plugin
+#>              TRUE available_plugin
+#>              TRUE available_plugin
+#>                                                                   ResponseReason
+#>  Conditional point calculation; calibration and Person uncertainty are excluded.
+#>  Conditional point calculation; calibration and Person uncertainty are excluded.
+#>  Conditional point calculation; calibration and Person uncertainty are excluded.
+#>  Conditional point calculation; calibration and Person uncertainty are excluded.
+#>  Conditional point calculation; calibration and Person uncertainty are excluded.
+#>  Conditional point calculation; calibration and Person uncertainty are excluded.
+#>  Conditional point calculation; calibration and Person uncertainty are excluded.
+#>  Conditional point calculation; calibration and Person uncertainty are excluded.
+#>  Conditional point calculation; calibration and Person uncertainty are excluded.
+#>  Conditional point calculation; calibration and Person uncertainty are excluded.
+#>  ScoreSlope ScoreInformation ObservedScoreDerivative PrObserved ObsProb
+#>           1            0.490                  -0.282      0.456   0.456
+#>           1            0.282                  -0.662      0.281   0.281
+#>           1            0.367                   0.472      0.585   0.585
+#>           1            0.444                  -0.384      0.424   0.424
+#>           1            0.444                  -1.384      0.088   0.088
+#>           1            0.586                   1.070      0.200   0.200
+#>           1            0.444                  -0.384      0.424   0.424
+#>           1            0.560                   1.152      0.171   0.171
+#>           1            0.656                   0.691      0.342   0.342
+#>           1            0.490                  -1.282      0.118   0.118
 #> 
 #> Settings
 #>            Setting        Value
@@ -259,5 +289,4 @@ summary(out)
 p_out <- plot(out, draw = FALSE)
 p_out$data$plot
 #> [1] "graph_expected"
-# }
 ```

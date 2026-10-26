@@ -154,7 +154,6 @@ The `summary` data.frame contains:
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -194,5 +193,4 @@ if (interactive()) {
     label_angle = 45
   )
 }
-# }
 ```

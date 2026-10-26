@@ -56,7 +56,9 @@ normal intervals from the standard errors. Default and
 contrasts, degrees of freedom, confidence level and complete-data
 information cautions remain attached through
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
-Fixed targets have open diamonds without intervals. In ggplot
+Numerical interval-availability reasons and saved inference notes are
+retained. Both base and ggplot views show a cross for a missing
+interval. Fixed targets have open diamonds without intervals. In ggplot
 conversion, infinite endpoints have arrows (their tips are display
 limits, not finite bounds); missing intervals have crosses at the saved
 estimate. Missing point estimates cause an error rather than being

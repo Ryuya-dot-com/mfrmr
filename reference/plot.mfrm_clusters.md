@@ -24,7 +24,7 @@ plot(x, ids = NULL, labels = NULL, draw = TRUE, preset = "standard", ...)
 
 ## Arguments
 
-- x:
+- x :
 
   An object returned by
   [`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
@@ -33,37 +33,37 @@ plot(x, ids = NULL, labels = NULL, draw = TRUE, preset = "standard", ...)
   [`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md),
   as appropriate.
 
-- type:
+- type :
 
   For a single partition, `"silhouette"` or `"profile"`.
 
-- feature:
+- feature :
 
   A single selected feature name, required for `type = "profile"`.
   Numeric features show means and medians in their original units;
   categorical features show within-group proportions in the original
   level order (including unused factor levels).
 
-- labels:
+- labels :
 
   Whether to display entity IDs on silhouettes or heatmaps. The default
   displays them for at most 50 entities. No entities are sampled when
   labels are hidden. Profile plots always label groups and levels.
 
-- draw:
+- draw :
 
   Draw the plot when `TRUE`; `FALSE` only returns plotted values.
 
-- preset:
+- preset :
 
   Plot style: `"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`.
 
-- ...:
+- ... :
 
   Reserved for future use; additional arguments are rejected.
 
-- ids:
+- ids :
 
   For imputation heatmaps, an optional character vector of distinct
   entity IDs in the desired display order. Selection affects only the
@@ -76,7 +76,10 @@ Invisibly, an `mfrm_plot_data` object. Its `data` contains the plotted
 table or matrix, title, subtitle, legend, and excluded IDs. Heatmaps
 also retain the displayed IDs and the number of imputations. Use
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
-to extract this payload for custom graphics.
+to extract this payload for custom graphics. Profile plots also retain
+`observations`: original-unit entity values and group/exclusion status,
+suitable for custom distribution plots; see
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
 [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
 converts imputation co-membership heatmaps using the saved matrix, ID
 order, label choice, colours and imputation count. The default and

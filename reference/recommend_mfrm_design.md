@@ -138,7 +138,11 @@ Threshold checks use unrounded metrics. Summaries saved by earlier
 versions may contain only rounded values; rebuild them with
 `summary(original_evaluation)` before requesting a recommendation. The
 original evaluation can be reused without generating or fitting new
-data.
+data. Summaries also need the current recovery-coordinate review.
+Rebuilding an old PCM/GPCM summary can leave its recovery fields
+unavailable, preventing a recommendation; a new evaluation is needed for
+corrected severity recovery. An unavailable group minimum/maximum is
+`NA`, not infinite apparent success.
 
 The connectivity screen uses generated assignments, including failed
 fits and diagnostic runs. `ConnectivityStatus` is `"disconnected"` if
@@ -200,16 +204,12 @@ follows `prefer`.
 ## Examples
 
 ``` r
-# \donttest{
-sim_eval <- suppressWarnings(evaluate_mfrm_design(
-  n_person = c(8, 12),
-  n_rater = 2,
-  n_criterion = 2,
-  raters_per_person = 2,
-  reps = 1,
-  maxit = 30,
-  seed = 123
-))
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sim_eval <- saved$design
 rec <- recommend_mfrm_design(
   sim_eval, max_ratings = 48, max_ratings_per_rater = 24
 )
@@ -222,5 +222,4 @@ rec$recommended
 #> #   MaxRatings <int>, MaxRatingsPerRater <int>, MaxRaterComponents <int>,
 #> #   MaxCriterionComponents <int>, DisconnectedReps <int>,
 #> #   LinkReviewStatus <chr>, LinkReviewReason <chr>, FacetsPassing <int>, …
-# }
 ```

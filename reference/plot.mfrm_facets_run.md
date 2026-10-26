@@ -24,8 +24,8 @@ plot(x, y = NULL, type = c("fit", "qc"), ...)
 
   Plot route: `"fit"` delegates to
   [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
-  and `"qc"` delegates to
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md).
+  and `"qc"` delegates to [plot(x, type =
+  "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 - ...:
 
@@ -48,8 +48,8 @@ result:
 
 Returns the plotting object produced by the delegated route:
 [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
-for `"fit"` and
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
+for `"fit"` and [plot(x, type =
+"qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 for `"qc"`.
 
 ## Typical workflow
@@ -66,14 +66,14 @@ for `"qc"`.
 
 [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md),
 [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
-[`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
+[plot(x, type =
+"qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md),
 [mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 out <- run_mfrm_facets(
@@ -89,5 +89,4 @@ p_fit$wright_map$data$plot
 p_qc <- plot(out, type = "qc", draw = FALSE)
 p_qc$data$plot
 #> [1] "qc_dashboard"
-# }
 ```

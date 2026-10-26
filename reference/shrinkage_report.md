@@ -30,7 +30,6 @@ A data.frame with one row per facet (and optionally `"Person"`) or
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300,
@@ -45,5 +44,7 @@ shrinkage_report(fit)
 #>                                                                                                                                                             Interpretation
 #> 1 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
 #> 2 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
-# }
+#>   CalculationVersion
+#> 1                  2
+#> 2                  2
 ```

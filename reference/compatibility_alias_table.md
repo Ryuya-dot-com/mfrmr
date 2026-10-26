@@ -65,7 +65,8 @@ the public surface.
 [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
 [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
 [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md),
-[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
+[plot(x, type =
+"fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 
@@ -139,8 +140,8 @@ compatibility_alias_table()
 #> 9                                                                                              Backward-compatible standard-error column; ModelSE is the preferred label.
 #> 10                                                                                                    Legacy adjusted-average column retained alongside the native label.
 #> 11                                                                                       Legacy standardized adjusted-average column retained alongside the native label.
-#> 12                                                                                                     Accepted by plot_fair_average() as a shortcut for AdjustedAverage.
-#> 13                                                                                         Accepted by plot_fair_average() as a shortcut for StandardizedAdjustedAverage.
+#> 12                                                                                          Accepted by plot(x, type = "fair_average") as a shortcut for AdjustedAverage.
+#> 13                                                                              Accepted by plot(x, type = "fair_average") as a shortcut for StandardizedAdjustedAverage.
 compatibility_alias_table("functions")
 #>                       Alias           PreferredName  Surface      Lifecycle
 #> 1               mfrmRFacets         run_mfrm_facets function retained_alias

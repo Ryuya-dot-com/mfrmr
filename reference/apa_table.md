@@ -28,7 +28,8 @@ apa_table(
   [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md),
   an `mfrm_summary_table_bundle`, diagnostics list, bias-result list,
   saved RSM/PCM fixed-facet intervals, or saved GPCM
-  slope/curve/bootstrap inference.
+  slope/curve/bootstrap inference. Ordinary Person-score results also
+  support `which = "decisions"` when cut scores were requested.
 
 - which:
 
@@ -42,7 +43,9 @@ apa_table(
 
 - digits:
 
-  Uniform number of rounding digits for numeric columns.
+  Uniform number of rounding digits for numeric columns, except saved
+  decision probabilities, boundaries and priors, which are retained at
+  full precision in `table`.
 
 - caption:
 
@@ -92,11 +95,11 @@ A list of class `apa_table` with fields:
 
 This helper avoids styling dependencies and returns a reproducible base
 `data.frame` plus manuscript-oriented metadata. It does not claim
-complete APA 7 or JARS compliance: `digits` applies the same rounding
-rule to every numeric column, so statistic-specific formatting (for
-example, exact *p*-value, confidence-interval, and effect-size
-conventions) and the target journal's final typography still require
-human review.
+complete APA 7 or JARS compliance: outside the saved `decisions` table,
+`digits` applies the same rounding rule to every numeric column, so
+statistic-specific formatting (for example, exact *p*-value,
+confidence-interval, and effect-size conventions) and the target
+journal's final typography still require human review.
 
 Supported `which` values:
 
@@ -111,6 +114,15 @@ Supported `which` values:
   `"interrater_summary"`, `"interrater_pairs"`, `"obs"`
 
 - For bias-result list: `"table"`, `"summary"`, `"chi_sq"`
+
+- For ordinary
+  [`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+  output: `"decisions"`.
+  [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+  and
+  [`score_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  results and their summaries also accept this selector. Cuts must have
+  been requested.
 
 - For RSM/PCM fixed-facet intervals: `"intervals"` (default),
   `"settings"`, `"contrasts"`, and `"clusters"` when present. Method,
@@ -127,6 +139,13 @@ Supported `which` values:
   preserved.
 
 ## Interpreting output
+
+Saved ordinary Person-score, unit-prediction and portable-score results
+with cut probabilities support `which = "decisions"`. Numeric
+probabilities, cut boundaries and priors are retained without decimal
+rounding in the table. They condition on calibration and the scoring
+prior; the cut labels do not establish CEFR alignment or a decision
+rule.
 
 - `table`: plain data.frame ready for export or further formatting.
 
@@ -148,12 +167,12 @@ Supported `which` values:
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md),
 [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
-[mfrmr_reporting_and_apa](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reporting_and_apa.md)
+[mfrmr_reporting_and_apa](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reporting_and_apa.md),
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -185,5 +204,4 @@ tbl$table
 #> 1 Criterion      3            0        0.3       -0.34        0.22 0.57
 #> 2     Rater      6            0        0.4       -0.61        0.41 1.02
 # This table summarizes facets; use as.data.frame(fit) for individual estimates
-# }
 ```

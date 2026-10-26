@@ -34,30 +34,30 @@ print(x, ...)
 
 ## Arguments
 
-- data:
+- data :
 
   Long-format data, one row per observed or assigned rating.
 
-- person, rater, score:
+- person, rater, score :
 
   Names of the person, rater and numeric score columns.
 
-- facets:
+- facets :
 
   Character vector of fixed-facet columns; default none. Include task or
   criterion columns explicitly when their difficulties are part of the
   intended model; their presence in `data` alone does not include them.
 
-- score_levels:
+- score_levels :
 
   Required consecutive integer score categories, in order.
 
-- rater_sd:
+- rater_sd :
 
   `NULL` estimates the population SD of rater severity. A nonnegative
   number fixes it as known; zero removes rater heterogeneity.
 
-- quad_points:
+- quad_points :
 
   Number of standard-normal Gauss-Hermite points for each person
   integral, from 7 to 241; default 31. The result is also evaluated at
@@ -68,43 +68,43 @@ print(x, ...)
   alone does not refit the calibration. No allowed order is universally
   sufficient.
 
-- maxit:
+- maxit :
 
   Maximum optimizer iterations per start; default 300.
 
-- missing:
+- missing :
 
   `"fail"` (default) refuses missing assigned scores; `"omit"`
   explicitly analyzes observed scores and records omitted rows.
 
-- person_sd:
+- person_sd :
 
   `NULL` (default) estimates the normal ability SD. A finite positive
   number fixes it as known; `person_sd = 1` retains the standard normal
   population. This is a population restriction with Rasch slope one.
 
-- person_variance_max:
+- person_variance_max :
 
   Positive upper search bound for estimated ability variance;
   default 16. Reaching it fails numerical readiness; increase the bound
   and refit rather than interpreting a capped estimate as a solution.
 
-- ...:
+- ... :
 
   Unused by summary and print.
 
-- calibration_intervals:
+- calibration_intervals :
 
   For summaries, `"none"` (default) omits calibration bounds; `"normal"`
   explicitly requests their pointwise normal approximation. This does
   not select individual-rater intervals.
 
-- level:
+- level :
 
   Nominal level for explicitly requested summary calibration intervals;
   default 0.95. Numerical and variance-boundary restrictions remain.
 
-- x, object:
+- x, object :
 
   A fitted `mfrm_random_rater` object.
 
@@ -116,6 +116,13 @@ model settings and optimizer records. It contains no native pointers;
 save it with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html). Its
 summary, plot and prediction methods are specific to this model; it is
 not an ordinary `mfrm_fit` or portable fixed-facet calibration object.
+Calibration and summary rater tables retain `IntervalStatus`,
+`CIEligible` and `InferenceReview` for normal-interval availability.
+These distinguish unrequested bounds, unsupported targets and unresolved
+checks or variance boundaries; see
+[`confint.mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_random_rater.md).
+Retained points require the separate fit checks and are not certified by
+these fields.
 
 ## Details
 
@@ -132,7 +139,15 @@ variance parameters. Person effects are integrated by quadrature
 conditional on all shared rater effects; the resulting joint rater
 integral uses the Laplace approximation through the optional RTMB
 package. Integrating a new rater separately for each person would fit a
-different model.
+different model. After marginalization, Persons sharing a rater are
+dependent. Adding Persons rated by the same fixed panel does not add
+independent draws from the rater population. Even if those rater effects
+became known exactly, a fixed number of draws would not consistently
+estimate a positive population variance. Person count or total rating
+count alone therefore cannot justify ordinary large-sample population-SD
+inference. The full calibration information includes all estimated
+population SDs, but this does not establish the required asymptotic
+regime or Laplace accuracy.
 
 The initial scope is RSM, unit weights, a connected person-rater design,
 multiple persons per rater, and full-rank additive fixed-facet coding.
@@ -140,7 +155,12 @@ Every declared category must occur. Nonassigned combinations are absent;
 omitted scores are not imputed. Informative assignment, nonnormal rater
 populations, PCM, anchors, interactions, testlets and latent regression
 are not implemented by this route. Connectedness alone does not
-guarantee adequate information about rater variance.
+guarantee adequate information about rater variance. A fixed-facet level
+with only minimum or only maximum scores has no finite calibration
+estimate. Such separation fails `checks$NumericalReady` and
+`checks$InformationPositive`, even if the optimizer reports convergence.
+`checks$FixedFacetSeparation` records this sufficient separation check;
+its absence does not exclude separation along combinations of facets.
 
 Both estimated zero variances are considered explicitly. One-sided
 variance scores check these boundaries; the derivative with respect to
@@ -311,6 +331,26 @@ summary(fit)
 #> 7          Step     Score                 4  1.26465868 0.23030176    NA    NA
 #> 8 Population SD     Rater  Rater population  0.25403161 0.10660909    NA    NA
 #> 9 Population SD    Person Person population  0.96867912 0.12319493    NA    NA
+#>       IntervalStatus CIEligible
+#> 1      not_requested      FALSE
+#> 2      not_requested      FALSE
+#> 3      not_requested      FALSE
+#> 4      not_requested      FALSE
+#> 5      not_requested      FALSE
+#> 6      not_requested      FALSE
+#> 7      not_requested      FALSE
+#> 8 unsupported_target      FALSE
+#> 9 unsupported_target      FALSE
+#>                                                                                                                                   InferenceReview
+#> 1                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 2                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 3                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 4                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 5                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 6                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 7                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 8 This normal-interval route does not support population SDs or variances. A retained point or SE does not authorize a regular variance interval.
+#> 9 This normal-interval route does not support population SDs or variances. A retained point or SE does not authorize a regular variance interval.
 #> 
 #> $raters
 #>   Rater Persons   Estimate ConditionalSD PredictionSE Lower Upper
@@ -318,6 +358,16 @@ summary(fit)
 #> 2   R02      48 -0.2692240     0.1230288    0.1514160    NA    NA
 #> 3   R03      48  0.1566218     0.1228254    0.1492172    NA    NA
 #> 4   R04      48  0.2730197     0.1229746    0.1514764    NA    NA
+#>   IntervalStatus CIEligible
+#> 1  not_requested      FALSE
+#> 2  not_requested      FALSE
+#> 3  not_requested      FALSE
+#> 4  not_requested      FALSE
+#>                                                                                           InferenceReview
+#> 1 Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 2 Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 3 Normal intervals were not requested. Use the documented confint() target to request this approximation.
+#> 4 Normal intervals were not requested. Use the documented confint() target to request this approximation.
 #> 
 #> $checks
 #>   OptimizerCode  MaxGradient ZeroVarianceScore EstimatedVarianceBoundary

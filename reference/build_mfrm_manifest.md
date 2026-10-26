@@ -80,7 +80,7 @@ which downstream outputs are currently available.
 Use `build_mfrm_manifest()` when you want a compact, machine-readable
 record of how an analysis was run. Compared with related helpers:
 
-- [`export_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm.md)
+- [`export_mfrm_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_tables.md)
   writes analysis tables only.
 
 - `build_mfrm_manifest()` records settings and available outputs.
@@ -99,8 +99,8 @@ The returned bundle has class `mfrm_manifest` and includes:
 - `summary`: one-row analysis overview
 
 - `readiness`, `readiness_components`, and `readiness_parameters`: the
-  source fit's current readiness-contract record, its component review,
-  and any parameter-level readiness rows
+  fitted model's recorded numerical checks and restrictions on
+  inference, overall and by component or parameter
 
 - `environment`: package/R/platform metadata
 
@@ -110,7 +110,10 @@ The returned bundle has class `mfrm_manifest` and includes:
 
 - `estimation_control`: key-value optimizer settings table
 
-- `anchor_summary`: facet-level anchor summary
+- `anchor_summary`: facet-level anchor summary. `model_settings`
+  separately records `centering_scope` and `noncenter_facet`; missing
+  convention metadata in a native fit retains the legacy `"remainder"`
+  interpretation
 
 - `anchors`: machine-readable anchor table
 
@@ -137,16 +140,17 @@ The `summary` table is the direct place to confirm that you are looking
 at the intended analysis. The `model_settings`, `source_columns`, and
 `estimation_control` tables are designed for reproducibility records and
 method write-up. `Converged` records the optimizer return-code decision;
-`InferenceReady` records the stricter readiness-contract decision. They
-need not agree. The `readiness` tables are provenance: they preserve the
-decision recorded for the source fit, including its contract version and
-reason codes. They do not make a subsequently replayed fit
-inference-ready; replay must recompute readiness from the replayed data
-and numerical result. Active latent-regression fits also record their
-population-model provenance there, including the fitted scoring basis,
-stored `population_formula`, and person-level contract used by the
-fitted population model. When categorical background variables are
-expanded through
+`InferenceReady` records whether the fit passes the additional numerical
+checks required for inference. They need not agree; passing these checks
+does not establish model fit or the statistical adequacy of every
+interval method. The `readiness` tables preserve these checks for the
+original fitted model, including the check-format version and reason
+codes. Re-running the analysis must repeat the checks using the new fit;
+the saved records do not certify it. Active latent-regression fits also
+record their population-model provenance there, including the fitted
+scoring basis, stored `population_formula`, and person-level data
+requirements used by the fitted population model. When categorical
+background variables are expanded through
 [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html),
 `population_xlevel_variables` and `population_contrast_variables`
 identify the variables whose fitted coding must be preserved for
@@ -179,6 +183,18 @@ surfaces while keeping full FACETS score-side contract review blocked
 and routing design forecasting through its separate caveated capability
 row.
 
+## Saved-result reuse
+
+Supplied screening results must describe this fitted analysis. Results
+from another fit or older results without identity metadata are refused.
+See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+to recreate them from the saved fit and matching diagnostics without
+refitting the model. Supplied unit scores, plausible values and
+fit-derived forecasts must also match this calibration. A forecast
+created with `sim_spec` remains a separate scenario; its source is
+recorded without asserting a match to the fit.
+
 ## See also
 
 [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md),
@@ -189,7 +205,6 @@ row.
 ## Examples
 
 ``` r
-# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
@@ -209,5 +224,4 @@ manifest$available_outputs[, c("Component", "Available")]
 #> 7 population_prediction     FALSE
 #> 8       unit_prediction     FALSE
 #> 9      plausible_values     FALSE
-# }
 ```

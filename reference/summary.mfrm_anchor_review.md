@@ -82,10 +82,10 @@ summary(review)
 #>     Person     48              0             0          0                 0
 #>      Rater      4              0             0          0                 0
 #>  Criterion      4              0             0          0                 0
-#>  OverlapLevels FreeLevels Noncenter DummyFacet
-#>              0         48      TRUE      FALSE
-#>              0          4     FALSE      FALSE
-#>              0          4     FALSE      FALSE
+#>  OverlapLevels FreeLevels Noncenter DummyFacet Centered      OriginBasis
+#>              0         48      TRUE      FALSE    FALSE estimated_origin
+#>              0          4     FALSE      FALSE     TRUE         zero_sum
+#>              0          4     FALSE      FALSE     TRUE         zero_sum
 #> 
 #> Level observation summary
 #>      Facet Levels MinObsPerLevel MedianObsPerLevel RecommendedMinObs PassMinObs
@@ -102,8 +102,8 @@ summary(review)
 #> 
 #> Recommendations
 #>  - Package observation-count screen: about 30 observations per element are used for review. Low-observation facets: Person.
-#>  - For linked analyses, keep Umean/Uscale from the source calibration so reporting origin and scaling stay consistent.
-#>  - Current noncenter facet is 'Person'. Other facets are centered unless constrained by anchors/group anchors.
+#>  - Supply anchors in internal logit coordinates, not Umean/Uscale display units. Use compatible score coding, orientation and reporting scales across linked analyses.
+#>  - Current noncenter facet is 'Person'. Other facets sum to zero across all levels, including anchors and group totals. The ungrouped remainder balances those contributions; a single remaining level is fixed by that balance.
 #> 
 #> Notes
 #>  - No anchor-table issue rows were detected.

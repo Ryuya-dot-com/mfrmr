@@ -1,18 +1,30 @@
-# Build report-ready output from `mfrm_results()`
+# Build reports from measurement, G/D-study or residual results
 
-`mfrm_report()` is a report-synthesis layer for an existing
+`mfrm_report()` connects existing measurement results, G/D-study results
+and residual exploration to tables, Markdown and HTML. It does not
+refit, recompute diagnostics or create new inferential support. Pass
+G/D-study and
+[`mfrm_residual_network()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_residual_network.md)
+objects directly. Rater/halo networks and
+[`fit_rater_network()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_rater_network.md)
+results also connect directly, retaining definitions, unavailable pairs,
+network fit, cluster-bootstrap contrasts and ERGM checks. Attach
+previously calculated G/D intervals explicitly. See the dedicated
+section below and the editable `templates/gtheory-report.Rmd`.
+
+For an
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
-object. It does not refit the model, recompute diagnostics, or add new
-validity rules. Instead, it turns the comprehensive first-screen result
-into a first-screen table, section plan, claim-readiness table,
-report-gap table, report-index table, template-index table, fit-criteria
-table, result-specific fit evidence summaries, fit-reporting wording
-templates, precision/separation reporting templates, bias/DFF reporting
-templates, misfit/pathway reporting templates, linking/anchor reporting
-templates, ZSTD-convention table, evidence-boundary table, next-action
-table, and optional Markdown or HTML report. Except for the individual
-rater sheet described below, the object and its table list retain the
-exact source-fit `fit_readiness*` tables from
+object, it turns the comprehensive first-screen result into a
+first-screen table, section plan, claim-readiness table, report-gap
+table, report-index table, template-index table, fit-criteria table,
+result-specific fit evidence summaries, fit-reporting wording templates,
+precision/separation reporting templates, bias/DFF reporting templates,
+misfit/pathway reporting templates, linking/anchor reporting templates,
+ZSTD-convention table, evidence-boundary table, next-action table, and
+optional Markdown or HTML report. For
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+inputs, except for the individual rater sheet, the object and its table
+list retain the exact source-fit `fit_readiness*` tables from
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md);
 report synthesis does not reinterpret or upgrade them. The `decision`
 table translates that same record into interpretation, formal-inference,
@@ -30,7 +42,9 @@ mfrm_report(
   audience = c("rater", "researcher"),
   label = NULL,
   max_cases = 5,
-  interval = NULL
+  interval = NULL,
+  intervals = NULL,
+  study_context = NULL
 )
 ```
 
@@ -40,7 +54,12 @@ mfrm_report(
 
   An
   [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
-  object.
+  object, a supported G/D-study or network result, or output from
+  [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
+  [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md),
+  [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
+  or
+  [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md).
 
 - style:
 
@@ -54,9 +73,10 @@ mfrm_report(
 
 - output:
 
-  Return format: `"object"` for an `mfrm_report` object, `"markdown"`
-  for a character scalar, `"html"` for a temporary HTML file, or
-  `"tables"` for the report's named data-frame list.
+  Return format: `"object"` for an `mfrm_report` object
+  (`mfrm_rater_feedback` when `style = "rater"`), `"markdown"` for a
+  character scalar, `"html"` for a temporary HTML file, or `"tables"`
+  for the report's named data-frame list.
 
 - facet:
 
@@ -96,6 +116,28 @@ mfrm_report(
   just a difference involving it. A single matching attachment is used
   automatically. Multiple matching attachments require an explicit
   choice. No interval is calculated here.
+
+- intervals:
+
+  For a G/D-study only, saved `confint(x)` output or a list of such
+  results. Source, design and target context are checked. `NULL` reports
+  point estimates without intervals; logical values do not trigger
+  computation. Old component intervals lacking source context must be
+  recreated with the current `confint(g)`. This differs from singular
+  `interval`, which selects an attachment for an individual rater sheet.
+
+- study_context:
+
+  Optional named character vector of study declarations, for example
+  `c(question = "...", rating_unit = "...", score_direction = "Higher means easier to understand", rubric = "1 = very difficult; 9 = very easy", transformation = "None", anchor_source = "...")`.
+  Names must be unique; values must be nonmissing and nonblank. The same
+  declaration can accompany separate measurement, G/D and feedback
+  reports when their meanings match. It is retained in `$study_context`,
+  `$tables$study_context`, Markdown, HTML and report appendix export.
+  These are user declarations, not model-verified facts: they never
+  recode data, reverse parameter signs, validate anchors or change
+  eligibility. For a recipient-facing rater sheet, supply only context
+  intended for that recipient; text is copied verbatim.
 
 ## Value
 
@@ -138,7 +180,19 @@ reconstruct one from calibration rows. It does not supply ordinary
 residual diagnostics or fit/APA wording templates; `template_index` is
 empty. See the model-specific section in
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
-for supported tables and plots.
+for supported tables and plots. The `Response residuals` row
+distinguishes an unsupplied saved
+[`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+result (`not_computed`) from a supplied result with no available
+observed-row results (`unavailable`) or results requiring review. If
+needed, compute these diagnostics separately for a numerically ready fit
+and attach them through
+`mfrm_results(fit, response_diagnostics = diagnostics)`. Available
+summaries remain descriptive (`caveat`): ordinary-model cutoffs do not
+apply, and they do not establish model adequacy. Report creation never
+computes the missing diagnostics. Older result bundles can be passed to
+`mfrm_report()` again to update the report; previously exported files
+retain their original text.
 
 For ordinary models, the `first_screen` table is the compact entry
 point: it gives an overall row and one row per major evidence area with
@@ -182,20 +236,129 @@ template areas so report authors can review unsupported or caveated
 wording before opening the full template text. The
 `precision_reporting_templates` table does the same for separation,
 reliability, and strata using the stored precision review and
-`diagnostics$reliability`. The `bias_reporting_templates` table is
-available when the source result was built with `include = "bias"` and
-keeps facet-level screens, interaction-bias contrasts, DFF follow-up,
-and fairness conclusions in separate sections. The
-`misfit_reporting_templates` table is available when the source result
-was built with `include = "misfit_review"` and keeps unexpected
-responses, displacement, pathway-map evidence, and case-review actions
-separate. The `linking_reporting_templates` table is available when the
-source result was built with `include = "linking"` and keeps anchor
-readiness, drift review, equating-chain review, and GPCM support
-boundaries separate. For example, fit and separation are not collapsed
-into a single pass/fail statement; bias screens are not treated as final
-fairness conclusions; pathway/misfit rows are case-review prompts; and
-drift/equating claims require multiple fitted forms or waves.
+`diagnostics$reliability`. `precision_by_facet` preserves every stored
+facet row, original values, missing-value reasons and inference flags.
+Templates report model and fit-adjusted indices separately for each
+facet; they are not confidence bounds. Cross-facet ranges in the
+compatibility summary are not an overall reliability coefficient. A
+Person separation index computed with EAP/posterior SD is not
+posterior-variance EAP reliability; this report does not compute that
+different index. `fit_calculation_basis` identifies the recorded target
+of the MnSq tables, including EAP plug-in and imported source
+definitions. Missing metadata stays unrecorded. Rebuild reports from
+saved results to obtain these explanations; no re-estimation is needed.
+The `bias_reporting_templates` table is available when the source result
+was built with `include = "bias"` and keeps facet-level screens,
+interaction-bias contrasts, DFF follow-up, and fairness conclusions in
+separate sections. The `misfit_reporting_templates` table is available
+when the source result was built with `include = "misfit_review"` and
+keeps unexpected responses, displacement, pathway-map evidence, and
+case-review actions separate. The `linking_reporting_templates` table is
+available when the source result was built with `include = "linking"`
+and keeps anchor readiness, drift review, equating-chain review, and
+GPCM support boundaries separate. For example, fit and separation are
+not collapsed into a single pass/fail statement; bias screens are not
+treated as final fairness conclusions; pathway/misfit rows are
+case-review prompts; and drift/equating claims require multiple fitted
+forms or waves.
+
+## Anchor, bias and model-choice modules
+
+Use `mfrm_report(review_mfrm_anchors(...))` before anchored fitting,
+`mfrm_report(build_linking_review(...))` for saved link evidence,
+`mfrm_report(estimate_bias(...))` for a prespecified interaction, and
+`mfrm_report(build_model_choice_review(...))` for candidate-model roles
+and comparability. Reporting does not fit a new model, select new
+interaction cells, calculate a missing LRT or test anchor invariance.
+Full bias cells and anchor values remain alongside compact summaries;
+source objects and unavailable states are preserved. `style = "rater"`
+continues to require individual feedback from
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
+Supply `study_context` to keep rubric direction, transformations, anchor
+provenance and the question with the report. A shared declaration does
+not establish equivalence between a raw G-study score and a latent MFRM
+measure. See the editable `templates/assessment-review.Rmd` for separate
+modules using bundled data and a saved report archive.
+
+## G/D-study and residual-exploration reports
+
+Saved Stan/brms summaries read by
+[`read_mfrm_posterior()`](https://ryuya-dot-com.github.io/mfrmr/reference/read_mfrm_posterior.md)
+also enter this route directly. Reports retain their credible-interval
+level, fixed values, priors, model-data identity and sampling review.
+They do not calculate new intervals, native MML diagnostics, prior
+sensitivity or posterior predictions.
+
+Pass
+[`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md),
+[`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md),
+[`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md)
+or
+[`mfrm_residual_network()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_residual_network.md)
+output directly, without
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
+The non-rater styles all preserve the same complete domain-specific
+tables and interpretation notes. Report creation never refits, clusters
+or computes intervals. The overall review status asks for substantive
+study context; it is not a numerical convergence or formal-inference
+assessment.
+
+G/D tables retain observed counts separately from future plans, fixed
+score/composite weights, signed covariance components, component policy,
+G/Phi, universe/error variances, measurement SEM and unavailable states.
+Saved component or plan/contrast intervals retain their methods,
+assumptions and any separate interval center. Without supplied intervals
+the report explicitly states `not_requested`. Paired-delta comparisons
+have their own report, preserving their shared-source covariance and
+approximation. These are observed-score studies, not latent-trait fits
+or MFRM separation reliability. Brennan (2003) explains why coefficients
+should be accompanied by error variances; Jiang et al. (2022) emphasize
+uncertainty and studied design conditions. Their findings do not
+validate every interval method supplied here.
+
+Use `build_summary_table_bundle(report)` for all numerical and
+contextual tables, `apa_table(report, which = "coefficients")` for a
+selected D-study table, and
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
+for CSV/HTML. `summary(report)` keeps the full evidence tables in
+`evidence_tables`; `top_n` does not truncate them. Save the complete
+report/source with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html)
+for replay. Source archives can contain participant identifiers and
+require sharing review. The installed editable template is located by
+`system.file("templates", "gtheory-report.Rmd", package = "mfrmr")`.
+
+Residual reports retain all nodes and pairs, overlap, threshold settings
+and cluster availability. They support exploratory review; they do not
+establish dimensions, rater quality, stable classes or causal
+relationships. See
+[`mfrm_residual_network()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_residual_network.md)
+for unsupervised learning, validation and the distinct role of
+supervised random forests.
+
+## Stored agreement in ordinary-model reports
+
+When diagnostics are present, the narrative and
+`tables$interrater_interpretation` distinguish observed agreement from
+the fitted-model expected baseline and from separation reliability.
+`tables$interrater_summary` retains the stored numerical summary
+unchanged. The denominator counts matched-context opportunities across
+rater pairs, not independent people. Unavailable values, zero matched
+opportunities and an absent stored summary are described explicitly; no
+missing agreement statistic is computed during reporting. Reports
+without diagnostics retain their existing component-status explanation
+rather than inventing values. These summaries share their interpretation
+with
+[`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md).
+See
+[`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
+for calculations and matching conventions. Markdown and HTML contain the
+same explanation; export with
+`export_mfrm_results(res, include = "report")` to retain the summary and
+interpretation as CSV files as well. Existing saved APA drafts retain
+their original wording until regenerated with
+[`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
+and the same saved fit/diagnostics. Regeneration does not refit the
+model.
 
 ## Two-family GPCM reports
 
@@ -241,7 +404,25 @@ path. To prepare sheets in a later session, save the complete `res` with
 with [`base::readRDS()`](https://rdrr.io/r/base/readRDS.html). The RDS
 file retains fitted data and identifiers for the analyst; it is not the
 recipient's sheet. Reloading and reporting reuse the saved analysis
-without updating it for new ratings.
+without updating it for new ratings. `output = "tables"` includes an
+`interpretation_notes` table with the overall review, audience-specific
+guidance and section explanations. Keep this table with the numerical
+tables when saving CSV files or sharing them. These explanations are the
+sheet's fixed, recipient-safe text; free-form notes from the source
+analysis are not copied. The same table is available in the sheet
+object's `$tables`. HTML and Markdown show the explanations beside their
+sections, without duplicating them as another table. The `uncertainty`
+table retains `Available` and a recipient-safe `Reason`, distinguishing
+constraint-fixed values, insufficient independent-cluster information,
+unusable variance/bounds and failed numerical/profile checks where the
+saved diagnostics identify the cause. If the interval is unavailable,
+both bounds are missing in the sheet, even when the analyst's saved
+result retains one computed endpoint. This does not mean zero
+uncertainty or an unbounded interval. The original saved analysis is
+unchanged; unidentified reasons direct the recipient to the analyst.
+Printing the sheet also shows interval availability and its explanation.
+Recreate sheets from saved `mfrm_results` objects to obtain these
+fields; reading an older sheet does not update its contents.
 
 The additive RSM/PCM sheet includes scoring tendency (severity),
 exposure, available saved fixed-facet uncertainty, ordinary
@@ -285,7 +466,7 @@ intervals. A larger slope is not evidence of competence or accuracy.
 
 Attach saved
 [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
-output through `intervals` in
+output from `parm = "slopes"` through `intervals` in
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
 to include a matching experimental component-slope interval. `interval`
 chooses among named attachments; pointwise/Bonferroni meaning,
@@ -314,6 +495,19 @@ comprehensive results/export bundle, which retains the original
 analysis. Rater-specific arguments are rejected with other report
 styles, even when explicitly supplied as `NULL`.
 
+## References
+
+Brennan, R. L. (2003). *Coefficients and indices in generalizability
+theory*. CASMA Research Report No. 1, University of Iowa.
+<https://education.uiowa.edu/sites/education.uiowa.edu/files/2026-04/casma-research-report-1-archived.pdf>.
+
+Jiang, Z., Raymond, M., DiStefano, C., Shi, D., Liu, R., & Sun, J.
+(2022). A Monte Carlo study of confidence interval methods for
+generalizability coefficient. *Educational and Psychological
+Measurement, 82*, 705–718.
+[doi:10.1177/00131644211033899](https://doi.org/10.1177/00131644211033899)
+.
+
 ## See also
 
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md),
@@ -325,17 +519,17 @@ styles, even when explicitly supplied as `NULL`.
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
@@ -453,15 +647,43 @@ report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
 #> 4                       Request this evidence only if the claim is needed.
 #> 5                       Request this evidence only if the claim is needed.
 #> 6                  Use the listed template route if this area is reported.
+report$fit_calculation_basis
+#>       Facet  FitBasis
+#> 1     Rater saved EAP
+#> 7 Criterion saved EAP
+#>                                                                                                                                                                                                                                                                                 FitInterpretation
+#> 1 Conditional residuals evaluated at saved EAP person measures; descriptive MnSq, not posterior-averaged residual statistics or posterior-predictive residuals. Person and calibration uncertainty are not propagated. Same-response EAP scoring does not establish an expectation-one reference.
+#> 7 Conditional residuals evaluated at saved EAP person measures; descriptive MnSq, not posterior-averaged residual statistics or posterior-predictive residuals. Person and calibration uncertainty are not propagated. Same-response EAP scoring does not establish an expectation-one reference.
+report$precision_by_facet[, c("Facet", "Levels", "Reliability",
+                              "RealReliability", "InputUncertaintyBasis")]
+#>       Facet Levels Reliability RealReliability      InputUncertaintyBasis
+#> 1 Criterion      3   0.8671839       0.8664954 Observed information (MML)
+#> 2    Person     48   0.6639255       0.6143843         Posterior SD (EAP)
+#> 3     Rater      6   0.6773715       0.6768246 Observed information (MML)
+contextual_report <- mfrm_report(res, study_context = c(
+  rating_unit = "One Person by Rater by Criterion rating",
+  score_direction = "Higher coded scores indicate more favorable performance",
+  rubric = "Synthetic example: permitted scores 1 to 4", transformation = "None"
+))
+contextual_report$tables$study_context
+#>             Field                                                   Value
+#> 1     rating_unit                 One Person by Rater by Criterion rating
+#> 2 score_direction Higher coded scores indicate more favorable performance
+#> 3          rubric              Synthetic example: permitted scores 1 to 4
+#> 4  transformation                                                    None
+#>                                        Source
+#> 1 User declaration; not verified by the model
+#> 2 User declaration; not verified by the model
+#> 3 User declaration; not verified by the model
+#> 4 User declaration; not verified by the model
 
 # Select a recipient explicitly. Missing intervals are explained in the sheet.
 recipient <- as.character(fit$prep$levels$Rater[1])
 sheet <- mfrm_report(res, style = "rater", facet = "Rater",
                      rater = recipient, output = "html", max_cases = 0)
 sheet$path
-#> [1] "/tmp/Rtmp3b8iPq/mfrmr_rater_1b2d66cb307f.html"
+#> [1] "/tmp/Rtmp9ZqIgh/mfrmr_rater_1cd51e50b7c1.html"
 # Review in a browser, then choose a permanent path for continuing work.
 recipient_file <- tempfile(fileext = ".html")
 stopifnot(file.copy(sheet$path, recipient_file, overwrite = FALSE))
-# }
 ```

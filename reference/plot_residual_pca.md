@@ -141,6 +141,13 @@ specific facet after global PCA review.
 3.  Use scree plot first, then loadings plot for targeted
     interpretation.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## Session plot defaults
 
 Set `options(mfrmr.plot_preset = "publication")` to choose a session
@@ -180,92 +187,3 @@ or diagnostic thresholds.
 
 [`analyze_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_residual_pca.md),
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-
-## Examples
-
-``` r
-# \donttest{
-toy_full <- load_mfrmr_data("example_core")
-toy_people <- unique(toy_full$Person)[1:24]
-toy <- toy_full[match(toy_full$Person, toy_people, nomatch = 0L) > 0L, , drop = FALSE]
-fit <- suppressWarnings(
-  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-)
-diag <- diagnose_mfrm(fit, residual_pca = "overall")
-pca <- analyze_residual_pca(diag, mode = "overall")
-plt <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
-head(plt$data)
-#> $plot
-#> [1] "scree"
-#> 
-#> $mode
-#> [1] "overall"
-#> 
-#> $facet
-#> NULL
-#> 
-#> $title
-#> [1] "Overall Residual PCA (Scree)"
-#> 
-#> $subtitle
-#> [1] "Variance explained by residual components"
-#> 
-#> $legend
-#>                                     label      role  aesthetic   value
-#> 1                    Residual eigenvalues component line-point #1f78b4
-#> 2 Unit eigenvalue (descriptive reference) reference       line #6b7280
-#> 
-pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE, parallel_reps = 10)
-pa <- plot_residual_pca(pca_pa, mode = "overall", plot_type = "parallel_scree", draw = FALSE)
-head(pa$data)
-#> $plot
-#> [1] "parallel_scree"
-#> 
-#> $mode
-#> [1] "overall"
-#> 
-#> $facet
-#> NULL
-#> 
-#> $title
-#> [1] "Overall Residual PCA (Parallel Scree)"
-#> 
-#> $subtitle
-#> [1] "Conditional permutation reference; fitted-model uncertainty omitted.\nComponentwise cutoffs; no adjustment for scanning components"
-#> 
-#> $legend
-#>                                     label            role  aesthetic   value
-#> 1           Observed residual eigenvalues       component line-point #1f78b4
-#> 2         95% residual-permutation cutoff parallel_cutoff line-point #d95f02
-#> 3                           Parallel mean   parallel_mean       line #1b9e77
-#> 4 Unit eigenvalue (descriptive reference)       reference       line #6b7280
-#> 
-plt_load <- plot_residual_pca(
-  pca, mode = "overall", plot_type = "loadings", component = 1, draw = FALSE
-)
-head(plt_load$data)
-#> $plot
-#> [1] "loadings"
-#> 
-#> $mode
-#> [1] "overall"
-#> 
-#> $facet
-#> NULL
-#> 
-#> $title
-#> [1] "Overall Residual PCA (Loadings: PC1)"
-#> 
-#> $subtitle
-#> [1] "Top 16 absolute loadings"
-#> 
-#> $legend
-#>               label    role aesthetic   value
-#> 1 Positive loadings loading       bar #1b9e77
-#> 2 Negative loadings loading       bar #d95f02
-#> 
-if (interactive()) {
-  plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
-}
-# }
-```

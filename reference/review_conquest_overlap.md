@@ -16,7 +16,8 @@ review_conquest_overlap(
   conquest_item_estimate = "auto",
   item_id_source = c("auto", "response_var", "level"),
   conquest_case_person = "auto",
-  conquest_case_estimate = "auto"
+  conquest_case_estimate = "auto",
+  conquest_location_shift = NULL
 )
 ```
 
@@ -68,7 +69,8 @@ review_conquest_overlap(
 - conquest_item_estimate:
 
   Column in `conquest_item_estimates` that stores the item estimate.
-  `"auto"` tries aliases such as `Estimate`, `Est`, and `Facility`.
+  `"auto"` tries `Estimate` and `Est`. Other columns must be specified
+  explicitly and converted to difficulty logits before review.
 
 - item_id_source:
 
@@ -85,6 +87,14 @@ review_conquest_overlap(
 
   Column in `conquest_case_eap` that stores case EAP estimates. `"auto"`
   tries conservative aliases such as `Estimate`, `EAP_1`, and `EAP`.
+
+- conquest_location_shift:
+
+  Known additive location offset, ConQuest minus mfrmr. Use `0` only
+  after confirming a common origin. `NULL` uses zero when the supplied
+  generated report confirms the common ITEMS constraint; otherwise
+  aligned EAP/intercept comparisons are unavailable. This argument does
+  not change scale units or reverse the item sign.
 
 ## Value
 
@@ -125,7 +135,9 @@ The intended workflow is:
 2.  run the narrow matching case in ConQuest;
 
 3.  normalize the four comparison CSV files with
-    [`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md);
+    [`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md),
+    supplying the generated review text as `report_file` for
+    stopping/model metadata;
 
 4.  pass those tables here to inspect direct differences, centered item
     agreement, and case-level EAP agreement.
@@ -159,10 +171,31 @@ includes:
 
 - Population slopes and `sigma2` are intended for direct comparison.
 
-- Item estimates should be interpreted after centering.
+- Both item tables are centered using the same matched finite items.
+  `MfrmrCentered` is this comparison coordinate; `CenteredEstimate`
+  retains the native bundle's original full-set coordinate.
+  `ItemCenteringRows` records the reference-set size. At least two items
+  are needed; otherwise centered differences and summary metrics are
+  unavailable. Missing items remain flagged, and partial-set agreement
+  does not imply full-set agreement. Recompute older reviews from the
+  saved bundle and external tables to apply this common reference set;
+  printing an old review does not change its values.
 
-- Case estimates should be interpreted as posterior EAP summaries under
-  the fitted population model.
+- Case estimates are posterior EAP summaries under the fitted population
+  model. `Difference` retains the raw external-minus-native value;
+  `AlignedDifference` subtracts the declared location shift. `CaseMae`
+  and `CaseMaxAbsDifference` use aligned differences and are unavailable
+  when the origin is unknown. `CaseRawMae` and `CaseRawMaxAbsDifference`
+  remain descriptive. Do not infer a common origin from partial centered
+  items.
+
+- Population summary errors cover slopes and variance; the intercept has
+  separate `InterceptCompared` and `InterceptAlignedDifference` fields.
+
+- `ExternalEstimationStatus` is unknown without a supplied report.
+  `criterion_met` does not certify precision; `ExternalPrecisionStatus`
+  remains `not_assessed`. Failed stopping and surplus external IDs are
+  attention items. Recreate old reviews to apply these rules.
 
 - The `overall` table reports both mean and maximum absolute differences
   for compared population, centered item, and case rows. The
@@ -172,6 +205,16 @@ includes:
 
 - Missing or non-numeric rows in `attention_items` indicate that the
   external tables do not align cleanly with the exported overlap bundle.
+  Non-finite estimates also use the existing `NonNumericInConQuest`
+  status and are excluded from comparison metrics.
+
+- This review does not compare MnSq, ZSTD, threshold crossings or full
+  parameter covariance. Native MML row residuals evaluated at EAP are
+  not ConQuest parameter-fit statistics: those aggregate through the
+  response design and average over posterior distributions. Adjacent
+  step parameters are not ConQuest cumulative-probability (Thurstonian)
+  thresholds. See the [ConQuest technical
+  manual](https://conquestmanual.acer.org/s3-00.html).
 
 ## See also
 
@@ -190,7 +233,8 @@ normalized <- normalize_conquest_overlap_exports(
   parameter_file = "conquest_overlap_conquest_parameters.csv",
   regression_file = "conquest_overlap_conquest_reg_coefficients.csv",
   covariance_file = "conquest_overlap_conquest_covariance.csv",
-  case_file = "conquest_overlap_conquest_cases_eap.csv"
+  case_file = "conquest_overlap_conquest_cases_eap.csv",
+  report_file = "conquest_overlap_conquest_parameters_review.txt"
 )
 review <- review_conquest_overlap(bundle, normalized)
 summary(review)$summary

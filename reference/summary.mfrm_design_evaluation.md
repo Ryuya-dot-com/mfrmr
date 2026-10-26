@@ -83,7 +83,14 @@ returned facet results have no performance-summary rows and cannot be
 recommended. To update an older saved summary, call
 [`summary()`](https://rdrr.io/r/base/summary.html) again on the original
 evaluation object; no simulation or refitting is needed. Rebuilding also
-restores full precision when an older summary stored rounded metrics.
+restores full precision when an older summary stored rounded metrics. It
+also withholds legacy PCM/GPCM recovery metrics whose step-location
+truth coordinates were not verified; those require a new evaluation for
+corrected recovery, while other diagnostic metrics remain.
+`RecoveryAvailableReps` reports the number of finite trial RMSEs.
+Mean-aligned bias is zero by construction; see
+[`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md)
+for the comparison target.
 
 `MaxRatings` and `MaxRatingsPerRater` are the largest total rating count
 and individual rater workload across all recorded replications,
@@ -107,24 +114,20 @@ summaries also use all run records, including failures.
 ## Examples
 
 ``` r
-# \donttest{
-sim_eval <- suppressWarnings(evaluate_mfrm_design(
-  n_person = c(8, 12),
-  n_rater = 2,
-  n_criterion = 2,
-  raters_per_person = 2,
-  reps = 1,
-  maxit = 30,
-  seed = 123
-))
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sim_eval <- saved$design
 s <- summary(sim_eval)
 s$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
 #>     <int>        <int>          <int>         <int>          <dbl>
-#> 1       2            2              2             1          0.938
+#> 1       2            2              2             1           0.32
 head(s$design_summary)
-#> # A tibble: 6 × 50
+#> # A tibble: 6 × 51
 #>   design_id Facet   n_person n_rater n_criterion raters_per_person AvailableReps
 #>   <chr>     <chr>      <int>   <int>       <int>             <int>         <int>
 #> 1 D01       Criter…        8       2           2                 2             1
@@ -133,12 +136,11 @@ head(s$design_summary)
 #> 4 D02       Person        12       2           2                 2             1
 #> 5 D01       Rater          8       2           2                 2             1
 #> 6 D02       Rater         12       2           2                 2             1
-#> # ℹ 43 more variables: MeanSeparation <dbl>, SdSeparation <dbl>,
+#> # ℹ 44 more variables: MeanSeparation <dbl>, SdSeparation <dbl>,
 #> #   McseSeparation <dbl>, MeanReliability <dbl>, McseReliability <dbl>,
 #> #   MeanInfit <dbl>, McseInfit <dbl>, MeanOutfit <dbl>, McseOutfit <dbl>,
-#> #   MeanMisfitRate <dbl>, McseMisfitRate <dbl>, MeanSeverityRMSE <dbl>,
-#> #   McseSeverityRMSE <dbl>, MeanSeverityBias <dbl>, McseSeverityBias <dbl>,
-#> #   MeanSeverityRMSERaw <dbl>, McseSeverityRMSERaw <dbl>,
-#> #   MeanSeverityBiasRaw <dbl>, McseSeverityBiasRaw <dbl>, …
-# }
+#> #   MeanMisfitRate <dbl>, McseMisfitRate <dbl>, RecoveryAvailableReps <int>,
+#> #   MeanSeverityRMSE <dbl>, McseSeverityRMSE <dbl>, MeanSeverityBias <dbl>,
+#> #   McseSeverityBias <dbl>, MeanSeverityRMSERaw <dbl>,
+#> #   McseSeverityRMSERaw <dbl>, MeanSeverityBiasRaw <dbl>, …
 ```

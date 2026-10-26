@@ -1,14 +1,16 @@
 # Assess whether recovery-simulation results are ready to use
 
 Converts the numerical output from
-[`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
 into a reviewer-facing adequacy checklist. The goal is not to impose one
 universal pass/fail rule; it is to make the main user questions
 explicit: Did the runs finish? Did the fitted models converge? Are
 uncertainty summaries available? Are coverage and Monte Carlo precision
 plausible? If practical RMSE or bias limits are supplied, which
 parameter groups need follow-up? For `GPCM`, which slope-regime
-generator condition frames the recovery evidence?
+generator condition frames the recovery evidence? This only reads an
+existing simulation result. It does not generate data, refit models, add
+replications or repair unavailable uncertainty estimates.
 
 ## Usage
 
@@ -45,7 +47,7 @@ plot(
 - x:
 
   For `assess_mfrm_recovery()`, output from
-  [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md).
+  [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md).
   For `plot.mfrm_recovery_assessment()`, output from
   `assess_mfrm_recovery()`.
 
@@ -66,8 +68,10 @@ plot(
 
 - min_se_available:
 
-  Minimum acceptable proportion of recovery rows with standard errors in
-  each parameter group. Set to `NULL` to skip this check.
+  Minimum acceptable proportion of all expected targets with matching
+  structural standard errors in each parameter group, including targets
+  in failed fits. Unknown target counts give `not_available`. Set to
+  `NULL` to skip this check.
 
 - coverage_target:
 
@@ -91,6 +95,8 @@ plot(
 - max_abs_bias:
 
   Optional practical absolute-bias limit. Naming follows `max_rmse`.
+  Mean-aligned location groups and complete identified log-slope blocks
+  have zero average bias by construction and remain `not_assessed`.
 
 - top_n:
 
@@ -102,7 +108,9 @@ plot(
 
 - ...:
 
-  Reserved for generic compatibility.
+  For `assess_mfrm_recovery()`, unused arguments must be empty; unknown
+  assessment options are rejected rather than silently ignored. For the
+  plot method, reserved for S3 generic compatibility.
 
 - y:
 
@@ -144,12 +152,12 @@ An object of class `mfrm_recovery_assessment` with:
 
 - `diagnostic_review`: optional fit/separation operating-characteristic
   context when retained by
-  [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md).
+  [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md).
 
 - `metric_review`: parameter-group metric checks.
 
-- `uncertainty_review`: compact coverage / SE availability
-  interpretation.
+- `uncertainty_review`: coverage / SE availability interpretation with
+  expected/available counts, coverage MCSE and unavailable reasons.
 
 - `reading_order`: recommended first-read order for the summary,
   condition, plot, and row-level recovery outputs.
@@ -165,7 +173,20 @@ case, so the function does not mark them as failed unless the user
 supplies `max_rmse` or `max_abs_bias`. Without those limits, the
 corresponding rows are marked `not_assessed` and the next action asks
 the user to set practical thresholds when a decision depends on the
-metric.
+metric. `BiasBasis` explains groups whose mean bias is fixed at zero by
+identification; even a supplied bias limit cannot turn that identity
+into recovery evidence. Threshold names are matched from the most
+specific group to its type or `default`; see `max_rmse` for examples.
+
+Metrics are recomputed from row-level evidence. Coverage is conditional
+on the available centered facet intervals, not all planned targets.
+`uncertainty_review` retains counts, `CoverageAvailabilityRate`,
+`McseCoverage95` and `CIReasons` alongside its descriptive checklist.
+See
+[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
+for the estimands, independent-trial MCSE, unsupported interval groups
+and handling of legacy saved results. Checklist tolerances do not
+replace the Monte Carlo uncertainty or qualify an estimator.
 
 The `condition_review` table is generator metadata for interpreting the
 recovery run. For `GPCM`, `GPCMSlopeRegime`, `StressLevel`, and
@@ -176,7 +197,7 @@ conditions into reporter-facing caveats, such as high-dispersion slope
 stress or sparse generated score support.
 
 The optional `diagnostic_review` table is available when
-[`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
+[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
 was called with `include_diagnostics = TRUE`. It summarizes fit and
 separation operating characteristics as diagnostic context only. Its
 availability fields do not mean that fit or separation values are
@@ -201,14 +222,13 @@ plots and `metric_review` for metric plots.
 
 ## See also
 
-[`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md),
+[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md),
 [`plot.mfrm_recovery_simulation()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_recovery_simulation.md)
 
 ## Examples
 
 ``` r
-# \donttest{
-rec <- evaluate_mfrm_recovery(
+rec <- simulate_mfrm_recovery(
   n_person = 12,
   n_rater = 2,
   n_criterion = 2,
@@ -268,7 +288,7 @@ assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
 #>  1 replication(s) retained score support; minimum category count = 2; minimum category proportion = 0.042; maximum omitted categories = 0.
 #>                                                                                                                 Group statuses: concern=4.
 #>                                                                                                           Group statuses: not_available=4.
-#>                                                                                                            Group statuses: ok=3, review=1.
+#>                                                                                                           Group statuses: not_available=4.
 #>                                                                                                           Group statuses: concern=2, ok=2.
 #>                                                                                         No practical absolute-bias threshold was supplied.
 #>                                                                                                                         NextAction
@@ -282,7 +302,7 @@ assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
 #>                                                    Review coverage with plots and row-level output before using it for a decision.
 #>                                       Review Monte Carlo precision with plots and row-level output before using it for a decision.
 #>                           Do not use RMSE as adequacy evidence until the design, fit settings, or replication count are revisited.
-#>                                                                Set a practical threshold if bias must support a go/no-go decision.
+#>                                         Average bias is fixed by group identification; inspect relative RMSE and row-level errors.
 #> 
 #> Condition review
 #>  Model GPCMSlopeRegime    StressLevel SlopeLevels MaxAbsCenteredLogSlope
@@ -312,27 +332,32 @@ assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
 #>         person    Person           logit 11.186    0         NA               0
 #>           step    Common           logit 13.703    0         NA               0
 #>  McseRMSEToRMSE OverallStatus
-#>            0.00       concern
-#>            0.00       concern
-#>            0.22       concern
-#>            0.25       concern
+#>              NA       concern
+#>              NA       concern
+#>              NA       concern
+#>              NA       concern
 #> 
 #> Uncertainty review
-#>  ParameterType     Facet ComparisonScale Coverage95 CoverageStatus
-#>          facet Criterion           logit         NA  not_available
-#>          facet     Rater           logit         NA  not_available
-#>         person    Person           logit         NA  not_available
-#>           step    Common           logit         NA  not_available
+#>  ParameterType     Facet ComparisonScale Coverage95 McseCoverage95 ExpectedRows
+#>          facet Criterion           logit         NA             NA            2
+#>          facet     Rater           logit         NA             NA            2
+#>         person    Person           logit         NA             NA           12
+#>           step    Common           logit         NA             NA            3
+#>  CoverageRows CoverageAvailabilityRate FailedReps CoverageStatus
+#>             0                        0          0  not_available
+#>             0                        0          0  not_available
+#>             0                        0          0  not_available
+#>             0                        0          0  not_available
 #>  SEAvailableRate SEStatus
 #>                0  concern
 #>                0  concern
 #>                0  concern
 #>                0  concern
-#>                                                                                Interpretation
-#>  Coverage was not computed because finite SE-based intervals were unavailable for this group.
-#>  Coverage was not computed because finite SE-based intervals were unavailable for this group.
-#>  Coverage was not computed because finite SE-based intervals were unavailable for this group.
-#>  Coverage was not computed because finite SE-based intervals were unavailable for this group.
+#>                                                                                             Interpretation
+#>  Coverage was not computed because matching centered structural intervals were unavailable for this group.
+#>  Coverage was not computed because matching centered structural intervals were unavailable for this group.
+#>  Coverage was not computed because matching centered structural intervals were unavailable for this group.
+#>  Coverage was not computed because matching centered structural intervals were unavailable for this group.
 #> 
 #> Next actions
 #>  - Reported convergence: Do not use model convergence as adequacy evidence until the design, fit settings, or replication count are revisited.
@@ -341,6 +366,15 @@ assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
 #>  - Coverage: Review coverage with plots and row-level output before using it for a decision.
 #>  - RMSE Monte Carlo error: Review Monte Carlo precision with plots and row-level output before using it for a decision.
 #>  - RMSE threshold: Do not use RMSE as adequacy evidence until the design, fit settings, or replication count are revisited.
+#> 
+#> Notes
+#>  - RMSE and bias statuses are decision-specific; supply practical thresholds when they matter.
+#>  - Fit/separation operating characteristics are diagnostic context and do not enter the recovery adequacy status.
+#>  - MCSE uses independent simulation trials, with a ratio linearization for unequal numbers of available parameter rows; fewer than two contributing trials gives NA.
+#>  - Coverage95 is conditional on available centered facet intervals. Report ExpectedRows, CoverageRows, CoverageAvailabilityRate and FailedReps alongside it; unavailable intervals are not counted as noncoverage.
+#>  - Mean-aligned location Bias and complete identified log-slope group Bias are zero by construction; they are not evidence of truth centering and receive BiasStatus = not_assessed. RMSE describes within-group relative recovery.
+#>  - Some fitted models did not report convergence; inspect `rep_overview` before interpreting recovery summaries.
+#>  - Some planned targets have no supported centered structural interval. RawSE preserves source uncertainty, including Person-score uncertainty, without treating it as an interval for this target.
 
 # Read the GPCM generator condition separately from recovery adequacy.
 gpcm_spec <- build_mfrm_sim_spec(
@@ -354,7 +388,7 @@ gpcm_spec <- build_mfrm_sim_spec(
   slopes = c(0.85, 1.15),
   assignment = "crossed"
 )
-gpcm_rec <- suppressWarnings(evaluate_mfrm_recovery(
+gpcm_rec <- suppressWarnings(simulate_mfrm_recovery(
   sim_spec = gpcm_spec,
   reps = 1,
   fit_method = "MML",
@@ -391,11 +425,11 @@ gpcm_review$diagnostic_reporting_notes[, c(
   "Facet", "ReportingAttention", "DiagnosticFinding"
 )]
 #> # A tibble: 3 × 3
-#>   Facet     ReportingAttention DiagnosticFinding             
-#>   <chr>     <chr>              <chr>                         
-#> 1 Criterion reporting_review   zero_separation_or_reliability
-#> 2 Person    context            diagnostic_context_available  
-#> 3 Rater     reporting_review   zero_separation_or_reliability
+#>   Facet     ReportingAttention DiagnosticFinding           
+#>   <chr>     <chr>              <chr>                       
+#> 1 Criterion context            diagnostic_context_available
+#> 2 Person    context            diagnostic_context_available
+#> 3 Rater     context            diagnostic_context_available
 summary(gpcm_review)$reading_order
 #> # A tibble: 6 × 4
 #>    Step Route                                                 WhatToRead Purpose
@@ -406,5 +440,4 @@ summary(gpcm_review)$reading_order
 #> 4     4 "plot(recovery_review, type = \"status\")"            Checklist… Find t…
 #> 5     5 "plot(recovery_review, type = \"metrics\")"           Parameter… Identi…
 #> 6     6 "recovery_review$source$recovery"                     Row-level… Diagno…
-# }
 ```

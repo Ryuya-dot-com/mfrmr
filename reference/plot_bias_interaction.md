@@ -87,11 +87,14 @@ plot_bias_interaction(
   Logical. When `TRUE` and `plot` is `"scatter"` or `"ranked"`, draw
   confidence-interval whiskers for `Bias Size`. `GPCM` rows use the
   conditional profile-likelihood limits returned by
-  [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-  when available; otherwise the interval uses the per-cell standard
-  error from
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
-  Ignored for `"heatmap"`, `"abs_t_hist"`, and `"facet_profile"`.
+  Search-limited or unverified bounds use dashed whiskers; missing
+  profile bounds are retained without substituting a different method.
+  Rows without profile output use conditional per-cell standard errors.
+  These screening approximations omit calibration uncertainty.
+  `CI_Status`, `CI_Complete` and returned notes retain this distinction;
+  `CI_Complete` describes endpoint computation, not coverage. Ignored
+  for `"heatmap"`, `"abs_t_hist"`, and `"facet_profile"`.
 
 - ci_level:
 
@@ -145,21 +148,31 @@ with multiple views. With `draw = FALSE`, the returned plot data include
 addition to the view-specific `ranked_table`, `scatter_data`,
 `facet_profile`, and heatmap components. Use these fields when
 rebuilding the same screening view in ggplot2, plotly, Quarto, or a
-dashboard.
+dashboard. Saved report thresholds determine flags, reference lines and
+returned notes; recreate
+[`bias_interaction_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/bias_interaction_report.md)
+from the saved bias object to change them. Scatter and ranked views
+support
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md);
+the other views require their base renderer or custom graphics.
+Conditional bounds and their status remain separate from
+calibration-inclusive uncertainty.
 
 ## Plot types
 
 - `"scatter"` (default):
 
-  Scatter plot of bias size (x) vs screening t-statistic (y). Points
-  colored by flag status. Dashed reference lines at `abs_bias_warn` and
-  `abs_t_warn`. Use for overall triage of interaction effects.
+  Observed-minus-expected score average (x) versus conditional bias size
+  in logits (y). Points use the saved flag status; horizontal guides
+  show the saved absolute-bias threshold and zero, with a vertical guide
+  at zero score difference.
 
 - `"ranked"`:
 
-  Ranked bar chart of top `top_n` interactions sorted by `sort_by`
-  criterion (absolute t, absolute bias, or probability). Bars colored
-  red for flagged cells.
+  Conditional bias size (x) for up to `top_n` saved ranked interactions
+  (y). Points are colored by flag status; optional whiskers retain the
+  conditional uncertainty and incomplete-bound status. A saved report
+  retains the ranking chosen when it was constructed.
 
 - `"heatmap"`:
 
@@ -185,9 +198,10 @@ dashboard.
 Start with `"scatter"` or `"ranked"` for triage, then confirm pattern
 shape using `"abs_t_hist"` and `"facet_profile"`.
 
-Consistent flags across multiple views are stronger screening signals of
-systematic interaction bias than a single extreme row, but they do not
-by themselves establish formal inferential evidence.
+These views reuse the same estimates and flags. Agreement between views
+is not independent corroborating evidence of bias. Review exposure,
+calibration uncertainty and substantive explanations before drawing
+conclusions about a rater.
 
 ## Typical workflow
 
@@ -198,6 +212,13 @@ by themselves establish formal inferential evidence.
 2.  Plot with `plot = "ranked"` for top interactions.
 
 3.  Cross-check using `plot = "scatter"` and `plot = "facet_profile"`.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
 
 ## Session plot defaults
 
@@ -238,21 +259,5 @@ or diagnostic thresholds.
 
 [`bias_interaction_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/bias_interaction_report.md),
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
-[`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md)
-
-## Examples
-
-``` r
-# \donttest{
-toy <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-p <- plot_bias_interaction(
-  fit,
-  diagnostics = diagnose_mfrm(fit, residual_pca = "none"),
-  facet_a = "Rater",
-  facet_b = "Criterion",
-  preset = "publication",
-  draw = FALSE
-)
-# }
-```
+[plot(x, type =
+"displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)

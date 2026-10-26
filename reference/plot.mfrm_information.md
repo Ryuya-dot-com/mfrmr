@@ -1,0 +1,151 @@
+# Plot design-weighted information or conditional precision
+
+Plot a saved
+[`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
+result to see where the observed assessment design provides more or less
+precision across ability.
+
+## Usage
+
+``` r
+# S3 method for class 'mfrm_information'
+plot(
+  x,
+  type = c("tif", "iif", "se", "sem", "csem", "both"),
+  facet = NULL,
+  draw = TRUE,
+  ...
+)
+```
+
+## Arguments
+
+- x:
+
+  Output from
+  [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md).
+
+- type:
+
+  `"tif"` for the overall precision curve (default), `"iif"` for
+  facet-level contribution curves, `"se"` / `"sem"` / `"csem"` for the
+  conditional standard error of measurement implied by that curve, or
+  `"both"` for precision with conditional SEM on a secondary axis.
+
+- facet:
+
+  For `type = "iif"`, which facet to plot. If `NULL`, the first facet is
+  used.
+
+- draw:
+
+  If `TRUE` (default), draw the plot. If `FALSE`, return reusable
+  `mfrm_plot_data` invisibly.
+
+- ...:
+
+  Additional base-graphics arguments for the selected view.
+
+## Value
+
+Invisibly, an `mfrm_plot_data` object.
+
+## Plot types
+
+- `"tif"`: overall design-weighted precision across theta.
+
+- `"se"` / `"sem"` / `"csem"`: conditional SEM across theta.
+
+- `"both"`: precision and conditional SEM together, useful for
+  presentations.
+
+- `"iif"`: facet-level contribution curves for one selected facet in a
+  supported `RSM`, `PCM`, or `GPCM` fit.
+
+## Which type should I use?
+
+- Use `"tif"` for a quick overall read on precision.
+
+- Use `"sem"` or `"csem"` when standard-error language is easier to
+  communicate than precision.
+
+- Use `"both"` when you want both views in one figure.
+
+- Use `"iif"` when you want to see which facet levels are shaping the
+  total precision curve.
+
+## Interpreting output
+
+- The total curve peaks where the realized design is most precise.
+
+- Conditional SEM is derived as `1 / sqrt(precision)`; lower is better.
+
+- Facet-level curves show which facet levels contribute most to that
+  realized precision at each theta.
+
+- For `GPCM`, those contributions include the squared discrimination
+  scaling implied by the fitted `slope_facet`.
+
+- If the precision peak sits far from the bulk of person measures, the
+  realized design may be poorly targeted.
+
+## Returned data when draw = FALSE
+
+`draw = FALSE` returns an `mfrm_plot_data` object. The underlying
+plotting data are stored in `$data$plot`. For `type = "tif"`, `"se"`, or
+`"both"`, those rows come from `x$tif`. For `type = "iif"`, the returned
+rows come from `x$iif` filtered to the requested facet. The plot data
+also include `plot_long`, `information_long`, `conditional_sem`,
+`summary`, and `settings` so ggplot2, plotly, Quarto, and table
+workflows can reuse the information and conditional-SEM series without
+parsing the drawn figure.
+
+## Typical workflow
+
+1.  Compute information with
+    [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md).
+
+2.  Plot with `plot(info)` for the total precision curve.
+
+3.  Use `plot(info, type = "iif", facet = "Rater")` for facet-level
+    contributions.
+
+4.  Use `draw = FALSE` when you want reusable plot data for custom
+    graphics or reporting helpers.
+
+## See also
+
+[`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md),
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md)
+
+## Examples
+
+``` r
+ratings <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+                 method = "MML", model = "RSM",
+                 quad_points = 7, maxit = 30)
+info <- compute_information(fit)
+tif_data <- plot(info, type = "tif", draw = FALSE)
+head(tif_data$data$plot)
+#> # A tibble: 6 × 3
+#>   Theta Information    SE
+#>   <dbl>       <dbl> <dbl>
+#> 1 -6           2.59 0.621
+#> 2 -5.94        2.75 0.603
+#> 3 -5.88        2.92 0.586
+#> 4 -5.82        3.09 0.569
+#> 5 -5.76        3.28 0.552
+#> 6 -5.7         3.48 0.536
+iif_data <- plot(info, type = "iif", facet = "Rater", draw = FALSE)
+head(iif_data$data$plot)
+#> # A tibble: 6 × 5
+#>   Theta Facet Level Information Exposure
+#>   <dbl> <chr> <chr>       <dbl>    <dbl>
+#> 1 -6    Rater R01         0.712       47
+#> 2 -5.94 Rater R01         0.756       47
+#> 3 -5.88 Rater R01         0.802       47
+#> 4 -5.82 Rater R01         0.850       47
+#> 5 -5.76 Rater R01         0.902       47
+#> 6 -5.7  Rater R01         0.956       47
+```

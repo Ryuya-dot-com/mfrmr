@@ -16,64 +16,64 @@ plot_compare_mfrm(
   theta_range = c(-6, 6),
   theta_points = 241L,
   preset = c("standard", "publication", "compact", "monochrome"),
-  show_title = TRUE,
-  show_notes = TRUE,
+  show_title = FALSE,
+  show_notes = FALSE,
   draw = TRUE
 )
 ```
 
 ## Arguments
 
-- reference, comparison:
+- reference, comparison :
 
   Two `mfrm_fit` objects. All signed differences are comparison minus
   reference, on the fitted coordinate scale.
 
-- type:
+- type :
 
   `"wright"` for distributions/locations or `"ccc"` for category
   probabilities at the zero additive-facet reference profile.
 
-- view:
+- view :
 
   `"comparison"` for paired displays or `"difference"` for matched
   location differences versus means, or probability differences.
 
-- labels:
+- labels :
 
   Two distinct, nonempty display labels, reference first.
 
-- curve_groups:
+- curve_groups :
 
   Optional step-facet levels to compare. By default all groups are
   required in both fits. An RSM common scale is explicitly paired with
   each selected PCM/GPCM group. Non-RSM fits must share a step owner.
 
-- panel:
+- panel :
 
   CCC layout: `"auto"` uses category panels in monochrome or with more
   than five categories, otherwise `"group"`. `"category"` always
   separates categories; `"group"` overlays categories within each group.
 
-- theta_range:
+- theta_range :
 
   Finite increasing length-two predictor range for CCCs.
 
-- theta_points:
+- theta_points :
 
   Integer number of grid points, at least two.
 
-- preset:
+- preset :
 
   Existing visual preset; monochrome uses shapes/line types as well as
   grey tones.
 
-- show_title, show_notes:
+- show_title, show_notes :
 
   Display title and explanatory subtitle. Notes and source readiness
   remain in the returned object.
 
-- draw:
+- draw :
 
   Draw with the optional ggplot2 renderer. `FALSE` returns data without
   requiring ggplot2. Use
@@ -126,6 +126,13 @@ the score label shown in the plot. `ExpectedScoreDifference` uses the
 native internal score coding, which need not equal the original score
 increments.
 
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
 ## Session plot defaults
 
 Set `options(mfrmr.plot_preset = "publication")` to choose a session
@@ -170,7 +177,6 @@ or diagnostic thresholds.
 ## Examples
 
 ``` r
-# \donttest{
 # Load one dataset for both models
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -199,21 +205,17 @@ fit_pcm <- fit_mfrm(
 # Compare fitted locations; drawing requires the optional ggplot2 package
 # If needed, install it once with install.packages("ggplot2")
 if (requireNamespace("ggplot2", quietly = TRUE)) {
-  plot_compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
+  plot(fit_rsm, comparison = fit_pcm, labels = c("RSM", "PCM"))
 
   # Run separately: compare score-category probabilities for one criterion
-  plot_compare_mfrm(
-    fit_rsm, fit_pcm,
-    type = "ccc",
-    curve_groups = "Content",
-    labels = c("RSM", "PCM")
-  )
+  plot(fit_rsm, comparison = fit_pcm, type = "ccc",
+    curve_groups = "Content", labels = c("RSM", "PCM"))
 }
 
 
 
 # Plot data are available even without ggplot2
-paired <- plot_compare_mfrm(fit_rsm, fit_pcm, draw = FALSE)
+paired <- plot(fit_rsm, comparison = fit_pcm, draw = FALSE)
 head(paired$data$differences)
 #>     Kind  Facet Level Estimate_Reference SourceEstimate_Reference
 #> 1 Person Person  P001         0.28429588               0.28429588
@@ -237,5 +239,4 @@ head(paired$data$differences)
 #> 5         available  0.028066825 -0.16092724
 #> 6         available  0.027857869  0.69073897
 # Differences are PCM minus RSM; no difference SE or significance test is computed
-# }
 ```

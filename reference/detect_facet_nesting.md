@@ -1,10 +1,11 @@
 # Detect nesting structure between facets
 
-Classifies every ordered pair of facets (optionally including `Person`)
-as crossed, partially nested, near-perfectly nested, or fully nested,
-based on a conditional-entropy index: \$\$\text{nesting\\index}(A \to B)
-= 1 - H(B \mid A) / H(B).\$\$ An index near 1 means that knowing the
-level of `A` essentially determines the level of `B` (A is nested in B).
+Classifies both directions of each pair of facets (optionally including
+`Person`) as crossed, partially nested, near-perfectly nested, or fully
+nested, based on a conditional-entropy index:
+\$\$\text{nesting\\index}(A \to B) = 1 - H(B \mid A) / H(B).\$\$ An
+index near 1 means that knowing the level of `A` essentially determines
+the level of `B` (A is nested in B).
 
 ## Usage
 
@@ -29,16 +30,18 @@ detect_facet_nesting(data, facets, person = NULL, weight_col = NULL)
 
 - weight_col:
 
-  Optional name of a weight column; if supplied, rows are replicated
-  proportionally when counting element co-occurrences.
+  Optional name of a numeric column of finite, nonnegative weights.
+  Zero-weight rows are excluded; at least one weight must be positive.
+  Weighted frequencies are used directly, without rounding or
+  replicating rows.
 
 ## Value
 
 A list of class `mfrm_facet_nesting` with:
 
-- `pairwise_table`: one row per ordered facet pair with
-  `NestingIndex_AinB`, `NestingIndex_BinA`, classification strings, and
-  `Direction`.
+- `pairwise_table`: one row per facet pair, reporting both directions
+  with `NestingIndex_AinB`, `NestingIndex_BinA`, classification strings,
+  `Direction`, `UsedRows` and `ExcludedRows`.
 
 - `summary`: a one-line summary table with facet counts and whether any
   non-crossed structure was detected.
@@ -63,6 +66,19 @@ effects.
 
 The direction column records which facet is nested in which, or
 `"crossed"` when neither direction is above 0.95.
+
+## Missing values and weights
+
+Each pair uses rows observed on both columns and having positive weight.
+Both marginal entropies and both conditional entropies use those same
+rows. `UsedRows` and `ExcludedRows` report this pair-specific scope;
+they count original rows, not the sum of weights. Different pairs may
+use different rows. Multiplying all weights by a positive constant
+leaves the indices unchanged. Weights are descriptive frequency weights,
+not a survey-variance correction. The index is undefined (`NA`) when its
+denominator entropy is zero, including pairs with no usable rows.
+Missing-value exclusion does not establish that the observed pattern
+represents the missing ratings.
 
 ## Interpreting output
 
@@ -90,10 +106,14 @@ combinations, which is the setting Linacre (1989) assumed.
 3.  For downstream reporting, use
     [`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md)
     to bundle this output with ICC and design-effect summaries, which
-    [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md)
-    then records for reproducibility.
+    [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
+    can record as available report material.
 
 ## References
+
+Shannon, C. E. (1948). A mathematical theory of communication. *Bell
+System Technical Journal, 27*, 379-423, 623-656.
+<https://web.mit.edu/6.976/www/handout/shannon.pdf>
 
 McEwen, M. R. (2018). *The effects of incomplete rating designs on
 results from many-facets-Rasch model analyses* (Doctoral thesis, Brigham

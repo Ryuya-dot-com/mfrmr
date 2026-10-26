@@ -22,8 +22,36 @@ draw_mfrm_resamples(spec, keep_data = TRUE)
 
 ## Value
 
-An object of class `mfrm_resamples` with `samples`, `manifest`,
-`stratum_manifest`, and `preserve_manifest`.
+An object of class `mfrm_resamples` with:
+
+- `samples`: replicate data frames with original Person, draw-unit,
+  stratum and top-up metadata, or an empty list when
+  `keep_data = FALSE`.
+
+- `manifest`: replicate seeds, sampling scheme, base/added/final cluster
+  counts, original Person counts, rating-row counts and coverage checks.
+
+- `stratum_manifest`: `BasePersonClusters` before top-up,
+  `TopupPersonClusters`, final `SelectedPersonClusters` and
+  `SelectedOriginalPersons`, and final `Rows` for each stratum.
+
+- `preserve_manifest`: observed coverage of requested facet levels.
+
+- `spec` and `terminology`: inputs, sampling assumptions and
+  interpretation. [`summary()`](https://rdrr.io/r/base/summary.html)
+  retains full manifests as well as compact tables. For older results
+  with top-up, pre-top-up stratum counts are retained as base counts;
+  unrecorded final cluster counts are `NA`, with a note, while final row
+  counts remain available. This does not redraw old samples.
+
+## Details
+
+See
+[`build_mfrm_resampling_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_resampling_spec.md)
+for sampling assumptions, top-up, label handling and saved-specification
+compatibility. Sampling keeps each selected Person's entire rating
+cluster and re-keys every instance when drawing with replacement. Other
+facet labels are retained.
 
 ## See also
 
@@ -32,21 +60,18 @@ An object of class `mfrm_resamples` with `samples`, `manifest`,
 ## Examples
 
 ``` r
-toy <- simulate_mfrm_data(n_person = 12, n_rater = 3, n_criterion = 2,
-                          raters_per_person = 2, seed = 11)
-region_map <- setNames(rep(c("A", "B", "C"),
-                           length.out = length(unique(toy$Person))),
-                       unique(toy$Person))
-toy$Region <- unname(region_map[toy$Person])
+# Same-size Person-cluster bootstrap within the observed Group strata.
+ratings <- load_mfrmr_data("example_operational")
 spec <- build_mfrm_resampling_spec(
-  toy, person = "Person", facets = c("Rater", "Criterion"),
-  score = "Score", strata = "Region", reps = 2,
-  sample_fraction = 0.5, seed = 99
+  ratings, person = "Person", facets = c("Rater", "Criterion"),
+  score = "Score", strata = "Group", reps = 2,
+  design = "stratified_bootstrap", sample_fraction = 1,
+  topup_preserve_facets = FALSE, seed = 99
 )
 draws <- draw_mfrm_resamples(spec, keep_data = FALSE)
 summary(draws)$overview
-#>                 Design Reps SamplesReturned Replace
-#> 1 stratified_subsample    2               0   FALSE
+#>                 Design              SamplingScheme Reps SamplesReturned Replace
+#> 1 stratified_bootstrap stratified_person_bootstrap    2               0    TRUE
 #>   PreserveCoverageCompleteRate TopupReps GapOrFallbackReps
 #> 1                            1         0                 0
 ```

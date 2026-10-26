@@ -72,15 +72,12 @@ An object of class `summary.mfrm_diagnostic_screening` with:
 ## Examples
 
 ``` r
-# \donttest{
-diag_eval <- evaluate_mfrm_diagnostic_screening(
-  design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
-  reps = 1,
-  maxit = 30,
-  seed = 123
-)
-#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
-#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+diag_eval <- saved$diagnostic_screening
 summary(diag_eval)
 #> mfrmr Diagnostic Screening Summary
 #> 
@@ -90,7 +87,7 @@ summary(diag_eval)
 #>  ScenarioRows PerformanceRows ReportSignalRows ContrastRows RunOKRate
 #>             2               2                2            1         1
 #>  ConvergenceRate IncludeReport PlotDataContract
-#>                0         FALSE   mfrm_plot_data
+#>                0          TRUE   mfrm_plot_data
 #> 
 #> Reading order
 #>  Step                 Table
@@ -124,7 +121,7 @@ summary(diag_eval)
 #>                                                        Compare raw screening surfaces across scenarios and design conditions.
 #>                                      Separate operating behavior from runtime and from inferential or validation conclusions.
 #>                                    Inspect whether misspecification shifts strict screens beyond the well-specified baseline.
-#>                                                                                         Skipped unless include_report = TRUE.
+#>                                                Use only when include_report = TRUE; otherwise treat absence as not requested.
 #>                                                      Reuse for ggplot2, plotly, Quarto, or supplementary figure construction.
 #>                                                                                                    InterpretationBoundary
 #>  Run completion and convergence are prerequisites for interpretation, not proof that the diagnostic screen is calibrated.
@@ -135,30 +132,30 @@ summary(diag_eval)
 #>                     Scenario means and flag rates are operating-characteristic readouts, not formal inferential p-values.
 #>                                     Type I and sensitivity labels are simulation proxies tied to the evaluated scenarios.
 #>                      Contrasts are descriptive deltas and depend on the selected baseline, design, and replication count.
-#>                           An empty table means report-index review was not requested, not that no reporting issues exist.
+#>            Report signals summarize the package reporting layer; they do not validate the model or the simulation design.
 #>                              Plot data are a presentation handoff and should not be reinterpreted as a separate analysis.
 #> 
 #> Next actions
-#>  Priority                           Area   Status
-#>         1              Replication count   review
-#>         2 Run completion and convergence   review
-#>         3       Screening interpretation       ok
-#>         4             Scenario contrasts       ok
-#>         5           Report-index signals optional
-#>         6 Appendix and plot-data handoff       ok
+#>  Priority                           Area Status
+#>         1              Replication count review
+#>         2 Run completion and convergence review
+#>         3       Screening interpretation     ok
+#>         4             Scenario contrasts     ok
+#>         5           Report-index signals     ok
+#>         6 Appendix and plot-data handoff     ok
 #>                                                                                                   Evidence
 #>                                                                                                  Reps = 1.
 #>                                                                RunOKRate = 1.000; ConvergenceRate = 0.000.
 #>                                                   scenario_summary rows = 2; performance_summary rows = 2.
 #>                                                                                scenario_contrast rows = 1.
-#>                                           include_report = FALSE; report-index signals were not requested.
+#>                                                                            report_signal_summary rows = 2.
 #>  summary tables and draw-free plot-data tables are available through the package-wide bundle/export route.
 #>                                                                                                            Action
 #>  Treat this as an initial screening run; increase `reps` before interpreting operating characteristics as stable.
 #>                      Inspect object$results for Error, RunOK, and Converged before summarizing scenario behavior.
 #>           Read scenario_summary and performance_summary together before making legacy-vs-strict screening claims.
 #>       Use scenario_contrast to describe misspecification-minus-baseline shifts, with the baseline scenario named.
-#>     Rebuild with include_report = TRUE only if report-readiness operating behavior is part of the study question.
+#>                    Use report_signal_summary to prioritize report text review, not as a diagnostic adequacy test.
 #>                Use build_summary_table_bundle() or export_summary_appendix(); use plot_data() for custom figures.
 #>                                                                                                                                        Route
 #>                                                                                               evaluate_mfrm_diagnostic_screening(reps = ...)
@@ -188,7 +185,7 @@ summary(diag_eval)
 #>                                                         Legacy residual summaries retain familiar ZSTD-style screening behavior.
 #>                           Strict marginal and pairwise summaries add model-implied response-distribution checks where available.
 #>                                         scenario_contrast subtracts the well-specified baseline from misspecification scenarios.
-#>                                                            report_signal_summary is empty unless include_report = TRUE was used.
+#>                                  report_signal_summary records mfrm_report() report-index availability and review-signal counts.
 #>                                        plot_* tables expose the same summaries in long form for figure or appendix construction.
 #>                                                                                                                   ReportingBoundary
 #>                                       Describe as a simulation operating-characteristic study, not as a calibrated hypothesis test.
@@ -202,7 +199,7 @@ summary(diag_eval)
 #>                 Pair legacy flags with strict marginal/pairwise summaries before making diagnostic-screening claims.
 #>                      Use performance_summary and scenario_contrast to compare sensitivity and Type I proxy behavior.
 #>                            State which scenario is the baseline and avoid strong claims when replications are small.
-#>        Rebuild with include_report = TRUE only if report-readiness operating behavior is part of the study question.
+#>                              Use report signals to prioritize report review text, not to decide diagnostic adequacy.
 #>  Use build_summary_table_bundle() or export_summary_appendix() to keep tables, roles, and appendix presets explicit.
 #> 
 #> Figure recipes
@@ -221,7 +218,7 @@ summary(diag_eval)
 #>                                                            Availability
 #>                                          available_when_plot_rows_exist
 #>                                          available_when_plot_rows_exist
-#>                                            requires_include_report_TRUE
+#>                                        available_when_report_rows_exist
 #>  available_when_well_specified_baseline_and_misspecification_rows_exist
 #>                                   available_when_performance_rows_exist
 #> 
@@ -233,17 +230,17 @@ summary(diag_eval)
 #>        Criterion       10       2           2                 2    1         1
 #>        Criterion       10       2           2                 2    1         1
 #>  ConvergenceRate MeanElapsedSec MeanLegacyMeanAbsZ MeanLegacyFlaggedLevels
-#>                0          1.059              0.589                       0
-#>                0          1.056              0.563                       0
+#>                0          0.350              0.706                       0
+#>                0          0.381              0.648                       1
 #>  LegacyAnyFlagRate MeanMarginalOverallRMSD MeanMarginalMaxAbsStdResidual
-#>                  0                   0.002                         0.050
-#>                  0                   0.046                         1.705
+#>                  0                   0.002                         0.058
+#>                  1                   0.033                         1.053
 #>  MeanMarginalFlaggedGroups MarginalAnyFlagRate MeanPairwiseFlaggedLevelPairs
-#>                          2                   1                             1
-#>                          4                   1                             0
+#>                          0                   0                             1
+#>                          4                   1                             1
 #>  PairwiseAnyFlagRate PairwiseAvailabilityRate
 #>                    1                        1
-#>                    0                        1
+#>                    1                        1
 #> 
 #> Performance summary (preview)
 #>  design_id         Scenario                         ScenarioClass Model
@@ -253,26 +250,26 @@ summary(diag_eval)
 #>        Criterion       10       2           2                 2    1
 #>        Criterion       10       2           2                 2    1
 #>  MeanElapsedSec McseElapsedSec MeanElapsedSecPer100Obs LegacyAnyFlagRate
-#>           1.059             NA                   2.647                 0
-#>           1.056             NA                   2.640                 0
+#>           0.350             NA                   0.875                 0
+#>           0.381             NA                   0.952                 1
 #>  McseLegacyAnyFlagRate MarginalAnyFlagRate McseMarginalAnyFlagRate
-#>                     NA                   1                      NA
+#>                     NA                   0                      NA
 #>                     NA                   1                      NA
 #>  PairwiseAnyFlagRate McsePairwiseAnyFlagRate StrictAnyFlagRate
 #>                    1                      NA                 1
-#>                    0                      NA                 1
+#>                    1                      NA                 1
 #>  McseStrictAnyFlagRate LegacyVsMarginalAgreement LegacyVsPairwiseAgreement
-#>                     NA                         0                         0
-#>                     NA                         0                         1
+#>                     NA                         1                         0
+#>                     NA                         1                         1
 #>  LegacyVsStrictAgreement MarginalVsPairwiseAgreement     EvaluationUse
-#>                        0                           1 sensitivity_proxy
-#>                        0                           0      type_I_proxy
+#>                        0                           0 sensitivity_proxy
+#>                        1                           1      type_I_proxy
 #>  LegacyTypeIProxy StrictTypeIProxy LegacySensitivityProxy
 #>                NA               NA                      0
-#>                 0                1                     NA
+#>                 1                1                     NA
 #>  StrictSensitivityProxy DeltaStrictMinusLegacyFlagRate
 #>                       1                              1
-#>                      NA                              1
+#>                      NA                              0
 #> 
 #> Report signal summary (preview)
 #>  design_id         Scenario                         ScenarioClass Model
@@ -282,14 +279,14 @@ summary(diag_eval)
 #>        Criterion       10       2           2                 2    1
 #>        Criterion       10       2           2                 2    1
 #>  ReportIndexAvailabilityRate ReportAuditErrorRows MeanReportReviewAreas
-#>                            0                    0                    NA
-#>                            0                    0                    NA
+#>                            1                    0                     2
+#>                            1                    0                     2
 #>  MeanReportReadyAreas MeanReportRequestIfNeededAreas FitReportReviewRate
-#>                    NA                             NA                   0
-#>                    NA                             NA                   0
+#>                     0                              3                   1
+#>                     0                              3                   1
 #>  MeanFitReportSignals PrecisionReportReviewRate MeanPrecisionReportSignals
-#>                    NA                         0                         NA
-#>                    NA                         0                         NA
+#>                     4                         1                          1
+#>                     6                         1                          1
 #>  MisfitReportReviewRate MeanMisfitReportSignals
 #>                       0                      NA
 #>                       0                      NA
@@ -300,39 +297,36 @@ summary(diag_eval)
 #>  DependenceFacet n_person n_rater n_criterion raters_per_person
 #>        Criterion       10       2           2                 2
 #>  MeanLegacyMeanAbsZ_Scenario MeanLegacyFlaggedLevels_Scenario
-#>                        0.589                                0
+#>                        0.706                                0
 #>  MeanMarginalOverallRMSD_Scenario MeanMarginalMaxAbsStdResidual_Scenario
-#>                             0.002                                   0.05
+#>                             0.002                                  0.058
 #>  MeanMarginalFlaggedGroups_Scenario MeanPairwiseFlaggedLevelPairs_Scenario
-#>                                   2                                      1
+#>                                   0                                      1
 #>  PairwiseAnyFlagRate_Scenario MeanLegacyMeanAbsZ_WellSpecified
-#>                             1                            0.563
+#>                             1                            0.648
 #>  MeanLegacyFlaggedLevels_WellSpecified MeanMarginalOverallRMSD_WellSpecified
-#>                                      0                                 0.046
+#>                                      1                                 0.033
 #>  MeanMarginalMaxAbsStdResidual_WellSpecified
-#>                                        1.705
+#>                                        1.053
 #>  MeanMarginalFlaggedGroups_WellSpecified
 #>                                        4
 #>  MeanPairwiseFlaggedLevelPairs_WellSpecified PairwiseAnyFlagRate_WellSpecified
-#>                                            0                                 0
+#>                                            1                                 1
 #>  DeltaLegacyMeanAbsZ DeltaLegacyFlaggedLevels DeltaMarginalOverallRMSD
-#>                0.026                        0                   -0.045
+#>                0.058                       -1                   -0.031
 #>  DeltaMarginalMaxAbsStdResidual DeltaMarginalFlaggedGroups
-#>                          -1.655                         -2
+#>                          -0.995                         -4
 #>  DeltaPairwiseFlaggedLevelPairs DeltaPairwiseAnyFlagRate StrictSignalImproved
-#>                               1                        1                 TRUE
+#>                               0                        0                FALSE
 #>  StrictSignalDominatesLegacy
 #>                         TRUE
 #> 
 #> Notes
 #>  - Well-specified rows report screening-oriented Type I proxies from any-flag rates; they are not calibrated inferential alpha estimates.
 #>  - Misspecification rows report screening-oriented sensitivity proxies from any-flag rates; they summarize detection behavior rather than formal power.
-#>  - At least one misspecification scenario increased a strict screening signal relative to the well-specified baseline for an evaluated design row.
-#>  - At least one misspecification scenario increased strict pairwise flagging relative to the well-specified baseline for an evaluated design row.
 #>  - At least one strict screening signal reacted more strongly than the legacy |ZSTD| screen for an evaluated design row.
 #>  - Draw-free diagnostic-screening plot tables are exported as operating-characteristic readouts, not validation pass/fail criteria.
 #>  - Planning helpers vary one person count and two named non-person facet roles (Rater and Criterion). Estimation may contain additional facets, but planning and forecasting are limited to this role-based design.
 #>  - Current scalar-argument planning paths allow `n_person`, `n_rater`, `n_criterion`, and `raters_per_person` to vary subject to `raters_per_person <= n_rater`.
 #>  - Named-facet structural design metadata for person count, non-person facet counts, and assignments per person. These deterministic design summaries do not establish arbitrary-facet simulation support or parameter-recovery performance.
-# }
 ```

@@ -1,6 +1,6 @@
-# List packaged simulation datasets
+# List packaged ordered-response MFRM datasets
 
-List packaged simulation datasets
+List packaged ordered-response MFRM datasets
 
 ## Usage
 
@@ -14,7 +14,8 @@ list_mfrmr_data(details = FALSE)
 
   If `FALSE` (default), return the backward-compatible character vector
   of dataset keys. If `TRUE`, return a catalog describing the intended
-  teaching role and design of every dataset.
+  teaching role and design of each dataset accepted by
+  [`load_mfrmr_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/load_mfrmr_data.md).
 
 ## Value
 
@@ -27,7 +28,14 @@ or, when `details = TRUE`, a data.frame with `Key`, `Rows`, `Persons`,
 ## Details
 
 Use this helper when you want to select packaged data programmatically
-(e.g., inside scripts, loops, or interactive-application wrappers).
+(e.g., inside scripts, loops, or interactive-application wrappers). For
+the separately packaged G-theory and agreement tables loaded with
+[`data()`](https://rdrr.io/r/utils/data.html), see
+[mfrmr_gtheory_data](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_gtheory_data.md)
+and
+[mfrmr_agreement_data](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_agreement_data.md).
+These use different input structures and are not keys for
+[`load_mfrmr_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/load_mfrmr_data.md).
 
 Typical pattern:
 
@@ -99,8 +107,8 @@ catalog[, c("Key", "PrimaryUse", "Design")]
 #> 9 Overlapping IDs; requires explicit anchors/linking for a common scale
 
 # Choose one dataset
-toy <- load_mfrmr_data("example_operational")
-head(toy)
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
 #>                Study Person Rater    Criterion Score Group
 #> 1 OperationalExample   P001   R01     Language     4     A
 #> 2 OperationalExample   P001   R01 Organization     2     A

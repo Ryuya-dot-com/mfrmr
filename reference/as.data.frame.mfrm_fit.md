@@ -68,12 +68,11 @@ facets are stacked underneath in the same schema.
 ## See also
 
 [`fit_mfrm`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-[`export_mfrm`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm.md)
+[`export_mfrm_tables`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_tables.md)
 
 ## Examples
 
 ``` r
-# \donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -111,5 +110,4 @@ subset(estimates, Facet == "Criterion")   # All criteria
 #> 55 Criterion      Content -0.3441471    <NA>
 #> 56 Criterion     Language  0.1204520    <NA>
 #> 57 Criterion Organization  0.2236950    <NA>
-# }
 ```

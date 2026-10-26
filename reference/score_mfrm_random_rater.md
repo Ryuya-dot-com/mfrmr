@@ -25,13 +25,13 @@ print(x, ...)
 
 ## Arguments
 
-- object:
+- object :
 
   A numerically ready
   [`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
   result.
 
-- newdata:
+- newdata :
 
   Complete long-format scoring roster, with the fitted columns. `NULL`
   uses the source roster. A supplied table replaces the source roster;
@@ -40,30 +40,30 @@ print(x, ...)
   inform the shared raters, including responses of Persons not selected
   for display.
 
-- persons:
+- persons :
 
   Character vector of distinct Person IDs to return; `NULL` returns all
   Persons in the scoring roster. This selects outputs, not data.
 
-- level:
+- level :
 
   Conditional equal-tail interval probability; default 0.95.
 
-- quad_points:
+- quad_points :
 
   Other-Person quadrature order, 7 to 241; default uses the fit's order.
   Scores are checked at `2 * quad_points + 1` points.
 
-- missing:
+- missing :
 
   `"fail"` or `"omit"`. Source replay uses the fit's policy; omission in
   a supplied roster must be requested explicitly.
 
-- ...:
+- ... :
 
   Unused.
 
-- x:
+- x :
 
   A scoring result.
 
@@ -73,7 +73,10 @@ An `mfrm_random_rater_scores` object with `table`, complete scoring
 roster, data accounting, settings and source metadata for
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
 Save it with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html). Its
-summary and plots need no live optimizer.
+summary and plots need no live optimizer. Keep `table$Status` and
+`table$Reason` with exported scores: `prior_only` describes the assumed
+population without observed responses for that Person; `unavailable`
+withholds the estimate, SD and bounds with a recorded cause.
 
 ## Details
 
@@ -103,6 +106,16 @@ and requested Persons. Start with a few IDs when checking a large
 roster; `persons = NULL` computes every Person's posterior and can be
 slow. Selecting outputs keeps all scoring responses. No fixed effects or
 population variances are re-estimated.
+
+With `newdata`, reusing a source rater ID does not import that rater's
+saved conditional distribution. Shared-rater distributions are
+calculated from the supplied responses and fitted population parameters.
+To retain earlier responses, include them in the complete scoring table,
+with each intended rating event appearing once. By contrast,
+[`predict.mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict.mfrm_random_rater.md)
+with `rater = "observed"` uses the rater's conditional distribution from
+the calibration responses at abilities you supply; it does not estimate
+abilities from new responses.
 
 Intervals condition on all supplied observed responses, fitted
 calibration and the fitted or specified normal ability population. They

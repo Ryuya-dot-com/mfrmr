@@ -51,7 +51,8 @@ score_mfrm_calibration(
   missing_response = "error",
   event_id = NULL,
   adaptive_quad_points = NULL,
-  scoring_prior = NULL
+  scoring_prior = NULL,
+  cut_scores = NULL
 )
 ```
 
@@ -172,6 +173,18 @@ score_mfrm_calibration(
   Two-family GPCM format 6 requires `scoring_prior = NULL` and retains
   the fixed N(0,1) prior.
 
+- cut_scores:
+
+  Optional named, strictly increasing finite ability cuts for
+  `score_mfrm_calibration()`. Ordinary RSM/PCM with unit weights and
+  continuous posterior intervals only. Returns a `decisions` table of
+  probabilities above cuts and in successive bands on the calibration
+  scale. Calibration, prior and cuts are held fixed; this excludes their
+  estimation uncertainty. Unscored Persons remain unavailable. Cut names
+  do not establish CEFR alignment. See
+  [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+  for interpretation and reporting.
+
 ## Value
 
 `extract_mfrm_calibration()`, `validate_mfrm_calibration()`,
@@ -182,7 +195,9 @@ structured refusals, with zero rows for an acceptable object.
 `save_mfrm_calibration()` invisibly returns the normalized path.
 `score_mfrm_calibration()` returns an `mfrm_calibration_score`
 containing estimates plus row and Person dispositions and scoring
-identities. When requested and scored rows exist, `quadrature_review`
+identities. With `cut_scores`, it also retains `decisions`: conditional
+event probabilities with boundaries, labels, actual priors and
+availability. When requested and scored rows exist, `quadrature_review`
 contains the fixed/adaptive comparison;
 [`summary()`](https://rdrr.io/r/base/summary.html) preserves it and adds
 a compact `quadrature_overview`.
@@ -328,6 +343,35 @@ artifacts preserve their discrete grid interval endpoints and carry a
 note that the continuous posterior mass can differ from the requested
 interval level.
 
+## Anchors, centering and score uncertainty
+
+New exports distinguish whole-facet centering, legacy remainder
+centering and uncentered facets in `constraints$identification`. Direct
+values and group means are retained in `constraints$anchors`; validation
+checks the explicit facet maps against the stored coordinates and free
+dimensions. For example, if four raters are centered as a whole and the
+first three have mean 0.10, the fourth is fixed at -0.30. Freezing
+retains all four calibrated values, including the estimates of the free
+group members.
+
+Scoring uses those expanded values without centering or estimating them
+again. A returned `SD` is a Person posterior SD conditional on the
+entire frozen calibration and scoring prior. It is not a rater SE and
+excludes uncertainty in both the estimated calibration and supplied
+anchors. Use
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+for supported conditional facet intervals. With an anchored fitted
+model,
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+accepts supplied response rows; the narrower
+[`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+entry excludes anchors.
+
+Loading an older artifact preserves its values and original constraint
+labels. Older generic labels do not fully identify the centering
+convention; consult the source fit or re-extract it to obtain explicit
+labels. Changing a label cannot convert a calibration to another scale.
+
 ## Statistical basis and external comparisons
 
 Bock and Mislevy (1982, pp. 432-433) describe posterior-mean and
@@ -348,6 +392,109 @@ supplied loading array and defaults to extreme-score adjustment and
 item-bias correction; its default output is not the same estimator as
 unadjusted JML. Do not infer agreement of estimators from agreement of
 fixed-calibration scores.
+
+## Choose what to save
+
+Save a fitted analysis or
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) when you need to
+revisit its diagnostics and reports. A portable `mfrm_calibration` has a
+different purpose: scoring new response rows without the training fit or
+training responses. Use `save_mfrm_calibration()` and
+`load_mfrm_calibration()` for that artifact. Save an already computed
+`mfrm_calibration_score` with
+[`saveRDS()`](https://rdrr.io/r/base/readRDS.html) to reproduce its
+tables and figures without scoring the responses again. A CSV is a
+table, not a replacement for any of these complete objects.
+
+Validation checks the saved parameters, scoring settings and model
+checks; freezing marks that calibration as ready for scoring without
+changing it. These steps do not establish model fit, lack of bias or
+suitability for another population. New Persons may use known calibrated
+facet levels. An unknown rater, task or score category requires an
+appropriate calibration workflow; assigning an existing level's name is
+not a way to extend the calibration. Missing responses are not zero
+scores. With `missing_response = "omit"`, inspect row dispositions and
+Persons who could not be scored.
+
+Older saved objects are checked against their recorded format and
+evidence. Inspect `review_mfrm_calibration()` if a file has missing or
+inconsistent records. Do not change saved check results to force
+acceptance. If checks of the original fitted model are missing,
+re-extract from that saved model if it passes the current checks; when
+only the score records are incomplete, score again from a valid frozen
+artifact. Neither action means that model refitting is automatically
+necessary.
+
+## Conditional ability decisions
+
+Supply `cut_scores` on the calibration's ability scale to obtain
+`decisions`, with one row per Person and requested event.
+`Type = "above_cut"` gives \\P(\theta \> c \mid y, \widehat\psi)\\;
+`Type = "ability_band"` gives the probability between successive cuts,
+including the two outer bands. `Lower < ability <= Upper` defines every
+row. `Label` uses the supplied cut names (or `Cut1`, ...) and `Band1`,
+... in increasing order. These events overlap: only the ability-band
+probabilities sum to one.
+
+`PriorMean` and `PriorSD` record the actual Person-specific normal
+prior; `Status` and `Reason` retain scoring availability.
+`available_conditional` means the applicable numerical checks passed,
+not that the model or the cut's substantive meaning has been validated.
+`review_only` requires inspection before interpretation. Source-roster
+scoring may return `prior_only` for missing-only Persons; portable
+scoring instead retains them as `unavailable` with `NA` probabilities.
+Fitted-object scoring omits Persons with no retained rows; inspect its
+row and population reviews. A Person absent from the input is never
+invented.
+
+Probabilities integrate the continuous posterior, rather than counting
+[`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md)
+draws or applying a normal approximation to EAP/SD. They condition on
+point calibration, population/prior parameters and supplied cuts, as
+recorded in `Uncertainty`. They do not propagate estimation error,
+compare two Persons or predict passing a future test. CEFR labels
+require externally justified cuts on this same scale. Very small tails
+have absolute, not relative, numerical accuracy; a returned zero or one
+is not a claim of impossibility or certainty.
+
+Review the scoring population as well as the calibration. An estimated
+normal prior is treated as known during scoring; its sampling
+uncertainty can matter especially with a small calibration cohort. A
+larger calibration cohort can improve parameter precision without
+correcting a prior that mismatches a new population's mean, spread or
+shape. Passing numerical checks does not establish that probabilities
+are accurate for that new population. A fixed reference prior is not a
+universal remedy: justify it for the target population on the
+calibration scale. If a prior override is supported, comparing
+externally justified alternatives is a sensitivity analysis, not
+evidence that the alternative giving the preferred classification is
+valid. Population-averaged accuracy also does not guarantee accuracy
+near each cut, within every subgroup or for each individual Person.
+
+Use
+[`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+for eligible ordinary RSM MML source Persons,
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+for ordinary RSM/PCM MML or JML fitted-object scoring, and
+`score_mfrm_calibration()` for eligible continuous-posterior RSM/PCM
+artifacts. Each route retains its existing source and population
+restrictions. Unit weights are required; GPCM, shared-rater and testlet
+cut probabilities are not supported. JML uses a separate scoring prior,
+not a population estimated by JML. `NULL` leaves the existing output
+unchanged.
+
+`summary(x)$decisions` and
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+with `which = "decisions"` reuse saved probabilities without rounding
+them. Fitted-object and portable score batches also support
+[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
+and
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
+Save the complete result with
+[`saveRDS()`](https://rdrr.io/r/base/readRDS.html) to retain cuts,
+priors and review states for later reporting. Existing score plots
+display EAPs and intervals, not these event probabilities.
 
 ## References
 
@@ -371,4 +518,11 @@ reference](https://conquestmanual.acer.org/s4-00.html).
 
 [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md),
 [mfrm_calibration_score_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md)
-for concise review and visualization of returned score batches.
+for an executable scoring example, concise review and visualization of
+returned score batches;
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md),
+[`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md),
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+and
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
+for saved-score tables.

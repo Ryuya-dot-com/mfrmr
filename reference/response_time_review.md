@@ -119,7 +119,7 @@ timing data before summary or plotting; no MFRM refit is needed.
 
 ## See also
 
-[`plot_response_time_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_response_time_review.md),
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_response_time_review.md),
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md),
 [`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md)
@@ -173,5 +173,5 @@ summary(rt)
 #> - Rates describe valid timed rows only; each group retains input and excluded counts. A group without valid times is unassessed.
 #> - Sample quantiles describe the observed distribution, not validated rapid-guessing, low-effort or speed cutoffs. Missing times and censoring are not modeled.
 #> - Score-level summaries are descriptive and should not be read as response-time model parameters.
-plot_response_time_review(rt, draw = FALSE)
+plot(rt, draw = FALSE)
 ```
