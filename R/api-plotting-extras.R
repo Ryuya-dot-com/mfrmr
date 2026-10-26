@@ -206,18 +206,12 @@ plot_threshold_ladder <- function(fit,
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Compute diagnostics once for the following checks
-#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostics <- example_fit$diagnostics
 #'
 #' # Compare each person's Infit and Outfit with the reference value of 1
 #' plot(fit, type = "person_fit", diagnostics = diagnostics)
@@ -622,18 +616,12 @@ plot_person_fit <- function(fit,
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Compute diagnostics once for the following checks
-#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostics <- example_fit$diagnostics
 #'
 #' # Compare signed severity estimates and their intervals
 #' severity <- plot(fit, type = "rater_severity", diagnostics = diagnostics, show_bands = FALSE)
@@ -1147,8 +1135,9 @@ plot_dif_summary <- function(x,
 #'
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' p <- plot(fit, type = "apa_summary", draw = FALSE)
 #' names(p$data)
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults

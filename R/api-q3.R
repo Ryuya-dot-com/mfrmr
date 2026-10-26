@@ -162,8 +162,9 @@
 #' @seealso [plot(x, type = "local_dependence")][plot.mfrm_fit], [diagnose_mfrm()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' q3 <- q3_statistic(fit)
 #' q3$summary
 #' # Look for: use MaxAbsQ3 and the pair table to rank follow-up. The default

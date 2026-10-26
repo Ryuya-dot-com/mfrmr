@@ -181,9 +181,9 @@ plan.
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "JML", maxit = 300
-)
+# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 bundle <- build_summary_table_bundle(fit)
 bundle$table_index
 summary(bundle)$role_summary

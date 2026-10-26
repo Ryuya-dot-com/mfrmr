@@ -101,8 +101,10 @@ This renderer is internal. Use the corresponding \code{plot()} route in
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
 p <- plot(fit, type = "facet_dashboard", diagnostics = diag, draw = FALSE)
 p$data$plot
 }

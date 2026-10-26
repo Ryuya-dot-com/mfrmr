@@ -161,18 +161,12 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
 
-# Fit the model
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  model = "RSM"
-)
+# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 
 # Compute diagnostics once for the following checks
-diagnostics <- diagnose_mfrm(fit)
+diagnostics <- example_fit$diagnostics
 
 # Read the interpretation status before reviewing the quality-control (QC) panels
 review <- summary(diagnostics)

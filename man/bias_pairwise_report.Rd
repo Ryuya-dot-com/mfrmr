@@ -200,8 +200,10 @@ summaries and fixed-report plots reject older pairwise calculations.
 
 \examples{
 toy <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
 out <- bias_pairwise_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
 s <- summary(out)
 s$summary

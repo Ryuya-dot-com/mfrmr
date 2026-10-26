@@ -1,3 +1,40 @@
+test_that("ordinary saved inputs retain their data and replay matching diagnostics", {
+  blocked <- function(...) stop("Unexpected statistical recomputation")
+  local_mocked_bindings(fit_mfrm = blocked, diagnose_mfrm = blocked,
+    .package = "mfrmr")
+  for (name in c("core-jml", "bias-jml", "operational-mml", "operational-mml-preserve")) {
+    x <- readRDS(system.file("examples", paste0(name, ".rds"),
+      package = "mfrmr", mustWork = TRUE))
+    before <- unserialize(serialize(x, NULL))
+    expected_dataset <- if (name == "core-jml") "example_core" else if (
+      name == "bias-jml") "example_bias" else "example_operational"
+    expect_identical(x$dataset, expected_dataset)
+    ratings <- load_mfrmr_data(x$dataset)
+    expect_equal(nrow(x$fit$prep$data), nrow(ratings))
+    for (column in c("Person", "Rater", "Criterion", "Score"))
+      expect_identical(as.character(x$fit$prep$data[[column]]),
+        as.character(ratings[[column]]))
+    expect_equal(x$fit$prep$n_person, length(unique(ratings$Person)))
+    expect_identical(x$fit$config$model, "RSM")
+    method <- if (grepl("jml", name)) "JML" else "MML"
+    expect_identical(x$fit$config$method, method)
+    expect_equal(x$fit$config$estimation_control$maxit,
+      if (method == "JML") 300 else 400)
+    expect_equal(x$fit$config$estimation_control$quad_points, 31)
+    expect_identical(x$diagnostics$diagnostic_mode, "both")
+    expect_identical(x$diagnostics$residual_pca_mode, "none")
+    res <- mfrm_results(x$fit, diagnostics = x$diagnostics, compute = "never")
+    expect_s3_class(res, "mfrm_results")
+    expect_equal(plot(res, type = "wright", draw = FALSE)$data,
+      plot_data(res, type = "wright"))
+    expect_identical(x, before)
+  }
+  recipe <- new.env(parent = baseenv())
+  sys.source(system.file("examples", "ordinary-fits.R", package = "mfrmr",
+    mustWork = TRUE), envir = recipe)
+  expect_true(is.function(recipe$ordinary_fit_examples))
+})
+
 test_that("saved measurement fits retain controls and support consumers without refitting", {
   x <- readRDS(system.file("examples", "measurement-fits.rds",
     package = "mfrmr", mustWork = TRUE))

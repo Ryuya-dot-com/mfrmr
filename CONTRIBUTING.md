@@ -143,6 +143,9 @@ examples lasting a few seconds each and minimal check CPU time. Long tests or
 vignette calculations may be optional, provided the remaining checks exercise
 all package features. Keep Rd examples useful and short on slower Windows check
 hosts; retain substantial analyses in tutorials and the complete test suite.
+The [CRAN Cookbook](https://contributor.r-project.org/cran-cookbook/docs_issues.html#overall-checktime)
+also documents an `Overall checktime` NOTE above ten minutes. This is a
+submission-review criterion, not an automatic ten-minute process timeout.
 
 - Classify the example's purpose before changing its workload. Keep generation,
   estimation and inference examples live. For `summary()`, `plot()` and other
@@ -152,6 +155,12 @@ hosts; retain substantial analyses in tutorials and the complete test suite.
   complete regeneration recipe. Keep settings, warnings and failed runs in the
   saved object, and explain that a one-replication example illustrates structure,
   not simulation precision. The generator entry-point examples remain live.
+- Ordinary table, plot and report examples reuse fitted inputs and matching
+  diagnostics from `inst/examples/*-jml.rds` and `operational-mml*.rds`.
+  `inst/examples/ordinary-fits.R` gives their complete regeneration recipe.
+  Each example loads its own input, so `example()` works in a fresh session
+  without a previously executed example or a hidden package-wide fit cache.
+  Keep the estimation and diagnostic entry-point examples live.
 - Use `example_operational` for applied tutorials, `example_core` for
   idealized fast checks, and `example_bias` only when a planted non-null
   DFF/bias signal is needed.
@@ -235,6 +244,20 @@ hosts; retain substantial analyses in tutorials and the complete test suite.
   report dependency setup, build and installation separately. Preserve actual
   skips and unfinished steps. A focused check and the exhaustive
   `NOT_CRAN=true` regression job provide different evidence.
+- `devtools::check()` defaults to `env_vars = c(NOT_CRAN = "true")`, which
+  runs the full **packaged** suite. To time the ordinary CRAN selection, set
+  `env_vars = c(NOT_CRAN = "false")`. This alone does not reproduce win-builder:
+  devtools also defaults to omitting the PDF manual, remote incoming checks
+  and strict Suggests availability. For a staged source archive, use:
+
+  ```r
+  devtools::check_built("mfrmr_0.2.4.tar.gz", cran = TRUE,
+    env_vars = c(NOT_CRAN = "false"), args = "--timings",
+    manual = TRUE, remote = TRUE, force_suggests = TRUE)
+  ```
+
+  See the [devtools check reference](https://devtools.r-lib.org/reference/check).
+  Record R, OS and dependency versions; local timing is not a Windows result.
 - When reusing executed articles with `--no-build-vignettes`, retain their
   `build/vignette.rds` index as well as `inst/doc`. Verify that its source,
   output and extracted R filenames match the current packaged articles;

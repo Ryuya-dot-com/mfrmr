@@ -165,8 +165,9 @@ rerun the G-study with the original data to obtain row accounting.
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
+# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 if (requireNamespace("lme4", quietly = TRUE)) {
   gt <- mfrm_generalizability(fit)
   gt$variance_components

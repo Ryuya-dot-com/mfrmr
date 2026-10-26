@@ -234,7 +234,9 @@ associations, not automatically latent dimensions. See
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
+# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 diag <- diagnose_mfrm(fit, residual_pca = "both")
 pca <- analyze_residual_pca(diag, mode = "both")
 pca2 <- analyze_residual_pca(fit, mode = "both")

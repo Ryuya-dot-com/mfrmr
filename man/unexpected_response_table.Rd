@@ -130,15 +130,10 @@ See \link{mfrmr_compatibility_layer} for migration instructions.
 \examples{
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  model = "RSM"
-)
-diagnostics <- diagnose_mfrm(fit)
+# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diagnostics <- example_fit$diagnostics
 unexpected <- unexpected_response_table(
   fit, diagnostics = diagnostics, abs_z_min = 1.5, prob_max = 0.4, top_n = 5
 )

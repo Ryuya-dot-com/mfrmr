@@ -510,9 +510,10 @@ validate_bias_results_input <- function(bias_results,
 #'   [make_anchor_table()], [reporting_checklist()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 #' manifest$summary[, c("Model", "Method", "Observations", "Facets")]
 #' manifest$available_outputs[, c("Component", "Available")]
@@ -1246,14 +1247,9 @@ build_mfrm_session_info_table <- function() {
 #' @examples
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
 #' replay$summary[, c("ScriptMode", "ResidualPCA", "BiasPairs")]
 #' cat(substr(replay$script, 1, 120))
@@ -4529,9 +4525,10 @@ review_conquest_overlap <- function(bundle,
 #'   [apa_table()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' appendix <- export_summary_appendix(
 #'   list(fit = fit, diagnostics = diag),
 #'   output_dir = tempdir(),
@@ -5111,9 +5108,10 @@ export_summary_appendix <- function(x,
 #'   [reporting_checklist()], [export_summary_appendix()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' bundle <- export_mfrm_bundle(
 #'   fit,
 #'   diagnostics = diag,

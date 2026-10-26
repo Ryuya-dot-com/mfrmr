@@ -409,15 +409,9 @@ plot_component_note <- function(name, role) {
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Draw the Wright map and keep its reusable data
 #' wright <- plot(fit)
@@ -520,15 +514,9 @@ plot_data <- function(x, component = NULL, type = NULL, ...,
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Discover which tables the default Wright map provides without drawing it
 #' plot_data_components(fit)
@@ -1181,18 +1169,12 @@ format_marginal_pair_label <- function(facet, level1, level2) {
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Compute diagnostics once for the following checks
-#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostics <- example_fit$diagnostics
 #'
 #' # Which score categories occur more or less often than the model expects?
 #' plot(diagnostics, type = "marginal_fit")
@@ -1432,18 +1414,12 @@ plot_marginal_fit <- function(x,
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Compute diagnostics once for the following checks
-#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostics <- example_fit$diagnostics
 #'
 #' # Which pairs show more or less exact agreement than the model expects?
 #' plot(diagnostics, type = "marginal_pairwise")
@@ -1682,7 +1658,9 @@ plot_marginal_pairwise <- function(x,
 #'   [plot(x, type = "qc")][plot.mfrm_fit], [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' p <- plot(fit, type = "unexpected", abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
 #' if (interactive()) {
 #'   plot(fit, type = "unexpected", abs_z_min = 1.5, prob_max = 0.4,
@@ -1940,18 +1918,12 @@ plot_unexpected <- function(x,
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Compute diagnostics once for the following checks
-#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostics <- example_fit$diagnostics
 #'
 #' # How do the observed and reference-adjusted person averages compare?
 #' plot(fit, type = "fair_average", diagnostics = diagnostics,
@@ -2238,7 +2210,9 @@ plot_fair_average <- function(x,
 #' @concept displacement
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' p <- plot(fit, type = "displacement", anchored_only = FALSE, draw = FALSE)
 #' if (interactive()) {
 #'   plot(fit, type = "displacement", anchored_only = FALSE, view = "lollipop", preset = "publication")
@@ -2497,15 +2471,9 @@ plot_displacement <- function(x,
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Compare observed exact agreement with its model-expected baseline
 #' plot(fit, type = "agreement", rater_facet = "Rater")
@@ -2752,7 +2720,9 @@ plot_interrater_agreement <- function(x,
 #' @seealso [facets_chisq_table()], [plot(x, type = "agreement")][plot.mfrm_fit], [plot(x, type = "qc")][plot.mfrm_fit]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' p <- plot(fit, type = "facets_chisq", draw = FALSE)
 #' if (interactive()) {
 #'   plot(fit, type = "facets_chisq", draw = TRUE, view = "fixed",
@@ -2984,18 +2954,12 @@ plot_facets_chisq <- function(x,
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Compute diagnostics once for the following checks
-#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostics <- example_fit$diagnostics
 #'
 #' # Read the interpretation status before reviewing the quality-control (QC) panels
 #' review <- summary(diagnostics)
@@ -3473,18 +3437,12 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Compute diagnostics once for the following checks
-#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostics <- example_fit$diagnostics
 #'
 #' # Compare facet estimates (horizontal axis) with Infit (vertical axis)
 #' plot(fit, type = "bubble", diagnostics = diagnostics)
@@ -3784,18 +3742,12 @@ plot_bubble <- function(x,
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Compute diagnostics once for the following checks
-#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostics <- example_fit$diagnostics
 #'
 #' # Use a new temporary folder for this example; choose a permanent one for your work
 #' output_dir <- tempfile("mfrmr-tables-")
@@ -3991,15 +3943,9 @@ export_mfrm_tables <- function(fit,
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Extract estimates and select the rows to display
 #' estimates <- as.data.frame(fit)

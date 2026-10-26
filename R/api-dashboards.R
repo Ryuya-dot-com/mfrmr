@@ -645,8 +645,10 @@ dashboard_draw_plot <- function(tbl,
 #' @seealso [facet_quality_dashboard()], [plot(x, type = "facet_dashboard")][plot.mfrm_fit]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' summary(facet_quality_dashboard(fit, diagnostics = diag))
 #' @export
 summary.mfrm_facet_dashboard <- function(object, digits = 3, top_n = 10, ...) {
@@ -749,8 +751,10 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' @seealso [facet_quality_dashboard()], [summary.mfrm_facet_dashboard()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' p <- plot(fit, type = "facet_dashboard", diagnostics = diag, draw = FALSE)
 #' p$data$plot
 #' @keywords internal

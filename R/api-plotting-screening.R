@@ -47,8 +47,9 @@
 #'
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' p <- plot(fit, type = "guttman", draw = FALSE)
 #' dim(p$data$matrix)
 #' # Look for: a clean monotone "staircase" of higher scores in the
@@ -227,8 +228,9 @@ plot_guttman_scalogram <- function(fit,
 #'
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' p <- plot(fit, type = "residual_qq", draw = FALSE)
 #' head(p$data$data)
 #' # Look for: points hugging the y = x reference line. Heavy upper-
@@ -525,8 +527,9 @@ plot_rater_trajectory <- function(fits,
 #'
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' p <- plot(fit, type = "agreement", view = "heatmap", draw = FALSE)
 #' dim(p$data$matrix)
 #' # Look for (default `metric = "exact"`):

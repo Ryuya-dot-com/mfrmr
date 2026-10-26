@@ -1,45 +1,55 @@
-design_evaluation_denominator_fixture <- function() {
-  # Public evaluation shape with known outcomes; no simulated responses or fits.
-  prototype <- mfrmr:::design_eval_result_prototype()
-  available <- prototype[rep(NA_integer_, 2), ]
-  for (name in names(available)) {
-    available[[name]] <- if (is.character(prototype[[name]])) rep("", 2) else if (
-      is.logical(prototype[[name]])) rep(FALSE, 2) else rep(0, 2)
+design_evaluation_denominator_fixture <- local({
+  planning_schema <- NULL
+  function() {
+    # Public evaluation shape with known outcomes; no simulated responses or fits.
+    prototype <- mfrmr:::design_eval_result_prototype()
+    available <- prototype[rep(NA_integer_, 2), ]
+    for (name in names(available)) {
+      available[[name]] <- if (is.character(prototype[[name]])) rep("", 2) else if (
+        is.logical(prototype[[name]])) rep(FALSE, 2) else rep(0, 2)
+    }
+    available$design_id <- "D1"
+    available$rep <- 1L
+    available$Facet <- c("Rater", "Criterion")
+    available$n_person <- 30L
+    available$n_rater <- 3L
+    available$n_criterion <- 3L
+    available$raters_per_person <- 2L
+    available$Converged <- TRUE
+    available$RecoveryComparable <- TRUE
+    available$Separation <- 3
+    available$Reliability <- .9
+    available$SeverityRMSE <- .1
+    available$MinCategoryCount <- 20
+    complete <- dplyr::bind_rows(lapply(1:10, function(rep) {
+      row <- available
+      row$design_id <- "D2"
+      row$n_person <- 40L
+      row$rep <- rep
+      row
+    }))
+    runs <- data.frame(
+      design_id = rep(c("D1", "D2", "D3"), each = 10),
+      rep = rep(1:10, 3),
+      RunOK = c(TRUE, rep(FALSE, 9), rep(TRUE, 10), rep(FALSE, 10)),
+      Converged = c(TRUE, rep(FALSE, 9), rep(TRUE, 10), rep(FALSE, 10)),
+      RaterComponents = 1L, CriterionComponents = 1L,
+      ElapsedSec = 0
+    )
+    out <- structure(list(results = dplyr::bind_rows(available, complete),
+      rep_overview = runs), class = "mfrm_design_evaluation")
+    # Real evaluation objects already carry this deterministic design metadata.
+    # Reuse only that unchanged input; summaries and decisions still run afresh.
+    if (is.null(planning_schema))
+      planning_schema <<- mfrmr:::simulation_object_planning_schema(out)
+    out$planning_schema <- planning_schema
+    out
   }
-  available$design_id <- "D1"
-  available$rep <- 1L
-  available$Facet <- c("Rater", "Criterion")
-  available$n_person <- 30L
-  available$n_rater <- 3L
-  available$n_criterion <- 3L
-  available$raters_per_person <- 2L
-  available$Converged <- TRUE
-  available$RecoveryComparable <- TRUE
-  available$Separation <- 3
-  available$Reliability <- .9
-  available$SeverityRMSE <- .1
-  available$MinCategoryCount <- 20
-  complete <- dplyr::bind_rows(lapply(1:10, function(rep) {
-    row <- available
-    row$design_id <- "D2"
-    row$n_person <- 40L
-    row$rep <- rep
-    row
-  }))
-  runs <- data.frame(
-    design_id = rep(c("D1", "D2", "D3"), each = 10),
-    rep = rep(1:10, 3),
-    RunOK = c(TRUE, rep(FALSE, 9), rep(TRUE, 10), rep(FALSE, 10)),
-    Converged = c(TRUE, rep(FALSE, 9), rep(TRUE, 10), rep(FALSE, 10)),
-    RaterComponents = 1L, CriterionComponents = 1L,
-    ElapsedSec = 0
-  )
-  structure(list(results = dplyr::bind_rows(available, complete),
-    rep_overview = runs), class = "mfrm_design_evaluation")
-}
+})
 
 test_that("design recommendations retain failed runs in convergence denominators", {
   x <- design_evaluation_denominator_fixture()
+  x$planning_schema <- NULL # Exercise reconstruction for legacy saved results.
   runs <- x$rep_overview
   build_schema <- mfrmr:::simulation_planning_schema
   schema_calls <- 0L
@@ -179,6 +189,7 @@ test_that("a design must provide every requested facet before it can pass", {
 
 test_that("default facet requests retain stored custom names when results are missing", {
   x <- design_evaluation_denominator_fixture()
+  x$planning_schema <- NULL # Custom facet labels need their own schema.
   x$settings <- list(facet_names = c(rater = "Judge", criterion = "Task"))
   x$results$Facet <- ifelse(x$results$Facet == "Rater", "Judge", "Task")
   x$results <- x$results[x$results$Facet == "Judge", ]

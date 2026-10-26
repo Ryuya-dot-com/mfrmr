@@ -102,9 +102,10 @@ conclusions about a rater.
 
 \examples{
 ratings <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
-diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diagnostics <- example_fit$diagnostics
 bias <- estimate_bias(fit, diagnostics = diagnostics,
   facet_a = "Rater", facet_b = "Criterion")
 p <- plot(bias, type = "ranked", preset = "publication", draw = FALSE)

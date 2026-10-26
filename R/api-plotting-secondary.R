@@ -58,8 +58,9 @@
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' p <- plot(fit, type = "local_dependence", draw = FALSE)
 #' dim(p$data$matrix)
 #' # Inspect large absolute correlations alongside shared-person counts.
@@ -176,8 +177,9 @@ plot_local_dependence_heatmap <- function(fit,
 #' @seealso [diagnose_mfrm()], [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' p <- plot(fit, type = "reliability", draw = FALSE)
 #' p$data$table
 #' # High Person value: distinguishable abilities.
@@ -316,8 +318,9 @@ plot_reliability_snapshot <- function(fit,
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' p <- plot(fit, type = "residual_matrix", top_n_persons = 12, draw = FALSE)
 #' dim(p$data$matrix)
 #' # Look for: |residual| > 2 or > 3 crosses conventional two- or
@@ -463,8 +466,9 @@ plot_residual_matrix <- function(fit,
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' fit_eb <- apply_empirical_bayes_shrinkage(fit)
 #' p <- plot(fit_eb, type = "shrinkage", view = "funnel", draw = FALSE)
 #' head(p$data$table)

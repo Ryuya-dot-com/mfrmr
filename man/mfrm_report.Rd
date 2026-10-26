@@ -414,19 +414,12 @@ with other report styles, even when explicitly supplied as \code{NULL}.
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
 
-# Fit the model
-fit <- fit_mfrm(
-  data = ratings,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  rating_min = 1, rating_max = 4, category_policy = "preserve",
-  method = "MML",
-  model = "RSM"
-)
+# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+example_fit <- readRDS(system.file("examples", "operational-mml-preserve.rds", package = "mfrmr"))
+fit <- example_fit$fit
 
 # Build results, then turn them into a report
-res <- mfrm_results(fit)
+res <- mfrm_results(fit, diagnostics = example_fit$diagnostics)
 report <- mfrm_report(res)
 
 # Read the report and the issues to address

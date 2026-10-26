@@ -105,9 +105,10 @@ intervals omit estimated-anchor uncertainty and cross-refit covariance.
 
 \examples{
 ratings <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
 dff <- analyze_dff(fit, diagnostics = diag,
                    facet = "Rater", group = "Group", data = ratings)
 unique(dff$dif_table$ClassificationSystem)

@@ -143,8 +143,9 @@ established ML packages for a separately designed prediction study.
 
 \examples{
 ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 300)
+# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 net <- mfrm_residual_network(fit, facet = "Criterion", missing = "complete",
                              clusters = 2)
 net$pairs                 # association, shared-person count, unavailability

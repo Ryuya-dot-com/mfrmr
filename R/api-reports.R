@@ -1339,15 +1339,9 @@ fit_measures_table <- function(x,
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Review the input-data checks recorded with this fit
 #' quality <- data_quality_report(fit)
@@ -1479,7 +1473,9 @@ estimation_iteration_report <- function(fit,
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' out <- subset_connectivity_report(fit)
 #' summary(out)
 #' p_sub <- plot(out, draw = FALSE)
@@ -2580,9 +2576,9 @@ network_review_reporting_map <- function() {
 #'   [rater_halo_network_analysis()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 300
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' if (requireNamespace("igraph", quietly = TRUE)) {
 #'   review <- build_mfrm_network_review(fit)
 #'   summary(review)
@@ -3023,9 +3019,9 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
 #'   [mfrm_network_analysis()], [plot.mfrm_bundle()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 300
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' if (requireNamespace("igraph", quietly = TRUE)) {
 #'   rn <- rater_network_analysis(fit, mode = "severity_direction")
 #'   rn$summary
@@ -3903,9 +3899,9 @@ empty_halo_network_bundle <- function(settings, message = NULL) {
 #'   [plot.mfrm_bundle()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 300
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' if (requireNamespace("igraph", quietly = TRUE)) {
 #'   halo <- rater_halo_network_analysis(fit)
 #'   halo$summary
@@ -4451,7 +4447,9 @@ rater_halo_network_analysis <- function(fit,
 #'   [mfrmr_reports_and_tables]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' out <- facet_statistics_report(fit)
 #' summary(out)
 #' p_fs <- plot(out, draw = FALSE)
@@ -4667,18 +4665,12 @@ build_fit_separation_reporting_basis <- function(fit, diagnostics) {
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Review support for standard errors, intervals, and reliability summaries
-#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostics <- example_fit$diagnostics
 #' precision <- precision_review_report(fit, diagnostics = diagnostics)
 #' review <- summary(precision)
 #' review$checks # Check statuses and reasons before making precision claims
@@ -4780,7 +4772,9 @@ precision_review_report <- function(fit, diagnostics = NULL) {
 #'   [mfrmr_reports_and_tables], [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' out <- category_structure_report(fit)
 #' summary(out)
 #' head(out$category_table[, c("Category", "Count", "Infit", "Outfit")])
@@ -4954,7 +4948,9 @@ category_structure_report <- function(fit,
 #'   [mfrmr_reports_and_tables], [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' out <- category_curves_report(fit, theta_points = 101)
 #' summary(out)
 #' head(out$probabilities[, c("CurveGroup", "Theta", "Category", "Probability")])
@@ -5066,8 +5062,10 @@ category_curves_report <- function(fit,
 #' @seealso [estimate_bias()], [build_fixed_reports()], [plot(x, type = "bias")][plot.mfrm_fit]
 #' @examples
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' out <- bias_interaction_report(bias, top_n = 10)
 #' summary(out)
@@ -5143,8 +5141,10 @@ bias_interaction_report <- function(x,
 #' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
 #' @examples
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' out <- bias_iteration_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
 #' summary(out)
 #' @export
@@ -5296,8 +5296,10 @@ bias_iteration_report <- function(x,
 #' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
 #' @examples
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' out <- bias_pairwise_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
 #' s <- summary(out)
 #' s$summary
@@ -5656,18 +5658,12 @@ plot_bias_interaction <- function(x,
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Compute diagnostics once for the following checks
-#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostics <- example_fit$diagnostics
 #'
 #' # Prepare draft wording from the fitted model and diagnostics
 #' apa <- build_apa_outputs(
@@ -6004,8 +6000,10 @@ resolve_apa_output_checks <- function(object) {
 #' @return The input object (invisibly).
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' apa <- build_apa_outputs(fit, diag)
 #' apa$report_text
 #' @export
@@ -6052,8 +6050,10 @@ print.mfrm_apa_text <- function(x, ...) {
 #' @seealso [build_apa_outputs()], [summary()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' apa <- build_apa_outputs(fit, diag)
 #' summary(apa)
 #' @export
@@ -8449,9 +8449,9 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #'   [build_weighting_review()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 300
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' bundle <- build_summary_table_bundle(fit)
 #' bundle$table_index
 #' summary(bundle)$role_summary
@@ -9643,9 +9643,9 @@ summary_table_bundle_reporting_map <- function(bundle, catalog) {
 #' @seealso [build_summary_table_bundle()], [apa_table()], [plot()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 300
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' bundle <- build_summary_table_bundle(fit)
 #' summary(bundle)
 #' @export
@@ -9981,9 +9981,9 @@ summary_table_bundle_filter_selection_tables <- function(tbl, appendix_preset) {
 #' @seealso [build_summary_table_bundle()], [apa_table()], [plot.apa_table()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 300
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' bundle <- build_summary_table_bundle(fit)
 #' plot(bundle, draw = FALSE)
 #' plot(bundle, type = "numeric_profile", which = "facet_overview", draw = FALSE)
@@ -10561,15 +10561,9 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Fit the model
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   model = "RSM"
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #'
 #' # Turn one summary table into a table with a caption and note
 #' results <- summary(fit)
@@ -11036,7 +11030,9 @@ as_flextable <- function(x, ...) UseMethod("as_flextable")
 #' @seealso [apa_table()], [plot()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' tbl <- apa_table(fit, which = "summary")
 #' summary(tbl)
 #' @export
@@ -11145,7 +11141,9 @@ print.summary.apa_table <- function(x, ...) {
 #' @seealso [apa_table()], [summary()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' tbl <- apa_table(fit, which = "summary")
 #' p <- plot(tbl, draw = FALSE)
 #' p2 <- plot(tbl, type = "first_numeric", draw = FALSE)
@@ -13321,9 +13319,9 @@ facets_fit_review_guidance <- function(model, external_supplied) {
 #'   [mfrmr_compatibility_layer]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 300
-#' )
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
 #' review <- facets_fit_review(fit)
 #' summary(review)
 #' @export
@@ -13531,8 +13529,10 @@ facets_fit_review <- function(fit,
 #'   [mfrmr_compatibility_layer]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' contract_review <- facets_output_contract_review(fit, diagnostics = diag, branch = "facets")
 #' summary(contract_review)
 #' p <- plot(contract_review, draw = FALSE)
@@ -13874,8 +13874,10 @@ facets_output_contract_review <- function(fit,
 #' @seealso [facets_output_contract_review()], [diagnose_mfrm()], [build_fixed_reports()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' fit <- example_fit$fit
+#' diag <- example_fit$diagnostics
 #' review <- reference_case_review(fit, diagnostics = diag)
 #' summary(review)
 #' @name reference_case_review
