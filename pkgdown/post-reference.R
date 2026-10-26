@@ -63,6 +63,12 @@ local({
       "effects; these do not guarantee exact coverage or simultaneous coverage across scores."))
 
   descriptions <- list(
+    plot.mfrm_posterior_summary = paste(
+      "Saved posterior means for three tasks and six raters on a fixed N(0,1)",
+      "ability scale. Diamonds mark fixed Task t1 and Rater r1 values without",
+      "estimated intervals. Open circles and dashed 95 percent credible",
+      "intervals mark the other estimates, all requiring sampling review.",
+      "The short-chain synthetic example does not establish model adequacy."),
     plot.mfrm_facets_results = c(paste(
       "Reported FACETS measures for six synthetic Persons. Downward and upward",
       "triangles mark extreme-score adjustments, a square marks a direct/group",

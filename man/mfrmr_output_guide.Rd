@@ -137,7 +137,10 @@ For \code{GPCM}, use \code{scope = "gpcm"} to find both the support matrix
 and the table that explains how out-of-scope routes are handled.
 Use \code{scope = "exports"} to distinguish saved-analysis archives from
 \code{\link[=export_mfrm_model]{export_mfrm_model()}}, which generates a Stan/brms model for a separate
-Bayesian analysis with explicit priors.
+Bayesian analysis with explicit priors. That route returns to mfrmr through
+\code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}}: inspect \code{summary(x)} before using \code{plot(x)},
+\code{confint(x)} or \code{\link[=mfrm_report]{mfrm_report()}}. Other interval levels, contrasts and
+predictions require the backend's joint draws.
 }
 
 \section{Check the model before following a route}{

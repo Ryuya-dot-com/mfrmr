@@ -86,6 +86,9 @@
 #'   [export_mfrm_model()] writes code, data, mappings and explicit Bayesian
 #'   priors for supported ordinary MML specifications. Export does not run a
 #'   sampler; posterior credible intervals are distinct from MML intervals.
+#'   After sampling, use [read_mfrm_posterior()] to read the saved summary,
+#'   inspect its sampling review, and continue with `plot()`, `confint()` and
+#'   [mfrm_report()]. The summary does not contain joint posterior draws.
 #' - "Did a simulation recover the known generating parameters well enough?"
 #'   Use [simulate_mfrm_recovery()] for the recovery study,
 #'   [assess_mfrm_recovery()] for the adequacy checklist, and then
@@ -345,7 +348,10 @@ NULL
 #' and the table that explains how out-of-scope routes are handled.
 #' Use `scope = "exports"` to distinguish saved-analysis archives from
 #' [export_mfrm_model()], which generates a Stan/brms model for a separate
-#' Bayesian analysis with explicit priors.
+#' Bayesian analysis with explicit priors. That route returns to mfrmr through
+#' [read_mfrm_posterior()]: inspect `summary(x)` before using `plot(x)`,
+#' `confint(x)` or [mfrm_report()]. Other interval levels, contrasts and
+#' predictions require the backend's joint draws.
 #'
 #' @section Check the model before following a route:
 #' The six-step beginner route starts with ordinary RSM/PCM. The result class
@@ -1399,14 +1405,14 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
 
   model_export_row <- data.frame(
     Scope = "exports",
-    Question = "Estimate an RSM/PCM or GPCM specification externally",
+    Question = "Estimate externally and bring saved Bayesian summaries into figures and reports",
     OutputFamily = "export",
-    MainFunction = "export_mfrm_model()",
-    UseWhen = "You need editable model code for an external Bayesian analysis or prior sensitivity.",
+    MainFunction = "export_mfrm_model(); read_mfrm_posterior()",
+    UseWhen = "You need editable model code for an external Bayesian analysis, or want to report its saved estimates and credible intervals in mfrmr.",
     TypicalInput = "Unit-weight RSM/PCM or one-family GPCM MML (Stan or brms), or two-family GPCM MML (Stan only), with fixed N(0,1). Supported fixed facet/group and retained step constraints are preserved; no interactions or shrinkage.",
-    NextStep = "Review code, priors, levels.csv, categories.csv, steps.csv where supplied and, for GPCM, slope-levels.csv; run run.R in the bundle directory, then inspect sampler diagnostics and posterior predictive fit.",
+    NextStep = "Review the model and priors, then run run.R. Return with x <- read_mfrm_posterior(directory); inspect summary(x) and x$checks before confint(x), plot(x) or mfrm_report(x). Use as_ggplot() and plot_data() for custom figures. See ?read_mfrm_posterior for saved reuse.",
     GPCMStatus = "one-family Stan/brms; two-family Stan only",
-    Notes = "Exports code and observed data without sampling or installing software. Proper structural priors define a Bayesian analysis; posterior credible intervals do not reproduce or qualify MML confidence intervals. Exact anchors carry no external calibration uncertainty. Original labels are retained; review before sharing.",
+    Notes = "The reader checks saved-summary consistency, not model adequacy. Stored 95% credible intervals retain fixed-value and sampling-review flags; joint draws are required for new intervals, contrasts or predictions. Default estimated-population GPCM cannot be exported unchanged. Exact anchors exclude calibration uncertainty. Original labels are retained; review before sharing.",
     stringsAsFactors = FALSE
   )
 
@@ -1552,8 +1558,8 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
   out$DecisionBoundary[targeted] <- out$Notes[targeted]
   batch_bias <- grepl("estimate_all_bias()", out$MainFunction, fixed = TRUE)
   out$DecisionBoundary[batch_bias] <- out$Notes[batch_bias]
-  model_export <- out$MainFunction == "export_mfrm_model()"
-  out$ObjectRole[model_export] <- "external model code and data"
+  model_export <- out$MainFunction == model_export_row$MainFunction
+  out$ObjectRole[model_export] <- "external model and saved posterior summary workflow"
   out$DecisionBoundary[model_export] <- out$Notes[model_export]
   out$ObjectRole[dedicated] <- "dedicated analysis and saved-output workflow"
   out$ObjectRole[out$Scope == "feedback"] <- "rater-feedback route selection"

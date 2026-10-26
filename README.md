@@ -132,6 +132,7 @@ agreement (Krippendorff's alpha and pairwise Cohen's kappa).
 | Check rating links; explore residual patterns | [Networks and reporting](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html) |
 | Choose a model | [Model choice](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.html); [GPCM scope](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html) |
 | Reuse a calibration or move from other software | [Portable calibration](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-portable-calibration.html); [FACETS migration](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facets-migration.html); `?build_conquest_overlap_bundle` |
+| Continue in Stan/brms and report saved estimates | [Model export](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.html); [return to figures and reports](https://ryuya-dot-com.github.io/mfrmr/reference/read_mfrm_posterior.html) |
 
 In R, use `mfrmr_output_guide("beginner")` to choose an entry point.
 The public website may be older; `browseVignettes("mfrmr")` matches your installation.

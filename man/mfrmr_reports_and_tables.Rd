@@ -99,6 +99,9 @@ use their own caveated or blocked \code{GPCM} routes.
 \code{\link[=export_mfrm_model]{export_mfrm_model()}} writes code, data, mappings and explicit Bayesian
 priors for supported ordinary MML specifications. Export does not run a
 sampler; posterior credible intervals are distinct from MML intervals.
+After sampling, use \code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}} to read the saved summary,
+inspect its sampling review, and continue with \code{plot()}, \code{confint()} and
+\code{\link[=mfrm_report]{mfrm_report()}}. The summary does not contain joint posterior draws.
 \item "Did a simulation recover the known generating parameters well enough?"
 Use \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} for the recovery study,
 \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} for the adequacy checklist, and then
