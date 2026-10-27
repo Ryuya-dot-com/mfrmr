@@ -9,7 +9,7 @@
 # saved <- simulation_result_examples()
 # for (name in setdiff(names(saved), "generation_warnings")) {
 #   saveRDS(list(result = saved[[name]], generation_warnings = saved$generation_warnings),
-#     paste0("simulation-", gsub("_", "-", name), ".rds"), compress = "gzip")
+#     paste0("simulation-", gsub("_", "-", name), ".rds"), compress = "xz")
 # }
 simulation_result_examples <- function() {
   warnings <- character()
