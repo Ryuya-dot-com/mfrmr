@@ -78,6 +78,13 @@ local({
         "synthetic PCM analysis. The horizontal axis retains Graphfile measure",
         "coordinates; the legend preserves categories 0, 1, 2 and 3.",
         "Lines join exported points. No confidence intervals are shown.")),
+    plot.mfrm_design_recommendation = paste(
+      "Two simulated designs screened for Person differentiation. Both fail",
+      "separation, reliability and recovery criteria; the second passes misfit",
+      "and convergence criteria. Facet coverage and connectedness pass for",
+      "both. Total and per-rater workload limits were not requested. No plan",
+      "is selected. Colors distinguish pass, fail, unavailable and not requested",
+      "criteria; the screen does not establish inter-rater agreement."),
     plot.mfrm_bias_collection = c(
       paste("Signed conditional bias shifts for all retained Rater by Criterion",
         "cells. The pair label reports screening availability and the range of",
