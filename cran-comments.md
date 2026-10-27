@@ -3,7 +3,8 @@
 ## Changes
 
 This update connects many-facet measurement, G/D studies and rater feedback
-to shared tables, figures and reports. Stan export now retains the default
+to shared tables, figures and reports, including exploratory bias collections.
+Stan export now retains the default
 single-family GPCM's estimated normal population and supported fixed anchors.
 Fixed-population exports also support brms. NEWS and the migration guide
 explain retired plotting helpers and corrections affecting saved analyses.
@@ -11,9 +12,9 @@ explain retired plotting helpers and corrections affecting saved analyses.
 ## Checks
 
 macOS arm64, R 4.6.1, 2026-10-27:
-`R CMD check --as-cran --timings` completed in 520 seconds:
-0 errors, 0 warnings, 0 notes. Examples took 61 seconds; tests took 131 seconds,
-with 12,592 passes and four intentional CRAN skips. Vignette rebuilding and
+`R CMD check --as-cran --timings` completed in 560 seconds:
+0 errors, 0 warnings, 0 notes. Examples took 57 seconds; tests took 131 seconds,
+with 12,627 passes and four intentional CRAN skips. Vignette rebuilding and
 both manuals passed.
 
 Long workflows remain available as explicit `\dontrun{}` examples, with
