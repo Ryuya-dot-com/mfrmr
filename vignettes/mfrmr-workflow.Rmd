@@ -830,11 +830,15 @@ a Bayesian analysis; it does not reproduce MML point estimates or qualify
 frequentist interval coverage. Two-family GMFRM also supports Stan export,
 with explicit component log-slope priors and a `slope-levels.csv` mapping; see
 the [two-family workflow](mfrmr-gpcm-scope.html). One-family GPCM uses
-`log_slope_prior_sd` in both formats, with geometric-mean-one slopes. For that
-route, the source must use `gpcm_mml_identification = "fixed_standard_normal"`.
-The default one-family GPCM estimates the population mean and variance and
-cannot currently be exported. Changing that setting changes the model; do not
-change it merely to enable export.
+`log_slope_prior_sd` in both formats, with geometric-mean-one slopes. For brms,
+the source must use `gpcm_mml_identification = "fixed_standard_normal"`.
+The default one-family GPCM estimates the population mean and variance.
+You can export its intercept-only population to Stan with
+`population_prior = list(mean = c(0, 1), log_sd = c(0, 0.5))`; each pair gives
+the location and scale of a normal prior. The mean and SD are sampled while
+relative slopes and anchors retain the native metric. brms still requires the
+fixed-population specification. Changing that setting changes the model; do not
+change it merely to enable export. Review prior predictions and sensitivity.
 
 Anchor values are exact constraints. `levels.csv` and `steps.csv` in anchored
 or one-family bundles show the prior means, marginal SDs and fixed coordinates.

@@ -12,7 +12,8 @@ export_mfrm_model(
   step_prior_sd = 1,
   overwrite = FALSE,
   acknowledge_sensitive = FALSE,
-  log_slope_prior_sd = 1
+  log_slope_prior_sd = 1,
+  population_prior = list(mean = c(0, 1), log_sd = c(0, 0.5))
 )
 }
 \arguments{
@@ -37,6 +38,12 @@ identifiers are included. Defaults to \code{FALSE}.}
 \item{log_slope_prior_sd}{Positive marginal prior SD of each component log
 slope for GPCM export. Defaults to 1; inspect prior
 sensitivity. Not used by RSM/PCM models.}
+
+\item{population_prior}{Normal prior parameters for an estimated Person
+population: a named list with \code{mean = c(location, scale)} for its mean
+and \code{log_sd = c(location, scale)} for the log of its standard deviation.
+Each scale must be positive. Defaults give \code{mu ~ normal(0, 1)} and
+\code{log(sigma) ~ normal(0, 0.5)}. Unused for fixed-population exports.}
 }
 \value{
 Invisibly, a list with \code{format}, \code{model}, \code{output_dir} and named
@@ -44,23 +51,37 @@ Invisibly, a list with \code{format}, \code{model}, \code{output_dir} and named
 }
 \description{
 Write a self-contained Bayesian model bundle without running an estimator.
-Supports ordinary RSM/PCM and one-family GPCM MML fits in both formats,
-and two-family GPCM in Stan. Fixed facet/group and step anchors are retained.
-Sources must be unit-weight, with
-a fixed standard-normal Person population and no facet interactions or
+Supports ordinary RSM/PCM and fixed-population one-family GPCM MML fits in
+both formats. Estimated-population one-family GPCM and two-family GPCM use
+Stan. Fixed facet/group and step anchors are retained.
+Sources must be unit-weight, with a fixed standard-normal Person population
+or (Stan only, one-family GPCM) an estimated intercept-only normal population,
+and no facet interactions or
 post-fit shrinkage. Unsupported specifications fail before files are written.
 }
 \details{
-The default one-family GPCM estimates its population mean and variance and
-cannot currently be exported. Choosing \code{gpcm_mml_identification = "fixed_standard_normal"} changes the model; it is not a file-format
-conversion. Keep the original fit when its estimated population is intended.
+The default one-family GPCM estimates its population mean and variance.
+Its intercept-only population can be exported to Stan, retaining the native
+metric, relative-slope constraint and supported fixed anchors. The generated
+model uses \code{theta = mu + sigma * z}, with independent standard-normal \code{z}.
+The population mean and SD are sampled, not fixed at their MML estimates.
+\code{population_prior} adds explicit Bayesian priors: by default sigma has median
+1 and a central 95\% prior interval of approximately 0.38 to 2.66. These are
+starting assumptions, not a population-size recommendation; inspect prior
+predictions and sensitivity for your rubric and anchors. The displayed
+Person prior SD includes uncertainty in both mu and sigma, not only sigma.
+Population regression, estimated-mean models with a fixed SD, and estimated-population
+brms or two-family exports are not supported. Choosing
+\code{gpcm_mml_identification = "fixed_standard_normal"} changes the model;
+it is not a file-format conversion or a workaround for these exclusions.
 
 Both formats retain the category ladder, facet signs, facet centering and
 RSM/PCM step ownership of the source specification. RSM/PCM adjacent-category log odds
 are \verb{theta + signed facet locations - step}. Steps follow their declared
 within-owner sum targets (zero by default) and are \strong{not ordered}. A binary
-ladder has its single offset fixed at its target. Ability parameters have independent standard-normal priors; realized
-abilities are not centered across the observed Persons.
+ladder has its single offset fixed at its target. Fixed-population ability
+parameters have independent standard-normal priors; realized abilities are
+not centered across the observed Persons in either population mode.
 
 All supported exports preserve the native logistic metric (L-metric),
 with scaling constant \eqn{D = 1}. No extra 1.7 or 1.702 factor is used.
@@ -156,20 +177,19 @@ anchor <- data.frame(Facet = "Rater",
                      Level = as.character(ratings$Rater[1]), Anchor = 0)
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
                  model = "GPCM", method = "MML", step_facet = "Criterion",
-                 slope_facet = "Criterion",
-                 gpcm_mml_identification = "fixed_standard_normal", anchors = anchor,
+                 slope_facet = "Criterion", anchors = anchor,
                  anchor_policy = "silent")
-# Export runs without Stan or brms. The example data are synthetic.
+# Keep the default estimated population. The example data are synthetic.
+# Export needs neither Stan nor brms installed and runs no sampler.
 stan <- export_mfrm_model(fit, tempfile("mfrmr-stan-"), "stan",
-                           acknowledge_sensitive = TRUE)
-brms <- export_mfrm_model(fit, tempfile("mfrmr-brms-"), "brms",
                            acknowledge_sensitive = TRUE)
 names(stan$files)
 bundle <- readRDS(stan$files[["model-data.rds"]])
 bundle$categories # Generated categories mapped to original scores
+bundle$population # Estimated mean/SD and their priors
 bundle$priors
-# Run each bundle's run.R separately if external sampling is wanted.
-unlink(c(stan$output_dir, brms$output_dir), recursive = TRUE)
+# Run this bundle's run.R separately if external sampling is wanted.
+unlink(stan$output_dir, recursive = TRUE)
 }
 }
 \references{

@@ -81,16 +81,56 @@ test_that("new export routes remain self-contained and validate before writing",
   expect_false(dir.exists(folder))
 })
 
-test_that("default GPCM export explains the population restriction without changing the fit", {
+test_that("default GPCM retains its population in Stan and rejects unsupported brms", {
   fit <- readRDS(test_path("fixtures", "anchored-gpcm.rds"))$shared$fit
-  before <- serialize(fit, NULL)
-  for (format in c("stan", "brms")) {
-    folder <- tempfile()
-    expect_error(export_mfrm_model(fit, folder, format),
-      "estimates its latent population.*fixed N\\(0,1\\).*changes the model.*Keep the original fit")
-    expect_false(dir.exists(folder))
+  before <- unserialize(serialize(fit, NULL))
+  folder <- tempfile(); on.exit(unlink(folder, recursive = TRUE), add = TRUE)
+  out <- export_mfrm_model(fit, folder, "stan", acknowledge_sensitive = TRUE)
+  b <- readRDS(out$files[["model-data.rds"]])
+  expect_identical(b$population$mode, "estimated_normal")
+  expect_identical(b$population$person_levels, fit$config$person_levels)
+  expect_identical(b$constraints$facets, fit$config$facet_specs)
+  expect_equal(b$levels$PriorSD[b$levels$Facet == "Person"],
+    rep(sqrt(1 + exp(.5)), b$stan_data$J))
+  expect_identical(b$schema_version, 2L)
+  expect_equal(as.vector(b$stan_data$population_mean_prior), c(0, 1))
+  expect_equal(as.vector(b$stan_data$population_log_sd_prior), c(0, .5))
+  folder2 <- tempfile()
+  expect_error(export_mfrm_model(fit, folder2, "brms"),
+    "supports format = 'stan' only.*Keep the original fit")
+  expect_false(dir.exists(folder2))
+  expect_identical(fit, before)
+})
+
+test_that("population export validates priors, design and Person alignment before writing", {
+  fit <- readRDS(test_path("fixtures", "anchored-gpcm.rds"))$shared$fit
+  for (prior in list(NULL, list(mean = c(0, 1)), list(mean = c(0, -1), log_sd = c(0, .5)),
+                     list(mean = c(0, 1), log_sd = c(NA, 1)),
+                     list(mean = c(0, 1), other = c(0, 1)))) {
+    path <- tempfile()
+    expect_error(export_mfrm_model(fit, path, population_prior = prior), "population_prior")
+    expect_false(dir.exists(path))
   }
-  expect_identical(serialize(fit, NULL), before)
+  for (modify in list(
+    function(f) { f$config$population_spec$fixed_sd <- 2; f },
+    function(f) { f$config$population_spec$design_matrix[, 1] <- 2; f },
+    function(f) { f$config$population_spec$person_lookup[1] <- 2L; f })) {
+    path <- tempfile()
+    expect_error(export_mfrm_model(modify(fit), path), "intercept-only|Person identities")
+    expect_false(dir.exists(path))
+  }
+  # Person-table order is incidental; the explicit lookup preserves identity.
+  b <- mfrmr:::mfrm_model_export_data(fit, 1, 1)
+  perm <- rev(seq_len(nrow(fit$population$person_table)))
+  fit$population$person_table <- fit$population$person_table[perm, , drop = FALSE]
+  fit$config$population_spec$design_matrix <- fit$config$population_spec$design_matrix[perm, , drop = FALSE]
+  fit$config$population_spec$person_lookup <- match(fit$config$population_spec$person_lookup, perm)
+  expect_identical(mfrmr:::mfrm_model_export_data(fit, 1, 1), b)
+  custom <- mfrmr:::mfrm_model_export_data(fit, 1, 1,
+    population_prior = list(mean = c(.3, .8), log_sd = c(-.2, .4)))
+  expect_identical(custom$priors$population, list(mean = c(.3, .8), log_sd = c(-.2, .4)))
+  expect_equal(custom$levels$PriorSD[custom$levels$Facet == "Person"],
+    rep(sqrt(.8^2 + exp(-.4 + 2 * .4^2)), custom$stan_data$J))
 })
 
 test_that("fully fixed blocks and binary steps do not introduce sampled nuisance coordinates", {

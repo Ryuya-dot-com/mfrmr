@@ -53,6 +53,11 @@ native fitted model. It supports \code{\link[=mfrm_report]{mfrm_report()}}, \cod
 Use the backend's saved fit for new credible levels, contrasts, predictions,
 trace plots or posterior predictive checks. Native scoring and MML/JML
 diagnostics are not available from this object.
+Estimated-population one-family Stan summaries retain the population mean
+and SD as reported parameters. Their schema-2 files require this newer reader;
+existing fixed-population schema-1 summaries remain supported. Use
+\code{plot(x, quantity = "population_sd")} to inspect between-Person variation
+on the native metric. This SD is not an individual Person standard error.
 
 \code{confint()} retrieves the stored equal-tailed 95\% \emph{posterior credible}
 intervals, retaining fixed/unavailable rows and review flags. It does not

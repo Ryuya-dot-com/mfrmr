@@ -1,6 +1,17 @@
 # Shared by both exported runners; no mfrmr installation is needed for replay.
+mfrm_population_label <- function(population = NULL) {
+  if (is.null(population)) return("Fixed N(0,1)")
+  if (!is.list(population) || !identical(population$mode, "estimated_normal") ||
+      !identical(population$formula, "~1") ||
+      !identical(population$parameterization, "noncentered"))
+    stop("Unsupported exported population specification.")
+  "Normal population with estimated mean and SD"
+}
+
 mfrm_parameter_map <- function(bundle) {
   d <- bundle$stan_data
+  population_label <- mfrm_population_label(bundle$population)
+  free_population <- !is.null(bundle$population)
   rows <- list()
   add <- function(variable, quantity, facet, level, fixed, value, anchored, reference, direction, transition = NA_character_) {
     rows[[length(rows) + 1L]] <<- data.frame(variable, quantity, facet, level, transition,
@@ -15,12 +26,21 @@ mfrm_parameter_map <- function(bundle) {
     value <- if (fixed && !is.null(d$location_offset)) d$location_offset[r$Index] else 0
     spec <- bundle$constraints$facets[[r$Facet]]
     anchored <- !is.null(spec) && !is.na(spec$anchors[match(r$Level, spec$levels)])
-    reference <- if (person) "Population N(0,1); observed Persons are not forced to average zero." else
+    reference <- if (person && free_population) "Estimated normal population; native relative-slope metric; observed Persons are not centered." else
+      if (person) "Population N(0,1); observed Persons are not forced to average zero." else
       if (r$Centered) "Saved facet centering constraints; zero is not a performance standard." else
-        "Uncentered location on the fixed N(0,1) ability scale."
+        if (free_population) "Uncentered location on the native relative-slope metric." else
+          "Uncentered location on the fixed N(0,1) ability scale."
     add(r$Parameter, if (person) "ability" else "location", r$Facet, r$Level,
       fixed, value, anchored, reference,
       if (r$Sign == 1) "Higher values favor higher coded scores." else "Higher values favor lower coded scores.")
+  }
+  if (free_population) {
+    add("population_mean", "population_mean", "Population", "Mean", FALSE, NA_real_, FALSE,
+      population_label, "Higher values favor higher coded scores; not necessarily better performance.")
+    add("population_sd", "population_sd", "Population", "SD", FALSE, NA_real_, FALSE,
+      "Native metric with geometric-mean-one relative slopes; not an individual Person SE.",
+      "Larger values indicate more between-Person variation in the assumed population.")
   }
   for (g in seq_len(d$G)) for (k in seq_len(d$C - 1L)) {
     index <- (g - 1L) * (d$C - 1L) + k
@@ -133,7 +153,7 @@ summarize_mfrm_draws <- function(draws, bundle, sampler, backend) {
     Why = if (any(flagged)) paste(why[flagged], collapse = "; ") else "Listed sampling checks detected no flags.",
     NextAction = if (any(flagged)) "Read sampling-review.csv before interpreting estimates or intervals." else
       "Review model fit, priors and target-specific Monte Carlo error before reporting.")
-  result <- list(schema_version = 1L, chains = as.integer(dim(draws)[2L]),
+  result <- list(schema_version = if (is.null(bundle$population)) 1L else 2L, chains = as.integer(dim(draws)[2L]),
     model_data_md5 = if (file.exists("model-data.rds")) unname(tools::md5sum("model-data.rds")) else NA_character_,
     parameters = p, sampler = sampler, decision = decision, checks = checks,
     backend = backend, interval = "equal-tailed posterior credible interval for varying parameters", level = .95,

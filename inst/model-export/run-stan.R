@@ -3,7 +3,7 @@
 summarize_mfrm_stan <- function(fit) {
   source("summarize.R", local = TRUE)
   bundle <- readRDS("model-data.rds")
-  variables <- grep(paste0("^(lp__$|(?:theta|locations|steps|location_free|step_free|",
+  variables <- grep(paste0("^(lp__$|population_(?:mean|sd|log_sd)$|(?:theta|theta_raw|locations|steps|location_free|step_free|",
     "component_slopes|log_component_slopes|log_slope_free)\\[)"),
     fit$metadata()$variables, value = TRUE, perl = TRUE)
   if (!length(variables)) stop("No exported model parameters found in fit.rds.")

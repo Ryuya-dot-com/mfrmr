@@ -82,3 +82,64 @@ test_that("both bundle runners can be sourced without executing estimation", {
     expect_error(env[[paste0("run_mfrm_", format)]]("--unknown"), "Usage:")
   }
 })
+
+test_that("estimated-population summaries retain units and reach all reporting consumers", {
+  skip_if_not_installed("posterior")
+  withr::local_seed(27)
+  fit <- readRDS(test_path("fixtures", "anchored-gpcm.rds"))$shared$fit
+  dir <- tempfile(); dir.create(dir)
+  withr::defer(unlink(dir, recursive = TRUE))
+  export_mfrm_model(fit, dir, acknowledge_sensitive = TRUE)
+  bundle <- readRDS(file.path(dir, "model-data.rds"))
+  env <- export_summary_helpers()
+  map <- env$mfrm_parameter_map(bundle)
+  expect_equal(map$quantity[map$facet == "Population"], c("population_mean", "population_sd"))
+  # Synthetic draws exercise reporting, not posterior validity or MCMC performance.
+  vars <- c(map$variable, "population_log_sd", "theta_raw[1]")
+  draws <- array(rnorm(200L * 4L * length(vars)), c(200L, 4L, length(vars)),
+    dimnames = list(NULL, NULL, vars))
+  for (i in which(map$quantity %in% c("slope", "population_sd"))) draws[, , i] <- exp(draws[, , i] * .2)
+  for (i in which(!is.na(map$fixed_value))) draws[, , i] <- map$fixed_value[i]
+  sampler <- data.frame(chain = 1:4, num_divergent = 0, num_max_treedepth = 0, ebfmi = .8)
+  withr::local_dir(dir)
+  env$summarize_mfrm_draws(draws, bundle, sampler, "Stan")
+  x <- read_mfrm_posterior(dir)
+  expect_identical(x$schema_version, 2L)
+  expect_identical(summary(x), x)
+  expect_identical(x$source$Population, "Normal population with estimated mean and SD")
+  p <- x$parameters
+  expect_identical(p$role[p$variable == "theta_raw[1]"], "free_coordinate")
+  expect_identical(p$value_role[p$quantity == "population_sd"], "estimated")
+  for (quantity in c("population_mean", "population_sd", "ability", "location")) {
+    plot <- plot(x, quantity = quantity, draw = FALSE)
+    expect_identical(plot_data(plot, "table")[names(p)], p[p$quantity == quantity, ])
+    expect_false(grepl("fixed N(0,1)", plot$data$xlab, fixed = TRUE))
+  }
+  expect_equal(confint(x, parm = "population_sd")$lower, p$lower[p$variable == "population_sd"])
+  report <- mfrm_report(x)
+  expect_identical(report$tables$parameters, p)
+  expect_identical(report$tables$source_model$Population, x$source$Population)
+  export_summary_appendix(report, output_dir = file.path(dir, "appendix"))
+  files <- list.files(file.path(dir, "appendix"), "parameters.*csv$", full.names = TRUE)
+  expect_length(files, 1L)
+  csv <- read.csv(files)
+  expect_equal(csv$lower[csv$variable == "population_sd"], p$lower[p$variable == "population_sd"])
+  bad <- x; bad$parameters$lower[bad$parameters$quantity == "population_sd"] <- -1
+  expect_error(summary(bad), "Inconsistent")
+  # A badly mixed internal population coordinate must reach every consumer,
+  # even when the reported SD draws themselves have no obvious chain shift.
+  draws[, 4L, "population_log_sd"] <- draws[, 4L, "population_log_sd"] + 3
+  env$summarize_mfrm_draws(draws, bundle, sampler, "Stan")
+  flagged <- read_mfrm_posterior(dir)
+  expect_identical(flagged$checks$Status[flagged$checks$Check == "rhat"], "review")
+  expect_identical(flagged$decision$Status, "sampling_review_required")
+  expect_true(all(confint(flagged, parm = "population_sd")$interval_status ==
+    "computed_sampling_review_required"))
+  expect_identical(mfrm_report(flagged)$tables$sampling_review, flagged$checks)
+  expect_identical(plot_data(plot(flagged, quantity = "population_sd", draw = FALSE),
+    "table")$sampling_review, "sampling_review_required")
+  saved <- readRDS(file.path(dir, "posterior-summary.rds"))
+  saved$schema_version <- 1L
+  saveRDS(saved, file.path(dir, "posterior-summary.rds"))
+  expect_error(read_mfrm_posterior(dir), "Incompatible population")
+})

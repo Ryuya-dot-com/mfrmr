@@ -11,8 +11,22 @@ The likelihood is adjacent-category logistic (D = 1):
 RSM/PCM use effective_slope = 1. A one-family GPCM uses its owner's slope,
 whose log slopes sum to zero (geometric mean one). For two-family GPCM the
 product of both slopes multiplies the entire predictor; only the first
-family's log slopes sum to zero. Two-family GPCM is Stan-only. Abilities are
-independent normal(0,1), without centering the realized Persons.
+family's log slopes sum to zero. Two-family GPCM is Stan-only.
+
+Check model-data.rds$population to identify the population model. If absent,
+abilities are independent normal(0,1). For estimated-normal one-family Stan
+bundles, theta = population_mean + population_sd * theta_raw, where theta_raw
+is standard normal. The mean and SD are sampled, not fixed MML estimates.
+Realized Persons are not centered in either model. The default priors are
+population_mean ~ normal(0,1) and log(population_sd) ~ normal(0,0.5), giving
+the SD a median of 1 and central 95% prior interval about 0.38--2.66.
+Choose these assumptions using population_prior when exporting and inspect
+prior predictions and sensitivity. The two stan_data population_*_prior
+vectors store c(location, scale); model-data.rds also records their meaning.
+levels.csv reports the marginal Person prior SD, including mean/SD uncertainty.
+Only the intercept-only estimated population is supported, and only in Stan.
+Its schema-2 summaries require the newer reader; fixed-population summaries
+retain schema 1. Retain the matching model-data.rds and summarize.R.
 
 Fixed facet locations, group means and step anchors retain their source
 values, units and centering convention. model-data.rds$constraints records
@@ -75,8 +89,8 @@ leave-one-Person-out scores. Repeated ratings retain conditional independence.
 These proper structural priors are Bayesian additions to the response model;
 posterior summaries do not reproduce MML estimates or confidence intervals.
 Neither exporting nor completing chains validates the source fit's inference.
-For prior sensitivity, change location_sd, step_sd or log_slope_sd in stan_data
-and update the descriptive priors and mapping tables consistently.
+For prior sensitivity, export again with the intended prior arguments into a
+separate directory, keeping its model-data, fit and summaries together.
 
 https://mc-stan.org/cmdstanr/
 https://mc-stan.org/learn-stan/diagnostics-warnings.html

@@ -21,6 +21,11 @@
 #' Use the backend's saved fit for new credible levels, contrasts, predictions,
 #' trace plots or posterior predictive checks. Native scoring and MML/JML
 #' diagnostics are not available from this object.
+#' Estimated-population one-family Stan summaries retain the population mean
+#' and SD as reported parameters. Their schema-2 files require this newer reader;
+#' existing fixed-population schema-1 summaries remain supported. Use
+#' `plot(x, quantity = "population_sd")` to inspect between-Person variation
+#' on the native metric. This SD is not an individual Person standard error.
 #'
 #' `confint()` retrieves the stored equal-tailed 95% *posterior credible*
 #' intervals, retaining fixed/unavailable rows and review flags. It does not
@@ -49,7 +54,7 @@ read_mfrm_posterior <- function(path) {
   if (!file.exists(file) || !file.exists(model_file))
     stop("Keep posterior-summary.rds and its matching model-data.rds together.", call. = FALSE)
   x <- readRDS(file)
-  if (!is.list(x) || !identical(x$schema_version, 1L) ||
+  if (!is.list(x) || length(x$schema_version) != 1L || !x$schema_version %in% c(1L, 2L) ||
       !identical(x$model_data_md5, unname(tools::md5sum(model_file))))
     stop("The summary has no matching model-data checksum. Regenerate it with the current run.R and summarize.R using --summarize; no new sampling is needed.", call. = FALSE)
   bundle <- readRDS(model_file)
@@ -58,13 +63,20 @@ read_mfrm_posterior <- function(path) {
       !bundle$model %in% c("RSM", "PCM", "GPCM"))
     stop("Expected a model-data bundle from export_mfrm_model().", call. = FALSE)
   helpers <- .mfrm_posterior_helpers()
+  expected_version <- if (is.null(bundle$population)) 1L else 2L
+  if (!identical(x$schema_version, expected_version) ||
+      (!is.null(bundle$schema_version) && !identical(bundle$schema_version, expected_version)) ||
+      (expected_version == 2L && (!identical(bundle$schema_version, 2L) ||
+        !identical(x$backend, "Stan") || !identical(bundle$model, "GPCM"))))
+    stop("Incompatible population bundle and summary versions; regenerate the matching summary.", call. = FALSE)
   x$parameter_map <- helpers$mfrm_parameter_map(bundle)
+  x$population <- bundle$population
   d <- bundle$stan_data
   x$source <- data.frame(Model = bundle$model, Backend = x$backend,
     Estimation = "External Bayesian sampling", ExportSourceMethod = bundle$source_method,
     PackageVersion = bundle$package_version,
     Ratings = d$N, Persons = d$J, Categories = d$C,
-    Population = "Fixed N(0,1)", ResponseMetric = "Adjacent-category logit (D = 1)",
+    Population = helpers$mfrm_population_label(x$population), ResponseMetric = "Adjacent-category logit (D = 1)",
     Interval = x$interval, Level = x$level, Chains = x$chains, ModelDataMD5 = x$model_data_md5)
   x$priors <- bundle$priors
   x$constraints <- bundle$constraints
@@ -82,7 +94,8 @@ read_mfrm_posterior <- function(path) {
 
 .mfrm_validate_posterior <- function(x) {
   fail <- function() stop("Inconsistent exported posterior summary; regenerate it from the matching saved fit and bundle.", call. = FALSE)
-  if (!inherits(x, "mfrm_posterior_summary") || !identical(x$schema_version, 1L) ||
+  if (!inherits(x, "mfrm_posterior_summary") ||
+      !identical(x$schema_version, if (is.null(x$population)) 1L else 2L) ||
       !is.character(x$backend) || length(x$backend) != 1L || !x$backend %in% c("Stan", "brms") ||
       !identical(x$level, .95) || !identical(x$interval, "equal-tailed posterior credible interval for varying parameters") ||
       length(x$chains) != 1L || !is.numeric(x$chains) || !is.finite(x$chains) || x$chains < 1 || x$chains != as.integer(x$chains)) fail()
@@ -97,7 +110,7 @@ read_mfrm_posterior <- function(path) {
       anyNA(map$variable) || anyDuplicated(map$variable) || !all(map$variable %in% p$variable)) fail()
   if (any(as.matrix(p[c("sd", "ess_bulk", "ess_tail", "mcse_lower", "mcse_upper")]) < 0, na.rm = TRUE) ||
       any(p$rhat <= 0, na.rm = TRUE) ||
-      any(as.matrix(p[p$quantity == "slope", c("mean", "median", "lower", "upper"), drop = FALSE]) <= 0, na.rm = TRUE)) fail()
+      any(as.matrix(p[p$quantity %in% c("slope", "population_sd"), c("mean", "median", "lower", "upper"), drop = FALSE]) <= 0, na.rm = TRUE)) fail()
   at <- match(map$variable, p$variable)
   for (name in names(map)) if (!identical(p[[name]][at], map[[name]])) fail()
   internal <- !p$variable %in% map$variable
@@ -124,7 +137,8 @@ read_mfrm_posterior <- function(path) {
     if (status == "sampling_review_required") "computed_sampling_review_required" else "computed_model_review_required"))
   if (!identical(p$interval_status, interval_status) || !is.data.frame(x$source) || nrow(x$source) != 1L ||
       !identical(x$source$ModelDataMD5, x$model_data_md5) || !identical(x$source$Backend, x$backend) ||
-      !identical(x$source$Level, x$level) || !identical(x$source$Population, "Fixed N(0,1)")) fail()
+      !identical(x$source$Level, x$level) || !identical(x$source$Population,
+        .mfrm_posterior_helpers()$mfrm_population_label(x$population))) fail()
   invisible(x)
 }
 

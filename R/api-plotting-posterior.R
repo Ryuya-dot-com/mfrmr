@@ -2,7 +2,9 @@
 #'
 #' @param x Output from [read_mfrm_posterior()].
 #' @param quantity One of `"location"` (default), `"ability"`, `"step_offset"`,
-#'   `"slope"` or `"log_slope"`. Quantities with different units are not mixed.
+#'   `"slope"`, `"log_slope"`, `"population_mean"` or `"population_sd"`.
+#'   Population quantities require an estimated-population export.
+#'   Quantities with different units are not mixed.
 #' @param facet Optional facet/owner names to retain; `NULL` retains all for
 #'   the selected quantity. Step rows use `facet = "Step owner"` and retain
 #'   their owner labels and category transitions in the plotted table.
@@ -39,7 +41,8 @@
 #' if (requireNamespace("ggplot2", quietly = TRUE)) as_ggplot(p)
 #' @export
 plot.mfrm_posterior_summary <- function(x,
-    quantity = c("location", "ability", "step_offset", "slope", "log_slope"),
+    quantity = c("location", "ability", "step_offset", "slope", "log_slope",
+                 "population_mean", "population_sd"),
     facet = NULL, draw = TRUE, reference = NULL, preset = "standard", show_legend = TRUE,
     title = NULL, subtitle = NULL, caption = NULL, ...) {
   rlang::check_dots_empty()
@@ -71,7 +74,11 @@ plot.mfrm_posterior_summary <- function(x,
   tab$Y <- rev(seq_len(nrow(tab)))
   xlab <- switch(quantity, location = "Location (fixed N(0,1) ability units)",
     ability = "Ability (fixed N(0,1) units)", step_offset = "Step offset (fixed N(0,1) ability units)",
-    slope = "Component discrimination", log_slope = "Log component discrimination")
+    slope = "Component discrimination", log_slope = "Log component discrimination",
+    population_mean = "Population mean (native relative-slope metric)",
+    population_sd = "Population SD (native relative-slope metric)")
+  if (!is.null(x$population)) xlab <- sub("fixed N(0,1) ability units",
+    "native relative-slope metric", sub("fixed N(0,1) units", "native relative-slope metric", xlab, fixed = TRUE), fixed = TRUE)
   out <- new_mfrm_plot_data("posterior_intervals", list(table = tab, source = x$source,
     checks = x$checks, decision = x$decision, notes = x$notes, level = x$level,
     interval_type = x$interval, title = title, subtitle = subtitle, caption = caption,

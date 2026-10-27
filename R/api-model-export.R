@@ -1,10 +1,12 @@
 #' Export a measurement model to Stan or brms
 #'
 #' Write a self-contained Bayesian model bundle without running an estimator.
-#' Supports ordinary RSM/PCM and one-family GPCM MML fits in both formats,
-#' and two-family GPCM in Stan. Fixed facet/group and step anchors are retained.
-#' Sources must be unit-weight, with
-#' a fixed standard-normal Person population and no facet interactions or
+#' Supports ordinary RSM/PCM and fixed-population one-family GPCM MML fits in
+#' both formats. Estimated-population one-family GPCM and two-family GPCM use
+#' Stan. Fixed facet/group and step anchors are retained.
+#' Sources must be unit-weight, with a fixed standard-normal Person population
+#' or (Stan only, one-family GPCM) an estimated intercept-only normal population,
+#' and no facet interactions or
 #' post-fit shrinkage. Unsupported specifications fail before files are written.
 #'
 #' @param fit A native RSM/PCM or GPCM MML `mfrm_fit` returned by
@@ -21,19 +23,35 @@
 #' @param log_slope_prior_sd Positive marginal prior SD of each component log
 #'   slope for GPCM export. Defaults to 1; inspect prior
 #'   sensitivity. Not used by RSM/PCM models.
+#' @param population_prior Normal prior parameters for an estimated Person
+#'   population: a named list with `mean = c(location, scale)` for its mean
+#'   and `log_sd = c(location, scale)` for the log of its standard deviation.
+#'   Each scale must be positive. Defaults give `mu ~ normal(0, 1)` and
+#'   `log(sigma) ~ normal(0, 0.5)`. Unused for fixed-population exports.
 #'
 #' @details
-#' The default one-family GPCM estimates its population mean and variance and
-#' cannot currently be exported. Choosing `gpcm_mml_identification =
-#' "fixed_standard_normal"` changes the model; it is not a file-format
-#' conversion. Keep the original fit when its estimated population is intended.
+#' The default one-family GPCM estimates its population mean and variance.
+#' Its intercept-only population can be exported to Stan, retaining the native
+#' metric, relative-slope constraint and supported fixed anchors. The generated
+#' model uses `theta = mu + sigma * z`, with independent standard-normal `z`.
+#' The population mean and SD are sampled, not fixed at their MML estimates.
+#' `population_prior` adds explicit Bayesian priors: by default sigma has median
+#' 1 and a central 95% prior interval of approximately 0.38 to 2.66. These are
+#' starting assumptions, not a population-size recommendation; inspect prior
+#' predictions and sensitivity for your rubric and anchors. The displayed
+#' Person prior SD includes uncertainty in both mu and sigma, not only sigma.
+#' Population regression, estimated-mean models with a fixed SD, and estimated-population
+#' brms or two-family exports are not supported. Choosing
+#' `gpcm_mml_identification = "fixed_standard_normal"` changes the model;
+#' it is not a file-format conversion or a workaround for these exclusions.
 #'
 #' Both formats retain the category ladder, facet signs, facet centering and
 #' RSM/PCM step ownership of the source specification. RSM/PCM adjacent-category log odds
 #' are `theta + signed facet locations - step`. Steps follow their declared
 #' within-owner sum targets (zero by default) and are **not ordered**. A binary
-#' ladder has its single offset fixed at its target. Ability parameters have independent standard-normal priors; realized
-#' abilities are not centered across the observed Persons.
+#' ladder has its single offset fixed at its target. Fixed-population ability
+#' parameters have independent standard-normal priors; realized abilities are
+#' not centered across the observed Persons in either population mode.
 #'
 #' All supported exports preserve the native logistic metric (L-metric),
 #' with scaling constant \eqn{D = 1}. No extra 1.7 or 1.702 factor is used.
@@ -136,26 +154,26 @@
 #'                      Level = as.character(ratings$Rater[1]), Anchor = 0)
 #' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
 #'                  model = "GPCM", method = "MML", step_facet = "Criterion",
-#'                  slope_facet = "Criterion",
-#'                  gpcm_mml_identification = "fixed_standard_normal", anchors = anchor,
+#'                  slope_facet = "Criterion", anchors = anchor,
 #'                  anchor_policy = "silent")
-#' # Export runs without Stan or brms. The example data are synthetic.
+#' # Keep the default estimated population. The example data are synthetic.
+#' # Export needs neither Stan nor brms installed and runs no sampler.
 #' stan <- export_mfrm_model(fit, tempfile("mfrmr-stan-"), "stan",
-#'                            acknowledge_sensitive = TRUE)
-#' brms <- export_mfrm_model(fit, tempfile("mfrmr-brms-"), "brms",
 #'                            acknowledge_sensitive = TRUE)
 #' names(stan$files)
 #' bundle <- readRDS(stan$files[["model-data.rds"]])
 #' bundle$categories # Generated categories mapped to original scores
+#' bundle$population # Estimated mean/SD and their priors
 #' bundle$priors
-#' # Run each bundle's run.R separately if external sampling is wanted.
-#' unlink(c(stan$output_dir, brms$output_dir), recursive = TRUE)
+#' # Run this bundle's run.R separately if external sampling is wanted.
+#' unlink(stan$output_dir, recursive = TRUE)
 #' }
 #' @export
 export_mfrm_model <- function(fit, output_dir, format = c("stan", "brms"),
                               location_prior_sd = 1, step_prior_sd = 1,
                               overwrite = FALSE, acknowledge_sensitive = FALSE,
-                              log_slope_prior_sd = 1) {
+                              log_slope_prior_sd = 1,
+                              population_prior = list(mean = c(0, 1), log_sd = c(0, 0.5))) {
   format <- match.arg(format)
   for (x in c("overwrite", "acknowledge_sensitive")) {
     value <- get(x)
@@ -170,10 +188,17 @@ export_mfrm_model <- function(fit, output_dir, format = c("stan", "brms"),
   product <- mfrm_has_product_slopes(fit) && identical(fit$config$model, "GPCM")
   if (product && format != "stan") stop(
     "Two-family GPCM model export supports format = 'stan' only.", call. = FALSE)
-  bundle <- mfrm_model_export_data(fit, location_prior_sd, step_prior_sd, log_slope_prior_sd)
+  bundle <- mfrm_model_export_data(fit, location_prior_sd, step_prior_sd,
+                                  log_slope_prior_sd, population_prior)
+  free_population <- !is.null(bundle$population)
+  if (free_population && format != "stan") stop(paste(
+    "Estimated-population one-family GPCM export supports format = 'stan' only.",
+    "Keep the original fit; choosing fixed_standard_normal changes the model."
+  ), call. = FALSE)
   template_dir <- system.file("model-export", package = "mfrmr")
   model_file <- if (format == "stan") "model.stan" else "model.R"
-  templates <- c(if (isTRUE(bundle$affine)) paste0("model-affine.", if (format == "stan") "stan" else "R") else
+  templates <- c(if (free_population) "model-population.stan" else
+                   if (isTRUE(bundle$affine)) paste0("model-affine.", if (format == "stan") "stan" else "R") else
                    if (product) "model-gmfrm.stan" else model_file,
                  paste0("run-", format, ".R"), if (isTRUE(bundle$affine)) "README-affine.txt" else
                    if (product) "README-gmfrm.txt" else "README.txt", "summarize.R")
@@ -219,7 +244,8 @@ mfrm_export_basis <- function(n, centered = TRUE) {
 }
 
 mfrm_model_export_data <- function(fit, location_prior_sd, step_prior_sd,
-                                   log_slope_prior_sd = 1) {
+                                   log_slope_prior_sd = 1,
+                                   population_prior = list(mean = c(0, 1), log_sd = c(0, 0.5))) {
   if (!inherits(fit, "mfrm_fit") ||
       inherits(fit, c("mfrm_testlet", "mfrm_random_rater"))) {
     stop("`fit` must be an ordinary mfrm_fit.", call. = FALSE)
@@ -253,13 +279,31 @@ mfrm_model_export_data <- function(fit, location_prior_sd, step_prior_sd,
         !identical(cfg$step_facet, cfg$slope_facet[2L])) stop(
       "Two-family slope levels or step ownership disagree with the fitted specification.", call. = FALSE)
   }
-  if (isTRUE(cfg$population_spec$active)) {
-    stop(paste(
-      "This fit estimates its latent population (mean, variance and/or regression coefficients).",
-      "Model export currently requires a fixed N(0,1) population.",
-      "Choosing fixed_standard_normal changes the model; it is not a file-format conversion.",
-      "Keep the original fit: export preserving its estimated population is not yet supported."
-    ), call. = FALSE)
+  pop <- cfg$population_spec
+  free_population <- isTRUE(pop$active)
+  if (free_population) {
+    Xp <- pop$design_matrix
+    if (!single || !is.null(pop$fixed_sd) || !is.matrix(Xp) ||
+        !is.numeric(Xp) || ncol(Xp) != 1L || !nrow(Xp) ||
+        anyNA(Xp) || any(Xp != 1) ||
+        !identical(pop$design_columns, "(Intercept)")) {
+      stop("Estimated-population export requires one-family GPCM with an intercept-only normal population and free SD; regression and two-family populations are unsupported.", call. = FALSE)
+    }
+    ids <- as.character(fit$population$person_table[[pop$person_id]])
+    lookup <- pop$person_lookup
+    if (length(ids) != nrow(Xp) || anyNA(ids) || anyDuplicated(ids) ||
+        !is.numeric(lookup) || length(lookup) != length(cfg$person_levels) ||
+        anyNA(lookup) || any(!is.finite(lookup)) || any(lookup != as.integer(lookup)) ||
+        any(lookup < 1 | lookup > length(ids)) ||
+        !identical(ids[lookup], as.character(cfg$person_levels))) {
+      stop("Population rows do not match the fitted Person identities.", call. = FALSE)
+    }
+    if (!is.list(population_prior) || length(population_prior) != 2L ||
+        !setequal(names(population_prior), c("mean", "log_sd")) ||
+        !all(vapply(population_prior, function(x) is.numeric(x) && length(x) == 2L &&
+          all(is.finite(x)) && x[2L] > 0, logical(1)))) {
+      stop("`population_prior` must contain mean and log_sd, each c(location, positive scale).", call. = FALSE)
+    }
   }
   if (length(cfg$interaction_specs) || length(cfg$dummy_facets) ||
       !identical(cfg$facet_shrinkage %||% "none", "none")) {
@@ -423,6 +467,23 @@ mfrm_model_export_data <- function(fit, location_prior_sd, step_prior_sd,
       PriorSD = sqrt(rowSums(sweep(step_basis, 2L, out$stan_data$step_sd, `*`)^2)))
     out$step_levels$Fixed <- out$step_levels$PriorSD == 0
     out$priors$anchor_basis <- "Conditional on fixed anchors and group means; normal free contrasts about the affine prior means."
+  }
+  if (free_population) {
+    prior <- lapply(population_prior[c("mean", "log_sd")], as.numeric)
+    person_sd <- sqrt(prior$mean[2L]^2 + exp(2 * prior$log_sd[1L] + 2 * prior$log_sd[2L]^2))
+    if (!is.finite(person_sd)) stop("The marginal Person prior SD exceeds the numeric range; review population_prior.", call. = FALSE)
+    out$schema_version <- 2L
+    out$population <- list(mode = "estimated_normal", formula = "~1",
+      parameterization = "noncentered", prior = prior,
+      person_levels = as.character(cfg$person_levels),
+      source_identification = pop$identification_role)
+    out$stan_data$population_mean_prior <- as.array(prior$mean)
+    out$stan_data$population_log_sd_prior <- as.array(prior$log_sd)
+    out$priors$ability <- "normal(population_mean, population_sd); conditionally independent"
+    out$priors$population <- prior
+    is_person <- out$levels$Facet == "Person"
+    out$levels$PriorMean[is_person] <- prior$mean[1L]
+    out$levels$PriorSD[is_person] <- person_sd
   }
   out
 }

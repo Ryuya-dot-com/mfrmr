@@ -25,12 +25,13 @@ figures, tables and an editable report while keeping its assumptions visible.
   See [agreement](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-rating-agreement.html)
   and [networks and reporting](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html).
 
-For supported models with a fixed standard-normal ability distribution, you
-can continue an RSM/PCM or single-family GPCM analysis in Stan or brms,
-keeping fixed anchors and choosing explicit priors.
-`export_mfrm_model()` writes the code, data and parameter maps; two-family
-GPCM export supports Stan. `read_mfrm_posterior()` brings saved summaries back
-to figures and reports, with credible intervals and sampling review retained.
+Continue a default single-family GPCM analysis in Stan while retaining its
+estimated normal population and supported fixed anchors. `export_mfrm_model()`
+writes the code, data and parameter maps with explicit priors.
+RSM/PCM and fixed-population single-family GPCM also support brms;
+two-family GPCM supports Stan. `read_mfrm_posterior()` brings saved summaries,
+including population mean/SD, back to figures and reports with credible
+intervals and sampling review. Population regression remains unsupported.
 See [model export](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.html).
 
 Supported MML models can show fitting progress and automatically increase

@@ -6,7 +6,8 @@
 \usage{
 \method{plot}{mfrm_posterior_summary}(
   x,
-  quantity = c("location", "ability", "step_offset", "slope", "log_slope"),
+  quantity = c("location", "ability", "step_offset", "slope", "log_slope",
+    "population_mean", "population_sd"),
   facet = NULL,
   draw = TRUE,
   reference = NULL,
@@ -22,7 +23,9 @@
 \item{x}{Output from \code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}}.}
 
 \item{quantity}{One of \code{"location"} (default), \code{"ability"}, \code{"step_offset"},
-\code{"slope"} or \code{"log_slope"}. Quantities with different units are not mixed.}
+\code{"slope"}, \code{"log_slope"}, \code{"population_mean"} or \code{"population_sd"}.
+Population quantities require an estimated-population export.
+Quantities with different units are not mixed.}
 
 \item{facet}{Optional facet/owner names to retain; \code{NULL} retains all for
 the selected quantity. Step rows use \code{facet = "Step owner"} and retain
