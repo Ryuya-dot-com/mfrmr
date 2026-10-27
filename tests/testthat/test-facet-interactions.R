@@ -203,7 +203,7 @@ test_that("compare_mfrm recognizes additive-to-interaction nesting", {
   )
 })
 
-test_that("interaction MML falls back from EM to direct optimization", {
+test_that("interaction MML uses its requested EM engine", {
   d <- mfrmr:::sample_mfrm_data(seed = 42)
 
   fit <- suppressMessages(suppressWarnings(fit_mfrm(
@@ -221,6 +221,7 @@ test_that("interaction MML falls back from EM to direct optimization", {
   )))
 
   expect_equal(fit$summary$MMLEngineRequested[1], "em")
-  expect_equal(fit$summary$MMLEngineUsed[1], "direct")
-  expect_match(fit$summary$MMLEngineDetail[1], "falling back to direct")
+  expect_equal(fit$summary$MMLEngineUsed[1], "em")
+  expect_false(fit$opt$mml_engine$Fallback)
+  expect_true(all(diff(fit$opt$ll_trace) >= -1e-10))
 })

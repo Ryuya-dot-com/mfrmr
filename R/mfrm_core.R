@@ -3469,15 +3469,6 @@ resolve_mml_engine_plan <- function(method,
     ))
   }
 
-  if (isTRUE(interaction_active)) {
-    return(list(
-      Requested = requested,
-      Used = "direct",
-      Fallback = TRUE,
-      Detail = "EM and hybrid MML are currently implemented only for additive RSM/PCM; falling back to direct optimization for model-estimated facet interactions."
-    ))
-  }
-
   if (isTRUE(population_active)) {
     return(list(
       Requested = requested,

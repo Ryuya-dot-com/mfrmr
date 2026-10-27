@@ -22,6 +22,38 @@ test_that("polishing cannot trade resolved likelihood loss for a smaller gradien
   expect_false(mfrm_optimizer_stage_is_better(rounded, current))
 })
 
+test_that("interaction polishing removes only the stopping constant and restores raw likelihood", {
+  fn <- function(p) 1e6 + p^2
+  bad <- FALSE
+  local_mocked_bindings(
+    make_param_cache = function(...) list(),
+    make_mfrm_direct_evaluator = function(...) list(value=fn, gradient=function(p) 2*p,
+      diagnostics=function() list()),
+    mfrm_optimizer_curvature_proposal = function(...) list(par=NULL, error="not needed"),
+    optim = function(par, fn, ...) {
+      if (abs(fn(par)) < 1) {
+        expect_equal(fn(par), 0)
+        expect_equal(fn(1)-fn(0), 1)
+        par <- if (bad) 100 else 0
+      }
+      list(par=par,value=fn(par),convergence=0L,counts=c('function'=1L,'gradient'=0L))
+    }, .package="mfrmr")
+  run <- function() suppressWarnings(run_mfrm_direct_optimization(.01,"MML",list(),
+    list(model="RSM",interaction_specs=list(cell=list(n_params=1L))), list(),
+    quad_points=3,maxit=20,reltol=1e-10))
+  out <- run()
+  expect_identical(out$par, 0)
+  expect_equal(out$value, fn(0))
+  expect_identical(out$optimizer_diagnostics$ConvergenceSeverity, "pass")
+  expect_identical(out$optimizer_polish$Stages$StageLabel[out$optimizer_polish$Stages$Selected],
+    "centered_objective_polish")
+  bad <- TRUE
+  rejected <- run()
+  expect_equal(rejected$par, .01)
+  expect_equal(rejected$value, fn(.01))
+  expect_identical(rejected$optimizer_diagnostics$ConvergenceSeverity, "review")
+})
+
 test_that("the optimizer retains its better point after rejected polishing stages", {
   fn <- function(x) 1e6 + (x^2 - 1)^2 - .003 * (x^3/3 - x)
   gr <- function(x) (x^2 - 1) * (4*x - .003)

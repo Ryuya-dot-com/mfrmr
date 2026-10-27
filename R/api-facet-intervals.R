@@ -62,9 +62,11 @@
 #' @param interaction Optional exact name of one fitted two-facet interaction,
 #'   for example `"Rater:Criterion"`. Omit `facet` and `comparison_review`.
 #'   This selects jointly fitted cell effects rather than fixed-baseline bias
-#'   screens. Requires `method = "model"`, `scale = "native"`, full direct
-#'   fixed-grid RSM/PCM MML with fixed N(0,1), one interaction, no anchors,
-#'   groups, dummy facets or shrinkage. See the joint-cell section below.
+#'   screens. Requires `method = "model"`, `scale = "native"`, full fixed-grid
+#'   RSM/PCM MML (direct, EM or hybrid) with fixed N(0,1), one interaction,
+#'   no anchors, groups, dummy facets or shrinkage. Every engine must pass the
+#'   common numerical and full-joint information checks; EM stopping alone
+#'   does not qualify intervals. See the joint-cell section below.
 #' @param anchor_covariance Optional full sampling covariance of the supplied
 #'   anchor estimates, including their correlations, in native ability units
 #'   squared. Row and column names must match every directly anchored level
@@ -1129,6 +1131,28 @@ print.mfrm_facet_intervals <- function(x, ...) {
 #' @rdname mfrm_facet_intervals
 #' @export
 summary.mfrm_facet_intervals <- function(object, ...) object$table
+
+#' @rdname mfrm_facet_intervals
+#' @param parm For `confint()`, optional distinct target names from
+#'   `object$table$Target`. Extracts the stored limits without recalculation;
+#'   `level` must match the saved level. Use `mfrm_facet_intervals()` to
+#'   calculate a different level. Unavailable limits remain `NA`; inspect
+#'   `summary(object)` for their eligibility and reasons.
+#' @export
+confint.mfrm_facet_intervals <- function(object, parm = NULL,
+                                        level = object$settings$level, ...) {
+  rlang::check_dots_empty()
+  if (!is.numeric(level) || length(level) != 1L || !is.finite(level) ||
+      level != object$settings$level)
+    stop("`level` must match the saved level; use `mfrm_facet_intervals()` to recalculate.", call. = FALSE)
+  labels <- object$table$Target
+  if (is.null(parm)) parm <- labels
+  if (!is.character(parm) || anyNA(parm) || anyDuplicated(parm) || !all(parm %in% labels))
+    stop("`parm` must contain distinct saved Target names.", call. = FALSE)
+  out <- as.matrix(object$table[match(parm, labels), c("Lower", "Upper"), drop = FALSE])
+  rownames(out) <- parm
+  out
+}
 
 #' @rdname mfrm_facet_intervals
 #' @importFrom stats vcov

@@ -135,7 +135,8 @@ test_that("the engine scope registry keeps fallbacks out of parity", {
     ,
     drop = FALSE
   ]
-  expect_true(interaction$Fallback)
+  expect_false(interaction$Fallback)
+  expect_identical(interaction$Used, "em")
   expect_true(population$Fallback)
   expect_false(interaction$ParityScope)
   expect_false(population$ParityScope)

@@ -47,10 +47,6 @@ mfrm_grad_mml_complete_data_core <- function(params,
     stop("Complete-data EM updates are currently implemented only when `population = NULL`.",
          call. = FALSE)
   }
-  if (facet_interactions_active(config)) {
-    stop("Complete-data EM updates are currently implemented only for additive RSM/PCM fits without model-estimated facet interactions.",
-         call. = FALSE)
-  }
 
   n <- length(idx$score_k)
   if (n == 0L) return(rep(0, sum(unlist(sizes))))
@@ -71,6 +67,7 @@ mfrm_grad_mml_complete_data_core <- function(params,
   n_nodes <- ncol(obs_posterior)
   grad_facets_exp <- lapply(config$facet_names, function(f) numeric(length(params$facets[[f]])))
   names(grad_facets_exp) <- config$facet_names
+  marginal_residual <- numeric(n)
 
   if (identical(config$model, "RSM")) {
     k_cat <- ncol(logprob_bundle$prob_list[[1]])
@@ -88,12 +85,7 @@ mfrm_grad_mml_complete_data_core <- function(params,
       obs_post_q <- obs_posterior[, q]
       w_residual <- residual_q * obs_post_q
 
-      for (facet in config$facet_names) {
-        sign_f <- if (!is.null(config$facet_signs[[facet]])) config$facet_signs[[facet]] else -1
-        rs <- rowsum(matrix(sign_f * w_residual, ncol = 1), idx$facets[[facet]], reorder = FALSE)
-        f_ids <- as.integer(rownames(rs))
-        grad_facets_exp[[facet]][f_ids] <- grad_facets_exp[[facet]][f_ids] + as.vector(rs)
-      }
+      marginal_residual <- marginal_residual + w_residual
 
       step_resid <- (compute_P_geq(probs_q) - I_geq) * obs_post_q
       if (!is.null(weight)) step_resid <- step_resid * weight
@@ -118,12 +110,7 @@ mfrm_grad_mml_complete_data_core <- function(params,
       obs_post_q <- obs_posterior[, q]
       w_residual <- residual_q * obs_post_q
 
-      for (facet in config$facet_names) {
-        sign_f <- if (!is.null(config$facet_signs[[facet]])) config$facet_signs[[facet]] else -1
-        rs <- rowsum(matrix(sign_f * w_residual, ncol = 1), idx$facets[[facet]], reorder = FALSE)
-        f_ids <- as.integer(rownames(rs))
-        grad_facets_exp[[facet]][f_ids] <- grad_facets_exp[[facet]][f_ids] + as.vector(rs)
-      }
+      marginal_residual <- marginal_residual + w_residual
 
       step_resid <- (compute_P_geq(probs_q) - I_geq) * obs_post_q
       if (!is.null(weight)) step_resid <- step_resid * weight
@@ -135,11 +122,20 @@ mfrm_grad_mml_complete_data_core <- function(params,
     grad_step_free <- project_typed_step_gradient(grad_step_mat, config)
   }
 
+  # Aggregate once after integrating residuals; the constraints are linear.
+  for (facet in config$facet_names) {
+    sign_f <- config$facet_signs[[facet]] %||% -1
+    rs <- rowsum(matrix(sign_f * marginal_residual, ncol = 1),
+                 idx$facets[[facet]], reorder = FALSE)
+    grad_facets_exp[[facet]][as.integer(rownames(rs))] <- as.vector(rs)
+  }
+  grad_interaction_free <- compute_interaction_gradient_free(marginal_residual, idx, config)
+
   grad_facet_free <- unlist(lapply(config$facet_names, function(f) {
     constraint_grad_project(grad_facets_exp[[f]], config$facet_specs[[f]])
   }))
 
-  -c(grad_facet_free, grad_step_free)
+  -c(grad_facet_free, grad_interaction_free, grad_step_free)
 }
 
 normalize_mfrm_optimizer <- function(optimizer = "auto") {
@@ -624,7 +620,7 @@ run_mfrm_direct_optimization <- function(start,
 
   run_stage <- function(par, stage_method, stage_reltol, index, label,
                         fail_hard = FALSE, curvature_restart = FALSE,
-                        coordinate_scale = NULL, jml_information = FALSE) {
+                        coordinate_scale = NULL, jml_information = FALSE, center_objective = FALSE) {
     input_par <- par
     proposal_counts <- c("function" = 0L, "gradient" = 0L)
     # The finite penalty applies only to proposals from an evaluable starting point.
@@ -668,6 +664,11 @@ run_mfrm_direct_optimization <- function(start,
           convergence = polished$convergence, counts = polished$counts,
           message = if (nzchar(polished$error)) polished$error else "Bounded JML information polishing.",
           jml_information_polish = polished[c("steps", "residual", "error", "fixed_coordinates")])
+      } else if (isTRUE(center_objective)) {
+        offset <- fn(par)
+        result <- optim(par = par, fn = function(p) fn(p) - offset, gr = gr,
+          method = stage_method, control = stage_control)
+        result$value <- fn(result$par)
       } else if (is.null(coordinate_scale)) {
         result <- optim(par = par, fn = fn, gr = gr, method = stage_method,
                         control = stage_control)
@@ -812,6 +813,20 @@ run_mfrm_direct_optimization <- function(start,
         if (identical(selected$diagnostics$ConvergenceSeverity, "pass")) break
       }
     }
+  }
+
+  # A large likelihood constant can trigger relative stopping before the
+  # score criterion. Subtract it only during this bounded polishing stage.
+  if (isTRUE(polish_triggered) &&
+      identical(selected$diagnostics$ConvergenceReason, "code_zero_large_gradient") &&
+      identical(method, "MML") && config$model %in% c("RSM", "PCM") &&
+      facet_interactions_active(config) && !isTRUE(config$population_spec$active) &&
+      !mfrmr_adaptive_integration(config)) {
+    candidate <- run_stage(selected$opt$par, "L-BFGS-B", .Machine$double.eps,
+      length(stages) + 1L, "centered_objective_polish", center_objective = TRUE)
+    stages[[length(stages) + 1L]] <- candidate
+    if (!nzchar(candidate$error) && mfrm_optimizer_stage_is_better(candidate, selected))
+      selected <- candidate
   }
 
   if (isTRUE(polish_triggered) &&
@@ -1253,6 +1268,17 @@ mfrm_checkpoint_payload <- function(par, prev_loglik, ll_trace, total_fn,
   )
 }
 
+# Numerical M steps implement generalized EM: accept only non-decreasing
+# auxiliary and marginal log likelihoods, allowing floating-point roundoff.
+mfrm_em_check_ascent <- function(previous, candidate, objective) {
+  tolerance <- 64 * .Machine$double.eps * max(1, abs(previous))
+  if (!is.finite(previous) || !is.finite(candidate) || candidate < previous - tolerance) {
+    stop("EM update failed the ", objective, " ascent check; no new parameters were accepted. ",
+         "Use `mml_engine = 'direct'` and review the model and starting values.", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
 run_mfrm_mml_em_optimization <- function(start,
                                          idx,
                                          config,
@@ -1359,8 +1385,8 @@ run_mfrm_mml_em_optimization <- function(start,
     as.numeric(m_step_reltol)
   }
 
+  state <- build_mfrm_mml_em_state(par, idx, config, sizes, quad)
   if (!skip_em_loop && start_it <= maxit) for (it in seq.int(start_it, maxit)) {
-    state <- build_mfrm_mml_em_state(par, idx, config, sizes, quad)
     ll_trace <- c(ll_trace, state$marginal_loglik)
 
     if (it > 1L) {
@@ -1406,7 +1432,12 @@ run_mfrm_mml_em_optimization <- function(start,
       }
     )
 
+    mfrm_em_check_ascent(-fn(par), -fn(m_opt$par), "auxiliary log-likelihood")
+    candidate_state <- build_mfrm_mml_em_state(m_opt$par, idx, config, sizes, quad)
+    mfrm_em_check_ascent(state$marginal_loglik, candidate_state$marginal_loglik,
+                        "marginal log-likelihood")
     par <- m_opt$par
+    state <- candidate_state
     total_fn <- total_fn + as.integer(unname(m_opt$counts[["function"]] %||% 0L))
     total_gr <- total_gr + as.integer(unname(m_opt$counts[["gradient"]] %||% 0L))
     last_completed_it <- as.integer(it)
@@ -1444,7 +1475,7 @@ run_mfrm_mml_em_optimization <- function(start,
   }
 
   checkpoint_resume_trace <- ll_trace
-  final_state <- build_mfrm_mml_em_state(par, idx, config, sizes, quad)
+  final_state <- state
   final_loglik <- final_state$marginal_loglik
   if (length(ll_trace) == 0L ||
       !isTRUE(isTRUE(all.equal(tail(ll_trace, 1L), final_loglik, tolerance = 1e-12)))) {

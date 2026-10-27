@@ -4,6 +4,7 @@
 \alias{mfrm_facet_intervals}
 \alias{print.mfrm_facet_intervals}
 \alias{summary.mfrm_facet_intervals}
+\alias{confint.mfrm_facet_intervals}
 \alias{vcov.mfrm_facet_intervals}
 \title{Pointwise intervals for fixed facet estimates and contrasts}
 \usage{
@@ -25,6 +26,8 @@ mfrm_facet_intervals(
 \method{print}{mfrm_facet_intervals}(x, ...)
 
 \method{summary}{mfrm_facet_intervals}(object, ...)
+
+\method{confint}{mfrm_facet_intervals}(object, parm = NULL, level = object$settings$level, ...)
 
 \method{vcov}{mfrm_facet_intervals}(object, ...)
 }
@@ -104,13 +107,21 @@ assumption, not a check inferred from different Person identifiers.}
 \item{interaction}{Optional exact name of one fitted two-facet interaction,
 for example \code{"Rater:Criterion"}. Omit \code{facet} and \code{comparison_review}.
 This selects jointly fitted cell effects rather than fixed-baseline bias
-screens. Requires \code{method = "model"}, \code{scale = "native"}, full direct
-fixed-grid RSM/PCM MML with fixed N(0,1), one interaction, no anchors,
-groups, dummy facets or shrinkage. See the joint-cell section below.}
+screens. Requires \code{method = "model"}, \code{scale = "native"}, full fixed-grid
+RSM/PCM MML (direct, EM or hybrid) with fixed N(0,1), one interaction,
+no anchors, groups, dummy facets or shrinkage. Every engine must pass the
+common numerical and full-joint information checks; EM stopping alone
+does not qualify intervals. See the joint-cell section below.}
 
 \item{x, object}{An object returned by \code{mfrm_facet_intervals()}.}
 
 \item{...}{Unused by print and summary methods.}
+
+\item{parm}{For \code{confint()}, optional distinct target names from
+\code{object$table$Target}. Extracts the stored limits without recalculation;
+\code{level} must match the saved level. Use \code{mfrm_facet_intervals()} to
+calculate a different level. Unavailable limits remain \code{NA}; inspect
+\code{summary(object)} for their eligibility and reasons.}
 }
 \value{
 An \code{mfrm_facet_intervals} object with \code{table}, selected target

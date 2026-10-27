@@ -29,7 +29,7 @@ mfrm_native_location_source <- function(fit, comparison_review = NULL, interacti
         mfrmr_adaptive_integration(cfg) || !is.character(interaction) ||
         length(interaction) != 1L || is.na(interaction) ||
         length(cfg$interaction_specs) != 1L || !interaction %in% names(cfg$interaction_specs))
-      stop("Joint cell intervals require one fitted two-facet RSM/PCM interaction, full direct fixed-grid MML, fixed N(0,1), and no shrinkage or dummy facets.", call. = FALSE)
+      stop("Joint cell intervals require one fitted two-facet RSM/PCM interaction, full fixed-grid MML, fixed N(0,1), and no shrinkage or dummy facets.", call. = FALSE)
     anchors <- extract_anchor_tables(cfg)
     if (nrow(anchors$anchors) || nrow(anchors$groups))
       stop("Joint cell intervals do not yet support anchors or group constraints.", call. = FALSE)
@@ -62,10 +62,12 @@ mfrm_native_location_source <- function(fit, comparison_review = NULL, interacti
   if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit") ||
       !identical(cfg$method, "MML") || !cfg$model %in% c("RSM", "PCM", "GPCM") ||
       (!active && !gpcm && !comparison && !joint) || mfrm_has_product_slopes(fit) ||
-      !identical(cfg$estimation_control$mml_engine_used, "direct") ||
+      !(cfg$estimation_control$mml_engine_used %in%
+        if (joint) c("direct", "em", "hybrid") else "direct") ||
       !length(fit$prep$data$Weight) || any(!is.finite(fit$prep$data$Weight)) ||
       any(fit$prep$data$Weight != 1) || (!comparison && !joint && length(cfg$interaction_specs))) {
-    stop(if (comparison || joint) "Interaction intervals require direct MML and unit weights." else
+    stop(if (joint) "Joint cell intervals require direct, EM or hybrid MML and unit weights." else
+      if (comparison) "Interaction intervals require direct MML and unit weights." else
       "Native location intervals require direct MML, unit weights, no interactions, and an estimated normal RSM/PCM population or one-family GPCM.", call. = FALSE)
   }
   if (anchor_origin) {

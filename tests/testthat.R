@@ -30,6 +30,7 @@ cran_light_tests <- c(
   "bias-numerics",
   "marginal-fit-availability",
   "mml-starts",
+  "interaction-em",
   "facets-manual-consistency",
   "facets-results",
   "fair-delta",

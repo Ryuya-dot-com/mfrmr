@@ -1271,7 +1271,7 @@ The current mfrmr routes are:
 
 | Model route | Estimation and calculation in this version |
 | --- | --- |
-| Public RSM / PCM | MML is the default; JML is also available. MML uses direct optimization by default. EM and hybrid are available for supported additive, fixed-population, fixed-integration settings (`population = NULL`). |
+| Public RSM / PCM | MML is the default; JML is also available. MML uses direct optimization by default. EM and hybrid support additive and jointly fitted two-facet interaction models with a fixed population and fixed integration (`population = NULL`). |
 | Public one-slope-family GPCM | MML uses direct optimization. Requests for EM or hybrid currently fall back to direct and record the choice in `fit$summary`. JML is available within its separate restrictions. |
 | Provisional two-slope-family GMFRM | Explicit fixed-standard-normal MML with generalized EM or adaptive direct fitting. Summaries, conditional curves, experimental component-slope and location/contrast intervals, and separately checked fitted-object/portable conditional EAP are available. Coverage remains unqualified; curve/step intervals and model ranking remain unavailable. |
 

@@ -85,8 +85,8 @@ test_that("start review uses actual engines and preserves raw EM review", {
   joint <- suppressWarnings(fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score",
     facet_interactions = "Rater:Criterion", mml_engine = "em", mml_starts = 0))
   expect_identical(joint$opt$start_review$table$EngineRequested, "em")
-  expect_identical(joint$opt$start_review$table$EngineUsed, "direct")
-  expect_true(nzchar(joint$opt$start_review$table$Warning))
+  expect_identical(joint$opt$start_review$table$EngineUsed, "em")
+  expect_false(joint$opt$mml_engine$Fallback)
 })
 
 test_that("GPCM adaptive review preserves the integration basis and slope constraint", {

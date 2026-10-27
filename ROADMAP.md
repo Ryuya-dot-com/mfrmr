@@ -488,7 +488,7 @@ already exist; verifying them under the revised constraints is part of this
 release work. This differs from propagating uncertainty in externally
 estimated anchors. Bias-screening SEs and conditional bounds retain their
 screening interpretation. For one fitted two-facet interaction in fixed-N(0,1),
-fixed-grid direct RSM/PCM MML, `mfrm_facet_intervals(interaction = ...)` now
+fixed-grid RSM/PCM MML (direct, EM or hybrid), `mfrm_facet_intervals(interaction = ...)` now
 provides joint-information cell and contrast intervals. This separate extension
 uses all nuisance-parameter uncertainty; it is not automatic anchor alignment,
 a replacement for screening, or a guarantee of simultaneous inference.

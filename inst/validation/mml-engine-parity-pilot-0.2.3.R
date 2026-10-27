@@ -889,11 +889,9 @@ mfrmr_engine_global_summary <- function(path_results, pairwise_results,
         "pcm_direct", "pcm_em", "pcm_hybrid"
       )
     ] %in% TRUE) &&
-    all(scope_registry$Fallback[
-      scope_registry$ScopeId %in% c(
-        "rsm_interaction_em", "pcm_population_hybrid"
-      )
-    ] %in% TRUE)
+    all(scope_registry$Fallback[scope_registry$ScopeId == "pcm_population_hybrid"] %in% TRUE) &&
+    all(scope_registry$Fallback[scope_registry$ScopeId == "rsm_interaction_em"] %in% FALSE) &&
+    all(scope_registry$Used[scope_registry$ScopeId == "rsm_interaction_em"] == "em")
 
   raw_em <- path_results[path_results$Path == "em_raw", , drop = FALSE]
   data.frame(

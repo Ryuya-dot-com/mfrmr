@@ -558,6 +558,20 @@ uncertainty, subgroup comparisons and design planning.
   bundles, retaining old bundles for old-ID exports. Neither a met stopping
   criterion nor default controls certify numerical precision.
 
+* RSM/PCM joint interaction models now accept `mml_engine = "em"` and
+  `"hybrid"` with a fixed standard-normal population and fixed quadrature.
+  Hybrid fitting uses EM initialization followed by direct optimization;
+  direct remains the default. Ordinary EM checks auxiliary and marginal
+  likelihood ascent before accepting numerical M steps. Joint-cell intervals
+  use the same full information and readiness checks across these engines.
+  EM alone does not establish stationarity, global optimality or adequate
+  integration, and need not be faster. Existing weight/anchor restrictions
+  on joint-cell intervals remain in force. A remaining direct-gradient stall
+  can trigger one polish with the likelihood constant removed from relative
+  stopping; likelihoods retain their original scale in all outputs. Saved
+  facet-interval objects also support `confint()` extraction at their stored
+  confidence level, retaining unavailable limits.
+
 * `fit_mfrm(..., mml_starts = c(0, 0.5, -0.5))` optionally reviews specified
   starting values for ordinary MML. Summary and report tables retain every
   attempt's likelihood, gradient, status, warnings and failures; long tables

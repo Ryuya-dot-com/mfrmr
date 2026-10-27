@@ -306,6 +306,12 @@ when the raw gradient is small. Each restart uses the requested \code{maxit}
 ceiling. A replacement must pass the original gradient/convergence checks,
 have no detected negative curvature and not worsen the objective beyond
 roundoff. Failed recovery retains the estimate with a numerical warning.
+For fixed-population, fixed-grid RSM/PCM interaction fits, a remaining
+gradient stall also permits one L-BFGS-B polish after subtracting a
+constant from the objective (\code{centered_objective_polish}). This removes
+the large likelihood constant from relative stopping, without changing
+derivatives or precision requirements. Stored likelihoods retain their
+original scale; a resolved likelihood loss is never accepted.
 This changes only the search coordinates, not the model or information
 matrix used for inference. It does not establish a global optimum,
 adequate quadrature, or valid confidence intervals. Inspect the
@@ -324,9 +330,17 @@ interpreting \code{EffectiveReltol} as a native \code{\link[stats:optim]{stats::
 \item{mml_engine}{MML optimization engine for \code{method = "MML"}:
 \code{"direct"} (default) uses the selected direct optimizer on the marginal
 log-likelihood,
-\code{"em"} uses an EM loop for \code{RSM} / \code{PCM} with \code{population = NULL}, or
-the explicitly scoped two-family GPCM route described below, and
-\code{"hybrid"} uses EM as a warm start before the direct optimizer. Unsupported
+\code{"em"} uses an EM loop for \code{RSM} / \code{PCM} with \code{population = NULL}, including
+model-estimated \code{facet_interactions}, or the explicitly scoped two-family
+GPCM route described below. \code{"hybrid"} uses EM as a warm start before the
+direct optimizer. Ordinary EM/hybrid requires fixed quadrature. Numerical
+M steps implement generalized EM, checking both the auxiliary and marginal
+log likelihood for non-decrease beyond roundoff before accepting an update;
+failed checks stop without replacing a valid checkpoint. This is not a
+block ECM algorithm or a guarantee of global convergence or faster fitting.
+Use \code{mml_starts} to review specified starts and keep integration sensitivity
+separate. For a raw EM fit with a large terminal gradient, use \code{"hybrid"}
+or \code{"direct"} and review the resulting readiness. Unsupported
 one-family combinations fall back to \code{"direct"} and record that fallback in
 \code{fit$summary}. Direct, hybrid, and EM engines all require the common
 terminal-gradient check for the Numerical component of fit readiness; EM

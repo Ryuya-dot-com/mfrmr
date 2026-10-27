@@ -1570,9 +1570,14 @@ Interpretation:
   ConQuest also reports information criteria, but cross-software comparisons
   require matching likelihoods and parameter counts, not just table labels.
   See [ConQuest commands](https://conquestmanual.acer.org/s4-00.html).
-- Joint facet interactions currently use direct optimization. Requesting
-  ordinary EM does not make this an independent EM fit; inspect recorded
-  optimizer/fallback diagnostics. The conditional cell screen itself is not EM.
+- Joint RSM/PCM interactions use direct optimization by default. With a fixed
+  standard-normal population and fixed quadrature, `mml_engine = "hybrid"`
+  initializes the fit with EM before direct finishing; `"em"` retains the EM
+  solution with its common terminal-gradient review. Use `mml_starts` to
+  examine specified initial values, and inspect `summary(fit)$starting_values`
+  and fit readiness before comparing models. EM can be slower and does not
+  resolve sparse-design identification or insufficient quadrature. The
+  conditional cell screen itself is not EM.
 
 ## 7. Multi-wave anchor review
 
