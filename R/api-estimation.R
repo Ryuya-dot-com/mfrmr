@@ -6226,6 +6226,9 @@ make_anchor_table <- function(fit,
 #' @seealso [fit_mfrm()], [analyze_residual_pca()], [build_visual_summaries()],
 #'   [mfrmr_visual_diagnostics], [mfrmr_reporting_and_apa]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("diagnose_mfrm", run.dontrun = TRUE)
+#' \dontrun{
 #' # Load the package and example ratings
 #' library(mfrmr)
 #' ratings <- load_mfrmr_data("example_operational")
@@ -6255,6 +6258,7 @@ make_anchor_table <- function(fit,
 #'
 #' # Distinguish residual-based checks from marginal model checks
 #' diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+#' }
 #' @section References:
 #' - Wright, B. D., & Masters, G. N. (1982). *Rating scale analysis*.
 #'   MESA Press. (G/R/H separation, reliability, and strata

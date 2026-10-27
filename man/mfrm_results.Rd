@@ -478,6 +478,9 @@ evidence and boundaries; they do not add ordinary-model reporting templates.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("mfrm_results", run.dontrun = TRUE)
+\dontrun{
 # Load the package and example ratings
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
@@ -501,6 +504,7 @@ review$next_actions
 
 # Draw the Wright map
 plot(res)
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}},

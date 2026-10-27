@@ -334,6 +334,9 @@ mfrmr_calibration_score_overview <- function(x) {
 #' @name mfrm_calibration_score_methods
 #'
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("mfrm_calibration_score_methods", run.dontrun = TRUE)
+#' \dontrun{
 #' dat <- load_mfrmr_data("example_core")
 #' ids <- unique(dat$Person)
 #' training <- dat[dat$Person %in% ids[1:18], , drop = FALSE]
@@ -359,6 +362,7 @@ mfrmr_calibration_score_overview <- function(x) {
 #' build_summary_table_bundle(scores)$table_index
 #' plot(scores, type = "interval", draw = FALSE)
 #' plot(scores, type = "edge_mass", draw = FALSE)
+#' }
 NULL
 
 #' @rdname mfrm_calibration_score_methods

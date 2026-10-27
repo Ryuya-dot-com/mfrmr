@@ -54,6 +54,9 @@ penalty. Neither is an ordinary maximized likelihood for AIC or testing.
 categories; its ordinary-MLE warnings are not penalty-rank diagnostics.
 }
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("summary.mfrm_jeffreys_fit", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("example_core")
 # Each row is one Person's rating by a Rater on a Criterion.
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
@@ -67,4 +70,5 @@ scores$reference_scores # Expected averages under the same plan for all Persons
 intervals <- confint(scores, parm = c("P001", "P002"), method = "delta")
 intervals[, c("Target", "Estimate", "SE", "Available", "CIEligible")]
 # Numerical availability is not a qualification of small-sample coverage.
+}
 }

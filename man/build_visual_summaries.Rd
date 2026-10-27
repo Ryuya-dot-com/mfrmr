@@ -102,6 +102,9 @@ functions behind each visual family.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("build_visual_summaries", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 # A balanced slice retains every Rater and Criterion while running quickly.
 toy <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
@@ -134,6 +137,7 @@ if (interactive()) {
     palette = c(warning = "#cb181d", summary = "#3182bd"),
     label_angle = 45
   )
+}
 }
 }
 \seealso{

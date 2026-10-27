@@ -46,6 +46,9 @@ Returns the plotting object produced by the delegated route:
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_facets_run", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 out <- run_mfrm_facets(
@@ -60,6 +63,7 @@ p_fit$wright_map$data$plot
 p_qc <- plot(out, type = "qc", draw = FALSE)
 p_qc$data$plot
 
+}
 }
 \seealso{
 \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \link[=plot.mfrm_fit]{plot(x, type = "qc")},

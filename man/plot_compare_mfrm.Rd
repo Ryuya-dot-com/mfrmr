@@ -132,6 +132,9 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("plot_compare_mfrm", run.dontrun = TRUE)
+\dontrun{
 # Load one dataset for both models
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -171,6 +174,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 paired <- plot(fit_rsm, comparison = fit_pcm, draw = FALSE)
 head(paired$data$differences)
 # Differences are PCM minus RSM; no difference SE or significance test is computed
+}
 }
 \seealso{
 \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \code{\link[=as_ggplot]{as_ggplot()}}, \code{\link[=compare_mfrm]{compare_mfrm()}}

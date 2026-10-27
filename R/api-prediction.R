@@ -132,6 +132,9 @@
 #' @seealso [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()],
 #'   [evaluate_mfrm_design()], [summary.mfrm_population_prediction]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("predict_mfrm_population", run.dontrun = TRUE)
+#' \dontrun{
 #' spec <- build_mfrm_sim_spec(
 #'   n_person = 16,
 #'   n_rater = 3,
@@ -148,6 +151,7 @@
 #' )
 #' s_pred <- summary(pred)
 #' s_pred$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
+#' }
 #' @section Saved-result reuse:
 #' Fit-derived forecasts must match the source fit when supplied to archive or
 #' replay helpers. Explicit `sim_spec` forecasts remain separate scenarios;
@@ -353,10 +357,10 @@ predict_mfrm_population <- function(fit = NULL,
 #' @examples
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
-#' saved <- readRDS(system.file("examples", "simulation-results.rds",
+#' saved <- readRDS(system.file("examples", "simulation-population.rds",
 #'   package = "mfrmr", mustWork = TRUE))
 #' # Inspect saved$generation_warnings and the result's run/status tables.
-#' pred <- saved$population
+#' pred <- saved$result
 #' s <- summary(pred)
 #' s$overview
 #' s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]

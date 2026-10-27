@@ -1285,12 +1285,16 @@ visual_scope_table <- function(fit, checklist) {
 #' - `notes`: interpretation notes
 #' @seealso [reporting_checklist()], [summary.mfrm_apa_outputs]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("summary.mfrm_reporting_checklist", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 7, maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
 #' chk <- reporting_checklist(fit, diagnostics = diag)
 #' summary(chk)
+#' }
 #' @method summary mfrm_reporting_checklist
 #' @export
 summary.mfrm_reporting_checklist <- function(object, top_n = 10, ...) {

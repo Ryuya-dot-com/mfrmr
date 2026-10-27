@@ -341,6 +341,9 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("build_equating_chain", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
 d1 <- toy[toy$Person \%in\% people[1:24], , drop = FALSE]
@@ -357,6 +360,7 @@ summary(fit2)
 chain <- build_equating_chain(list(Form1 = fit1, Form2 = fit2))
 summary(chain)
 chain$cumulative
+}
 }
 \seealso{
 \code{\link[=detect_anchor_drift]{detect_anchor_drift()}}, \code{\link[=anchor_to_baseline]{anchor_to_baseline()}},

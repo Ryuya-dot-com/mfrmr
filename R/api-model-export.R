@@ -127,6 +127,9 @@
 #' Bayesian estimation using Hamiltonian Monte Carlo. *Behaviormetrika, 47*,
 #' 469-496. \doi{10.1007/s41237-020-00115-7}. Equation 9, Sections 6-7 and Appendix.
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("export_mfrm_model", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("example_core")
 #' # Illustrative fixed reference; applications need justified calibration values.
 #' anchor <- data.frame(Facet = "Rater",
@@ -147,6 +150,7 @@
 #' bundle$priors
 #' # Run each bundle's run.R separately if external sampling is wanted.
 #' unlink(c(stan$output_dir, brms$output_dir), recursive = TRUE)
+#' }
 #' @export
 export_mfrm_model <- function(fit, output_dir, format = c("stan", "brms"),
                               location_prior_sd = 1, step_prior_sd = 1,

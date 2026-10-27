@@ -121,6 +121,9 @@ diagnostics without refitting the model.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("facets_output_contract_review", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -129,6 +132,7 @@ diag <- example_fit$diagnostics
 contract_review <- facets_output_contract_review(fit, diagnostics = diag, branch = "facets")
 summary(contract_review)
 p <- plot(contract_review, draw = FALSE)
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}},

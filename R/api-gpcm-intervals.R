@@ -463,6 +463,9 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #'   Journal of Statistical Software, 95(1), 1--36. \doi{10.18637/jss.v095.i01}.
 #' @seealso [gpcm_capability_matrix()], [build_weighting_review()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("confint.mfrm_fit", run.dontrun = TRUE)
+#' \dontrun{
 #' # Compare intervals for free coefficients and relative discriminations.
 #' ratings <- load_mfrmr_data("example_core")
 #' # Reuse the synthetic GPCM fit; estimation uses 61 quadrature points.
@@ -490,6 +493,7 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #' # A separate, prespecified profile calculation can be requested with
 #' # confint(fit, parm = "slopes", method = "profile", slope = chosen_rater).
 #' # Choose chosen_rater from fit$slopes$SlopeFacet; see the profile section.
+#' }
 #' @export
 confint.mfrm_fit <- function(object, parm = NULL, level = .95,
                               scale = c("relative", "standardized"), contrasts = NULL,

@@ -242,6 +242,9 @@ or \code{\link[=export_summary_appendix]{export_summary_appendix()}} /
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("mfrmr_reports_and_tables", run.dontrun = TRUE)
+\dontrun{
 # Load the package and example ratings
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
@@ -278,4 +281,5 @@ file <- tempfile(fileext = ".rds") # Choose a lasting path for your analysis
 saveRDS(res, file)
 saved <- readRDS(file)
 summary(saved)$triage # No refitting or repeated diagnostic calculation
+}
 }

@@ -576,6 +576,9 @@
 #' \doi{10.3390/appliedmath4030063}
 #'
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("mfrmr_linking_and_dff", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("example_core")
 #' people <- unique(ratings$Person)
 #' baseline_data <- ratings[ratings$Person %in% people[1:24], , drop = FALSE]
@@ -600,5 +603,6 @@
 #' # Fixed-anchor differences are zero by construction, not evidence of stability.
 #' linked$drift[, c("Facet", "Level", "Drift")]
 #'
+#' }
 #' @name mfrmr_linking_and_dff
 NULL

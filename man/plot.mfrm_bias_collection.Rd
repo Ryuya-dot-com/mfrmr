@@ -94,6 +94,9 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_bias_collection", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML")
@@ -101,6 +104,7 @@ screens <- estimate_all_bias(fit)
 p <- plot(screens)
 plot_data(p, "overview")
 plot(screens, pair = "Rater x Criterion", type = "ranked")
+}
 }
 \seealso{
 \code{\link[=estimate_all_bias]{estimate_all_bias()}}, \code{\link[=summary.mfrm_bias_collection]{summary.mfrm_bias_collection()}},

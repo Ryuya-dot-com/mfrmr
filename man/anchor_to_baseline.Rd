@@ -187,6 +187,9 @@ neither establishes anchor invariance or a successful substantive link.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("anchor_to_baseline", run.dontrun = TRUE)
+\dontrun{
 # Packaged synthetic teaching data; no data-generation code is needed.
 ratings <- load_mfrmr_data("example_core")
 people <- unique(ratings$Person)
@@ -205,6 +208,7 @@ summary(res)
 # These fixed-value differences are not a test of Criterion stability.
 head(res$drift[, c("Facet", "Level", "Drift", "Flag")])
 res$baseline_anchors[1:3, ]
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=make_anchor_table]{make_anchor_table()}}, \code{\link[=detect_anchor_drift]{detect_anchor_drift()}},

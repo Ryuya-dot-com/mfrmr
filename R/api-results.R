@@ -5891,6 +5891,9 @@ mfrm_report_html <- function(report) {
 #'   [build_apa_outputs()], [reporting_checklist()],
 #'   [mfrmr_output_guide()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("mfrm_report", run.dontrun = TRUE)
+#' \dontrun{
 #' # Load the package and example ratings
 #' library(mfrmr)
 #' ratings <- load_mfrmr_data("example_operational")
@@ -5931,6 +5934,7 @@ mfrm_report_html <- function(report) {
 #' # Review in a browser, then choose a permanent path for continuing work.
 #' recipient_file <- tempfile(fileext = ".html")
 #' stopifnot(file.copy(sheet$path, recipient_file, overwrite = FALSE))
+#' }
 #' @export
 mfrm_report <- function(x,
                         style = c("qc", "apa", "validation", "reviewer", "technical", "rater"),
@@ -6327,6 +6331,9 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' @seealso [mfrm_results()], [launch_mfrmr_viewer()],
 #'   [export_mfrm_bundle()], [export_summary_appendix()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("export_mfrm_results", run.dontrun = TRUE)
+#' \dontrun{
 #' # Load the package and example ratings
 #' library(mfrmr)
 #' ratings <- load_mfrmr_data("example_operational")
@@ -6362,6 +6369,7 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' exported$plot_errors
 #' # Full paths remain in exported$written_files$Path.
 #' # Open index.html in output_dir to read the report.
+#' }
 #' @export
 export_mfrm_results <- function(x,
                                 output_dir = ".",
@@ -7188,6 +7196,9 @@ export_mfrm_results <- function(x,
 #'   [export_mfrm_results()],
 #'   [launch_mfrmr_viewer()], [mfrmr_output_guide()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("mfrm_results", run.dontrun = TRUE)
+#' \dontrun{
 #' # Load the package and example ratings
 #' library(mfrmr)
 #' ratings <- load_mfrmr_data("example_operational")
@@ -7211,6 +7222,7 @@ export_mfrm_results <- function(x,
 #'
 #' # Draw the Wright map
 #' plot(res)
+#' }
 #' @export
 mfrm_results <- function(fit,
                          include = "standard",

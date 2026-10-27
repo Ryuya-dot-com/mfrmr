@@ -39,6 +39,9 @@
 #' @seealso [estimate_all_bias()], [summary.mfrm_bias_collection()],
 #'   [plot.mfrm_bias()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("plot.mfrm_bias_collection", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML")
@@ -46,6 +49,7 @@
 #' p <- plot(screens)
 #' plot_data(p, "overview")
 #' plot(screens, pair = "Rater x Criterion", type = "ranked")
+#' }
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_bias_collection <- function(x, pair = NULL,

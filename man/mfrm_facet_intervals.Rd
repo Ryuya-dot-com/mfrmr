@@ -702,6 +702,9 @@ and \code{\link[=export_mfrm_results]{export_mfrm_results()}} do not accept CML 
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("mfrm_facet_intervals", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
   model = "RSM", method = "MML", rating_min = 1, rating_max = 4,
@@ -748,6 +751,7 @@ if (requireNamespace("lpSolve", quietly = TRUE)) {
   saved <- readRDS(file)
   summary(saved) # Same conditional-information result, without refitting
   # Use plot(saved) for a figure; ordinary mfrm_results() does not accept CML.
+}
 }
 }
 \references{

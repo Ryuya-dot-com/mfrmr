@@ -165,6 +165,9 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #'   [mfrmr_workflow_methods], [mfrmr_compatibility_layer]
 #'
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("run_mfrm_facets", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #'
@@ -194,6 +197,7 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #'     maxit = 30
 #'   )
 #'   out_mml$fit$summary[, c("Model", "Method", "MethodUsed")]
+#' }
 #' }
 #' @param mml_integration MML integration mode passed to [fit_mfrm()]:
 #'   `"fixed"` (default) or `"adaptive"`. Adaptive integration requires the

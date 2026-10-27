@@ -195,6 +195,9 @@ See \link{mfrmr_compatibility_layer} for migration and replay behavior.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("predict_mfrm_population", run.dontrun = TRUE)
+\dontrun{
 spec <- build_mfrm_sim_spec(
   n_person = 16,
   n_rater = 3,
@@ -211,6 +214,7 @@ pred <- predict_mfrm_population(
 )
 s_pred <- summary(pred)
 s_pred$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
+}
 }
 \seealso{
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}},

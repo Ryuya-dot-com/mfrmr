@@ -70,10 +70,10 @@ identification identity, not evidence of unbiased estimation.
 \examples{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
-saved <- readRDS(system.file("examples", "simulation-results.rds",
+saved <- readRDS(system.file("examples", "simulation-recovery.rds",
   package = "mfrmr", mustWork = TRUE))
 # Inspect saved$generation_warnings and the result's run/status tables.
-rec <- saved$recovery
+rec <- saved$result
 plot(rec, type = "summary", metric = "rmse", draw = FALSE)
 }
 \seealso{

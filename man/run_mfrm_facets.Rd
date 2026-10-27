@@ -196,6 +196,9 @@ one-shot wrapper.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("run_mfrm_facets", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 
@@ -225,6 +228,7 @@ if (interactive()) {
     maxit = 30
   )
   out_mml$fit$summary[, c("Model", "Method", "MethodUsed")]
+}
 }
 }
 \seealso{

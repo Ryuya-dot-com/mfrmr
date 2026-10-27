@@ -78,6 +78,9 @@ scale across administrations.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("build_linking_review", run.dontrun = TRUE)
+\dontrun{
 # Deliberately linked teaching waves: common labels below represent the
 # same rater and criterion identities by construction.
 toy <- load_mfrmr_data("example_core")
@@ -96,6 +99,7 @@ review <- build_linking_review(anchor_review = anchor_review_obj, drift = drift,
 summary(review)
 review$top_linking_risks
 review$group_view_index
+}
 }
 \seealso{
 \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, \code{\link[=detect_anchor_drift]{detect_anchor_drift()}},

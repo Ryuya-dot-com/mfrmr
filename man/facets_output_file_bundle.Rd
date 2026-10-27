@@ -141,6 +141,9 @@ score-scale decision. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_m
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("facets_output_file_bundle", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -149,6 +152,7 @@ out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_
 summary(out)
 p_out <- plot(out, draw = FALSE)
 p_out$data$plot
+}
 }
 \seealso{
 \code{\link[=category_curves_report]{category_curves_report()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},

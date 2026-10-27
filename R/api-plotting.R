@@ -2462,6 +2462,9 @@ plot_displacement <- function(x,
 #' @seealso [interrater_agreement_table()], [plot(x, type = "facets_chisq")][plot.mfrm_fit],
 #'   [plot(x, type = "qc")][plot.mfrm_fit], [mfrmr_visual_diagnostics]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("plot_interrater_agreement", run.dontrun = TRUE)
+#' \dontrun{
 #' library(mfrmr)
 #'
 #' # Saved synthetic MML/RSM analysis of example_operational.
@@ -2476,6 +2479,7 @@ plot_displacement <- function(x,
 #' # Optional: compare the direction and magnitude of observed-score differences
 #' plot(fit, type = "agreement", rater_facet = "Rater", metric = "difference")
 #' # Positive horizontal values mean Rater1 assigned higher scores than Rater2
+#' }
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @keywords internal
 #' @section Migration in 0.2.4:

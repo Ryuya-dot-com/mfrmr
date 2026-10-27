@@ -775,6 +775,9 @@ validate_unexpected_coverage <- function(x) {
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [displacement_table()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("fair_average_table", run.dontrun = TRUE)
+#' \dontrun{
 #' library(mfrmr)
 #'
 #' # Saved synthetic MML/RSM analysis of example_operational.
@@ -799,6 +802,7 @@ validate_unexpected_coverage <- function(x) {
 #' head(extreme_report$raw_by_facet$Person[, c("Level", "PrimaryMeasure",
 #'      "Measure", "MeasureBasis", "ModelSE", "MeasureSEBasis")])
 #' # ModelSE describes the adjusted total when MeasureBasis says extrapolation
+#' }
 #' @section References:
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
 #' - Linacre, J. M. (1994). *Many-facet Rasch Measurement* (2nd ed.).
@@ -5230,6 +5234,9 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #'   [export_mfrm_bundle()], [mfrmr_reports_and_tables],
 #'   [mfrmr_compatibility_layer]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("facets_output_file_bundle", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -5238,6 +5245,7 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' summary(out)
 #' p_out <- plot(out, draw = FALSE)
 #' p_out$data$plot
+#' }
 #' @export
 facets_output_file_bundle <- function(fit,
                                       diagnostics = NULL,

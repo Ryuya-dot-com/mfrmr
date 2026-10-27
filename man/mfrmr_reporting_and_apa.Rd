@@ -371,6 +371,9 @@ caveated \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=bui
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("mfrmr_reporting_and_apa", run.dontrun = TRUE)
+\dontrun{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -398,4 +401,5 @@ tbl <- apa_table(results, which = "facet_overview")
 tbl # Prints the table, caption, and note; review them before using in a paper
 
 # For individual estimates, see as.data.frame(fit)
+}
 }

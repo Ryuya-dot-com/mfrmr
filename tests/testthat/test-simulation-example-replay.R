@@ -1,6 +1,13 @@
+simulation_saved_examples <- function() {
+  kinds <- c("recovery", "design", "diagnostic_screening", "signal_detection", "population")
+  parts <- lapply(kinds, function(kind) readRDS(system.file("examples",
+    paste0("simulation-", gsub("_", "-", kind), ".rds"), package = "mfrmr", mustWork = TRUE)))
+  c(stats::setNames(lapply(parts, `[[`, "result"), kinds),
+    list(generation_warnings = parts[[1]]$generation_warnings))
+}
+
 test_that("simulation consumer examples retain their settings and failed-run evidence", {
-  saved <- readRDS(system.file("examples", "simulation-results.rds",
-    package = "mfrmr", mustWork = TRUE))
+  saved <- simulation_saved_examples()
   classes <- c(recovery = "mfrm_recovery_simulation", design = "mfrm_design_evaluation",
     diagnostic_screening = "mfrm_diagnostic_screening",
     signal_detection = "mfrm_signal_detection", population = "mfrm_population_prediction")
@@ -19,8 +26,7 @@ test_that("simulation consumer examples retain their settings and failed-run evi
 })
 
 test_that("saved simulation consumers and recipe loading never regenerate responses or fits", {
-  path <- system.file("examples", "simulation-results.rds", package = "mfrmr", mustWork = TRUE)
-  saved <- readRDS(path)
+  saved <- simulation_saved_examples()
   before <- serialize(saved, NULL)
   blocked <- function(...) stop("Unexpected simulation or refitting")
   local_mocked_bindings(simulate_mfrm_data = blocked, fit_mfrm = blocked,
@@ -67,5 +73,5 @@ test_that("saved simulation consumers and recipe loading never regenerate respon
   rec <- recommend_mfrm_design(saved$design, max_ratings = 48, max_ratings_per_rater = 24)
   expect_true(is.data.frame(rec$recommended))
   expect_identical(serialize(saved, NULL), before)
-  expect_identical(readRDS(path), saved)
+  expect_identical(simulation_saved_examples(), saved)
 })

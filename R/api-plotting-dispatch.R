@@ -284,6 +284,9 @@ plot.mfrm_dif_interaction <- function(x, type = "heatmap", ...) {
 #'   forest rows use `data$data`, including `CI_Lower` and `CI_Upper`.
 #' @seealso [detect_anchor_drift()], [mfrmr_plot_migration]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("plot.mfrm_anchor_drift", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("example_core")
 #' people <- unique(ratings$Person)
 #' d1 <- ratings[ratings$Person %in% people[1:12], , drop = FALSE]
@@ -305,6 +308,7 @@ plot.mfrm_dif_interaction <- function(x, type = "heatmap", ...) {
 #' if (interactive()) {
 #'   plot(drift, type = "heatmap", preset = "publication")
 #' }
+#' }
 #' @export
 plot.mfrm_anchor_drift <- function(x, type = c("drift", "heatmap", "forest"), ...) {
   .mfrm_plot_call(plot_anchor_drift, x, c(list(type = match.arg(type)), list(...)))
@@ -320,6 +324,9 @@ plot.mfrm_anchor_drift <- function(x, type = c("drift", "heatmap", "forest"), ..
 #' @inheritSection plot_qc_pipeline Interpretation
 #' @seealso [run_qc_pipeline()], [mfrmr_plot_migration]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("plot.mfrm_qc_pipeline", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("study1")
 #' # These observed data trigger a category-support warning: the QC plot
 #' # displays that review requirement; convergence does not remove it.
@@ -328,6 +335,7 @@ plot.mfrm_anchor_drift <- function(x, type = c("drift", "heatmap", "forest"), ..
 #' qc <- run_qc_pipeline(fit)
 #' verdicts <- plot(qc, draw = FALSE)
 #' head(verdicts)
+#' }
 #' @export
 plot.mfrm_qc_pipeline <- function(x, type = c("traffic_light", "detail"), draw = TRUE, ...) {
   .mfrm_plot_call(plot_qc_pipeline, x, c(list(type = match.arg(type), draw = draw), list(...)))

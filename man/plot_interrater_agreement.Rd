@@ -179,6 +179,9 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("plot_interrater_agreement", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 
 # Saved synthetic MML/RSM analysis of example_operational.
@@ -193,6 +196,7 @@ plot(fit, type = "agreement", rater_facet = "Rater")
 # Optional: compare the direction and magnitude of observed-score differences
 plot(fit, type = "agreement", rater_facet = "Rater", metric = "difference")
 # Positive horizontal values mean Rater1 assigned higher scores than Rater2
+}
 }
 \seealso{
 \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")},

@@ -489,6 +489,9 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   [mfrm_cluster_hierarchical()], [plot.mfrm_clusters()],
 #'   [mice::mice()], [mice::complete()]
 #' @examples
+#' # Optional integration example (loads additional modelling or rendering packages).
+#' # example("mfrm_cluster_imputed", run.dontrun = TRUE)
+#' \dontrun{
 #' if (requireNamespace("mice", quietly = TRUE) &&
 #'     requireNamespace("cluster", quietly = TRUE)) {
 #'   attributes <- mice::nhanes2
@@ -508,6 +511,7 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   summary(result)
 #'   result$co_membership[1:4, 1:4]
 #'   result$imputation_model$loggedEvents
+#' }
 #' }
 #' @export
 mfrm_cluster_imputed <- function(x, imputed, impute, k, weights = NULL,

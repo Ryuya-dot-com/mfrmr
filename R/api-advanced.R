@@ -818,6 +818,9 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #'   [dif_interaction_table()], [plot(x, type = "heatmap")][plot.mfrm_dif], [dif_report()],
 #'   [subset_connectivity_report()], [mfrmr_linking_and_dff]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("analyze_dff", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -846,6 +849,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' #   reference groups share enough common elements for a comparable
 #' #   contrast; "demoted_*" rows lose linking under the refit branch
 #' #   and should be read as exploratory.
+#' }
 #' @rdname analyze_dff
 #' @export
 analyze_dff <- function(fit,
@@ -3863,6 +3867,9 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #'   [diagnose_mfrm()], [build_equating_chain()], [mfrmr_linking_and_dff]
 #' @export
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("anchor_to_baseline", run.dontrun = TRUE)
+#' \dontrun{
 #' # Packaged synthetic teaching data; no data-generation code is needed.
 #' ratings <- load_mfrmr_data("example_core")
 #' people <- unique(ratings$Person)
@@ -3881,6 +3888,7 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' # These fixed-value differences are not a test of Criterion stability.
 #' head(res$drift[, c("Facet", "Level", "Drift", "Flag")])
 #' res$baseline_anchors[1:3, ]
+#' }
 #' @param mml_integration MML integration mode passed to [fit_mfrm()]. `NULL`
 #'   inherits the baseline fit's mode for MML; JML uses `"fixed"`.
 #' @param centering_scope `NULL` inherits the baseline's convention. Older fits
@@ -4149,6 +4157,9 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #'   [make_anchor_table()], [plot(x)][plot.mfrm_anchor_drift], [mfrmr_linking_and_dff]
 #' @export
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("detect_anchor_drift", run.dontrun = TRUE)
+#' \dontrun{
 #' # Deliberately linked teaching waves: common labels below represent the
 #' # same rater and criterion identities by construction.
 #' toy <- load_mfrmr_data("example_core")
@@ -4164,6 +4175,7 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' summary(drift)
 #' head(drift$drift_table[, c("Facet", "Level", "Wave", "Drift", "Flag")])
 #' drift$common_elements
+#' }
 detect_anchor_drift <- function(fits,
                                 facets = NULL,
                                 drift_threshold = 0.5,
@@ -4724,6 +4736,9 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #'   [make_anchor_table()], [plot(x)][plot.mfrm_anchor_drift]
 #' @export
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("build_equating_chain", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' people <- unique(toy$Person)
 #' d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
@@ -4740,6 +4755,7 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' chain <- build_equating_chain(list(Form1 = fit1, Form2 = fit2))
 #' summary(chain)
 #' chain$cumulative
+#' }
 build_equating_chain <- function(fits,
                                  anchor_facets = NULL,
                                  include_person = FALSE,
@@ -5584,6 +5600,9 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' @seealso [review_mfrm_anchors()], [detect_anchor_drift()],
 #'   [build_equating_chain()], [plot(x)][plot.mfrm_anchor_drift], [mfrmr_linking_and_dff]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("build_linking_review", run.dontrun = TRUE)
+#' \dontrun{
 #' # Deliberately linked teaching waves: common labels below represent the
 #' # same rater and criterion identities by construction.
 #' toy <- load_mfrmr_data("example_core")
@@ -5602,6 +5621,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' summary(review)
 #' review$top_linking_risks
 #' review$group_view_index
+#' }
 #' @export
 build_linking_review <- function(anchor_review = NULL,
                                  drift = NULL,
@@ -6805,6 +6825,9 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #'   [displacement_table()], [plot(x, type = "unexpected")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit],
 #'   [plot(x, type = "marginal_fit")][plot.mfrm_fit], [plot(x, type = "marginal_pairwise")][plot.mfrm_fit]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("build_misfit_casebook", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' # A balanced slice retains every Rater and Criterion while running quickly.
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
@@ -6814,6 +6837,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #' casebook <- build_misfit_casebook(fit, diagnostics = diag, top_n = 10)
 #' summary(casebook)
 #' casebook$top_cases
+#' }
 #' @section Saved-result reuse:
 #' Supplied screening results must describe this fitted analysis. Results from
 #' another fit or older results without identity metadata are refused. See
@@ -7517,6 +7541,9 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' @return An object of class `mfrm_weighting_review`.
 #' @seealso [compare_mfrm()], [compute_information()], [gpcm_capability_matrix()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("build_weighting_review", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' rasch_fit <- fit_mfrm(
 #'   toy,
@@ -7541,6 +7568,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' review <- build_weighting_review(rasch_fit, gpcm_fit, theta_points = 41)
 #' summary(review)
 #' review$top_reweighted_levels
+#' }
 #' @name build_weighting_review
 #' @export
 build_weighting_review <- function(rasch_fit,

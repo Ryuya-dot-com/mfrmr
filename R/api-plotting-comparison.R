@@ -62,6 +62,9 @@
 #'   the native draw-free payloads and their exclusions/interpretation metadata.
 #' @seealso [plot.mfrm_fit()], [as_ggplot()], [compare_mfrm()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("plot_compare_mfrm", run.dontrun = TRUE)
+#' \dontrun{
 #' # Load one dataset for both models
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
@@ -101,6 +104,7 @@
 #' paired <- plot(fit_rsm, comparison = fit_pcm, draw = FALSE)
 #' head(paired$data$differences)
 #' # Differences are PCM minus RSM; no difference SE or significance test is computed
+#' }
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @keywords internal
 #' @section Migration in 0.2.4:

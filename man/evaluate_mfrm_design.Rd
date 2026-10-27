@@ -394,6 +394,9 @@ files are never silently reused or replaced by \code{"on_change"}.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("evaluate_mfrm_design", run.dontrun = TRUE)
+\dontrun{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
   design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 2),
   reps = 1,
@@ -404,6 +407,7 @@ s_eval <- summary(sim_eval)
 s_eval$design_summary[, c("Facet", "n_person", "MeanSeparation", "MeanSeverityRMSE")]
 p_eval <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 names(p_eval)
+}
 }
 \seealso{
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \link{summary.mfrm_design_evaluation}, \link{plot.mfrm_design_evaluation}

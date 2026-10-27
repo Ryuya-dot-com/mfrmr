@@ -175,6 +175,9 @@ calibrated inferential power. \code{GPCM} rows add explicit
 characteristics under the evaluated role-based design.
 }
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("evaluate_mfrm_diagnostic_screening", run.dontrun = TRUE)
+\dontrun{
 diag_eval <- evaluate_mfrm_diagnostic_screening(
   design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
   reps = 1,
@@ -183,6 +186,7 @@ diag_eval <- evaluate_mfrm_diagnostic_screening(
 )
 diag_eval$scenario_summary
 diag_eval$scenario_contrast
+}
 }
 \seealso{
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

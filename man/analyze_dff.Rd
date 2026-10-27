@@ -338,6 +338,9 @@ visible together.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("analyze_dff", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -366,6 +369,7 @@ if ("ScaleLinkStatus" \%in\% names(dff_refit$dif_table)) {
 #   reference groups share enough common elements for a comparable
 #   contrast; "demoted_*" rows lose linking under the refit branch
 #   and should be read as exploratory.
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=compare_mfrm]{compare_mfrm()}},

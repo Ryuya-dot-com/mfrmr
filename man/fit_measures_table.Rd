@@ -164,6 +164,9 @@ preserves the original guide to other diagnostic paths; marginal category
 counts are not posterior-averaged MnSq.
 }
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("fit_measures_table", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -176,6 +179,7 @@ fm$underfit
 # Include FACETS-style df/ZSTD companion columns for comparison.
 fm_facets <- fit_measures_table(fit, facet = "Rater", fit_df_method = "both")
 fm_facets$df_conversion_guide$decision_guide
+}
 }
 \references{
 Linacre, J. M. (2003). Size vs. significance: standardized

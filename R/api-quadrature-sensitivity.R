@@ -851,6 +851,9 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #'
 #' @seealso [fit_mfrm()], [diagnose_mfrm()], [apa_table()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("mml_quadrature_sensitivity", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -863,6 +866,7 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' summary(sensitivity)
 #' # Preserve small numerical differences when preparing the sensitivity table.
 #' apa_table(sensitivity, digits = 5)
+#' }
 #' @export
 mml_quadrature_sensitivity <- function(
     fit,

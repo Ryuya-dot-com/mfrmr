@@ -116,6 +116,9 @@ model; they do not propagate estimated-edge or model-selection uncertainty.
 Changing \code{level} does not change the fitted object or its stored plot.
 }
 \examples{
+# Optional integration example (loads additional modelling or rendering packages).
+# example("fit_rater_network", run.dontrun = TRUE)
+\dontrun{
 if (requireNamespace("ergm", quietly = TRUE) &&
     requireNamespace("igraph", quietly = TRUE)) {
   ratings <- load_mfrmr_data("example_core")
@@ -130,6 +133,7 @@ if (requireNamespace("ergm", quietly = TRUE) &&
   confint(model, level = 0.90) # Approximate, conditional on this binary network
   mfrm_report(model)$tables$coefficients
   plot(model, draw = FALSE)
+}
 }
 }
 \references{

@@ -42,6 +42,9 @@ standard errors produce no whisker, not a zero-width interval.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_anchor_drift", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("example_core")
 people <- unique(ratings$Person)
 d1 <- ratings[ratings$Person \%in\% people[1:12], , drop = FALSE]
@@ -62,6 +65,7 @@ chain_plot <- plot(chain, type = "chain", draw = FALSE)
 head(chain_plot$data$table)
 if (interactive()) {
   plot(drift, type = "heatmap", preset = "publication")
+}
 }
 }
 \seealso{

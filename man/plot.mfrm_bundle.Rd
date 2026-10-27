@@ -160,6 +160,9 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_bundle", run.dontrun = TRUE)
+\dontrun{
 toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person \%in\% toy_people, , drop = FALSE]
@@ -189,6 +192,7 @@ if (interactive()) {
     palette = c(warning = "#cb181d", summary = "#3182bd"),
     label_angle = 45
   )
+}
 }
 }
 \seealso{

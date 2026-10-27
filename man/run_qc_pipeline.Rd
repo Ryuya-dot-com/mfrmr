@@ -163,6 +163,9 @@ diagnostics without refitting the model.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("run_qc_pipeline", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("study1")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
@@ -171,6 +174,7 @@ qc <- run_qc_pipeline(fit)
 qc
 summary(qc)
 qc$verdicts
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}},

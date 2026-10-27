@@ -240,6 +240,9 @@ static figures, numeric tables and an HTML export recipe.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("as_ggplot", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 # A balanced slice retains every Rater and Criterion while running quickly.
 toy <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
@@ -248,6 +251,7 @@ fit <- fit_mfrm(toy, "Person",
 as_ggplot(fit, type = "wright")
 as_ggplot(fit, type = "fit_pathway", include_person = TRUE)
 as_ggplot(plot(fit, type = "ccc", draw = FALSE))
+}
 }
 \seealso{
 \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}} with \code{scope = "plots"} for selected

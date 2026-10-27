@@ -463,6 +463,9 @@ of \code{attr(result, "reml_source")$score_scale} to restore score-product units
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("confint.mfrm_multivariate_gstudy", run.dontrun = TRUE)
+\dontrun{
 # Published synthetic data: 10 persons, 6 common tasks, scores V and W.
 tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 g <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
@@ -494,6 +497,7 @@ if (requireNamespace("lme4", quietly = TRUE) && requireNamespace("minqa", quietl
   joint_ci <- confint(sparse_g, parm = "Person", score = c("V", "W"),
                       method = "reml_profile", assumption = "normal")
   joint_ci[, c("Source", "Estimate", "IntervalCenter", "Lower", "Upper", "Validation")]
+}
 }
 }
 \references{

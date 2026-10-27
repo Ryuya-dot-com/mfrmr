@@ -1331,12 +1331,16 @@ summarize_reference_benchmark_case <- function(case_id, case_type, fit_runs, des
 #'
 #' @return An object of class `mfrm_reference_benchmark`.
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("reference_case_benchmark", run.dontrun = TRUE)
+#' \dontrun{
 #' bench <- reference_case_benchmark(
 #'   cases = "synthetic_truth",
 #'   method = "JML",
 #'   maxit = 30
 #' )
 #' summary(bench)
+#' }
 #' @export
 reference_case_benchmark <- function(cases = c(
                                        "synthetic_truth",

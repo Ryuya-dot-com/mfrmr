@@ -67,6 +67,9 @@ pass rate.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("reference_case_review", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -74,6 +77,7 @@ fit <- example_fit$fit
 diag <- example_fit$diagnostics
 review <- reference_case_review(fit, diagnostics = diag)
 summary(review)
+}
 }
 \seealso{
 \code{\link[=facets_output_contract_review]{facets_output_contract_review()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}

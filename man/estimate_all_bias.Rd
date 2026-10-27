@@ -140,6 +140,9 @@ See \link{mfrmr_compatibility_layer} for migration instructions.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("estimate_all_bias", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML")
@@ -147,6 +150,7 @@ diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 bias_all <- estimate_all_bias(fit, diagnostics = diag)
 summary(bias_all)
 head(summary(bias_all)$cells)
+}
 }
 \seealso{
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}

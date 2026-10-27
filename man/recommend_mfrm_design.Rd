@@ -153,10 +153,10 @@ cost or scoring time. Ranking among passing designs still follows \code{prefer}.
 \examples{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
-saved <- readRDS(system.file("examples", "simulation-results.rds",
+saved <- readRDS(system.file("examples", "simulation-design.rds",
   package = "mfrmr", mustWork = TRUE))
 # Inspect saved$generation_warnings and the result's run/status tables.
-sim_eval <- saved$design
+sim_eval <- saved$result
 rec <- recommend_mfrm_design(
   sim_eval, max_ratings = 48, max_ratings_per_rater = 24
 )

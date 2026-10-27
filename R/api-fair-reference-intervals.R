@@ -351,6 +351,9 @@
 #'   construction; the present Monte Carlo diagnostic additionally allocates
 #'   errors across both endpoints and retains unresolved-draw envelopes.
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("confint.mfrm_fair_average", run.dontrun = TRUE)
+#' \dontrun{
 #' d <- load_mfrmr_data("example_core")
 #' # Calibrate the observed ratings with ordinary joint maximum likelihood.
 #' f <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score",
@@ -379,6 +382,7 @@
 #' bounded <- confint(fair, parm = c("P001", "P002"), method = "bounded")
 #' bounded[, c("Target", "Estimate", "DesignEstimate", "CI_Lower", "CI_Upper", "Informative")]
 #' attr(bounded, "support") # Check how much of the plan was actually observed.
+#' }
 #' @export
 confint.mfrm_fair_average <- function(object, parm = NULL, level = .95,
     nsim, seed, contrasts = NULL, anchor_source = NULL, generating_fit = NULL,

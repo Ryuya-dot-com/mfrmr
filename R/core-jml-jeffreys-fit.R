@@ -104,6 +104,9 @@ mfrm_fit_jeffreys <- function(a, supplied) {
 #'   `category_support` describes observed category usage, including missing
 #'   categories; its ordinary-MLE warnings are not penalty-rank diagnostics.
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("summary.mfrm_jeffreys_fit", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("example_core")
 #' # Each row is one Person's rating by a Rater on a Criterion.
 #' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
@@ -117,6 +120,7 @@ mfrm_fit_jeffreys <- function(a, supplied) {
 #' intervals <- confint(scores, parm = c("P001", "P002"), method = "delta")
 #' intervals[, c("Target", "Estimate", "SE", "Available", "CIEligible")]
 #' # Numerical availability is not a qualification of small-sample coverage.
+#' }
 #' @export
 summary.mfrm_jeffreys_fit <- function(object, ...) {
   rlang::check_dots_empty()

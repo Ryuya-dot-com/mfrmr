@@ -449,6 +449,9 @@ reported separately from mathematical unboundedness.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("confint.mfrm_fit", run.dontrun = TRUE)
+\dontrun{
 # Compare intervals for free coefficients and relative discriminations.
 ratings <- load_mfrmr_data("example_core")
 # Reuse the synthetic GPCM fit; estimation uses 61 quadrature points.
@@ -476,6 +479,7 @@ apa_table(saved) # Reuse the intervals without fitting again
 # A separate, prespecified profile calculation can be requested with
 # confint(fit, parm = "slopes", method = "profile", slope = chosen_rater).
 # Choose chosen_rater from fit$slopes$SlopeFacet; see the profile section.
+}
 }
 \references{
 Fischer, S. M., and Lewis, M. A. (2021). A robust and efficient

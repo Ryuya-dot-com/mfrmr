@@ -145,6 +145,9 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("mfrm_calibration_score_methods", run.dontrun = TRUE)
+\dontrun{
 dat <- load_mfrmr_data("example_core")
 ids <- unique(dat$Person)
 training <- dat[dat$Person \%in\% ids[1:18], , drop = FALSE]
@@ -170,6 +173,7 @@ apa_table(scores, which = "decisions")
 build_summary_table_bundle(scores)$table_index
 plot(scores, type = "interval", draw = FALSE)
 plot(scores, type = "edge_mass", draw = FALSE)
+}
 }
 \seealso{
 \link{mfrm_calibration_workflow}, \link{mfrm_calibration_capabilities},

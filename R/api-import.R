@@ -88,12 +88,16 @@
 #' one-way fitted-object import of the documented fields.
 #' @seealso [import_tam_fit()], [import_erm_fit()]
 #' @examples
+#' # Optional integration example (loads additional modelling or rendering packages).
+#' # example("import_mirt_fit", run.dontrun = TRUE)
+#' \dontrun{
 #' if (requireNamespace("mirt", quietly = TRUE)) {
 #'   response_matrix <- matrix(sample(0:1, 120, replace = TRUE), nrow = 40)
 #'   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
 #'   fit <- mirt::mirt(response_matrix, 1, itemtype = "Rasch", verbose = FALSE)
 #'   imported <- import_mirt_fit(fit, model = "RSM")
 #'   imported$summary
+#' }
 #' }
 #' @export
 import_mirt_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),

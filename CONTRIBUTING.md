@@ -155,14 +155,18 @@ The [CRAN Cookbook](https://contributor.r-project.org/cran-cookbook/docs_issues.
 also documents an `Overall checktime` NOTE above ten minutes. This is a
 submission-review criterion, not an automatic ten-minute process timeout.
 
-- Classify the example's purpose before changing its workload. Keep generation,
-  estimation and inference examples live. For `summary()`, `plot()` and other
+- Classify the example's purpose before changing its workload. Keep a short
+  executable route where it is useful. Put long estimation,
+  simulation and repeated-inference workflows in `\dontrun{}` with an explicit
+  reason and retain their original data, precision and complete runnable code.
+  For `summary()`, `plot()` and other
   consumers of simulation results, read a packaged synthetic result and execute
   the consumer. The simulation consumer examples use
-  `inst/examples/simulation-results.rds`; the adjacent `.R` file contains the
+  `inst/examples/simulation-*.rds` (one result per file);
+  `simulation-results.R` contains the
   complete regeneration recipe. Keep settings, warnings and failed runs in the
   saved object, and explain that a one-replication example illustrates structure,
-  not simulation precision. The generator entry-point examples remain live.
+  not simulation precision.
 - Ordinary table, plot and report examples reuse fitted inputs and matching
   diagnostics from `inst/examples/*-jml.rds` and `operational-mml*.rds`.
   `inst/examples/ordinary-fits.R` gives their complete regeneration recipe.
@@ -170,11 +174,27 @@ submission-review criterion, not an automatic ten-minute process timeout.
   without a previously executed example or a hidden package-wide fit cache.
   Label these as saved synthetic analyses; do not load an unused ratings table
   that appears to drive the analysis. Derive any needed data or labels from
-  that same saved analysis. Keep estimation, diagnostics and the primary
-  results/report/export examples live so users can replace the input data.
+  that same saved analysis. Keep complete data-to-result code so users can
+  replace the input data;
+  mark lengthy workflows for explicit execution rather than shrinking their
+  data or weakening estimation settings to meet a timing target.
   The full `NOT_CRAN=true` suite regenerates the ordinary fitted inputs and
   compares estimates and diagnostics; ordinary checks verify reuse without
   refitting. Update the saved inputs when their calculations change.
+- The ordinary test profile retains live RSM/PCM/GPCM (including adaptive
+  integration), two-family GPCM, CML, random-rater and testlet estimation,
+  independent likelihood/gradient checks, anchors, G/D inference, networks and
+  the data-to-report smoke path. More extensive report/plot combinations run
+  with `NOT_CRAN=true`: calibration and portable scoring remain covered by
+  `calibration-public-api`, `conditional-scoring` and `gmfrm-portable`; anchor
+  precision by `anchored-calibration`, `anchored-facet-intervals` and
+  `anchored-gpcm`; inference/reporting by `gpcm-inference-extensions`,
+  `gmfrm-interval-status`, `experimental-reporting`, `report-modules` and
+  `study-report`; FACETS checks by `facets-manual-consistency` and
+  `facets-results`. The complete suite retains the larger fixtures and all
+  detailed combinations. Do not shrink fixtures when that changes the numerical
+  or inferential
+  condition being tested.
 - Use `example_operational` for applied tutorials, `example_core` for
   idealized fast checks, and `example_bias` only when a planted non-null
   DFF/bias signal is needed.
@@ -193,20 +213,27 @@ submission-review criterion, not an automatic ten-minute process timeout.
   `R CMD check --as-cran` normally runs examples once without `donttest` code
   and again with it. Do not add this wrapper merely to hide expensive code:
   even the ordinary examples can then run twice. Keep short complete examples
-  unwrapped, and place longer
-  multi-step analyses in executed vignettes. Explain any remaining wrapper.
+  unwrapped; retain long workflows in help as explicitly runnable examples and
+  in relevant tutorials. Explain each wrapper.
   Guard optional Suggests with `requireNamespace()` or the relevant feature
   check, rather than relying on `\donttest{}` to avoid the dependency.
-- Reserve `\dontrun{}` for examples that genuinely cannot execute during a
-  check, such as workflows that require files produced by external software.
-  Reserve `@examplesIf interactive()` for functions that genuinely require an
-  interactive session.
+- Use `\dontrun{}` for measured long workflows, optional heavyweight
+  integrations and external-software examples. Give the reason and an explicit
+  `example("topic", run.dontrun = TRUE)` command. This keeps the complete code
+  visible without altering its analysis settings. Writing R Extensions
+  [documents this display-only mechanism](https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Documenting-functions);
+  brms uses it for its estimation examples. It is not limited to examples that
+  are impossible to run. Reserve `@examplesIf interactive()` for functions
+  that actually require interaction. Do not hide an error behind a wrapper.
 - For a measured long calculation, a commented recomputation call may accompany
   an executable example that reads and uses its saved synthetic result. Include
   the complete regeneration recipe, preserve its data and numerical settings,
   and check that the saved objects match and replay without refitting. A replay
-  check does not replace numerical tests of the estimator. Do not comment out
-  the entire workflow or advertise an unexecuted recipe as a fresh validation.
+  check does not replace numerical tests of the estimator. Prefer a complete
+  `\dontrun{}` block to commenting out every line of a long workflow. Check
+  optional examples explicitly when their code or dependencies change, reusing
+  matching successful execution logs when only their wrapper changes; do not
+  advertise an unexecuted recipe as a fresh validation.
 - Check that the retained example's optimization and integration controls
   support its stated purpose. Show the model's numerical checks where relevant;
   no quadrature order is a universally sufficient accuracy setting.
@@ -276,6 +303,9 @@ submission-review criterion, not an automatic ten-minute process timeout.
   `build/vignette.rds` index as well as `inst/doc`. Verify that its source,
   output and extracted R filenames match the current packaged articles;
   copying the HTML alone does not produce a complete vignette distribution.
+  For byte-identical sources restored by a checkout, retain their matching
+  source timestamps: a newer Rmd timestamp than its reused output raises a
+  check warning. Do not change dates to conceal an actual source change.
 - Packaged teaching data use R's lazy-data database. Access them through
   `load_mfrmr_data()` or `mfrmr::dataset_name` to reuse loaded objects; `data()`
   remains available. Measure data-loading cost before adding another cache.

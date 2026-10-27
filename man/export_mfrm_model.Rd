@@ -147,6 +147,9 @@ convergence, inference, or an external sampler's diagnostics. Repeated ratings
 retain the source conditional-independence assumption.
 }
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("export_mfrm_model", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("example_core")
 # Illustrative fixed reference; applications need justified calibration values.
 anchor <- data.frame(Facet = "Rater",
@@ -167,6 +170,7 @@ bundle$categories # Generated categories mapped to original scores
 bundle$priors
 # Run each bundle's run.R separately if external sampling is wanted.
 unlink(c(stan$output_dir, brms$output_dir), recursive = TRUE)
+}
 }
 \references{
 Uto, M., & Ueno, M. (2020). A generalized many-facet Rasch model and its

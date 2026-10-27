@@ -168,6 +168,9 @@ user-facing plot tables such as \code{section_status} for status plots and
 \code{metric_review} for metric plots.
 }
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("assess_mfrm_recovery", run.dontrun = TRUE)
+\dontrun{
 rec <- simulate_mfrm_recovery(
   n_person = 12,
   n_rater = 2,
@@ -218,6 +221,7 @@ gpcm_review$diagnostic_reporting_notes[, c(
   "Facet", "ReportingAttention", "DiagnosticFinding"
 )]
 summary(gpcm_review)$reading_order
+}
 }
 \seealso{
 \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}}, \code{\link[=plot.mfrm_recovery_simulation]{plot.mfrm_recovery_simulation()}}

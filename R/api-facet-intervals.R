@@ -645,6 +645,9 @@
 #' @seealso [analyze_facet_equivalence()], [pool_mfrm_imputed()],
 #'   [plot.mfrm_facet_intervals()], [mfrm_population_intervals()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("mfrm_facet_intervals", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
 #'   model = "RSM", method = "MML", rating_min = 1, rating_max = 4,
@@ -691,6 +694,7 @@
 #'   saved <- readRDS(file)
 #'   summary(saved) # Same conditional-information result, without refitting
 #'   # Use plot(saved) for a figure; ordinary mfrm_results() does not accept CML.
+#' }
 #' }
 #' @export
 mfrm_facet_intervals <- function(fit, facet = NULL, contrasts = NULL,

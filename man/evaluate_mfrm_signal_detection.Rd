@@ -343,6 +343,9 @@ reporting}. Psychological Methods.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("evaluate_mfrm_signal_detection", run.dontrun = TRUE)
+\dontrun{
 sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
   design = list(person = 8, rater = 2, criterion = 2, assignment = 2),
   reps = 1,
@@ -352,6 +355,7 @@ sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
 ))
 s_sig <- summary(sig_eval)
 s_sig$overview
+}
 }
 \seealso{
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=estimate_bias]{estimate_bias()}}

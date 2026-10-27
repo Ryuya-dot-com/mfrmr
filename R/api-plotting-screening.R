@@ -351,6 +351,9 @@ plot_residual_qq <- function(fit,
 #' @concept linking
 #'
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("plot_rater_trajectory", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit_a <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                   method = "JML", maxit = 300)
@@ -365,6 +368,7 @@ plot_residual_qq <- function(fit,
 #' #   "calibration drift" signal. Without anchor linking the per-wave
 #' #   logits are on different scales and the picture cannot be read
 #' #   as drift; see the Anchor-linking caveat in the docstring.
+#' }
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @keywords internal
 #' @section Migration in 0.2.4:

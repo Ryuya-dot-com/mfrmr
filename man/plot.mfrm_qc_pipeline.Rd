@@ -51,6 +51,9 @@ justifies deleting raters or collapsing categories without further review.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_qc_pipeline", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("study1")
 # These observed data trigger a category-support warning: the QC plot
 # displays that review requirement; convergence does not remove it.
@@ -59,6 +62,7 @@ fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
 qc <- run_qc_pipeline(fit)
 verdicts <- plot(qc, draw = FALSE)
 head(verdicts)
+}
 }
 \seealso{
 \code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, \link{mfrmr_plot_migration}

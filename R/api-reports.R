@@ -815,6 +815,9 @@ fit_measure_basis_rows <- function(diagnostics, measures) {
 #' @concept confidence intervals
 #' @concept fit statistics
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("fit_measures_table", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
 #'   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -827,6 +830,7 @@ fit_measure_basis_rows <- function(diagnostics, measures) {
 #' # Include FACETS-style df/ZSTD companion columns for comparison.
 #' fm_facets <- fit_measures_table(fit, facet = "Rater", fit_df_method = "both")
 #' fm_facets$df_conversion_guide$decision_guide
+#' }
 #' @export
 fit_measures_table <- function(x,
                                diagnostics = NULL,
@@ -10988,6 +10992,9 @@ as_kable <- function(x, ...) UseMethod("as_kable")
 #'   [as_kable()] for a `knitr::kable`-targeted alternative;
 #'   [apa_table()] for constructing an `apa_table` in the first place.
 #' @examples
+#' # Optional integration example (loads additional modelling or rendering packages).
+#' # example("as_flextable", run.dontrun = TRUE)
+#' \dontrun{
 #' tbl <- structure(
 #'   list(
 #'     table = data.frame(Term = c("Rater A", "Rater B"), Estimate = c(-0.12, 0.18)),
@@ -10998,6 +11005,7 @@ as_kable <- function(x, ...) UseMethod("as_kable")
 #' )
 #' if (requireNamespace("flextable", quietly = TRUE)) {
 #'   invisible(as_flextable(tbl))
+#' }
 #' }
 #' @export
 as_flextable <- function(x, ...) UseMethod("as_flextable")
@@ -11519,6 +11527,9 @@ print.summary.mfrm_threshold_profiles <- function(x, ...) {
 #' @seealso [mfrm_threshold_profiles()], [build_apa_outputs()],
 #'   [plot(x, type = "marginal_fit")][plot.mfrm_fit], [plot(x, type = "marginal_pairwise")][plot.mfrm_fit]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("build_visual_summaries", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' # A balanced slice retains every Rater and Criterion while running quickly.
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
@@ -11551,6 +11562,7 @@ print.summary.mfrm_threshold_profiles <- function(x, ...) {
 #'     palette = c(warning = "#cb181d", summary = "#3182bd"),
 #'     label_angle = 45
 #'   )
+#' }
 #' }
 #' @export
 build_visual_summaries <- function(fit,
@@ -13524,6 +13536,9 @@ facets_fit_review <- function(fit,
 #' @seealso [fit_mfrm()], [diagnose_mfrm()], [build_fixed_reports()],
 #'   [mfrmr_compatibility_layer]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("facets_output_contract_review", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -13532,6 +13547,7 @@ facets_fit_review <- function(fit,
 #' contract_review <- facets_output_contract_review(fit, diagnostics = diag, branch = "facets")
 #' summary(contract_review)
 #' p <- plot(contract_review, draw = FALSE)
+#' }
 #' @section Saved-result reuse:
 #' Supplied screening results must describe this fitted analysis. Results from
 #' another fit or older results without identity metadata are refused. See
@@ -13869,6 +13885,9 @@ facets_output_contract_review <- function(fit,
 #' @return An object of class `mfrm_reference_review`.
 #' @seealso [facets_output_contract_review()], [diagnose_mfrm()], [build_fixed_reports()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("reference_case_review", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -13876,6 +13895,7 @@ facets_output_contract_review <- function(fit,
 #' diag <- example_fit$diagnostics
 #' review <- reference_case_review(fit, diagnostics = diag)
 #' summary(review)
+#' }
 #' @name reference_case_review
 #' @export
 reference_case_review <- function(fit,
@@ -14511,6 +14531,9 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #'   [mfrm_threshold_profiles()], [plot(x)][plot.mfrm_qc_pipeline],
 #'   [plot(x, type = "qc")][plot.mfrm_fit], [build_visual_summaries()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("run_qc_pipeline", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("study1")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 300
@@ -14519,6 +14542,7 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #' qc
 #' summary(qc)
 #' qc$verdicts
+#' }
 #' @section Saved-result reuse:
 #' Supplied screening results must describe this fitted analysis. Results from
 #' another fit or older results without identity metadata are refused. See

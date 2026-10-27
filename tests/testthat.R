@@ -10,6 +10,9 @@ is_cran_check <- local({
   }
 })
 
+# Keep live estimation, independent numerical checks and representative public paths.
+# Broader report/plot/portable-scoring combinations run in the complete suite;
+# see CONTRIBUTING.md for the remaining ordinary coverage of those families.
 cran_light_tests <- c(
   "api-migration",
   "model-export",
@@ -19,7 +22,6 @@ cran_light_tests <- c(
   "adaptive-fitting",
   "adaptive-quadrature-review",
   "calibration-public-api",
-  "calibration-plot-conversion",
   "appendix-table-collisions",
   "conditional-scoring",
   "decision-probabilities",
@@ -27,12 +29,8 @@ cran_light_tests <- c(
   "category-variance",
   "bias-numerics",
   "facets-manual-consistency",
-  "facets-manual-boundaries",
   "facets-results",
   "fair-delta",
-  "category-owner-reporting",
-  "rater-effect-plots",
-  "fixed-measure-precision",
   "facet-centering",
   "parameter-map-invariants",
   "likelihood-numerics",
@@ -42,12 +40,9 @@ cran_light_tests <- c(
   "anchor-migration",
   "anchored-facet-intervals",
   "anchored-calibration",
-  "anchored-diagnostics",
   "anchored-gpcm",
   "fit-measures-scope",
-  "portable-gpcm",
   "portable-jml",
-  "scoring-prior",
   "cran-smoke",
   "cml",
   "cml-comparisons",
@@ -67,14 +62,10 @@ cran_light_tests <- c(
   "simulation-example-replay",
   "results-replay",
   "results-csv-encoding",
-  "facet-dashboard",
   "feature-clustering",
   "numeric-feature-workflows",
   "response-imputation",
   "facet-intervals",
-  "mml-comparison-intervals",
-  "facet-interval-reporting",
-  "plot-dispatch",
   "plot-population-intervals",
   "dff-plot-support",
   "dff-refit-availability",
@@ -123,17 +114,13 @@ cran_light_tests <- c(
   "rsm-pcm-nesting",
   "gpcm-uncertainty-readiness",
   "gpcm-inference-extensions",
-  "gpcm-inference-reporting",
   "gpcm-profile-intervals",
   "gpcm-pattern-cache",
   "gmfrm-public-workflow",
   "gmfrm-scoring",
   "gmfrm-portable",
-  "gmfrm-scoring-results",
-  "gmfrm-rater-feedback",
   "experimental-reporting",
   "agreement-reporting",
-  "gmfrm-facet-intervals",
   "gmfrm-interval-status",
   "gmfrm-rank-deficient-source",
   "gmfrm-adaptive-profiles",
@@ -170,7 +157,7 @@ if (is_cran_check) {
   local({
     # CRAN permits at most two concurrent cores. Keep each worker's numerical
     # libraries single-threaded, retain an explicit serial override, and leave
-    # the full regression suite below unchanged. No test is dropped for timing.
+    # the complete regression suite below unchanged.
     requested <- suppressWarnings(as.integer(getOption(
       "Ncpus", Sys.getenv("TESTTHAT_CPUS", "2")
     )))

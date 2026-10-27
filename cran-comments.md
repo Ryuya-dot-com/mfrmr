@@ -10,22 +10,22 @@ retired plotting helpers and corrections affecting saved analyses.
 ## Checks
 
 macOS arm64, R 4.6.1, 2026-10-27:
-`R CMD check --as-cran --timings mfrmr_0.2.4.tar.gz` completed with
-0 errors, 0 warnings and 1 NOTE. Remote incoming, system-clock and strict
-Suggests checks were enabled; tests used `NOT_CRAN=false`.
+`R CMD check --as-cran --timings` completed in 532 seconds with no errors
+or NOTEs. Examples took 61 seconds (maximum per topic: 0.77 seconds);
+tests took 130 seconds, with 12,542 passes, no failures or warnings, and
+four intentional CRAN skips. Vignette rebuilding and both manuals passed.
 
-The NOTE concerns a reference URL in `compute_facet_design_effect.Rd`:
-<https://www150.statcan.gc.ca/n1/pub/12-001-x/2004002/article/7751-eng.pdf>.
-The connection timed out after 60 seconds without receiving data. A separate
-retry also timed out; the URL has not been changed on that evidence alone.
+The one WARNING concerned the modification time of an unchanged vignette
+source. This was corrected, and a subsequent packaging-only check was clean.
+Apart from build timestamps, all archived file contents match the full run.
+Examples and tests were not repeated for that metadata correction.
 
-Total elapsed time was 755 seconds, including 232 seconds for incoming checks
-and 34 seconds for installation. Examples took 141 seconds; all 273 recorded
-topics were below 5 seconds individually (maximum 3.08 seconds).
-Tests took 170 seconds: 14,604 passes, no failures or warnings, and four
-intentional CRAN skips. Vignette rebuilding and PDF/HTML manuals passed.
+Long workflows remain available as explicit `\dontrun{}` examples, with
+instructions for running them. Short examples and representative numerical
+checks remain active. The complete test suite remains available with
+`NOT_CRAN=true`.
 
-Updated Windows and R-devel checks remain pending.
+Windows checks of this revised archive are pending.
 
 ## Reverse dependencies
 

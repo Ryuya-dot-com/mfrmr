@@ -192,6 +192,9 @@ result. See \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}} for the 
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("mfrm_population_intervals", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("example_core")
 persons <- data.frame(Person = unique(ratings$Person))
 # Fictional predictor for this example; use your observed covariates.
@@ -210,6 +213,7 @@ plot_data(p, "notes")
 results <- mfrm_results(fit, intervals = list(population = ci),
   include = "fit", compute = "never")
 apa_table(results$population_intervals$population)
+}
 }
 \seealso{
 \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}, \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=mfrm_results]{mfrm_results()}},

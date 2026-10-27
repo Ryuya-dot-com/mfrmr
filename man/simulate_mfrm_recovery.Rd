@@ -332,6 +332,9 @@ summaries.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("simulate_mfrm_recovery", run.dontrun = TRUE)
+\dontrun{
 saved <- tempfile(fileext = ".rds")
 rec <- simulate_mfrm_recovery(
   n_person = 12,
@@ -350,6 +353,7 @@ again <- simulate_mfrm_recovery(n_person = 12, n_rater = 2, n_criterion = 2,
   reps = 1, maxit = 30, seed = 123, file = saved)
 identical(rec, again)
 unlink(saved)
+}
 }
 \references{
 Morris, T. P., White, I. R., and Crowther, M. J. (2019).

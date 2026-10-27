@@ -285,6 +285,9 @@ slope-aware extension.)
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("fair_average_table", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 
 # Saved synthetic MML/RSM analysis of example_operational.
@@ -309,6 +312,7 @@ extreme_report <- fair_average_table(jml, xtreme = .3, xtreme_method = "facets")
 head(extreme_report$raw_by_facet$Person[, c("Level", "PrimaryMeasure",
      "Measure", "MeasureBasis", "ModelSE", "MeasureSEBasis")])
 # ModelSE describes the adjusted total when MeasureBasis says extrapolation
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=displacement_table]{displacement_table()}}

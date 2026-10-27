@@ -151,6 +151,9 @@ print.mfrm_facets_run <- function(x, ...) {
 #'   [mfrmr_visual_diagnostics], [mfrmr_workflow_methods]
 #'
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("plot.mfrm_facets_run", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' out <- run_mfrm_facets(
@@ -165,6 +168,7 @@ print.mfrm_facets_run <- function(x, ...) {
 #' p_qc <- plot(out, type = "qc", draw = FALSE)
 #' p_qc$data$plot
 #'
+#' }
 #' @export
 plot.mfrm_facets_run <- function(x, y = NULL, type = c("fit", "qc"), ...) {
   if (!inherits(x, "mfrm_facets_run")) {

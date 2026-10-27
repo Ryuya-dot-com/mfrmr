@@ -630,6 +630,9 @@
 #' - For end-to-end routes, see [mfrmr_workflow_methods].
 #'
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("mfrmr_compatibility_layer", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #'
@@ -655,6 +658,7 @@
 #' )
 #' names(fixed)
 #'
+#' }
 #' @name mfrmr_compatibility_layer
 NULL
 

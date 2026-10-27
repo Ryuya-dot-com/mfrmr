@@ -2126,6 +2126,9 @@ summarize_category_curves_bundle <- function(object, digits = 3, top_n = 10) {
 #' @return An object of class `summary.mfrm_bundle`.
 #' @seealso [unexpected_response_table()], [fair_average_table()], `plot()`
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("summary.mfrm_bundle", run.dontrun = TRUE)
+#' \dontrun{
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -2138,6 +2141,7 @@ summarize_category_curves_bundle <- function(object, digits = 3, top_n = 10) {
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' t11 <- bias_count_table(bias, branch = "facets")
 #' summary(t11)
+#' }
 #' @export
 summary.mfrm_bundle <- function(object,
                                 digits = 3,
@@ -6804,6 +6808,9 @@ plot_visual_summaries_bundle <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso `summary()`, [plot(x, type = "unexpected")][plot.mfrm_fit], [plot(x, type = "fair_average")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("plot.mfrm_bundle", run.dontrun = TRUE)
+#' \dontrun{
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -6833,6 +6840,7 @@ plot_visual_summaries_bundle <- function(x,
 #'     palette = c(warning = "#cb181d", summary = "#3182bd"),
 #'     label_angle = 45
 #'   )
+#' }
 #' }
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @section Network display controls:

@@ -161,6 +161,9 @@
 #' @seealso [rater_network_analysis()], [rater_halo_network_analysis()],
 #'   [plot.mfrm_network_ergm()]
 #' @examples
+#' # Optional integration example (loads additional modelling or rendering packages).
+#' # example("fit_rater_network", run.dontrun = TRUE)
+#' \dontrun{
 #' if (requireNamespace("ergm", quietly = TRUE) &&
 #'     requireNamespace("igraph", quietly = TRUE)) {
 #'   ratings <- load_mfrmr_data("example_core")
@@ -175,6 +178,7 @@
 #'   confint(model, level = 0.90) # Approximate, conditional on this binary network
 #'   mfrm_report(model)$tables$coefficients
 #'   plot(model, draw = FALSE)
+#' }
 #' }
 #' @export
 fit_rater_network <- function(x, terms, threshold, relation = c("greater", "less"),

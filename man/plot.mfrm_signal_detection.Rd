@@ -59,13 +59,17 @@ average of available design-level means, not a pooled trial/cell rate.
 Plot DIF/bias screening simulation results
 }
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_signal_detection", run.dontrun = TRUE)
+\dontrun{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
-saved <- readRDS(system.file("examples", "simulation-results.rds",
+saved <- readRDS(system.file("examples", "simulation-signal-detection.rds",
   package = "mfrmr", mustWork = TRUE))
 # Inspect saved$generation_warnings and the result's run/status tables.
-sig_eval <- saved$signal_detection
+sig_eval <- saved$result
 plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALSE)
+}
 }
 \seealso{
 \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}, \link{summary.mfrm_signal_detection}

@@ -410,6 +410,9 @@ with other report styles, even when explicitly supplied as \code{NULL}.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("mfrm_report", run.dontrun = TRUE)
+\dontrun{
 # Load the package and example ratings
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
@@ -450,6 +453,7 @@ sheet$path
 # Review in a browser, then choose a permanent path for continuing work.
 recipient_file <- tempfile(fileext = ".html")
 stopifnot(file.copy(sheet$path, recipient_file, overwrite = FALSE))
+}
 }
 \references{
 Brennan, R. L. (2003). \emph{Coefficients and indices in generalizability theory}.

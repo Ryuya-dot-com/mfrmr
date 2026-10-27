@@ -88,6 +88,9 @@ diagnostics without refitting the model.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("build_misfit_casebook", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 # A balanced slice retains every Rater and Criterion while running quickly.
 toy <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
@@ -97,6 +100,7 @@ diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 casebook <- build_misfit_casebook(fit, diagnostics = diag, top_n = 10)
 summary(casebook)
 casebook$top_cases
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},

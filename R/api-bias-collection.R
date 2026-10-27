@@ -91,6 +91,9 @@
 #' @return A named list with class `mfrm_bias_collection`.
 #' @seealso [estimate_bias()], [reporting_checklist()], [facet_quality_dashboard()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("estimate_all_bias", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML")
@@ -98,6 +101,7 @@
 #' bias_all <- estimate_all_bias(fit, diagnostics = diag)
 #' summary(bias_all)
 #' head(summary(bias_all)$cells)
+#' }
 #' @section Saved-result reuse:
 #' The returned `fit_identity` records the fitted analysis for reuse with
 #' reports and exports. Recreate older results from the saved fit and matching
@@ -341,6 +345,9 @@ estimate_all_bias <- function(fit,
 #'   No multiplicity-adjusted confirmatory decisions are supplied.
 #' @seealso [estimate_all_bias()], [plot.mfrm_bias_collection()], [estimate_bias()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("summary.mfrm_bias_collection", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML")
@@ -348,6 +355,7 @@ estimate_all_bias <- function(fit,
 #' review <- summary(screens)
 #' review$overview
 #' head(review$cells[, c("Interaction", "Bias Size", "ObsN", "ScreenAvailable")])
+#' }
 #' @export
 summary.mfrm_bias_collection <- function(object, ...) {
   rlang::check_dots_empty()

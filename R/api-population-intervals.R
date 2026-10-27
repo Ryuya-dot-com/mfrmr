@@ -145,6 +145,9 @@
 #' @seealso [mfrm_facet_intervals()], [predict_mfrm_units()], [mfrm_results()],
 #'   [plot.mfrm_population_intervals()], [apa_table()], [export_mfrm_results()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("mfrm_population_intervals", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("example_core")
 #' persons <- data.frame(Person = unique(ratings$Person))
 #' # Fictional predictor for this example; use your observed covariates.
@@ -163,6 +166,7 @@
 #' results <- mfrm_results(fit, intervals = list(population = ci),
 #'   include = "fit", compute = "never")
 #' apa_table(results$population_intervals$population)
+#' }
 #' @export
 mfrm_population_intervals <- function(object, level = .95, contrasts = NULL,
                                       anchor_covariance = NULL, independent_anchors = FALSE) {

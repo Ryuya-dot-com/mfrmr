@@ -1761,6 +1761,9 @@
 #'   Paired Wright/CCC payloads from [plot(reference, comparison = comparison)][plot.mfrm_fit] retain their selected
 #'   comparison or difference view, group selection and monochrome panel policy.
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("as_ggplot", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' # A balanced slice retains every Rater and Criterion while running quickly.
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
@@ -1769,6 +1772,7 @@
 #' as_ggplot(fit, type = "wright")
 #' as_ggplot(fit, type = "fit_pathway", include_person = TRUE)
 #' as_ggplot(plot(fit, type = "ccc", draw = FALSE))
+#' }
 #' @export
 as_ggplot <- function(x, type = NULL, component = NULL, ...) {
   UseMethod("as_ggplot")

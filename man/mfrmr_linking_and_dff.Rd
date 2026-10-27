@@ -595,6 +595,9 @@ fit each wave separately -> \code{\link[=detect_anchor_drift]{detect_anchor_drif
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("mfrmr_linking_and_dff", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("example_core")
 people <- unique(ratings$Person)
 baseline_data <- ratings[ratings$Person \%in\% people[1:24], , drop = FALSE]
@@ -619,6 +622,7 @@ linked$fit$facets$others
 # Fixed-anchor differences are zero by construction, not evidence of stability.
 linked$drift[, c("Facet", "Level", "Drift")]
 
+}
 }
 \references{
 TAM documentation: \href{https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html}{MML estimation and fixed parameters}

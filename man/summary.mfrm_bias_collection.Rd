@@ -54,6 +54,9 @@ cells omitted by the chosen screening options are not reconstructed.
 No multiplicity-adjusted confirmatory decisions are supplied.
 }
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("summary.mfrm_bias_collection", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML")
@@ -61,6 +64,7 @@ screens <- estimate_all_bias(fit)
 review <- summary(screens)
 review$overview
 head(review$cells[, c("Interaction", "Bias Size", "ObsN", "ScreenAvailable")])
+}
 }
 \seealso{
 \code{\link[=estimate_all_bias]{estimate_all_bias()}}, \code{\link[=plot.mfrm_bias_collection]{plot.mfrm_bias_collection()}}, \code{\link[=estimate_bias]{estimate_bias()}}

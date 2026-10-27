@@ -44,10 +44,10 @@ than pass/fail evidence.
 \examples{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
-saved <- readRDS(system.file("examples", "simulation-results.rds",
+saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
   package = "mfrmr", mustWork = TRUE))
 # Inspect saved$generation_warnings and the result's run/status tables.
-diag_eval <- saved$diagnostic_screening
+diag_eval <- saved$result
 summary(diag_eval)
 }
 \seealso{

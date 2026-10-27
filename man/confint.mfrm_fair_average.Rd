@@ -389,6 +389,9 @@ finite-sample normality. Estimated plans and unmodelled dependence are excluded.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("confint.mfrm_fair_average", run.dontrun = TRUE)
+\dontrun{
 d <- load_mfrmr_data("example_core")
 # Calibrate the observed ratings with ordinary joint maximum likelihood.
 f <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score",
@@ -417,6 +420,7 @@ attr(delta, "covariance") # Includes the covariance between Persons.
 bounded <- confint(fair, parm = c("P001", "P002"), method = "bounded")
 bounded[, c("Target", "Estimate", "DesignEstimate", "CI_Lower", "CI_Upper", "Informative")]
 attr(bounded, "support") # Check how much of the plan was actually observed.
+}
 }
 \references{
 Murphy, K. M., and Topel, R. H. (1985). Estimation and inference

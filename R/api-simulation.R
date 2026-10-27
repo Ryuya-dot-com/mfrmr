@@ -2815,6 +2815,9 @@ recovery_build_notes <- function(rep_overview, recovery_summary, model) {
 #' \emph{Statistics in Medicine}, 38(11), 2074--2102.
 #' \doi{10.1002/sim.8086}.
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("simulate_mfrm_recovery", run.dontrun = TRUE)
+#' \dontrun{
 #' saved <- tempfile(fileext = ".rds")
 #' rec <- simulate_mfrm_recovery(
 #'   n_person = 12,
@@ -2833,6 +2836,7 @@ recovery_build_notes <- function(rep_overview, recovery_summary, model) {
 #'   reps = 1, maxit = 30, seed = 123, file = saved)
 #' identical(rec, again)
 #' unlink(saved)
+#' }
 #' @export
 simulate_mfrm_recovery <- function(n_person = 50,
                                    n_rater = 4,
@@ -4047,6 +4051,9 @@ recovery_assessment_next_actions <- function(checklist, metric_review, max_n = 6
 #' - `thresholds`: thresholds used for the assessment.
 #' @seealso [simulate_mfrm_recovery()], [plot.mfrm_recovery_simulation()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("assess_mfrm_recovery", run.dontrun = TRUE)
+#' \dontrun{
 #' rec <- simulate_mfrm_recovery(
 #'   n_person = 12,
 #'   n_rater = 2,
@@ -4097,6 +4104,7 @@ recovery_assessment_next_actions <- function(checklist, metric_review, max_n = 6
 #'   "Facet", "ReportingAttention", "DiagnosticFinding"
 #' )]
 #' summary(gpcm_review)$reading_order
+#' }
 #' @export
 assess_mfrm_recovery <- function(x,
                                  min_reps = 30,
@@ -5005,10 +5013,10 @@ recovery_plot_status_table <- function(rep_tbl) {
 #' @examples
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
-#' saved <- readRDS(system.file("examples", "simulation-results.rds",
+#' saved <- readRDS(system.file("examples", "simulation-recovery.rds",
 #'   package = "mfrmr", mustWork = TRUE))
 #' # Inspect saved$generation_warnings and the result's run/status tables.
-#' rec <- saved$recovery
+#' rec <- saved$result
 #' plot(rec, type = "summary", metric = "rmse", draw = FALSE)
 #' @export
 plot.mfrm_recovery_simulation <- function(x,
@@ -5820,6 +5828,9 @@ simulation_evaluate_design_cell <- function(design,
 #'   `file` is supplied.
 #' @seealso [simulate_mfrm_data()], [summary.mfrm_design_evaluation], [plot.mfrm_design_evaluation]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("evaluate_mfrm_design", run.dontrun = TRUE)
+#' \dontrun{
 #' sim_eval <- suppressWarnings(evaluate_mfrm_design(
 #'   design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 2),
 #'   reps = 1,
@@ -5830,6 +5841,7 @@ simulation_evaluate_design_cell <- function(design,
 #' s_eval$design_summary[, c("Facet", "n_person", "MeanSeparation", "MeanSeverityRMSE")]
 #' p_eval <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 #' names(p_eval)
+#' }
 #' @export
 evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
                                  n_rater = c(3, 5),
@@ -6248,10 +6260,10 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #' @examples
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
-#' saved <- readRDS(system.file("examples", "simulation-results.rds",
+#' saved <- readRDS(system.file("examples", "simulation-design.rds",
 #'   package = "mfrmr", mustWork = TRUE))
 #' # Inspect saved$generation_warnings and the result's run/status tables.
-#' sim_eval <- saved$design
+#' sim_eval <- saved$result
 #' s <- summary(sim_eval)
 #' s$overview
 #' head(s$design_summary)
@@ -6391,10 +6403,10 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
 #' @examples
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
-#' saved <- readRDS(system.file("examples", "simulation-results.rds",
+#' saved <- readRDS(system.file("examples", "simulation-design.rds",
 #'   package = "mfrmr", mustWork = TRUE))
 #' # Inspect saved$generation_warnings and the result's run/status tables.
-#' sim_eval <- saved$design
+#' sim_eval <- saved$result
 #' p <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 #' c(p$facet, p$x_var)
 #' @export
@@ -6634,10 +6646,10 @@ plot.mfrm_design_evaluation <- function(x,
 #' @examples
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
-#' saved <- readRDS(system.file("examples", "simulation-results.rds",
+#' saved <- readRDS(system.file("examples", "simulation-design.rds",
 #'   package = "mfrmr", mustWork = TRUE))
 #' # Inspect saved$generation_warnings and the result's run/status tables.
-#' sim_eval <- saved$design
+#' sim_eval <- saved$result
 #' rec <- recommend_mfrm_design(
 #'   sim_eval, max_ratings = 48, max_ratings_per_rater = 24
 #' )
@@ -7622,6 +7634,9 @@ diagnostic_screening_summarize_results <- function(results, design_variable_alia
 #'
 #' @seealso [simulate_mfrm_data()], [evaluate_mfrm_design()], [diagnose_mfrm()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("evaluate_mfrm_diagnostic_screening", run.dontrun = TRUE)
+#' \dontrun{
 #' diag_eval <- evaluate_mfrm_diagnostic_screening(
 #'   design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
 #'   reps = 1,
@@ -7630,6 +7645,7 @@ diagnostic_screening_summarize_results <- function(results, design_variable_alia
 #' )
 #' diag_eval$scenario_summary
 #' diag_eval$scenario_contrast
+#' }
 #' @export
 evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
                                                n_rater = c(4),
@@ -8481,10 +8497,10 @@ diagnostic_screening_interpretation_payload <- function(object, overview = NULL)
 #' @examples
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
-#' saved <- readRDS(system.file("examples", "simulation-results.rds",
+#' saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
 #'   package = "mfrmr", mustWork = TRUE))
 #' # Inspect saved$generation_warnings and the result's run/status tables.
-#' diag_eval <- saved$diagnostic_screening
+#' diag_eval <- saved$result
 #' summary(diag_eval)
 #' @export
 summary.mfrm_diagnostic_screening <- function(object, digits = 3, ...) {
@@ -8913,10 +8929,10 @@ diagnostic_screening_plot_group_labels <- function(plot_tbl, group_var = NULL) {
 #' @examples
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
-#' saved <- readRDS(system.file("examples", "simulation-results.rds",
+#' saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
 #'   package = "mfrmr", mustWork = TRUE))
 #' # Inspect saved$generation_warnings and the result's run/status tables.
-#' diag_eval <- saved$diagnostic_screening
+#' diag_eval <- saved$result
 #' plot(diag_eval, type = "overview", draw = FALSE)
 #' plot_data(diag_eval, type = "overview", component = "plot_long")
 #' plot_data(diag_eval, type = "overview", component = "next_actions")
@@ -9571,6 +9587,9 @@ signal_eval_metric_col <- function(signal, metric) {
 #' - `notes`: short interpretation notes
 #' @seealso [simulate_mfrm_data()], [evaluate_mfrm_design()], [analyze_dff()], [analyze_dif()], [estimate_bias()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("evaluate_mfrm_signal_detection", run.dontrun = TRUE)
+#' \dontrun{
 #' sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
 #'   design = list(person = 8, rater = 2, criterion = 2, assignment = 2),
 #'   reps = 1,
@@ -9580,6 +9599,7 @@ signal_eval_metric_col <- function(signal, metric) {
 #' ))
 #' s_sig <- summary(sig_eval)
 #' s_sig$overview
+#' }
 #' @export
 evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
                                            n_rater = c(4),
@@ -10142,10 +10162,10 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
 #' @examples
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
-#' saved <- readRDS(system.file("examples", "simulation-results.rds",
+#' saved <- readRDS(system.file("examples", "simulation-signal-detection.rds",
 #'   package = "mfrmr", mustWork = TRUE))
 #' # Inspect saved$generation_warnings and the result's run/status tables.
-#' sig_eval <- saved$signal_detection
+#' sig_eval <- saved$result
 #' summary(sig_eval)
 #' @export
 summary.mfrm_signal_detection <- function(object, digits = 3, ...) {
@@ -10306,13 +10326,17 @@ signal_detection_metric_label <- function(signal, metric_col) {
 #'   average of available design-level means, not a pooled trial/cell rate.
 #' @seealso [evaluate_mfrm_signal_detection()], [summary.mfrm_signal_detection]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("plot.mfrm_signal_detection", run.dontrun = TRUE)
+#' \dontrun{
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
-#' saved <- readRDS(system.file("examples", "simulation-results.rds",
+#' saved <- readRDS(system.file("examples", "simulation-signal-detection.rds",
 #'   package = "mfrmr", mustWork = TRUE))
 #' # Inspect saved$generation_warnings and the result's run/status tables.
-#' sig_eval <- saved$signal_detection
+#' sig_eval <- saved$result
 #' plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALSE)
+#' }
 #' @export
 plot.mfrm_signal_detection <- function(x,
                                        signal = c("dif", "bias"),

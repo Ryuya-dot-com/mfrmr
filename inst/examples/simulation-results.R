@@ -7,7 +7,10 @@
 # source(system.file("examples", "simulation-results.R", package = "mfrmr"))
 # RNGkind("Mersenne-Twister", "Inversion", "Rejection") # recorded generation RNG
 # saved <- simulation_result_examples()
-# saveRDS(saved, "simulation-results.rds", compress = "xz")
+# for (name in setdiff(names(saved), "generation_warnings")) {
+#   saveRDS(list(result = saved[[name]], generation_warnings = saved$generation_warnings),
+#     paste0("simulation-", gsub("_", "-", name), ".rds"), compress = "gzip")
+# }
 simulation_result_examples <- function() {
   warnings <- character()
   results <- withCallingHandlers(list(

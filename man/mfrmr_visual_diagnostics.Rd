@@ -655,6 +655,9 @@ For a longer, plot-first walkthrough, run
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("mfrmr_visual_diagnostics", run.dontrun = TRUE)
+\dontrun{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -682,6 +685,7 @@ plot(fit, type = "qc", diagnostics = diagnostics)
 
 # Follow up on observed versus model-expected category frequencies
 plot(diagnostics, type = "marginal_fit")
+}
 }
 \seealso{
 \link{mfrmr_workflow_methods}, \link{mfrmr_reports_and_tables},

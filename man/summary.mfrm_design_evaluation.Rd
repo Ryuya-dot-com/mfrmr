@@ -79,10 +79,10 @@ summaries also use all run records, including failures.
 \examples{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
-saved <- readRDS(system.file("examples", "simulation-results.rds",
+saved <- readRDS(system.file("examples", "simulation-design.rds",
   package = "mfrmr", mustWork = TRUE))
 # Inspect saved$generation_warnings and the result's run/status tables.
-sim_eval <- saved$design
+sim_eval <- saved$result
 s <- summary(sim_eval)
 s$overview
 head(s$design_summary)

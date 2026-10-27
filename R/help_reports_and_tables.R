@@ -211,6 +211,9 @@
 #' - For legacy-compatible wrappers and exports, see [mfrmr_compatibility_layer].
 #'
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("mfrmr_reports_and_tables", run.dontrun = TRUE)
+#' \dontrun{
 #' # Load the package and example ratings
 #' library(mfrmr)
 #' ratings <- load_mfrmr_data("example_operational")
@@ -247,6 +250,7 @@
 #' saveRDS(res, file)
 #' saved <- readRDS(file)
 #' summary(saved)$triage # No refitting or repeated diagnostic calculation
+#' }
 #' @name mfrmr_reports_and_tables
 NULL
 

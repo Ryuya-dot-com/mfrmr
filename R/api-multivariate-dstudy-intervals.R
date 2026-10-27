@@ -1313,6 +1313,9 @@
 #' @seealso [mfrm_d_study()], [confint.mfrm_multivariate_gstudy()],
 #'   [mfrm_multivariate_d_compare()]
 #' @examples
+#' # Long-running workflow; run explicitly when needed.
+#' # example("confint.mfrm_multivariate_d_study", run.dontrun = TRUE)
+#' \dontrun{
 #' tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 #' g <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
 #' d <- mfrm_d_study(g, data.frame(Tasks = c(6, 12)),
@@ -1419,6 +1422,7 @@
 #'     method = "mean_square_region", assumption = "normal")
 #'   nested_region[, c("Raters", "Tasks", "Estimate", "Lower", "Upper", "Status")]
 #'   attr(nested_region, "reference")$counts
+#' }
 #' }
 #' @export
 confint.mfrm_multivariate_d_study <- function(object, parm = "G", level = .95,

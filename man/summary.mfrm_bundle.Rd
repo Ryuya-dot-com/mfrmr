@@ -93,6 +93,9 @@ benchmark check previews when summarizing \code{mfrm_reference_benchmark}.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("summary.mfrm_bundle", run.dontrun = TRUE)
+\dontrun{
 toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person \%in\% toy_people, , drop = FALSE]
@@ -105,6 +108,7 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 t11 <- bias_count_table(bias, branch = "facets")
 summary(t11)
+}
 }
 \seealso{
 \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}, \code{plot()}

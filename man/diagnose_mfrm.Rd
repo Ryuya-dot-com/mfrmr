@@ -427,6 +427,9 @@ finite-count note: \url{https://www.rasch.org/rmt/rmt221e.htm}.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("diagnose_mfrm", run.dontrun = TRUE)
+\dontrun{
 # Load the package and example ratings
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
@@ -456,6 +459,10 @@ diagnostic_summary$top_fit      # Most unusual residual-based fit statistics
 
 # Distinguish residual-based checks from marginal model checks
 diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+}
+# Long-running workflow; run explicitly when needed.
+# example("diagnose_mfrm", run.dontrun = TRUE)
+\dontrun{
 # Each row is one bundled example rating; use ordinary JML for this reference
 ratings <- load_mfrmr_data("example_core")
 jml_fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
@@ -465,6 +472,7 @@ jml_diagnostics <- diagnose_mfrm(jml_fit, residual_pca = "none",
 head(jml_diagnostics$measures[, c("Facet", "Level", "PTMEA",
      "PTMEAExpected", "PTMEAExpectedN", "PTMEAExpectedStatus")])
 # Compare observed PTMEA with its conditional reference; neither is a test
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},

@@ -137,6 +137,9 @@ reasons, imputation diagnostics, and comparisons of group counts and weights,
 see \code{vignette("mfrmr-external-features", package = "mfrmr")}.
 }
 \examples{
+# Optional integration example (loads additional modelling or rendering packages).
+# example("mfrm_cluster_imputed", run.dontrun = TRUE)
+\dontrun{
 if (requireNamespace("mice", quietly = TRUE) &&
     requireNamespace("cluster", quietly = TRUE)) {
   attributes <- mice::nhanes2
@@ -156,6 +159,7 @@ if (requireNamespace("mice", quietly = TRUE) &&
   summary(result)
   result$co_membership[1:4, 1:4]
   result$imputation_model$loggedEvents
+}
 }
 }
 \seealso{

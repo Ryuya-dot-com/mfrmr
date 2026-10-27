@@ -133,6 +133,9 @@ the non-ZIP artifacts, including any plot-error CSV; the returned
 \code{written_files} and \code{summary} additionally record a successful ZIP.
 }
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("export_mfrm_results", run.dontrun = TRUE)
+\dontrun{
 # Load the package and example ratings
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
@@ -168,6 +171,7 @@ head(data.frame(
 exported$plot_errors
 # Full paths remain in exported$written_files$Path.
 # Open index.html in output_dir to read the report.
+}
 }
 \seealso{
 \code{\link[=mfrm_results]{mfrm_results()}}, \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}},

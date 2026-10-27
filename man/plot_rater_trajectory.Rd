@@ -92,6 +92,9 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("plot_rater_trajectory", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 fit_a <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                   method = "JML", maxit = 300)
@@ -106,6 +109,7 @@ head(p$data$data)
 #   "calibration drift" signal. Without anchor linking the per-wave
 #   logits are on different scales and the picture cannot be read
 #   as drift; see the Anchor-linking caveat in the docstring.
+}
 }
 \seealso{
 \link[=plot.mfrm_anchor_drift]{plot(x)}, \link{mfrmr_linking_and_dff}

@@ -693,6 +693,9 @@ retaining its package-native GPCM caveats.
 }
 
 \examples{
+# Long-running workflow; run explicitly when needed.
+# example("mfrmr_compatibility_layer", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 
@@ -718,4 +721,5 @@ fixed <- build_fixed_reports(
 )
 names(fixed)
 
+}
 }

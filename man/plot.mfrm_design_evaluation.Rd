@@ -66,10 +66,10 @@ missingness and rater-pair linkage separately from recovery metrics
 \examples{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
-saved <- readRDS(system.file("examples", "simulation-results.rds",
+saved <- readRDS(system.file("examples", "simulation-design.rds",
   package = "mfrmr", mustWork = TRUE))
 # Inspect saved$generation_warnings and the result's run/status tables.
-sim_eval <- saved$design
+sim_eval <- saved$result
 p <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 c(p$facet, p$x_var)
 }
