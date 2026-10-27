@@ -67,5 +67,5 @@ head(review$cells[, c("Interaction", "Bias Size", "ObsN", "ScreenAvailable")])
 }
 }
 \seealso{
-\code{\link[=estimate_all_bias]{estimate_all_bias()}}, \code{\link[=plot.mfrm_bias_collection]{plot.mfrm_bias_collection()}}, \code{\link[=estimate_bias]{estimate_bias()}}
+\code{\link[=estimate_all_bias]{estimate_all_bias()}}, \code{\link[=plot.mfrm_bias_collection]{plot.mfrm_bias_collection()}}, \code{\link[=mfrm_report]{mfrm_report()}}, \code{\link[=estimate_bias]{estimate_bias()}}
 }

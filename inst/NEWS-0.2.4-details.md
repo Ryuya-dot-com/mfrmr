@@ -558,6 +558,14 @@ uncertainty, subgroup comparisons and design planning.
   bundles, retaining old bundles for old-ID exports. Neither a met stopping
   criterion nor default controls certify numerical precision.
 
+* `mfrm_report()` now accepts `estimate_all_bias()` collections directly.
+  Reports and appendix exports retain the full requested search, all stored
+  signed cell estimates, unavailable screens, failed pairs, settings and
+  calculation history. No recalibration or multiplicity adjustment is added.
+  The Linking and DFF guide connects conditional exploration to explicit joint
+  interaction models and compatible model comparisons, distinguishing
+  same-data exploratory selection from prespecified inference.
+
 * Pairwise bias reports now orient local measures using the target-facet sign
   and condition local SEs on the baseline calibration. The default
   `df_method = "facets"` uses modified Rasch-Welch df rounded down for the tail

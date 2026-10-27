@@ -5537,7 +5537,7 @@ mfrm_report_html <- function(report) {
 #' record into interpretation, formal-inference, reason, and next-action text.
 #'
 #' @param x An [mfrm_results()] object, a supported G/D-study or network result,
-#'   or output from [estimate_bias()], [review_mfrm_anchors()],
+#'   or output from [estimate_bias()], [estimate_all_bias()], [review_mfrm_anchors()],
 #'   [build_linking_review()] or [build_model_choice_review()].
 #' @param style Report emphasis. `"qc"` is the default first-screen report.
 #'   `"apa"` emphasizes manuscript wording, `"validation"` emphasizes the
@@ -5590,6 +5590,13 @@ mfrm_report_html <- function(report) {
 #' Use `mfrm_report(review_mfrm_anchors(...))` before anchored fitting,
 #' `mfrm_report(build_linking_review(...))` for saved link evidence,
 #' `mfrm_report(estimate_bias(...))` for a prespecified interaction, and
+#' `mfrm_report(estimate_all_bias(...))` for a collection of exploratory screens.
+#' Collection reports keep every requested interaction in `tables$overview`,
+#' all retained cells in `tables$bias_cells` with an `Interaction` key, failed
+#' pairs in `tables$errors`, and calculation settings/history and facet directions.
+#' Failed pairs remain visible even with `keep_errors = FALSE`; unavailable
+#' screens are not reported as negative results. No collection-wide multiplicity
+#' adjustment is added. Use
 #' `mfrm_report(build_model_choice_review(...))` for candidate-model roles
 #' and comparability. Reporting does not fit a new model, select new
 #' interaction cells, calculate a missing LRT or test anchor invariance.

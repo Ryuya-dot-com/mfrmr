@@ -126,8 +126,14 @@ The returned object is a bundle-like list with class
 \item Inspect \code{summary(bias_all)$overview} for availability and magnitude, then
 \code{summary(bias_all)$cells} for all retained cells and their observed counts.
 Use \code{\link[=plot.mfrm_bias_collection]{plot.mfrm_bias_collection()}} for the overview or a named pair.
-\item Pass the resulting \code{by_pair} list into \code{\link[=reporting_checklist]{reporting_checklist()}} or
-\code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.
+\item Use \code{report <- mfrm_report(bias_all)} to retain the full search, failed
+pairs and all cells in one report; \code{\link[=export_summary_appendix]{export_summary_appendix()}} saves its
+tables. Supply \code{study_context} to state rubric endpoints and score direction.
+The \code{by_pair} list also feeds \code{\link[=reporting_checklist]{reporting_checklist()}} or \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.
+\item For a substantively justified joint interaction model, use
+\code{facet_interactions} in \code{\link[=fit_mfrm]{fit_mfrm()}} and \code{\link[=compare_mfrm]{compare_mfrm()}} on compatible
+fits. Selecting terms from these screens makes same-data comparisons
+exploratory; it does not create a prespecified confirmatory test.
 }
 }
 
@@ -150,8 +156,13 @@ diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 bias_all <- estimate_all_bias(fit, diagnostics = diag)
 summary(bias_all)
 head(summary(bias_all)$cells)
+report <- mfrm_report(bias_all, study_context = c(
+  score_direction = "Higher coded scores indicate better performance"))
+report$tables$overview
+head(report$tables$bias_cells)
 }
 }
 \seealso{
-\code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}
+\code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=mfrm_report]{mfrm_report()}}, \code{\link[=compare_mfrm]{compare_mfrm()}},
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}
 }

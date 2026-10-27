@@ -8,7 +8,7 @@ figures, tables and an editable report while keeping its assumptions visible.
 
 - **Turn an analysis into a report.** `mfrm_report()` now brings generalizability
   and decision studies (G/D studies),
-  anchor/linking reviews, specified bias analyses and model-choice reviews into
+  anchor/linking reviews, individual or batch bias screens and model-choice reviews into
   the shared reporting workflow. Editable templates help you write the Methods
   and Results, and exports keep the underlying tables and analysis. You can
   record what high scores mean alongside the results.

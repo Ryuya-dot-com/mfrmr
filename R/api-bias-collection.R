@@ -85,11 +85,18 @@
 #' 3. Inspect `summary(bias_all)$overview` for availability and magnitude, then
 #'    `summary(bias_all)$cells` for all retained cells and their observed counts.
 #'    Use [plot.mfrm_bias_collection()] for the overview or a named pair.
-#' 4. Pass the resulting `by_pair` list into [reporting_checklist()] or
-#'    [facet_quality_dashboard()].
+#' 4. Use `report <- mfrm_report(bias_all)` to retain the full search, failed
+#'    pairs and all cells in one report; [export_summary_appendix()] saves its
+#'    tables. Supply `study_context` to state rubric endpoints and score direction.
+#'    The `by_pair` list also feeds [reporting_checklist()] or [facet_quality_dashboard()].
+#' 5. For a substantively justified joint interaction model, use
+#'    `facet_interactions` in [fit_mfrm()] and [compare_mfrm()] on compatible
+#'    fits. Selecting terms from these screens makes same-data comparisons
+#'    exploratory; it does not create a prespecified confirmatory test.
 #'
 #' @return A named list with class `mfrm_bias_collection`.
-#' @seealso [estimate_bias()], [reporting_checklist()], [facet_quality_dashboard()]
+#' @seealso [estimate_bias()], [mfrm_report()], [compare_mfrm()],
+#'   [reporting_checklist()], [facet_quality_dashboard()]
 #' @examples
 #' # Long-running workflow; run explicitly when needed.
 #' # example("estimate_all_bias", run.dontrun = TRUE)
@@ -101,6 +108,10 @@
 #' bias_all <- estimate_all_bias(fit, diagnostics = diag)
 #' summary(bias_all)
 #' head(summary(bias_all)$cells)
+#' report <- mfrm_report(bias_all, study_context = c(
+#'   score_direction = "Higher coded scores indicate better performance"))
+#' report$tables$overview
+#' head(report$tables$bias_cells)
 #' }
 #' @section Saved-result reuse:
 #' The returned `fit_identity` records the fitted analysis for reuse with
@@ -343,7 +354,7 @@ estimate_all_bias <- function(fit,
 #'   Counts cover retained [estimate_bias()] cells: unobserved combinations and
 #'   cells omitted by the chosen screening options are not reconstructed.
 #'   No multiplicity-adjusted confirmatory decisions are supplied.
-#' @seealso [estimate_all_bias()], [plot.mfrm_bias_collection()], [estimate_bias()]
+#' @seealso [estimate_all_bias()], [plot.mfrm_bias_collection()], [mfrm_report()], [estimate_bias()]
 #' @examples
 #' # Long-running workflow; run explicitly when needed.
 #' # example("summary.mfrm_bias_collection", run.dontrun = TRUE)

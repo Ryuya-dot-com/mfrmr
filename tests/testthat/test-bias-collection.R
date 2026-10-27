@@ -209,6 +209,21 @@ test_that("collection presentation refuses mixed fitted-analysis identities", {
   expect_error(summary(x), "mismatch")
   expect_error(plot(x, draw = FALSE), "mismatch")
   expect_error(plot(x, pair = 1, draw = FALSE), "mismatch")
+  expect_error(mfrm_report(x), "mismatch")
+})
+
+test_that("computed collections feed reports without repeating estimation", {
+  x <- bias_collection_fixture$bias_all
+  s <- summary(x)
+  local_mocked_bindings(fit_mfrm = function(...) stop("Unexpected refit"),
+    diagnose_mfrm = function(...) stop("Unexpected diagnostics"),
+    estimate_bias = function(...) stop("Unexpected cell estimation"))
+  r <- mfrm_report(x)
+  expect_identical(r$tables$overview, s$overview)
+  expect_identical(r$tables$bias_cells, s$cells)
+  expect_identical(r$source$fit_identity, x$fit_identity)
+  expect_identical(plot_data(plot(r$source, draw = FALSE), "table")[["Bias Size"]],
+    r$tables$bias_cells[["Bias Size"]])
 })
 
 test_that("explicit Person pairs do not require automatic Person enumeration", {

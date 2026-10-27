@@ -1,7 +1,7 @@
 .mfrm_study_report_classes <- function() c("mfrm_multivariate_gstudy",
   "mfrm_multivariate_d_study", "mfrm_multivariate_d_comparison", "mfrm_residual_network",
   "mfrm_rater_network", "mfrm_halo_network", "mfrm_network_ergm",
-  "mfrm_posterior_summary",
+  "mfrm_posterior_summary", "mfrm_bias_collection",
   .mfrm_review_report_classes())
 
 .mfrm_review_report_classes <- function() c("mfrm_bias", "mfrm_anchor_review",
@@ -72,6 +72,29 @@
     issue <- paste(x$decision$Interpretation, x$decision$Why)
     route <- "report$tables$sampling_review; plot(x); confint(x)"
     title_route <- "export_mfrm_model() -> external sampling -> read_mfrm_posterior()"
+  } else if (inherits(x, "mfrm_bias_collection")) {
+    s <- summary(x)
+    title <- "Exploratory bias interactions"
+    add("overview", s$overview, "bias_overview", "All requested interactions and screening availability")
+    add("bias_cells", s$cells, "bias_screening_rows", "All retained cells, unrounded, signed and keyed by Interaction")
+    add("errors", s$errors, "study_diagnostics", "Failed interactions, including when keep_errors was FALSE")
+    add("optimization_failures", s$optimization_failures, "study_diagnostics", "Stored cell-level optimization failures")
+    add("settings", s$settings, "review_settings", "Search scope, exclusions and calculation settings")
+    for (nm in c("chi_sq", "iteration", "orientation_review")) {
+      value <- dplyr::bind_rows(lapply(x$by_pair, function(pair) pair[[nm]]), .id = "Interaction")
+      role <- c(chi_sq = "bias_chi_square", iteration = "bias_iteration_status", orientation_review = "study_design")
+      description <- c(chi_sq = "Stored conditional pair screens; not joint interaction tests",
+        iteration = "Stored cell-calculation history by interaction",
+        orientation_review = "Fitted facet directions by interaction")
+      add(nm, value, role[nm], description[nm])
+    }
+    notes <- c(s$notes,
+      "Positive Bias Size increases expected coded scores; substantive benefit depends on rubric direction.",
+      "Report the full search scope and exclusions. Unobserved or omitted cells are not reconstructed; unavailable results are not negative screens.",
+      "A joint interaction model selected after this screen remains exploratory on the same data. Its model-comparison p-values are not prespecified confirmatory evidence.")
+    issue <- "State the exploration scope, score direction, conditional uncertainty and substantive follow-up; retain failed interactions and unavailable cells."
+    route <- "plot(x); report$tables$overview; report$tables$bias_cells"
+    title_route <- "estimate_all_bias()"
   } else if (inherits(x, .mfrm_review_report_classes())) {
     # Keep the established summary/export route, with full source tables below.
     b <- build_summary_table_bundle(x, include_empty = TRUE,

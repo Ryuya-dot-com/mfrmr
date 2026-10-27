@@ -73,6 +73,15 @@ control or cover a search across multiple interactions. Do not select only
 flagged cells for the appendix. Explain the proposed substantive follow-up;
 a flag is not evidence of unfairness or a reason to exclude a rater.
 
+For an exploratory search across facet pairs, replace the bias module's
+calculation with `bias <- estimate_all_bias(fit, diagnostics)` and keep
+`reports$bias <- mfrm_report(bias, study_context = context)`. Its `overview`
+lists every requested interaction; `bias_cells` adds an `Interaction` key and
+`errors` retains failed pairs. Use `plot(bias)` for the collection overview.
+Report the search scope and full cells without claiming collection-wide error
+control. A joint model chosen from these screens remains exploratory when
+compared on the same data; consult the Linking and DFF guide for that route.
+
 ## Reusing anchors in a receiving cohort
 
 ```{r anchors, eval=params$run_anchors}

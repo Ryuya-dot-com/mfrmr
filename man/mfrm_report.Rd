@@ -20,7 +20,7 @@ mfrm_report(
 }
 \arguments{
 \item{x}{An \code{\link[=mfrm_results]{mfrm_results()}} object, a supported G/D-study or network result,
-or output from \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}},
+or output from \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=estimate_all_bias]{estimate_all_bias()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}},
 \code{\link[=build_linking_review]{build_linking_review()}} or \code{\link[=build_model_choice_review]{build_model_choice_review()}}.}
 
 \item{style}{Report emphasis. \code{"qc"} is the default first-screen report.
@@ -218,6 +218,13 @@ and drift/equating claims require multiple fitted forms or waves.
 Use \code{mfrm_report(review_mfrm_anchors(...))} before anchored fitting,
 \code{mfrm_report(build_linking_review(...))} for saved link evidence,
 \code{mfrm_report(estimate_bias(...))} for a prespecified interaction, and
+\code{mfrm_report(estimate_all_bias(...))} for a collection of exploratory screens.
+Collection reports keep every requested interaction in \code{tables$overview},
+all retained cells in \code{tables$bias_cells} with an \code{Interaction} key, failed
+pairs in \code{tables$errors}, and calculation settings/history and facet directions.
+Failed pairs remain visible even with \code{keep_errors = FALSE}; unavailable
+screens are not reported as negative results. No collection-wide multiplicity
+adjustment is added. Use
 \code{mfrm_report(build_model_choice_review(...))} for candidate-model roles
 and comparability. Reporting does not fit a new model, select new
 interaction cells, calculate a missing LRT or test anchor invariance.
