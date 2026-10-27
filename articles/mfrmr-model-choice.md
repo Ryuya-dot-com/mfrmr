@@ -125,7 +125,7 @@ intervals. Ability-dependent assignments or response-dependent stopping
 need separate justification; conditioning is not a blanket correction
 for an informative observation process. See [Andersen
 (1970)](https://doi.org/10.1111/j.2517-6161.1970.tb00842.x) and [Mair
-and Hatzinger (2007)](https://www.jstatsoft.org/article/view/v020i09).
+and Hatzinger (2007)](https://doi.org/10.18637/jss.v020.i09).
 
 Why does this CML route stop at RSM/PCM? With unequal GPCM slopes, two
 response patterns with the same total can still have different

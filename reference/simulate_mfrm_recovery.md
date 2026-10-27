@@ -438,6 +438,9 @@ Medicine*, 38(11), 2074–2102.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("simulate_mfrm_recovery", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 saved <- tempfile(fileext = ".rds")
 rec <- simulate_mfrm_recovery(
   n_person = 12,
@@ -450,19 +453,11 @@ rec <- simulate_mfrm_recovery(
 )
 summary(rec)$recovery_summary[, c("ParameterType", "Facet", "RMSE",
   "McseRMSE", "ExpectedRows", "CoverageRows", "Coverage95")]
-#> # A tibble: 4 × 7
-#>   ParameterType Facet        RMSE McseRMSE ExpectedRows CoverageRows Coverage95
-#>   <chr>         <chr>       <dbl>    <dbl>        <int>        <int>      <dbl>
-#> 1 facet         Criterion  0.0130       NA            2            0         NA
-#> 2 facet         Rater      0.222        NA            2            0         NA
-#> 3 person        Person    11.2          NA           12            0         NA
-#> 4 step          Common    13.7          NA            3            0         NA
 
 # A second identical call reads the result without fitting again.
 again <- simulate_mfrm_recovery(n_person = 12, n_rater = 2, n_criterion = 2,
   reps = 1, maxit = 30, seed = 123, file = saved)
-#> Loaded completed simulation: /tmp/Rtmp9ZqIgh/file1cd573c04251.rds
 identical(rec, again)
-#> [1] TRUE
 unlink(saved)
+} # }
 ```

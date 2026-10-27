@@ -160,6 +160,9 @@ documented fields.
 ## Examples
 
 ``` r
+# Optional integration example (loads additional modelling or rendering packages).
+# example("import_mirt_fit", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 if (requireNamespace("mirt", quietly = TRUE)) {
   response_matrix <- matrix(sample(0:1, 120, replace = TRUE), nrow = 40)
   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
@@ -167,8 +170,5 @@ if (requireNamespace("mirt", quietly = TRUE)) {
   imported <- import_mirt_fit(fit, model = "RSM")
   imported$summary
 }
-#>   Model Method Source  N Persons Facets Categories    LogLik      AIC      BIC
-#> 1   RSM    MML   mirt 40      40      1         NA -81.62847 171.2569 178.0125
-#>   Converged ConvergenceStatus
-#> 1      TRUE                ok
+} # }
 ```

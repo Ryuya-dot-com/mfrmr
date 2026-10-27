@@ -61,7 +61,7 @@ than pass/fail evidence."><meta property="og:image" content="https://ryuya-dot-c
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize a diagnostic-screening simulation study</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_diagnostic_screening.Rd</code></div>
     </div>
 
@@ -123,10 +123,10 @@ and runtime views</p></li>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># One saved replication illustrates output structure, not precise rates.</span></span></span>
 <span class="r-in"><span><span class="co"># Regeneration recipe: examples/simulation-results.R in the package.</span></span></span>
-<span class="r-in"><span><span class="va">saved</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"simulation-results.rds"</span>,</span></span>
+<span class="r-in"><span><span class="va">saved</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"simulation-diagnostic-screening.rds"</span>,</span></span>
 <span class="r-in"><span>  package <span class="op">=</span> <span class="st">"mfrmr"</span>, mustWork <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Inspect saved$generation_warnings and the result's run/status tables.</span></span></span>
-<span class="r-in"><span><span class="va">diag_eval</span> <span class="op">&lt;-</span> <span class="va">saved</span><span class="op">$</span><span class="va">diagnostic_screening</span></span></span>
+<span class="r-in"><span><span class="va">diag_eval</span> <span class="op">&lt;-</span> <span class="va">saved</span><span class="op">$</span><span class="va">result</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diag_eval</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Diagnostic Screening Summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

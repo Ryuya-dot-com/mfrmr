@@ -83,7 +83,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Linking and DFF</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/vignettes/mfrmr-linking-and-dff.Rmd" class="external-link"><code>vignettes/mfrmr-linking-and-dff.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-linking-and-dff.Rmd" class="external-link"><code>vignettes/mfrmr-linking-and-dff.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-linking-and-dff.Rmd</code></div>
     </div>
 
@@ -751,8 +751,8 @@ is not an accuracy guarantee.</p>
 <span>                    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">new_raters</span><span class="op">$</span><span class="va">Estimate</span><span class="op">[</span><span class="va">new_raters</span><span class="op">$</span><span class="va">Level</span> <span class="op">!=</span> <span class="st">"R01"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Convention FixedR01 OtherRaterSum</span></span>
-<span><span class="co">#&gt; 1  remainder      0.7           0.0</span></span>
-<span><span class="co">#&gt; 2      facet      0.7          -0.7</span></span></code></pre></div>
+<span><span class="co">#&gt; 1  remainder      0.7  1.387779e-17</span></span>
+<span><span class="co">#&gt; 2      facet      0.7 -7.000000e-01</span></span></code></pre></div>
 <p>Both fits keep R01 at 0.70. The remaining raters sum to zero in the
 legacy fit and -0.70 in the whole-facet fit. This changes R01’s
 comparison with the other raters; it is not just a renamed column.
@@ -2260,22 +2260,50 @@ the interaction table and narrative report.</p>
 <h2 id="model-estimated-facet-interactions">6. Model-estimated facet interactions<a class="anchor" aria-label="anchor" href="#model-estimated-facet-interactions"></a>
 </h2>
 <p>Residual bias and DFF tools screen for unusual cells after fitting
-the additive model. When the interaction hypothesis is specified in
-advance, use <code>facet_interactions</code> to estimate the named
-two-way non-person facet interaction in the model likelihood.</p>
+the additive model. For example, ask whether a rater scores particular
+criteria unexpectedly high or low after accounting for the main facet
+effects. <code><a href="../reference/estimate_all_bias.html">estimate_all_bias()</a></code> screens all non-Person facet
+pairs by default; specify <code>pairs</code> to limit the search. It
+holds the calibration and Person estimates fixed, so these cell shifts
+differ from jointly estimated interaction effects.</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_add</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
-<span>  <span class="va">bias_df</span>,</span>
-<span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
-<span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span>
-<span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span>
-<span>  model <span class="op">=</span> <span class="st">"RSM"</span>,</span>
-<span>  quad_points <span class="op">=</span> <span class="fl">7</span></span>
+<code class="sourceCode R"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span>
+<span><span class="va">fit_add</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
+<span>  <span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">31</span></span>
 <span><span class="op">)</span></span>
-<span></span>
+<span><span class="va">screens</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_all_bias.html">estimate_all_bias</a></span><span class="op">(</span><span class="va">fit_add</span><span class="op">)</span></span>
+<span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span><span class="va">screens</span>, study_context <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  question <span class="op">=</span> <span class="st">"Which rater-criterion cells need substantive review?"</span>,</span>
+<span>  score_direction <span class="op">=</span> <span class="st">"Higher coded scores indicate better performance"</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">report</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">overview</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">report</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">bias_cells</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">screens</span><span class="op">)</span></span>
+<span><span class="co"># Keep complete tables, including failed pairs and unavailable cells.</span></span>
+<span><span class="fu"><a href="../reference/export_summary_appendix.html">export_summary_appendix</a></span><span class="op">(</span><span class="va">report</span>, output_dir <span class="op">=</span> <span class="st">"bias-review"</span><span class="op">)</span></span></code></pre></div>
+<p>The signed <code>Bias Size</code> describes a shift in expected
+<strong>coded</strong> scores; positive does not necessarily mean
+favorable. Replace the declared direction with your rubric’s actual
+meaning. Report the searched interactions, exclusions, cell counts and
+unavailable results, rather than only flagged cells. The screening
+statistics omit calibration and Person uncertainty and have no
+collection-wide multiplicity control. Different pairs reuse
+observations; their cell counts must not be summed as the study sample
+size. This is a FACETS-like conditional exploration workflow, not a
+claim of identical algorithms, probabilities or calibration conventions.
+See the <a href="https://winsteps.com/facetman/biasestimation.htm" class="external-link">FACETS
+bias-estimation description</a>.</p>
+<p>When the interaction hypothesis is specified in advance, use
+<code>facet_interactions</code> to estimate the named two-way non-person
+facet interaction in the model likelihood. An interaction selected after
+inspecting these screens can also be fitted, but its same-data
+comparison remains exploratory: the LRT p-value does not account for
+that selection.</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Continue with ratings and fit_add from the preceding block.</span></span>
 <span><span class="va">fit_interaction</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
-<span>  <span class="va">bias_df</span>,</span>
+<span>  <span class="va">ratings</span>,</span>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
 <span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span>
 <span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span>
@@ -2286,7 +2314,14 @@ two-way non-person facet interaction in the model likelihood.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/interaction_effect_table.html">interaction_effect_table</a></span><span class="op">(</span><span class="va">fit_interaction</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/compare_mfrm.html">compare_mfrm</a></span><span class="op">(</span>Additive <span class="op">=</span> <span class="va">fit_add</span>, Interaction <span class="op">=</span> <span class="va">fit_interaction</span>, nested <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_mfrm.html">compare_mfrm</a></span><span class="op">(</span>Additive <span class="op">=</span> <span class="va">fit_add</span>, Interaction <span class="op">=</span> <span class="va">fit_interaction</span>,</span>
+<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Additive"</span>, <span class="st">"Interaction"</span><span class="op">)</span>, nested <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">comparison</span></span>
+<span><span class="va">model_report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span><span class="fu"><a href="../reference/build_model_choice_review.html">build_model_choice_review</a></span><span class="op">(</span></span>
+<span>  Additive <span class="op">=</span> <span class="va">fit_add</span>, Interaction <span class="op">=</span> <span class="va">fit_interaction</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">model_report</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">comparison_table</span></span>
+<span><span class="co"># The nested LRT remains in comparison$lrt; the review above reports ICs.</span></span></code></pre></div>
 <p>Interpretation:</p>
 <ul>
 <li>Name the facet pair explicitly before fitting.</li>
@@ -2296,6 +2331,27 @@ additive MFRM under zero marginal-sum constraints.</li>
 claims.</li>
 <li>Keep this route separate from residual screening with
 <code><a href="../reference/estimate_bias.html">estimate_bias()</a></code>.</li>
+<li>Match observations, score coding, constraints, population
+specification and integration settings. Both example fits use 31 points;
+that is the minimum comparison gate, not proof of sufficient integration
+accuracy. Check stability of likelihood differences and conclusions with
+a finer common grid when needed.</li>
+<li>AIC, BIC and SABIC compare eligible candidate models; BIC uses the
+number of Persons, not rating rows. Ranking and nested-LRT eligibility
+are separate. ConQuest also reports information criteria, but
+cross-software comparisons require matching likelihoods and parameter
+counts, not just table labels. See <a href="https://conquestmanual.acer.org/s4-00.html" class="external-link">ConQuest
+commands</a>.</li>
+<li>Joint RSM/PCM interactions use direct optimization by default. With
+a fixed standard-normal population and fixed quadrature,
+<code>mml_engine = "hybrid"</code> initializes the fit with EM before
+direct finishing; <code>"em"</code> retains the EM solution with its
+common terminal-gradient review. Use <code>mml_starts</code> to examine
+specified initial values, and inspect
+<code>summary(fit)$starting_values</code> and fit readiness before
+comparing models. EM can be slower and does not resolve sparse-design
+identification or insufficient quadrature. The conditional cell screen
+itself is not EM.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -2310,7 +2366,7 @@ levels have documented cross-wave identity and unchanged meaning.</p>
 <code>ej2021_study2</code> here. They are independent legacy synthetic
 studies; reused raw labels do not identify common persons, raters, or
 anchors and do not link their scales.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">declared_common_facets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Criterion"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
@@ -2427,7 +2483,7 @@ practical assignments. Four common persons and eight raters illustrate
 the syntax; they are not recommended minimum counts. The common-person
 example uses more rating rows than the other examples, so this is not an
 equal-budget precision comparison.</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">common</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mfrm_sim_spec.html">build_mfrm_sim_spec</a></span><span class="op">(</span></span>

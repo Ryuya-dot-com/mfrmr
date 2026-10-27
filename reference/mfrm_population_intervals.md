@@ -33,7 +33,7 @@ vcov(object, ...)
 
 ## Arguments
 
-- object :
+- object:
 
   A native RSM/PCM MML fit with an active population model, or saved
   native-location
@@ -44,11 +44,11 @@ vcov(object, ...)
   [`vcov()`](https://rdrr.io/r/stats/vcov.html), supply the
   population-interval result.
 
-- level :
+- level:
 
   Pointwise confidence level, strictly between zero and one.
 
-- contrasts :
+- contrasts:
 
   Optional numeric matrix of prespecified linear combinations of
   population coefficients. Give each row a distinct nonempty target name
@@ -58,7 +58,7 @@ vcov(object, ...)
   dependent rows are allowed for pointwise intervals. `NULL` retains the
   coefficient/variance-only output.
 
-- anchor_covariance :
+- anchor_covariance:
 
   Optional full sampling covariance of the supplied anchor estimates,
   including their correlations, in native ability units squared. Row and
@@ -67,7 +67,7 @@ vcov(object, ...)
   anchor-origin route with an intercept-only population and fixed SD.
   `NULL` retains the existing conditional-on-anchors calculation.
 
-- independent_anchors :
+- independent_anchors:
 
   Logical, default `FALSE`. Set `TRUE` with `anchor_covariance` only
   when source calibration and receiving responses are independent.
@@ -75,11 +75,11 @@ vcov(object, ...)
   covariance and are unsupported. This is an explicit assumption, not a
   check inferred from different Person identifiers.
 
-- x :
+- x:
 
   An interval result.
 
-- ... :
+- ...:
 
   Unused.
 
@@ -246,6 +246,9 @@ for the different uncertainty targets.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("mfrm_population_intervals", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 ratings <- load_mfrmr_data("example_core")
 persons <- data.frame(Person = unique(ratings$Person))
 # Fictional predictor for this example; use your observed covariates.
@@ -256,74 +259,13 @@ fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
 L <- matrix(c(0, 2), nrow = 1,
   dimnames = list("X = 1 minus X = -1", c("(Intercept)", "X")))
 ci <- mfrm_population_intervals(fit, contrasts = L)
-#> Warning: Experimental pointwise population intervals: sampling coverage is unqualified and method qualification is incomplete. Residual variance is conditional on the fitted predictors; these intervals do not include population misspecification or dependence. Contrasts use the fitted population coding and describe conditional population means, not individual ability differences or causal effects.
 subset(summary(ci), Type == "coefficient_contrast")
-#>                        Target                 Type               Term Estimate
-#> 3 contrast:X = 1 minus X = -1 coefficient_contrast X = 1 minus X = -1 -1.08342
-#>          SE     Lower      Upper WorkingEstimate WorkingSE WorkingLower
-#> 3 0.4777931 -2.019877 -0.1469624        -1.08342 0.4777931    -2.019877
-#>   WorkingUpper WorkingScale NaturalScaleStatus    Status CIEligible
-#> 3   -0.1469624  coefficient             finite available       TRUE
-#>                                                                                                  InferenceReview
-#> 3 Experimental population normal/log-variance intervals; numerical checks passed, sampling coverage unqualified.
 plot(ci)
-
 p <- plot(ci, type = "contrasts")
-
 plot_data(p, "contrast_weights")
-#>                    (Intercept) X
-#> X = 1 minus X = -1           0 2
 plot_data(p, "notes")
-#>        Type
-#> 1  subtitle
-#> 2   caution
-#> 3   caution
-#> 4   caution
-#> 5   caution
-#> 6   caution
-#> 7   caution
-#> 8   caution
-#> 9   caution
-#> 10  caution
-#>                                                                                                                                                                                                                                                          Text
-#> 1                                                                                                                                                                                                                        95% experimental pointwise intervals
-#> 2  Experimental pointwise population intervals: sampling coverage is unqualified and method qualification is incomplete. Residual variance is conditional on the fitted predictors; these intervals do not include population misspecification or dependence.
-#> 3                                                                                                                 Contrasts use the fitted population coding and describe conditional population means, not individual ability differences or causal effects.
-#> 4                                                       Experimental pointwise population intervals: numerical availability does not establish sampling coverage. No multiplicity adjustment, causal inference or individual prediction interval is supplied.
-#> 5                                                         The plot uses saved values and numerical checks without recomputing or requalifying them. Missing bounds are unavailable, not infinite; crosses retain finite estimates without eligible intervals.
-#> 6                                    Native ability units are not population-SD-standardized. Predictor units, transformations, interactions and factor coding determine coefficient meaning; magnitudes are not comparable measures of predictor importance.
-#> 7                                                        Higher conditional population ability predicts higher coded ratings; whether higher ratings are favorable depends on the rubric. The zero line is a reference, not a practical-importance threshold.
-#> 8                                                                                                                               Contrasts use the saved weights and can represent conditional means or differences; the weights determine the interpretation.
-#> 9                                                                                                                                                                    Population formula: ~X. Inspect population_spec and population_coding for fitted coding.
-#> 10                                                                                                                                                                 Residual variance is retained in intervals but not drawn on the coefficient/contrast axis.
 results <- mfrm_results(fit, intervals = list(population = ci),
   include = "fit", compute = "never")
 apa_table(results$population_intervals$population)
-#> Conditional-normal population uncertainty
-#>                       Target                 Type               Term Estimate
-#>             beta:(Intercept)          coefficient        (Intercept)     0.00
-#>                       beta:X          coefficient                  X    -0.54
-#>  contrast:X = 1 minus X = -1 coefficient_contrast X = 1 minus X = -1    -1.08
-#>        log_residual_variance    residual_variance  Residual variance     0.83
-#>    SE Lower Upper WorkingEstimate WorkingSE WorkingLower WorkingUpper
-#>  0.14 -0.28  0.27            0.00      0.14        -0.28         0.27
-#>  0.24 -1.01 -0.07           -0.54      0.24        -1.01        -0.07
-#>  0.48 -2.02 -0.15           -1.08      0.48        -2.02        -0.15
-#>  0.21  0.50  1.38           -0.19      0.26        -0.69         0.32
-#>           WorkingScale NaturalScaleStatus    Status CIEligible
-#>            coefficient             finite available       TRUE
-#>            coefficient             finite available       TRUE
-#>            coefficient             finite available       TRUE
-#>  log_residual_variance             finite available       TRUE
-#>                                                                                                 InferenceReview
-#>  Experimental population normal/log-variance intervals; numerical checks passed, sampling coverage unqualified.
-#>  Experimental population normal/log-variance intervals; numerical checks passed, sampling coverage unqualified.
-#>  Experimental population normal/log-variance intervals; numerical checks passed, sampling coverage unqualified.
-#>  Experimental population normal/log-variance intervals; numerical checks passed, sampling coverage unqualified.
-#>  ConfidenceLevel
-#>             0.95
-#>             0.95
-#>             0.95
-#>             0.95
-#> Note. Experimental pointwise population intervals: sampling coverage is unqualified and method qualification is incomplete. Residual variance is conditional on the fitted predictors; these intervals do not include population misspecification or dependence. Contrasts use the fitted population coding and describe conditional population means, not individual ability differences or causal effects.
+} # }
 ```

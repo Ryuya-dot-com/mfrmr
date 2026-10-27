@@ -27,7 +27,7 @@ mfrm_results(
 
 ## Arguments
 
-- fit :
+- fit:
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
@@ -48,7 +48,7 @@ mfrm_results(
   [`summary()`](https://rdrr.io/r/base/summary.html) and point-only
   Wright map; comprehensive reports require a native mfrmr fit.
 
-- include :
+- include:
 
   Result sections or purpose presets to include. Purpose presets are
   `"standard"`, `"publication"`, `"validation"`, `"facets"`, `"bias"`,
@@ -60,35 +60,35 @@ mfrm_results(
   selects `c("fit", "plots")`. Explicit presets and sections remain
   scope-checked.
 
-- response_time :
+- response_time:
 
   Optional response-time column name. When `NULL` and `include` contains
   `"response_time"`, conservative column names such as `ResponseTime`,
   `response_time`, or `RT` are detected when available.
 
-- response_time_data :
+- response_time_data:
 
   Optional original long-format data containing the timing column.
   Required for already fitted objects unless the timing column is still
   present in `fit$prep$data`.
 
-- response_time_facets :
+- response_time_facets:
 
   Optional facet columns for response-time summaries. Defaults to the
   fitted model's source facet columns when available.
 
-- response_time_score :
+- response_time_score:
 
   Optional score column for response-time summaries. Defaults to the
   fitted model's source score column when available.
 
-- output :
+- output:
 
   Return format: `"object"` for an `mfrm_results` object, `"summary"`
   for its compact summary, `"tables"` for a named list of available data
   frames, or `"html"` for a temporary HTML report.
 
-- diagnostics :
+- diagnostics:
 
   Optional matching output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
@@ -97,7 +97,7 @@ mfrm_results(
   object is also accepted as an alias for `response_diagnostics`; do not
   supply it twice.
 
-- compute :
+- compute:
 
   Diagnostic computation policy. `"auto"` preserves the standard
   behavior; `"never"` collects only sections that can be built without
@@ -113,7 +113,7 @@ mfrm_results(
   results without fitting, integration or diagnostic calculation;
   ordinary diagnostics remain `"not_available"`.
 
-- predictions :
+- predictions:
 
   Optional saved predictions for a testlet or random-rater fit: the
   result of `predict(fit, ...)`. Matching calibration, column roles,
@@ -122,7 +122,7 @@ mfrm_results(
   fit before attachment; the fit itself does not need to be
   re-estimated.
 
-- intervals :
+- intervals:
 
   Optional saved
   [`mfrm_random_rater_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_random_rater_intervals.md)
@@ -141,7 +141,7 @@ mfrm_results(
   `population_<name>_interpretation_notes`. No bootstrap or interval
   calculation is run by this function.
 
-- scores :
+- scores:
 
   Optional saved
   [`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
@@ -161,7 +161,7 @@ mfrm_results(
   model-aware map routes; see
   [mfrmr_model_maps](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_model_maps.md).
 
-- comparison :
+- comparison:
 
   Optional descriptive extended-model result from
   [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
@@ -173,7 +173,7 @@ mfrm_results(
   retain aligned predictive quantities; select `metric` for other
   indices.
 
-- response_diagnostics :
+- response_diagnostics:
 
   Optional saved
   [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
@@ -194,7 +194,7 @@ mfrm_results(
   re-estimation. The original object is unchanged; newly exported
   results include the recovered metadata.
 
-- calibration_intervals :
+- calibration_intervals:
 
   For testlet and shared-rater fits, `"none"` (default) retains
   calibration estimates and approximate SEs with missing bounds.
@@ -205,7 +205,7 @@ mfrm_results(
   and reports retain the selection. This does not select
   individual-rater or Person intervals.
 
-- calibration_level :
+- calibration_level:
 
   Nominal level for those calibration intervals, between zero and one;
   default 0.95. Nondefault calibration options are unavailable for
@@ -623,11 +623,14 @@ boundaries; they do not add ordinary-model reporting templates.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("mfrm_results", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Load the package and example ratings
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
 
-# Fit the model
+# Fit these ratings; replace the data-loading line for your own analysis
 fit <- fit_mfrm(
   data = ratings,
   person = "Person",
@@ -642,52 +645,9 @@ fit <- fit_mfrm(
 res <- mfrm_results(fit)
 review <- summary(res)
 review$decision
-#>               Interpretation FormalInference FitReadiness
-#> 1 Ready for formal inference             Yes        ready
-#>                                           Why                        NextAction
-#> 1 All stored fit-readiness components passed. Read the compact results summary.
 review$next_actions
-#>   Priority               Area
-#> 1        1           Overview
-#> 3        2             Triage
-#> 2        2         Wright map
-#> 4        3        Diagnostics
-#> 5        4 Visual diagnostics
-#> 6        5        Fit pathway
-#> 7        5          Precision
-#> 8        6          Reporting
-#> 9       11             Tables
-#>                                                                      Action
-#> 1                                         Read the compact results summary.
-#> 3                            Read the first-screen triage before branching.
-#> 2                   Create and inspect the required shared-logit scale map.
-#> 4                    Review diagnostic key warnings before report drafting.
-#> 5                     Open the QC dashboard after reviewing the Wright map.
-#> 6 Review Infit against measure, including selected person rows when useful.
-#> 7        Inspect fit, separation, reliability, and ZSTD wording boundaries.
-#> 8        Use the reporting checklist as a guide for preparing a manuscript.
-#> 9                            Create an appendix-ready summary-table bundle.
-#>                                                                                                                                                                     Route
-#> 1                                                                                                                                                            summary(res)
-#> 3                                                                                                                                                     summary(res)$triage
-#> 2                                                                                         plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
-#> 4                                                                                                                                   summary(res$diagnostics)$key_warnings
-#> 5                                                                                                                          plot(res, type = "qc", preset = "publication")
-#> 6 plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged", preset = "publication")
-#> 7                                                                                                                                summary(res$components$precision_review)
-#> 8                                                                                                                             summary(res$components$reporting_checklist)
-#> 9                                                                                                                                         build_summary_table_bundle(res)
-#>                                                                                                                                                 Reason
-#> 1                                                           Confirms input mode, model, method, section status, table coverage, and available figures.
-#> 3                             Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting outputs.
-#> 2 The Wright map is the primary fitted-scale figure: compare person targeting with facet levels and step thresholds before branching into diagnostics.
-#> 4                                            Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up checks.
-#> 5                                                            The QC dashboard gives a focused follow-up view of fit, residual, and category summaries.
-#> 6                                          This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit.
-#> 7                                         Precision review keeps fit-size, standardized fit, and separation evidence in separate reporting categories.
-#> 8                                                                                Checklist rows identify report-ready, missing, and caveated sections.
-#> 9                                                                   The bundle exposes table roles, plot readiness, and conservative appendix presets.
 
 # Draw the Wright map
 plot(res)
+} # }
 ```

@@ -63,7 +63,7 @@ training / drift feedback loops."><meta property="og:image" content="https://ryu
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Rater-severity trajectory across an ordered wave / occasion variable</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-plotting-screening.R" class="external-link"><code>R/api-plotting-screening.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-plotting-screening.R" class="external-link"><code>R/api-plotting-screening.R</code></a></small>
       <div class="d-none name"><code>plot_rater_trajectory.Rd</code></div>
     </div>
 
@@ -179,7 +179,10 @@ appearance, not estimates, confidence levels or diagnostic thresholds.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("plot_rater_trajectory", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit_a</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>                  method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
@@ -187,19 +190,13 @@ appearance, not estimates, confidence levels or diagnostic thresholds.</p>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_a</span>, type <span class="op">=</span> <span class="st">"trajectory"</span>, comparison <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>T2 <span class="op">=</span> <span class="va">fit_b</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"T1"</span>, <span class="st">"T2"</span><span class="op">)</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Wave Level   Estimate         SE      CI_Lower     CI_Upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T1.1   T1   R01 -0.1957463 0.09729871 -0.3864482600 -0.005044321</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T2.1   T2   R01 -0.1957463 0.09729871 -0.3864482600 -0.005044321</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T1.2   T1   R02 -0.3287812 0.09769555 -0.5202609108 -0.137301394</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T2.2   T2   R02 -0.3287812 0.09769555 -0.5202609108 -0.137301394</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T1.3   T1   R03  0.1910898 0.09724038  0.0005021609  0.381677427</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> T2.3   T2   R03  0.1910898 0.09724038  0.0005021609  0.381677427</span>
 <span class="r-in"><span><span class="co"># Look for: stable trajectories (small wave-to-wave shifts within</span></span></span>
 <span class="r-in"><span><span class="co">#   each rater's CI ribbon) once the waves are anchor-linked. A</span></span></span>
 <span class="r-in"><span><span class="co">#   rater whose line drifts &gt;0.5 logits across waves is the typical</span></span></span>
 <span class="r-in"><span><span class="co">#   "calibration drift" signal. Without anchor linking the per-wave</span></span></span>
 <span class="r-in"><span><span class="co">#   logits are on different scales and the picture cannot be read</span></span></span>
 <span class="r-in"><span><span class="co">#   as drift; see the Anchor-linking caveat in the docstring.</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

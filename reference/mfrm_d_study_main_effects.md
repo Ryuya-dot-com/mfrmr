@@ -154,6 +154,14 @@ accept a single score and estimate the corresponding interaction
 components explicitly. Changing `residual_scaling` here only explores
 assumptions; it does not estimate the omitted interactions.
 
+Pass the result directly to
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+for full projection tables and their assumptions. Newly created results
+retain source variance components, estimation settings and observed
+facet counts. Reports of older compatible results mark missing source
+details `not_recorded`; report creation never reconstructs components or
+computes confidence intervals.
+
 The `G` and `Phi` values returned here belong to the
 generalizability-theory metric family. They should not be interpreted as
 coefficient alpha, omega, KR-20, or IRT marginal/separation reliability,
@@ -186,9 +194,10 @@ the source main-effects model.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 if (requireNamespace("lme4", quietly = TRUE)) {
   gt <- mfrm_generalizability(fit)
   ds <- mfrm_d_study(gt, data.frame(Rater = c(2, 3, 4), Criterion = 4))

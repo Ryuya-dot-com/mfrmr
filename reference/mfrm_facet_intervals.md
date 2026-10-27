@@ -30,12 +30,15 @@ print(x, ...)
 summary(object, ...)
 
 # S3 method for class 'mfrm_facet_intervals'
+confint(object, parm = NULL, level = object$settings$level, ...)
+
+# S3 method for class 'mfrm_facet_intervals'
 vcov(object, ...)
 ```
 
 ## Arguments
 
-- fit :
+- fit:
 
   An inference-ready RSM/PCM MML fit from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
@@ -56,20 +59,20 @@ vcov(object, ...)
   interaction fits use the `comparison_review` extension below; their
   explicit model and source checks remain separate.
 
-- facet :
+- facet:
 
   A non-person facet, for example `"Rater"`. May be omitted when
   `comparison_review` supplies a facet-by-origin interaction target, or
   for a CML comparison-only fit, which already retains its targets.
 
-- contrasts :
+- contrasts:
 
   Optional numeric matrix with distinct target row names and columns
   named by every level of `facet`. Columns are aligned by name. A row
   with coefficients `c(1, -1, 0)` estimates the first level minus the
   second. By default, each level is reported.
 
-- method :
+- method:
 
   `"model"` (default) uses ordinary observed information; `"sandwich"`
   uses independent-cluster marginal-likelihood scores. The
@@ -77,7 +80,7 @@ vcov(object, ...)
   `"model"`; sandwich support remains limited to the ordinary
   fixed-population RSM/PCM route.
 
-- clusters :
+- clusters:
 
   For sandwich inference, an optional data frame with exactly one row
   per fitted person and complete `Person` and `Cluster` identifiers.
@@ -86,17 +89,17 @@ vcov(object, ...)
   A person cannot be split across clusters. Supply original person
   labels, even when the input person column has another name.
 
-- adjust :
+- adjust:
 
   Logical; with `method = "sandwich"`, optionally multiply the
   covariance by `G/(G-1)`, where `G` is the cluster count. Default
   `FALSE`. This scaling does not guarantee small-sample coverage.
 
-- level :
+- level:
 
   Pointwise confidence level, strictly between zero and one.
 
-- scale :
+- scale:
 
   `"native"` (default) retains the fitted ability units.
   `"standardized"` divides an explicit within-facet zero-sum contrast,
@@ -106,7 +109,7 @@ vcov(object, ...)
   normal population; individual locations and latent regression are not
   supported.
 
-- comparison_review :
+- comparison_review:
 
   Optional
   [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
@@ -117,7 +120,7 @@ vcov(object, ...)
   and assumptions. Omit this argument for a CML comparison-only fit; its
   saved review is reused.
 
-- anchor_covariance :
+- anchor_covariance:
 
   Optional full sampling covariance of the supplied anchor estimates,
   including their correlations, in native ability units squared. Row and
@@ -126,7 +129,7 @@ vcov(object, ...)
   anchor-origin route with an intercept-only population and fixed SD.
   `NULL` retains the existing conditional-on-anchors calculation.
 
-- independent_anchors :
+- independent_anchors:
 
   Logical, default `FALSE`. Set `TRUE` with `anchor_covariance` only
   when source calibration and receiving responses are independent.
@@ -134,22 +137,34 @@ vcov(object, ...)
   covariance and are unsupported. This is an explicit assumption, not a
   check inferred from different Person identifiers.
 
-- interaction :
+- interaction:
 
   Optional exact name of one fitted two-facet interaction, for example
   `"Rater:Criterion"`. Omit `facet` and `comparison_review`. This
   selects jointly fitted cell effects rather than fixed-baseline bias
-  screens. Requires `method = "model"`, `scale = "native"`, full direct
-  fixed-grid RSM/PCM MML with fixed N(0,1), one interaction, no anchors,
-  groups, dummy facets or shrinkage. See the joint-cell section below.
+  screens. Requires `method = "model"`, `scale = "native"`, full
+  fixed-grid RSM/PCM MML (direct, EM or hybrid) with fixed N(0,1), one
+  interaction, no anchors, groups, dummy facets or shrinkage. Every
+  engine must pass the common numerical and full-joint information
+  checks; EM stopping alone does not qualify intervals. See the
+  joint-cell section below.
 
-- x, object :
+- x, object:
 
   An object returned by `mfrm_facet_intervals()`.
 
-- ... :
+- ...:
 
   Unused by print and summary methods.
+
+- parm:
+
+  For [`confint()`](https://rdrr.io/r/stats/confint.html), optional
+  distinct target names from `object$table$Target`. Extracts the stored
+  limits without recalculation; `level` must match the saved level. Use
+  `mfrm_facet_intervals()` to calculate a different level. Unavailable
+  limits remain `NA`; inspect `summary(object)` for their eligibility
+  and reasons.
 
 ## Value
 
@@ -810,29 +825,16 @@ R. *Journal of Statistical Software*, 95(1), 1–36.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("mfrm_facet_intervals", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 ratings <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
   model = "RSM", method = "MML", rating_min = 1, rating_max = 4,
   category_policy = "preserve")
 intervals <- mfrm_facet_intervals(fit, "Rater", method = "sandwich")
 summary(intervals)
-#>   Target   Estimate         SE       Lower       Upper    ModelSE  ModelLower
-#> 1    R01 -0.1838153 0.08409258 -0.34863371 -0.01899684 0.08209147 -0.34471159
-#> 2    R02 -0.3088478 0.07488878 -0.45562708 -0.16206847 0.08298771 -0.47150069
-#> 3    R03  0.1795027 0.08434452  0.01419045  0.34481490 0.08202273  0.01874108
-#> 4    R04  0.3131604 0.09478720  0.12738087  0.49893987 0.08294736  0.15058652
-#>    ModelUpper    Status CIEligible
-#> 1 -0.02291895 available       TRUE
-#> 2 -0.14619486 available       TRUE
-#> 3  0.34026428 available       TRUE
-#> 4  0.47573421 available       TRUE
-#>                                                                                                            InferenceReview
-#> 1 Pointwise normal approximation under the selected covariance method; numerical availability does not guarantee coverage.
-#> 2 Pointwise normal approximation under the selected covariance method; numerical availability does not guarantee coverage.
-#> 3 Pointwise normal approximation under the selected covariance method; numerical availability does not guarantee coverage.
-#> 4 Pointwise normal approximation under the selected covariance method; numerical availability does not guarantee coverage.
 plot(intervals)
-
 
 # Compare two selected raters, rather than each rater against the origin.
 # Here choose the first two example labels; prespecify your own comparison.
@@ -842,8 +844,6 @@ contrast <- matrix(0, 1, length(raters), dimnames = list(
 contrast[1, 1:2] <- c(1, -1)
 difference <- mfrm_facet_intervals(fit, "Rater", contrasts = contrast)
 summary(difference)[, c("Target", "Estimate", "SE", "Lower", "Upper", "Status")]
-#>          Target  Estimate        SE      Lower     Upper    Status
-#> 1 R01 minus R02 0.1250325 0.1337755 -0.1371626 0.3872276 available
 # With the default negative rater sign, a positive contrast means the first
 # rater is stricter. Units are native logits. An interval containing zero
 # leaves the direction uncertain; it does not establish equivalence.
@@ -857,20 +857,7 @@ population_fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"),
   rating_min = 1, rating_max = 4, category_policy = "preserve", quad_points = 61)
 standardized <- mfrm_facet_intervals(population_fit, "Rater",
   contrasts = contrast, scale = "standardized")
-#> Warning: Population-SD-standardized contrasts use full joint delta-method uncertainty; sampling coverage is not qualified. Regular inference requires a correctly specified, identified marginal model and a true population SD strictly above zero. A positive fitted SD alone does not establish these conditions; near-zero SD can make the ratio unstable. Quadrature agreement is a numerical diagnostic, not an error bound. Unequal slopes or steps can make expected-rating differences vary with ability.
 summary(standardized)
-#>          Target  Estimate       SE      Lower     Upper  ModelSE ModelLower
-#> 1 R01 minus R02 0.1284989 0.138447 -0.1428523 0.3998501 0.138447 -0.1428523
-#>   ModelUpper    Status CIEligible
-#> 1  0.3998501 available       TRUE
-#>                                                                                                                 InferenceReview
-#> 1 Population-SD-standardized pointwise delta-method interval; source numerical checks passed, sampling coverage is unqualified.
-#>                                   ScaleReference NativeEstimate
-#> 1 within-facet zero-sum contrast / population SD      0.1244346
-#>   CoverageQualified
-#> 1             FALSE
-#>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            InferenceCaution
-#> 1 Population-SD-standardized contrasts use full joint delta-method uncertainty; sampling coverage is not qualified. Regular inference requires a correctly specified, identified marginal model and a true population SD strictly above zero. A positive fitted SD alone does not establish these conditions; near-zero SD can make the ratio unstable. Quadrature agreement is a numerical diagnostic, not an error bound. Unequal slopes or steps can make expected-rating differences vary with ability.
 # Estimate is now in fitted ability-population SD units; its delta-method
 # interval includes uncertainty in that SD. It is not a Wald z statistic.
 
@@ -888,10 +875,5 @@ if (requireNamespace("lpSolve", quietly = TRUE)) {
   summary(saved) # Same conditional-information result, without refitting
   # Use plot(saved) for a figure; ordinary mfrm_results() does not accept CML.
 }
-#>          Target Estimate        SE      Lower     Upper    Status CIEligible
-#> 1 R01 minus R02 0.124638 0.1335936 -0.1372007 0.3864767 available       TRUE
-#>                                                                                                             InferenceReview
-#> 1 Pointwise conditional-information normal approximation; numerical availability does not guarantee finite-sample coverage.
-#>     ModelSE ModelLower ModelUpper
-#> 1 0.1335936 -0.1372007  0.3864767
+} # }
 ```

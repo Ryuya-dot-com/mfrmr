@@ -638,7 +638,7 @@ Wright map is meant to support.
   for systematic departure from the additive main-effects model.
 
 - [`plot()`](https://rdrr.io/r/graphics/plot.default.html) /
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) :
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   DFF / DIF screening views for facet-level x group contrasts. Best for
   showing which facet and group pair is involved before writing
@@ -678,7 +678,7 @@ Wright map is meant to support.
   too busy.
 
 - [`response_time_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/response_time_review.md)
-  / [`plot()`](https://rdrr.io/r/graphics/plot.default.html) :
+  / [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
   Descriptive response-time screening by person, facet, and score
   category. Best for reviewing rapid/slow response patterns alongside
@@ -984,6 +984,9 @@ For a longer, plot-first walkthrough, run
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("mfrmr_visual_diagnostics", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -1001,22 +1004,15 @@ fit <- fit_mfrm(
 # Start with the shared-scale view; run plot commands one at a time
 plot(fit)
 
-
 # Compute diagnostics once and check their interpretation status
 diagnostics <- diagnose_mfrm(fit)
 review <- summary(diagnostics)
 review$decision
-#>               Interpretation FormalInference FitReadiness
-#> 1 Ready for formal inference             Yes        ready
-#>                                           Why
-#> 1 All stored fit-readiness components passed.
-#>                                                                                            NextAction
-#> 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.
 
 # Inspect an overview of model-fit issues
 plot(fit, type = "qc", diagnostics = diagnostics)
 
-
 # Follow up on observed versus model-expected category frequencies
 plot(diagnostics, type = "marginal_fit")
+} # }
 ```

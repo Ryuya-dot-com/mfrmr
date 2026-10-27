@@ -55,7 +55,7 @@ without loading either backend or running an estimator."><meta property="og:imag
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Read an exported Bayesian measurement summary</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-posterior-summary.R" class="external-link"><code>R/api-posterior-summary.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-posterior-summary.R" class="external-link"><code>R/api-posterior-summary.R</code></a></small>
       <div class="d-none name"><code>read_mfrm_posterior.Rd</code></div>
     </div>
 
@@ -125,7 +125,12 @@ native fitted model. It supports <code><a href="mfrm_report.html">mfrm_report()<
 <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> and <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code>.
 Use the backend's saved fit for new credible levels, contrasts, predictions,
 trace plots or posterior predictive checks. Native scoring and MML/JML
-diagnostics are not available from this object.</p>
+diagnostics are not available from this object.
+Estimated-population one-family Stan summaries retain the population mean
+and SD as reported parameters. Their schema-2 files require this newer reader;
+existing fixed-population schema-1 summaries remain supported. Use
+<code>plot(x, quantity = "population_sd")</code> to inspect between-Person variation
+on the native metric. This SD is not an individual Person standard error.</p>
 <p><code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> retrieves the stored equal-tailed 95% <em>posterior credible</em>
 intervals, retaining fixed/unavailable rows and review flags. It does not
 calculate frequentist confidence intervals or change the saved level.

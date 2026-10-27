@@ -85,17 +85,18 @@ bundle.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
 path <- tempfile(fileext = ".csv")
 out <- write_mfrm_residual_file(fit, diag, path, overwrite = TRUE)
 data.frame(
   Component = out$written_files$Component,
   File = basename(out$written_files$Path)
 )
-#>       Component                 File
-#> 1 residual_file file1cd53fec2f9d.csv
+#>       Component                File
+#> 1 residual_file file1d848a18231.csv
 # Full paths remain in out$written_files$Path.
 ```

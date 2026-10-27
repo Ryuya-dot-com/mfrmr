@@ -524,6 +524,9 @@ is active. Unreadable files are never silently reused or replaced by
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("evaluate_mfrm_design", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
   design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 2),
   reps = 1,
@@ -532,22 +535,7 @@ sim_eval <- suppressWarnings(evaluate_mfrm_design(
 ))
 s_eval <- summary(sim_eval)
 s_eval$design_summary[, c("Facet", "n_person", "MeanSeparation", "MeanSeverityRMSE")]
-#> # A tibble: 6 × 4
-#>   Facet     n_person MeanSeparation MeanSeverityRMSE
-#>   <chr>        <int>          <dbl>            <dbl>
-#> 1 Criterion        8           0              0.102 
-#> 2 Criterion       12           0              0.0102
-#> 3 Person           8           1.13           1.20  
-#> 4 Person          12           1.55           0.688 
-#> 5 Rater            8           2.62           0.844 
-#> 6 Rater           12           0              0.140 
 p_eval <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 names(p_eval)
-#>  [1] "plot"                    "facet"                  
-#>  [3] "metric"                  "metric_col"             
-#>  [5] "x_var"                   "x_label"                
-#>  [7] "group_var"               "group_label"            
-#>  [9] "design_variable_aliases" "design_descriptor"      
-#> [11] "planning_scope"          "planning_constraints"   
-#> [13] "planning_schema"         "data"                   
+} # }
 ```

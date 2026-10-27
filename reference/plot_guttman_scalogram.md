@@ -118,9 +118,10 @@ for the underlying diagnostics bundle.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 p <- plot(fit, type = "guttman", draw = FALSE)
 dim(p$data$matrix)
 #> [1] 40  4

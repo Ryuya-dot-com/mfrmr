@@ -163,8 +163,8 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 #> # A tibble: 2 × 7
 #>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
 #>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
-#> 1 Criterion      3            0      0.302      -0.344       0.224 0.568
-#> 2 Rater          6            0      0.399      -0.606       0.412 1.02
+#> 1 Criterion      3     4.62e-18      0.302      -0.344       0.224 0.568
+#> 2 Rater          6    -4.64e-18      0.399      -0.606       0.412 1.02
 
 # Check the interpretation status and recommended next step
 results$decision
@@ -717,6 +717,17 @@ is a computational ceiling, not a convergence criterion; inspect
 data, model, method, and planned controls when investigating an
 iteration limit. Choose JML for its fixed-person estimand when
 appropriate, not as a faster substitute for MML.
+
+`summary(fit)$numerical_review` distinguishes optimization, curvature,
+starting values and integration, with a next action for each. To
+preserve inputs and constraints, use `build_mfrm_replay_script(fit)`
+with the original input data before changing a diagnostic control.
+Ordinary `mml_starts` and automatic integration cannot be combined:
+review specified starts on a shared fixed grid, then run
+[`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
+separately. That review retains the starting-value policy. Nearly equal
+likelihoods do not override unresolved gradient, information or
+inference checks.
 
 ### 2. Read precision and model fit before interpreting differences
 
@@ -1294,11 +1305,16 @@ Stan export, with explicit component log-slope priors and a
 `slope-levels.csv` mapping; see the [two-family
 workflow](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md).
 One-family GPCM uses `log_slope_prior_sd` in both formats, with
-geometric-mean-one slopes. For that route, the source must use
+geometric-mean-one slopes. For brms, the source must use
 `gpcm_mml_identification = "fixed_standard_normal"`. The default
-one-family GPCM estimates the population mean and variance and cannot
-currently be exported. Changing that setting changes the model; do not
-change it merely to enable export.
+one-family GPCM estimates the population mean and variance. You can
+export its intercept-only population to Stan with
+`population_prior = list(mean = c(0, 1), log_sd = c(0, 0.5))`; each pair
+gives the location and scale of a normal prior. The mean and SD are
+sampled while relative slopes and anchors retain the native metric. brms
+still requires the fixed-population specification. Changing that setting
+changes the model; do not change it merely to enable export. Review
+prior predictions and sensitivity.
 
 Anchor values are exact constraints. `levels.csv` and `steps.csv` in
 anchored or one-family bundles show the prior means, marginal SDs and

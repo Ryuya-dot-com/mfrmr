@@ -37,19 +37,12 @@ A data frame with one row per reusable plot-data component.
 ## Examples
 
 ``` r
-# Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
 
-# Fit the model
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  model = "RSM"
-)
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 
 # Discover which tables the default Wright map provides without drawing it
 plot_data_components(fit)

@@ -790,6 +790,9 @@ calibration. *AppliedMath*, 4(3), 1181–1191.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("mfrmr_linking_and_dff", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 ratings <- load_mfrmr_data("example_core")
 people <- unique(ratings$Person)
 baseline_data <- ratings[ratings$Person %in% people[1:24], , drop = FALSE]
@@ -805,46 +808,14 @@ review <- review_mfrm_anchors(
   rating_min = 1, rating_max = 4, category_policy = "preserve"
 )
 review$issue_counts
-#> # A tibble: 13 × 2
-#>    Issue                            N
-#>    <chr>                        <int>
-#>  1 anchor_schema_mismatch           0
-#>  2 group_anchor_schema_mismatch     0
-#>  3 unknown_anchor_facets            0
-#>  4 unknown_anchor_levels            0
-#>  5 invalid_anchor_values            0
-#>  6 duplicate_anchors                0
-#>  7 unknown_group_facets             0
-#>  8 unknown_group_levels             0
-#>  9 invalid_group_labels             0
-#> 10 duplicate_group_assignments      0
-#> 11 missing_group_values             0
-#> 12 group_value_conflicts            0
-#> 13 overlap_anchor_group             0
 linked <- anchor_to_baseline(
   new_data, baseline, "Person", c("Rater", "Criterion"), "Score",
   anchor_facets = "Criterion", anchor_policy = "error",
   rating_min = 1, rating_max = 4, category_policy = "preserve"
 )
 linked$fit$facets$others
-#> # A tibble: 8 × 3
-#>   Facet     Level        Estimate
-#>   <chr>     <chr>           <dbl>
-#> 1 Rater     R01            -0.246
-#> 2 Rater     R02            -0.404
-#> 3 Rater     R03             0.269
-#> 4 Rater     R04             0.380
-#> 5 Criterion Accuracy        0.202
-#> 6 Criterion Content        -0.480
-#> 7 Criterion Language        0.130
-#> 8 Criterion Organization    0.148
 # Fixed-anchor differences are zero by construction, not evidence of stability.
 linked$drift[, c("Facet", "Level", "Drift")]
-#> # A tibble: 4 × 3
-#>   Facet     Level        Drift
-#>   <chr>     <chr>        <dbl>
-#> 1 Criterion Accuracy         0
-#> 2 Criterion Content          0
-#> 3 Criterion Language         0
-#> 4 Criterion Organization     0
+
+} # }
 ```

@@ -118,8 +118,21 @@ A list of class `mfrm_design_recommendation` with:
 
 ## Details
 
-This helper converts a design-study summary into a simple planning
-table.
+This helper screens simulated designs under user-chosen planning
+criteria. The default targets non-Person facet calibration: high
+separation reliability means that facet-level differences can be
+distinguished, not that raters agree. Use `facets = "Person"` to target
+Person differentiation instead. Neither use establishes classification
+accuracy or a universal sample size. Inspect `summary(result)$target`
+and `$thresholds` before interpreting the recommendation. Defaults are
+planning choices, not validated standards.
+[`summary.mfrm_design_recommendation()`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_design_recommendation.md)
+explains the criterion outcomes;
+[`plot.mfrm_design_recommendation()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_design_recommendation.md)
+and
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+preserve them without repeating the simulation. No plan-selection
+confidence interval is computed.
 
 A design is marked as recommended when all requested facets satisfy all
 selected thresholds simultaneously. Each design must have results for
@@ -206,10 +219,10 @@ follows `prefer`.
 ``` r
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
-saved <- readRDS(system.file("examples", "simulation-results.rds",
+saved <- readRDS(system.file("examples", "simulation-design.rds",
   package = "mfrmr", mustWork = TRUE))
 # Inspect saved$generation_warnings and the result's run/status tables.
-sim_eval <- saved$design
+sim_eval <- saved$result
 rec <- recommend_mfrm_design(
   sim_eval, max_ratings = 48, max_ratings_per_rater = 24
 )

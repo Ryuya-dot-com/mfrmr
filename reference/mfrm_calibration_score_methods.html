@@ -61,7 +61,7 @@ refitting a model."><meta property="og:image" content="https://ryuya-dot-com.git
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Review and plot portable fixed-calibration scores</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-calibration-methods.R" class="external-link"><code>R/api-calibration-methods.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-calibration-methods.R" class="external-link"><code>R/api-calibration-methods.R</code></a></small>
       <div class="d-none name"><code>mfrm_calibration_score_methods.Rd</code></div>
     </div>
 
@@ -240,7 +240,10 @@ appearance, not estimates, confidence levels or diagnostic thresholds.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("mfrm_calibration_score_methods", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">training</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">ids</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">18</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
@@ -251,36 +254,6 @@ appearance, not estimates, confidence levels or diagnostic thresholds.</p>
 <span class="r-in"><span>  <span class="va">fit</span>, <span class="va">training</span>, quad_points <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">31</span>, <span class="fl">61</span><span class="op">)</span>, theta_points <span class="op">=</span> <span class="fl">41</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">q_review</span><span class="op">)</span> <span class="co"># Inspect movement; these grids are not universal cutoffs.</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> RSM-MML quadrature sensitivity summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ReferenceNodes ComparedGrids AllEstimationConverged AllHessiansFullRank</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              31             2                   TRUE                TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  MaxNLLAbsChangePerPerson MaxMeasurementParameterAbsChange MaxSlopeAbsChange</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   0.00019                          0.00174                NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  MaxPopulationSDAbsChange MaxProbabilityAbsChange MaxEAPAbsChange</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         0                 0.00059          0.0071</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  MaxPosteriorSDAbsChange</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  0.01019</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Grid comparisons</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model ReferenceNodes Nodes IsReference NLLChangePerPerson</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM             31    31        TRUE            0.00000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM             31    61       FALSE           -0.00019</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  NLLAbsChangePerPerson MeasurementParameterMaxAbsChange SlopeMaxAbsChange</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0.00000                          0.00000                NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0.00019                          0.00174                NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  RawSlopeSEMaxAbsChange SlopeIntervalMaxAbsChange</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      NA                        NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      NA                        NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  SlopeIntervalEligibilityChanged PopulationSDAbsChange</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                               NA                     0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                               NA                     0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  RawPopulationSDSEAbsChange ProbabilityMaxAbsChange EAPMaxAbsChange</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                          NA                 0.00000          0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                          NA                 0.00059          0.0071</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  PosteriorSDMaxAbsChange</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  0.00000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  0.01019</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No automatic stability classification or readiness change is applied.</span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">q_review</span><span class="op">$</span><span class="va">fits</span><span class="op">$</span><span class="va">q61</span></span></span>
 <span class="r-in"><span><span class="va">calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_calibration_workflow.html">freeze_mfrm_calibration</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="mfrm_calibration_workflow.html">validate_mfrm_calibration</a></span><span class="op">(</span><span class="fu"><a href="mfrm_calibration_workflow.html">extract_mfrm_calibration</a></span><span class="op">(</span></span></span>
@@ -291,99 +264,11 @@ appearance, not estimates, confidence levels or diagnostic thresholds.</p>
 <span class="r-in"><span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_calibration_workflow.html">score_mfrm_calibration</a></span><span class="op">(</span><span class="va">calibration</span>, <span class="va">new_rows</span>,</span></span>
 <span class="r-in"><span>  cut_scores <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Basic <span class="op">=</span> <span class="op">-</span><span class="fl">0.5</span>, Advanced <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Portable Calibration Score Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Calibration: mfrmr-calibration-v1:rsm:mml:20261026090425686245</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model / estimator: RSM / MML</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Persons: 2 scored (0 requiring review); 0 not scored</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Posterior estimates (2 of 2)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   P019: estimate 0.934, SD 0.323, interval [0.314, 1.579], scored</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   P020: estimate -0.381, SD 0.302, interval [-0.978, 0.209], scored</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Response-row disposition</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   32 input; 32 scored; 0 omitted; 0 refused; missing-response policy: error</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Conditional decision probabilities (first 10; full table in $decisions)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Person         Type    Label Lower Upper  Probability PriorMean PriorSD</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P019    above_cut    Basic  -0.5   Inf 9.999982e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P019    above_cut Advanced   0.8   Inf 6.568698e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P019 ability_band    Band1  -Inf  -0.5 1.769806e-06         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P019 ability_band    Band2  -0.5   0.8 3.431284e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P019 ability_band    Band3   0.8   Inf 6.568698e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P020    above_cut    Basic  -0.5   Inf 6.546008e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P020    above_cut Advanced   0.8   Inf 4.590082e-05         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P020 ability_band    Band1  -Inf  -0.5 3.453992e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P020 ability_band    Band2  -0.5   0.8 6.545549e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P020 ability_band    Band3   0.8   Inf 4.590082e-05         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Status Reason                                Uncertainty</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Decision probabilities describe Lower &lt; ability &lt;= Upper on the calibration</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   scale. Calibration, population estimates and supplied cut scores are held</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   fixed. Probability accuracy depends on the scoring prior matching the target</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   population; numerical checks do not validate that match. Uncertainty in an</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   estimated prior is excluded, and a larger calibration sample does not correct</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a mismatched scoring prior. They are not Person-difference tests or</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   probabilities of passing a future administration. Cut labels do not establish</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   CEFR alignment. Very small tails have absolute, not relative, numerical</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   accuracy.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Interval interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   95% intervals: continuous posterior quantiles.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Posterior SDs and intervals are conditional on the frozen point calibration</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   and exclude calibration-parameter uncertainty.</span>
 <span class="r-in"><span><span class="fu"><a href="apa_table.html">apa_table</a></span><span class="op">(</span><span class="va">scores</span>, which <span class="op">=</span> <span class="st">"decisions"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Conditional ability decision probabilities</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Person         Type    Label Lower Upper  Probability PriorMean PriorSD</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P019    above_cut    Basic  -0.5   Inf 9.999982e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P019    above_cut Advanced   0.8   Inf 6.568698e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P019 ability_band    Band1  -Inf  -0.5 1.769806e-06         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P019 ability_band    Band2  -0.5   0.8 3.431284e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P019 ability_band    Band3   0.8   Inf 6.568698e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P020    above_cut    Basic  -0.5   Inf 6.546008e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P020    above_cut Advanced   0.8   Inf 4.590082e-05         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P020 ability_band    Band1  -Inf  -0.5 3.453992e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P020 ability_band    Band2  -0.5   0.8 6.545549e-01         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P020 ability_band    Band3   0.8   Inf 4.590082e-05         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Status Reason                                Uncertainty</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional        conditional_on_point_calibration_and_prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Note. Decision probabilities describe Lower &lt; ability &lt;= Upper on the calibration scale. Calibration, population estimates and supplied cut scores are held fixed. Probability accuracy depends on the scoring prior matching the target population; numerical checks do not validate that match. Uncertainty in an estimated prior is excluded, and a larger calibration sample does not correct a mismatched scoring prior. They are not Person-difference tests or probabilities of passing a future administration. Cut labels do not establish CEFR alignment. Very small tails have absolute, not relative, numerical accuracy.</span>
 <span class="r-in"><span><span class="fu"><a href="build_summary_table_bundle.html">build_summary_table_bundle</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span><span class="op">$</span><span class="va">table_index</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Table Rows Cols                  Role</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   overview    1   12   prediction_overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  estimates    2   17        unit_estimates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     review    0   11    score_dispositions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 row_review    1    5 prediction_row_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   settings    9    2      scoring_settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6      notes    7    1  interpretation_notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  decisions   10   11 conditional_decisions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Description</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Scoring-batch counts and the frozen calibration identity.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             Conditional posterior summaries for scored Persons.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 Every review or unavailable Person disposition, including missing-only Persons.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Response-row scoring and omission counts.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Saved scoring settings; no calibration or scoring is repeated.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                Interpretation of conditional scores and recorded review states.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 Decision probabilities describe Lower &lt; ability &lt;= Upper on the calibration scale. Calibration, population estimates and supplied cut scores are held fixed. Probability accuracy depends on the scoring prior matching the target population; numerical checks do not validate that match. Uncertainty in an estimated prior is excluded, and a larger calibration sample does not correct a mismatched scoring prior. They are not Person-difference tests or probabilities of passing a future administration. Cut labels do not establish CEFR alignment. Very small tails have absolute, not relative, numerical accuracy.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scores</span>, type <span class="op">=</span> <span class="st">"interval"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scores</span>, type <span class="op">=</span> <span class="st">"edge_mass"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

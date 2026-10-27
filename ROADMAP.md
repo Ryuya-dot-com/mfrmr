@@ -47,6 +47,15 @@ The release has three complementary purposes:
 | G-theory assessment planning | How would tasks, raters and score weights affect assessment dependability? | Preserve the completed, scoped estimates, intervals and plan comparisons in the final API and release. |
 | Rater feedback and assessment decisions | Which rating patterns need review, and how uncertain is a conclusion? | Connect supported diagnostics, individual reports and decision summaries. |
 
+Simulation design recommendations now carry their target, threshold
+sources and candidate outcomes into summaries, plots and shared reports.
+Person differentiation and non-Person facet calibration remain distinct
+purposes. Main-effects D-study approximations also enter reports with
+their assumptions and recorded source components; they do not replace
+full component G-studies. Numerical review separates optimization,
+curvature, starting values and integration, with explicit follow-up
+routes that do not change acceptance criteria.
+
 The G-theory interval requirements are reconciled within the documented
 designs and assumptions, with experimental methods distinguished from
 qualified defaults. Anchor alignment and its migration workflow are
@@ -445,11 +454,15 @@ extension.
 Anchors, linking/imports, feature analysis, assigned-score imputation
 and eligible pooling, and separate random-rater/testlet models remain
 included within their documented restrictions. Stan/brms code export
-supports its implemented combinations: RSM/PCM and one-family GPCM in
-both formats, and two-family GPCM in Stan. Supported fixed facet/group
-and retained step constraints are preserved. Code export is not a native
-Bayesian estimator or a guarantee about prior choice or credible
-intervals.
+supports its implemented combinations: RSM/PCM and fixed-population
+one-family GPCM in both formats, and two-family GPCM in Stan. Default
+one-family GPCM fits can retain an estimated intercept-only normal
+population in Stan, with explicit priors and population mean/SD
+summaries connected to plots, intervals and reports. Population
+regression, estimated-population brms and joint-draw scoring remain
+later extensions. Supported fixed facet/group and retained step
+constraints are preserved. Code export is not a native Bayesian
+estimator or a guarantee about prior choice or credible intervals.
 
 Location anchors use internal coordinates; ordinary fit uncertainty
 conditions on their supplied values. The bounded source-covariance
@@ -554,13 +567,13 @@ already exist; verifying them under the revised constraints is part of
 this release work. This differs from propagating uncertainty in
 externally estimated anchors. Bias-screening SEs and conditional bounds
 retain their screening interpretation. For one fitted two-facet
-interaction in fixed-N(0,1), fixed-grid direct RSM/PCM MML,
-`mfrm_facet_intervals(interaction = ...)` now provides joint-information
-cell and contrast intervals. This separate extension uses all
-nuisance-parameter uncertainty; it is not automatic anchor alignment, a
-replacement for screening, or a guarantee of simultaneous inference.
-Anchors, GPCM, population regression and multiple interaction terms
-remain outside this joint-cell interval route.
+interaction in fixed-N(0,1), fixed-grid RSM/PCM MML (direct, EM or
+hybrid), `mfrm_facet_intervals(interaction = ...)` now provides
+joint-information cell and contrast intervals. This separate extension
+uses all nuisance-parameter uncertainty; it is not automatic anchor
+alignment, a replacement for screening, or a guarantee of simultaneous
+inference. Anchors, GPCM, population regression and multiple interaction
+terms remain outside this joint-cell interval route.
 
 ## Across-year assessments with common recordings
 
@@ -1501,7 +1514,7 @@ different operations.
 |----|----|----|
 | TAM | [`import_tam_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/import_tam_fit.md) imports supported unidimensional MML results for summaries and point-only Wright maps. Multifacet conditions become `DesignCell` locations; separate facet effects and their joint covariance are not reconstructed. | Extend source-aware reporting first; recover separate facets or transformed uncertainty only with an identified parameter map and the required joint covariance. |
 | ConQuest | [`build_conquest_overlap_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_conquest_overlap_bundle.md) and [`review_conquest_overlap()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_conquest_overlap.md) support a narrow binary, single-facet latent-regression comparison. Broader research comparisons do not expand this public API. | Add matched polytomous additive RSM/PCM cases before more general GPCM exchange. Reuse `conquestr` where suitable for execution and reading, retaining original outputs and settings. |
-| Stan/brms | [`export_mfrm_model()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.md) writes model bundles. RSM/PCM and one-family GPCM support both formats, including supported fixed facet/group anchors; two-family GPCM supports Stan. [`read_mfrm_posterior()`](https://ryuya-dot-com.github.io/mfrmr/reference/read_mfrm_posterior.md) connects saved summaries to figures, credible intervals and shared reports. | Preserve estimated-population GPCM specifications, then extend joint-draw contrasts, new credible levels and prediction. Support data/specification input without a preliminary MML fit. |
+| Stan/brms | [`export_mfrm_model()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.md) writes model bundles with supported fixed anchors. RSM/PCM and fixed-population one-family GPCM support both formats; default estimated-population one-family GPCM and two-family GPCM support Stan. [`read_mfrm_posterior()`](https://ryuya-dot-com.github.io/mfrmr/reference/read_mfrm_posterior.md) connects saved summaries, including population mean/SD, to figures, credible intervals and shared reports. | Extend population regression, joint-draw contrasts, new credible levels and prediction. Support data/specification input without a preliminary MML fit. |
 
 [ConQuest](https://www.acer.org/au/conquest) already includes
 multidimensional, multifaceted and Bayesian estimation.
@@ -1514,14 +1527,15 @@ alone does not establish methodological novelty or practical
 superiority.
 
 Stan export currently requires a supported native MML fit, unit weights,
-no interactions/shrinkage and a fixed standard-normal Person population.
-Fixed anchors are exact constraints; uncertainty from an earlier
-calibration is not propagated. Person anchors and native two-family
-anchored fitting remain outside the source-model scope. It preserves the
-response likelihood and adds explicit structural priors; its posterior
-is not the original MML estimate or confidence interval. The read-only
-`mfrm_posterior_summary` connects saved marginal summaries to
-[`summary()`](https://rdrr.io/r/base/summary.html),
+no interactions/shrinkage and either a fixed standard-normal Person
+population or a one-family GPCM with an estimated intercept-only normal
+population. Fixed anchors are exact constraints; uncertainty from an
+earlier calibration is not propagated. Person anchors and native
+two-family anchored fitting remain outside the source-model scope. It
+preserves the response likelihood and adds explicit structural priors;
+its posterior is not the original MML estimate or confidence interval.
+The read-only `mfrm_posterior_summary` connects saved marginal summaries
+to [`summary()`](https://rdrr.io/r/base/summary.html),
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
 [`confint()`](https://rdrr.io/r/stats/confint.html), long plot tables
 and

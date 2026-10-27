@@ -477,6 +477,9 @@ errors across both endpoints and retains unresolved-draw envelopes.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("confint.mfrm_fair_average", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 d <- load_mfrmr_data("example_core")
 # Calibrate the observed ratings with ordinary joint maximum likelihood.
 f <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score",
@@ -487,20 +490,6 @@ f <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score",
 plan <- unique(d[c("Rater", "Criterion")])
 fair <- fair_average_table(f, reference_plan = plan)
 head(fair$reference_scores) # Expected average, in internal score units.
-#>   Person Estimate         Status                       Target          Units
-#> 1   P001 2.937500 point_estimate common_plan_expected_average internal_score
-#> 2   P002 3.437499 point_estimate common_plan_expected_average internal_score
-#> 3   P003 3.249999 point_estimate common_plan_expected_average internal_score
-#> 4   P004 3.062501 point_estimate common_plan_expected_average internal_score
-#> 5   P005 3.062501 point_estimate common_plan_expected_average internal_score
-#> 6   P006 1.625000 point_estimate common_plan_expected_average internal_score
-#>    Uncertainty
-#> 1 not_computed
-#> 2 not_computed
-#> 3 not_computed
-#> 4 not_computed
-#> 5 not_computed
-#> 6 not_computed
 # Two replications exercise the API only; they cannot qualify coverage.
 # Explicit experimental generator; points and every refit remain ordinary JML.
 ci <- confint(fair, parm = c("P001", "P002"), nsim = 2, seed = 71,
@@ -508,57 +497,16 @@ ci <- confint(fair, parm = c("P001", "P002"), nsim = 2, seed = 71,
   contrasts = matrix(c(1, -1), 1,
     dimnames = list("P001 minus P002", c("P001", "P002"))))
 summary(ci) # Read Status and Available alongside the limits.
-#> Common-plan expected-score intervals (experimental)
-#>            Target   Estimate   CI_Lower   CI_Upper Level Available       Status
-#> 1 P001 minus P002 -0.4999991 -0.6153476 -0.2403474  0.95      TRUE experimental
-#>   Planned Resolved Unresolved ExpectedTailDraws CIEligible LowerMCLower
-#> 1       2        2          0              0.05      FALSE         -Inf
-#>   LowerMCUpper UpperMCLower UpperMCUpper MCLevel MCFinite
-#> 1   -0.2403474   -0.6153476          Inf    0.95    FALSE
-#>                          Uncertainty
-#> 1 joint_calibration_and_person_refit
-#>                                                                                                                                                                            InferenceReview
-#> 1 Experimental pointwise fitted-model approximation; finite-sample coverage and JML bias remain unqualified. Jeffreys generating model; the reported point and refits remain ordinary JML.
-#> Numerical availability is separate from coverage qualification.
-#> Jeffreys generating model; displayed points and refits retain ordinary JML.
-#> Endpoint Monte Carlo enclosures measure simulation precision, not sampling coverage; MCFinite alone does not establish precision.
 attr(ci, "trials") # Includes unresolved refits and their reasons.
-#>   Replication CalibrationGradient ScoringGradient BoundaryPersons Available
-#> 1           1                  NA    4.202793e-05               0      TRUE
-#> 2           2                  NA    4.030392e-05               0      TRUE
-#>   Reason Warnings Seconds
-#> 1                   0.685
-#> 2                   0.699
 attr(ci, "monte_carlo") # Infinite enclosures expose the two-draw tail uncertainty.
-#>            Target Endpoint Probability RankLower RankUpper      Lower
-#> 1 P001 minus P002    lower       0.975         1         3       -Inf
-#> 2 P001 minus P002    upper       0.025         0         2 -0.6153476
-#>        Upper MCLevel Planned Unresolved RankLimited
-#> 1 -0.2403474    0.95       2          0        TRUE
-#> 2        Inf    0.95       2          0        TRUE
 plot(ci, draw = FALSE) # Saved plotting data, including the cautions.
 # Deterministic local approximation to the same expected-score target:
 delta <- confint(fair, parm = c("P001", "P002"), method = "delta")
 delta[, c("Target", "Estimate", "SE", "Available", "CIEligible")]
-#> Common-plan expected-score intervals (experimental)
-#>   Target Estimate        SE Available CIEligible
-#> 1   P001 2.937500 0.1921590      TRUE      FALSE
-#> 2   P002 3.437499 0.1599923      TRUE      FALSE
-#> Numerical availability is separate from coverage qualification.
 attr(delta, "covariance") # Includes the covariance between Persons.
-#>            P001       P002
-#> P001 0.03692507 0.00000000
-#> P002 0.00000000 0.02559753
 # Conservative alternative with explicit observed/unobserved plan support:
 bounded <- confint(fair, parm = c("P001", "P002"), method = "bounded")
 bounded[, c("Target", "Estimate", "DesignEstimate", "CI_Lower", "CI_Upper", "Informative")]
-#> Common-plan expected-score intervals (experimental)
-#>   Target Estimate DesignEstimate CI_Lower CI_Upper Informative
-#> 1   P001 2.937500         2.9375 1.918924 3.956076        TRUE
-#> 2   P002 3.437499         3.4375 2.418924 4.000000        TRUE
-#> Numerical availability is separate from coverage qualification.
 attr(bounded, "support") # Check how much of the plan was actually observed.
-#>   Person ObservedPlanWeight UnobservedPlanWeight RelevantResponses CompletePlan
-#> 1   P001                  1                    0                16         TRUE
-#> 2   P002                  1                    0                16         TRUE
+} # }
 ```

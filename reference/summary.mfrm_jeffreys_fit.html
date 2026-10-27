@@ -57,7 +57,7 @@ The result does not inherit ordinary JML uncertainty or FACETS diagnostics."><me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Inspect a Jeffreys-penalized fit</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/core-jml-jeffreys-fit.R" class="external-link"><code>R/core-jml-jeffreys-fit.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/core-jml-jeffreys-fit.R" class="external-link"><code>R/core-jml-jeffreys-fit.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_jeffreys_fit.Rd</code></div>
     </div>
 
@@ -127,172 +127,23 @@ categories; its ordinary-MLE warnings are not penalty-rank diagnostics.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("summary.mfrm_jeffreys_fit", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Each row is one Person's rating by a Rater on a Criterion.</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"JML"</span>, jml_penalty <span class="op">=</span> <span class="st">"jeffreys"</span>, rating_min <span class="op">=</span> <span class="fl">1</span>, rating_max <span class="op">=</span> <span class="fl">4</span>,</span></span>
 <span class="r-in"><span>  category_policy <span class="op">=</span> <span class="st">"preserve"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">persons</span> <span class="co"># Finite penalized Person points, without SEs</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Person    Estimate PrimaryEstimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    P001  0.62892988      0.62892988</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    P002  1.54091106      1.54091106</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    P003  1.15811858      1.15811858</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    P004  0.82948467      0.82948467</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    P005  0.82948467      0.82948467</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    P006 -1.40431066     -1.40431066</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7    P007  0.82948467      0.82948467</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8    P008 -1.53543132     -1.53543132</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9    P009 -0.84692262     -0.84692262</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10   P010  0.62892988      0.62892988</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11   P011  0.25403786      0.25403786</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12   P012  0.07396471      0.07396471</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13   P013  0.53253690      0.53253690</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14   P014  1.15811858      1.15811858</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15   P015 -2.00369537     -2.00369537</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16   P016 -0.10435286     -0.10435286</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17   P017  0.16364309      0.16364309</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18   P018 -0.19354172     -0.19354172</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19   P019  0.93466618      0.93466618</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20   P020 -0.37338828     -0.37338828</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21   P021  0.43816437      0.43816437</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22   P022 -0.94905294     -0.94905294</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23   P023  2.46002873      2.46002873</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24   P024  2.02465323      2.02465323</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25   P025  0.82948467      0.82948467</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26   P026 -1.40431066     -1.40431066</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27   P027 -0.19354172     -0.19354172</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28   P028 -0.37338828     -0.37338828</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29   P029  0.07396471      0.07396471</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30   P030  0.25403786      0.25403786</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31   P031  0.72775544      0.72775544</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32   P032 -0.94905294     -0.94905294</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33   P033 -0.65152702     -0.65152702</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34   P034 -0.37338828     -0.37338828</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35   P035  0.07396471      0.07396471</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36   P036  1.68729754      1.68729754</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37   P037  0.07396471      0.07396471</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38   P038 -0.74793035     -0.74793035</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39   P039 -0.01527520     -0.01527520</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40   P040 -0.94905294     -0.94905294</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41   P041 -1.16547186     -1.16547186</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42   P042  0.72775544      0.72775544</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 43   P043 -0.55723761     -0.55723761</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 44   P044  0.72775544      0.72775544</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 45   P045 -1.67694521     -1.67694521</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 46   P046 -1.40431066     -1.40431066</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47   P047 -1.16547186     -1.16547186</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48   P048 -0.65152702     -0.65152702</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">checks</span><span class="op">$</span><span class="va">max_gradient</span> <span class="co"># Penalized score-equation diagnostic</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5.615066e-06</span>
 <span class="r-in"><span><span class="va">plan</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">ratings</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="fair_average_table.html">fair_average_table</a></span><span class="op">(</span><span class="va">fit</span>, reference_plan <span class="op">=</span> <span class="va">plan</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">scores</span><span class="op">$</span><span class="va">reference_scores</span> <span class="co"># Expected averages under the same plan for all Persons</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Person Estimate         Status                       Target          Units</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    P001 2.928024 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    P002 3.418372 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    P003 3.234450 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    P004 3.050576 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    P005 3.050576 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    P006 1.643494 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7    P007 3.050576 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8    P008 1.582339 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9    P009 1.949067 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10   P010 2.928024 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11   P011 2.683010 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12   P012 2.560562 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13   P013 2.866758 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14   P014 3.234450 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15   P015 1.398714 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16   P016 2.438163 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17   P017 2.621781 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18   P018 2.376984 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19   P019 3.111861 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20   P020 2.254666 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21   P021 2.805501 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22   P022 1.887965 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23   P023 3.724877 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24   P024 3.602306 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25   P025 3.050576 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26   P026 1.643494 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27   P027 2.376984 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28   P028 2.254666 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29   P029 2.560562 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30   P030 2.683010 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31   P031 2.989297 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32   P032 1.887965 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33   P033 2.071282 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34   P034 2.254666 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35   P035 2.560562 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36   P036 3.479686 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37   P037 2.560562 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38   P038 2.010172 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39   P039 2.499356 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40   P040 1.887965 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41   P041 1.765750 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42   P042 2.989297 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 43   P043 2.132399 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 44   P044 2.989297 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 45   P045 1.521160 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 46   P046 1.643494 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47   P047 1.765750 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48   P048 2.071282 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Uncertainty</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9  not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 43 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 44 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 45 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 46 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48 not_computed</span>
 <span class="r-in"><span><span class="va">intervals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">scores</span>, parm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"P001"</span>, <span class="st">"P002"</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"delta"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">intervals</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Target"</span>, <span class="st">"Estimate"</span>, <span class="st">"SE"</span>, <span class="st">"Available"</span>, <span class="st">"CIEligible"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Common-plan expected-score intervals (experimental)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Target Estimate        SE Available CIEligible</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   P001 2.928024 0.1942444      TRUE      FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   P002 3.418372 0.1619385      TRUE      FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Numerical availability is separate from coverage qualification.</span>
 <span class="r-in"><span><span class="co"># Numerical availability is not a qualification of small-sample coverage.</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

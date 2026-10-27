@@ -53,7 +53,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a case-level misfit review bundle</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>build_misfit_casebook.Rd</code></div>
     </div>
 
@@ -169,7 +169,10 @@ diagnostics without refitting the model.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("build_misfit_casebook", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># A balanced slice retains every Rater and Criterion while running quickly.</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy</span><span class="op">[</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
@@ -177,177 +180,8 @@ diagnostics without refitting the model.</p>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">casebook</span> <span class="op">&lt;-</span> <span class="fu">build_misfit_casebook</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">casebook</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrm Misfit Casebook Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model DiagnosticMode    ReviewStatus AdministrationID WaveID TotalCases</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM           both review_required             &lt;NA&gt;   &lt;NA&gt;          3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  RollupRows GroupViews TopCaseRows SourcesAvailable GPCMSupport</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           3          7           3                2    deferred</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Item           Value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Overall status review_required</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Model             RSM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            GPCM        deferred</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Key Warnings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Strict pairwise screening contributed 1 flagged pair rows.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Unexpected-response screening contributed 1 case rows.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Next Actions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use plot(diagnostics, type = "marginal_pairwise", draw = FALSE) to inspect</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    the strongest pairwise local-dependence signals.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use plot(unexpected, type = "unexpected", draw = FALSE) to review the most</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    surprising person-level observations.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Case Rollup</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  AdministrationID WaveID  RollupType                     RollupKey</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              &lt;NA&gt;   &lt;NA&gt;      person                          P004</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              &lt;NA&gt;   &lt;NA&gt;  facet_pair Criterion::Accuracy::Language</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              &lt;NA&gt;   &lt;NA&gt; facet_level                  Person::P004</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         RollupLabel  SourceFamily     Facet SupportBasis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                        Person: P004    unexpected      &lt;NA&gt;       legacy</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion pair: Accuracy::Language marginal_pair Criterion marginal_fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                        Person: P004   element_fit    Person       legacy</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  InterpretationTier</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  operational_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         exploratory</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  operational_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 PrimaryPlotRoute SupportStatus</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              plot(unexpected, type = "unexpected", draw = FALSE)     supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      plot(diagnostics, type = "marginal_pairwise", draw = FALSE)     supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  plot(fit, type = "qc", diagnostics = diagnostics, draw = FALSE)     supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Cases DistinctSourceRows PersonsFlagged MaxPriority MeanPriority EvidenceN</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      1                  1              1       6.217        6.217         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      1                  1              0       2.042        2.042         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      1                  1              0       0.487        0.487         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                               TopCaseID</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                          unexpected:160</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  pairwise:Criterion::Accuracy::Language</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                element_fit:Person::P004</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Grouping Views</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   View Rows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              by_person    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         by_facet_level    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          by_facet_pair    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       by_source_family    3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               by_facet    2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      by_administration    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                by_wave    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  facet_views$Criterion    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     facet_views$Person    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                 Description</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Repeated signals concentrated on the same person across evidence families.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      Repeated signals concentrated on the same facet level.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                            Repeated pairwise signals within the same facet.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                              Volume and priority by evidence source family.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                      All flagged evidence grouped by facet.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             Operational concentration by administration/form when provided.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Operational concentration by wave/occasion when provided.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                           Case-rollup rows restricted to facet `Criterion`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                              Case-rollup rows restricted to facet `Person`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Plot Follow-up</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SourceFamily Available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  marginal_pair      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     unexpected      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                   PlotHelper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  plot(diagnostics, type = "marginal_pairwise", draw = FALSE)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          plot(unexpected, type = "unexpected", draw = FALSE)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      Trigger</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Use when strict pairwise local-dependence rows are flagged.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Use when person-level unexpected responses dominate review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Source Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SourceFamily SupportBasis InterpretationTier</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     unexpected       legacy operational_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  marginal_pair marginal_fit        exploratory</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    element_fit       legacy operational_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 PrimaryPlotRoute Cases</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              plot(unexpected, type = "unexpected", draw = FALSE)     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      plot(diagnostics, type = "marginal_pairwise", draw = FALSE)     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  plot(fit, type = "qc", diagnostics = diagnostics, draw = FALSE)     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  MaxPriority</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        6.217</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        2.042</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        0.487</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Source Support</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SourceFamily Available SupportBasis    Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  marginal_cell      TRUE marginal_fit supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  marginal_pair      TRUE marginal_fit supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     unexpected      TRUE       legacy supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   displacement      TRUE       legacy supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                    Note</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Strict marginal cell screening is available for operational follow-up.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Strict pairwise screening is available for operational follow-up.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Unexpected-response rows are available for operational follow-up.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Displacement rows are available for operational follow-up.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Top Cases</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                  CaseID                       CaseType</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                          unexpected:160       unexpected_response_case</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  pairwise:Criterion::Accuracy::Language pairwise_local_dependence_case</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                element_fit:Person::P004               element_fit_case</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SourceFamily                                 SourceTable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     unexpected                 unexpected_response_table()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  marginal_pair diagnostics$marginal_fit$pairwise$top_pairs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    element_fit                             diagnostics$fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   SourceRowKey AdministrationID WaveID          PrimaryUnit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                            160             &lt;NA&gt;   &lt;NA&gt;                 P004</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion::Accuracy::Language             &lt;NA&gt;   &lt;NA&gt; Accuracy vs Language</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Person::P004             &lt;NA&gt;   &lt;NA&gt;         Person: P004</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     PrimaryUnitType Person     Facet Level Category            PairKey</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  person_observation   P004      &lt;NA&gt;  &lt;NA&gt;        1               &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          facet_pair   &lt;NA&gt; Criterion  &lt;NA&gt;       NA Accuracy::Language</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         facet_level   &lt;NA&gt;    Person  P004       NA               &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               ContextKey Wave                                  Signal</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           R02 | Accuracy &lt;NA&gt;              Unexpected response screen</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Criterion &lt;NA&gt; Strict pairwise local-dependence screen</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Infit=1.56, Outfit=1.63 &lt;NA&gt;              MnSq misfit (band 0.5-1.5)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                               Direction Magnitude ReviewPriority</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     Lower than expected     6.217          6.217</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Lower than expected adjacent agreement     2.042          2.042</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  Outfit MnSq above band     0.487          0.487</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  WithinSourceRank EvidenceN SupportBasis InterpretationTier</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 1         1       legacy operational_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 1         1 marginal_fit        exploratory</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 1         1       legacy operational_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 PrimaryPlotRoute SupportStatus</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              plot(unexpected, type = "unexpected", draw = FALSE)     supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      plot(diagnostics, type = "marginal_pairwise", draw = FALSE)     supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  plot(fit, type = "qc", diagnostics = diagnostics, draw = FALSE)     supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Support Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Scope    Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  RSM / PCM supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       GPCM  deferred</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                   Note</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Supported as a synthesis layer over package-native screening outputs.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         Deferred unless a GPCM source fit is supplied.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Misfit casebook rows are operational review units, not formal case</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    decisions.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - The helper preserves source-family-specific screening logic rather than</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    collapsing all evidence into one opaque score.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Repeated signals across strict marginal, unexpected-response, and</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    displacement sources deserve priority.</span>
 <span class="r-in"><span><span class="va">casebook</span><span class="op">$</span><span class="va">top_cases</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 26</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   CaseID  CaseType SourceFamily SourceTable SourceRowKey AdministrationID WaveID</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> unexpe… unexpec… unexpected   unexpected… 160          <span style="color: #BB0000;">NA</span>               <span style="color: #BB0000;">NA</span>    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> pairwi… pairwis… marginal_pa… diagnostic… Criterion::… <span style="color: #BB0000;">NA</span>               <span style="color: #BB0000;">NA</span>    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> elemen… element… element_fit  diagnostic… Person::P004 <span style="color: #BB0000;">NA</span>               <span style="color: #BB0000;">NA</span>    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 19 more variables: PrimaryUnit &lt;chr&gt;, PrimaryUnitType &lt;chr&gt;, Person &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Facet &lt;chr&gt;, Level &lt;chr&gt;, Category &lt;int&gt;, PairKey &lt;chr&gt;, ContextKey &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Wave &lt;chr&gt;, Signal &lt;chr&gt;, Direction &lt;chr&gt;, Magnitude &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ReviewPriority &lt;dbl&gt;, WithinSourceRank &lt;int&gt;, EvidenceN &lt;int&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   SupportBasis &lt;chr&gt;, InterpretationTier &lt;chr&gt;, PrimaryPlotRoute &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   SupportStatus &lt;chr&gt;</span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

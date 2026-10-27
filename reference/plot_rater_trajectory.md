@@ -114,6 +114,9 @@ or diagnostic thresholds.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("plot_rater_trajectory", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_core")
 fit_a <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                   method = "JML", maxit = 300)
@@ -122,17 +125,11 @@ fit_b <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 p <- plot(fit_a, type = "trajectory", comparison = list(T2 = fit_b),
   labels = c("T1", "T2"), draw = FALSE)
 head(p$data$data)
-#>      Wave Level   Estimate         SE      CI_Lower     CI_Upper
-#> T1.1   T1   R01 -0.1957463 0.09729871 -0.3864482600 -0.005044321
-#> T2.1   T2   R01 -0.1957463 0.09729871 -0.3864482600 -0.005044321
-#> T1.2   T1   R02 -0.3287812 0.09769555 -0.5202609108 -0.137301394
-#> T2.2   T2   R02 -0.3287812 0.09769555 -0.5202609108 -0.137301394
-#> T1.3   T1   R03  0.1910898 0.09724038  0.0005021609  0.381677427
-#> T2.3   T2   R03  0.1910898 0.09724038  0.0005021609  0.381677427
 # Look for: stable trajectories (small wave-to-wave shifts within
 #   each rater's CI ribbon) once the waves are anchor-linked. A
 #   rater whose line drifts >0.5 logits across waves is the typical
 #   "calibration drift" signal. Without anchor linking the per-wave
 #   logits are on different scales and the picture cannot be read
 #   as drift; see the Anchor-linking caveat in the docstring.
+} # }
 ```

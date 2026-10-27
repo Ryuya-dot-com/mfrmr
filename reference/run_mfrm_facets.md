@@ -285,6 +285,9 @@ one-shot wrapper.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("run_mfrm_facets", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 
@@ -297,19 +300,10 @@ out <- run_mfrm_facets(
   maxit = 30
 )
 out$fit$summary[, c("Model", "Method", "MethodUsed")]
-#> # A tibble: 1 × 3
-#>   Model Method MethodUsed
-#>   <chr> <chr>  <chr>     
-#> 1 RSM   JML    JML       
 s <- summary(out)
 s$overview[, c("Model", "Method", "Converged")]
-#> # A tibble: 1 × 3
-#>   Model Method Converged
-#>   <chr> <chr>  <lgl>    
-#> 1 RSM   JML    TRUE     
 p_fit <- plot(out, type = "fit", draw = FALSE)
 p_fit$wright_map$data$plot
-#> [1] "wright_map"
 
 # Optional: MML route
 if (interactive()) {
@@ -324,4 +318,5 @@ if (interactive()) {
   )
   out_mml$fit$summary[, c("Model", "Method", "MethodUsed")]
 }
+} # }
 ```

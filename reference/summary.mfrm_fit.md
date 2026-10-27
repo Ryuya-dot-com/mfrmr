@@ -167,6 +167,16 @@ An object of class `summary.mfrm_fit` with:
   this summary from the fit to obtain new fields; reading an old summary
   does not update it or refit the model
 
+- `numerical_review`: separate optimization, curvature, starting-value,
+  integration and reproducible-refit evidence with specific next
+  actions. Missing checks remain unassessed; this table does not change
+  readiness
+
+- `starting_values`, `starting_value_notes`: all attempted starts,
+  numerical outcomes, selection and interpretation limits when
+  `fit_mfrm(mml_starts = ...)` was requested. These describe numerical
+  sensitivity, not sampling uncertainty
+
 - `attached_diagnostics`: logical flag indicating whether the `mfrm_fit`
   was returned with diagnostics already attached
 
@@ -381,29 +391,12 @@ The entries below describe the ordinary, uncorrected fitting routes.
 ## Examples
 
 ``` r
-# Load the package
 library(mfrmr)
 
-# Load example ratings and look at the first six rows
-toy <- load_mfrmr_data("example_operational")
-head(toy)
-#>                Study Person Rater    Criterion Score Group
-#> 1 OperationalExample   P001   R01     Language     4     A
-#> 2 OperationalExample   P001   R01 Organization     2     A
-#> 3 OperationalExample   P001   R02      Content     4     A
-#> 4 OperationalExample   P001   R02     Language     3     A
-#> 5 OperationalExample   P001   R02 Organization     2     A
-#> 6 OperationalExample   P002   R01      Content     3     A
-
-# Fit the model
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  model = "RSM"
-)
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 
 # Save the summary, then display its tables
 results <- summary(fit)
@@ -418,8 +411,8 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 #> # A tibble: 2 × 7
 #>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
 #>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
-#> 1 Criterion      3            0      0.302      -0.344       0.224 0.568
-#> 2 Rater          6            0      0.399      -0.606       0.412 1.02 
+#> 1 Criterion      3     4.62e-18      0.302      -0.344       0.224 0.568
+#> 2 Rater          6     0             0.399      -0.606       0.412 1.02 
 
 # Check the interpretation status and recommended next step
 results$decision

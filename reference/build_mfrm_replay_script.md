@@ -242,15 +242,10 @@ recorded without asserting a match to the fit.
 
 ``` r
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  model = "RSM"
-)
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
 replay$summary[, c("ScriptMode", "ResidualPCA", "BiasPairs")]
 #>   ScriptMode ResidualPCA BiasPairs

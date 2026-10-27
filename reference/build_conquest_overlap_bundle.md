@@ -260,12 +260,14 @@ includes:
 ## Examples
 
 ``` r
-bundle <- build_conquest_overlap_bundle(
-  quad_points = 31, maxit = 2000, reltol = 1e-10
-)
+# Synthetic latent-regression fit; the full regeneration recipe is
+# examples/measurement-fits.R in the package (31 nodes, maxit = 2000).
+fit <- readRDS(system.file("examples", "measurement-fits.rds",
+  package = "mfrmr", mustWork = TRUE))$conquest
+bundle <- build_conquest_overlap_bundle(fit = fit)
 bundle$summary[, c("Case", "Facet", "Covariate", "Persons", "Items")]
-#>                          Case     Facet Covariate Persons Items
-#> 1 synthetic_latent_regression Criterion         X      60     6
+#>        Case     Facet Covariate Persons Items
+#> 1 fit_input Criterion         X      60     6
 summary(bundle)$mfrmr_fit_status
 #>                           Item     Value
 #> 1              MML engine used    direct

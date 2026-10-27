@@ -57,7 +57,7 @@ mfrmr."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Linking and DFF Guide</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/help_linking_and_dff.R" class="external-link"><code>R/help_linking_and_dff.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/help_linking_and_dff.R" class="external-link"><code>R/help_linking_and_dff.R</code></a></small>
       <div class="d-none name"><code>mfrmr_linking_and_dff.Rd</code></div>
     </div>
 
@@ -672,7 +672,10 @@ calibration. <em>AppliedMath</em>, 4(3), 1181–1191.
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("mfrmr_linking_and_dff", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">people</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">baseline_data</span> <span class="op">&lt;-</span> <span class="va">ratings</span><span class="op">[</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">people</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">24</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">new_data</span> <span class="op">&lt;-</span> <span class="va">ratings</span><span class="op">[</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">people</span><span class="op">[</span><span class="fl">25</span><span class="op">:</span><span class="fl">48</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
@@ -687,49 +690,16 @@ calibration. <em>AppliedMath</em>, 4(3), 1181–1191.
 <span class="r-in"><span>  rating_min <span class="op">=</span> <span class="fl">1</span>, rating_max <span class="op">=</span> <span class="fl">4</span>, category_policy <span class="op">=</span> <span class="st">"preserve"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">issue_counts</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 13 × 2</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Issue                            N</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> anchor_schema_mismatch           0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> group_anchor_schema_mismatch     0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> unknown_anchor_facets            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> unknown_anchor_levels            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> invalid_anchor_values            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> duplicate_anchors                0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> unknown_group_facets             0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> unknown_group_levels             0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> invalid_group_labels             0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> duplicate_group_assignments      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> missing_group_values             0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> group_value_conflicts            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> overlap_anchor_group             0</span>
 <span class="r-in"><span><span class="va">linked</span> <span class="op">&lt;-</span> <span class="fu"><a href="anchor_to_baseline.html">anchor_to_baseline</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">new_data</span>, <span class="va">baseline</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  anchor_facets <span class="op">=</span> <span class="st">"Criterion"</span>, anchor_policy <span class="op">=</span> <span class="st">"error"</span>,</span></span>
 <span class="r-in"><span>  rating_min <span class="op">=</span> <span class="fl">1</span>, rating_max <span class="op">=</span> <span class="fl">4</span>, category_policy <span class="op">=</span> <span class="st">"preserve"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">linked</span><span class="op">$</span><span class="va">fit</span><span class="op">$</span><span class="va">facets</span><span class="op">$</span><span class="va">others</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 8 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Facet     Level        Estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater     R01            -<span style="color: #BB0000;">0.246</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater     R02            -<span style="color: #BB0000;">0.404</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater     R03             0.269</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater     R04             0.380</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Criterion Accuracy        0.202</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Criterion Content        -<span style="color: #BB0000;">0.480</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> Criterion Language        0.130</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> Criterion Organization    0.148</span>
 <span class="r-in"><span><span class="co"># Fixed-anchor differences are zero by construction, not evidence of stability.</span></span></span>
 <span class="r-in"><span><span class="va">linked</span><span class="op">$</span><span class="va">drift</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Facet"</span>, <span class="st">"Level"</span>, <span class="st">"Drift"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Facet     Level        Drift</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion Accuracy         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Criterion Content          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Criterion Language         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Criterion Organization     0</span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

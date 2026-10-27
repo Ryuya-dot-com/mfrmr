@@ -53,7 +53,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Recommend a design condition from simulation results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>recommend_mfrm_design.Rd</code></div>
     </div>
 
@@ -161,7 +161,16 @@ post-fit reviews</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This helper converts a design-study summary into a simple planning table.</p>
+    <p>This helper screens simulated designs under user-chosen planning criteria.
+The default targets non-Person facet calibration: high separation reliability
+means that facet-level differences can be distinguished, not that raters
+agree. Use <code>facets = "Person"</code> to target Person differentiation instead.
+Neither use establishes classification accuracy or a universal sample size.
+Inspect <code>summary(result)$target</code> and <code>$thresholds</code> before interpreting the
+recommendation. Defaults are planning choices, not validated standards.
+<code><a href="summary.mfrm_design_recommendation.html">summary.mfrm_design_recommendation()</a></code> explains the criterion outcomes;
+<code><a href="plot.mfrm_design_recommendation.html">plot.mfrm_design_recommendation()</a></code> and <code><a href="mfrm_report.html">mfrm_report()</a></code> preserve them without
+repeating the simulation. No plan-selection confidence interval is computed.</p>
 <p>A design is marked as recommended when all requested facets satisfy all
 selected thresholds simultaneously.
 Each design must have results for every requested facet. Missing facets
@@ -234,10 +243,10 @@ cost or scoring time. Ranking among passing designs still follows <code>prefer</
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># One saved replication illustrates output structure, not precise rates.</span></span></span>
 <span class="r-in"><span><span class="co"># Regeneration recipe: examples/simulation-results.R in the package.</span></span></span>
-<span class="r-in"><span><span class="va">saved</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"simulation-results.rds"</span>,</span></span>
+<span class="r-in"><span><span class="va">saved</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"simulation-design.rds"</span>,</span></span>
 <span class="r-in"><span>  package <span class="op">=</span> <span class="st">"mfrmr"</span>, mustWork <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Inspect saved$generation_warnings and the result's run/status tables.</span></span></span>
-<span class="r-in"><span><span class="va">sim_eval</span> <span class="op">&lt;-</span> <span class="va">saved</span><span class="op">$</span><span class="va">design</span></span></span>
+<span class="r-in"><span><span class="va">sim_eval</span> <span class="op">&lt;-</span> <span class="va">saved</span><span class="op">$</span><span class="va">result</span></span></span>
 <span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">recommend_mfrm_design</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">sim_eval</span>, max_ratings <span class="op">=</span> <span class="fl">48</span>, max_ratings_per_rater <span class="op">=</span> <span class="fl">24</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>

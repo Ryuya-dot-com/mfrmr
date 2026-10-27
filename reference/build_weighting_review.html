@@ -53,7 +53,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a weighting-policy review between Rasch-family and GPCM fits</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>build_weighting_review.Rd</code></div>
     </div>
 
@@ -180,7 +180,10 @@ validity adjudication.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("build_weighting_review", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rasch_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">toy</span>,</span></span>
 <span class="r-in"><span>  <span class="st">"Person"</span>,</span></span>
@@ -203,120 +206,8 @@ validity adjudication.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu">build_weighting_review</span><span class="op">(</span><span class="va">rasch_fit</span>, <span class="va">gpcm_fit</span>, theta_points <span class="op">=</span> <span class="fl">41</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrm Weighting Review Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ReferenceModel ComparisonModel ReferenceMethod ComparisonMethod SlopeFacet</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             RSM            GPCM             MML              MML  Criterion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  StepFacet SlopeLevelCount FreeRelativeSlopeContrasts</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion               4                          3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Comparison interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Numerical convergence checks passed for both fits; inference eligibility is</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   assessed separately.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Log-likelihood difference: 8.593 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Inspect changes in facet measures, relative slopes and information shares.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   The supplied fits do not satisfy the information-criterion comparison checks.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   An equal-slope PCM/GPCM test requires two MML fits with the same step facet</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   and population model.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Key Warnings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Model-comparison weights are descriptive only because the two fits do not</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    share a fully comparable formal MML basis.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Largest GPCM slope deviation is at Criterion = Organization (Estimate =</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    1.148).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Largest within-facet information-share shift is -0.026 for Criterion =</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Organization.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Largest facet-measure shift is -0.020 for Criterion = Organization.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Next Actions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Read summary(model_comparison) before interpreting any fit advantage as a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    scoring recommendation.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use IC ranking only when ICComparable is true; weighting consequences</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    require a separate substantive decision.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use slope_profile and top_reweighted_levels to inspect whether Criterion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    levels are being upweighted or downweighted in substantively acceptable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    ways.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use plot_information(compute_information(rasch_fit), type = "iif", facet =</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    "Criterion", draw = FALSE) and the GPCM analogue to inspect precision</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    redistribution visually.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Top Measure Shifts</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet        Level ReferenceEstimate ReferenceRank ComparisonEstimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion Organization             0.067             2              0.047</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion     Language             0.094             3              0.113</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion     Accuracy             0.240             4              0.257</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      Content            -0.401             1             -0.417</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater          R03             0.184             3              0.172</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater          R02            -0.317             1             -0.309</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater          R01            -0.189             2             -0.183</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater          R04             0.321             4              0.320</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ComparisonRank DeltaEstimate AbsDeltaEstimate RankShift      Direction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               2        -0.020            0.020         0  Lower in GPCM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               3         0.019            0.019         0 Higher in GPCM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               4         0.017            0.017         0 Higher in GPCM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1        -0.017            0.017         0  Lower in GPCM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               3        -0.013            0.013         0  Lower in GPCM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1         0.008            0.008         0 Higher in GPCM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               2         0.006            0.006         0 Higher in GPCM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               4        -0.002            0.002         0  Lower in GPCM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Top Reweighted Levels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet        Level ReferenceIntegratedInfo ReferenceExposure</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion Organization                1909.750               192</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion     Accuracy                1909.445               192</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      Content                1909.047               192</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion     Language                1909.722               192</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ReferenceInfoShare ReferenceExposureShare ComparisonIntegratedInfo</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0.25                   0.25                 2196.635</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0.25                   0.25                 1721.569</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0.25                   0.25                 1763.436</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0.25                   0.25                 1989.414</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ComparisonExposure ComparisonInfoShare ComparisonExposureShare InfoShareDelta</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 192               0.224                    0.25         -0.026</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 192               0.224                    0.25         -0.026</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 192               0.224                    0.25         -0.026</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 192               0.224                    0.25         -0.026</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ExposureShareDelta IntegratedInfoRatio AbsInfoShareDelta AbsLogInfoRatio</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   0               1.150             0.026           0.140</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   0               0.902             0.026           0.104</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   0               0.924             0.026           0.079</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   0               1.042             0.026           0.041</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  SlopeEstimate SlopeLogEstimate SlopeDirection SlopeExposure SlopeExposureShare</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          1.148            0.138     Upweighted           192               0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.905           -0.100   Downweighted           192               0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.926           -0.077   Downweighted           192               0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          1.039            0.038      Near unit           192               0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Observation weights and discrimination-based reweighting are separate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    concepts in this package.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - The fitted slopes vary across levels of `Criterion`; other facets have no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    separate slope block.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Criterion-owned and rater-owned GPCM fits are separate restricted models;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    both blocks cannot be estimated together by the current GPCM interface.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - FACETS is a direct JML comparator only for the aligned equal-discrimination</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM side; its reported discrimination is a post-fit diagnostic, not the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    fitted free-slope GPCM parameter.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - The review is intended to make reweighting visible; it does not decide by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    itself whether GPCM should replace the Rasch-family operational model.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Information-share changes are computed within each facet because the same</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    total information is partitioned separately by facet.</span>
 <span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">top_reweighted_levels</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 20</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Facet     Level    ReferenceIntegratedI…¹ ReferenceExposure ReferenceInfoShare</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion Organiz…                  <span style="text-decoration: underline;">1</span>910.               192              0.250</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Criterion Accuracy                  <span style="text-decoration: underline;">1</span>909.               192              0.250</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Criterion Content                   <span style="text-decoration: underline;">1</span>909.               192              0.250</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Criterion Language                  <span style="text-decoration: underline;">1</span>910.               192              0.250</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ abbreviated name: ¹​ReferenceIntegratedInfo</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 15 more variables: ReferenceExposureShare &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ComparisonIntegratedInfo &lt;dbl&gt;, ComparisonExposure &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ComparisonInfoShare &lt;dbl&gt;, ComparisonExposureShare &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   InfoShareDelta &lt;dbl&gt;, ExposureShareDelta &lt;dbl&gt;, IntegratedInfoRatio &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   AbsInfoShareDelta &lt;dbl&gt;, AbsLogInfoRatio &lt;dbl&gt;, SlopeEstimate &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   SlopeLogEstimate &lt;dbl&gt;, SlopeDirection &lt;chr&gt;, SlopeExposure &lt;dbl&gt;, …</span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

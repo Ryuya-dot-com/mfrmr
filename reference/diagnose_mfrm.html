@@ -53,7 +53,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compute diagnostics for an <code>mfrm_fit</code> object</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/core-expected-correlation.R" class="external-link"><code>R/core-expected-correlation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/core-expected-correlation.R" class="external-link"><code>R/core-expected-correlation.R</code></a></small>
       <div class="d-none name"><code>diagnose_mfrm.Rd</code></div>
     </div>
 
@@ -468,7 +468,10 @@ finite-count note: <a href="https://www.rasch.org/rmt/rmt221e.htm" class="extern
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("diagnose_mfrm", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -488,66 +491,19 @@ finite-count note: <a href="https://www.rasch.org/rmt/rmt221e.htm" class="extern
 <span class="r-in"><span><span class="co"># Check each residual's basis and the coverage of aggregate fit statistics</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">diagnostics</span><span class="op">$</span><span class="va">obs</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PersonMeasureBasis"</span>, <span class="st">"ConditionalVariance"</span>,</span></span>
 <span class="r-in"><span>  <span class="st">"PearsonAvailable"</span>, <span class="st">"ResponseReason"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   PersonMeasureBasis ConditionalVariance PearsonAvailable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1          saved EAP           0.6713656             TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2          saved EAP           0.6916274             TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3          saved EAP           0.6130873             TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4          saved EAP           0.7109476             TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5          saved EAP           0.7234085             TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6          saved EAP           0.4352147             TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                    ResponseReason</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Conditional point calculation; calibration and Person uncertainty are excluded.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Conditional point calculation; calibration and Person uncertainty are excluded.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Conditional point calculation; calibration and Person uncertainty are excluded.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Conditional point calculation; calibration and Person uncertainty are excluded.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Conditional point calculation; calibration and Person uncertainty are excluded.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Conditional point calculation; calibration and Person uncertainty are excluded.</span>
 <span class="r-in"><span><span class="va">diagnostics</span><span class="op">$</span><span class="va">overall_fit</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Infit"</span>, <span class="st">"Outfit"</span>, <span class="st">"FitUnavailableRows"</span>, <span class="st">"FitReason"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Infit Outfit FitUnavailableRows FitReason                                     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.866  0.857                  0 Descriptive mean squares; their calculation d…</span>
 <span class="r-in"><span><span class="va">diagnostic_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diagnostics</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">diagnostic_summary</span><span class="op">$</span><span class="va">decision</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               Interpretation FormalInference FitReadiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Ready for formal inference             Yes        ready</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           Why</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 All stored fit-readiness components passed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                            NextAction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">diagnostic_summary</span><span class="op">$</span><span class="va">key_warnings</span> <span class="co"># Issues to investigate, if present</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Unexpected responses flagged: 1."                                                                                                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "Flagged displacement levels: 1."                                                                                                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "MnSq screening flagged 18 element(s) outside the configured 0.5-1.5 band."                                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "Person-level fit warnings: 18 row(s); identifiers suppressed. Use `include_person = TRUE` only under appropriate privacy controls."</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "Strict marginal fit flagged 1 group-level summaries."                                                                              </span>
 <span class="r-in"><span><span class="va">diagnostic_summary</span><span class="op">$</span><span class="va">top_fit</span>      <span class="co"># Most unusual residual-based fit statistics</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 13</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Facet     Level   Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> Person    P022    0.126  0.123     -<span style="color: #BB0000;">2.86</span>      -<span style="color: #BB0000;">2.88</span>     8.20      8.17</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> Person    P026    0.126  0.117     -<span style="color: #BB0000;">2.78</span>      -<span style="color: #BB0000;">2.84</span>     7.75      7.71</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> Criterion Content 0.730  0.743     -<span style="color: #BB0000;">2.27</span>      -<span style="color: #BB0000;">2.09</span>   119.      113.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> Person    P035    0.239  0.237     -<span style="color: #BB0000;">2.24</span>      -<span style="color: #BB0000;">2.25</span>     8.90      8.91</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> Person    P016    2.66   2.53       2.19       2.06     5.95      5.85</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> Person    P008    0.251  0.250     -<span style="color: #BB0000;">2.16</span>      -<span style="color: #BB0000;">2.17</span>     8.79      8.79</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> Person    P025    2.22   2.18       2.09       2.03     8.94      8.92</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> Rater     R05     0.648  0.640     -<span style="color: #BB0000;">1.98</span>      -<span style="color: #BB0000;">1.97</span>    51.5      48.5 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> Person    P012    2.01   2.17       1.72       1.91     7.85      7.78</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> Person    P017    0.265  0.285     -<span style="color: #BB0000;">1.90</span>      -<span style="color: #BB0000;">1.79</span>     7.42      7.33</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 5 more variables: InfitZSTD_FACETS &lt;dbl&gt;, OutfitZSTD_FACETS &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   DF_Infit_FACETS &lt;dbl&gt;, DF_Outfit_FACETS &lt;dbl&gt;, AbsZ &lt;dbl&gt;</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Distinguish residual-based checks from marginal model checks</span></span></span>
 <span class="r-in"><span><span class="va">diagnostic_summary</span><span class="op">$</span><span class="va">diagnostic_basis</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DiagnosticPath"</span>, <span class="st">"Status"</span>, <span class="st">"Basis"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DiagnosticPath                   Status        Basis                          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> legacy_residual_fit              computed      plugin_residuals_and_eap_tables</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> strict_marginal_fit              computed      latent_integrated_first_order_…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> strict_pairwise_local_dependence computed      latent_integrated_second_order…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> posterior_predictive_follow_up   not_available posterior_predictive_replicati…</span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("diagnose_mfrm", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="co"># Each row is one bundled example rating; use ordinary JML for this reference</span></span></span>
 <span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">jml_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
@@ -556,16 +512,8 @@ finite-count note: <a href="https://www.rasch.org/rmt/rmt221e.htm" class="extern
 <span class="r-in"><span>                                 diagnostic_mode <span class="op">=</span> <span class="st">"legacy"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">jml_diagnostics</span><span class="op">$</span><span class="va">measures</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Facet"</span>, <span class="st">"Level"</span>, <span class="st">"PTMEA"</span>,</span></span>
 <span class="r-in"><span>     <span class="st">"PTMEAExpected"</span>, <span class="st">"PTMEAExpectedN"</span>, <span class="st">"PTMEAExpectedStatus"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Facet  Level   PTMEA PTMEAExpected PTMEAExpectedN PTMEAExpectedStatus  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Person P001   0.123          0.287             16 available_conditional</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Person P002  -<span style="color: #BB0000;">0.090</span><span style="color: #BB0000; text-decoration: underline;">5</span>         0.238             16 available_conditional</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Person P003   0.355          0.262             16 available_conditional</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Person P004  -<span style="color: #BB0000;">0.055</span><span style="color: #BB0000; text-decoration: underline;">4</span>         0.279             16 available_conditional</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Person P005  -<span style="color: #BB0000;">0.215</span>          0.279             16 available_conditional</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Person P006   0.196          0.263             16 available_conditional</span>
 <span class="r-in"><span><span class="co"># Compare observed PTMEA with its conditional reference; neither is a test</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

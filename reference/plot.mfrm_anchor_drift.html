@@ -55,7 +55,7 @@ detect_anchor_drift(). Read summary(x) and link support alongside the plot."><me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot a saved anchor-drift review</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-plotting-dispatch.R" class="external-link"><code>R/api-plotting-dispatch.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-plotting-dispatch.R" class="external-link"><code>R/api-plotting-dispatch.R</code></a></small>
       <div class="d-none name"><code>plot.mfrm_anchor_drift.Rd</code></div>
     </div>
 
@@ -118,7 +118,10 @@ standard errors produce no whisker, not a zero-width interval.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("plot.mfrm_anchor_drift", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">people</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">d1</span> <span class="op">&lt;-</span> <span class="va">ratings</span><span class="op">[</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">people</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">d2</span> <span class="op">&lt;-</span> <span class="va">ratings</span><span class="op">[</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">people</span><span class="op">[</span><span class="fl">13</span><span class="op">:</span><span class="fl">24</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
@@ -128,282 +131,18 @@ standard errors produce no whisker, not a zero-width interval.</p>
 <span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"JML"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Review convergence and common-element support before interpreting changes.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Many-Facet Measurement Model Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model: RSM | Method: JML | N: 192 | Persons: 12 | Facets: 2 | Categories: 4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Decision</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Interpretation: Fit-readiness requirements satisfied; formal precision</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    review required</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Formal inference: No</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Why: Formal precision support has not been evaluated.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Next: Run `diagnose_mfrm()` and pass its result as `diagnostics =` to</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    evaluate formal precision support; fit readiness alone is not a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    formal-inference decision.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   JML uses observed scores without an extreme-score adjustment or finite-item</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   bias correction. Independently free Person measures are infinite for</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   all-minimum/all-maximum responses; finite optimizer values are computational</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   traces. JML SEs and normal bands remain exploratory.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Centering: whole declared facet, including anchors and group totals.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Visual workflow (in order)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Priority                   Visual Required Available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         1 mfrmr Wright map with SE     TRUE      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         2  FACETS-style Wright map    FALSE      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         3            Infit pathway    FALSE     FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       Interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Diagnostic interpretation available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Diagnostic interpretation available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                          Unavailable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Plot commands are stored in `$required_visual$Route`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Overall status: Fit completed; review diagnostics before reporting</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Convergence: converged (severity: pass, maximum absolute gradient: 1.86e-05)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Estimation path: RSM / JML</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Reporting readiness: Fit available for diagnostic review; inferential</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    strength depends on the estimator and convergence evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Workflow readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Domain                                         Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Fit                                  Checks passed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Numerical                                  Checks passed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Data                                  Checks passed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Design                           Connectivity checked</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Stability                                  Checks passed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Diagnostics                                   Not assessed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Reporting Review the stored result before interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Key warnings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - None.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Next actions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    formal precision support; fit readiness alone is not a formal-inference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    decision.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - After reviewing convergence, run `review &lt;- summary(fit, profile = "facets",</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    detail = "brief")` for the comprehensive measurement review; FACETS software</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    is not required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Then draw the complete native Wright map with `plot(fit, type = "wright",</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    show_ci = TRUE, top_n = Inf, preset = "publication")`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - MML provides marginal diagnostics; review the resulting fit and uncertainty</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    assumptions before using its SEs or intervals.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Reuse `review$results$diagnostics`; call `diagnose_mfrm()` again only for</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    residual PCA or other custom settings.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    reporting readiness.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fit overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   LogLik: -203.282 | Information-criterion ranking is unavailable for JML.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Optimizer code 0: Yes | Status: converged | Fn evals: 66 | Gr evals: 28</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Terminal gradient: maximum absolute = 1.86e-05 | RMS = 7.58e-06 | Review tolerance = 0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Optimization note: Optimizer returned convergence code 0.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population basis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   JML estimates Person measures jointly with calibration parameters; it does</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   not estimate a normal population distribution.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Facet overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      4            0      0.309      -0.458       0.217 0.675</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      4            0      0.216      -0.216       0.253 0.470</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Person measure distribution</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Persons DistributionN ReviewExcludedExtremeEAPs  Mean    SD Median    Min</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       12            12                         0 0.261 1.089  0.669 -1.673</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Max  Span                               Interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1.695 3.368 Subject to the fit's interpretation decision</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Targeting (Person vs facet means; sum-to-zero ID makes Targeting = Person mean)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet PersonMean FacetMean Targeting PersonSD FacetSD SpreadRatio</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      0.261         0     0.261    1.089   0.309       3.523</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      0.261         0     0.261    1.089   0.216       5.052</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Step parameter summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Steps    Min   Max  Span Monotonic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      3 -1.305 1.469 2.774      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Estimation settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  StepFacet SlopeFacet NoncenterFacet WeightColumn RatingMin RatingMax</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;NA&gt;       &lt;NA&gt;         Person         &lt;NA&gt;         1         4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  CategoryPolicy ScoreRecoded DummyFacets PositiveFacets FacetInteractions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        collapse        FALSE                                             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  UnusedScoreCategories UnusedScoreCategoryCount</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                               0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   RSM uses one shared set of rating-scale thresholds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Full fitting settings are retained in `$settings_overview`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Most extreme facet levels (|estimate|)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet        Level Estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      Content   -0.458</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater          R04    0.253</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion     Accuracy    0.217</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater          R02   -0.216</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion Organization    0.140</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Paper reporting map</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                Area CoveredHere</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model identification / convergence         yes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Data structure / missingness          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Reliability / fit / residual PCA          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Category functioning     partial</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Bias / DIF / interaction checks          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Draft reporting / checklist          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                CompanionOutput</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                   summary(fit)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                               summary(describe_mfrm_data(...))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    summary(diagnose_mfrm(fit))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  rating_scale_table() / category_structure_report() / category_curves_report()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         summary(estimate_bias(...)) / analyze_dff() / related bundle summaries</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                        reporting_checklist() / summary(build_apa_outputs(...))</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Many-Facet Measurement Model Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model: RSM | Method: JML | N: 192 | Persons: 12 | Facets: 2 | Categories: 4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Decision</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Interpretation: Fit-readiness requirements satisfied; formal precision</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    review required</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Formal inference: No</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Why: Formal precision support has not been evaluated.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Next: Run `diagnose_mfrm()` and pass its result as `diagnostics =` to</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    evaluate formal precision support; fit readiness alone is not a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    formal-inference decision.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   JML uses observed scores without an extreme-score adjustment or finite-item</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   bias correction. Independently free Person measures are infinite for</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   all-minimum/all-maximum responses; finite optimizer values are computational</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   traces. JML SEs and normal bands remain exploratory.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Centering: whole declared facet, including anchors and group totals.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Visual workflow (in order)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Priority                   Visual Required Available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         1 mfrmr Wright map with SE     TRUE      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         2  FACETS-style Wright map    FALSE      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         3            Infit pathway    FALSE     FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       Interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Diagnostic interpretation available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Diagnostic interpretation available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                          Unavailable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Plot commands are stored in `$required_visual$Route`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Overall status: Fit completed; review diagnostics before reporting</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Convergence: converged (severity: pass, maximum absolute gradient: 7.02e-06)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Estimation path: RSM / JML</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Reporting readiness: Fit available for diagnostic review; inferential</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    strength depends on the estimator and convergence evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Workflow readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Domain                                         Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Fit                                  Checks passed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Numerical                                  Checks passed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Data                                  Checks passed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Design                           Connectivity checked</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Stability                                  Checks passed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Diagnostics                                   Not assessed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Reporting Review the stored result before interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Key warnings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - None.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Next actions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    formal precision support; fit readiness alone is not a formal-inference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    decision.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - After reviewing convergence, run `review &lt;- summary(fit, profile = "facets",</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    detail = "brief")` for the comprehensive measurement review; FACETS software</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    is not required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Then draw the complete native Wright map with `plot(fit, type = "wright",</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    show_ci = TRUE, top_n = Inf, preset = "publication")`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - MML provides marginal diagnostics; review the resulting fit and uncertainty</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    assumptions before using its SEs or intervals.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Reuse `review$results$diagnostics`; call `diagnose_mfrm()` again only for</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    residual PCA or other custom settings.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    reporting readiness.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fit overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   LogLik: -191.617 | Information-criterion ranking is unavailable for JML.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Optimizer code 0: Yes | Status: converged | Fn evals: 131 | Gr evals: 44</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Terminal gradient: maximum absolute = 7.02e-06 | RMS = 2.99e-06 | Review tolerance = 0.0001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Optimization note: Optimizer returned convergence code 0.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population basis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   JML estimates Person measures jointly with calibration parameters; it does</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   not estimate a normal population distribution.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Facet overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      4            0      0.409      -0.612       0.232 0.844</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      4            0      0.389      -0.397       0.354 0.751</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Person measure distribution</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Persons DistributionN ReviewExcludedExtremeEAPs  Mean    SD Median    Min</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       12            12                         0 0.428 1.387  0.443 -2.372</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Max  Span                               Interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2.715 5.087 Subject to the fit's interpretation decision</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Targeting (Person vs facet means; sum-to-zero ID makes Targeting = Person mean)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet PersonMean FacetMean Targeting PersonSD FacetSD SpreadRatio</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      0.428         0     0.428    1.387   0.409       3.394</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      0.428         0     0.428    1.387   0.389       3.569</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Step parameter summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Steps    Min   Max  Span Monotonic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      3 -1.611 1.314 2.925      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Estimation settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  StepFacet SlopeFacet NoncenterFacet WeightColumn RatingMin RatingMax</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;NA&gt;       &lt;NA&gt;         Person         &lt;NA&gt;         1         4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  CategoryPolicy ScoreRecoded DummyFacets PositiveFacets FacetInteractions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        collapse        FALSE                                             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  UnusedScoreCategories UnusedScoreCategoryCount</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                               0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   RSM uses one shared set of rating-scale thresholds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Full fitting settings are retained in `$settings_overview`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Most extreme facet levels (|estimate|)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet   Level Estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion Content   -0.612</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater     R01   -0.397</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater     R03    0.354</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater     R04    0.313</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater     R02   -0.269</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Paper reporting map</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                Area CoveredHere</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model identification / convergence         yes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Data structure / missingness          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Reliability / fit / residual PCA          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Category functioning     partial</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Bias / DIF / interaction checks          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Draft reporting / checklist          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                CompanionOutput</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                   summary(fit)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                               summary(describe_mfrm_data(...))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    summary(diagnose_mfrm(fit))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  rating_scale_table() / category_structure_report() / category_curves_report()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         summary(estimate_bias(...)) / analyze_dff() / related bundle summaries</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                        reporting_checklist() / summary(build_apa_outputs(...))</span>
 <span class="r-in"><span><span class="va">drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="detect_anchor_drift.html">detect_anchor_drift</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>W1 <span class="op">=</span> <span class="va">fit1</span>, W2 <span class="op">=</span> <span class="va">fit2</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Thin linking support between 'W1' and 'W2': fewer than 5 retained common elements in Criterion, Rater.</span>
 <span class="r-in"><span><span class="va">drift_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">drift</span>, type <span class="op">=</span> <span class="st">"drift"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">drift_plot</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "mfrm_plot_data" "list"          </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">drift_plot</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "plot"            "table"           "title"           "subtitle"       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "legend"          "reference_lines" "preset"          "plot_name"      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [9] "notes"          </span>
 <span class="r-in"><span><span class="va">chain</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_equating_chain.html">build_equating_chain</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>F1 <span class="op">=</span> <span class="va">fit1</span>, F2 <span class="op">=</span> <span class="va">fit2</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Thin linking support between 'F1' and 'F2': fewer than 5 retained common elements in Criterion, Rater.</span>
 <span class="r-in"><span><span class="va">chain_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">chain</span>, type <span class="op">=</span> <span class="st">"chain"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">chain_plot</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">table</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Wave  Cumulative_Offset Status   Reason</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> F1              0       computed <span style="color: #BB0000;">NA</span>    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> F2              0.002<span style="text-decoration: underline;">11</span> computed <span style="color: #BB0000;">NA</span>    </span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">drift</span>, type <span class="op">=</span> <span class="st">"heatmap"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -1427,7 +1427,7 @@ The current mfrmr routes are:
 
 | Model route | Estimation and calculation in this version |
 |----|----|
-| Public RSM / PCM | MML is the default; JML is also available. MML uses direct optimization by default. EM and hybrid are available for supported additive, fixed-population, fixed-integration settings (`population = NULL`). |
+| Public RSM / PCM | MML is the default; JML is also available. MML uses direct optimization by default. EM and hybrid support additive and jointly fitted two-facet interaction models with a fixed population and fixed integration (`population = NULL`). |
 | Public one-slope-family GPCM | MML uses direct optimization. Requests for EM or hybrid currently fall back to direct and record the choice in `fit$summary`. JML is available within its separate restrictions. |
 | Provisional two-slope-family GMFRM | Explicit fixed-standard-normal MML with generalized EM or adaptive direct fitting. Summaries, conditional curves, experimental component-slope and location/contrast intervals, and separately checked fitted-object/portable conditional EAP are available. Coverage remains unqualified; curve/step intervals and model ranking remain unavailable. |
 
@@ -2834,8 +2834,7 @@ designs, but a high G coefficient is not the probability of selecting
 the correct champion. Their linear composite weights do not implement
 the score-dependent trimming of competition panels.
 
-Sport applications have precedents. [Looney
-(1997)](https://pubmed.ncbi.nlm.nih.gov/9661718/) applied many-facet
+Sport applications have precedents. Looney (1997)[^1] applied many-facet
 Rasch analysis to 1994 Olympic figure skating under the then-used rank
 aggregation system; that study does not validate current scoring rules
 or this GMFRM implementation. In gymnastics, [Mercier and Heiniger
@@ -4234,3 +4233,7 @@ from the Rasch-family route. Use the current matrix returned by
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
 as the workflow contract and `gpcm_capability_matrix(view = 'scores')`
 for score-side alternatives.
+
+[^1]: Looney, M. A. (1997). Objective measurement of figure skating
+    performance. *Journal of Outcome Measurement, 1*(2), 143–163. PMID:
+    9661718.

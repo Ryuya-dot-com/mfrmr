@@ -80,7 +80,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot fitted MFRM results with base R</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-plotting-fit-family.R" class="external-link"><code>R/api-plotting-fit-family.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-plotting-fit-family.R" class="external-link"><code>R/api-plotting-fit-family.R</code></a></small>
       <div class="d-none name"><code>plot.mfrm_fit.Rd</code></div>
     </div>
 
@@ -748,19 +748,12 @@ appearance, not estimates, confidence levels or diagnostic thresholds.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a>
 </h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
-<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
-<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
-<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Saved synthetic MML/RSM analysis of example_operational.</span></span></span>
+<span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
+<span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"operational-mml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Run each plot command separately to inspect its figure</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span> <span class="co"># Wright map: persons, facets, and category thresholds</span></span></span>
@@ -794,7 +787,7 @@ appearance, not estimates, confidence levels or diagnostic thresholds.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   DisplayEstimate &lt;dbl&gt;, DisplayLabel &lt;chr&gt;, OriginalCI_Lower &lt;dbl&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   OriginalCI_Upper &lt;dbl&gt;, DisplayCI_Lower &lt;dbl&gt;, DisplayCI_Upper &lt;dbl&gt;, …</span></span>
 <span class="r-in"><span><span class="co"># Find a named judge without refitting or dropping the surrounding scale</span></span></span>
-<span class="r-in"><span><span class="va">judge</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Rater</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">judge</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">wright</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">locations</span>, <span class="va">Group</span> <span class="op">==</span> <span class="st">"Rater"</span><span class="op">)</span><span class="op">$</span><span class="va">Label</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">focused</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, highlight <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Rater <span class="op">=</span> <span class="va">judge</span><span class="op">)</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">focused</span>, <span class="st">"locations"</span><span class="op">)</span>, <span class="va">Highlighted</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 39</span></span>

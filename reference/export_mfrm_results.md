@@ -184,11 +184,14 @@ record a successful ZIP.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("export_mfrm_results", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Load the package and example ratings
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
 
-# Fit the model
+# Fit these ratings; replace the data-loading line for your own analysis
 fit <- fit_mfrm(
   data = ratings,
   person = "Person",
@@ -216,23 +219,8 @@ head(data.frame(
   Component = exported$written_files$Component,
   File = basename(exported$written_files$Path)
 ))
-#>                          Component
-#> 1                 summary_overview
-#> 2                 summary_decision
-#> 3                   summary_status
-#> 4            summary_fit_readiness
-#> 5 summary_fit_readiness_components
-#> 6 summary_fit_readiness_parameters
-#>                                                 File
-#> 1                 mfrmr_results_summary_overview.csv
-#> 2                 mfrmr_results_summary_decision.csv
-#> 3                   mfrmr_results_summary_status.csv
-#> 4            mfrmr_results_summary_fit_readiness.csv
-#> 5 mfrmr_results_summary_fit_readiness_components.csv
-#> 6 mfrmr_results_summary_fit_readiness_parameters.csv
 exported$plot_errors
-#> [1] Plot  Error
-#> <0 rows> (or 0-length row.names)
 # Full paths remain in exported$written_files$Path.
 # Open index.html in output_dir to read the report.
+} # }
 ```

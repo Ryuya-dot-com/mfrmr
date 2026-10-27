@@ -53,7 +53,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize all retained bias screens</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-bias-collection.R" class="external-link"><code>R/api-bias-collection.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-bias-collection.R" class="external-link"><code>R/api-bias-collection.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_bias_collection.Rd</code></div>
     </div>
 
@@ -123,33 +123,22 @@ No multiplicity-adjusted confirmatory decisions are supplied.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="estimate_all_bias.html">estimate_all_bias()</a></code>, <code><a href="plot.mfrm_bias_collection.html">plot.mfrm_bias_collection()</a></code>, <code><a href="estimate_bias.html">estimate_bias()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="estimate_all_bias.html">estimate_all_bias()</a></code>, <code><a href="plot.mfrm_bias_collection.html">plot.mfrm_bias_collection()</a></code>, <code><a href="mfrm_report.html">mfrm_report()</a></code>, <code><a href="estimate_bias.html">estimate_bias()</a></code></p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("summary.mfrm_bias_collection", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"MML"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">screens</span> <span class="op">&lt;-</span> <span class="fu"><a href="estimate_all_bias.html">estimate_all_bias</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">screens</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">overview</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Interaction Order            Facets Rows ScreenPositive Significant</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Rater x Criterion     2 Rater x Criterion   16              3           3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    MaxAbsT MeanAbsBias SupportsFormalInference FormalInferenceEligible</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 2.594645   0.2641805                   FALSE                   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   PrimaryReportingEligible ClassificationSystem   ReportingUse Kept Error</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                    FALSE            screening screening_only TRUE      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ScreenUnavailable ScreenAvailable Points    Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 0              16     16 available</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">review</span><span class="op">$</span><span class="va">cells</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Interaction"</span>, <span class="st">"Bias Size"</span>, <span class="st">"ObsN"</span>, <span class="st">"ScreenAvailable"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Interaction   Bias Size ObsN ScreenAvailable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Rater x Criterion  0.72471042   24            TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Rater x Criterion -0.15575682   24            TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Rater x Criterion -0.07480308   24            TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Rater x Criterion -0.22906880   24            TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Rater x Criterion  0.29138522   24            TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Rater x Criterion  0.05605990   24            TRUE</span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

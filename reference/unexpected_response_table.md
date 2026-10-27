@@ -196,16 +196,11 @@ for migration instructions.
 
 ``` r
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  model = "RSM"
-)
-diagnostics <- diagnose_mfrm(fit)
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diagnostics <- example_fit$diagnostics
 unexpected <- unexpected_response_table(
   fit, diagnostics = diagnostics, abs_z_min = 1.5, prob_max = 0.4, top_n = 5
 )

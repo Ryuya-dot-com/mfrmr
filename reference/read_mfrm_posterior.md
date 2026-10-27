@@ -69,6 +69,12 @@ and
 Use the backend's saved fit for new credible levels, contrasts,
 predictions, trace plots or posterior predictive checks. Native scoring
 and MML/JML diagnostics are not available from this object.
+Estimated-population one-family Stan summaries retain the population
+mean and SD as reported parameters. Their schema-2 files require this
+newer reader; existing fixed-population schema-1 summaries remain
+supported. Use `plot(x, quantity = "population_sd")` to inspect
+between-Person variation on the native metric. This SD is not an
+individual Person standard error.
 
 [`confint()`](https://rdrr.io/r/stats/confint.html) retrieves the stored
 equal-tailed 95% *posterior credible* intervals, retaining

@@ -56,6 +56,7 @@ mfrm_report(
   [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
   object, a supported G/D-study or network result, or output from
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
+  [`estimate_all_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_all_bias.md),
   [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md),
   [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
   or
@@ -267,8 +268,15 @@ forms or waves.
 Use `mfrm_report(review_mfrm_anchors(...))` before anchored fitting,
 `mfrm_report(build_linking_review(...))` for saved link evidence,
 `mfrm_report(estimate_bias(...))` for a prespecified interaction, and
-`mfrm_report(build_model_choice_review(...))` for candidate-model roles
-and comparability. Reporting does not fit a new model, select new
+`mfrm_report(estimate_all_bias(...))` for a collection of exploratory
+screens. Collection reports keep every requested interaction in
+`tables$overview`, all retained cells in `tables$bias_cells` with an
+`Interaction` key, failed pairs in `tables$errors`, and calculation
+settings/history and facet directions. Failed pairs remain visible even
+with `keep_errors = FALSE`; unavailable screens are not reported as
+negative results. No collection-wide multiplicity adjustment is added.
+Use `mfrm_report(build_model_choice_review(...))` for candidate-model
+roles and comparability. Reporting does not fit a new model, select new
 interaction cells, calculate a missing LRT or test anchor invariance.
 Full bias cells and anchor values remain alongside compact summaries;
 source objects and unavailable states are preserved. `style = "rater"`
@@ -279,6 +287,25 @@ provenance and the question with the report. A shared declaration does
 not establish equivalence between a raw G-study score and a latent MFRM
 measure. See the editable `templates/assessment-review.Rmd` for separate
 modules using bundled data and a saved report archive.
+
+## Planning and numerical review
+
+Pass
+[`recommend_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/recommend_mfrm_design.md)
+results directly to preserve the planning target, threshold sources, all
+candidate designs and long criterion outcomes. Facet calibration
+reliability is not inter-rater agreement. Recommendations apply to the
+simulated conditions; no universal sample size is inferred. Main-effects
+[`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md)
+results also enter directly. These reports preserve residual-scaling
+assumptions and unavailable coefficients separately from full
+interaction-component G-studies. Newly created projections retain source
+components and observed counts; missing historical metadata are labelled
+`not_recorded` without refitting. Intervals are unsupported for this
+approximation and for simulation recommendations. Native measurement
+reports include `numerical_review`: separate evidence and next actions
+for optimization, curvature, starts, integration and replay. This table
+neither reruns diagnostics nor changes inferential readiness.
 
 ## G/D-study and residual-exploration reports
 
@@ -519,11 +546,14 @@ Measurement, 82*, 705–718.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("mfrm_report", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Load the package and example ratings
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
 
-# Fit the model
+# Fit these ratings; replace the data-loading line for your own analysis
 fit <- fit_mfrm(
   data = ratings,
   person = "Person",
@@ -540,150 +570,24 @@ report <- mfrm_report(res)
 
 # Read the report and the issues to address
 summary(report, view = "reader")
-#> mfrmr Report Summary
-#> 
-#> Overview
-#>  Style OverallStatus     FirstAction ReviewAreas NotComputedAreas CaveatAreas
-#>     qc        review Start with Fit.           1                0           0
-#>  OptionalAreas UnavailableAreas OkAreas
-#>              3                0       1
-#>                                                      SourceInclude
-#>  fit, diagnostics, tables, precision, reporting, categories, plots
-#> 
-#> Decision
-#>  - Interpretation: Ready for formal inference
-#>  - Formal inference: Yes
-#>  - Why: All stored fit-readiness components passed.
-#>  - Next: Read the compact results summary.
-#> 
-#> First screen
-#>               Area            Status         Readiness
-#>            Overall            review            review
-#>                Fit            review            review
-#>         Bias / DFF request_if_needed request_if_needed
-#>  Linking / anchors request_if_needed request_if_needed
-#>   Misfit / pathway request_if_needed request_if_needed
-#>          Precision                ok             ready
-#>                                                                      MainIssue
-#>  ok=1; review=1; caveat=0; request_if_needed=3; not_computed=0; unavailable=0.
-#>                   ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9
-#>                                                    Evidence was not requested.
-#>                                                    Evidence was not requested.
-#>                                                    Evidence was not requested.
-#>                                                No report-index review signals.
-#>                                                                NextAction
-#>                                                           Start with Fit.
-#>  Inspect the primary evidence table and template boundary before writing.
-#>                        Request this evidence only if the claim is needed.
-#>                        Request this evidence only if the claim is needed.
-#>                        Request this evidence only if the claim is needed.
-#>                   Use the listed template route if this area is reported.
-#>                                  PrimaryRoute
-#>    report$report_index; report$template_index
-#>                   report$fit_evidence_summary
-#>           mfrm_results(fit, include = "bias")
-#>        mfrm_results(fit, include = "linking")
-#>  mfrm_results(fit, include = "misfit_review")
-#>             report$precision_evidence_summary
-#> 
-#> Claim readiness
-#>                Readiness Claims                    ExampleClaim
-#>  needs_requested_section      5       APA-style manuscript text
-#>        write_with_caveat      1      Fit and precision evidence
-#>                    ready      4 Appendix or reviewer supplement
-#> 
-#> Immediate actions
-#>  Area Status                                                    MainIssue
-#>   Fit review ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9
-#>                                                                NextAction
-#>  Inspect the primary evidence table and template boundary before writing.
-#>                 PrimaryRoute                  TemplateRoute
-#>  report$fit_evidence_summary report$fit_reporting_templates
-#> 
-#> Report gaps
-#>  Priority           GapType                        Section
-#>         3     not_requested     APA and manuscript wording
-#>         3     not_requested            Anchors and linking
-#>         3     not_requested                 Bias screening
-#>         3     not_requested      Misfit and pathway review
-#>         3     not_requested       Network and connectivity
-#>         3     not_requested               Response-time QC
-#>         4 caveated_evidence Fit, separation, and precision
-#>                                                                                                   RecommendedAction
-#>                   Rebuild the result with mfrm_results(fit, include = "publication") before using APA-style output.
-#>                Rebuild the result with mfrm_results(fit, include = "linking") before writing anchor-readiness text.
-#>            Rebuild the result with mfrm_results(fit, include = "bias") before writing bias or fairness-screen text.
-#>  Rebuild the result with mfrm_results(fit, include = "misfit_review") before writing observation-level misfit text.
-#>                    Rebuild the result with mfrm_results(fit, include = "network") before writing connectivity text.
-#>          Request the relevant mfrm_results() section or call the route-specific helper before reporting this claim.
-#>                             Write only a caveated claim and inspect the route-specific table before manuscript use.
-#>                                                                                                                           Route
-#>                                                                 mfrm_results(fit, include = "publication"); build_apa_outputs()
-#>                                                             mfrm_results(fit, include = "linking"); plot(res, type = "anchors")
-#>                                                 mfrm_results(fit, include = "bias"); estimate_bias(); bias_interaction_report()
-#>                                                       mfrm_results(fit, include = "misfit_review"); plot(res, type = "pathway")
-#>                                                             mfrm_results(fit, include = "network"); build_mfrm_network_review()
-#>  mfrm_results(fit, include = "response_time", response_time = ..., response_time_data = ...); plot(res, type = "response_time")
-#>                                             summary(res$components$precision_review); precision_review_report(fit, diagnostics)
 report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
-#>                Area            Status
-#> 1           Overall            review
-#> 2               Fit            review
-#> 3        Bias / DFF request_if_needed
-#> 4 Linking / anchors request_if_needed
-#> 5  Misfit / pathway request_if_needed
-#> 6         Precision                ok
-#>                                                                       MainIssue
-#> 1 ok=1; review=1; caveat=0; request_if_needed=3; not_computed=0; unavailable=0.
-#> 2                  ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9
-#> 3                                                   Evidence was not requested.
-#> 4                                                   Evidence was not requested.
-#> 5                                                   Evidence was not requested.
-#> 6                                               No report-index review signals.
-#>                                                                 NextAction
-#> 1                                                          Start with Fit.
-#> 2 Inspect the primary evidence table and template boundary before writing.
-#> 3                       Request this evidence only if the claim is needed.
-#> 4                       Request this evidence only if the claim is needed.
-#> 5                       Request this evidence only if the claim is needed.
-#> 6                  Use the listed template route if this area is reported.
 report$fit_calculation_basis
-#>       Facet  FitBasis
-#> 1     Rater saved EAP
-#> 7 Criterion saved EAP
-#>                                                                                                                                                                                                                                                                                 FitInterpretation
-#> 1 Conditional residuals evaluated at saved EAP person measures; descriptive MnSq, not posterior-averaged residual statistics or posterior-predictive residuals. Person and calibration uncertainty are not propagated. Same-response EAP scoring does not establish an expectation-one reference.
-#> 7 Conditional residuals evaluated at saved EAP person measures; descriptive MnSq, not posterior-averaged residual statistics or posterior-predictive residuals. Person and calibration uncertainty are not propagated. Same-response EAP scoring does not establish an expectation-one reference.
 report$precision_by_facet[, c("Facet", "Levels", "Reliability",
                               "RealReliability", "InputUncertaintyBasis")]
-#>       Facet Levels Reliability RealReliability      InputUncertaintyBasis
-#> 1 Criterion      3   0.8671839       0.8664954 Observed information (MML)
-#> 2    Person     48   0.6639255       0.6143843         Posterior SD (EAP)
-#> 3     Rater      6   0.6773715       0.6768246 Observed information (MML)
 contextual_report <- mfrm_report(res, study_context = c(
   rating_unit = "One Person by Rater by Criterion rating",
   score_direction = "Higher coded scores indicate more favorable performance",
   rubric = "Synthetic example: permitted scores 1 to 4", transformation = "None"
 ))
 contextual_report$tables$study_context
-#>             Field                                                   Value
-#> 1     rating_unit                 One Person by Rater by Criterion rating
-#> 2 score_direction Higher coded scores indicate more favorable performance
-#> 3          rubric              Synthetic example: permitted scores 1 to 4
-#> 4  transformation                                                    None
-#>                                        Source
-#> 1 User declaration; not verified by the model
-#> 2 User declaration; not verified by the model
-#> 3 User declaration; not verified by the model
-#> 4 User declaration; not verified by the model
 
 # Select a recipient explicitly. Missing intervals are explained in the sheet.
 recipient <- as.character(fit$prep$levels$Rater[1])
 sheet <- mfrm_report(res, style = "rater", facet = "Rater",
                      rater = recipient, output = "html", max_cases = 0)
 sheet$path
-#> [1] "/tmp/Rtmp9ZqIgh/mfrmr_rater_1cd51e50b7c1.html"
 # Review in a browser, then choose a permanent path for continuing work.
 recipient_file <- tempfile(fileext = ".html")
 stopifnot(file.copy(sheet$path, recipient_file, overwrite = FALSE))
+} # }
 ```

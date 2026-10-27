@@ -53,7 +53,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a linking-review synthesis object</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>build_linking_review.Rd</code></div>
     </div>
 
@@ -149,7 +149,10 @@ scale across administrations.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Deliberately linked teaching waves: common labels below represent the</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("build_linking_review", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Deliberately linked teaching waves: common labels below represent the</span></span></span>
 <span class="r-in"><span><span class="co"># same rater and criterion identities by construction.</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">people</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span></span></span>
@@ -162,81 +165,12 @@ scale across administrations.</p>
 <span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"MML"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">anchor_review_obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="review_mfrm_anchors.html">review_mfrm_anchors</a></span><span class="op">(</span><span class="va">d1</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="detect_anchor_drift.html">detect_anchor_drift</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Wave1 <span class="op">=</span> <span class="va">fit1</span>, Wave2 <span class="op">=</span> <span class="va">fit2</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Thin linking support between 'Wave1' and 'Wave2': fewer than 5 retained common elements in Criterion, Rater.</span>
 <span class="r-in"><span><span class="va">chain</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_equating_chain.html">build_equating_chain</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Wave1 <span class="op">=</span> <span class="va">fit1</span>, Wave2 <span class="op">=</span> <span class="va">fit2</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Thin linking support between 'Wave1' and 'Wave2': fewer than 5 retained common elements in Criterion, Rater.</span>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu">build_linking_review</span><span class="op">(</span>anchor_review <span class="op">=</span> <span class="va">anchor_review_obj</span>, drift <span class="op">=</span> <span class="va">drift</span>, chain <span class="op">=</span> <span class="va">chain</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrm Linking Review Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Linking flags are review screens, not tests of anchor invariance.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Source-parameter, estimated-offset and cross-fit covariance are not fully</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   propagated. A sufficient element count alone does not establish a common</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   scale.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  AnchorReviewAvailable DriftAvailable ChainAvailable SourceModels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   TRUE           TRUE           TRUE          RSM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Key Warnings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Drift review flagged 2 wave/facet support or drift rows.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Chain review flagged 1 adjacent-link instability rows.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Next Actions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Inspect detect_anchor_drift() and plot(drift, type = "drift") for wave-level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    follow-up.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Inspect build_equating_chain() and plot(chain, type = "chain") before using</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    cumulative offsets operationally.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Top Linking Risks</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet Level  Wave           Link</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion  &lt;NA&gt; Wave2           &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater  &lt;NA&gt; Wave2           &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; Wave1 -&gt; Wave2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                          Signal Magnitude</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Retained common-element support is below the package guideline     1.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Retained common-element support is below the package guideline     1.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Thin retained support in an adjacent screened link     0.187</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                         Guidance</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Treat drift flags as low-support until more retained common elements are available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Treat drift flags as low-support until more retained common elements are available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Inspect the adjacent link and cumulative offsets before using the chain for operational review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Plot Follow-up</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        ReviewArea Available                                 PlotHelper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Anchor adequacy      TRUE plot(anchor_review, type = "issue_counts")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Wave-level drift      TRUE                plot(drift, type = "drift")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Screened chain      TRUE                plot(chain, type = "chain")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                            Trigger</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                            Use when anchor issues or overlap warnings are present.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Use when fitted waves show flagged drift or thin retained common-element support.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Use when adjacent links show thin support or large residual spread.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Detailed risk values, grouped views and support information remain in the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   returned review tables.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Review anchor overlap, fitted-wave drift and adjacent-link residuals</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    together before comparing results across administrations.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Drift or limited-overlap flags identify comparisons to investigate; they do</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    not establish that the measurement scale has changed.</span>
 <span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">top_linking_risks</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 20</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   RiskID     Area  SourceFamily SourceTable SourceRowKey AdministrationID WaveID</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> thin_link… post… thin_link_s… drift$comm… Criterion::… <span style="color: #BB0000;">NA</span>               Wave2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> thin_link… post… thin_link_s… drift$comm… Rater::Wave2 <span style="color: #BB0000;">NA</span>               Wave2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> chain_sup… chai… equating_ch… chain$links Wave1 -&gt; Wa… <span style="color: #BB0000;">NA</span>               <span style="color: #BB0000;">NA</span>    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 13 more variables: LinkKey &lt;chr&gt;, Facet &lt;chr&gt;, Level &lt;chr&gt;, Wave &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Link &lt;chr&gt;, Signal &lt;chr&gt;, Magnitude &lt;dbl&gt;, SeverityGroup &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ReviewPriority &lt;dbl&gt;, Guidance &lt;chr&gt;, PrimaryPlotRoute &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   SupportStatus &lt;chr&gt;, RiskRank &lt;int&gt;</span></span>
 <span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">group_view_index</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   View              Rows Description                                          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> by_wave              1 Concentrated linking risks by fitted wave.           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> by_link              1 Concentrated linking risks by adjacent screened link.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> by_facet             2 Concentrated linking risks by facet.                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> by_source_family     2 Volume and priority by evidence source family.       </span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

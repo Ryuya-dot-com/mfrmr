@@ -12,17 +12,18 @@ assumptions visible.
 - **Turn an analysis into a report.**
   [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
   now brings generalizability and decision studies (G/D studies),
-  anchor/linking reviews, specified bias analyses and model-choice
-  reviews into the shared reporting workflow. Editable templates help
-  you write the Methods and Results, and exports keep the underlying
-  tables and analysis. You can record what high scores mean alongside
-  the results. See [reporting
+  anchor/linking reviews, individual or batch bias screens and
+  model-choice reviews into the shared reporting workflow. Editable
+  templates help you write the Methods and Results, and exports keep the
+  underlying tables and analysis. You can record what high scores mean
+  alongside the results. See [reporting
   examples](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-reporting-and-apa.html).
 - **Compare plans before collecting more ratings.** Examine how
   specified rater/task counts affect the precision of a score, weighted
   composite or difference. G/D-study reports connect sources of
-  variation to plan tables, figures and supported intervals. See
-  [assessment
+  variation to plan tables, figures and supported intervals. Simulation
+  recommendations now show their target, criteria and candidate outcomes
+  in summaries, plots and reports. See [assessment
   planning](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gtheory.html).
 - **Find rating patterns that need attention.** Check assignment links
   before fitting, examine observed agreement, and prepare supported
@@ -33,20 +34,21 @@ assumptions visible.
   and [networks and
   reporting](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html).
 
-You can also continue a supported RSM/PCM or single-family GPCM analysis
-in Stan or brms, keeping fixed anchors and choosing explicit priors.
+Continue a default single-family GPCM analysis in Stan while retaining
+its estimated normal population and supported fixed anchors.
 [`export_mfrm_model()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.md)
-writes the code, data and parameter maps; two-family GPCM export
-supports Stan.
+writes the code, data and parameter maps with explicit priors. RSM/PCM
+and fixed-population single-family GPCM also support brms; two-family
+GPCM supports Stan.
 [`read_mfrm_posterior()`](https://ryuya-dot-com.github.io/mfrmr/reference/read_mfrm_posterior.md)
-brings saved summaries back to figures and reports, with credible
-intervals and sampling review retained. See [model
+brings saved summaries, including population mean/SD, back to figures
+and reports with credible intervals and sampling review. Population
+regression remains unsupported. See [model
 export](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.html).
 
-Other additions include automatic integration with a user-set maximum
-and fitting progress for supported MML routes, plus signed agreement
-networks, halo contrasts and optional ERGMs. Two-family GPCM retains
-experimental inference limits. The [GPCM
+Supported MML models can show fitting progress and automatically
+increase numerical integration accuracy up to a user-set maximum.
+Two-family GPCM retains experimental inference limits. The [GPCM
 guide](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html)
 and [detailed
 changes](https://github.com/Ryuya-dot-com/mfrmr/blob/main/inst/NEWS-0.2.4-details.md)

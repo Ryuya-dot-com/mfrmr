@@ -1504,87 +1504,38 @@ coefficient interval coverage.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("confint.mfrm_multivariate_d_study", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 g <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
 d <- mfrm_d_study(g, data.frame(Tasks = c(6, 12)),
   weights = c(V = .5, W = .5))
 ci <- confint(d, assumption = "normal")
 ci[, c("Tasks", "Estimate", "Lower", "Upper", "Status")]
-#>   Tasks  Estimate     Lower     Upper    Status
-#> 1     6 0.6628198 0.1866522 0.9033006 Available
-#> 2    12 0.7972238 0.3145862 0.9491939 Available
 attr(ci, "notes")
-#> [1] "Exact F coverage requires the balanced independent normal-effects model and positive residual variance. It is not distribution robust."                                                                                                                                                                                                                            
-#> [2] "Intervals describe population G for each future count, using uncertainty and degrees of freedom from the source study. They are not Person-rank, pass/fail, Phi or plan-difference intervals."                                                                                                                                                                     
-#> [3] "All counts for this score use the same ratio interval. Do not treat rows as independent or infer a difference from interval overlap."                                                                                                                                                                                                                              
-#> [4] "Intersect the mean-square expectation-ratio interval with R >= 1 before transforming to G. An empty intersection is not zero uncertainty. RawRatioLower/Upper are ratio endpoints, not G endpoints."                                                                                                                                                               
-#> [5] "PointStatus and Status describe separate outputs. A positive-width ratio interval that rounds to identical G endpoints is unavailable on that scale; retained log-ratio bounds may still resolve plan differences. If the base log-ratio width itself rounds away, neither interval is available. SaveRDS() retains fixed weights, assumptions and source context."
 # Optional normal approximation: SE describes the coefficient, not measurement SEM.
 delta_ci <- confint(d, method = "delta", assumption = "normal")
 delta_ci[, c("Tasks", "Estimate", "SE", "Lower", "Upper", "SEStatus")]
-#>   Tasks  Estimate        SE    Lower     Upper  SEStatus
-#> 1     6 0.6628198 0.1597151 0.349784 0.9758555 Available
-#> 2    12 0.7972238 0.1155275 0.570794 1.0236536 Available
 phi_ci <- confint(d, parm = "Phi", assumption = "normal", seed = 1)
 phi_ci[, c("Tasks", "Estimate", "Lower", "Upper", "Status")]
-#>   Tasks  Estimate     Lower     Upper    Status
-#> 1     6 0.6205514 0.1453685 0.8782785 Available
-#> 2    12 0.7658521 0.2538371 0.9351952 Available
 attr(phi_ci, "monte_carlo")$endpoint_bands
-#>   Scenario LowerMCLower LowerMCUpper UpperMCLower UpperMCUpper
-#> 1        1    0.1409362    0.1499983    0.8767140    0.8797482
-#> 2        2    0.2470535    0.2608669    0.9343075    0.9360277
 # How much would G improve by changing from six to twelve tasks?
 change <- confint(d, parm = "G", reference = 1, assumption = "normal")
 change[, c("Tasks", "ReferenceCount", "Estimate", "Lower", "Upper", "Status")]
-#>   Tasks ReferenceCount  Estimate      Lower     Upper    Status
-#> 1    12              6 0.1344041 0.04589323 0.1715729 Available
 # The same planning question for absolute dependability; coverage is approximate.
 phi_change <- confint(d, parm = "Phi", reference = 1, assumption = "normal")
 phi_change[, c("Tasks", "ReferenceCount", "Estimate", "Lower", "Upper", "Status")]
-#>   Tasks ReferenceCount  Estimate      Lower     Upper    Status
-#> 1    12              6 0.1453008 0.05691668 0.1715729 Available
 attr(phi_change, "monte_carlo")$endpoint_bands
-#>   Scenario LowerMCLower LowerMCUpper UpperMCLower UpperMCUpper
-#> 1        2   0.05622835   0.05768965    0.1715729    0.1715729
 # Sampling uncertainty in measurement SEM, rather than in G or Phi.
 sem_ci <- confint(d, parm = "AbsoluteSEM", assumption = "normal")
 sem_ci[, c("Tasks", "Estimate", "Lower", "Upper", "Method", "Status")]
-#>   Tasks  Estimate     Lower     Upper                         Method    Status
-#> 1     6 0.4585605 0.3892449 0.7006264 Graybill-Wang MLS SEM interval Available
-#> 2    12 0.3242513 0.2752377 0.4954177 Graybill-Wang MLS SEM interval Available
 sem_change <- confint(d, parm = "RelativeSEM", reference = 1,
                       assumption = "normal")
 sem_change[, c("Tasks", "Estimate", "Lower", "Upper", "Status")]
-#>   Tasks   Estimate      Lower      Upper    Status
-#> 1    12 -0.1225044 -0.1542971 -0.1016098 Available
 sem_plot <- plot(d, type = "sem", metric = "AbsoluteSEM", intervals = TRUE,
                  assumption = "normal", draw = FALSE)
 plot_data(sem_plot, "notes")
-#>           Type
-#> 1     subtitle
-#> 2      caption
-#> 3  uncertainty
-#> 4  uncertainty
-#> 5  uncertainty
-#> 6  uncertainty
-#> 7  uncertainty
-#> 8  uncertainty
-#> 9  uncertainty
-#> 10 uncertainty
-#> 11 uncertainty
-#>                                                                                                                                                                                                                                                                                                                                       Text
-#> 1                                                                                                                                                                                                                                                 Future complete crossed designs | Saved coefficient intervals | Source-study uncertainty
-#> 2                                                                                                                                                                                                                                                                                       Points are requested scenarios; lines are guides. 
-#> 3                                                                                                                                                                                                                                                                           Nominal 95% intervals; method: Graybill-Wang MLS SEM interval.
-#> 4                                                  Ribbons connect saved endpoints at requested counts; intermediate plans are not evaluated. Isolated intervals use vertical segments. Open points have no interval; gaps are not interpolated. Inspect unavailable_intervals and the saved interval objects for reasons and diagnostics.
-#> 5                                                                      Ribbons do not establish simultaneous coverage across scores or metrics. Any joint coverage across plans depends on the interval method and its stated model; drawing a band adds no coverage guarantee. Interval overlap does not test a score or plan difference.
-#> 6                                                                                                                           Intervals quantify sampling uncertainty in population measurement SEM, not intervals for Person scores. Source variance components are combined before forming an interval; component endpoints are not added.
-#> 7                                                                            One contributing mean square uses a chi-square interval; positive sums use Graybill-Wang MLS and signed sums use Ting MLS. Square-root transformation preserves the underlying variance-interval coverage; it does not make MLS exact or distribution robust.
-#> 8                                                                                                           Intervals are pointwise under independent normal random effects and fixed score weights. They are not generally simultaneous across plans or scores. Missing/empty intervals and negative component estimates remain explicit.
-#> 9                                                                                                                ErrorVariance, ErrorVarianceSE and RawVarianceLower/Upper have squared score units; Lower/Upper and Estimate have score units. A negative error-variance estimate can leave a point unavailable while an interval exists.
-#> 10 The nonnegative variance-space intersection is transformed before drawing the SEM interval. If all contributing mean squares are zero, the interval is unavailable; a zero SE is not proof of exact population knowledge. Positive intervals whose width or endpoints cannot be represented remain unavailable with an explicit Status.
-#> 11                                                                          In a limited normal-model screen, nominal 95% coverage for positive error variances ranged from 93.45% to 99.00% (2,000 replications per source condition); approximate coverage is not assured. More future ratings do not increase source-study information.
 # Different raters serve each task; retain three raters per task.
 data("mfrmr_example_gtheory_nested", package = "mfrmr")
 gn <- mfrm_g_study(mfrmr_example_gtheory_nested,
@@ -1593,23 +1544,7 @@ dn <- mfrm_d_study(gn,
   data.frame(Raters = 3, Tasks = c(6, 12)))
 nested_change <- confint(dn, parm = "G", reference = 1, assumption = "normal")
 nested_change[, c("Raters", "Tasks", "ReferenceCount", "Estimate", "Lower", "Upper")]
-#>   Raters Tasks ReferenceCount   Estimate      Lower     Upper
-#> 1      3    12              6 0.08205353 0.04620405 0.1254214
 attr(nested_change, "nesting_context")
-#> $child
-#> [1] "Rater"
-#> 
-#> $parent
-#> [1] "Task"
-#> 
-#> $source_children_per_parent
-#> [1] 3
-#> 
-#> $future
-#>   Scenario ChildrenPerParent Parents
-#> 1        1                 3       6
-#> 2        2                 3      12
-#> 
 # Incomplete one-facet ratings: relative SEM without likelihood fitting.
 observed <- tasks[(tasks$Person + tasks$Task) %% 3 != 0, ]
 sparse_g <- mfrm_g_study(observed, "V", rater = NULL, method = "minque0")
@@ -1617,28 +1552,15 @@ sparse_d <- mfrm_d_study(sparse_g, data.frame(Tasks = c(6, 12)))
 residual_sem <- confint(sparse_d, parm = "RelativeSEM",
   method = "residual_contrast", assumption = "normal")
 residual_sem[, c("Tasks", "Estimate", "IntervalCenter", "Lower", "Upper", "Status")]
-#>   Tasks  Estimate IntervalCenter     Lower     Upper
-#> 1     6 0.3373204      0.3905818 0.3063166 0.5391625
-#> 2    12 0.2385215      0.2761830 0.2165986 0.3812455
-#>                        Status
-#> 1 Exact normal-model interval
-#> 2 Exact normal-model interval
 residual_change <- confint(sparse_d, parm = "RelativeSEM", reference = 1,
   method = "residual_contrast", assumption = "normal")
 residual_change[, c("Tasks", "Estimate", "IntervalCenter", "Lower", "Upper")]
-#>   Tasks    Estimate IntervalCenter     Lower       Upper
-#> 1    12 -0.09879884     -0.1143987 -0.157917 -0.08971806
 # Relative G also uses Person variation; normal Person effects are required.
 spectral_g <- confint(sparse_d, method = "spectral_f", assumption = "normal")
 spectral_g[, c("Tasks", "Estimate", "Lower", "Upper", "Status")]
-#>   Tasks  Estimate Lower     Upper        Status
-#> 1     6 0.8353911     0 0.9340280 Includes zero
-#> 2    12 0.9103140     0 0.9658888 Includes zero
 spectral_change <- confint(sparse_d, method = "spectral_f", reference = 1,
   assumption = "normal")
 spectral_change[, c("Tasks", "Estimate", "Lower", "Upper")]
-#>   Tasks   Estimate Lower     Upper
-#> 1    12 0.07492288     0 0.1715729
 # A separate experimental REML model can address G/Phi or absolute SEM.
 if (requireNamespace("lme4", quietly = TRUE) && requireNamespace("minqa", quietly = TRUE)) {
   profile_ci <- confint(sparse_d, method = "reml_profile", assumption = "normal")
@@ -1666,23 +1588,10 @@ future <- mfrm_d_study(crossed,
 crossed_ci <- confint(future, parm = "Phi", assumption = "normal")
 crossed_ci[, c("Raters", "Tasks", "Estimate", "Lower", "Upper",
                "FormulaComplete", "Status")]
-#>   Raters Tasks  Estimate     Lower     Upper FormulaComplete           Status
-#> 1      2     6 0.3646152 0.1686214 0.5386395            TRUE Computed MLS set
-#> 2      4    12 0.5490169 0.2942078 0.7150933            TRUE Computed MLS set
 attr(crossed_ci, "notes")
-#> [1] "Approximate intervals for individual G/Phi targets from a balanced Person-by-two-crossed-random-facet source under independent normal effects. Select a prespecified score or composite. These are not nested, incomplete-source or plan-difference intervals."                                                                                                                              
-#> [2] "For each candidate coefficient, invert the unrestricted Ting MLS interval for its signed linear null in the expected mean squares. Source degrees of freedom determine the asymmetric chi-square/F corrections. Original ANOVA estimates and point failures are preserved; no component clipping or fitted-nuisance bootstrap is used."                                                      
-#> [3] "The returned bounds enclose all retained pieces. FormulaComplete is FALSE if a squared MLS width is negative and therefore undefined for some candidates. Those candidates are conservatively retained, with their ranges in diagnostics; the width is not replaced by zero. NumericalComplete concerns the inversion, while Available concerns returned bounds. Neither certifies coverage."
-#> [4] "When root separation cannot be represented on the coefficient scale, bounds are unavailable with an explicit Status and NumericalComplete=FALSE; the point estimate remains. A genuine parameter-space boundary is not itself a failure."                                                                                                                                                    
-#> [5] "Small sources can give very wide or full [0,1] intervals, including with large proposed future counts. More future ratings do not add source information. Limited normal-model evaluations support this approximation but do not establish uniform finite-sample coverage; see the help for results and scope."                                                                              
-#> [6] "The reported sampling evaluations concern 95% intervals. At very low requested confidence levels, squared chi-square corrections can lose their direction; the two-term F limiting identity is not guaranteed there."                                                                                                                                                                        
-#> [7] "Intervals are pointwise for one prespecified score and plan. Curve ribbons add no simultaneous coverage, and interval overlap does not test a plan difference. An empty set is distinct from zero uncertainty or a failed numerical calculation. Save the complete result with saveRDS() to retain notes and diagnostics without recalculation."                                             
 # The score method remains an explicit experimental comparison for G.
 score_ci <- confint(future, method = "score", assumption = "normal")
 score_ci[, c("Scenario", "Estimate", "Lower", "Upper", "Empty", "Status")]
-#>   Scenario  Estimate     Lower     Upper Empty                       Status
-#> 1        1 0.5607879 0.4224802 0.7242602 FALSE Computed score approximation
-#> 2        2 0.7312265 0.6083311 0.8485110 FALSE Computed score approximation
 # Vary task counts within each rater count to obtain planning-curve ribbons.
 curve_plans <- mfrm_d_study(crossed,
   expand.grid(Raters = c(2, 4), Tasks = c(3, 6, 12)),
@@ -1690,34 +1599,6 @@ curve_plans <- mfrm_d_study(crossed,
 score_curve <- plot(curve_plans, metric = "G", intervals = TRUE,
   method = "score", assumption = "normal", draw = FALSE)
 plot_data(score_curve, "notes")
-#>           Type
-#> 1     subtitle
-#> 2      caption
-#> 3  uncertainty
-#> 4  uncertainty
-#> 5  uncertainty
-#> 6  uncertainty
-#> 7  uncertainty
-#> 8  uncertainty
-#> 9  uncertainty
-#> 10 uncertainty
-#> 11 uncertainty
-#> 12 uncertainty
-#> 13 uncertainty
-#>                                                                                                                                                                                                                                                                                                                                                                        Text
-#> 1                                                                                                                                                                                                                                                                                  Future complete crossed designs | Saved coefficient intervals | Source-study uncertainty
-#> 2                                                                                                                                                                                                                                                                                                                        Points are requested scenarios; lines are guides. 
-#> 3                                                                                                                                                                                                                                                                                                              Nominal 95% intervals; method: Extended score (approximate).
-#> 4                                                                                   Ribbons connect saved endpoints at requested counts; intermediate plans are not evaluated. Isolated intervals use vertical segments. Open points have no interval; gaps are not interpolated. Inspect unavailable_intervals and the saved interval objects for reasons and diagnostics.
-#> 5                                                                                                       Ribbons do not establish simultaneous coverage across scores or metrics. Any joint coverage across plans depends on the interval method and its stated model; drawing a band adds no coverage guarantee. Interval overlap does not test a score or plan difference.
-#> 6                                          Explicit experimental score intervals for G from a balanced Person-by-two-crossed-random-facet source under independent normal effects and positive mean-square expectations. Select one score or prespecified composite. Not a Phi, SEM, nested, incomplete-source or plan-difference method; it is never an automatic default.
-#> 7                                                                   Estimate and PointStatus retain the original ANOVA D-study. Nuisance component values used by the score may be negative provided the restricted marginal covariance remains positive definite; these computational values do not replace the reported components. No component is individually clipped.
-#> 8                                                     The score uses expected efficient information after solving the null nuisance equations, then an approximate chi-square(1) cutoff. Verified root residuals are separate from optimizer status labels and do not prove global optimality or asymptotic consistency. More future ratings do not add source information.
-#> 9  Limited normal-model evaluation with 360 independent sources per condition gave true-value inclusion of 93.1-97.8% (Monte Carlo SE 0.8-1.3 percentage points). These are truth-constraint checks, not full endpoint coverage or a guarantee of 95% coverage. The method is not distribution robust; few source Persons can produce wide intervals or poor approximation.
-#> 10                                      The inversion compares finite grids and checks cutoff crossings, retaining accepted pieces and their envelope. It cannot exclude narrower undetected pieces. NumericalComplete records this numerical check, not validated coverage. Empty identifies a resolved empty scanned set, not zero uncertainty or an estimated G of zero.
-#> 11                                                                                  An unresolved chi-square cutoff leaves missing bounds with NumericalComplete = FALSE and Empty = FALSE, retaining the original point and diagnostic cutoff/endpoint tolerances. This is arithmetic precision control, not a minimum sample size or evidence of an empty confidence set.
-#> 12                                                                                    An empty set or failed numerical check leaves Lower/Upper unavailable. CandidateLower/Upper and diagnostics retain any exploratory bounds; failed candidates are not accepted intervals. Available means that nonempty finite bounds were returned. No automatic fallback is applied.
-#> 13                                                                                                          Intervals are pointwise for a fixed score/composite and future plan; their overlap does not test a plan difference. Save the complete result with saveRDS(). Existing forests and curve ribbons use saved bounds and preserve missing points without refitting.
 if (requireNamespace("lpSolve", quietly = TRUE)) {
   comparison <- confint(future, parm = "Phi", assumption = "normal",
     method = c("mls", "approximate_f", "mean_square_region"))
@@ -1733,6 +1614,5 @@ if (requireNamespace("lpSolve", quietly = TRUE)) {
   nested_region[, c("Raters", "Tasks", "Estimate", "Lower", "Upper", "Status")]
   attr(nested_region, "reference")$counts
 }
-#>   Raters Tasks
-#> 1      3     6
+} # }
 ```

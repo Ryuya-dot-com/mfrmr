@@ -190,6 +190,9 @@ limitations.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("mml_quadrature_sensitivity", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -200,67 +203,7 @@ sensitivity <- mml_quadrature_sensitivity(
   fit, toy, quad_points = c(31, 41), adaptive_quad_points = c(31, 61)
 )
 summary(sensitivity)
-#> RSM-MML quadrature sensitivity summary
-#>  ReferenceNodes ComparedGrids AllEstimationConverged AllHessiansFullRank
-#>              31             2                   TRUE                TRUE
-#>  MaxNLLAbsChangePerPerson MaxMeasurementParameterAbsChange MaxSlopeAbsChange
-#>                   0.00039                          0.00215                NA
-#>  MaxPopulationSDAbsChange MaxProbabilityAbsChange MaxEAPAbsChange
-#>                         0                 0.00072         0.00756
-#>  MaxPosteriorSDAbsChange
-#>                  0.01155
-#> 
-#> Grid comparisons
-#>  Model ReferenceNodes Nodes IsReference NLLChangePerPerson
-#>    RSM             31    31        TRUE            0.00000
-#>    RSM             31    41       FALSE            0.00039
-#>  NLLAbsChangePerPerson MeasurementParameterMaxAbsChange SlopeMaxAbsChange
-#>                0.00000                          0.00000                NA
-#>                0.00039                          0.00215                NA
-#>  RawSlopeSEMaxAbsChange SlopeIntervalMaxAbsChange
-#>                      NA                        NA
-#>                      NA                        NA
-#>  SlopeIntervalEligibilityChanged PopulationSDAbsChange
-#>                               NA                     0
-#>                               NA                     0
-#>  RawPopulationSDSEAbsChange ProbabilityMaxAbsChange EAPMaxAbsChange
-#>                          NA                 0.00000         0.00000
-#>                          NA                 0.00072         0.00756
-#>  PosteriorSDMaxAbsChange
-#>                  0.00000
-#>                  0.01155
-#> 
-#> Fixed-parameter integration review (adaptive minus fixed)
-#>  FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange
-#>          31            31      48           0             0.010239937
-#>          41            31      48           0             0.002018021
-#>          31            61      48           0             0.010239937
-#>          41            61      48           0             0.002018021
-#>  MaxAbsEAPChange MaxAbsSDChange
-#>      0.009191803    0.015226750
-#>      0.002018215    0.003787628
-#>      0.009191803    0.015226750
-#>      0.002018215    0.003787628
-#> Inspect $quadrature_review for adaptive-order changes and unavailable rows.
-#> No automatic stability classification or readiness change is applied.
 # Preserve small numerical differences when preparing the sensitivity table.
 apa_table(sensitivity, digits = 5)
-#>  Model ReferenceNodes Nodes IsReference NLLChangePerPerson
-#>    RSM             31    31        TRUE            0.00000
-#>    RSM             31    41       FALSE            0.00039
-#>  NLLAbsChangePerPerson MeasurementParameterMaxAbsChange SlopeMaxAbsChange
-#>                0.00000                          0.00000                NA
-#>                0.00039                          0.00215                NA
-#>  RawSlopeSEMaxAbsChange SlopeIntervalMaxAbsChange
-#>                      NA                        NA
-#>                      NA                        NA
-#>  SlopeIntervalEligibilityChanged PopulationSDAbsChange
-#>                               NA                     0
-#>                               NA                     0
-#>  RawPopulationSDSEAbsChange ProbabilityMaxAbsChange EAPMaxAbsChange
-#>                          NA                 0.00000         0.00000
-#>                          NA                 0.00072         0.00756
-#>  PosteriorSDMaxAbsChange
-#>                  0.00000
-#>                  0.01155
+} # }
 ```

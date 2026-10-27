@@ -131,10 +131,13 @@ covariance.
 ## Examples
 
 ``` r
-ratings <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+# Saved synthetic JML/RSM analysis of example_bias.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+# Group labels from the same synthetic data used for the saved fit.
+ratings <- load_mfrmr_data(example_fit$dataset)
 dff <- analyze_dff(fit, diagnostics = diag,
                    facet = "Rater", group = "Group", data = ratings)
 unique(dff$dif_table$ClassificationSystem)

@@ -127,7 +127,11 @@ text, and to check duplicate-ID / non-numeric-estimate pre-review flags.
 ## Examples
 
 ``` r
-bundle <- build_conquest_overlap_bundle()
+# Reuse the synthetic fit; normalize the extracted tables below.
+# Regeneration recipe: examples/measurement-fits.R in the package.
+fit <- readRDS(system.file("examples", "measurement-fits.rds",
+  package = "mfrmr", mustWork = TRUE))$conquest_quick
+bundle <- build_conquest_overlap_bundle(fit = fit)
 tmp_dir <- tempdir()
 pop_path <- file.path(tmp_dir, "cq_pop.csv")
 item_path <- file.path(tmp_dir, "cq_item.tsv")
@@ -190,19 +194,19 @@ summary(normalized)$normalization_scope
 review <- review_conquest_overlap(bundle, normalized)
 summary(review)$summary
 #>   PopulationParametersExpected PopulationParametersCompared PopulationMae
-#> 1                            3                            2  3.330669e-16
+#> 1                            3                            2   1.94289e-16
 #>   PopulationMaxAbsDifference PopulationMaxAbsParameter InterceptCompared
-#> 1               4.440892e-16                    sigma2             FALSE
+#> 1               3.330669e-16                         X             FALSE
 #>   InterceptAlignedDifference ItemRowsExpected ItemRowsCompared
 #> 1                         NA                6                6
 #>   ItemCenteringRows ItemCenteredCorrelation ItemCenteredMae
-#> 1                 6                       1    1.262879e-15
+#> 1                 6                       1    6.591949e-16
 #>   ItemCenteredMaxAbsDifference ItemCenteredMaxAbsItem CaseRowsExpected
-#> 1                 3.774758e-15                   I006               60
+#> 1                 1.998401e-15                   I006               60
 #>   CaseRowsCompared CaseCorrelation CaseMae CaseMaxAbsDifference   CaseRawMae
-#> 1                0              NA      NA                   NA 6.632137e-16
+#> 1                0              NA      NA                   NA 7.267335e-16
 #>   CaseRawMaxAbsDifference LocationShift LocationStatus ExternalEstimationStatus
-#> 1            4.884981e-15            NA        unknown                  unknown
+#> 1            4.662937e-15            NA        unknown                  unknown
 #>   ExternalPrecisionStatus AttentionItems AttentionMissing AttentionDuplicate
 #> 1            not_assessed              1                0                  0
 #>   AttentionNonNumeric AttentionUnexpected

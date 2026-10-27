@@ -563,8 +563,8 @@ data.frame(
                     sum(new_raters$Estimate[new_raters$Level != "R01"]))
 )
 #>   Convention FixedR01 OtherRaterSum
-#> 1  remainder      0.7           0.0
-#> 2      facet      0.7          -0.7
+#> 1  remainder      0.7  1.387779e-17
+#> 2      facet      0.7 -7.000000e-01
 ```
 
 Both fits keep R01 at 0.70. The remaining raters sum to zero in the
@@ -2072,24 +2072,57 @@ cat(dr$narrative)
 ## 6. Model-estimated facet interactions
 
 Residual bias and DFF tools screen for unusual cells after fitting the
-additive model. When the interaction hypothesis is specified in advance,
-use `facet_interactions` to estimate the named two-way non-person facet
-interaction in the model likelihood.
+additive model. For example, ask whether a rater scores particular
+criteria unexpectedly high or low after accounting for the main facet
+effects.
+[`estimate_all_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_all_bias.md)
+screens all non-Person facet pairs by default; specify `pairs` to limit
+the search. It holds the calibration and Person estimates fixed, so
+these cell shifts differ from jointly estimated interaction effects.
 
 ``` r
 
+ratings <- load_mfrmr_data("example_bias")
 fit_add <- fit_mfrm(
-  bias_df,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  model = "RSM",
-  quad_points = 7
+  ratings, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", model = "RSM", quad_points = 31
 )
+screens <- estimate_all_bias(fit_add)
+report <- mfrm_report(screens, study_context = c(
+  question = "Which rater-criterion cells need substantive review?",
+  score_direction = "Higher coded scores indicate better performance"
+))
+report$tables$overview
+head(report$tables$bias_cells)
+plot(screens)
+# Keep complete tables, including failed pairs and unavailable cells.
+export_summary_appendix(report, output_dir = "bias-review")
+```
 
+The signed `Bias Size` describes a shift in expected **coded** scores;
+positive does not necessarily mean favorable. Replace the declared
+direction with your rubric’s actual meaning. Report the searched
+interactions, exclusions, cell counts and unavailable results, rather
+than only flagged cells. The screening statistics omit calibration and
+Person uncertainty and have no collection-wide multiplicity control.
+Different pairs reuse observations; their cell counts must not be summed
+as the study sample size. This is a FACETS-like conditional exploration
+workflow, not a claim of identical algorithms, probabilities or
+calibration conventions. See the [FACETS bias-estimation
+description](https://winsteps.com/facetman/biasestimation.htm).
+
+When the interaction hypothesis is specified in advance, use
+`facet_interactions` to estimate the named two-way non-person facet
+interaction in the model likelihood. An interaction selected after
+inspecting these screens can also be fitted, but its same-data
+comparison remains exploratory: the LRT p-value does not account for
+that selection.
+
+``` r
+
+# Continue with ratings and fit_add from the preceding block.
 fit_interaction <- fit_mfrm(
-  bias_df,
+  ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
@@ -2100,7 +2133,14 @@ fit_interaction <- fit_mfrm(
 )
 
 interaction_effect_table(fit_interaction)
-compare_mfrm(Additive = fit_add, Interaction = fit_interaction, nested = TRUE)
+comparison <- compare_mfrm(Additive = fit_add, Interaction = fit_interaction,
+  labels = c("Additive", "Interaction"), nested = TRUE)
+comparison
+model_report <- mfrm_report(build_model_choice_review(
+  Additive = fit_add, Interaction = fit_interaction
+))
+model_report$tables$comparison_table
+# The nested LRT remains in comparison$lrt; the review above reports ICs.
 ```
 
 Interpretation:
@@ -2111,6 +2151,26 @@ Interpretation:
 - Inspect sparse interaction cells before reporting substantive claims.
 - Keep this route separate from residual screening with
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
+- Match observations, score coding, constraints, population
+  specification and integration settings. Both example fits use 31
+  points; that is the minimum comparison gate, not proof of sufficient
+  integration accuracy. Check stability of likelihood differences and
+  conclusions with a finer common grid when needed.
+- AIC, BIC and SABIC compare eligible candidate models; BIC uses the
+  number of Persons, not rating rows. Ranking and nested-LRT eligibility
+  are separate. ConQuest also reports information criteria, but
+  cross-software comparisons require matching likelihoods and parameter
+  counts, not just table labels. See [ConQuest
+  commands](https://conquestmanual.acer.org/s4-00.html).
+- Joint RSM/PCM interactions use direct optimization by default. With a
+  fixed standard-normal population and fixed quadrature,
+  `mml_engine = "hybrid"` initializes the fit with EM before direct
+  finishing; `"em"` retains the EM solution with its common
+  terminal-gradient review. Use `mml_starts` to examine specified
+  initial values, and inspect `summary(fit)$starting_values` and fit
+  readiness before comparing models. EM can be slower and does not
+  resolve sparse-design identification or insufficient quadrature. The
+  conditional cell screen itself is not EM.
 
 ## 7. Multi-wave anchor review
 

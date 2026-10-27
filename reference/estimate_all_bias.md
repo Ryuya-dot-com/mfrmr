@@ -181,10 +181,23 @@ The returned object is a bundle-like list with class
     [`plot.mfrm_bias_collection()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_bias_collection.md)
     for the overview or a named pair.
 
-4.  Pass the resulting `by_pair` list into
+4.  Use `report <- mfrm_report(bias_all)` to retain the full search,
+    failed pairs and all cells in one report;
+    [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
+    saves its tables. Supply `study_context` to state rubric endpoints
+    and score direction. The `by_pair` list also feeds
     [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
     or
     [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md).
+
+5.  For a substantively justified joint interaction model, use
+    `facet_interactions` in
+    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+    and
+    [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
+    on compatible fits. Selecting terms from these screens makes
+    same-data comparisons exploratory; it does not create a prespecified
+    confirmatory test.
 
 ## Saved-result reuse
 
@@ -198,173 +211,27 @@ for migration instructions.
 ## See also
 
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
+[`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md),
 [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
 [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md)
 
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("estimate_all_bias", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML")
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 bias_all <- estimate_all_bias(fit, diagnostics = diag)
 summary(bias_all)
-#> Exploratory bias screens
-#>        Interaction Rows Points ScreenAvailable ScreenUnavailable ScreenPositive
-#>  Rater x Criterion   16     16              16                 0              0
-#>  MeanAbsBias    Status
-#>       0.0797 available
-#> 
-#> Conditional plug-in screens: calibration and Person uncertainty are held fixed; no formal inference or collection-wide multiplicity control.
-#> Positive bias increases expected coded scores. Review signed magnitude, observed counts and unavailable cells before interpreting a flag.
-#> Pairs reuse observations. Do not sum cell counts across pairs as a study sample size; no flags does not establish no interaction.
 head(summary(bias_all)$cells)
-#>         Interaction Sq Observd Score Expctd Score Observd Count Obs-Exp Average
-#> 1 Rater x Criterion  1           120     118.6394            48      0.02834529
-#> 2 Rater x Criterion  2           134     136.3289            48     -0.04851837
-#> 3 Rater x Criterion  3           126     122.7315            48      0.06809366
-#> 4 Rater x Criterion  4           121     123.4956            48     -0.05199205
-#> 5 Rater x Criterion  5           120     122.2386            48     -0.04663752
-#> 6 Rater x Criterion  6           142     139.7255            48      0.04738465
-#>                                 ExpectedScoreBasis AfterBiasExpectedScore
-#> 1 Main-analysis expectations before the cell shift               120.0000
-#> 2 Main-analysis expectations before the cell shift               134.0000
-#> 3 Main-analysis expectations before the cell shift               126.0003
-#> 4 Main-analysis expectations before the cell shift               121.0000
-#> 5 Main-analysis expectations before the cell shift               120.0000
-#> 6 Main-analysis expectations before the cell shift               142.0000
-#>   AfterBiasObsExpAverage   Bias Size PrimaryBias ExtremeAdjustment      S.E.
-#> 1          -3.443359e-08  0.04725162  0.04725162                 0 0.1863585
-#> 2           5.523612e-08 -0.08427419 -0.08427419                 0 0.1896485
-#> 3          -6.110577e-06  0.11397626  0.11397626                 0 0.1870010
-#> 4          -3.077194e-07 -0.08678193 -0.08678193                 0 0.1863890
-#> 5          -9.290138e-08 -0.07778079 -0.07778079                 0 0.1863585
-#> 6           2.233726e-07  0.08541203  0.08541203                 0 0.1946505
-#>            t d.f.     Prob. InferenceTier SupportsFormalInference
-#> 1  0.2535522   47 0.8009474     screening                   FALSE
-#> 2 -0.4443705   47 0.6588142     screening                   FALSE
-#> 3  0.6094954   47 0.5451315     screening                   FALSE
-#> 4 -0.4655958   47 0.6436552     screening                   FALSE
-#> 5 -0.4173718   47 0.6783070     screening                   FALSE
-#> 6  0.4387969   47 0.6628193     screening                   FALSE
-#>   FormalInferenceEligible PrimaryReportingEligible   ReportingUse
-#> 1                   FALSE                    FALSE screening_only
-#> 2                   FALSE                    FALSE screening_only
-#> 3                   FALSE                    FALSE screening_only
-#> 4                   FALSE                    FALSE screening_only
-#> 5                   FALSE                    FALSE screening_only
-#> 6                   FALSE                    FALSE screening_only
-#>                           SEBasis
-#> 1 conditional plug-in information
-#> 2 conditional plug-in information
-#> 3 conditional plug-in information
-#> 4 conditional plug-in information
-#> 5 conditional plug-in information
-#> 6 conditional plug-in information
-#>                                                   DFBasis DFUnrounded DFDisplay
-#> 1 frequency-weighted observed count minus 1 approximation          47        47
-#> 2 frequency-weighted observed count minus 1 approximation          47        47
-#> 3 frequency-weighted observed count minus 1 approximation          47        47
-#> 4 frequency-weighted observed count minus 1 approximation          47        47
-#> 5 frequency-weighted observed count minus 1 approximation          47        47
-#> 6 frequency-weighted observed count minus 1 approximation          47        47
-#>   StatisticLabel   ProbabilityMetric
-#> 1    screening t screening tail area
-#> 2    screening t screening tail area
-#> 3    screening t screening tail area
-#> 4    screening t screening tail area
-#> 5    screening t screening tail area
-#> 6    screening t screening tail area
-#>                                                           ProbabilityReference
-#> 1 Two-sided Student t at continuous count-minus-one df; calibration held fixed
-#> 2 Two-sided Student t at continuous count-minus-one df; calibration held fixed
-#> 3 Two-sided Student t at continuous count-minus-one df; calibration held fixed
-#> 4 Two-sided Student t at continuous count-minus-one df; calibration held fixed
-#> 5 Two-sided Student t at continuous count-minus-one df; calibration held fixed
-#> 6 Two-sided Student t at continuous count-minus-one df; calibration held fixed
-#>       ProbabilityStatus
-#> 1 available_conditional
-#> 2 available_conditional
-#> 3 available_conditional
-#> 4 available_conditional
-#> 5 available_conditional
-#> 6 available_conditional
-#>                                                                                                     ProbabilityReason
-#> 1 The tail conditions on the fitted calibration; count-minus-one is a screening approximation, not a calibrated test.
-#> 2 The tail conditions on the fitted calibration; count-minus-one is a screening approximation, not a calibrated test.
-#> 3 The tail conditions on the fitted calibration; count-minus-one is a screening approximation, not a calibrated test.
-#> 4 The tail conditions on the fitted calibration; count-minus-one is a screening approximation, not a calibrated test.
-#> 5 The tail conditions on the fitted calibration; count-minus-one is a screening approximation, not a calibrated test.
-#> 6 The tail conditions on the fitted calibration; count-minus-one is a screening approximation, not a calibrated test.
-#>       Infit    Outfit ObsN OptimizationStatus OptimizationDetail BiasStatus
-#> 1 1.0488661 1.0256516   48                 ok               <NA>   interior
-#> 2 0.7948752 0.7876311   48                 ok               <NA>   interior
-#> 3 1.0859087 1.0895050   48                 ok               <NA>   interior
-#> 4 0.9546214 0.9449286   48                 ok               <NA>   interior
-#> 5 0.8723443 0.8524407   48                 ok               <NA>   interior
-#> 6 0.9824756 1.2850242   48                 ok               <NA>   interior
-#>   ConditionalInformation          ScreenStatus
-#> 1               28.79396 available_conditional
-#> 2               27.80361 available_conditional
-#> 3               28.59645 available_conditional
-#> 4               28.78455 available_conditional
-#> 5               28.79396 available_conditional
-#> 6               26.39301 available_conditional
-#>                                                                                   ScreenReason
-#> 1 Conditional information uses all cell rows; calibration and Person uncertainty are excluded.
-#> 2 Conditional information uses all cell rows; calibration and Person uncertainty are excluded.
-#> 3 Conditional information uses all cell rows; calibration and Person uncertainty are excluded.
-#> 4 Conditional information uses all cell rows; calibration and Person uncertainty are excluded.
-#> 5 Conditional information uses all cell rows; calibration and Person uncertainty are excluded.
-#> 6 Conditional information uses all cell rows; calibration and Person uncertainty are excluded.
-#>   FitResponseRows FitAvailableRows FitUnavailableRows             FitStatus
-#> 1              48               48                  0 available_descriptive
-#> 2              48               48                  0 available_descriptive
-#> 3              48               48                  0 available_descriptive
-#> 4              48               48                  0 available_descriptive
-#> 5              48               48                  0 available_descriptive
-#> 6              48               48                  0 available_descriptive
-#>                                                                              FitReason
-#> 1 Descriptive mean squares; their calculation does not establish inferential validity.
-#> 2 Descriptive mean squares; their calculation does not establish inferential validity.
-#> 3 Descriptive mean squares; their calculation does not establish inferential validity.
-#> 4 Descriptive mean squares; their calculation does not establish inferential validity.
-#> 5 Descriptive mean squares; their calculation does not establish inferential validity.
-#> 6 Descriptive mean squares; their calculation does not establish inferential validity.
-#>   InteractionFacets InteractionOrder InteractionMode Facet1 Facet1_Level
-#> 1 Rater x Criterion                2        pairwise  Rater          R01
-#> 2 Rater x Criterion                2        pairwise  Rater          R01
-#> 3 Rater x Criterion                2        pairwise  Rater          R01
-#> 4 Rater x Criterion                2        pairwise  Rater          R01
-#> 5 Rater x Criterion                2        pairwise  Rater          R02
-#> 6 Rater x Criterion                2        pairwise  Rater          R02
-#>   Facet1_Index Facet1_Measure  Facet1_SE    Facet2 Facet2_Level Facet2_Index
-#> 1            1     -0.1838153 0.08209147 Criterion     Accuracy            1
-#> 2            1     -0.1838153 0.08209147 Criterion      Content            2
-#> 3            1     -0.1838153 0.08209147 Criterion     Language            3
-#> 4            1     -0.1838153 0.08209147 Criterion Organization            4
-#> 5            2     -0.3088478 0.08298771 Criterion     Accuracy            1
-#> 6            2     -0.3088478 0.08298771 Criterion      Content            2
-#>   Facet2_Measure  Facet2_SE FacetA FacetA_Level FacetA_Index FacetA_Measure
-#> 1     0.23363879 0.08237044  Rater          R01            1     -0.1838153
-#> 2    -0.38997303 0.08384145  Rater          R01            1     -0.1838153
-#> 3     0.09146368 0.08172648  Rater          R01            1     -0.1838153
-#> 4     0.06487055 0.08167028  Rater          R01            1     -0.1838153
-#> 5     0.23363879 0.08237044  Rater          R02            2     -0.3088478
-#> 6    -0.38997303 0.08384145  Rater          R02            2     -0.3088478
-#>    FacetA_SE    FacetB FacetB_Level FacetB_Index FacetB_Measure  FacetB_SE
-#> 1 0.08209147 Criterion     Accuracy            1     0.23363879 0.08237044
-#> 2 0.08209147 Criterion      Content            2    -0.38997303 0.08384145
-#> 3 0.08209147 Criterion     Language            3     0.09146368 0.08172648
-#> 4 0.08209147 Criterion Organization            4     0.06487055 0.08167028
-#> 5 0.08298771 Criterion     Accuracy            1     0.23363879 0.08237044
-#> 6 0.08298771 Criterion      Content            2    -0.38997303 0.08384145
-#>   PointAvailable ScreenAvailable ScreenPositive
-#> 1           TRUE            TRUE          FALSE
-#> 2           TRUE            TRUE          FALSE
-#> 3           TRUE            TRUE          FALSE
-#> 4           TRUE            TRUE          FALSE
-#> 5           TRUE            TRUE          FALSE
-#> 6           TRUE            TRUE          FALSE
+report <- mfrm_report(bias_all, study_context = c(
+  score_direction = "Higher coded scores indicate better performance"))
+report$tables$overview
+head(report$tables$bias_cells)
+} # }
 ```

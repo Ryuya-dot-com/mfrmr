@@ -144,6 +144,9 @@ linking routes remain visibly separate capability rows.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("build_visual_summaries", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_core")
 # A balanced slice retains every Rater and Criterion while running quickly.
 toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
@@ -162,129 +165,11 @@ vis2 <- build_visual_summaries(
 )
 vis_facets <- build_visual_summaries(fit, diag, branch = "facets")
 vis_facets$branch
-#> [1] "facets"
 summary(vis)
-#> mfrmr Visual Summary Bundle
-#> 
-#> Overview
-#>    Branch    Style ThresholdProfile WarningVisuals SummaryVisuals
-#>  original original           strict             13             13
-#> 
-#> Warning counts
-#>                            Visual Messages
-#>               strict_marginal_fit        7
-#>              residual_pca_overall        5
-#>             residual_pca_by_facet        4
-#>  strict_pairwise_local_dependence        2
-#>                        wright_map        2
-#>                 observed_expected        1
-#>                       pathway_map        1
-#>                   category_curves        0
-#>                facet_distribution        0
-#>                   fit_diagnostics        0
-#>             fit_zstd_distribution        0
-#>                     misfit_levels        0
-#>                   step_thresholds        0
-#> 
-#> Summary counts
-#>                            Visual Messages
-#>               strict_marginal_fit       10
-#>              residual_pca_overall        5
-#>             residual_pca_by_facet        4
-#>  strict_pairwise_local_dependence        4
-#>                        wright_map        4
-#>             fit_zstd_distribution        2
-#>                 observed_expected        2
-#>                   category_curves        1
-#>                facet_distribution        1
-#>                   fit_diagnostics        1
-#>                     misfit_levels        1
-#>                       pathway_map        1
-#>                   step_thresholds        1
-#> 
-#> FACETS crosswalk
-#>                            Visual
-#>                        unexpected
-#>                      fair_average
-#>                      displacement
-#>                        interrater
-#>                      facets_chisq
-#>               strict_marginal_fit
-#>  strict_pairwise_local_dependence
-#>              residual_pca_overall
-#>             residual_pca_by_facet
-#>      category_probability_surface
-#>                                                                       FACETS
-#>                                                           Table 4 / Table 10
-#>                                                                     Table 12
-#>                                                                      Table 9
-#>                                                          Inter-rater outputs
-#>                                                Facet fixed/random chi-square
-#>          No direct FACETS equivalent (package-native strict marginal screen)
-#>          No direct FACETS equivalent (package-native strict pairwise screen)
-#>                                                       Residual PCA (overall)
-#>                                                      Residual PCA (by facet)
-#>  No direct FACETS equivalent (exploratory category-probability surface data)
-#> 
-#> Public plot routes
-#>                            Visual                          PlotHelper
-#>                        comparison                  plot.mfrm_bundle()
-#>                    warning_counts                  plot.mfrm_bundle()
-#>                    summary_counts                  plot.mfrm_bundle()
-#>                        unexpected        plot(x, type = "unexpected")
-#>                      fair_average      plot(x, type = "fair_average")
-#>                      displacement      plot(x, type = "displacement")
-#>                        interrater         plot(x, type = "agreement")
-#>                      facets_chisq      plot(x, type = "facets_chisq")
-#>               strict_marginal_fit      plot(x, type = "marginal_fit")
-#>  strict_pairwise_local_dependence plot(x, type = "marginal_pairwise")
-#>                                                                                       DrawFreeRoute
-#>                                                        plot(vis, type = "comparison", draw = FALSE)
-#>                                                    plot(vis, type = "warning_counts", draw = FALSE)
-#>                                                    plot(vis, type = "summary_counts", draw = FALSE)
-#>  plot(unexpected_response_table(fit, diagnostics = diagnostics), type = "unexpected", draw = FALSE)
-#>       plot(fair_average_table(fit, diagnostics = diagnostics), type = "fair_average", draw = FALSE)
-#>       plot(displacement_table(fit, diagnostics = diagnostics), type = "displacement", draw = FALSE)
-#>  plot(interrater_agreement_table(fit, diagnostics = diagnostics), type = "agreement", draw = FALSE)
-#>       plot(facets_chisq_table(fit, diagnostics = diagnostics), type = "facets_chisq", draw = FALSE)
-#>                                              plot(diagnostics, type = "marginal_fit", draw = FALSE)
-#>                                         plot(diagnostics, type = "marginal_pairwise", draw = FALSE)
-#>  PlotReturnClass                         Scope
-#>   mfrm_plot_data               bundle overview
-#>   mfrm_plot_data               bundle overview
-#>   mfrm_plot_data               bundle overview
-#>   mfrm_plot_data unexpected-response follow-up
-#>   mfrm_plot_data        fair-average follow-up
-#>   mfrm_plot_data        displacement follow-up
-#>   mfrm_plot_data         inter-rater follow-up
-#>   mfrm_plot_data    facet chi-square follow-up
-#>   mfrm_plot_data     strict marginal follow-up
-#>   mfrm_plot_data     strict pairwise follow-up
-#> 
-#> Notes
-#>  - Original branch keeps package-native warning/summary map organization.
-#>  - Reusable draw-free plot data are available in `plot_payloads`: comparison, warning_counts, summary_counts, category_probability_surface.
 p <- plot(vis, type = "comparison", draw = FALSE)
 p2 <- plot(vis, type = "warning_counts", draw = FALSE)
 vis$plot_payloads$comparison$data$plot
-#> [1] "comparison"
 vis$public_plot_routes[, c("Visual", "PlotHelper", "DrawFreeRoute")]
-#> # A tibble: 13 × 3
-#>    Visual                           PlotHelper                     DrawFreeRoute
-#>    <chr>                            <chr>                          <chr>        
-#>  1 comparison                       "plot.mfrm_bundle()"           "plot(vis, t…
-#>  2 warning_counts                   "plot.mfrm_bundle()"           "plot(vis, t…
-#>  3 summary_counts                   "plot.mfrm_bundle()"           "plot(vis, t…
-#>  4 unexpected                       "plot(x, type = \"unexpected\… "plot(unexpe…
-#>  5 fair_average                     "plot(x, type = \"fair_averag… "plot(fair_a…
-#>  6 displacement                     "plot(x, type = \"displacemen… "plot(displa…
-#>  7 interrater                       "plot(x, type = \"agreement\"… "plot(interr…
-#>  8 facets_chisq                     "plot(x, type = \"facets_chis… "plot(facets…
-#>  9 strict_marginal_fit              "plot(x, type = \"marginal_fi… "plot(diagno…
-#> 10 strict_pairwise_local_dependence "plot(x, type = \"marginal_pa… "plot(diagno…
-#> 11 residual_pca_overall             "plot(x, type = \"residual_pc… "plot(analyz…
-#> 12 residual_pca_by_facet            "plot(x, type = \"residual_pc… "plot(analyz…
-#> 13 category_probability_surface     "plot.mfrm_fit()"              "plot(fit, t…
 if (interactive()) {
   plot(
     vis,
@@ -295,4 +180,5 @@ if (interactive()) {
     label_angle = 45
   )
 }
+} # }
 ```

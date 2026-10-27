@@ -646,19 +646,12 @@ plot(x, type = "wright", view = "unified"), plot(x, type = "bubble"),
 ## Examples
 
 ``` r
-# Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
 
-# Fit the model
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  model = "RSM"
-)
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 
 # Run each plot command separately to inspect its figure
 plot(fit) # Wright map: persons, facets, and category thresholds
@@ -692,7 +685,7 @@ head(wright$data$locations)
 #> #   DisplayEstimate <dbl>, DisplayLabel <chr>, OriginalCI_Lower <dbl>,
 #> #   OriginalCI_Upper <dbl>, DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, …
 # Find a named judge without refitting or dropping the surrounding scale
-judge <- as.character(toy$Rater[1])
+judge <- subset(wright$data$locations, Group == "Rater")$Label[1]
 focused <- plot(fit, highlight = list(Rater = judge), draw = FALSE)
 subset(plot_data(focused, "locations"), Highlighted)
 #> # A tibble: 1 × 39

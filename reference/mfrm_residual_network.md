@@ -201,9 +201,10 @@ research. *PLOS ONE, 12*, e0174035.
 ## Examples
 
 ``` r
-ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 300)
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 net <- mfrm_residual_network(fit, facet = "Criterion", missing = "complete",
                              clusters = 2)
 net$pairs                 # association, shared-person count, unavailability

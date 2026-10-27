@@ -43,25 +43,25 @@ as_ggplot(x, type = NULL, component = NULL, ...)
 
 ## Arguments
 
-- x :
+- x:
 
   An `mfrm_plot_data` object, or an mfrmr object with a draw-free plot
   method. Corrected-JML slope, location and step plots retain their
   point or cumulative-distribution view, labels, reference and
   interpretation note; conversion does not add confidence intervals.
 
-- type :
+- type:
 
   Optional plot type passed to
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for a
   non-plot-data input. A saved plot-data input already selects a view
   and rejects `type`.
 
-- component :
+- component:
 
   Optional tabular payload component to convert.
 
-- ... :
+- ...:
 
   Arguments passed to the draw-free plot method. CCC conversion
   additionally accepts `slope_aes`, `facet_by`, and `show_overlay`. A
@@ -296,14 +296,16 @@ status and alternatives.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("as_ggplot", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_core")
 # A balanced slice retains every Rater and Criterion while running quickly.
 toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 fit <- fit_mfrm(toy, "Person",
                 c("Rater", "Criterion"), "Score", maxit = 30)
 as_ggplot(fit, type = "wright")
-
 as_ggplot(fit, type = "fit_pathway", include_person = TRUE)
-
 as_ggplot(plot(fit, type = "ccc", draw = FALSE))
+} # }
 ```

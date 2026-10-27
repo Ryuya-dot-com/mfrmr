@@ -57,7 +57,7 @@ which bundle, table, or reporting helper to call."><meta property="og:image" con
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Reports and Tables Map</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
       <div class="d-none name"><code>mfrmr_reports_and_tables.Rd</code></div>
     </div>
 
@@ -325,7 +325,10 @@ or <code><a href="export_summary_appendix.html">export_summary_appendix()</a></c
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("mfrmr_reports_and_tables", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -341,192 +344,27 @@ or <code><a href="export_summary_appendix.html">export_summary_appendix()</a></c
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">decision</span> <span class="co"># Review the fit before interpreting it</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                           Interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Fit-readiness requirements satisfied; formal precision review required</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   FormalInference FitReadiness                                              Why</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1              No        ready Formal precision support has not been evaluated.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                   NextAction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Build the comprehensive results and report</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_results.html">mfrm_results</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_report.html">mfrm_report</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">report</span>, view <span class="op">=</span> <span class="st">"reader"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Report Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Style OverallStatus     FirstAction ReviewAreas NotComputedAreas CaveatAreas</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     qc        review Start with Fit.           1                0           0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  OptionalAreas UnavailableAreas OkAreas</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              3                0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      SourceInclude</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  fit, diagnostics, tables, precision, reporting, categories, plots</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Decision</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Interpretation: Ready for formal inference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Formal inference: Yes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Why: All stored fit-readiness components passed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Next: Read the compact results summary.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> First screen</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               Area            Status         Readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Overall            review            review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Fit            review            review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Bias / DFF request_if_needed request_if_needed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Linking / anchors request_if_needed request_if_needed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Misfit / pathway request_if_needed request_if_needed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Precision                ok             ready</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                      MainIssue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ok=1; review=1; caveat=0; request_if_needed=3; not_computed=0; unavailable=0.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    Evidence was not requested.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    Evidence was not requested.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    Evidence was not requested.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                No report-index review signals.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                NextAction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                           Start with Fit.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Inspect the primary evidence table and template boundary before writing.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                        Request this evidence only if the claim is needed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                        Request this evidence only if the claim is needed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                        Request this evidence only if the claim is needed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Use the listed template route if this area is reported.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                  PrimaryRoute</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    report$report_index; report$template_index</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   report$fit_evidence_summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           mfrm_results(fit, include = "bias")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        mfrm_results(fit, include = "linking")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  mfrm_results(fit, include = "misfit_review")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             report$precision_evidence_summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Claim readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Readiness Claims                    ExampleClaim</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  needs_requested_section      5       APA-style manuscript text</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        write_with_caveat      1      Fit and precision evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    ready      4 Appendix or reviewer supplement</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Immediate actions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Area Status                                                    MainIssue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Fit review ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                NextAction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Inspect the primary evidence table and template boundary before writing.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 PrimaryRoute                  TemplateRoute</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  report$fit_evidence_summary report$fit_reporting_templates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Report gaps</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Priority           GapType                        Section</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         3     not_requested     APA and manuscript wording</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         3     not_requested            Anchors and linking</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         3     not_requested                 Bias screening</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         3     not_requested      Misfit and pathway review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         3     not_requested       Network and connectivity</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         3     not_requested               Response-time QC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         4 caveated_evidence Fit, separation, and precision</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                   RecommendedAction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Rebuild the result with mfrm_results(fit, include = "publication") before using APA-style output.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Rebuild the result with mfrm_results(fit, include = "linking") before writing anchor-readiness text.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Rebuild the result with mfrm_results(fit, include = "bias") before writing bias or fairness-screen text.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Rebuild the result with mfrm_results(fit, include = "misfit_review") before writing observation-level misfit text.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    Rebuild the result with mfrm_results(fit, include = "network") before writing connectivity text.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Request the relevant mfrm_results() section or call the route-specific helper before reporting this claim.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                             Write only a caveated claim and inspect the route-specific table before manuscript use.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                           Route</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                 mfrm_results(fit, include = "publication"); build_apa_outputs()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                             mfrm_results(fit, include = "linking"); plot(res, type = "anchors")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 mfrm_results(fit, include = "bias"); estimate_bias(); bias_interaction_report()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                       mfrm_results(fit, include = "misfit_review"); plot(res, type = "pathway")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                             mfrm_results(fit, include = "network"); build_mfrm_network_review()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  mfrm_results(fit, include = "response_time", response_time = ..., response_time_data = ...); plot(res, type = "response_time")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                             summary(res$components$precision_review); precision_review_report(fit, diagnostics)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Find report sections that need attention</span></span></span>
 <span class="r-in"><span><span class="va">report</span><span class="op">$</span><span class="va">first_screen</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span>, <span class="st">"MainIssue"</span>, <span class="st">"NextAction"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Area            Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           Overall            review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2               Fit            review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3        Bias / DFF request_if_needed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Linking / anchors request_if_needed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  Misfit / pathway request_if_needed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6         Precision                ok</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                       MainIssue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 ok=1; review=1; caveat=0; request_if_needed=3; not_computed=0; unavailable=0.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                  ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                   Evidence was not requested.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                   Evidence was not requested.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                   Evidence was not requested.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                               No report-index review signals.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                 NextAction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                          Start with Fit.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Inspect the primary evidence table and template boundary before writing.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                       Request this evidence only if the claim is needed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                       Request this evidence only if the claim is needed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                       Request this evidence only if the claim is needed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                  Use the listed template route if this area is reported.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Extract individual person, rater, and criterion estimates</span></span></span>
 <span class="r-in"><span><span class="va">estimates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">estimates</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Person"</span><span class="op">)</span><span class="op">)</span> <span class="co"># First six persons</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Facet Level    Estimate Extreme</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Person  P001  0.28429588    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Person  P002  0.66118004    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Person  P003  0.02177773    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Person  P004  0.22410785    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Person  P005 -0.17496065    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Person  P006  0.67681003    none</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">estimates</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Rater"</span><span class="op">)</span>       <span class="co"># All raters</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Facet Level   Estimate Extreme</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49 Rater   R01 -0.6059776    &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50 Rater   R02 -0.3820356    &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51 Rater   R03  0.2120388    &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52 Rater   R04  0.1799462    &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53 Rater   R05  0.1842365    &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54 Rater   R06  0.4117917    &lt;NA&gt;</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">estimates</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Criterion"</span><span class="op">)</span>   <span class="co"># All criteria</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Facet        Level   Estimate Extreme</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55 Criterion      Content -0.3441471    &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56 Criterion     Language  0.1204520    &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 57 Criterion Organization  0.2236950    &lt;NA&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Keep the full result, including methods and unavailable-output reasons</span></span></span>
 <span class="r-in"><span><span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".rds"</span><span class="op">)</span> <span class="co"># Choose a lasting path for your analysis</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">res</span>, <span class="va">file</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">saved</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">saved</span><span class="op">)</span><span class="op">$</span><span class="va">triage</span> <span class="co"># No refitting or repeated diagnostic calculation</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      Area Severity                        Signal</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5             Diagnostics   review   diagnostic_warnings_present</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 Precision / separation   review    precision_review_available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2             Data review       ok           data_readiness_pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   Design / connectivity       ok                 design_linked</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8    Diagnostic dashboard       ok             qc_plot_available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           Numerical fit       ok      numerical_readiness_pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11              Reporting       ok reporting_checklist_available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    Section availability       ok  requested_sections_available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4               Stability       ok      stability_readiness_pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                  Tables       ok              tables_collected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7              Wright map       ok required_wright_map_available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                              Route</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                            summary(res$diagnostics)$key_warnings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                        summary(res$components$precision_review)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                           summary(res)$readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                           summary(res)$readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                   plot(res, type = "qc", preset = "publication")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                           summary(res)$readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                     summary(res$components$reporting_checklist)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                              summary(res)$status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                           summary(res)$readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                  build_summary_table_bundle(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                         Detail</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                           Unexpected responses flagged: 1. | Flagged displacement levels: 1.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                          Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                    Data status is `pass`. No preparation warning or review row was retained.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                            Design status is `pass_linked`. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                   The QC dashboard is available as a focused follow-up after the required Wright-map review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                           Numerical status is `pass`. Optimizer returned convergence code 0.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11 Reporting checklist is available; the associated reporting status is `ready_for_diagnostics_and_reporting_follow_up`. Reporting status is the strictest applicable upstream workflow state.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                    Requested sections that could be computed were available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                        Stability status is `pass`. No boundary-constant non-person facet level was detected.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                          121 data-frame table(s) were collected for appendix or handoff use.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                 The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots.</span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

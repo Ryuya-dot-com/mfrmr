@@ -237,6 +237,9 @@ Transactions*, 8(3), 370. <https://www.rasch.org/rmt/rmt83b.htm>.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("fit_measures_table", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -244,135 +247,10 @@ fit <- fit_mfrm(
 )
 fm <- fit_measures_table(fit, facet = "Rater")
 fm$facets_table
-#>   Facet Level    Measure Fixed      S.E.   Lower CI    Upper CI CI Level
-#> 1 Rater   R05  0.1348932 FALSE 0.2298500 -0.3156044  0.58539090     0.95
-#> 2 Rater   R01 -0.5968433 FALSE 0.2231594 -1.0342276 -0.15945899     0.95
-#> 3 Rater   R06  0.3677868 FALSE 0.2401725 -0.1029426  0.83851627     0.95
-#> 4 Rater   R04  0.1692568 FALSE 0.2164848 -0.2550456  0.59355929     0.95
-#> 5 Rater   R02 -0.3339430 FALSE 0.2066065 -0.7388843  0.07099831     0.95
-#> 6 Rater   R03  0.2588494 FALSE 0.2123514 -0.1573516  0.67505041     0.95
-#>       Interval interpretation                   SE basis Obs Infit MnSq
-#> 1 Model-based normal interval Observed information (MML)  44  0.6437494
-#> 2 Model-based normal interval Observed information (MML)  47  0.7558296
-#> 3 Model-based normal interval Observed information (MML)  38  0.8062824
-#> 4 Model-based normal interval Observed information (MML)  47  0.9195966
-#> 5 Model-based normal interval Observed information (MML)  56  0.9659519
-#> 6 Model-based normal interval Observed information (MML)  50  1.0003529
-#>   Infit ZStd Outfit MnSq Outfit ZStd Infit df Outfit df         Fit df method
-#> 1 -2.0209607   0.6364430  -2.0096758 51.88287  49.03268 facets_wright_masters
-#> 2 -1.4432350   0.7419517  -1.4840655 63.20603  59.17353 facets_wright_masters
-#> 3 -0.8846298   0.7890478  -0.9547509 42.42920  40.77036 facets_wright_masters
-#> 4 -0.3893766   0.9036096  -0.4663254 59.41458  56.36934 facets_wright_masters
-#> 5 -0.1555933   1.0267816   0.2145481 74.49979  71.60665 facets_wright_masters
-#> 6  0.0613227   0.9692421  -0.1113085 63.10792  61.01441 facets_wright_masters
-#>   Fit basis
-#> 1 saved EAP
-#> 2 saved EAP
-#> 3 saved EAP
-#> 4 saved EAP
-#> 5 saved EAP
-#> 6 saved EAP
-#>                                                                                                                                                                                                                                                                                Fit interpretation
-#> 1 Conditional residuals evaluated at saved EAP person measures; descriptive MnSq, not posterior-averaged residual statistics or posterior-predictive residuals. Person and calibration uncertainty are not propagated. Same-response EAP scoring does not establish an expectation-one reference.
-#> 2 Conditional residuals evaluated at saved EAP person measures; descriptive MnSq, not posterior-averaged residual statistics or posterior-predictive residuals. Person and calibration uncertainty are not propagated. Same-response EAP scoring does not establish an expectation-one reference.
-#> 3 Conditional residuals evaluated at saved EAP person measures; descriptive MnSq, not posterior-averaged residual statistics or posterior-predictive residuals. Person and calibration uncertainty are not propagated. Same-response EAP scoring does not establish an expectation-one reference.
-#> 4 Conditional residuals evaluated at saved EAP person measures; descriptive MnSq, not posterior-averaged residual statistics or posterior-predictive residuals. Person and calibration uncertainty are not propagated. Same-response EAP scoring does not establish an expectation-one reference.
-#> 5 Conditional residuals evaluated at saved EAP person measures; descriptive MnSq, not posterior-averaged residual statistics or posterior-predictive residuals. Person and calibration uncertainty are not propagated. Same-response EAP scoring does not establish an expectation-one reference.
-#> 6 Conditional residuals evaluated at saved EAP person measures; descriptive MnSq, not posterior-averaged residual statistics or posterior-predictive residuals. Person and calibration uncertainty are not propagated. Same-response EAP scoring does not establish an expectation-one reference.
-#>   FACETS Infit df FACETS Outfit df FACETS Infit ZStd FACETS Outfit ZStd
-#> 1        51.88287         49.03268        -2.0209607         -2.0096758
-#> 2        63.20603         59.17353        -1.4432350         -1.4840655
-#> 3        42.42920         40.77036        -0.8846298         -0.9547509
-#> 4        59.41458         56.36934        -0.3893766         -0.4663254
-#> 5        74.49979         71.60665        -0.1555933          0.2145481
-#> 6        63.10792         61.01441         0.0613227         -0.1113085
-#>   Max ZStd shift Flag changed by df Max df rel shift                df review
-#> 1     0.64871108               TRUE        0.5066771       flag_changed_by_df
-#> 2     0.47849778              FALSE        0.5120042 df_convention_difference
-#> 3     0.30898811              FALSE        0.4983455 df_convention_difference
-#> 4     0.15948863              FALSE        0.5054059 df_convention_difference
-#> 5     0.08562633              FALSE        0.5063195 df_convention_difference
-#> 6     0.02401090              FALSE        0.5001427 df_convention_difference
-#>    Fit Status               Review Reason
-#> 1 within_band Within selected review band
-#> 2 within_band Within selected review band
-#> 3 within_band Within selected review band
-#> 4 within_band Within selected review band
-#> 5 within_band Within selected review band
-#> 6 within_band Within selected review band
 fm$underfit
-#>  [1] Facet                                   
-#>  [2] Level                                   
-#>  [3] Measure                                 
-#>  [4] Fixed                                   
-#>  [5] SE                                      
-#>  [6] CI_Lower                                
-#>  [7] CI_Upper                                
-#>  [8] CI_Level                                
-#>  [9] N                                       
-#> [10] Infit                                   
-#> [11] Outfit                                  
-#> [12] InfitZSTD                               
-#> [13] OutfitZSTD                              
-#> [14] DF_Infit                                
-#> [15] DF_Outfit                               
-#> [16] DF_Infit_ENGINE                         
-#> [17] DF_Outfit_ENGINE                        
-#> [18] DF_Infit_FACETS                         
-#> [19] DF_Outfit_FACETS                        
-#> [20] InfitZSTD_ENGINE                        
-#> [21] OutfitZSTD_ENGINE                       
-#> [22] InfitZSTD_FACETS                        
-#> [23] OutfitZSTD_FACETS                       
-#> [24] FitDfMethod                             
-#> [25] FitZSTDTransform                        
-#> [26] InfitBand                               
-#> [27] OutfitBand                              
-#> [28] InfitZSTDBand                           
-#> [29] OutfitZSTDBand                          
-#> [30] Underfit                                
-#> [31] Overfit                                 
-#> [32] FitStatus                               
-#> [33] ScreenComplete                          
-#> [34] ZSTDOnly                                
-#> [35] ReviewReason                            
-#> [36] MaxAbsZSTD                              
-#> [37] MaxMnSqDistance                         
-#> [38] FitBasis                                
-#> [39] FitInterpretation                       
-#> [40] SE_Method                               
-#> [41] PrecisionTier                           
-#> [42] SupportsFormalInference                 
-#> [43] SEUse                                   
-#> [44] CIBasis                                 
-#> [45] CIUse                                   
-#> [46] CIEligible                              
-#> [47] CILabel                                 
-#> [48] CI_Method                               
-#> [49] InfitZSTDDiff_FACETS_minus_ENGINE       
-#> [50] OutfitZSTDDiff_FACETS_minus_ENGINE      
-#> [51] MaxAbsZSTDDiff_FACETS_vs_ENGINE         
-#> [52] MaxAbsLogDFRatio_ENGINE_over_FACETS     
-#> [53] MaxDFRelativeDifference_ENGINE_vs_FACETS
-#> [54] EngineFlagAbsZ                          
-#> [55] FacetsStyleFlagAbsZ                     
-#> [56] FlagChangedByDf                         
-#> [57] DfSensitivityStatus                     
-#> <0 rows> (or 0-length row.names)
 
 # Include FACETS-style df/ZSTD companion columns for comparison.
 fm_facets <- fit_measures_table(fit, facet = "Rater", fit_df_method = "both")
 fm_facets$df_conversion_guide$decision_guide
-#>   Step                                                         Question
-#> 1    1                                           Are MnSq values close?
-#> 2    2                   Are df values close under the same convention?
-#> 3    3                   Do ZSTD values differ after MnSq and df agree?
-#> 4    4 Does |ZSTD| > 2 status change only after changing df convention?
-#> 5    5                            Is an external FACETS table supplied?
-#>                                                                                            RecommendedAction
-#> 1 If MnSq differs materially, treat this as a fit-statistic or estimation difference before discussing ZSTD.
-#> 2                    If df differs, classify the ZSTD gap as a df-convention issue unless MnSq also differs.
-#> 3            Check WHEXACT/normalization settings and rounding/truncation before making a substantive claim.
-#> 4         Report the flag as convention-sensitive; inspect MnSq and substantive context before acting on it.
-#> 5                     Use read_facets_fit_table() or normalize_facets_fit_frame(), then facets_fit_review().
+} # }
 ```

@@ -390,6 +390,9 @@ extra steps required for every report and do not apply to native CML.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("mfrmr_reports_and_tables", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Load the package and example ratings
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
@@ -406,190 +409,25 @@ fit <- fit_mfrm(
 )
 
 summary(fit)$decision # Review the fit before interpreting it
-#>                                                           Interpretation
-#> 1 Fit-readiness requirements satisfied; formal precision review required
-#>   FormalInference FitReadiness                                              Why
-#> 1              No        ready Formal precision support has not been evaluated.
-#>                                                                                                                                                   NextAction
-#> 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.
 
 # Build the comprehensive results and report
 res <- mfrm_results(fit)
 report <- mfrm_report(res)
 summary(report, view = "reader")
-#> mfrmr Report Summary
-#> 
-#> Overview
-#>  Style OverallStatus     FirstAction ReviewAreas NotComputedAreas CaveatAreas
-#>     qc        review Start with Fit.           1                0           0
-#>  OptionalAreas UnavailableAreas OkAreas
-#>              3                0       1
-#>                                                      SourceInclude
-#>  fit, diagnostics, tables, precision, reporting, categories, plots
-#> 
-#> Decision
-#>  - Interpretation: Ready for formal inference
-#>  - Formal inference: Yes
-#>  - Why: All stored fit-readiness components passed.
-#>  - Next: Read the compact results summary.
-#> 
-#> First screen
-#>               Area            Status         Readiness
-#>            Overall            review            review
-#>                Fit            review            review
-#>         Bias / DFF request_if_needed request_if_needed
-#>  Linking / anchors request_if_needed request_if_needed
-#>   Misfit / pathway request_if_needed request_if_needed
-#>          Precision                ok             ready
-#>                                                                      MainIssue
-#>  ok=1; review=1; caveat=0; request_if_needed=3; not_computed=0; unavailable=0.
-#>                   ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9
-#>                                                    Evidence was not requested.
-#>                                                    Evidence was not requested.
-#>                                                    Evidence was not requested.
-#>                                                No report-index review signals.
-#>                                                                NextAction
-#>                                                           Start with Fit.
-#>  Inspect the primary evidence table and template boundary before writing.
-#>                        Request this evidence only if the claim is needed.
-#>                        Request this evidence only if the claim is needed.
-#>                        Request this evidence only if the claim is needed.
-#>                   Use the listed template route if this area is reported.
-#>                                  PrimaryRoute
-#>    report$report_index; report$template_index
-#>                   report$fit_evidence_summary
-#>           mfrm_results(fit, include = "bias")
-#>        mfrm_results(fit, include = "linking")
-#>  mfrm_results(fit, include = "misfit_review")
-#>             report$precision_evidence_summary
-#> 
-#> Claim readiness
-#>                Readiness Claims                    ExampleClaim
-#>  needs_requested_section      5       APA-style manuscript text
-#>        write_with_caveat      1      Fit and precision evidence
-#>                    ready      4 Appendix or reviewer supplement
-#> 
-#> Immediate actions
-#>  Area Status                                                    MainIssue
-#>   Fit review ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9
-#>                                                                NextAction
-#>  Inspect the primary evidence table and template boundary before writing.
-#>                 PrimaryRoute                  TemplateRoute
-#>  report$fit_evidence_summary report$fit_reporting_templates
-#> 
-#> Report gaps
-#>  Priority           GapType                        Section
-#>         3     not_requested     APA and manuscript wording
-#>         3     not_requested            Anchors and linking
-#>         3     not_requested                 Bias screening
-#>         3     not_requested      Misfit and pathway review
-#>         3     not_requested       Network and connectivity
-#>         3     not_requested               Response-time QC
-#>         4 caveated_evidence Fit, separation, and precision
-#>                                                                                                   RecommendedAction
-#>                   Rebuild the result with mfrm_results(fit, include = "publication") before using APA-style output.
-#>                Rebuild the result with mfrm_results(fit, include = "linking") before writing anchor-readiness text.
-#>            Rebuild the result with mfrm_results(fit, include = "bias") before writing bias or fairness-screen text.
-#>  Rebuild the result with mfrm_results(fit, include = "misfit_review") before writing observation-level misfit text.
-#>                    Rebuild the result with mfrm_results(fit, include = "network") before writing connectivity text.
-#>          Request the relevant mfrm_results() section or call the route-specific helper before reporting this claim.
-#>                             Write only a caveated claim and inspect the route-specific table before manuscript use.
-#>                                                                                                                           Route
-#>                                                                 mfrm_results(fit, include = "publication"); build_apa_outputs()
-#>                                                             mfrm_results(fit, include = "linking"); plot(res, type = "anchors")
-#>                                                 mfrm_results(fit, include = "bias"); estimate_bias(); bias_interaction_report()
-#>                                                       mfrm_results(fit, include = "misfit_review"); plot(res, type = "pathway")
-#>                                                             mfrm_results(fit, include = "network"); build_mfrm_network_review()
-#>  mfrm_results(fit, include = "response_time", response_time = ..., response_time_data = ...); plot(res, type = "response_time")
-#>                                             summary(res$components$precision_review); precision_review_report(fit, diagnostics)
 
 # Find report sections that need attention
 report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
-#>                Area            Status
-#> 1           Overall            review
-#> 2               Fit            review
-#> 3        Bias / DFF request_if_needed
-#> 4 Linking / anchors request_if_needed
-#> 5  Misfit / pathway request_if_needed
-#> 6         Precision                ok
-#>                                                                       MainIssue
-#> 1 ok=1; review=1; caveat=0; request_if_needed=3; not_computed=0; unavailable=0.
-#> 2                  ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9
-#> 3                                                   Evidence was not requested.
-#> 4                                                   Evidence was not requested.
-#> 5                                                   Evidence was not requested.
-#> 6                                               No report-index review signals.
-#>                                                                 NextAction
-#> 1                                                          Start with Fit.
-#> 2 Inspect the primary evidence table and template boundary before writing.
-#> 3                       Request this evidence only if the claim is needed.
-#> 4                       Request this evidence only if the claim is needed.
-#> 5                       Request this evidence only if the claim is needed.
-#> 6                  Use the listed template route if this area is reported.
 
 # Extract individual person, rater, and criterion estimates
 estimates <- as.data.frame(fit)
 head(subset(estimates, Facet == "Person")) # First six persons
-#>    Facet Level    Estimate Extreme
-#> 1 Person  P001  0.28429588    none
-#> 2 Person  P002  0.66118004    none
-#> 3 Person  P003  0.02177773    none
-#> 4 Person  P004  0.22410785    none
-#> 5 Person  P005 -0.17496065    none
-#> 6 Person  P006  0.67681003    none
 subset(estimates, Facet == "Rater")       # All raters
-#>    Facet Level   Estimate Extreme
-#> 49 Rater   R01 -0.6059776    <NA>
-#> 50 Rater   R02 -0.3820356    <NA>
-#> 51 Rater   R03  0.2120388    <NA>
-#> 52 Rater   R04  0.1799462    <NA>
-#> 53 Rater   R05  0.1842365    <NA>
-#> 54 Rater   R06  0.4117917    <NA>
 subset(estimates, Facet == "Criterion")   # All criteria
-#>        Facet        Level   Estimate Extreme
-#> 55 Criterion      Content -0.3441471    <NA>
-#> 56 Criterion     Language  0.1204520    <NA>
-#> 57 Criterion Organization  0.2236950    <NA>
 
 # Keep the full result, including methods and unavailable-output reasons
 file <- tempfile(fileext = ".rds") # Choose a lasting path for your analysis
 saveRDS(res, file)
 saved <- readRDS(file)
 summary(saved)$triage # No refitting or repeated diagnostic calculation
-#>                      Area Severity                        Signal
-#> 5             Diagnostics   review   diagnostic_warnings_present
-#> 10 Precision / separation   review    precision_review_available
-#> 2             Data review       ok           data_readiness_pass
-#> 3   Design / connectivity       ok                 design_linked
-#> 8    Diagnostic dashboard       ok             qc_plot_available
-#> 1           Numerical fit       ok      numerical_readiness_pass
-#> 11              Reporting       ok reporting_checklist_available
-#> 6    Section availability       ok  requested_sections_available
-#> 4               Stability       ok      stability_readiness_pass
-#> 9                  Tables       ok              tables_collected
-#> 7              Wright map       ok required_wright_map_available
-#>                                                                              Route
-#> 5                                            summary(res$diagnostics)$key_warnings
-#> 10                                        summary(res$components$precision_review)
-#> 2                                                           summary(res)$readiness
-#> 3                                                           summary(res)$readiness
-#> 8                                   plot(res, type = "qc", preset = "publication")
-#> 1                                                           summary(res)$readiness
-#> 11                                     summary(res$components$reporting_checklist)
-#> 6                                                              summary(res)$status
-#> 4                                                           summary(res)$readiness
-#> 9                                                  build_summary_table_bundle(res)
-#> 7  plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
-#>                                                                                                                                                                                         Detail
-#> 5                                                                                                                           Unexpected responses flagged: 1. | Flagged displacement levels: 1.
-#> 10                                                                          Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.
-#> 2                                                                                                                    Data status is `pass`. No preparation warning or review row was retained.
-#> 3                            Design status is `pass_linked`. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
-#> 8                                                                                                   The QC dashboard is available as a focused follow-up after the required Wright-map review.
-#> 1                                                                                                                           Numerical status is `pass`. Optimizer returned convergence code 0.
-#> 11 Reporting checklist is available; the associated reporting status is `ready_for_diagnostics_and_reporting_follow_up`. Reporting status is the strictest applicable upstream workflow state.
-#> 6                                                                                                                                    Requested sections that could be computed were available.
-#> 4                                                                                                        Stability status is `pass`. No boundary-constant non-person facet level was detected.
-#> 9                                                                                                                          121 data-frame table(s) were collected for appendix or handoff use.
-#> 7                                                 The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots.
+} # }
 ```

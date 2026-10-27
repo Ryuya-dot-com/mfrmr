@@ -507,6 +507,9 @@ note: <https://www.rasch.org/rmt/rmt221e.htm>.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("diagnose_mfrm", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Load the package and example ratings
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
@@ -527,66 +530,19 @@ diagnostics <- diagnose_mfrm(fit)
 # Check each residual's basis and the coverage of aggregate fit statistics
 head(diagnostics$obs[, c("PersonMeasureBasis", "ConditionalVariance",
   "PearsonAvailable", "ResponseReason")])
-#>   PersonMeasureBasis ConditionalVariance PearsonAvailable
-#> 1          saved EAP           0.6713656             TRUE
-#> 2          saved EAP           0.6916274             TRUE
-#> 3          saved EAP           0.6130873             TRUE
-#> 4          saved EAP           0.7109476             TRUE
-#> 5          saved EAP           0.7234085             TRUE
-#> 6          saved EAP           0.4352147             TRUE
-#>                                                                    ResponseReason
-#> 1 Conditional point calculation; calibration and Person uncertainty are excluded.
-#> 2 Conditional point calculation; calibration and Person uncertainty are excluded.
-#> 3 Conditional point calculation; calibration and Person uncertainty are excluded.
-#> 4 Conditional point calculation; calibration and Person uncertainty are excluded.
-#> 5 Conditional point calculation; calibration and Person uncertainty are excluded.
-#> 6 Conditional point calculation; calibration and Person uncertainty are excluded.
 diagnostics$overall_fit[, c("Infit", "Outfit", "FitUnavailableRows", "FitReason")]
-#> # A tibble: 1 × 4
-#>   Infit Outfit FitUnavailableRows FitReason                                     
-#>   <dbl>  <dbl>              <int> <chr>                                         
-#> 1 0.866  0.857                  0 Descriptive mean squares; their calculation d…
 diagnostic_summary <- summary(diagnostics)
 diagnostic_summary$decision
-#>               Interpretation FormalInference FitReadiness
-#> 1 Ready for formal inference             Yes        ready
-#>                                           Why
-#> 1 All stored fit-readiness components passed.
-#>                                                                                            NextAction
-#> 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.
 
 diagnostic_summary$key_warnings # Issues to investigate, if present
-#> [1] "Unexpected responses flagged: 1."                                                                                                  
-#> [2] "Flagged displacement levels: 1."                                                                                                   
-#> [3] "MnSq screening flagged 18 element(s) outside the configured 0.5-1.5 band."                                                         
-#> [4] "Person-level fit warnings: 18 row(s); identifiers suppressed. Use `include_person = TRUE` only under appropriate privacy controls."
-#> [5] "Strict marginal fit flagged 1 group-level summaries."                                                                              
 diagnostic_summary$top_fit      # Most unusual residual-based fit statistics
-#> # A tibble: 10 × 13
-#>    Facet     Level   Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit
-#>    <chr>     <fct>   <dbl>  <dbl>     <dbl>      <dbl>    <dbl>     <dbl>
-#>  1 Person    P022    0.126  0.123     -2.86      -2.88     8.20      8.17
-#>  2 Person    P026    0.126  0.117     -2.78      -2.84     7.75      7.71
-#>  3 Criterion Content 0.730  0.743     -2.27      -2.09   119.      113.  
-#>  4 Person    P035    0.239  0.237     -2.24      -2.25     8.90      8.91
-#>  5 Person    P016    2.66   2.53       2.19       2.06     5.95      5.85
-#>  6 Person    P008    0.251  0.250     -2.16      -2.17     8.79      8.79
-#>  7 Person    P025    2.22   2.18       2.09       2.03     8.94      8.92
-#>  8 Rater     R05     0.648  0.640     -1.98      -1.97    51.5      48.5 
-#>  9 Person    P012    2.01   2.17       1.72       1.91     7.85      7.78
-#> 10 Person    P017    0.265  0.285     -1.90      -1.79     7.42      7.33
-#> # ℹ 5 more variables: InfitZSTD_FACETS <dbl>, OutfitZSTD_FACETS <dbl>,
-#> #   DF_Infit_FACETS <dbl>, DF_Outfit_FACETS <dbl>, AbsZ <dbl>
 
 # Distinguish residual-based checks from marginal model checks
 diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
-#> # A tibble: 4 × 3
-#>   DiagnosticPath                   Status        Basis                          
-#>   <chr>                            <chr>         <chr>                          
-#> 1 legacy_residual_fit              computed      plugin_residuals_and_eap_tables
-#> 2 strict_marginal_fit              computed      latent_integrated_first_order_…
-#> 3 strict_pairwise_local_dependence computed      latent_integrated_second_order…
-#> 4 posterior_predictive_follow_up   not_available posterior_predictive_replicati…
+} # }
+# Long-running workflow; run explicitly when needed.
+# example("diagnose_mfrm", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Each row is one bundled example rating; use ordinary JML for this reference
 ratings <- load_mfrmr_data("example_core")
 jml_fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
@@ -595,14 +551,6 @@ jml_diagnostics <- diagnose_mfrm(jml_fit, residual_pca = "none",
                                  diagnostic_mode = "legacy")
 head(jml_diagnostics$measures[, c("Facet", "Level", "PTMEA",
      "PTMEAExpected", "PTMEAExpectedN", "PTMEAExpectedStatus")])
-#> # A tibble: 6 × 6
-#>   Facet  Level   PTMEA PTMEAExpected PTMEAExpectedN PTMEAExpectedStatus  
-#>   <chr>  <chr>   <dbl>         <dbl>          <dbl> <chr>                
-#> 1 Person P001   0.123          0.287             16 available_conditional
-#> 2 Person P002  -0.0905         0.238             16 available_conditional
-#> 3 Person P003   0.355          0.262             16 available_conditional
-#> 4 Person P004  -0.0554         0.279             16 available_conditional
-#> 5 Person P005  -0.215          0.279             16 available_conditional
-#> 6 Person P006   0.196          0.263             16 available_conditional
 # Compare observed PTMEA with its conditional reference; neither is a test
+} # }
 ```

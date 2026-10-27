@@ -126,7 +126,7 @@ population distribution are analysis choices even when arguments are omitted.">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit many-facet ordered-response models with a flexible number of facets</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/core-cml.R" class="external-link"><code>R/core-cml.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/core-comparison-fit.R" class="external-link"><code>R/core-comparison-fit.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/core-cml.R" class="external-link"><code>R/core-cml.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/core-comparison-fit.R" class="external-link"><code>R/core-comparison-fit.R</code></a></small>
       <div class="d-none name"><code>fit_mfrm.Rd</code></div>
     </div>
 
@@ -214,7 +214,8 @@ population distribution are analysis choices even when arguments are omitted.</p
 <span>  mml_accuracy_control <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  population_sd <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  jml_penalty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"jeffreys"</span><span class="op">)</span>,</span>
-<span>  progress <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  progress <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  mml_starts <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'mfrm_cml_fit'</span></span>
@@ -565,6 +566,12 @@ when the raw gradient is small. Each restart uses the requested <code>maxit</cod
 ceiling. A replacement must pass the original gradient/convergence checks,
 have no detected negative curvature and not worsen the objective beyond
 roundoff. Failed recovery retains the estimate with a numerical warning.
+For fixed-population, fixed-grid RSM/PCM interaction fits, a remaining
+gradient stall also permits one L-BFGS-B polish after subtracting a
+constant from the objective (<code>centered_objective_polish</code>). This removes
+the large likelihood constant from relative stopping, without changing
+derivatives or precision requirements. Stored likelihoods retain their
+original scale; a resolved likelihood loss is never accepted.
 This changes only the search coordinates, not the model or information
 matrix used for inference. It does not establish a global optimum,
 adequate quadrature, or valid confidence intervals. Inspect the
@@ -589,9 +596,17 @@ interpreting <code>EffectiveReltol</code> as a native <code><a href="https://rdr
 <dd><p>MML optimization engine for <code>method = "MML"</code>:
 <code>"direct"</code> (default) uses the selected direct optimizer on the marginal
 log-likelihood,
-<code>"em"</code> uses an EM loop for <code>RSM</code> / <code>PCM</code> with <code>population = NULL</code>, or
-the explicitly scoped two-family GPCM route described below, and
-<code>"hybrid"</code> uses EM as a warm start before the direct optimizer. Unsupported
+<code>"em"</code> uses an EM loop for <code>RSM</code> / <code>PCM</code> with <code>population = NULL</code>, including
+model-estimated <code>facet_interactions</code>, or the explicitly scoped two-family
+GPCM route described below. <code>"hybrid"</code> uses EM as a warm start before the
+direct optimizer. Ordinary EM/hybrid requires fixed quadrature. Numerical
+M steps implement generalized EM, checking both the auxiliary and marginal
+log likelihood for non-decrease beyond roundoff before accepting an update;
+failed checks stop without replacing a valid checkpoint. This is not a
+block ECM algorithm or a guarantee of global convergence or faster fitting.
+Use <code>mml_starts</code> to review specified starts and keep integration sensitivity
+separate. For a raw EM fit with a large terminal gradient, use <code>"hybrid"</code>
+or <code>"direct"</code> and review the resulting readiness. Unsupported
 one-family combinations fall back to <code>"direct"</code> and record that fallback in
 <code>fit$summary</code>. Direct, hybrid, and EM engines all require the common
 terminal-gradient check for the Numerical component of fit readiness; EM
@@ -1033,6 +1048,35 @@ time forecast: convergence and required refinement are not known in advance.
 Display follows <code>cli</code> console settings and is cleared on return, error or
 interruption. The default is silent; it does not change numerical controls
 or become part of saved calibration/replay settings.</p></dd>
+
+
+<dt id="arg-mml-starts">mml_starts<a class="anchor" aria-label="anchor" href="#arg-mml-starts"></a>
+</dt>
+<dd><p>Optional starting-value review for ordinary full RSM/PCM
+or single-family GPCM MML. <code>NULL</code> keeps the usual single start. A numeric
+vector such as <code>c(0, 0.5, -0.5)</code> adds each nonzero offset times the
+alternating vector <code>(1, -1, 1, ...)</code> to the default free coordinates.
+These deterministic offsets explore one direction in the fitted free-
+coordinate order, not random or exhaustive searches. The default start
+is always included. To explore other directions, supply a uniquely named
+list of named numeric coordinate values; obtain names from
+<code>fit$opt$start_review$parameter_map$Coordinate</code> after <code>mml_starts = 0</code>.
+Unlisted coordinates retain their default initial values. Anchored and
+dependent coordinates are expanded from the existing constraints.
+All attempts share the same fixed or adaptive integration rule and order;
+automatic integration, checkpoints and two-family GPCM are unsupported.
+Each attempt uses the requested engine, with existing fallbacks recorded.
+The smallest reevaluated negative log likelihood is retained even when
+that attempt is unfinished; a worse converged attempt is not substituted.
+Inspect <code>summary(fit)$starting_values</code> and <code>fit$opt$start_review</code> for all
+starts, optimizer outcomes, warnings, errors and coordinate differences.
+If all attempts fail, the error condition retains <code>$start_review</code>.
+Missing curvature means it was not evaluated. This review increases fitting
+time and does not establish a global optimum, adequate integration or valid
+inference. Use <code><a href="mml_quadrature_sensitivity.html">mml_quadrature_sensitivity()</a></code> for integration sensitivity.
+Same-model replay and resampling retain this policy. Subgroup DFF refits
+accept numeric offsets; named starts require an explicit subgroup fit
+because linking changes the free-coordinate basis.</p></dd>
 
 
 <dt id="arg-object-x">object, x<a class="anchor" aria-label="anchor" href="#arg-object-x"></a>
@@ -2634,7 +2678,8 @@ Unsupported explicit arguments are rejected even when equal to a default.
 Ordinary <code>mfrm_fit</code> scoring, diagnostics and consolidated reports are not
 attached to this separate class. These restrictions do not affect imported
 eRm fits. See Mair and Hatzinger (2007),
-<a href="https://www.jstatsoft.org/article/view/v020i09" class="external-link">https://www.jstatsoft.org/article/view/v020i09</a>, for the linear Rasch-family
+<a href="https://doi.org/10.18637/jss.v020.i09" class="external-link">doi:10.18637/jss.v020.i09</a>
+, for the linear Rasch-family
 CML framework.</p>
     </div>
     <div class="section level2">
@@ -2735,7 +2780,8 @@ are rejected, including unsupported arguments set to their default values.</p>
 <p>The estimable-function criterion is discussed by Lenth (2015),
 <a href="https://journal.r-project.org/articles/RJ-2015-016/" class="external-link">https://journal.r-project.org/articles/RJ-2015-016/</a>. Recession directions
 and finite-MLE existence in exponential families are distinguished by
-Geyer (2009), <a href="https://www.stat.umn.edu/geyer/gdor/" class="external-link">https://www.stat.umn.edu/geyer/gdor/</a>. These principles do not
+Geyer (2009), <a href="https://doi.org/10.1214/08-EJS349" class="external-link">doi:10.1214/08-EJS349</a>
+. These principles do not
 establish global MML identification or finite-sample inference here.</p>
     </div>
     <div class="section level2">
@@ -2791,8 +2837,8 @@ establish global MML identification or finite-sample inference here.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion      3            0      0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater          6            0      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion      3     4.62<span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>      0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater          6    -<span style="color: #BB0000;">4.64</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Check the interpretation status and recommended next step</span></span></span>
 <span class="r-in"><span><span class="va">results</span><span class="op">$</span><span class="va">decision</span></span></span>
@@ -2802,6 +2848,15 @@ establish global MML identification or finite-sample inference here.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1              No        ready Formal precision support has not been evaluated.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                   NextAction</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Optional repeated fitting: compare specified starting values.</span></span></span>
+<span class="r-in"><span><span class="va">reviewed</span> <span class="op">&lt;-</span> <span class="fu">fit_mfrm</span><span class="op">(</span><span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  mml_starts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">reviewed</span><span class="op">)</span><span class="op">$</span><span class="va">starting_values</span> <span class="co"># Every attempt, including warnings/failures</span></span></span>
+<span class="r-in"><span><span class="va">reviewed</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">start_review</span><span class="op">$</span><span class="va">parameter_map</span> <span class="co"># Meaning and constraints of coordinates</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">reviewed</span><span class="op">)</span><span class="op">$</span><span class="va">starting_values</span>, <span class="st">"starting-values.csv"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

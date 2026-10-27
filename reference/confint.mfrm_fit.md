@@ -45,7 +45,7 @@ confint(object, parm = NULL, level = 0.95, ...)
 
 ## Arguments
 
-- object :
+- object:
 
   A native MML or CML result from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
@@ -53,7 +53,7 @@ confint(object, parm = NULL, level = 0.95, ...)
   structural-truth intervals are unsupported. Extended models have their
   own methods.
 
-- parm :
+- parm:
 
   `NULL` (default) selects all entries of `coef(object)`; exact
   coefficient names or positive integer positions select a distinct
@@ -62,11 +62,11 @@ confint(object, parm = NULL, level = 0.95, ...)
   `names(coef(object))` before selecting coefficients: their names
   identify free parameter coordinates, not all displayed facet levels.
 
-- level :
+- level:
 
   Nominal confidence level strictly between zero and one.
 
-- scale :
+- scale:
 
   `"relative"` (one-family default) keeps geometric mean one.
   `"standardized"` reports population-SD times slope, including
@@ -75,18 +75,18 @@ confint(object, parm = NULL, level = 0.95, ...)
   when omitted: SD is fixed at one, the first slope family has geometric
   mean one, and the second family is free on that scale.
 
-- contrasts :
+- contrasts:
 
   Optional numeric matrix: one named comparison per row, all slope
   levels as named columns, finite nonzero rows summing to zero. For A
   versus B use coefficients 1 and -1, and zero for other levels.
 
-- contrast_scale :
+- contrast_scale:
 
   `"ratio"` exponentiates log-slope contrasts (A/B); `"difference"`
   contrasts positive slopes (A-B) by the delta method.
 
-- method :
+- method:
 
   `"model"` uses joint observed information; `"sandwich"` uses Person
   marginal-likelihood scores, optionally grouped into larger clusters.
@@ -94,7 +94,7 @@ confint(object, parm = NULL, level = 0.95, ...)
   specified relative slope, or one two-family component, using a
   chi-square(1) likelihood-ratio cutoff.
 
-- clusters :
+- clusters:
 
   Optional data frame mapping each fitted `Person` once to a nonmissing
   `Cluster`, as in
@@ -102,22 +102,22 @@ confint(object, parm = NULL, level = 0.95, ...)
   Persons are independent units by default. Shared random effects across
   clusters are not supported.
 
-- adjust :
+- adjust:
 
   For sandwich covariance only, multiply by G/(G-1) for G clusters;
   default FALSE. This is not a small-sample accuracy guarantee.
 
-- simultaneous :
+- simultaneous:
 
   `"none"` (default) gives pointwise intervals; `"bonferroni"` adjusts
   for all rows requested in this call. It does not adjust for other
   analyses or post-selection of targets.
 
-- ... :
+- ...:
 
   Unused; additional arguments are rejected.
 
-- slope :
+- slope:
 
   For `method = "profile"`, one exact level from
   `object$slopes$SlopeFacet`, selected for the research question.
@@ -126,7 +126,7 @@ confint(object, parm = NULL, level = 0.95, ...)
   the name is the fitted owner column and the value is its level. This
   distinguishes equal level labels belonging to different facets.
 
-- profile_control :
+- profile_control:
 
   Named list for profiling: `maxit` (400 iterations per optimizer
   stage), `max_steps` (8 bracketing trials per side, including
@@ -543,122 +543,35 @@ R. Journal of Statistical Software, 95(1), 1–36.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("confint.mfrm_fit", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Compare intervals for free coefficients and relative discriminations.
 ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-  model = "GPCM", method = "MML", step_facet = "Criterion",
-  slope_facet = "Rater", rating_min = 1, rating_max = 4,
-  category_policy = "preserve", quad_points = 61)
+# Reuse the synthetic GPCM fit; estimation uses 61 quadrature points.
+# Full regeneration recipe: examples/measurement-fits.R in the package.
+fit <- readRDS(system.file("examples", "measurement-fits.rds",
+  package = "mfrmr", mustWork = TRUE))$gpcm
 # The default matches coef(fit): steps, locations and log slopes.
 coefficients_ci <- confint(fit, level = 0.95)
-#> Warning: Native location intervals: pointwise Wald inference assumes a correctly specified, identified regular MML model; numerical eligibility does not guarantee finite-sample coverage. Native ability units are not standardized by the fitted population SD; unequal slopes or steps can make expected-rating differences vary with ability.
 head(coefficients_ci)
-#>                     2.5%       97.5%
-#> Rater[1]     -0.35486952 -0.01858949
-#> Rater[2]     -0.47092508 -0.14217597
-#> Rater[3]      0.02064554  0.33160792
-#> Criterion[1]  0.06913173  0.42192630
-#> Criterion[2] -0.57646155 -0.21932332
-#> Criterion[3] -0.04765366  0.27785378
 attr(coefficients_ci, "diagnostics") # Availability and interpretation
-#>        Parameter     Estimate         SE CIEligible    Status
-#> 1       Rater[1] -0.186729507 0.08578730       TRUE available
-#> 2       Rater[2] -0.306550523 0.08386611       TRUE available
-#> 3       Rater[3]  0.176126730 0.07932860       TRUE available
-#> 4   Criterion[1]  0.245529019 0.09000027       TRUE available
-#> 5   Criterion[2] -0.397892434 0.09110836       TRUE available
-#> 6   Criterion[3]  0.115100056 0.08303914       TRUE available
-#> 7       steps[1] -1.343394474 0.19483937       TRUE available
-#> 8       steps[2] -0.047545143 0.20001461       TRUE available
-#> 9       steps[3] -1.283682697 0.21792014       TRUE available
-#> 10      steps[4]  0.028934351 0.20157638       TRUE available
-#> 11      steps[5] -0.666925136 0.20079137       TRUE available
-#> 12      steps[6] -0.339995815 0.20977740       TRUE available
-#> 13      steps[7] -1.601532688 0.20111062       TRUE available
-#> 14      steps[8]  0.114816584 0.19688086       TRUE available
-#> 15 log_slopes[1] -0.082633767 0.13052216       TRUE available
-#> 16 log_slopes[2]  0.000937634 0.12718119       TRUE available
-#> 17 log_slopes[3]  0.095880541 0.13041047       TRUE available
-#> 18       beta[1]  0.002599413 0.14968581       TRUE available
-#> 19 log_sigma2[1] -0.054077942 0.25411013       TRUE available
-#>                                                                                                                InferenceReview
-#> 1  Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 2  Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 3  Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 4  Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 5  Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 6  Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 7  Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 8  Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 9  Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 10 Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 11 Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 12 Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 13 Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 14 Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 15 Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 16 Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 17 Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 18 Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
-#> 19 Pointwise normal approximation in the coef() coordinates; numerical availability does not guarantee finite-sample coverage.
 # Explicitly request positive relative slopes for rater comparison:
 intervals <- confint(fit, parm = "slopes", level = 0.95)
 intervals
-#> Approximate 95% interval results: Relative GPCM slopes (geometric mean one)
-#>  Level Estimate  Lower Upper    Status
-#>    R01   0.9207 0.7129 1.189 Available
-#>    R02   1.0009 0.7801 1.284 Available
-#>    R03   1.1006 0.8524 1.421 Available
-#>    R04   0.9859 0.7609 1.278 Available
-#> Joint-information log-Wald approximation 
-#> Pointwise intervals.
 attr(intervals, "diagnostics")[, c("SlopeFacet", "Estimate",
   "CIEligible", "InferenceReview")]
-#> # A tibble: 4 × 4
-#>   SlopeFacet Estimate CIEligible InferenceReview                                
-#>   <chr>         <dbl> <lgl>      <chr>                                          
-#> 1 R01           0.921 TRUE       "Pointwise log-Wald approximation from the inv…
-#> 2 R02           1.00  TRUE       "Pointwise log-Wald approximation from the inv…
-#> 3 R03           1.10  TRUE       "Pointwise log-Wald approximation from the inv…
-#> 4 R04           0.986 TRUE       "Pointwise log-Wald approximation from the inv…
 # Relative slopes have geometric mean one. A value above one means a
 # steeper response curve, not greater severity or better rater quality.
 # Missing bounds need the saved reason; availability is not a coverage test.
 plot(intervals)
-
 file <- tempfile(fileext = ".rds")
 saveRDS(intervals, file) # Use a lasting path for your analysis
 saved <- readRDS(file)
 apa_table(saved) # Reuse the intervals without fitting again
-#> GPCM inference
-#>  SlopeFacet Estimate   SE LogSE CI_Lower CI_Upper CIEligible
-#>         R01     0.92 0.12  0.13     0.71     1.19       TRUE
-#>         R02     1.00 0.13  0.13     0.78     1.28       TRUE
-#>         R03     1.10 0.14  0.13     0.85     1.42       TRUE
-#>         R04     0.99 0.13  0.13     0.76     1.28       TRUE
-#>                  CIUse
-#>  approximate_pointwise
-#>  approximate_pointwise
-#>  approximate_pointwise
-#>  approximate_pointwise
-#>                                                                                                                                                                                                                          InferenceReview
-#>  Pointwise log-Wald approximation from the inverse full joint MML information. Relative slopes have geometric mean one. Assess starting-value and quadrature sensitivity; small samples and model misspecification can affect coverage. 
-#>  Pointwise log-Wald approximation from the inverse full joint MML information. Relative slopes have geometric mean one. Assess starting-value and quadrature sensitivity; small samples and model misspecification can affect coverage. 
-#>  Pointwise log-Wald approximation from the inverse full joint MML information. Relative slopes have geometric mean one. Assess starting-value and quadrature sensitivity; small samples and model misspecification can affect coverage. 
-#>  Pointwise log-Wald approximation from the inverse full joint MML information. Relative slopes have geometric mean one. Assess starting-value and quadrature sensitivity; small samples and model misspecification can affect coverage. 
-#>  IntervalStatus                                    Target
-#>       Available Relative GPCM slopes (geometric mean one)
-#>       Available Relative GPCM slopes (geometric mean one)
-#>       Available Relative GPCM slopes (geometric mean one)
-#>       Available Relative GPCM slopes (geometric mean one)
-#>                                    Method ConfidenceLevel Adjustment
-#>  Joint-information log-Wald approximation             95%  Pointwise
-#>  Joint-information log-Wald approximation             95%  Pointwise
-#>  Joint-information log-Wald approximation             95%  Pointwise
-#>  Joint-information log-Wald approximation             95%  Pointwise
-#> Note. Approximate inference under the stated target and method; unavailable outcomes remain present. No rater-quality or scoring-weight decision is implied.
 
 # A separate, prespecified profile calculation can be requested with
 # confint(fit, parm = "slopes", method = "profile", slope = chosen_rater).
 # Choose chosen_rater from fit$slopes$SlopeFacet; see the profile section.
+} # }
 ```

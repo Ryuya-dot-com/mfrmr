@@ -89,7 +89,8 @@ fit_mfrm(
   mml_accuracy_control = NULL,
   population_sd = NULL,
   jml_penalty = c("none", "jeffreys"),
-  progress = FALSE
+  progress = FALSE,
+  mml_starts = NULL
 )
 
 # S3 method for class 'mfrm_cml_fit'
@@ -404,11 +405,17 @@ summary(object, ...)
   restart uses the requested `maxit` ceiling. A replacement must pass
   the original gradient/convergence checks, have no detected negative
   curvature and not worsen the objective beyond roundoff. Failed
-  recovery retains the estimate with a numerical warning. This changes
-  only the search coordinates, not the model or information matrix used
-  for inference. It does not establish a global optimum, adequate
-  quadrature, or valid confidence intervals. Inspect the
-  `SmallestCurvature`, `CurvatureScale` and `CurvatureReviewError`
+  recovery retains the estimate with a numerical warning. For
+  fixed-population, fixed-grid RSM/PCM interaction fits, a remaining
+  gradient stall also permits one L-BFGS-B polish after subtracting a
+  constant from the objective (`centered_objective_polish`). This
+  removes the large likelihood constant from relative stopping, without
+  changing derivatives or precision requirements. Stored likelihoods
+  retain their original scale; a resolved likelihood loss is never
+  accepted. This changes only the search coordinates, not the model or
+  information matrix used for inference. It does not establish a global
+  optimum, adequate quadrature, or valid confidence intervals. Inspect
+  the `SmallestCurvature`, `CurvatureScale` and `CurvatureReviewError`
   fields in the stage history alongside the objective and terminal
   gradient.
 
@@ -428,15 +435,24 @@ summary(object, ...)
 
   MML optimization engine for `method = "MML"`: `"direct"` (default)
   uses the selected direct optimizer on the marginal log-likelihood,
-  `"em"` uses an EM loop for `RSM` / `PCM` with `population = NULL`, or
-  the explicitly scoped two-family GPCM route described below, and
-  `"hybrid"` uses EM as a warm start before the direct optimizer.
-  Unsupported one-family combinations fall back to `"direct"` and record
-  that fallback in `fit$summary`. Direct, hybrid, and EM engines all
-  require the common terminal-gradient check for the Numerical component
-  of fit readiness; EM relative log-likelihood convergence alone does
-  not establish numerical readiness. `InferenceReady` is `TRUE` only
-  when every stored fit-readiness component passes.
+  `"em"` uses an EM loop for `RSM` / `PCM` with `population = NULL`,
+  including model-estimated `facet_interactions`, or the explicitly
+  scoped two-family GPCM route described below. `"hybrid"` uses EM as a
+  warm start before the direct optimizer. Ordinary EM/hybrid requires
+  fixed quadrature. Numerical M steps implement generalized EM, checking
+  both the auxiliary and marginal log likelihood for non-decrease beyond
+  roundoff before accepting an update; failed checks stop without
+  replacing a valid checkpoint. This is not a block ECM algorithm or a
+  guarantee of global convergence or faster fitting. Use `mml_starts` to
+  review specified starts and keep integration sensitivity separate. For
+  a raw EM fit with a large terminal gradient, use `"hybrid"` or
+  `"direct"` and review the resulting readiness. Unsupported one-family
+  combinations fall back to `"direct"` and record that fallback in
+  `fit$summary`. Direct, hybrid, and EM engines all require the common
+  terminal-gradient check for the Numerical component of fit readiness;
+  EM relative log-likelihood convergence alone does not establish
+  numerical readiness. `InferenceReady` is `TRUE` only when every stored
+  fit-readiness component passes.
 
 - population_formula :
 
@@ -868,6 +884,37 @@ summary(object, ...)
   cleared on return, error or interruption. The default is silent; it
   does not change numerical controls or become part of saved
   calibration/replay settings.
+
+- mml_starts :
+
+  Optional starting-value review for ordinary full RSM/PCM or
+  single-family GPCM MML. `NULL` keeps the usual single start. A numeric
+  vector such as `c(0, 0.5, -0.5)` adds each nonzero offset times the
+  alternating vector `(1, -1, 1, ...)` to the default free coordinates.
+  These deterministic offsets explore one direction in the fitted free-
+  coordinate order, not random or exhaustive searches. The default start
+  is always included. To explore other directions, supply a uniquely
+  named list of named numeric coordinate values; obtain names from
+  `fit$opt$start_review$parameter_map$Coordinate` after
+  `mml_starts = 0`. Unlisted coordinates retain their default initial
+  values. Anchored and dependent coordinates are expanded from the
+  existing constraints. All attempts share the same fixed or adaptive
+  integration rule and order; automatic integration, checkpoints and
+  two-family GPCM are unsupported. Each attempt uses the requested
+  engine, with existing fallbacks recorded. The smallest reevaluated
+  negative log likelihood is retained even when that attempt is
+  unfinished; a worse converged attempt is not substituted. Inspect
+  `summary(fit)$starting_values` and `fit$opt$start_review` for all
+  starts, optimizer outcomes, warnings, errors and coordinate
+  differences. If all attempts fail, the error condition retains
+  `$start_review`. Missing curvature means it was not evaluated. This
+  review increases fitting time and does not establish a global optimum,
+  adequate integration or valid inference. Use
+  [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
+  for integration sensitivity. Same-model replay and resampling retain
+  this policy. Subgroup DFF refits accept numeric offsets; named starts
+  require an explicit subgroup fit because linking changes the
+  free-coordinate basis.
 
 - object, x :
 
@@ -2699,8 +2746,8 @@ Unsupported explicit arguments are rejected even when equal to a
 default. Ordinary `mfrm_fit` scoring, diagnostics and consolidated
 reports are not attached to this separate class. These restrictions do
 not affect imported eRm fits. See Mair and Hatzinger (2007),
-<https://www.jstatsoft.org/article/view/v020i09>, for the linear
-Rasch-family CML framework.
+[doi:10.18637/jss.v020.i09](https://doi.org/10.18637/jss.v020.i09) , for
+the linear Rasch-family CML framework.
 
 ## Comparison-only estimation
 
@@ -2812,9 +2859,10 @@ unsupported arguments set to their default values.
 The estimable-function criterion is discussed by Lenth (2015),
 <https://journal.r-project.org/articles/RJ-2015-016/>. Recession
 directions and finite-MLE existence in exponential families are
-distinguished by Geyer (2009), <https://www.stat.umn.edu/geyer/gdor/>.
-These principles do not establish global MML identification or
-finite-sample inference here.
+distinguished by Geyer (2009),
+[doi:10.1214/08-EJS349](https://doi.org/10.1214/08-EJS349) . These
+principles do not establish global MML identification or finite-sample
+inference here.
 
 ## See also
 
@@ -2872,8 +2920,8 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 #> # A tibble: 2 × 7
 #>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
 #>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
-#> 1 Criterion      3            0      0.302      -0.344       0.224 0.568
-#> 2 Rater          6            0      0.399      -0.606       0.412 1.02 
+#> 1 Criterion      3     4.62e-18      0.302      -0.344       0.224 0.568
+#> 2 Rater          6    -4.64e-18      0.399      -0.606       0.412 1.02 
 
 # Check the interpretation status and recommended next step
 results$decision
@@ -2883,4 +2931,13 @@ results$decision
 #> 1              No        ready Formal precision support has not been evaluated.
 #>                                                                                                                                                   NextAction
 #> 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.
+
+if (FALSE) { # \dontrun{
+# Optional repeated fitting: compare specified starting values.
+reviewed <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  mml_starts = c(0, 0.5, -0.5))
+summary(reviewed)$starting_values # Every attempt, including warnings/failures
+reviewed$opt$start_review$parameter_map # Meaning and constraints of coordinates
+write.csv(summary(reviewed)$starting_values, "starting-values.csv", row.names = FALSE)
+} # }
 ```

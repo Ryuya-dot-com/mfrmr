@@ -138,374 +138,293 @@ if (requireNamespace("TAM", quietly = TRUE)) {
   imported$summary
 }
 #> ....................................................
-#> Processing Data      2026-10-26 09:04:14.940758 
+#> Processing Data      2026-10-27 13:32:58.37419 
 #>     * Response Data: 20 Persons and  3 Items 
 #>     * Numerical integration with 21 nodes
-#>     * Created Design Matrices   ( 2026-10-26 09:04:14.942209 )
-#>     * Calculated Sufficient Statistics   ( 2026-10-26 09:04:14.943444 )
+#>     * Created Design Matrices   ( 2026-10-27 13:32:58.375401 )
+#>     * Calculated Sufficient Statistics   ( 2026-10-27 13:32:58.376473 )
 #> ....................................................
-#> Iteration 1     2026-10-26 09:04:14.944915
+#> Iteration 1     2026-10-27 13:32:58.377672
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 166.0006
-#>   Maximum item intercept parameter change: 0.825458
+#>   Deviance = 174.8739
+#>   Maximum item intercept parameter change: 0.81675
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.170222
+#>   Maximum variance parameter change: 0.166609
 #> ....................................................
-#> Iteration 2     2026-10-26 09:04:14.946808
+#> Iteration 2     2026-10-27 13:32:58.379194
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 159.9523 | Absolute change: 6.0483 | Relative change: 0.0378131
-#>   Maximum item intercept parameter change: 0.740951
+#>   Deviance = 168.7498 | Absolute change: 6.1241 | Relative change: 0.03629098
+#>   Maximum item intercept parameter change: 0.159987
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.197607
+#>   Maximum variance parameter change: 0.230348
 #> ....................................................
-#> Iteration 3     2026-10-26 09:04:14.947511
+#> Iteration 3     2026-10-27 13:32:58.379703
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 156.8726 | Absolute change: 3.0798 | Relative change: 0.01963247
-#>   Maximum item intercept parameter change: 0.329582
+#>   Deviance = 166.8102 | Absolute change: 1.9396 | Relative change: 0.0116274
+#>   Maximum item intercept parameter change: 0.093208
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.146256
+#>   Maximum variance parameter change: 0.133636
 #> ....................................................
-#> Iteration 4     2026-10-26 09:04:14.948167
+#> Iteration 4     2026-10-27 13:32:58.380172
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 155.2944 | Absolute change: 1.5781 | Relative change: 0.01016214
-#>   Maximum item intercept parameter change: 0.127433
+#>   Deviance = 165.6773 | Absolute change: 1.1329 | Relative change: 0.00683812
+#>   Maximum item intercept parameter change: 0.063102
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.091922
+#>   Maximum variance parameter change: 0.084584
 #> ....................................................
-#> Iteration 5     2026-10-26 09:04:14.948852
+#> Iteration 5     2026-10-27 13:32:58.380648
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 154.4537 | Absolute change: 0.8407 | Relative change: 0.00544295
-#>   Maximum item intercept parameter change: 0.07696
+#>   Deviance = 164.9617 | Absolute change: 0.7156 | Relative change: 0.00433773
+#>   Maximum item intercept parameter change: 0.045334
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.062858
+#>   Maximum variance parameter change: 0.057606
 #> ....................................................
-#> Iteration 6     2026-10-26 09:04:14.949534
+#> Iteration 6     2026-10-27 13:32:58.381099
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 153.8951 | Absolute change: 0.5586 | Relative change: 0.00362978
-#>   Maximum item intercept parameter change: 0.051295
+#>   Deviance = 164.4812 | Absolute change: 0.4805 | Relative change: 0.0029215
+#>   Maximum item intercept parameter change: 0.032153
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.045048
+#>   Maximum variance parameter change: 0.041472
 #> ....................................................
-#> Iteration 7     2026-10-26 09:04:14.950179
+#> Iteration 7     2026-10-27 13:32:58.381551
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 153.4999 | Absolute change: 0.3953 | Relative change: 0.00257495
-#>   Maximum item intercept parameter change: 0.037085
+#>   Deviance = 164.1433 | Absolute change: 0.3379 | Relative change: 0.00205853
+#>   Maximum item intercept parameter change: 0.025284
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.033731
+#>   Maximum variance parameter change: 0.031124
 #> ....................................................
-#> Iteration 8     2026-10-26 09:04:14.950841
+#> Iteration 8     2026-10-27 13:32:58.382
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 153.2079 | Absolute change: 0.292 | Relative change: 0.0019059
-#>   Maximum item intercept parameter change: 0.031884
+#>   Deviance = 163.8966 | Absolute change: 0.2467 | Relative change: 0.00150522
+#>   Maximum item intercept parameter change: 0.020316
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.026121
+#>   Maximum variance parameter change: 0.024168
 #> ....................................................
-#> Iteration 9     2026-10-26 09:04:14.951491
+#> Iteration 9     2026-10-27 13:32:58.382445
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 152.9841 | Absolute change: 0.2238 | Relative change: 0.00146308
-#>   Maximum item intercept parameter change: 0.023112
+#>   Deviance = 163.7108 | Absolute change: 0.1858 | Relative change: 0.00113519
+#>   Maximum item intercept parameter change: 0.017122
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.020888
+#>   Maximum variance parameter change: 0.0193
 #> ....................................................
-#> Iteration 10     2026-10-26 09:04:14.952126
+#> Iteration 10     2026-10-27 13:32:58.382905
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 152.808 | Absolute change: 0.1761 | Relative change: 0.00115219
-#>   Maximum item intercept parameter change: 0.020885
+#>   Deviance = 163.5668 | Absolute change: 0.1439 | Relative change: 0.00087993
+#>   Maximum item intercept parameter change: 0.014514
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.017098
+#>   Maximum variance parameter change: 0.015794
 #> ....................................................
-#> Iteration 11     2026-10-26 09:04:14.952788
+#> Iteration 11     2026-10-27 13:32:58.383361
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 152.6645 | Absolute change: 0.1435 | Relative change: 0.00094019
-#>   Maximum item intercept parameter change: 0.016319
+#>   Deviance = 163.4522 | Absolute change: 0.1146 | Relative change: 0.00070108
+#>   Maximum item intercept parameter change: 0.011953
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.014397
+#>   Maximum variance parameter change: 0.013232
 #> ....................................................
-#> Iteration 12     2026-10-26 09:04:14.953404
+#> Iteration 12     2026-10-27 13:32:58.383823
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 152.5437 | Absolute change: 0.1207 | Relative change: 0.00079152
-#>   Maximum item intercept parameter change: 0.014476
+#>   Deviance = 163.3584 | Absolute change: 0.0938 | Relative change: 0.00057432
+#>   Maximum item intercept parameter change: 0.011053
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.012415
+#>   Maximum variance parameter change: 0.011328
 #> ....................................................
-#> Iteration 13     2026-10-26 09:04:14.954057
+#> Iteration 13     2026-10-27 13:32:58.384268
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 152.4376 | Absolute change: 0.1062 | Relative change: 0.0006964
-#>   Maximum item intercept parameter change: 0.013316
+#>   Deviance = 163.2789 | Absolute change: 0.0795 | Relative change: 0.00048672
+#>   Maximum item intercept parameter change: 0.008958
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.011036
+#>   Maximum variance parameter change: 0.009938
 #> ....................................................
-#> Iteration 14     2026-10-26 09:04:14.954695
+#> Iteration 14     2026-10-27 13:32:58.384727
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 152.3395 | Absolute change: 0.0981 | Relative change: 0.00064378
-#>   Maximum item intercept parameter change: 0.011908
+#>   Deviance = 163.2092 | Absolute change: 0.0697 | Relative change: 0.00042725
+#>   Maximum item intercept parameter change: 0.008147
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.010121
+#>   Maximum variance parameter change: 0.008923
 #> ....................................................
-#> Iteration 15     2026-10-26 09:04:14.955314
+#> Iteration 15     2026-10-27 13:32:58.385155
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 152.2431 | Absolute change: 0.0963 | Relative change: 0.00063284
-#>   Maximum item intercept parameter change: 0.012422
+#>   Deviance = 163.1454 | Absolute change: 0.0639 | Relative change: 0.0003914
+#>   Maximum item intercept parameter change: 0.007625
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.009618
+#>   Maximum variance parameter change: 0.008223
 #> ....................................................
-#> Iteration 16     2026-10-26 09:04:14.955953
+#> Iteration 16     2026-10-27 13:32:58.38561
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 152.1411 | Absolute change: 0.102 | Relative change: 0.00067075
-#>   Maximum item intercept parameter change: 0.011445
+#>   Deviance = 163.0839 | Absolute change: 0.0614 | Relative change: 0.0003766
+#>   Maximum item intercept parameter change: 0.007373
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.009528
+#>   Maximum variance parameter change: 0.007795
 #> ....................................................
-#> Iteration 17     2026-10-26 09:04:14.956589
+#> Iteration 17     2026-10-27 13:32:58.38605
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 152.0226 | Absolute change: 0.1185 | Relative change: 0.00077931
-#>   Maximum item intercept parameter change: 0.011984
+#>   Deviance = 163.0214 | Absolute change: 0.0625 | Relative change: 0.00038362
+#>   Maximum item intercept parameter change: 0.007234
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.009901
+#>   Maximum variance parameter change: 0.007625
 #> ....................................................
-#> Iteration 18     2026-10-26 09:04:14.957199
+#> Iteration 18     2026-10-27 13:32:58.386492
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 151.8682 | Absolute change: 0.1544 | Relative change: 0.00101693
-#>   Maximum item intercept parameter change: 0.013343
+#>   Deviance = 162.9533 | Absolute change: 0.0681 | Relative change: 0.00041779
+#>   Maximum item intercept parameter change: 0.007363
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.010899
+#>   Maximum variance parameter change: 0.007726
 #> ....................................................
-#> Iteration 19     2026-10-26 09:04:14.957837
+#> Iteration 19     2026-10-27 13:32:58.386919
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 151.6341 | Absolute change: 0.234 | Relative change: 0.00154344
-#>   Maximum item intercept parameter change: 0.01599
+#>   Deviance = 162.873 | Absolute change: 0.0803 | Relative change: 0.00049283
+#>   Maximum item intercept parameter change: 0.007784
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.012874
+#>   Maximum variance parameter change: 0.008152
 #> ....................................................
-#> Iteration 20     2026-10-26 09:04:14.958513
+#> Iteration 20     2026-10-27 13:32:58.38734
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 151.199 | Absolute change: 0.4351 | Relative change: 0.00287775
-#>   Maximum item intercept parameter change: 0.020984
+#>   Deviance = 162.7687 | Absolute change: 0.1043 | Relative change: 0.000641
+#>   Maximum item intercept parameter change: 0.008635
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.016585
+#>   Maximum variance parameter change: 0.009023
 #> ....................................................
-#> Iteration 21     2026-10-26 09:04:14.959144
+#> Iteration 21     2026-10-27 13:32:58.387778
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 150.1157 | Absolute change: 1.0834 | Relative change: 0.00721686
-#>   Maximum item intercept parameter change: 0.030472
+#>   Deviance = 162.6153 | Absolute change: 0.1534 | Relative change: 0.00094354
+#>   Maximum item intercept parameter change: 0.010125
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.023463
+#>   Maximum variance parameter change: 0.010585
 #> ....................................................
-#> Iteration 22     2026-10-26 09:04:14.959794
+#> Iteration 22     2026-10-27 13:32:58.388207
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 146.0336 | Absolute change: 4.082 | Relative change: 0.02795263
-#>   Maximum item intercept parameter change: 0.043674
+#>   Deviance = 162.3497 | Absolute change: 0.2656 | Relative change: 0.00163576
+#>   Maximum item intercept parameter change: 0.013183
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.032382
+#>   Maximum variance parameter change: 0.013342
 #> ....................................................
-#> Iteration 23     2026-10-26 09:04:14.960421
+#> Iteration 23     2026-10-27 13:32:58.388672
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 124.7457 | Absolute change: 21.2879 | Relative change: 0.1706508
-#>   Maximum item intercept parameter change: 0.02252
+#>   Deviance = 161.7721 | Absolute change: 0.5776 | Relative change: 0.00357023
+#>   Maximum item intercept parameter change: 0.018421
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0.014031
+#>   Maximum variance parameter change: 0.018355
 #> ....................................................
-#> Iteration 24     2026-10-26 09:04:14.961061
+#> Iteration 24     2026-10-27 13:32:58.389109
 #> E Step
 #> M Step Intercepts   |----
-#>   Deviance = 70.539 | Absolute change: 54.2067 | Relative change: 0.7684648
-#>   Maximum item intercept parameter change: 0.004438
+#>   Deviance = 160.0212 | Absolute change: 1.751 | Relative change: 0.01094209
+#>   Maximum item intercept parameter change: 0.027649
+#>   Maximum item slope parameter change: 0
+#>   Maximum regression parameter change: 0
+#>   Maximum variance parameter change: 0.027081
+#> ....................................................
+#> Iteration 25     2026-10-27 13:32:58.389547
+#> E Step
+#> M Step Intercepts   |----
+#>   Deviance = 151.8892 | Absolute change: 8.132 | Relative change: 0.053539
+#>   Maximum item intercept parameter change: 0.032823
+#>   Maximum item slope parameter change: 0
+#>   Maximum regression parameter change: 0
+#>   Maximum variance parameter change: 0.030413
+#> ....................................................
+#> Iteration 26     2026-10-27 13:32:58.38999
+#> E Step
+#> M Step Intercepts   |----
+#>   Deviance = 107.4521 | Absolute change: 44.4371 | Relative change: 0.4135527
+#>   Maximum item intercept parameter change: 0.011218
+#>   Maximum item slope parameter change: 0
+#>   Maximum regression parameter change: 0
+#>   Maximum variance parameter change: 0.002618
+#> ....................................................
+#> Iteration 27     2026-10-27 13:32:58.390414
+#> E Step
+#> M Step Intercepts   |----
+#>   Deviance = 81.7316 | Absolute change: 25.7205 | Relative change: 0.3146947
+#>   Maximum item intercept parameter change: 0.00114
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 25     2026-10-26 09:04:14.961701
-#> E Step
-#> M Step Intercepts   |----
-#>   Deviance = 70.5388 | Absolute change: 2e-04 | Relative change: 2.97e-06
-#>   Maximum item intercept parameter change: 0.004757
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 26     2026-10-26 09:04:14.962317
-#> E Step
-#> M Step Intercepts   |----
-#>   Deviance = 70.5387 | Absolute change: 1e-04 | Relative change: 1.2e-06
-#>   Maximum item intercept parameter change: 0.002646
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 27     2026-10-26 09:04:14.962963
-#> E Step
-#> M Step Intercepts   |---
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 5.4e-07
-#>   Maximum item intercept parameter change: 0.002382
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 28     2026-10-26 09:04:14.963543
-#> E Step
-#> M Step Intercepts   |---
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 3.1e-07
-#>   Maximum item intercept parameter change: 0.001668
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 29     2026-10-26 09:04:14.964109
-#> E Step
-#> M Step Intercepts   |---
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 1.9e-07
-#>   Maximum item intercept parameter change: 0.001401
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 30     2026-10-26 09:04:14.964701
+#> Iteration 28     2026-10-27 13:32:58.39086
 #> E Step
 #> M Step Intercepts   |--
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 1.1e-07
-#>   Maximum item intercept parameter change: 0.001011
+#>   Deviance = 81.7316 | Absolute change: 0 | Relative change: 1.2e-07
+#>   Maximum item intercept parameter change: 0.000308
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 31     2026-10-26 09:04:14.965199
-#> E Step
-#> M Step Intercepts   |---
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 7e-08
-#>   Maximum item intercept parameter change: 0.00082
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 32     2026-10-26 09:04:14.965774
+#> Iteration 29     2026-10-27 13:32:58.391207
 #> E Step
 #> M Step Intercepts   |--
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 4e-08
-#>   Maximum item intercept parameter change: 0.000588
+#>   Deviance = 81.7316 | Absolute change: 0 | Relative change: 1e-08
+#>   Maximum item intercept parameter change: 0.000177
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 33     2026-10-26 09:04:14.966285
+#> Iteration 30     2026-10-27 13:32:58.391554
 #> E Step
-#> M Step Intercepts   |---
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 2e-08
-#>   Maximum item intercept parameter change: 0.000489
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 34     2026-10-26 09:04:14.96688
-#> E Step
-#> M Step Intercepts   |--
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 1e-08
-#>   Maximum item intercept parameter change: 0.000361
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 35     2026-10-26 09:04:14.967365
-#> E Step
-#> M Step Intercepts   |--
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 1e-08
-#>   Maximum item intercept parameter change: 0.000264
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 36     2026-10-26 09:04:14.967868
-#> E Step
-#> M Step Intercepts   |--
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 0
-#>   Maximum item intercept parameter change: 0.00023
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 37     2026-10-26 09:04:14.968343
-#> E Step
-#> M Step Intercepts   |--
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 0
-#>   Maximum item intercept parameter change: 0.00016
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 38     2026-10-26 09:04:14.968859
-#> E Step
-#> M Step Intercepts   |--
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 0
-#>   Maximum item intercept parameter change: 0.000131
-#>   Maximum item slope parameter change: 0
-#>   Maximum regression parameter change: 0
-#>   Maximum variance parameter change: 0
-#> ....................................................
-#> Iteration 39     2026-10-26 09:04:14.969341
-#> E Step
-#> M Step Intercepts   |--
-#>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 0
-#>   Maximum item intercept parameter change: 9.2e-05
+#> M Step Intercepts   |-
+#>   Deviance = 81.7316 | Absolute change: 0 | Relative change: 0
+#>   Maximum item intercept parameter change: 9.7e-05
 #>   Maximum item slope parameter change: 0
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
 #> Item Parameters
 #>   xsi.index  xsi.label     est
-#> 1         1 Item1_Cat1 -1.2528
-#> 2         2 Item1_Cat2  0.3365
-#> 3         3 Item1_Cat3 -0.1823
-#> 4         4 Item2_Cat1 -0.2876
-#> 5         5 Item2_Cat2  1.3861
-#> 6         6 Item2_Cat3 -0.6930
-#> 7         7 Item3_Cat1 -0.5878
-#> 8         8 Item3_Cat2  0.5878
-#> 9         9 Item3_Cat3  1.6094
+#> 1         1 Item1_Cat1 -0.4054
+#> 2         2 Item1_Cat2 -0.0001
+#> 3         3 Item1_Cat3  0.4055
+#> 4         4 Item2_Cat1 -0.4055
+#> 5         5 Item2_Cat2 -0.1541
+#> 6         6 Item2_Cat3  0.8472
+#> 7         7 Item3_Cat1  0.0000
+#> 8         8 Item3_Cat2  0.4055
+#> 9         9 Item3_Cat3  0.0000
 #> ...................................
 #> Regression Coefficients
 #>      [,1]
@@ -520,18 +439,18 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #> [1] 0
 #> 
 #> -----------------------------
-#> Start:  2026-10-26 09:04:14.940276
-#> End:  2026-10-26 09:04:14.973601 
-#> Time difference of 0.0333252 secs
+#> Start:  2026-10-27 13:32:58.373783
+#> End:  2026-10-27 13:32:58.395094 
+#> Time difference of 0.02131081 secs
 #> 
 #>   Model Method Source  N Persons Facets Categories    LogLik      AIC      BIC
-#> 1   PCM    MML    TAM 20      20      1         NA -35.26929 90.53859 100.4959
+#> 1   PCM    MML    TAM 20      20      1         NA -40.86579 101.7316 111.6889
 #>        ICContractVersion ICEligible ICSelectable                    ICStatus
 #> 1 external_native_tam_v1      FALSE        FALSE imported_native_descriptive
 #>   NativeDeviance NativeLogLik NativeNpar NativeICSampleSize NativeAIC NativeBIC
-#> 1       70.53859    -35.26929         10                 20  90.53859  100.4959
+#> 1       81.73158    -40.86579         10                 20  101.7316  111.6889
 #>   NativeABIC     NativeAICFormula          NativeBICFormula
-#> 1   67.66177 tam_deviance_plus_2k tam_deviance_plus_log_n_k
+#> 1   78.85476 tam_deviance_plus_2k tam_deviance_plus_log_n_k
 #>                           NativeABICFormula NativeAICFormulaVerified
 #> 1 tam_deviance_plus_log_n_minus_2_over_24_k                     TRUE
 #>   NativeBICFormulaVerified NativeABICFormulaVerified
@@ -539,5 +458,5 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   NativeLogLikDevianceConsistent NativePersonCountConsistent Converged
 #> 1                           TRUE                        TRUE      TRUE
 #>                               ConvergenceStatus Iterations IterationCeiling
-#> 1 imported_tam_stopped_before_iteration_ceiling         39             1000
+#> 1 imported_tam_stopped_before_iteration_ceiling         30             1000
 ```

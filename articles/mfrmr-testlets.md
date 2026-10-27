@@ -765,14 +765,14 @@ model_comparison$checks
 #> 8      Blocked source readiness withholds differences; parameter exclusions remain in the effects table.
 model_comparison$effects
 #>       Facet        Level SourceReference SourceComparison CenterReference
-#> 1 Criterion     Accuracy      0.23250785       0.23698253               0
-#> 2 Criterion      Content     -0.38809689      -0.39556320               0
-#> 3 Criterion     Language      0.09102647       0.09277729               0
-#> 4 Criterion Organization      0.06456257       0.06580338               0
-#> 5     Rater          R01     -0.18292092      -0.18556593               0
-#> 6     Rater          R02     -0.30735556      -0.31285402               0
-#> 7     Rater          R03      0.17863651       0.18223377               0
-#> 8     Rater          R04      0.31163997       0.31618617               0
+#> 1 Criterion     Accuracy      0.23250785       0.23698253    0.000000e+00
+#> 2 Criterion      Content     -0.38809689      -0.39556320    0.000000e+00
+#> 3 Criterion     Language      0.09102647       0.09277729    0.000000e+00
+#> 4 Criterion Organization      0.06456257       0.06580338    0.000000e+00
+#> 5     Rater          R01     -0.18292092      -0.18556593   -6.938894e-18
+#> 6     Rater          R02     -0.30735556      -0.31285402   -6.938894e-18
+#> 7     Rater          R03      0.17863651       0.18223377   -6.938894e-18
+#> 8     Rater          R04      0.31163997       0.31618617   -6.938894e-18
 #>   CenterComparison   Reference  Comparison        Mean   Difference
 #> 1    -1.387779e-17  0.23250785  0.23698253  0.23474519  0.004474682
 #> 2    -1.387779e-17 -0.38809689 -0.39556320 -0.39183004 -0.007466312

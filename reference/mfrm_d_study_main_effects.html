@@ -59,7 +59,7 @@ re-fitting the Rasch/MFRM model."><meta property="og:image" content="https://ryu
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Main-effects D-study approximation</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-generalizability.R" class="external-link"><code>R/api-generalizability.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-gstudy-entry.R" class="external-link"><code>R/api-gstudy-entry.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-generalizability.R" class="external-link"><code>R/api-generalizability.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-gstudy-entry.R" class="external-link"><code>R/api-gstudy-entry.R</code></a></small>
       <div class="d-none name"><code>mfrm_d_study_main_effects.Rd</code></div>
     </div>
 
@@ -205,6 +205,11 @@ including Person-by-Task, Person-by-Rater, and Person-by-Rater-by-Task. Those
 functions also accept a single score and estimate the corresponding
 interaction components explicitly. Changing <code>residual_scaling</code> here only
 explores assumptions; it does not estimate the omitted interactions.</p>
+<p>Pass the result directly to <code><a href="mfrm_report.html">mfrm_report()</a></code> for full projection tables and
+their assumptions. Newly created results retain source variance components,
+estimation settings and observed facet counts. Reports of older compatible
+results mark missing source details <code>not_recorded</code>; report creation never
+reconstructs components or computes confidence intervals.</p>
 <p>The <code>G</code> and <code>Phi</code> values returned here belong to the generalizability-theory
 metric family. They should not be interpreted as coefficient alpha, omega,
 KR-20, or IRT marginal/separation reliability, even though all of those
@@ -231,9 +236,10 @@ interaction components omitted by the source main-effects model.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Saved synthetic JML/RSM analysis of example_core.</span></span></span>
+<span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
+<span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"core-jml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lme4"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">gt</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_generalizability.html">mfrm_generalizability</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_d_study.html">mfrm_d_study</a></span><span class="op">(</span><span class="va">gt</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>, Criterion <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span></span>

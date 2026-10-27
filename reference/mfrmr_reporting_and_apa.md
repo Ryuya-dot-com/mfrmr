@@ -544,6 +544,9 @@ appendix assembly, after choosing the supported route above.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("mfrmr_reporting_and_apa", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -562,50 +565,14 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 checklist <- reporting_checklist(fit, diagnostics = diagnostics)
 checklist$section_summary
-#>                       Section Items Available DraftReady ReadyForAPA Missing
-#> 1 Bias / Interaction Analysis     2         0          0           0       2
-#> 2    Element-Level Statistics     4         4          4           4       0
-#> 3      Facet-Level Statistics     3         3          3           3       0
-#> 4                  Global Fit     3         2          2           2       1
-#> 5              Method Section     8         7          7           7       1
-#> 6    Rating Scale Diagnostics     4         4          4           4       0
-#> 7             Visual Displays     9         7          6           6       2
-#>   NeedsDraftWork NeedsAction
-#> 1              2           2
-#> 2              0           0
-#> 3              0           0
-#> 4              1           1
-#> 5              1           1
-#> 6              0           0
-#> 7              3           3
 subset(checklist$checklist, !DraftReady,
        c("Section", "Item", "NextAction"))
-#>                        Section                          Item
-#> 8               Method Section Hierarchical structure review
-#> 10                  Global Fit              PCA of residuals
-#> 23 Bias / Interaction Analysis            Facet pairs tested
-#> 24 Bias / Interaction Analysis  Screen-positive interactions
-#> 27             Visual Displays          Residual PCA visuals
-#> 30             Visual Displays       Strict marginal visuals
-#> 31             Visual Displays            Bias / DIF visuals
-#>                                                                                                                                   NextAction
-#> 8  Run `analyze_hierarchical_structure(fit)` once per design and pass the result to `reporting_checklist(..., hierarchical_structure = hs)`.
-#> 10                                                                Run residual PCA if you want to comment on unexplained residual structure.
-#> 23                                                                   Run bias screening if the manuscript needs interaction-level follow-up.
-#> 24                                                                         Run bias screening before discussing interaction-level anomalies.
-#> 27                                                     Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
-#> 30             Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
-#> 31                                                                    Run bias or DIF screening before discussing interaction-level visuals.
 
 # Format the per-facet distribution summary as a table
 results <- summary(fit, diagnostics = diagnostics)
 tbl <- apa_table(results, which = "facet_overview")
 tbl # Prints the table, caption, and note; review them before using in a paper
-#> Per-facet spread, range, and level-count summary.
-#>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate Span
-#>  Criterion      3            0        0.3       -0.34        0.22 0.57
-#>      Rater      6            0        0.4       -0.61        0.41 1.02
-#> Note. No population model was requested; MML used an unconditional normal person distribution.
 
 # For individual estimates, see as.data.frame(fit)
+} # }
 ```

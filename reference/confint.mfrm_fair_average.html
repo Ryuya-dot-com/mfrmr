@@ -59,7 +59,7 @@ conservative bounded-response method uses the scoring observations directly."><m
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Intervals for common-plan Person expected scores</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-fair-reference-intervals.R" class="external-link"><code>R/api-fair-reference-intervals.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-fair-reference-intervals.R" class="external-link"><code>R/api-fair-reference-intervals.R</code></a></small>
       <div class="d-none name"><code>confint.mfrm_fair_average.Rd</code></div>
     </div>
 
@@ -506,7 +506,10 @@ errors across both endpoints and retains unresolved-draw envelopes.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("confint.mfrm_fair_average", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Calibrate the observed ratings with ordinary joint maximum likelihood.</span></span></span>
 <span class="r-in"><span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">d</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"JML"</span>, rating_min <span class="op">=</span> <span class="fl">1</span>, rating_max <span class="op">=</span> <span class="fl">4</span>, category_policy <span class="op">=</span> <span class="st">"preserve"</span>,</span></span>
@@ -516,20 +519,6 @@ errors across both endpoints and retains unresolved-draw envelopes.</p>
 <span class="r-in"><span><span class="va">plan</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">d</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fair</span> <span class="op">&lt;-</span> <span class="fu"><a href="fair_average_table.html">fair_average_table</a></span><span class="op">(</span><span class="va">f</span>, reference_plan <span class="op">=</span> <span class="va">plan</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">fair</span><span class="op">$</span><span class="va">reference_scores</span><span class="op">)</span> <span class="co"># Expected average, in internal score units.</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Person Estimate         Status                       Target          Units</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   P001 2.937500 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   P002 3.437499 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   P003 3.249999 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   P004 3.062501 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   P005 3.062501 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   P006 1.625000 point_estimate common_plan_expected_average internal_score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Uncertainty</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 not_computed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 not_computed</span>
 <span class="r-in"><span><span class="co"># Two replications exercise the API only; they cannot qualify coverage.</span></span></span>
 <span class="r-in"><span><span class="co"># Explicit experimental generator; points and every refit remain ordinary JML.</span></span></span>
 <span class="r-in"><span><span class="va">ci</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fair</span>, parm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"P001"</span>, <span class="st">"P002"</span><span class="op">)</span>, nsim <span class="op">=</span> <span class="fl">2</span>, seed <span class="op">=</span> <span class="fl">71</span>,</span></span>
@@ -537,59 +526,18 @@ errors across both endpoints and retains unresolved-draw envelopes.</p>
 <span class="r-in"><span>  contrasts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span>, <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>    dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"P001 minus P002"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"P001"</span>, <span class="st">"P002"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ci</span><span class="op">)</span> <span class="co"># Read Status and Available alongside the limits.</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Common-plan expected-score intervals (experimental)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Target   Estimate   CI_Lower   CI_Upper Level Available       Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 P001 minus P002 -0.4999991 -0.6153476 -0.2403474  0.95      TRUE experimental</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Planned Resolved Unresolved ExpectedTailDraws CIEligible LowerMCLower</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       2        2          0              0.05      FALSE         -Inf</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   LowerMCUpper UpperMCLower UpperMCUpper MCLevel MCFinite</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   -0.2403474   -0.6153476          Inf    0.95    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                          Uncertainty</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 joint_calibration_and_person_refit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                            InferenceReview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Experimental pointwise fitted-model approximation; finite-sample coverage and JML bias remain unqualified. Jeffreys generating model; the reported point and refits remain ordinary JML.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Numerical availability is separate from coverage qualification.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Jeffreys generating model; displayed points and refits retain ordinary JML.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Endpoint Monte Carlo enclosures measure simulation precision, not sampling coverage; MCFinite alone does not establish precision.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ci</span>, <span class="st">"trials"</span><span class="op">)</span> <span class="co"># Includes unresolved refits and their reasons.</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Replication CalibrationGradient ScoringGradient BoundaryPersons Available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1                  NA    4.202793e-05               0      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2           2                  NA    4.030392e-05               0      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Reason Warnings Seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                   0.685</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                   0.699</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ci</span>, <span class="st">"monte_carlo"</span><span class="op">)</span> <span class="co"># Infinite enclosures expose the two-draw tail uncertainty.</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Target Endpoint Probability RankLower RankUpper      Lower</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 P001 minus P002    lower       0.975         1         3       -Inf</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 P001 minus P002    upper       0.025         0         2 -0.6153476</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Upper MCLevel Planned Unresolved RankLimited</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -0.2403474    0.95       2          0        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        Inf    0.95       2          0        TRUE</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ci</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="co"># Saved plotting data, including the cautions.</span></span></span>
 <span class="r-in"><span><span class="co"># Deterministic local approximation to the same expected-score target:</span></span></span>
 <span class="r-in"><span><span class="va">delta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fair</span>, parm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"P001"</span>, <span class="st">"P002"</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"delta"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">delta</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Target"</span>, <span class="st">"Estimate"</span>, <span class="st">"SE"</span>, <span class="st">"Available"</span>, <span class="st">"CIEligible"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Common-plan expected-score intervals (experimental)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Target Estimate        SE Available CIEligible</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   P001 2.937500 0.1921590      TRUE      FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   P002 3.437499 0.1599923      TRUE      FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Numerical availability is separate from coverage qualification.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">delta</span>, <span class="st">"covariance"</span><span class="op">)</span> <span class="co"># Includes the covariance between Persons.</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            P001       P002</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> P001 0.03692507 0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> P002 0.00000000 0.02559753</span>
 <span class="r-in"><span><span class="co"># Conservative alternative with explicit observed/unobserved plan support:</span></span></span>
 <span class="r-in"><span><span class="va">bounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fair</span>, parm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"P001"</span>, <span class="st">"P002"</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"bounded"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bounded</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Target"</span>, <span class="st">"Estimate"</span>, <span class="st">"DesignEstimate"</span>, <span class="st">"CI_Lower"</span>, <span class="st">"CI_Upper"</span>, <span class="st">"Informative"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Common-plan expected-score intervals (experimental)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Target Estimate DesignEstimate CI_Lower CI_Upper Informative</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   P001 2.937500         2.9375 1.918924 3.956076        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   P002 3.437499         3.4375 2.418924 4.000000        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Numerical availability is separate from coverage qualification.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">bounded</span>, <span class="st">"support"</span><span class="op">)</span> <span class="co"># Check how much of the plan was actually observed.</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Person ObservedPlanWeight UnobservedPlanWeight RelevantResponses CompletePlan</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   P001                  1                    0                16         TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   P002                  1                    0                16         TRUE</span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

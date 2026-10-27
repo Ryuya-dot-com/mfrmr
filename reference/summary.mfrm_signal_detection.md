@@ -84,10 +84,10 @@ An object of class `summary.mfrm_signal_detection` with:
 ``` r
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
-saved <- readRDS(system.file("examples", "simulation-results.rds",
+saved <- readRDS(system.file("examples", "simulation-signal-detection.rds",
   package = "mfrmr", mustWork = TRUE))
 # Inspect saved$generation_warnings and the result's run/status tables.
-sig_eval <- saved$signal_detection
+sig_eval <- saved$result
 summary(sig_eval)
 #> mfrmr Signal Detection Summary
 #> 

@@ -485,6 +485,9 @@ implementation of one published many-facet Rasch simulation design.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("evaluate_mfrm_signal_detection", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
   design = list(person = 8, rater = 2, criterion = 2, assignment = 2),
   reps = 1,
@@ -494,8 +497,5 @@ sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
 ))
 s_sig <- summary(sig_eval)
 s_sig$overview
-#> # A tibble: 1 × 5
-#>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
-#>     <int>        <int>          <int>         <int>          <dbl>
-#> 1       1            1              1             0           1.25
+} # }
 ```

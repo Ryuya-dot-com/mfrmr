@@ -135,22 +135,15 @@ in an older diagnostic result are not filled with assumed approval.
 ## Examples
 
 ``` r
-# Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
 
-# Fit the model
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  model = "RSM"
-)
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 
-# Compute diagnostics once for the following checks
-diagnostics <- diagnose_mfrm(fit)
+# Use the diagnostics saved with this fit
+diagnostics <- example_fit$diagnostics
 
 # Use a new temporary folder for this example; choose a permanent one for your work
 output_dir <- tempfile("mfrmr-tables-")

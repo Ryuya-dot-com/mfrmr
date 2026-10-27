@@ -195,7 +195,7 @@ if (requireNamespace("lpSolve", quietly = TRUE)) {
 #> [8] 0.4117480
 #> 
 #> $inverse_error
-#> [1] 2.220446e-16
+#> [1] 4.440892e-16
 #> 
 #> $information_status
 #> [1] "available"
@@ -630,7 +630,7 @@ archive <- export_mfrm_results(feedback_results,
 table(archive$written_files$Format)
 #> 
 #>  csv html   md    R  rds 
-#>  174    1    1    1    1
+#>  176    1    1    1    1
 archive$plot_errors
 #> [1] Plot  Error
 #> <0 rows> (or 0-length row.names)

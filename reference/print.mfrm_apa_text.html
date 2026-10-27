@@ -53,7 +53,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Print APA narrative text with preserved line breaks</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>print.mfrm_apa_text.Rd</code></div>
     </div>
 
@@ -107,9 +107,11 @@ report output in the console.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Saved synthetic JML/RSM analysis of example_core.</span></span></span>
+<span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
+<span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"core-jml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
+<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">diagnostics</span></span></span>
 <span class="r-in"><span><span class="va">apa</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_apa_outputs.html">build_apa_outputs</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">apa</span><span class="op">$</span><span class="va">report_text</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Method.</span>
@@ -128,7 +130,7 @@ report output in the console.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> exploratory in this run. Recommended use for this precision profile: JML standard errors</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> and normal bands are exploratory approximations. Changing to MML does not by itself</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> establish valid uncertainty; review the fitted model and its uncertainty assumptions..</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Optimization met the numerical convergence checks after 203 function evaluations and 53</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Optimization met the numerical convergence checks after 209 function evaluations and 53</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> gradient evaluations (LogLik = -820.949). MML model-comparison criteria are unavailable for</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> this fit; numerical completion alone does not establish comparability. Legacy descriptive</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> AIC = 1753.898; legacy descriptive BIC = 2013.950; neither enters the common MML ranking</span>

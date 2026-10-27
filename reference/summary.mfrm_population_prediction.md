@@ -65,10 +65,10 @@ An object of class `summary.mfrm_population_prediction` with:
 ``` r
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
-saved <- readRDS(system.file("examples", "simulation-results.rds",
+saved <- readRDS(system.file("examples", "simulation-population.rds",
   package = "mfrmr", mustWork = TRUE))
 # Inspect saved$generation_warnings and the result's run/status tables.
-pred <- saved$population
+pred <- saved$result
 s <- summary(pred)
 s$overview
 #> # A tibble: 1 × 5

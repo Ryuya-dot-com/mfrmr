@@ -71,31 +71,21 @@ decisions are supplied.
 
 [`estimate_all_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_all_bias.md),
 [`plot.mfrm_bias_collection()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_bias_collection.md),
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
 
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("summary.mfrm_bias_collection", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 ratings <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML")
 screens <- estimate_all_bias(fit)
 review <- summary(screens)
 review$overview
-#>         Interaction Order            Facets Rows ScreenPositive Significant
-#> 1 Rater x Criterion     2 Rater x Criterion   16              3           3
-#>    MaxAbsT MeanAbsBias SupportsFormalInference FormalInferenceEligible
-#> 1 2.594645   0.2641805                   FALSE                   FALSE
-#>   PrimaryReportingEligible ClassificationSystem   ReportingUse Kept Error
-#> 1                    FALSE            screening screening_only TRUE      
-#>   ScreenUnavailable ScreenAvailable Points    Status
-#> 1                 0              16     16 available
 head(review$cells[, c("Interaction", "Bias Size", "ObsN", "ScreenAvailable")])
-#>         Interaction   Bias Size ObsN ScreenAvailable
-#> 1 Rater x Criterion  0.72471042   24            TRUE
-#> 2 Rater x Criterion -0.15575682   24            TRUE
-#> 3 Rater x Criterion -0.07480308   24            TRUE
-#> 4 Rater x Criterion -0.22906880   24            TRUE
-#> 5 Rater x Criterion  0.29138522   24            TRUE
-#> 6 Rater x Criterion  0.05605990   24            TRUE
+} # }
 ```

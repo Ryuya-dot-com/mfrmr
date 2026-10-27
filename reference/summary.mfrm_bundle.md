@@ -130,6 +130,9 @@ Additional class-aware summaries are provided for:
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("summary.mfrm_bundle", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -138,70 +141,9 @@ fit <- suppressWarnings(
 )
 t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
 summary(t4)
-#> mfrmr Unexpected Response Summary 
-#>   Class: mfrm_unexpected
-#>   Components: 4
-#> 
-#> Threshold summary
-#>  TotalObservations EvaluatedObservations UnavailableObservations UnexpectedN
-#>                192                   192                       0          24
-#>  UnexpectedPercent LowProbabilityN LargeResidualN     Rule AbsZThreshold
-#>               12.5              24             24 residual           1.5
-#>  ProbThreshold
-#>            0.4
-#> 
-#> Flagged responses: table
-#>  Row Rater    Criterion Weight Score Observed Expected Residual StdResidual
-#>  160   R02     Accuracy      1     1        1    3.071   -2.071      -2.816
-#>  130   R03     Language      1     1        1    2.966   -1.966      -2.602
-#>   55   R01 Organization      1     1        1    2.937   -1.937      -2.548
-#>   48   R04      Content      1     1        1    2.697   -1.697      -2.142
-#>  181   R04     Accuracy      1     1        1    2.660   -1.660      -2.087
-#>  ObsProb MostLikely MostLikelyProb MostLikelyCount CategoryGap Surprise
-#>    0.020          3          0.513               1           2    1.704
-#>    0.029          3          0.515               1           2    1.538
-#>    0.032          3          0.514               1           2    1.496
-#>    0.066          3          0.478               1           2    1.181
-#>    0.073          3          0.469               1           2    1.139
-#>            Direction FlagLowProbability FlagLargeResidual Severity
-#>  Lower than expected               TRUE              TRUE    5.519
-#>  Lower than expected               TRUE              TRUE    5.139
-#>  Lower than expected               TRUE              TRUE    5.045
-#>  Lower than expected               TRUE              TRUE    4.323
-#>  Lower than expected               TRUE              TRUE    4.226
-#> 
-#> Settings
-#>    Setting    Value
-#>  abs_z_min      1.5
-#>   prob_max      0.4
-#>       rule residual
-#> 
-#> Notes
-#>  - Unexpected-response summary for quick residual screening.
-#>  - Person identifiers are suppressed in this summary. Use `include_person =
-#>    TRUE` only under appropriate privacy controls.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 t11 <- bias_count_table(bias, branch = "facets")
 summary(t11)
-#> mfrmr Bias Count Summary
-#> 
-#> Overview
-#>  InteractionFacets InteractionOrder InteractionMode Branch         Style FacetA
-#>  Rater x Criterion                2        pairwise facets facets_manual  Rater
-#>     FacetB Cells TotalCount MeanCount MedianCount MinCount MaxCount
-#>  Criterion    16        192        12          12       12       12
-#>  LowCountCells LowCountPercent
-#>              0               0
-#> 
-#> Count distribution
-#>  Min Q1 Median Mean Q3 Max
-#>   12 12     12   12 12  12
-#> 
-#> Thresholds
-#>         Setting Value
-#>  min_count_warn    10
-#> 
-#> Notes
-#>  - FACETS-style branch: table columns mirror the output-contract naming.
+} # }
 ```

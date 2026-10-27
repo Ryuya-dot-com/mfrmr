@@ -25,70 +25,70 @@ plot_interrater_agreement(
 
 ## Arguments
 
-- x :
+- x:
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   or
   [`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md).
 
-- diagnostics :
+- diagnostics:
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   when `x` is `mfrm_fit`.
 
-- rater_facet :
+- rater_facet:
 
   Name of the rater facet when `x` is `mfrm_fit`.
 
-- context_facets :
+- context_facets:
 
   Optional context facets when `x` is `mfrm_fit`.
 
-- exact_warn :
+- exact_warn:
 
   Warning threshold for exact agreement when `x` is a fit. Saved
   agreement results use their own thresholds; conflicting overrides are
   rejected. Recreate the agreement result to change its flag rules.
 
-- corr_warn :
+- corr_warn:
 
   Warning threshold for pairwise correlation when `x` is a fit. Saved
   agreement results use their own threshold.
 
-- plot_type :
+- plot_type:
 
   `"exact"`, `"corr"`, or `"difference"`.
 
-- top_n :
+- top_n:
 
   Maximum pairs displayed for bar-style plots.
 
-- main :
+- main:
 
   Compatibility title argument. Omitted or `NULL` keeps the default
   title. Existing calls remain supported without a deprecation warning.
   For new code, prefer `title`; do not supply both arguments.
 
-- palette :
+- palette:
 
   Optional named color overrides (`ok`, `flag`, `expected`).
 
-- label_angle :
+- label_angle:
 
   X-axis label angle for bar-style plots.
 
-- preset :
+- preset:
 
   Visual preset (`"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`).
 
-- draw :
+- draw:
 
   If `TRUE`, draw with base graphics.
 
-- title :
+- title:
 
   Plot title. Omit it to keep the default, supply one character string
   to replace it, or use `NULL` (or `""`) to suppress it. This changes
@@ -237,27 +237,22 @@ or diagnostic thresholds.
 ## Examples
 
 ``` r
-# Load the package and example ratings
+# Long-running workflow; run explicitly when needed.
+# example("plot_interrater_agreement", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
 
-# Fit the model
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  model = "RSM"
-)
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 
 # Compare observed exact agreement with its model-expected baseline
 plot(fit, type = "agreement", rater_facet = "Rater")
-
 # Bars show observed agreement; connected circles show model-expected agreement
 
 # Optional: compare the direction and magnitude of observed-score differences
 plot(fit, type = "agreement", rater_facet = "Rater", metric = "difference")
-
 # Positive horizontal values mean Rater1 assigned higher scores than Rater2
+} # }
 ```

@@ -47,9 +47,11 @@ breaks.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
 apa <- build_apa_outputs(fit, diag)
 apa$report_text
 #> Method.
@@ -68,7 +70,7 @@ apa$report_text
 #> exploratory in this run. Recommended use for this precision profile: JML standard errors
 #> and normal bands are exploratory approximations. Changing to MML does not by itself
 #> establish valid uncertainty; review the fitted model and its uncertainty assumptions..
-#> Optimization met the numerical convergence checks after 203 function evaluations and 53
+#> Optimization met the numerical convergence checks after 209 function evaluations and 53
 #> gradient evaluations (LogLik = -820.949). MML model-comparison criteria are unavailable for
 #> this fit; numerical completion alone does not establish comparability. Legacy descriptive
 #> AIC = 1753.898; legacy descriptive BIC = 2013.950; neither enters the common MML ranking

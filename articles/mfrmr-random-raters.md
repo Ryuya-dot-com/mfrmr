@@ -560,10 +560,10 @@ model_comparison$models
 #> 2 MML: Person quadrature and shared-rater Laplace
 subset(model_comparison$effects, Facet == "Rater")
 #>   Facet Level SourceReference SourceComparison CenterReference CenterComparison
-#> 5 Rater   R01      -0.1829209       -0.1603836               0     8.464462e-06
-#> 6 Rater   R02      -0.3073556       -0.2692240               0     8.464462e-06
-#> 7 Rater   R03       0.1786365        0.1566218               0     8.464462e-06
-#> 8 Rater   R04       0.3116400        0.2730197               0     8.464462e-06
+#> 5 Rater   R01      -0.1829209       -0.1603836   -6.938894e-18     8.464462e-06
+#> 6 Rater   R02      -0.3073556       -0.2692240   -6.938894e-18     8.464462e-06
+#> 7 Rater   R03       0.1786365        0.1566218   -6.938894e-18     8.464462e-06
+#> 8 Rater   R04       0.3116400        0.2730197   -6.938894e-18     8.464462e-06
 #>    Reference Comparison       Mean  Difference        ReferenceKind
 #> 5 -0.1829209 -0.1603921 -0.1716565  0.02252884 Fixed facet estimate
 #> 6 -0.3073556 -0.2692324 -0.2882940  0.03812311 Fixed facet estimate
@@ -732,12 +732,12 @@ head(attr(sd_interval, "profile"))
 #> 6 0.1184987 907.0329 0.9472890                           FALSE             0
 #> 5 0.1308901 906.5867 0.9502072                           FALSE             0
 #>    MaxGradient LogLikDifference GradientDifference InformationPositive
-#> 2 3.959576e-05     2.736556e-09       1.008696e-07                TRUE
-#> 4 6.406482e-05     1.585136e-09       6.101202e-08                TRUE
-#> 7 1.029423e-08     1.099920e-09       4.437633e-08                TRUE
-#> 8 1.923066e-05     1.098101e-09       4.432374e-08                TRUE
-#> 6 2.894858e-05     1.035005e-09       4.215296e-08                TRUE
-#> 5 2.973349e-05     5.885568e-10       2.686203e-08                TRUE
+#> 2 3.959996e-05     2.736442e-09       1.008696e-07                TRUE
+#> 4 6.415218e-05     1.584453e-09       6.101197e-08                TRUE
+#> 7 1.029421e-08     1.099806e-09       4.437632e-08                TRUE
+#> 8 1.924490e-05     1.098101e-09       4.432370e-08                TRUE
+#> 6 2.896967e-05     1.034891e-09       4.215298e-08                TRUE
+#> 5 2.973017e-05     5.883294e-10       2.686202e-08                TRUE
 #>   NumericalReady Detail        LR
 #> 2           TRUE        18.169547
 #> 4           TRUE         5.390822
@@ -1504,14 +1504,14 @@ res$tables$bootstrap_availability
 #> R04   R04      19    17          2  FALSE
 res$tables$comparison_effects
 #>       Facet        Level SourceReference SourceComparison CenterReference
-#> 1 Criterion     Accuracy      0.23250785       0.23147642               0
-#> 2 Criterion      Content     -0.38809689      -0.38637722               0
-#> 3 Criterion     Language      0.09102647       0.09062358               0
-#> 4 Criterion Organization      0.06456257       0.06427722               0
-#> 5     Rater          R01     -0.18292092      -0.16038361               0
-#> 6     Rater          R02     -0.30735556      -0.26922398               0
-#> 7     Rater          R03      0.17863651       0.15662179               0
-#> 8     Rater          R04      0.31163997       0.27301966               0
+#> 1 Criterion     Accuracy      0.23250785       0.23147642    0.000000e+00
+#> 2 Criterion      Content     -0.38809689      -0.38637722    0.000000e+00
+#> 3 Criterion     Language      0.09102647       0.09062358    0.000000e+00
+#> 4 Criterion Organization      0.06456257       0.06427722    0.000000e+00
+#> 5     Rater          R01     -0.18292092      -0.16038361   -6.938894e-18
+#> 6     Rater          R02     -0.30735556      -0.26922398   -6.938894e-18
+#> 7     Rater          R03      0.17863651       0.15662179   -6.938894e-18
+#> 8     Rater          R04      0.31163997       0.27301966   -6.938894e-18
 #>   CenterComparison   Reference  Comparison        Mean    Difference
 #> 1    -1.387779e-17  0.23250785  0.23147642  0.23199214 -0.0010314221
 #> 2    -1.387779e-17 -0.38809689 -0.38637722 -0.38723705  0.0017196695

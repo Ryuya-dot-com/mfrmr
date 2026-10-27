@@ -38,6 +38,9 @@ for constructing an `apa_table` in the first place.
 ## Examples
 
 ``` r
+# Optional integration example (loads additional modelling or rendering packages).
+# example("as_flextable", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 tbl <- structure(
   list(
     table = data.frame(Term = c("Rater A", "Rater B"), Estimate = c(-0.12, 0.18)),
@@ -49,4 +52,5 @@ tbl <- structure(
 if (requireNamespace("flextable", quietly = TRUE)) {
   invisible(as_flextable(tbl))
 }
+} # }
 ```

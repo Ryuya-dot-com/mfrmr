@@ -84,7 +84,7 @@ information. This is uncertainty in a fitted curve, not a Person score interval.
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Uncertainty in GPCM category probabilities and information curves</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-gpcm-curve-intervals.R" class="external-link"><code>R/api-gpcm-curve-intervals.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-gpcm-curve-intervals.R" class="external-link"><code>R/api-gpcm-curve-intervals.R</code></a></small>
       <div class="d-none name"><code>mfrm_curve_intervals.Rd</code></div>
     </div>
 
@@ -286,10 +286,10 @@ and missing intervals. A slope value of one is not a rater-quality threshold.</p
 </h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># How do category probabilities vary with ability in one rating context?</span></span></span>
 <span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"GPCM"</span>, method <span class="op">=</span> <span class="st">"MML"</span>, step_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span></span>
-<span class="r-in"><span>  slope_facet <span class="op">=</span> <span class="st">"Rater"</span>, rating_min <span class="op">=</span> <span class="fl">1</span>, rating_max <span class="op">=</span> <span class="fl">4</span>,</span></span>
-<span class="r-in"><span>  category_policy <span class="op">=</span> <span class="st">"preserve"</span>, quad_points <span class="op">=</span> <span class="fl">61</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Reuse the synthetic GPCM fit; estimation uses 61 quadrature points.</span></span></span>
+<span class="r-in"><span><span class="co"># Full regeneration recipe: examples/measurement-fits.R in the package.</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"measurement-fits.rds"</span>,</span></span>
+<span class="r-in"><span>  package <span class="op">=</span> <span class="st">"mfrmr"</span>, mustWork <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">gpcm</span></span></span>
 <span class="r-in"><span><span class="co"># Select actual labels from the example; replace them with your context.</span></span></span>
 <span class="r-in"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>Theta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="fl">21</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">ratings</span><span class="op">$</span><span class="va">Rater</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span></span>

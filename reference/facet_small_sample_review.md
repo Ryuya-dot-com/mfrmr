@@ -111,8 +111,7 @@ Linacre, J. M. (1994). Sample size and item calibration stability.
 
 Jones, E., & Wind, S. A. (2018). Using repeated ratings to improve
 measurement precision in incomplete rating designs. *Journal of Applied
-Measurement, 19*(2), 148-161.
-<https://pubmed.ncbi.nlm.nih.gov/29894984/>
+Measurement, 19*(2), 148-161. PMID: 29894984.
 
 ## See also
 

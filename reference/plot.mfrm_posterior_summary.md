@@ -8,7 +8,8 @@ Plot saved posterior estimates and credible intervals
 # S3 method for class 'mfrm_posterior_summary'
 plot(
   x,
-  quantity = c("location", "ability", "step_offset", "slope", "log_slope"),
+  quantity = c("location", "ability", "step_offset", "slope", "log_slope",
+    "population_mean", "population_sd"),
   facet = NULL,
   draw = TRUE,
   reference = NULL,
@@ -30,8 +31,10 @@ plot(
 
 - quantity :
 
-  One of `"location"` (default), `"ability"`, `"step_offset"`, `"slope"`
-  or `"log_slope"`. Quantities with different units are not mixed.
+  One of `"location"` (default), `"ability"`, `"step_offset"`,
+  `"slope"`, `"log_slope"`, `"population_mean"` or `"population_sd"`.
+  Population quantities require an estimated-population export.
+  Quantities with different units are not mixed.
 
 - facet :
 

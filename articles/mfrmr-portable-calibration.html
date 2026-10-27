@@ -83,7 +83,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Portable calibration and fresh-session scoring</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/vignettes/mfrmr-portable-calibration.Rmd" class="external-link"><code>vignettes/mfrmr-portable-calibration.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-portable-calibration.Rmd" class="external-link"><code>vignettes/mfrmr-portable-calibration.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-portable-calibration.Rmd</code></div>
     </div>
 
@@ -391,10 +391,10 @@ artifact, so none can influence the score.</p>
 <span><span class="co">#&gt; Fixed-parameter integration review (adaptive minus fixed)</span></span>
 <span><span class="co">#&gt;  FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange</span></span>
 <span><span class="co">#&gt;         121            31       2           0            6.549072e-11</span></span>
-<span><span class="co">#&gt;         121            61       2           0            6.549072e-11</span></span>
+<span><span class="co">#&gt;         121            61       2           0            6.549428e-11</span></span>
 <span><span class="co">#&gt;  MaxAbsEAPChange MaxAbsSDChange</span></span>
-<span><span class="co">#&gt;     5.946027e-10   3.467933e-10</span></span>
-<span><span class="co">#&gt;     5.946028e-10   3.467932e-10</span></span>
+<span><span class="co">#&gt;     5.946026e-10   3.467934e-10</span></span>
+<span><span class="co">#&gt;     5.946025e-10   3.467933e-10</span></span>
 <span><span class="co">#&gt;   Calibration: portable-rsm-example</span></span>
 <span><span class="co">#&gt;   Model / estimator: RSM / MML</span></span>
 <span><span class="co">#&gt;   Persons: 2 scored (1 requiring review); 0 not scored</span></span>
@@ -611,25 +611,25 @@ the calibration parameters and prior fixed.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span><span class="op">$</span><span class="va">quadrature_overview</span></span>
 <span><span class="co">#&gt;   FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange</span></span>
 <span><span class="co">#&gt; 1        121            31       2           0            6.549072e-11</span></span>
-<span><span class="co">#&gt; 2        121            61       2           0            6.549072e-11</span></span>
+<span><span class="co">#&gt; 2        121            61       2           0            6.549428e-11</span></span>
 <span><span class="co">#&gt;   MaxAbsEAPChange MaxAbsSDChange</span></span>
-<span><span class="co">#&gt; 1    5.946027e-10   3.467933e-10</span></span>
-<span><span class="co">#&gt; 2    5.946028e-10   3.467932e-10</span></span>
+<span><span class="co">#&gt; 1    5.946026e-10   3.467934e-10</span></span>
+<span><span class="co">#&gt; 2    5.946025e-10   3.467933e-10</span></span>
 <span><span class="co"># Keep full precision when inspecting individual differences.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">scores</span><span class="op">$</span><span class="va">quadrature_review</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Person"</span>, <span class="st">"AdaptiveNodes"</span>, <span class="st">"EAPChange"</span>, <span class="st">"PosteriorSDChange"</span>,</span>
 <span>  <span class="st">"AdaptiveEAPChangeFromPrevious"</span>, <span class="st">"AdaptiveSDChangeFromPrevious"</span>, <span class="st">"Status"</span></span>
 <span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         Person AdaptiveNodes     EAPChange PosteriorSDChange</span></span>
-<span><span class="co">#&gt; 1 NEW_PERSON_1            31 -5.946027e-10      3.467933e-10</span></span>
-<span><span class="co">#&gt; 2 NEW_PERSON_1            61 -5.946028e-10      3.467932e-10</span></span>
-<span><span class="co">#&gt; 3 NEW_PERSON_2            31 -7.105427e-15     -1.016964e-13</span></span>
+<span><span class="co">#&gt; 1 NEW_PERSON_1            31 -5.946026e-10      3.467934e-10</span></span>
+<span><span class="co">#&gt; 2 NEW_PERSON_1            61 -5.946025e-10      3.467933e-10</span></span>
+<span><span class="co">#&gt; 3 NEW_PERSON_2            31 -6.661338e-15     -1.021405e-13</span></span>
 <span><span class="co">#&gt; 4 NEW_PERSON_2            61  1.776357e-15     -9.769963e-15</span></span>
 <span><span class="co">#&gt;   AdaptiveEAPChangeFromPrevious AdaptiveSDChangeFromPrevious   Status</span></span>
 <span><span class="co">#&gt; 1                            NA                           NA computed</span></span>
-<span><span class="co">#&gt; 2                 -1.110223e-16                -5.551115e-17 computed</span></span>
+<span><span class="co">#&gt; 2                  1.110223e-16                -1.110223e-16 computed</span></span>
 <span><span class="co">#&gt; 3                            NA                           NA computed</span></span>
-<span><span class="co">#&gt; 4                  8.881784e-15                 9.192647e-14 computed</span></span></code></pre></div>
+<span><span class="co">#&gt; 4                  8.437695e-15                 9.237056e-14 computed</span></span></code></pre></div>
 <p>Check fixed-versus-adaptive differences and changes between adaptive
 orders, including log-marginal likelihood contributions in the full
 table. Observation weights, when supplied, enter the likelihood as in

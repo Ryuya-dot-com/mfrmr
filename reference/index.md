@@ -204,6 +204,7 @@ assumptions.
 - [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
   [`print(`*`<mfrm_facet_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
   [`summary(`*`<mfrm_facet_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+  [`confint(`*`<mfrm_facet_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
   [`vcov(`*`<mfrm_facet_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
   : Pointwise intervals for fixed facet estimates and contrasts
 - [`plot(`*`<mfrm_facet_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_facet_intervals.md)
@@ -919,6 +920,14 @@ and compatibility helpers.
 
 - [`recommend_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/recommend_mfrm_design.md)
   : Recommend a design condition from simulation results
+
+- [`summary(`*`<mfrm_design_recommendation>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_design_recommendation.md)
+  [`print(`*`<summary.mfrm_design_recommendation>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_design_recommendation.md)
+  [`print(`*`<mfrm_design_recommendation>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_design_recommendation.md)
+  : Review a simulation-based design recommendation
+
+- [`plot(`*`<mfrm_design_recommendation>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_design_recommendation.md)
+  : Plot criteria behind a design recommendation
 
 - [`reference_case_benchmark()`](https://ryuya-dot-com.github.io/mfrmr/reference/reference_case_benchmark.md)
   : Benchmark packaged reference cases

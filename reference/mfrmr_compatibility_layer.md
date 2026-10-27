@@ -880,6 +880,9 @@ count band as proof of sample adequacy.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("mfrmr_compatibility_layer", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 
@@ -891,43 +894,7 @@ run <- run_mfrm_facets(
   maxit = 30
 )
 summary(run)
-#> FACETS-style Workflow Summary
-#>   Model: RSM | Method: JML
-#>   N: 192 | Persons: 12 | Facets: 2 | Categories: 4
-#>   LogLik: -203.282 | Information-criterion ranking is unavailable for JML.
-#>   Optimizer returned code 0: Yes | Formal inference: Ready | Iterations: 66
-#> 
-#> Column mapping
-#>     Key            Value
-#>  Person           Person
-#>   Score            Score
-#>  Facets Rater, Criterion
-#>  Weight                 
-#> 
-#> Detailed objects:
-#>  - summary(out$fit)
-#>  - summary(out$diagnostics)
 compatibility_alias_table("functions")
-#>                       Alias           PreferredName  Surface      Lifecycle
-#> 1               mfrmRFacets         run_mfrm_facets function retained_alias
-#> 2               analyze_dif             analyze_dff function retained_alias
-#> 3              mfrm_cluster        mfrm_cluster_pam function retained_alias
-#> 4 mfrm_response_imputations review_mfrm_imputations function retained_alias
-#>                                                   RetainedFor
-#> 1                                      older workflow scripts
-#> 2                           earlier DIF-oriented package code
-#> 3        earlier feature-clustering scripts and saved results
-#> 4 earlier assigned-score imputation scripts and saved results
-#>             RemovalPlan
-#> 1 No scheduled removal.
-#> 2 No scheduled removal.
-#> 3 No scheduled removal.
-#> 4 No scheduled removal.
-#>                                                                                                   Notes
-#> 1                                    Compatibility wrapper for the legacy-compatible one-shot workflow.
-#> 2               DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.
-#> 3 Identical Gower/PAM implementation and result class; the preferred name makes the algorithm explicit.
-#> 4        Same supplied-completion checks and result class; this function does not generate imputations.
 
 fixed <- build_fixed_reports(
   estimate_bias(
@@ -940,7 +907,6 @@ fixed <- build_fixed_reports(
   branch = "original"
 )
 names(fixed)
-#> [1] "bias_fixed"        "pairwise_fixed"    "pairwise_table"   
-#> [4] "branch"            "style"             "interaction_label"
-#> [7] "target_facet"     
+
+} # }
 ```

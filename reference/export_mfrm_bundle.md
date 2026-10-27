@@ -338,10 +338,11 @@ recorded without asserting a match to the fit.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
 bundle <- export_mfrm_bundle(
   fit,
   diagnostics = diag,

@@ -577,44 +577,22 @@ Available from
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("confint.mfrm_multivariate_gstudy", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Published synthetic data: 10 persons, 6 common tasks, scores V and W.
 tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 g <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
 ci <- confint(g, weights = c(V = .5, W = .5), assumption = "normal")
 ci[, c("Source", "Estimate", "SE", "Lower", "Upper", "Status")]
-#>     Source  Estimate        SE       Lower    Upper    Status
-#> 1   Person 0.3438889 0.2241526 0.049657449 1.550716 Available
-#> 2     Task 0.2120370 0.1708214 0.006867325 1.798412 Available
-#> 3 Residual 1.0496296 0.2165221 0.722110052 1.665130 Available
 attr(ci, "notes")
-#> [1] "Pointwise normal-random-effects intervals for a prespecified score or fixed composite; MLS intervals are approximate. Not simultaneous or distribution robust."       
-#> [2] "Estimates and SEs have squared score units. SE is sampling uncertainty in a component, not measurement SEM or uncertainty in G/Phi."                                  
-#> [3] "Raw estimates and endpoints are retained. Lower/Upper intersect the interval with nonnegative variances; consult Status for empty or unavailable intervals."          
-#> [4] "Positive intervals whose width or endpoints cannot be represented remain unavailable with an explicit Status; a rounded zero width is not exact population knowledge."
-#> [5] "SE uses the df + 2 moment correction. Weights are used as supplied; saveRDS() preserves assumptions and source context."                                              
 # One original score and one component; no new G-study is fitted.
 confint(g, parm = "Person", score = "V", assumption = "normal", level = .90)
-#>   Source Score  Estimate        SE      Lower   Upper   RawLower RawUpper Level
-#> 1 Person     V 0.3681481 0.2497098 0.07913359 1.34985 0.07913359  1.34985   0.9
-#>     Method    Status
-#> 1 Ting MLS Available
 # Covariance between the two observed scores, retaining its sign.
 covariance_ci <- confint(g, score = c("V", "W"), method = "gci",
   assumption = "normal")
 covariance_ci[, c("Source", "Estimate", "SE", "Lower", "Upper", "Status")]
-#>     Source   Estimate        SE       Lower    Upper
-#> 1   Person 0.31925926 0.2312888 -0.05279626 1.535775
-#> 2     Task 0.09185185 0.2075366 -0.80723400 1.732818
-#> 3 Residual 0.70481481 0.2284757  0.31956605 1.323658
-#>                          Status
-#> 1 Computed generalized interval
-#> 2 Computed generalized interval
-#> 3 Computed generalized interval
 attr(covariance_ci, "monte_carlo")$endpoint_bands
-#>     Source LowerMCLower LowerMCUpper UpperMCLower UpperMCUpper
-#> 1   Person  -0.06215423  -0.04371375     1.492759     1.601598
-#> 2     Task  -0.85624243  -0.75573220     1.641290     1.834400
-#> 3 Residual   0.31195909   0.32533382     1.305259     1.340737
 # Incomplete ratings: a residual-only interval without likelihood fitting.
 observed <- tasks[(tasks$Person + tasks$Task) %% 3 != 0, ]
 sparse_g <- mfrm_g_study(observed, c("V", "W"), rater = NULL,
@@ -622,10 +600,7 @@ sparse_g <- mfrm_g_study(observed, c("V", "W"), rater = NULL,
 residual_ci <- confint(sparse_g, parm = "Residual", score = "V",
   method = "residual_contrast", assumption = "normal")
 residual_ci[, c("Estimate", "IntervalCenter", "Lower", "Upper", "Status")]
-#>    Estimate IntervalCenter     Lower    Upper                      Status
-#> 1 0.6827101      0.9153247 0.5629792 1.744177 Exact normal-model interval
 attr(residual_ci, "residual_projection")$df
-#> [1] 25
 # A separate experimental REML model can address other components.
 if (requireNamespace("lme4", quietly = TRUE) && requireNamespace("minqa", quietly = TRUE)) {
   profile_ci <- confint(sparse_g, score = "V", method = "reml_profile",
@@ -637,8 +612,5 @@ if (requireNamespace("lme4", quietly = TRUE) && requireNamespace("minqa", quietl
                       method = "reml_profile", assumption = "normal")
   joint_ci[, c("Source", "Estimate", "IntervalCenter", "Lower", "Upper", "Validation")]
 }
-#>   Source  Estimate IntervalCenter      Lower    Upper
-#> 1 Person 0.5444439      0.4759792 0.05920502 1.825228
-#>                                                                                Validation
-#> 1 Experimental chi-square calibration; boundary and finite-sample coverage not guaranteed
+} # }
 ```

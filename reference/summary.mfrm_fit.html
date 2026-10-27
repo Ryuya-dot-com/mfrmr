@@ -53,7 +53,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize an <code>mfrm_fit</code> object in a user-friendly format</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_fit.Rd</code></div>
     </div>
 
@@ -197,6 +197,12 @@ distinguishes whole-facet (<code>"facet"</code>) from legacy remainder centering
 convention metadata retain the legacy interpretation. Recreate this
 summary from the fit to obtain new fields; reading an old summary does
 not update it or refit the model</p></li>
+<li><p><code>numerical_review</code>: separate optimization, curvature, starting-value,
+integration and reproducible-refit evidence with specific next actions.
+Missing checks remain unassessed; this table does not change readiness</p></li>
+<li><p><code>starting_values</code>, <code>starting_value_notes</code>: all attempted starts, numerical
+outcomes, selection and interpretation limits when <code>fit_mfrm(mml_starts = ...)</code>
+was requested. These describe numerical sensitivity, not sampling uncertainty</p></li>
 <li><p><code>attached_diagnostics</code>: logical flag indicating whether the
 <code>mfrm_fit</code> was returned with diagnostics already attached</p></li>
 <li><p><code>attached_diagnostics_cols</code>: character vector of diagnostic
@@ -350,29 +356,12 @@ checks. For <code>GPCM</code>, continue with <code><a href="compute_information.
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load the package</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Load example ratings and look at the first six rows</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">toy</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Study Person Rater    Criterion Score Group</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 OperationalExample   P001   R01     Language     4     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 OperationalExample   P001   R01 Organization     2     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 OperationalExample   P001   R02      Content     4     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 OperationalExample   P001   R02     Language     3     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 OperationalExample   P001   R02 Organization     2     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 OperationalExample   P002   R01      Content     3     A</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
-<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
-<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
-<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Saved synthetic MML/RSM analysis of example_operational.</span></span></span>
+<span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
+<span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"operational-mml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Save the summary, then display its tables</span></span></span>
 <span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
@@ -387,8 +376,8 @@ checks. For <code>GPCM</code>, continue with <code><a href="compute_information.
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion      3            0      0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater          6            0      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion      3     4.62<span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>      0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater          6     0   <span style="color: #949494;"> </span>         0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Check the interpretation status and recommended next step</span></span></span>
 <span class="r-in"><span><span class="va">results</span><span class="op">$</span><span class="va">decision</span></span></span>

@@ -197,96 +197,16 @@ for the current scope.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
+# Long-running workflow; run explicitly when needed.
+# example("facets_output_file_bundle", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
 summary(out)
-#> mfrmr Output File Bundle Summary 
-#>   Class: mfrm_output_bundle
-#>   Components: 4
-#> 
-#> Output overview
-#>  GraphRows ScoreRows WrittenFiles IncludeFixed WriteFiles ScoreSEMethod
-#>        241       768            0        FALSE      FALSE          both
-#> 
-#> Output preview rows: scorefile
-#>  Rater Criterion Observed Expected Residual StdResidual   Var Weight score_k
-#>    R01   Content        3    3.282   -0.282      -0.403 0.490      1       2
-#>    R01   Content        3    3.662   -0.662      -1.247 0.282      1       2
-#>    R01   Content        4    3.528    0.472       0.779 0.367      1       3
-#>    R01   Content        3    3.384   -0.384      -0.576 0.444      1       2
-#>    R01   Content        2    3.384   -1.384      -2.077 0.444      1       1
-#>    R01   Content        3    1.930    1.070       1.398 0.586      1       2
-#>    R01   Content        3    3.384   -0.384      -0.576 0.444      1       2
-#>    R01   Content        3    1.848    1.152       1.539 0.560      1       2
-#>    R01   Content        3    2.309    0.691       0.853 0.656      1       2
-#>    R01   Content        2    3.282   -1.282      -1.832 0.490      1       1
-#>  PersonMeasure PrimaryPersonMeasure PersonMeasureBasis ConditionalVariance
-#>          0.684                0.684      JML optimizer               0.490
-#>          1.672                1.672      JML optimizer               0.282
-#>          1.257                1.257      JML optimizer               0.367
-#>          0.901                0.901      JML optimizer               0.444
-#>          0.901                0.901      JML optimizer               0.444
-#>         -1.522               -1.522      JML optimizer               0.586
-#>          0.901                0.901      JML optimizer               0.444
-#>         -1.665               -1.665      JML optimizer               0.560
-#>         -0.918               -0.918      JML optimizer               0.656
-#>          0.684                0.684      JML optimizer               0.490
-#>  PearsonAvailable   ResponseStatus
-#>              TRUE available_plugin
-#>              TRUE available_plugin
-#>              TRUE available_plugin
-#>              TRUE available_plugin
-#>              TRUE available_plugin
-#>              TRUE available_plugin
-#>              TRUE available_plugin
-#>              TRUE available_plugin
-#>              TRUE available_plugin
-#>              TRUE available_plugin
-#>                                                                   ResponseReason
-#>  Conditional point calculation; calibration and Person uncertainty are excluded.
-#>  Conditional point calculation; calibration and Person uncertainty are excluded.
-#>  Conditional point calculation; calibration and Person uncertainty are excluded.
-#>  Conditional point calculation; calibration and Person uncertainty are excluded.
-#>  Conditional point calculation; calibration and Person uncertainty are excluded.
-#>  Conditional point calculation; calibration and Person uncertainty are excluded.
-#>  Conditional point calculation; calibration and Person uncertainty are excluded.
-#>  Conditional point calculation; calibration and Person uncertainty are excluded.
-#>  Conditional point calculation; calibration and Person uncertainty are excluded.
-#>  Conditional point calculation; calibration and Person uncertainty are excluded.
-#>  ScoreSlope ScoreInformation ObservedScoreDerivative PrObserved ObsProb
-#>           1            0.490                  -0.282      0.456   0.456
-#>           1            0.282                  -0.662      0.281   0.281
-#>           1            0.367                   0.472      0.585   0.585
-#>           1            0.444                  -0.384      0.424   0.424
-#>           1            0.444                  -1.384      0.088   0.088
-#>           1            0.586                   1.070      0.200   0.200
-#>           1            0.444                  -0.384      0.424   0.424
-#>           1            0.560                   1.152      0.171   0.171
-#>           1            0.656                   0.691      0.342   0.342
-#>           1            0.490                  -1.282      0.118   0.118
-#> 
-#> Settings
-#>            Setting        Value
-#>            include graph, score
-#>        theta_range        -6, 6
-#>       theta_points          241
-#>             digits            4
-#>      include_fixed        FALSE
-#>     fixed_max_rows          400
-#>        write_files        FALSE
-#>         output_dir         NULL
-#>        file_prefix mfrmr_output
-#>          overwrite        FALSE
-#>    score_se_method         both
-#>  score_side_status     standard
-#> 
-#> Notes
-#>  - Graphfile/SCORE-style export bundle (table output and optional file-write
-#>    metadata).
-#>  - Person identifiers are suppressed in this summary. Use `include_person =
-#>    TRUE` only under appropriate privacy controls.
 p_out <- plot(out, draw = FALSE)
 p_out$data$plot
-#> [1] "graph_expected"
+} # }
 ```

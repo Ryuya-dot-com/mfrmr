@@ -188,6 +188,9 @@ weights, see
 ## Examples
 
 ``` r
+# Optional integration example (loads additional modelling or rendering packages).
+# example("mfrm_cluster_imputed", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 if (requireNamespace("mice", quietly = TRUE) &&
     requireNamespace("cluster", quietly = TRUE)) {
   attributes <- mice::nhanes2
@@ -208,5 +211,5 @@ if (requireNamespace("mice", quietly = TRUE) &&
   result$co_membership[1:4, 1:4]
   result$imputation_model$loggedEvents
 }
-#> NULL
+} # }
 ```

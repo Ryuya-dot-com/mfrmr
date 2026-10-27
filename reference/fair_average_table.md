@@ -391,52 +391,32 @@ does not accept this bundle.
 ## Examples
 
 ``` r
-# Load the package and example ratings
+# Long-running workflow; run explicitly when needed.
+# example("fair_average_table", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
 
-# Fit the model
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  model = "RSM"
-)
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
 
-# Compute diagnostics once for the following checks
-diagnostics <- diagnose_mfrm(fit)
+# Use the diagnostics saved with this fit
+diagnostics <- example_fit$diagnostics
 
 # Compare observed person means with model-based scores on a common reference
 fair <- fair_average_table(fit, diagnostics = diagnostics, facets = "Person",
                            reference = "mean", label_style = "native")
 head(fair$raw_by_facet$Person[, c("Level", "ObservedAverage", "FairM")])
-#> # A tibble: 6 × 3
-#>   Level ObservedAverage FairM
-#>   <chr>           <dbl> <dbl>
-#> 1 P045             3.67  3.45
-#> 2 P015             3.67  3.44
-#> 3 P036             3.33  3.33
-#> 4 P030             3.33  3.28
-#> 5 P027             3.17  3.16
-#> 6 P025             3     3.02
 # FairM uses the mean reference for the other facets; it is in score units
 # It is a conditional model prediction, not a guarantee of fairness
 
-# For an ordinary JML fit, request total-score extrapolation explicitly
+# Fit the same synthetic ratings by JML to illustrate total-score extrapolation
+toy <- load_mfrmr_data(example_fit$dataset)
 jml <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML")
 extreme_report <- fair_average_table(jml, xtreme = .3, xtreme_method = "facets")
 head(extreme_report$raw_by_facet$Person[, c("Level", "PrimaryMeasure",
      "Measure", "MeasureBasis", "ModelSE", "MeasureSEBasis")])
-#> # A tibble: 6 × 6
-#>   Level PrimaryMeasure Measure MeasureBasis    ModelSE MeasureSEBasis           
-#>   <chr>          <dbl>   <dbl> <chr>             <dbl> <chr>                    
-#> 1 P015            2.37    2.37 Fitted estimate   0.764 Fitted measure or unavai…
-#> 2 P045            2.26    2.26 Fitted estimate   0.769 Fitted measure or unavai…
-#> 3 P036            1.65    1.65 Fitted estimate   0.585 Fitted measure or unavai…
-#> 4 P030            1.59    1.59 Fitted estimate   0.584 Fitted measure or unavai…
-#> 5 P027            1.44    1.44 Fitted estimate   0.548 Fitted measure or unavai…
-#> 6 P013            1.16    1.16 Fitted estimate   0.555 Fitted measure or unavai…
 # ModelSE describes the adjusted total when MeasureBasis says extrapolation
+} # }
 ```

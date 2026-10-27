@@ -139,10 +139,11 @@ conclusions about a rater.
 ## Examples
 
 ``` r
-ratings <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
-diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+# Saved synthetic JML/RSM analysis of example_bias.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diagnostics <- example_fit$diagnostics
 bias <- estimate_bias(fit, diagnostics = diagnostics,
   facet_a = "Rater", facet_b = "Criterion")
 p <- plot(bias, type = "ranked", preset = "publication", draw = FALSE)

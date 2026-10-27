@@ -184,6 +184,9 @@ Psychological Measurement, 78, 430–459. doi:10.1177/0013164416689696.
 ## Examples
 
 ``` r
+# Optional integration example (loads additional modelling or rendering packages).
+# example("fit_rater_network", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 if (requireNamespace("ergm", quietly = TRUE) &&
     requireNamespace("igraph", quietly = TRUE)) {
   ratings <- load_mfrmr_data("example_core")
@@ -199,15 +202,5 @@ if (requireNamespace("ergm", quietly = TRUE) &&
   mfrm_report(model)$tables$coefficients
   plot(model, draw = FALSE)
 }
-#> Registered S3 methods overwritten by 'ergm':
-#>   method               from
-#>   simulate.formula     lme4
-#>   simulate.formula_lhs lme4
-#> Starting maximum pseudolikelihood estimation (MPLE):
-#> Obtaining the responsible dyads.
-#> Evaluating the predictor and response matrix.
-#> Maximizing the pseudolikelihood.
-#> Finished MPLE.
-#> Evaluating log-likelihood at the estimate. 
-#> 
+} # }
 ```

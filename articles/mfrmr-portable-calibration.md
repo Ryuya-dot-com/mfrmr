@@ -291,10 +291,10 @@ summary(scores)
 #> Fixed-parameter integration review (adaptive minus fixed)
 #>  FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange
 #>         121            31       2           0            6.549072e-11
-#>         121            61       2           0            6.549072e-11
+#>         121            61       2           0            6.549428e-11
 #>  MaxAbsEAPChange MaxAbsSDChange
-#>     5.946027e-10   3.467933e-10
-#>     5.946028e-10   3.467932e-10
+#>     5.946026e-10   3.467934e-10
+#>     5.946025e-10   3.467933e-10
 #>   Calibration: portable-rsm-example
 #>   Model / estimator: RSM / MML
 #>   Persons: 2 scored (1 requiring review); 0 not scored
@@ -534,25 +534,25 @@ parameters and prior fixed.
 summary(scores)$quadrature_overview
 #>   FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange
 #> 1        121            31       2           0            6.549072e-11
-#> 2        121            61       2           0            6.549072e-11
+#> 2        121            61       2           0            6.549428e-11
 #>   MaxAbsEAPChange MaxAbsSDChange
-#> 1    5.946027e-10   3.467933e-10
-#> 2    5.946028e-10   3.467932e-10
+#> 1    5.946026e-10   3.467934e-10
+#> 2    5.946025e-10   3.467933e-10
 # Keep full precision when inspecting individual differences.
 head(scores$quadrature_review[c(
   "Person", "AdaptiveNodes", "EAPChange", "PosteriorSDChange",
   "AdaptiveEAPChangeFromPrevious", "AdaptiveSDChangeFromPrevious", "Status"
 )])
 #>         Person AdaptiveNodes     EAPChange PosteriorSDChange
-#> 1 NEW_PERSON_1            31 -5.946027e-10      3.467933e-10
-#> 2 NEW_PERSON_1            61 -5.946028e-10      3.467932e-10
-#> 3 NEW_PERSON_2            31 -7.105427e-15     -1.016964e-13
+#> 1 NEW_PERSON_1            31 -5.946026e-10      3.467934e-10
+#> 2 NEW_PERSON_1            61 -5.946025e-10      3.467933e-10
+#> 3 NEW_PERSON_2            31 -6.661338e-15     -1.021405e-13
 #> 4 NEW_PERSON_2            61  1.776357e-15     -9.769963e-15
 #>   AdaptiveEAPChangeFromPrevious AdaptiveSDChangeFromPrevious   Status
 #> 1                            NA                           NA computed
-#> 2                 -1.110223e-16                -5.551115e-17 computed
+#> 2                  1.110223e-16                -1.110223e-16 computed
 #> 3                            NA                           NA computed
-#> 4                  8.881784e-15                 9.192647e-14 computed
+#> 4                  8.437695e-15                 9.237056e-14 computed
 ```
 
 Check fixed-versus-adaptive differences and changes between adaptive

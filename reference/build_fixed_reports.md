@@ -158,9 +158,11 @@ specifically required for a compatibility handoff.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+# Saved synthetic JML/RSM analysis of example_bias.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 fixed <- build_fixed_reports(bias)
 fixed_original <- build_fixed_reports(bias, branch = "original")

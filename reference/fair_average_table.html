@@ -53,7 +53,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an adjusted-score reference table bundle</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>fair_average_table.Rd</code></div>
     </div>
 
@@ -400,54 +400,34 @@ slope-aware extension.)</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("fair_average_table", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
-<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
-<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
-<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Saved synthetic MML/RSM analysis of example_operational.</span></span></span>
+<span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
+<span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"operational-mml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Compute diagnostics once for the following checks</span></span></span>
-<span class="r-in"><span><span class="va">diagnostics</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Use the diagnostics saved with this fit</span></span></span>
+<span class="r-in"><span><span class="va">diagnostics</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">diagnostics</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Compare observed person means with model-based scores on a common reference</span></span></span>
 <span class="r-in"><span><span class="va">fair</span> <span class="op">&lt;-</span> <span class="fu">fair_average_table</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diagnostics</span>, facets <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
 <span class="r-in"><span>                           reference <span class="op">=</span> <span class="st">"mean"</span>, label_style <span class="op">=</span> <span class="st">"native"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">fair</span><span class="op">$</span><span class="va">raw_by_facet</span><span class="op">$</span><span class="va">Person</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Level"</span>, <span class="st">"ObservedAverage"</span>, <span class="st">"FairM"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Level ObservedAverage FairM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> P045             3.67  3.45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> P015             3.67  3.44</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> P036             3.33  3.33</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> P030             3.33  3.28</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> P027             3.17  3.16</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> P025             3     3.02</span>
 <span class="r-in"><span><span class="co"># FairM uses the mean reference for the other facets; it is in score units</span></span></span>
 <span class="r-in"><span><span class="co"># It is a conditional model prediction, not a guarantee of fairness</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># For an ordinary JML fit, request total-score extrapolation explicitly</span></span></span>
+<span class="r-in"><span><span class="co"># Fit the same synthetic ratings by JML to illustrate total-score extrapolation</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="va">example_fit</span><span class="op">$</span><span class="va">dataset</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">jml</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">extreme_report</span> <span class="op">&lt;-</span> <span class="fu">fair_average_table</span><span class="op">(</span><span class="va">jml</span>, xtreme <span class="op">=</span> <span class="fl">.3</span>, xtreme_method <span class="op">=</span> <span class="st">"facets"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">extreme_report</span><span class="op">$</span><span class="va">raw_by_facet</span><span class="op">$</span><span class="va">Person</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Level"</span>, <span class="st">"PrimaryMeasure"</span>,</span></span>
 <span class="r-in"><span>     <span class="st">"Measure"</span>, <span class="st">"MeasureBasis"</span>, <span class="st">"ModelSE"</span>, <span class="st">"MeasureSEBasis"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Level PrimaryMeasure Measure MeasureBasis    ModelSE MeasureSEBasis           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> P015            2.37    2.37 Fitted estimate   0.764 Fitted measure or unavai…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> P045            2.26    2.26 Fitted estimate   0.769 Fitted measure or unavai…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> P036            1.65    1.65 Fitted estimate   0.585 Fitted measure or unavai…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> P030            1.59    1.59 Fitted estimate   0.584 Fitted measure or unavai…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> P027            1.44    1.44 Fitted estimate   0.548 Fitted measure or unavai…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> P013            1.16    1.16 Fitted estimate   0.555 Fitted measure or unavai…</span>
 <span class="r-in"><span><span class="co"># ModelSE describes the adjusted total when MeasureBasis says extrapolation</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

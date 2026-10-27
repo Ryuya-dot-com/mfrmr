@@ -83,7 +83,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Workflow</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-workflow.Rmd</code></div>
     </div>
 
@@ -402,8 +402,8 @@ collapsed into a different scale.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 7</span></span></span>
 <span><span class="co">#&gt;   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Criterion      3            0      0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater          6            0      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Criterion      3     4.62<span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>      0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater          6    -<span style="color: #BB0000;">4.64</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02</span></span>
 <span></span>
 <span><span class="co"># Check the interpretation status and recommended next step</span></span>
 <span><span class="va">results</span><span class="op">$</span><span class="va">decision</span></span>
@@ -1006,6 +1006,16 @@ criterion; inspect <code>ConvergenceStatus</code> and
 method, and planned controls when investigating an iteration limit.
 Choose JML for its fixed-person estimand when appropriate, not as a
 faster substitute for MML.</p>
+<p><code>summary(fit)$numerical_review</code> distinguishes
+optimization, curvature, starting values and integration, with a next
+action for each. To preserve inputs and constraints, use
+<code>build_mfrm_replay_script(fit)</code> with the original input data
+before changing a diagnostic control. Ordinary <code>mml_starts</code>
+and automatic integration cannot be combined: review specified starts on
+a shared fixed grid, then run <code><a href="../reference/mml_quadrature_sensitivity.html">mml_quadrature_sensitivity()</a></code>
+separately. That review retains the starting-value policy. Nearly equal
+likelihoods do not override unresolved gradient, information or
+inference checks.</p>
 </div>
 <div class="section level3">
 <h3 id="read-precision-and-model-fit-before-interpreting-differences">2. Read precision and model fit before interpreting differences<a class="anchor" aria-label="anchor" href="#read-precision-and-model-fit-before-interpreting-differences"></a>
@@ -1631,11 +1641,16 @@ reproduce MML point estimates or qualify frequentist interval coverage.
 Two-family GMFRM also supports Stan export, with explicit component
 log-slope priors and a <code>slope-levels.csv</code> mapping; see the <a href="mfrmr-gpcm-scope.html">two-family workflow</a>. One-family GPCM
 uses <code>log_slope_prior_sd</code> in both formats, with
-geometric-mean-one slopes. For that route, the source must use
+geometric-mean-one slopes. For brms, the source must use
 <code>gpcm_mml_identification = "fixed_standard_normal"</code>. The
-default one-family GPCM estimates the population mean and variance and
-cannot currently be exported. Changing that setting changes the model;
-do not change it merely to enable export.</p>
+default one-family GPCM estimates the population mean and variance. You
+can export its intercept-only population to Stan with
+<code>population_prior = list(mean = c(0, 1), log_sd = c(0, 0.5))</code>;
+each pair gives the location and scale of a normal prior. The mean and
+SD are sampled while relative slopes and anchors retain the native
+metric. brms still requires the fixed-population specification. Changing
+that setting changes the model; do not change it merely to enable
+export. Review prior predictions and sensitivity.</p>
 <p>Anchor values are exact constraints. <code>levels.csv</code> and
 <code>steps.csv</code> in anchored or one-family bundles show the prior
 means, marginal SDs and fixed coordinates. A zero SD reflects a fixed

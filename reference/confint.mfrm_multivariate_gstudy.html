@@ -65,7 +65,7 @@ used ratings, including incomplete sources, without likelihood fitting."><meta p
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Sampling uncertainty in G-study variance and covariance components</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-multivariate-gstudy-intervals.R" class="external-link"><code>R/api-multivariate-gstudy-intervals.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-multivariate-gstudy-intervals.R" class="external-link"><code>R/api-multivariate-gstudy-intervals.R</code></a></small>
       <div class="d-none name"><code>confint.mfrm_multivariate_gstudy.Rd</code></div>
     </div>
 
@@ -578,44 +578,22 @@ Available from <a href="https://education.uiowa.edu/casma/computer-programs" cla
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Published synthetic data: 10 persons, 6 common tasks, scores V and W.</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("confint.mfrm_multivariate_gstudy", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Published synthetic data: 10 persons, 6 common tasks, scores V and W.</span></span></span>
 <span class="r-in"><span><span class="va">tasks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"mgenova-table12.csv"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_g_study.html">mfrm_g_study</a></span><span class="op">(</span><span class="va">tasks</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"V"</span>, <span class="st">"W"</span><span class="op">)</span>, rater <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">ci</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">g</span>, weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>V <span class="op">=</span> <span class="fl">.5</span>, W <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span>, assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">ci</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Source"</span>, <span class="st">"Estimate"</span>, <span class="st">"SE"</span>, <span class="st">"Lower"</span>, <span class="st">"Upper"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Source  Estimate        SE       Lower    Upper    Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Person 0.3438889 0.2241526 0.049657449 1.550716 Available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     Task 0.2120370 0.1708214 0.006867325 1.798412 Available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Residual 1.0496296 0.2165221 0.722110052 1.665130 Available</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ci</span>, <span class="st">"notes"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Pointwise normal-random-effects intervals for a prespecified score or fixed composite; MLS intervals are approximate. Not simultaneous or distribution robust."       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "Estimates and SEs have squared score units. SE is sampling uncertainty in a component, not measurement SEM or uncertainty in G/Phi."                                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "Raw estimates and endpoints are retained. Lower/Upper intersect the interval with nonnegative variances; consult Status for empty or unavailable intervals."          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "Positive intervals whose width or endpoints cannot be represented remain unavailable with an explicit Status; a rounded zero width is not exact population knowledge."</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "SE uses the df + 2 moment correction. Weights are used as supplied; saveRDS() preserves assumptions and source context."                                              </span>
 <span class="r-in"><span><span class="co"># One original score and one component; no new G-study is fitted.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">g</span>, parm <span class="op">=</span> <span class="st">"Person"</span>, score <span class="op">=</span> <span class="st">"V"</span>, assumption <span class="op">=</span> <span class="st">"normal"</span>, level <span class="op">=</span> <span class="fl">.90</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Source Score  Estimate        SE      Lower   Upper   RawLower RawUpper Level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Person     V 0.3681481 0.2497098 0.07913359 1.34985 0.07913359  1.34985   0.9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Method    Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Ting MLS Available</span>
 <span class="r-in"><span><span class="co"># Covariance between the two observed scores, retaining its sign.</span></span></span>
 <span class="r-in"><span><span class="va">covariance_ci</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">g</span>, score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"V"</span>, <span class="st">"W"</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"gci"</span>,</span></span>
 <span class="r-in"><span>  assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">covariance_ci</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Source"</span>, <span class="st">"Estimate"</span>, <span class="st">"SE"</span>, <span class="st">"Lower"</span>, <span class="st">"Upper"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Source   Estimate        SE       Lower    Upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Person 0.31925926 0.2312888 -0.05279626 1.535775</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     Task 0.09185185 0.2075366 -0.80723400 1.732818</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Residual 0.70481481 0.2284757  0.31956605 1.323658</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                          Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Computed generalized interval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Computed generalized interval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Computed generalized interval</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">covariance_ci</span>, <span class="st">"monte_carlo"</span><span class="op">)</span><span class="op">$</span><span class="va">endpoint_bands</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Source LowerMCLower LowerMCUpper UpperMCLower UpperMCUpper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Person  -0.06215423  -0.04371375     1.492759     1.601598</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     Task  -0.85624243  -0.75573220     1.641290     1.834400</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Residual   0.31195909   0.32533382     1.305259     1.340737</span>
 <span class="r-in"><span><span class="co"># Incomplete ratings: a residual-only interval without likelihood fitting.</span></span></span>
 <span class="r-in"><span><span class="va">observed</span> <span class="op">&lt;-</span> <span class="va">tasks</span><span class="op">[</span><span class="op">(</span><span class="va">tasks</span><span class="op">$</span><span class="va">Person</span> <span class="op">+</span> <span class="va">tasks</span><span class="op">$</span><span class="va">Task</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">3</span> <span class="op">!=</span> <span class="fl">0</span>, <span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">sparse_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_g_study.html">mfrm_g_study</a></span><span class="op">(</span><span class="va">observed</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"V"</span>, <span class="st">"W"</span><span class="op">)</span>, rater <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
@@ -623,10 +601,7 @@ Available from <a href="https://education.uiowa.edu/casma/computer-programs" cla
 <span class="r-in"><span><span class="va">residual_ci</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sparse_g</span>, parm <span class="op">=</span> <span class="st">"Residual"</span>, score <span class="op">=</span> <span class="st">"V"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"residual_contrast"</span>, assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">residual_ci</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Estimate"</span>, <span class="st">"IntervalCenter"</span>, <span class="st">"Lower"</span>, <span class="st">"Upper"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Estimate IntervalCenter     Lower    Upper                      Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.6827101      0.9153247 0.5629792 1.744177 Exact normal-model interval</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">residual_ci</span>, <span class="st">"residual_projection"</span><span class="op">)</span><span class="op">$</span><span class="va">df</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 25</span>
 <span class="r-in"><span><span class="co"># A separate experimental REML model can address other components.</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lme4"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"minqa"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">profile_ci</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sparse_g</span>, score <span class="op">=</span> <span class="st">"V"</span>, method <span class="op">=</span> <span class="st">"reml_profile"</span>,</span></span>
@@ -638,10 +613,7 @@ Available from <a href="https://education.uiowa.edu/casma/computer-programs" cla
 <span class="r-in"><span>                      method <span class="op">=</span> <span class="st">"reml_profile"</span>, assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">joint_ci</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Source"</span>, <span class="st">"Estimate"</span>, <span class="st">"IntervalCenter"</span>, <span class="st">"Lower"</span>, <span class="st">"Upper"</span>, <span class="st">"Validation"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Source  Estimate IntervalCenter      Lower    Upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Person 0.5444439      0.4759792 0.05920502 1.825228</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                Validation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Experimental chi-square calibration; boundary and finite-sample coverage not guaranteed</span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

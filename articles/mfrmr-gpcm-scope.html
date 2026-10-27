@@ -83,7 +83,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>GPCM scope and current limitations</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/vignettes/mfrmr-gpcm-scope.Rmd" class="external-link"><code>vignettes/mfrmr-gpcm-scope.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-gpcm-scope.Rmd" class="external-link"><code>vignettes/mfrmr-gpcm-scope.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-gpcm-scope.Rmd</code></div>
     </div>
 
@@ -1781,9 +1781,9 @@ results.</p>
 <tr class="odd">
 <td>Public RSM / PCM</td>
 <td>MML is the default; JML is also available. MML uses direct
-optimization by default. EM and hybrid are available for supported
-additive, fixed-population, fixed-integration settings
-(<code>population = NULL</code>).</td>
+optimization by default. EM and hybrid support additive and jointly
+fitted two-facet interaction models with a fixed population and fixed
+integration (<code>population = NULL</code>).</td>
 </tr>
 <tr class="even">
 <td>Public one-slope-family GPCM</td>
@@ -3484,10 +3484,12 @@ Multivariate G/D studies can examine dependability of supported score
 composites and designs, but a high G coefficient is not the probability
 of selecting the correct champion. Their linear composite weights do not
 implement the score-dependent trimming of competition panels.</p>
-<p>Sport applications have precedents. <a href="https://pubmed.ncbi.nlm.nih.gov/9661718/" class="external-link">Looney (1997)</a>
-applied many-facet Rasch analysis to 1994 Olympic figure skating under
-the then-used rank aggregation system; that study does not validate
-current scoring rules or this GMFRM implementation. In gymnastics, <a href="https://arxiv.org/abs/1807.10021" class="external-link">Mercier and Heiniger (2019)</a>
+<p>Sport applications have precedents. Looney (1997)<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;Looney, M. A. (1997). Objective measurement of figure
+skating performance. &lt;em&gt;Journal of Outcome Measurement, 1&lt;/em&gt;(2),
+143–163. PMID: 9661718.&lt;/p&gt;"><sup>1</sup></a> applied many-facet
+Rasch analysis to 1994 Olympic figure skating under the then-used rank
+aggregation system; that study does not validate current scoring rules
+or this GMFRM implementation. In gymnastics, <a href="https://arxiv.org/abs/1807.10021" class="external-link">Mercier and Heiniger (2019)</a>
 examined performance-dependent judging error and limitations of
 ranking-based judge evaluation. Their comparison scores approximate
 performance quality; agreement with a panel is not independent proof of
@@ -5146,6 +5148,7 @@ from the Rasch-family route. Use the current matrix returned by
 <code>gpcm_capability_matrix(view = 'scores')</code> for score-side
 alternatives.</p>
 </div>
+
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>

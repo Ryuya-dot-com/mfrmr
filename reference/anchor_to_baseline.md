@@ -270,6 +270,9 @@ formal z tests or calibrated error-rate decisions.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("anchor_to_baseline", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Packaged synthetic teaching data; no data-generation code is needed.
 ratings <- load_mfrmr_data("example_core")
 people <- unique(ratings$Person)
@@ -285,29 +288,8 @@ res <- anchor_to_baseline(d2, fit1, "Person",
                           rating_min = 1, rating_max = 4,
                           category_policy = "preserve")
 summary(res)
-#> --- Anchored Fit Summary ---
-#> Inference-ready: TRUE 
-#> Optimizer returned code 0: TRUE | Status: converged 
-#> Anchor candidates: 4 | Matched non-Person anchors: 4 | Flagged: 0 
-#> 
-#> Fixed-anchor differences check constraints, not stability across administrations.
-#> Fixed-anchor differences by facet:
-#>      Facet N Mean_Drift Max_Drift N_Flagged
-#>  Criterion 4          0         0         0
 # These fixed-value differences are not a test of Criterion stability.
 head(res$drift[, c("Facet", "Level", "Drift", "Flag")])
-#> # A tibble: 4 × 4
-#>   Facet     Level        Drift Flag 
-#>   <chr>     <chr>        <dbl> <lgl>
-#> 1 Criterion Accuracy         0 FALSE
-#> 2 Criterion Content          0 FALSE
-#> 3 Criterion Language         0 FALSE
-#> 4 Criterion Organization     0 FALSE
 res$baseline_anchors[1:3, ]
-#> # A tibble: 3 × 3
-#>   Facet     Level    Anchor
-#>   <chr>     <chr>     <dbl>
-#> 1 Criterion Accuracy  0.202
-#> 2 Criterion Content  -0.480
-#> 3 Criterion Language  0.130
+} # }
 ```

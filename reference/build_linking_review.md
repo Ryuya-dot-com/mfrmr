@@ -109,6 +109,9 @@ interchangeability, invariance or a common scale across administrations.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("build_linking_review", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Deliberately linked teaching waves: common labels below represent the
 # same rater and criterion identities by construction.
 toy <- load_mfrmr_data("example_core")
@@ -122,79 +125,10 @@ fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
                  method = "MML", quad_points = 7, maxit = 30)
 anchor_review_obj <- review_mfrm_anchors(d1, "Person", c("Rater", "Criterion"), "Score")
 drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
-#> Warning: Thin linking support between 'Wave1' and 'Wave2': fewer than 5 retained common elements in Criterion, Rater.
 chain <- build_equating_chain(list(Wave1 = fit1, Wave2 = fit2))
-#> Warning: Thin linking support between 'Wave1' and 'Wave2': fewer than 5 retained common elements in Criterion, Rater.
 review <- build_linking_review(anchor_review = anchor_review_obj, drift = drift, chain = chain)
 summary(review)
-#> mfrm Linking Review Summary
-#>   Linking flags are review screens, not tests of anchor invariance.
-#>   Source-parameter, estimated-offset and cross-fit covariance are not fully
-#>   propagated. A sufficient element count alone does not establish a common
-#>   scale.
-#> 
-#> Overview
-#>  AnchorReviewAvailable DriftAvailable ChainAvailable SourceModels
-#>                   TRUE           TRUE           TRUE          RSM
-#> 
-#> Key Warnings
-#>  - Drift review flagged 2 wave/facet support or drift rows.
-#>  - Chain review flagged 1 adjacent-link instability rows.
-#> 
-#> Next Actions
-#>  - Inspect detect_anchor_drift() and plot(drift, type = "drift") for wave-level
-#>    follow-up.
-#>  - Inspect build_equating_chain() and plot(chain, type = "chain") before using
-#>    cumulative offsets operationally.
-#> 
-#> Top Linking Risks
-#>      Facet Level  Wave           Link
-#>  Criterion  <NA> Wave2           <NA>
-#>      Rater  <NA> Wave2           <NA>
-#>       <NA>  <NA>  <NA> Wave1 -> Wave2
-#>                                                          Signal Magnitude
-#>  Retained common-element support is below the package guideline     1.000
-#>  Retained common-element support is below the package guideline     1.000
-#>              Thin retained support in an adjacent screened link     0.187
-#>                                                                                         Guidance
-#>              Treat drift flags as low-support until more retained common elements are available.
-#>              Treat drift flags as low-support until more retained common elements are available.
-#>  Inspect the adjacent link and cumulative offsets before using the chain for operational review.
-#> 
-#> Plot Follow-up
-#>        ReviewArea Available                                 PlotHelper
-#>   Anchor adequacy      TRUE plot(anchor_review, type = "issue_counts")
-#>  Wave-level drift      TRUE                plot(drift, type = "drift")
-#>    Screened chain      TRUE                plot(chain, type = "chain")
-#>                                                                            Trigger
-#>                            Use when anchor issues or overlap warnings are present.
-#>  Use when fitted waves show flagged drift or thin retained common-element support.
-#>                Use when adjacent links show thin support or large residual spread.
-#>   Detailed risk values, grouped views and support information remain in the
-#>   returned review tables.
-#> 
-#> Notes
-#>  - Review anchor overlap, fitted-wave drift and adjacent-link residuals
-#>    together before comparing results across administrations.
-#>  - Drift or limited-overlap flags identify comparisons to investigate; they do
-#>    not establish that the measurement scale has changed.
 review$top_linking_risks
-#> # A tibble: 3 × 20
-#>   RiskID     Area  SourceFamily SourceTable SourceRowKey AdministrationID WaveID
-#>   <chr>      <chr> <chr>        <chr>       <chr>        <chr>            <chr> 
-#> 1 thin_link… post… thin_link_s… drift$comm… Criterion::… NA               Wave2 
-#> 2 thin_link… post… thin_link_s… drift$comm… Rater::Wave2 NA               Wave2 
-#> 3 chain_sup… chai… equating_ch… chain$links Wave1 -> Wa… NA               NA    
-#> # ℹ 13 more variables: LinkKey <chr>, Facet <chr>, Level <chr>, Wave <chr>,
-#> #   Link <chr>, Signal <chr>, Magnitude <dbl>, SeverityGroup <chr>,
-#> #   ReviewPriority <dbl>, Guidance <chr>, PrimaryPlotRoute <chr>,
-#> #   SupportStatus <chr>, RiskRank <int>
 review$group_view_index
-#> # A tibble: 4 × 3
-#>   View              Rows Description                                          
-#>   <chr>            <int> <chr>                                                
-#> 1 by_wave              1 Concentrated linking risks by fitted wave.           
-#> 2 by_link              1 Concentrated linking risks by adjacent screened link.
-#> 3 by_facet             2 Concentrated linking risks by facet.                 
-#> 4 by_source_family     2 Volume and priority by evidence source family.       
+} # }
 ```

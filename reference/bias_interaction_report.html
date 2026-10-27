@@ -81,7 +81,7 @@ within a facet while controlling for the other.
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a bias-interaction plot-data bundle (FACETS Table 13: ranked bias list)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>bias_interaction_report.Rd</code></div>
     </div>
 
@@ -224,9 +224,11 @@ graphics. Export the bundle's data frames with <code><a href="https://rdrr.io/r/
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Saved synthetic JML/RSM analysis of example_bias.</span></span></span>
+<span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
+<span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"bias-jml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
+<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">diagnostics</span></span></span>
 <span class="r-in"><span><span class="va">bias</span> <span class="op">&lt;-</span> <span class="fu"><a href="estimate_bias.html">estimate_bias</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span>, facet_a <span class="op">=</span> <span class="st">"Rater"</span>, facet_b <span class="op">=</span> <span class="st">"Criterion"</span>, max_iter <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">bias_interaction_report</span><span class="op">(</span><span class="va">bias</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>

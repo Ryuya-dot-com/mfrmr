@@ -71,7 +71,7 @@ targets, Monte Carlo uncertainty and migration of saved results."><meta property
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Simulate parameter recovery by repeated generation and refitting</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f31cb2c8d492a3f23741e22541d504c2cacbb3d1/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>simulate_mfrm_recovery.Rd</code></div>
     </div>
 
@@ -474,7 +474,10 @@ Using simulation studies to evaluate statistical methods.
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">saved</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".rds"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("simulate_mfrm_recovery", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">saved</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".rds"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">simulate_mfrm_recovery</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  n_person <span class="op">=</span> <span class="fl">12</span>,</span></span>
 <span class="r-in"><span>  n_rater <span class="op">=</span> <span class="fl">2</span>,</span></span>
@@ -486,21 +489,13 @@ Using simulation studies to evaluate statistical methods.
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span><span class="op">$</span><span class="va">recovery_summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ParameterType"</span>, <span class="st">"Facet"</span>, <span class="st">"RMSE"</span>,</span></span>
 <span class="r-in"><span>  <span class="st">"McseRMSE"</span>, <span class="st">"ExpectedRows"</span>, <span class="st">"CoverageRows"</span>, <span class="st">"Coverage95"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 7</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ParameterType Facet        RMSE McseRMSE ExpectedRows CoverageRows Coverage95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> facet         Criterion  0.013<span style="text-decoration: underline;">0</span>       <span style="color: #BB0000;">NA</span>            2            0         <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> facet         Rater      0.222        <span style="color: #BB0000;">NA</span>            2            0         <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> person        Person    11.2          <span style="color: #BB0000;">NA</span>           12            0         <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> step          Common    13.7          <span style="color: #BB0000;">NA</span>            3            0         <span style="color: #BB0000;">NA</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A second identical call reads the result without fitting again.</span></span></span>
 <span class="r-in"><span><span class="va">again</span> <span class="op">&lt;-</span> <span class="fu">simulate_mfrm_recovery</span><span class="op">(</span>n_person <span class="op">=</span> <span class="fl">12</span>, n_rater <span class="op">=</span> <span class="fl">2</span>, n_criterion <span class="op">=</span> <span class="fl">2</span>,</span></span>
 <span class="r-in"><span>  reps <span class="op">=</span> <span class="fl">1</span>, maxit <span class="op">=</span> <span class="fl">30</span>, seed <span class="op">=</span> <span class="fl">123</span>, file <span class="op">=</span> <span class="va">saved</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Loaded completed simulation: /tmp/Rtmp9ZqIgh/file1cd573c04251.rds</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">rec</span>, <span class="va">again</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">saved</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

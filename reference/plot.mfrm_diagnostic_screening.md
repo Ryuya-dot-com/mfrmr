@@ -76,10 +76,10 @@ after drawing.
 ``` r
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
-saved <- readRDS(system.file("examples", "simulation-results.rds",
+saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
   package = "mfrmr", mustWork = TRUE))
 # Inspect saved$generation_warnings and the result's run/status tables.
-diag_eval <- saved$diagnostic_screening
+diag_eval <- saved$result
 plot(diag_eval, type = "overview", draw = FALSE)
 #> <mfrm_plot_data>
 #>   name     : diagnostic_screening

@@ -75,22 +75,16 @@ collapsing categories without further review.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_qc_pipeline", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 ratings <- load_mfrmr_data("study1")
 # These observed data trigger a category-support warning: the QC plot
 # displays that review requirement; convergence does not remove it.
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
-#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
 qc <- run_qc_pipeline(fit)
 verdicts <- plot(qc, draw = FALSE)
 head(verdicts)
-#> # A tibble: 6 × 6
-#>   Check                Verdict Value             Threshold Detail AffectsOverall
-#>   <chr>                <chr>   <chr>             <chr>     <chr>  <lgl>         
-#> 1 Convergence          Warn    Numerical conver… Numerica… Numer… TRUE          
-#> 2 Global Fit           Pass    Infit=1.00, Outf… [0.50, 1… Globa… TRUE          
-#> 3 Reliability          Skip    Not requested     No diffe… No fa… FALSE         
-#> 4 Separation           Skip    Not requested     No diffe… No fa… FALSE         
-#> 5 Element Misfit       Fail    139/328 (42.4%)   Pass<=5%… 139 o… TRUE          
-#> 6 Unexpected Responses Pass    0.5%              Pass<=2%… 0.5% … TRUE          
+} # }
 ```

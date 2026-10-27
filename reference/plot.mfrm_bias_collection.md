@@ -18,17 +18,17 @@ plot(
 
 ## Arguments
 
-- x :
+- x:
 
   A result from
   [`estimate_all_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_all_bias.md).
 
-- pair :
+- pair:
 
   An exact `Interaction` label from `summary(x)$overview`, or its row
   number. `NULL` (default) shows all requested pairs.
 
-- type :
+- type:
 
   `"overview"` shows signed cell estimates grouped by pair. With `pair`
   supplied, the default becomes `"heatmap"`; `"scatter"`, `"ranked"`,
@@ -36,15 +36,15 @@ plot(
   [`plot.mfrm_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_bias.md)
   view.
 
-- draw :
+- draw:
 
   Draw the figure. `FALSE` returns its data without opening a device.
 
-- preset :
+- preset:
 
   A package plot preset, for example `"standard"` or `"monochrome"`.
 
-- ... :
+- ...:
 
   With `pair`, additional arguments to
   [`plot.mfrm_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_bias.md),
@@ -129,20 +129,15 @@ or diagnostic thresholds.
 ## Examples
 
 ``` r
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_bias_collection", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 ratings <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML")
 screens <- estimate_all_bias(fit)
 p <- plot(screens)
-
 plot_data(p, "overview")
-#>         Interaction Order            Facets Rows ScreenPositive Significant
-#> 1 Rater x Criterion     2 Rater x Criterion   16              3           3
-#>    MaxAbsT MeanAbsBias SupportsFormalInference FormalInferenceEligible
-#> 1 2.594645   0.2641805                   FALSE                   FALSE
-#>   PrimaryReportingEligible ClassificationSystem   ReportingUse Kept Error
-#> 1                    FALSE            screening screening_only TRUE      
-#>   ScreenUnavailable ScreenAvailable Points    Status
-#> 1                 0              16     16 available
 plot(screens, pair = "Rater x Criterion", type = "ranked")
+} # }
 ```
