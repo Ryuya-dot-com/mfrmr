@@ -4423,7 +4423,8 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
                           mml_integration = "fixed",
                           repeated_ratings = c("review", "independent"),
                           centering_scope = "remainder",
-                          mml_accuracy_control = NULL) {
+                          mml_accuracy_control = NULL,
+                          mml_starts = NULL) {
   # Internal validation instrumentation. The option is deliberately absent
   # from the public fitting API because elapsed time is volatile metadata, not
   # part of the statistical result. When enabled, timings are attached only
@@ -4657,6 +4658,9 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     config$estimation_control$mml_integration_requested <- "auto"
     config$estimation_control$quad_points_requested <- as.integer(quad_points)
     quad_points <- config$estimation_control$quad_points
+  } else if (!is.null(mml_starts)) {
+    opt <- mfrmr_run_mml_starts(start, mml_starts, prep, idx, config, sizes,
+      quad_points, maxit, reltol, config$estimation_control$optimizer_requested)
   } else {
     opt <- run_mfrm_optimization(
       start = start,

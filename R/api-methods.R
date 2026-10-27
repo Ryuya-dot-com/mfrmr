@@ -8751,6 +8751,9 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   convention metadata retain the legacy interpretation. Recreate this
 #'   summary from the fit to obtain new fields; reading an old summary does
 #'   not update it or refit the model
+#' - `starting_values`, `starting_value_notes`: all attempted starts, numerical
+#'   outcomes, selection and interpretation limits when `fit_mfrm(mml_starts = ...)`
+#'   was requested. These describe numerical sensitivity, not sampling uncertainty
 #' - `attached_diagnostics`: logical flag indicating whether the
 #'   `mfrm_fit` was returned with diagnostics already attached
 #' - `attached_diagnostics_cols`: character vector of diagnostic
@@ -10244,6 +10247,10 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     notes = notes,
     digits = digits
   )
+  if (!is.null(object$opt$start_review)) {
+    out$starting_values <- object$opt$start_review$table
+    out$starting_value_notes <- object$opt$start_review$notes
+  }
   class(out) <- "summary.mfrm_fit"
   out
 }
@@ -11135,6 +11142,12 @@ print.summary.mfrm_fit <- function(x, ...) {
   }
 
   cat("Many-Facet Measurement Model Summary\n")
+  if (nrow(x$starting_values %||% data.frame())) {
+    cat("\nStarting-value review (same model and integration rule)\n")
+    columns <- c("Start", "LogLikLoss", "TerminalGradientSupNorm", "NumericalStatus", "Selected")
+    print(round_numeric_df(x$starting_values[columns], digits), row.names = FALSE)
+    print_wrapped_line("Inspect $starting_values for warnings/failures and $starting_value_notes for scope. Agreement does not certify a global optimum or valid inference.")
+  }
   if (nrow(x$interaction_comparisons %||% data.frame()) > 0L) {
     cat("\nRequested joint-fit interaction comparisons\n")
     columns <- c("Comparison", "Group1", "Group2", "Estimate", "EstimateStatus", "State")

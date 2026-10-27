@@ -202,6 +202,7 @@ build_replay_fit_mfrm_lines <- function(replay_inputs,
     emit("mml_engine", as.character(ri$mml_engine %||% "direct")),
     emit("mml_integration", as.character(ri$mml_integration %||% "fixed")),
     add_optional("mml_accuracy_control", ri$mml_accuracy_control),
+    add_optional("mml_starts", ri$mml_starts),
     emit("facet_shrinkage", as.character(ri$facet_shrinkage %||% "none"))
   )
 

@@ -63,7 +63,8 @@ fit_mfrm(
   mml_accuracy_control = NULL,
   population_sd = NULL,
   jml_penalty = c("none", "jeffreys"),
-  progress = FALSE
+  progress = FALSE,
+  mml_starts = NULL
 )
 
 \method{summary}{mfrm_cml_fit}(object, ...)
@@ -693,6 +694,32 @@ time forecast: convergence and required refinement are not known in advance.
 Display follows \code{cli} console settings and is cleared on return, error or
 interruption. The default is silent; it does not change numerical controls
 or become part of saved calibration/replay settings.}
+
+\item{mml_starts}{Optional starting-value review for ordinary full RSM/PCM
+or single-family GPCM MML. \code{NULL} keeps the usual single start. A numeric
+vector such as \code{c(0, 0.5, -0.5)} adds each nonzero offset times the
+alternating vector \verb{(1, -1, 1, ...)} to the default free coordinates.
+These deterministic offsets explore one direction in the fitted free-
+coordinate order, not random or exhaustive searches. The default start
+is always included. To explore other directions, supply a uniquely named
+list of named numeric coordinate values; obtain names from
+\code{fit$opt$start_review$parameter_map$Coordinate} after \code{mml_starts = 0}.
+Unlisted coordinates retain their default initial values. Anchored and
+dependent coordinates are expanded from the existing constraints.
+All attempts share the same fixed or adaptive integration rule and order;
+automatic integration, checkpoints and two-family GPCM are unsupported.
+Each attempt uses the requested engine, with existing fallbacks recorded.
+The smallest reevaluated negative log likelihood is retained even when
+that attempt is unfinished; a worse converged attempt is not substituted.
+Inspect \code{summary(fit)$starting_values} and \code{fit$opt$start_review} for all
+starts, optimizer outcomes, warnings, errors and coordinate differences.
+If all attempts fail, the error condition retains \verb{$start_review}.
+Missing curvature means it was not evaluated. This review increases fitting
+time and does not establish a global optimum, adequate integration or valid
+inference. Use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} for integration sensitivity.
+Same-model replay and resampling retain this policy. Subgroup DFF refits
+accept numeric offsets; named starts require an explicit subgroup fit
+because linking changes the free-coordinate basis.}
 
 \item{object, x}{A fitted CML result for its summary, print, covariance and
 log-likelihood methods, or a comparison-only result for its summary and
@@ -2446,6 +2473,15 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 
 # Check the interpretation status and recommended next step
 results$decision
+
+\dontrun{
+# Optional repeated fitting: compare specified starting values.
+reviewed <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  mml_starts = c(0, 0.5, -0.5))
+summary(reviewed)$starting_values # Every attempt, including warnings/failures
+reviewed$opt$start_review$parameter_map # Meaning and constraints of coordinates
+write.csv(summary(reviewed)$starting_values, "starting-values.csv", row.names = FALSE)
+}
 }
 \seealso{
 \link{mfrm_fit_extractors}, \link{mfrm_fit_responses}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},

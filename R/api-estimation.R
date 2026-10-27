@@ -485,6 +485,31 @@
 #'   Display follows `cli` console settings and is cleared on return, error or
 #'   interruption. The default is silent; it does not change numerical controls
 #'   or become part of saved calibration/replay settings.
+#' @param mml_starts Optional starting-value review for ordinary full RSM/PCM
+#'   or single-family GPCM MML. `NULL` keeps the usual single start. A numeric
+#'   vector such as `c(0, 0.5, -0.5)` adds each nonzero offset times the
+#'   alternating vector `(1, -1, 1, ...)` to the default free coordinates.
+#'   These deterministic offsets explore one direction in the fitted free-
+#'   coordinate order, not random or exhaustive searches. The default start
+#'   is always included. To explore other directions, supply a uniquely named
+#'   list of named numeric coordinate values; obtain names from
+#'   `fit$opt$start_review$parameter_map$Coordinate` after `mml_starts = 0`.
+#'   Unlisted coordinates retain their default initial values. Anchored and
+#'   dependent coordinates are expanded from the existing constraints.
+#'   All attempts share the same fixed or adaptive integration rule and order;
+#'   automatic integration, checkpoints and two-family GPCM are unsupported.
+#'   Each attempt uses the requested engine, with existing fallbacks recorded.
+#'   The smallest reevaluated negative log likelihood is retained even when
+#'   that attempt is unfinished; a worse converged attempt is not substituted.
+#'   Inspect `summary(fit)$starting_values` and `fit$opt$start_review` for all
+#'   starts, optimizer outcomes, warnings, errors and coordinate differences.
+#'   If all attempts fail, the error condition retains `$start_review`.
+#'   Missing curvature means it was not evaluated. This review increases fitting
+#'   time and does not establish a global optimum, adequate integration or valid
+#'   inference. Use [mml_quadrature_sensitivity()] for integration sensitivity.
+#'   Same-model replay and resampling retain this policy. Subgroup DFF refits
+#'   accept numeric offsets; named starts require an explicit subgroup fit
+#'   because linking changes the free-coordinate basis.
 #' @param mml_engine MML optimization engine for `method = "MML"`:
 #'   `"direct"` (default) uses the selected direct optimizer on the marginal
 #'   log-likelihood,
@@ -2226,6 +2251,15 @@
 #'
 #' # Check the interpretation status and recommended next step
 #' results$decision
+#'
+#' \dontrun{
+#' # Optional repeated fitting: compare specified starting values.
+#' reviewed <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+#'   mml_starts = c(0, 0.5, -0.5))
+#' summary(reviewed)$starting_values # Every attempt, including warnings/failures
+#' reviewed$opt$start_review$parameter_map # Meaning and constraints of coordinates
+#' write.csv(summary(reviewed)$starting_values, "starting-values.csv", row.names = FALSE)
+#' }
 #' @export
 fit_mfrm <- function(data,
                      person,
@@ -2280,10 +2314,12 @@ fit_mfrm <- function(data,
                      mml_accuracy_control = NULL,
                      population_sd = NULL,
                      jml_penalty = c("none", "jeffreys"),
-                     progress = FALSE) {
+                     progress = FALSE,
+                     mml_starts = NULL) {
   close_progress <- mfrmr_start_fit_progress(progress)
   on.exit(close_progress(), add = TRUE)
   supplied_arguments <- setdiff(names(as.list(match.call())[-1L]), "progress")
+  if (is.null(mml_starts)) supplied_arguments <- setdiff(supplied_arguments, "mml_starts")
   fit_scope <- match.arg(fit_scope)
   if (fit_scope == "full" && !is.null(comparison_review))
     stop("Use fit_scope = 'comparisons' to fit a comparison review, or extract comparisons from a full fit with interaction_effect_table().", call. = FALSE)
@@ -2420,6 +2456,11 @@ fit_mfrm <- function(data,
     stop("`mml_integration = 'adaptive'` requires MML with the direct engine and no checkpoint.",
          call. = FALSE)
   }
+  if (!is.null(mml_starts) &&
+      (method != "MML" || fit_scope != "full" || length(slope_facet) > 1L ||
+       !is.null(jml_correction_order) || jml_penalty != "none" ||
+       !is.null(checkpoint) || mml_integration == "auto"))
+    stop("`mml_starts` requires ordinary full MML, fixed/adaptive integration and no checkpoint; two-family GPCM uses gpcm_mml_start.", call. = FALSE)
   gpcm_mml_identification <- match.arg(gpcm_mml_identification)
   interaction_policy <- tolower(match.arg(interaction_policy))
   anchor_policy <- tolower(match.arg(anchor_policy))
@@ -2672,6 +2713,7 @@ fit_mfrm <- function(data,
     mml_engine = mml_engine,
     mml_integration = mml_integration,
     mml_accuracy_control = mml_accuracy_control,
+    mml_starts = mml_starts,
     checkpoint = checkpoint,
     repeated_ratings = repeated_ratings,
     centering_scope = centering_scope
@@ -2837,6 +2879,8 @@ fit_mfrm <- function(data,
     repeated_ratings = repeated_ratings,
     package_version = as.character(utils::packageVersion("mfrmr"))
   )
+
+  if (!is.null(mml_starts)) fit$config$replay_inputs$mml_starts <- mml_starts
 
   if (isTRUE(attach_diagnostics)) {
     fit <- attach_diagnostics_to_fit(fit)

@@ -558,6 +558,15 @@ uncertainty, subgroup comparisons and design planning.
   bundles, retaining old bundles for old-ID exports. Neither a met stopping
   criterion nor default controls certify numerical precision.
 
+* `fit_mfrm(..., mml_starts = c(0, 0.5, -0.5))` optionally reviews specified
+  starting values for ordinary MML. Summary and report tables retain every
+  attempt's likelihood, gradient, status, warnings and failures; long tables
+  preserve the named initial and terminal coordinates. The default start is
+  always included and a worse converged point never replaces a better
+  unfinished result. Existing readiness checks still apply. This checks
+  specified starts, not global optimality or confidence-interval validity;
+  integration sensitivity is a separate review. Default fitting is unchanged.
+
 * `mfrm_report()` now accepts `estimate_all_bias()` collections directly.
   Reports and appendix exports retain the full requested search, all stored
   signed cell estimates, unavailable screens, failed pairs, settings and

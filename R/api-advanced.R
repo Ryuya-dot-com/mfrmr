@@ -243,6 +243,8 @@ build_dff_summary <- function(tbl, method) {
 resolve_dff_refit_controls <- function(fit) {
   replay <- fit$config$replay_inputs %||% list()
   control <- fit$config$estimation_control %||% list()
+  if (is.list(replay$mml_starts))
+    stop("Named starting coordinates cannot be reused after subgroup linking changes the free coordinates. Use numeric `mml_starts` offsets or fit the subgroup models explicitly.", call. = FALSE)
 
   population_active <- isTRUE(fit$config$population_active) ||
     isTRUE(fit$config$population_spec$active) ||
@@ -342,6 +344,7 @@ resolve_dff_refit_controls <- function(fit) {
     min_obs_per_category = as.numeric(replay$min_obs_per_category %||% 10),
     quad_points = as.integer(replay$quad_points %||% control$quad_points %||% 31L),
     mml_integration = as.character(control$mml_integration %||% "fixed"),
+    mml_starts = replay$mml_starts,
     maxit = as.integer(replay$maxit %||% control$maxit %||% 400L),
     reltol = as.numeric(replay$reltol %||% control$reltol %||% 1e-9),
     optimizer = as.character(
@@ -1375,6 +1378,7 @@ analyze_dif <- function(...) {
       reltol = refit_controls$reltol,
       optimizer = refit_controls$optimizer,
       mml_engine = refit_controls$mml_engine,
+      mml_starts = refit_controls$mml_starts,
       mml_integration = refit_controls$mml_integration
     )
     # Capture the anchor-review issue messages emitted while refitting

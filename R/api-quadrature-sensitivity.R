@@ -146,6 +146,7 @@ mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
     missing_codes = replay$missing_codes,
     model = as.character(replay$model %||% config$model),
     method = "MML",
+    mml_starts = replay$mml_starts,
     step_facet = replay$step_facet %||% config$step_facet,
     slope_facet = replay$slope_facet %||% config$slope_facet,
     facet_interactions = replay$facet_interactions,

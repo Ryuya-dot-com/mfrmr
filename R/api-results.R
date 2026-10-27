@@ -5170,6 +5170,13 @@ mfrm_report_build <- function(x, style) {
   out$tables <- c(out$tables, x$tables[setdiff(keys, names(out$tables))])
   if (length(category_notes)) out$tables$category_notes <- data.frame(Note = category_notes)
   out$markdown <- mfrm_report_markdown(out)
+  if (!is.null(x$fit$opt$start_review)) {
+    out$tables <- c(out$tables, mfrmr_mml_start_tables(x$fit))
+    out$markdown <- paste(out$markdown, "## Starting-value review",
+      mfrm_report_markdown_table(out$tables$starting_values),
+      paste(out$tables$starting_value_notes$Note, collapse = "\n\n"),
+      "All attempts and free-coordinate initial/terminal values remain in the unrounded tables, including failed attempts.", sep = "\n\n")
+  }
   if (!is.null(x$scores)) {
     displayed <- prediction_display_estimates(tables$person_scores)
     names(displayed)[names(displayed) == "Estimate"] <- "EAP"
@@ -7350,6 +7357,10 @@ mfrm_results <- function(fit,
     score = response_time_score
   )
   out <- mfrm_results_build(ctx, include = include)
+  if (!is.null(out$fit$opt$start_review)) {
+    out$tables <- c(out$tables, mfrmr_mml_start_tables(out$fit))
+    out$table_index <- mfrm_results_table_index(out$tables)
+  }
   out <- mfrm_gpcm_results_attach(out, gpcm_inference)
   out <- mfrm_gpcm_results_attach_scores(out, scores)
   out <- mfrm_facet_results_attach(out, facet_intervals)
