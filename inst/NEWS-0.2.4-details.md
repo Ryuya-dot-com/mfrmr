@@ -566,6 +566,18 @@ uncertainty, subgroup comparisons and design planning.
   interaction models and compatible model comparisons, distinguishing
   same-data exploratory selection from prespecified inference.
 
+  Bias-cell Infit/Outfit summaries now use one grouped aggregation per
+  interaction instead of repeating the same setup for every cell. The cell
+  likelihood, conditional uncertainty, search boundaries and complete-cell
+  availability rules are unchanged; this reduces reporting overhead without
+  lowering numerical precision.
+
+  Marginal pairwise diagnostics reuse facet-label ordering and validate an
+  exactly shared posterior once per context. Unequal posteriors retain the
+  original pairwise tolerance checks, and unavailable observations stay visible.
+  This reduces repeated preparation without changing integrated probabilities
+  or screening rules.
+
 * Pairwise bias reports now orient local measures using the target-facet sign
   and condition local SEs on the baseline calibration. The default
   `df_method = "facets"` uses modified Rasch-Welch df rounded down for the tail

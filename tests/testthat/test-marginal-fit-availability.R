@@ -83,6 +83,37 @@ test_that("invalid node probabilities and inconsistent posteriors remain unavail
   expect_equal(calc_marginal_pairwise_bundle(core)$pair_stats$UnavailableContextPairs, 1)
 })
 
+test_that("approximate posterior agreement is not shared transitively across a context", {
+  delta <- .3 * sqrt(.Machine$double.eps)
+  posterior <- rbind(c(.5 + delta, .5 - delta), c(.5, .5), c(.5 + 2 * delta, .5 - 2 * delta))
+  core <- marginal_pair_fixture()
+  core$prep$data <- data.frame(Person = "P1", Rater = c("B", "A", "C"))
+  core$posterior_bundle$obs_posterior <- posterior
+  core$logprob_bundle$prob_list <- rep(list(matrix(.5, 3, 2)), 2)
+  core$observed_cat <- c(0, 1, 1); core$weights <- rep(1, 3)
+  x <- calc_marginal_pairwise_bundle(core)$pair_stats
+  expect_identical(x$UnavailableContextPairs, c(0L, 1L, 0L))
+  expect_identical(paste(x$Level1, x$Level2), c("A B", "A C", "B C"))
+  expect_true(is.na(x$ExpectedExactCount[2]))
+  expect_equal(x$ExpectedExactCount[c(1, 3)], c(.5, .5))
+})
+
+test_that("precomputed level order retains literal radix pairs and missing levels", {
+  core <- marginal_pair_fixture()
+  levels <- c("z", "\u00e9", "A", NA_character_)
+  core$prep$data <- data.frame(Person = "P1", Rater = factor(levels))
+  x <- calc_marginal_pairwise_bundle(core)$pair_stats
+  pairs <- utils::combn(seq_along(levels), 2)
+  expected <- apply(pairs, 2, function(pair) {
+    sorted <- sort(levels[pair], method = "radix")
+    paste(sorted[1], sorted[2], sep = "/")
+  })
+  expect_setequal(paste(x$Level1, x$Level2, sep = "/"), expected)
+  expect_equal(nrow(x), 6)
+  expect_equal(x$ExpectedExactCount, rep(.5, 6))
+  expect_equal(x$UnavailableContextPairs, rep(0, 6))
+})
+
 test_that("marginal cells do not omit missing probabilities or fabricate classifications", {
   cells <- function(p, w = c(1, 1), obs = c(0, 1)) summarize_marginal_fit_grid(NULL, obs, p, w, 0:1)
   good <- cells(matrix(0.5, 2, 2))

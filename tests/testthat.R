@@ -28,6 +28,7 @@ cran_light_tests <- c(
   "classification",
   "category-variance",
   "bias-numerics",
+  "marginal-fit-availability",
   "facets-manual-consistency",
   "facets-results",
   "fair-delta",

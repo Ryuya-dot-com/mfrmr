@@ -8150,6 +8150,8 @@ calc_marginal_pairwise_bundle <- function(expected_core,
       next
     }
 
+    facet_levels <- as.character(prep$data[[facet]])
+    level_rank <- match(facet_levels, sort(unique(facet_levels), method = "radix"))
     context_df <- prep$data[, context_cols, drop = FALSE]
     context_df[] <- lapply(context_df, function(x) ifelse(is.na(x), "<NA>", as.character(x)))
     group_key <- do.call(paste, c(unname(context_df), sep = "\r"))
@@ -8157,7 +8159,7 @@ calc_marginal_pairwise_bundle <- function(expected_core,
 
     for (idx_g in split_idx) {
       if (length(idx_g) < 2L) next
-      level_vals <- as.character(prep$data[[facet]][idx_g])
+      level_vals <- facet_levels[idx_g]
       if (length(unique(level_vals)) < 2L) next
 
       pair_mat <- utils::combn(seq_along(idx_g), 2L)
@@ -8165,15 +8167,25 @@ calc_marginal_pairwise_bundle <- function(expected_core,
       # Keep only this context's category-by-node matrices in memory.
       context_prob <- lapply(idx_g, function(i) matrix(vapply(
         prob_list, function(prob) prob[i, ], numeric(k_cat)), nrow = k_cat))
+      # Exact equality is transitive; approximate pairwise equality need not be.
+      same_posterior <- all(valid_posterior[idx_g]) &&
+        all(obs_posterior[idx_g, , drop = FALSE] ==
+          rep(obs_posterior[idx_g[1L], ], each = length(idx_g)))
 
       for (col_idx in seq_len(ncol(pair_mat))) {
         row_i <- idx_g[pair_mat[1L, col_idx]]
         row_j <- idx_g[pair_mat[2L, col_idx]]
-        level_i <- as.character(prep$data[[facet]][row_i])
-        level_j <- as.character(prep$data[[facet]][row_j])
+        level_i <- facet_levels[row_i]
+        level_j <- facet_levels[row_j]
         if (!nzchar(level_i) || !nzchar(level_j) || identical(level_i, level_j)) next
 
-        level_pair <- sort(c(level_i, level_j), method = "radix")
+        level_pair <- if (anyNA(level_rank[c(row_i, row_j)])) {
+          sort(c(level_i, level_j), method = "radix")
+        } else if (level_rank[row_i] < level_rank[row_j]) {
+          c(level_i, level_j)
+        } else {
+          c(level_j, level_i)
+        }
         pair_weight <- weights[row_i] * weights[row_j]
         # Zero-weight opportunities are excluded by design; invalid ones remain unavailable.
         if (is.finite(pair_weight) && pair_weight == 0) next
@@ -8181,8 +8193,9 @@ calc_marginal_pairwise_bundle <- function(expected_core,
             !is.finite(pair_weight)) pair_weight <- NA_real_
 
         posterior <- obs_posterior[row_i, ]
-        posterior_ok <- all(valid_posterior[c(row_i, row_j)]) &&
-          isTRUE(all.equal(posterior, obs_posterior[row_j, ], tolerance = sqrt(.Machine$double.eps)))
+        posterior_ok <- same_posterior ||
+          (all(valid_posterior[c(row_i, row_j)]) &&
+           isTRUE(all.equal(posterior, obs_posterior[row_j, ], tolerance = sqrt(.Machine$double.eps))))
 
         exp_exact <- exp_adjacent <- NA_real_
         if (posterior_ok && all(valid_probability[c(row_i, row_j)])) {
@@ -9215,6 +9228,7 @@ estimate_bias_interaction <- function(res,
   interaction_mode <- ifelse(interaction_order > 2, "higher_order", "pairwise")
 
   rows <- list()
+  fit_rows <- list()
   seq_id <- 1
   for (key in names(groups)) {
     g <- groups[[key]]
@@ -9244,8 +9258,8 @@ estimate_bias_interaction <- function(res,
       var_k <- mfrm_category_variance(probs, k_vals, expected_k)
       resid_k <- score_k_sub - expected_k
       fit_var <- ifelse(var_k > 1e-10, var_k, NA_real_)
-      fit_stats <- calc_overall_fit(data.frame(StdSq = resid_k^2 / fit_var,
-        Var = fit_var, Weight = weight_sub))
+      fit_rows[[seq_id]] <- data.frame(.BiasCell = seq_id,
+        StdSq = resid_k^2 / fit_var, Var = fit_var, Weight = weight_sub)
 
       # The bias parameter is an additive shift on eta.  Under GPCM,
       # d log L / d b = a * (X - E[X]), so the conditional information
@@ -9442,6 +9456,16 @@ estimate_bias_interaction <- function(res,
 
   bias_tbl <- bind_rows(rows)
   if (nrow(bias_tbl) == 0) return(list())
+
+  # Aggregate once across cells, preserving the same complete-cell fit rules.
+  if (length(fit_rows)) {
+    grouped_fit <- calc_facet_fit(bind_rows(fit_rows), ".BiasCell")
+    at <- match(bias_tbl$Sq, grouped_fit$Level)
+    retained <- !is.na(at)
+    columns <- c("Infit", "Outfit", "FitResponseRows", "FitAvailableRows",
+      "FitUnavailableRows", "FitStatus", "FitReason")
+    bias_tbl[retained, columns] <- grouped_fit[at[retained], columns]
+  }
 
   numeric_cols <- c("Observd Score", "Expctd Score", "Observd Count", "Obs-Exp Average", "Bias Size", "S.E.")
   pop_sd <- function(x) {
