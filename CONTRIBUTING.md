@@ -67,7 +67,7 @@ From the package root:
 ```sh
 mfrmr_stage_root=$(mktemp -d "${TMPDIR:-/tmp}/mfrmr-source.XXXXXX")
 Rscript --vanilla scripts/stage-package.R "$mfrmr_stage_root/mfrmr"
-R CMD build "$mfrmr_stage_root/mfrmr"
+R_BUILD_TAR=internal R CMD build "$mfrmr_stage_root/mfrmr"
 ```
 
 The helper prunes excluded directories before traversal, using the running R
@@ -82,8 +82,11 @@ an archive, verify its expected file list and source contents, then install
 the archive in a fresh library. Missing-file warnings are a failed build, not
 a usable candidate. If using an external tar program via `R_BUILD_TAR`, follow
 the [R build documentation](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/PkgUtils.html)
-and verify extraction with R's default unpacker; platform-specific extended
-attributes can make an otherwise complete archive unreadable.
+and verify extraction explicitly with `utils::untar(..., tar = "internal")`;
+the standalone `untar()` default may use an external unpacker instead.
+The internal build method avoids macOS extended-attribute records that the
+internal installer may reject. An external tar's successful build or extraction
+is not sufficient evidence of portability.
 
 ## Coding guidelines
 

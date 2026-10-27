@@ -78,7 +78,8 @@ summary.mfrm_design_recommendation <- function(object, ...) {
         ifelse(!is.finite(value), "unavailable", ifelse(pass %in% TRUE, "pass", "fail")))
   }
   checks <- dplyr::bind_rows(checks,
-    add("Facet coverage", designs$FacetsRequired - lengths(strsplit(designs$FacetsMissing, ", ", fixed = TRUE)),
+    add("Facet coverage", vapply(designs$DesignRow, function(i)
+      sum(x$thresholds$facets %in% facets$Facet[facets$DesignRow == i]), integer(1)),
       designs$FacetsRequired, "=", designs$FacetsMissing == ""),
     add("Total ratings", designs$MaxRatings, x$thresholds$max_ratings, "<=",
       designs$RatingsPass, !is.null(x$thresholds$max_ratings)),

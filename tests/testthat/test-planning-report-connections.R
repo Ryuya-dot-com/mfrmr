@@ -53,6 +53,17 @@ test_that("planning target and criterion outcomes are explicit without changing 
   expect_error(recommend_mfrm_design(s, min_reliability = c(.7, .8)), "one numeric threshold")
   expect_error(recommend_mfrm_design(s, min_reliability = NA_real_), "one numeric threshold")
   expect_error(summary(x, unused = TRUE), "must be empty")
+  # Facet names are labels, not comma-delimited lists to parse for counts.
+  named <- s
+  named$design_summary$Facet[named$design_summary$Facet == "Rater"] <- "Judge, examiner"
+  named$design_summary <- named$design_summary[!(named$design_summary$design_id == "D1" &
+    named$design_summary$Facet == "Judge, examiner"), ]
+  ns <- summary(recommend_mfrm_design(named, facets = c("Judge, examiner", "Criterion")))
+  row <- ns$design_table$DesignRow[ns$design_table$design_id == "D1"]
+  coverage <- ns$checks[ns$checks$DesignRow == row & ns$checks$Criterion == "Facet coverage", ]
+  expect_equal(coverage$Value, 1)
+  expect_equal(coverage$Threshold, 2)
+  expect_identical(coverage$Status, "fail")
 })
 
 test_that("recommendation figures, reports and exports retain all candidates and unavailable values", {
