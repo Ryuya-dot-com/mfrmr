@@ -16,23 +16,18 @@ explain retired plotting helpers and corrections affecting saved analyses.
 ## Checks
 
 macOS arm64, R 4.6.1, 2026-10-27:
-`R CMD check --as-cran --timings` completed in 565 seconds. The only error
-was a test expectation missing the newly registered facet-interval `confint`
-method. This expectation is corrected; the rebuilt archive installs and its
-registration-contract test passes (13 assertions). All other check steps
-passed, including 12,916 assertions, examples (59 seconds), vignette rebuilding
-and both manuals. There were no warnings or notes and four intentional CRAN skips.
+`R CMD check --as-cran --timings`: 0 errors, 0 warnings, 0 notes;
+603 seconds elapsed (examples 63 seconds; tests 146 seconds).
 
-The corrected archive changes only that test expectation and generated
-package-date metadata. Implementation and built documentation are identical;
-the full check was not repeated after this test-only correction.
+A subsequent correction counts reported planning targets by their identities
+rather than splitting labels containing commas. The final archive installs
+and passes all 72 targeted reporting assertions. No estimation code or built
+documentation changed; the full check was not repeated after this correction.
+Windows checks of this archive are pending.
 
-Long workflows remain available as explicit `\dontrun{}` examples, with
-instructions for running them. Short examples and representative numerical
-checks remain active. The complete test suite remains available with
-`NOT_CRAN=true`.
-
-Windows checks of this revised archive are pending.
+Long workflows have explicit `\dontrun{}` examples with execution instructions;
+short examples and representative numerical tests remain active. The complete
+test suite is available with `NOT_CRAN=true`.
 
 ## Reverse dependencies
 
