@@ -80,7 +80,16 @@ post-fit reviews
 Recommend a design condition from simulation results
 }
 \details{
-This helper converts a design-study summary into a simple planning table.
+This helper screens simulated designs under user-chosen planning criteria.
+The default targets non-Person facet calibration: high separation reliability
+means that facet-level differences can be distinguished, not that raters
+agree. Use \code{facets = "Person"} to target Person differentiation instead.
+Neither use establishes classification accuracy or a universal sample size.
+Inspect \code{summary(result)$target} and \verb{$thresholds} before interpreting the
+recommendation. Defaults are planning choices, not validated standards.
+\code{\link[=summary.mfrm_design_recommendation]{summary.mfrm_design_recommendation()}} explains the criterion outcomes;
+\code{\link[=plot.mfrm_design_recommendation]{plot.mfrm_design_recommendation()}} and \code{\link[=mfrm_report]{mfrm_report()}} preserve them without
+repeating the simulation. No plan-selection confidence interval is computed.
 
 A design is marked as recommended when all requested facets satisfy all
 selected thresholds simultaneously.

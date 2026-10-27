@@ -5170,6 +5170,11 @@ mfrm_report_build <- function(x, style) {
   out$tables <- c(out$tables, x$tables[setdiff(keys, names(out$tables))])
   if (length(category_notes)) out$tables$category_notes <- data.frame(Note = category_notes)
   out$markdown <- mfrm_report_markdown(out)
+  if (inherits(x$fit, "mfrm_fit")) {
+    out$tables$numerical_review <- .mfrm_numerical_review(x$fit)
+    out$markdown <- paste(out$markdown, "## Numerical review and next actions",
+      mfrm_report_markdown_table(out$tables$numerical_review), sep = "\n\n")
+  }
   if (!is.null(x$fit$opt$start_review)) {
     out$tables <- c(out$tables, mfrmr_mml_start_tables(x$fit))
     out$markdown <- paste(out$markdown, "## Starting-value review",
@@ -5616,6 +5621,21 @@ mfrm_report_html <- function(report) {
 #' See the editable `templates/assessment-review.Rmd` for separate modules
 #' using bundled data and a saved report archive.
 #'
+#' @section Planning and numerical review:
+#' Pass [recommend_mfrm_design()] results directly to preserve the planning
+#' target, threshold sources, all candidate designs and long criterion outcomes.
+#' Facet calibration reliability is not inter-rater agreement. Recommendations
+#' apply to the simulated conditions; no universal sample size is inferred.
+#' Main-effects [mfrm_d_study()] results also enter directly. These reports
+#' preserve residual-scaling assumptions and unavailable coefficients separately
+#' from full interaction-component G-studies. Newly created projections retain
+#' source components and observed counts; missing historical metadata are
+#' labelled `not_recorded` without refitting. Intervals are unsupported for
+#' this approximation and for simulation recommendations.
+#' Native measurement reports include `numerical_review`: separate evidence
+#' and next actions for optimization, curvature, starts, integration and replay.
+#' This table neither reruns diagnostics nor changes inferential readiness.
+#'
 #' @section G/D-study and residual-exploration reports:
 #' Saved Stan/brms summaries read by [read_mfrm_posterior()] also enter this
 #' route directly. Reports retain their credible-interval level, fixed values,
@@ -5967,7 +5987,7 @@ mfrm_report <- function(x,
   }
   if (!is.null(intervals)) stop("Saved `intervals` apply only to G/D-study reports.", call. = FALSE)
   if (!inherits(x, "mfrm_results")) {
-    stop("`x` must be mfrm_results, a saved posterior summary, a G/D-study, a paired D-study comparison, a residual/rater/halo network, an ERGM result, bias estimates, or an anchor/linking/model-choice review. Use `mfrm_results()` for a supported native fit or `read_mfrm_posterior()` for an exported Bayesian summary.", call. = FALSE)
+    stop("`x` must be mfrm_results, a saved posterior summary, a design recommendation, a G/D-study, a paired D-study comparison, a residual/rater/halo network, an ERGM result, bias estimates, or an anchor/linking/model-choice review. Use `mfrm_results()` for a supported native fit or `read_mfrm_posterior()` for an exported Bayesian summary.", call. = FALSE)
   }
   style <- match.arg(tolower(as.character(style[1])), c("qc", "apa", "validation", "reviewer", "technical", "rater"))
   output <- match.arg(tolower(as.character(output[1])), c("object", "markdown", "html", "tables"))

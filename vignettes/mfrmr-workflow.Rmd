@@ -522,6 +522,15 @@ increasing it. Keep the same data, model, method, and planned controls when
 investigating an iteration limit. Choose JML for its fixed-person estimand
 when appropriate, not as a faster substitute for MML.
 
+`summary(fit)$numerical_review` distinguishes optimization, curvature, starting
+values and integration, with a next action for each. To preserve inputs and
+constraints, use `build_mfrm_replay_script(fit)` with the original input data
+before changing a diagnostic control. Ordinary `mml_starts` and automatic
+integration cannot be combined: review specified starts on a shared fixed grid,
+then run `mml_quadrature_sensitivity()` separately. That review retains the
+starting-value policy. Nearly equal likelihoods do not override unresolved
+gradient, information or inference checks.
+
 ```{r ratings-setup-artifacts, echo = FALSE, eval = is_cran_check}
 vignette_artifact("workflow_fit_decision.csv")
 vignette_artifact("workflow_fit_overview.csv")

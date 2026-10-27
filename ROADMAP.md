@@ -41,6 +41,14 @@ The release has three complementary purposes:
 | G-theory assessment planning | How would tasks, raters and score weights affect assessment dependability? | Preserve the completed, scoped estimates, intervals and plan comparisons in the final API and release. |
 | Rater feedback and assessment decisions | Which rating patterns need review, and how uncertain is a conclusion? | Connect supported diagnostics, individual reports and decision summaries. |
 
+Simulation design recommendations now carry their target, threshold sources
+and candidate outcomes into summaries, plots and shared reports. Person
+differentiation and non-Person facet calibration remain distinct purposes.
+Main-effects D-study approximations also enter reports with their assumptions
+and recorded source components; they do not replace full component G-studies.
+Numerical review separates optimization, curvature, starting values and
+integration, with explicit follow-up routes that do not change acceptance criteria.
+
 The G-theory interval requirements are reconciled within the documented
 designs and assumptions, with experimental methods distinguished from
 qualified defaults. Anchor alignment and its migration workflow are

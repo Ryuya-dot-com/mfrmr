@@ -583,6 +583,12 @@ mfrm_generalizability <- function(fit,
 #' interaction components explicitly. Changing `residual_scaling` here only
 #' explores assumptions; it does not estimate the omitted interactions.
 #'
+#' Pass the result directly to [mfrm_report()] for full projection tables and
+#' their assumptions. Newly created results retain source variance components,
+#' estimation settings and observed facet counts. Reports of older compatible
+#' results mark missing source details `not_recorded`; report creation never
+#' reconstructs components or computes confidence intervals.
+#'
 #' The `G` and `Phi` values returned here belong to the generalizability-theory
 #' metric family. They should not be interpreted as coefficient alpha, omega,
 #' KR-20, or IRT marginal/separation reliability, even though all of those
@@ -725,6 +731,8 @@ mfrm_d_study.mfrm_generalizability <- function(x,
   attr(out, "random_facets") <- random_facets
   attr(out, "residual_scaling") <- residual_scaling
   attr(out, "source") <- "mfrm_generalizability"
+  attr(out, "source_design") <- x$design
+  attr(out, "source_components") <- x$variance_components
   attr(out, "estimand_scale") <- x$design$estimand_scale %||%
     "observed_numeric_score"
   attr(out, "identification_status") <- identification_status

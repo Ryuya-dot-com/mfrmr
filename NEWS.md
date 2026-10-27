@@ -16,7 +16,8 @@ figures, tables and an editable report while keeping its assumptions visible.
 - **Compare plans before collecting more ratings.** Examine how specified
   rater/task counts affect the precision of a score, weighted composite or
   difference. G/D-study reports connect sources of variation to plan tables,
-  figures and supported intervals.
+  figures and supported intervals. Simulation recommendations now show their
+  target, criteria and candidate outcomes in summaries, plots and reports.
   See [assessment planning](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gtheory.html).
 - **Find rating patterns that need attention.** Check assignment links before
   fitting, examine observed agreement, and prepare supported rater feedback.

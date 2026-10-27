@@ -1987,6 +1987,24 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   .require_mfrmr_ggplot2()
   payload <- x$data %||% list()
   dots <- list(...)
+  if (identical(x$name, "design_recommendation")) {
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "table"))
+      stop("Use component = 'table' for criterion outcomes; use plot_data() for the other tables.", call. = FALSE)
+    tab <- payload$table
+    tab$Design <- factor(tab$DesignRow, levels = payload$designs$DesignRow,
+      labels = paste0(payload$designs$DesignRow, ifelse(payload$designs$Selected, " *", "")))
+    tab$Check <- factor(tab$Check, levels = rev(unique(tab$Check)))
+    p <- ggplot2::ggplot(tab, ggplot2::aes(x = .data$Design, y = .data$Check, fill = .data$Status)) +
+      ggplot2::geom_tile(colour = "#666666") +
+      ggplot2::scale_fill_manual(values = c(pass = "#2A9D8F", fail = "#D55E00",
+        unavailable = "#999999", not_requested = "#FFFFFF"), drop = FALSE) +
+      .mfrmr_gg_theme() +
+      ggplot2::labs(x = "Ranked design row (* selected)", y = NULL, fill = "Criterion")
+    attr(p, "mfrmr_plot_data") <- x
+    attr(p, "mfrmr_notes") <- payload$notes
+    return(p)
+  }
   if (identical(x$name, "bias_collection")) {
     rlang::check_dots_empty()
     if (!is.null(component) && !identical(component, "table")) stop(

@@ -6558,7 +6558,16 @@ plot.mfrm_design_evaluation <- function(x,
 #'   explicitly omit this structural screen; the recorded status is retained.
 #'
 #' @details
-#' This helper converts a design-study summary into a simple planning table.
+#' This helper screens simulated designs under user-chosen planning criteria.
+#' The default targets non-Person facet calibration: high separation reliability
+#' means that facet-level differences can be distinguished, not that raters
+#' agree. Use `facets = "Person"` to target Person differentiation instead.
+#' Neither use establishes classification accuracy or a universal sample size.
+#' Inspect `summary(result)$target` and `$thresholds` before interpreting the
+#' recommendation. Defaults are planning choices, not validated standards.
+#' [summary.mfrm_design_recommendation()] explains the criterion outcomes;
+#' [plot.mfrm_design_recommendation()] and [mfrm_report()] preserve them without
+#' repeating the simulation. No plan-selection confidence interval is computed.
 #'
 #' A design is marked as recommended when all requested facets satisfy all
 #' selected thresholds simultaneously.
@@ -6666,6 +6675,16 @@ recommend_mfrm_design <- function(x,
                                   max_ratings = NULL,
                                   max_ratings_per_rater = NULL,
                                   require_connected = TRUE) {
+  threshold_sources <- stats::setNames(
+    ifelse(names(formals(recommend_mfrm_design))[-1L] %in% names(match.call())[-1L],
+      "user_supplied", "default"), names(formals(recommend_mfrm_design))[-1L])
+  if (missing(facets)) threshold_sources["facets"] <- "stored_facet_names"
+  for (name in c("min_separation", "min_reliability", "max_severity_rmse",
+                 "max_misfit_rate", "min_convergence_rate")) {
+    value <- get(name)
+    if (!is.numeric(value) || length(value) != 1L || is.na(value))
+      stop("`", name, "` must be one numeric threshold (infinite bounds are allowed).", call. = FALSE)
+  }
   if (!is.logical(require_connected) || length(require_connected) != 1L || is.na(require_connected)) {
     stop("`require_connected` must be a single TRUE/FALSE value.", call. = FALSE)
   }
@@ -6817,6 +6836,7 @@ recommend_mfrm_design <- function(x,
       facet_table = facet_table,
       design_table = design_table,
       recommended = recommended,
+      threshold_sources = threshold_sources,
       thresholds = list(
         facets = facets,
         min_separation = min_separation,

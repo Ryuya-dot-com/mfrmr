@@ -128,6 +128,12 @@ functions also accept a single score and estimate the corresponding
 interaction components explicitly. Changing \code{residual_scaling} here only
 explores assumptions; it does not estimate the omitted interactions.
 
+Pass the result directly to \code{\link[=mfrm_report]{mfrm_report()}} for full projection tables and
+their assumptions. Newly created results retain source variance components,
+estimation settings and observed facet counts. Reports of older compatible
+results mark missing source details \code{not_recorded}; report creation never
+reconstructs components or computes confidence intervals.
+
 The \code{G} and \code{Phi} values returned here belong to the generalizability-theory
 metric family. They should not be interpreted as coefficient alpha, omega,
 KR-20, or IRT marginal/separation reliability, even though all of those

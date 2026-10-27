@@ -131,6 +131,7 @@ cran_light_tests <- c(
   "gmfrm-em",
   "jml-public-workflow",
   "study-report",
+  "planning-report-connections",
   "report-modules",
   "residual-network",
   "network-inference",

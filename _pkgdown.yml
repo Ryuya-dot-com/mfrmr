@@ -352,6 +352,8 @@ reference:
       - print.mfrm_apa_text
       - recode_missing_codes
       - recommend_mfrm_design
+      - summary.mfrm_design_recommendation
+      - plot.mfrm_design_recommendation
       - reference_case_benchmark
       - reference_case_review
       - review_conquest_overlap

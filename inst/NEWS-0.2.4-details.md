@@ -572,6 +572,19 @@ uncertainty, subgroup comparisons and design planning.
   facet-interval objects also support `confint()` extraction at their stored
   confidence level, retaining unavailable limits.
 
+* Simulation design recommendations now connect to `summary()`, `plot()`,
+  `as_ggplot()`, `plot_data()` and `mfrm_report()`. Reports retain targets,
+  threshold sources, replication aggregates, failed/unavailable criteria and
+  workload constraints. High facet separation reliability describes distinct
+  locations, not agreement; `facets = "Person"` targets Person differentiation.
+  The underlying ranking and defaults are unchanged. Main-effects D-study
+  approximations also enter shared reports, retaining their residual assumptions
+  and newly saved source components/counts without pretending to estimate omitted
+  interactions or confidence intervals. Missing historical metadata stay explicit.
+  Fit summaries and measurement reports add `numerical_review` with separate
+  optimization, curvature, starts, integration and reproducible-refit actions;
+  this guidance does not alter numerical or inference acceptance criteria.
+
 * `fit_mfrm(..., mml_starts = c(0, 0.5, -0.5))` optionally reviews specified
   starting values for ordinary MML. Summary and report tables retain every
   attempt's likelihood, gradient, status, warnings and failures; long tables

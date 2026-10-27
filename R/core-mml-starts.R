@@ -1,5 +1,52 @@
 # Optional same-design, same-integration starting-value review for ordinary MML.
 
+.mfrm_numerical_review <- function(fit) {
+  config <- fit$config
+  opt <- fit$opt
+  d <- opt$optimizer_diagnostics %||% list()
+  mml <- identical(config$method, "MML")
+  two <- length(config$gpcm_spec$component_levels) == 2L
+  stages <- opt$optimizer_polish$Stages %||% data.frame()
+  curvature <- stages$SmallestCurvature[which(stages$Selected %||% logical())]
+  starts <- opt$start_review$table
+  action <- if (identical(d$ConvergenceStatus, "iteration_limit")) {
+    "Refit with the next prespecified maxit ceiling, holding data, model, weights, constraints, tolerance and quadrature fixed; recheck the terminal gradient."
+  } else if (identical(opt$mml_engine$Used, "em") && !identical(d$ConvergenceSeverity, "pass")) {
+    "Compare direct or hybrid on the same model and integration rule; EM likelihood stopping alone does not establish stationarity. Retain the raw EM result."
+  } else {
+    "Inspect fit$opt$optimizer_polish$Stages, the terminal gradient and objective. Similar likelihoods do not override a failed numerical criterion; do not loosen tolerances merely to remove a warning."
+  }
+  start_action <- if (!mml) "Ordinary mml_starts applies to MML, not this estimator." else if (two) {
+    "Use the two-family gpcm_mml_start controls and their scoped diagnostics; ordinary mml_starts is unsupported."
+  } else if (!is.null(starts)) {
+    "Review summary(fit)$starting_values and all warnings, errors and terminal coordinates. Offset starts explore one direction; named coordinate lists explore other prespecified directions. Agreement is not proof of a global maximum."
+  } else {
+    "For eligible full MML fits, compare prespecified mml_starts at the same fixed/adaptive rule. Auto integration and checkpoints cannot be combined with mml_starts; use a separate fixed-grid review at the retained order."
+  }
+  data.frame(
+    Area = c("Optimization", "Curvature", "Starting values", "Integration", "Reproducible refit"),
+    Status = c(d$ConvergenceSeverity %||% "not_assessed",
+      if (any(is.finite(curvature))) "recorded" else "not_assessed",
+      if (is.null(starts)) "not_requested" else if (any(!starts$NumericalStatus %in% "pass")) "review" else "completed",
+      if (mml) config$mml_accuracy$status %||% "not_assessed" else "not_applicable",
+      if (is.null(config$replay_inputs)) "not_recorded" else "recorded"),
+    Evidence = c(paste0("Reason: ", d$ConvergenceReason %||% "not_recorded",
+      "; gradient sup norm: ", format(d$TerminalGradientSupNorm %||% NA_real_, digits = 8),
+      "; threshold: ", format(d$GradientReviewTolerance %||% NA_real_, digits = 8)),
+      paste0("Selected-stage smallest curvature: ", paste(format(curvature, digits = 8), collapse = ", ")),
+      paste0(if (is.null(starts)) 0L else nrow(starts), " stored ordinary-MML attempts"),
+      if (mml) paste0(config$estimation_control$mml_integration %||% "fixed", "; points: ",
+        config$estimation_control$quad_points %||% NA_integer_) else "No marginal integration for this estimator",
+      "Source rows, score coding, weights, anchors, constraints and controls must remain matched."),
+    NextAction = c(action,
+      "Missing curvature means not evaluated, not positive definiteness. Review recorded curvature failures and model identification before interpreting intervals.",
+      start_action,
+      if (mml) "Use mml_quadrature_sensitivity(fit) separately to assess denser shared rules; it retains ordinary starting-value settings. Compare likelihoods, effects and probabilities, then check the uncertainty method's own eligibility. The review does not promote readiness automatically." else
+        "Review estimator-specific diagnostics and uncertainty assumptions; a quadrature check is not applicable.",
+      "Use build_mfrm_replay_script(fit) with matching original inputs when replay metadata are available. Save the original fit and change only the declared diagnostic control before comparing results."),
+    stringsAsFactors = FALSE)
+}
+
 mfrmr_mml_start_vectors <- function(start, requested, map) {
   vectors <- list(default = as.numeric(start))
   if (is.numeric(requested) && !is.complex(requested) && is.null(dim(requested))) {

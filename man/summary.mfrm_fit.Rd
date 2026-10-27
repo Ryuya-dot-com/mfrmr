@@ -114,6 +114,9 @@ distinguishes whole-facet (\code{"facet"}) from legacy remainder centering
 convention metadata retain the legacy interpretation. Recreate this
 summary from the fit to obtain new fields; reading an old summary does
 not update it or refit the model
+\item \code{numerical_review}: separate optimization, curvature, starting-value,
+integration and reproducible-refit evidence with specific next actions.
+Missing checks remain unassessed; this table does not change readiness
 \item \code{starting_values}, \code{starting_value_notes}: all attempted starts, numerical
 outcomes, selection and interpretation limits when \code{fit_mfrm(mml_starts = ...)}
 was requested. These describe numerical sensitivity, not sampling uncertainty

@@ -238,6 +238,23 @@ See the editable \code{templates/assessment-review.Rmd} for separate modules
 using bundled data and a saved report archive.
 }
 
+\section{Planning and numerical review}{
+
+Pass \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}} results directly to preserve the planning
+target, threshold sources, all candidate designs and long criterion outcomes.
+Facet calibration reliability is not inter-rater agreement. Recommendations
+apply to the simulated conditions; no universal sample size is inferred.
+Main-effects \code{\link[=mfrm_d_study]{mfrm_d_study()}} results also enter directly. These reports
+preserve residual-scaling assumptions and unavailable coefficients separately
+from full interaction-component G-studies. Newly created projections retain
+source components and observed counts; missing historical metadata are
+labelled \code{not_recorded} without refitting. Intervals are unsupported for
+this approximation and for simulation recommendations.
+Native measurement reports include \code{numerical_review}: separate evidence
+and next actions for optimization, curvature, starts, integration and replay.
+This table neither reruns diagnostics nor changes inferential readiness.
+}
+
 \section{G/D-study and residual-exploration reports}{
 
 Saved Stan/brms summaries read by \code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}} also enter this

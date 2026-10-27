@@ -1,4 +1,5 @@
 .mfrm_study_report_classes <- function() c("mfrm_multivariate_gstudy",
+  "mfrm_design_recommendation", "mfrm_d_study",
   "mfrm_multivariate_d_study", "mfrm_multivariate_d_comparison", "mfrm_residual_network",
   "mfrm_rater_network", "mfrm_halo_network", "mfrm_network_ergm",
   "mfrm_posterior_summary", "mfrm_bias_collection",
@@ -44,14 +45,73 @@
   domain <- class(x)[1L]
   if (style == "rater") stop("`style = 'rater'` requires mfrm_results.", call. = FALSE)
   if (!is.null(intervals) && !inherits(x, c("mfrm_multivariate_gstudy", "mfrm_multivariate_d_study")))
-    stop("Saved `intervals` apply only to G/D-study reports.", call. = FALSE)
+    stop("Saved `intervals` apply only to G/D-study reports from mfrm_g_study(); main-effects approximations and simulation recommendations do not support intervals.", call. = FALSE)
   tables <- list(); roles <- descriptions <- character()
   add <- function(name, value, role, description) {
     tables[[name]] <<- as.data.frame(value, stringsAsFactors = FALSE)
     roles[name] <<- role; descriptions[name] <<- description
   }
   notes <- character(); saved_intervals <- NULL
-  if (inherits(x, "mfrm_posterior_summary")) {
+  if (inherits(x, "mfrm_design_recommendation")) {
+    s <- summary(x)
+    title <- "Simulation-based assessment planning"
+    add("target", s$target, "study_design", "What the recommendation evaluates")
+    add("thresholds", s$thresholds, "study_design", "Requested criteria, ranking and threshold sources")
+    add("designs", s$design_table, "study_estimates", "All ranked candidates, including failed criteria and structural review")
+    add("checks", s$checks, "study_diagnostics", "Long criterion outcomes; unavailable and inactive checks remain distinct")
+    add("facets", s$facet_table, "study_estimates", "Unrounded facet aggregates and recorded replication evidence")
+    add("recommended", s$recommended, "study_estimates", "First passing candidate under the stored ranking, if any")
+    for (name in c("planning_scope", "planning_constraints")) {
+      settings <- x[[name]]
+      if (length(settings)) {
+        # Keep structured facet metadata in its own table.
+        for (field in names(settings)[vapply(settings, is.data.frame, logical(1))])
+          add(paste(name, field, sep = "_"), settings[[field]], "study_design", "Stored planning facet definitions")
+        settings <- settings[!vapply(settings, is.data.frame, logical(1))]
+        add(name, data.frame(Setting = names(settings),
+          Value = vapply(settings, function(v) paste(v, collapse = ", "), character(1))),
+          "study_design", "Stored scope and constraints of evaluated designs")
+      }
+    }
+    notes <- s$notes
+    issue <- paste("Review the target, generating assumptions and simulation precision.",
+      "A passing calibration screen is not evidence of rater agreement or cut-score classification accuracy.")
+    route <- "summary(x)$target; summary(x)$checks; plot(x); report$tables"
+    title_route <- "evaluate_mfrm_design() -> recommend_mfrm_design()"
+  } else if (inherits(x, "mfrm_d_study")) {
+    validate_gtheory_output(x)
+    title <- "Main-effects D-study approximation"
+    add("coefficients", summary(x), "study_estimates", "Point projections, error variances, residual assumptions and availability reasons")
+    design <- attr(x, "source_design", exact = TRUE)
+    components <- attr(x, "source_components", exact = TRUE)
+    add("source_design", data.frame(
+      ObjectFacet = attr(x, "object_facet") %||% NA_character_,
+      RandomFacets = paste(attr(x, "random_facets"), collapse = ", "),
+      Scale = attr(x, "estimand_scale") %||% NA_character_,
+      Formula = if (is.null(design$formula)) NA_character_ else paste(design$formula, collapse = " "),
+      REML = design$reml %||% NA,
+      SourceDetails = if (is.null(design) || is.null(components)) "not_recorded" else "stored"),
+      "study_design", "Observed-score main-effects source; missing historical metadata are not reconstructed")
+    if (!is.null(components)) add("components", components, "study_estimates", "Stored source variance components, without repair")
+    if (!is.null(design$observed_levels)) add("source_counts", data.frame(
+      Facet = names(design$observed_levels), ObservedLevels = unname(design$observed_levels)),
+      "study_design", "Observed source levels; distinct from future plan counts")
+    usage <- attr(x, "data_usage", exact = TRUE)
+    if (!is.null(usage$counts)) add("source_rows", as.data.frame(as.list(usage$counts)),
+      "study_design", "Source G-study row accounting")
+    add("uncertainty", data.frame(Status = "not_available",
+      Interpretation = "Point projections conditional on source components; no confidence intervals or omitted interaction components."),
+      "study_diagnostics", "Uncertainty boundary of the main-effects approximation")
+    notes <- c(
+      "This observed-score main-effects approximation is not a full Person-by-rater-by-task variance decomposition or an MFRM latent-scale reliability.",
+      "G concerns relative decisions and Phi absolute decisions. Future counts assume common facet levels in a complete crossing and invariant source components.",
+      "ResidualScaling describes a planning assumption. Sensitivity rows are alternatives, not confidence bounds or estimates of omitted interactions.",
+      "Identification warnings, boundary fits, unavailable values and calculation reasons remain in the coefficient table; a large G/Phi does not override them.",
+      "Use mfrm_g_study() on suitable raw ratings to estimate supported interaction components explicitly. Report score units, rubric direction, sampled universe and the chosen residual assumption.")
+    issue <- "Interpret as a main-effects planning approximation; review source identification and residual assumptions."
+    route <- "plot(x); report$tables$coefficients; mfrm_g_study() for supported interaction components"
+    title_route <- "mfrm_generalizability() -> mfrm_d_study()"
+  } else if (inherits(x, "mfrm_posterior_summary")) {
     .mfrm_validate_posterior(x)
     title <- "External Bayesian measurement summary"
     add("source_model", x$source, "study_design", "Exported model, response scale and stored credible level")

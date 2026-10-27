@@ -8751,6 +8751,9 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   convention metadata retain the legacy interpretation. Recreate this
 #'   summary from the fit to obtain new fields; reading an old summary does
 #'   not update it or refit the model
+#' - `numerical_review`: separate optimization, curvature, starting-value,
+#'   integration and reproducible-refit evidence with specific next actions.
+#'   Missing checks remain unassessed; this table does not change readiness
 #' - `starting_values`, `starting_value_notes`: all attempted starts, numerical
 #'   outcomes, selection and interpretation limits when `fit_mfrm(mml_starts = ...)`
 #'   was requested. These describe numerical sensitivity, not sampling uncertainty
@@ -10251,6 +10254,10 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     out$starting_values <- object$opt$start_review$table
     out$starting_value_notes <- object$opt$start_review$notes
   }
+  out$numerical_review <- .mfrm_numerical_review(object)
+  if (!identical(numerical_status, "pass")) out$next_actions <- c(
+    "Read summary(fit)$numerical_review for separate optimization, curvature, starting-value, integration and reproducible-refit actions.",
+    out$next_actions)
   class(out) <- "summary.mfrm_fit"
   out
 }
