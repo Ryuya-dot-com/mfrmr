@@ -1,43 +1,38 @@
 # mfrmr 0.2.4
 
-## Changes
+## Resubmission
 
-This update connects many-facet measurement, G/D-study planning and rater
-feedback through shared tables, figures and reports. It adds Stan export for
-single-family GPCM with its estimated normal population and supported fixed
-anchors, optional MML starting-value reviews, and EM/hybrid estimation for
-RSM/PCM interaction models. NEWS and the migration guide explain corrections
-affecting saved analyses and replacements for retired plotting helpers.
+The examples and tests failed because recompressing the bundled model-data file
+changed its checksum, while the posterior summary retained the original checksum.
+The original model-data bytes have been restored. The reader's integrity checks
+remain unchanged, and a regression test covers equal data with different file
+encodings. No model estimates or posterior summaries were recalculated.
+
+The DESCRIPTION term "generalizability" is intentional: it refers to
+generalizability theory (G-theory).
 
 ## Checks
 
-Windows Server 2022 x64, win-builder, 2026-10-27:
+macOS arm64, R 4.6.1, 2026-10-28:
+`R CMD check --as-cran --timings` on the corrected archive: 0 errors,
+0 warnings, 0 notes; 514 seconds elapsed (examples 55 seconds; tests 134 seconds).
+The affected examples and installed posterior-reader, reporting and plotting
+tests pass. The corrected archive has not yet been checked on Windows or Debian;
+the incoming failures reported above concern the previous archive.
 
-- [R 4.5.3 (oldrelease)](https://win-builder.r-project.org/k7x3sA0l96uQ/00check.log): 0 errors, 0 warnings, 0 notes;
-  1,493 seconds check time (examples 195 seconds; tests 573 seconds).
-- [R 4.6.1 (release)](https://win-builder.r-project.org/Am74Ro2r7Okx/00check.log): 0 errors, 0 warnings, 0 notes;
-  1,540 seconds check time (examples 200 seconds; tests 530 seconds).
+## Overall checktime
 
-macOS arm64, R 4.6.1, 2026-10-27:
-`R CMD check --as-cran --timings`: 0 errors, 0 warnings, 0 notes;
-603 seconds elapsed (examples 63 seconds; tests 146 seconds).
+The previous Windows incoming check reported 22 minutes, including 321 seconds
+for static R-code analysis and 510 seconds for tests. Its examples stopped at
+the checksum error, so their 104 seconds are not a complete example timing.
+This checksum correction does not resolve or claim compliance with the
+ten-minute criterion.
 
-After the macOS check, a reporting correction for facet labels containing commas
-passed targeted installed-package tests. Both Windows checks include this
-correction; the full macOS check was not repeated after it.
-
-The submission archive was subsequently reduced to 7,587,204 bytes by lossless
-data/image compression and stronger gzip compression. No files were removed.
-Serialized data streams are byte-identical, and image pixels and rendering
-metadata are unchanged. Executable code, help text and test programs are
-unchanged. R's internal extraction, fresh installation and packaged-data tests
-pass. The full checks above were not repeated for this storage-only change.
-
-Long workflows have explicit `\dontrun{}` examples with execution instructions;
-short examples and representative numerical tests remain active. The complete
-test suite is available with `NOT_CRAN=true`.
+Long workflows use explicit `\dontrun{}` examples. Ordinary tests retain real
+estimation and independent numerical checks across measurement, G/D studies
+and rater feedback, with at most two workers. The broader test suite runs with
+`NOT_CRAN=true`.
 
 ## Reverse dependencies
 
-No reverse dependencies were listed in the CRAN package index checked on
-2026-10-26.
+No strong reverse dependencies were identified by the incoming check.

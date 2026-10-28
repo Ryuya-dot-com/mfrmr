@@ -31,7 +31,12 @@ test_that("checksum, fixed-value and diagnostic inconsistencies fail before repo
   src <- system.file("extdata", "posterior-example", package = "mfrmr")
   file.copy(file.path(src, c("model-data.rds", "posterior-summary.rds")), dir)
   expect_s3_class(read_mfrm_posterior(file.path(dir, "posterior-summary.rds")), "mfrm_posterior_summary")
-  b <- readRDS(file.path(dir, "model-data.rds")); b$priors$location_marginal_sd <- 2
+  b <- readRDS(file.path(dir, "model-data.rds"))
+  # Recompression preserves R values but breaks the saved file identity.
+  saveRDS(b, file.path(dir, "model-data.rds"), compress = FALSE)
+  expect_identical(readRDS(file.path(dir, "model-data.rds")), b)
+  expect_error(read_mfrm_posterior(dir), "checksum")
+  b$priors$location_marginal_sd <- 2
   saveRDS(b, file.path(dir, "model-data.rds"))
   expect_error(read_mfrm_posterior(dir), "checksum")
   expect_error(read_mfrm_posterior(tempfile()), "together")

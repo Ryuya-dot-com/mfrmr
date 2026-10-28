@@ -88,6 +88,11 @@ The internal build method avoids macOS extended-attribute records that the
 internal installer may reject. An external tar's successful build or extraction
 is not sufficient evidence of portability.
 
+Before recompressing saved files, inspect their checksum relationships. Exported
+posterior summaries refer to the exact `model-data.rds` bytes; equal R values
+do not preserve that identity. Keep these model files unchanged and exercise
+the public readers for every affected saved-data family from the built package.
+
 ## Coding guidelines
 
 - Prefer readable, explicit code over compact but opaque code.
