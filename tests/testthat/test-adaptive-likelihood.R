@@ -15,10 +15,14 @@ test_that("public adaptive fits use one objective for likelihood, gradient, cova
     expect_match(fit$summary$IntegrationEvaluationId, "aghq_normal_v1:q=31", fixed = TRUE)
     expect_lt(abs(fit$summary$LogLik + expected$value), 1e-8)
     expect_lt(abs(fit$summary$TerminalGradientSupNorm - max(abs(expected$gradient))), 1e-8)
-    covariance <- mfrmr:::compute_mml_parameter_covariance(fit)
-    hessian <- stats::optimHess(fit$opt$par, function(x) evaluate(x)$value,
-                               function(x) evaluate(x)$gradient)
-    expect_lt(max(abs(covariance$hessian - hessian)), 1e-7)
+    # GPCM covers the general live Hessian route in ordinary checks.
+    # The complete suite also verifies the RSM and PCM special cases.
+    if (model == "GPCM" || isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) {
+      covariance <- mfrmr:::compute_mml_parameter_covariance(fit)
+      hessian <- stats::optimHess(fit$opt$par, function(x) evaluate(x)$value,
+                                 function(x) evaluate(x)$gradient)
+      expect_lt(max(abs(covariance$hessian - hessian)), 1e-7)
+    }
     review <- mfrmr:::mfrmr_adaptive_quadrature_review(
       idx, config, mfrmr:::expand_params(fit$opt$par, sizes, config),
       mfrmr:::gauss_hermite_normal(31L), fit$prep$levels$Person, 31L

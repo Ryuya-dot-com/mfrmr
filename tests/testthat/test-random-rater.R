@@ -11,6 +11,14 @@ shared_rater_example <- function(persons = 120, raters = 8, sd = .7, seed = 9235
   })
 }
 
+shared_rater_fit <- local({
+  saved <- NULL
+  function() {
+    if (is.null(saved)) saved <<- fit_mfrm_random_rater(shared_rater_example(), "Person", "Rater", "Score", "Criterion", 0:2, person_sd = 1)
+    saved
+  }
+})
+
 test_that("random-rater input preserves roles, categories and omitted assigned scores", {
   d <- shared_rater_example()
   x <- mfrm_random_rater_data(d, "Person", "Rater", "Criterion", "Score", 0:2)
@@ -134,7 +142,7 @@ test_that("shared predictor cells retain unequal counts, focal abilities and rep
 
 test_that("fitting, covariance and replacement-rater prediction keep their targets", {
   skip_if_not_installed("RTMB", "2.0")
-  fit <- fit_mfrm_random_rater(shared_rater_example(), "Person", "Rater", "Score", "Criterion", 0:2, person_sd = 1)
+  fit <- shared_rater_fit()
   expect_s3_class(fit, "mfrm_random_rater")
   expect_true(fit$checks$NumericalReady)
   expect_true(fit$checks$InformationPositive)
@@ -160,13 +168,6 @@ test_that("fitting, covariance and replacement-rater prediction keep their targe
   expect_equal(conditional, fit$conditional_rater_covariance, tolerance = 1e-5, ignore_attr = TRUE)
   expect_equal(conditional + J %*% fit$covariance %*% t(J), fit$rater_covariance,
     tolerance = 1e-5, ignore_attr = TRUE)
-  interval <- confint(fit)
-  expect_lt(interval[1, "Lower"], fit$calibration$rater_sd)
-  expect_gt(interval[1, "Upper"], fit$calibration$rater_sd)
-  profile <- attr(interval, "profile")
-  expect_true(all(profile$NumericalReady))
-  ends <- vapply(interval[1, ], function(sd) profile$NLL[which.min(abs(profile$SD - sd))], numeric(1))
-  expect_equal(unname(2 * (ends + fit$loglik)), rep(qchisq(.95, 1), 2), tolerance = 2e-4)
   expect_error(confint(fit, parm = "steps"), "rater_sd")
   expect_error(confint(fit, level = 1), "level")
   f <- tempfile(); saveRDS(fit, f)
@@ -193,6 +194,21 @@ test_that("fitting, covariance and replacement-rater prediction keep their targe
   grDevices::pdf(tempfile(fileext = ".pdf")); before <- graphics::par("mar")
   plot(fit); expect_equal(graphics::par("mar"), before); grDevices::dev.off()
   if (requireNamespace("ggplot2", quietly = TRUE)) expect_s3_class(as_ggplot(plot), "ggplot")
+})
+
+test_that("positive random-rater variance profiles attain the likelihood cutoff", {
+  # Keep the expensive nuisance refits in the full suite; ordinary checks retain
+  # a live boundary profile and independent analytic endpoint/curvature tests.
+  skip_on_cran()
+  skip_if_not_installed("RTMB", "2.0")
+  fit <- shared_rater_fit()
+  interval <- confint(fit)
+  expect_lt(interval[1, "Lower"], fit$calibration$rater_sd)
+  expect_gt(interval[1, "Upper"], fit$calibration$rater_sd)
+  profile <- attr(interval, "profile")
+  expect_true(all(profile$NumericalReady))
+  ends <- vapply(interval[1, ], function(sd) profile$NLL[which.min(abs(profile$SD - sd))], numeric(1))
+  expect_equal(unname(2 * (ends + fit$loglik)), rep(qchisq(.95, 1), 2), tolerance = 2e-4)
 })
 
 test_that("an estimated zero variance does not manufacture certainty", {

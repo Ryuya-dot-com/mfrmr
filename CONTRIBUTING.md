@@ -279,6 +279,14 @@ submission-review criterion, not an automatic ten-minute process timeout.
   limits still apply. If an external limit interrupts a run, preserve completed
   results and rerun only unfinished phases against the same source archive.
   Do not restart successful numerical tests merely to change a timeout setting.
+- Within selected files, repeated multi-start scenarios and positive-variance
+  random-rater profile refits use `skip_on_cran()`. Ordinary checks still run
+  live estimation, a boundary variance profile, analytic profile cutoffs and
+  curvature failures, and adaptive likelihood/gradient checks for all models;
+  the repeated Hessian comparison runs for the general GPCM case. The full
+  `NOT_CRAN=true` suite retains every scenario, original sample size, quadrature
+  order and tolerance. Assess workload reductions separately from changes to
+  estimator speed, and measure Windows rather than extrapolating Mac totals.
 - Source-tree-only historical and research validation tests are excluded from
   the package. Run them only for the affected area, with their recorded source
   version and optional runtime.

@@ -1707,9 +1707,9 @@ uncertainty, subgroup comparisons and design planning.
   for changes between waves.
 
 * Adaptive integration evaluates each Person's quadrature points together,
-  reducing repeated setup during fitting, scoring and
-  uncertainty checks. Integration orders and numerical acceptance criteria
-  are unchanged.
+  including category moments, reducing repeated setup during fitting, scoring
+  and uncertainty checks. Quadrature reviews avoid computing unused category
+  moments. Integration orders and numerical acceptance criteria are unchanged.
 
 * Design-evaluation summaries reuse resolved planning metadata when preparing
   their structural design review, avoiding repeated construction for older

@@ -54,6 +54,7 @@ cran_light_tests <- c(
   "response-imputation",
   "linking-numerics",
   "random-rater",
+  "random-rater-profile",
   "testlet",
   "gauss-hermite-weights",
   "generalizability-missing",

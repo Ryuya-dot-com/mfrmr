@@ -31,6 +31,8 @@ test_that("ordinary starts retain same-objective outcomes and the default result
 })
 
 test_that("named starts, weights and anchors retain the constrained objective", {
+  # Full-suite scenario: ordinary checks retain live starts and engine-specific tests.
+  skip_on_cran()
   d <- mml_starts_fixture()$data
   d$Weight <- rep(c(.5, 1, 2), length.out = nrow(d))
   anchor <- data.frame(facet = "Rater", level = as.character(d$Rater[1]), anchor = .2)
@@ -76,6 +78,8 @@ test_that("named starts, weights and anchors retain the constrained objective", 
 })
 
 test_that("start review uses actual engines and preserves raw EM review", {
+  # Full-suite scenario: ordinary checks retain live starts and engine-specific tests.
+  skip_on_cran()
   d <- mml_starts_fixture()$data
   em <- suppressWarnings(fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score",
     mml_engine = "em", mml_starts = c(0, .75, -.75), maxit = 1000, reltol = 1e-10))
@@ -90,6 +94,8 @@ test_that("start review uses actual engines and preserves raw EM review", {
 })
 
 test_that("GPCM adaptive review preserves the integration basis and slope constraint", {
+  # Full-suite scenario: ordinary checks retain live starts and engine-specific tests.
+  skip_on_cran()
   d <- mml_starts_fixture()$data
   f <- suppressWarnings(fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score",
     model = "GPCM", step_facet = "Criterion", slope_facet = "Criterion",

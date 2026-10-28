@@ -108,13 +108,16 @@ mfrmr_adaptive_person_kernel <- function(idx, config, params, base_eta, mu, sigm
         lapply(node_indices, function(i) linear[i, , drop = FALSE])
       } else vector("list", length(z))
     } else NULL
-    moments <- vapply(prob_list, function(probability) {
-      expected <- as.vector(probability %*% categories)
-      variance <- rowSums(probability *
-        (rep(categories, each = nrow(probability)) - expected)^2)
-      c(score = sigma * sum(idx$weight * slope * (idx$score_k - expected)),
-        information = sigma^2 * sum(idx$weight * slope^2 * variance))
-    }, c(score = 0, information = 0))
+    # Rows are already stacked by node. Compute all category moments together
+    # instead of dispatching the same small matrix operations once per node.
+    expected <- as.vector(probability %*% categories)
+    variance <- rowSums(probability *
+      (rep(categories, each = nrow(probability)) - expected)^2)
+    moments <- rbind(
+      score = sigma * colSums(matrix(
+        (idx$weight * slope)[node_rows] * (idx$score_k[node_rows] - expected), n)),
+      information = sigma^2 * colSums(matrix(
+        (idx$weight * slope^2)[node_rows] * variance, n)))
     if (any(!is.finite(moments))) {
       stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive posterior score or information."))
     }
@@ -200,7 +203,8 @@ mfrmr_adaptive_quadrature_review <- function(
         if (any(!is.finite(value))) stop("Non-finite posterior moments.", call. = FALSE)
         value
       }
-      fixed <- summarize(quad$nodes, evaluate(quad$nodes)$log_likelihood, log(quad$weights))
+      fixed <- summarize(quad$nodes,
+        evaluate(quad$nodes, include_moments = FALSE)$log_likelihood, log(quad$weights))
       # For non-negative weights and positive slopes the normal-prior log
       # posterior is strictly concave: information = 1 + sum(w a^2 Var(K)).
       location <- mfrmr_adaptive_posterior_location(evaluate)
@@ -211,7 +215,7 @@ mfrmr_adaptive_quadrature_review <- function(
         # The density ratio and Jacobian retain the original prior/integral.
         log_weights <- log(rule$weights) +
           stats::dnorm(z, log = TRUE) - stats::dnorm(rule$nodes, log = TRUE) + log(scale)
-        summarize(z, evaluate(z)$log_likelihood, log_weights)
+        summarize(z, evaluate(z, include_moments = FALSE)$log_likelihood, log_weights)
       }, c(log_marginal = 0, eap = 0, sd = 0))
       out$FixedLogMarginal <- fixed["log_marginal"]
       out$AdaptiveLogMarginal <- adaptive["log_marginal", ]
