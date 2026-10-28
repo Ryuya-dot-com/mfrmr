@@ -189,20 +189,18 @@ submission-review criterion, not an automatic ten-minute process timeout.
   The full `NOT_CRAN=true` suite regenerates the ordinary fitted inputs and
   compares estimates and diagnostics; ordinary checks verify reuse without
   refitting. Update the saved inputs when their calculations change.
-- The ordinary test profile retains live RSM/PCM/GPCM (including adaptive
-  integration), two-family GPCM, CML, random-rater and testlet estimation,
-  independent likelihood/gradient checks, anchors, G/D inference, networks and
-  the data-to-report smoke path. More extensive report/plot combinations run
-  with `NOT_CRAN=true`: calibration and portable scoring remain covered by
-  `calibration-public-api`, `conditional-scoring` and `gmfrm-portable`; anchor
-  precision by `anchored-calibration`, `anchored-facet-intervals` and
-  `anchored-gpcm`; inference/reporting by `gpcm-inference-extensions`,
-  `gmfrm-interval-status`, `experimental-reporting`, `report-modules` and
-  `study-report`; FACETS checks by `facets-manual-consistency` and
-  `facets-results`. The complete suite retains the larger fixtures and all
-  detailed combinations. Do not shrink fixtures when that changes the numerical
-  or inferential
-  condition being tested.
+- The ordinary test profile selects representative workflows and independent
+  numerical checks; `tests/testthat.R` is the authoritative file list. It keeps
+  live RSM/PCM/GPCM adaptive likelihood checks (`adaptive-likelihood`), fixed-grid
+  fitting and reports (`cran-smoke`), two-family GPCM (`gmfrm-em`,
+  `gmfrm-public-workflow`), CML, random-rater and testlet estimation. Calibration,
+  anchors, model comparisons, G/D studies and rater feedback remain covered.
+  The `posterior-summary` reader/report/plot and checksum regressions are mandatory,
+  including rejection of a changed file whose loaded values are identical.
+  Repeated refitting, detailed interval/plot combinations and sensitivity sweeps
+  remain in the complete `NOT_CRAN=true` suite. Keep their data, integration orders
+  and tolerances unchanged when moving them out of the ordinary selection.
+  Reducing routine test work is not evidence of faster model estimation.
 - Use `example_operational` for applied tutorials, `example_core` for
   idealized fast checks, and `example_bias` only when a planted non-null
   DFF/bias signal is needed.
