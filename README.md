@@ -49,12 +49,15 @@ Source installation requires R build tools. Check `packageVersion("mfrmr")`
 in a fresh R session before following the examples. Before updating existing
 scripts, open `help("mfrmr_api_migration_030")`.
 The development source includes five core offline tutorials: workflow, model
-choice, G theory, visual diagnostics and reporting. The commands below open
-documentation for the installed version. The main website documents the
-published release; development articles are built separately under `dev/`.
-Until a website build matches your checkout, use its installed help and local
-article sources in `vignettes/articles/`. The new visual tour is
-`vignettes/articles/mfrmr.Rmd` in this checkout.
+choice, G theory, visual diagnostics and reporting. Use the
+[development documentation](https://ryuya-dot-com.github.io/mfrmr/dev/) with
+this development version, and the stable website with CRAN 0.2.4.
+
+**[Start the interactive tour](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html)**
+to follow one assessment from rating data to diagnostics, rater feedback,
+assessment planning and a saved report. You can explore the figures before
+running R. To start with your own data, follow the
+[data and design section](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html#look-at-data).
 
 ## Try one assessment
 

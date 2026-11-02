@@ -74,9 +74,10 @@ statistical targets or inference eligibility.
   reports. Log-slope priors remain tied to the source slope reference;
   changing that reference with fresh priors changes the Bayesian model.
   Two-family simulation, JML, direct data/spec export, brms and new-Person
-  posterior scoring remain unsupported. This compatible extension
-  is a `0.3.x` candidate; its implementation does not expand the `0.3.0`
-  release requirements.
+  posterior scoring remain unsupported. This extension is included in the
+  planned `0.3.0` release.
+  Numerical convergence does not establish a unique finite optimum or
+  adequate estimation precision for every rating design.
 - Unanchored two-family Stan bundles omit per-rating `eta` and
   `effective_slopes` from saved output. These are deterministic work vectors;
   parameter draws, `log_lik`, `y_rep`, diagnostics and posterior replay remain
