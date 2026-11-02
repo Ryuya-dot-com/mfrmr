@@ -2,10 +2,12 @@
 
 ## mfrmr 0.2.4
 
-**Unreleased candidate.** This release connects rating analysis,
-assessment planning and reporting. You can move from a fitted model or
-rating plan to figures, tables and an editable report while keeping its
-assumptions visible.
+CRAN release: 2026-10-30
+
+**Published on CRAN on 2026-10-30.** This release connects rating
+analysis, assessment planning and reporting. You can move from a fitted
+model or rating plan to figures, tables and an editable report while
+keeping its assumptions visible.
 
 ### What is easier now?
 

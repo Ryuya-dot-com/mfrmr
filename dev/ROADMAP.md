@@ -30,6 +30,7 @@ replacement already available from CRAN.
 | Area | Published 0.2.4 | Intended change in 0.3.0 |
 |----|----|----|
 | Public entry points | 189 exports | 163 exports: consolidate 28 names into shared routes and add [`facets_guide()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/facets_guide.md) / [`import_irt_fit()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/import_irt_fit.md). Follow the migration guide for exact replacements. |
+| Two-family GPCM | Experimental two-facet MML | Choose two slope facets among fixed additive facets, with separate step ownership and a named slope reference; retain experimental inference limits. |
 | Model specification | Flat [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md) arguments | Group advanced model choices in `spec` and numerical settings in `control`, with validated legacy calls. |
 | Figures and saved results | Existing S3 routes and legacy plot payloads | Return `ggplot` objects consistently; use [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot_data.md) for numerical payloads. Preserve saved-result classes and supported methods. |
 | Bayesian workflows | Export and posterior-summary review | Direct data/spec export, optional CmdStanR execution, joint-draw contrasts and new-Person scoring with separate predictive-precision checks. |
@@ -50,6 +51,28 @@ validation.
 The release remains conditional on cross-platform checks and acceptable
 check duration. An implemented feature or a successful local check alone
 does not establish release readiness.
+
+## What should become easier in 0.3.0?
+
+The intended benefit is a connected assessment workflow: start with a
+rating table, understand the design and diagnostics, and use the results
+to prepare feedback or compare a future rating plan. The [interactive
+tour](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html)
+shows this sequence with data, figures, explanations and a saved
+analysis.
+
+| Your question | The workflow should help you do this |
+|----|----|
+| Can I compare people rated by different panels? | Inspect who rated whom, distinguish missing assignments from zero scores, and review model identification. A connected graph alone is insufficient. |
+| What should I discuss with a rater? | Read severity together with consistency, exposure and uncertainty; prepare a reviewable report without automatic rater exclusion. |
+| Should I add raters or tasks? | Compare declared plans using G/Phi, uncertainty and resource constraints. A D-Study is a separate observed-score analysis, not a transformation of an MFRM coefficient. |
+| Can I reproduce this result later? | Save the analysis, diagnostics and numerical plot data together, and reload them for reporting. |
+
+TAM or FACETS can remain the right choice for a particular model or
+established workflow. mfrmr’s aim is to reduce the work between analysis
+and an interpretable assessment decision. More model options alone would
+not achieve that aim; beginner comprehension and successful use still
+need evaluation.
 
 ## 0.3.0: migration and release conditions
 
@@ -87,11 +110,11 @@ successful local check or completed implementation does not close these
 conditions. Version milestones express dependencies and evidence
 requirements, not calendar dates.
 
-New model candidates below do not expand the requirements for `0.3.0`.
-Errors or misleading claims within its supported scope still require
-correction. Later extensions are selected for a concrete assessment
-decision and the evidence needed to support it; they are not a
-commitment to implement every branch.
+Alternative response equations and later model candidates below are
+outside `0.3.0`. Errors or misleading claims within its supported scope
+still require correction. Later extensions are selected for a concrete
+assessment decision and the evidence needed to support it; they are not
+a commitment to implement every branch.
 
 ## Measurement models: current limits and extension order
 
@@ -128,22 +151,23 @@ scoring. Extended-role Stan export from an existing fit supports
 posterior reload, contrasts, plots and reports. Two-family simulation,
 direct data/spec export and new-Person posterior scoring remain
 unsupported. Changing the slope reference with fresh independent priors
-changes the Bayesian model. This implementation is a compatible `0.3.x`
-release candidate; it does not add a prerequisite to the `0.3.0`
-release.
+changes the Bayesian model. This extension is included in **0.3.0**. Its
+point-estimation review separates identification, numerical accuracy and
+sampling error; adding support does not remove experimental interval
+restrictions.
 
 A bounded three-facet study now separates Person count from ratings per
 Person. All numerical checks passed, but the 60-Person, four-rating
 Task-slope interval covered its true value in 183/200 replications. The
-design, Monte Carlo uncertainty and precision results are described
-under “Three facets: Person count and rating exposure” in
-`vignettes/articles/mfrmr-gpcm-scope.Rmd` in the matching development
-source. They do not establish a general minimum sample size or remove
+design, Monte Carlo uncertainty and precision results are described in
+the [development GPCM
+guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html#three-facets-person-count-and-rating-exposure).
+They do not establish a general minimum sample size or remove
 experimental interval restrictions. The number of levels of each facet
 was fixed at two.
 
-The remaining adoption criteria distinguish computational support from
-inferential recommendations:
+The 0.3.0 review distinguishes reliable computation from inferential
+recommendations:
 
 1.  **Specify the model and supported designs.** Keep the response
     equation, category support, population, location constraints and
@@ -151,12 +175,18 @@ inferential recommendations:
     probabilities; changing the step owner generally changes the model.
     Identify confounded or insufficient rating designs before promising
     estimation.
-2.  **Complete the supported workflow.** Connect estimation and
+2.  **Verify point estimation before recommending intervals.** Check
+    objective values and estimates under independent starting values and
+    integration refinement; separate local curvature from existence of a
+    finite, unique optimum. Assess bias and RMSE on each parameter’s
+    stated scale, with Monte Carlo uncertainty, retaining failed
+    attempts in the denominator.
+3.  **Complete the supported workflow.** Connect estimation and
     numerical audits to intervals, prediction, saved-result reload,
     reporting and calibration export. Document and reject unsupported
     simulation or Bayesian-export combinations. Existing saved fits must
     retain their original equation and owner conventions.
-3.  **Evaluate the intended inference.** Use independent calculations
+4.  **Evaluate the intended inference.** Use independent calculations
     and targeted finite-sample studies for the adopted model, estimand
     and rating design. Successful reference calculations are not
     production implementation, and new computational support does not

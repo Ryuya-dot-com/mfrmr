@@ -2,8 +2,7 @@
 
 **Who scores more severely? What changes when we add tasks? Which scores
 does our model predict?** Explore each question below, then adapt the
-code to your own assessment. These examples require the **unreleased
-0.2.4 candidate**; follow the [installation
+code to your own assessment. These examples use the **development interface for 0.3.0**; follow the [installation
 instructions](https://ryuya-dot-com.github.io/mfrmr/dev/index.html#install-and-choose-matching-documentation).
 All observations here are synthetic.
 

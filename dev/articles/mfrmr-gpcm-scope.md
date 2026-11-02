@@ -536,8 +536,10 @@ not provide intervals for two families**: SEs and bounds are missing and
 explicitly. Known facet levels not observed together are labelled in
 `curves$contexts`; this label is not evidence that extrapolation is
 reliable. The first and second family’s numerical slopes are retained
-separately in `fit_joint$slopes`; `PrimaryEstimate` remains unavailable
-pending inferential qualification.
+separately in `fit_joint$slopes`; `OptimizerEstimate` is the numerical solution. `PrimaryEstimate` remains
+unavailable because the finite-optimum and boundary review is incomplete,
+not simply because interval coverage is unqualified. A positive local
+information matrix does not establish a unique global optimum.
 
 For complete probability curves and cumulative 50% thresholds at chosen
 rating contexts, use
@@ -613,6 +615,65 @@ marginal information has an independent reference based on [Louis
 agreement with that reference checks the calculation, not its
 finite-sample coverage. A different interval method is not automatically
 required whenever an approximate method has a documented limitation.
+
+### Point estimates: numerical accuracy and sampling error
+
+The extended-role model is included in the planned **0.3.0** release. Its
+point estimates need three separate reviews:
+
+1. **Identification:** a named geometric-mean-one slope family removes the
+   reciprocal scaling ambiguity between the two slope families. The fixed
+   N(0,1) population sets the ability scale. Location constraints and observed
+   crossings must also identify the fitted effects. More rows cannot resolve
+   a structural confounding in the assignment design.
+2. **Numerical accuracy:** compare starts, likelihoods, gradients and refined
+   integration. In a saved five-facet example with 160 Persons and 32 ratings
+   each, fixed-grid EM converged at 61 nodes but failed the integration review.
+   Adaptive direct MML passed the local checks on the same data and model.
+   The largest change in a free location coordinate was 0.01045; the Task t1
+   slope changed from 1.24265 to 1.23675. These differences concern numerical
+   approximation, not a change in the ability population. Neither agreement
+   between two starts nor local curvature proves global uniqueness.
+3. **Sampling error:** even an accurately computed optimum can vary widely or
+   be biased across samples. This affects slope interpretation, fitted curves
+   and comparisons before an SE or interval is considered.
+
+The three-facet study below was reanalysed for all 14 structural parameters
+(six locations, four steps and four slopes), retaining all 800 fitted datasets.
+These are constrained parameters, not 14 independent degrees of freedom.
+All numerical point estimates were available. The slope results on their
+original positive scale were:
+
+| Slope (true value) | Bias, 60 Persons × 4 ratings (MCSE) | RMSE, 60 × 4 | Bias, 240 × 8 (MCSE) | RMSE, 240 × 8 |
+| --- | ---: | ---: | ---: | ---: |
+| Task t1 (0.80) | −0.0022 (0.0136) | 0.1914 | 0.0046 (0.0033) | 0.0470 |
+| Task t2 (1.25) | 0.0732 (0.0217) | 0.3152 | −0.0030 (0.0051) | 0.0717 |
+| Rater r1 (0.90) | 0.0558 (0.0234) | 0.3348 | 0.0064 (0.0066) | 0.0938 |
+| Rater r2 (1.20) | 0.1326 (0.0315) | 0.4635 | 0.0098 (0.0084) | 0.1183 |
+
+Each cell uses 200 replications. Bias is the mean estimate minus the true
+value; RMSE includes both bias and spread. MCSE describes simulation
+uncertainty, not an SE for one assessment's estimate. This follows the
+[performance-measure distinctions of Morris, White and Crowther (2019)](https://doi.org/10.1002/sim.8086).
+The two intermediate designs, 60 × 8 and 240 × 4, were retained in the same
+analysis; the endpoint columns summarize a change in both Person count and
+within-Person crossing, not their isolated effects.
+
+The bias depends on scale and on which constrained parameter is inspected.
+Task t2 is exactly the reciprocal of Task t1. In the smaller design their
+log-slope biases were +0.0302 and −0.0302, while their positive-scale biases
+were not negatives of each other. Exponentiation and reciprocation are
+nonlinear. Near-zero bias for one slope therefore does not establish low
+bias for its paired slope; subtracting separate bias estimates could also
+break the model's normalization. No automatic correction is applied.
+
+These results support the computation in the stated design, while showing
+material small-sample error. They do not establish a minimum sample size,
+a general finite-optimum certificate, or accuracy under population
+misspecification, more facet levels or extreme slopes. The details below
+also show why this point-estimation evidence cannot by itself qualify SEs
+or confidence intervals.
+
 
 ### Three facets: Person count and rating exposure
 

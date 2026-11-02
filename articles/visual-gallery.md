@@ -2,8 +2,7 @@
 
 **Who scores more strictly? What changes when we add tasks? Which scores
 does our model predict?** Explore each question below, then adapt the
-code to your own assessment. These examples require the **unreleased
-0.2.4 candidate**; follow the [installation
+code to your own assessment. These examples use **mfrmr 0.2.4, available from CRAN**; follow the [installation
 instructions](https://ryuya-dot-com.github.io/mfrmr/index.html#install-the-version-used-here).
 All observations here are synthetic.
 

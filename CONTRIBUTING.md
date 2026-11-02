@@ -11,7 +11,6 @@ Thanks for helping improve `mfrmr`.
 ## Development setup
 
 ``` r
-
 # from package root
 install.packages(c("devtools", "roxygen2", "testthat"))
 devtools::document()
@@ -22,7 +21,6 @@ To try a development checkout, start a fresh R session in its package
 root:
 
 ``` r
-
 pkgload::load_all(".", export_all = FALSE)
 getNamespaceInfo(asNamespace("mfrmr"), "path")
 ```
@@ -55,6 +53,21 @@ checks report a skip when these files are absent; that skip is not
 evidence that the numerical validation passed. Ordinary package tests
 and hosted checks must not require private roadmaps.
 
+Before publishing source or documentation, run
+`Rscript scripts/check-publication-boundary.R` from the repository root.
+It checks tracked and new non-ignored files, private references in
+user-facing sources and installed text, and version metadata against the
+recorded public release. It also checks research text and manifests for
+personal-machine paths, and research prose for references to private
+plans. Development sources omit release dates from DESCRIPTION and
+CITATION.cff. Run this check locally before staging and pushing; the
+package-check and website workflows repeat it after the source has
+reached GitHub. Research protocols still need editorial review:
+numerical conditions, counterexamples and source identities belong in
+public evidence, while personal instructions, approval exchanges and
+current work queues belong in local records. A dated research protocol
+is not a current release checklist.
+
 For external programs such as FACETS, transfer a completed input bundle,
 run it in a local directory, and return a completed output bundle.
 Record the source commit, program version, settings, stopping status and
@@ -74,16 +87,57 @@ From the package root:
 ``` sh
 mfrmr_stage_root=$(mktemp -d "${TMPDIR:-/tmp}/mfrmr-source.XXXXXX")
 Rscript --vanilla scripts/stage-package.R "$mfrmr_stage_root/mfrmr"
-R_BUILD_TAR=internal R CMD build "$mfrmr_stage_root/mfrmr"
+NOT_CRAN=true R_BUILD_TAR=internal R CMD build "$mfrmr_stage_root/mfrmr"
 ```
 
 The helper prunes excluded directories before traversal, using the
 running R version’s `tools` build-ignore rules, and verifies the copied
-file bytes. It requires a new destination outside the checkout and
-refuses an existing one. The normal build still applies its remaining
-exclusions and transformations. This avoids copying research artifacts;
-it does not skip required package checks, examples or vignette
-execution.
+file bytes. It then removes duplicated roxygen comments from the staged
+R files: their generated help remains in `man/`, and the editable
+roxygen source remains in the checkout. Parsed R expressions must match
+exactly before and after this step. Blank lines preserve line numbers;
+ordinary implementation comments and license notices remain. The helper
+requires a new destination outside the checkout and refuses an existing
+one. The normal build still applies its remaining exclusions and
+transformations. This avoids copying research artifacts; it does not
+skip required package checks, examples or vignette execution.
+
+The package includes five core tutorials: workflow, model choice, G
+theory, visual diagnostics and reporting. Specialized guides and the
+interactive gallery live in `vignettes/articles/` and are built by
+pkgdown. Keep their published article names stable. When linking from an
+installed tutorial to a website-only article, use its full website URL
+rather than [`vignette()`](https://rdrr.io/r/utils/vignette.html) or a
+local HTML path. All specialized calculations remain part of the
+evaluated website build.
+
+Keep each reference page focused on its question, minimal runnable use,
+arguments, output and essential interpretation limits. Link detailed
+comparisons, derivations and extended tutorials instead of repeating
+them. Core assumptions and unavailable states must remain understandable
+offline. Use rendered pkgdown pages for learning links; use GitHub links
+for source, issues and reproducible evidence. Relative repository paths
+in README can fail CRAN’s installed-file URL check, so use a verified
+absolute source URL where a source link is intended. The website uses
+`development.mode: auto`: released documentation stays at the site root
+and development documentation is built under `dev/`. Check version
+labels and links before deployment. Prepare development article links
+together with their matching `dev/` pages, and verify deployment before
+announcing those URLs as available. Until then, use the checkout’s
+installed help and local article preview. When preparing a release, move
+article links to the release site together with its documentation and
+verify content and version labels; HTTP success alone is not a version
+match.
+
+`NOT_CRAN=true` evaluates the worked tutorials for distribution,
+including the G-theory article. Ordinary CRAN checks leave their long
+calculations unevaluated; the distributed HTML retains the evaluated
+tables and figures. The website workflow uses the same evaluation
+setting. Tutorials use SVG line graphics when the optional `svglite`
+package is available, with PNG as a fallback. Install `svglite` for
+compact distribution builds; figures, text and analysis settings are
+otherwise retained. Review the rendered figures after a graphics-device
+change.
 
 Inspect build warnings even when the command exits successfully. Before
 using an archive, verify its expected file list and source contents,
@@ -99,16 +153,44 @@ extended-attribute records that the internal installer may reject. An
 external tar’s successful build or extraction is not sufficient evidence
 of portability.
 
+Before recompressing saved files, inspect their checksum relationships.
+Exported posterior summaries refer to the exact `model-data.rds` bytes;
+equal R values do not preserve that identity. Keep these model files
+unchanged and exercise the public readers for every affected saved-data
+family from the built package.
+
 ## Coding guidelines
 
 - Prefer readable, explicit code over compact but opaque code.
 - Keep public API names descriptive.
 - For user-facing behavior changes, update docs and examples in the same
   PR.
-- Use base R plotting defaults in this package unless there is a strong
-  reason not to.
+- Use the existing `ggplot2` plotting helpers and shared theme. Public
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods
+  return `ggplot` objects; expose numerical payloads through
+  [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
 
 ## Testing expectations
+
+Before a release containing Bayesian export, posterior or scoring
+changes, run
+`Rscript --vanilla scripts/check-stan-live.R PATH_TO_NEW_EVIDENCE_DIRECTORY`
+with CmdStanR, CmdStan and a working C++ toolchain installed. This is a
+required release check, separate from the ordinary and full package
+suites: it refuses missing dependencies and any skipped test, and
+records the Git revision, actual source hashes (including uncommitted
+changes), software versions and test counts. Retain its console log
+alongside the receipt. The evidence applies only to the recorded
+sources; rerun when those Bayesian paths change. Short chains test
+execution and data transfer, not posterior calibration or coverage.
+
+Install CmdStanR from the repository declared in `DESCRIPTION`,
+following the [official installation
+instructions](https://mc-stan.org/cmdstanr/articles/cmdstanr.html).
+CmdStan is a separate installation; installing the R package alone does
+not enable the live tests. Ordinary tests may skip absent optional
+tools, and a successful full suite with such skips does not satisfy the
+live release check.
 
 - Add or update tests for every user-visible change.
 - Keep tests deterministic (fixed seeds, no network calls).
@@ -134,7 +216,9 @@ of portability.
 ## Documentation expectations
 
 - Update roxygen comments when function arguments/returns change.
-- Run `devtools::document()` before committing.
+- Run
+  [`devtools::document()`](https://devtools.r-lib.org/reference/document.html)
+  before committing.
 - Do not pass a partial topic set to `roclet_output()` in the package
   directory: its default cleanup deletes other generated help files. Use
   normal package documentation generation or an isolated output
@@ -172,6 +256,54 @@ Verify labels, interval endpoints and underlying values after
 conversion, and retain the static figures and tables. A successful HTML
 build does not replace checking browser interactions and the deployed
 site’s assets.
+
+## Selecting a regression run
+
+After installing the same source, run from the package checkout with the
+desired library in `R_LIBS`:
+
+``` sh
+Rscript scripts/run-regression.R . cran ../validation-cran
+Rscript scripts/run-regression.R . extended ../validation-extended
+Rscript scripts/run-regression.R . reference ../validation-reference
+Rscript scripts/run-regression.R . all ../validation-all
+```
+
+`cran` uses the representative selection in `tests/testthat.R`.
+`extended` executes that selection and the listed detailed files with
+`NOT_CRAN=true`, restoring full numerical grids and propagation cases.
+`all` runs the complete test directory, including supplementary help
+examples and repository-only checks; some repository checks require
+retained external evidence. Review skips and warnings separately from
+failures. The runner saves per-test results and session information and
+returns a nonzero status for failures or errors.
+`scripts/cran-test-selection.json` records why cases move to extended
+checking. Choose the run from the changed behavior and applicable saved
+evidence.
+
+`reference` runs the repository-only numerical reference tests listed in
+`reference_tests` in `tests/testthat.R`. Their implementations live in
+`inst/validation/reference-code/`, outside the installed runtime
+namespace. The unfiltered repository `all` run includes these tests, and
+an explicit full CI run executes them against the package installed by
+its completed check. They retain the independent reference calculations
+and numerical tolerances; they are not part of the ordinary CRAN test
+selection. When a file mixes runtime and reference tests, keep the
+runtime blocks in the package and share only the fixture definitions
+needed by both modes. To inspect or run a reference implementation
+directly from a matching checkout:
+
+``` r
+source("scripts/load-research-code.R")
+reference <- load_mfrmr_research_code(".")
+ls(reference)
+```
+
+The returned environment resolves runtime helpers from the installed
+mfrmr namespace without changing that namespace. Historical research
+drivers with frozen source hashes must continue to use their recorded
+source/library; moving current reference code does not update or
+requalify past results.
 
 ## Examples and timing policy
 
@@ -217,20 +349,31 @@ timeout.
   without refitting. Update the saved inputs when their calculations
   change.
 
-- The ordinary test profile retains live RSM/PCM/GPCM (including
-  adaptive integration), two-family GPCM, CML, random-rater and testlet
-  estimation, independent likelihood/gradient checks, anchors, G/D
-  inference, networks and the data-to-report smoke path. More extensive
-  report/plot combinations run with `NOT_CRAN=true`: calibration and
-  portable scoring remain covered by `calibration-public-api`,
-  `conditional-scoring` and `gmfrm-portable`; anchor precision by
-  `anchored-calibration`, `anchored-facet-intervals` and
-  `anchored-gpcm`; inference/reporting by `gpcm-inference-extensions`,
-  `gmfrm-interval-status`, `experimental-reporting`, `report-modules`
-  and `study-report`; FACETS checks by `facets-manual-consistency` and
-  `facets-results`. The complete suite retains the larger fixtures and
-  all detailed combinations. Do not shrink fixtures when that changes
-  the numerical or inferential condition being tested.
+- The ordinary test profile selects the end-to-end public workflow and
+  short numerical/contract files; `tests/testthat.R` is the
+  authoritative selection. `population-identification` checks the
+  conditional RSM/PCM design certificate, mixed singleton rosters,
+  unsupported cases and preservation of inference restrictions.
+  `cran-smoke` retains live RSM/PCM and adaptive GPCM estimation,
+  diagnostics, summaries, plots and exports. Independent
+  likelihood/backend checks, CML, corrected JML, two-family GPCM,
+  random-rater/testlet fitting, calibration, G/D studies and agreement
+  checks remain. The `posterior-summary` reader, report, plot and
+  checksum regressions are mandatory, including rejection of a changed
+  file whose loaded values are identical. Detailed refitting,
+  failure/restart grids and propagation combinations run with
+  `NOT_CRAN=true`; the extended selection also includes files moved out
+  of the ordinary run. Their original data, assertions and tolerances
+  remain. A per-file timing budget helps choose representative checks;
+  it is not a timeout and must not silently skip a test on a slower
+  platform. Reducing routine test work is not evidence of faster model
+  estimation. Argument-routing checks retain live ordinary MML/JML,
+  Jeffreys and comparison-only fits, plus invalid-input guards, on CRAN.
+  Repeated flat versus structured calls for corrected JML, GPCM MML and
+  CML run in full mode; their engine-specific numerical checks still run
+  on CRAN. Simulation plot-dispatch tests use bundled results on CRAN
+  and regenerate their original simulations in full mode. See
+  `scripts/cran-test-selection.json` for the exact cases.
 
 - Use `example_operational` for applied tutorials, `example_core` for
   idealized fast checks, and `example_bias` only when a planted non-null
@@ -274,6 +417,20 @@ timeout.
   `@examplesIf interactive()` for functions that actually require
   interaction. Do not hide an error behind a wrapper.
 
+- Keep complete supplementary examples in their own help topics. Mark
+  them with a reason and `example("topic", run.dontrun = TRUE)` when
+  their routine execution duplicates representative workflows.
+  `inst/examples/execution-policy.csv` records these choices and the
+  primary examples that remain automatic. A `mixed` entry runs the short
+  primary example normally and retains optional supplementary
+  calculations in a reasoned `\dontrun{}` block on the same page.
+  Existing non-executed examples keep their original opt-in status;
+  relocating them cannot reduce the ordinary numerical workload. Avoid
+  separate copies of the same example code in `inst/examples/manual/`.
+  The full regression reads and runs the installed help through
+  [`utils::example()`](https://rdrr.io/r/utils/example.html), including
+  its output.
+
 - For a measured long calculation, a commented recomputation call may
   accompany an executable example that reads and uses its saved
   synthetic result. Include the complete regeneration recipe, preserve
@@ -309,22 +466,19 @@ timeout.
   bindings afterward. Keep the independent derivative/covariance checks
   and tests of changed fits, information budgets and integration
   settings; avoid a suite-wide cache that could conceal stale results.
-  Measure affected files separately from a complete package check.
+  Measure affected files separately from a complete package check. In
+  tests comparing flat and structured arguments, the ordinary CRAN run
+  may similarly reuse a successful numerical solution only after exact
+  prepared input, numerical-control and evaluator comparisons. Both
+  public calls must still validate their inputs; `NOT_CRAN=true` must
+  retain separate fits.
 
-- Ordinary checks run the same selected tests in at most two testthat
-  workers, with numerical-library threads limited to one per worker.
-  This follows the [CRAN resource
-  limit](https://cran.r-project.org/web/packages/policies.html) and
-  [testthat’s parallel-test
-  interface](https://testthat.r-lib.org/articles/parallel.html). It
-  reduces elapsed time, not the amount of numerical validation or
-  necessarily total CPU time. `TESTTHAT_PARALLEL=false` retains serial
-  execution; `Ncpus` / `TESTTHAT_CPUS` requests are capped at two in
-  ordinary checks. Older testthat versions without the supported
-  interface run serially. `NOT_CRAN=true` retains the complete
-  regression suite and its existing execution policy. Keep files
-  independent, use session-local temporary files, and verify unchanged
-  test results before accepting a scheduling change.
+- Ordinary checks run the selected tests serially in one session, with
+  numerical library threads limited to one. This avoids worker startup
+  and repeated dependency loading for short files. The complete
+  `NOT_CRAN=true` suite keeps its existing scheduling policy. Compare
+  timings and results in the intended environment rather than assuming
+  parallel execution is always faster.
 
 - CRAN-time `testthat` and ordinary push/PR CI run the representative
   workflow and selected contracts from `tests/testthat.R`. For broad
@@ -338,6 +492,14 @@ timeout.
   results and rerun only unfinished phases against the same source
   archive. Do not restart successful numerical tests merely to change a
   timeout setting.
+
+- Within selected files, long reference integrations, repeated profile
+  fits and optimizer-failure combinations use `skip_on_cran()`. Ordinary
+  tests retain live models, numerical kernels, short boundary cases and
+  public output paths. `NOT_CRAN=true` restores every retained scenario,
+  original sample size, quadrature order and tolerance. Review the
+  selection notes in `scripts/cran-test-selection.json` when changing
+  either path.
 
 - Source-tree-only historical and research validation tests are excluded
   from the package. Run them only for the affected area, with their
@@ -354,15 +516,15 @@ timeout.
   skips and unfinished steps. A focused check and the exhaustive
   `NOT_CRAN=true` regression job provide different evidence.
 
-- `devtools::check()` defaults to `env_vars = c(NOT_CRAN = "true")`,
-  which runs the full **packaged** suite. To time the ordinary CRAN
-  selection, set `env_vars = c(NOT_CRAN = "false")`. This alone does not
-  reproduce win-builder: devtools also defaults to omitting the PDF
-  manual, remote incoming checks and strict Suggests availability. For a
-  staged source archive, use:
+- [`devtools::check()`](https://devtools.r-lib.org/reference/check.html)
+  defaults to `env_vars = c(NOT_CRAN = "true")`, which runs the full
+  **packaged** suite. To time the ordinary CRAN selection, set
+  `env_vars = c(NOT_CRAN = "false")`. This alone does not reproduce
+  win-builder: devtools also defaults to omitting the PDF manual, remote
+  incoming checks and strict Suggests availability. For a staged source
+  archive, use:
 
   ``` r
-
   devtools::check_built("mfrmr_0.2.4.tar.gz", cran = TRUE,
     env_vars = c(NOT_CRAN = "false"), args = "--timings",
     manual = TRUE, remote = TRUE, force_suggests = TRUE)

@@ -34,7 +34,6 @@ report.
 **The CRAN release is 0.2.4 (published 2026-10-30).** Install it with:
 
 ``` r
-
 install.packages("mfrmr")
 browseVignettes("mfrmr")
 ```
@@ -52,7 +51,6 @@ Building tutorials requires R Markdown and Pandoc. Then, from the
 directory containing that archive, install it in R:
 
 ``` r
-
 install.packages("mfrmr_0.2.4.9000.tar.gz", repos = NULL, type = "source")
 ```
 
@@ -61,13 +59,17 @@ Source installation requires R build tools. Check
 examples. Before updating existing scripts, open
 [`help("mfrmr_api_migration_030")`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_api_migration_030.md).
 The development source includes five core offline tutorials: workflow,
-model choice, G theory, visual diagnostics and reporting. The commands
-below open documentation for the installed version. The main website
-documents the published release; development articles are built
-separately under `dev/`. Until a website build matches your checkout,
-use its installed help and local article sources in
-`vignettes/articles/`. The new visual tour is
-`vignettes/articles/mfrmr.Rmd` in this checkout.
+model choice, G theory, visual diagnostics and reporting. Use the
+[development documentation](https://ryuya-dot-com.github.io/mfrmr/dev/)
+with this development version, and the stable website with CRAN 0.2.4.
+
+**[Start the interactive
+tour](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html)**
+to follow one assessment from rating data to diagnostics, rater
+feedback, assessment planning and a saved report. You can explore the
+figures before running R. To start with your own data, follow the [data
+and design
+section](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html#look-at-data).
 
 ## Try one assessment
 
@@ -77,7 +79,6 @@ ratings are observed. Here, interpret 1 as lower performance and 4 as
 higher performance.
 
 ``` r
-
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
 head(ratings[c("Person", "Rater", "Criterion", "Score")], 3)
@@ -99,7 +100,6 @@ the
 [`vignette("mfrmr-model-choice", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-model-choice.md).
 
 ``` r
-
 fit <- fit_mfrm(
   ratings, person = "Person", facets = c("Rater", "Criterion"), score = "Score",
   rating_min = 1, rating_max = 4, category_policy = "preserve",
@@ -135,7 +135,6 @@ fit rather than silently changing its model.
 ## Read the first figure
 
 ``` r
-
 plot(fit, show_ci = FALSE)
 ```
 
@@ -164,7 +163,6 @@ understanding* and *ease of understanding* run in opposite directions.
 ## Make a report and keep the analysis
 
 ``` r
-
 report <- mfrm_report(analysis, style = "apa", output = "html")
 browseURL(report$path)  # Open the draft report in your browser
 export_mfrm_results(analysis, output_dir = "assessment-export", preset = "starter")

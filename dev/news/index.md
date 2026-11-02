@@ -118,9 +118,10 @@ statistical targets or inference eligibility.
   priors remain tied to the source slope reference; changing that
   reference with fresh priors changes the Bayesian model. Two-family
   simulation, JML, direct data/spec export, brms and new-Person
-  posterior scoring remain unsupported. This compatible extension is a
-  `0.3.x` candidate; its implementation does not expand the `0.3.0`
-  release requirements.
+  posterior scoring remain unsupported. This extension is included in
+  the planned `0.3.0` release. Numerical convergence does not establish
+  a unique finite optimum or adequate estimation precision for every
+  rating design.
 
 - Unanchored two-family Stan bundles omit per-rating `eta` and
   `effective_slopes` from saved output. These are deterministic work
@@ -307,7 +308,9 @@ statistical targets or inference eligibility.
 
 - FACETS terminology, coverage, visual and fit-df guides now use
   `facets_guide(topic = ...)`. Their explanations and return structures
-  are retained. The legacy `mfrmRFacets()` name is replaced by
+  are retained. The legacy
+  [`mfrmRFacets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.html)
+  name is replaced by
   [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/run_mfrm_facets.md);
   use the same arguments. See
   [`?mfrmr_api_migration_030`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_api_migration_030.md)

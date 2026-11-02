@@ -31,19 +31,19 @@ report.
 
 ## Install the version used here
 
-**These examples require the unreleased 0.2.4 candidate.** If the
-maintainer has supplied its `.tar.gz` archive, select it here:
+**This website documents mfrmr 0.2.4, available from CRAN.** Install it
+in R:
 
 ``` r
-
-install.packages(file.choose(), repos = NULL, type = "source")
+install.packages("mfrmr")
+browseVignettes("mfrmr")
 ```
 
-Source installation requires R build tools. Keep the archive and
-checksum: different candidates share version `0.2.4`. Without the
-candidate, use `install.packages("mfrmr")` for the CRAN release and
-follow its installed tutorials via `browseVignettes("mfrmr")`; some
-features below will be unavailable.
+Check `packageVersion("mfrmr")` before following the examples. For the
+upcoming 0.3.0 interface, use the separate [development
+documentation](https://ryuya-dot-com.github.io/mfrmr/dev/) and
+[interactive
+tour](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html).
 
 ## Try one assessment
 
@@ -53,7 +53,6 @@ ratings are observed. Here, interpret 1 as lower performance and 4 as
 higher performance.
 
 ``` r
-
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
 head(ratings[c("Person", "Rater", "Criterion", "Score")], 3)
@@ -75,7 +74,6 @@ the [model-choice
 guide](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.html).
 
 ``` r
-
 fit <- fit_mfrm(
   ratings, person = "Person", facets = c("Rater", "Criterion"), score = "Score",
   rating_min = 1, rating_max = 4, category_policy = "preserve",
@@ -95,7 +93,6 @@ validity.
 ## Read the first figure
 
 ``` r
-
 plot(fit, show_ci = FALSE)
 ```
 
@@ -124,7 +121,6 @@ understanding* run in opposite directions.
 ## Make a report and keep the analysis
 
 ``` r
-
 report <- mfrm_report(analysis, style = "apa", output = "html")
 browseURL(report$path)  # Open the draft report in your browser
 export_mfrm_results(analysis, output_dir = "assessment-export", preset = "starter")
