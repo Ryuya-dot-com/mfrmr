@@ -1,0 +1,339 @@
+# Build a category curve export bundle (preferred alias)
+
+Build a category curve export bundle (preferred alias)
+
+## Usage
+
+``` r
+category_curves_report(
+  fit,
+  theta_range = c(-6, 6),
+  theta_points = 241,
+  digits = 4,
+  include_fixed = FALSE,
+  fixed_max_rows = 400,
+  newdata = NULL
+)
+```
+
+## Arguments
+
+- fit:
+
+  Output from
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md).
+
+- theta_range:
+
+  Theta/logit range for curve coordinates.
+
+- theta_points:
+
+  Number of points on the theta grid.
+
+- digits:
+
+  Rounding digits for numeric graph output.
+
+- include_fixed:
+
+  If `TRUE`, include a legacy-compatible fixed-width text block.
+
+- fixed_max_rows:
+
+  Maximum rows shown in fixed-width graph tables.
+
+- newdata:
+
+  Optional data frame with every non-Person facet, one row per rating
+  context, using fitted level labels and no `Theta` column. For native
+  GPCM MML, evaluates the full fitted predictor, including one or two
+  slope families. `Theta` is reserved for the ability grid.
+  Unknown/missing levels are refused; unobserved combinations of known
+  levels are allowed and labelled. NULL retains reference profiles.
+
+## Value
+
+A named list with category-curve components. Class:
+`mfrm_category_curves`.
+
+## Details
+
+Preferred high-level API for category-probability curve exports.
+`model_context` records the fitted step/slope owners. `curve_profiles`
+maps each `CurveGroup` to the owner levels, including separate-owner
+GPCM. By default, curves are conditional reference profiles with
+additive locations fixed at zero; see the retained `CurveBasis` and
+`PredictorOffset` columns. Explicit `newdata` enables full-context one-
+and two-family GPCM MML curves. This helper does not compute calibration
+SEs or confidence intervals. `plot(out)` and its selected curve views
+use base graphics. Automatic
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/as_ggplot.md)
+conversion of this bundle is unavailable because curve families have
+distinct targets and scales; extract `probabilities` and retain its
+curve-family and group columns for custom figures. For fitted CCC
+graphics, [plot(fit, type =
+"ccc")](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot.mfrm_fit.md)
+has a dedicated conversion; review its reference-profile settings before
+comparing curves. Returns tidy curve coordinates and summary metadata
+for quick plotting/report integration without calling low-level helpers
+directly. The expected-score table also carries the per-curve score
+variance and information function. For `GPCM`, the information column
+follows the Muraki/Samejima identity \\a^2 \mathrm{Var}(X \mid
+\theta)\\; for `RSM` / `PCM`, this reduces to the usual score variance
+because discrimination is fixed at one. The `category_information` table
+decomposes that total into category-level contributions, \\a^2
+P_k(\theta)(k - E\[X \mid \theta\])^2\\, whose sum equals the reported
+information at the same theta value. The `cumulative_probabilities`
+table follows the FACETS / Winsteps graph convention of accumulating
+modeled probabilities across ordered categories (`P(X <= k)` by default,
+with `P(X >= k)` also returned for flipped curves).
+`cumulative_boundaries` reports approximate theta values where
+`P(X <= k) = .5`, with `BoundaryStatus` and `CrossingCount` to avoid
+over-interpreting boundaries outside the requested theta range or with
+multiple crossings.
+
+Without `newdata`, these are reference-profile curves. Estimated step
+parameters and, for `GPCM`, each step-facet group's estimated slope are
+retained, while additive facet main effects and fitted interactions are
+fixed at zero. The `CurveBasis` and `PredictorOffset` columns, and the
+corresponding entries in `settings`, make that conditioning explicit.
+Thus the curves do not represent an arbitrary observed Person-by-facet
+cell.
+
+## Explicit rating contexts
+
+With `newdata`, `curve_profiles` maps each curve to `InputRow` in the
+saved `newdata`. It retains the step owner/level, effective
+discrimination (the product for two families), additive
+`PredictorOffset`, and `ObservedContext`. The predictor is
+`Theta + PredictorOffset`; facet locations and interactions are
+retained. No Person posterior or population integration is involved.
+`Category` and expected scores retain the internal scoring scale;
+`CategoryLabel` and boundary label columns retain the original score
+labels. Plot series use these original labels without changing the
+scoring rule.
+
+`cumulative_boundaries` solves `P(X <= k) = .5`, equivalently
+`P(X >= k+1) = .5`, directly within `theta_range`. It is independent of
+`theta_points` and retains full numerical precision irrespective of
+`digits`. Binary boundaries use the analytic adjacent intersection.
+Other boundaries use bracketed root finding on a stable difference of
+unnormalized lower and upper category masses, avoiding subtraction of
+rounded probabilities. The root tolerance is 1e-10 in native ability
+units: the mass difference must change sign within that distance on
+either side of the reported root. The probability residual must also be
+at most 1e-8. These are numerical checks, not statistical uncertainty
+bounds. Out-of-range roots remain NA with `outside_theta_range`; failed
+numerical checks remain NA with `numerical_failure` and a reason.
+`AndrichThreshold` is the centered step offset; `AdjacentThreshold` is
+the ability where the adjacent probabilities are equal, including the
+context offset. Neither is generally the cumulative
+`ThurstonianThreshold`. Positive discriminations order cumulative
+thresholds even when an intermediate category is never most probable;
+ordering alone does not establish category adequacy. `SE`, `CI_Lower`,
+and `CI_Upper` are NA and `CIEligible` is FALSE.
+
+Finite calculations are retained even when the source fit needs review.
+`fit_readiness`, `settings$source_converged` and the summary/plot notes
+retain that distinction. Two-family values remain provisional.
+Unobserved contexts are predictions under the fitted model, not an
+identification guarantee. Save the complete result with
+[`saveRDS()`](https://rdrr.io/r/base/readRDS.html);
+[`summary()`](https://rdrr.io/r/base/summary.html),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot_data.md)
+replay it without fitting, diagnostics or covariance calculation.
+
+## Interpreting output
+
+Use this report to inspect:
+
+- where each category has highest probability across theta
+
+- where cumulative category probabilities cross .5
+
+- whether adjacent categories cross in expected order
+
+- whether probability bands look compressed (often sparse categories)
+
+Recommended read order:
+
+1.  `summary(out)` for compact diagnostics.
+
+2.  `out$probabilities`, `out$expected_ogive`, and
+    `out$category_information` for custom graphics.
+
+3.  `plot(out)` for a default visual check, or
+    `plot(out, type = "cumulative")` to inspect cumulative
+    probabilities. `plot(out, type = "information")` to inspect
+    curve-level information. Use
+    `plot(out, type = "category_information")` when category-level
+    contributions are needed.
+
+## References
+
+Category response curves follow Andrich's rating-scale formulation,
+Masters' partial-credit model, and Muraki's generalized partial-credit
+model. The `Information` column for `GPCM` uses Muraki's
+item-information result obtained from Samejima's general polytomous
+information formula.
+
+- Andrich, D. (1978). *A rating formulation for ordered response
+  categories*. Psychometrika, 43(4), 561-573.
+
+- Masters, G. N. (1982). *A Rasch model for partial credit scoring*.
+  Psychometrika, 47(2), 149-174.
+
+- Muraki, E. (1992). *A generalized partial credit model: Application of
+  an EM algorithm*. Applied Psychological Measurement, 16(2), 159-176.
+  [doi:10.1177/014662169201600206](https://doi.org/10.1177/014662169201600206)
+
+- Muraki, E. (1993). *Information functions of the generalized partial
+  credit model*. Applied Psychological Measurement, 17(4), 351-363.
+  [doi:10.1177/014662169301700403](https://doi.org/10.1177/014662169301700403)
+
+## Typical workflow
+
+1.  Fit model with
+    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md).
+
+2.  Run `category_curves_report()` with suitable `theta_points`.
+
+3.  Use [`summary()`](https://rdrr.io/r/base/summary.html) and
+    [`plot()`](https://rdrr.io/r/graphics/plot.default.html); export
+    tables for manuscripts/dashboard use. `plot(out)` gives a four-panel
+    overview. Use `preset = "monochrome"` for grayscale/line-type output
+    and `boundary_status = "none"` when cumulative `.5` boundary lines
+    should be suppressed. `plot(out, type = "category_probability")` and
+    `plot(out, type = "conditional_probability")` are explicit aliases
+    for the same category-probability curves as `type = "ccc"`. The
+    historical conditional alias is ordinary P(k), not the FACETS
+    adjacent-conditional curve P(k)/(P(k-1)+P(k)); prefer the
+    unambiguous `"ccc"` name. Use
+    `plot_data(out, component = "plot_long")` when rebuilding the curves
+    with ggplot2, plotly, or another R graphics system.
+
+## See also
+
+[`category_structure_report()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/category_structure_report.md),
+[`rating_scale_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/rating_scale_table.md),
+[`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot.mfrm_fit.md),
+[mfrmr_reports_and_tables](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_reports_and_tables.md),
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_visual_diagnostics.md)
+
+## Examples
+
+``` r
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+out <- category_curves_report(fit, theta_points = 101)
+summary(out)
+#> mfrmr Category Curves Summary 
+#>   Class: mfrm_category_curves
+#>   Components: 10
+#> 
+#> Curve grid summary
+#>                                 Metric   Value
+#>                           curve_groups   1.000
+#>                           theta_points 101.000
+#>                             categories   4.000
+#>                      legacy_graph_rows 101.000
+#>                    expected_ogive_rows 101.000
+#>                       probability_rows 404.000
+#>                    probability_columns   4.000
+#>            cumulative_probability_rows 808.000
+#>               cumulative_boundary_rows   3.000
+#>              category_information_rows 404.000
+#>           boundary_rows_needing_review   0.000
+#>      boundary_rows_outside_theta_range   0.000
+#>  boundary_rows_with_multiple_crossings   0.000
+#>                  max_total_information   0.661
+#>               max_category_information   0.283
+#> 
+#> Boundary / curve rows: cumulative_boundaries
+#>  CurveGroup BoundaryOrder LowerOrEqualCategory AboveCategory ThresholdCategory
+#>      Common             1                    1             2                 2
+#>      Common             2                    2             3                 3
+#>      Common             3                    3             4                 4
+#>  CumulativeDirection TargetProbability ThurstonianThreshold InThetaRange
+#>          at_or_below               0.5               -1.540         TRUE
+#>          at_or_below               0.5               -0.034         TRUE
+#>          at_or_below               0.5                1.572         TRUE
+#>  CrossingCount BoundaryStatus   BoundaryLabel
+#>              1       in_range P(X <= 1) = 0.5
+#>              1       in_range P(X <= 2) = 0.5
+#>              1       in_range P(X <= 3) = 0.5
+#> 
+#> Settings
+#>                  Setting
+#>              theta_range
+#>             theta_points
+#>                   digits
+#>              curve_basis
+#>         predictor_offset
+#>  curve_basis_description
+#>            include_fixed
+#>           fixed_max_rows
+#>                   scales
+#>                                                                                                                                Value
+#>                                                                                                                                -6, 6
+#>                                                                                                                                  101
+#>                                                                                                                                    4
+#>                                                                                                          zero_additive_facet_profile
+#>                                                                                                                                    0
+#>  Estimated step and, for GPCM, slope parameters are retained; additive facet main effects and fitted interactions are fixed at zero.
+#>                                                                                                                                FALSE
+#>                                                                                                                                  400
+#>                                                                                                                          <table 1x2>
+#> 
+#> Notes
+#>  - Category-curve bundle with probabilities, cumulative probabilities, total
+#>    information, and category-specific information.
+#>  - Category-specific information contributions sum to total information at the
+#>    same curve and theta point.
+#>  - Cumulative .5 boundary rows are in range with a single crossing where
+#>    reported.
+head(out$probabilities[, c("CurveGroup", "Theta", "Category", "Probability")])
+#>   CurveGroup Theta Category Probability
+#> 1     Common -6.00        1      0.9907
+#> 2     Common -5.88        1      0.9896
+#> 3     Common -5.76        1      0.9882
+#> 4     Common -5.64        1      0.9868
+#> 5     Common -5.52        1      0.9851
+#> 6     Common -5.40        1      0.9832
+p_overview <- plot(out, draw = FALSE)
+p_overview$data$plot
+#> NULL
+p_cum <- plot(out, type = "cumulative", draw = FALSE)
+head(p_cum$data$cumulative_boundaries)
+#> NULL
+p_info <- plot(out, type = "category_information", draw = FALSE)
+head(p_info$data$category_information)
+#> NULL
+curve_long <- plot_data(out, component = "plot_long")
+head(curve_long[, c("PlotType", "Theta", "Series", "Value")])
+#>   PlotType Theta Series  Value
+#> 1    ogive -6.00 Common 1.0093
+#> 2    ogive -5.88 Common 1.0105
+#> 3    ogive -5.76 Common 1.0118
+#> 4    ogive -5.64 Common 1.0133
+#> 5    ogive -5.52 Common 1.0150
+#> 6    ogive -5.40 Common 1.0169
+if (FALSE) { # \dontrun{
+# Which cumulative boundaries apply to a specified rater and criterion?
+ratings <- load_mfrmr_data("example_core")
+gpcm_fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  model = "GPCM", method = "MML", step_facet = "Criterion",
+  slope_facet = "Rater", rating_min = 1, rating_max = 4,
+  category_policy = "preserve", quad_points = 61)
+contexts <- unique(ratings[c("Rater", "Criterion")])[1:2, ]
+curves <- category_curves_report(gpcm_fit, newdata = contexts)
+curves$cumulative_boundaries[, c("CurveGroup", "UpperCategoryLabel",
+  "ThurstonianThreshold", "AdjacentThreshold", "BoundaryStatus")]
+summary(curves) # Inspect source readiness and interval limitations too.
+plot(curves, type = "cumulative")
+} # }
+```

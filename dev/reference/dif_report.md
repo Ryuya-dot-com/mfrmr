@@ -1,0 +1,130 @@
+# Generate a differential-functioning interpretation report
+
+Produces APA-style narrative text interpreting the results of a
+differential- functioning analysis or interaction table. For
+`method = "refit"`, the report summarises linked screening contrasts and
+whether conditional plug-in uncertainty was available. For
+`method = "residual"`, it summarises the availability and meaning of
+residual comparisons, without testing differential functioning or
+classifying comparisons as positive or negative.
+
+## Usage
+
+``` r
+dif_report(dif_result, ...)
+```
+
+## Arguments
+
+- dif_result:
+
+  Output from
+  [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/analyze_dff.md)
+  (class `mfrm_dff` with compatibility class `mfrm_dif`) or
+  [`dif_interaction_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/dif_interaction_table.md)
+  (class `mfrm_dif_interaction`).
+
+- ...:
+
+  Reserved for generic compatibility.
+
+## Value
+
+Object of class `mfrm_dif_report` with `narrative`, `counts`,
+`large_dif`, `gpcm_boundary`, and `config`.
+
+## Details
+
+When `dif_result` is an `mfrm_dff`/`mfrm_dif` object, the report is
+based on the pairwise differential-functioning contrasts in
+`$dif_table`. When it is an `mfrm_dif_interaction` object, the report
+uses the cell-level statistics and flags from `$table`.
+
+Refit differences are descriptive on a linked logit scale when subgroup
+calibrations retain the required anchors. Their separate-subgroup
+plug-in standard errors condition on those anchors and omit
+baseline-anchor uncertainty and cross-refit covariance, so the report
+does not assign ETS labels or present refit rows as formal inference.
+The residual method also returns descriptive group differences without
+tests or binary classifications.
+
+## Interpreting output
+
+- `$narrative`: character scalar with the full narrative text.
+
+- `$counts`: named integer vector of method-appropriate counts.
+
+- `$large_dif`: an empty compatibility table for current refit output,
+  or an empty table for residual comparisons. Interaction reports
+  include only cells above the requested absolute residual mean
+  threshold, in score units.
+
+- `$gpcm_boundary`: for `GPCM` inputs, a capability-boundary table
+  marking the narrative as caveated DFF screening output.
+
+- `$config`: analysis configuration inherited from the input.
+
+- `$comparison_review`: when supplied to
+  [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/analyze_dff.md),
+  its separate prospective interaction review, retained without treating
+  its states as classifications of the residual/refit contrasts. Also
+  retained by [`summary()`](https://rdrr.io/r/base/summary.html).
+
+## GPCM boundary
+
+If the input comes from a `GPCM` fit, the narrative includes a `GPCM`
+note and the returned report carries `gpcm_boundary`. Treat the text as
+slope-aware screening/reporting support, not as a standalone fairness,
+invariance, or operational subgroup decision.
+
+## Typical workflow
+
+1.  Run
+    [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/analyze_dff.md)
+    or
+    [`dif_interaction_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/dif_interaction_table.md).
+
+2.  Pass the result to `dif_report()`.
+
+3.  Print the report or extract `$narrative` for inclusion in a
+    manuscript.
+
+## References
+
+The narrative caveat about distinguishing construct-relevant variation
+from unwanted measurement bias is grounded in:
+
+- Eckes, T. (2011). *Introduction to Many-Facet Rasch Measurement:
+  Analyzing and Evaluating Rater-Mediated Assessments*. Frankfurt am
+  Main: Peter Lang. ISBN 978-3-631-61350-4.
+
+- McNamara, T., & Knoch, U. (2012). The Rasch wars: The emergence of
+  Rasch measurement in language testing. *Language Testing*, 29(4),
+  555–576.
+  [doi:10.1177/0265532211430367](https://doi.org/10.1177/0265532211430367)
+
+## See also
+
+[`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/analyze_dff.md),
+[`dif_interaction_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/dif_interaction_table.md),
+[plot(x, type =
+"heatmap")](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot.mfrm_dif.md),
+[`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_apa_outputs.md)
+
+## Examples
+
+``` r
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("dif_report", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+toy <- load_mfrmr_data("example_bias")
+
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+  method = "JML", model = "RSM", maxit = 300
+)
+diag <- diagnose_mfrm(fit, residual_pca = "none")
+dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
+rpt <- dif_report(dif)
+cat(rpt$narrative)
+} # }
+```

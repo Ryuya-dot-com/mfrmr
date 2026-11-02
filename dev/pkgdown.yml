@@ -1,0 +1,29 @@
+pandoc: 3.8.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  articles/mfrmr-external-features: mfrmr-external-features.html
+  articles/mfrmr-facet-intervals: mfrmr-facet-intervals.html
+  articles/mfrmr-facets-migration: mfrmr-facets-migration.html
+  articles/mfrmr-gpcm-scope: mfrmr-gpcm-scope.html
+  mfrmr-gtheory: mfrmr-gtheory.html
+  articles/mfrmr-linking-and-dff: mfrmr-linking-and-dff.html
+  articles/mfrmr-mml-and-marginal-fit: mfrmr-mml-and-marginal-fit.html
+  mfrmr-model-choice: mfrmr-model-choice.html
+  articles/mfrmr-networks-and-reporting: mfrmr-networks-and-reporting.html
+  articles/mfrmr-portable-calibration: mfrmr-portable-calibration.html
+  articles/mfrmr-random-raters: mfrmr-random-raters.html
+  articles/mfrmr-rating-agreement: mfrmr-rating-agreement.html
+  mfrmr-reporting-and-apa: mfrmr-reporting-and-apa.html
+  articles/mfrmr-response-imputation: mfrmr-response-imputation.html
+  articles/mfrmr-screening-performance: mfrmr-screening-performance.html
+  articles/mfrmr-testlet-applications: mfrmr-testlet-applications.html
+  articles/mfrmr-testlets: mfrmr-testlets.html
+  mfrmr-visual-diagnostics: mfrmr-visual-diagnostics.html
+  mfrmr-workflow: mfrmr-workflow.html
+  articles/mfrmr: mfrmr.html
+  articles/visual-gallery: visual-gallery.html
+last_built: 2026-11-02T04:58Z
+urls:
+  reference: https://ryuya-dot-com.github.io/mfrmr/reference
+  article: https://ryuya-dot-com.github.io/mfrmr/articles

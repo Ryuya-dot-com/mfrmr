@@ -1,0 +1,203 @@
+# Review MML sensitivity to the quadrature grid
+
+Refit one ordered-response MML model to the same supplied response data
+at two or more Gauss–Hermite quadrature counts. The original fit is
+reused at its own quadrature count; all other fits reuse its stored
+model, identification, anchor, interaction, optimizer, and population
+settings.
+
+Use `mml_quadrature_sensitivity()` for all supported model families. The
+former GPCM-only name is no longer exported.
+
+## Usage
+
+``` r
+mml_quadrature_sensitivity(
+  fit,
+  data,
+  quad_points = c(31L, 41L),
+  theta_range = c(-4, 4),
+  theta_points = 161L,
+  adaptive_quad_points = NULL
+)
+```
+
+## Arguments
+
+- fit:
+
+  An RSM, PCM, or GPCM MML `mfrm_fit` returned by
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md).
+  `mml_quadrature_sensitivity()` accepts only GPCM fits.
+
+- data:
+
+  The original response data.frame used to create `fit`. Prepared
+  response rows are compared semantically after refitting; row order may
+  differ, but changed observations fail closed.
+
+- quad_points:
+
+  At least two distinct positive integers, including the quadrature
+  count stored on `fit`. The default `c(31, 41)` is a comparison
+  starting point, not a claim that either grid is adequate for the data.
+  Refits retain the source fit's fixed or adaptive integration mode.
+
+- theta_range:
+
+  Two finite values defining the common ability grid used for fitted
+  category-probability comparison.
+
+- theta_points:
+
+  Number of common-grid ability points; at least 21.
+
+- adaptive_quad_points:
+
+  Optional vector of at least two distinct integer orders \>= 3, for
+  example `c(31, 61)`. Adds a per-Person `quadrature_review` at each
+  fit's fixed parameters, comparing a fixed-prior grid with
+  mode/curvature-adapted grids. This separates integration error from
+  parameter changes during refitting. Inspect changes between adaptive
+  orders too; neither grid is certified exact. Also available for two
+  slope families as a numerical diagnostic; it does not add Person
+  scoring or change the fitted integration method.
+
+## Value
+
+An object of class `mfrm_quadrature_sensitivity` containing:
+
+- `summary`: one comparison row per quadrature grid relative to the
+  original fit, including likelihood, measurement-coordinate,
+  probability, EAP, and posterior-SD changes;
+
+- `quadrature_review`: when requested, unrounded per-Person
+  fixed/adaptive log-marginal, EAP and posterior-SD differences,
+  adaptive-order changes, mode/curvature and computation status.
+  Unavailable rows retain their reason.
+  [`summary()`](https://rdrr.io/r/base/summary.html) also supplies a
+  compact `quadrature_overview`;
+
+- `runs`: likelihood, gradient, curvature, population-scale, and
+  readiness details for each fit;
+
+- `slopes`: component-slope estimates, raw diagnostic SEs and freshly
+  checked 95% model intervals. The summary reports endpoint changes
+  among jointly eligible levels and counts changes in interval
+  availability. One-family slopes have geometric mean one; two-family
+  scale references differ;
+
+- `intervals`: for two families, saved `mfrm_slope_intervals` objects
+  named by quadrature count, with their numerical checks and cautions;
+
+- `conditions`: warnings and messages from refitting and result
+  extraction;
+
+- `fits`: the reference and refitted `mfrm_fit` objects;
+
+- `settings` and `notes`: the fixed comparison contract and
+  interpretation boundary.
+
+The object supports [`print()`](https://rdrr.io/r/base/print.html),
+[`summary()`](https://rdrr.io/r/base/summary.html),
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html), and the
+existing
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/apa_table.md)
+list route (for example `apa_table(out)`).
+
+## Details
+
+This is an explicit refit diagnostic: neither
+[`summary.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/summary.mfrm_fit.md)
+nor
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md)
+invokes it automatically. It reports continuous changes rather than
+classifying a fit as quadrature-stable or unstable. In particular, it
+does not select a cutoff for acceptable changes, make unavailable
+standard errors valid, or resolve other warnings about the fit.
+
+The probability comparison evaluates every observed combination of
+non-Person facet levels on the same theta grid. It includes fitted
+two-way facet interactions and, for GPCM, the complete-predictor slope
+action. Same-Person EAP and posterior-SD changes use each fit's
+corresponding quadrature count. A one-point grid has no public scoring
+route, so those two changes are `NA` when it is the reference.
+
+Explicit intercept-only and covariate population models reuse the
+retained person table, factor coding and formula, with design equality
+checked by Person. Older fits without that data cannot be replayed.
+
+Raw slope and population-SD standard errors are computed from each local
+observed-information Hessian for diagnostic comparison only. The public
+parameter-level `SEEligible` state remains unchanged.
+
+## Two slope families
+
+For a two-family GPCM, refits preserve the ordered slope owners, fixed
+N(0,1) population, score ladder, engine, integration method and stopping
+controls (`em_score_tol` for fixed-grid EM or `reltol` for adaptive
+direct MML). Each refit reconstructs the source initialization policy
+from the observed data. Fixed-grid EM uses the neutral vector; adaptive
+fits retain either neutral-only or neutral-plus-EM initialization. Older
+adaptive fits without this setting retain the earlier neutral-only
+procedure. The reference estimate is not used as a new starting vector.
+Component slopes retain `SlopeOwner` and `ScaleReference`: the first
+family has geometric mean one; the second is free on the fixed ability
+scale. Category-probability comparisons use the product of both slopes.
+
+For both two-family engines, `intervals` contains the separately checked
+experimental [`confint()`](https://rdrr.io/r/stats/confint.html) result
+for each grid, including failed checks, cautions and missing bounds. For
+example, after comparing `quad_points = c(31, 61)`, use
+`plot(out$intervals$q61)` and
+`apa_table(out$intervals$q61, which = "numerical_checks")`. These checks
+also evaluate q versus 2q-1 at that fit's saved parameters without
+another refit. Passing these checks does not establish sampling coverage
+or resolve other warnings about the fitted model. Adaptive fits use
+their moving-node objective for both the information and the
+higher-order comparison. Person-score comparisons in `summary` remain
+unavailable for two families: EAP and posterior-SD changes there are
+`NA`, not zero. With `adaptive_quad_points`, the separate
+`quadrature_review` table evaluates posterior moments and log marginal
+likelihoods at each unchanged calibration. These diagnostic integrals do
+not enable
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/predict_mfrm_units.md)
+or supply Person intervals. The effective slope is the product of both
+facet slopes; moving the integration grid retains the original N(0,1)
+density and its Jacobian. This does not provide adaptive EM, update
+estimates or repair their intervals.
+
+More quadrature points improve the numerical approximation, not the
+amount of observed information. In a sparse design, a small group of
+candidates rated many times may need a finer grid than candidates with
+few ratings. Inspect interval availability and measured changes; no
+fixed point count is guaranteed to be adequate for every design. See the
+GPCM scope vignette for a same-data example and its sampling
+limitations.
+
+## See also
+
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md),
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md),
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/apa_table.md)
+
+## Examples
+
+``` r
+# Long-running workflow; run explicitly when needed.
+# example("mml_quadrature_sensitivity", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+toy <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(
+  toy, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", model = "RSM",
+  quad_points = 31
+)
+sensitivity <- mml_quadrature_sensitivity(
+  fit, toy, quad_points = c(31, 41), adaptive_quad_points = c(31, 61)
+)
+summary(sensitivity)
+# Preserve small numerical differences when preparing the sensitivity table.
+apa_table(sensitivity, digits = 5)
+} # }
+```

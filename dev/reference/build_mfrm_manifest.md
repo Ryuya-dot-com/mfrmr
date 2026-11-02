@@ -1,0 +1,220 @@
+# Build a reproducibility manifest for an MFRM analysis
+
+Build a reproducibility manifest for an MFRM analysis
+
+## Usage
+
+``` r
+build_mfrm_manifest(
+  fit,
+  diagnostics = NULL,
+  bias_results = NULL,
+  population_prediction = NULL,
+  unit_prediction = NULL,
+  plausible_values = NULL,
+  include_person_anchors = FALSE,
+  data = NULL
+)
+```
+
+## Arguments
+
+- fit:
+
+  Output from
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md)
+  or
+  [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/run_mfrm_facets.md).
+
+- diagnostics:
+
+  Optional output from
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md).
+  When `NULL`, diagnostics are computed with `residual_pca = "none"`.
+
+- bias_results:
+
+  Optional output from
+  [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/estimate_bias.md)
+  or a named list of bias bundles.
+
+- population_prediction:
+
+  Optional output from
+  [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/predict_mfrm_population.md).
+
+- unit_prediction:
+
+  Optional output from
+  [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/predict_mfrm_units.md).
+
+- plausible_values:
+
+  Optional output from
+  [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/sample_mfrm_plausible_values.md).
+
+- include_person_anchors:
+
+  If `TRUE`, include person measures in the exported anchor table.
+
+- data:
+
+  Optional original analysis data frame. When supplied, the manifest's
+  `input_summary` row for `data` describes the user's untouched input
+  rather than the package's internal `prep$data` (which carries
+  synthesised `Weight` / `score_k` columns). The summary records
+  structure, not a byte-level or serialized-object identity claim.
+
+## Value
+
+A named list with class `mfrm_manifest`.
+
+## Details
+
+This helper creates a compact package-native analysis record. It
+summarizes analysis settings, source columns, anchoring information, and
+which downstream outputs are currently available.
+
+## When to use this
+
+Use `build_mfrm_manifest()` when you want a compact, machine-readable
+record of how an analysis was run. Compared with related helpers:
+
+- [`export_mfrm_tables()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_tables.md)
+  writes analysis tables only.
+
+- `build_mfrm_manifest()` records settings and available outputs.
+
+- [`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_mfrm_replay_script.md)
+  creates an executable R script.
+
+- [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_bundle.md)
+  writes a project-folder reproducibility bundle; review every included
+  artifact for person-level or sensitive data before sharing it.
+
+## Output
+
+The returned bundle has class `mfrm_manifest` and includes:
+
+- `summary`: one-row analysis overview
+
+- `readiness`, `readiness_components`, and `readiness_parameters`: the
+  fitted model's recorded numerical checks and restrictions on
+  inference, overall and by component or parameter
+
+- `environment`: package/R/platform metadata
+
+- `model_settings`: key-value model settings table
+
+- `source_columns`: key-value data-column table
+
+- `estimation_control`: key-value optimizer settings table
+
+- `anchor_summary`: facet-level anchor summary. `model_settings`
+  separately records `centering_scope` and `noncenter_facet`; missing
+  convention metadata in a native fit retains the legacy `"remainder"`
+  interpretation
+
+- `anchors`: machine-readable anchor table
+
+- `hierarchical_review`: retained traceability table for hierarchical /
+  small-sample design flags
+
+- `missing_recoding`: retained traceability table for missing-code
+  recoding
+
+- `shrinkage_review`: retained traceability table for shrinkage settings
+
+- `available_outputs`: availability table for
+  diagnostics/bias/PCA/prediction outputs
+
+- `dependencies`, `input_summary`, and `session_info`: reproducibility
+  metadata tables. `input_summary` records object structure and does not
+  claim byte-for-byte identity across platforms or serialization formats
+
+- `settings`: manifest build settings
+
+## Interpreting output
+
+The `summary` table is the direct place to confirm that you are looking
+at the intended analysis. The `model_settings`, `source_columns`, and
+`estimation_control` tables are designed for reproducibility records and
+method write-up. `Converged` records the optimizer return-code decision;
+`InferenceReady` records whether the fit passes the additional numerical
+checks required for inference. They need not agree; passing these checks
+does not establish model fit or the statistical adequacy of every
+interval method. The `readiness` tables preserve these checks for the
+original fitted model, including the check-format version and reason
+codes. Re-running the analysis must repeat the checks using the new fit;
+the saved records do not certify it. Active latent-regression fits also
+record their population-model provenance there, including the fitted
+scoring basis, stored `population_formula`, and person-level data
+requirements used by the fitted population model. When categorical
+background variables are expanded through
+[`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html),
+`population_xlevel_variables` and `population_contrast_variables`
+identify the variables whose fitted coding must be preserved for
+replay/scoring. The `available_outputs` table is especially useful
+before building bundles, because it tells you whether residual PCA,
+anchors, bias results, or prediction-side artifacts are already
+available. A practical reading order is `summary` first,
+`available_outputs` second, and `anchors` last when reproducibility
+depends on fixed constraints.
+
+## Typical workflow
+
+1.  Fit a model with
+    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md)
+    or
+    [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/run_mfrm_facets.md).
+
+2.  Compute diagnostics once with
+    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md)
+    if you want explicit control over residual PCA.
+
+3.  Build a manifest and inspect `summary` plus `available_outputs`.
+
+4.  If you need files on disk, pass the same objects to
+    [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_bundle.md).
+
+For `GPCM` fits, the manifest is available with an explicit
+`gpcm_boundary` table. It records supported direct diagnostics/reporting
+surfaces while keeping full FACETS score-side contract review blocked
+and routing design forecasting through its separate caveated capability
+row.
+
+## Saved-result reuse
+
+Supplied screening results must describe this fitted analysis. Results
+from another fit or older results without identity metadata are refused.
+See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_compatibility_layer.md)
+to recreate them from the saved fit and matching diagnostics without
+refitting the model. Supplied unit scores, plausible values and
+fit-derived forecasts must also match this calibration. A forecast
+created with `sim_spec` remains a separate scenario; its source is
+recorded without asserting a match to the fit.
+
+## See also
+
+[`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_bundle.md),
+[`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_mfrm_replay_script.md),
+[`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/make_anchor_table.md),
+[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/reporting_checklist.md)
+
+## Examples
+
+``` r
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("build_mfrm_manifest", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+manifest <- build_mfrm_manifest(fit, diagnostics = diag)
+manifest$summary[, c("Model", "Method", "Observations", "Facets")]
+manifest$available_outputs[, c("Component", "Available")]
+} # }
+```

@@ -1,0 +1,57 @@
+# FACETS-facing visual contract
+
+`facets_guide('visuals')` identifies the closest package route for
+common FACETS visual surfaces and states what can and cannot be claimed
+from that visual correspondence. It distinguishes the FACETS-style
+asterisk ruler from the native uncertainty-aware Wright map.
+
+## Value
+
+A data.frame with visual surface, status, first route, editable data
+route, and claim-boundary columns.
+
+## See also
+
+[plot(x, type = "wright", view =
+"unified")](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot.mfrm_fit.md),
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot_data.md),
+[`facets_guide()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/facets_guide.md),
+[`facets_guide()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/facets_guide.md)
+
+## Examples
+
+``` r
+facets_guide('visuals')
+#>                  FACETSVisualSurface                Status
+#> 1      Table 6 asterisk Wright ruler    implemented_visual
+#> 2 Native Wright map with uncertainty       mfrmr_extension
+#> 3     Table 8 rating-scale structure           implemented
+#> 4     Graphs: expected-score ICC/IRF           implemented
+#> 5               Bond-Fox fit pathway implemented_extension
+#> 6             DIF/bias visual review               partial
+#> 7        Graphfile and R/Web handoff               partial
+#>                                                                                 FirstMfrmrRoute
+#> 1                             plot(fit, type = "wright", view = "unified", renderer = "facets")
+#> 2             plot(fit, type = "wright", view = "unified", renderer = "native", show_ci = TRUE)
+#> 3                                             rating_scale_table(); category_structure_report()
+#> 4                                                                   plot(fit, type = "pathway")
+#> 5 plot(fit, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12)
+#> 6                                                                        plot(x, type = "bias")
+#> 7                                         facets_output_file_bundle(); plot_data(); as_ggplot()
+#>                                                            EditableDataRoute
+#> 1 plot_data(..., renderer = "facets", component = "facets_style")$ruler_rows
+#> 2                plot(..., draw = FALSE); plot_data(component = "locations")
+#> 3                                          rating_scale_table(); plot_data()
+#> 4                                                plot_data(type = "pathway")
+#> 5                                            plot_data(type = "fit_pathway")
+#> 6                                     plot_data(); bias_interaction_report()
+#> 7                        facets_output_file_bundle(); plot_data_components()
+#>                                                                                                                ClaimBoundary
+#> 1 FACETS-style visual grammar; numerical comparison requires output from a documented FACETS version under aligned settings.
+#> 2                             The SE/CI display is an mfrmr extension and should be retained for uncertainty interpretation.
+#> 3                                                                  Structured R output replaces FACETS line-printer artwork.
+#> 4                                                   This is expected score over theta, not a measure-versus-fit pathway map.
+#> 5                                      This is a Bond-Fox-style mfrmr extension; it is not a standard FACETS Table 6 output.
+#> 6                                                             Screening display only; it is not a final fairness conclusion.
+#> 7                                   Editable handoff is supported, but FACETS UI, Excel, and webpage behavior is not cloned.
+```

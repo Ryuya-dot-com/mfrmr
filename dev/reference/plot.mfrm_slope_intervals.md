@@ -1,0 +1,131 @@
+# Display saved GPCM intervals and bootstrap results
+
+Plot the selected inference result without fitting or recomputing
+covariance. These plots describe discrimination or specified contrasts,
+not rater severity, agreement, quality or recommended scoring weights.
+
+## Usage
+
+``` r
+# S3 method for class 'mfrm_slope_intervals'
+plot(
+  x,
+  title = "GPCM slope uncertainty",
+  subtitle = paste(attr(x, "target"), attr(x, "method"), paste0(100 * attr(x, "level"),
+    "%"), if (attr(x, "simultaneous") == "none") "pointwise" else "Bonferroni", sep =
+    " | "),
+  reference = NULL,
+  draw = TRUE,
+  ...,
+  type = c("interval", "profile"),
+  caption = NULL
+)
+
+# S3 method for class 'mfrm_gpcm_bootstrap'
+plot(
+  x,
+  title = "GPCM bootstrap inference",
+  subtitle = "Fitted-model parametric bootstrap; unresolved refits retained",
+  draw = TRUE,
+  ...
+)
+```
+
+## Arguments
+
+- x:
+
+  Saved
+  [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/confint.mfrm_fit.md)
+  output from `parm = "slopes"`, or
+  [`bootstrap_mfrm_gpcm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/bootstrap_mfrm_gpcm.md)
+  output.
+
+- title, subtitle:
+
+  Optional returned metadata; NULL removes it. The interval description
+  defaults to the saved target, method, confidence level and any saved
+  numerical or bootstrap cautions. Custom text overrides this default,
+  while the diagnostics remain in the plot data and interval tables.
+  Titles and notes are not drawn. Use `plot_data(p, "notes")` for
+  descriptions and cautions, and `plot_data(p, "title")` for the
+  suggested figure title.
+
+- reference:
+
+  Optional finite numeric vertical reference. Default NULL; no quality
+  threshold or scoring-policy cutoff is selected.
+
+- draw:
+
+  TRUE draws the ggplot; FALSE returns it only.
+
+- ...:
+
+  For bootstrap slope results, passed to
+  [`confint()`](https://rdrr.io/r/stats/confint.html) to select its
+  target and level. Otherwise unused.
+
+- type:
+
+  For saved slope intervals, `"interval"` displays bounds; `"profile"`
+  displays saved likelihood evaluations and the same-target Wald limits.
+  The default is `"profile"` for saved profile calculations and
+  `"interval"` otherwise. This never initiates profiling.
+
+- caption:
+
+  For saved slope intervals, optional returned caption. NULL removes it.
+  Two-family intervals state the distinct family references by default.
+  Profile plots supply a default explanation of line styles and missing
+  coordinates when omitted.
+
+## Value
+
+Invisibly a ggplot, retaining an `mfrm_plot_data` attribute for
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot_data.md).
+No fitting or resampling is performed.
+
+## Details
+
+Crosses retain unavailable intervals. Open circles retain intervals with
+infinite endpoints; the plot does not replace them with finite bounds.
+Incomplete intervals retain the computed endpoint as a tick, without a
+connecting interval line. A missing endpoint is not an infinite endpoint
+or a calibrated one-sided interval. Finite review-only bounds use a
+dashed line. The table retains `IntervalStatus`, `CIEligible`, `CIUse`
+(when saved), all bounds and failure reasons; returned notes explain the
+display. For a bootstrap LRT, a histogram shows resolved null statistics
+and a line the observed statistic. The returned notes count every
+unresolved replicate.
+
+Use
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/apa_table.md)
+for target-aware tables,
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot_data.md)
+for plotted values, and
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/as_ggplot.md)
+for customization. Attach one result or a named list with
+`mfrm_results(fit, intervals = list(slopes = ci, curves = curves), compute = "never")`.
+Named plot routes become `gpcm_slopes`, `gpcm_curves`, etc. Exact source
+matching is required; default fit diagnostics are preserved.
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_results.md)
+saves these tables and plots; replay reloads the saved RDS, preserving
+the selected methods without rerunning estimation. Markdown report
+summaries include the finite, unbounded and unavailable interval counts
+and the saved inference cautions/reasons.
+
+For positive slope or ratio intervals spanning many orders of magnitude,
+use `as_ggplot(ci) + ggplot2::scale_x_log10()`. Finite bounds and
+estimates must be strictly positive. Keep a linear axis for signed
+differences. Changing the axis does not narrow the interval or make it
+more reliable.
+
+## Examples
+
+``` r
+# ci <- confint(fit, parm = "slopes", scale = "standardized", method = "sandwich")
+# plot(ci, title = NULL)
+# apa_table(ci)
+# plot_data(ci, "table")
+```

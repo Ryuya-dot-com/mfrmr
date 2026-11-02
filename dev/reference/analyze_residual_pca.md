@@ -1,0 +1,512 @@
+# Run exploratory residual PCA summaries
+
+Legacy-compatible residual diagnostics can be inspected in two ways:
+
+1.  overall residual PCA on the person x combined-facet matrix
+
+2.  facet-specific residual PCA on person x facet-level matrices
+
+## Usage
+
+``` r
+analyze_residual_pca(
+  diagnostics,
+  mode = c("overall", "facet", "both"),
+  facets = NULL,
+  pca_max_factors = 10L,
+  parallel = FALSE,
+  parallel_reps = 200L,
+  parallel_quantile = 0.95,
+  parallel_method = c("residual_permutation", "model_bootstrap"),
+  seed = NULL
+)
+
+# S3 method for class 'mfrm_residual_pca'
+plot(x, type = "scree", mode = "overall", ...)
+```
+
+## Arguments
+
+- diagnostics:
+
+  Output from
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md)
+  or
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md).
+
+- mode:
+
+  For `analyze_residual_pca()`: `"overall"`, `"facet"`, or `"both"`.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
+  `"overall"` (default) or `"facet"`. Do not also supply `mode` when
+  using a prefixed `type` such as `"facet_scree"`.
+
+- facets:
+
+  Optional subset of facets. This selects the facet-specific analyses
+  and the facets combined to define columns in the overall PCA.
+
+- pca_max_factors:
+
+  Maximum number of components retained for loadings, subject to matrix
+  dimensions; `"auto"` caps this at 10. Variance tables retain the full
+  eigenvalue spectrum, not only those loading columns.
+
+- parallel:
+
+  Logical; if `TRUE`, add a simulation reference to the PCA tables.
+
+- parallel_reps:
+
+  Number of permutations or simulated-and-refitted data sets when
+  `parallel = TRUE`. Each model-bootstrap replicate requires a full fit.
+
+- parallel_quantile:
+
+  Upper reference quantile used as the exploratory comparison cutoff.
+  The default (`0.95`) follows the common parallel analysis convention.
+
+- parallel_method:
+
+  Reference method. `"residual_permutation"` (default) permutes
+  standardized residuals within each column, preserving residual
+  distributions and missingness. `"model_bootstrap"` generates ratings
+  and refits a supported RSM/PCM MML model; supply the original fit, not
+  detached diagnostics. See Model-generated reference below for
+  restrictions.
+
+- seed:
+
+  Optional integer seed for reproducible simulation. When supplied, the
+  caller's random-number state is restored after the calculation.
+
+- x:
+
+  A result from `analyze_residual_pca()`.
+
+- type:
+
+  `"scree"`, `"parallel_scree"`, `"parallel_excess"`, or `"loadings"`.
+  Existing `"overall_*"` and `"facet_*"` spellings remain supported.
+
+- ...:
+
+  `facet` selects a facet for `mode = "facet"` (default: the first
+  available facet); `component = 1` selects a loading component;
+  `top_n = 20` limits displayed loadings. `preset` is `"standard"`,
+  `"publication"`, `"compact"`, or `"monochrome"`; `draw = FALSE`
+  returns data without drawing.
+
+## Value
+
+A named list with:
+
+- `mode`: resolved mode used for computation
+
+- `facet_names`: facets analyzed
+
+- `overall`: overall PCA bundle (or `NULL`)
+
+- `by_facet`: named list of facet PCA bundles
+
+- `overall_table`: variance table for overall PCA
+
+- `by_facet_table`: stacked variance table across facets
+
+- `parallel_settings`, `parallel_overall_table`,
+  `parallel_by_facet_table`, and `parallel_status`: returned for every
+  call; the parallel tables are populated when `parallel = TRUE`
+
+- `bootstrap_trials`, `bootstrap_settings`: attempted replicate/scope
+  records and generation settings for the model bootstrap; otherwise
+  `NULL`.
+
+- `errors`: explanations for unavailable overall or facet PCA analyses;
+  unavailable analyses have empty variance tables.
+
+- `warnings`: named list of non-fatal PCA warnings captured from the
+  underlying PCA engine. These indicate exploratory boundary conditions,
+  not confirmatory evidence.
+
+- `InferenceTier`, `SupportsFormalInference`,
+  `PrimaryReportingEligible`, `ReportingUse`, and `DecisionUse`:
+  machine-readable guards that keep this route exploratory and prohibit
+  an automatic dimensionality or subscore decision.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object whose `plot_data(p)` payload contains:
+
+- `plot`: `"scree"`, `"parallel_scree"`, `"parallel_excess"`, or
+  `"loadings"`
+
+- `mode`: `"overall"` or `"facet"`
+
+- `facet`: facet name (or `NULL`)
+
+- `title`: plot title text
+
+- `data`: underlying table used for plotting
+
+- `InferenceTier`, `SupportsFormalInference`,
+  `PrimaryReportingEligible`, `ReportingUse`, and `DecisionUse`:
+  machine-readable exploratory-screening guards
+
+## Details
+
+The function works on standardized residual structures derived from
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md).
+When a fitted object from
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md)
+is supplied, diagnostics are computed internally.
+
+Conceptually, this follows the Rasch residual-PCA tradition of examining
+structure in model residuals after the primary Rasch dimension has been
+extracted. In `mfrmr`, however, the implementation is an **exploratory
+many-facet adaptation**: it works on standardized residual matrices
+built as person x combined-facet or person x facet-level layouts, rather
+than reproducing FACETS/Winsteps residual-contrast tables one-to-one.
+
+Residual PCA should therefore be reported as residual-structure
+evidence, not as a formal proof of unidimensionality. It also should not
+be described as DIMTEST or UNIDIM: those essential-unidimensionality
+tests require a separate item-response-layer definition that is not
+uniquely determined by a many-facet long data set. In applied MFRM
+reporting, residual PCA is best triangulated with global residual fit,
+element fit, and Q3-style local-dependence screens.
+
+Correlations use persons with observed residuals for each pair. Every
+column and pair must have defined correlations, and the resulting matrix
+must be positive semidefinite (allowing numerical roundoff). Missing
+correlations are not set to zero, and invalid matrices are not smoothed.
+Unavailable analyses retain an explanation in `errors`. Older stored PCA
+calculations are recomputed from the supplied observations when this
+function is called.
+
+Output tables use:
+
+- `Component`: principal-component index (1, 2, ...)
+
+- `Eigenvalue`: eigenvalue for each component
+
+- `Proportion`: component variance proportion
+
+- `Cumulative`: cumulative variance proportion
+
+When `parallel = TRUE`, the variance tables additionally include
+reference summaries (the method is retained in `ParallelMethod`):
+
+- `ParallelMean`: mean reference eigenvalue
+
+- `ParallelCutoff`: `parallel_quantile` cutoff of reference eigenvalues
+
+- `ExcessOverParallelCutoff`: observed eigenvalue minus the cutoff
+
+- `ExceedsParallelCutoff`: whether the observed eigenvalue exceeds the
+  selected reference cutoff
+
+With `parallel_method = "residual_permutation"`, the comparison
+conditions on the fitted residuals and missingness pattern; it does not
+simulate responses or refit the model. It does not account for
+fitted-parameter uncertainty and is not a calibrated dimensionality
+test. If any requested permutation has unavailable or invalid
+correlations, the comparison is withheld rather than conditioning on
+successful permutations. `parallel_status` retains the successful count
+and the reason. More permutations improve numerical stability of the
+reference quantile, but do not establish error-rate control for the
+fitted model.
+
+For `mode = "facet"` or `"both"`, `by_facet_table` additionally includes
+a `Facet` column.
+
+`summary(pca)` is supported through
+[`summary()`](https://rdrr.io/r/base/summary.html). `plot(pca)`
+dispatches on class `mfrm_residual_pca`. Use `type = "scree"`,
+`"parallel_scree"`, `"parallel_excess"` or `"loadings"`, with
+`mode = "overall"` or `mode = "facet", facet = "Criterion"`. Existing
+prefixed spellings such as `"facet_scree"` remain supported. Plotting a
+saved PCA does not generate or refit a parallel reference. Save the
+complete result with
+[`base::saveRDS()`](https://rdrr.io/r/base/readRDS.html), including
+`errors`, `warnings`, `parallel_status` and any `bootstrap_trials`;
+export the desired tables separately with
+[`utils::write.csv()`](https://rdrr.io/r/utils/write.table.html).
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/as_ggplot.md)
+converts a saved plot payload without redoing PCA. A blank unavailable
+plot is not evidence of an absence of residual structure.
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot
+saved residual PCA
+
+Display a saved residual PCA or its saved parallel-analysis comparison.
+Plotting does not generate a new parallel reference.
+
+## Interpreting output
+
+Use `overall_table` first:
+
+- early components with noticeably larger eigenvalues or proportions
+  suggest residual structure that may deserve follow-up. Small early
+  components do not establish unidimensionality; inspect the residual
+  aggregation, available person overlaps, fit and local-dependence
+  screens.
+
+Then inspect `by_facet_table`:
+
+- describes patterns within each facet-level residual matrix. Different
+  numbers of columns, aggregation and overlaps prevent treating
+  eigenvalues across facets as a ranking of their contributions to a
+  single decomposition.
+
+Finally, inspect loadings via [plot(x, type =
+"residual_pca")](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot.mfrm_fit.md)
+to identify which variables/elements drive each component.
+
+## Model-generated reference
+
+`parallel_method = "model_bootstrap"` is an exploratory
+parametric-bootstrap reference for native RSM/PCM MML fits with a fixed
+standard-normal population, fixed quadrature, additive facets and unit
+weights. Anchors, dummy/positive facets, shrinkage, estimated population
+models, GPCM, JML and extended testlet/shared-rater models are not
+supported by this reference yet.
+
+Each replicate draws one independent standard-normal ability per Person
+and shares it across that Person's retained rating rows. Fitted facet
+and step parameters generate conditionally independent ratings. The
+model is refitted with the original identification, category map,
+quadrature and optimization settings. Standardized residuals use the
+same scoring and aggregation as the observed analysis. One refit
+supplies every requested PCA scope.
+
+The reference conditions on the analyzed assignment and observation
+pattern: it does not fill unassigned or missing ratings or simulate
+informative missingness. Sparse designs remain usable only when the
+required residual correlations are defined and their matrix is positive
+semidefinite. Source and refitted models must pass numerical convergence
+checks. The observed PCA itself can be unavailable despite successful
+fitting, for example because the assignment lacks shared-Person pairs.
+This is reported separately from refit failure. Every planned replicate
+is retained in `bootstrap_trials`, including warnings and failures. An
+affected scope has no reference cutoff if any replicate fails;
+successful replicates are not substituted or selected to form its
+reference. Raw eigenvalue draws, with missing rows for failures, are
+stored under each PCA bundle's `parallel$draws`.
+
+Refitting includes variation from parameter estimation under the fitted
+null; generating parameters themselves are plug-in estimates, not
+posterior draws. Cutoffs are componentwise reference quantiles, not
+multiplicity-adjusted tests. Scanning every component does not preserve
+the nominal false-flag probability of one component. Absence of a flag
+is not evidence that all model assumptions hold. Few replicates give
+unstable tail quantiles. Neither a fixed number of replicates nor this
+algorithm establishes calibrated false-flag rates or proves
+unidimensionality. Inspect convergence, quadrature sensitivity, overlap
+and competing dependence explanations before substantive use.
+
+## Dimensionality and network follow-up
+
+Checking a one-dimensional model does not require fitting a
+multidimensional alternative first. Residual structure can also reflect
+testlet, rater or assignment effects; neither the component count nor
+the count plus one is an estimated number of substantive abilities.
+Combine the screen with
+[`q3_statistic()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/q3_statistic.md),
+marginal-fit review and substantive task/criterion evidence. The current
+permutation reference does not replace a fitted-model parametric
+bootstrap. No native residual-network/EGA or calibrated dimensionality
+decision is supplied here. Residual communities would describe remaining
+associations, not automatically latent dimensions. See
+[`vignette("mfrmr-visual-diagnostics")`](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-visual-diagnostics.md)
+for alternatives and their scope.
+
+## Typical workflow
+
+1.  Fit model and run
+    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md)
+    with `residual_pca = "none"` or `"both"`.
+
+2.  Call `analyze_residual_pca(..., mode = "both")`.
+
+3.  Review `summary(pca)`, then plot scree/loadings.
+
+4.  Cross-check with fit/misfit diagnostics before conclusions.
+
+## Interpretation
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
+
+- `"scree"` shows component eigenvalues. A dominant early component is
+  exploratory evidence of residual structure, not a standalone test of
+  unidimensionality.
+
+- `"parallel_scree"` shows the observed eigenvalues and saved reference
+  mean/cutoff; `"parallel_excess"` shows the observed-minus-cutoff
+  difference. Compute these references with `parallel = TRUE` in
+  `analyze_residual_pca()` first. Exceeding a cutoff suggests follow-up,
+  not proof of multidimensionality. Inspect `parallel_status` and
+  `bootstrap_trials` for unavailable comparisons and distinguish
+  residual permutation from refitted model bootstrap.
+
+- `"loadings"` shows the largest absolute loadings; inspect both signs
+  and magnitudes to identify the contributing variables or elements.
+
+Use overall mode before locating patterns within individual facets.
+Repeated plots of a saved result reuse the same PCA and do not provide
+independent evidence.
+
+## References
+
+The residual-PCA idea follows the Rasch residual-structure literature,
+especially Linacre's discussions of principal components of Rasch
+residuals. The current `mfrmr` implementation should be interpreted as
+an exploratory extension for many-facet workflows rather than as a
+direct reproduction of a single FACETS/Winsteps output table.
+
+The optional parallel analysis follows Horn's data-driven eigenvalue
+comparison logic and later recommendations to compare observed
+eigenvalues with high quantiles of a reference distribution. Here that
+reference is generated by within-column permutation of standardized
+residuals by default. The optional model bootstrap instead regenerates
+ratings and refits the supported model. The cited factor-retention
+literature does not calibrate either many-facet residual comparison as a
+fitted-model test.
+
+- Horn, J. L. (1965). A rationale and test for the number of factors in
+  factor analysis. *Psychometrika*, 30, 179-185.
+  [doi:10.1007/BF02289447](https://doi.org/10.1007/BF02289447) .
+
+- Glorfeld, L. W. (1995). An improvement on Horn's parallel analysis
+  methodology for selecting the correct number of factors to retain.
+  *Educational and Psychological Measurement*, 55, 377-393.
+  [doi:10.1177/0013164495055003002](https://doi.org/10.1177/0013164495055003002)
+  .
+
+- Hayton, J. C., Allen, D. G., & Scarpello, V. (2004). Factor retention
+  decisions in exploratory factor analysis: A tutorial on parallel
+  analysis. *Organizational Research Methods*, 7, 191-205.
+
+- Timmerman, M. E., & Lorenzo-Seva, U. (2011). Dimensionality assessment
+  of ordered polytomous items with parallel analysis. *Psychological
+  Methods*, 16, 209-220.
+
+- Linacre, J. M. (1998). *Structure in Rasch residuals: Why principal
+  components analysis (PCA)?* Rasch Measurement Transactions,
+  12(2), 636. <https://www.rasch.org/rmt/rmt122m.htm>
+
+- Linacre, J. M. (1998). *Detecting multidimensionality: Which residual
+  data-type works best?* Journal of Outcome Measurement, 2(3), 266-283.
+
+Applications and broader measurement discussions below provide context;
+they do not validate this implementation's residual aggregation,
+reference cutoffs or automatic dimensionality decisions:
+
+- Eckes, T. (2005). Examining rater effects in TestDaF writing and
+  speaking performance assessments: A many-facet Rasch analysis.
+  *Language Assessment Quarterly*, 2(3), 197-221.
+
+- Yamashita, T. (2024). An application of many-facet Rasch measurement
+  to evaluate automated essay scoring: A case of ChatGPT-4.0. *Research
+  Methods in Applied Linguistics*, 3(3), 100133.
+
+- Uto, M. (2021). A multidimensional generalized many-facet Rasch model
+  for rubric-based performance assessment. *Behaviormetrika*, 48(2),
+  425-457.
+
+- Aryadoust, V., Ng, L. Y., & Sayama, H. (2021). A comprehensive review
+  of Rasch measurement in language assessment: Recommendations and
+  guidelines for research. *Language Testing*, 38(1), 6-40.
+
+- Tseng, W.-T. (2016). Measuring English vocabulary size via
+  computerized adaptive testing. *Computers & Education*, 97, 69-85.
+
+## See also
+
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md),
+[plot(x, type =
+"residual_pca")](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot.mfrm_fit.md),
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_visual_diagnostics.md)
+
+`analyze_residual_pca()`,
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_plot_migration.md)
+
+## Examples
+
+``` r
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- diagnose_mfrm(fit, residual_pca = "both")
+pca <- analyze_residual_pca(diag, mode = "both")
+pca2 <- analyze_residual_pca(fit, mode = "both")
+summary(pca)
+#> Residual PCA summary
+#> 
+#> Overview
+#>  Analysis Facets Overall components Facet component rows
+#>      both      2                 16                    8
+#> 
+#> Residual eigenvalues
+#>  PC Eigenvalue Proportion
+#>   1      2.114      0.132
+#>   2      1.833      0.115
+#>   3      1.706      0.107
+#>   4      1.519      0.095
+#>   5      1.290      0.081
+#>   6      1.157      0.072
+#>   7      1.098      0.069
+#>   8      1.054      0.066
+#>   9      0.949      0.059
+#>  10      0.846      0.053
+#> Residual PCA is exploratory residual-structure screening (overall and/or by facet), not a standalone dimensionality test or an automatic decision about dimensions or subscores. 
+p <- plot(pca, type = "residual_pca", mode = "overall", view = "scree", draw = FALSE)
+p$data$plot
+#> NULL
+head(p$data)
+#>   Component Eigenvalue Proportion Cumulative
+#> 1         1   2.113557 0.13209732  0.1320973
+#> 2         2   1.832887 0.11455546  0.2466528
+#> 3         3   1.706239 0.10663995  0.3532927
+#> 4         4   1.519039 0.09493995  0.4482327
+#> 5         5   1.289992 0.08062450  0.5288572
+#> 6         6   1.157287 0.07233045  0.6011876
+# Optional permutation reference repeats the PCA calculation.
+# example("analyze_residual_pca", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE, parallel_reps = 10)
+head(pca_pa$overall_table)
+} # }
+head(pca$overall_table)
+#>   Component Eigenvalue Proportion Cumulative
+#> 1         1   2.113557 0.13209732  0.1320973
+#> 2         2   1.832887 0.11455546  0.2466528
+#> 3         3   1.706239 0.10663995  0.3532927
+#> 4         4   1.519039 0.09493995  0.4482327
+#> 5         5   1.289992 0.08062450  0.5288572
+#> 6         6   1.157287 0.07233045  0.6011876
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot.mfrm_residual_pca", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+ratings_all <- load_mfrmr_data("example_core")
+selected_people <- unique(ratings_all$Person)[1:24]
+ratings <- ratings_all[
+  ratings_all$Person %in% selected_people, , drop = FALSE]
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+                method = "JML")
+diag <- diagnose_mfrm(fit, residual_pca = "overall")
+pca <- analyze_residual_pca(diag, mode = "overall")
+plt <- plot(pca, type = "scree", draw = FALSE)
+head(plot_data(plt, "data"))
+# Ten replicates illustrate the display, not a stable reference cutoff.
+pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE,
+                               parallel_reps = 10, seed = 2026)
+pa <- plot(pca_pa, type = "parallel_scree", draw = FALSE)
+head(plot_data(pa, "data"))
+plt_load <- plot(pca, type = "loadings", component = 1, draw = FALSE)
+head(plot_data(plt_load, "data"))
+if (interactive()) {
+  plot(pca, type = "scree", preset = "publication")
+}
+} # }
+```

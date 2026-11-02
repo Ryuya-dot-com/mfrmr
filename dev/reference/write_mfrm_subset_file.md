@@ -1,0 +1,103 @@
+# Write standalone subset-connectivity files
+
+Write standalone subset-connectivity files
+
+## Usage
+
+``` r
+write_mfrm_subset_file(
+  fit,
+  diagnostics = NULL,
+  path,
+  node_path = NULL,
+  format = c("csv", "tsv"),
+  digits = 4,
+  overwrite = FALSE,
+  include_nodes = TRUE
+)
+```
+
+## Arguments
+
+- fit:
+
+  Output from
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md).
+
+- diagnostics:
+
+  Optional output from
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md).
+  Supplying it avoids recomputing subset connectivity. Must match this
+  fitted analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics.
+
+- path:
+
+  Output file path for the subset summary table.
+
+- node_path:
+
+  Optional output file path for the node-level subset table. When `NULL`
+  and `include_nodes = TRUE`, a sibling file ending in `_nodes.csv` or
+  `_nodes.tsv` is created.
+
+- format:
+
+  File format: `"csv"` or `"tsv"`. If omitted, inferred from `path` when
+  the extension is `.csv` or `.tsv`, otherwise `"csv"`.
+
+- digits:
+
+  Rounding digits for numeric columns.
+
+- overwrite:
+
+  If `FALSE`, existing files are not overwritten.
+
+- include_nodes:
+
+  If `TRUE`, also write the node-level facet/level to subset membership
+  table.
+
+## Value
+
+A bundle with `table`, `nodes`, `summary`, `written_files`, and
+`settings`.
+
+## Details
+
+Subsets are connected components in the observation design graph. The
+graph links `Person` and all modeled facet levels that co-occur in an
+observation. A single co-observation graph component does not prove
+common-scale identification; shared other facets can conceal confounded
+panels. Consult the fitted estimability audit. Multiple graph subsets
+require external anchoring or a deliberate separate-calibration design
+justifies it.
+
+## See also
+
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md),
+[`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/subset_connectivity_report.md),
+[`write_mfrm_residual_file()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/write_mfrm_residual_file.md)
+
+## Examples
+
+``` r
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+path <- tempfile(fileext = ".csv")
+out <- write_mfrm_subset_file(fit, diag, path, overwrite = TRUE)
+data.frame(
+  Component = out$written_files$Component,
+  File = basename(out$written_files$Path)
+)
+#>        Component                      File
+#> 1 subset_summary       file1beba60ff0e.csv
+#> 2   subset_nodes file1beba60ff0e_nodes.csv
+# Full paths remain in out$written_files$Path.
+```

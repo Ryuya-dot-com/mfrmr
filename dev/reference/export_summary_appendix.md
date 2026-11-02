@@ -1,0 +1,208 @@
+# Export manuscript appendix tables from documented summary surfaces
+
+Export manuscript appendix tables from documented summary surfaces
+
+## Usage
+
+``` r
+export_summary_appendix(
+  x,
+  output_dir = ".",
+  prefix = "mfrmr_appendix",
+  include_html = TRUE,
+  preset = c("all", "recommended", "compact", "methods", "results", "diagnostics",
+    "reporting"),
+  overwrite = FALSE,
+  zip_bundle = FALSE,
+  zip_name = NULL,
+  digits = 3,
+  top_n = 10,
+  preview_chars = 160
+)
+```
+
+## Arguments
+
+- x:
+
+  A supported [`summary()`](https://rdrr.io/r/base/summary.html) source,
+  a prebuilt
+  [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_summary_table_bundle.md)
+  result, or a named list of such objects.
+
+- output_dir:
+
+  Directory where files will be written.
+
+- prefix:
+
+  File-name prefix for written artifacts.
+
+- include_html:
+
+  If `TRUE`, also write a lightweight HTML appendix page.
+
+- preset:
+
+  Appendix table-selection preset: `"all"` keeps every returned summary
+  table, `"recommended"` keeps manuscript-facing summary tables while
+  dropping bridge-only or preview-only surfaces, and `"compact"` keeps a
+  smaller reviewer-facing subset. Section-aware presets `"methods"`,
+  `"results"`, `"diagnostics"`, and `"reporting"` keep only the returned
+  tables classified to those appendix sections in the summary-table
+  catalog.
+
+- overwrite:
+
+  If `FALSE`, refuse to overwrite existing files.
+
+- zip_bundle:
+
+  If `TRUE`, attempt to zip the written appendix artifacts.
+
+- zip_name:
+
+  Optional zip-file name. Defaults to `"{prefix}_appendix.zip"`.
+
+- digits:
+
+  Digits forwarded when raw objects must be normalized through
+  [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_summary_table_bundle.md).
+
+- top_n:
+
+  Row cap forwarded when raw objects must be normalized through
+  [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_summary_table_bundle.md).
+
+- preview_chars:
+
+  Character cap forwarded when APA-output summaries must be normalized
+  through
+  [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_summary_table_bundle.md).
+
+## Value
+
+A named list of class `mfrm_summary_appendix_export` with:
+
+- `summary`
+
+- `written_files`
+
+- `selection_summary`
+
+- `selection_table_summary`
+
+- `selection_section_table_summary`
+
+- `selection_handoff_table_summary`
+
+- `selection_handoff_preset_summary`
+
+- `selection_handoff_summary`
+
+- `selection_handoff_bundle_summary`
+
+- `selection_handoff_role_summary`
+
+- `selection_handoff_role_section_summary`
+
+- `selection_role_summary`
+
+- `selection_section_summary`
+
+- `selection_catalog`
+
+- `settings`
+
+- `notes`
+
+## Details
+
+This helper is the narrow public bridge from documented
+[`summary()`](https://rdrr.io/r/base/summary.html) surfaces to
+manuscript appendix artifacts. It accepts the same reporting objects
+that
+[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_summary_table_bundle.md)
+supports, exports their table bundles as CSV, and optionally assembles a
+lightweight HTML appendix page.
+
+Inspect `written_files` for the actual file paths. An analysis table
+whose name conflicts with bundle metadata (for example, `overview`) is
+retained with a `table_` prefix, with a numeric suffix if needed for
+uniqueness. Metadata keeps its existing filename; the analysis table is
+also retained in HTML. Summary rounding follows `digits`; retain the
+source R object for full-precision reuse. ZIP archives contain only
+files written by this call. With `overwrite = TRUE` an existing ZIP is
+replaced after the new archive is built and checked; obsolete members
+are not carried forward. If ZIP creation fails, any older ZIP is
+retained, `summary$ZipWritten` is zero and `notes` explains the failure.
+Other files in the destination folder are left in place.
+
+Fit-level caveats are exported through the `analysis_caveats` role, and
+pre-fit score-support caveats are exported through the
+`score_category_caveats` role. Both roles are classified as diagnostics,
+so they remain available under `"recommended"` and `"diagnostics"`
+presets when the source summary contains caveat rows.
+
+Precision-review summaries keep `fit_separation_basis` in the exported
+precision-review role so fit, ZSTD, separation/reliability/strata, and
+package review thresholds can be reported without turning them into
+universal recovery criteria. Fit-measure and FACETS fit-review summaries
+keep df/ZSTD sensitivity and optional external FACETS matching tables in
+the same precision-review section.
+
+Parameter-recovery studies can be exported by passing
+[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/simulate_mfrm_recovery.md)
+or
+[`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/assess_mfrm_recovery.md)
+output directly. The exported bundle keeps the ADEMP-style simulation
+basis, recovery metrics, replication status, adequacy checklist,
+thresholds, and next actions in separate appendix-ready tables.
+
+A compatible precomputed recovery-evidence summary can also be exported,
+including its case assessments, condition notes, diagnostic notes, and
+domain assessments.
+
+Unlike
+[`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_bundle.md),
+this helper does not require a fitted model. It is intended for the
+stage where compact reporting summaries already exist and the task is to
+hand off appendix-ready tables, catalogs, and reporting maps.
+
+## Typical workflow
+
+1.  Build `summary(...)` objects from fit, diagnostics, data
+    description, reporting checklist, or APA outputs.
+
+2.  Call `export_summary_appendix(...)` on one object or a named list.
+
+3.  Hand off the written CSV/HTML appendix artifacts to manuscript or QA
+    workflows.
+
+## See also
+
+[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_summary_table_bundle.md),
+[`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_bundle.md),
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/apa_table.md)
+
+## Examples
+
+``` r
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("export_summary_appendix", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+appendix <- export_summary_appendix(
+  list(fit = fit, diagnostics = diag),
+  output_dir = tempdir(),
+  prefix = "mfrmr_appendix_example",
+  include_html = TRUE,
+  overwrite = TRUE
+)
+appendix$summary
+} # }
+```

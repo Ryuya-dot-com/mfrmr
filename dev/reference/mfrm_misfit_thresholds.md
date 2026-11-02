@@ -1,0 +1,85 @@
+# MnSq misfit threshold pair used across mfrmr screening helpers
+
+Returns the lower / upper bounds that mfrmr screens treat as the
+heuristic mean-square (Infit / Outfit MnSq) review band when flagging
+element-level misfit. Defaults use the published 0.5-1.5 interval as a
+screening convention; both ends can be overridden via R options. The
+interval is not a universal acceptance rule or an automatic exclusion
+rule. Low mean squares describe low residual variability rather than
+poor rater quality.
+[`fit_measures_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_measures_table.md)
+uses this mean-square screen by default; ZSTD-only evidence is separate
+unless its combined rule is requested. Compare declared bands against
+known simulation truth with
+[`mfrm_screening_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrm_screening_sensitivity.md).
+
+## Usage
+
+``` r
+mfrm_misfit_thresholds(lower = NULL, upper = NULL)
+```
+
+## Arguments
+
+- lower:
+
+  Optional lower bound. When `NULL` (default), the active option /
+  package default is used.
+
+- upper:
+
+  Optional upper bound.
+
+## Value
+
+A named numeric vector `c(lower = ..., upper = ...)` with
+`lower < upper`.
+
+## Details
+
+Helpers that consume the band include
+[`summary.mfrm_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/summary.mfrm_diagnostics.md)
+(`misfit_flagged` block and `key_warnings` auto-flag),
+[`build_misfit_casebook()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_misfit_casebook.md)
+(the new `element_fit` source family), the bias / misfit narrative
+inside
+[`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_apa_outputs.md),
+and
+[`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/facet_quality_dashboard.md)
+when `misfit_warn = NULL`. Setting the options once at the top of an
+analysis script therefore changes every downstream screen at once.
+
+## Configuration
+
+Two scalar R options drive the band:
+
+- `mfrmr.misfit_lower`:
+
+  Lower review bound. Default `0.5`.
+
+- `mfrmr.misfit_upper`:
+
+  Upper review bound. Default `1.5`.
+
+Pass scalar arguments to override the options for a single call, e.g.
+`mfrm_misfit_thresholds(lower = 0.7, upper = 1.3)` for the tighter Bond
+& Fox (2015) reporting band.
+
+## See also
+
+[`summary.mfrm_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/summary.mfrm_diagnostics.md),
+[`build_misfit_casebook()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_misfit_casebook.md),
+[`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/facet_quality_dashboard.md)
+
+## Examples
+
+``` r
+mfrm_misfit_thresholds()
+#> lower upper 
+#>   0.5   1.5 
+old <- options(mfrmr.misfit_lower = 0.7, mfrmr.misfit_upper = 1.3)
+mfrm_misfit_thresholds()
+#> lower upper 
+#>   0.7   1.3 
+options(old)
+```

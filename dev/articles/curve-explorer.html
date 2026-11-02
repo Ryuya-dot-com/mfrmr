@@ -1,0 +1,237 @@
+<div id="mfrmr-curve-explorer" class="mce">
+  <div class="mce-header">
+    <div class="mce-models" role="radiogroup" aria-label="Model">
+      <label><input type="radio" name="mce-model" value="RSM" checked> RSM</label>
+      <label><input type="radio" name="mce-model" value="PCM"> PCM</label>
+      <label><input type="radio" name="mce-model" value="GPCM"> GPCM</label>
+    </div>
+    <span class="mce-note" aria-live="polite"></span>
+    <button type="button" class="mce-reset" aria-label="Reset sliders to initial values">Reset</button>
+  </div>
+  <div class="mce-panels">
+    <div class="mce-panel" data-item="0">
+      <div class="mce-title">Criterion A</div>
+      <svg viewBox="0 0 336 202" role="img" aria-label="Category probability curves for criterion A"></svg>
+      <div class="mce-readout" aria-live="polite"></div>
+      <label>Difficulty (&delta;) <input type="range" data-par="delta" data-default="-0.5" data-own="-0.5" min="-2" max="2" step="0.1" value="-0.5"><output></output></label>
+      <label>Threshold spacing <input type="range" data-par="spacing" data-default="1.2" data-own="1.2" min="0.2" max="2.5" step="0.1" value="1.2"><output></output></label>
+      <label>Relative slope (a) <input type="range" data-par="slope" data-default="0.8" data-own="0.8" min="0.4" max="2.5" step="0.01" value="0.8"><output></output></label>
+    </div>
+    <div class="mce-panel" data-item="1">
+      <div class="mce-title">Criterion B</div>
+      <svg viewBox="0 0 336 202" role="img" aria-label="Category probability curves for criterion B"></svg>
+      <div class="mce-readout" aria-live="polite"></div>
+      <label>Difficulty (&delta;) <input type="range" data-par="delta" data-default="0.5" data-own="0.5" min="-2" max="2" step="0.1" value="0.5"><output></output></label>
+      <label>Threshold spacing <input type="range" data-par="spacing" data-default="0.6" data-own="0.6" min="0.2" max="2.5" step="0.1" value="0.6"><output></output></label>
+      <label>Relative slope (a) <input type="range" data-par="slope" data-default="1.25" data-own="1.25" min="0.4" max="2.5" step="0.01" value="1.25"><output></output></label>
+    </div>
+  </div>
+  <div class="mce-legend">
+    <span><i style="background:#264653"></i>Score 1</span>
+    <span><i style="background:#2a9d8f"></i>Score 2</span>
+    <span><i style="background:#d99b26"></i>Score 3</span>
+    <span><i style="background:#e76f51"></i>Score 4</span>
+    <span class="mce-thresh-key"><u class="mce-dot"></u>Threshold crossings (1|2, 2|3 = &delta;, 3|4)</span>
+  </div>
+  <div class="mce-hints">
+    <span><strong>Difficulty (&delta;):</strong> shifts all curves left (easier) or right (harder).</span>
+    <span><strong>Threshold spacing:</strong> widens or narrows middle scores (2 &amp; 3).</span>
+    <span><strong>Relative slope (a):</strong> changes steepness without moving the crossings. In GPCM, B = 1/A keeps the geometric mean at one.</span>
+  </div>
+</div>
+<style>
+.mce{border:1px solid var(--bs-border-color,#dee2e6);border-radius:.6rem;padding:.95rem 1.05rem;margin:1rem 0 1.5rem}
+.mce-header{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin-bottom:.65rem}
+.mce-models{display:flex;gap:.85rem;align-items:center;font-weight:600}
+.mce-models label{cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;margin:0}
+.mce-note{font-weight:400;font-size:.87rem;color:var(--bs-secondary-color,#6c757d);flex:1 1 220px}
+.mce-reset{margin-left:auto;padding:.15rem .55rem;font-size:.8rem;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.35rem;background:transparent;color:var(--bs-body-color,#212529);cursor:pointer}
+.mce-reset:hover{border-color:#1f6f8b;color:#1f6f8b}
+.mce-panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:1rem}
+.mce-title{font-weight:600;margin-bottom:.15rem}
+.mce svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair}
+.mce-readout{font-size:.8rem;font-variant-numeric:tabular-nums;color:var(--bs-secondary-color,#6c757d);min-height:1.25rem;margin:.15rem 0 .35rem}
+.mce-panel label{display:grid;grid-template-columns:8.8rem 1fr 2.8rem;align-items:center;gap:.5rem;font-size:.86rem;margin:.18rem 0}
+.mce-panel label.mce-locked{opacity:.48}
+.mce-panel output{font-variant-numeric:tabular-nums;text-align:right}
+.mce-legend{display:flex;flex-wrap:wrap;gap:.45rem .9rem;font-size:.83rem;margin-top:.55rem;align-items:center}
+.mce-legend i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:.3rem;vertical-align:middle}
+.mce-thresh-key{color:var(--bs-secondary-color,#6c757d);display:inline-flex;align-items:center;gap:.3rem}
+.mce-dot{display:inline-block;width:7px;height:7px;border-radius:50%;border:1.5px solid var(--bs-secondary-color,#6c757d);background:var(--bs-body-bg,#fff);text-decoration:none}
+.mce-hints{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.25rem .9rem;margin-top:.5rem;padding-top:.45rem;border-top:1px solid var(--bs-border-color,#dee2e6);font-size:.8rem;color:var(--bs-secondary-color,#6c757d)}
+.mce .grid{stroke:var(--bs-border-color,#dee2e6);stroke-width:1}
+.mce .thresh-line{stroke:var(--bs-secondary-color,#6c757d);stroke-width:1;stroke-dasharray:2.5,2.5;opacity:.65}
+.mce .thresh-dot{fill:var(--bs-body-bg,#fff);stroke:var(--bs-secondary-color,#6c757d);stroke-width:1.5}
+.mce .hover-line{stroke:var(--bs-body-color,#212529);stroke-width:1;stroke-dasharray:3,2;opacity:.55}
+.mce .tick{fill:var(--bs-secondary-color,#6c757d);font-size:10px}
+.mce .axis-label{fill:var(--bs-secondary-color,#6c757d);font-size:10px}
+.mce .curve-label{font-size:10.5px;font-weight:700;paint-order:stroke;stroke:var(--bs-body-bg,#fff);stroke-width:3px;stroke-linejoin:round}
+</style>
+<script>
+(function () {
+  var root = document.getElementById("mfrmr-curve-explorer");
+  if (!root) return;
+  var colours = ["#264653", "#2a9d8f", "#d99b26", "#e76f51"];
+  var notes = {
+    RSM: "Shared rubric: Criterion B copies Criterion A's threshold spacing; both slopes are fixed at 1.0.",
+    PCM: "Criterion-specific thresholds: each criterion uses its own spacing; both slopes are fixed at 1.0.",
+    GPCM: "Criterion-specific steps and relative slopes: adjust A's slope; B = 1/A keeps their geometric mean at 1."
+  };
+  var W = 336, H = 202, L = 32, R = 10, T = 10, B = 34, lo = -4, hi = 4;
+  var panels = root.querySelectorAll(".mce-panel");
+  var hoverTheta = null;
+
+  function model() { return root.querySelector("input[name=mce-model]:checked").value; }
+  function ownValue(panel, par) { return parseFloat(panel.querySelector("[data-par=" + par + "]").dataset.own); }
+  function x(t) { return L + (t - lo) / (hi - lo) * (W - L - R); }
+  function y(p) { return T + (1 - p) * (H - T - B); }
+  function fmtSigned(v) { return (v < 0 ? "\u2212" : (v > 0 ? "+" : "")) + Math.abs(v).toFixed(1); }
+  function fmtAxis(v) { return (v < 0 ? "\u2212" : "") + Math.abs(v).toFixed(1); }
+
+  function probabilities(theta, delta, spacing, slope) {
+    var taus = [-spacing, 0, spacing], s = 0, num = [1];
+    for (var k = 0; k < 3; k++) { s += slope * (theta - delta - taus[k]); num.push(Math.exp(s)); }
+    var total = num.reduce(function (a, b) { return a + b; }, 0);
+    return num.map(function (v) { return v / total; });
+  }
+
+  function axes() {
+    var g = "";
+    [0, 0.5, 1].forEach(function (p) {
+      g += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(p) + '" y2="' + y(p) + '"/>';
+      g += '<text class="tick" x="' + (L - 5) + '" y="' + (y(p) + 3) + '" text-anchor="end">' + (p === 0 || p === 1 ? p.toFixed(0) : p.toFixed(1)) + "</text>";
+    });
+    [-4, -2, 0, 2, 4].forEach(function (t) {
+      g += '<text class="tick" x="' + x(t) + '" y="' + (H - 18) + '" text-anchor="middle">' + (t < 0 ? "\u2212" + Math.abs(t) : t) + "</text>";
+    });
+    g += '<text class="axis-label" x="' + ((L + W - R) / 2).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle">Person measure \u03b8 (logits)</text>';
+    return g;
+  }
+
+  function effectiveParams(i) {
+    var m = model(), panel = panels[i], a = panels[0];
+    var delta = ownValue(panel, "delta");
+    var spacing = (m === "RSM" && i === 1) ? ownValue(a, "spacing") : ownValue(panel, "spacing");
+    var slope = m === "GPCM" ? (i === 0 ? ownValue(a, "slope") : 1 / ownValue(a, "slope")) : 1.0;
+    return { delta: delta, spacing: spacing, slope: slope };
+  }
+
+  function draw(panel, par) {
+    var paths = [[], [], [], []];
+    var peaks = [
+      { t: -3.5, p: -1 },
+      { t: par.delta - 0.5 * par.spacing, p: -1 },
+      { t: par.delta + 0.5 * par.spacing, p: -1 },
+      { t: 3.5, p: -1 }
+    ];
+    for (var i = 0; i <= 160; i++) {
+      var t = lo + (hi - lo) * i / 160, p = probabilities(t, par.delta, par.spacing, par.slope);
+      for (var k = 0; k < 4; k++) {
+        paths[k].push((i ? "L" : "M") + x(t).toFixed(1) + "," + y(p[k]).toFixed(1));
+        if (k === 1 || k === 2) {
+          if (p[k] > peaks[k].p) peaks[k] = { t: t, p: p[k] };
+        }
+      }
+    }
+    peaks[0] = { t: -3.55, p: probabilities(-3.55, par.delta, par.spacing, par.slope)[0] };
+    peaks[3] = { t: 3.55, p: probabilities(3.55, par.delta, par.spacing, par.slope)[3] };
+
+    var svg = axes();
+    var crossings = [par.delta - par.spacing, par.delta, par.delta + par.spacing];
+    crossings.forEach(function (tc, idx) {
+      if (tc >= lo && tc <= hi) {
+        var pc = probabilities(tc, par.delta, par.spacing, par.slope)[idx];
+        svg += '<line class="thresh-line" x1="' + x(tc).toFixed(1) + '" x2="' + x(tc).toFixed(1) + '" y1="' + y(0).toFixed(1) + '" y2="' + y(pc).toFixed(1) + '"/>';
+      }
+    });
+    for (var k = 0; k < 4; k++) {
+      svg += '<path d="' + paths[k].join("") + '" fill="none" stroke="' + colours[k] + '" stroke-width="2.4"/>';
+    }
+    crossings.forEach(function (tc, idx) {
+      if (tc >= lo && tc <= hi) {
+        var pc = probabilities(tc, par.delta, par.spacing, par.slope)[idx];
+        svg += '<circle class="thresh-dot" cx="' + x(tc).toFixed(1) + '" cy="' + y(pc).toFixed(1) + '" r="3"/>';
+      }
+    });
+
+    for (var c = 0; c < 4; c++) {
+      var lx = x(peaks[c].t);
+      if (c === 1) lx = Math.min(lx, x(par.delta) - 7);
+      if (c === 2) lx = Math.max(lx, x(par.delta) + 7);
+      lx = Math.max(L + 8, Math.min(W - R - 8, lx));
+      var ly = Math.max(T + 9, y(peaks[c].p) - 5);
+      svg += '<text class="curve-label" x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle" fill="' + colours[c] + '">' + (c + 1) + "</text>";
+    }
+
+    if (hoverTheta !== null) {
+      var hp = probabilities(hoverTheta, par.delta, par.spacing, par.slope);
+      svg += '<line class="hover-line" x1="' + x(hoverTheta).toFixed(1) + '" x2="' + x(hoverTheta).toFixed(1) + '" y1="' + T + '" y2="' + y(0).toFixed(1) + '"/>';
+      for (var hc = 0; hc < 4; hc++) {
+        svg += '<circle cx="' + x(hoverTheta).toFixed(1) + '" cy="' + y(hp[hc]).toFixed(1) + '" r="3.4" fill="' + colours[hc] + '" stroke="#fff" stroke-width="1"/>';
+      }
+    }
+    panel.querySelector("svg").innerHTML = svg;
+
+    var readout = panel.querySelector(".mce-readout");
+    if (hoverTheta !== null) {
+      var rp = probabilities(hoverTheta, par.delta, par.spacing, par.slope);
+      readout.textContent = "At \u03b8 = " + fmtSigned(hoverTheta) + ":  1: " + Math.round(rp[0] * 100) + "% \u00b7 2: " + Math.round(rp[1] * 100) + "% \u00b7 3: " + Math.round(rp[2] * 100) + "% \u00b7 4: " + Math.round(rp[3] * 100) + "%";
+    } else {
+      readout.textContent = "Thresholds (1|2, 2|3, 3|4): " + crossings.map(fmtAxis).join(", ") + " logits (hover to inspect)";
+    }
+  }
+
+  function update() {
+    var m = model();
+    panels.forEach(function (panel, i) {
+      var par = effectiveParams(i);
+      ["delta", "spacing", "slope"].forEach(function (name) {
+        var input = panel.querySelector("[data-par=" + name + "]");
+        var locked = (name === "slope" && (m !== "GPCM" || i === 1)) || (name === "spacing" && m === "RSM" && i === 1);
+        input.disabled = locked;
+        input.parentNode.classList.toggle("mce-locked", locked);
+        input.value = par[name];
+        panel.querySelector("[data-par=" + name + "] + output").textContent = name === "slope" ? par[name].toFixed(2) : fmtAxis(par[name]);
+      });
+      draw(panel, par);
+    });
+    root.querySelector(".mce-note").textContent = notes[m];
+  }
+
+  function onSliderOrModel(e) {
+    if (e.target && e.target.matches("input[type=range]") && !e.target.disabled) {
+      e.target.dataset.own = e.target.value;
+    }
+    update();
+  }
+
+  panels.forEach(function (panel) {
+    var svg = panel.querySelector("svg");
+    svg.addEventListener("pointermove", function (e) {
+      var rect = svg.getBoundingClientRect();
+      if (!rect.width) return;
+      var svgX = (e.clientX - rect.left) / rect.width * W;
+      var rawT = lo + (svgX - L) / (W - L - R) * (hi - lo);
+      hoverTheta = Math.max(lo, Math.min(hi, Math.round(rawT * 10) / 10));
+      update();
+    });
+    svg.addEventListener("pointerleave", function () {
+      hoverTheta = null;
+      update();
+    });
+  });
+
+  root.querySelector(".mce-reset").addEventListener("click", function () {
+    root.querySelector("input[name=mce-model][value=RSM]").checked = true;
+    root.querySelectorAll("input[type=range]").forEach(function (input) {
+      input.dataset.own = input.dataset.default;
+    });
+    hoverTheta = null;
+    update();
+  });
+
+  root.addEventListener("input", onSliderOrModel);
+  root.addEventListener("change", onSliderOrModel);
+  update();
+})();
+</script>

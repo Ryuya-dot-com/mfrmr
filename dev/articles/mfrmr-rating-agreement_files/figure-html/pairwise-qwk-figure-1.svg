@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='252.00pt' viewBox='0 0 504.00 252.00'>
+<g class='svglite'>
+<defs>
+  <style type='text/css'><![CDATA[
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+      fill: none;
+      stroke: #000000;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+    }
+    .svglite g.glyphgroup path {
+      fill: inherit;
+      stroke: none;
+    }
+  ]]></style>
+</defs>
+<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
+<defs>
+  <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwyNTIuMDA='>
+    <rect x='0.00' y='0.00' width='504.00' height='252.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwyNTIuMDA=)'>
+<rect x='0.00' y='0.00' width='504.00' height='252.00' style='stroke-width: 1.16; stroke: #FFFFFF; fill: #FFFFFF;' />
+</g>
+<defs>
+  <clipPath id='cpODEuNDV8NDk4LjAyfDUuOTh8MjE4LjMy'>
+    <rect x='81.45' y='5.98' width='416.57' height='212.34' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpODEuNDV8NDk4LjAyfDUuOTh8MjE4LjMy)'>
+<rect x='81.45' y='5.98' width='416.57' height='212.34' style='stroke-width: 1.16; stroke: none; fill: #FFFFFF;' />
+<line x1='100.39' y1='218.32' x2='100.39' y2='5.98' style='stroke-width: 1.16; stroke: #737373; stroke-dasharray: 1.55,4.66; stroke-linecap: butt;' />
+<circle cx='316.79' cy='45.79' r='3.59' style='stroke-width: 0.77; fill: #000000;' />
+<circle cx='415.97' cy='112.15' r='3.59' style='stroke-width: 0.77; fill: #000000;' />
+<circle cx='272.52' cy='178.51' r='3.59' style='stroke-width: 0.77; fill: #000000;' />
+</g>
+<g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwyNTIuMDA=)'>
+<polyline points='81.45,218.32 81.45,5.98 ' style='stroke-width: 1.16; stroke-linecap: square;' />
+<text x='76.07' y='181.80' text-anchor='end' style='font-size: 9.60px; font-family: "Liberation Sans";' textLength='70.09px' lengthAdjust='spacingAndGlyphs'>R2 / R3 (N = 10)</text>
+<text x='76.07' y='115.45' text-anchor='end' style='font-size: 9.60px; font-family: "Liberation Sans";' textLength='70.09px' lengthAdjust='spacingAndGlyphs'>R1 / R3 (N = 10)</text>
+<text x='76.07' y='49.09' text-anchor='end' style='font-size: 9.60px; font-family: "Liberation Sans";' textLength='70.09px' lengthAdjust='spacingAndGlyphs'>R1 / R2 (N = 12)</text>
+<polyline points='78.46,178.51 81.45,178.51 ' style='stroke-width: 1.16; stroke-linecap: butt;' />
+<polyline points='78.46,112.15 81.45,112.15 ' style='stroke-width: 1.16; stroke-linecap: butt;' />
+<polyline points='78.46,45.79 81.45,45.79 ' style='stroke-width: 1.16; stroke-linecap: butt;' />
+<polyline points='81.45,218.32 498.02,218.32 ' style='stroke-width: 1.16; stroke-linecap: square;' />
+<polyline points='100.39,221.31 100.39,218.32 ' style='stroke-width: 1.16; stroke-linecap: butt;' />
+<polyline points='195.06,221.31 195.06,218.32 ' style='stroke-width: 1.16; stroke-linecap: butt;' />
+<polyline points='289.74,221.31 289.74,218.32 ' style='stroke-width: 1.16; stroke-linecap: butt;' />
+<polyline points='384.41,221.31 384.41,218.32 ' style='stroke-width: 1.16; stroke-linecap: butt;' />
+<polyline points='479.09,221.31 479.09,218.32 ' style='stroke-width: 1.16; stroke-linecap: butt;' />
+<text x='100.39' y='230.30' text-anchor='middle' style='font-size: 9.60px; font-family: "Liberation Sans";' textLength='18.66px' lengthAdjust='spacingAndGlyphs'>0.00</text>
+<text x='195.06' y='230.30' text-anchor='middle' style='font-size: 9.60px; font-family: "Liberation Sans";' textLength='18.66px' lengthAdjust='spacingAndGlyphs'>0.25</text>
+<text x='289.74' y='230.30' text-anchor='middle' style='font-size: 9.60px; font-family: "Liberation Sans";' textLength='18.66px' lengthAdjust='spacingAndGlyphs'>0.50</text>
+<text x='384.41' y='230.30' text-anchor='middle' style='font-size: 9.60px; font-family: "Liberation Sans";' textLength='18.66px' lengthAdjust='spacingAndGlyphs'>0.75</text>
+<text x='479.09' y='230.30' text-anchor='middle' style='font-size: 9.60px; font-family: "Liberation Sans";' textLength='18.66px' lengthAdjust='spacingAndGlyphs'>1.00</text>
+<text x='289.74' y='243.53' text-anchor='middle' style='font-size: 12.00px; font-family: "Liberation Sans";' textLength='139.39px' lengthAdjust='spacingAndGlyphs'>Quadratic weighted kappa</text>
+</g>
+</g>
+</svg>

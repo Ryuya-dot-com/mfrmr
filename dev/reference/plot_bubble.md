@@ -1,0 +1,221 @@
+# Bubble chart of measure estimates and fit statistics
+
+Produces a Rasch-convention bubble chart where each element is a circle
+positioned at its measure estimate (x) and fit mean-square (y). Bubble
+radius reflects approximate measurement precision or sample size.
+
+## Usage
+
+``` r
+plot_bubble(
+  x,
+  diagnostics = NULL,
+  fit_stat = c("Infit", "Outfit"),
+  view = c("measure", "infit_outfit"),
+  bubble_size = NULL,
+  facets = NULL,
+  include_person = FALSE,
+  fit_range = c(0.5, 1.5),
+  top_n = 60,
+  main = NULL,
+  palette = NULL,
+  draw = TRUE,
+  preset = c("standard", "publication", "compact", "monochrome"),
+  marginal = c("auto", "histogram", "none"),
+  title = NULL
+)
+```
+
+## Arguments
+
+- x:
+
+  Output from
+  [`fit_mfrm`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md)
+  or
+  [`diagnose_mfrm`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md).
+
+- diagnostics:
+
+  Optional output from
+  [`diagnose_mfrm`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md)
+  when `x` is an `mfrm_fit` object. If omitted, diagnostics are computed
+  automatically.
+
+- fit_stat:
+
+  Fit statistic for the y-axis: `"Infit"` (default) or `"Outfit"`.
+  Ignored when `view = "infit_outfit"` because that view always plots
+  Infit on x and Outfit on y.
+
+- view:
+
+  Layout. `"measure"` (default, the historical mfrmr layout) plots
+  Measure (logit) on x and the chosen `fit_stat` MnSq on y.
+  `"infit_outfit"` plots Infit MnSq on x and Outfit MnSq on y, matching
+  the Winsteps Table 30.2 "Most-misfitting Persons / Items" scatter that
+  many MFRM and Rasch users expect, and defaults `bubble_size = "N"`.
+
+- bubble_size:
+
+  Variable controlling bubble radius: `"SE"` (default for
+  `view = "measure"`), `"N"` (observation count; default for
+  `view = "infit_outfit"`), or `"equal"` (uniform size).
+
+- facets:
+
+  Character vector of facets to include. `NULL` (default) includes every
+  row allowed by `include_person`.
+
+- include_person:
+
+  If `TRUE`, person measures may be included in the chart (and in
+  `facets` filtering). The default is `FALSE` because person rows
+  commonly overwhelm facet-level patterns.
+
+- fit_range:
+
+  Numeric length-2 vector defining the heuristic fit-review band shown
+  as a shaded region (default `c(0.5, 1.5)`).
+
+- top_n:
+
+  Maximum number of elements to plot (default 60).
+
+- main:
+
+  Compatibility title argument. Omitted or `NULL` keeps the default
+  title. Existing calls remain supported without a deprecation warning.
+  For new code, prefer `title`; do not supply both arguments.
+
+- palette:
+
+  Optional named colour vector keyed by facet name.
+
+- draw:
+
+  If `TRUE` (default), print the `ggplot` object.
+
+- preset:
+
+  Visual preset (`"standard"`, `"publication"`, `"compact"`, or
+  `"monochrome"`).
+
+- title:
+
+  Plot title. Omit it to keep the default, supply one character string
+  to replace it, or use `NULL` (or `""`) to suppress it. This changes
+  only the heading; numerical results, reference lines, subtitles and
+  interpretation notes remain. Both `main` and `title` explicitly
+  supplied is an error, even if equal or `NULL`. Positional legacy
+  arguments retain their order; use the exact name `title`.
+
+## Value
+
+Invisibly, a `ggplot` object. Use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot_data.md)
+to retrieve its reusable plotting data and notes.
+
+## Details
+
+When `x` is an `mfrm_fit` object and `diagnostics` is omitted, the
+function computes diagnostics internally via
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md).
+For repeated plotting in the same workflow, passing a precomputed
+diagnostics object avoids that extra work.
+
+The x-axis shows element measure estimates on the **logit** scale (one
+logit = one unit change in log-odds of responding in a higher category).
+The y-axis shows the selected fit mean-square statistic. A shaded band
+between `fit_range[1]` and `fit_range[2]` highlights a common heuristic
+review range.
+
+`preset = "monochrome"` uses gray facet colours unless overridden with
+`palette`.
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/as_ggplot.md)
+retains the saved radius ratios and facet colours, but uses physical
+point sizes rather than base graphics' plot units. It also retains the
+reference lines; this is not a pixel-identical rendering.
+
+Bubble radius options:
+
+- `"SE"`: inversely proportional to standard error—larger circles
+  indicate more precisely estimated elements under the current SE
+  approximation.
+
+- `"N"`: radius proportional to the square root of observation count, so
+  circle area is proportional to count—larger circles indicate elements
+  with more data.
+
+- `"equal"`: uniform size, useful when SE or N differences distract from
+  the fit pattern.
+
+Person estimates are excluded by default because they typically
+outnumber facet elements and obscure the display.
+
+## Interpreting the plot
+
+Points near the horizontal reference line at 1.0 are closer to model
+expectation on the selected MnSq scale. Points above 1.5 suggest
+underfit relative to common review heuristics; these elements may have
+inconsistent scoring. Points below 0.5 suggest overfit relative to
+common review heuristics; these may indicate redundancy or restricted
+range. Points are colored by facet for easy identification.
+
+## Typical workflow
+
+1.  Fit a model with
+    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md).
+
+2.  Compute diagnostics once with
+    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md).
+
+3.  Call `plot(fit, type = "bubble", diagnostics = diag)` to inspect the
+    most extreme elements.
+
+## Session plot defaults
+
+See
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_visual_diagnostics.md)
+for `options(mfrmr.plot_preset)`, argument precedence, and appearance
+when saving or reusing a plot.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
+## See also
+
+[`diagnose_mfrm`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md),
+[`plot_unexpected`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot_unexpected.md),
+[`plot_fair_average`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot_fair_average.md)
+
+## Examples
+
+``` r
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot_bubble", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+library(mfrmr)
+
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+
+# Use the diagnostics saved with this fit
+diagnostics <- example_fit$diagnostics
+
+# Compare facet estimates (horizontal axis) with Infit (vertical axis)
+plot(fit, type = "bubble", diagnostics = diagnostics)
+# Above the review band: more response variation than expected; below: less
+# By default, larger bubbles indicate greater precision, not greater misfit
+
+# Optional: compare Infit (horizontal) and Outfit (vertical) directly
+plot(fit, type = "bubble", diagnostics = diagnostics, view = "infit_outfit")
+# Here bubble size represents observation count; bands are review aids
+} # }
+```

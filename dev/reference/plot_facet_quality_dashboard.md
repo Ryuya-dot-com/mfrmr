@@ -1,0 +1,169 @@
+# Plot a facet-quality dashboard
+
+Plot a facet-quality dashboard
+
+## Usage
+
+``` r
+plot_facet_quality_dashboard(
+  x,
+  diagnostics = NULL,
+  facet = NULL,
+  bias_results = NULL,
+  severity_warn = 1,
+  misfit_warn = NULL,
+  central_tendency_max = NULL,
+  bias_count_warn = 1L,
+  bias_abs_t_warn = 2,
+  bias_abs_size_warn = 0.5,
+  bias_p_max = 0.05,
+  plot_type = c("severity", "flags"),
+  top_n = 20,
+  main = NULL,
+  palette = NULL,
+  label_angle = 45,
+  draw = TRUE,
+  ...,
+  title = NULL
+)
+```
+
+## Arguments
+
+- x:
+
+  Output from
+  [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/facet_quality_dashboard.md)
+  or
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md).
+
+- diagnostics:
+
+  Optional output from
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md)
+  when `x` is a fit.
+
+- facet:
+
+  Optional facet name.
+
+- bias_results:
+
+  Optional bias bundle or list of bundles.
+
+- severity_warn:
+
+  Absolute estimate cutoff used to flag severity outliers.
+
+- misfit_warn:
+
+  Mean-square cutoff used to flag misfit.
+
+- central_tendency_max:
+
+  Legacy opt-in absolute estimate cutoff for marking facet estimates
+  near the fitted origin. Default `NULL`; use
+  [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/data_quality_report.md)
+  for observed category-use screening or
+  [`rater_centrality_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/rater_centrality_table.md)
+  for indirect centrality indices.
+
+- bias_count_warn:
+
+  Minimum flagged-bias row count required to flag a level.
+
+- bias_abs_t_warn:
+
+  Absolute `t` cutoff used when deriving bias-row flags from a raw bias
+  bundle.
+
+- bias_abs_size_warn:
+
+  Absolute bias-size cutoff used when deriving bias-row flags from a raw
+  bias bundle.
+
+- bias_p_max:
+
+  Probability cutoff used when deriving bias-row flags from a raw bias
+  bundle.
+
+- plot_type:
+
+  Plot type, `"severity"` or `"flags"`.
+
+- top_n:
+
+  Number of rows to keep in the plot data.
+
+- main:
+
+  Compatibility title argument. Omitted or `NULL` keeps the default
+  title. Existing calls remain supported without a deprecation warning.
+  For new code, prefer `title`; do not supply both arguments.
+
+- palette:
+
+  Optional named color overrides.
+
+- label_angle:
+
+  Label angle hint for the `"flags"` plot.
+
+- draw:
+
+  If `TRUE`, print the `ggplot` object.
+
+- ...:
+
+  Reserved for generic compatibility.
+
+- title:
+
+  Plot title. Omit it to keep the default, supply one character string
+  to replace it, or use `NULL` (or `""`) to suppress it. This changes
+  only the heading; numerical results, reference lines, subtitles and
+  interpretation notes remain. Both `main` and `title` explicitly
+  supplied is an error, even if equal or `NULL`. Positional legacy
+  arguments retain their order; use the exact name `title`.
+
+## Value
+
+Invisibly, a `ggplot` object. Use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/plot_data.md)
+to retrieve its reusable plotting data and notes.
+
+## Details
+
+When `x` is a dashboard, its stored screening settings define both flags
+and plot guides; threshold arguments apply only when `x` is a fit.
+Returned plot data retain those settings, interpretation notes and fit
+readiness. Restricted or older dashboards without readiness are labeled
+`REVIEW ONLY`. Zero observed flags is not a complete diagnostic pass.
+
+## Migration in 0.2.4
+
+This renderer is internal. Use the corresponding
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) route in
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_plot_migration.md);
+the former exported name is no longer available.
+
+## See also
+
+[`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/facet_quality_dashboard.md),
+[`summary.mfrm_facet_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/facet_quality_dashboard.md)
+
+## Examples
+
+``` r
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot_facet_quality_dashboard", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+p <- plot(fit, type = "facet_dashboard", diagnostics = diag, draw = FALSE)
+plot_data(p, "plot")
+} # }
+```

@@ -1,0 +1,365 @@
+# Export a fit-level analysis archive
+
+Export a fit-level analysis archive
+
+## Usage
+
+``` r
+export_mfrm_bundle(
+  fit,
+  diagnostics = NULL,
+  bias_results = NULL,
+  population_prediction = NULL,
+  unit_prediction = NULL,
+  plausible_values = NULL,
+  summary_tables = NULL,
+  output_dir = ".",
+  prefix = "mfrmr_bundle",
+  include = c("core_tables", "checklist", "dashboard", "apa", "anchors", "manifest",
+    "visual_summaries", "predictions", "summary_tables", "script", "html"),
+  facet = NULL,
+  include_person_anchors = FALSE,
+  overwrite = FALSE,
+  acknowledge_sensitive = FALSE,
+  zip_bundle = FALSE,
+  zip_name = NULL,
+  data = NULL
+)
+```
+
+## Arguments
+
+- fit:
+
+  Output from
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md)
+  or
+  [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/run_mfrm_facets.md).
+
+- diagnostics:
+
+  Optional output from
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/diagnose_mfrm.md).
+  When `NULL`, diagnostics are reused from
+  [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/run_mfrm_facets.md)
+  when available, otherwise computed with `residual_pca = "none"` (or
+  `"both"` when visual summaries are requested). Must match this fitted
+  analysis; see
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_compatibility_layer.md)
+  for migration of saved diagnostics.
+
+- bias_results:
+
+  Optional output from
+  [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/estimate_bias.md)
+  or a named list of bias bundles.
+
+- population_prediction:
+
+  Optional output from
+  [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/predict_mfrm_population.md).
+
+- unit_prediction:
+
+  Optional output from
+  [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/predict_mfrm_units.md).
+
+- plausible_values:
+
+  Optional output from
+  [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/sample_mfrm_plausible_values.md).
+
+- summary_tables:
+
+  Optional manuscript-summary bundle input. Can be
+  [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_summary_table_bundle.md)
+  output, any object supported by
+  [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_summary_table_bundle.md),
+  or a named list of such objects. When `NULL` and `"summary_tables"` is
+  requested in `include`, a default set is built from `fit`,
+  `diagnostics`,
+  [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/reporting_checklist.md),
+  and
+  [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_apa_outputs.md).
+  Compatible precomputed recovery-evidence summaries can be supplied
+  here to co-locate their appendix tables with a fit-based export
+  bundle.
+
+- output_dir:
+
+  Directory where files will be written.
+
+- prefix:
+
+  File-name prefix.
+
+- include:
+
+  Components to export. Supported values are `"core_tables"`,
+  `"checklist"`, `"dashboard"`, `"apa"`, `"anchors"`, `"manifest"`,
+  `"visual_summaries"`, `"predictions"`, `"summary_tables"`, `"script"`,
+  and `"html"`. By default, export all listed components except
+  predictions when no prediction or plausible-value object is supplied.
+  Explicitly requesting `"predictions"` requires at least one such
+  object.
+
+- facet:
+
+  Optional facet for
+  [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/facet_quality_dashboard.md).
+
+- include_person_anchors:
+
+  If `TRUE`, include person measures in the exported anchor table.
+
+- overwrite:
+
+  If `FALSE`, refuse to overwrite existing files.
+
+- acknowledge_sensitive:
+
+  Logical; set to `TRUE` only after acknowledging that the archive can
+  contain direct person identifiers, person-level estimates, original
+  labels, replay data, and local paths. This suppresses the privacy
+  warning; it does not deidentify any file.
+
+- zip_bundle:
+
+  If `TRUE`, attempt to zip the written files into a single archive
+  using [`utils::zip()`](https://rdrr.io/r/utils/zip.html). This is
+  best-effort and may depend on the local R installation.
+
+- zip_name:
+
+  Optional zip-file name. Defaults to `"{prefix}_bundle.zip"`.
+
+- data:
+
+  Optional original analysis data frame. When supplied,
+  `export_mfrm_bundle()` co-locates a CSV copy of the data alongside the
+  replay script and updates the script's
+  [`read.csv()`](https://rdrr.io/r/utils/read.table.html) path to point
+  at it. The manifest's `input_summary` row for `data` describes the
+  user's untouched input structure; it is not a byte-level equality
+  claim about the CSV replay representation. Default `NULL` falls back
+  to the legacy `your_data.csv` placeholder path.
+
+## Value
+
+A named list with class `mfrm_export_bundle`.
+
+## Details
+
+This function is the one-call fit-level archive and HTML route. It
+reuses `mfrmr` functions for estimation and diagnostics. When
+`diagnostics = NULL`, the exporter computes the diagnostics it needs,
+then writes the requested CSV/text/replay artifacts and a lightweight
+HTML page from the fitted object. Use
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrm_results.md)
+and
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrm_report.md)
+first when you want to inspect a results object before writing files;
+use `export_mfrm_bundle()` when the goal is a project-folder bundle from
+`fit`. For only the core CSV tables without automatic diagnostics, use
+[`export_mfrm_tables()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_tables.md).
+For a complete saved R result that reloads without refitting, use
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_results.md).
+The optional `"script"` component here is a refitting recipe, not a copy
+of the fitted R object.
+
+The returned `written_files` and optional ZIP include only files written
+by this call. With `overwrite = TRUE`, the ZIP is built afresh and
+checked before replacing an existing archive; obsolete members are not
+retained. If ZIP creation fails, any older ZIP remains in place but is
+not counted as a new output: `summary$ZipWritten` is zero and `notes`
+explains the failure. Unrequested loose files in the folder are left in
+place.
+
+Every bundle is an analysis archive, not a deidentified or automatically
+shareable package. Core tables, anchors, predictions, replay sidecars,
+scripts, and HTML can contain identifying or study-sensitive
+information. Review and transform every file under the applicable
+data-handling policy before sharing it.
+
+## Choosing exports
+
+The `include` argument lets you assemble a bundle for different
+audiences:
+
+- `"core_tables"` for analysts who mainly want CSV output.
+
+- `"manifest"` for a compact analysis record.
+
+- `"script"` for reproducibility and reruns. For latent-regression fits,
+  this also writes the fit-level replay person-data sidecar when
+  available.
+
+- `"html"` for a lightweight summary page. This is not a
+  deidentification guarantee. When replay sidecars are present, the HTML
+  shows an artifact index for them rather than embedding the raw
+  person-level replay table.
+
+- `"summary_tables"` for manuscript-facing CSV exports of documented
+  [`summary()`](https://rdrr.io/r/base/summary.html) surfaces and their
+  compact indexes.
+
+- `"visual_summaries"` when you want warning maps or residual PCA
+  summaries to travel with the bundle.
+
+## Recommended presets
+
+Common starting points are:
+
+- minimal tables: `include = c("core_tables", "manifest")`
+
+- reporting bundle:
+  `include = c("core_tables", "checklist", "dashboard", "summary_tables", "html")`
+
+- archival bundle:
+  `include = c("core_tables", "manifest", "script", "visual_summaries", "html")`
+
+## Written outputs
+
+Depending on `include`, the exporter can write:
+
+- core CSV tables via
+  [`export_mfrm_tables()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_tables.md)
+
+- checklist CSVs via
+  [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/reporting_checklist.md)
+
+- facet-dashboard CSVs and interpretation notes via
+  [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/facet_quality_dashboard.md),
+  including screening settings in CSV and HTML; HTML tables show every
+  level's estimates and unavailable diagnostics, while CSVs retain full
+  detail
+
+- APA text files via
+  [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_apa_outputs.md)
+
+- manuscript-summary CSVs via
+  [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_summary_table_bundle.md)
+
+- anchor CSV via
+  [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/make_anchor_table.md)
+
+- manifest CSV/TXT via
+  [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_mfrm_manifest.md)
+
+- exact source-fit readiness CSVs with fit, component, and parameter
+  scope
+
+- visual warning/summary artifacts via
+  [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_visual_summaries.md)
+
+- prediction/forecast CSVs via
+  [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/predict_mfrm_population.md),
+  [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/predict_mfrm_units.md),
+  and
+  [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/sample_mfrm_plausible_values.md)
+
+- a package-native replay script via
+  [`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_mfrm_replay_script.md)
+
+- replay-source readiness CSVs retained as provenance; the replayed fit
+  recomputes its own readiness
+
+- for latent-regression fits, a replay-side person-data CSV paired with
+  the replay script
+
+- a lightweight HTML report that bundles the exported tables/text and,
+  for replay sidecars, an artifact summary instead of raw person-level
+  rows
+
+For latent-regression fits, prediction-side artifacts can carry the
+fitted population-model scoring basis when you explicitly supply the
+corresponding prediction objects.
+[`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/predict_mfrm_population.md)
+remains the scenario-level forecast helper, whereas
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/predict_mfrm_units.md)
+and
+[`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/sample_mfrm_plausible_values.md)
+are the scoring layer. To keep exports and replay scripts practical,
+large structural-design schemas from scenario-level population
+predictions are not flattened into
+`*_population_prediction_settings.csv` or ADeMP CSVs; the compact
+simulation specification files carry the replay-relevant settings
+instead.
+
+For `GPCM`, this exporter is available as a caveated partial bundle over
+supported diagnostics, report text, visual summaries, manifests, and
+replay scripts. The returned object and manifest include
+`gpcm_boundary`. Package-native `GPCM` scorefile export is available
+with caveats, while full FACETS-style score-side contract review and
+design forecasting remain outside this bundle contract.
+
+## Interpreting output
+
+The returned object reports both high-level bundle status and the exact
+files written. In practice, `bundle$summary` is the direct status check,
+while `bundle$written_files` is the file inventory to inspect or hand
+off to other tools.
+
+## Typical workflow
+
+1.  Fit a model and compute diagnostics once.
+
+2.  Decide whether the audience needs tables only, or also a manifest,
+    replay script, and HTML summary.
+
+3.  Call `export_mfrm_bundle()` with a dedicated output directory.
+
+4.  Inspect `bundle$written_files` or open the generated HTML file.
+
+## Saved-result reuse
+
+Supplied screening results must describe this fitted analysis. Results
+from another fit or older results without identity metadata are refused.
+See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrmr_compatibility_layer.md)
+to recreate them from the saved fit and matching diagnostics without
+refitting the model. Supplied unit scores, plausible values and
+fit-derived forecasts must also match this calibration. A forecast
+created with `sim_spec` remains a separate scenario; its source is
+recorded without asserting a match to the fit.
+
+## See also
+
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/fit_mfrm.md),
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrm_results.md),
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/mfrm_report.md),
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_results.md),
+[`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_mfrm_manifest.md),
+[`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_mfrm_replay_script.md),
+[`export_mfrm_tables()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_mfrm_tables.md),
+[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/reporting_checklist.md),
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/export_summary_appendix.md)
+
+## Examples
+
+``` r
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("export_mfrm_bundle", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+bundle <- export_mfrm_bundle(
+  fit,
+  diagnostics = diag,
+  output_dir = tempdir(),
+  prefix = "mfrmr_bundle_example",
+  include = c("core_tables", "manifest", "script", "html"),
+  overwrite = TRUE,
+  acknowledge_sensitive = TRUE
+)
+bundle$summary[, c("FilesWritten", "HtmlWritten", "ScriptWritten")]
+head(data.frame(
+  Component = bundle$written_files$Component,
+  File = basename(bundle$written_files$Path)
+))
+# Full paths and data-handling notes remain in bundle$written_files.
+} # }
+```

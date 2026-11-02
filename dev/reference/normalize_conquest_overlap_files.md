@@ -1,0 +1,195 @@
+# Normalize extracted ConQuest overlap files to the `mfrmr` review contract
+
+Use `normalize_conquest_overlap_tables(..., input = "files")`. The
+former file-specific entry is no longer exported. This guide retains its
+file format and provenance details.
+
+## Arguments
+
+- population_file:
+
+  Path to an extracted ConQuest population-parameter table in
+  CSV/TSV/TXT form.
+
+- item_file:
+
+  Path to an extracted ConQuest item-estimate table in CSV/TSV/TXT form.
+
+- case_file:
+
+  Path to an extracted ConQuest case-level EAP table in CSV/TSV/TXT
+  form.
+
+- population_delimiter:
+
+  Delimiter for `population_file`. `"auto"` chooses comma, tab, or
+  semicolon from the file extension/header line.
+
+- item_delimiter:
+
+  Delimiter for `item_file`. `"auto"` chooses from the file
+  extension/header line.
+
+- case_delimiter:
+
+  Delimiter for `case_file`. `"auto"` chooses from the file
+  extension/header line.
+
+- conquest_population_term:
+
+  Column in `population_file` that stores parameter names. `"auto"`
+  tries conservative aliases such as `Parameter` and `Term`.
+
+- conquest_population_estimate:
+
+  Column in `population_file` that stores parameter estimates. `"auto"`
+  tries aliases such as `Estimate` and `Est`.
+
+- conquest_item_id:
+
+  Column in `item_file` that stores the item identifier as extracted by
+  the user. `"auto"` tries aliases such as `ResponseVar`, `ItemID`,
+  `Item`, and `Label`.
+
+- conquest_item_estimate:
+
+  Column in `item_file` that stores item estimates. `"auto"` tries
+  `Estimate` and `Est`. `Facility` is not an automatic alias: establish
+  whether it is a difficulty, easiness, or raw proportion and convert it
+  to the required logit difficulty before review.
+
+- conquest_case_person:
+
+  Column in `case_file` that stores person IDs. `"auto"` tries
+  conservative aliases such as `Person`, `PID`, and `Sequence ID`.
+
+- conquest_case_estimate:
+
+  Column in `case_file` that stores case EAP estimates. `"auto"` tries
+  conservative aliases such as `Estimate`, `EAP_1`, and `EAP`.
+
+- keep_extra_columns:
+
+  If `TRUE`, keep all remaining columns after the standardized
+  identifier and estimate columns.
+
+## Value
+
+A named list with class `mfrm_conquest_overlap_tables`.
+
+## Details
+
+The file-input route of
+[`normalize_conquest_overlap_tables()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/normalize_conquest_overlap_tables.md)
+reads these formats. It is intentionally limited to already extracted
+tabular files and does not parse raw ConQuest report text.
+
+The recommended workflow is:
+
+1.  export a bundle for the documented comparison scope with
+    [`build_conquest_overlap_bundle()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/build_conquest_overlap_bundle.md);
+
+2.  extract the relevant ConQuest tables to CSV/TSV/TXT files;
+
+3.  call `normalize_conquest_overlap_tables(..., input = "files")`;
+
+4.  pass the result to
+    [`review_conquest_overlap()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/review_conquest_overlap.md).
+
+Read `summary(normalized)$normalization_scope` before review to confirm
+that the files were treated as extracted tables, not raw ConQuest report
+text, and to check duplicate-ID / non-numeric-estimate pre-review flags.
+
+## See also
+
+[`normalize_conquest_overlap_tables()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/normalize_conquest_overlap_tables.md),
+[`review_conquest_overlap()`](https://ryuya-dot-com.github.io/mfrmr/dev/reference/review_conquest_overlap.md)
+
+## Examples
+
+``` r
+# Reuse the synthetic fit; normalize the extracted tables below.
+# Regeneration recipe: examples/measurement-fits.R in the package.
+fit <- readRDS(system.file("examples", "measurement-fits.rds",
+  package = "mfrmr", mustWork = TRUE))$conquest_quick
+bundle <- build_conquest_overlap_bundle(fit = fit)
+tmp_dir <- tempdir()
+pop_path <- file.path(tmp_dir, "cq_pop.csv")
+item_path <- file.path(tmp_dir, "cq_item.tsv")
+case_path <- file.path(tmp_dir, "cq_case.csv")
+utils::write.csv(
+  data.frame(
+    Term = bundle$mfrmr_population$Parameter,
+    Est = bundle$mfrmr_population$Estimate
+  ),
+  pop_path,
+  row.names = FALSE
+)
+utils::write.table(
+  data.frame(
+    Item = bundle$mfrmr_item_estimates$ResponseVar,
+    Est = bundle$mfrmr_item_estimates$Estimate
+  ),
+  item_path,
+  sep = "\t",
+  row.names = FALSE
+)
+utils::write.csv(
+  data.frame(
+    PID = bundle$mfrmr_case_eap$Person,
+    EAP = bundle$mfrmr_case_eap$Estimate
+  ),
+  case_path,
+  row.names = FALSE
+)
+normalized <- normalize_conquest_overlap_tables(input = "files", 
+  conquest_population = pop_path,
+  conquest_item_estimates = item_path,
+  conquest_case_eap = case_path,
+  conquest_population_term = "Term",
+  conquest_population_estimate = "Est",
+  conquest_item_id = "Item",
+  conquest_item_estimate = "Est",
+  conquest_case_person = "PID",
+  conquest_case_estimate = "EAP"
+)
+summary(normalized)$normalization_scope
+#>                            Area             Status
+#> 1 Extracted table normalization             active
+#> 2     Raw ConQuest text parsing      not performed
+#> 3               Bundle matching deferred to review
+#> 4        Pre-review table check      none detected
+#> 5 Generated estimation metadata            unknown
+#>                                                             Evidence
+#> 1                                             69 standardized row(s)
+#> 2      estimates are extracted from CSV/TSV/TXT or data.frame inputs
+#> 3 review_conquest_overlap() matches rows against the exported bundle
+#> 4                  0 duplicate ID(s); 0 non-numeric estimate cell(s)
+#> 5       optional report_file in normalize_conquest_overlap_exports()
+#>                                                                                                                   Interpretation
+#> 1                                            Population, item, and case tables have been converted to the mfrmr review contract.
+#> 2                       No general report parser is used; optional generated estimation metadata are described separately below.
+#> 3                                     Identifier matching and numerical comparison are intentionally handled by the review step.
+#> 4                                            Resolve duplicate IDs or non-numeric estimates before treating the review as clean.
+#> 5 Stopping/model metadata are separate from estimate extraction; they do not establish numerical precision or common input data.
+review <- review_conquest_overlap(bundle, normalized)
+summary(review)$summary
+#>   PopulationParametersExpected PopulationParametersCompared PopulationMae
+#> 1                            3                            2   1.94289e-16
+#>   PopulationMaxAbsDifference PopulationMaxAbsParameter InterceptCompared
+#> 1               3.330669e-16                         X             FALSE
+#>   InterceptAlignedDifference ItemRowsExpected ItemRowsCompared
+#> 1                         NA                6                6
+#>   ItemCenteringRows ItemCenteredCorrelation ItemCenteredMae
+#> 1                 6                       1    6.591949e-16
+#>   ItemCenteredMaxAbsDifference ItemCenteredMaxAbsItem CaseRowsExpected
+#> 1                 1.998401e-15                   I006               60
+#>   CaseRowsCompared CaseCorrelation CaseMae CaseMaxAbsDifference   CaseRawMae
+#> 1                0              NA      NA                   NA 7.267335e-16
+#>   CaseRawMaxAbsDifference LocationShift LocationStatus ExternalEstimationStatus
+#> 1            4.662937e-15            NA        unknown                  unknown
+#>   ExternalPrecisionStatus AttentionItems AttentionMissing AttentionDuplicate
+#> 1            not_assessed              1                0                  0
+#>   AttentionNonNumeric AttentionUnexpected
+#> 1                   0                   0
+```
