@@ -31,7 +31,7 @@
 #'
 #' **Bias/interaction** in MFRM refers to a systematic departure from
 #' the additive model for a specific combination of facet elements
-#' (e.g., a particular rater is unexpectedly harsh on a particular
+#' (e.g., a particular rater is unexpectedly severe on a particular
 #' criterion).  See [estimate_bias()] for the mathematical formulation.
 #'
 #' When `pairs = NULL`, the function builds all 2-way combinations of
@@ -119,6 +119,7 @@
 #' diagnostics using the original screening options; no model refit is needed.
 #' See [mfrmr_compatibility_layer] for migration instructions.
 #' @export
+#' @order 1
 estimate_all_bias <- function(fit,
                               diagnostics = NULL,
                               pairs = NULL,
@@ -294,7 +295,7 @@ estimate_all_bias <- function(fit,
     dplyr::bind_rows(error_rows)
   }
 
-  settings <- dashboard_settings_table(list(
+  settings <- bundle_settings_table(list(
     requested_pairs = length(pair_specs),
     successful_pairs = length(by_pair),
     diagnostics_supplied = diagnostics_supplied,
@@ -322,13 +323,12 @@ estimate_all_bias <- function(fit,
   out
 }
 
-#' Summarize all retained bias screens
-#'
-#' @param object,x A result from [estimate_all_bias()].
+#' @rdname estimate_all_bias
+#' @details `summary()` method: Summarize all retained bias screens
+#' @param object A result from [estimate_all_bias()].
 #' @param digits Number of significant digits used for printing; calculations
 #'   and returned tables retain their precision.
-#' @param ... Reserved; additional arguments are rejected.
-#' @return `summary()` returns a `summary.mfrm_bias_collection` list:
+#' @return For `summary()`: `summary()` returns a `summary.mfrm_bias_collection` list:
 #'   `overview` has one row per requested interaction, `cells` combines retained
 #'   cell tables with an `Interaction` identifier and explicit `PointAvailable`,
 #'   `ScreenAvailable` and `ScreenPositive` fields, `errors` lists failed pairs,
@@ -337,7 +337,7 @@ estimate_all_bias <- function(fit,
 #'   `Bias Size`, conditional `S.E.`, `t` and any GPCM profile status, are
 #'   preserved. `settings`, `fit_identity` and `notes` retain provenance and
 #'   interpretation. Print methods return their input invisibly.
-#' @details No model, diagnostics or cell calculation is repeated. The overview
+#' @details For `summary()`: No model, diagnostics or cell calculation is repeated. The overview
 #'   counts finite bias estimates from successful cell optimizations separately
 #'   from cells with a finite screening statistic and positive finite conditional
 #'   SE. `ScreenPositive` is missing when no statistic can be screened, rather
@@ -355,8 +355,7 @@ estimate_all_bias <- function(fit,
 #'   cells omitted by the chosen screening options are not reconstructed.
 #'   No multiplicity-adjusted confirmatory decisions are supplied.
 #' @seealso [estimate_all_bias()], [plot.mfrm_bias_collection()], [mfrm_report()], [estimate_bias()]
-#' @examples
-#' # Long-running workflow; run explicitly when needed.
+#' @examples # Long-running workflow; run explicitly when needed.
 #' # example("summary.mfrm_bias_collection", run.dontrun = TRUE)
 #' \dontrun{
 #' ratings <- load_mfrmr_data("example_bias")
@@ -428,14 +427,14 @@ summary.mfrm_bias_collection <- function(object, ...) {
     class = "summary.mfrm_bias_collection")
 }
 
-#' @rdname summary.mfrm_bias_collection
+#' @rdname estimate_all_bias
 #' @export
 print.mfrm_bias_collection <- function(x, digits = 3, ...) {
   print(summary(x), digits = digits, ...)
   invisible(x)
 }
 
-#' @rdname summary.mfrm_bias_collection
+#' @rdname estimate_all_bias
 #' @export
 print.summary.mfrm_bias_collection <- function(x, digits = 3, ...) {
   rlang::check_dots_empty()

@@ -193,6 +193,9 @@ and convergence state
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("build_conquest_overlap_bundle", run.dontrun = TRUE)
+\dontrun{
 # Synthetic latent-regression fit; the full regeneration recipe is
 # examples/measurement-fits.R in the package (31 nodes, maxit = 2000).
 fit <- readRDS(system.file("examples", "measurement-fits.rds",
@@ -203,6 +206,7 @@ summary(bundle)$mfrmr_fit_status
 summary(bundle)$conquest_command_scope
 summary(bundle)$conquest_output_contract
 cat(substr(bundle$conquest_command, 1, 120))
+}
 }
 \seealso{
 \code{\link[=normalize_conquest_overlap_files]{normalize_conquest_overlap_files()}}, \code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}},

@@ -9,10 +9,10 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", message = FALSE, fig.widt
   fig.height = 4.8, dev.args = list(bg = "white"))
 ```
 
-**Who scores more strictly? What changes when we add tasks? Which scores does
+**Who scores more severely? What changes when we add tasks? Which scores does
 our model predict?** Explore each question below, then adapt the code to your
 own assessment. These examples require the **unreleased 0.2.4 candidate**;
-follow the [installation instructions](../index.html#install-the-version-used-here).
+follow the [installation instructions](../index.html#install-and-choose-matching-documentation).
 All observations here are synthetic.
 
 Hover or tap to inspect values, drag to zoom and double-click to reset.
@@ -87,7 +87,7 @@ rater_widget
 <details>
 <summary>Static ggplot and exact values</summary>
 
-```{r rater-static, fig.alt="Six rater severity estimates with 95 percent model-based normal intervals. R01 is near minus 0.61 and R06 near plus 0.41 logits. Higher locations mean stricter scoring; zero is a centering reference."}
+```{r rater-static, fig.alt="Six rater severity estimates with 95 percent model-based normal intervals. R01 is near minus 0.61 and R06 near plus 0.41 logits. Higher locations mean more severe scoring; zero is a centering reference."}
 rater_gg
 ```
 

@@ -203,6 +203,7 @@ validate_response_time_review <- function(x) {
 #' @concept visual diagnostics
 #' @concept quality control
 #' @export
+#' @order 1
 response_time_review <- function(data,
                                  person,
                                  facets = NULL,
@@ -472,12 +473,11 @@ print.mfrm_response_time_review <- function(x, ...) {
   invisible(x)
 }
 
-#' Summarize a response-time review
-#'
+#' @rdname response_time_review
+#' @details `summary()` method: Summarize a response-time review
 #' @param object An object returned by [response_time_review()].
 #' @param top_n Number of top groups to retain in summary previews.
-#' @param ... Unused.
-#' @return A list of class `summary.mfrm_response_time_review`.
+#' @return For `summary()`: A list of class `summary.mfrm_response_time_review`.
 #' @export
 summary.mfrm_response_time_review <- function(object, top_n = 10L, ...) {
   if (!inherits(object, "mfrm_response_time_review")) {
@@ -592,13 +592,16 @@ print.summary.mfrm_response_time_review <- function(x, ...) {
 #' @param facet Optional facet name when `type = "facet"`.
 #' @param top_n Maximum number of person or facet rows to plot.
 #' @param preset Visual preset.
-#' @param draw If `TRUE`, draw with base graphics. If `FALSE`, return only an
-#'   `mfrm_plot_data` object.
+#' @param draw If `TRUE`, print the `ggplot` object. If `FALSE`, return the
+#'   `ggplot` object invisibly without drawing.
 #' @param ... Unused.
 #'
-#' @return Invisibly, an `mfrm_plot_data` object containing the plot table,
-#'   thresholds, overview, and interpretation notes.
+#' @return Invisibly, a `ggplot` object carrying reusable tables, thresholds,
+#'   overview, and interpretation notes accessible via [plot_data()].
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot_response_time_review", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy$ResponseTime <- 10 + seq_len(nrow(toy)) %% 6 + as.numeric(toy$Score)
 #' rt <- response_time_review(
@@ -607,11 +610,14 @@ print.summary.mfrm_response_time_review <- function(x, ...) {
 #' )
 #' plot(rt, type = "distribution", draw = FALSE)
 #' plot(rt, type = "person", draw = FALSE)
+#' }
 #' @seealso [response_time_review()], [plot_data_components()],
 #'   [mfrmr_output_guide()]
 #' @concept response time
 #' @concept visual diagnostics
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
@@ -646,61 +652,6 @@ plot_response_time_review <- function(x,
   )
   subtitle <- "Descriptive screening view; not a joint speed-accuracy model"
 
-  if (isTRUE(draw)) {
-    apply_plot_preset(style)
-    old_par <- graphics::par()["mar"]
-    on.exit(graphics::par(old_par), add = TRUE)
-    if (identical(type, "distribution")) {
-      graphics::hist(
-        tbl$LogTime,
-        breaks = if (length(unique(tbl$LogTime)) < 2L) 1L else "FD",
-        col = style$fill_soft,
-        border = style$axis,
-        main = "",
-        xlab = paste0("log response time (", unit, ")")
-      )
-      graphics::abline(v = log(thresholds$Value), lty = c(2, 3),
-                       col = c(style$warn, style$accent_secondary), lwd = 1.2)
-      graphics::legend(
-        "topright",
-        legend = c("Rapid threshold", "Slow threshold"),
-        lty = c(2, 3),
-        col = c(style$warn, style$accent_secondary),
-        bty = "n", cex = 0.85
-      )
-    } else if (!any(is.finite(tbl$MedianTime))) {
-      graphics::plot.new()
-      graphics::text(0.5, 0.5, "No valid times are available for these groups.")
-    } else if (identical(type, "score")) {
-      y <- tbl$MedianTime
-      x_pos <- seq_len(nrow(tbl))
-      graphics::plot(
-        x_pos, y, type = "b", pch = 19, col = style$accent_primary,
-        xaxt = "n", xlab = "Score", ylab = paste0("Median time (", unit, ")"),
-        main = ""
-      )
-      graphics::axis(1, at = x_pos, labels = tbl$Score)
-      graphics::abline(h = thresholds$Value, lty = c(2, 3),
-                       col = c(style$warn, style$accent_secondary))
-    } else {
-      label_col <- if (identical(type, "person")) "Person" else "Level"
-      labels <- as.character(tbl[[label_col]])
-      y <- seq_len(nrow(tbl))
-      graphics::par(mar = c(5, max(6, min(14, max(nchar(labels)) * 0.55)),
-                            3, 2))
-      graphics::plot(
-        tbl$MedianTime, y,
-        yaxt = "n", pch = 19, col = style$accent_primary,
-        xlab = paste0("Median time (", unit, ")"), ylab = "",
-        main = ""
-      )
-      graphics::axis(2, at = y, labels = labels, las = 1, cex.axis = 0.75)
-      graphics::abline(v = thresholds$Value, lty = c(2, 3),
-                       col = c(style$warn, style$accent_secondary))
-    }
-  }
-
-
   ref_values <- if (identical(type, "distribution")) {
     log(thresholds$Value)
   } else {
@@ -712,7 +663,7 @@ plot_response_time_review <- function(x,
     "Median response time"
   }
 
-  invisible(new_mfrm_plot_data(
+  out <- new_mfrm_plot_data(
     "response_time_review",
     list(
       table = tbl,
@@ -744,13 +695,17 @@ plot_response_time_review <- function(x,
         role = c("rapid_response", "slow_response")
       )
     )
-  ))
+  )
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
-#' Plot a saved response-time review
+#' @rdname response_time_review
+#' @details `plot()` method: Plot a saved response-time review
 #' @inheritParams plot_response_time_review
-#' @param ... View-specific controls from [plot_response_time_review()].
-#' @return The existing response-time plot payload. These are descriptive timing summaries.
+#' @param ... For `plot()`: View-specific controls from [plot_response_time_review()].
+#'
+#' For `summary()`: Unused.
+#' @return For `plot()`: Invisibly, a `ggplot` object (reusable tables and notes via [plot_data()]). These are descriptive timing summaries.
 #' @seealso [response_time_review()], [mfrmr_plot_migration]
 #' @export
 plot.mfrm_response_time_review <- function(x,

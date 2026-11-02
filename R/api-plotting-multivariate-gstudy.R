@@ -157,7 +157,7 @@
 #'   `plot_data(p, "notes")` and keep them when sharing a figure. Both base R
 #'   graphics and optional [as_ggplot()] conversion are supported.
 #'
-#' @return Invisibly, an `mfrm_plot_data` object with `table` (source, display label, selected
+#' @return Invisibly, a `ggplot` object; [plot_data()] extracts `table` (source, display label, selected
 #'   estimate, sign status and full component-matrix PSD diagnostic),
 #'   `weights`, `score`, `kind`, `source_design`, `source_rows`, axis labels and
 #'   notes. `plot`, `panels` and `ncol` describe the view. Component tables include
@@ -181,6 +181,9 @@
 #' @seealso [mfrm_g_study()], [plot.mfrm_multivariate_d_study()]
 #' @md
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_multivariate_gstudy", run.dontrun = TRUE)
+#' \dontrun{
 #' tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 #' g <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
 #' p <- plot(g, weights = c(V = .5, W = .5), preset = "monochrome",
@@ -192,6 +195,7 @@
 #' plot_data(covariance_plot, "table")
 #' if (requireNamespace("ggplot2", quietly = TRUE)) {
 #'   as_ggplot(p)
+#' }
 #' }
 #' @export
 plot.mfrm_multivariate_gstudy <- function(x, score = NULL, weights = NULL,
@@ -380,62 +384,5 @@ plot.mfrm_multivariate_gstudy <- function(x, score = NULL, weights = NULL,
     out$data$intervals <- ci
     out$data$unavailable_intervals <- table[!table$IntervalAvailable, , drop = FALSE]
   }
-  if (!draw) return(invisible(out))
-  old <- graphics::par(no.readonly = TRUE)
-  on.exit(graphics::par(old), add = TRUE)
-  apply_plot_preset(style)
-  nr <- ceiling(nrow(panels) / ncol)
-  layout <- matrix(c(seq_len(nrow(panels)), rep(0L, nr * ncol - nrow(panels))), ncol = ncol, byrow = TRUE)
-  if (type == "covariance") layout <- rbind(layout, rep(nrow(panels) + 1L, ncol))
-  # The color key needs room for its axis even when many panels share a device.
-  graphics::layout(layout, heights = if (type == "covariance") c(rep(1, nr), graphics::lcm(1.8)) else rep(1, nr))
-  graphics::par(cex = 1, mex = 1)
-  colors <- grDevices::colorRampPalette(heat_colors)(101)
-  limits <- range(c(0, table$Estimate))
-  if (intervals) limits <- range(c(limits, table$Lower, table$Upper), na.rm = TRUE)
-  if (diff(limits) == 0) limits <- c(-.05, .05)
-  for (i in seq_len(nrow(panels))) {
-    part <- table[table$Panel == i, , drop = FALSE]
-    if (type == "components") {
-      left <- max(4, max(graphics::strwidth(labels, units = "inches", cex = .75)) /
-        graphics::par("csi") + 2)
-      graphics::par(mar = c(4.5, left, if (nrow(panels) > 1L) 2.5 else 1, .5))
-      position <- rev(seq_len(nrow(part)))
-      plot(limits, c(.5, nrow(part) + .5), type = "n", yaxt = "n",
-        xlab = out$data$x_label, ylab = "", cex.lab = .8, cex.axis = .8)
-      axis(2, at = position, labels = labels, las = 1, cex.axis = .75, tick = FALSE)
-      abline(v = 0, lty = 2, col = style$grid)
-      if (intervals) {
-        ok <- part$IntervalAvailable
-        segments(part$Lower[ok], position[ok], part$Upper[ok], position[ok], col = style$foreground)
-        for (endpoint in c("Lower", "Upper")) segments(part[[endpoint]][ok], position[ok] - .09,
-          part[[endpoint]][ok], position[ok] + .09, col = style$foreground)
-        points(part$Estimate[!ok], position[!ok], pch = 0, cex = 1.5, col = style$foreground)
-      } else segments(0, position, part$Estimate, position, col = style$foreground)
-      points(part$Estimate, position, pch = ifelse(part$Estimate < 0, 1, 16), col = style$foreground)
-    } else {
-      graphics::par(mar = c(3.3, 5.5, 3.5, .5))
-      q <- length(score)
-      plot(c(.5, q + .5), c(.5, q + .5), type = "n", axes = FALSE,
-        xlab = "", ylab = "", xaxs = "i", yaxs = "i")
-      xx <- match(part$Column, score); yy <- q + 1 - match(part$Row, score)
-      index <- round((part$Estimate / bound + 1) * 50) + 1L
-      rect(xx - .5, yy - .5, xx + .5, yy + .5, col = colors[index], border = "white")
-      ink <- ifelse(colMeans(grDevices::col2rgb(colors[index])) < 140, "white", "black")
-      text(xx, yy, trimws(formatC(part$Estimate, format = "g", digits = 3)), col = ink, cex = .8)
-      score_labels <- vapply(score, function(s) paste(strwrap(s, 14), collapse = "\n"), character(1))
-      axis(1, at = seq_len(q), labels = score_labels, tick = FALSE, cex.axis = .75, gap.axis = -1)
-      axis(2, at = rev(seq_len(q)), labels = score_labels, las = 1, tick = FALSE, cex.axis = .75)
-    }
-    if (nrow(panels) > 1L || type == "covariance") mtext(
-      paste(strwrap(panels$Label[i], 28), collapse = "\n"), side = 3, line = .5, cex = .85)
-  }
-  if (type == "covariance") {
-    graphics::par(mar = c(2.7, 5.5, .2, 1), pty = "m")
-    image(seq(-1, 1, length.out = 101), 1, matrix(seq_len(101), ncol = 1),
-      col = colors, axes = FALSE, xlab = "", ylab = "")
-    axis(1, at = c(-1, 0, 1), labels = format(signif(c(-bound, 0, bound), 3), trim = TRUE), cex.axis = .8)
-    mtext("Variance / covariance", side = 1, line = 1.6, cex = .8)
-  }
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }

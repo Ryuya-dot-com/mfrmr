@@ -5,6 +5,33 @@ testlet_fixture <- function() {
     Rater = rep(rep(c("A","B"),each=3),6), Criterion = rep(1:3,12), Score = as.vector(t(y)))
 }
 
+test_that("selected testlet Persons retain the complete kernel coordinates", {
+  d <- testlet_fixture()
+  reference <- mfrmr:::mfrm_testlet_data(d, "Person", "Score", "Rater",
+    c("Rater", "Criterion"), 0:2, "omit")
+  empty <- d[1:6, ]; empty$Person <- "Unobserved"; empty$Score <- NA_real_
+  input <- mfrmr:::mfrm_testlet_data(rbind(d, empty), "Person", "Score", "Rater",
+    c("Rater", "Criterion"), 0:2, "omit", reference = reference)
+  rule <- mfrmr:::gauss_hermite_normal(7L)
+  for (variance in c(0, .7)) for (gradient in c(FALSE, TRUE)) {
+    par <- c(.15 * sin(seq_len(ncol(input$X))), -.6, .6, variance)
+    full <- mfrmr:::mfrm_testlet_kernel(input, par, c(-1, .2), rule, gradient)
+    for (persons in list(6L, c(6L, 1L), c(6L, 1L, 6L), 7L,
+      integer(), rev(seq_along(input$persons)))) {
+      expected <- full
+      expected$loglik <- full$loglik[, persons, drop = FALSE]
+      if (gradient) {
+        expected$score <- full$score[, persons, , drop = FALSE]
+        expected$theta_score <- full$theta_score[, persons, drop = FALSE]
+        expected$theta_curvature <- full$theta_curvature[, persons, drop = FALSE]
+      }
+      actual <- mfrmr:::mfrm_testlet_kernel(input, par, c(-1, .2), rule,
+        gradient, persons)
+      expect_identical(actual, expected)
+    }
+  }
+})
+
 test_that("testlet preparation preserves assignments and separates local from fixed roles", {
   d <- testlet_fixture()
   expect_error(fit_mfrm_testlet(d,"Person","Score","Rater",c("Rater","Criterion"),0:2), "Assigned scores")
@@ -32,7 +59,10 @@ test_that("three-block four-category likelihood and derivatives match an indepen
   x <- mfrm_testlet_data(d,"Person","Score","Block",c("Station","Criterion"),0:3,"omit")
   par <- c(as.vector(crossprod(x$basis$Station,c(-.2,.1,.1))),
     as.vector(crossprod(x$basis$Criterion,c(-.3,.3))),-.8,0,.6,.4)
-  order <- 13L; jac <- matrix(0,order,order)
+  # Both independent tensor and nested integration use the same rule. Seven
+  # nodes retain every derivative/variance-face check without a 13^4 grid.
+  order <- if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) 13L else 7L
+  jac <- matrix(0,order,order)
   jac[cbind(1:(order-1),2:order)] <- sqrt(1:(order-1))
   eig <- eigen(jac+t(jac),symmetric=TRUE); nodes <- eig$values; weights <- eig$vectors[1,]^2
   grid <- as.matrix(expand.grid(rep(list(seq_len(order)),4)))
@@ -89,6 +119,8 @@ test_that("three-block four-category likelihood and derivatives match an indepen
 })
 
 test_that("fitting and continuous scoring agree with retained independent reference values", {
+  # Extended numerical/reference case; shorter live routes remain on CRAN.
+  skip_on_cran()
   d <- testlet_fixture()
   fit <- fit_mfrm_testlet(d,"Person","Score","Rater",c("Rater","Criterion"),0:2,quad_points=61,missing="omit",person_sd=1)
   expect_true(fit$checks$NumericalReady); expect_true(fit$checks$InformationPositive)

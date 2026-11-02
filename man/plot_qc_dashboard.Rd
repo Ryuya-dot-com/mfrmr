@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-plotting.R
 \name{plot_qc_dashboard}
 \alias{plot_qc_dashboard}
-\title{Plot a base-R QC dashboard}
+\title{Plot a QC dashboard with ggplot2}
 \usage{
 plot_qc_dashboard(
   fit,
@@ -46,15 +46,16 @@ plot_qc_dashboard(
 
 \item{top_n}{Maximum elements displayed in displacement panel.}
 
-\item{draw}{If \code{TRUE}, draw with base graphics.}
+\item{draw}{If \code{TRUE}, print the \code{ggplot} object.}
 
 \item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 }
 \value{
-A plotting-data object of class \code{mfrm_plot_data}.
+Invisibly, a \code{ggplot} object. Use \code{\link[=plot_data]{plot_data()}} to retrieve its
+reusable plotting data and notes.
 }
 \description{
-Plot a base-R QC dashboard
+Plot a QC dashboard with ggplot2
 }
 \details{
 The dashboard draws nine QC panels in a 3\eqn{\times}3 grid:\tabular{lll}{
@@ -119,44 +120,22 @@ Treat this dashboard as a screening layer; follow up with dedicated helpers
 }
 }
 
+\section{Session plot defaults}{
+
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
+}
+
 \section{Migration in 0.2.4}{
 
 This renderer is internal. Use the corresponding \code{plot()} route in
 \link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
-\section{Session plot defaults}{
-
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
-}
-
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot_qc_dashboard", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 
 # Saved synthetic MML/RSM analysis of example_operational.
@@ -175,8 +154,9 @@ review$decision
 qc <- plot(fit, type = "qc", diagnostics = diagnostics)
 
 # Inspect the counts behind the category panel
-qc$data$category_stats[, c("Category", "Count", "ExpectedCount")]
+plot_data(qc, "category_stats")[, c("Category", "Count", "ExpectedCount")]
 # Use focused plots such as plot(diagnostics, type = "marginal_fit") to investigate a panel
+}
 }
 \seealso{
 \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "fair_average")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")}, \link[=plot.mfrm_fit]{plot(x, type = "agreement")}, \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}

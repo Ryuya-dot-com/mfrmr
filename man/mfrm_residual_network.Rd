@@ -4,6 +4,7 @@
 \alias{mfrm_residual_network}
 \alias{summary.mfrm_residual_network}
 \alias{print.mfrm_residual_network}
+\alias{plot.mfrm_residual_network}
 \title{Explore residual associations and groups of facet levels}
 \usage{
 mfrm_residual_network(
@@ -20,6 +21,14 @@ mfrm_residual_network(
 \method{summary}{mfrm_residual_network}(object, ...)
 
 \method{print}{mfrm_residual_network}(x, ...)
+
+\method{plot}{mfrm_residual_network}(
+  x,
+  type = c("network", "matrix", "dendrogram"),
+  preset = c("standard", "publication", "compact", "monochrome"),
+  draw = TRUE,
+  ...
+)
 }
 \arguments{
 \item{fit}{A supported \code{\link[=fit_mfrm]{fit_mfrm()}} result, with ordinary observation-level
@@ -51,7 +60,16 @@ levels. \code{NULL} skips clustering. The number is supplied, not estimated.}
 
 \item{...}{Reserved; unused arguments are rejected.}
 
-\item{x}{An \code{mfrm_residual_network}.}
+\item{x}{For \code{print.mfrm_residual_network()}: An \code{mfrm_residual_network}.
+
+For \code{plot()}: A result from \code{\link[=mfrm_residual_network]{mfrm_residual_network()}}.}
+
+\item{type}{\code{"network"}, \code{"matrix"} or \code{"dendrogram"}.}
+
+\item{preset}{Visual preset; see \link{mfrmr_visual_diagnostics}.}
+
+\item{draw}{Whether to print the \code{ggplot} figure; \code{FALSE} returns the \code{ggplot}
+object without drawing.}
 }
 \value{
 An \code{mfrm_residual_network} with \code{nodes}, all \code{pairs}, displayed
@@ -61,6 +79,11 @@ membership), source model metadata and interpretation \code{notes}.
 \code{\link[=plot]{plot()}} returns saved figure data; \code{\link[=mfrm_report]{mfrm_report()}} and
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} connect the result to reporting.
 Complete RDS archives include person identifiers: review sharing permissions.
+
+For \code{plot()}: Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts the
+selected view, saved matrix, nodes, pairs, edges, clustering, settings and
+interpretation notes. Plotting does not recompute residuals or clustering.
+Save the analysis object to redraw every view.
 }
 \description{
 After reviewing a fitted measurement model, locate facet levels whose
@@ -68,6 +91,18 @@ standardized residuals move together across persons. For example, explore
 criteria that share unexplained variation, or raters with similar residual
 profiles. This descriptive, signed correlation network complements
 \code{\link[=q3_statistic]{q3_statistic()}}, residual PCA and case review.
+}
+\details{
+\code{plot()} method: Plot saved residual associations and exploratory groups
+
+Compare the full matrix with its thresholded network, then inspect the
+clustering tree when requested. Network positions are a deterministic
+circle: distance on the page is not a statistical distance. Positive edges
+are solid red and negative edges dashed blue; thickness represents |r|.
+Gray matrix cells denote unavailable correlations. Node colors do not
+encode quality. Dendrogram labels append the chosen group number in square
+brackets; these numbers are labels, not ranks. Titles and cautions are retained in \code{\link[=plot_data]{plot_data()}}, not
+printed into the figure.
 }
 \section{Statistical definition}{
 
@@ -142,6 +177,9 @@ established ML packages for a separately designed prediction study.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("mfrm_residual_network", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -154,6 +192,7 @@ plot(net, type = "matrix", draw = FALSE)
 report <- mfrm_report(net)
 build_summary_table_bundle(report)$table_index
 }
+}
 \references{
 Wesolowski, B. C. (2019). Predicting operational rater-type classifications
 using Rasch measurement theory and random forests: A music performance
@@ -165,6 +204,6 @@ approach for estimating the number of dimensions in psychological research.
 \emph{PLOS ONE, 12}, e0174035. \doi{10.1371/journal.pone.0174035}.
 }
 \seealso{
-\code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}}, \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}},
+\link[=mfrm_cluster_kmeans]{k-means details}, \link[=mfrm_cluster_hierarchical]{hierarchical clustering details},
 \link{mfrmr_visual_diagnostics}
 }

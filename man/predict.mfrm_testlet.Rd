@@ -4,6 +4,7 @@
 \alias{predict.mfrm_testlet}
 \alias{summary.mfrm_testlet_scores}
 \alias{print.mfrm_testlet_scores}
+\alias{plot.mfrm_testlet_scores}
 \title{Score Persons using a fixed testlet calibration}
 \usage{
 \method{predict}{mfrm_testlet}(
@@ -19,6 +20,23 @@
 \method{summary}{mfrm_testlet_scores}(object, ...)
 
 \method{print}{mfrm_testlet_scores}(x, ...)
+
+\method{plot}{mfrm_testlet_scores}(
+  x,
+  draw = TRUE,
+  style = c("interval", "precision", "distribution"),
+  sort = c("input", "estimate", "uncertainty"),
+  palette = c("accessible", "mono"),
+  title = NULL,
+  caption = NULL,
+  show_title = FALSE,
+  show_notes = FALSE,
+  show_labels = TRUE,
+  reference = 0,
+  text_scale = 1,
+  point_size = 2.5,
+  ...
+)
 }
 \arguments{
 \item{object}{A ready \code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} result.}
@@ -44,7 +62,41 @@ selects outputs while retaining the complete supplied scoring roster.}
 
 \item{...}{Unused.}
 
-\item{x}{A scoring result.}
+\item{x}{For \code{predict.mfrm_testlet()}: A scoring result.
+
+For \code{plot()}: A result from \code{\link[=predict.mfrm_testlet]{predict.mfrm_testlet()}}.}
+
+\item{draw}{\code{FALSE} returns plot data without opening a device.}
+
+\item{style}{\code{"interval"} keeps every labeled row; \code{"precision"} plots
+estimates against interval width (upper minus lower bound); \code{"distribution"}
+shows the empirical cumulative distribution of finite point estimates,
+excluding prior-only and unavailable scores. No density is reconstructed.}
+
+\item{sort}{Row order for interval plots: input order, increasing estimate,
+or increasing interval width. Missing values come last; ties retain input
+order. Sorting is descriptive, not a test of differences.}
+
+\item{palette}{\code{"accessible"} uses blue and dark orange with filled/open
+symbols; \code{"mono"} uses dark grey with the same symbol distinctions.}
+
+\item{title, caption}{\code{NULL} uses the default text; a string replaces it;
+\code{""} removes it. Interpretation notes remain in the saved plot data.}
+
+\item{show_title, show_notes}{Show the title and caption, respectively.
+\code{FALSE} hides text without deleting its metadata.}
+
+\item{show_labels}{Show IDs on interval and precision plots. Distribution
+plots summarize estimates and do not label individual IDs. For crowded
+precision plots use \code{FALSE} and consult the retained table.}
+
+\item{reference}{Vertical reference line in logits; \code{NULL} omits it.
+This is an orientation aid, not a quality threshold.}
+
+\item{text_scale}{Positive multiplier for text size.}
+
+\item{point_size}{Positive point size in ggplot millimetres; base graphics
+use the corresponding relative size (2.5 is the default).}
 }
 \value{
 An \code{mfrm_testlet_scores} object with one table row per requested
@@ -55,6 +107,9 @@ prediction-source metadata for \code{\link[=mfrm_results]{mfrm_results()}}.
 Keep \code{table$Status} and \code{table$Reason} with exported scores: \code{prior_only}
 describes the assumed population without observed responses for that Person;
 \code{unavailable} withholds the estimate, SD and bounds with a recorded cause.
+
+For \code{plot()}: Invisibly, a \code{ggplot} object; \code{\link[=plot_data]{plot_data()}} retains all
+requested Persons, their statuses, interval endpoints and settings.
 }
 \description{
 Recompute Person scores from all supplied rows, integrating local effects
@@ -74,7 +129,7 @@ within a Person or testlet. No fixed effects are re-estimated.
 Unequal block sizes do not imply equal block weights. The influence of an
 additional response depends on its block and the fitted model; integrating
 local effects is not a general correction for assignment or content bias.
-See \code{vignette("mfrmr-testlet-applications")} for a complete-roster
+See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlet-applications.html}{online testlet-applications guide} for a complete-roster
 comparison of one-point changes in five- versus two-criterion tasks.
 
 EAP, posterior SD and intervals use continuous ability integration. Interval
@@ -98,13 +153,55 @@ coverage was 93.3\% in one
 sparse, unequal-block condition with 120 Persons. The original numerical
 failures and their repair remain separately documented. Accounting for
 dependence improved coverage relative to ordinary RSM, but did not consistently improve EAP
-mean squared error. See \code{vignette("mfrmr-testlets")} for the comparison,
+mean squared error. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlets.html}{online testlet guide} for the comparison,
 Monte Carlo uncertainty and numerical-selection correction.
 These intervals neither correct calibration-estimation uncertainty nor
 guarantee 95\% coverage for each fixed ability. Person contrasts and
 simultaneous decisions are not provided by this route.
+
+\code{plot()} method: Plot conditional Person scores from a testlet model
+
+For \code{plot()}: In the default interval view, empty rows remain labeled. Open circles mark prior-only results;
+filled points are response-based conditional scores. The intervals exclude
+calibration-estimation uncertainty and are not tests of Person differences.
+\code{\link[=as_ggplot]{as_ggplot()}} preserves all labeled rows, prior-only symbols and the
+conditional-interval note. \code{\link[=plot_data]{plot_data()}} retains statuses and reasons for
+custom graphics or table export; conversion does not rerun scoring.
 }
+\section{Choosing a view}{
+
+For \code{plot()}:
+
+Interval plots answer where estimates lie and how uncertain they are.
+Precision plots help identify estimates with wider intervals; width is
+neither a fit statistic nor a reliability coefficient. Finite intervals
+are required and excluded rows remain in \code{display_data} with reasons.
+Distribution plots summarize the selected point estimates, which are
+affected by shrinkage and the selected roster. They do not estimate the
+latent population distribution, show posterior densities, or imply
+independent observations.
+}
+
+\section{Accessible and reusable output}{
+
+For \code{plot()}:
+
+Colours are supplemented by point shapes; open circles mean prior only.
+Use \code{palette = "mono"} for monochrome reproduction. \code{\link[=plot_data]{plot_data()}} retains
+the complete source \code{table}, \code{display_data} with inclusion reasons,
+\code{alt_text}, interpretation \code{notes}, and display settings. Supply the text
+alternative and table alongside exported figures; image files alone do
+not automatically expose that information to screen readers.
+\code{\link[=as_ggplot]{as_ggplot()}} preserves the view and display controls, supplies
+\code{labs(alt = ...)}, and allows further \code{labs()}, \code{theme()} and scale edits.
+Rendering does not fit, score or resample. Use the same controls through
+\code{plot(results, type = "scores", style = "precision")}.
+}
+
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("predict.mfrm_testlet", run.dontrun = TRUE)
+\dontrun{
 example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
 fit <- example$testlet$fit
 scores <- example$testlet$scores
@@ -115,6 +212,9 @@ scores <- example$testlet$scores
 scores$table
 plot(scores)
 }
+}
 \seealso{
 \code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}}, \code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}}, \code{\link[=mfrm_results]{mfrm_results()}}
+
+\code{\link[=plot.mfrm_testlet]{plot.mfrm_testlet()}}, \code{\link[=plot_data_components]{plot_data_components()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}}
 }

@@ -103,15 +103,25 @@
 #' on an interpretable common scale; plotting performs no linking.
 #'
 #' @section Returned data and appearance:
-#' Use `draw = FALSE` to obtain the existing payload without drawing. Most
-#' routes return `mfrm_plot_data`; the QC pipeline retains its verdict-table
-#' return, and native interval routes retain their existing ggplot results.
-#' Return classes have not been homogenized. Use [plot_data()] for supported
-#' payloads and [as_ggplot()] only for supported conversions. Unsupported
-#' conversions do not become available through this API change.
+#' In 0.3.0, every `plot()` S3 method renders with `ggplot2` and invisibly
+#' returns a `ggplot` object (`inherits(p, "ggplot")`). Use `draw = FALSE` to
+#' build and return the `ggplot` object without printing or opening a graphics
+#' device. Extract underlying tables, matrices, settings, and cautions with
+#' [plot_data()] (for example `plot_data(p, "notes")` or
+#' `plot_data(p, component = "locations")`) and inspect available components
+#' with [plot_data_components()]; do not index `p$data$...` directly on a
+#' `ggplot` object.
+#'
+#' [as_ggplot()] remains supported for saved `0.2.x` `mfrm_plot_data` and
+#' simulation plot payloads, and returns `0.3.0` `ggplot` objects unchanged
+#' when no alternative component view is requested. Two-continuous-variable
+#' scatterplots (including `plot(dif, type = "scatter")`, model comparisons,
+#' fit pathway, fair average, bias, PCA scores, and recovery scatterplots)
+#' accept `marginal = c("auto", "histogram", "none")` to attach aligned top and
+#' right marginal histograms over the finite plotted pairs (`"auto"` enables
+#' histograms on single-panel views with at least eight finite pairs).
 #' Titles and cautions stay outside figures by default; keep returned notes
-#' when exporting. G/D plots retain their existing color, monochrome, score
-#' and facet-panel controls. Save full result objects for later plotting.
+#' when exporting. Save full result objects for later plotting.
 #'
 #' @seealso [plot.mfrm_fit()], [mfrmr_visual_diagnostics], [mfrmr_output_guide()]
 #' @name mfrmr_plot_migration

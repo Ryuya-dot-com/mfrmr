@@ -1,8 +1,16 @@
-conditional_scoring_fixture <- function() {
-  x <- readRDS(test_path("fixtures", "mfrm-conditional-scoring-gpcm.rds"))
-  x$new <- x$data[x$data$Person %in% head(unique(x$data$Person), 2), ]
-  x
-}
+conditional_scoring_fixture <- local({
+  cached <- NULL
+  function() {
+    if (is.null(cached)) {
+      x <- readRDS(test_path("fixtures", "mfrm-conditional-scoring-gpcm.rds"))
+      x$new <- x$data[x$data$Person %in% head(unique(x$data$Person), 2), ]
+      # Retain the formula environment so an unchanged fit has stable identity.
+      cached <<- x
+    }
+    local_cran_fixture_information(cached$fit, "conditional-scoring", .env = parent.frame())
+    cached
+  }
+})
 
 test_that("conditional population scoring carries checks through summaries, draws and exports", {
   x <- conditional_scoring_fixture()

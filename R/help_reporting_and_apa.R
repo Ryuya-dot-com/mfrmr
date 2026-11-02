@@ -9,10 +9,10 @@
 #' comparison-only fits do not supply this consolidated reporting workflow.
 #' For CML, use `summary(fit)` and [mfrm_facet_intervals()], then `summary(ci)`,
 #' `plot(ci)`, [apa_table()] and `saveRDS(ci, file)`; see
-#' `vignette("mfrmr-facet-intervals", package = "mfrmr")`.
+#' [online facet-interval guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-facet-intervals.html).
 #' Ordinary one-family `GPCM` fits support [reporting_checklist()],
 #' [precision_review_report()], direct curve/graph and residual table helpers,
-#' and caveated APA/QC/export bundles. Use [gpcm_capability_matrix()] when you
+#' and caveated APA/QC/export bundles. Use `mfrmr_output_guide("gpcm_capabilities")` ([mfrmr_gpcm_scope]) when you
 #' need the formal boundary for the current `GPCM` reporting path.
 #'
 #' In particular, `GPCM` [build_apa_outputs()],
@@ -24,7 +24,7 @@
 #' linking synthesis use their own caveated `GPCM` routes and should not be
 #' treated as automatic operational-scoring evidence.
 #'
-#' See `vignette("mfrmr-networks-and-reporting")` for Lamprianou-inspired network
+#' See [online networks and reporting guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html) for Lamprianou-inspired network
 #' views, the FACETS/ConQuest reporting crosswalk and speaking/writing examples
 #' combining MFRM with G/D studies. [plot_data()] supports long-format extraction
 #' and original-value cluster profiles for custom distribution plots.
@@ -57,7 +57,7 @@
 #'   [build_model_choice_review()] and [build_summary_table_bundle()] for
 #'   cautious model-role, route-boundary, and wording tables.
 #' - "How should I start figure captions or visual-results wording?"
-#'   Use [visual_reporting_template()] for conservative caption and results
+#'   Use `mfrmr_output_guide("visual_templates")` for conservative caption and results
 #'   sentence starters, then verify availability with
 #'   `reporting_checklist()$visual_scope`.
 #'
@@ -104,7 +104,7 @@
 #'
 #' These functions serve different purposes; figures and reports are optional
 #' branches from the saved results, not compulsory steps before saving them.
-#' The worked example in `vignette("mfrmr-facet-intervals")` follows this route
+#' The worked example in [online facet-interval guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-facet-intervals.html) follows this route
 #' through individual feedback, interval figures and save/reopen operations.
 #'
 #' @section Specialist reporting tools:
@@ -254,7 +254,7 @@
 #'   often feed result tables and appendix material.}
 #'   \item{[build_visual_summaries()]}{Prepares publication-oriented figure
 #'   data that can be cited from the report text.}
-#'   \item{[visual_reporting_template()]}{Provides conservative figure
+#'   \item{`mfrmr_output_guide("visual_templates")`}{Provides conservative figure
 #'   placement, caption-starter, results-wording, and overclaim-avoidance
 #'   guidance for public visual helpers.}
 #' }
@@ -265,7 +265,7 @@
 #' - Use the checklist's `"Visual Displays"` rows to decide whether the next
 #'   follow-up should be [plot(x, type = "qc")][plot.mfrm_fit], [plot(x, type = "marginal_fit")][plot.mfrm_fit],
 #'   [plot(x, type = "residual_pca")][plot.mfrm_fit], [plot(x, type = "bias")][plot.mfrm_fit], or another public plot.
-#' - Use [visual_reporting_template()] to draft visual captions and
+#' - Use `mfrmr_output_guide("visual_templates")` to draft visual captions and
 #'   results-sentence starters, but do not paste the skeletons without checking
 #'   the actual fit, diagnostics, and study context.
 #' - Before formal inferential claims, review the fit decision, precision
@@ -329,7 +329,7 @@
 #' - For report/table selection, see [mfrmr_reports_and_tables].
 #' - For end-to-end analysis routes, see [mfrmr_workflow_methods].
 #' - For visual follow-up, see [mfrmr_visual_diagnostics].
-#' - For the `GPCM` support statement, see [gpcm_capability_matrix].
+#' - For the `GPCM` support statement, see [mfrmr_gpcm_scope].
 #' - For a longer walkthrough, see
 #'   `vignette("mfrmr-reporting-and-apa", package = "mfrmr")`.
 #'

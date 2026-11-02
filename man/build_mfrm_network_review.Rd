@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-reports.R
 \name{build_mfrm_network_review}
 \alias{build_mfrm_network_review}
+\alias{summary.mfrm_network_review}
 \title{Build an MFRM network review}
 \usage{
 build_mfrm_network_review(
@@ -20,6 +21,8 @@ build_mfrm_network_review(
   basis = c("observed", "planned"),
   weight = NULL
 )
+
+\method{summary}{mfrm_network_review}(object, digits = 3, top_n = 10, ...)
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
@@ -42,7 +45,10 @@ retain before constructing the graph; passed to \code{\link[=mfrm_network_analys
 \item{min_observations}{Minimum observations required to keep a subset row;
 passed to \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}.}
 
-\item{top_n}{Number of central/cut/bridge rows to retain in the review.}
+\item{top_n}{For \code{build_mfrm_network_review()}: Number of central/cut/bridge rows to retain in the review.
+
+For \code{summary()}: Number of central/cut/bridge rows to keep in the compact
+summary.}
 
 \item{include_graph}{Logical; if \code{TRUE}, keep the underlying \code{igraph} object
 in the nested \code{source_network} bundle.}
@@ -63,6 +69,12 @@ Planned networks require \code{score = NULL} and \code{weight = NULL}.}
 \item{weight}{Optional numeric weight column for observed raw data. Missing
 and zero-weight rows do not create edges. Edge weights still count rows,
 not sampling weights. Negative or infinite weights are refused.}
+
+\item{object}{Output from \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}}.}
+
+\item{digits}{Number of digits for printed numeric values.}
+
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 A bundle of class \code{mfrm_network_review} containing:
@@ -76,6 +88,8 @@ A bundle of class \code{mfrm_network_review} containing:
 \item \code{reporting_map}: boundary between MFRM, design network, sparse design,
 peer-review design, and rater-effect network routes
 }
+
+For \code{summary()}: An object of class \code{summary.mfrm_network_review}.
 }
 \description{
 Build an MFRM network review
@@ -94,6 +108,8 @@ The review status is deliberately conservative and descriptive. It is not a
 literature-derived adequacy cut point for fit, separation, recovery, or
 rater quality. Use it to decide which design links, anchors, or additional
 observations need inspection before making common-scale claims.
+
+\code{summary()} method: Summarize an MFRM network review
 }
 \section{References}{
 
@@ -122,10 +138,13 @@ rows are available here; review original missing assignments before fitting.
 No prefit result supplies an identification audit or model-readiness decision.
 \code{settings$is_disjoint} describes the source graph, even when subset filters
 omit components; compare source/retained subset counts. Filters do not establish
-linking. See \code{vignette("mfrmr-networks-and-reporting")} for a panel example.
+linking. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} for a panel example.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("build_mfrm_network_review", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -136,8 +155,11 @@ if (requireNamespace("igraph", quietly = TRUE)) {
   build_summary_table_bundle(review)
 }
 }
+}
 \seealso{
 \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}, \code{\link[=subset_connectivity_report]{subset_connectivity_report()}},
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, \code{\link[=rater_network_analysis]{rater_network_analysis()}},
 \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}}
+
+\code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}}
 }

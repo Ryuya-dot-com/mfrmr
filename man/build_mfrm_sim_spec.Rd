@@ -299,6 +299,9 @@ specification that tells \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("build_mfrm_sim_spec", run.dontrun = TRUE)
+\dontrun{
 spec <- build_mfrm_sim_spec(
   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
   assignment = "rotating"
@@ -306,6 +309,7 @@ spec <- build_mfrm_sim_spec(
 spec$model
 spec$assignment
 nrow(spec$threshold_table)
+}
 }
 \seealso{
 \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}

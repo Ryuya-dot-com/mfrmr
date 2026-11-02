@@ -13,19 +13,10 @@ mml_quadrature_sensitivity(
   theta_points = 161L,
   adaptive_quad_points = NULL
 )
-
-gpcm_mml_quadrature_sensitivity(
-  fit,
-  data,
-  quad_points = c(31L, 41L),
-  theta_range = c(-4, 4),
-  theta_points = 161L,
-  adaptive_quad_points = NULL
-)
 }
 \arguments{
 \item{fit}{An RSM, PCM, or GPCM MML \code{mfrm_fit} returned by
-\code{\link[=fit_mfrm]{fit_mfrm()}}. \code{\link[=gpcm_mml_quadrature_sensitivity]{gpcm_mml_quadrature_sensitivity()}} accepts only GPCM fits.}
+\code{\link[=fit_mfrm]{fit_mfrm()}}. \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} accepts only GPCM fits.}
 
 \item{data}{The original response data.frame used to create \code{fit}. Prepared
 response rows are compared semantically after refitting; row order may
@@ -82,6 +73,9 @@ Refit one ordered-response MML model to the same supplied response data at
 two or more Gauss--Hermite quadrature counts. The original fit is reused at
 its own quadrature count; all other fits reuse its stored model,
 identification, anchor, interaction, optimizer, and population settings.
+
+Use \code{mml_quadrature_sensitivity()} for all supported model
+families. The former GPCM-only name is no longer exported.
 }
 \details{
 This is an explicit refit diagnostic: neither \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}} nor

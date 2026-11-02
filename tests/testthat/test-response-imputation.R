@@ -8,14 +8,14 @@ response_fixture <- function() {
   a$Score[c(2, 7)] <- c(1, 0)
   b$Score[c(2, 7)] <- c(2, 1)
   list(data = d, completed = list(a, b), person = "Person", facets = c("Rater", "Task"),
-    score = "Score", event_id = "Event", impute = c("1", "7"), categories = 0:2,
+    score = "Score", event_id = "Event", impute_ids = c("1", "7"), categories = 0:2,
     assigned = "Assigned", missing = "omit", imputation_model = list(method = "test completions"))
 }
 
 test_that("response review preserves identities, assignments and explicit omissions", {
   a <- response_fixture()
   a$completed[[2]] <- a$completed[[2]][8:1, ]
-  x <- do.call(mfrm_response_imputations, a)
+  x <- do.call(review_mfrm_imputations, a)
   expect_s3_class(x, "mfrm_response_imputations")
   expect_identical(x$events$ID, a$data$Event)
   expect_equal(x$completed[[2]]$Event, a$data$Event)
@@ -31,41 +31,41 @@ test_that("response review preserves identities, assignments and explicit omissi
   a$assigned <- NULL
   a$data$Assigned <- NULL
   a$completed <- lapply(a$completed, function(d) { d$Assigned <- NULL; d })
-  expect_true(all(do.call(mfrm_response_imputations, a)$events$Assigned))
+  expect_true(all(do.call(review_mfrm_imputations, a)$events$Assigned))
 })
 
 test_that("response review refuses changed evidence and impossible imputation targets", {
   base <- response_fixture()
   bad <- base; bad$missing <- "error"
-  expect_error(do.call(mfrm_response_imputations, bad), "not selected")
-  bad <- base; bad$impute <- c("1", "é", "7")
-  expect_error(do.call(mfrm_response_imputations, bad), "Only missing scores on assigned")
-  bad <- base; bad$impute <- c("001", "7")
-  expect_error(do.call(mfrm_response_imputations, bad), "Only missing scores")
+  expect_error(do.call(review_mfrm_imputations, bad), "not selected")
+  bad <- base; bad$impute_ids <- c("1", "é", "7")
+  expect_error(do.call(review_mfrm_imputations, bad), "Only missing scores on assigned")
+  bad <- base; bad$impute_ids <- c("001", "7")
+  expect_error(do.call(review_mfrm_imputations, bad), "Only missing scores")
   bad <- base; bad$completed[[2]]$Score[1] <- 1
-  expect_error(do.call(mfrm_response_imputations, bad), "Imputation 2: Observed")
+  expect_error(do.call(review_mfrm_imputations, bad), "Imputation 2: Observed")
   bad <- base; bad$completed[[1]]$Score[4] <- 1
-  expect_error(do.call(mfrm_response_imputations, bad), "unselected scores")
+  expect_error(do.call(review_mfrm_imputations, bad), "unselected scores")
   bad <- base; bad$completed[[2]]$Score[2] <- 0.5
-  expect_error(do.call(mfrm_response_imputations, bad), "categories")
+  expect_error(do.call(review_mfrm_imputations, bad), "categories")
   bad <- base; bad$completed[[2]]$Score[2] <- NA
-  expect_error(do.call(mfrm_response_imputations, bad), "must be completed")
+  expect_error(do.call(review_mfrm_imputations, bad), "must be completed")
   bad <- base; bad$completed[[1]]$Rater[2] <- "changed"
-  expect_error(do.call(mfrm_response_imputations, bad), "Identifiers")
+  expect_error(do.call(review_mfrm_imputations, bad), "Identifiers")
   bad <- base; bad$completed[[1]]$Assigned[4] <- TRUE
-  expect_error(do.call(mfrm_response_imputations, bad), "assignment")
+  expect_error(do.call(review_mfrm_imputations, bad), "assignment")
   bad <- base; bad$completed[[1]]$Event[2] <- "001"
-  expect_error(do.call(mfrm_response_imputations, bad), "all event IDs exactly once")
+  expect_error(do.call(review_mfrm_imputations, bad), "all event IDs exactly once")
   bad <- base; bad$categories <- c(0, 2)
-  expect_error(do.call(mfrm_response_imputations, bad), "contiguous")
+  expect_error(do.call(review_mfrm_imputations, bad), "contiguous")
   bad <- base; bad$imputation_model <- NULL
-  expect_error(do.call(mfrm_response_imputations, bad), "Retain the saved")
+  expect_error(do.call(review_mfrm_imputations, bad), "Retain the saved")
   bad <- base; bad$completed <- bad$completed[1]
-  expect_error(do.call(mfrm_response_imputations, bad), "at least two")
+  expect_error(do.call(review_mfrm_imputations, bad), "at least two")
   bad <- base; bad$data$Assigned[4] <- NA
-  expect_error(do.call(mfrm_response_imputations, bad), "complete and logical")
+  expect_error(do.call(review_mfrm_imputations, bad), "complete and logical")
   bad <- base; bad$data$Score[4] <- 1
-  expect_error(do.call(mfrm_response_imputations, bad), "Unassigned rows")
+  expect_error(do.call(review_mfrm_imputations, bad), "Unassigned rows")
 })
 
 test_that("mids input retains its model and enforces original data and where", {
@@ -78,15 +78,15 @@ test_that("mids input retains its model and enforces original data and where", {
   where <- is.na(a$data); where[,] <- FALSE; where[c(2, 7), "Score"] <- TRUE
   mids <- mice::as.mids(long, where = where)
   a$completed <- mids; a$imputation_model <- NULL
-  x <- do.call(mfrm_response_imputations, a)
+  x <- do.call(review_mfrm_imputations, a)
   expect_identical(x$imputation_model, mids)
   expect_equal(x$completed[[2]]$Score[c(2, 7)], c(2, 1))
   bad <- a; bad$completed$where[4, "Score"] <- TRUE
-  expect_error(do.call(mfrm_response_imputations, bad), "where.*exactly")
+  expect_error(do.call(review_mfrm_imputations, bad), "where.*exactly")
   bad <- a; bad$completed$data$Score[1] <- 1
-  expect_error(do.call(mfrm_response_imputations, bad), "Observed")
+  expect_error(do.call(review_mfrm_imputations, bad), "Observed")
   bad <- a; bad$completed$where[1, "Event"] <- TRUE
-  expect_error(do.call(mfrm_response_imputations, bad), "identifier")
+  expect_error(do.call(review_mfrm_imputations, bad), "identifier")
 })
 
 test_that("imputation review preserves numeric evidence without text rounding", {
@@ -94,24 +94,24 @@ test_that("imputation review preserves numeric evidence without text rounding", 
   a$data$Aux <- rep(1, nrow(a$data))
   a$completed <- lapply(a$completed, function(d) { d$Aux <- rep(1, nrow(d)); d })
   bad <- a; bad$completed[[1]]$Aux[1] <- 1 + 2e-15
-  expect_error(do.call(mfrm_response_imputations, bad), "observed predictor")
+  expect_error(do.call(review_mfrm_imputations, bad), "observed predictor")
   a$completed[[1]]$Aux <- as.integer(a$completed[[1]]$Aux)
-  expect_s3_class(do.call(mfrm_response_imputations, a), "mfrm_response_imputations")
+  expect_s3_class(do.call(review_mfrm_imputations, a), "mfrm_response_imputations")
   a$data$Aux[2] <- NA
   a$completed[[1]]$Aux[2] <- 2
-  expect_s3_class(do.call(mfrm_response_imputations, a), "mfrm_response_imputations")
+  expect_s3_class(do.call(review_mfrm_imputations, a), "mfrm_response_imputations")
   for (nm in c("Person", "Rater", "Task")) {
     bad <- response_fixture()
     levels <- unique(bad$data[[nm]])
     bad$data[[nm]] <- c(1, 1 + 2e-15)[match(bad$data[[nm]], levels)]
     bad$completed <- lapply(bad$completed, function(d) { d[[nm]] <- bad$data[[nm]]; d })
-    expect_error(do.call(mfrm_response_imputations, bad), "distinct text labels")
+    expect_error(do.call(review_mfrm_imputations, bad), "distinct text labels")
   }
   bad <- response_fixture()
   bad$data$Person <- rep(c(1, 2), each = 4)
   bad$completed <- lapply(bad$completed, function(d) { d$Person <- bad$data$Person; d })
   bad$completed[[1]]$Person[1] <- 1 + 2e-15
-  expect_error(do.call(mfrm_response_imputations, bad), "Identifiers")
+  expect_error(do.call(review_mfrm_imputations, bad), "Identifiers")
 })
 
 local({
@@ -124,7 +124,7 @@ local({
   a$Score[missing_rows] <- c(1, 2, 3, 4, 1, 2)
   b$Score[missing_rows] <- c(3, 4, 1, 2, 2, 3)
   d$Score[missing_rows] <- NA
-  x <- mfrm_response_imputations(d, list(a, b), "Person", c("Rater", "Criterion"),
+  x <- review_mfrm_imputations(d, list(a, b), "Person", c("Rater", "Criterion"),
     "Score", "Event", d$Event[missing_rows], 1:4,
     imputation_model = list(method = "integration fixture"))
   fitted <- fit_mfrm_imputed(x)
@@ -277,7 +277,8 @@ local({
     device <- grDevices::dev.cur()
     drawing <- plot(pooled, draw = FALSE)
     expect_identical(grDevices::dev.cur(), device)
-    expect_s3_class(drawing, "mfrm_plot_data")
+    expect_s3_class(drawing, "ggplot")
+    expect_s3_class(attr(drawing, "mfrmr_plot_data"), "mfrm_plot_data")
     expect_equal(plot_data(drawing)$table, pooled$table)
     expect_equal(plot_data(drawing)$contrasts, pooled$contrasts)
     expect_match(plot_data(drawing)$subtitle, "pointwise MI")

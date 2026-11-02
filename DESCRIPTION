@@ -1,10 +1,9 @@
 Package: mfrmr
 Type: Package
 Title: Estimation and Diagnostics for Many-Facet Measurement Models
-Version: 0.2.4
-Date: 2026-10-27
-Config/mfrmr/release-status: candidate
-Config/mfrmr/public-version: 0.2.3.1
+Version: 0.2.4.9000
+Config/mfrmr/release-status: development
+Config/mfrmr/public-version: 0.2.4
 Authors@R:
     person(given = "Ryuya", family = "Komuro", role = c("aut", "cre", "cph"),
            email = "ryuya.komuro.c4@tohoku.ac.jp",
@@ -21,7 +20,7 @@ Description: Estimates many-facet ordered-response
     Experimental two-family estimation and conditional scoring retain explicit
     uncertainty limitations. The fit, diagnose and report workflow covers
     anchoring, linking, bias and differential-functioning screening, with saved
-    results for replay. Observed-score generalizability and decision studies
+    results for replay. Observed-score G-Study and D-Study analyses
     support assessment planning under declared rating designs. Agreement,
     rater feedback and conditional classification summaries connect analysis
     to assessment decisions. See 'Andrich'
@@ -42,9 +41,12 @@ Depends:
 Imports:
     cli,
     dplyr,
+    ggplot2 (>= 3.4.0),
     Matrix,
     grDevices,
     graphics,
+    grid,
+    gtable,
     tidyr,
     tibble,
     purrr,
@@ -58,9 +60,13 @@ Imports:
     tools,
     utils
 LinkingTo:
-    cpp11
+    cpp11 (>= 0.5.4)
 Suggests:
     RTMB (>= 2.0),
+    brms,
+    cmdstanr,
+    jsonlite,
+    posterior,
     cluster,
     mice,
     nleqslv,
@@ -71,6 +77,7 @@ Suggests:
     covr,
     knitr,
     rmarkdown,
+    svglite,
     igraph,
     ergm (>= 4.0),
     network,
@@ -84,11 +91,12 @@ Suggests:
     future,
     future.apply,
     shiny,
-    ggplot2 (>= 3.4.0),
     mirt,
     TAM,
     eRm,
     lpSolve
+Additional_repositories: https://stan-dev.r-universe.dev
+SystemRequirements: CmdStan (optional, for running exported Stan models)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/Needs/website: pkgdown, plotly, htmlwidgets

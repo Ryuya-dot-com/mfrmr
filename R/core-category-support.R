@@ -32,10 +32,6 @@ mfrm_category_settings <- function(prep, config = list()) {
 # route additionally marks fixed transitions so missing-category evidence is
 # charged only to optimizer coordinates that remain free.
 
-mfrmr_category_contract_version <- function() {
-  mfrmr_readiness_contract_version()
-}
-
 mfrmr_category_values_text <- function(x) {
   x <- as.character(x)
   if (length(x) == 0L) "" else paste(x, collapse = ";")
@@ -535,7 +531,7 @@ audit_mfrm_category_support <- function(prep, config, sizes) {
   ]
 
   readiness <- data.frame(
-    ReadinessContractVersion = mfrmr_category_contract_version(),
+    ReadinessContractVersion = mfrmr_readiness_contract_version(),
     ReadinessScope = "fit",
     CategoryState = state,
     ReasonCodes = paste(audit_reasons, collapse = ";"),
@@ -553,7 +549,7 @@ audit_mfrm_category_support <- function(prep, config, sizes) {
   )
 
   list(
-    contract_version = mfrmr_category_contract_version(),
+    contract_version = mfrmr_readiness_contract_version(),
     model = as.character(config$model),
     method = as.character(config$method),
     scale_scope = "single_observed_scale",

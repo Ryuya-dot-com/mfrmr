@@ -24,6 +24,8 @@ vignette_artifact <- function(name) {
   )
 }
 knitr::opts_chunk$set(
+  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
+  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
@@ -42,11 +44,11 @@ connected workflows, not a checklist requiring every analysis.
 | Define what was rated and whether the design links the groups | `describe_mfrm_data()` → model/design review → `subset_connectivity_report()` or `build_mfrm_network_review()` after fitting | Rubric endpoints, rating unit, assigned/missing rows, shared observations and identification checks. A connected graph alone does not establish a common scale. |
 | Estimate person measures and named rater/criterion effects | `fit_mfrm()` → `summary()` → `diagnose_mfrm()` and eligible intervals → `mfrm_results()` → `mfrm_report()` | Model, scale, estimates, uncertainty, Separation/Strata/Reliability, fit and the figures that answer the question. |
 | Decide how many raters or tasks a score needs | `mfrm_g_study()` → `mfrm_d_study()` → `plot()` / `summary()` → eligible plan comparisons | [G/D-study](mfrmr-gtheory.html) components, score weights, G/Phi/SEM, future counts and uncertainty. No MFRM fit is required. |
-| Describe observed agreement | Match the rating unit → `pairwise_kappa_table()`, `krippendorff_alpha_table()` or `pairwise_icc_table()` | [Agreement](mfrmr-rating-agreement.html) target, category distances/ICC definition, overlap and exclusions. Choose the coefficient from the question. |
-| Reuse a scale across forms or waves | Anchor review → anchored fit / linking review → drift and eligible uncertainty | [Anchor provenance and scale](mfrmr-linking-and-dff.html), invariance assumption, fixed versus propagated uncertainty. A common label is not a common calibration. |
-| Investigate an unexpected rater/criterion combination or group contrast | Diagnostics → specified `estimate_bias()` or `analyze_dff()` → signed tables and `plot()` → reporting | [Bias/DFF](mfrmr-linking-and-dff.html) target, cell counts, direction, multiplicity and conditional uncertainty; a screen does not establish unfairness. |
+| Describe observed agreement | Match the rating unit → `pairwise_kappa_table()`, `krippendorff_alpha_table()` or `pairwise_icc_table()` | [Agreement](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html) target, category distances/ICC definition, overlap and exclusions. Choose the coefficient from the question. |
+| Reuse a scale across forms or waves | Anchor review → anchored fit / linking review → drift and eligible uncertainty | [Anchor provenance and scale](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html), invariance assumption, fixed versus propagated uncertainty. A common label is not a common calibration. |
+| Investigate an unexpected rater/criterion combination or group contrast | Diagnostics → specified `estimate_bias()` or `analyze_dff()` → signed tables and `plot()` → reporting | [Bias/DFF](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html) target, cell counts, direction, multiplicity and conditional uncertainty; a screen does not establish unfairness. |
 | Decide whether another model changes the answer | Matched fits → `compare_mfrm()` → `build_model_choice_review()` → `build_summary_table_bundle()` | [Model comparison](mfrmr-model-choice.html), comparable likelihoods, eligible tests and changes in substantive conclusions. |
-| Investigate structure left unexplained or describe groups | Residual diagnostics / `analyze_residual_pca()` / `q3_statistic()` → `mfrm_residual_network()` → `mfrm_report()`; separately, declared entity features → clustering | [Residual exploration](mfrmr-visual-diagnostics.html#residual-networks-ega-and-the-assignment-graph-answer-different-questions) and [feature groups](mfrmr-external-features.html) have different inputs. Retain overlap, feature construction and exploratory status. |
+| Investigate structure left unexplained or describe groups | Residual diagnostics / `analyze_residual_pca()` / `q3_statistic()` → `mfrm_residual_network()` → `mfrm_report()`; separately, declared entity features → clustering | [Residual exploration](mfrmr-visual-diagnostics.html#residual-networks-ega-and-the-assignment-graph-answer-different-questions) and [feature groups](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html) have different inputs. Retain overlap, feature construction and exploratory status. |
 | Give feedback, score new responses or save evidence | Eligible rater report / `score_mfrm_persons()` or portable calibration → plots, export and RDS | Recipient-specific evidence and limitations, scoring prior/calibration version and the source of uncertainty. See the [reporting map](mfrmr-reporting-and-apa.html#choose-report-sections-by-question). |
 
 Before any branch, record the **meaning of low and high scores**. A column
@@ -104,13 +106,13 @@ for that workflow. To
 choose between fixed facets, shared random raters and Person-specific
 testlets, use `mfrmr_output_guide("models")` or
 `help("mfrmr_workflow_methods")`. The extended models have dedicated tutorials:
-`vignette("mfrmr-random-raters", package = "mfrmr")` and
-`vignette("mfrmr-testlets", package = "mfrmr")`. Their prediction targets and
+[Shared random raters: feedback and replacement raters](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html) and
+[Dependent ratings within a person: testlet models](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlets.html). Their prediction targets and
 reporting support differ. The diagnostics and reports below follow ordinary
 RSM/PCM fits. Two-family GPCM and corrected JML also have class `mfrm_fit`,
 but require their model-specific result routes; sharing that class does not
-make these ordinary diagnostics available. See `gpcm_capability_matrix()` and
-`vignette("mfrmr-gpcm-scope", package = "mfrmr")` before changing model family.
+make these ordinary diagnostics available. See `mfrmr_output_guide("gpcm_capabilities")` and
+[GPCM scope and current limitations](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html) before changing model family.
 
 This example estimates person abilities while accounting for rater severity
 and criterion difficulty. A *facet* is a source of variation in scores; here,
@@ -167,7 +169,7 @@ the full summary.
 The Wright map displays the estimates in logits, the model's measurement units,
 rather than the original 1-to-4 scores. With this example's default orientation,
 higher person estimates mean higher ability; higher rater estimates mean
-stricter ratings, and higher criterion estimates mean greater difficulty.
+more severe ratings, and higher criterion estimates mean greater difficulty.
 
 The native models use the **logistic metric (L-metric), with D = 1**: there
 is no extra 1.7 or 1.702 normal-ogive approximation factor. In this RSM example,
@@ -383,10 +385,10 @@ subset(csv_estimates, Facet == "Criterion")
 
 `Level` identifies the person, rater, or criterion; `Estimate` is the fitted
 value in logits. With these defaults, higher person values mean higher
-ability, higher rater values mean stricter ratings, and higher criterion values
+ability, higher rater values mean more severe ratings, and higher criterion values
 mean greater difficulty. The rater and criterion estimates are centered at
 zero within each facet. In the practice file, R06 is about +0.41 and R01 about
--0.61: R06 is estimated to rate more strictly after accounting for person
+-0.61: R06 is estimated to rate more severely after accounting for person
 ability and criterion difficulty. This difference alone does not establish
 statistical significance.
 
@@ -652,14 +654,14 @@ Follow a pairwise warning with `plot()`. Add residual PCA
 only when residual structure is relevant to the question, using
 `diagnose_mfrm(fit_toy, residual_pca = "both")`. Report the mode and limits of
 the screen; residual PCA alone does not establish unidimensionality. See
-`vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")` and
+[MML estimation and marginal-fit diagnostics](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-mml-and-marginal-fit.html) and
 `vignette("mfrmr-visual-diagnostics", package = "mfrmr")` for these follow-ups.
 
 **What should I discuss with a rater?** Start from the coverage and category
 checks above, then view severity and its uncertainty alongside the screening
 results. Reuse the same fit and diagnostics:
 
-```{r rater-feedback, fig.alt = "Rater severity estimates with 95% normal intervals on the fitted logit scale. Positive estimates indicate stricter ratings relative to the fitted reference."}
+```{r rater-feedback, fig.alt = "Rater severity estimates with 95% normal intervals on the fitted logit scale. Positive estimates indicate more severe ratings relative to the fitted reference."}
 plot(fit_toy, type = "rater_severity", diagnostics = diag_toy, facet = "Rater", show_bands = FALSE)
 rater_review <- facet_quality_dashboard(
   fit_toy, diagnostics = diag_toy, facet = "Rater"
@@ -676,7 +678,7 @@ rater_review$settings
 writeLines(strwrap(rater_review$notes, width = 72))
 ```
 
-A stricter rater is not necessarily inconsistent or incorrect. Individual
+A more severe rater is not necessarily inconsistent or incorrect. Individual
 interval overlap is not a test of the difference between two raters. Read
 `MissingMetrics` before interpreting flags: zero observed flags is not a
 complete pass when diagnostics are unavailable. A `REVIEW ONLY` label retains
@@ -739,7 +741,7 @@ rater_table_toy <- subset(
 )
 apa_table(rater_table_toy, digits = 3,
           caption = "Rater severity and fit",
-          note = "N counts rating rows. Rater effects are centered within facet and measured in logits; higher values indicate stricter ratings. Intervals are 95% normal approximations from MML observed-information SEs. Infit and Outfit have reference value 1.")
+          note = "N counts rating rows. Rater effects are centered within facet and measured in logits; higher values indicate more severe ratings. Intervals are 95% normal approximations from MML observed-information SEs. Infit and Outfit have reference value 1.")
 ```
 
 Report the score scale and direction with the table. For person results,
@@ -795,16 +797,19 @@ vignette_artifact("workflow_export_files.csv")
 ### Further analyses should answer a stated question
 
 For observed rating agreement, start with the
-[rating-agreement tutorial](mfrmr-rating-agreement.html). Its small runnable
+[rating-agreement tutorial](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html). Its small runnable
 example shows how to match person-by-task records, distinguish correlation
 from agreement, compare a score source with a reference, and audit missing
 pairs without fitting another model. It also explains why these coefficients
 answer a different question from rater severity or separation reliability.
 
 For prior sensitivity or an external Bayesian extension, use
-`export_mfrm_model()` with a unit-weight RSM/PCM or one-family GPCM MML fit
-on the fixed N(0,1) ability scale. Both Stan and brms retain supported fixed
-facet anchors and group means. This example reuses the RSM fit above:
+`export_mfrm_model()` either with a unit-weight RSM/PCM or one-family GPCM MML
+fit, or directly with rating `data` and a model `spec` list when native MML
+optimization is not needed first (add `write_json = TRUE` on Stan bundles to
+write CmdStanR-compatible `model-data.json` alongside `model-data.rds`). Both
+Stan and brms retain supported fixed facet anchors and group means. This
+example reuses the RSM fit above:
 
 ```{r model-export-example}
 # Reuse the fit above; no additional estimation or backend is needed to export.
@@ -838,7 +843,7 @@ unordered step offsets with their original sum constraints. Their explicit struc
 a Bayesian analysis; it does not reproduce MML point estimates or qualify
 frequentist interval coverage. Two-family GMFRM also supports Stan export,
 with explicit component log-slope priors and a `slope-levels.csv` mapping; see
-the [two-family workflow](mfrmr-gpcm-scope.html). One-family GPCM uses
+the [two-family workflow](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html). One-family GPCM uses
 `log_slope_prior_sd` in both formats, with geometric-mean-one slopes. For brms,
 the source must use `gpcm_mml_identification = "fixed_standard_normal"`.
 The default one-family GPCM estimates the population mean and variance.
@@ -896,7 +901,7 @@ the backend's joint draws; they cannot be recovered from this summary.
 | Which facet combinations merit closer review? | `estimate_all_bias(fit)` explores all non-Person pairs. `summary(screens)$overview` shows availability and magnitude; `$cells` preserves signed shifts and counts. Use `plot(screens)` and `plot(screens, pair = "Rater x Criterion")` for overview and detail. These conditional screens have no collection-wide multiplicity control. |
 | Do prespecified rater-by-criterion or group contrasts depart from the model? | `estimate_bias()` supplies conditional screening evidence; `analyze_dff()` has its own scope. For jointly fitted interactions, see `fit_mfrm(facet_interactions = ...)` and `interaction_effect_table()`. Specify the target, supported inference route and multiplicity plan before inspecting results. See the reporting vignette and `mfrmr-linking-and-dff`. |
 | How often does a declared rater-warning rule detect a specified departure or falsely flag an unaffected rater? | `mfrm_screening_performance()` with known simulation truth and all planned trials. See `mfrmr-screening-performance` for individual/family rates, unavailable results and Monte Carlo uncertainty. |
-| Would the conclusions change under a GPCM? | `gpcm_capability_matrix()` and `mfrmr-gpcm-scope`; explain what discrimination reweighting means for the score interpretation. |
+| Would the conclusions change under a GPCM? | `mfrmr_output_guide("gpcm_capabilities")` and `mfrmr-gpcm-scope`; explain what discrimination reweighting means for the score interpretation. |
 | Are scores missing from assigned rating events? | Start with the assignment roster, then `review_mfrm_imputations()`, `fit_mfrm_imputed()` and `pool_mfrm_imputed()`. See `mfrmr-response-imputation` for an explicit imputation model; the review function does not generate scores. Do not fill unassigned combinations. |
 | Do external attributes describe different groups of persons, raters or tasks? | `mfrm_features()` with PCA/k-means for numeric features, or PAM/hierarchical clustering for mixed features. See `mfrmr-external-features` for missing attributes, group stability and links back to rating events. Groups are not ability classes or judgments of rater quality. |
 | Would more raters or tasks improve observed-score dependability? | `mfrm_g_study()` followed by `mfrm_d_study()`; declare the observed-score design, candidate plans and any composite weights. Their help explains G/Phi and SEM. These coefficients describe observed scores, not MFRM latent abilities. |

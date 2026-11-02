@@ -28,41 +28,7 @@
       preset = style$name
     )
   )
-  if (!draw) return(invisible(out))
-
-  opar <- graphics::par()["mar"]
-  on.exit(graphics::par(opar), add = TRUE)
-
-  dt <- dt |> dplyr::arrange(dplyr::desc(abs(.data$Drift)))
-  if (!any(is.finite(dt$Drift))) {
-    plot.new()
-    text(.5, .5, "No finite drift estimates")
-    return(invisible(out))
-  }
-  labels <- paste0(dt$Facet, ":", dt$Level, " @ ", dt$Wave)
-  n <- nrow(dt)
-
-  max_abs <- max(abs(dt$Drift), na.rm = TRUE) * 1.2
-  if (max_abs == 0) max_abs <- 1
-
-  label_width <- max(graphics::strwidth(labels, units = "inches", cex = .7))
-  if (label_width + 1.5 >= graphics::par("fin")[1]) {
-    stop("Anchor labels need more horizontal space; use a wider graphics device or inspect the table with `draw = FALSE`.",
-      call. = FALSE)
-  }
-  margin <- label_width / (graphics::par("csi") * graphics::par("mex")) + 1.2
-  graphics::par(mar = c(4, max(8, margin), 3, 1))
-  plot(dt$Drift, seq_len(n), xlim = c(-max_abs, max_abs),
-                 yaxt = "n", xlab = "Drift (logits)", ylab = "",
-                 main = "", pch = 19,
-                 col = ifelse(dt$Flag %in% TRUE, style$warn, style$accent_primary), ...)
-  axis(2, at = seq_len(n), labels = labels, las = 1, cex.axis = 0.7)
-  abline(v = pretty(c(-max_abs, max_abs), n = 5), col = grDevices::adjustcolor(style$grid, alpha.f = 0.85), lty = 1)
-  abline(v = 0, lty = 2, col = grDevices::adjustcolor(style$foreground, alpha.f = 0.7))
-  abline(v = c(-config$drift_threshold, config$drift_threshold),
-                   lty = 3, col = grDevices::adjustcolor(style$warn, alpha.f = 0.9))
-
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 .plot_drift_heatmap <- function(dt, config, draw = TRUE, style = resolve_plot_preset("standard"), ...) {
@@ -79,7 +45,7 @@
 
   if (is.null(mat) || nrow(mat) == 0) {
     if (draw) message("Insufficient data for heatmap.")
-    return(invisible(NULL))
+    mat <- matrix(numeric(0), nrow = 0L, ncol = 0L)
   }
 
   out <- new_mfrm_plot_data(
@@ -101,32 +67,7 @@
     )
   )
 
-  if (!draw) return(invisible(out))
-
-  if (!any(is.finite(mat))) {
-    plot.new()
-    text(.5, .5, "No finite drift estimates")
-    return(invisible(out))
-  }
-  max_abs <- max(abs(mat), na.rm = TRUE)
-  if (max_abs == 0) max_abs <- 1
-  n_colors <- 21
-  breaks <- seq(-max_abs, max_abs, length.out = n_colors + 1)
-  blues <- grDevices::colorRampPalette(c(style$accent_primary, "white", style$warn))(n_colors)
-
-  opar <- graphics::par()["mar"]
-  on.exit(graphics::par(opar), add = TRUE)
-  graphics::par(mar = c(5, 8, 3, 2))
-
-  image(t(mat[nrow(mat):1, , drop = FALSE]),
-                  axes = FALSE, col = blues, breaks = breaks,
-                  main = "", ...)
-  axis(1, at = seq(0, 1, length.out = ncol(mat)),
-                 labels = colnames(mat), las = 2, cex.axis = 0.8)
-  axis(2, at = seq(0, 1, length.out = nrow(mat)),
-                 labels = rev(rownames(mat)), las = 1, cex.axis = 0.7)
-
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 .equating_graph_data <- function(x) {
@@ -241,11 +182,7 @@
   nodes$RetainedDegree <- tabulate(match(c(edges$from[retained], edges$to[retained]), nodes$NodeId), nrow(nodes))
   links$from <- sprintf("wave_%d", links$FromID)
   links$to <- sprintf("wave_%d", links$ToID)
-  notes <- data.frame(Type = c("definition", "interpretation", "screening"), Text = c(
-    "Edges show common elements in the recorded comparisons, not an all-pairs assessment or an inventory of fixed anchors. Element nodes are repeated per link; AnchorId identifies the same facet/level across links.",
-    "Connectedness and retention do not establish anchor invariance, model identification, scale comparability, or precision. Review drift, link support and source-fit readiness separately.",
-    "Retained is the screening set, not a guarantee of positive weight in the offset. Flag is a separate residual-drift check; counts and edge widths do not represent precision."
-  ), stringsAsFactors = FALSE)
+  notes <- .mfrmr_table_.equating_graph_data_notes
   isolated <- wave_nodes$Label[nodes$RetainedDegree[seq_along(waves)] == 0L]
   if (length(isolated)) notes <- rbind(notes, data.frame(Type = "warning", Text = paste0(
     "No retained common-element connection for: ", paste(isolated, collapse = ", "), ".")))
@@ -444,215 +381,11 @@
     baseline_cumulative = baseline$cumulative, baseline_elements = baseline$elements,
     links = dplyr::bind_rows(link_rows), cumulative = dplyr::bind_rows(cumulative_rows),
     retention_changes = dplyr::bind_rows(changed_rows), common_by_facet = dplyr::bind_rows(support_rows)),
-    notes = data.frame(Type = c("definition", "interpretation", "screening", "uncertainty"), Text = c(
-      "Each scenario removes one common facet/level identity from all adjacent links, then recomputes preliminary offsets, screening, final offsets and cumulative offsets using the recorded threshold and fixed source estimates/SEs.",
-      "Changes are conditional linking-offset changes, not refitted item, rater or person measures. Missing link offsets propagate to later cumulative offsets. The first wave is a fixed zero reference and is excluded from maximum cumulative changes.",
-      "Screening can re-admit other elements. If it would exclude every finite difference, the existing method falls back to all finite differences; ScreeningFallback reports this. Retained elements with unusable SEs may not contribute when inverse-variance weighting is active. Support includes facets whose last element was removed.",
-      "No source model is refitted and no new SE, covariance or confidence interval is estimated. Finite offsets, small changes and retained connections do not establish anchor invariance, adequate support, comparable scales or inferential readiness."
-    ), stringsAsFactors = FALSE))
+    notes = .mfrmr_table_.equating_offset_sensitivity_data)
 }
 
-.draw_equating_offset_sensitivity <- function(out, style) {
-  rows <- out$data$data$removal
-  apply_plot_preset(style)
-  old <- graphics::par(c("mar", "xpd"))
-  on.exit(graphics::par(old), add = TRUE)
-  graphics::par(mar = c(if (out$data$display$show_notes) 8 else 6.8, 8,
-    if (out$data$display$show_title) 3 else 1, 1))
-  title <- .mfrm_plot_display_title(out$data)
-  if (!nrow(rows)) {
-    plot.new()
-    title(main = title)
-    text(0.5, 0.5, "No common elements to remove.", cex = 0.85)
-    return(invisible(out))
-  }
-  # Keep input order for ties at the precision printed next to the points.
-  rows <- rows[order(signif(rows$MaxAbsCumulativeChange, 3), decreasing = TRUE, na.last = TRUE), , drop = FALSE]
-  value <- rows$MaxAbsCumulativeChange
-  available <- is.finite(value)
-  position <- ifelse(available, value, 0)
-  y <- rev(seq_len(nrow(rows)))
-  key <- out$data$styles
-  k <- ifelse(!available, 3L, ifelse(rows$CompleteComparison, 1L, 2L))
-  plot(position, y, type = "n", xlim = c(0, max(0.1, position) * 1.4),
-    ylim = c(0.5, nrow(rows) + 0.5), yaxt = "n", ylab = "", xaxs = "i",
-    xaxt = if (any(available)) "s" else "n",
-    xlab = if (any(available)) "Max. absolute cumulative offset change (logits)" else
-      "No finite cumulative offset comparison", main = title, cex.lab = 0.8)
-  labels <- sprintf("%s: %s", rows$Facet, rows$Level)
-  duplicate <- duplicated(labels) | duplicated(labels, fromLast = TRUE)
-  labels[duplicate] <- paste0(labels[duplicate], " [", rows$AnchorId[duplicate], "]")
-  labels <- truncate_axis_label(labels, width = 22L)
-  wide <- graphics::strwidth(labels, cex = 0.7, units = "inches") > graphics::par("mai")[2] - 0.25
-  if (any(wide)) {
-    labels[wide] <- rows$AnchorId[wide]
-    warning("Some sensitivity labels exceed the left margin; anchor IDs are shown. Full identities remain in the removal table.", call. = FALSE)
-  }
-  axis(2, at = y, labels = labels, las = 1, cex.axis = 0.7, tick = FALSE)
-  if (any(available)) segments(0, y[available], value[available], y[available], col = style$neutral)
-  points(position, y, pch = key$Shape[k], col = key$Color[k], cex = 1.1, xpd = NA)
-  text(position, y, ifelse(available, format(signif(value, 3), trim = TRUE), "unavailable"),
-    pos = 4, offset = 0.4, cex = 0.7)
-  if (graphics::strheight("M", cex = 0.7) * 1.4 > 1) warning(
-    "Sensitivity labels are crowded; increase the device height or use the returned removal table.", call. = FALSE)
-  graphics::par(xpd = NA)
-  usr <- graphics::par("usr")
-  lh <- graphics::par("csi") * graphics::par("mex") * diff(usr[3:4]) / graphics::par("pin")[2]
-  legend(mean(usr[1:2]), usr[3] - 3.9 * lh, xjust = 0.5, yjust = 1,
-    legend = key$Label, pch = key$Shape, col = key$Color, bty = "n", cex = 0.7)
-  if (out$data$display$show_notes) mtext(
-    "Offsets recomputed; source fits and SEs fixed. No new uncertainty estimates.", side = 1, line = 6.7, cex = 0.6)
-  invisible(out)
-}
 
-.draw_equating_topology <- function(out, style, removal = FALSE) {
-  data <- out$data$data
-  apply_plot_preset(style)
-  old <- graphics::par(c("mar", "xpd"))
-  on.exit(graphics::par(old), add = TRUE)
-  title <- .mfrm_plot_display_title(out$data)
-  bottom <- if (removal) {
-    if (out$data$display$show_notes) 8 else 6.8
-  } else if (out$data$display$show_notes) 6 else 4.5
-  top <- if (out$data$display$show_title) 3 else 1
-  key <- out$data$styles
-  if (!removal) {
-    graphics::par(mar = c(bottom, 1, top, 1))
-    nodes <- data$nodes
-    angle <- seq(0, 2 * pi, length.out = nrow(nodes) + 1L)[-1L] + pi / 2
-    xy <- cbind(cos(angle), sin(angle))
-    plot(xy, type = "n", xlim = c(-1.65, 1.65), ylim = c(-1.5, 1.5),
-      axes = FALSE, xlab = "", ylab = "", main = title)
-    edges <- data$links
-    a <- match(edges$from, nodes$NodeId)
-    b <- match(edges$to, nodes$NodeId)
-    k <- match(edges$Status, key$Status)
-    segments(xy[a, 1], xy[a, 2], xy[b, 1], xy[b, 2],
-      lty = key$Linetype[k], col = key$Color[k], lwd = 1.7)
-    # Counts are annotations of recorded links, not edge weights for distance.
-    if (nrow(edges)) text((xy[a, 1] + xy[b, 1]) / 2, (xy[a, 2] + xy[b, 2]) / 2,
-      labels = edges$RetainedElements, pos = 3, offset = 0.3, cex = 0.8)
-    points(xy, pch = 22, bg = style$background, cex = 1.8)
-    labels <- nodes$Label
-    duplicate <- duplicated(labels) | duplicated(labels, fromLast = TRUE)
-    labels[duplicate] <- paste0(labels[duplicate], " [W", nodes$WaveID[duplicate], "]")
-    labels <- truncate_axis_label(labels, width = 18L)
-    usr <- graphics::par("usr")
-    too_wide <- graphics::strwidth(labels, cex = 0.75) >
-      1.9 * pmin(xy[, 1] - usr[1], usr[2] - xy[, 1])
-    if (any(too_wide)) {
-      labels[too_wide] <- paste0("Wave ", nodes$WaveID[too_wide])
-      warning("Some wave labels exceed the panel width; wave IDs are shown. Full labels remain in the node table.", call. = FALSE)
-    }
-    if (nrow(nodes) > 8L) warning("Wave-link labels may be crowded; enlarge the device or use the returned link table.", call. = FALSE)
-    text(xy[, 1], xy[, 2], labels, pos = ifelse(xy[, 2] >= 0, 3, 1),
-      offset = 0.8, cex = 0.75)
-    graphics::par(xpd = NA)
-    legend("bottom", inset = c(0, -0.32), legend = key$Label,
-      lty = key$Linetype, col = key$Color, lwd = 1.7, bty = "n", cex = 0.7)
-    footer <- "Numbers: retained elements. Connections do not establish invariance."
-  } else {
-    graphics::par(mar = c(bottom, 8, top, 1))
-    rows <- data$removal
-    rows <- rows[order(rows$NewlyDisconnectedPairs, decreasing = TRUE), , drop = FALSE]
-    if (!nrow(rows)) {
-      plot.new()
-      title(main = title)
-      text(0.5, 0.5, "No common elements to remove.", cex = 0.85)
-    } else {
-      value <- rows$NewlyDisconnectedPairs
-      y <- rev(seq_len(nrow(rows)))
-      k <- ifelse(value > 0, 1L, ifelse(rows$RetainedOccurrences > 0, 2L, 3L))
-      plot(value, y, type = "n", xlim = c(0, max(1, value) * 1.15),
-        ylim = c(0.5, nrow(rows) + 0.5), yaxt = "n", xaxt = "n", ylab = "",
-        xlab = "Newly disconnected wave pairs", main = title, xaxs = "i")
-      ticks <- pretty(c(0, max(1, value)), n = 4)
-      ticks <- ticks[ticks >= 0 & ticks == floor(ticks) & ticks <= max(1, value)]
-      axis(1, at = ticks, labels = ticks)
-      labels <- sprintf("%s: %s", rows$Facet, rows$Level)
-      duplicate <- duplicated(labels) | duplicated(labels, fromLast = TRUE)
-      labels[duplicate] <- paste0(labels[duplicate], " [", rows$AnchorId[duplicate], "]")
-      labels <- truncate_axis_label(labels, width = 22L)
-      too_wide <- graphics::strwidth(labels, cex = 0.7, units = "inches") > graphics::par("mai")[2] - 0.25
-      if (any(too_wide)) {
-        labels[too_wide] <- rows$AnchorId[too_wide]
-        warning("Some removal labels exceed the left margin; anchor IDs are shown. Full labels remain in the removal table.", call. = FALSE)
-      }
-      axis(2, at = y, labels = labels, las = 1, cex.axis = 0.7, tick = FALSE)
-      segments(0, y, value, y, col = style$neutral)
-      points(value, y, pch = key$Shape[k], col = key$Color[k], cex = 1.1, xpd = NA)
-      text(value, y, value, pos = 4, offset = 0.4, cex = 0.7)
-      if (graphics::strheight("M", cex = 0.7) * 1.4 > 1) warning(
-        "Removal labels are crowded; increase the device height or use the returned removal table.", call. = FALSE)
-      graphics::par(xpd = NA)
-      usr <- graphics::par("usr")
-      line_height <- graphics::par("csi") * graphics::par("mex") * diff(usr[3:4]) / graphics::par("pin")[2]
-      legend(mean(usr[1:2]), usr[3] - 3.9 * line_height,
-        xjust = 0.5, yjust = 1, legend = key$Label,
-        pch = key$Shape, col = key$Color, bty = "n", cex = 0.7)
-    }
-    footer <- "Topology only; screening fixed. Estimates and SEs are not recomputed."
-  }
-  if (out$data$display$show_notes) mtext(footer, side = 1,
-    line = if (removal) 6.7 else 4.8, cex = 0.6)
-  invisible(out)
-}
 
-.draw_equating_graph <- function(out, style) {
-  data <- out$data$data
-  nodes <- data$nodes
-  edges <- data$edges
-  nw <- data$n_waves
-  ne <- data$n_element_nodes
-  # ponytail: fixed two-column layout; add link panels if dense chains need them.
-  y <- function(n) if (n == 1L) 0.5 else seq(0.95, 0.05, length.out = n)
-  nodes$X <- c(rep(0.30, nw), rep(0.62, ne))
-  nodes$Y <- c(y(nw), y(ne))
-  key <- out$data$styles
-  edge_style <- match(edges$Status, key$Status)
-  apply_plot_preset(style)
-  old <- graphics::par(c("mar", "xpd"))
-  on.exit(graphics::par(old), add = TRUE)
-  graphics::par(mar = c(if (out$data$display$show_notes) 6 else 4.5, 0.5,
-                        if (out$data$display$show_title) 3 else 1, 0.5))
-  plot.new()
-  graphics::plot.window(xlim = c(0, 1), ylim = c(0, 1), xaxs = "i", yaxs = "i")
-  cex <- 0.72
-  labels <- nodes$Label
-  duplicate <- duplicated(labels) | duplicated(labels, fromLast = TRUE)
-  labels[duplicate] <- paste0(labels[duplicate], " [", nodes$NodeId[duplicate], "]")
-  labels <- truncate_axis_label(labels, width = 30L)
-  available <- ifelse(nodes$Kind == "wave", 0.27, 0.35)
-  too_wide <- graphics::strwidth(labels, cex = cex) > available
-  if (any(too_wide)) {
-    # Keep stable IDs on shortened labels; full text remains in the payload.
-    labels[too_wide] <- ifelse(nodes$Kind[too_wide] == "wave",
-      paste0("Wave ", nodes$WaveID[too_wide]), nodes$NodeId[too_wide])
-    warning("Some graph labels exceed the panel width; node IDs are shown. Widen the device or use the returned node table for full labels.", call. = FALSE)
-  }
-  if (max(nw, ne) > 1L && 0.9 / (max(nw, ne) - 1L) < 1.4 * graphics::strheight("M", cex = cex)) {
-    warning("Graph labels are crowded; increase the device height or use the returned node/edge tables.", call. = FALSE)
-  }
-  a <- match(edges$from, nodes$NodeId)
-  b <- match(edges$to, nodes$NodeId)
-  segments(nodes$X[a], nodes$Y[a], nodes$X[b], nodes$Y[b],
-    col = key$Color[edge_style], lty = key$Linetype[edge_style], lwd = 1.5)
-  points(nodes$X, nodes$Y, pch = ifelse(nodes$Kind == "wave", 22, 21),
-    bg = style$background, col = style$foreground, cex = 1.4)
-  text(nodes$X, nodes$Y, labels, pos = ifelse(nodes$Kind == "wave", 2, 4),
-    cex = cex, col = style$foreground, offset = 0.7)
-  title(main = .mfrm_plot_display_title(out$data))
-  graphics::par(xpd = NA)
-  legend(0.5, -0.035, xjust = 0.5, yjust = 1, bty = "n", ncol = 2,
-    legend = c("Wave / form", "Element in link", key$Label),
-    pch = c(22, 21, rep(NA, nrow(key))), pt.bg = style$background,
-    lty = c(NA, NA, key$Linetype), col = c(rep(style$foreground, 2), key$Color),
-    lwd = 1.5, cex = 0.7)
-  if (out$data$display$show_notes) mtext(
-    "Recorded comparisons only. Retention does not establish invariance.",
-    side = 1, line = 4.5, cex = 0.63)
-  invisible(out)
-}
 
 .plot_equating_chain <- function(x, draw = TRUE, style = resolve_plot_preset("standard"),
                                  show_title = FALSE, show_notes = FALSE, ...) {
@@ -677,37 +410,14 @@
     )
   )
   out$data$notes <- .mfrm_plot_notes(out$data)
-  if (!draw) return(invisible(out))
-
-  opar <- graphics::par()["mar"]
-  on.exit(graphics::par(opar), add = TRUE)
-  graphics::par(mar = c(5, 4, 3, 1))
-
-  n <- nrow(cum)
-  plot(seq_len(n), cum$Cumulative_Offset, type = "b",
-                 pch = 19, col = style$accent_primary, lwd = 2,
-                 xaxt = "n", xlab = "", ylab = "Cumulative Offset (logits)",
-                 main = .mfrm_plot_display_title(out$data), ...)
-  axis(1, at = seq_len(n), labels = cum$Wave, las = 2, cex.axis = 0.8)
-  abline(h = pretty(cum$Cumulative_Offset, n = 5), col = grDevices::adjustcolor(style$grid, alpha.f = 0.85), lty = 1)
-  abline(h = 0, lty = 2, col = grDevices::adjustcolor(style$foreground, alpha.f = 0.7))
-
-  links <- x$links
-  for (i in seq_len(nrow(links))) {
-    mid_x <- i + 0.5
-    mid_y <- (cum$Cumulative_Offset[i] + cum$Cumulative_Offset[i + 1]) / 2
-    text(mid_x, mid_y, sprintf("n=%d", links$N_Common[i]),
-                   cex = 0.7, col = grDevices::adjustcolor(style$foreground, alpha.f = 0.82))
-  }
-
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 # --- Exported plot function --------------------------------------------------
 
 #' Plot anchor drift or a screened linking chain
 #'
-#' Creates base-R plots for inspecting anchor drift across calibration waves
+#' Creates ggplot2 figures for inspecting anchor drift across calibration waves
 #' or visualising the cumulative offset in a screened linking chain.
 #'
 #' @param x An `mfrm_anchor_drift` or `mfrm_equating_chain` object.
@@ -722,9 +432,8 @@
 #'   anchor-estimate whiskers (default `0.95`). Ignored for other
 #'   plot types.
 #' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
-#' @param draw If `FALSE`, return the plot data invisibly without drawing.
-#' @param ... Additional graphical parameters passed to base plotting
-#'   functions.
+#' @param draw If `FALSE`, return the `ggplot` object invisibly without printing.
+#' @param ... Reserved for compatibility; use the named plot controls.
 #'
 #' @details
 #' Four plot types are supported:
@@ -779,7 +488,7 @@
 #'    [build_equating_chain()].
 #' 2. Start with `draw = FALSE` if you want the plotting data for custom
 #'    reporting.
-#' 3. Use the base-R plot for quick screening and then inspect the underlying
+#' 3. Use the plot for quick screening and then inspect the underlying
 #'    tables for exact values.
 #'
 #' @section Further guidance:
@@ -787,9 +496,10 @@
 #' [mfrmr_visual_diagnostics] and
 #' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
 #'
-#' @return A plotting-data object of class `mfrm_plot_data`. With
-#'   `draw = FALSE`, `result$data$table` contains the filtered drift or chain
-#'   table, `result$data$matrix` contains the heatmap matrix when requested,
+#' @return Invisibly, a `ggplot` object. Use [plot_data()] to retrieve its
+#'   reusable plotting data and notes. With
+#'   `draw = FALSE`, `plot_data(p, "table")` contains the filtered drift or chain
+#'   table, `plot_data(p, "matrix")` contains the heatmap matrix when requested,
 #'   and the returned plot data includes package-native `title`, `subtitle`,
 #'   `legend`, and `reference_lines`.
 #'
@@ -798,7 +508,9 @@
 #' @concept confidence intervals
 #' @concept visual diagnostics
 #' @concept linking
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
@@ -814,7 +526,6 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
 
   if (inherits(x, "mfrm_equating_chain")) {
     if (type == "chain") {
-      if (isTRUE(draw)) apply_plot_preset(style)
       return(.plot_equating_chain(x, draw = draw, style = style, ...))
     }
   }
@@ -825,17 +536,20 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
 
     if (nrow(dt) == 0) {
       if (draw) message("No drift data to plot.")
-      return(invisible(NULL))
+      return(.mfrm_finalize_ggplot(
+        new_mfrm_plot_data(
+          "anchor_drift",
+          list(plot = type, table = dt, data = dt, matrix = matrix(numeric(0), 0L, 0L), preset = style$name)
+        ),
+        draw = draw
+      ))
     }
 
     if (type == "drift") {
-      if (isTRUE(draw)) apply_plot_preset(style)
       return(.plot_drift_dot(dt, x$config, draw = draw, style = style, ...))
     } else if (type == "heatmap") {
-      if (isTRUE(draw)) apply_plot_preset(style)
       return(.plot_drift_heatmap(dt, x$config, draw = draw, style = style, ...))
     } else if (type == "forest") {
-      if (isTRUE(draw)) apply_plot_preset(style)
       return(.plot_drift_forest(dt, x$config, ci_level = ci_level,
                                  draw = draw, style = style, ...))
     }
@@ -889,36 +603,7 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
                                              "dashed", "reference")
     )
   )
-  if (isTRUE(draw)) {
-    old_mar <- graphics::par("mar")
-    on.exit(graphics::par(mar = old_mar), add = TRUE)
-    label_width <- max(graphics::strwidth(dt$Label, units = "inches", cex = .7))
-    if (label_width + graphics::par("mai")[4] + 1.25 >= graphics::par("fin")[1]) {
-      stop("Anchor labels need more horizontal space; use a wider graphics device or inspect the table with `draw = FALSE`.",
-        call. = FALSE)
-    }
-    margin <- label_width / (graphics::par("csi") * graphics::par("mex")) + 1.2
-    graphics::par(mar = c(old_mar[1], max(old_mar[2], margin), old_mar[3:4]))
-    y <- seq_len(nrow(dt))
-    xrange <- range(c(dt$Estimate, dt$CI_Lower, dt$CI_Upper, 0),
-                    finite = TRUE, na.rm = TRUE)
-    plot(
-      x = dt$Estimate, y = y, type = "n",
-      xlim = xrange, yaxt = "n",
-      xlab = "Estimate (logit)", ylab = "",
-      main = ""
-    )
-    abline(v = 0, lty = 2, col = style$neutral)
-    valid <- is.finite(dt$CI_Lower) & is.finite(dt$CI_Upper)
-    if (any(valid)) {
-      segments(dt$CI_Lower[valid], y[valid],
-                         dt$CI_Upper[valid], y[valid],
-                         col = style$accent_primary, lwd = 2)
-    }
-    points(dt$Estimate, y, pch = 19, col = style$accent_primary)
-    axis(2, at = y, labels = dt$Label, las = 1, cex.axis = 0.7)
-  }
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 # ============================================================================
@@ -960,7 +645,8 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
 #' is not high agreement, and no colour establishes statistical validity or
 #' justifies deleting raters or collapsing categories without further review.
 #'
-#' @return Invisible verdicts tibble from the QC pipeline.
+#' @return Invisibly, a `ggplot` object. `plot_data(p, "verdicts")` returns
+#'   the verdicts tibble from the QC pipeline.
 #'
 #' @seealso [run_qc_pipeline()], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [build_visual_summaries()], [mfrmr_visual_diagnostics]
@@ -975,52 +661,14 @@ plot_qc_pipeline <- function(x, type = c("traffic_light", "detail"),
   validate_qc_pipeline_output(x)
 
   vt <- x$verdicts
-  if (!draw) return(invisible(vt))
-
-  n <- nrow(vt)
-  cols <- ifelse(vt$Verdict == "Pass", "#2ca02c",
-                 ifelse(vt$Verdict == "Warn", "#ff7f0e",
-                        ifelse(vt$Verdict == "Fail", "#d62728", "#999999")))
-
-  opar <- graphics::par()["mar"]
-  on.exit(graphics::par(opar), add = TRUE)
-
-  if (type == "traffic_light") {
-    graphics::par(mar = c(3, 14, 3, 4))
-
-    plot(NULL, xlim = c(0, 1), ylim = c(0.5, n + 0.5),
-                   xaxt = "n", yaxt = "n", xlab = "", ylab = "",
-                   main = "", ...)
-
-    for (i in seq_len(n)) {
-      rect(0, i - 0.4, 1, i + 0.4, col = cols[i], border = NA)
-      text(0.5, i, vt$Verdict[i], col = "white", font = 2, cex = 0.9)
-    }
-
-    axis(2, at = seq_len(n), labels = vt$Check,
-                   las = 1, cex.axis = 0.8, tick = FALSE)
-
-    for (i in seq_len(n)) {
-      mtext(vt$Value[i], side = 4, at = i,
-                      las = 1, cex = 0.6, line = 0.5)
-    }
-  } else {
-    graphics::par(mar = c(3, 14, 3, 8))
-
-    plot(NULL, xlim = c(0, 1), ylim = c(0.5, n + 0.5),
-                   xaxt = "n", yaxt = "n", xlab = "", ylab = "",
-                   main = "", ...)
-
-    for (i in seq_len(n)) {
-      rect(0, i - 0.4, 0.15, i + 0.4, col = cols[i], border = NA)
-      text(0.075, i, substr(vt$Verdict[i], 1, 1),
-                     col = "white", font = 2, cex = 0.8)
-      text(0.2, i, vt$Detail[i], adj = 0, cex = 0.7)
-    }
-
-    axis(2, at = seq_len(n), labels = vt$Check,
-                   las = 1, cex.axis = 0.8, tick = FALSE)
-  }
-
-  invisible(vt)
+  out <- new_mfrm_plot_data(
+    "qc_pipeline",
+    list(
+      plot = type,
+      verdicts = vt,
+      table = vt,
+      title = "QC pipeline"
+    )
+  )
+  .mfrm_finalize_ggplot(out, draw = draw)
 }

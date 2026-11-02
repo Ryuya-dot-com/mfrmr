@@ -121,8 +121,9 @@ plot method and computes intervals before conversion; also supply
 \code{assumption = "normal"}.
 For multivariate D-study plots, an explicit \code{component = "series"} keeps
 this dedicated conversion; use \code{\link[=plot_data]{plot_data()}} for other tables.
-Difference-interval plots from \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} use their
-base \code{plot()} method or \code{\link[=plot_data]{plot_data()}}; automatic conversion is not supported.
+Difference-interval plots from \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} return
+\code{ggplot} objects via both \code{plot()} and \code{as_ggplot()}, with underlying tables
+accessible through \code{\link[=plot_data]{plot_data()}}.
 Severity profiles preserve their saved normal bounds,
 ordered levels, guide bands, fixed points, unavailable states and precision
 notes with the default or \code{component = "data"}. The word "profile" does not
@@ -230,7 +231,7 @@ Methods use both line types and vertical offsets, including in monochrome.
 }
 \section{Interactive views}{
 
-The \href{https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html}{visual gallery}
+The \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/visual-gallery.html}{visual gallery}
 shows how to pass a supported ggplot to \code{plotly::ggplotly()} for browser-based
 hovering, zooming and legend filtering. Plotly is an optional downstream
 renderer. Keep the original mfrmr plot and its \code{\link[=plot_data]{plot_data()}} notes alongside

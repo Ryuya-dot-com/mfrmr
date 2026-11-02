@@ -32,33 +32,45 @@ analyses even when the input ratings are identical.
 
 | Your question | Route to consider | What makes it appropriate |
 | --- | --- | --- |
-| How much stricter are these particular judges, after allowing for the tasks? | Fixed-facet RSM or PCM; consider CML if structural comparisons are the main target. | Estimates named effects or identified differences. CML avoids specifying an ability distribution, but supplies no Person scores. |
+| How much more severe are these particular judges, after allowing for the tasks? | Fixed-facet RSM or PCM; consider CML if structural comparisons are the main target. | Estimates named effects or identified differences. CML avoids specifying an ability distribution, but supplies no Person scores. |
 | What are the performers' abilities, and how do they vary in the target population? | A suitable response model estimated by MML; explicitly choose fixed or estimated population parameters. | MML uses a population distribution for calibration and posterior scoring. Its distributional assumptions are part of the analysis. |
 | Do different criteria or judges use the rubric categories differently? | PCM with the relevant `step_facet`. | Allows separate category-step patterns for that facet. A common pattern may be preferable when substantively credible and separate patterns are poorly informed. |
 | Does the relationship between ability and ratings differ across criteria or judges? | One-family GPCM with an explicit `slope_facet`; use MML for structural inference. | Estimates relative discriminations. A high slope is not, by itself, evidence of a better or fairer judge. |
 | Are several ratings of the same performance related beyond the modeled ability and fixed effects? | Person-specific testlet RSM, when its block structure matches the design. | Models dependence within a Person's block. Free GPCM slopes alone do not model that dependence. |
 | Are the judges sampled from a population to which I want to generalize? | Shared random-rater RSM, when that sampling and distribution model is credible. | Estimates rater-population variation and shrunken effects for observed raters. These differ from fixed-judge severities. |
 | Would more judges or tasks improve the dependability of our reported score? | [G-study and D-study](mfrmr-gtheory.html). | Studies variation in observed scores and specified future plans; no MFRM fit is required. |
-| Did judges actually assign the same scores to the same performances? | [Rating agreement and score comparisons](mfrmr-rating-agreement.html). | Agreement concerns observed scores. Small estimated severity differences do not establish agreement. |
+| Did judges actually assign the same scores to the same performances? | [Rating agreement and score comparisons](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html). | Agreement concerns observed scores. Small estimated severity differences do not establish agreement. |
+
+## Check sample size and rating assignments
 
 These are starting choices, not automatic rules based on the number of rows.
+Distinguish the number of **independent Persons**, the number of **raters and
+tasks**, the **ratings per Person and per facet level**, and the **overlap in
+assignments**. More ratings of the same Person do not create more independent
+Persons. More raters or tasks also introduce effects to estimate; their counts
+are not interchangeable with the number of Persons.
+
 Use `describe_mfrm_data()` to inspect score categories and rating assignments.
 For example, if each judge works on a different task and no observations
 separate the two effects, a richer model cannot invent the missing comparison.
 More Persons can improve precision in supported directions while leaving that
 confounding intact. Missing or unassigned ratings are not zero scores.
 
-The package does not impose one minimum Person count for every task. Full
-RSM/PCM JML, CML and fixed-population MML can accept a single Person if their
-checks pass; other calibration routes retain an at-least-two-Person support
-limit. One-Person JML/MML requires `lpSolve` for a pre-fit recession check.
-Independent repeated ratings can sometimes identify a comparison within that
-Person, but copying the same rating does not create information. The results
-retain a single-Person caution: a finite point or model-information interval
-does not establish coverage or empirical between-Person variation. Person-
-cluster sandwich uncertainty is unavailable. Scoring a new Person against an
-existing calibration is a different task; see the
-[portable calibration tutorial](mfrmr-portable-calibration.html).
+There is no universal minimum Person count or automatic small-sample correction
+in this package. The same counts can yield different precision when ability,
+severity or difficulty variation changes which categories are used. A sample's
+observed rating SD also reflects the rubric and assignments; it is not the
+latent ability SD. Choose the comparison and required precision before using
+counts to plan a study.
+
+Full RSM/PCM JML, CML and fixed-population MML can accept a single Person after
+their checks, but acceptance does not establish interval coverage or
+between-Person variation. Person-cluster
+sandwich uncertainty is unavailable with one Person. The installed help for
+`mfrm_facet_intervals()`, under "Small samples and singleton categories", gives
+the exact scope and cautions. Scoring a new Person against an existing
+calibration is a different task; see the
+[portable calibration tutorial](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-portable-calibration.html).
 
 ## Choose what the response model needs to explain
 
@@ -69,7 +81,7 @@ categories. The **slope owner** supplies separate discriminations: how strongly
 the rating probabilities change with ability. Several facets still describe
 one latent ability dimension in these models.
 
-Severity and category use are different effects. A judge can be stricter
+Severity and category use are different effects. A judge can be more severe
 overall while using the same relative step pattern as other judges; RSM
 already allows that severity difference. PCM is relevant when the step pattern
 itself differs after allowing for the modeled locations.
@@ -79,17 +91,25 @@ itself differs after allowing for the modeled locations.
 | RSM: rating-scale model | Additive fixed facet locations and a shared category-step pattern; discrimination fixed at one. | A useful starting model when the same rubric transitions and discrimination are credible. It pools information about steps, but can miss systematic differences in category use. |
 | PCM: partial-credit model | Separate step patterns for one selected facet; discrimination remains one. | Useful when, for example, criteria have genuinely different transitions. Each separate pattern needs information; sparse category use can make it unstable or unestimable. |
 | One-family GPCM: generalized partial-credit model | PCM structure plus positive relative slopes for one selected facet. | Useful for a substantive discrimination question. Free slopes add uncertainty and affect score interpretation; ordinary total-score CML is unavailable. MML permits distinct step and slope owners; JML requires the same owner. |
-| Two-family GPCM | Two ordered slope families for exactly two non-Person facets, under the documented constraints. | A provisional MML route for questions requiring both families. It needs a design that separates them and has a narrower set of supported outputs; it is still unidimensional. |
+| Two-family GPCM | Two slope families among declared fixed additive facets, with explicit step/location roles and a named GM1 slope reference. | A provisional MML route for questions requiring both families. It needs a design that separates them and has a narrower set of supported outputs; it is still unidimensional. |
 | Person-specific testlet RSM | An additional normally distributed effect shared by ratings in a block within a Person. | Useful for the supported nonoverlapping block design. It adds a variance component and does not represent a rater effect shared across different Persons. |
 | Shared random-rater RSM | A normally distributed rater effect shared across Persons. | Useful for a credible sampled-rater population. It changes the target and introduces shrinkage and a variance component. Current estimation uses a Laplace approximation for the shared rater effects. |
+
+Native `fit_mfrm()` currently uses one declared `rating_min`/`rating_max`
+for the entire fit. PCM varies step parameters within that common range; it
+does not declare a different category set for each criterion or rubric.
+Mixing a binary criterion with a 0–4 criterion therefore requires support for
+distinct response ranges, which this interface does not yet provide. A
+category impossible under a rubric must not be treated as merely unobserved
+in the sample.
 
 The extensions are not interchangeable. PCM step variation, GPCM discrimination
 variation, testlet dependence and random-rater variation answer different
 questions. The current testlet and random-rater functions fit their specified
 RSM extensions; they are not switches that can be added to every PCM or GPCM.
-See the [GPCM scope guide](mfrmr-gpcm-scope.html),
-[testlet tutorial](mfrmr-testlets.html) and
-[random-rater tutorial](mfrmr-random-raters.html) for the exact fitted models.
+See the [GPCM scope guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html),
+[testlet tutorial](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlets.html) and
+[random-rater tutorial](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html) for the exact fitted models.
 
 ## Choose how Person ability enters estimation
 
@@ -131,7 +151,7 @@ probability of each pattern depends on which rating has the steeper slope.
 Conditioning on that total therefore does not remove ability. This is a limit
 of ordinary total-score conditioning, not a claim that no sufficient statistic
 can exist in any GPCM submodel; the
-[GPCM guide gives the calculation](mfrmr-gpcm-scope.html#why-total-score-conditioning-does-not-remove-ability).
+[GPCM guide gives the calculation](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html#why-total-score-conditioning-does-not-remove-ability).
 
 If the ability distribution may be skewed, CML is an attractive option for
 RSM/PCM structural comparisons when their conditional response assumptions are
@@ -159,8 +179,8 @@ is not implemented, rather than that an attempted fit failed.
 Use `fit_mfrm()` for the first four rows, `fit_mfrm_testlet()` for testlets and
 `fit_mfrm_random_rater()` for shared random raters. For native CML, keep the
 declared rubric with `category_policy = "preserve"`, use unit response weights
-and specify `step_facet` explicitly for PCM. Use `gpcm_capability_matrix()` and
-`mfrmr_interval_guide()` to check the required output before committing to a
+and specify `step_facet` explicitly for PCM. Use `mfrmr_output_guide("gpcm_capabilities")` and
+`mfrmr_output_guide("intervals")` to check the required output before committing to a
 workflow. Corrected JML is requested explicitly with `jml_correction_order`;
 it is not selected automatically by increasing iterations. Its adjustment is
 related to [Dhaene and Weidner (2023)](https://doi.org/10.1007/s13209-023-00283-1);
@@ -216,7 +236,7 @@ There are five practical consequences:
    For example, with the same two binary items answered once by each Person,
    the default GPCM has more free parameters than the response distribution
    can identify. Increasing the number of Persons alone cannot resolve this
-   problem; see the [GPCM inference explanation](mfrmr-gpcm-scope.html#how-uncertain-is-a-relative-slope).
+   problem; see the [GPCM inference explanation](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html#how-uncertain-is-a-relative-slope).
 2. **Flexibility in one respect leaves other assumptions unchanged.** GPCM
    slopes do not automatically handle local dependence, multiple ability
    dimensions, informative missingness or a misspecified ability distribution.
@@ -282,10 +302,14 @@ to force a successful fit changes the question.
 
 For ordinary RSM/PCM MML, start with the [workflow tutorial](mfrmr-workflow.html).
 For CML structural comparisons and model-specific uncertainty, use
-[facet intervals](mfrmr-facet-intervals.html). For GPCM or either dependence
-extension, follow the dedicated guides linked above. In an R installation
-without vignettes, `help("mfrmr_workflow_methods")` gives the workflow and
-`help("mfrmr_methods_reference")` links questions to methods and references.
+`help("mfrm_facet_intervals")` for supported inputs, output states and assumptions;
+the [online facet-interval guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-facet-intervals.html)
+adds worked rater comparisons and simulation results. For GPCM or either
+dependence extension, follow the dedicated guides linked above. Core help
+remains available offline: `help("fit_mfrm_technical_details")` gives exact
+model and estimator contracts, and `help("mfrmr_workflow_methods")` provides a
+workflow when vignettes were not installed. Use Web documentation matching
+your installed package version.
 
 When reporting, explain **what you wanted to compare, why the chosen response
 and population model suit the design, and how the result answers that question**.

@@ -186,7 +186,7 @@ mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_case
   if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit") ||
       !identical(cfg$model, "GPCM") || !identical(cfg$method, "MML") ||
       !identical(cfg$posterior_basis, "fixed_standard_normal") ||
-      !identical(cfg$step_facet, cfg$slope_facet[2L]) ||
+      !cfg$step_facet %in% cfg$facet_names ||
       !isTRUE(all(cfg$facet_signs[cfg$slope_facet] == -1)) ||
       length(cfg$interaction_specs) || isTRUE(fit$population$active))
     stop("Two-family rater sheets require the native fixed-N(0,1) GPCM MML fit.", call. = FALSE)
@@ -211,6 +211,8 @@ mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_case
   if (any(!is.finite(c(location, slope))) || slope <= 0)
     stop("The selected two-family point estimates are unavailable.", call. = FALSE)
   first <- identical(facet, cfg$slope_facet[1L])
+  owns_steps <- identical(facet, cfg$step_facet)
+  centered <- !identical(facet, cfg$noncenter_facet)
   d <- fit$prep$data; take <- which(as.character(d[[facet]]) == rater)
   other <- setdiff(cfg$slope_facet, facet)
   if (!length(take) || any(!is.finite(d$Weight)) || any(d$Weight != 1))
@@ -228,14 +230,14 @@ mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_case
       ObservedCounterpartLevels = length(unique(d[[other]][take])),
       FittedCounterpartLevels = length(cfg$facet_levels[[other]])),
     uncertainty = data.frame(),
-    steps = if (!first) data.frame(Step = seq_len(cfg$n_cat - 1L),
+    steps = if (owns_steps) data.frame(Step = seq_len(cfg$n_cat - 1L),
       Offset = as.numeric(params$steps_mat[match(rater, cfg$facet_levels[[facet]]), ])) else data.frame(),
     categories = data.frame(ModelScore = as.numeric(map$InternalScore), Ratings = counts,
       Percent = 100 * counts / length(take)),
     residuals = data.frame(), cases = data.frame())
   notes <- c(
     severity = paste("Increasing this location lowers expected scores when ability, both slopes and all other modeled effects are held fixed.",
-      if (first) "Locations in this family sum to zero across fitted levels." else
+      if (centered) "Locations in this family sum to zero across fitted levels." else
         "Locations in this family are not centered; the ability population has mean zero and SD one.",
       "Zero is not a quality standard or necessarily the other raters' average. Location intervals are not displayed in this individual sheet."),
     slope = paste("This component multiplies the other family's slope for each rating. Together they control how category probabilities change with ability.",
@@ -244,8 +246,8 @@ mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_case
       "One is not a competence benchmark. A larger slope does not establish scoring accuracy or training effectiveness."),
     exposure = "Counts cover retained ratings, people and observed levels of the other facet. Unobserved combinations are not evidence of the rater's behavior there. These counts do not measure planned-assignment completion or make different raters' assignments comparable.",
     uncertainty = "No saved interval for this component slope was supplied. Location and category-step intervals are not displayed in this sheet; no interval is calculated here.",
-    steps = if (first) "Category steps belong to the other facet; there is no single set of steps specific to this selected level." else
-      "These category-step offsets sum to zero within this level. An adjacent-category threshold also includes both facet locations; an offset alone is not a threshold. Step intervals are unavailable.",
+    steps = if (!owns_steps) "Category steps belong to another declared facet; there is no single set of steps specific to this selected level." else
+      "These category-step offsets sum to zero within this level. An adjacent-category threshold also includes all modeled facet locations; an offset alone is not a threshold. Step intervals are unavailable.",
     categories = "Percentages describe this rater's retained assignments on the fitted category scale. Unequal use or an unused category alone does not establish a rubric or rater problem.",
     residuals = "No saved posterior response diagnostics were supplied. Ordinary Infit/Outfit reference values, cutoffs and tests are unavailable for this model.",
     cases = "No saved posterior response diagnostics were supplied; rating cases are not calculated for this sheet.")

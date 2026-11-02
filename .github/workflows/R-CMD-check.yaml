@@ -3,8 +3,7 @@
 # remaining Windows/Linux R-version cells start only after that prerequisite
 # succeeds. Push/PR checks use the lightweight suite; the complete Ubuntu
 # release suite is an explicit manual choice for broad changes or a batched
-# release review. Fixed-calibration G4 receipt issuance is held until the
-# post-maintenance successor contract is frozen. Isolated G-theory
+# release review. Isolated G-theory
 # execution/resume validation remains an explicit slow tier and is not a
 # release check unless MFRMR_RUN_GTHEORY_SLOW is set by a dedicated run.
 on:

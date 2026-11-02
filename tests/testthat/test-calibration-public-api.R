@@ -26,11 +26,11 @@ calibration_public_fixture <- local({
       created_at_utc = "2026-08-26T00:00:00Z",
       quadrature_review = quadrature_review
     )
-    validated <- validate_mfrm_calibration(
-      draft, validated_at_utc = "2026-08-26T00:01:00Z"
+    validated <- update(status = "validated", 
+      draft, at_utc = "2026-08-26T00:01:00Z"
     )
-    frozen <- freeze_mfrm_calibration(
-      validated, frozen_at_utc = "2026-08-26T00:02:00Z"
+    frozen <- update(status = "frozen", 
+      validated, at_utc = "2026-08-26T00:02:00Z"
     )
     rows <- training[
       as.character(training$Person) %in% persons[seq_len(2L)],
@@ -52,15 +52,15 @@ calibration_public_fixture <- local({
 
 test_that("portable calibration exports only the reviewed public workflow", {
   expected <- c(
-    "mfrm_calibration_capabilities", "extract_mfrm_calibration",
-    "review_mfrm_calibration", "validate_mfrm_calibration",
-    "freeze_mfrm_calibration", "supersede_mfrm_calibration",
-    "retire_mfrm_calibration", "save_mfrm_calibration",
+    "mfrmr_output_guide", "extract_mfrm_calibration",
+    "review_mfrm_calibration", "save_mfrm_calibration",
     "load_mfrm_calibration", "score_mfrm_calibration"
   )
   exports <- getNamespaceExports("mfrmr")
   expect_true(all(expected %in% exports))
+  expect_true(is.function(getS3method("update", "mfrm_calibration")))
   expect_false(any(c(
+    "mfrm_calibration_capabilities",
     "mfrmr_extract_calibration_draft", "mfrmr_review_calibration",
     "mfrmr_validate_calibration_draft", "mfrmr_freeze_calibration",
     "mfrmr_score_calibration"
@@ -68,7 +68,7 @@ test_that("portable calibration exports only the reviewed public workflow", {
 })
 
 test_that("public capability matrix states the bounded artifact envelope", {
-  capabilities <- mfrm_calibration_capabilities()
+  capabilities <- mfrmr_output_guide("calibration_capabilities")
   expect_identical(nrow(capabilities), 8L)
   expect_identical(
     names(capabilities),
@@ -97,7 +97,7 @@ test_that("public capability matrix states the bounded artifact envelope", {
   expect_true(all(guide$Scope == "calibration"))
   expect_true(all(guide$RecommendedEntry))
   expect_true(any(grepl(
-    "mfrm_calibration_capabilities()", guide$MainFunction, fixed = TRUE
+    "mfrmr_output_guide(\"calibration_capabilities\")", guide$MainFunction, fixed = TRUE
   )))
   expect_true(any(grepl(
     "score_mfrm_calibration()", guide$MainFunction, fixed = TRUE
@@ -151,10 +151,10 @@ test_that("public lifecycle is explicit and artifact scoring performs no refit",
     score_mfrm_calibration(fixture$frozen, fixture$rows)
   )
 
-  retired <- retire_mfrm_calibration(
+  retired <- update(status = "retired", 
     fixture$frozen,
     record_id = "public-api-rsm-retired",
-    retired_at_utc = "2026-08-26T00:03:00Z"
+    at_utc = "2026-08-26T00:03:00Z"
   )
   expect_identical(retired$lifecycle$state, "retired")
   error <- tryCatch(
@@ -268,39 +268,41 @@ test_that("portable score plots preserve selection and non-scored dispositions",
   interval <- plot(scored, type = "interval", draw = FALSE)
   precision <- plot(scored, type = "precision", draw = FALSE)
   edge_mass <- plot(scored, type = "edge_mass", draw = FALSE)
-  expect_s3_class(interval, "mfrm_plot_data")
-  expect_identical(interval$name, "calibration_score_interval")
-  expect_identical(precision$name, "calibration_score_precision")
-  expect_identical(edge_mass$name, "calibration_score_edge_mass")
+  expect_s3_class(interval, "ggplot")
+  expect_s3_class(attr(interval, "mfrmr_plot_data"), "mfrm_plot_data")
+  expect_identical(attr(interval, "mfrmr_plot_data")$name, "calibration_score_interval")
+  expect_identical(attr(precision, "mfrmr_plot_data")$name, "calibration_score_precision")
+  expect_identical(attr(edge_mass, "mfrmr_plot_data")$name, "calibration_score_edge_mass")
+  interval_pd <- plot_data(interval)
   expect_true(all(c(
     "data", "selection_summary", "unplotted_dispositions",
     "interpretation", "display_encoding", "settings", "legend",
     "reference_lines"
-  ) %in% names(interval$data)))
+  ) %in% names(interval_pd)))
   expect_identical(
-    interval$data$display_encoding$Status, c("Scored", "Review")
+    interval_pd$display_encoding$Status, c("Scored", "Review")
   )
-  expect_identical(interval$data$display_encoding$Shape, c(16L, 17L))
+  expect_identical(interval_pd$display_encoding$Shape, c(16L, 17L))
   expect_true(all(
-    interval$data$legend$aesthetic == "colour and shape"
+    interval_pd$legend$aesthetic == "colour and shape"
   ))
-  expect_true("NEW_LOW" %in% interval$data$unplotted_dispositions$Person)
-  expect_identical(interval$data$selection_summary$NotScoredPersons, 1L)
+  expect_true("NEW_LOW" %in% interval_pd$unplotted_dispositions$Person)
+  expect_identical(interval_pd$selection_summary$NotScoredPersons, 1L)
   expect_identical(
-    interval$data$subtitle,
+    interval_pd$subtitle,
     "1 of 1 scored Persons shown; 1 review disposition shown; 1 not scored"
   )
   expect_true(all(c(
     "ReviewFlag", "QuadratureEdgeMass", "QuadratureEdgeThreshold",
     "DisplayOrder", "LabelPosition", "LabelX", "LabelY"
-  ) %in% names(interval$data$data)))
+  ) %in% names(interval_pd$data)))
   expect_match(
-    interval$data$interpretation$Guidance[3L],
+    interval_pd$interpretation$Guidance[3L],
     "calibration-parameter uncertainty excluded",
     fixed = TRUE
   )
   expect_match(
-    interval$data$caption,
+    interval_pd$caption,
     "calibration-parameter uncertainty excluded",
     fixed = TRUE
   )
@@ -317,21 +319,23 @@ test_that("portable score plots preserve selection and non-scored dispositions",
   edge_prioritized <- plot(
     prioritized, type = "edge_mass", draw = FALSE
   )
+  precision_prioritized_df <- plot_data(precision_prioritized, "data")
+  edge_prioritized_df <- plot_data(edge_prioritized, "data")
   expect_true(all(
-    precision_prioritized$data$data$LabelPosition[
-      precision_prioritized$data$data$ReviewFlag
+    precision_prioritized_df$LabelPosition[
+      precision_prioritized_df$ReviewFlag
     ] == 3L
   ))
-  precision_review <- precision_prioritized$data$data[
-    precision_prioritized$data$data$ReviewFlag, , drop = FALSE
+  precision_review <- precision_prioritized_df[
+    precision_prioritized_df$ReviewFlag, , drop = FALSE
   ]
   expect_true(all(is.finite(precision_review$LabelX)))
   expect_true(all(is.finite(precision_review$LabelY)))
   expect_true(all(precision_review$LabelY > precision_review$SD))
   expect_identical(length(unique(precision_review$LabelY)),
                    nrow(precision_review))
-  edge_review <- edge_prioritized$data$data[
-    edge_prioritized$data$data$ReviewFlag, , drop = FALSE
+  edge_review <- edge_prioritized_df[
+    edge_prioritized_df$ReviewFlag, , drop = FALSE
   ]
   expect_true(all(
     edge_review$LabelPosition[edge_review$Estimate < 0] == 4L
@@ -340,10 +344,11 @@ test_that("portable score plots preserve selection and non-scored dispositions",
     edge_review$LabelPosition[edge_review$Estimate > 0] == 2L
   ))
   truncated <- plot(prioritized, top_n = 1L, draw = FALSE)
-  expect_true(truncated$data$data$ReviewFlag)
-  expect_identical(truncated$data$selection_summary$PlottedPersons, 1L)
-  expect_identical(truncated$data$selection_summary$OmittedFromPlot, 2L)
-  expect_true(truncated$data$selection_summary$ReviewRowsPrioritized)
+  expect_s3_class(truncated, "ggplot")
+  expect_true(plot_data(truncated, "data")$ReviewFlag)
+  expect_identical(plot_data(truncated, "selection_summary")$PlottedPersons, 1L)
+  expect_identical(plot_data(truncated, "selection_summary")$OmittedFromPlot, 2L)
+  expect_true(plot_data(truncated, "selection_summary")$ReviewRowsPrioritized)
 
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off(), add = TRUE)
@@ -407,7 +412,7 @@ test_that("public loader explicitly refuses incompatible schema fixtures", {
   on.exit(unlink(path), add = TRUE)
 
   newer <- fixture$frozen
-  newer$header$schema_version <- 7L
+  newer$header$schema_version <- 8L
   saveRDS(newer, path, version = 3)
   newer_error <- tryCatch(
     load_mfrm_calibration(path),
@@ -579,7 +584,7 @@ test_that("portable interval identity survives saved results, summaries and CSV"
     draft$scoring_basis$scoring_algorithm <- algorithm
     draft$integrity$semantic_components <-
       mfrmr:::mfrmr_calibration_semantic_components(draft)
-    artifact <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
+    artifact <- update(status = "frozen", update(status = "validated", draft))
     scored <- score_mfrm_calibration(artifact, fixture$rows, interval_level = 0.955)
     summarized <- summary(scored, digits = 1)
     fields <- c("ScoringAlgorithm", "IntervalLevel")
@@ -609,8 +614,8 @@ test_that("portable interval identity survives saved results, summaries and CSV"
     }), collapse = " "))
     expect_match(displayed, expected, fixed = TRUE)
     expect_match(displayed, "95.5% intervals", fixed = TRUE)
-    expect_match(interval$data$caption, expected, fixed = TRUE)
-    expect_match(interval$data$caption, "95.5% intervals", fixed = TRUE)
+    expect_match(plot_data(interval, "caption"), expected, fixed = TRUE)
+    expect_match(plot_data(interval, "caption"), "95.5% intervals", fixed = TRUE)
     if (requireNamespace("ggplot2", quietly = TRUE)) {
       gg <- as_ggplot(interval)
       expect_match(gsub("[[:space:]]+", " ", paste(plot_data(gg, "notes")$Text, collapse = "\n")), expected, fixed = TRUE)
@@ -632,12 +637,12 @@ test_that("public documentation surfaces share the bounded calibration wording",
   skip_if_not(file.exists(readme), "README requires the source tree on this R installation.")
   article_candidates <- c(file.path(root, c(
       "doc/mfrmr-portable-calibration.Rmd",
-      "vignettes/mfrmr-portable-calibration.Rmd"
-    )), test_path("..", "..", "vignettes", "mfrmr-portable-calibration.Rmd"))
+      "vignettes/articles/mfrmr-portable-calibration.Rmd"
+    )), test_path("..", "..", "vignettes", "articles", "mfrmr-portable-calibration.Rmd"))
   article <- article_candidates[file.exists(article_candidates)]
   expect_true(file.exists(readme))
   expect_true(file.exists(file.path(root, "NEWS.md")))
-  skip_if(!length(article), "Article requires a source tree or an installation with built vignettes.")
+  skip_if(!length(article), "Specialized article requires the repository source tree.")
   article <- article[1L]
 
   text <- list(
@@ -650,8 +655,8 @@ test_that("public documentation surfaces share the bounded calibration wording",
     article = paste(readLines(article, warn = FALSE), collapse = "\n")
   )
 
-  # The README routes readers to the specialist guide instead of duplicating it.
-  expect_match(text$README, "mfrmr-portable-calibration.html", fixed = TRUE)
+  # The README routes readers through the installed workflow help for their version.
+  expect_match(text$README, 'help("mfrm_calibration_workflow")', fixed = TRUE)
   core_surfaces <- text["article"]
   for (surface in core_surfaces) {
     expect_match(surface, "RSM", fixed = TRUE)
@@ -661,7 +666,7 @@ test_that("public documentation surfaces share the bounded calibration wording",
     expect_match(surface, "GPCM", fixed = TRUE)
     expect_match(surface, "JML", fixed = TRUE)
   }
-  expect_match(text$article, "mfrm_calibration_capabilities()", fixed = TRUE)
+  expect_match(text$article, "mfrmr_output_guide(\"calibration_capabilities\")", fixed = TRUE)
   expect_match(
     text$article,
     "score_mfrm_calibration(calibration, new_rows)",
@@ -759,7 +764,7 @@ test_that("current RSM portable artifacts accept explicit scoring priors without
   f <- calibration_public_fixture()
   expect_error(score_mfrm_calibration(f$frozen, f$rows,
     scoring_prior = list(mean = .4, sd = 1.2)), "integration did not pass")
-  f$frozen <- freeze_mfrm_calibration(validate_mfrm_calibration(
+  f$frozen <- update(status = "frozen", update(status = "validated", 
     extract_mfrm_calibration(f$fit, quadrature_review = f$quadrature_review,
       scoring_quad_points = 121)))
   before <- serialize(f$frozen, NULL)

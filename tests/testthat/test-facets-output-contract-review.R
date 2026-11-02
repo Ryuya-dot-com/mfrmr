@@ -76,10 +76,14 @@ test_that("facets_output_contract_review integrates with summary() and plot()", 
   p3 <- plot(contract_review, type = "metric_status", draw = FALSE)
   p4 <- plot(contract_review, type = "metric_by_table", draw = FALSE)
 
-  expect_s3_class(p1, "mfrm_plot_data")
-  expect_s3_class(p2, "mfrm_plot_data")
-  expect_s3_class(p3, "mfrm_plot_data")
-  expect_s3_class(p4, "mfrm_plot_data")
+  expect_s3_class(p1, "ggplot")
+  expect_s3_class(p2, "ggplot")
+  expect_s3_class(p3, "ggplot")
+  expect_s3_class(p4, "ggplot")
+  expect_s3_class(attr(p1, "mfrmr_plot_data"), "mfrm_plot_data")
+  expect_s3_class(attr(p2, "mfrmr_plot_data"), "mfrm_plot_data")
+  expect_s3_class(attr(p3, "mfrmr_plot_data"), "mfrm_plot_data")
+  expect_s3_class(attr(p4, "mfrmr_plot_data"), "mfrm_plot_data")
 })
 
 test_that("facets_output_contract_review contract coverage includes unavailable rows", {

@@ -83,7 +83,7 @@ example_bias \tab 384 \tab 48 \tab 4 \tab 4 \tab 2
 and for inspecting incomplete but connected assignment.
 \item Use \code{mfrmr_example_core} for fast, idealized checks and examples that
 specifically require complete crossing.
-\item Use \code{mfrmr_example_bias} for \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=dif_interaction_table]{dif_interaction_table()}},
+\item Use \code{mfrmr_example_bias} for \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=dif_interaction_table]{dif_interaction_table()}},
 \link[=plot.mfrm_dif]{plot(x, type = "heatmap")}, and \code{\link[=estimate_bias]{estimate_bias()}}.
 }
 

@@ -1,8 +1,8 @@
-#' Plot saved latent-population coefficients or contrasts
+#' @rdname mfrm_population_intervals
+#' @details `plot()` method: Plot saved latent-population coefficients or contrasts
 #'
 #' Read point estimates and their experimental pointwise intervals from an
 #' existing population analysis, without fitting or recalculating uncertainty.
-#' @param x A saved result from [mfrm_population_intervals()].
 #' @param type Show `"coefficients"` (default, including the intercept) or
 #'   the prespecified `"contrasts"` stored in `x`. Residual variance has different
 #'   units and remains in `summary(x)` rather than sharing this axis.
@@ -11,16 +11,14 @@
 #'   `"monochrome"`. The session default is used when omitted.
 #' @param reference Optional finite vertical reference, default zero; `NULL`
 #'   omits it. This is not a practical-importance or automatic decision threshold.
-#' @param ... Unused; unsupported arguments are rejected.
-#' @return Invisibly, an `mfrm_plot_data` object. `table` preserves selected
+#' @return For `plot()`: Invisibly, a `ggplot` object. Through [plot_data()], `table` preserves selected
 #'   source rows and adds `PlotStatus`, `Label` and `Y`; `intervals` retains the
 #'   complete original table. `population_spec` preserves the formula, trained
 #'   terms, factor levels and coding; `population_coding` is a readable coding
 #'   table. `contrast_weights`, source identity, settings, numerical checks and
 #'   interpretation notes accompany the figure. Use [plot_data()] to inspect
-#'   these and [as_ggplot()] for an editable figure with the same saved values.
-#' @details
-#' Rows retain their saved order. Filled circles and lines show numerically
+#'   these; [as_ggplot()] remains idempotent on the returned object.
+#' @details For `plot()`: Rows retain their saved order. Filled circles and lines show numerically
 #' available intervals. Crosses with a `CI unavailable` label retain finite
 #' points without eligible finite bounds. A missing point keeps its labeled row
 #' without a marker; it is never plotted at zero. Titles and explanatory notes
@@ -52,9 +50,11 @@
 #' `p <- plot(ci, type = "contrasts", draw = FALSE)`,
 #' `plot_data(p, "contrast_weights")` and `plot_data(p, "notes")` to read it.
 #' `as_ggplot(ci, type = "contrasts")` converts the same saved result.
-#' @seealso [mfrm_population_intervals()], [mfrmr_interval_guide()],
+#' @seealso [mfrm_population_intervals()], [mfrmr_output_guide()],
 #'   [plot.mfrm_facet_intervals()]
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @export
 plot.mfrm_population_intervals <- function(x, type = c("coefficients", "contrasts"),
                                           draw = TRUE, preset = "standard",
@@ -117,21 +117,7 @@ plot.mfrm_population_intervals <- function(x, type = c("coefficients", "contrast
         " | Independent anchor-source uncertainty included"),
     xlab = if (type == "coefficients") "Coefficient (native ability scale)" else
       "Contrast (native ability scale)"))
-  if (!draw) return(invisible(out))
-  apply_plot_preset(style)
-  old <- graphics::par(mar = c(4.5, 10, 1.5, 2))
-  on.exit(graphics::par(old), add = TRUE)
-  plot(NA_real_, NA_real_, type = "n", xlim = limits,
-    ylim = out$data$y_range, yaxt = "n",
-    xlab = out$data$xlab, ylab = "", main = "")
-  if (!is.null(reference)) abline(v = reference, col = style$grid, lty = 2)
-  segments(tab$Lower[available], tab$Y[available],
-    tab$Upper[available], tab$Y[available], col = style$accent_primary, lwd = 2)
-  finite <- is.finite(tab$Estimate)
-  points(tab$Estimate[finite], tab$Y[finite],
-    pch = ifelse(available[finite], 16, 4), col = style$accent_primary)
-  axis(2, at = tab$Y, labels = tab$Label, las = 1, cex.axis = .8)
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 .mfrm_gg_population_intervals <- function(x) {

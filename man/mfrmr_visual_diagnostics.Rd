@@ -4,7 +4,7 @@
 \alias{mfrmr_visual_diagnostics}
 \title{mfrmr Visual Diagnostics Map}
 \description{
-Quick guide to choosing the right base-R diagnostic plot in \code{mfrmr}.
+Quick guide to choosing the right \code{ggplot2} diagnostic plot in \code{mfrmr}.
 Use this page when you know the analysis question but do not yet know
 which plotting helper or \code{plot()} method to call.
 
@@ -36,7 +36,7 @@ transformation. Under \code{GPCM} the fair-average panel of
 stay outside the documented \code{GPCM} boundary.
 }
 
-Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the formal per-helper boundary
+Use \code{mfrmr_output_guide("gpcm_capabilities")} and \link{mfrmr_gpcm_scope} for the formal per-helper boundary
 before choosing a \code{GPCM} follow-up plot route.
 Two-family GPCM and corrected JML use their separate
 \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} routes; the shared \code{mfrm_fit} class does not
@@ -127,11 +127,11 @@ To change labels on the converted ggplot, use
 \code{as_ggplot(p) + ggplot2::labs(title = NULL)}.
 
 Figures omit titles, subtitles and explanatory footnotes by default.
-Keep the returned object: \code{p <- plot(fit)}, then use
+Keep the returned \code{ggplot} object: \code{p <- plot(fit)}, then use
 \code{plot_data(p, "title")} and \code{plot_data(p, "notes")} to prepare the title
-and notes separately in a manuscript. Printing a returned \code{mfrm_plot_data}
-object also displays notes in the console. The same notes accessor works
-for mfrmr ggplots and after saving and reloading the returned object.
+and notes separately in a manuscript. The same notes accessor works
+after saving and reloading \code{p} with \code{saveRDS()}, as well as on saved \verb{0.2.x}
+\code{mfrm_plot_data} objects.
 Axis labels, legends, panel identifiers and data/status symbols remain.
 \code{title}, \code{main}, \code{subtitle} and \code{caption} now supply metadata by default.
 Entry points with \code{show_title} and \code{show_notes} allow explicit opt-in
@@ -262,8 +262,8 @@ Use \link[=plot.mfrm_fit]{plot(x, type = "residual_pca")}.
 \item "Which interaction cells or facet levels drive bias screening results?"
 Use \link[=plot.mfrm_fit]{plot(x, type = "bias")}.
 \item "Which group-by-facet contrasts drive DFF / DIF screening results?"
-Use \link[=plot.mfrm_dif]{plot(x, type = "heatmap")} and \link[=plot.mfrm_dif]{plot(x, type = "summary")} after
-\code{\link[=analyze_dff]{analyze_dff()}}.
+Use \link[=plot.mfrm_dif]{plot(x, type = "heatmap")}, \link[=plot.mfrm_dif]{plot(x, type = "summary")},
+and \link[=plot.mfrm_dif]{plot(x, type = "scatter")} after \code{\link[=analyze_dff]{analyze_dff()}}.
 \item "Do person response rows follow the expected Guttman-style
 ordering once persons and items are sorted on the logit scale?"
 Use \link[=plot.mfrm_fit]{plot(x, type = "guttman")} as a teaching-oriented screen.
@@ -308,7 +308,7 @@ behavior needs follow-up.
 Use \code{\link[=reporting_checklist]{reporting_checklist()}} and review the \code{"Visual Displays"} rows before
 choosing the next plot.
 \item "Where should this figure go in a paper or appendix?"
-Use \code{\link[=visual_reporting_template]{visual_reporting_template()}} for a static reporting-use table, then
+Use \code{mfrmr_output_guide("visual_templates")} for a static reporting-use table, then
 cross-check run-specific availability with \code{reporting_checklist()$visual_scope}.
 \item "Do I need a 3D-style category probability surface?"
 Use \code{plot(fit, type = "ccc_surface", draw = FALSE)} to get
@@ -364,13 +364,21 @@ accessibility requirements, or print workflows require grayscale output.
 \section{Customizing figures}{
 
 The package's plotting defaults are intended to be safe starting points,
-not a closed graphics system. Use \code{preset = "publication"} for clean
-manuscript defaults, or \code{preset = "monochrome"} for grayscale output that
-relies more on line type, point shape, and reference lines than on color.
-Use \code{plot(..., draw = FALSE)} when you want the reusable \code{mfrm_plot_data}
-object instead of immediate base graphics. Then call
-\code{\link[=plot_data_components]{plot_data_components()}} to see available components and \code{\link[=plot_data]{plot_data()}} to
-extract the long tables used by the plot.
+not a closed graphics system. Every \code{plot()} method returns a \code{ggplot}
+object invisibly (\code{inherits(p, "ggplot")}). Use \code{preset = "publication"}
+for clean manuscript defaults, or \code{preset = "monochrome"} for grayscale
+output that relies more on line type, point shape, and reference lines than
+on color. Two-continuous-variable scatterplots (including
+\code{plot(dif, type = "scatter")}, model comparisons, fit pathway, fair average,
+bias, PCA scores, and recovery scatterplots) accept
+\code{marginal = c("auto", "histogram", "none")} to attach aligned X/Y marginal
+histograms over the finite plotted pairs.
+
+Use \code{plot(..., draw = FALSE)} when you want to construct the \code{ggplot} object
+without opening a graphics device. Then call \code{\link[=plot_data_components]{plot_data_components()}} to see
+available components and \code{\link[=plot_data]{plot_data()}} to extract the underlying tables and
+notes; saved \verb{0.2.x} \code{mfrm_plot_data} RDS objects remain compatible with both
+\code{\link[=plot_data]{plot_data()}} and \code{\link[=as_ggplot]{as_ggplot()}}.
 
 Custom renderers should keep the returned metadata close to the figure:
 \code{reference_lines}, \code{legend}, \code{guidance}, \code{category_support},
@@ -399,18 +407,18 @@ fitted object contains the required data:
 \link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")} and \link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")} for
 \code{diagnostic_mode = "both"}.
 \item Reporting/export handoff:
-\code{\link[=build_visual_summaries]{build_visual_summaries()}} and \code{draw = FALSE} routes that return reusable
-\code{mfrm_plot_data} objects for downstream review and export. When step
-estimates are available, \code{build_visual_summaries()} also exposes
-\verb{$plot_payloads$category_probability_surface}.
+\code{\link[=build_visual_summaries]{build_visual_summaries()}} and \code{draw = FALSE} routes that return \code{ggplot}
+objects carrying reusable \code{\link[=plot_data]{plot_data()}} components for downstream review
+and export. When step estimates are available, \code{build_visual_summaries()}
+also exposes \verb{$plot_payloads$category_probability_surface}.
 \item Portable score-batch review:
 \code{plot(scores, type = "interval")}, \code{"precision"}, or \code{"edge_mass"}
 after \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}}. These views retain selection accounting,
 review dispositions, and Persons that could not be scored.
 \item 3D-ready exploratory handoff:
-\code{plot(fit, type = "ccc_surface", draw = FALSE)} returns a
-theta-by-category-by-probability \code{mfrm_plot_data} object. This is not a
-default APA/reporting figure and does not load plotly/rgl.
+\code{plot(fit, type = "ccc_surface", draw = FALSE)} returns a \code{ggplot}
+surface heatmap whose \code{\link[=plot_data]{plot_data()}} components carry theta-by-category-by-probability
+tables. This is not a default APA/reporting figure and does not load plotly/rgl.
 }
 }
 
@@ -418,10 +426,10 @@ default APA/reporting figure and does not load plotly/rgl.
 
 The package currently treats 3D as an exploratory data handoff, not as a
 default plotting layer. The supported route is
-\code{plot(fit, type = "ccc_surface", draw = FALSE)}, which returns
-\code{surface}, \code{categories}, \code{category_support}, \code{groups}, \code{axis_contract},
-\code{renderer_contract}, \code{interpretation_guide}, and \code{reporting_policy} tables
-inside an \code{mfrm_plot_data} object. These columns can be passed to an
+\code{plot(fit, type = "ccc_surface", draw = FALSE)}, whose \code{\link[=plot_data]{plot_data()}}
+components provide \code{surface}, \code{categories}, \code{category_support}, \code{groups},
+\code{axis_contract}, \code{renderer_contract}, \code{interpretation_guide}, and
+\code{reporting_policy} tables. These columns can be passed to an
 external renderer if needed, while \code{category_support} and
 \code{interpretation_guide} should be checked before interpreting retained
 zero-frequency categories or adjacent threshold ridges.
@@ -533,7 +541,7 @@ Winsteps Table 10/13/14 (Misfit order) and FACETS Tables 7/8.}
 \link[=plot.mfrm_fit]{plot(x, type = "bias")} correspond to FACETS Table 14
 ("Bias / Interaction calibration report").}
 \item{Differential rater / item functioning}{\code{\link[=analyze_dff]{analyze_dff()}} /
-\code{\link[=analyze_dif]{analyze_dif()}} + \link[=plot.mfrm_dif]{plot(x, type = "heatmap")} / \link[=plot.mfrm_dif]{plot(x, type = "summary")}
+\code{\link[=analyze_dff]{analyze_dff()}} + \link[=plot.mfrm_dif]{plot(x, type = "heatmap")} / \link[=plot.mfrm_dif]{plot(x, type = "summary")}
 cover the FACETS DIF / bias-by-group route and the Winsteps DIF
 (Table 30 group differences) report.}
 \item{Inter-rater agreement}{\code{\link[=interrater_agreement_table]{interrater_agreement_table()}} +
@@ -613,10 +621,10 @@ writing interpretation.
 Wright, expected-score pathway, CCC, and \link[=plot.mfrm_fit]{plot(x, type = "fair_average")} displays
 accept \code{show_title = FALSE} and \code{show_notes = FALSE}. These options hide
 figure annotations while retaining axes, legends, structural panel labels,
-and the original title and notes in the returned \code{mfrm_plot_data} object.
-With \code{p <- plot(fit, type = "ccc", draw = FALSE, show_title = FALSE, show_notes = FALSE)}, inspect \code{p$data$notes} before writing a caption.
+and the original title and notes in the returned \code{ggplot} object's plot data.
+With \code{p <- plot(fit, type = "ccc", draw = FALSE, show_title = FALSE, show_notes = FALSE)}, inspect \code{plot_data(p, "notes")} before writing a caption.
 \code{\link[=as_ggplot]{as_ggplot()}} respects the display options and retains notes in
-\code{attr(as_ggplot(p), "mfrmr_notes")}. Hiding annotations does not change
+\code{attr(p, "mfrmr_notes")}. Hiding annotations does not change
 readiness or interval eligibility.
 
 Use \code{preset = "monochrome"} for grayscale. Expected-score and CCC curves
@@ -631,8 +639,108 @@ unverified. RSM/PCM plots propagate the focal measure SE while holding
 thresholds and reference measures fixed. GPCM-MML plots can use structural
 table SEs for non-Person rows, conditioning on Person EAP/reference means.
 \code{fair_average_table(fair_se = TRUE)} does not provide RSM/PCM fair-score
-SEs. See \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}} and \link[=plot.mfrm_fit]{plot(x, type = "fair_average")} for the status
+SEs. See \code{mfrmr_output_guide("intervals")} and \link[=plot.mfrm_fit]{plot(x, type = "fair_average")} for the status
 columns and the observed-minus-fair gap caveat.
+}
+
+\section{Why an estimate or interval is missing}{
+
+A finite printed value may be a usable estimate, an optimizer value retained
+for review, a constraint-fixed value, or a prior-only score. Read the result's
+status and explanation before interpreting it. An \code{NA} bound is not an
+infinite limit, zero uncertainty, or evidence of no effect.
+\itemize{
+\item \strong{Fit and parameter readiness:} start with \code{summary(fit)$decision},
+\verb{$readiness} and \verb{$key_warnings} for ordinary fits. For CML inspect
+\code{summary(fit)$checks} and \verb{$notes}; comparison-only CML retains
+\code{EstimateStatus} and \code{EstimateReason} in \code{fit$comparisons}. Identification
+failure or absence of a finite MLE cannot be repaired merely by increasing
+optimizer iterations. A refused calculation explains the restriction in
+its error instead of returning an inferential result.
+\item \strong{Facet and population intervals:} inspect \code{ci$table$Status},
+\verb{$CIEligible} and \verb{$InferenceReview}, together with the result's checks
+and cautions. Missing SEs or bounds may coexist with a retained point;
+that does not certify the point as reliable. \code{fixed} refers to a target
+fixed by constraints, not an estimate with perfect measured precision.
+\item \strong{GPCM slope/profile intervals:} use \code{attr(ci, "diagnostics")} and
+the saved endpoint checks. They distinguish an unavailable interval from
+a partially resolved profile; \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} describes each method.
+\item \strong{Testlet and shared-rater normal intervals:} use
+\code{attr(ci, "diagnostics")} and \code{attr(ci, "checks")}; default summary tables
+also retain \code{IntervalStatus} and \code{InferenceReview}. These distinguish intervals
+not requested, unsupported targets, failed numerical/information checks,
+and estimated zero-variance boundaries. The boundary restriction applies
+even when optimization has converged. See \code{\link[=confint.mfrm_testlet]{confint.mfrm_testlet()}} and
+\code{\link[=confint.mfrm_random_rater]{confint.mfrm_random_rater()}}.
+\item \strong{Person scores:} \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} and the extension scoring
+functions retain row-level \code{Status} and \code{Reason}. \code{prior_only} means no
+observed responses: the reported mean and interval describe the assumed
+population. \code{unavailable} withholds individual estimates and intervals.
+Review the stated cause; more quadrature nodes cannot supply observations
+or remedy a zero ability-variance restriction.
+\item \strong{G/D-study intervals:} read the metric-specific \code{Status}, diagnostics
+and notes. A width below numerical resolution is a calculation limitation,
+not perfect reliability; raw log-ratio or pivot diagnostics may still be
+retained. An explicitly reported zero endpoint, a constraint boundary and
+an unresolved numerical interval have different meanings.
+}
+
+Increase integration precision or revise optimizer controls only when the
+saved diagnostics identify those numerical issues. Model assumptions,
+insufficient design information and unsupported boundary inference need
+substantive review. Numerical success alone does not resolve them.
+Keep explanations with saved results: use \code{\link[=saveRDS]{saveRDS()}} for the whole object,
+and export the status/reason table with CSV. Older saved tables do not gain
+fields merely by being read; recreate summaries or interval displays from
+their source fit where supported. Do not rewrite historical fit checks.
+}
+
+\section{Availability is not coverage}{
+
+Read the target, interval method and assumptions before interpreting bounds.
+Numerical availability, sampling coverage and public API support are separate
+questions. Where returned, \code{CIEligible} records the source and method's
+eligibility checks, which can include model, design and numerical restrictions;
+\code{CoverageQualified = FALSE} means nominal sampling coverage is not established
+for that procedure. It is not a measured coverage rate and does not erase
+computed bounds. Absence of that field is not evidence of coverage either.
+
+A partial profile retains computed endpoints and the unresolved side's
+reason. An unresolved search is not an infinite limit or a calibrated
+one-sided interval. Inspect \code{apa_table(result, which = "profile_endpoints")}
+and retain the method's notes when reporting or exporting it.
+
+Corrected-JML \code{RootSE} describes variation around an adjusted-equation root;
+residual bias can separate that root from the true structural parameter.
+It must not be turned into a structural confidence interval by multiplying
+it by 1.96. \code{mfrmr_output_guide("intervals")} includes that uncertainty-only route with no default
+confidence level. Unavailable public structural intervals do not establish
+that every interval method is mathematically impossible.
+
+Conditional Person posterior intervals hold calibration fixed. A full
+external Bayesian analysis, for example through \code{\link[=export_mfrm_model]{export_mfrm_model()}}, has
+different assumptions and returns credible intervals; export alone neither
+runs the sampler nor validates its intervals. Inspect sampler precision,
+convergence and prior sensitivity. Neither type of posterior interval is
+automatically a frequentist confidence interval with nominal coverage.
+See \code{mfrmr_output_guide("gpcm_capabilities")} and \link{mfrmr_gpcm_scope} for estimator-specific routes and restrictions.
+For coefficients, conditional population means and residual variance in an
+estimated RSM/PCM population, use \code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}. Its
+\link[=plot.mfrm_population_intervals]{plot() method} displays coefficients or
+saved contrasts, retaining unavailable intervals and experimental status.
+Residual variance stays in the table because its units differ. This route
+is separate from Person scoring and facet-location intervals.
+
+Native RSM/PCM CML intervals use conditional information, with no estimated
+Person abilities or population SD. \code{mfrmr_output_guide("intervals")} gives a dedicated route for
+saved comparison-only targets and explains the facet argument for full CML
+results. A separate full-MML interaction route accepts \code{comparison_review}
+and optional \code{scale = "standardized"}; estimated-SD standardization includes
+the same fit's population-SD uncertainty and its covariance with the contrast.
+It requires an intercept-only normal population rather than substituting a
+regression residual SD. Neither numerical eligibility nor a positive
+conditional identification check establishes global MML identification or
+finite-sample interval coverage.
 }
 
 \section{Non-Latin and long labels}{
@@ -690,8 +798,7 @@ plot(diagnostics, type = "marginal_fit")
 \seealso{
 \link{mfrmr_workflow_methods}, \link{mfrmr_reports_and_tables},
 \link{mfrmr_reporting_and_apa}, \link{mfrmr_linking_and_dff},
-\link{gpcm_capability_matrix}, \code{\link[=visual_reporting_template]{visual_reporting_template()}},
-\code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}},
+\link{mfrmr_gpcm_scope}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}}, \link{mfrmr_plot_migration},
 \link[=plot.mfrm_fit]{plot(x, type = "guttman")}, \link[=plot.mfrm_fit]{plot(x, type = "qc")},
 \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")}, \link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")},
 \link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")}, \link[=plot.mfrm_fit]{plot(x, type = "agreement")},
@@ -701,8 +808,6 @@ plot(diagnostics, type = "marginal_fit")
 \link[=plot.mfrm_fit]{plot(x, type = "residual_qq")}, \code{plot(fits[[1L]], type = "trajectory", comparison = fits[-1L], labels = names(fits))} (see \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}),
 \link[=plot.mfrm_fit]{plot(x, type = "agreement", view = "heatmap")}, \code{\link[=response_time_review]{response_time_review()}},
 \link[=plot.mfrm_response_time_review]{plot(x)}
-
-\link{mfrmr_plot_migration}
 }
 \concept{GPCM boundaries}
 \concept{confidence intervals}

@@ -103,6 +103,9 @@
 #' See [stats::mantelhaen.test()] for the numerical inference conventions.
 #' @seealso [ordinal_logistic_table()], [analyze_dff()], [mfrmr_linking_and_dff]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("mantel_haenszel_table", run.dontrun = TRUE)
+#' \dontrun{
 #' # One binary target per Person; both groups share two declared strata.
 #' d <- data.frame(Person = paste0("P", 1:16), Item = "A",
 #'   Group = rep(c("Reference", "Focal"), each = 8),
@@ -112,6 +115,7 @@
 #'                            "Matching", c("Reference", "Focal"))
 #' mh$table
 #' mh$strata
+#' }
 #' @export
 mantel_haenszel_table <- function(data, person, target, score, group, strata,
                                  groups, inference = c("exact", "asymptotic"),

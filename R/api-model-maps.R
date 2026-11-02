@@ -56,9 +56,11 @@
 #' and prior-only results. A prior-only point is not a measured ability.
 #' `title`/`caption` replace defaults; `show_title`/`show_notes` hide annotations
 #' without removing interpretation metadata. `text_scale` and `point_size`
-#' change sizes, and `draw = FALSE` returns saved plot data. [as_ggplot()]
-#' preserves these choices and supplies alternative text. Plot tables retain
-#' all selected unavailable rows; `locations` also retains undisplayed panels.
+#' change sizes, and `draw = FALSE` returns the `ggplot` object without
+#' printing. [plot_data()] extracts the plotted tables (`locations` also retains
+#' undisplayed panels) and notes; [as_ggplot()] remains idempotent on the
+#' returned object and supplies alternative text. Plot tables retain
+#' all selected unavailable rows.
 #' No fitting, scoring or integration is performed during plotting/export.
 #'
 #' @examples
@@ -166,34 +168,10 @@ mfrm_model_map <- function(x, type, facet=NULL, persons=NULL, fit_stat=c("Infit"
     display=list(type=type,metric=metric,panels=panels,palette=palette,show_title=show_title,
       show_notes=show_notes,show_labels=show_labels,text_scale=text_scale,point_size=point_size))
   out<-new_mfrm_plot_data("extended_model_map",payload)
-  if(draw) mfrm_draw_model_map(payload)
-  invisible(out)
-}
-
-mfrm_draw_model_map <- function(payload) {
-  opt<-payload$display;tab<-payload$table
-  range_finite <- function(z,pad=.3) {z<-z[is.finite(z)];if(!length(z)) z<-c(-1,1);r<-range(z);r+c(-1,1)*max(pad,diff(r)*.15)}
-  y<-range_finite(c(tab$Estimate[tab$Included],tab$Lower[tab$IntervalShown],tab$Upper[tab$IntervalShown]))
-  panels<-if(opt$type=="wright") "all" else opt$panels
-  nc<-min(3,ceiling(sqrt(length(panels))))
-  old<-graphics::par(mfrow=c(ceiling(length(panels)/nc),nc),mar=c(5,5,3,1),oma=c(if(opt$show_notes) 5 else 0,0,if(opt$show_title) 3 else 0,0),cex=opt$text_scale)
-  on.exit(graphics::par(old),add=TRUE)
-  for(panel in panels) {
-    d<-if(opt$type=="wright") tab else tab[tab$Panel==panel,,drop=FALSE]
-    xr<-if(opt$type=="wright") c(.5,length(opt$panels)+.5) else range_finite(d$X[d$Included],.05)
-    graphics::plot(NA_real_,xlim=xr,ylim=y,xaxt=if(opt$type=="wright") "n" else "s",
-      xlab=if(opt$type=="wright") "" else paste("Descriptive",if(opt$metric=="infit") "Infit" else "Outfit"),
-      ylab="Conditional reference location (logits)",main=if(opt$type=="wright") "" else panel,bty="n")
-    if(opt$type=="wright") graphics::axis(1,at=seq_along(opt$panels),labels=opt$panels)
-    ci<-d[d$IntervalShown,,drop=FALSE];used<-d[d$Included,,drop=FALSE]
-    graphics::segments(ci$X,ci$Lower,ci$X,ci$Upper,col=ci$Colour)
-    graphics::points(used$X,used$Estimate,pch=used$Shape,col=used$Colour,cex=opt$point_size/2.5)
-    if(opt$show_labels) graphics::text(used$X,used$Estimate,used$Level,pos=3,cex=.7)
-    if(!nrow(used)) graphics::text(mean(xr),mean(y),"No available locations")
-  }
-  if(opt$show_title) graphics::mtext(payload$title,side=3,outer=TRUE,line=1)
-  if(opt$show_notes) graphics::mtext(paste(strwrap(payload$caption,105),collapse="\n"),side=1,outer=TRUE,line=1,cex=.7)
-  invisible(payload)
+  p <- .mfrm_finalize_ggplot(out, draw = FALSE)
+  attr(p, "mfrmr_alt_text") <- payload$alt_text
+  if (isTRUE(draw)) .mfrm_draw_ggplot_clean(p)
+  invisible(p)
 }
 
 .mfrmr_gg_model_map <- function(payload) {
@@ -204,7 +182,8 @@ mfrm_draw_model_map <- function(payload) {
     ggplot2::geom_point(data=used,ggplot2::aes(colour=.data$Kind,shape=.data$Kind),size=opt$point_size)+
     ggplot2::scale_colour_manual(name=NULL,values=colours,drop=FALSE)+
     ggplot2::scale_shape_manual(name=NULL,values=shapes,drop=FALSE)+
-    ggplot2::theme_minimal(base_size=11*opt$text_scale)+ggplot2::theme(legend.position="bottom",panel.spacing=ggplot2::unit(1.5,"lines"))
+    .mfrmr_gg_theme_styled("standard", base_size = 11 * opt$text_scale) +
+    ggplot2::theme(legend.position="bottom",panel.spacing=ggplot2::unit(1.5,"lines"))
   if(opt$show_labels) p<-p+ggplot2::geom_text(data=used,ggplot2::aes(label=.data$Level),vjust=-1,size=3*opt$text_scale)
   if(opt$type=="wright") p<-p+ggplot2::scale_x_continuous(breaks=seq_along(opt$panels),labels=opt$panels,limits=c(.5,length(opt$panels)+.5)) else
     p<-p+ggplot2::facet_wrap(~Panel,ncol=min(3,ceiling(sqrt(length(opt$panels)))),drop=FALSE)

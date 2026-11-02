@@ -49,6 +49,9 @@ design bookkeeping rather than signal-detection performance
 Summarize a DIF/bias screening simulation
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("summary.mfrm_signal_detection", run.dontrun = TRUE)
+\dontrun{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
 saved <- readRDS(system.file("examples", "simulation-signal-detection.rds",
@@ -56,6 +59,7 @@ saved <- readRDS(system.file("examples", "simulation-signal-detection.rds",
 # Inspect saved$generation_warnings and the result's run/status tables.
 sig_eval <- saved$result
 summary(sig_eval)
+}
 }
 \seealso{
 \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}, \link{plot.mfrm_signal_detection}

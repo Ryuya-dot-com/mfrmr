@@ -166,7 +166,7 @@ NULL
 #'   and for inspecting incomplete but connected assignment.
 #' - Use `mfrmr_example_core` for fast, idealized checks and examples that
 #'   specifically require complete crossing.
-#' - Use `mfrmr_example_bias` for [analyze_dff()], [analyze_dif()], [dif_interaction_table()],
+#' - Use `mfrmr_example_bias` for [analyze_dff()], [dif_interaction_table()],
 #'   [plot(x, type = "heatmap")][plot.mfrm_dif], and [estimate_bias()].
 #'
 #' All three objects can be loaded either with [load_mfrmr_data()] or directly

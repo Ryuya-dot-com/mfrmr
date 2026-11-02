@@ -57,26 +57,27 @@ test_that("simulate_mfrm_recovery returns row-level and summary recovery tables"
   expect_output(print(rec), "MFRM Parameter Recovery Simulation Summary")
 
   summary_plot <- plot(rec, type = "summary", metric = "rmse", draw = FALSE)
-  expect_s3_class(summary_plot, "mfrm_plot_data")
-  expect_identical(summary_plot$name, "recovery_simulation")
-  expect_identical(summary_plot$data$type, "summary")
+  expect_s3_class(summary_plot, "ggplot")
+  expect_identical(attr(summary_plot, "mfrmr_plot_data")$name, "recovery_simulation")
+  summary_payload <- plot_data(summary_plot)
+  expect_identical(summary_payload$type, "summary")
   expect_true(all(c("plot_table", "metric", "metric_label", "notes") %in%
-                    names(summary_plot$data)))
-  expect_true(nrow(summary_plot$data$plot_table) > 0)
+                    names(summary_payload)))
+  expect_true(nrow(summary_payload$plot_table) > 0)
 
   error_plot <- plot(rec, type = "errors", parameter_type = "facet", draw = FALSE)
-  expect_s3_class(error_plot, "mfrm_plot_data")
-  expect_identical(error_plot$data$type, "errors")
-  expect_true(all(error_plot$data$plot_table$ParameterType == "facet"))
+  expect_s3_class(error_plot, "ggplot")
+  expect_identical(plot_data(error_plot, "type"), "errors")
+  expect_true(all(plot_data(error_plot, "plot_table")$ParameterType == "facet"))
 
   scatter_plot <- plot(rec, type = "scatter", comparison = "unaligned", draw = FALSE)
-  expect_s3_class(scatter_plot, "mfrm_plot_data")
-  expect_identical(scatter_plot$data$comparison, "unaligned")
+  expect_s3_class(scatter_plot, "ggplot")
+  expect_identical(plot_data(scatter_plot, "comparison"), "unaligned")
 
   status_plot <- plot(rec, type = "replications", draw = FALSE)
-  expect_s3_class(status_plot, "mfrm_plot_data")
-  expect_identical(status_plot$data$type, "replications")
-  expect_true("rep_overview" %in% names(status_plot$data))
+  expect_s3_class(status_plot, "ggplot")
+  expect_identical(plot_data(status_plot, "type"), "replications")
+  expect_true("rep_overview" %in% names(plot_data(status_plot)))
 
   assessment <- assess_mfrm_recovery(
     rec,
@@ -151,48 +152,50 @@ test_that("simulate_mfrm_recovery returns row-level and summary recovery tables"
   expect_output(print(assessment), "MFRM Recovery Adequacy Assessment")
 
   assessment_status_plot <- plot(assessment, type = "status", draw = FALSE)
-  expect_s3_class(assessment_status_plot, "mfrm_plot_data")
-  expect_identical(assessment_status_plot$name, "recovery_assessment")
-  expect_identical(assessment_status_plot$data$type, "status")
+  expect_s3_class(assessment_status_plot, "ggplot")
+  expect_identical(attr(assessment_status_plot, "mfrmr_plot_data")$name, "recovery_assessment")
+  status_payload <- plot_data(assessment_status_plot)
+  expect_identical(status_payload$type, "status")
   expect_true(all(c("plot_table", "section_status", "status_counts",
                     "checklist", "condition_reporting_notes",
                     "condition_review", "diagnostic_reporting_notes",
                     "diagnostic_review",
                     "reading_order", "guidance") %in%
-                    names(assessment_status_plot$data)))
-  expect_s3_class(assessment_status_plot$data$condition_reporting_notes,
+                    names(status_payload)))
+  expect_s3_class(status_payload$condition_reporting_notes,
                   "data.frame")
-  expect_s3_class(assessment_status_plot$data$diagnostic_reporting_notes,
+  expect_s3_class(status_payload$diagnostic_reporting_notes,
                   "data.frame")
-  expect_true(all(assessment_status_plot$data$condition_reporting_notes$ValidationUse ==
+  expect_true(all(status_payload$condition_reporting_notes$ValidationUse ==
                     "generator_condition_context"))
-  expect_true(all(assessment_status_plot$data$diagnostic_reporting_notes$ValidationUse ==
+  expect_true(all(status_payload$diagnostic_reporting_notes$ValidationUse ==
                     "diagnostic_context_only"))
-  expect_true(nrow(assessment_status_plot$data$status_counts) > 0)
-  expect_true("AttentionOrder" %in% names(assessment_status_plot$data$section_status))
+  expect_true(nrow(status_payload$status_counts) > 0)
+  expect_true("AttentionOrder" %in% names(status_payload$section_status))
   expect_true(any(grepl("Read this plot before metric-level plots",
-                        assessment_status_plot$data$guidance, fixed = TRUE)))
+                        status_payload$guidance, fixed = TRUE)))
 
   assessment_metric_plot <- plot(assessment, type = "metrics",
                                  metric = "rmse", draw = FALSE)
-  expect_s3_class(assessment_metric_plot, "mfrm_plot_data")
-  expect_identical(assessment_metric_plot$name, "recovery_assessment")
-  expect_identical(assessment_metric_plot$data$type, "metrics")
-  expect_identical(assessment_metric_plot$data$metric, "rmse")
+  expect_s3_class(assessment_metric_plot, "ggplot")
+  expect_identical(attr(assessment_metric_plot, "mfrmr_plot_data")$name, "recovery_assessment")
+  metric_payload <- plot_data(assessment_metric_plot)
+  expect_identical(metric_payload$type, "metrics")
+  expect_identical(metric_payload$metric, "rmse")
   expect_true(all(c("Value", "Limit", "Status", "AttentionOrder") %in%
-                    names(assessment_metric_plot$data$plot_table)))
+                    names(metric_payload$plot_table)))
   expect_true(all(c("metric_review", "condition_reporting_notes",
                     "condition_review", "diagnostic_reporting_notes",
                     "diagnostic_review",
                     "reading_order", "guidance") %in%
-                    names(assessment_metric_plot$data)))
-  expect_s3_class(assessment_metric_plot$data$condition_reporting_notes,
+                    names(metric_payload)))
+  expect_s3_class(metric_payload$condition_reporting_notes,
                   "data.frame")
-  expect_s3_class(assessment_metric_plot$data$diagnostic_reporting_notes,
+  expect_s3_class(metric_payload$diagnostic_reporting_notes,
                   "data.frame")
-  expect_true(nrow(assessment_metric_plot$data$plot_table) > 0)
+  expect_true(nrow(metric_payload$plot_table) > 0)
   expect_true(any(grepl("sorted by status priority",
-                        assessment_metric_plot$data$guidance, fixed = TRUE)))
+                        metric_payload$guidance, fixed = TRUE)))
 
   assessment_no_limits <- assess_mfrm_recovery(
     rec,
@@ -429,8 +432,8 @@ test_that("simulate_mfrm_recovery supports fitted GPCM slope rows", {
 
   slope_plot <- plot(rec, type = "summary", metric = "bias",
                      parameter_type = "slope", draw = FALSE)
-  expect_s3_class(slope_plot, "mfrm_plot_data")
-  expect_true(all(slope_plot$data$plot_table$ParameterType == "slope"))
+  expect_s3_class(slope_plot, "ggplot")
+  expect_true(all(plot_data(slope_plot, "plot_table")$ParameterType == "slope"))
 
   assessment <- assess_mfrm_recovery(
     rec,

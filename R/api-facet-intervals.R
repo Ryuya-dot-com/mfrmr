@@ -541,9 +541,9 @@
 #' [mfrm_population_intervals()] consumer to models with fitted interactions.
 #'
 #' @section Two-family location targets:
-#'   For native two-family GPCM MML, select either modeled non-Person facet.
-#'   The first slope owner's locations sum to zero; the second owner's locations
-#'   are uncentered on the fixed N(0,1) ability scale. These locations are measured
+#'   For native two-family GPCM MML, select a modeled non-Person facet.
+#'   Locations sum to zero except in the declared `noncenter_facet`, whose
+#'   locations are uncentered on the fixed N(0,1) ability scale. These locations are measured
 #'   before multiplication by both slope components. Increasing a location
 #'   lowers expected ratings when ability, slopes and other effects stay fixed.
 #'   A contrast between actual raters need not imply a uniform difference in
@@ -604,16 +604,13 @@
 #'   Review quadrature sensitivity separately; the helper reuses the fitted grid.
 #'
 #' @section Bounded evaluation:
-#'   For the RSM/PCM route, a 1,600-dataset comparison used 80/320 independent persons, three
-#'   fixed raters and two criteria. In its combined skewed-ability/sparse-design
-#'   scenario, sandwich coverage of generating contrasts ranged from 87.0 to
-#'   95.5 percent despite all intervals being available. Coverage of the
-#'   independently calculated working-model targets ranged from 93.0 to 97.5
-#'   percent. These are ranges across conditions/contrasts, not uncertainty
-#'   bounds or universal operating characteristics. At 200 datasets per
-#'   condition, MCSE near 95 percent is about 1.54 percentage points.
-#'   See \code{vignette("mfrmr-facet-intervals", package = "mfrmr")} for the
-#'   design, interpretation and a complete rater-feedback example.
+#'   Availability is not a coverage guarantee: sandwich intervals can describe
+#'   a working-model target accurately while missing the generating contrast.
+#'   The \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-facet-intervals.html#what-the-bounded-simulation-showed}{online simulation comparison}
+#'   gives the evaluated designs, results and Monte Carlo uncertainty. For a
+#'   worked rater comparison, start at the beginning of that guide. The
+#'   assumptions, small-sample cautions and unavailable states are retained
+#'   in the sections above for offline use.
 #'
 #' @references White, H. (1982). Maximum likelihood estimation of misspecified
 #'   models. *Econometrica*, 50(1), 1--25.
@@ -667,7 +664,7 @@
 #' difference <- mfrm_facet_intervals(fit, "Rater", contrasts = contrast)
 #' summary(difference)[, c("Target", "Estimate", "SE", "Lower", "Upper", "Status")]
 #' # With the default negative rater sign, a positive contrast means the first
-#' # rater is stricter. Units are native logits. An interval containing zero
+#' # rater is more severe. Units are native logits. An interval containing zero
 #' # leaves the direction uncertain; it does not establish equivalence.
 #'
 #' # Estimate the population SD in this same model before standardizing.
@@ -699,6 +696,7 @@
 #' }
 #' }
 #' @export
+#' @order 1
 mfrm_facet_intervals <- function(fit, facet = NULL, contrasts = NULL,
                                  method = c("model", "sandwich"),
                                  clusters = NULL, adjust = FALSE, level = .95,
@@ -932,7 +930,7 @@ mfrm_facet_intervals <- function(fit, facet = NULL, contrasts = NULL,
     out$source <- mfrm_gpcm_inference_source(fit)
     out$settings$two_family <- TRUE
     out$settings$scale <- "fixed_standard_normal"
-    out$settings$location_reference <- if (facet == fit$config$slope_facet[1L])
+    out$settings$location_reference <- if (facet != fit$config$noncenter_facet)
       "sum_to_zero_across_levels" else "uncentered_on_fixed_N01"
     out$settings$integration <- if (mfrmr_adaptive_integration(fit$config)) "adaptive" else "fixed"
     out$checks <- inference$checks
@@ -1115,8 +1113,10 @@ mfrm_person_likelihood_scores <- function(fit) {
 }
 
 #' @rdname mfrm_facet_intervals
-#' @param x,object An object returned by `mfrm_facet_intervals()`.
-#' @param ... Unused by print and summary methods.
+#' @param object An object returned by `mfrm_facet_intervals()`.
+#' @param ... For `print.mfrm_facet_intervals()`: Unused by print and summary methods.
+#'
+#' For `plot()`: Unused.
 #' @export
 print.mfrm_facet_intervals <- function(x, ...) {
   cat(x$settings$facet, "intervals:", x$settings$method, "covariance\n")
@@ -1129,8 +1129,11 @@ print.mfrm_facet_intervals <- function(x, ...) {
 }
 
 #' @rdname mfrm_facet_intervals
-#' @export
-summary.mfrm_facet_intervals <- function(object, ...) object$table
+#' @name summary.mfrm_facet_intervals
+#' @aliases summary.mfrm_facet_intervals
+#' @usage \method{summary}{mfrm_facet_intervals}(object, ...)
+#' @rawNamespace S3method(summary,mfrm_facet_intervals,summary.mfrm_pooled)
+NULL
 
 #' @rdname mfrm_facet_intervals
 #' @param parm For `confint()`, optional distinct target names from

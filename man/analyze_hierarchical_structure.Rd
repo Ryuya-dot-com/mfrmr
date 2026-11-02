@@ -151,6 +151,9 @@ See \link{mfrmr_compatibility_layer}.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("analyze_hierarchical_structure", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 hs <- analyze_hierarchical_structure(toy,
                                      facets = c("Rater", "Criterion"),
@@ -165,6 +168,7 @@ if (requireNamespace("lme4", quietly = TRUE) &&
                                             facets = c("Rater", "Criterion"))
   summary(hs_full)
   plot(hs_full, type = "icc")
+}
 }
 }
 \references{

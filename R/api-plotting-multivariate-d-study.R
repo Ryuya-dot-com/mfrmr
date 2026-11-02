@@ -223,7 +223,7 @@
 #' retain their recorded values and availability: rerun
 #' [mfrm_d_study()] on the saved G-study to apply current rules.
 #'
-#' @return Invisibly, an `mfrm_plot_data` object. Use [plot_data()] to extract
+#' @return Invisibly, a `ggplot` object. Use [plot_data()] to extract
 #'   `table` (the selected scores/composites), `series` (one row per scenario and
 #'   plotted metric, including missing values), `unavailable`, `design_grid`,
 #'   `weights`, score identity, axis/group names, labels, `component_note`,
@@ -252,6 +252,9 @@
 #'   the optional ggplot2 package; for example, `as_ggplot(d, type = "sem")`.
 #' @seealso [mfrm_d_study()], [mfrm_g_study()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_multivariate_d_study", run.dontrun = TRUE)
+#' \dontrun{
 #' # Question: how much would doubling the common tasks change dependability?
 #' tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 #' g <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
@@ -285,7 +288,10 @@
 #' sources <- plot(alternatives, composite = "Difference", type = "error_components")
 #' plot_data(sources, "table") # Includes signed cross-score covariance terms.
 #' plot_data(sources, "totals") # Error totals, SEM, G/Phi and availability.
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' }
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @md
 #' @export
 plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem", "error_components"),
@@ -478,90 +484,7 @@ plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem", "e
     out$data$notes <- rbind(out$data$notes,
       data.frame(Type = "uncertainty", Text = bands$notes))
   }
-  if (!draw) return(invisible(out))
-  old <- graphics::par()[c("mfrow", "mar", "oma", "cex", "mex")]
-  on.exit(graphics::par(old), add = TRUE)
-  apply_plot_preset(style)
-  graphics::par(mfrow = c(ceiling(nrow(panels) / panel_columns), panel_columns),
-    mar = if (faceted) c(4.3, 5.5, 3.2, 1) else c(4.7, 5.3, 2.3, if (show_legend) 8 else 1),
-    oma = c(if (faceted && show_legend) 1 + ceiling(length(groups) / 2) else .2, 0, .2, 0))
-  if (show_legend && !faceted) {
-    margin <- graphics::par("mar")
-    legend_width <- max(graphics::strwidth(paste("MMMM", groups), units = "inches", cex = 0.8))
-    margin[4L] <- max(margin[4L], legend_width / (graphics::par("csi") * graphics::par("mex")) + 1)
-    graphics::par(mar = margin)
-  }
-  y_lim <- .mfrm_mvds_y_limits(series, type == "coefficients", references$value)
-  for (i in seq_len(nrow(panels))) {
-    s <- series[if (faceted) series$Panel == panels$Panel[i] else
-      series$Metric == panels$Metric[i], , drop = FALSE]
-    ok <- s$Status == "Available" & is.finite(s$Value)
-    x_lim <- if (faceted) range(series$X) else range(s$X)
-    plot(x_lim, y_lim, type = "n", ylim = y_lim,
-      xlab = x_label,
-      ylab = if (length(metrics) == 1L) sub(": ", "\n", y_label) else if (type == "coefficients") "Dependability\nHigher is better" else "SEM (score units)\nLower is better",
-      main = if (faceted || length(metrics) > 1L) panels$Label[i] else NULL, xaxt = "n", yaxt = "n")
-    ticks <- sort(unique(if (faceted) series$X else s$X))
-    if (length(ticks) > 15L) ticks <- pretty(range(ticks))
-    axis(1, at = ticks[ticks >= x_lim[1] & ticks <= x_lim[2] & ticks == floor(ticks)])
-    has_intervals <- !is.null(bands) && any(s$IntervalAvailable)
-    if (any(ok) || has_intervals) {
-      if (type == "coefficients" && identical(y_lim, c(0, 1)))
-        axis(2, at = seq(0, 1, 0.2), las = 1) else axis(2, las = 1)
-      graphics::grid(nx = NA, ny = NULL, col = style$grid)
-      if (has_intervals) for (run in unique(stats::na.omit(s$IntervalRun))) {
-        z <- s[!is.na(s$IntervalRun) & s$IntervalRun == run, , drop = FALSE]
-        z <- z[order(z$X, z$Scenario), , drop = FALSE]
-        j <- match(z$Group[1L], groups)
-        if (length(unique(z$X)) == 1L) {
-          segments(z$X, z$Lower, z$X, z$Upper, col = cols[j], lty = line_types[j])
-        } else {
-          graphics::polygon(c(z$X, rev(z$X)), c(z$Lower, rev(z$Upper)),
-            col = grDevices::adjustcolor(cols[j], alpha.f = .14), border = NA)
-          lines(z$X, z$Lower, col = cols[j], lty = line_types[j], lwd = .7)
-          lines(z$X, z$Upper, col = cols[j], lty = line_types[j], lwd = .7)
-        }
-      }
-      for (j in seq_along(groups)) {
-        z <- s[s$Group == groups[j], , drop = FALSE]
-        z <- z[order(z$X, z$Scenario), , drop = FALSE]
-        z$Value[z$Status != "Available" | !is.finite(z$Value)] <- NA_real_
-        lines(z$X, z$Value, col = cols[j], lty = line_types[j], lwd = 2)
-        pch <- rep(shapes[j], nrow(z))
-        if (!is.null(bands)) pch[!z$IntervalAvailable] <- c(1, 2, 0, 5, 1, 2)[(j-1L) %% 6L+1L]
-        points(z$X, z$Value, col = cols[j], pch = pch)
-      }
-    } else {
-      text(mean(x_lim), mean(y_lim), .mfrm_mvds_unavailable_message(s$Status, compact = faceted),
-        cex = 0.8, col = style$foreground)
-    }
-    if (nrow(references)) abline(h = references$value,
-      lty = references$linetype, col = style$neutral)
-    if (show_legend && !faceted) {
-      .mfrm_mvds_legend(groups, cols, line_types, shapes, faceted = FALSE)
-    }
-  }
-  if (faceted && show_legend) {
-    .mfrm_mvds_legend(groups, cols, line_types, shapes, faceted = TRUE)
-  }
-  invisible(out)
-}
-
-.mfrm_mvds_legend <- function(groups, cols, line_types, shapes, faceted) {
-  # Recompute physical text spacing when pkgdown or a saved plot changes devices.
-  grDevices::recordGraphics({
-    if (faceted) {
-      legend(graphics::grconvertX(.5, from = "ndc"),
-        graphics::grconvertY(.015, from = "ndc"), legend = groups,
-        col = cols, lty = line_types, pch = shapes, ncol = min(2, length(groups)),
-        bty = "n", xpd = NA, xjust = .5, yjust = 0, cex = .8)
-    } else {
-      usr <- graphics::par("usr")
-      legend(usr[2] + 0.03 * diff(usr[1:2]), usr[4], legend = groups,
-        col = cols, lty = line_types, pch = shapes, bty = "n", xpd = NA, cex = .8)
-    }
-  }, list(groups = groups, cols = cols, line_types = line_types,
-    shapes = shapes, faceted = faceted), asNamespace("mfrmr"))
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 .mfrm_mvds_y_limits <- function(series, coefficients, references) {

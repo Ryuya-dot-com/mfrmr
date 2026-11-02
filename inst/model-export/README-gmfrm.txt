@@ -13,7 +13,9 @@ value_role distinguishes estimated parameters, fixed anchors and values
 determined by constraints. Fixed values have no estimated SD or interval
 (NA); zero calibration uncertainty is not inferred. Internal coordinates
 remain available for diagnostic review. posterior-summary.rds retains all
-tables and interpretation notes.
+tables and interpretation notes, and posterior-draws.rds stores the matching
+base-R chain-by-iteration parameter draws bound by checksum for shared-calibration
+contrasts and arbitrary credible levels in read_mfrm_posterior().
 
 The screen checks at least four chains, R-hat < 1.01, bulk/tail ESS >= 100
 per chain, zero divergences/tree-depth hits and E-BFMI >= 0.3. These are
@@ -48,13 +50,18 @@ maps Person and location labels; slope-levels.csv maps component_slopes and
 log_component_slopes to owners and levels. Category 1 is the lowest source
 score; categories.csv retains unused declared categories. steps[g,k] is the
 offset for transition k to k+1; model-data.rds$step_owners identifies g.
+Extended bundles also store $model_roles: the slope facets, step facet,
+uncentered location facet and geometric-mean-one reference. These roles follow
+read_mfrm_posterior() into contrasts, figures and reports.
 
 The default marginal prior SD is 1 for locations, step offsets and component
 log slopes. Centered blocks use orthonormal coordinates with SD multiplied by
 sqrt(m/(m-1)); their constrained components have the declared marginal SD and
 are dependent. Uncentered blocks use independent normal coordinates. These
 are explicit proper Bayesian priors, not MML penalties or an empirical
-coverage correction. Change location_sd, step_sd or log_slope_sd in
+coverage correction. The log-slope prior is tied to the source fit's geometric-
+mean-one reference. Exporting another reference with fresh independent priors
+changes the Bayesian model, not just its coordinates. Change location_sd, step_sd or log_slope_sd in
 model-data.rds$stan_data for prior sensitivity; update $priors metadata too.
 
 The model follows the product-slope response equation in Uto and Ueno (2020),
@@ -72,8 +79,14 @@ likelihood and replicated ratings condition on sampled abilities of existing
 Persons; they are not new-Person predictions or leave-one-Person-out scores.
 Repeated ratings retain the source conditional-independence assumption.
 
+The unanchored template keeps per-rating eta and effective_slopes local to
+computation, reducing CSV output. They can be reconstructed from theta,
+location_free, log_slope_free and the saved design matrices. Parameter draws,
+log_lik and y_rep are still saved; existing bundles can still be replayed.
+
 This format supports native, unanchored, unit-weight two-family GPCM MML
-sources with fixed N(0,1), second-owner steps, and no population regression,
+sources with fixed N(0,1), named slope/step/location roles and additional fixed
+additive facets, and no population regression,
 interactions, dummy facets or shrinkage. One-family GPCM uses a separate
 affine template in Stan or brms; two-family brms export remains unsupported. Retained ratings are exported, not omitted input rows or
 the original MML optimization. The bundle includes ratings and original labels;

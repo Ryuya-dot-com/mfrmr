@@ -176,6 +176,9 @@ rater facet, reported separately from agreement.}
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("interrater_agreement_table", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 
 # Saved synthetic MML/RSM analysis of example_operational.
@@ -190,6 +193,7 @@ agreement$pairs[, c("Rater1", "Rater2", "N", "Exact", "Corr", "MeanDiff")]
 # N is the number of matched ratings; Exact is the fraction with identical scores
 # MeanDiff = Rater1 minus Rater2: positive means Rater1 assigned higher scores
 # These observed-score comparisons are distinct from fitted rater severity
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_chisq_table]{facets_chisq_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "agreement")},

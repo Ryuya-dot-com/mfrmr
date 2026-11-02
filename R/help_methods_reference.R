@@ -8,14 +8,14 @@
 #' opened with `help("mfrmr_methods_reference")`, not a function to run.
 #' For an integrated guide to **when to use each model and estimator**, read
 #' `vignette("mfrmr-model-choice", package = "mfrmr")` or its
-#' [online version](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.html).
+#' [online version](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-model-choice.html).
 #' It compares practical uses and limitations, including why a more complex
 #' model is not automatically preferable. The sections below provide the
 #' calculation references after that choice.
 #'
 #' @section Start with the question:
 #' Suppose several judges score performances on several criteria. A low score
-#' might reflect the performance, a stricter judge, a harder criterion, or a
+#' might reflect the performance, a more severe judge, a more difficult criterion, or a
 #' combination the chosen model does not explain. MFRM estimates these effects
 #' under a stated model. Raw agreement asks a different question: did judges
 #' give the same ratings to the same performances?
@@ -71,10 +71,11 @@
 #' 5. **Check the requested output separately.** A fitted point, covariance,
 #'    interval, residual analysis and G/D projection have different requirements.
 #'    Flexible facet names/counts in one route do not extend another route.
-#'    For example, two-family GPCM currently has exactly two non-Person facets;
+#'    For example, two-family GPCM requires two slope owners and explicitly
+#'    declared step/location/reference roles; its Bayesian export is narrower;
 #'    incomplete G-study observations do not authorize arbitrary unbalanced
-#'    future D-study plans. Follow [gpcm_capability_matrix()],
-#'    [mfrmr_interval_guide()] and [mfrm_d_study()] for those limits.
+#'    future D-study plans. Follow `mfrmr_output_guide("gpcm_capabilities")`,
+#'    `mfrmr_output_guide("intervals")` and [mfrm_d_study()] for those limits.
 #'
 #' @section Find the appropriate calculation:
 #' Follow the help link for arguments, equations, returned fields, examples
@@ -89,7 +90,7 @@
 #' - **How do ability, severity and category use explain scores?** Ordered-category
 #'   response probabilities with specified facet effects. RSM shares steps; PCM assigns
 #'   steps to one selected facet; GPCM additionally allows positive slopes. [fit_mfrm()]
-#'   and [gpcm_capability_matrix()]; Andrich (1978), Masters (1982), Muraki (1992).
+#'   and [mfrmr_gpcm_scope]; Andrich (1978), Masters (1982), Muraki (1992).
 #'
 #' - **How are the parameters estimated?** MML integrates over a declared ability
 #'   distribution; JML estimates Person parameters jointly with structural parameters.
@@ -104,7 +105,7 @@
 #'
 #' - **How uncertain is a measure or difference?** A model-specific SE or interval for a
 #'   named target, conditional on specified assumptions. A difference may need the
-#'   covariance between estimates. [mfrmr_interval_guide()], [mfrm_facet_intervals()] and
+#'   covariance between estimates. `mfrmr_output_guide("intervals")`, [mfrm_facet_intervals()] and
 #'   [mfrm_population_intervals()]; each page describes its calculation and limitations.
 #'
 #' - **Which ratings are unexpected?** Infit/Outfit and residual summaries compare
@@ -124,7 +125,7 @@
 #'   categories. Two-family curves use their separate fitted-curve route with
 #'   unavailable curve/step intervals; these ordinary helpers do not extend to it.
 #'
-#' - **Is a rater unusually strict in a particular context?** Conditional bias screens
+#' - **Is a rater unusually severe in a particular context?** Conditional bias screens
 #'   describe departures from the additive model for a combination of facet levels.
 #'   [estimate_bias()] and [estimate_all_bias()]; Linacre (1989) and the FACETS sources
 #'   in their help. These screens hold calibration fixed.
@@ -205,7 +206,7 @@
 #'
 #' @section Use results as evidence about a construct:
 #' A construct is the attribute a score is intended to represent, such as
-#' speaking proficiency. Begin with a claim about that score and its use:
+#' speaking ability. Begin with a claim about that score and its use:
 #' "Content and Organization describe related aspects of performance across
 #' the specified tasks and raters." State the population, rubric, score units,
 #' intended composite or separate scores, and an expected pattern before
@@ -232,8 +233,8 @@
 #' positive but Person-by-Task variation is substantial, consider whether the
 #' intended generalization spans those tasks. A task-specific strength may be
 #' substantive; it is error only relative to the chosen across-task target.
-#' If fit looks satisfactory but the claimed proficiency is poorly represented
-#' by the tasks, fit does not repair content underrepresentation.
+#' If fit looks satisfactory but the intended construct is poorly represented
+#' by the tasks, fit does not repair construct underrepresentation.
 #'
 #' Inspect all components rather than choosing favorable ones. Covariances
 #' depend on units, and a raw component is not its contribution to a future
@@ -263,7 +264,7 @@
 #' Start with the same rated response, identified by all relevant keys such as
 #' Person, Task and Criterion. Matching several responses from one Person does
 #' not make them independent sampling units. The runnable
-#' `vignette("mfrmr-rating-agreement", package = "mfrmr")` shows matching,
+#' [online rating-agreement guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html) shows matching,
 #' exclusions, interpretation and saving without fitting a measurement model.
 #'
 #' - **Identical scores and model expectations:** [interrater_agreement_table()]
@@ -447,9 +448,10 @@
 #' @section Read the method before interpreting the number:
 #' **Model:** RSM/PCM use unit discrimination. One-family GPCM assigns slopes
 #' to one selected facet; MML allows a different step owner, whereas JML
-#' requires the same owner. The experimental two-family MML route has exactly
-#' two non-Person facets and additional restrictions. Check
-#' [gpcm_capability_matrix()] before transferring an ordinary-model analysis.
+#' requires the same owner. Experimental two-family MML permits two slope
+#' owners among additional fixed additive facets, with a fixed N(0,1)
+#' population, separate step/location roles and a named GM1 slope reference. Check
+#' `mfrmr_output_guide("gpcm_capabilities")` ([mfrmr_gpcm_scope]) before transferring an ordinary-model analysis.
 #' The original response-model papers do not establish the performance of
 #' every mfrmr estimator, extension or interval.
 #'
@@ -503,7 +505,7 @@
 #' interpretation allowed by its assumptions. A finite experimental interval
 #' is not evidence of nominal coverage. A missing endpoint is not infinity.
 #' Conditional bias screens and fixed-calibration Person intervals omit
-#' calibration uncertainty. Use [mfrmr_interval_guide()] to select the target
+#' calibration uncertainty. Use `mfrmr_output_guide("intervals")` to select the target
 #' before choosing a method.
 #'
 #' @section Find and cite the supporting literature:
@@ -566,7 +568,7 @@
 #' \url{https://education.uiowa.edu/sites/education.uiowa.edu/files/2026-04/casma-research-report-1-archived.pdf}.
 #'
 #' @seealso [mfrmr_workflow_methods], [mfrmr_output_guide()],
-#'   [mfrmr_interval_guide()], [gpcm_capability_matrix()]
+#'   [mfrmr_gpcm_scope]
 #' @concept calculation methods
 #' @concept methodological references
 #' @name mfrmr_methods_reference

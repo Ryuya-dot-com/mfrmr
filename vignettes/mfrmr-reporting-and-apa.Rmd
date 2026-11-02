@@ -10,6 +10,8 @@ vignette: >
 ```{r, include = FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
+  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
+  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
@@ -25,7 +27,7 @@ connects those steps to actual `mfrmr` tables and figures. The
 that the researcher must provide outside the fitted model.
 
 For a literature-based comparison with FACETS/ConQuest and actual L2
-speaking/writing papers, see [connect designs, networks and reports](mfrmr-networks-and-reporting.html#connect-to-a-manuscript-not-a-coefficient-inventory).
+speaking/writing papers, see [connect designs, networks and reports](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html#connect-to-a-manuscript-not-a-coefficient-inventory).
 That lesson also distinguishes the analysis units of MFRM and G/D studies.
 
 ## Choose report sections by question
@@ -39,14 +41,14 @@ coefficient list is not stronger evidence.
 | When this is your question | Report these outputs together | Existing route |
 | --- | --- | --- |
 | Can the model distinguish people or facet levels, and where does it misfit? | Estimates/intervals, Separation, Strata, model or fit-adjusted Reliability, fit basis, Wright map and relevant category curves | `diagnose_mfrm()` → `mfrm_results()` → `mfrm_report()`; this lesson below |
-| Do two named raters agree on the same responses? | Exact/adjacent agreement when useful, Cohen's kappa with declared unweighted/linear/quadratic weights, common-unit counts and exclusions | `pairwise_kappa_table()`; [agreement lesson](mfrmr-rating-agreement.html). Several raters produce separate pair results, not a single panel kappa. |
+| Do two named raters agree on the same responses? | Exact/adjacent agreement when useful, Cohen's kappa with declared unweighted/linear/quadratic weights, common-unit counts and exclusions | `pairwise_kappa_table()`; [agreement lesson](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html). Several raters produce separate pair results, not a single panel kappa. |
 | How much observed agreement does the panel show? | Krippendorff's alpha with its distance and pairable units, or a justified alternative such as Gwet AC2 | `krippendorff_alpha_table()` / `gwet_ac2_table()`. Choose the chance/distance model before interpreting the coefficient. |
 | How reproducible are numeric ratings under the specified rater model? | The stated ICC definition, single/average-score target, consistency/absolute-agreement target and analyzed sample | `pairwise_icc_table()` and its help. An ICC is not interchangeable with separation reliability, alpha or kappa. |
 | Which future assessment plan suits the intended score? | G-study variance/covariance components; D-study G/Phi/SEM, score weights, count grid, uncertainty and eligible paired contrasts | [G/D-study reporting structure](mfrmr-gtheory.html#report-the-assessment-planning-answer), `mfrm_report(g/d, intervals = saved_ci)` → `build_summary_table_bundle()`; `plot(g/d)` and the editable G/D template |
-| Can scores be compared across forms or waves? | Anchor source, values, scale/direction, centering, overlap, invariance assumption, drift and uncertainty basis | [Linking workflow](mfrmr-linking-and-dff.html), `review_mfrm_anchors()` → anchored fit / `build_linking_review()` → `build_summary_table_bundle()` |
+| Can scores be compared across forms or waves? | Anchor source, values, scale/direction, centering, overlap, invariance assumption, drift and uncertainty basis | [Linking workflow](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html), `review_mfrm_anchors()` → anchored fit / `build_linking_review()` → `build_summary_table_bundle()` |
 | Does a particular combination or group need investigation? | Signed bias/DFF contrast, cell evidence, reference group, multiplicity, uncertainty and follow-up | Specified `estimate_bias()` / `analyze_dff()` → `plot()` / tables. Supply matching bias results to `reporting_checklist()` and `build_apa_outputs()`; `dif_report()` serves DFF. |
 | Does a model choice change the answer? | Comparison basis, AIC/BIC where comparable, eligible LRT, numerical checks and changes in the target estimates/conclusion | `compare_mfrm()` → `build_model_choice_review()` → `build_summary_table_bundle()`; [model choice](mfrmr-model-choice.html#compare-conclusions-not-just-fit-statistics) |
-| What unexplained structure or grouping merits follow-up? | Node/feature definition, residual versus observed-score basis, overlap, missingness, selection choices and exploratory stability | [Visual diagnostics](mfrmr-visual-diagnostics.html) and [feature groups](mfrmr-external-features.html); keep exploration separate from confirmation |
+| What unexplained structure or grouping merits follow-up? | Node/feature definition, residual versus observed-score basis, overlap, missingness, selection choices and exploratory stability | [Visual diagnostics](mfrmr-visual-diagnostics.html) and [feature groups](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html); keep exploration separate from confirmation |
 
 Separation describes spread relative to error; Strata transforms separation;
 Reliability expresses another ratio of the same underlying variance estimates.
@@ -182,7 +184,7 @@ MML means marginal maximum likelihood; RSM is a rating-scale model with
 shared category thresholds. In this default fit, the person distribution is
 fixed to standard normal, person scores are expected a posteriori (EAP)
 estimates, and rater and criterion effects are fixed parameters centered
-within each facet. Higher rater estimates mean stricter ratings, in logits.
+within each facet. Higher rater estimates mean more severe ratings, in logits.
 In a real study, explain why this population assumption and shared-threshold
 rubric match the question. Record any different estimator, constraints,
 anchors, weights, interactions, or score orientation.
@@ -350,7 +352,7 @@ rater_apa <- apa_table(
   caption = "Rater severity and fit in the synthetic MML/RSM example",
   note = paste(
     "282 ratings of 48 persons by six raters on three criteria using a 1-4 rubric.",
-    "N counts rating rows. Measures and SEs are in logits; higher values mean stricter ratings.",
+    "N counts rating rows. Measures and SEs are in logits; higher values mean more severe ratings.",
     "Intervals are 95% normal approximations from observed-information SEs.",
     "Rater effects are centered within facet. Infit and Outfit have reference value 1."
   )
@@ -379,7 +381,7 @@ A worked explanation for this synthetic example is:
 > raw rater averages are not the only basis for comparison. Estimated rater
 > severity ranged from -0.606 logits (R01; SE = 0.224, 95% CI [-1.046, -0.166])
 > to 0.412 logits (R06; SE = 0.249, 95% CI [-0.077, 0.901]), a span of about
-> 1.018 logits. Thus, the fitted model describes R06 as stricter than R01 in
+> 1.018 logits. Thus, the fitted model describes R06 as more severe than R01 in
 > these data. This span is descriptive: it is not an interval or a hypothesis
 > test for the difference. The evidence does not establish why the raters
 > differ or how much a particular examinee's decision would change.
@@ -449,7 +451,7 @@ observed-score summaries; keep them separate from the marginal diagnostic
 screens above. Use `agreement$pairs` when differences among rater pairs matter.
 
 For observed QWK, ordinal Krippendorff alpha, Gwet AC2 or an aligned score-source
-comparison, follow [Rating agreement and score comparisons](mfrmr-rating-agreement.html).
+comparison, follow [Rating agreement and score comparisons](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html).
 That tutorial shows the matching keys and sample audits, and distinguishes
 these chance-agreement definitions from the fitted-model expectation above.
 
@@ -662,7 +664,7 @@ maximum likelihood in `mfrmr` (software versions are recorded below). Shared
 category steps represented a common transition structure across criteria.
 The working person distribution was fixed to standard normal, person scores
 were EAP estimates, and rater and criterion effects were centered within facet.
-Higher rater estimates indicated stricter scoring. The fit used 31 quadrature
+Higher rater estimates indicated more severe scoring. The fit used 31 quadrature
 points, an iteration limit of 400, and the recorded L-BFGS-B optimizer; the
 requested relative tolerance was 1e-9 and the effective selected-stage tolerance
 was 1e-13. We examined the stored readiness and precision checks, residual/EAP
@@ -846,7 +848,7 @@ writeLines(c(
   "Figure 1. Person, facet, and step locations in the synthetic MML/RSM analysis.",
   "282 ratings; 48 persons, six raters, three criteria; rubric 1-4.",
   "The histogram shows person EAP estimates. All locations are in logits.",
-  "Higher rater/criterion values mean stricter scoring/greater difficulty; effects are centered within facet.",
+  "Higher rater/criterion values mean more severe scoring/greater difficulty; effects are centered within facet.",
   "Facet whiskers are 95% normal intervals using MML observed-information SEs from the same diagnostics as Table 1.",
   "Steps are shared adjacent-category transitions shown as point estimates; see Step-uncertainty.csv for their intervals.",
   "The display does not test rater contrasts or establish unidimensionality."

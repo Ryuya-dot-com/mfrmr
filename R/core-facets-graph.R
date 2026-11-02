@@ -193,55 +193,5 @@
     legend = new_plot_legend(label = labels, role = if (type == "ccc") "source_category" else "expected_score",
       aesthetic = "color", value = colors),
     display = list(show_title = show_title, show_notes = show_notes, show_legend = show_legend)))
-  if (draw) {
-    nc <- min(2L, length(scales)); nr <- ceiling(length(scales) / nc)
-    key <- show_legend && type == "ccc"
-    key_space <- if (key) 1 + ceiling(length(labels) / 4) else 0
-    old <- graphics::par(mfrow = c(nr, nc), mar = c(4.5, 4.5, if (show_title) 3 else 1, 1),
-      oma = c(if (show_notes) 3 else 0, 0, 0, 0), xpd = FALSE)
-    on.exit(graphics::par(old), add = TRUE)
-    if (key) {
-      # Reserve a legend region instead of freezing device-to-user coordinates.
-      panel_cex <- graphics::par("cex")
-      panel_layout <- matrix(c(seq_along(scales), rep(0L, nr * nc - length(scales))),
-        nrow = nr, byrow = TRUE)
-      graphics::layout(rbind(panel_layout, rep(length(scales) + 1L, nc)),
-        heights = c(rep(1, nr), graphics::lcm(2.54 * graphics::par("csi") * key_space)))
-      graphics::par(cex = panel_cex)
-    }
-    limits <- function(z) {
-      z <- z[is.finite(z)]
-      if (!length(z)) return(c(0, 1))
-      r <- range(z)
-      if (diff(r) == 0) r <- r + c(-.5, .5)
-      r
-    }
-    for (s in scales) {
-      z <- d[d$Scale == s, , drop = FALSE]
-      graphics::plot(NA_real_, NA_real_, xlim = limits(z$X),
-        ylim = if (type == "ccc") c(0, 1) else limits(z$Y),
-        xlab = paste0(xlab, " [Scale ", s, "]"), ylab = ylab,
-        main = if (show_title) out$data$title else "")
-      for (label in labels) {
-        v <- z[z$Series == label, , drop = FALSE]
-        if (!nrow(v)) next
-        graphics::lines(v$X, v$Y, col = v$Color[1], lty = v$LineType[1], lwd = 1.5)
-        # Show isolated available coordinates even when no line can be drawn.
-        isolated <- !is.na(v$Segment) & !duplicated(v$Segment) & !duplicated(v$Segment, fromLast = TRUE)
-        graphics::points(v$X[isolated], v$Y[isolated], col = v$Color[1], pch = 16)
-      }
-      if (!any(z$Available)) graphics::text(mean(graphics::par("usr")[1:2]),
-        mean(graphics::par("usr")[3:4]), "No available coordinates")
-    }
-    if (key) {
-      graphics::par(mar = rep(0, 4))
-      graphics::plot.new()
-      graphics::legend("center", legend = labels, col = colors,
-        lty = (seq_along(labels) - 1L) %% 6L + 1L,
-        ncol = min(4L, length(labels)), cex = .8, bty = "n", xpd = NA, title = "Source category")
-    }
-    if (show_notes) graphics::mtext("Reported FACETS coordinates; inspect source scales and saved diagnostics.",
-      side = 1, outer = TRUE, line = .5, cex = .7)
-  }
-  out
+  .mfrm_finalize_ggplot(out, draw = draw)
 }

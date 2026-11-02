@@ -79,7 +79,7 @@
 #' These are bounded numerical comparisons, not universal accuracy bounds or
 #' performance cutoffs. They do not establish repeated-sampling 95 percent
 #' coverage when calibration is estimated, qualify the calibration likelihood,
-#' or test Person differences. See `vignette("mfrmr-random-raters")` for the
+#' or test Person differences. See [online random-rater guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html) for the
 #' reference-precision limitations and interpretation.
 #' @return An `mfrm_random_rater_scores` object with `table`, complete scoring
 #'   roster, data accounting, settings and source metadata for [mfrm_results()].
@@ -87,11 +87,12 @@
 #'   Keep `table$Status` and `table$Reason` with exported scores: `prior_only`
 #'   describes the assumed population without observed responses for that Person;
 #'   `unavailable` withholds the estimate, SD and bounds with a recorded cause.
-#' @param x A scoring result.
+#' @param x For `score_mfrm_random_rater()`: A scoring result.
+#'
+#' For `plot()`: A result from [score_mfrm_random_rater()].
 #' @param ... Unused.
 #' @seealso [predict.mfrm_random_rater()], [plot.mfrm_random_rater_scores()]
-#' @examples
-#' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+#' @examples example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
 #' fit <- example$random_rater$fit
 #' scores <- example$random_rater$scores
 #' # To recompute (requires RTMB >= 2.0 and can take several minutes):
@@ -101,6 +102,7 @@
 #' plot(scores)
 #' mfrm_results(fit, scores = scores, compute = "never")
 #' @export
+#' @order 1
 score_mfrm_random_rater <- function(object, newdata = NULL, persons = NULL,
     level = .95, quad_points = object$settings$quad_points,
     missing = if (is.null(newdata)) object$settings$missing else "fail") {
@@ -217,12 +219,11 @@ mfrm_random_rater_person_interval <- function(input, calibration, person, quad_p
 }
 
 #' @rdname score_mfrm_random_rater
-#' @export
-summary.mfrm_random_rater_scores <- function(object, ...) {
-  list(scores = object$table, status_counts = table(factor(object$table$Status,
-    levels = c("available_conditional", "prior_only", "unavailable"))),
-    data_usage = object$data_usage, settings = object$settings)
-}
+#' @name summary.mfrm_random_rater_scores
+#' @aliases summary.mfrm_random_rater_scores
+#' @usage \method{summary}{mfrm_random_rater_scores}(object, ...)
+#' @rawNamespace S3method(summary,mfrm_random_rater_scores,summary.mfrm_testlet_scores)
+NULL
 
 #' @rdname score_mfrm_random_rater
 #' @export
@@ -233,15 +234,15 @@ print.mfrm_random_rater_scores <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot Person scores from a shared-rater model
+#' @rdname score_mfrm_random_rater
+#' @details `plot()` method: Plot Person scores from a shared-rater model
 #' @inheritParams plot.mfrm_testlet_scores
 #' @seealso [plot.mfrm_testlet_scores()] for view selection, accessible output
 #'   and the meaning of the empirical distribution.
-#' @param x A result from [score_mfrm_random_rater()].
 #' @param draw `FALSE` returns plot data without opening a device.
-#' @param ... Unused.
-#' @return Invisibly, an `mfrm_plot_data` object; use [plot_data()].
-#' @details In the default interval view, all requested Persons remain labeled. Open circles indicate
+#' @return For `plot()`: Invisibly, a `ggplot` object; use [plot_data()] to
+#'   extract the underlying table and settings.
+#' @details For `plot()`: In the default interval view, all requested Persons remain labeled. Open circles indicate
 #'   prior-only results; unavailable scores have no point or interval.
 #'   Intervals are conditional on calibration and use joint rater Laplace
 #'   integration. They are not tests of Person differences. [as_ggplot()]

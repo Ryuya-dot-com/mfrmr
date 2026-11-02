@@ -1,12 +1,33 @@
-#' Read FACETS results for standalone visualization
+#' Read FACETS results for standalone visualization and fit review
 #'
 #' Import reported element measures, fit statistics and optional Graphfile
 #' curves without refitting a model.
-#' Use [plot.mfrm_facets_results()] to inspect the saved results.
+#' Use [plot.mfrm_facets_results()] to inspect the saved results, or pass the
+#' returned object to [facets_fit_review()] for external FACETS-vs-mfrmr fit
+#' comparison.
 #'
-#' @inheritParams read_facets_fit_table
-#' @param file Scorefile input as described below, or `NULL` when only
-#'   `graph_file` is supplied.
+#' @param file Scorefile input (a vector of file paths, a directory containing
+#'   `score.N.txt` files, or a data frame), or `NULL` when only `graph_file` is
+#'   supplied.
+#' @param facet Optional facet name to assign when the file does not contain a
+#'   facet column. Use this for one-facet CSV exports.
+#' @param facet_map Optional character vector mapping FACETS score-file numbers
+#'   to facet names, for example `c("1" = "Person", "2" = "Rater")`. If unnamed,
+#'   positions are used as score-file numbers.
+#' @param format File format. `"auto"` detects FACETS `score.N.txt` files from
+#'   their name/header; `"delimited"` reads a CSV/TSV/semicolon table; and
+#'   `"scorefile"` reads a FACETS score-file table, including comma, tab or
+#'   semicolon exports with facet heading lines. Fixed-field input requires
+#'   validated all-field headings with element number after the statistics;
+#'   appended facet fields are separated from the element label. Headerless,
+#'   element-first and selected-field fixed layouts are rejected. Use named
+#'   delimited columns for those layouts and for non-ASCII labels.
+#' @param facet_col,level_col Optional explicit column names for delimited
+#'   tables when automatic detection is not sufficient. For score files,
+#'   `level_col` can override the column immediately before `F-Number`.
+#' @param delimiter Optional delimiter for delimited tables. If omitted, comma,
+#'   tab, and semicolon are detected from the header line.
+#' @param encoding Source file encoding, explicitly converted to UTF-8.
 #' @param graph_file Optional path to one FACETS Graphfile with headings, in
 #'   CSV, tab-separated or validated ASCII fixed-width format. Supply an export
 #'   from the same analysis when also importing element results. File identity
@@ -23,9 +44,9 @@
 #' directory containing `score.N.txt` files, or a named delimited table. Comma,
 #' tab and semicolon Scorefiles retain their native facet heading lines. Numeric
 #' facet numbers default to `Facet1`, `Facet2`, etc.; supply `facet_map` to name
-#' them. A data frame is also accepted. The supported layouts follow
-#' [read_facets_fit_table()]. Use named delimited files for non-ASCII labels; fixed-width
-#' imports require ASCII because byte and character widths can differ.
+#' them. A data frame is also accepted. Validated fixed-field Scorefile layouts
+#' and named delimited tables are supported; use named delimited files for
+#' non-ASCII labels because byte and character widths can differ.
 #' For text output from FACETS, request `Scorefile=score.txt`,
 #' `Heading lines=Yes`, `QM=Double` and `CSV=Commas`, `Tabs` or `Semicolons`.
 #' Check that the files were actually generated; a zero process exit code alone
@@ -113,6 +134,7 @@
 #' result$table[, c("Facet", "ElementID", "Label", "Estimate", "SourceStatus")]
 #' plot(result, type = "measure", facets = "Rater", draw = FALSE)
 #' @export
+#' @order 1
 read_facets_results <- function(file = NULL, facet = NULL, facet_map = NULL,
                                 format = c("auto", "delimited", "scorefile"),
                                 facet_col = NULL, level_col = NULL,
@@ -255,7 +277,7 @@ read_facets_results <- function(file = NULL, facet = NULL, facet_map = NULL,
 }
 
 #' @rdname read_facets_results
-#' @param object,x A saved `mfrm_facets_results` object.
+#' @param object A saved `mfrm_facets_results` object.
 #' @param ... Must be empty.
 #' @param component `"elements"` (default) or `"curves"` for Graphfile results.
 #' @export
@@ -331,9 +353,11 @@ as.data.frame.mfrm_facets_results <- function(x, row.names = NULL, optional = FA
   labels
 }
 
-#' Plot imported FACETS measures, fit statistics and curves
-#'
+#' @rdname read_facets_results
+#' @details `plot()` method: Plot imported FACETS measures, fit statistics and curves
 #' @param x Saved output of [read_facets_results()].
+#'
+#' Also for `summary()`: A saved `mfrm_facets_results` object.
 #' @param type `"measure"` for labelled element locations by facet; `"wright"`
 #'   for points by facet on one measure axis; `"fit"` for measure versus mean
 #'   square; or `"infit_outfit"` for Infit versus Outfit. Wright maps require
@@ -345,7 +369,7 @@ as.data.frame.mfrm_facets_results <- function(x, row.names = NULL, optional = FA
 #'   Facet selectors do not apply to curves, and scale selectors do not apply
 #'   to element plots.
 #' @param statistic `"infit"` or `"outfit"`, used for `type = "fit"`.
-#' @param draw Logical; draw with base graphics when true.
+#' @param draw Logical; print the `ggplot` figure when true.
 #' @param show_title,show_notes Logical; show title/interpretation notes in the
 #'   plot, off by default. Notes always remain in the returned data.
 #' @param show_legend Logical; display the source-status symbol key or category
@@ -358,22 +382,20 @@ as.data.frame.mfrm_facets_results <- function(x, row.names = NULL, optional = FA
 #'   This changes display labels only, not source labels or element identity.
 #'   Curve plots do not accept this map. Only `type = "measure"` draws element
 #'   labels; the other element plots retain them in returned plot data.
-#' @param ... Must be empty.
-#' @return Invisibly an `mfrm_plot_data` object. `data$plot_data` retains every
-#'   selected row with `X`, `Y`, `Available` and `Reason`; element plots also
-#'   have `Symbol`, and curves have `Series`, `Color`, `LineType` and `Segment`.
-#'   Unavailable
-#'   numerical coordinates are `NA` (measure plots retain label positions).
-#'   Original reported values/status remain in the same
-#'   rows. `data$notes`, `data$sources` and `data$metadata` describe interpretation
-#'   and origin. `data$label_map` retains a supplied display map. Filtering and
-#'   display labels do not change the saved results.
-#' @details
-#' Each measure panel has its own axis; the Wright display shares one measure
+#' @return For `plot()`: Invisibly a `ggplot` object whose underlying payload
+#'   (accessible via [plot_data()]) retains every selected row in `plot_data`
+#'   with `X`, `Y`, `Available` and `Reason`; element plots also have `Symbol`,
+#'   and curves have `Series`, `Color`, `LineType` and `Segment`.
+#'   Unavailable numerical coordinates are `NA` (measure plots retain label
+#'   positions). Original reported values/status remain in the same rows.
+#'   `notes`, `sources` and `metadata` describe interpretation and origin.
+#'   `label_map` retains a supplied display map. Filtering and display labels
+#'   do not change the saved results.
+#' @details For `plot()`: Each measure panel has its own axis; the Wright display shares one measure
 #' axis without centering, reversing signs or inventing category thresholds.
 #' Filled circles denote estimated elements, squares direct/group anchor flags, downward/upward
 #' triangles extreme low/high source status, diamonds single observations and
-#' open circles unknown source status. The symbol key is in `data$legend`.
+#' open circles unknown source status. The symbol key is in `plot_data(p, "legend")`.
 #' A square marks source Status 1; it does not identify an individually fixed
 #' measure. Group-anchor members can vary around a fixed group mean, and
 #' `GroupRaw` may instead be a reporting group. Check the original specification
@@ -400,21 +422,24 @@ as.data.frame.mfrm_facets_results <- function(x, row.names = NULL, optional = FA
 #' rows break the lines. The legend identifies source category labels. Expected
 #' scores and category labels retain their source coding. Each panel has its
 #' own reported Measure axis, independent of element-plot scale declarations.
-#' For curves, `data$data` holds the raw Graphfile table, `data$plot_data` the
-#' selected long rows, and `data$diagnostics` the probability-sum checks.
-#' @examples
+#' For curves, `plot_data(p, "data")` holds the raw Graphfile table,
+#' `plot_data(p, "plot_data")` the selected long rows, and
+#' `plot_data(p, "diagnostics")` the probability-sum checks.
+#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_facets_results", run.dontrun = TRUE)
+#' \dontrun{
 #' path <- system.file("extdata", "facets-example", package = "mfrmr")
 #' result <- read_facets_results(path,
 #'   facet_map = c("Person", "Rater", "Task"), source_version = "4.5.0")
 #' plot(result, type = "measure", facets = "Person")
 #' p <- plot(result, type = "infit_outfit", facets = "Rater", draw = FALSE)
-#' p$data$plot_data[, c("Label", "X", "Y", "Available", "Reason")]
-#' p$data$notes
+#' plot_data(p, "plot_data")[, c("Label", "X", "Y", "Available", "Reason")]
+#' plot_data(p, "notes")
 #' # Display names are joined by facet and exported ID, never by row order.
 #' labels <- data.frame(Facet = "Person", ElementID = c("1", "2"),
 #'   DisplayLabel = c("Participant A", "Participant B"))
 #' labelled <- plot(result, facets = "Person", label_map = labels, draw = FALSE)
-#' labelled$data$plot_data[, c("ElementID", "Label", "DisplayLabel")]
+#' plot_data(labelled, "plot_data")[, c("ElementID", "Label", "DisplayLabel")]
 #' # A separate synthetic PCM analysis, with four exported scale curves.
 #' graph_path <- system.file("extdata", "facets-graph-example", "graph.txt",
 #'   package = "mfrmr")
@@ -423,6 +448,7 @@ as.data.frame.mfrm_facets_results <- function(x, row.names = NULL, optional = FA
 #' plot(curves, type = "ccc", scales = 1)
 #' expected <- plot_data(curves, "plot_data", type = "expected", scales = 1)
 #' head(expected[, c("Scale", "Measure", "Value", "Available")])
+#' }
 #' @export
 plot.mfrm_facets_results <- function(x, type = c("measure", "wright", "fit", "infit_outfit", "ccc", "expected"),
                                     facets = NULL, statistic = c("infit", "outfit"),
@@ -434,7 +460,7 @@ plot.mfrm_facets_results <- function(x, type = c("measure", "wright", "fit", "in
   if (type %in% c("ccc", "expected")) {
     if (!is.null(facets)) stop("Use `scales`, not `facets`, for Graphfile curves.", call. = FALSE)
     if (!is.null(label_map)) stop("`label_map` applies only to element plots.", call. = FALSE)
-    return(invisible(.facets_graph_plot(x, type, scales, draw, show_title, show_notes, show_legend)))
+    return(.facets_graph_plot(x, type, scales, draw, show_title, show_notes, show_legend))
   }
   if (!is.null(scales)) stop("`scales` applies only to Graphfile curves.", call. = FALSE)
   if (!nrow(x$table)) stop("No element results were imported; select a Graphfile curve type.", call. = FALSE)
@@ -480,7 +506,6 @@ plot.mfrm_facets_results <- function(x, type = c("measure", "wright", "fit", "in
   d$Symbol <- unname(symbols[d$SourceStatus])
   symbol_labels <- c("Estimated", "Direct/group anchor", "Extreme low", "Extreme high",
     "Single observation", "Unknown status", "No data", "Unmeasurable")
-  used_symbols <- which(names(symbols) %in% d$SourceStatus[d$Available])
   units <- x$metadata$measure_units
   measure_label <- if (is.na(units)) "Reported measure" else paste0("Measure (", units, ")")
   xlab <- switch(type, measure = measure_label, wright = "Facet", fit = measure_label,
@@ -498,54 +523,5 @@ plot.mfrm_facets_results <- function(x, type = c("measure", "wright", "fit", "in
       axis = if (type == "fit") "y" else c("x", "y"), value = 1,
       label = "Model reference", linetype = "dashed", role = "mean_square_reference") else NULL,
     display = list(show_title = show_title, show_notes = show_notes, show_legend = show_legend)))
-  if (draw) {
-    panels <- if (type == "wright") "Wright map" else facets
-    nc <- min(2L, length(panels)); nr <- ceiling(length(panels) / nc)
-    legend_space <- if (show_legend && length(used_symbols)) 3 else 0
-    old <- graphics::par(mfrow = c(nr, nc), mar = c(4.5, if (type == "measure") 6 else 4.5,
-      if (show_title) 3 else 1, 1), oma = c(if (show_notes) 3 else 0, 0, 0, 0), xpd = FALSE)
-    on.exit(graphics::par(old), add = TRUE)
-    if (legend_space > 0) {
-      # A separate region survives recorded-plot replay at a new device size.
-      # Converting device coordinates to user units freezes the old margins.
-      panel_cex <- graphics::par("cex")
-      panel_layout <- matrix(c(seq_along(panels), rep(0L, nr * nc - length(panels))),
-        nrow = nr, byrow = TRUE)
-      graphics::layout(rbind(panel_layout, rep(length(panels) + 1L, nc)),
-        heights = c(rep(1, nr), graphics::lcm(2.54 * graphics::par("csi") * legend_space)))
-      graphics::par(cex = panel_cex)
-    }
-    limits <- function(z) {
-      z <- z[is.finite(z)]
-      if (!length(z)) return(c(0, 1))
-      r <- range(z)
-      if (diff(r) == 0) r <- r + c(-1, 1) * max(.1, abs(r[1]) * .05)
-      r
-    }
-    for (panel in panels) {
-      z <- d[d$Panel == panel, , drop = FALSE]
-      graphics::plot(NA_real_, NA_real_, xlim = if (type == "wright") c(.5, length(facets) + .5) else limits(z$X),
-        ylim = if (type == "measure") c(.5, nrow(z) + .5) else limits(z$Y),
-        xlab = if (type == "wright") xlab else paste0(xlab, " [", panel, "]"),
-        ylab = ylab, xaxt = if (type == "wright") "n" else "s",
-        yaxt = if (type == "measure") "n" else "s",
-        main = if (show_title) out$data$title else "")
-      if (type == "measure") graphics::axis(2, at = z$Y, labels = z$DisplayLabel, las = 2, cex.axis = .8)
-      if (type == "wright") graphics::axis(1, at = seq_along(facets), labels = facets)
-      if (type %in% c("fit", "infit_outfit")) graphics::abline(h = 1, col = "grey60", lty = 2)
-      if (type == "infit_outfit") graphics::abline(v = 1, col = "grey60", lty = 2)
-      graphics::points(z$X, z$Y, pch = z$Symbol, bg = "white")
-      if (!any(z$Available)) graphics::text(mean(graphics::par("usr")[1:2]),
-        mean(graphics::par("usr")[3:4]), "No available points")
-    }
-    if (legend_space > 0) {
-      graphics::par(mar = rep(0, 4))
-      graphics::plot.new()
-      graphics::legend("center", legend = symbol_labels[used_symbols], pch = unname(symbols[used_symbols]),
-        pt.bg = "white", ncol = min(3L, length(used_symbols)), cex = .7, bty = "n", xpd = NA)
-    }
-    if (show_notes) graphics::mtext("Reported FACETS points; no confidence intervals. Inspect saved notes and source scales.",
-      side = 1, outer = TRUE, line = .5, cex = .7)
-  }
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }

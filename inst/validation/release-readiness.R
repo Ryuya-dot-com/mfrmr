@@ -52,8 +52,8 @@ mfrmr_release_readiness_prompt_steps <- function(target_version = NULL) {
     Evidence = c(
       "DESCRIPTION release lifecycle, public baseline, version, and date policy; CITATION version and release date; reader-facing roadmap and lifecycle statement; first NEWS heading; source-package identity and check provenance in repository-only records; absence of development labels or internal gate mechanics in public release files",
       "release-evidence-checklist blocker rows; targeted mathematical tests; recovery-validation summary",
-      "gpcm_capability_matrix(); README; vignettes; NEWS deferred-work section; post-0.2.2 GPCM roadmap",
-      "facets_positioning_guide(); facets_fit_review(); read_facets_fit_table(); output guide",
+      "mfrmr_output_guide(\"gpcm_capabilities\"); README; vignettes; NEWS deferred-work section; post-0.2.2 GPCM roadmap",
+      "facets_guide(); facets_fit_review(); read_facets_results(); output guide",
       "summary methods; plot(..., draw = FALSE); plot_data(); summary-table bundles",
       "README/vignettes/man/cheatsheet terminology scan",
       "mfrmr.Rcheck/00check.log or attached check log; GitHub Actions warning policy and check artifacts",
@@ -1790,11 +1790,13 @@ mfrmr_release_readiness_public_scope_status <- function(
 
   env <- new.env(parent = globalenv())
   if (file.exists(paths$facets_coverage_source)) {
+    source(file.path(dirname(paths$facets_coverage_source), "aaa-static-tables.R"), local = env)
     source(paths$facets_coverage_source, local = env)
+    env$facets_feature_coverage <- env$.facets_feature_coverage
   } else if (isNamespaceLoaded("mfrmr") ||
              requireNamespace("mfrmr", quietly = TRUE)) {
     env$facets_feature_coverage <-
-      getExportedValue("mfrmr", "facets_feature_coverage")
+      function(...) getExportedValue("mfrmr", "facets_guide")("coverage", ...)
   }
   coverage_available <- exists(
     "facets_feature_coverage",
@@ -2260,6 +2262,7 @@ mfrmr_release_readiness_gpcm_scope_status <- function(paths,
 
   env <- new.env(parent = globalenv())
   if (file.exists(paths$gpcm_capability_source)) {
+    source(file.path(dirname(paths$gpcm_capability_source), "aaa-static-tables.R"), local = env)
     source(paths$gpcm_capability_source, local = env)
   } else if (isNamespaceLoaded("mfrmr") ||
              requireNamespace("mfrmr", quietly = TRUE)) {
@@ -2268,7 +2271,7 @@ mfrmr_release_readiness_gpcm_scope_status <- function(paths,
     # so read the capability matrix and guard coverage from the installed
     # namespace instead of the source tree.
     env$gpcm_capability_matrix <-
-      getExportedValue("mfrmr", "gpcm_capability_matrix")
+      getFromNamespace("gpcm_capability_matrix", "mfrmr")
     env$.gpcm_capability_registry <-
       getFromNamespace(".gpcm_capability_registry", "mfrmr")
     env$.gpcm_runtime_guard_registry <-
@@ -2443,7 +2446,7 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
   ))
   exact_source_check <- contains(
     "release-check-runner-0.2.4.R"
-  ) && contains("Exact source-tarball R CMD check")
+  )
   package_check <- contains("r-lib/actions/check-r-package@v2") ||
     exact_source_check
   warning_policy <- any(grepl("error-on:", lines, fixed = TRUE) &
@@ -2451,8 +2454,11 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
     (exact_source_check && contains("MFRMR_CHECK_ERROR_ON: warning"))
   artifact_upload <- contains("actions/upload-artifact@v4") &&
     any(grepl("check", lines, fixed = TRUE) | grepl("Rcheck", lines, fixed = TRUE))
-  readiness_gate <- contains("Repository validation review") &&
-    contains("mfrmr_release_readiness_review")
+  readiness_gate <- (contains("Repository validation review") &&
+    contains("mfrmr_release_readiness_review")) ||
+    (contains("scripts/check-publication-boundary.R") &&
+     contains("receipt$CheckComplete") && contains("receipt$SourceTarballSHA256") &&
+     contains("receipt$CheckLogSHA256"))
   legacy_g4_issuance <- contains(
     "fixed-calibration-g4-hosted-runner-0.2.4.R"
   ) || contains("Upload bound G4 cell receipt") ||

@@ -79,12 +79,12 @@ test_that("data_quality_report flags retained zero-frequency score categories", 
   expect_identical(summary(dq)$preview_name, "quality_flags")
 
   p <- plot(dq, type = "score_support", preset = "monochrome", draw = FALSE)
-  expect_s3_class(p, "mfrm_plot_data")
-  expect_identical(p$data$plot, "score_support")
-  expect_equal(p$data$preset, "monochrome")
+  expect_s3_class(p, "ggplot")
+  expect_identical(plot_data(p, "plot"), "score_support")
+  expect_equal(plot_data(p, "preset"), "monochrome")
   p_flags <- plot(dq, type = "quality_flags", draw = FALSE)
-  expect_s3_class(p_flags, "mfrm_plot_data")
-  expect_identical(p_flags$data$plot, "quality_flags")
+  expect_s3_class(p_flags, "ggplot")
+  expect_identical(plot_data(p_flags, "plot"), "quality_flags")
 })
 
 test_that("data_quality_report flags original gaps hidden by score recoding", {
@@ -114,9 +114,9 @@ test_that("data_quality_report flags original gaps hidden by score recoding", {
   expect_true(any(dq$quality_flags$Flag == "Original score sequence had gaps before recoding"))
   expect_true(any(dq$quality_overview$Area == "Score support" & dq$quality_overview$Status == "high"))
   p_map <- plot(dq, type = "score_map", draw = FALSE)
-  expect_s3_class(p_map, "mfrm_plot_data")
-  expect_identical(p_map$data$plot, "score_map")
-  expect_true(any(p_map$data$table$MappingStatus == "recoded"))
+  expect_s3_class(p_map, "ggplot")
+  expect_identical(plot_data(p_map, "plot"), "score_map")
+  expect_true(any(plot_data(p_map, "table")$MappingStatus == "recoded"))
   expect_false("score_out_of_range" %in% dq$row_review$Status)
 })
 
@@ -168,9 +168,9 @@ test_that("data_quality_report flags facet-level category usage gaps", {
   expect_true(any(dq$quality_overview$Area == "Facet category use" & dq$quality_overview$Status == "high"))
 
   p <- plot(dq, type = "facet_category_usage", top_n = 5, draw = FALSE)
-  expect_s3_class(p, "mfrm_plot_data")
-  expect_identical(p$data$plot, "facet_category_usage")
-  expect_equal(p$data$top_n, 5L)
+  expect_s3_class(p, "ggplot")
+  expect_identical(plot_data(p, "plot"), "facet_category_usage")
+  expect_equal(plot_data(p, "top_n"), 5L)
 })
 
 test_that("data_quality_report separates local range restriction from global score support", {
@@ -243,8 +243,8 @@ test_that("data_quality_report flags facet levels with restricted response patte
   expect_true(any(dq$quality_overview$Area == "Facet response patterns" & dq$quality_overview$Status == "high"))
 
   p <- plot(dq, type = "facet_response_patterns", top_n = 5, draw = FALSE)
-  expect_s3_class(p, "mfrm_plot_data")
-  expect_identical(p$data$plot, "facet_response_patterns")
+  expect_s3_class(p, "ggplot")
+  expect_identical(plot_data(p, "plot"), "facet_response_patterns")
 })
 
 test_that("fit_measures_table lists directional fit statuses", {
@@ -268,16 +268,16 @@ test_that("fit_measures_table lists directional fit statuses", {
   s <- summary(fm)
   expect_s3_class(s, "summary.mfrm_bundle")
   p_status <- plot(fm, draw = FALSE)
-  expect_s3_class(p_status, "mfrm_plot_data")
-  expect_identical(p_status$data$plot, "status")
+  expect_s3_class(p_status, "ggplot")
+  expect_identical(plot_data(p_status, "plot"), "status")
   p_scatter <- plot(fm, type = "infit_outfit", draw = FALSE)
-  expect_s3_class(p_scatter, "mfrm_plot_data")
-  expect_identical(p_scatter$data$plot, "infit_outfit")
+  expect_s3_class(p_scatter, "ggplot")
+  expect_identical(plot_data(p_scatter, "plot"), "infit_outfit")
   p_ci <- plot(fm, type = "measure_ci", ci_level = 0.80, preset = "monochrome", draw = FALSE)
-  expect_s3_class(p_ci, "mfrm_plot_data")
-  expect_identical(p_ci$data$plot, "measure_ci")
-  expect_equal(p_ci$data$ci_level, 0.80)
-  expect_equal(p_ci$data$preset, "monochrome")
+  expect_s3_class(p_ci, "ggplot")
+  expect_identical(plot_data(p_ci, "plot"), "measure_ci")
+  expect_equal(plot_data(p_ci, "ci_level"), 0.80)
+  expect_equal(plot_data(p_ci, "preset"), "monochrome")
 
   fm_df <- fit_measures_table(
     .fit,
@@ -321,9 +321,9 @@ test_that("fit_measures_table lists directional fit statuses", {
   expect_s3_class(s_df, "summary.mfrm_bundle")
   expect_identical(s_df$summary_kind, "mfrm_fit_measures")
   p_df <- plot(fm_df, type = "df_sensitivity", top_n = 5, draw = FALSE)
-  expect_s3_class(p_df, "mfrm_plot_data")
-  expect_identical(p_df$data$plot, "df_sensitivity")
-  expect_lte(nrow(p_df$data$table), 5L)
+  expect_s3_class(p_df, "ggplot")
+  expect_identical(plot_data(p_df, "plot"), "df_sensitivity")
+  expect_lte(nrow(plot_data(p_df, "table")), 5L)
 
   fm_df_from_engine_diag <- fit_measures_table(
     .fit,
@@ -448,27 +448,29 @@ test_that("subset_connectivity_report returns a bundle", {
   sc <- subset_connectivity_report(.fit)
   expect_s3_class(sc, "mfrm_bundle")
   p_cov <- plot(sc, type = "linking_matrix", draw = FALSE)
-  expect_s3_class(p_cov, "mfrm_plot_data")
-  expect_identical(p_cov$data$plot, "coverage_matrix")
-  expect_identical(p_cov$data$requested_type, "linking_matrix")
-  expect_true(is.matrix(p_cov$data$matrix))
-  expect_true(all(c("facet_summary", "subset_summary") %in% names(p_cov$data)))
-  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(p_cov$data)))
-  expect_true(is.data.frame(p_cov$data$legend))
-  expect_true(is.data.frame(p_cov$data$reference_lines))
+  expect_s3_class(p_cov, "ggplot")
+  p_cov_pd <- plot_data(p_cov)
+  expect_identical(p_cov_pd$plot, "coverage_matrix")
+  expect_identical(p_cov_pd$requested_type, "linking_matrix")
+  expect_true(is.matrix(p_cov_pd$matrix))
+  expect_true(all(c("facet_summary", "subset_summary") %in% names(p_cov_pd)))
+  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(p_cov_pd)))
+  expect_true(is.data.frame(p_cov_pd$legend))
+  expect_true(is.data.frame(p_cov_pd$reference_lines))
 
   p_design <- plot(sc, type = "design_matrix", draw = FALSE)
-  expect_s3_class(p_design, "mfrm_plot_data")
-  expect_identical(p_design$data$plot, "coverage_matrix")
-  expect_identical(p_design$data$requested_type, "design_matrix")
+  expect_s3_class(p_design, "ggplot")
+  expect_identical(plot_data(p_design, "plot"), "coverage_matrix")
+  expect_identical(plot_data(p_design, "requested_type"), "design_matrix")
 
   p_net <- plot(sc, type = "network", draw = FALSE)
-  expect_s3_class(p_net, "mfrm_plot_data")
-  expect_identical(p_net$data$plot, "network")
-  expect_true(all(c("nodes", "edges") %in% names(p_net$data)))
-  expect_s3_class(p_net$data$nodes, "data.frame")
-  expect_s3_class(p_net$data$edges, "data.frame")
-  expect_true(all(c("From", "To", "Weight") %in% names(p_net$data$edges)))
+  expect_s3_class(p_net, "ggplot")
+  p_net_pd <- plot_data(p_net)
+  expect_identical(p_net_pd$plot, "network")
+  expect_true(all(c("nodes", "edges") %in% names(p_net_pd)))
+  expect_s3_class(p_net_pd$nodes, "data.frame")
+  expect_s3_class(p_net_pd$edges, "data.frame")
+  expect_true(all(c("From", "To", "Weight") %in% names(p_net_pd$edges)))
 })
 
 test_that("subset_connectivity linking_matrix draws without error", {
@@ -504,12 +506,12 @@ test_that("mfrm_network_analysis returns graph metrics for the fitted design", {
                   %in% names(net$facet_summary)))
   expect_true(all(net$node_metrics$Degree >= 0))
   p_cent <- plot(net, type = "centrality", draw = FALSE)
-  expect_s3_class(p_cent, "mfrm_plot_data")
-  expect_identical(p_cent$data$plot, "centrality")
+  expect_s3_class(p_cent, "ggplot")
+  expect_identical(plot_data(p_cent, "plot"), "centrality")
   p_facet <- plot(net, type = "facet_summary", metric = "BridgeIncidentEdges", draw = FALSE)
-  expect_identical(p_facet$data$plot, "facet_summary")
+  expect_identical(plot_data(p_facet, "plot"), "facet_summary")
   p_network <- plot(net, type = "network", draw = FALSE)
-  expect_identical(p_network$data$plot, "network")
+  expect_identical(plot_data(p_network, "plot"), "network")
   s <- summary(net)
   expect_s3_class(s, "summary.mfrm_bundle")
 })
@@ -618,12 +620,12 @@ test_that("rater_network_analysis returns rater relationship graph metrics", {
   expect_true(all(c("From", "To", "Weight", "Direction") %in% names(rn$edge_metrics)))
   expect_true(any(is.finite(rn$node_metrics$SeverityIndex)))
   p_sev <- plot(rn, type = "severity", draw = FALSE)
-  expect_s3_class(p_sev, "mfrm_plot_data")
-  expect_identical(p_sev$data$plot, "severity")
+  expect_s3_class(p_sev, "ggplot")
+  expect_identical(plot_data(p_sev, "plot"), "severity")
   p_net <- plot(rn, type = "network", draw = FALSE)
-  expect_identical(p_net$data$plot, "network")
+  expect_identical(plot_data(p_net, "plot"), "network")
   p_mat <- plot(rn, type = "matrix", draw = FALSE)
-  expect_identical(p_mat$data$plot, "matrix")
+  expect_identical(plot_data(p_mat, "plot"), "matrix")
   rn_agree <- rater_network_analysis(.fit, diagnostics = .diag, mode = "agreement")
   expect_identical(rn_agree$summary$Mode[1], "agreement")
   expect_true(all(rn_agree$edge_metrics$Weight >= 0))
@@ -655,14 +657,14 @@ test_that("rater_halo_network_analysis returns rater-by-criterion halo diagnosti
   expect_true(all(halo$halo_summary_by_rater$ReviewStatus %in%
                     c("warning", "review", "ok", "insufficient_data")))
   p_dist <- plot(halo, type = "edge_distribution", draw = FALSE)
-  expect_s3_class(p_dist, "mfrm_plot_data")
-  expect_identical(p_dist$data$plot, "edge_distribution")
+  expect_s3_class(p_dist, "ggplot")
+  expect_identical(plot_data(p_dist, "plot"), "edge_distribution")
   p_sum <- plot(halo, type = "halo_summary", draw = FALSE)
-  expect_identical(p_sum$data$plot, "halo_summary")
+  expect_identical(plot_data(p_sum, "plot"), "halo_summary")
   p_mat <- plot(halo, type = "matrix", draw = FALSE)
-  expect_identical(p_mat$data$plot, "matrix")
+  expect_identical(plot_data(p_mat, "plot"), "matrix")
   p_net <- plot(halo, type = "network", draw = FALSE)
-  expect_identical(p_net$data$plot, "network")
+  expect_identical(plot_data(p_net, "plot"), "network")
   s <- summary(halo)
   expect_s3_class(s, "summary.mfrm_bundle")
 })
@@ -755,7 +757,7 @@ test_that("unexpected_response_table produces valid output", {
   s <- summary(ut)
   expect_s3_class(s, "summary.mfrm_bundle")
   p <- plot(ut, draw = FALSE)
-  expect_s3_class(p, "mfrm_plot_data")
+  expect_s3_class(p, "ggplot")
 })
 
 # ---- fair_average_table ----
@@ -774,7 +776,7 @@ test_that("fair_average_table produces valid output", {
   expect_identical(s$summary$FairSEStatus[1], "not_requested")
   expect_true(all(c("ObservedAverage", "AdjustedAverage") %in% names(s$preview)))
   p <- plot(fa, draw = FALSE)
-  expect_s3_class(p, "mfrm_plot_data")
+  expect_s3_class(p, "ggplot")
 })
 
 test_that("fair_average_table supports native label and reference controls", {
@@ -794,7 +796,7 @@ test_that("displacement_table produces valid output", {
   s <- summary(dt)
   expect_s3_class(s, "summary.mfrm_bundle")
   p <- plot(dt, draw = FALSE)
-  expect_s3_class(p, "mfrm_plot_data")
+  expect_s3_class(p, "ggplot")
 })
 
 test_that("estimate_bias exposes screening-tier metadata", {
@@ -885,7 +887,7 @@ test_that("interrater_agreement_table produces valid output", {
   s <- summary(ia)
   expect_s3_class(s, "summary.mfrm_bundle")
   p <- plot(ia, draw = FALSE)
-  expect_s3_class(p, "mfrm_plot_data")
+  expect_s3_class(p, "ggplot")
 })
 
 # ---- facets_chisq_table ----
@@ -896,7 +898,7 @@ test_that("facets_chisq_table produces valid output", {
   s <- summary(fc)
   expect_s3_class(s, "summary.mfrm_bundle")
   p <- plot(fc, draw = FALSE)
-  expect_s3_class(p, "mfrm_plot_data")
+  expect_s3_class(p, "ggplot")
 })
 
 # ---- bias_interaction_report ----
@@ -1133,10 +1135,10 @@ test_that("build_fixed_reports pvalue plot degrades gracefully when p-values are
   fr$pairwise_table$`Prob.` <- NA_character_
 
   p <- plot(fr, type = "pvalue", draw = FALSE)
-  expect_s3_class(p, "mfrm_plot_data")
-  expect_identical(p$data$plot, "pvalue")
-  expect_length(p$data$p_values, 0)
-  expect_match(p$data$message, "No finite p-values available", fixed = TRUE)
+  expect_s3_class(p, "ggplot")
+  expect_identical(plot_data(p, "plot"), "pvalue")
+  expect_length(plot_data(p, "p_values"), 0)
+  expect_match(plot_data(p, "message"), "No finite p-values available", fixed = TRUE)
 })
 
 # ---- build_visual_summaries ----
@@ -1198,12 +1200,12 @@ test_that("analyze_residual_pca supports residual-permutation parallel analysis"
   expect_equal(pca$parallel_settings$Reps, 5L)
 
   p_scree <- plot_residual_pca(pca, plot_type = "parallel_scree", draw = FALSE)
-  expect_s3_class(p_scree, "mfrm_plot_data")
-  expect_equal(p_scree$data$plot, "parallel_scree")
+  expect_s3_class(p_scree, "ggplot")
+  expect_equal(plot_data(p_scree, "plot"), "parallel_scree")
 
   p_excess <- plot_residual_pca(pca, plot_type = "parallel_excess", draw = FALSE)
-  expect_s3_class(p_excess, "mfrm_plot_data")
-  expect_equal(p_excess$data$plot, "parallel_excess")
+  expect_s3_class(p_excess, "ggplot")
+  expect_equal(plot_data(p_excess, "plot"), "parallel_excess")
 })
 
 test_that("plot_residual_pca requires parallel results for parallel plots", {
@@ -1240,10 +1242,11 @@ test_that("analyze_residual_pca retains computation errors instead of dropping t
 test_that("plot_residual_pca produces plot bundles", {
   pca <- analyze_residual_pca(.diag, mode = "overall")
   p_scree <- plot_residual_pca(pca, plot_type = "scree", draw = FALSE)
-  expect_s3_class(p_scree, "mfrm_plot_data")
-  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(p_scree$data)))
-  expect_true(is.data.frame(p_scree$data$legend))
-  expect_true(is.data.frame(p_scree$data$reference_lines))
+  expect_s3_class(p_scree, "ggplot")
+  p_scree_pd <- plot_data(p_scree)
+  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(p_scree_pd)))
+  expect_true(is.data.frame(p_scree_pd$legend))
+  expect_true(is.data.frame(p_scree_pd$reference_lines))
 })
 
 # ---- plot.mfrm_fit specific types ----
@@ -1254,8 +1257,8 @@ test_that("plot.mfrm_fit supports all named types", {
     "Review-only display",
     fixed = TRUE
   )
-  expect_s3_class(p_wright, "mfrm_plot_data")
-  expect_true(all(c("person_hist", "person_stats", "label_points", "group_summary", "y_range") %in% names(p_wright$data)))
+  expect_s3_class(p_wright, "ggplot")
+  expect_true(all(c("person_hist", "person_stats", "label_points", "group_summary", "y_range") %in% names(plot_data(p_wright))))
 
   expect_warning(
     p_pathway <- plot(
@@ -1264,46 +1267,47 @@ test_that("plot.mfrm_fit supports all named types", {
     "Review-only display",
     fixed = TRUE
   )
-  expect_s3_class(p_pathway, "mfrm_plot_data")
+  expect_s3_class(p_pathway, "ggplot")
+  p_pathway_pd <- plot_data(p_pathway)
   expect_true(all(c(
     "steps", "endpoint_labels", "dominance_regions",
     "pathway_long", "pathway_annotations", "fit_measures",
     "fit_status", "curve_fit_status", "fit_measure_status"
-  ) %in% names(p_pathway$data)))
+  ) %in% names(p_pathway_pd)))
   expect_true(all(c(
     "Layer", "CurveGroup", "Theta", "Value", "ValueName"
-  ) %in% names(p_pathway$data$pathway_long)))
+  ) %in% names(p_pathway_pd$pathway_long)))
   expect_true(all(c(
     "AnnotationType", "CurveGroup", "X", "Y", "Label"
-  ) %in% names(p_pathway$data$pathway_annotations)))
+  ) %in% names(p_pathway_pd$pathway_annotations)))
   expect_true(all(c(
     "Facet", "Level", "Measure", "SE", "FitStatus"
-  ) %in% names(p_pathway$data$fit_measures)))
+  ) %in% names(p_pathway_pd$fit_measures)))
   expect_true(all(c(
     "CurveGroup", "FitStatus", "MatchedFitRow"
-  ) %in% names(p_pathway$data$curve_fit_status)))
-  expect_true(isTRUE(p_pathway$data$fit_measure_status$Available[1]))
+  ) %in% names(p_pathway_pd$curve_fit_status)))
+  expect_true(isTRUE(p_pathway_pd$fit_measure_status$Available[1]))
 
   expect_warning(
     p_ccc <- plot(.fit, type = "ccc", draw = FALSE),
     "Review-only display",
     fixed = TRUE
   )
-  expect_s3_class(p_ccc, "mfrm_plot_data")
+  expect_s3_class(p_ccc, "ggplot")
 
   expect_warning(
     p_person <- plot(.fit, type = "person", draw = FALSE),
     "Review-only display",
     fixed = TRUE
   )
-  expect_s3_class(p_person, "mfrm_plot_data")
+  expect_s3_class(p_person, "ggplot")
 
   expect_warning(
     p_step <- plot(.fit, type = "step", draw = FALSE),
     "Review-only display",
     fixed = TRUE
   )
-  expect_s3_class(p_step, "mfrm_plot_data")
+  expect_s3_class(p_step, "ggplot")
 })
 
 test_that("plot_wright_unified returns enhanced Wright-map payload", {
@@ -1317,21 +1321,23 @@ test_that("plot_wright_unified returns enhanced Wright-map payload", {
     "Review-only display",
     fixed = TRUE
   )
+  expect_s3_class(p_wright_unified, "ggplot")
+  p_wright_unified_pd <- plot_data(p_wright_unified)
   expect_true(all(c("persons", "facets", "person_hist", "person_stats", "group_summary", "y_lim") %in%
-    names(p_wright_unified)))
-  expect_null(p_wright_unified$thresholds)
+    names(p_wright_unified_pd)))
+  expect_null(p_wright_unified_pd$thresholds)
 })
 
 # ---- plot_qc_dashboard ----
 
 test_that("plot_qc_dashboard returns a plot bundle", {
   p <- plot_qc_dashboard(.fit, diagnostics = .diag, draw = FALSE)
-  expect_s3_class(p, "mfrm_plot_data")
-  expect_identical(as.character(p$data$preset), "standard")
-  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(p$data)))
+  expect_s3_class(p, "ggplot")
+  expect_identical(as.character(plot_data(p, "preset")), "standard")
+  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(plot_data(p))))
 
   p_pub <- plot_qc_dashboard(.fit, diagnostics = .diag, draw = FALSE, preset = "publication")
-  expect_identical(as.character(p_pub$data$preset), "publication")
+  expect_identical(as.character(plot_data(p_pub, "preset")), "publication")
 })
 
 # ---- make_anchor_table ----

@@ -125,14 +125,11 @@ mfrmr_typed_anchor_note_template <- function() {
   )
 }
 
-mfrmr_typed_anchor_abort <- function(code, field_path, detail) {
-  mfrmr_calibration_abort(code, field_path, detail)
-}
 
 mfrmr_normalize_typed_anchors <- function(config, anchors) {
   expected <- names(mfrmr_calibration_anchor_template())
   if (!is.data.frame(anchors) || !identical(names(anchors), expected)) {
-    mfrmr_typed_anchor_abort(
+    mfrmr_calibration_abort(
       "ANCHOR_DECLARATION_INVALID", "constraints.anchors",
       "typed anchors must use the exact registered columns"
     )
@@ -146,34 +143,34 @@ mfrmr_normalize_typed_anchors <- function(config, anchors) {
   character_columns <- setdiff(expected, c("Value", "DeclarationOrder"))
   if (any(!vapply(anchors[character_columns], is.character, logical(1))) ||
       !is.numeric(anchors$Value) || !is.integer(anchors$DeclarationOrder)) {
-    mfrmr_typed_anchor_abort(
+    mfrmr_calibration_abort(
       "ANCHOR_DECLARATION_INVALID", "constraints.anchors",
       "typed anchor columns must retain their registered storage types"
     )
   }
   if (anyNA(anchors$AnchorId) || any(!nzchar(anchors$AnchorId)) ||
       anyDuplicated(anchors$AnchorId)) {
-    mfrmr_typed_anchor_abort(
+    mfrmr_calibration_abort(
       "ANCHOR_DECLARATION_INVALID", "constraints.anchors.AnchorId",
       "declaration identifiers must be nonempty and unique"
     )
   }
   if (anyNA(anchors$DeclarationOrder) || any(anchors$DeclarationOrder < 1L) ||
       anyDuplicated(anchors$DeclarationOrder)) {
-    mfrmr_typed_anchor_abort(
+    mfrmr_calibration_abort(
       "ANCHOR_DECLARATION_INVALID", "constraints.anchors.DeclarationOrder",
       "declaration order must be unique and positive but never sets precedence"
     )
   }
   if (any(!is.finite(anchors$Value))) {
-    mfrmr_typed_anchor_abort(
+    mfrmr_calibration_abort(
       "ANCHOR_DECLARATION_INVALID", "constraints.anchors.Value",
       "every anchor value must be finite"
     )
   }
   if (anyNA(anchors$CoordinateSystem) ||
       any(anchors$CoordinateSystem != "expanded_logit")) {
-    mfrmr_typed_anchor_abort(
+    mfrmr_calibration_abort(
       "ANCHOR_COORDINATE_SYSTEM_INVALID", "constraints.anchors.CoordinateSystem",
       "core anchors must use the exact expanded_logit coordinate system"
     )
@@ -188,7 +185,7 @@ mfrmr_normalize_typed_anchors <- function(config, anchors) {
   step_owner <- as.character(config$step_facet %||% NA_character_)
   valid_types <- c("direct", "group", "shared_step", "owned_step")
   if (anyNA(anchors$AnchorType) || any(!anchors$AnchorType %in% valid_types)) {
-    mfrmr_typed_anchor_abort(
+    mfrmr_calibration_abort(
       "ANCHOR_DECLARATION_INVALID", "constraints.anchors.AnchorType",
       "anchor type is not supported by this calibration workflow"
     )
@@ -204,19 +201,19 @@ mfrmr_normalize_typed_anchors <- function(config, anchors) {
           present_text(row$Step) ||
           (identical(type, "direct") && present_text(row$GroupId)) ||
           (identical(type, "group") && missing_text(row$GroupId))) {
-        mfrmr_typed_anchor_abort(
+        mfrmr_calibration_abort(
           "ANCHOR_SELECTOR_INVALID", path,
           "facet anchors have an invalid direct/group selector shape"
         )
       }
       if (!row$OwnerFacet %in% facet_names) {
-        mfrmr_typed_anchor_abort(
+        mfrmr_calibration_abort(
           "ANCHOR_OWNER_UNKNOWN", paste0(path, ".OwnerFacet"),
           "facet owner is not declared by the model"
         )
       }
       if (!row$Level %in% as.character(facet_levels[[row$OwnerFacet]])) {
-        mfrmr_typed_anchor_abort(
+        mfrmr_calibration_abort(
           "ANCHOR_LEVEL_UNKNOWN", paste0(path, ".Level"),
           "facet level is not declared under the selected owner"
         )
@@ -225,13 +222,13 @@ mfrmr_normalize_typed_anchors <- function(config, anchors) {
       if (!identical(row$ParameterClass, "shared_step") ||
           present_text(row$OwnerFacet) || present_text(row$Level) ||
           missing_text(row$Step) || present_text(row$GroupId)) {
-        mfrmr_typed_anchor_abort(
+        mfrmr_calibration_abort(
           "ANCHOR_SELECTOR_INVALID", path,
           "shared-step anchors require only a transition selector"
         )
       }
       if (!identical(family, "RSM")) {
-        mfrmr_typed_anchor_abort(
+        mfrmr_calibration_abort(
           "ANCHOR_OWNER_INCOMPATIBLE", path,
           "shared-step anchors belong only to RSM"
         )
@@ -240,19 +237,19 @@ mfrmr_normalize_typed_anchors <- function(config, anchors) {
       if (!identical(row$ParameterClass, "owned_step") ||
           missing_text(row$OwnerFacet) || missing_text(row$Level) ||
           missing_text(row$Step) || present_text(row$GroupId)) {
-        mfrmr_typed_anchor_abort(
+        mfrmr_calibration_abort(
           "ANCHOR_SELECTOR_INVALID", path,
           "owned-step anchors require owner, owner level, and transition"
         )
       }
       if (!identical(family, "PCM") || !identical(row$OwnerFacet, step_owner)) {
-        mfrmr_typed_anchor_abort(
+        mfrmr_calibration_abort(
           "ANCHOR_OWNER_INCOMPATIBLE", paste0(path, ".OwnerFacet"),
           "owned-step anchor does not belong to the declared PCM step owner"
         )
       }
       if (!row$Level %in% as.character(facet_levels[[step_owner]])) {
-        mfrmr_typed_anchor_abort(
+        mfrmr_calibration_abort(
           "ANCHOR_LEVEL_UNKNOWN", paste0(path, ".Level"),
           "owned-step level is not declared under the step owner"
         )
@@ -262,7 +259,7 @@ mfrmr_normalize_typed_anchors <- function(config, anchors) {
       step <- suppressWarnings(as.integer(row$Step))
       if (is.na(step) || step < 1L || step > n_steps ||
           !identical(as.character(step), row$Step)) {
-        mfrmr_typed_anchor_abort(
+        mfrmr_calibration_abort(
           "ANCHOR_STEP_UNKNOWN", paste0(path, ".Step"),
           "transition must be a canonical integer in the declared category range"
         )
@@ -304,14 +301,14 @@ mfrmr_normalize_typed_anchors <- function(config, anchors) {
   }
   conflict_selector <- conflict(semantic_key, include_group = TRUE)
   if (!is.na(conflict_selector)) {
-    mfrmr_typed_anchor_abort(
+    mfrmr_calibration_abort(
       "ANCHOR_CONFLICT", "constraints.anchors",
       paste0("conflicting declarations target selector `", conflict_selector, "`")
     )
   }
   group_conflict <- conflict(group_target_key, include_group = FALSE)
   if (!is.na(group_conflict)) {
-    mfrmr_typed_anchor_abort(
+    mfrmr_calibration_abort(
       "ANCHOR_CONFLICT", "constraints.anchors",
       paste0("group mean differs within selector `", group_conflict, "`")
     )
@@ -402,138 +399,6 @@ mfrmr_typed_anchors_from_config <- function(config) {
   mfrmr_calibration_bind_rows(rows, mfrmr_calibration_anchor_template())
 }
 
-mfrmr_apply_typed_anchors <- function(config, anchors) {
-  incoming <- mfrmr_normalize_typed_anchors(config, anchors)
-  if (nrow(incoming$anchors) == 0L) {
-    out <- config
-    out$step_specs <- mfrmr_step_specs(config)
-    existing <- mfrmr_normalize_typed_anchors(
-      out, mfrmr_typed_anchors_from_config(out)
-    )
-    out$typed_anchors <- existing$anchors
-    out$typed_anchor_notes <- existing$notes
-    return(list(config = out, anchors = existing$anchors,
-                notes = existing$notes))
-  }
-  existing <- mfrmr_typed_anchors_from_config(config)
-  combined <- rbind(existing, incoming$anchors)
-  combined$AnchorId <- sprintf("combined::%d", seq_len(nrow(combined)))
-  combined$DeclarationOrder <- as.integer(seq_len(nrow(combined)))
-  normalized <- mfrmr_normalize_typed_anchors(config, combined)
-  declarations <- normalized$anchors
-  notes <- rbind(incoming$notes, normalized$notes)
-  if (nrow(notes) > 0L) {
-    notes <- notes[!duplicated(paste(notes$Code, notes$Selector, notes$Count,
-                                     notes$Detail, sep = "\r")), , drop = FALSE]
-    rownames(notes) <- NULL
-  }
-
-  out <- config
-  for (facet in as.character(config$facet_names)) {
-    direct <- declarations[
-      declarations$AnchorType == "direct" &
-        declarations$OwnerFacet == facet, , drop = FALSE
-    ]
-    group <- declarations[
-      declarations$AnchorType == "group" &
-        declarations$OwnerFacet == facet, , drop = FALSE
-    ]
-    anchors_map <- if (nrow(direct)) setNames(direct$Value, direct$Level) else NULL
-    groups_map <- if (nrow(group)) setNames(group$GroupId, group$Level) else NULL
-    group_values <- if (nrow(group)) {
-      values <- group$Value[!duplicated(group$GroupId)]
-      setNames(values, group$GroupId[!duplicated(group$GroupId)])
-    } else {
-      NULL
-    }
-    spec <- tryCatch(
-      build_facet_constraint(
-        levels = config$facet_specs[[facet]]$levels,
-        anchors = anchors_map,
-        groups = groups_map,
-        group_values = group_values,
-        centered = isTRUE(config$facet_specs[[facet]]$centered),
-        centering_scope = config$facet_specs[[facet]]$centering_scope %||% "remainder"
-      ),
-      error = function(error) {
-        mfrmr_typed_anchor_abort(
-          "ANCHOR_CONSTRAINT_INCOMPATIBLE", "constraints.anchors",
-          paste0("facet `", facet, "`: ", conditionMessage(error))
-        )
-      }
-    )
-    for (group_id in unique(stats::na.omit(spec$groups))) {
-      members <- which(spec$groups == group_id)
-      if (all(is.finite(spec$anchors[members]))) {
-        target <- spec$group_values[[group_id]] * length(members)
-        if (!isTRUE(all.equal(sum(spec$anchors[members]), target,
-                              tolerance = 1e-12))) {
-          mfrmr_typed_anchor_abort(
-            "ANCHOR_CONSTRAINT_INCOMPATIBLE", "constraints.anchors",
-            paste0("fully fixed group `", facet, "::", group_id,
-                   "` violates its declared mean")
-          )
-        }
-      }
-    }
-    out$facet_specs[[facet]] <- spec
-  }
-
-  n_steps <- max(as.integer(config$n_cat) - 1L, 0L)
-  scopes <- if (identical(config$model, "RSM")) {
-    "shared"
-  } else {
-    as.character(config$facet_levels[[config$step_facet]])
-  }
-  out$step_specs <- lapply(scopes, function(scope) {
-    selected <- if (identical(config$model, "RSM")) {
-      declarations[declarations$AnchorType == "shared_step", , drop = FALSE]
-    } else {
-      declarations[
-        declarations$AnchorType == "owned_step" &
-          declarations$Level == scope, , drop = FALSE
-      ]
-    }
-    values <- if (nrow(selected)) setNames(selected$Value, selected$Step) else NULL
-    tryCatch(
-      build_step_constraint(
-        n_steps, anchors = values, target = 0, scope = scope
-      ),
-      error = function(error) {
-        mfrmr_typed_anchor_abort(
-          "ANCHOR_CONSTRAINT_INCOMPATIBLE", "constraints.anchors",
-          conditionMessage(error)
-        )
-      }
-    )
-  })
-  names(out$step_specs) <- scopes
-  out$typed_anchors <- declarations
-  out$typed_anchor_notes <- notes
-  sizes <- build_param_sizes(out)
-  for (facet in as.character(out$facet_names)) {
-    facet_jacobian <- mfrmr_constraint_jacobian_sparse(
-      out$facet_specs[[facet]], facet
-    )$jacobian
-    if (ncol(facet_jacobian) > 0L &&
-        Matrix::rankMatrix(facet_jacobian)[1] != ncol(facet_jacobian)) {
-      mfrmr_typed_anchor_abort(
-        "ANCHOR_RANK_DEFICIENT", "constraints.anchors",
-        paste0("typed facet constraint for `", facet,
-               "` is not full column rank")
-      )
-    }
-  }
-  step_jacobian <- mfrmr_step_jacobian_sparse(out, sizes)$jacobian
-  if (ncol(step_jacobian) > 0L && Matrix::rankMatrix(step_jacobian)[1] !=
-      ncol(step_jacobian)) {
-    mfrmr_typed_anchor_abort(
-      "ANCHOR_RANK_DEFICIENT", "constraints.anchors",
-      "typed step constraint Jacobian is not full column rank"
-    )
-  }
-  list(config = out, anchors = declarations, notes = notes)
-}
 
 mfrmr_calibration_interaction_template <- function() {
   data.frame(
@@ -810,20 +675,22 @@ mfrmr_calibration_extract_identification <- function(fit) {
   mfrmr_calibration_bind_rows(rows, mfrmr_calibration_identification_template())
 }
 
-mfrmr_calibration_product_identification <- function(owners, levels, n_steps) {
-  n <- lengths(levels[owners])
-  second <- n[2L]
+mfrmr_calibration_product_identification <- function(owners, levels, n_steps,
+    facets = owners, step_owner = owners[2L], noncenter_facet = owners[2L]) {
+  n <- lengths(levels[facets]); ns <- lengths(levels[owners])
+  nstep <- length(levels[[step_owner]])
+  centered <- facets != noncenter_facet
   data.frame(
-    ConstraintId = c(paste0("facet_constraint::", 1:2),
-      paste0("owned_step_constraint::", seq_len(second)), paste0("slope_constraint::", 1:2)),
-    ParameterClass = c(rep("facet", 2), rep("owned_step", second), rep("slope", 2)),
-    OwnerFacet = c(owners, rep(owners[2], second), owners),
-    ConstraintType = c("sum_to_zero", "uncentered_fixed_population",
-      rep("row_sum_to_zero", second), "sum_to_zero_log_slopes", "free_fixed_population"),
-    Target = c(paste0("facet_levels::", n), paste0("owner_level::", seq_len(second)),
+    ConstraintId = c(paste0("facet_constraint::", seq_along(facets)),
+      paste0("owned_step_constraint::", seq_len(nstep)), paste0("slope_constraint::", 1:2)),
+    ParameterClass = c(rep("facet", length(facets)), rep("owned_step", nstep), rep("slope", 2)),
+    OwnerFacet = c(facets, rep(step_owner, nstep), owners),
+    ConstraintType = c(ifelse(centered, "sum_to_zero", "uncentered_fixed_population"),
+      rep("row_sum_to_zero", nstep), "sum_to_zero_log_slopes", "free_fixed_population"),
+    Target = c(paste0("facet_levels::", n), paste0("owner_level::", seq_len(nstep)),
       "geometric_mean_one", "fixed_standard_normal"),
-    Value = c(NA_real_, NA_real_, rep(0, second), 0, NA_real_),
-    FreeDimension = as.integer(c(n[1] - 1L, n[2], rep(n_steps - 1L, second), n[1] - 1L, n[2])),
+    Value = c(rep(NA_real_, length(facets)), rep(0, nstep), 0, NA_real_),
+    FreeDimension = as.integer(c(n - centered, rep(n_steps - 1L, nstep), ns[1] - 1L, ns[2])),
     stringsAsFactors = FALSE, row.names = NULL)
 }
 
@@ -853,15 +720,17 @@ mfrmr_calibration_semantic_components <- function(x) {
     )],
     support_profile = x$eligibility$support_profile_id
   )
-  if (x$header$schema_version %in% c(2L, 4L, 5L, 6L)) {
+  if (x$header$schema_version %in% c(2L, 4L, 5L, 6L, 7L)) {
     out$slope_specification <- x$model[c("slope_owner", "slope_action")]
   }
-  if (x$header$schema_version %in% c(2L, 3L, 4L, 5L, 6L)) {
+  if (x$header$schema_version %in% c(2L, 3L, 4L, 5L, 6L, 7L)) {
     out$source_scoring_review <- x$eligibility[c("source_readiness_status", "source_scoring_evidence")]
   }
-  if (identical(x$header$schema_version, 6L))
+  if (x$header$schema_version %in% c(6L, 7L))
     out$product_structure <- c(x$model[c("slope_composition", "observed_contexts")],
       list(source_columns = x$input_schema$source_columns))
+  if (identical(x$header$schema_version, 7L))
+    out$product_structure <- c(out$product_structure, x$model[c("slope_reference", "noncenter_facet")])
   out
 }
 
@@ -1004,6 +873,9 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
     error=function(e) mfrmr_calibration_abort("SOURCE_READINESS_INELIGIBLE","fit",conditionMessage(e))) else NULL
   if (!is.null(adjusted)) fit$config <- adjusted$config
   product <- mfrm_has_product_slopes(fit)
+  product_version <- if (product && (!identical(fit$config$facet_names, fit$config$slope_facet) ||
+      !identical(fit$config$step_facet, fit$config$slope_facet[2L]) ||
+      !identical(fit$config$noncenter_facet, fit$config$slope_facet[2L]))) 7L else 6L
   product_source <- if (product) tryCatch(prediction_gmfrm_scoring_readiness(fit),
     error = function(e) mfrmr_calibration_abort("SOURCE_READINESS_INELIGIBLE", "fit", conditionMessage(e))) else NULL
   model <- toupper(as.character(fit$config$model %||% ""))
@@ -1112,7 +984,8 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   interactions <- mfrmr_calibration_extract_interactions(fit, coordinates)
   anchors <- mfrmr_calibration_extract_anchors(fit)
   identification <- if (product) mfrmr_calibration_product_identification(
-    fit$config$slope_facet, fit$config$facet_levels, fit$config$n_cat - 1L) else
+    fit$config$slope_facet, fit$config$facet_levels, fit$config$n_cat - 1L,
+    fit$config$facet_names, fit$config$step_facet, fit$config$noncenter_facet) else
     mfrmr_calibration_extract_identification(fit)
   prior_mean <- 0
   prior_sd <- 1
@@ -1219,7 +1092,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   x <- list(
     header = list(
       schema_id = mfrmr_calibration_schema_id(),
-      schema_version = if (product) 6L else if (!is.null(adjusted)) 5L else mfrmr_calibration_schema_version(model, method),
+      schema_version = if (product) product_version else if (!is.null(adjusted)) 5L else mfrmr_calibration_schema_version(model, method),
       object_class = "mfrm_calibration",
       calibration_id = calibration_id,
       semantic_identity_version = mfrmr_calibration_semantic_identity_version()
@@ -1263,7 +1136,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       weights = as.numeric(quad$weights)
     ),
     eligibility = list(
-      support_profile_id = if (product) "gmfrm_mml_fixed_standard_normal_v6" else if (!is.null(adjusted)) "gpcm_corrected_jml_reference_normal_v5" else if (jml) {
+      support_profile_id = if (product) paste0("gmfrm_mml_fixed_standard_normal_v", product_version) else if (!is.null(adjusted)) "gpcm_corrected_jml_reference_normal_v5" else if (jml) {
         paste0(tolower(model), "_jml_reference_normal_v", if (model == "GPCM") 4L else 3L)
       } else if (identical(model, "GPCM")) {
         "gpcm_mml_frozen_normal_v2"
@@ -1308,9 +1181,13 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   if (jml && model != "GPCM") x$eligibility$source_scoring_evidence <- source_scoring
   if (product) {
     x$model$slope_composition <- "product"
+    if (product_version == 7L) {
+      x$model$slope_reference <- fit$config$slope_facet[1L]
+      x$model$noncenter_facet <- fit$config$noncenter_facet
+    }
     x$model$observed_contexts <- unique(as.data.frame(unname(lapply(
-      fit$prep$data[fit$config$slope_facet], as.character)), check.names = FALSE))
-    names(x$model$observed_contexts) <- fit$config$slope_facet
+      fit$prep$data[fit$config$facet_names], as.character)), check.names = FALSE))
+    names(x$model$observed_contexts) <- fit$config$facet_names
     rownames(x$model$observed_contexts) <- NULL
   }
   x$integrity$semantic_components <- mfrmr_calibration_semantic_components(x)
@@ -1358,13 +1235,14 @@ mfrmr_calibration_expected_sections <- function(version = 1L) {
     ),
     integrity = c("semantic_components", "optional_hash")
   )
-  if (version %in% c(2L, 4L, 5L, 6L)) {
+  if (version %in% c(2L, 4L, 5L, 6L, 7L)) {
     out$model <- c(out$model, "slope_owner", "slope_action")
   }
-  if (version %in% c(2L, 3L, 4L, 5L, 6L)) {
+  if (version %in% c(2L, 3L, 4L, 5L, 6L, 7L)) {
     out$eligibility <- c(out$eligibility, "source_scoring_evidence")
   }
-  if (identical(version, 6L)) out$model <- c(out$model, "slope_composition", "observed_contexts")
+  if (version %in% c(6L, 7L)) out$model <- c(out$model, "slope_composition", "observed_contexts")
+  if (identical(version, 7L)) out$model <- c(out$model, "slope_reference", "noncenter_facet")
   out
 }
 
@@ -1470,7 +1348,7 @@ mfrmr_review_calibration <- function(x) {
     add("SCHEMA_TYPE_INVALID", "header.schema_version", "must be one integer")
     return(refusals)
   }
-  if (!version %in% c(1L, 2L, 3L, 4L, 5L, 6L)) {
+  if (!version %in% c(1L, 2L, 3L, 4L, 5L, 6L, 7L)) {
     add(if (version < 1L) "SCHEMA_MIGRATION_REQUIRED" else "SCHEMA_VERSION_UNSUPPORTED",
       "header.schema_version", "schema version is not supported")
     return(refusals)
@@ -1501,11 +1379,11 @@ mfrmr_review_calibration <- function(x) {
     add("IDENTITY_VERSION_UNKNOWN", "header.semantic_identity_version", "identity algorithm is not registered")
   }
 
-  product <- identical(version, 6L)
-  gpcm <- version %in% c(2L, 4L, 5L, 6L) && identical(x$model$family, "GPCM")
+  product <- version %in% c(6L, 7L)
+  gpcm <- version %in% c(2L, 4L, 5L, 6L, 7L) && identical(x$model$family, "GPCM")
   jml <- version %in% c(3L, 4L, 5L)
   if (!(if (version %in% c(1L, 3L)) x$model$family %in% c("RSM", "PCM") else gpcm)) {
-    add("MODEL_FAMILY_UNSUPPORTED", "model.family", "versions 1 and 3 support RSM/PCM; versions 2, 4, 5 and 6 support GPCM")
+    add("MODEL_FAMILY_UNSUPPORTED", "model.family", "versions 1 and 3 support RSM/PCM; versions 2, 4, 5, 6 and 7 support GPCM")
   }
   if (!identical(x$model$estimator, if (jml) "JML" else "MML")) {
     add("MODEL_ESTIMATOR_UNSUPPORTED", "model.estimator", "estimator must match the file format")
@@ -1833,7 +1711,7 @@ mfrmr_review_calibration <- function(x) {
     add("MODEL_STRUCTURE_UNSUPPORTED", "constraints", "portable JML does not support anchors or interactions")
   if (jml && !identical(x$scoring_basis$scoring_algorithm, "quadrature_eap_v2"))
     add("SCORING_BASIS_UNSUPPORTED", "scoring_basis.scoring_algorithm", "JML requires reference-prior EAP with continuous posterior intervals")
-  expected_support_profile <- if (product) "gmfrm_mml_fixed_standard_normal_v6" else if (version == 5L) "gpcm_corrected_jml_reference_normal_v5" else if (jml) {
+  expected_support_profile <- if (product) paste0("gmfrm_mml_fixed_standard_normal_v", version) else if (version == 5L) "gpcm_corrected_jml_reference_normal_v5" else if (jml) {
     paste0(tolower(x$model$family), "_jml_reference_normal_v", if (gpcm) 4L else 3L)
   } else if (gpcm) {
     "gpcm_mml_frozen_normal_v2"
@@ -2245,35 +2123,44 @@ mfrmr_calibration_scoring_levels <- function(x) {
 }
 
 mfrmr_calibration_review_product <- function(x) {
-  owners <- x$model$slope_owner
+  owners <- x$model$slope_owner; facets <- x$model$facet_names
+  step <- x$model$step_owner
+  extended <- identical(x$header$schema_version, 7L)
+  noncenter <- if (extended) x$model$noncenter_facet else owners[2L]
+  reference <- if (extended) x$model$slope_reference else owners[1L]
   if (!is.character(owners) || length(owners) != 2L || anyNA(owners) || anyDuplicated(owners) ||
-      !identical(owners, x$model$facet_names) || !identical(x$model$step_owner, owners[2]) ||
+      !all(owners %in% facets) || !identical(reference, owners[1L]) ||
+      !is.character(step) || length(step) != 1L || !step %in% facets ||
+      !is.character(noncenter) || length(noncenter) != 1L || !noncenter %in% facets ||
+      (!extended && (!identical(owners, facets) || !identical(step, owners[2L]))) ||
       !identical(x$model$slope_composition, "product") || any(x$model$facet_signs != -1) ||
       !identical(x$scoring_basis$prior_mean, 0) || !identical(x$scoring_basis$prior_sd, 1))
     mfrmr_calibration_abort("IDENTIFICATION_CONTRACT_INVALID", "model",
-      "Two-family calibration requires ordered owners, second-owner steps, negative facet signs and fixed N(0,1).")
-  if (any(owners %in% c("Person", "Score", "Weight", "InputRow", "EventId",
+      "Two-family calibration requires declared facet roles, a first-owner GM1 reference, negative facet signs and fixed N(0,1). Format 6 retains second-owner steps/locations.")
+  if (any(facets %in% c("Person", "Score", "Weight", "InputRow", "EventId",
       "Disposition", "ReasonCode", "CalibrationId", "ObservedContext")))
     mfrmr_calibration_abort("MODEL_FACET_ROLE_INVALID", "model.facet_names",
-      "Portable two-family owner names cannot use reserved scoring/disposition column names.")
-  roles <- data.frame(Facet = owners, Role = c("facet", "facet_and_step_owner"), OrderIndex = 1:2)
+      "Portable two-family facet names cannot use reserved scoring/disposition column names.")
+  roles <- data.frame(Facet = facets, Role = ifelse(facets == step, "facet_and_step_owner", "facet"),
+    OrderIndex = seq_along(facets))
   if (!identical(x$model$facet_roles, roles))
     mfrmr_calibration_abort("MODEL_FACET_ROLE_INVALID", "model.facet_roles",
-      "Facet roles must retain the second owner's category steps.")
+      "Facet roles must retain the declared category-step owner.")
   levels <- mfrmr_calibration_scoring_levels(x)
-  if (any(lengths(levels) < 2L)) mfrmr_calibration_abort("MODEL_FACET_LEVEL_INVALID", "model.facet_levels",
-    "Two-family calibration requires at least two levels in each owner.")
-  expected <- mfrmr_calibration_product_identification(owners, levels, x$response$n_categories - 1L)
+  if (any(lengths(levels[owners]) < 2L)) mfrmr_calibration_abort("MODEL_FACET_LEVEL_INVALID", "model.facet_levels",
+    "Two-family calibration requires at least two levels in each slope owner.")
+  expected <- mfrmr_calibration_product_identification(owners, levels,
+    x$response$n_categories - 1L, facets, step, noncenter)
   if (!identical(x$constraints$identification, expected))
     mfrmr_calibration_abort("IDENTIFICATION_CONTRACT_INVALID", "constraints.identification",
-      "First-owner locations/log slopes must be centered; second-owner locations/slopes are free and its steps are row-centered.")
+      "Locations, steps and component log slopes must retain their declared centering constraints.")
   contexts <- x$model$observed_contexts
-  if (!is.data.frame(contexts) || !identical(names(contexts), owners) || !nrow(contexts) ||
+  if (!is.data.frame(contexts) || !identical(names(contexts), facets) || !nrow(contexts) ||
       anyNA(contexts) || anyDuplicated(contexts) ||
-      !all(vapply(owners, function(owner) is.character(contexts[[owner]]) &&
-        all(contexts[[owner]] %in% levels[[owner]]), TRUE)))
+      !all(vapply(facets, function(f) is.character(contexts[[f]]) &&
+        all(contexts[[f]] %in% levels[[f]]), TRUE)))
     mfrmr_calibration_abort("MODEL_STRUCTURE_UNSUPPORTED", "model.observed_contexts",
-      "Observed contexts must be distinct combinations of the two declared level dictionaries.")
+      "Observed contexts must be distinct combinations of all declared facet level dictionaries.")
   map <- x$response$score_map
   if (x$response$rating_min != 0L || !identical(map$OriginalScore, map$InternalScore))
     mfrmr_calibration_abort("RESPONSE_SCORE_MAP_INVALID", "response.score_map",
@@ -2282,7 +2169,7 @@ mfrmr_calibration_review_product <- function(x) {
 }
 
 mfrmr_calibration_materialize_scoring <- function(x) {
-  product <- identical(x$header$schema_version, 6L)
+  product <- x$header$schema_version %in% c(6L, 7L)
   coordinates <- x$parameters$coordinates
   facet_levels <- mfrmr_calibration_scoring_levels(x)
   facet_values <- vector("list", length(x$model$facet_names))
@@ -2419,10 +2306,12 @@ mfrmr_calibration_materialize_scoring <- function(x) {
     }
     if (!product) slopes <- slopes[[1L]]
   }
-  if (product && (abs(sum(facet_values[[x$model$slope_owner[1]]])) > 1e-10 ||
+  centered <- setdiff(x$model$facet_names, if (identical(x$header$schema_version, 7L))
+    x$model$noncenter_facet else x$model$slope_owner[2L])
+  if (product && (any(vapply(facet_values[centered], function(v) abs(sum(v)) > 1e-10, TRUE)) ||
       any(abs(rowSums(owned_steps)) > 1e-10))) {
     mfrmr_calibration_abort("IDENTIFICATION_CONTRACT_INVALID", "parameters.coordinates",
-      "First-owner locations and each second-owner step set must sum to zero.")
+      "Centered facet locations and each declared step set must sum to zero.")
   }
 
   expected_coordinate_count <- sum(lengths(facet_levels)) + (if (product) sum(lengths(slopes)) else length(slopes)) +
@@ -2484,7 +2373,7 @@ mfrmr_score_calibration <- function(calibration,
   mfrmr_calibration_abort_review(review)
   gpcm <- identical(calibration$model$family, "GPCM")
   jml <- identical(calibration$model$estimator, "JML")
-  product <- identical(calibration$header$schema_version, 6L)
+  product <- calibration$header$schema_version %in% c(6L, 7L)
   if (!is.null(cut_scores) && (!calibration$model$family %in% c("RSM","PCM") ||
       !endsWith(calibration$scoring_basis$scoring_algorithm, "_v2")))
     mfrmr_calibration_abort("SCORING_BASIS_UNSUPPORTED", "cut_scores",
@@ -2792,7 +2681,7 @@ mfrmr_score_calibration <- function(calibration,
   if (product) {
     # Keys use level indices, so labels shared by different owners cannot collide.
     keys <- function(values) do.call(paste, c(unname(values), sep = ":"))
-    observed <- lapply(calibration$model$slope_owner, function(owner)
+    observed <- lapply(calibration$model$facet_names, function(owner)
       match(calibration$model$observed_contexts[[owner]], materialized$facet_levels[[owner]]))
     row_dispositions$ObservedContext <- keys(facet_index) %in% keys(observed)
   }

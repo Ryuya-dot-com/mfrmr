@@ -79,8 +79,9 @@ test_that('sensitivity views preserve values, missing cells and display controls
     expect_silent(plot(x,style=style,direction=c('underfit','overfit'),palette='mono'))
     expect_equal(par(c('mar','oma','mfrow','cex')),before)
     p<-plot(x,style=style,direction='overfit',show_title=FALSE,show_notes=FALSE,draw=FALSE)
-    expect_equal(p$data$table$Value,c(1/3,2/3))
-    expect_match(p$data$alt_text,'known/planned')
+    expect_s3_class(p,'ggplot')
+    expect_equal(plot_data(p,'table')$Value,c(1/3,2/3))
+    expect_match(plot_data(p,'alt_text'),'known/planned')
     if(requireNamespace('ggplot2',quietly=TRUE)) {
       gg<-as_ggplot(p);expect_null(gg$labels$title);expect_null(gg$labels$caption)
       expect_silent(ggplot2::ggplotGrob(gg))
@@ -89,9 +90,9 @@ test_that('sensitivity views preserve values, missing cells and display controls
   empty<-mfrm_screening_sensitivity(f$roster,f$measures[FALSE,],f$bands,'all unavailable')
   expect_silent(plot(empty))
   if(requireNamespace('ggplot2',quietly=TRUE)) expect_silent(ggplot2::ggplotGrob(as_ggplot(plot(empty,draw=FALSE))))
-  p<-plot(empty,quantity='unavailable',draw=FALSE);expect_equal(p$data$table$Value,c(1,1))
+  p<-plot(empty,quantity='unavailable',draw=FALSE);expect_equal(plot_data(p,'table')$Value,c(1,1))
   tiny<-x;tiny$by_family$Rate[tiny$by_family$Rate>0]<-.0001
-  expect_true(any(grepl('0.01%',plot(tiny,draw=FALSE)$data$table$Label,fixed=TRUE)))
+  expect_true(any(grepl('0.01%',plot_data(plot(tiny,draw=FALSE),'table')$Label,fixed=TRUE)))
   for(palette in c('accessible','mono')) expect_true(all(
     mfrm_screening_tile_colours(c(seq(0,1,length.out=101),NA),palette)$contrast>=4.5))
   file<-tempfile();saveRDS(x,file);expect_identical(readRDS(file),x)

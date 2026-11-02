@@ -196,6 +196,9 @@ approximations. These do not estimate the precision of the full design.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("compute_facet_icc", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 if (requireNamespace("lme4", quietly = TRUE)) {
   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
@@ -209,6 +212,7 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   #   shares > 0.10 hint at meaningful systematic facet differences.
   # - `Interpretation` summarises the variance-share band the helper
   #   has assigned to each row.
+}
 }
 }
 \references{

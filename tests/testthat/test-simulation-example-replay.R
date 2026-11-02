@@ -49,11 +49,13 @@ test_that("saved simulation consumers and recipe loading never regenerate respon
       active <- saved$design$planning_schema$structural_design_review
       selected <- plot(active, type = "selection_bundles",
         appendix_preset = "compact", draw = FALSE)
-      expect_identical(selected$data$table$TablesSelected, 3L)
-      expect_equal(selected$data$table$SelectionFraction, 3 / 23)
+      expect_s3_class(selected, "ggplot")
+      expect_identical(plot_data(selected, "table")$TablesSelected, 3L)
+      expect_equal(plot_data(selected, "table")$SelectionFraction, 3 / 23)
       roles <- plot(active, type = "selection_roles",
         appendix_preset = "recommended", draw = FALSE)
-      expect_equal(sum(roles$data$table$Tables), 4L)
+      expect_s3_class(roles, "ggplot")
+      expect_equal(sum(plot_data(roles, "table")$Tables), 4L)
       expect_error(plot(active, type = "selection_roles",
         appendix_preset = "reporting", draw = FALSE), "No structural-design")
     }
@@ -65,10 +67,9 @@ test_that("saved simulation consumers and recipe loading never regenerate respon
     report = plot(saved$diagnostic_screening, type = "report", metric = "rate", draw = FALSE),
     signal = plot(saved$signal_detection, signal = "dif", metric = "power", x_var = "n_person", draw = FALSE)
   )
-  for (x in plots[c("recovery", "diagnostic", "report")]) expect_s3_class(x, "mfrm_plot_data")
+  for (x in plots) expect_s3_class(x, "ggplot")
   for (x in plots[c("design", "signal")]) {
-    expect_type(x, "list")
-    expect_true(is.data.frame(x$data))
+    expect_true(is.data.frame(plot_data(x, "data")))
   }
   rec <- recommend_mfrm_design(saved$design, max_ratings = 48, max_ratings_per_rater = 24)
   expect_true(is.data.frame(rec$recommended))

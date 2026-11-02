@@ -71,6 +71,9 @@ exposing the iteration table, convergence summary, and orientation review in
 one bundle.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("bias_iteration_report", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -78,6 +81,7 @@ fit <- example_fit$fit
 diag <- example_fit$diagnostics
 out <- bias_iteration_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
 summary(out)
+}
 }
 \seealso{
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=bias_interaction_report]{bias_interaction_report()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}

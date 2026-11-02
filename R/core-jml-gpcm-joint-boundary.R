@@ -65,17 +65,6 @@ mfrmr_jml_gpcm_joint_empty_target_table <- function() {
   )
 }
 
-mfrmr_jml_gpcm_joint_empty_loading_table <- function() {
-  data.frame(
-    PairId = character(0),
-    CoordinateType = character(0),
-    OptimizerIndex = integer(0),
-    Coordinate = character(0),
-    Level = character(0),
-    Loading = numeric(0),
-    stringsAsFactors = FALSE
-  )
-}
 
 mfrmr_jml_gpcm_joint_empty_rate_table <- function() {
   data.frame(
@@ -508,7 +497,7 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
   slope_facet <- as.character(config$slope_facet %||% NA_character_)
   empty_pairs <- mfrmr_jml_gpcm_joint_empty_pair_table()
   empty_targets <- mfrmr_jml_gpcm_joint_empty_target_table()
-  empty_loadings <- mfrmr_jml_gpcm_joint_empty_loading_table()
+  empty_loadings <- mfrmr_jml_gpcm_slope_empty_loading_table()
   empty_rates <- mfrmr_jml_gpcm_joint_empty_rate_table()
 
   finish <- function(state, complete, scope_complete, detail,
@@ -525,7 +514,7 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
                      optimizer_log_likelihood = NA_real_,
                      likelihood_difference = NA_real_) {
     list(
-      contract_version = mfrmr_boundary_contract_version(),
+      contract_version = mfrmr_readiness_contract_version(),
       method = method,
       model = model,
       scope = paste(

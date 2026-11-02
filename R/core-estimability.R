@@ -15,10 +15,6 @@
 # information instrument establishes global identification or weak-information
 # readiness. This distinction is retained in `Complete` and `NonlinearBlocks`.
 
-mfrmr_estimability_contract_version <- function() {
-  mfrmr_readiness_contract_version()
-}
-
 mfrmr_empty_sparse_matrix <- function(nrow = 0L, ncol = 0L) {
   Matrix::sparseMatrix(
     i = integer(0), j = integer(0), x = numeric(0),
@@ -3085,6 +3081,69 @@ mfrmr_estimability_nonlinear_blocks <- function(sizes) {
   )]
 }
 
+mfrmr_normal_population_identification <- function(prep, idx, config, sizes,
+                                                   primary, rank_audit) {
+  out <- list(
+    state = "not_applicable", sufficient_conditions_met = FALSE,
+    reason = "Requires unanchored additive RSM/PCM MML with an estimated normal population variance and unit weights.",
+    probability_model_scope = "continuous_normal_unit_slope_positive_variance",
+    assumptions = c("Independent Persons and conditionally independent ratings.",
+      "Fixed or noninformatively assigned rating rosters, conditional on the supplied covariates.",
+      "Correct normal population model, finite coordinates and strictly positive finite residual variance."),
+    repeated_persons = NA_integer_, singleton_persons = NA_integer_,
+    additive_rank = NA_integer_, additive_dimension = ncol(primary$design),
+    tolerance_ranks = data.frame(),
+    readiness_effect = "none_identification_only",
+    limitations = "Does not establish sample maximum existence, boundary exclusion, numerical accuracy, weak-information status or interval coverage.")
+  pop <- config$population_spec
+  if (!identical(config$method, "MML") || !config$model %in% c("RSM", "PCM") ||
+      !isTRUE(pop$active) || !is.null(pop$fixed_sd) ||
+      !identical(as.integer(sizes[["log_sigma2"]] %||% 0L), 1L) ||
+      length(config$interaction_specs) || length(config$dummy_facets) ||
+      !identical(config$noncenter_facet, "Person") ||
+      any(vapply(c(config$facet_specs, config$step_specs, list(config$theta_spec)),
+        function(x) any(!is.na(x$anchors)) || any(!is.na(x$groups)), logical(1))) ||
+      length(idx$weight) != length(idx$person) ||
+      any(!is.finite(idx$weight)) || any(idx$weight != 1)) return(out)
+  if ("duplicate_person_facet_cells" %in% prep$preparation_notes$Condition) {
+    out$reason <- "Repeated rating cells require a conditional-independence declaration; the sufficient condition was not evaluated."
+    return(out)
+  }
+  # The linear map must cover every free coordinate except the normal variance.
+  linear <- setdiff(seq_len(sum(unlist(sizes))), build_param_slices(sizes)$log_sigma2)
+  if (nrow(primary$map) != length(linear) ||
+      !setequal(primary$map$OptimizerIndex, linear)) {
+    out$reason <- "The adjacent design does not cover all non-variance coordinates."
+    return(out)
+  }
+  counts <- tabulate(idx$person, nbins = prep$n_person)
+  repeated <- counts >= 2L
+  out$repeated_persons <- sum(repeated)
+  out$singleton_persons <- sum(counts == 1L)
+  out$state <- "inconclusive"
+  out$reason <- "The repeated-Person subset does not establish the sufficient rank condition; this is not a nonidentification certificate."
+  if (!any(repeated)) return(out)
+  keep <- rep(repeated[idx$person], times = primary$transitions)
+  rank <- if (all(keep)) rank_audit else {
+    subset <- primary$design[keep, , drop = FALSE]
+    nonzero <- as.numeric(Matrix::colSums(subset^2)) > 0
+    # Exact zero columns add no rank; omitting them avoids sparse-QR augmentation warnings.
+    mfrmr_estimability_rank_audit(subset[, nonzero, drop = FALSE],
+      primary$map[nonzero, , drop = FALSE])
+  }
+  out$additive_rank <- rank$Rank
+  out$tolerance_ranks <- rank$ToleranceRanks
+  out$tolerance_ranks$Nullity <- out$additive_dimension - out$tolerance_ranks$Rank
+  if (rank$Rank == out$additive_dimension && !isTRUE(rank$ToleranceSensitive)) {
+    out$state <- "sufficient_conditions_met"
+    out$sufficient_conditions_met <- TRUE
+    out$reason <- "The repeated-Person adjacent design has full column rank at every recorded tolerance; under the stated assumptions it identifies the finite locations, steps, population coefficients and positive residual variance."
+  } else if (isTRUE(rank$ToleranceSensitive)) {
+    out$reason <- "Repeated-Person design rank depends on the recorded tolerance; the sufficient condition is inconclusive."
+  }
+  out
+}
+
 audit_mfrm_estimability <- function(prep, idx, config, sizes) {
   primary <- mfrmr_estimability_adjacent_design(
     prep = prep, idx = idx, config = config, sizes = sizes
@@ -3166,7 +3225,7 @@ audit_mfrm_estimability <- function(prep, idx, config, sizes) {
   }
 
   readiness <- data.frame(
-    ReadinessContractVersion = mfrmr_estimability_contract_version(),
+    ReadinessContractVersion = mfrmr_readiness_contract_version(),
     ReadinessScope = "fit",
     EstimabilityState = state,
     ReasonCodes = paste(reason_codes, collapse = ";"),
@@ -3180,12 +3239,14 @@ audit_mfrm_estimability <- function(prep, idx, config, sizes) {
   )
 
   list(
-    contract_version = mfrmr_estimability_contract_version(),
+    contract_version = mfrmr_readiness_contract_version(),
     method = config$method,
     model = config$model,
     readiness = readiness,
     complete = isTRUE(complete),
     nonlinear_blocks = nonlinear_blocks,
+    normal_population_identification = mfrmr_normal_population_identification(
+      prep, idx, config, sizes, primary, rank_audit),
     design = list(
       role = "adjacent_category_logit_constrained_free_coordinate_design",
       observation_rows = primary$observation_rows,

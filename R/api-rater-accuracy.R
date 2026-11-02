@@ -61,7 +61,7 @@
 #' Exact agreement proportions describe the retained benchmark mix. Accuracy
 #' logits adjust for the specified difficulty structure under the response
 #' model, local independence and a connected identifiable design. They are
-#' neither ordinary rater severity nor examinee proficiency. Binary coding
+#' neither ordinary rater severity nor examinee ability. Binary coding
 #' discards the direction and magnitude of disagreements. The native fit's
 #' readiness and estimate-use labels remain visible; finite numbers do not
 #' establish reportability, model fit or transport to other benchmarks.
@@ -198,7 +198,7 @@ fit_rater_accuracy <- function(data, rater, facets, score, reference,
         Input = c(rater, facets), Model = c("Person", facet_names),
         Cases = c("Rater", facet_names))),
     notes = c(
-      "Accuracy is reference-specific exact matching, not severity or examinee proficiency; disagreement direction and size are discarded.",
+      "Accuracy is reference-specific exact matching, not rater severity or examinee ability; disagreement direction and size are discarded.",
       "References are fixed supplied benchmarks; their uncertainty and validity are not estimated.",
       "Review source readiness, design connectivity, local independence and benchmark selection before interpretation; no accuracy cutoff or interval is supplied.",
       "Native fit Person fields refer to raters; each difficulty facet is sum-to-zero centered. Separation concerns differences in accuracy.",

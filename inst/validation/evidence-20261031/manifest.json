@@ -1,0 +1,14 @@
+{
+  "scope": "Historical preflight and deterministic numerical evidence; not current-release coverage validation",
+  "population_source": "2026-09-10 frozen scientific source; 90/90 reconstructed file MD5 values match Payload",
+  "population_original_evidence_md5": "86fe25d8719e4ced75e8699298ddca1f",
+  "population_extract": "8 cells x 5 datasets x 4 targets; counts and coverage independently recounted against all 32 original summary rows",
+  "files": {
+    "adaptive-fitting-0.2.4-results.csv": "c0075da4278fe2aef88471c208ad16cd3df0c210d5db09652fa5dd6b90183343",
+    "adaptive-fitting-0.2.4-source.csv": "54aebb6a224e33684b80a98d92e6682f744c5bbd8899e9c1aea19783f1a0fa04",
+    "population-coverage-preflight-runs-0.2.4.csv": "96879c2c074ca2719ab48b2d31baff140d3ad7b1c744282aff2685e024095b45",
+    "population-coverage-preflight-summary-0.2.4.csv": "2c5b6bc64a212c9d473f450194e47ebe387871c7eac96e17272882dc3209181b",
+    "population-preflight-replicates.csv": "4ccd868f517c63c55cfe76a52cddac54a32432297adff921c56e43405cfa37a1",
+    "population-preflight-source.rds": "68868db7b76db1fd953f32fa60459f2cde9dde184d740daeeee1898fbea67457"
+  }
+}

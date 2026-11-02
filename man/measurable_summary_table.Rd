@@ -93,6 +93,9 @@ and low-count flag.}
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("measurable_summary_table", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -101,6 +104,7 @@ t5 <- measurable_summary_table(fit)
 summary(t5)
 p_t5 <- plot(t5, draw = FALSE)
 p_t5$data$plot
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}},

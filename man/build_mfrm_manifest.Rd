@@ -149,6 +149,9 @@ scenario; its source is recorded without asserting a match to the fit.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("build_mfrm_manifest", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -157,6 +160,7 @@ diag <- example_fit$diagnostics
 manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 manifest$summary[, c("Model", "Method", "Observations", "Facets")]
 manifest$available_outputs[, c("Component", "Available")]
+}
 }
 \seealso{
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}},

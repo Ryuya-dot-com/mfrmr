@@ -27,9 +27,10 @@ contain FACETS-style fit columns, diagnostics are recomputed with
 Must match this fitted analysis; see \link{mfrmr_compatibility_layer} for
 migration of saved diagnostics.}
 
-\item{facets_fit}{Optional external FACETS fit table, or a list of such
-tables. The helper matches rows by \code{Facet} and \code{Level}; a person-only table
-with a \code{Person} column is also accepted.}
+\item{facets_fit}{Optional external FACETS results from
+\code{\link[=read_facets_results]{read_facets_results()}}, a Scorefile/CSV path or \code{score.N.txt} directory,
+a data frame, or a list of those inputs. Rows are matched by \code{Facet} and
+\code{Level}; a person-only table with a \code{Person} column is also accepted.}
 
 \item{facet_col, level_col}{Optional explicit column names for the external
 FACETS table when automatic detection is not sufficient.}
@@ -97,6 +98,9 @@ sparse cell; such NA-vs-finite pairs are availability differences, not
 fit differences. Both notes are repeated in the returned \code{guidance} table.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("facets_fit_review", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -104,7 +108,8 @@ fit <- example_fit$fit
 review <- facets_fit_review(fit)
 summary(review)
 }
+}
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_output_contract_review]{facets_output_contract_review()}},
+\code{\link[=read_facets_results]{read_facets_results()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_output_contract_review]{facets_output_contract_review()}},
 \link{mfrmr_compatibility_layer}
 }

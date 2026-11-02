@@ -114,15 +114,25 @@ on an interpretable common scale; plotting performs no linking.
 
 \section{Returned data and appearance}{
 
-Use \code{draw = FALSE} to obtain the existing payload without drawing. Most
-routes return \code{mfrm_plot_data}; the QC pipeline retains its verdict-table
-return, and native interval routes retain their existing ggplot results.
-Return classes have not been homogenized. Use \code{\link[=plot_data]{plot_data()}} for supported
-payloads and \code{\link[=as_ggplot]{as_ggplot()}} only for supported conversions. Unsupported
-conversions do not become available through this API change.
+In 0.3.0, every \code{plot()} S3 method renders with \code{ggplot2} and invisibly
+returns a \code{ggplot} object (\code{inherits(p, "ggplot")}). Use \code{draw = FALSE} to
+build and return the \code{ggplot} object without printing or opening a graphics
+device. Extract underlying tables, matrices, settings, and cautions with
+\code{\link[=plot_data]{plot_data()}} (for example \code{plot_data(p, "notes")} or
+\code{plot_data(p, component = "locations")}) and inspect available components
+with \code{\link[=plot_data_components]{plot_data_components()}}; do not index \code{p$data$...} directly on a
+\code{ggplot} object.
+
+\code{\link[=as_ggplot]{as_ggplot()}} remains supported for saved \verb{0.2.x} \code{mfrm_plot_data} and
+simulation plot payloads, and returns \verb{0.3.0} \code{ggplot} objects unchanged
+when no alternative component view is requested. Two-continuous-variable
+scatterplots (including \code{plot(dif, type = "scatter")}, model comparisons,
+fit pathway, fair average, bias, PCA scores, and recovery scatterplots)
+accept \code{marginal = c("auto", "histogram", "none")} to attach aligned top and
+right marginal histograms over the finite plotted pairs (\code{"auto"} enables
+histograms on single-panel views with at least eight finite pairs).
 Titles and cautions stay outside figures by default; keep returned notes
-when exporting. G/D plots retain their existing color, monochrome, score
-and facet-panel controls. Save full result objects for later plotting.
+when exporting. Save full result objects for later plotting.
 }
 
 \seealso{

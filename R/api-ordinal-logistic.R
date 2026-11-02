@@ -114,6 +114,9 @@
 #' that handbook are not interchangeable.
 #' @seealso [analyze_dff()], [mantel_haenszel_table()], [mfrmr_linking_and_dff]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("ordinal_logistic_table", run.dontrun = TRUE)
+#' \dontrun{
 #' if (requireNamespace("ordinal", quietly = TRUE)) {
 #'   d <- expand.grid(Match = c(-1, 0, 1), Group = c("R", "F"),
 #'                    Score = 0:2, Replicate = 1:5)
@@ -123,6 +126,7 @@
 #'                                "Match", c("R", "F"), 0:2)
 #'   ol$table
 #'   ol$proportional_odds
+#' }
 #' }
 #' @export
 ordinal_logistic_table <- function(data, person, target, score, group, matching,

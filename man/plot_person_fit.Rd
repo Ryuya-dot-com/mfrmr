@@ -11,6 +11,7 @@ plot_person_fit(
   upper = 1.5,
   top_n_label = 12L,
   preset = c("standard", "publication", "compact", "monochrome"),
+  marginal = c("auto", "histogram", "none"),
   draw = TRUE,
   fit_index = c("meansquare", "loglik")
 )
@@ -31,7 +32,7 @@ The default mean-square view uses largest \verb{|Infit - 1| + |Outfit - 1|};
 
 \item{preset}{Visual preset, including \code{"monochrome"}.}
 
-\item{draw}{If \code{TRUE}, draw with base graphics.}
+\item{draw}{If \code{TRUE}, print the \code{ggplot} object.}
 
 \item{fit_index}{Plot focus. \code{"meansquare"} keeps the Infit/Outfit bubble
 plot. \code{"loglik"} draws the report index selected by
@@ -39,7 +40,7 @@ plot. \code{"loglik"} draws the report index selected by
 \code{lz} with a caveat).}
 }
 \value{
-An \code{mfrm_plot_data} object whose reusable plot data include
+Invisibly, a \code{ggplot} object. Its \code{\link[=plot_data]{plot_data()}} components include
 \code{data} with one row per person, \code{plot_long} for custom R graphics,
 \code{person_fit_indices} from \code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}}, and compact
 flag/status summaries.
@@ -62,44 +63,22 @@ review (overfit / underfit) using
 \code{\link[=unexpected_response_table]{unexpected_response_table()}} for follow-up.
 }
 
+\section{Session plot defaults}{
+
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
+}
+
 \section{Migration in 0.2.4}{
 
 This renderer is internal. Use the corresponding \code{plot()} route in
 \link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
-\section{Session plot defaults}{
-
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
-}
-
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot_person_fit", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 
 # Saved synthetic MML/RSM analysis of example_operational.
@@ -114,6 +93,7 @@ diagnostics <- example_fit$diagnostics
 plot(fit, type = "person_fit", diagnostics = diagnostics)
 # Values above 1 indicate more response variation than expected, below 1 less
 # The reference bands flag patterns for review, not automatic exclusion
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},

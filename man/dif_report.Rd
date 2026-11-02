@@ -7,7 +7,7 @@
 dif_report(dif_result, ...)
 }
 \arguments{
-\item{dif_result}{Output from \code{\link[=analyze_dff]{analyze_dff()}} / \code{\link[=analyze_dif]{analyze_dif()}}
+\item{dif_result}{Output from \code{\link[=analyze_dff]{analyze_dff()}}
 (class \code{mfrm_dff} with compatibility class \code{mfrm_dif}) or
 \code{\link[=dif_interaction_table]{dif_interaction_table()}} (class \code{mfrm_dif_interaction}).}
 
@@ -66,7 +66,7 @@ standalone fairness, invariance, or operational subgroup decision.
 \section{Typical workflow}{
 
 \enumerate{
-\item Run \code{\link[=analyze_dff]{analyze_dff()}} / \code{\link[=analyze_dif]{analyze_dif()}} or \code{\link[=dif_interaction_table]{dif_interaction_table()}}.
+\item Run \code{\link[=analyze_dff]{analyze_dff()}} or \code{\link[=dif_interaction_table]{dif_interaction_table()}}.
 \item Pass the result to \code{dif_report()}.
 \item Print the report or extract \verb{$narrative} for inclusion in a
 manuscript.
@@ -88,6 +88,9 @@ Rasch measurement in language testing. \emph{Language Testing}, 29(4),
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("dif_report", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -98,7 +101,8 @@ dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 rpt <- dif_report(dif)
 cat(rpt$narrative)
 }
+}
 \seealso{
-\code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=dif_interaction_table]{dif_interaction_table()}},
+\code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=dif_interaction_table]{dif_interaction_table()}},
 \link[=plot.mfrm_dif]{plot(x, type = "heatmap")}, \code{\link[=build_apa_outputs]{build_apa_outputs()}}
 }

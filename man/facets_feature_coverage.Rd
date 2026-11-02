@@ -3,12 +3,6 @@
 \name{facets_feature_coverage}
 \alias{facets_feature_coverage}
 \title{FACETS Feature Coverage Matrix}
-\usage{
-facets_feature_coverage(
-  status = c("all", "implemented", "supported_with_caveat", "partial", "not_implemented",
-    "not_targeted")
-)
-}
 \arguments{
 \item{status}{Which rows to return. \code{"all"} returns the full matrix.
 Other values filter by the \code{Status} column.}
@@ -31,7 +25,7 @@ A data.frame with columns:
 }
 }
 \description{
-\code{facets_feature_coverage()} summarizes how \code{mfrmr} maps
+\code{facets_guide('coverage')} summarizes how \code{mfrmr} maps
 the main FACETS output-table, output-file, and graph-menu surface to package
 functions. It is a surface-coverage guide, not a statement that estimands,
 conditioning, extreme-score handling, degrees of freedom, or numerical
@@ -117,10 +111,10 @@ supplies a separate, limited normal-theory paired-plan calculation. See
 \code{vignette("mfrmr-gtheory", package = "mfrmr")} for a runnable workflow.
 }
 \examples{
-facets_feature_coverage()
-facets_feature_coverage("partial")
-facets_feature_coverage("supported_with_caveat")
-facets_feature_coverage("not_implemented")
+facets_guide('coverage')
+facets_guide('coverage', "partial")
+facets_guide('coverage', "supported_with_caveat")
+facets_guide('coverage', "not_implemented")
 }
 \references{
 Linacre, J. M. (2026). \emph{A user's guide to FACETS, version 4.5.0}.
@@ -128,7 +122,8 @@ Winsteps.com. See the guide's output-table index for the documented
 FACETS files, plots, and graphs.
 }
 \seealso{
-\code{\link[=facets_positioning_guide]{facets_positioning_guide()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
-\code{\link[=facets_fit_df_guide]{facets_fit_df_guide()}}, \code{\link[=read_facets_fit_table]{read_facets_fit_table()}}, \code{\link[=facets_fit_review]{facets_fit_review()}},
-\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
+\code{\link[=facets_guide]{facets_guide()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
+\code{\link[=read_facets_results]{read_facets_results()}}, \code{\link[=facets_fit_review]{facets_fit_review()}},
+\link{mfrmr_gpcm_scope}
 }
+\keyword{internal}

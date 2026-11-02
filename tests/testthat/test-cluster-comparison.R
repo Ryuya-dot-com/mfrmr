@@ -127,7 +127,7 @@ test_that("feature selections compare the same entities and check every shared c
   skip_if_not_installed("cluster")
   input <- data.frame(ID = letters[1:4], X = c(0, 0, 1, 1), Y = c(0, 1, 0, 1))
   x <- mfrm_cluster(mfrm_features(input, "ID", "X"), 2)
-  y <- mfrm_cluster_hierarchical(mfrm_features(input[4:1, ], "ID", "Y"), 2)
+  y <- mfrm_cluster(mfrm_features(input[4:1, ], "ID", "Y"), 2, method = "hierarchical")
   xy <- mfrm_cluster(mfrm_features(input, "ID", c("X", "Y")), 2)
   out <- mfrm_cluster_compare(list(XOnly = x, YOnly = y, Both = xy))
   expect_equal(out$analysis_summary$Features, c(1L, 1L, 2L))

@@ -2,7 +2,7 @@
 % Please edit documentation in R/help_compatibility_layer.R
 \name{compatibility_alias_table}
 \alias{compatibility_alias_table}
-\title{List retained compatibility aliases and preferred names}
+\title{List compatibility aliases, migration status and preferred names}
 \usage{
 compatibility_alias_table(
   scope = c("all", "functions", "arguments", "fields", "columns", "plot_metrics")
@@ -13,7 +13,7 @@ compatibility_alias_table(
 \code{"arguments"}, \code{"fields"}, \code{"columns"}, or \code{"plot_metrics"}.}
 }
 \value{
-A data.frame with one row per retained alias and columns:
+A data.frame with one row per compatibility name and columns:
 \itemize{
 \item \code{Alias}
 \item \code{PreferredName}
@@ -25,20 +25,20 @@ A data.frame with one row per retained alias and columns:
 }
 }
 \description{
-List retained compatibility aliases and preferred names
+List compatibility aliases, migration status and preferred names
 }
 \details{
-This helper is a compact public registry of the compatibility aliases that
-\code{mfrmr} intentionally keeps visible for older scripts and downstream
-handoffs. It is meant to answer two questions quickly:
+This helper records compatibility names used in older scripts and downstream
+handoffs, including aliases removed from exports. It answers two questions:
 \enumerate{
 \item Which old names are still accepted?
 \item Which package-native names should new code use instead?
 }
 
-Non-exported soft-deprecated helpers are deliberately excluded here. This table
-is only for retained user-facing aliases that remain part of the public
-surface.
+\code{Lifecycle = "retained_alias"} means the alias is still accepted;
+\code{"removed_export"} means scripts must use the replacement. Private helpers
+that were never public are excluded. See \link{mfrmr_api_migration_030} for the
+complete 0.3.0 development migration, including merged operations.
 }
 \section{Typical workflow}{
 

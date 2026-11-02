@@ -36,7 +36,7 @@ Non-Person location constraints are available in supported ordinary MML/JML
 fits. Person direct/group constraints require JML; MML integrates ability
 and rejects them. This is an implementation boundary, not a claim that
 fixed-Person MML is mathematically impossible. Two-family GPCM has separate
-restrictions; see \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}.
+restrictions; see \code{mfrmr_output_guide("gpcm_capabilities")} and \link{mfrmr_gpcm_scope}.
 
 With \code{centering_scope = "facet"} (the ordinary-fit default), centered facets
 sum to zero across all levels, including direct anchors and group totals.
@@ -590,7 +590,7 @@ fit each wave separately -> \code{\link[=detect_anchor_drift]{detect_anchor_drif
 \item For report/table selection, see \link{mfrmr_reports_and_tables}.
 \item For end-to-end routes, see \link{mfrmr_workflow_methods}.
 \item For a longer walkthrough, see
-\code{vignette("mfrmr-linking-and-dff", package = "mfrmr")}.
+\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html}{online linking and DFF guide}.
 }
 }
 

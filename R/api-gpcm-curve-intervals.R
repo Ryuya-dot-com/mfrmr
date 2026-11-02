@@ -97,6 +97,9 @@
 #'   not fix its slope, thresholds or whole response curve. Availability still
 #'   depends on the joint-information and numerical checks described above.
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("mfrm_curve_intervals", run.dontrun = TRUE)
+#' \dontrun{
 #' # How do category probabilities vary with ability in one rating context?
 #' ratings <- load_mfrmr_data("example_core")
 #' # Reuse the synthetic GPCM fit; estimation uses 61 quadrature points.
@@ -118,6 +121,7 @@
 #' saveRDS(curves, file) # Keep the complete result, including context and notes
 #' saved <- readRDS(file)
 #' saved$settings
+#' }
 #' @export
 mfrm_curve_intervals <- function(fit, newdata, type = c("probability", "information"),
     method = c("model", "sandwich"), clusters = NULL, adjust = FALSE,
@@ -294,12 +298,14 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
       ggplot2::aes(shape = "Unavailable"), color = "#333333", size = 2.5,
       show.legend = c(shape = TRUE, color = FALSE, fill = FALSE, linetype = FALSE)) +
     ggplot2::scale_shape_manual(values = c(Unavailable = 4), name = "Interval")
-  attr(p, "mfrmr_plot_data") <- new_mfrm_plot_data("gpcm_curve_intervals",
+  saved_out <- new_mfrm_plot_data("gpcm_curve_intervals",
     list(table = tab, settings = x$settings, title = title, subtitle = subtitle, caption = caption,
       cautions = x$cautions, contexts = x$contexts, uncertainty_note = x$anchor_note))
-  p <- .mfrmr_gg_labs(p, attr(p, "mfrmr_plot_data")$data,
+  attr(p, "mfrmr_plot_data") <- saved_out
+  attr(p, "mfrmr_notes") <- .mfrm_plot_annotation_notes(saved_out$data)
+  p <- .mfrmr_gg_labs(p, saved_out$data,
     x = "Ability (native scale)",
     y = if (x$settings$type == "probability") "Category probability" else "Information per rating")
-  if (isTRUE(draw)) print(p)
+  if (isTRUE(draw)) .mfrm_draw_ggplot_clean(p)
   invisible(p)
 }

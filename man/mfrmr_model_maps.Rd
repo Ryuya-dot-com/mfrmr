@@ -65,9 +65,11 @@ set it to \code{FALSE} for crowded pathways. \code{palette} is
 and prior-only results. A prior-only point is not a measured ability.
 \code{title}/\code{caption} replace defaults; \code{show_title}/\code{show_notes} hide annotations
 without removing interpretation metadata. \code{text_scale} and \code{point_size}
-change sizes, and \code{draw = FALSE} returns saved plot data. \code{\link[=as_ggplot]{as_ggplot()}}
-preserves these choices and supplies alternative text. Plot tables retain
-all selected unavailable rows; \code{locations} also retains undisplayed panels.
+change sizes, and \code{draw = FALSE} returns the \code{ggplot} object without
+printing. \code{\link[=plot_data]{plot_data()}} extracts the plotted tables (\code{locations} also retains
+undisplayed panels) and notes; \code{\link[=as_ggplot]{as_ggplot()}} remains idempotent on the
+returned object and supplies alternative text. Plot tables retain
+all selected unavailable rows.
 No fitting, scoring or integration is performed during plotting/export.
 }
 

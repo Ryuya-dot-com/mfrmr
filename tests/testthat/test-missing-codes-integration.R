@@ -239,3 +239,19 @@ test_that("review_mfrm_anchors respects missing_codes", {
   expect_true(is.data.frame(aud_raw$facet_summary))
   expect_true(is.data.frame(aud_clean$facet_summary))
 })
+
+test_that("recode_missing_codes replaces sentinels and records per-column counts", {
+  raw_df <- data.frame(
+    Person = c("P1", "P2", "P3"),
+    Score = c(1, 99, 2),
+    Note = c("ok", "n/a", " "),
+    stringsAsFactors = FALSE
+  )
+  cleaned <- recode_missing_codes(raw_df, columns = c("Score", "Note"))
+  expect_identical(is.na(cleaned$Score), c(FALSE, TRUE, FALSE))
+  expect_identical(is.na(cleaned$Note), c(FALSE, TRUE, TRUE))
+  rec <- attr(cleaned, "mfrm_missing_recoding")
+  expect_s3_class(rec, "data.frame")
+  expect_identical(rec$Replaced[match(c("Score", "Note"), rec$Column)], c(1L, 2L))
+  expect_error(recode_missing_codes(raw_df, columns = "UnknownCol"), "Unknown column")
+})

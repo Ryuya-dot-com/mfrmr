@@ -207,6 +207,9 @@
 #' @return An object of class `mfrm_sim_spec`.
 #' @seealso [extract_mfrm_sim_spec()], [simulate_mfrm_data()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("build_mfrm_sim_spec", run.dontrun = TRUE)
+#' \dontrun{
 #' spec <- build_mfrm_sim_spec(
 #'   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
 #'   assignment = "rotating"
@@ -214,6 +217,7 @@
 #' spec$model
 #' spec$assignment
 #' nrow(spec$threshold_table)
+#' }
 #' @export
 build_mfrm_sim_spec <- function(n_person = 50,
                                 n_rater = 4,

@@ -12,11 +12,14 @@ gpcm_inference_fixture <- local({
         quad_points=31,maxit=400,reltol=1e-10)
       cached <<- list(fit=fit,data=data)
     }
+    local_cran_fixture_information(cached$fit, "gpcm-inference", .env = parent.frame())
     cached
   }
 })
 
 test_that('verified weak-information cautions reach intervals, curves and reports', {
+  # Extended local/CI regression; see CONTRIBUTING.md.
+  skip_on_cran()
   f <- gpcm_inference_fixture()$fit
   info <- compute_mml_parameter_covariance(f)
   caution <- 'Ill-conditioned information: inspect interval width and boundary proximity.'
@@ -94,7 +97,11 @@ test_that('slope transformations retain full covariance, scale uncertainty and m
 })
 
 test_that('extreme valid confidence levels preserve slope and curve tail probabilities', {
-  f <- readRDS(test_path('fixtures', 'mfrm-conditional-scoring-gpcm.rds'))$fit
+  # Reuse the eligible live population-GPCM fixture in CRAN tests.
+  # The complete suite keeps the separate conditional-scoring fixture.
+  f <- if (isTRUE(as.logical(Sys.getenv('NOT_CRAN', 'false'))))
+    readRDS(test_path('fixtures', 'mfrm-conditional-scoring-gpcm.rds'))$fit else
+    gpcm_inference_fixture()$fit
   # Reuse fresh derivatives for this unchanged fit, retaining every target/tail check.
   information <- compute_mml_parameter_covariance(f)
   scores <- mfrm_mml_person_scores_numeric(f)
@@ -113,7 +120,7 @@ test_that('extreme valid confidence levels preserve slope and curve tail probabi
   critical <- function(n) uniroot(function(z)
     pnorm(z, lower.tail = FALSE, log.p = TRUE) - log((1-level)/(2*n)),
     c(0, 20), tol = 1e-12)$root
-  for (method in c('model', 'sandwich')) for (simultaneous in c('none', 'bonferroni')) {
+  for (method in c('model', 'sandwich')) for (simultaneous in if (isTRUE(as.logical(Sys.getenv('NOT_CRAN', 'false')))) c('none', 'bonferroni') else if (method == 'model') 'none' else 'bonferroni') {
     for (scale in c('relative', 'standardized')) {
       ci <- confint(f, parm = "slopes", level = level, scale = scale, method = method,
         simultaneous = simultaneous)

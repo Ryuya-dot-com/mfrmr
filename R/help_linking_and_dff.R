@@ -28,7 +28,7 @@
 #' fits. Person direct/group constraints require JML; MML integrates ability
 #' and rejects them. This is an implementation boundary, not a claim that
 #' fixed-Person MML is mathematically impossible. Two-family GPCM has separate
-#' restrictions; see [gpcm_capability_matrix()].
+#' restrictions; see `mfrmr_output_guide("gpcm_capabilities")` and [mfrmr_gpcm_scope].
 #'
 #' With `centering_scope = "facet"` (the ordinary-fit default), centered facets
 #' sum to zero across all levels, including direct anchors and group totals.
@@ -535,7 +535,7 @@
 #' - For report/table selection, see [mfrmr_reports_and_tables].
 #' - For end-to-end routes, see [mfrmr_workflow_methods].
 #' - For a longer walkthrough, see
-#'   `vignette("mfrmr-linking-and-dff", package = "mfrmr")`.
+#'   [online linking and DFF guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html).
 #'
 #' @references
 #' TAM documentation: \href{https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html}{MML estimation and fixed parameters}

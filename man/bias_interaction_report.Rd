@@ -111,6 +111,9 @@ The bundle is optimized for downstream \code{summary()} and
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("bias_interaction_report", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -121,6 +124,7 @@ out <- bias_interaction_report(bias, top_n = 10)
 summary(out)
 p_bi <- plot(out, draw = FALSE)
 p_bi$data$plot
+}
 }
 \seealso{
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}, \link[=plot.mfrm_fit]{plot(x, type = "bias")}

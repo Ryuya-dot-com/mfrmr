@@ -43,38 +43,46 @@ test_that("corrected JML retains its estimator through public output and saved e
   expect_identical(res$tables$slopes,fit$slopes)
   expect_true(all(res$plot_map$Available))
   expect_output(print(summary(res)),"slopes")
-  for(type in c("slopes","locations","steps")) {
-    p <- plot(res,type=type,draw=FALSE)
-    expect_s3_class(p,"mfrm_plot_data")
-    if(requireNamespace("ggplot2",quietly=TRUE)) {
-      g <- as_ggplot(p)
-      expect_s3_class(g,"ggplot")
-      expect_s3_class(ggplot2::ggplot_build(g),"ggplot_built")
+  # Keep the live corrected fit/covariance and scope refusals on CRAN.
+  # Detailed graphics, HTML and replay combinations run in the full suite.
+  if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) {
+    for(type in c("slopes","locations","steps")) {
+      p <- plot(res,type=type,draw=FALSE)
+      expect_s3_class(p,"ggplot")
+      expect_s3_class(attr(p,"mfrmr_plot_data"),"mfrm_plot_data")
+      if(requireNamespace("ggplot2",quietly=TRUE)) {
+        g <- as_ggplot(p)
+        expect_s3_class(g,"ggplot")
+        expect_s3_class(ggplot2::ggplot_build(g),"ggplot_built")
+      }
     }
+    distribution <- plot(fit,style="distribution",draw=FALSE)
+    expect_s3_class(distribution,"ggplot")
+    expect_false(grepl("prior",plot_data(distribution,"caption"),ignore.case=TRUE))
+    expect_gt(plot_data(distribution,"display")$limits[1],0)
+    report <- mfrm_report(res)
+    expect_s3_class(report,"mfrm_report")
+    expect_match(report$markdown,"No confidence intervals")
+    expect_match(report$markdown,"New independent Persons")
+    expect_identical(report$tables$uncertainty,s$tables$uncertainty)
+    expect_match(mfrm_report(res,output="html")$html,"RootSE")
+    path <- tempfile("adjusted-export-")
+    on.exit(unlink(path,recursive=TRUE),add=TRUE)
+    exported <- export_mfrm_results(res,output_dir=path,preset="starter",acknowledge_sensitive=TRUE)
+    expect_equal(nrow(exported$plot_errors),0L)
+    index <- paste(readLines(file.path(path,"index.html")),collapse="\n")
+    expect_match(index,"Corrected|adjusted")
+    expect_false(grepl("required Wright|provisional fitted curves",index))
+    saved <- exported$written_files$Path[exported$written_files$Component=="results_rds"]
+    restored <- readRDS(saved)
+    expect_identical(restored$fit$jml_adjustment,fit$jml_adjustment)
+    expect_identical(restored$tables$uncertainty,s$tables$uncertainty)
+    replay <- exported$written_files$Path[exported$written_files$Component=="replay_code"]
+    withr::with_dir(path,sys.source(replay,envir=new.env(parent=globalenv())))
+  } else {
+    expect_s3_class(plot(res,type="slopes",draw=FALSE),"ggplot")
+    expect_s3_class(attr(plot(res,type="slopes",draw=FALSE),"mfrmr_plot_data"),"mfrm_plot_data")
   }
-  distribution <- plot(fit,style="distribution",draw=FALSE)
-  expect_s3_class(distribution,"mfrm_plot_data")
-  expect_false(grepl("prior",distribution$data$caption,ignore.case=TRUE))
-  expect_gt(distribution$data$display$limits[1],0)
-  report <- mfrm_report(res)
-  expect_s3_class(report,"mfrm_report")
-  expect_match(report$markdown,"No confidence intervals")
-  expect_match(report$markdown,"New independent Persons")
-  expect_identical(report$tables$uncertainty,s$tables$uncertainty)
-  expect_match(mfrm_report(res,output="html")$html,"RootSE")
-  path <- tempfile("adjusted-export-")
-  on.exit(unlink(path,recursive=TRUE),add=TRUE)
-  exported <- export_mfrm_results(res,output_dir=path,preset="starter",acknowledge_sensitive=TRUE)
-  expect_equal(nrow(exported$plot_errors),0L)
-  index <- paste(readLines(file.path(path,"index.html")),collapse="\n")
-  expect_match(index,"Corrected|adjusted")
-  expect_false(grepl("required Wright|provisional fitted curves",index))
-  saved <- exported$written_files$Path[exported$written_files$Component=="results_rds"]
-  restored <- readRDS(saved)
-  expect_identical(restored$fit$jml_adjustment,fit$jml_adjustment)
-  expect_identical(restored$tables$uncertainty,s$tables$uncertainty)
-  replay <- exported$written_files$Path[exported$written_files$Component=="replay_code"]
-  withr::with_dir(path,sys.source(replay,envir=new.env(parent=globalenv())))
   # Ordinary inference/diagnostics must never be attached to these roots.
   expect_error(confint(fit),"corrected JML")
   expect_error(diagnose_mfrm(fit),"corrected JML")
@@ -113,6 +121,8 @@ test_that("corrected JML refuses unsupported settings without changing defaults"
 })
 
 test_that("unresolved corrected roots remain reportable without optimizer placeholders", {
+  # Extended numerical/reference case; shorter live routes remain on CRAN.
+  skip_on_cran()
   skip_if_not_installed("nleqslv")
   args <- jml_public_args(); args$maxit <- 1L
   expect_warning(fit <- do.call(fit_mfrm,args),"duplicated Person")
@@ -127,6 +137,8 @@ test_that("unresolved corrected roots remain reportable without optimizer placeh
 })
 
 test_that("covariance failure cannot erase corrected public point estimates", {
+  # Extended numerical/reference case; shorter live routes remain on CRAN.
+  skip_on_cran()
   skip_if_not_installed("nleqslv")
   local_mocked_bindings(mfrm_jml_adjustment_covariance=function(...)
     stop("Controlled covariance failure"),.package="mfrmr")
@@ -141,5 +153,5 @@ test_that("covariance failure cannot erase corrected public point estimates", {
   expect_true(all(res$plot_map$Available))
   expect_identical(res$status$Status[res$status$Section=="precision"],"not_available")
   expect_match(mfrm_report(res)$markdown,"Controlled covariance failure")
-  expect_s3_class(plot(res,draw=FALSE),"mfrm_plot_data")
+  expect_s3_class(plot(res,draw=FALSE),"ggplot")
 })

@@ -745,7 +745,7 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' identification, anchor, interaction, optimizer, and population settings.
 #'
 #' @param fit An RSM, PCM, or GPCM MML `mfrm_fit` returned by
-#'   [fit_mfrm()]. [gpcm_mml_quadrature_sensitivity()] accepts only GPCM fits.
+#'   [fit_mfrm()]. [mml_quadrature_sensitivity()] accepts only GPCM fits.
 #' @param data The original response data.frame used to create `fit`. Prepared
 #'   response rows are compared semantically after refitting; row order may
 #'   differ, but changed observations fail closed.
@@ -1092,19 +1092,11 @@ mfrmr_gqs_run <- function(
 }
 
 #' @rdname mml_quadrature_sensitivity
-#' @export
-gpcm_mml_quadrature_sensitivity <- function(
-    fit,
-    data,
-    quad_points = c(31L, 41L),
-    theta_range = c(-4, 4),
-    theta_points = 161L,
-    adaptive_quad_points = NULL) {
-  mfrmr_gqs_run(
-    fit, data, quad_points, theta_range, theta_points,
-    allowed_models = "GPCM", adaptive_quad_points = adaptive_quad_points
-  )
-}
+#' @description Use `mml_quadrature_sensitivity()` for all supported model
+#'   families. The former GPCM-only name is no longer exported.
+#' @usage NULL
+#' @name gpcm_mml_quadrature_sensitivity
+NULL
 
 #' @export
 as.data.frame.mfrm_quadrature_sensitivity <- function(x, row.names = NULL,

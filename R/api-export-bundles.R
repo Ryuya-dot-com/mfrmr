@@ -510,6 +510,9 @@ validate_bias_results_input <- function(bias_results,
 #' @seealso [export_mfrm_bundle()], [build_mfrm_replay_script()],
 #'   [make_anchor_table()], [reporting_checklist()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("build_mfrm_manifest", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -518,6 +521,7 @@ validate_bias_results_input <- function(bias_results,
 #' manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 #' manifest$summary[, c("Model", "Method", "Observations", "Facets")]
 #' manifest$available_outputs[, c("Component", "Available")]
+#' }
 #' @section Saved-result reuse:
 #' Supplied screening results must describe this fitted analysis. Results from
 #' another fit or older results without identity metadata are refused. See
@@ -646,7 +650,7 @@ build_mfrm_manifest <- function(fit,
     stringsAsFactors = FALSE
   )
 
-  model_settings <- dashboard_settings_table(list(
+  model_settings <- bundle_settings_table(list(
     model = as.character(cfg$model %||% NA_character_),
     method = as.character(manifest_method),
     method_used = as.character(manifest_method_used),
@@ -717,14 +721,14 @@ build_mfrm_manifest <- function(fit,
     population_response_rows_omitted = as.integer(fit_population$response_rows_omitted %||% 0L)
   ))
 
-  source_columns <- dashboard_settings_table(list(
+  source_columns <- bundle_settings_table(list(
     person = as.character(cfg$source_columns$person %||% "Person"),
     facets = paste(as.character(cfg$source_columns$facets %||% cfg$facet_names %||% character(0)), collapse = ", "),
     score = as.character(cfg$source_columns$score %||% "Score"),
     weight = as.character(cfg$source_columns$weight %||% "")
   ))
 
-  estimation_control <- dashboard_settings_table(list(
+  estimation_control <- bundle_settings_table(list(
     maxit = as.integer(est_ctl$maxit %||% NA_integer_),
     reltol = as.numeric(est_ctl$reltol %||% NA_real_),
     quad_points = as.integer(est_ctl$quad_points %||% NA_integer_),
@@ -743,7 +747,7 @@ build_mfrm_manifest <- function(fit,
     plausible_values = plausible_values
   )
 
-  settings <- dashboard_settings_table(list(
+  settings <- bundle_settings_table(list(
     diagnostics_supplied = diagnostics_supplied,
     include_person_anchors = isTRUE(include_person_anchors),
     bias_collection = inherits(bias_results, "mfrm_bias_collection"),
@@ -1246,6 +1250,9 @@ build_mfrm_session_info_table <- function() {
 #' @return A named list with class `mfrm_replay_script`.
 #' @seealso [build_mfrm_manifest()], [export_mfrm_bundle()], [run_mfrm_facets()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("build_mfrm_replay_script", run.dontrun = TRUE)
+#' \dontrun{
 #' library(mfrmr)
 #' # Saved synthetic MML/RSM analysis of example_operational.
 #' # For your own data, fit a model first; see ?fit_mfrm.
@@ -1254,6 +1261,7 @@ build_mfrm_session_info_table <- function() {
 #' replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
 #' replay$summary[, c("ScriptMode", "ResidualPCA", "BiasPairs")]
 #' cat(substr(replay$script, 1, 120))
+#' }
 #' @section Saved-result reuse:
 #' Supplied screening results must describe this fitted analysis. Results from
 #' another fit or older results without identity metadata are refused. See
@@ -1848,7 +1856,7 @@ build_mfrm_replay_script <- function(fit,
     ),
     stringsAsFactors = FALSE
   )
-  settings <- dashboard_settings_table(list(
+  settings <- bundle_settings_table(list(
     data_file = as.character(data_file[1]),
     script_mode = resolved_mode,
     input_mode = ctx$input_mode,
@@ -2633,6 +2641,9 @@ conquest_overlap_component_sensitivity <- function(component) {
 #'   [reference_case_benchmark()], [build_mfrm_replay_script()],
 #'   [export_mfrm_bundle()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("build_conquest_overlap_bundle", run.dontrun = TRUE)
+#' \dontrun{
 #' # Synthetic latent-regression fit; the full regeneration recipe is
 #' # examples/measurement-fits.R in the package (31 nodes, maxit = 2000).
 #' fit <- readRDS(system.file("examples", "measurement-fits.rds",
@@ -2643,6 +2654,7 @@ conquest_overlap_component_sensitivity <- function(component) {
 #' summary(bundle)$conquest_command_scope
 #' summary(bundle)$conquest_output_contract
 #' cat(substr(bundle$conquest_command, 1, 120))
+#' }
 #' @export
 build_conquest_overlap_bundle <- function(fit = NULL,
                                           case = c("synthetic_latent_regression"),
@@ -2910,7 +2922,7 @@ build_conquest_overlap_bundle <- function(fit = NULL,
 
   summary_tbl <- make_summary_table(nrow(written_files))
 
-  settings <- dashboard_settings_table(list(
+  settings <- bundle_settings_table(list(
     case = resolved$case,
     input_source = resolved$source,
     facet = prepared$facet_name,
@@ -3238,6 +3250,13 @@ max_abs_conquest_overlap_label <- function(x, label) {
 
 #' Normalize extracted ConQuest overlap tables to the `mfrmr` review contract
 #'
+#' @param input `"tables"` for data frames (the default), or `"files"` for
+#'   extracted CSV/TSV/TXT paths supplied through the same three input arguments.
+#'   This does not parse raw ConQuest parameter/report exports; those retain
+#'   their separate bundle-dependent [normalize_conquest_overlap_exports()] route.
+#' @param population_delimiter,item_delimiter,case_delimiter File delimiters
+#'   used only with `input = "files"`: `"auto"`, `"comma"`, `"tab"`,
+#'   `"semicolon"`, or the corresponding literal separator.
 #' @param conquest_population Extracted ConQuest population-parameter table as a
 #'   data.frame.
 #' @param conquest_item_estimates Extracted ConQuest item-estimate table as a
@@ -3330,7 +3349,26 @@ normalize_conquest_overlap_tables <- function(conquest_population,
                                               conquest_item_estimate = "auto",
                                               conquest_case_person = "auto",
                                               conquest_case_estimate = "auto",
-                                              keep_extra_columns = TRUE) {
+                                              keep_extra_columns = TRUE,
+                                              input = c("tables", "files"),
+                                              population_delimiter = "auto",
+                                              item_delimiter = "auto",
+                                              case_delimiter = "auto") {
+  input <- match.arg(input)
+  if (input == "files") {
+    return(normalize_conquest_overlap_files(
+      population_file = conquest_population, item_file = conquest_item_estimates,
+      case_file = conquest_case_eap, population_delimiter = population_delimiter,
+      item_delimiter = item_delimiter, case_delimiter = case_delimiter,
+      conquest_population_term = conquest_population_term,
+      conquest_population_estimate = conquest_population_estimate,
+      conquest_item_id = conquest_item_id, conquest_item_estimate = conquest_item_estimate,
+      conquest_case_person = conquest_case_person, conquest_case_estimate = conquest_case_estimate,
+      keep_extra_columns = keep_extra_columns))
+  }
+  if (!missing(population_delimiter) || !missing(item_delimiter) || !missing(case_delimiter)) {
+    stop("Delimiter controls require `input = 'files'`.", call. = FALSE)
+  }
   conquest_population <- validate_conquest_overlap_input_df(conquest_population, "conquest_population")
   conquest_item_estimates <- validate_conquest_overlap_input_df(conquest_item_estimates, "conquest_item_estimates")
   conquest_case_eap <- validate_conquest_overlap_input_df(conquest_case_eap, "conquest_case_eap")
@@ -3378,7 +3416,7 @@ normalize_conquest_overlap_tables <- function(conquest_population,
     stringsAsFactors = FALSE
   )
 
-  settings <- dashboard_settings_table(list(
+  settings <- bundle_settings_table(list(
     conquest_population_term = pop_term_col,
     conquest_population_estimate = pop_est_col,
     conquest_item_id = item_id_col,
@@ -3697,7 +3735,7 @@ normalize_conquest_overlap_exports <- function(bundle,
   }
   out$settings <- rbind(
     out$settings,
-    dashboard_settings_table(list(
+    bundle_settings_table(list(
       source = "generated_conquest_csv_exports",
       reconstructed_last_item = reconstructed_last_item,
       conquest_version = conquest_version,
@@ -3761,7 +3799,7 @@ normalize_conquest_overlap_exports <- function(bundle,
 #'   standardized identifier and estimate columns.
 #'
 #' @details
-#' This helper is a thin file-wrapper around [normalize_conquest_overlap_tables()].
+#' The file-input route of [normalize_conquest_overlap_tables()] reads these formats.
 #' It is intentionally limited to already extracted tabular files and does not
 #' parse raw ConQuest report text.
 #'
@@ -3770,7 +3808,7 @@ normalize_conquest_overlap_exports <- function(bundle,
 #' 1. export a bundle for the documented comparison scope with
 #'    [build_conquest_overlap_bundle()];
 #' 2. extract the relevant ConQuest tables to CSV/TSV/TXT files;
-#' 3. call `normalize_conquest_overlap_files()` on those files;
+#' 3. call `normalize_conquest_overlap_tables(..., input = "files")`; 
 #' 4. pass the result to [review_conquest_overlap()].
 #'
 #' Read `summary(normalized)$normalization_scope` before review to confirm
@@ -3814,10 +3852,10 @@ normalize_conquest_overlap_exports <- function(bundle,
 #'   case_path,
 #'   row.names = FALSE
 #' )
-#' normalized <- normalize_conquest_overlap_files(
-#'   population_file = pop_path,
-#'   item_file = item_path,
-#'   case_file = case_path,
+#' normalized <- normalize_conquest_overlap_tables(input = "files", 
+#'   conquest_population = pop_path,
+#'   conquest_item_estimates = item_path,
+#'   conquest_case_eap = case_path,
 #'   conquest_population_term = "Term",
 #'   conquest_population_estimate = "Est",
 #'   conquest_item_id = "Item",
@@ -3828,7 +3866,10 @@ normalize_conquest_overlap_exports <- function(bundle,
 #' summary(normalized)$normalization_scope
 #' review <- review_conquest_overlap(bundle, normalized)
 #' summary(review)$summary
-#' @export
+#' @description Use `normalize_conquest_overlap_tables(..., input = "files")`.
+#'   The former file-specific entry is no longer exported. This guide retains
+#'   its file format and provenance details.
+#' @usage NULL
 normalize_conquest_overlap_files <- function(population_file,
                                              item_file,
                                              case_file,
@@ -3871,7 +3912,7 @@ normalize_conquest_overlap_files <- function(population_file,
   )
   normalized$settings <- rbind(
     normalized$settings,
-    dashboard_settings_table(list(
+    bundle_settings_table(list(
       population_file = normalized$source_files$Path[1],
       item_file = normalized$source_files$Path[2],
       case_file = normalized$source_files$Path[3],
@@ -4381,7 +4422,7 @@ review_conquest_overlap <- function(bundle,
     stringsAsFactors = FALSE
   )
 
-  settings <- dashboard_settings_table(list(
+  settings <- bundle_settings_table(list(
     item_id_source = item_match$source,
     item_centering_basis = "same_matched_finite_items",
     conquest_location_shift = location_shift,
@@ -4525,6 +4566,9 @@ review_conquest_overlap <- function(bundle,
 #' @seealso [build_summary_table_bundle()], [export_mfrm_bundle()],
 #'   [apa_table()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("export_summary_appendix", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -4538,6 +4582,7 @@ review_conquest_overlap <- function(bundle,
 #'   overwrite = TRUE
 #' )
 #' appendix$summary
+#' }
 #' @export
 export_summary_appendix <- function(x,
                                     output_dir = ".",
@@ -4908,7 +4953,7 @@ export_summary_appendix <- function(x,
     stringsAsFactors = FALSE
   )
 
-  settings <- dashboard_settings_table(list(
+  settings <- bundle_settings_table(list(
     output_dir = normalizePath(output_dir, winslash = "/", mustWork = FALSE),
     prefix = prefix,
     include_html = include_html,
@@ -5108,6 +5153,9 @@ export_summary_appendix <- function(x,
 #'   [build_mfrm_replay_script()], [export_mfrm_tables()],
 #'   [reporting_checklist()], [export_summary_appendix()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("export_mfrm_bundle", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -5128,6 +5176,7 @@ export_summary_appendix <- function(x,
 #'   File = basename(bundle$written_files$Path)
 #' ))
 #' # Full paths and data-handling notes remain in bundle$written_files.
+#' }
 #' @section Saved-result reuse:
 #' Supplied screening results must describe this fitted analysis. Results from
 #' another fit or older results without identity metadata are refused. See
@@ -5223,19 +5272,7 @@ export_mfrm_bundle <- function(fit,
     stop("Could not create output directory: ", output_dir, call. = FALSE)
   }
 
-  privacy_notice <- data.frame(
-    PrivacyClass = "analysis_archive",
-    Deidentified = FALSE,
-    ShareableWithoutReview = FALSE,
-    Notice = paste0(
-      "This fit-level bundle is an analysis archive, not a deidentified or ",
-      "automatically shareable package. It can contain direct person identifiers, ",
-      "person-level estimates, original labels, replay data, and local paths. ",
-      "Review and transform every file under the applicable data-handling policy ",
-      "before sharing it."
-    ),
-    stringsAsFactors = FALSE
-  )
+  privacy_notice <- .mfrmr_table_export_mfrm_bundle_privacy_notice
   if (!acknowledge_sensitive) {
     warning(
       privacy_notice$Notice[1],
@@ -5997,7 +6034,7 @@ export_mfrm_bundle <- function(fit,
     stringsAsFactors = FALSE
   )
 
-  settings <- dashboard_settings_table(list(
+  settings <- bundle_settings_table(list(
     diagnostics_supplied = diagnostics_supplied,
     include = paste(include, collapse = ", "),
     output_dir = normalizePath(output_dir, winslash = "/", mustWork = FALSE),

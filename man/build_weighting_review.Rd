@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-advanced.R
 \name{build_weighting_review}
 \alias{build_weighting_review}
+\alias{summary.mfrm_weighting_review}
 \title{Build a weighting-policy review between Rasch-family and GPCM fits}
 \usage{
 build_weighting_review(
@@ -12,6 +13,8 @@ build_weighting_review(
   top_n = 10L,
   nested = FALSE
 )
+
+\method{summary}{mfrm_weighting_review}(object, digits = 3, top_n = 10, ...)
 }
 \arguments{
 \item{rasch_fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}} using \code{model = "RSM"} or \code{"PCM"}.}
@@ -24,13 +27,24 @@ for the information-redistribution comparison.}
 \item{theta_points}{Integer number of theta grid points passed to
 \code{\link[=compute_information]{compute_information()}}.}
 
-\item{top_n}{Maximum number of rows to keep in compact summary outputs.}
+\item{top_n}{For \code{build_weighting_review()}: Maximum number of rows to keep in compact summary outputs.
+
+For \code{summary()}: Number of top rows to retain in compact summary tables.}
 
 \item{nested}{Request the PCM/GPCM equal-slope likelihood-ratio test. Default
 \code{FALSE}. Requires matched MML fits and the checks in \code{\link[=compare_mfrm]{compare_mfrm()}}.}
+
+\item{object}{Output from \code{\link[=build_weighting_review]{build_weighting_review()}}.}
+
+\item{digits}{Number of digits for printed numeric values.}
+
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 An object of class \code{mfrm_weighting_review}.
+
+For \code{summary()}: An object of class \code{summary.mfrm_weighting_review}, including the
+evidence-tier \code{comparison_contract} table and any computed \code{lrt}.
 }
 \description{
 Build a weighting-policy review between Rasch-family and GPCM fits
@@ -70,6 +84,8 @@ selection because it is unpenalized and the GPCM contains additional slope
 parameters. FACETS may serve as a direct comparator for the PCM/JML side
 only; its post-fit discrimination statistic is not a jointly estimated
 free-slope GPCM counterpart.
+
+\code{summary()} method: Summarize a weighting-review object
 }
 \section{Recommended input route}{
 
@@ -139,5 +155,7 @@ review$top_reweighted_levels
 }
 }
 \seealso{
-\code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=compute_information]{compute_information()}}, \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
+\code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=compute_information]{compute_information()}}, \link{mfrmr_gpcm_scope}
+
+\code{\link[=build_weighting_review]{build_weighting_review()}}
 }

@@ -13,10 +13,10 @@
 #'   one axis, with a common method legend. `"panels"` retains one panel per
 #'   future plan, with at most `ncol` columns.
 #' @param ... Reserved; additional arguments are rejected.
-#' @return Invisibly, an `mfrm_plot_data` object retaining the exact `table`,
+#' @return Invisibly, a `ggplot` object; [plot_data()] retains the exact `table`,
 #'   `unavailable` rows, source `intervals`, `design_grid`, `weights` and `notes`.
-#'   Use [plot_data()] to inspect them and [as_ggplot()] on the returned object
-#'   for an editable plot. No title or explanatory footnote is drawn.
+#'   [as_ggplot()] remains idempotent on the returned object.
+#'   No title or explanatory footnote is drawn.
 #' @details All methods concern the same score/composite, metric and
 #'   source data. A filled point has an interval; an open point is an available
 #'   estimate without an interval. Unavailable intervals are explicitly labeled
@@ -57,8 +57,13 @@
 #'   a squared width is undefined. Their conservative bounds are drawn, while
 #'   the saved interval object and notes retain the reason and affected ranges.
 #' @seealso [confint.mfrm_multivariate_d_study()]
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_dstudy_intervals", run.dontrun = TRUE)
+#' \dontrun{
 #' tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 #' g <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
 #' d <- mfrm_d_study(g, data.frame(Tasks = c(6, 12)))
@@ -66,6 +71,7 @@
 #' p <- plot(ci, draw = FALSE)
 #' plot_data(p, "notes")
 #' if (requireNamespace("ggplot2", quietly = TRUE)) as_ggplot(p)
+#' }
 #' @export
 plot.mfrm_dstudy_intervals <- function(x, draw = TRUE, preset = "standard",
                                       ncol = 2L, layout = c("combined", "panels"), ...) {
@@ -131,50 +137,7 @@ plot.mfrm_dstudy_intervals <- function(x, draw = TRUE, preset = "standard",
     plans = data.frame(Scenario = plans, Label = labels[plans], Y = centers),
     methods = methods, palette = palette, xrange = xrange,
     xlab = if (sem) paste(sub("SEM", " SEM", unique(x$Metric), fixed = TRUE), "(score units)") else unique(x$Metric)))
-  if (!draw) return(invisible(out))
-  apply_plot_preset(style)
-  old <- graphics::par()[c("mfrow", "mar", "oma", "cex", "mex")]
-  on.exit(graphics::par(old), add = TRUE)
-  combined <- layout == "combined"
-  graphics::par(mfrow = if (combined) c(1, 1) else
-      c(ceiling(length(plans)/out$data$ncol), out$data$ncol),
-    mex = .7, mar = c(if (combined) 5 else 4, if (combined) 11 else 10,
-      if (combined && length(methods) > 2L) 1.5*length(methods)+1 else if (combined) 3.5 else 2, 1),
-    oma = c(0, 0, 0, 0))
-  if (combined) {
-    margin <- graphics::par("mar")
-    margin[2] <- max(margin[2],
-      max(graphics::strwidth(labels[plans], units = "inches", cex = .8))/
-        (graphics::par("csi")*graphics::par("mex"))+2)
-    graphics::par(mar = margin)
-  }
-  groups <- if (combined) list(plans) else as.list(plans)
-  for (plan in groups) {
-    z <- tab[tab$Scenario %in% plan, , drop = FALSE]
-    y <- if (combined) z$Y else z$Row
-    plot(NA_real_, NA_real_, xlim = xrange,
-      ylim = c(.5, if (combined) length(plans)+.5 else length(methods)+.5),
-      xlab = out$data$xlab, ylab = "", yaxt = "n", main = "")
-    if (combined) {
-      if (length(plans) > 1L) abline(h = centers[-1L]+.5, col = "grey90")
-      axis(2, at = centers, labels = labels[plans], las = 1, cex.axis = .8, tick = FALSE)
-      legend(x = mean(graphics::par("usr")[1:2]),
-        y = graphics::par("usr")[4] + graphics::strheight("M")*
-          if (length(methods) > 2L) .25 else 1.5,
-        xjust = .5, yjust = if (length(methods) > 2L) 0 else .5,
-        xpd = NA, bty = "n", horiz = length(methods) <= 2L,
-        legend = methods, col = palette, pch = 15L+seq_along(methods),
-        lty = seq_along(methods), lwd = 2, cex = .8)
-      for (j in which(!z$Available)) text(z$StatusX[j], y[j], z$StatusLabel[j],
-        adj = z$StatusHjust[j], col = z$Colour[j], cex = .7)
-    } else {
-      mtext(labels[plan], side = 3, line = .5, cex = .85)
-      axis(2, at = z$Row, labels = z$MethodLabel, las = 1, cex.axis = .8)
-    }
-    segments(z$Lower, y, z$Upper, y, col = z$Colour, lwd = 2, lty = z$LineType)
-    points(z$Estimate, y, col = z$Colour, pch = z$Shape)
-  }
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 .mfrm_gg_dstudy_intervals <- function(x) {

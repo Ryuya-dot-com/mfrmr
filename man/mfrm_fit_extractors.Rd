@@ -156,6 +156,15 @@ and marginal likelihoods must not be compared. For MML, BIC uses Persons,
 not rating rows or the sum of rating weights. Counts describe the retained
 analysis, not omitted input records or an effective sample size under
 dependence. Use \code{nobs(fit, type = "ratings")} to count retained ratings.
+
+For CML, adding extreme-score Persons can increase BIC's penalty even when
+the conditional likelihood is unchanged. Report both total and informative
+Person counts. A sensitivity calculation using the latter is
+\code{-2 * as.numeric(ll) + attr(ll, "df") * log(attr(ll, "informative_persons"))},
+where \code{ll <- logLik(fit)} and the informative count is positive. Label this
+as an alternative penalty convention, not the package's BIC or a validated
+model-selection rule; neither count resolves dependence or sparse-design
+asymptotics. Keep the same retained data and conditioning basis in comparisons.
 }
 \examples{
 ratings <- load_mfrmr_data("example_core")

@@ -159,8 +159,8 @@ mfrm_gpcm_results_score_tables <- function(fit, scores) {
   }
   if (portable) {
     mfrmr_validate_calibration_score(scores)
-    if (!identical(scores$settings$schema_version, 6L))
-      stop("Two-family results require portable scoring format 6.", call. = FALSE)
+    if (!isTRUE(scores$settings$schema_version %in% c(6L, 7L)))
+      stop("Two-family results require portable scoring format 6 or 7.", call. = FALSE)
     source <- scores$settings$source_scoring_evidence
     estimates <- scores$estimates
     review <- sum(scores$person_dispositions$Disposition == "scored_review")
@@ -300,7 +300,7 @@ mfrm_gpcm_product_point_tables <- function(fit) {
       Interval = "See attached slope-interval tables, if requested"),
     fitted_locations = data.frame(Facet = fit$facets$others$Facet,
       Level = fit$facets$others$Level, FittedLocation = fit$facets$others$Estimate,
-      Constraint = ifelse(fit$facets$others$Facet == fit$config$slope_facet[1],
+      Constraint = ifelse(fit$facets$others$Facet != fit$config$noncenter_facet,
         "Sum to zero across levels", "Uncentered; fixed N(0,1) ability"),
       Interval = "See attached location-interval tables, if requested"),
     fitted_steps = data.frame(StepOwner = fit$config$step_facet,
@@ -385,7 +385,7 @@ mfrm_gpcm_product_report <- function(x, style) {
       "Retain unavailable bounds and labels for contexts not observed together.",
       "Conditional new-Person EAP is separately available through predict_mfrm_units() or the portable calibration workflow with source/batch checks. Attach matching saved output through scores in mfrm_results()."),
     PrimaryRoute = c("report$tables$fit_summary_settings_overview", "report$tables$fit_summary_readiness",
-      "report$tables", "gpcm_capability_matrix()"))
+      "report$tables", "mfrmr_output_guide(\"gpcm_capabilities\")"))
   selected <- c("fit_summary_overview", "fit_summary_settings_overview", "fit_summary_readiness",
     "fit_summary_decision", "fit_summary_slope_overview", "fit_summary_caveats")
   tables <- c(x$tables[intersect(selected, names(x$tables))],
@@ -565,7 +565,9 @@ plot.mfrm_slope_intervals <- function(x, title = "GPCM slope uncertainty",
         x_label = if ("SlopeOwner" %in% names(attr(x, "diagnostics"))) "Component discrimination (log scale)" else "Relative discrimination (log scale)",
         level = attr(x, "level"), cutoff = saved$cutoff))
     p <- mfrm_gg_gpcm_profile(payload)
-    if (isTRUE(draw)) print(p)
+    attr(p, "mfrmr_plot_data") <- payload
+    attr(p, "mfrmr_notes") <- .mfrm_plot_annotation_notes(payload$data)
+    if (isTRUE(draw)) .mfrm_draw_ggplot_clean(p)
     return(invisible(p))
   }
   p <- ggplot2::ggplot(tab, ggplot2::aes(y = .data$Level, x = .data$Estimate)) +
@@ -583,15 +585,17 @@ plot.mfrm_slope_intervals <- function(x, title = "GPCM slope uncertainty",
         sum(tab$Display == "Unavailable"), "unavailable. Ticks retain computed partial bounds.")) +
     .mfrmr_gg_theme() + ggplot2::theme(plot.subtitle = ggplot2::element_text(size = 9))
   if (!is.null(reference)) p <- p + ggplot2::geom_vline(xintercept = reference, linetype = "dashed", color = "grey40")
-  attr(p, "mfrmr_plot_data") <- new_mfrm_plot_data("gpcm_slope_intervals",
+  saved_out <- new_mfrm_plot_data("gpcm_slope_intervals",
     list(table = tab, title = title, subtitle = subtitle, caption = caption,
       cautions = c(attr(x, "cautions"), interval_note), target = attr(x, "target"),
       uncertainty_note = attr(x, "anchor_note"),
       method = attr(x, "method"), level = attr(x, "level"), adjustment = attr(x, "simultaneous"),
       checks = attr(x, "checks"), numerical_checks = attr(x, "numerical_checks"),
       score_rank = attr(x, "score_rank")))
-  p <- .mfrmr_gg_labs(p, attr(p, "mfrmr_plot_data")$data, x = attr(x, "target"))
-  if (isTRUE(draw)) print(p)
+  attr(p, "mfrmr_plot_data") <- saved_out
+  attr(p, "mfrmr_notes") <- .mfrm_plot_annotation_notes(saved_out$data)
+  p <- .mfrmr_gg_labs(p, saved_out$data, x = attr(x, "target"))
+  if (isTRUE(draw)) .mfrm_draw_ggplot_clean(p)
   invisible(p)
 }
 
@@ -614,11 +618,13 @@ plot.mfrm_gpcm_bootstrap <- function(x, title = "GPCM bootstrap inference",
     ggplot2::labs(x = "Null likelihood-ratio statistic", y = "Replicates",
       alt = "Histogram of resolved PCM-null bootstrap likelihood-ratio statistics with the observed statistic marked. Unresolved replicate counts are retained.") +
     .mfrmr_gg_theme()
-  attr(p, "mfrmr_plot_data") <- new_mfrm_plot_data("gpcm_bootstrap_test",
+  saved_boot <- new_mfrm_plot_data("gpcm_bootstrap_test",
     list(table = tab, test = x$test, title = title, subtitle = subtitle, caption = caption))
-  p <- .mfrmr_gg_labs(p, attr(p, "mfrmr_plot_data")$data,
+  attr(p, "mfrmr_plot_data") <- saved_boot
+  attr(p, "mfrmr_notes") <- .mfrm_plot_annotation_notes(saved_boot$data)
+  p <- .mfrmr_gg_labs(p, saved_boot$data,
     x = "Null likelihood-ratio statistic", y = "Replicates")
-  if (isTRUE(draw)) print(p)
+  if (isTRUE(draw)) .mfrm_draw_ggplot_clean(p)
   invisible(p)
 }
 
@@ -632,12 +638,18 @@ as_ggplot.mfrm_slope_intervals <- function(x, type = NULL, component = NULL, ...
 }
 
 #' @rdname as_ggplot
-#' @export
-as_ggplot.mfrm_curve_intervals <- as_ggplot.mfrm_slope_intervals
+#' @name as_ggplot.mfrm_curve_intervals
+#' @aliases as_ggplot.mfrm_curve_intervals
+#' @usage \method{as_ggplot}{mfrm_curve_intervals}(x, type = NULL, component = NULL, ...)
+#' @rawNamespace S3method(as_ggplot,mfrm_curve_intervals,as_ggplot.mfrm_slope_intervals)
+NULL
 
 #' @rdname as_ggplot
-#' @export
-as_ggplot.mfrm_gpcm_bootstrap <- as_ggplot.mfrm_slope_intervals
+#' @name as_ggplot.mfrm_gpcm_bootstrap
+#' @aliases as_ggplot.mfrm_gpcm_bootstrap
+#' @usage \method{as_ggplot}{mfrm_gpcm_bootstrap}(x, type = NULL, component = NULL, ...)
+#' @rawNamespace S3method(as_ggplot,mfrm_gpcm_bootstrap,as_ggplot.mfrm_slope_intervals)
+NULL
 
 #' @rdname as_ggplot
 #' @export

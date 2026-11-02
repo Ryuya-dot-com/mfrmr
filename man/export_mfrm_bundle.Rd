@@ -227,6 +227,9 @@ scenario; its source is recorded without asserting a match to the fit.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("export_mfrm_bundle", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -247,6 +250,7 @@ head(data.frame(
   File = basename(bundle$written_files$Path)
 ))
 # Full paths and data-handling notes remain in bundle$written_files.
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=mfrm_results]{mfrm_results()}}, \code{\link[=mfrm_report]{mfrm_report()}},

@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-plotting-fit-family.R
 \name{plot.mfrm_fit}
 \alias{plot.mfrm_fit}
-\title{Plot fitted MFRM results with base R}
+\title{Plot fitted MFRM results with ggplot2}
 \usage{
 \method{plot}{mfrm_fit}(
   x,
@@ -41,6 +41,7 @@
   persons_per_star = NULL,
   show_title = FALSE,
   show_notes = FALSE,
+  marginal = c("auto", "histogram", "none"),
   ...,
   level = NULL,
   view = NULL,
@@ -153,7 +154,7 @@ shape) or \code{"facet"} (one base-graphics panel per facet).}
 
 \item{zstd_cut}{Absolute ZSTD review line for a fit pathway.}
 
-\item{draw}{If \code{TRUE}, draw the plot with base graphics.}
+\item{draw}{If \code{TRUE}, print the resulting \code{ggplot} object.}
 
 \item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"},
 or \code{"monochrome"}).}
@@ -196,6 +197,11 @@ review-only title markers. Notes remain available in the returned object,
 and R warnings are still issued. Default \code{FALSE}; use
 \code{plot_data(p, "notes")} for the descriptions and cautions outside the figure.}
 
+\item{marginal}{Marginal histogram display for two-continuous-variable
+scatterplots (\code{"auto"}, \code{"histogram"}, or \code{"none"}). Default \code{"auto"}
+attaches aligned X/Y marginal histograms on single-panel scatterplots
+with at least 8 finite plotted coordinate pairs.}
+
 \item{...}{View-specific controls listed in \link{mfrmr_plot_migration}. The
 consolidated routes reject irrelevant or duplicated arguments.}
 
@@ -229,17 +235,17 @@ Selection is not a statistical flag. Inspect \code{locations$Highlighted},
 without finite locations are rejected. \code{NULL} selects no levels.}
 }
 \value{
-Invisibly, an \code{mfrm_plot_data} object (default and for any
-single \code{type}), or an \code{mfrm_plot_bundle} when
-\code{type = "bundle"} / \code{"all"} / \code{"default"}. Each returned fit plot
-includes domain-specific readiness and an interpretation status in its
-data payload, plus a \code{notes} table and \code{display} settings. It also includes
-a one-row \code{scale_contract} table recording
-the fitted coordinate basis, population SD when applicable,
-discrimination basis, and GPCM MML identification convention.
+Invisibly, a \code{ggplot} object (including a 3-panel composite
+\code{ggplot} when \code{type = "bundle"} / \code{"all"} / \code{"default"}). Each returned fit
+plot carries its underlying plot payload and notes accessible via
+\code{\link[=plot_data]{plot_data()}} and \code{\link[=plot_data_components]{plot_data_components()}}, including domain-specific
+readiness, an interpretation status, a \code{notes} table, \code{display} settings,
+and a one-row \code{scale_contract} table recording the fitted coordinate basis,
+population SD when applicable, discrimination basis, and GPCM MML
+identification convention.
 }
 \description{
-Plot fitted MFRM results with base R
+Plot fitted MFRM results with ggplot2
 }
 \details{
 Start with \code{plot(fit)}: it draws a Wright map of person abilities, rater
@@ -268,19 +274,17 @@ display convention and leaves fair scores unchanged.
 
 This S3 plotting method provides the core fit-family visuals for
 \code{mfrmr}. When \code{type} is omitted, it returns the Wright map alone as
-an \code{mfrm_plot_data} object (the most useful single figure for a
+a \code{ggplot} object (the most useful single figure for a
 first inspection). Pass \code{type = "bundle"} (or \code{"all"} / \code{"default"})
-to obtain the legacy three-plot \code{mfrm_plot_bundle} containing a
+to obtain a three-panel composite \code{ggplot} containing a
 Wright map, pathway map, and category characteristic curves. The
 compact native default records any omitted facet locations in
-\code{data$retention} and annotates the subtitle and drawn figure; use
+\code{plot_data(p, "retention")} and the returned notes; use
 \code{top_n = Inf} to retain every fitted location in the final Wright map.
-Every retained native location is labelled. \code{LabelX} / \code{LabelY} provide
-initial text positions; base graphics further adjusts these positions for
-the device's text dimensions, avoiding nearby labels and fitted points where
-space permits. Leader lines connect displaced text to the unchanged point.
-\code{label_points} retains fitted coordinates and initial text positions for
-custom renderers. Step transitions share one vertical ladder and their
+\code{LabelX} / \code{LabelY} provide text positions, and leader lines connect displaced
+labels to unchanged fitted points. Display labels may be shortened;
+\code{plot_data(p, "label_points")} retains the full labels, fitted coordinates
+and text positions for custom graphics. Step transitions share one vertical ladder and their
 labels include the fitted threshold logit. When the fit records
 boundary-separated facet levels and no
 display range was supplied, the native and FACETS-style maps use the same
@@ -288,18 +292,16 @@ robust automatic range and place those levels at ruler ends. Exact fitted
 values and intervals remain in \code{OriginalEstimate}, \code{CI_Lower}, and
 \code{CI_Upper}; \code{DisplayEstimate}, \code{DisplayCI_Lower}, \code{DisplayCI_Upper}, and the
 clipping-status columns describe only the rendered coordinates. Endpoint
-triangles and the plot footer disclose any omitted or clipped interval.
-The returned object always carries machine-readable metadata through
-the \code{mfrm_plot_data} contract, even when the plot is drawn
-immediately.
-Set \code{show_title = FALSE} and \code{show_notes = FALSE} for a figure whose title
-and explanation will be supplied by the surrounding document. The returned
-\code{data$notes} table contains \code{Type} and \code{Text} columns for interpretation,
+triangles and the returned notes disclose omitted or clipped intervals.
+The returned object always carries machine-readable metadata accessible
+through \code{\link[=plot_data]{plot_data()}}, even when the plot is drawn immediately.
+Titles and explanatory notes are omitted from the figure by default;
+use \code{show_title = TRUE} or \code{show_notes = TRUE} to include them. The returned
+\code{plot_data(p, "notes")} table contains \code{Type} and \code{Text} columns for interpretation,
 reference-profile conditions, and display/retention notes where applicable;
-\code{print()} also prints these notes. \code{data$display} records the two flags.
+\code{plot_data(p, "display")} records the two flags.
 Original titles, subtitles, coordinates, and readiness metadata are retained.
-Device-dependent crowding warnings are issued during drawing rather than
-stored in this draw-free notes table. \code{as_ggplot()} respects these flags and
+\code{as_ggplot()} respects these flags and
 retains the notes in \code{attr(plot, "mfrmr_notes")}.
 
 Fit-family Wright, pathway, and CCC displays use a shared, CUD-informed
@@ -311,17 +313,17 @@ locations retain their distinct point shapes, and small data labels use
 dark neutral text. Six line types cycle for larger series sets, so dense
 plots still require labels, panels, or more space. This is not a guarantee
 of perceptual separation for every viewer or device.
-\code{preset = "monochrome"} applies to these series in both base and ggplot
-renderers. Custom \code{palette} values are retained in \code{data$palette} and used
-during ggplot conversion; colour overrides keep the non-colour encodings.
+\code{preset = "monochrome"} applies to these series. Custom \code{palette} values
+are retained in the plot payload and used during saved-plot conversion;
+colour overrides keep the non-colour encodings.
 See \url{https://jfly.uni-koeln.de/color/} for Color Universal Design guidance.
 
 Every fit-derived payload also carries \code{data$fit_readiness},
 \code{data$interpretation_status}, and \code{data$interpretation_note}. Availability
 and interpretability are separate: when a numerical, data, design, or
 stability status requires review, the coordinates remain available for
-diagnosis, but the call warns and marks the returned subtitle and drawn
-title \verb{REVIEW ONLY} by default. Hiding that annotation changes presentation
+diagnosis, but the call warns and records the review-only interpretation
+in the returned metadata. Hiding an annotation changes presentation
 only; it does not change the fit's interpretation status or suppress warnings.
 A prior-regularized extreme MML EAP remains in \code{fit$facets$person}. If its
 source fit is blocked, however, it is omitted from the Wright-map scale so
@@ -346,7 +348,7 @@ presumes that higher scores represent better performance.
 Facets listed in \code{fit_mfrm(positive_facets = ...)} are reversed
 (higher values raise expected scores); state the active orientation in
 figure captions when reporting.
-The returned \code{notes}, also shown by \code{print()}, state the recorded facet
+The returned \code{notes}, accessible through \code{\link[=plot_data]{plot_data()}}, state the recorded facet
 directions and the score-coding caveat. Missing orientation in an older or
 imported result is not guessed. Category labels do not recode the data.
 See \link{mfrmr_visual_diagnostics} for reverse-coded comprehensibility, fit,
@@ -484,33 +486,8 @@ For a plot-selection guide and extended examples, see
 
 \section{Session plot defaults}{
 
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
 }
 
 \examples{
@@ -524,17 +501,17 @@ fit <- example_fit$fit
 # Run each plot command separately to inspect its figure
 plot(fit) # Wright map: persons, facets, and category thresholds
 
-# Rater severity estimates (higher means stricter in this example)
+# Rater severity estimates (higher means more severe in this example)
 plot(fit, type = "facet", facet = "Rater")
 
 # Probability of each score category across the ability scale
 plot(fit, type = "ccc")
 
-# Optional: get plot data instead of drawing a figure
+# Optional: get plot without printing and inspect underlying tables
 wright <- plot(fit, draw = FALSE)
-head(wright$data$locations)
+head(plot_data(wright, "locations"))
 # Find a named judge without refitting or dropping the surrounding scale
-judge <- subset(wright$data$locations, Group == "Rater")$Label[1]
+judge <- subset(plot_data(wright, "locations"), Group == "Rater")$Label[1]
 focused <- plot(fit, highlight = list(Rater = judge), draw = FALSE)
 subset(plot_data(focused, "locations"), Highlighted)
 }

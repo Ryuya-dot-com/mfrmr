@@ -115,6 +115,9 @@ See \link{mfrmr_compatibility_layer} for migration instructions.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("unexpected_after_bias_table", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -125,6 +128,7 @@ t10 <- unexpected_after_bias_table(fit, bias, diagnostics = diag, top_n = 20)
 summary(t10)
 p_t10 <- plot(t10, draw = FALSE)
 p_t10$data$plot
+}
 }
 \seealso{
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=bias_count_table]{bias_count_table()}},

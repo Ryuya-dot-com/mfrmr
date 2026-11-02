@@ -112,8 +112,9 @@ test_that("estimated-population summaries retain units and reach all reporting c
   expect_identical(p$value_role[p$quantity == "population_sd"], "estimated")
   for (quantity in c("population_mean", "population_sd", "ability", "location")) {
     plot <- plot(x, quantity = quantity, draw = FALSE)
+    expect_s3_class(plot, "ggplot")
     expect_identical(plot_data(plot, "table")[names(p)], p[p$quantity == quantity, ])
-    expect_false(grepl("fixed N(0,1)", plot$data$xlab, fixed = TRUE))
+    expect_false(grepl("fixed N(0,1)", plot_data(plot, "xlab"), fixed = TRUE))
   }
   expect_equal(confint(x, parm = "population_sd")$lower, p$lower[p$variable == "population_sd"])
   report <- mfrm_report(x)

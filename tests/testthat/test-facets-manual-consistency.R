@@ -170,9 +170,11 @@ test_that('table and plot defaults preserve FACETS df and supplied WHEXACT choic
   expect_true(all(tab$FitDfMethod=='facets_wright_masters'))
   p <- plot(f,type='fit_pathway',fit_scale='zstd',include_person=TRUE,
     top_n_person=Inf,draw=FALSE)
-  expected <- d$measures[match(key(p$data$table),key(d$measures)),]
-  expect_identical(p$data$zstd_method,'facets')
-  expect_equal(p$data$table$FitValue,expected$InfitZSTD)
+  expect_s3_class(p,'ggplot')
+  p_tbl <- plot_data(p,'table')
+  expected <- d$measures[match(key(p_tbl),key(d$measures)),]
+  expect_identical(plot_data(p,'zstd_method'),'facets')
+  expect_equal(p_tbl$FitValue,expected$InfitZSTD)
 
   # Engine-only results lack companion columns. Adding them must retain the
   # chosen cube-root variant, rather than silently switching NO back to YES.
@@ -184,8 +186,9 @@ test_that('table and plot defaults preserve FACETS df and supplied WHEXACT choic
   expect_lt(max(abs(tab$InfitZSTD-expected$InfitZSTD)),.0051)
   p <- plot(f,type='fit_pathway',fit_scale='zstd',diagnostics=old,
     include_person=TRUE,top_n_person=Inf,draw=FALSE)
-  expected <- ref[match(key(p$data$table),key(ref)),]
-  expect_lt(max(abs(p$data$table$FitValue-expected$InfitZSTD)),.0051)
+  p_tbl <- plot_data(p,'table')
+  expected <- ref[match(key(p_tbl),key(ref)),]
+  expect_lt(max(abs(p_tbl$FitValue-expected$InfitZSTD)),.0051)
 })
 
 
@@ -194,22 +197,23 @@ test_that("unexpected plots retain the table rule and permit a completely evalua
   d <- diagnose_mfrm(f, residual_pca="none")
   tab <- unexpected_response_table(f, d)
   p <- plot(f, type="unexpected", diagnostics=d, draw=FALSE)
-  expect_identical(p$data$table, as.data.frame(tab$table))
-  expect_identical(p$data$thresholds, tab$thresholds)
-  expect_identical(p$data$thresholds$rule, "residual")
-  expect_false(any(p$data$reference_lines$axis == "h"))
+  expect_s3_class(p, "ggplot")
+  expect_identical(plot_data(p, "table"), as.data.frame(tab$table))
+  expect_identical(plot_data(p, "thresholds"), tab$thresholds)
+  expect_identical(plot_data(p, "thresholds")$rule, "residual")
+  expect_false(any(plot_data(p, "reference_lines")$axis == "h"))
   saved <- unexpected_response_table(f, d, abs_z_min=.5, rule="both", prob_max=.8)
   p <- plot(saved, draw=FALSE)
-  expect_identical(p$data$thresholds, saved$thresholds)
-  expect_equal(p$data$reference_lines$value, c(-.5, .5, -log10(.8)))
-  expect_match(p$data$subtitle, "both")
+  expect_identical(plot_data(p, "thresholds"), saved$thresholds)
+  expect_equal(plot_data(p, "reference_lines")$value, c(-.5, .5, -log10(.8)))
+  expect_match(plot_data(p, "subtitle"), "both")
   empty <- unexpected_response_table(f, d, abs_z_min=100)
   expect_equal(empty$summary$UnexpectedN, 0L)
   file <- tempfile(fileext="pdf")
   grDevices::pdf(file)
   tryCatch(p <- plot(empty, draw=TRUE), finally=grDevices::dev.off())
   unlink(file)
-  expect_equal(nrow(p$data$table), 0L)
-  expect_equal(p$data$summary$UnavailableObservations, 0L)
-  expect_match(p$data$notes, "No unexpected responses")
+  expect_equal(nrow(plot_data(p, "table")), 0L)
+  expect_equal(plot_data(p, "summary")$UnavailableObservations, 0L)
+  expect_match(paste(plot_data(p, "notes")$Text, collapse = " "), "No unexpected responses")
 })

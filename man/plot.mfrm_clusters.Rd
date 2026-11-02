@@ -18,7 +18,7 @@
 \method{plot}{mfrm_imputed_clusters}(x, ids = NULL, labels = NULL, draw = TRUE, preset = "standard", ...)
 }
 \arguments{
-\item{x}{An object returned by \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}} or
+\item{x}{An object returned by \code{\link[=mfrm_cluster]{mfrm_cluster()}} or
 \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, as appropriate.}
 
 \item{type}{For a single partition, \code{"silhouette"} or \code{"profile"}.}
@@ -44,10 +44,9 @@ entity IDs in the desired display order. Selection affects only the view,
 not clustering or the denominator. By default all IDs appear in input order.}
 }
 \value{
-Invisibly, an \code{mfrm_plot_data} object. Its \code{data} contains the plotted
+Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts the plotted
 table or matrix, title, subtitle, legend, and excluded IDs. Heatmaps also
-retain the displayed IDs and the number of imputations. Use \code{\link[=plot_data]{plot_data()}}
-to extract this payload for custom graphics. Profile plots also retain
+retain the displayed IDs and the number of imputations. Profile plots also retain
 \code{observations}: original-unit entity values and group/exclusion status,
 suitable for custom distribution plots; see \code{\link[=plot_data]{plot_data()}}.
 \code{\link[=as_ggplot]{as_ggplot()}} converts imputation co-membership heatmaps using the saved
@@ -90,75 +89,28 @@ These fractions describe sensitivity to imputations under fixed settings,
 not membership probabilities, sampling stability, or a consensus partition.
 Rows and columns follow input order or explicit \code{ids}; no hierarchical
 clustering is performed. PAM is nonhierarchical and these plots do not
-provide a dendrogram. Use \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} for a separate
+provide a dendrogram. Use \code{mfrm_cluster(..., method = "hierarchical")} for a separate
 hierarchical analysis and its dendrogram.
 }
 \section{Session plot defaults}{
 
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
 
 
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot.mfrm_clusters", run.dontrun = TRUE)
+\dontrun{
 if (requireNamespace("cluster", quietly = TRUE)) {
   raters <- data.frame(Rater = paste0("R", 1:6),
     ExperienceYears = c(1, 2, 3, 12, 13, 14),
     Specialty = factor(rep(c("Language", "Science"), each = 3)))
-  groups <- mfrm_cluster_pam(mfrm_features(raters, "Rater",
+  groups <- mfrm_cluster(method = "pam", mfrm_features(raters, "Rater",
     c("ExperienceYears", "Specialty")), k = 2)
   plot(groups)
   plot(groups, type = "profile", feature = "ExperienceYears")
@@ -167,6 +119,7 @@ if (requireNamespace("cluster", quietly = TRUE)) {
   values$table
 }
 }
+}
 \seealso{
-\code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
+\code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
 }

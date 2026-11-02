@@ -5,14 +5,6 @@
 \alias{plot.mfrm_hierarchical_clusters}
 \title{Hierarchical grouping of external features}
 \usage{
-mfrm_cluster_hierarchical(
-  x,
-  k,
-  weights = NULL,
-  missing = c("error", "omit"),
-  linkage = c("average", "complete")
-)
-
 \method{plot}{mfrm_hierarchical_clusters}(
   x,
   type = c("dendrogram", "silhouette", "profile"),
@@ -26,22 +18,6 @@ mfrm_cluster_hierarchical(
 \arguments{
 \item{x}{For clustering, a table reviewed with \code{\link[=mfrm_features]{mfrm_features()}}. For plotting,
 an \code{mfrm_hierarchical_clusters} result.}
-
-\item{k}{Number of groups, an integer from 2 to one less than the number of
-included entities, and no greater than their number of distinct profiles.
-The number is chosen by the user, not optimized automatically.}
-
-\item{weights}{Optional named, strictly positive finite numeric vector with
-one weight per selected feature. Defaults to equal weights. Names, not
-vector order, identify features. Remove a feature to exclude it.}
-
-\item{missing}{Either \code{"error"} (default) or \code{"omit"}. The latter excludes
-incomplete entities explicitly, retaining their IDs, reasons, and missing
-group membership in the result. No values are imputed.}
-
-\item{linkage}{\code{"average"} (default, UPGMA) or \code{"complete"}. Average linkage
-uses the mean dissimilarity over all cross-group pairs; complete linkage
-uses their maximum. Neither is selected automatically from the data.}
 
 \item{type}{\code{"dendrogram"} (default), \code{"silhouette"}, or \code{"profile"}.}
 
@@ -68,17 +44,27 @@ Cluster, Silhouette), \code{cluster_summary}, \code{profiles}, \code{feature_dat
 \code{settings} including the linkage. Hierarchical clustering does not select
 medoids; \code{medoids} is \code{NULL} and membership has no \code{Medoid} column.
 \code{summary()} returns the size/silhouette table. \code{plot()} invisibly returns
-\code{mfrm_plot_data}; dendrogram data include the tree, leaf order, memberships,
+a \code{ggplot} object; \code{\link[=plot_data]{plot_data()}} extracts the tree, leaf order, memberships,
 group count, and excluded IDs.
 }
 \description{
-Build an agglomerative hierarchy from weighted Gower dissimilarities, cut
-it into a chosen number of groups, and inspect the retained dendrogram.
+For new code use \code{mfrm_cluster(..., method = "hierarchical")}.
+The former method-specific entry is no longer exported. This guide retains
+its statistical details and saved-result plotting methods.
 }
 \details{
+Build an agglomerative hierarchy from weighted Gower dissimilarities, cut
+it into a chosen number of groups, and inspect the retained dendrogram.
+
+Call \code{mfrm_cluster(x, k, method = "hierarchical", linkage = "average")}.
+The \code{k}, \code{weights} and \code{missing} controls follow \code{\link[=mfrm_cluster]{mfrm_cluster()}}.
+\code{linkage} is \code{"average"} (default, UPGMA) or \code{"complete"}. Average linkage
+uses the mean dissimilarity over all cross-group pairs; complete linkage
+uses their maximum. Neither is selected automatically from the data.
+
 Uses \code{\link[stats:hclust]{stats::hclust()}} followed by \code{\link[stats:cutree]{stats::cutree()}} at the requested \code{k}.
 Feature types, scaling, weights, missingness handling, silhouette definition,
-and the 5,000-included-entity limit follow \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}. No distance
+and the 5,000-included-entity limit follow \code{\link[=mfrm_cluster]{mfrm_cluster()}}. No distance
 transformation or automatic sampling is performed. This limit is not a
 memory or speed guarantee.
 
@@ -115,8 +101,14 @@ Use \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}} to compare this 
 linkage on the same data. For multiple imputations, use
 \code{mfrm_cluster_imputed(..., method = "hierarchical", linkage = "average")}.
 Each completion retains its own tree; no pooled tree or branch support is
-estimated. See \code{vignette("mfrmr-external-features", package = "mfrmr")}.
+estimated. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html}{online feature-analysis guide}.
 }
+\section{Session plot defaults}{
+
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
+}
+
 \section{Reading clustering metrics}{
 
 For entity i, a(i) is its mean dissimilarity to other members of its own
@@ -142,37 +134,6 @@ See \code{\link[cluster:silhouette]{cluster::silhouette()}} and Rousseeuw (1987)
 \doi{10.1016/0377-0427(87)90125-7}, for the silhouette definition.
 }
 
-\section{Session plot defaults}{
-
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
-}
-
 \examples{
 if (requireNamespace("cluster", quietly = TRUE)) {
   # Fictional rater backgrounds; R7 has unrecorded experience.
@@ -180,14 +141,14 @@ if (requireNamespace("cluster", quietly = TRUE)) {
     ExperienceYears = c(1, 2, 3, 12, 13, 14, NA),
     Specialty = factor(c(rep("Language", 3), rep("Science", 4))))
   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
-  hierarchy <- mfrm_cluster_hierarchical(features, k = 2, missing = "omit")
+  hierarchy <- mfrm_cluster(method = "hierarchical", features, k = 2, missing = "omit")
   plot(hierarchy)
   plot(hierarchy, type = "silhouette")
   plot(hierarchy, type = "profile", feature = "ExperienceYears")
   comparison <- mfrm_cluster_compare(list(
-    PAM = mfrm_cluster_pam(features, k = 2, missing = "omit"),
+    PAM = mfrm_cluster(method = "pam", features, k = 2, missing = "omit"),
     Average = hierarchy,
-    Complete = mfrm_cluster_hierarchical(features, k = 2,
+    Complete = mfrm_cluster(method = "hierarchical", features, k = 2,
       linkage = "complete", missing = "omit")))
   comparison$analysis_summary
   summary(comparison)
@@ -200,5 +161,5 @@ Criterion? Journal of Classification, 31, 274--295.
 \doi{10.1007/s00357-014-9161-z}.
 }
 \seealso{
-\code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
+\code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
 }

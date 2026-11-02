@@ -177,7 +177,7 @@ rubric overlap; \code{\link[=rater_halo_network_analysis]{rater_halo_network_ana
 bootstrap contrasts instead of an independent-edge test.
 Use \code{\link[=mfrm_residual_network]{mfrm_residual_network()}} for residual associations and
 \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} for prefit assignment links. See
-\code{vignette("mfrmr-networks-and-reporting")} for complementary views, paired
+\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} for complementary views, paired
 overlap, direction and interpretation. \code{\link[=plot.mfrm_bundle]{plot.mfrm_bundle()}} documents custom
 layouts and display-only filters, which do not change the computed network.
 }
@@ -188,7 +188,8 @@ layouts and display-only filters, which do not change the computed network.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 fit <- example_fit$fit
 if (requireNamespace("igraph", quietly = TRUE)) {
-  rn <- rater_network_analysis(fit, mode = "severity_direction")
+  rn <- rater_network_analysis(fit, diagnostics = example_fit$diagnostics,
+    mode = "severity_direction")
   rn$summary
   head(rn$node_metrics)
   plot(rn, type = "severity", draw = FALSE)

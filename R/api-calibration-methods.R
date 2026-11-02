@@ -2,7 +2,7 @@
 
 mfrmr_validate_calibration_score_assumptions <- function(x) {
   s <- x$settings
-  if (identical(s$schema_version, 6L)) prediction_validate_interval_record(x)
+  if (isTRUE(s$schema_version %in% c(6L, 7L))) prediction_validate_interval_record(x)
   if (!identical(s$estimator, "JML") && !identical(s$family, "GPCM") && is.null(s$scoring_prior) &&
       is.null(s$score_integration_review)) return(invisible(x))
   valid <- tryCatch({
@@ -22,7 +22,7 @@ mfrmr_validate_calibration_score_assumptions <- function(x) {
       all(e$PriorMean == actual$mean & e$PriorSD == actual$sd &
         e$RetainedPriorMean == retained$mean & e$RetainedPriorSD == retained$sd) &&
       (!identical(s$family, "GPCM") ||
-        ((if (identical(s$schema_version,6L)) mfrmr_calibration_gmfrm_evidence_valid else if (identical(s$schema_version,5L)) mfrm_jml_scoring_evidence_valid else if (identical(s$estimator, "JML")) mfrmr_calibration_gpcm_jml_evidence_valid else mfrmr_calibration_source_evidence_valid)(s$source_scoring_evidence) &&
+        ((if (isTRUE(s$schema_version %in% c(6L, 7L))) mfrmr_calibration_gmfrm_evidence_valid else if (identical(s$schema_version,5L)) mfrm_jml_scoring_evidence_valid else if (identical(s$estimator, "JML")) mfrmr_calibration_gpcm_jml_evidence_valid else mfrmr_calibration_source_evidence_valid)(s$source_scoring_evidence) &&
           identical(s$source_scoring_evidence, s$semantic_components$source_scoring_review$source_scoring_evidence))) &&
       (!identical(s$estimator, "JML") || identical(s$family, "GPCM") ||
         (mfrmr_calibration_jml_evidence_valid(s$source_scoring_evidence) &&
@@ -36,15 +36,15 @@ mfrmr_validate_calibration_score_assumptions <- function(x) {
   if (identical(s$schema_version,5L)) valid <- valid &&
     all(c("CalibrationMethod","CorrectionOrder") %in% names(x$estimates)) &&
     isTRUE(all(x$estimates$CalibrationMethod=="Corrected JML" & x$estimates$CorrectionOrder==s$source_scoring_evidence$local_calibration_review$correction_order))
-  if (identical(s$schema_version,6L)) valid <- valid &&
-    identical(s$semantic_components$schema$schema_version, 6L) &&
+  if (isTRUE(s$schema_version %in% c(6L, 7L))) valid <- valid &&
+    identical(s$semantic_components$schema$schema_version, s$schema_version) &&
     identical(s$family, "GPCM") && identical(s$estimator, "MML") &&
     is.null(s$scoring_prior) && is.null(s$event_id_column) &&
     identical(s$prior_identity, list(type = "fixed_standard_normal", mean = 0, sd = 1)) &&
     identical(s$semantic_components$product_structure$slope_composition, "product") &&
     identical(s$scoring_algorithm, s$semantic_components$scoring_algorithm) &&
     identical(s$quadrature_order, s$semantic_components$quadrature$quadrature_order) &&
-    identical(s$engine_identity, "artifact_coordinates_v6")
+    identical(s$engine_identity, paste0("artifact_coordinates_v", s$schema_version))
   if (!isTRUE(valid)) stop("Portable scoring output has missing or inconsistent prior or numerical-check records; score again from the frozen calibration.", call. = FALSE)
   invisible(x)
 }
@@ -139,7 +139,7 @@ mfrmr_calibration_score_print_prior <- function(settings) {
   print_wrapped_line(paste0("Scoring prior: ", if (is.null(settings$scoring_prior)) "retained normal" else "user-supplied normal",
     " (mean ", prior$mean, ", SD ", prior$sd, "). Retained prior: mean ", retained$mean, ", SD ", retained$sd, "."))
   if (identical(settings$schema_version,5L)) print_wrapped_line(mfrm_jml_scoring_note(settings$source_scoring_evidence))
-  if (identical(settings$schema_version,6L)) print_wrapped_line(
+  if (isTRUE(settings$schema_version %in% c(6L, 7L))) print_wrapped_line(
     "Experimental two-family EAP on the fixed N(0,1) scale; sampling coverage and population transport are not established.")
   if (identical(settings$estimator, "JML")) print_wrapped_line(
     "JML-calibrated post-hoc EAP: the reference prior was not estimated by JML; these are not ML/WLE scores.")
@@ -290,10 +290,12 @@ mfrmr_calibration_score_overview <- function(x) {
 #' printed results and interval plots explain that their posterior mass can
 #' differ from the requested level.
 #' Its print method shows at most ten rows from each table so routine console
-#' output stays compact. Base and ggplot2 renderers distinguish scored and
-#' review states by shape as well as colour.
-#' `as_ggplot(p)` and `as_ggplot(p, component = "data")` preserve the same
-#' selected view, saved bounds, review symbols and unplotted dispositions.
+#' output stays compact. Plots distinguish scored and review states by shape
+#' as well as colour.
+#' `plot(x)` returns a `ggplot` object directly; `as_ggplot(p)` and
+#' `as_ggplot(p, component = "data")` preserve the same selected view, saved
+#' bounds, review symbols and unplotted dispositions for both `ggplot` and
+#' legacy `mfrm_plot_data` objects.
 #' Use [plot_data()] to extract other components. Changing the interval level
 #' requires an explicit scoring call; conversion does not recompute intervals.
 #' Notes remain in the returned object and are not automatically drawn.
@@ -309,8 +311,8 @@ mfrmr_calibration_score_overview <- function(x) {
 #' @param label_review Whether review points are labelled in the precision and
 #'   edge-mass views. Interval plots always label the displayed Persons.
 #' @param main Optional plot title.
-#' @param draw If `TRUE`, draw with base R graphics. The returned
-#'   `mfrm_plot_data` is available invisibly in either case.
+#' @param draw If `TRUE`, print the `ggplot` figure on the active graphics
+#'   device. The `ggplot` object is returned invisibly in either case.
 #' @param preset Visual preset: `"standard"`, `"publication"`, `"compact"`,
 #'   or `"monochrome"`.
 #' @param ... Reserved for generic compatibility.
@@ -323,11 +325,12 @@ mfrmr_calibration_score_overview <- function(x) {
 #'   When cut scores were requested, `decisions` preserves every probability,
 #'   cut boundary and actual scoring prior without rounding; unavailable
 #'   Persons remain in that table with `NA` probabilities.
-#'   `plot()` returns an `mfrm_plot_data` with the selected plotting table,
+#'   `plot()` returns a `ggplot` object (invisibly) whose underlying payload
+#'   (accessible via [plot_data()]) retains the selected plotting table,
 #'   selection accounting, unplotted Person dispositions, interpretation
 #'   guidance, and plotting settings.
 #'
-#' @seealso [mfrm_calibration_workflow], [mfrm_calibration_capabilities],
+#' @seealso [mfrm_calibration_workflow], [mfrmr_output_guide()],
 #'   [plot_data()], [plot_data_components()], [as_ggplot()], [apa_table()],
 #'   [build_summary_table_bundle()], [export_summary_appendix()],
 #'   [predict_mfrm_units()] for conditional-decision interpretation
@@ -349,8 +352,8 @@ mfrmr_calibration_score_overview <- function(x) {
 #' )
 #' summary(q_review) # Inspect movement; these grids are not universal cutoffs.
 #' fit <- q_review$fits$q61
-#' calibration <- freeze_mfrm_calibration(
-#'   validate_mfrm_calibration(extract_mfrm_calibration(
+#' calibration <- update(status = "frozen", 
+#'   update(status = "validated", extract_mfrm_calibration(
 #'     fit, quadrature_review = q_review, scoring_quad_points = 121
 #'   ))
 #' )
@@ -670,7 +673,9 @@ mfrmr_calibration_score_plot_table <- function(x, top_n, sort_by) {
 
 #' @rdname mfrm_calibration_score_methods
 #' @method plot mfrm_calibration_score
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @export
 plot.mfrm_calibration_score <- function(
     x,
@@ -772,7 +777,7 @@ plot.mfrm_calibration_score <- function(
   if (identical(x$settings$schema_version,5L)) uncertainty_note <- paste(
     uncertainty_note,paste0("Corrected JML (order ",x$settings$source_scoring_evidence$local_calibration_review$correction_order,
       "); residual calibration bias may remain."),sep="\n")
-  if (identical(x$settings$schema_version,6L)) uncertainty_note <- paste(
+  if (isTRUE(x$settings$schema_version %in% c(6L, 7L))) uncertainty_note <- paste(
     uncertainty_note, "Experimental two-family model; sampling coverage and population transport are not established.", sep = "\n")
   selection_summary <- data.frame(
     ScoredPersons = as.integer(nrow(full)),
@@ -821,102 +826,6 @@ plot.mfrm_calibration_score <- function(
     }
   )
 
-  if (isTRUE(draw)) {
-    apply_plot_preset(style)
-    point_color <- ifelse(
-      plotted$ReviewFlag, style$warn, style$accent_primary
-    )
-    point_shape <- ifelse(plotted$ReviewFlag, 17L, 16L)
-    if (identical(type, "interval")) {
-      x_range <- range(c(plotted$Lower, plotted$Upper, 0), finite = TRUE)
-      if (diff(x_range) <= 0) x_range <- x_range + c(-0.5, 0.5)
-      old_mar <- graphics::par("mar")
-      on.exit(graphics::par(mar = old_mar), add = TRUE)
-      graphics::par(mar = c(6.4, 8.2, 4.2, 1.5))
-      graphics::plot(
-        plotted$Estimate, plotted$DisplayOrder,
-        xlim = x_range, ylim = c(0.5, nrow(plotted) + 0.5),
-        yaxt = "n", ylab = "", xlab = "Posterior EAP (logits)",
-        main = "", pch = point_shape, col = point_color
-      )
-      graphics::abline(v = 0, lty = 2, col = style$neutral)
-      graphics::segments(
-        plotted$Lower, plotted$DisplayOrder,
-        plotted$Upper, plotted$DisplayOrder,
-        col = point_color, lwd = 1.5
-      )
-      graphics::points(
-        plotted$Estimate, plotted$DisplayOrder,
-        pch = point_shape, col = point_color
-      )
-      graphics::axis(
-        2, at = plotted$DisplayOrder, labels = plotted$Person,
-        las = 1, cex.axis = style$axis_cex
-      )
-    } else if (identical(type, "precision")) {
-      x_range <- range(plotted$Observations, finite = TRUE)
-      if (diff(x_range) <= 0) {
-        padding <- max(1, abs(x_range[1L]) * 0.06)
-        x_range <- x_range + c(-padding, padding)
-      }
-      y_range <- range(c(plotted$SD, plotted$LabelY), finite = TRUE)
-      if (diff(y_range) <= 0) y_range <- y_range + c(-0.05, 0.05)
-      y_padding <- max(diff(y_range) * 0.14, 0.01)
-      y_range <- y_range + c(-y_padding * 0.2, y_padding)
-      graphics::plot(
-        plotted$Observations, plotted$SD,
-        xlim = x_range, ylim = y_range,
-        xlab = "Valid response rows", ylab = "Posterior SD (logits)",
-        main = "", pch = point_shape, col = point_color
-      )
-      if (isTRUE(label_review) && any(plotted$ReviewFlag)) {
-        graphics::segments(
-          plotted$Observations[plotted$ReviewFlag],
-          plotted$SD[plotted$ReviewFlag],
-          plotted$LabelX[plotted$ReviewFlag],
-          plotted$LabelY[plotted$ReviewFlag],
-          col = style$warn, lwd = 0.7
-        )
-        graphics::text(
-          plotted$LabelX[plotted$ReviewFlag],
-          plotted$LabelY[plotted$ReviewFlag],
-          labels = plotted$Person[plotted$ReviewFlag],
-          pos = 3, offset = 0.35, cex = 0.75, col = style$warn
-        )
-      }
-    } else {
-      edge_mass <- plotted$QuadratureEdgeMass
-      edge_mass[!is.finite(edge_mass)] <- NA_real_
-      maximum <- max(c(edge_mass, edge_threshold, 0), na.rm = TRUE)
-      if (!is.finite(maximum) || maximum <= 0) maximum <- 1
-      graphics::plot(
-        plotted$Estimate, edge_mass,
-        ylim = c(0, maximum * 1.08),
-        xlab = "Posterior EAP (logits)",
-        ylab = "Posterior mass at outer quadrature nodes",
-        main = "", pch = point_shape, col = point_color
-      )
-      if (length(edge_threshold) > 0L) {
-        graphics::abline(h = edge_threshold[1L], lty = 2, col = style$warn)
-      }
-      if (isTRUE(label_review) && any(plotted$ReviewFlag)) {
-        graphics::text(
-          plotted$Estimate[plotted$ReviewFlag],
-          edge_mass[plotted$ReviewFlag],
-          labels = plotted$Person[plotted$ReviewFlag],
-          pos = plotted$LabelPosition[plotted$ReviewFlag],
-          offset = 0.6, cex = 0.75, col = style$warn
-        )
-      }
-    }
-    graphics::legend(
-      "topleft", legend = c("Scored", "Review"),
-      pch = c(16L, 17L), col = c(style$accent_primary, style$warn),
-      bty = "o", bg = style$background, box.col = style$background,
-      cex = 0.78
-    )
-  }
-
   interpretation <- data.frame(
     Topic = c(
       "Review color", "Not scored", "Interval basis", "Use boundary"
@@ -959,5 +868,5 @@ plot.mfrm_calibration_score <- function(
                  "source_scoring_evidence", "score_integration_review")) {
     if (!is.null(x$settings[[name]])) out$data$settings[[name]] <- x$settings[[name]]
   }
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }

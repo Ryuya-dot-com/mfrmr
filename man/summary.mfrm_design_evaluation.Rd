@@ -77,6 +77,9 @@ not establish connectedness when records are missing. Sparse-design
 summaries also use all run records, including failures.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("summary.mfrm_design_evaluation", run.dontrun = TRUE)
+\dontrun{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
 saved <- readRDS(system.file("examples", "simulation-design.rds",
@@ -86,6 +89,7 @@ sim_eval <- saved$result
 s <- summary(sim_eval)
 s$overview
 head(s$design_summary)
+}
 }
 \seealso{
 \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \link{plot.mfrm_design_evaluation}

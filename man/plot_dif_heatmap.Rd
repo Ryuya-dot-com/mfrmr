@@ -18,7 +18,7 @@ plot_dif_heatmap(
 }
 \arguments{
 \item{x}{Output from \code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=analyze_dff]{analyze_dff()}}, or
-\code{\link[=analyze_dif]{analyze_dif()}}. When an \code{mfrm_dff}/\code{mfrm_dif} object is passed,
+\code{\link[=analyze_dff]{analyze_dff()}}. When an \code{mfrm_dff}/\code{mfrm_dif} object is passed,
 the \code{cell_table} element
 is used (requires \code{method = "residual"}).}
 
@@ -37,7 +37,7 @@ point for cell labels.}
 
 \item{flag_threshold}{Optional non-negative absolute-value threshold. When
 supplied, cells with \code{abs(value) >= flag_threshold} are recorded in
-\verb{$data$flag_matrix} and outlined on the drawn heatmap.}
+\code{plot_data(p, "flag_matrix")} and outlined on the drawn heatmap.}
 
 \item{scale_limit}{Optional positive scalar for a symmetric color scale
 from \code{-scale_limit} to \code{+scale_limit}. Use this to make several heatmaps
@@ -45,13 +45,13 @@ visually comparable.}
 
 \item{flag_color}{Border color for cells meeting \code{flag_threshold}.}
 
-\item{...}{Additional graphical parameters passed to \code{\link[graphics:image]{graphics::image()}}.}
+\item{...}{Reserved for compatibility; use the named appearance controls above.}
 }
 \value{
-Invisibly, an \code{mfrm_plot_data} object whose \code{data} slot bundles
-the row x column metric matrix (\verb{$matrix}), the source long table
-(\verb{$pairs}), and the metric label. Earlier 0.1.x releases returned the
-bare matrix; consume \verb{$data$matrix} to keep code forward-compatible.
+Invisibly, a \code{ggplot} object. Use \code{plot_data(p, "matrix")} for
+the row x column metric matrix, \code{plot_data(p, "pairs")} for the source long
+table, and \code{plot_data(p, "metric")} for the metric label. Earlier 0.1.x
+releases returned the bare matrix; use \code{\link[=plot_data]{plot_data()}} with current plots.
 }
 \description{
 Visualizes the interaction between a facet and a grouping variable
@@ -89,6 +89,6 @@ This renderer is internal. Use the corresponding \code{plot()} route in
 }
 
 \seealso{
-\code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=dif_report]{dif_report()}}
+\code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=dif_report]{dif_report()}}
 }
 \keyword{internal}

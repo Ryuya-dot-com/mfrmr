@@ -154,6 +154,7 @@
 #' # With MML/EAP scores, lz_star is unavailable; lz is an uncorrected screening index
 #' # A flag alone does not establish invalid responses or justify excluding a person
 #' @export
+#' @order 1
 compute_person_fit_indices <- function(diagnostics, fit = NULL) {
   if (is.null(diagnostics) || !is.list(diagnostics) ||
       is.null(diagnostics$obs)) {
@@ -400,15 +401,13 @@ person_fit_validate_table <- function(object) {
   as.data.frame(object, stringsAsFactors = FALSE)
 }
 
-#' Summarize person-fit indices
-#'
-#' @description
-#' `summary()` for [compute_person_fit_indices()] output gives a compact,
+#' @rdname compute_person_fit_indices
+#' @details `summary()` method: Summarize person-fit indices
+#' @details `summary()` method: `summary()` for [compute_person_fit_indices()] output gives a compact,
 #' report-ready reading order: first the number of persons and flags, then
 #' status counts, then the highest-priority review rows. The summary keeps
 #' `lz_star` availability visible so users do not silently treat uncorrected
 #' `lz` as Snijders-corrected output.
-#'
 #' @param object Output from [compute_person_fit_indices()].
 #' @param digits Number of digits used when printing numeric columns.
 #' @param top_n Number of review rows retained in `top_review`.
@@ -416,8 +415,7 @@ person_fit_validate_table <- function(object) {
 #'   preview. The default retains the rows in the returned object but suppresses
 #'   identifiers from console output.
 #' @param ... Unused.
-#'
-#' @return An object of class `summary.mfrm_person_fit_indices` with:
+#' @return For `summary()`: An object of class `summary.mfrm_person_fit_indices` with:
 #' - `overview`
 #' - `status_summary`
 #' - `report_index_summary`

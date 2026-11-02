@@ -496,5 +496,5 @@ An Object-Oriented Implementation of Clustered Covariances in R.
 Journal of Statistical Software, 95(1), 1--36. \doi{10.18637/jss.v095.i01}.
 }
 \seealso{
-\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}, \code{\link[=build_weighting_review]{build_weighting_review()}}
+\code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}}, \link{mfrmr_gpcm_scope}, \code{\link[=build_weighting_review]{build_weighting_review()}}
 }

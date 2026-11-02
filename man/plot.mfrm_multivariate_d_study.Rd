@@ -126,7 +126,7 @@ silently substituted after failure.}
 \item{...}{Reserved for future use; additional arguments are rejected.}
 }
 \value{
-Invisibly, an \code{mfrm_plot_data} object. Use \code{\link[=plot_data]{plot_data()}} to extract
+Invisibly, a \code{ggplot} object. Use \code{\link[=plot_data]{plot_data()}} to extract
 \code{table} (the selected scores/composites), \code{series} (one row per scenario and
 plotted metric, including missing values), \code{unavailable}, \code{design_grid},
 \code{weights}, score identity, axis/group names, labels, \code{component_note},
@@ -294,36 +294,14 @@ retain their recorded values and availability: rerun
 }
 \section{Session plot defaults}{
 
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot.mfrm_multivariate_d_study", run.dontrun = TRUE)
+\dontrun{
 # Question: how much would doubling the common tasks change dependability?
 tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 g <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
@@ -357,6 +335,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 sources <- plot(alternatives, composite = "Difference", type = "error_components")
 plot_data(sources, "table") # Includes signed cross-score covariance terms.
 plot_data(sources, "totals") # Error totals, SEM, G/Phi and availability.
+}
 }
 \seealso{
 \code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=mfrm_g_study]{mfrm_g_study()}}

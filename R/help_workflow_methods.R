@@ -5,10 +5,18 @@
 #' read the summary. The Examples section contains a complete runnable script.
 #' The later sections describe diagnostics, reporting, and specialist routes.
 #'
-#' See `vignette("mfrmr-networks-and-reporting")` for Lamprianou-inspired network
+#' See [online networks and reporting guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html) for Lamprianou-inspired network
 #' views, the FACETS/ConQuest reporting crosswalk and speaking/writing examples
 #' combining MFRM with G/D studies. [plot_data()] supports long-format extraction
 #' and original-value cluster profiles for custom distribution plots.
+#'
+#' @section Offline tutorials and online articles:
+#' Five core tutorials are included with the package; list them with
+#' `vignette(package = "mfrmr")`. Specialist guides are online articles and
+#' cannot be opened with `vignette()`. Follow their links below.
+#' The main website documents the published release. Compare its version
+#' label with `packageVersion("mfrmr")`: development changes may only be
+#' described in the installed help until matching website pages are published.
 #'
 #' @section Connect the question to the result:
 #' These are alternative or complementary branches, not requirements to run
@@ -39,7 +47,7 @@
 #' record whether they mean greater ease or greater difficulty. `positive_facets`
 #' changes parameter orientation, not outcome coding. Keep coding consistent
 #' with anchors and report labels; see [mfrmr_visual_diagnostics]. The
-#' `vignette("mfrmr-networks-and-reporting")` supplies richer network and custom
+#' [online networks and reporting guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html) supplies richer network and custom
 #' distribution examples, plus literature-based reporting connections. The
 #' workflow vignette places assignment networks at design review and score
 #' networks alongside observed agreement. Neither is a residual graph.
@@ -50,7 +58,7 @@
 #' @section Choose a reading path:
 #' To choose a model and estimator before fitting, read
 #' `vignette("mfrmr-model-choice", package = "mfrmr")` or the
-#' [online decision guide](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.html).
+#' [online decision guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-model-choice.html).
 #' It connects assessment questions to the available routes and explains why
 #' starting with the most complex model is not automatically preferable.
 #'
@@ -59,11 +67,11 @@
 #' every specialist route. For your own file, use **Use your own ratings** and
 #' the workflow vignette's CSV lesson. For an unfamiliar result or formula,
 #' open [mfrmr_methods_reference]: it links questions to calculations, their
-#' limits and original references. Use [mfrmr_interval_guide()] when the
+#' limits and original references. Use `mfrmr_output_guide("intervals")` when the
 #' question specifically concerns uncertainty.
 #'
 #' @section Choose by purpose and design:
-#' For named rater/task severity comparisons, consider fixed-facet RSM/PCM;
+#' For named rater-severity or task-difficulty comparisons, consider fixed-facet RSM/PCM;
 #' CML avoids an ability-distribution assumption when structural comparisons
 #' are the target, but estimates neither Person scores nor a population SD.
 #' MML is the route for supported population and GPCM structural inference,
@@ -82,7 +90,7 @@
 #' exactly in finite samples; extra effects require information and can add
 #' uncertainty. Choose the structure justified by the question and design,
 #' not complexity alone. See [mfrmr_methods_reference] for assumptions and
-#' [mfrmr_interval_guide()] for uncertainty availability.
+#' `mfrmr_output_guide("intervals")` for uncertainty availability.
 #'
 #' @section Start here:
 #' 1. Load the package with `library(mfrmr)` and example ratings with
@@ -114,12 +122,12 @@
 #' `summary(fit)$steps` and [mfrm_facet_intervals()], then `plot(ci)` and RDS
 #' saving. CML conditions out Person abilities and estimates no population SD;
 #' ordinary scoring, diagnostics and consolidated reports do not apply.
-#' See `vignette("mfrmr-facet-intervals")` for its executable comparison example.
+#' See [online facet-interval guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-facet-intervals.html) for its executable comparison example.
 #' For a deficient school/rater assignment, declare CML comparisons with
 #' [describe_mfrm_data()] and use `fit_scope = "comparisons"`; `summary(fit)`
 #' then reports only requested contrasts, with conditional-information intervals
 #' for identifiable targets and missing values for others. See
-#' `vignette("mfrmr-linking-and-dff")` for that separate workflow.
+#' [online linking and DFF guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html) for that separate workflow.
 #'
 #' A `FormalInference = "No"` entry in `results$decision` can mean that precision
 #' has not yet been reviewed. Read `Why` and `NextAction` to distinguish that
@@ -160,10 +168,10 @@
 #' simulation truth. [mfrm_screening_sensitivity()] repeats that evaluation
 #' across specified thresholds; it does not establish accuracy from real
 #' ratings alone. [mfrm_pca()] summarizes numeric external attributes;
-#' [mfrm_cluster_kmeans()] forms groups. PCA is optional before k-means.
-#' [mfrm_cluster_pam()] uses partitioning around medoids (PAM) for mixed attributes;
-#' it does not automatically choose a clustering algorithm. For a dendrogram,
-#' use [mfrm_cluster_hierarchical()].
+#' [mfrm_cluster()] forms groups: choose `method = "kmeans"` for numeric
+#' attributes, `"pam"` (the default) for mixed attributes, or `"hierarchical"`
+#' for a Gower dendrogram. PCA is optional before k-means. The method is an
+#' explicit choice, not automatically selected from the data.
 #' A G-study ([mfrm_g_study()]) estimates sources of variation in
 #' observed scores; a D-study ([mfrm_d_study()]) uses them to
 #' compare future rater/task plans. Neither needs an MFRM fit.
@@ -171,15 +179,16 @@
 #' @section Updating earlier scripts:
 #' | Earlier call | Recommended call | Meaning retained |
 #' | --- | --- | --- |
-#' | `mfrm_cluster(x, k)` | `mfrm_cluster_pam(x, k)` | Same Gower/PAM partition and result class. |
+#' | `mfrm_cluster_pam(x, k)` | `mfrm_cluster(x, k, method = "pam")` | Same Gower/PAM partition and result class. |
 #' | `mfrm_response_imputations(..., impute = ids)` | `review_mfrm_imputations(..., impute_ids = ids)` | Same checks of supplied completed ratings; no imputation model is fitted. |
 #' | `keep_original = TRUE` | `category_policy = "preserve"` | Same category ladder in fitting, data review and anchor review. |
 #' | `keep_original = FALSE` | `category_policy = "collapse"` | Same collapsing of gaps; still the default when no policy is supplied. |
 #'
-#' The old calls **in this table** remain supported, including positional arguments. Saved
-#' objects retain their classes and `summary()`/`plot()` methods. Do not pass
-#' conflicting old/new category choices. See [compatibility_alias_table()] for
-#' the complete migration map. This does not change what `predict()` returns:
+#' The former clustering and imputation-review names are no longer exported
+#' in the 0.3.0 development series; see [mfrmr_api_migration_030]. The category
+#' argument aliases remain supported. Saved objects retain their classes and
+#' `summary()`/`plot()` methods. Do not pass conflicting old/new category choices.
+#' See [compatibility_alias_table()] for alias status. This does not change what `predict()` returns:
 #' use the ability-scoring or response-prediction route named for your model.
 #' The former standalone drawing `plot_*()` functions have a different policy:
 #' they are no longer exported in 0.2.4. Use result-object `plot()` and
@@ -308,8 +317,8 @@
 #' @section Choose which ratings share an effect:
 #' The routine fit/diagnose/results/report workflow starts with ordinary
 #' RSM/PCM. Other [fit_mfrm()] models share the `mfrm_fit` class but have
-#' different restrictions. Check [gpcm_capability_matrix()] and
-#' `vignette("mfrmr-gpcm-scope", package = "mfrmr")` for one-family GPCM,
+#' different restrictions. Check `mfrmr_output_guide("gpcm_capabilities")`, [mfrmr_gpcm_scope] and
+#' [online GPCM scope guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html) for one-family GPCM,
 #' two-family GPCM or corrected JML;
 #' the latter two do not supply ordinary fit tests or Wright/Pathway maps.
 #' Use `mfrmr_output_guide("models")` to compare:
@@ -320,13 +329,13 @@
 #'   shared across all Persons rated by that rater. For abilities of source
 #'   Persons, use [score_mfrm_persons()]. `predict()` instead gives score
 #'   probabilities at supplied abilities for observed or replacement raters. See
-#'   `vignette("mfrmr-random-raters", package = "mfrmr")`.
+#'   [online random-rater guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html).
 #' - **Person-specific testlets:** [fit_mfrm_testlet()] groups dependent ratings
 #'   within each Person. Use [score_mfrm_persons()] for abilities of source
 #'   Persons; `predict()` also accepts a supplied rating table for scoring.
 #'   Both hold fitted calibration fixed. A Rater column can specify fixed severity
 #'   and local within-Person membership. See
-#'   `vignette("mfrmr-testlets", package = "mfrmr")`.
+#'   [online testlet guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlets.html).
 #'
 #' Choose the next call from the input and the quantity you need:
 #'
@@ -355,7 +364,7 @@
 #' All three have `summary()`, `plot()`, [plot_data()] and ordinary RDS saving.
 #' Extended-model plots additionally support [as_ggplot()], preserving each
 #' interval's target, prior-only symbols and unavailable rows. Check
-#' [mfrmr_interval_guide()] for each interval's target and limitations.
+#' `mfrmr_output_guide("intervals")` for each interval's target and limitations.
 #' The two extended models have their own classes. [mfrm_results()] collects
 #' their saved calibration, numerical checks and interval meanings; attach
 #' separately computed `predictions` and random-rater `intervals` explicitly.
@@ -400,7 +409,7 @@
 #' and portable new-Person EAP intervals condition on the calibration and prior;
 #' they exclude calibration uncertainty and have unqualified coverage and
 #' population transport. Neither inherits the one-family
-#' diagnostic/inference workflow below. See [gpcm_capability_matrix()] and the
+#' diagnostic/inference workflow below. See `mfrmr_output_guide("gpcm_capabilities")`, [mfrmr_gpcm_scope] and the
 #' Two slope families section in [fit_mfrm()].
 #' Neither the estimated slopes nor their sampling covariance can substitute
 #' for G-study score covariance components. Score weights specify the intended
@@ -410,7 +419,7 @@
 #' complementary multivariate G-theory and MFRM analyses. Their G-study omitted
 #' raters, so its generalization scope differs from a person-by-rater-by-task
 #' analysis. For the relationship and literature, see
-#' `vignette("mfrmr-gpcm-scope", package = "mfrmr")`.
+#' [online GPCM scope guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html).
 #'
 #' **Does MFRM simulation replace a G-study?** Not automatically, and an
 #' analysis need not use both. Choose the score and decision first:
@@ -445,10 +454,10 @@
 #' the respective design boundaries.
 #'
 #' To group persons, raters or tasks by external attributes, use [mfrm_features()]
-#' followed by [mfrm_cluster_pam()] or [mfrm_cluster_hierarchical()] for mixed
-#' attributes. [mfrm_pca()] and [mfrm_cluster_kmeans()] use selected numeric
+#' followed by [mfrm_cluster()] with `method = "pam"` or `"hierarchical"` for mixed
+#' attributes. [mfrm_pca()] and clustering with `method = "kmeans"` use selected numeric
 #' features with explicitly chosen scaling and component counts. See
-#' `vignette("mfrmr-external-features", package = "mfrmr")` for imputation and
+#' [online feature-analysis guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html) for imputation and
 #' setting comparisons. These are exploratory attribute groups, not estimated
 #' ability classes or rater-quality judgments.
 #' Use `mfrmr_output_guide("features")` or `mfrmr_output_guide("gtheory")` for
@@ -457,14 +466,14 @@
 #' Save the full analysis with `saveRDS()`; these are not [mfrm_results()] inputs.
 #' Export a chosen summary with `write.csv(summary(result), ..., row.names = FALSE)`
 #' and keep the full source object for its settings, excluded rows and assumptions.
-#' Multivariate G-study component panels/covariance heatmaps and D-study curves
-#' support [as_ggplot()], retaining score identities, G/Phi or SEM, facet-count
-#' panels and unavailable values. Plan-difference plots use base graphics or
-#' custom graphics from [plot_data()]; automatic conversion is unavailable.
+#' Multivariate G-study component panels/covariance heatmaps, D-study curves,
+#' and paired plan-difference plots return `ggplot` objects directly and support
+#' [as_ggplot()] and [plot_data()], retaining score identities, G/Phi or SEM,
+#' facet-count panels and unavailable values.
 #' PCA scree/scores/loadings, saved dendrograms, imputation co-membership,
-#' silhouettes and numeric/categorical cluster profiles have dedicated
-#' [as_ggplot()] conversions. Use `mfrmr_output_guide("plots")` to choose a
-#' supported view; data extraction alone does not guarantee equivalent graphics.
+#' silhouettes and numeric/categorical cluster profiles also return `ggplot`
+#' objects directly and support [as_ggplot()]. Use `mfrmr_output_guide("plots")`
+#' to choose a supported view; data extraction alone does not guarantee equivalent graphics.
 #'
 #' @section Missing scores on assigned ratings:
 #' [review_mfrm_imputations()] reviews supplied ordinal completions;
@@ -474,7 +483,7 @@
 #' not fill unassigned cells or pool Person EAPs. The imputation model and the
 #' fixed-standard-normal RSM/PCM MML analysis must be justified together.
 #' See `mfrmr_output_guide("imputation")` and
-#' `vignette("mfrmr-response-imputation")` for an executed example and its limits.
+#' [online response-imputation guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-response-imputation.html) for an executed example and its limits.
 #' A pooled result has dedicated `summary()`, `plot()` and [plot_data()] routes;
 #' use `saveRDS()` for the complete analysis or `write.csv(summary(pooled), ...)`
 #' for a selected table. It is not an [mfrm_results()] input. [as_ggplot()]
@@ -525,7 +534,7 @@
 #'   does not require refitting; printing an old comparison leaves its stored
 #'   decision unchanged.
 #' - **Group comparisons and equivalence:** recreate residual [analyze_dff()]
-#'   / [analyze_dif()] and [dif_interaction_table()] results from the existing
+#'   / [analyze_dff()] and [dif_interaction_table()] results from the existing
 #'   fit and original group data. They now describe residual differences without
 #'   tests or confidence intervals. Recompute [analyze_facet_equivalence()]
 #'   from an eligible MML fit with matching current diagnostics and the original
@@ -574,9 +583,9 @@
 #'   plan comparisons with [mfrm_multivariate_d_compare()]. A coefficient
 #'   table alone does not contain the information needed for those intervals.
 #' - **External-feature groups:** saved clustering results retain their
-#'   memberships and fitted hierarchy. Replot them to update labels; use
-#'   [plot_data()] for their stored values. Automatic [as_ggplot()] conversion
-#'   is not supported for these plots. A change to features, weights, group
+#'   memberships and fitted hierarchy. Replot them to update labels; `plot()`
+#'   returns a `ggplot` object and [plot_data()] extracts their stored values.
+#'   A change to features, weights, group
 #'   counts or method requires a new clustering call, followed by
 #'   [mfrm_cluster_compare()] on the updated results. For imputation
 #'   comparisons, reuse the original `mice` object to preserve pairing across
@@ -601,8 +610,7 @@
 #'   the reviewed source fits and [mfrm_calibration_workflow], then score again.
 #'   Retain the old artifact for reproducibility. Re-summarizing older score
 #'   results recovers recorded algorithm/level labels without changing values.
-#' - **External fits:** rerun [import_erm_fit()], [import_tam_fit()] or
-#'   [import_mirt_fit()] on the saved source-package fit and rebuild displays;
+#' - **External fits:** rerun [import_irt_fit()] on the saved source-package fit and rebuild displays;
 #'   source-model re-estimation is unnecessary. Use `compute_fit = TRUE` when
 #'   imported measurement diagnostics are needed. Unsupported source models
 #'   remain unsupported, and imports do not become native fits.
@@ -745,7 +753,7 @@
 #' read its structural or comparison summary, create [mfrm_facet_intervals()],
 #' and use the interval object's plots/tables and RDS saving. CML has no Person
 #' abilities or population SD and does not support the ordinary diagnostic,
-#' Wright-map or consolidated-report steps. [mfrmr_interval_guide()] also maps
+#' Wright-map or consolidated-report steps. `mfrmr_output_guide("intervals")` also maps
 #' full MML interaction contrasts and their explicit population-SD standardization.
 #'
 #' 1. Review the long-format data and intended score support with
@@ -756,7 +764,7 @@
 #'    `res <- mfrm_results(fit)` and inspect `summary(res)$triage` and
 #'    `$next_actions`. The same `res` supports reporting and saving; use
 #'    `$plot_map` to select an optional figure.
-#' 4. (Optional) Use [run_mfrm_facets()] or [mfrmRFacets()] only when a
+#' 4. (Optional) Use [run_mfrm_facets()] or [run_mfrm_facets()] only when a
 #'    legacy-compatible one-shot wrapper is needed.
 #' 5. For a focused diagnostic question, reuse `res$diagnostics`. Call
 #'    [diagnose_mfrm()] separately when its settings need to change.
@@ -792,7 +800,7 @@
 #'    Caveated APA/QC/export bundles are available for sensitivity reporting,
 #'    while score-side FACETS helpers remain outside the documented `GPCM`
 #'    boundary. Use
-#'    [gpcm_capability_matrix()] as the formal capability map
+#'    `mfrmr_output_guide("gpcm_capabilities")` (and [mfrmr_gpcm_scope]) as the formal capability map
 #'    before branching into less common helpers.
 #'    Residual DIF/DFF differences remain descriptive; their detection and
 #'    false-positive rates are unavailable in [evaluate_mfrm_signal_detection()].
@@ -800,7 +808,7 @@
 #'    simulation truth, use [mfrm_screening_performance()] with a complete planned
 #'    roster. It distinguishes individual and any-target rates, Monte Carlo
 #'    uncertainty and unavailable outcomes. See
-#'    `vignette("mfrmr-screening-performance", package = "mfrmr")`.
+#'    [online screening-performance guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-screening-performance.html).
 #' 6. (Optional, `RSM` / `PCM`; `GPCM` with caveat) Estimate
 #'    interaction bias with [estimate_bias()].
 #' 7. Choose a downstream branch:
@@ -852,8 +860,8 @@
 #'    scenario forecast helper, not the latent-regression estimator itself.
 #'    Prediction export still requires actual prediction objects in addition to
 #'    `include = "predictions"`.
-#' 13. Use `summary()` for compact text checks and `plot()` (or dedicated plot
-#'    helpers) for base-R visual diagnostics.
+#' 13. Use `summary()` for compact text checks and `plot()` for `ggplot2`
+#'    visual diagnostics (extracting tables and cautions with [plot_data()]).
 #'
 #' @section Three practical routes:
 #' - Quick first pass:
@@ -991,13 +999,13 @@
 #' - `mfrm_iteration_report`, `mfrm_subset_connectivity`, `mfrm_facet_statistics`
 #' - `mfrm_facets_contract_review`, `mfrm_reference_review`, `mfrm_reference_benchmark`
 #'
-#' For unknown bundle classes, use dedicated plotting helpers or custom base-R
-#' plots from component tables.
+#' For unknown bundle classes, use dedicated plotting methods or custom
+#' `ggplot2` displays built from component tables via [plot_data()].
 #'
-#' @seealso [fit_mfrm()], [run_mfrm_facets()], [mfrmRFacets()],
+#' @seealso [fit_mfrm()], [run_mfrm_facets()], [run_mfrm_facets()],
 #'   [diagnose_mfrm()], [estimate_bias()], [mfrmr_visual_diagnostics],
 #'   [mfrmr_reports_and_tables], [mfrmr_reporting_and_apa],
-#'   [gpcm_capability_matrix], [mfrmr_linking_and_dff],
+#'   [mfrmr_gpcm_scope], [mfrmr_linking_and_dff],
 #'   [mfrmr_compatibility_layer],
 #'   [summary.mfrm_fit()], `summary(diag)`,
 #'   `summary()`, [plot.mfrm_fit()], `plot()`

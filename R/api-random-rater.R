@@ -104,7 +104,7 @@
 #'   and availability criterion. Six-rater Monte Carlo uncertainty also
 #'   prevented a conclusive material-undercoverage decision in this study.
 #'   An earlier known-ability-SD pilot found 84.2% six-rater coverage. See
-#'   `vignette("mfrmr-random-raters")` for designs and Monte Carlo intervals.
+#'   [online random-rater guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html) for designs and Monte Carlo intervals.
 #'   These studies do not establish a safe minimum rater count. Numerical
 #'   checks do not certify statistical validity or shared-rater Laplace accuracy.
 #'
@@ -123,7 +123,7 @@
 #' likelihood solution, an absolute likelihood normalization, the entire SD
 #' profile, variance boundaries or repeated-sampling interval coverage. Person
 #' quadrature checks remain distinct from this comparison. See
-#' `vignette("mfrmr-random-raters")` for the reference-precision limits and scope.
+#' [online random-rater guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html) for the reference-precision limits and scope.
 #' @section Model assumptions and related research:
 #' A shared rater effect represents differences in usual severity across
 #' raters, not inconsistency within a rater or differential severity toward a
@@ -149,7 +149,7 @@
 #' whereas [fit_mfrm_testlet()] uses a distinct effect for each Person/block
 #' pair, even when the block is named Rater. These sharing structures lead
 #' to different marginal likelihoods and prediction targets; the two routes
-#' cannot currently be combined. See [gpcm_capability_matrix()] for the
+#' cannot currently be combined. See [mfrmr_gpcm_scope] for the
 #' relationship to fixed slope families and local independence.
 #'
 #' @section Comparison with fixed-rater MFRM:
@@ -194,6 +194,9 @@
 #'   [mfrm_response_diagnostics()] for descriptive posterior predictive residuals,
 #'   [confint.mfrm_random_rater()], [mfrm_random_rater_intervals()], [mfrm_results()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("fit_mfrm_random_rater", run.dontrun = TRUE)
+#' \dontrun{
 #' # Inspecting this saved synthetic fit does not require RTMB.
 #' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
 #' fit <- example$random_rater$fit
@@ -203,8 +206,11 @@
 #' #   facets = "Criterion", score_levels = 1:4, quad_points = 121)
 #' summary(fit)
 #' plot(fit)
-#' system.file("examples", "extended-models.R", package = "mfrmr")
+#' recipe <- system.file("examples", "extended-models.R", package = "mfrmr")
+#' # Run source(recipe) separately to regenerate the saved fits.
+#' }
 #' @export
+#' @order 1
 fit_mfrm_random_rater <- function(data, person, rater, score, facets = character(),
                                   score_levels, rater_sd = NULL, quad_points = 31L,
                                   maxit = 300L, missing = c("fail", "omit"),
@@ -282,8 +288,10 @@ fit_mfrm_random_rater <- function(data, person, rater, score, facets = character
 }
 
 #' @rdname fit_mfrm_random_rater
-#' @param x,object A fitted `mfrm_random_rater` object.
-#' @param ... Unused by summary and print.
+#' @param object A fitted `mfrm_random_rater` object.
+#' @param ... For `summary.mfrm_random_rater()`: Unused by summary and print.
+#'
+#' For `plot()`: Unused.
 #' @param calibration_intervals For summaries, `"none"` (default) omits
 #'   calibration bounds; `"normal"` explicitly requests their pointwise normal
 #'   approximation. This does not select individual-rater intervals.

@@ -38,7 +38,7 @@
 #' complementary criteria:
 #'
 #' - **Severity**: elements with \eqn{|\mathrm{Estimate}| >}
-#'   `severity_warn` logits are flagged as unusually harsh or lenient.
+#'   `severity_warn` logits are flagged as unusually severe or lenient.
 #' - **Misfit**: elements with Infit or Outfit MnSq outside the
 #'   configured heuristic review band are flagged. The band defaults to the package
 #'   pair returned by [mfrm_misfit_thresholds()] (Linacre 0.5-1.5);
@@ -107,18 +107,23 @@
 #'
 #' @seealso [diagnose_mfrm()], [estimate_bias()], [plot(x, type = "qc")][plot.mfrm_fit]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("facet_quality_dashboard", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:8], ]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' dash <- facet_quality_dashboard(fit, diagnostics = diag)
 #' summary(dash)
+#' }
 #' @section Saved-result reuse:
 #' Supplied screening results must describe this fitted analysis. Results from
 #' another fit or older results without identity metadata are refused. See
 #' [mfrmr_compatibility_layer] to recreate them from the saved fit and matching
 #' diagnostics without refitting the model.
 #' @export
+#' @order 1
 facet_quality_dashboard <- function(fit,
                                     diagnostics = NULL,
                                     facet = NULL,
@@ -301,7 +306,7 @@ facet_quality_dashboard <- function(fit,
     stringsAsFactors = FALSE
   )
 
-  settings <- dashboard_settings_table(list(
+  settings <- bundle_settings_table(list(
     facet = facet,
     facet_source = overview$FacetSource[1],
     severity_warn = abs(severity_warn),
@@ -371,20 +376,6 @@ facet_quality_dashboard <- function(fit,
   out
 }
 
-dashboard_settings_table <- function(settings) {
-  if (is.null(settings) || !is.list(settings) || length(settings) == 0) return(data.frame())
-  keys <- names(settings)
-  if (is.null(keys) || any(!nzchar(keys))) {
-    keys <- paste0("Setting", seq_along(settings))
-  }
-  vals <- vapply(settings, function(v) {
-    if (is.null(v)) return("NULL")
-    if (is.data.frame(v)) return(paste0("<table ", nrow(v), "x", ncol(v), ">"))
-    if (is.list(v)) return(paste0("<list ", length(v), ">"))
-    paste(as.character(v), collapse = ", ")
-  }, character(1))
-  data.frame(Setting = keys, Value = vals, stringsAsFactors = FALSE)
-}
 
 dashboard_round_numeric_df <- function(df, digits = 3L) {
   if (!is.data.frame(df) || nrow(df) == 0) return(df)
@@ -634,22 +625,23 @@ dashboard_draw_plot <- function(tbl,
 
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
-#' Summarize a facet-quality dashboard
-#'
+#' @rdname facet_quality_dashboard
+#' @details `summary()` method: Summarize a facet-quality dashboard
 #' @param object Output from [facet_quality_dashboard()].
 #' @param digits Number of digits for printed numeric values.
 #' @param top_n Number of flagged levels to preview.
-#' @param ... Reserved for generic compatibility.
-#'
-#' @return An object of class `summary.mfrm_facet_dashboard`.
+#' @return For `summary()`: An object of class `summary.mfrm_facet_dashboard`.
 #' @seealso [facet_quality_dashboard()], [plot(x, type = "facet_dashboard")][plot.mfrm_fit]
-#' @examples
+#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("summary.mfrm_facet_dashboard", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' diag <- example_fit$diagnostics
 #' summary(facet_quality_dashboard(fit, diagnostics = diag))
+#' }
 #' @export
 summary.mfrm_facet_dashboard <- function(object, digits = 3, top_n = 10, ...) {
   if (!is.list(object) || is.null(object$detail)) {
@@ -739,7 +731,7 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' @inheritParams plot_marginal_fit
 #' @param palette Optional named color overrides.
 #' @param label_angle Label angle hint for the `"flags"` plot.
-#' @param draw If `TRUE`, draw with base graphics.
+#' @param draw If `TRUE`, print the `ggplot` object.
 #' @param ... Reserved for generic compatibility.
 #'
 #' @details When `x` is a dashboard, its stored screening settings define both
@@ -747,16 +739,21 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' Returned plot data retain those settings, interpretation notes and fit
 #' readiness. Restricted or older dashboards without readiness are labeled
 #' `REVIEW ONLY`. Zero observed flags is not a complete diagnostic pass.
-#' @return A plotting-data object of class `mfrm_plot_data`.
+#' @return Invisibly, a `ggplot` object. Use [plot_data()] to retrieve its
+#'   reusable plotting data and notes.
 #' @seealso [facet_quality_dashboard()], [summary.mfrm_facet_dashboard()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot_facet_quality_dashboard", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' diag <- example_fit$diagnostics
 #' p <- plot(fit, type = "facet_dashboard", diagnostics = diag, draw = FALSE)
-#' p$data$plot
+#' plot_data(p, "plot")
+#' }
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
@@ -837,21 +834,6 @@ plot_facet_quality_dashboard <- function(x,
     }
   }
 
-  if (isTRUE(draw)) {
-    opar <- graphics::par()["mar"]
-    on.exit(graphics::par(opar), add = TRUE)
-    graphics::par(mar = c(4.5, 8.5, 3.5, 1.5))
-    dashboard_draw_plot(
-      tbl = tbl,
-      plot_type = plot_type,
-      facet = bundle$facet %||% bundle$overview$Facet[1],
-      thresholds = thresholds,
-      main = plot_title,
-      palette = palette,
-      label_angle = label_angle
-    )
-  }
-
   out <- new_mfrm_plot_data(
     "facet_quality_dashboard",
     list(
@@ -870,15 +852,19 @@ plot_facet_quality_dashboard <- function(x,
       interpretation_status = bundle$interpretation_status
     )
   )
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
-#' Plot a saved facet-quality dashboard
+#' @rdname facet_quality_dashboard
+#' @details `plot()` method: Plot a saved facet-quality dashboard
 #' @param x A result from [facet_quality_dashboard()].
 #' @param y Ignored; present for generic compatibility.
 #' @param type `"severity"` or `"flags"`.
-#' @param ... Display controls from [plot_facet_quality_dashboard()].
-#' @return The existing plot payload, including screening cautions.
+#' @param ... For `plot()`: Display controls from [plot_facet_quality_dashboard()].
+#'
+#' For `summary()`: Reserved for generic compatibility.
+#' @return For `plot()`: Invisibly, a `ggplot` object carrying the dashboard
+#'   payload and screening cautions accessible via [plot_data()].
 #' @seealso [mfrmr_plot_migration]
 #' @export
 plot.mfrm_facet_dashboard <- function(x, y = NULL, type = c("severity", "flags"), ...) {

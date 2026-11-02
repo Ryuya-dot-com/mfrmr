@@ -32,12 +32,11 @@
 #'
 #' @section Compatibility map:
 #' \describe{
-#'   \item{[facets_positioning_guide()]}{User-facing wording for the package's
+#'   \item{[facets_guide()]}{User-facing wording for the package's
 #'   relationship to FACETS. Use before describing compatibility outputs in a
 #'   report or migration note.}
 #'   \item{[run_mfrm_facets()]}{One-shot legacy-compatible wrapper that fits,
 #'   diagnoses, and returns key tables in one object.}
-#'   \item{[mfrmRFacets()]}{Alias for [run_mfrm_facets()] kept for continuity.}
 #'   \item{[build_fixed_reports()]}{Fixed-width interaction and pairwise text
 #'   blocks. Best when a text-only compatibility artifact is required.}
 #'   \item{[facets_output_file_bundle()]}{Graphfile/scorefile style CSV and
@@ -119,8 +118,8 @@
 #' | --- | --- | --- |
 #' | `evaluate_mfrm_recovery(...)` | `simulate_mfrm_recovery(...)` | Generate data repeatedly, refit, and summarize parameter recovery. |
 #' | `build_peer_review_design_review(x)` | `review_peer_design(x)` | Read existing peer-assessment assignment metadata; no assignment generation or model fitting. |
-#' | `gpcm_score_side_contract(status)` | `gpcm_capability_matrix(status, view = "scores")` | Read score availability, limitations and alternatives. |
-#' | `gpcm_runtime_guard_coverage()` | `gpcm_capability_matrix(view = "unavailable")` | Read blocked/deferred workflows and alternatives. |
+#' | `gpcm_score_side_contract(status)` | `mfrmr_output_guide("gpcm_capabilities", status, view = "scores")` | Read score availability, limitations and alternatives. |
+#' | `gpcm_runtime_guard_coverage()` | `mfrmr_output_guide("gpcm_capabilities", view = "unavailable")` | Read blocked/deferred workflows and alternatives. |
 #'
 #' `assess_mfrm_recovery(x, ...)` keeps its name: it applies review thresholds
 #' to an existing simulation result without generating data or refitting.
@@ -164,7 +163,7 @@
 #' and multiplicity settings; no MFRM fitting is involved. Regenerate CSV
 #' exports from the new result.
 #'
-#' - Start FACETS-facing reports with [facets_positioning_guide()] when readers
+#' - Start FACETS-facing reports with [facets_guide()] when readers
 #'   might otherwise assume FACETS numerical reproduction.
 #' - Keep compatibility wrappers only where a downstream consumer truly needs
 #'   the old layout or fixed-width format.
@@ -622,7 +621,7 @@
 #'
 #' @section Companion guides:
 #' - For FACETS coverage and boundary wording, see
-#'   [facets_positioning_guide()] and [facets_feature_coverage()].
+#'   [facets_guide()] with topic = "positioning" or "coverage".
 #' - For standard reports/tables, see [mfrmr_reports_and_tables].
 #' - For manuscript-draft reporting, see [mfrmr_reporting_and_apa].
 #' - For visual diagnostics, see [mfrmr_visual_diagnostics].
@@ -662,23 +661,23 @@
 #' @name mfrmr_compatibility_layer
 NULL
 
-#' List retained compatibility aliases and preferred names
+#' List compatibility aliases, migration status and preferred names
 #'
 #' @param scope Which alias surface to return: `"all"`, `"functions"`,
 #'   `"arguments"`, `"fields"`, `"columns"`, or `"plot_metrics"`.
 #'
 #' @details
-#' This helper is a compact public registry of the compatibility aliases that
-#' `mfrmr` intentionally keeps visible for older scripts and downstream
-#' handoffs. It is meant to answer two questions quickly:
+#' This helper records compatibility names used in older scripts and downstream
+#' handoffs, including aliases removed from exports. It answers two questions:
 #' 1. Which old names are still accepted?
 #' 2. Which package-native names should new code use instead?
 #'
-#' Non-exported soft-deprecated helpers are deliberately excluded here. This table
-#' is only for retained user-facing aliases that remain part of the public
-#' surface.
+#' `Lifecycle = "retained_alias"` means the alias is still accepted;
+#' `"removed_export"` means scripts must use the replacement. Private helpers
+#' that were never public are excluded. See [mfrmr_api_migration_030] for the
+#' complete 0.3.0 development migration, including merged operations.
 #'
-#' @return A data.frame with one row per retained alias and columns:
+#' @return A data.frame with one row per compatibility name and columns:
 #' - `Alias`
 #' - `PreferredName`
 #' - `Surface`
@@ -703,114 +702,7 @@ NULL
 compatibility_alias_table <- function(scope = c("all", "functions", "arguments", "fields", "columns", "plot_metrics")) {
   scope <- match.arg(scope)
 
-  out <- data.frame(
-    Alias = c(
-      "mfrmRFacets",
-      "analyze_dif",
-      "mfrm_cluster",
-      "mfrm_response_imputations",
-      "mfrm_response_imputations(impute)",
-      "keep_original",
-      "JMLE",
-      "ReadyForAPA",
-      "SE",
-      "Fair(M) Average",
-      "Fair(Z) Average",
-      "FairM",
-      "FairZ"
-    ),
-    PreferredName = c(
-      "run_mfrm_facets",
-      "analyze_dff",
-      "mfrm_cluster_pam",
-      "review_mfrm_imputations",
-      "review_mfrm_imputations(impute_ids)",
-      "category_policy",
-      "JML",
-      "DraftReady",
-      "ModelSE",
-      "AdjustedAverage",
-      "StandardizedAdjustedAverage",
-      "AdjustedAverage",
-      "StandardizedAdjustedAverage"
-    ),
-    Surface = c(
-      "function",
-      "function",
-      "function",
-      "function",
-      "argument",
-      "argument",
-      "argument",
-      "column",
-      "column",
-      "column",
-      "column",
-      "plot_metric",
-      "plot_metric"
-    ),
-    Lifecycle = c(
-      "retained_alias",
-      "retained_alias",
-      "retained_alias",
-      "retained_alias",
-      "retained_alias",
-      "retained_alias",
-      "retained_alias",
-      "retained_alias",
-      "retained_alias",
-      "retained_alias",
-      "retained_alias",
-      "retained_alias",
-      "retained_alias"
-    ),
-    RetainedFor = c(
-      "older workflow scripts",
-      "earlier DIF-oriented package code",
-      "earlier feature-clustering scripts and saved results",
-      "earlier assigned-score imputation scripts and saved results",
-      "event-ID selection in earlier imputation-review calls",
-      "existing score-category policy in fitting and input review",
-      "historical method labels",
-      "older reporting scripts",
-      "older measure-table scripts",
-      "FACETS-style table continuity",
-      "FACETS-style table continuity",
-      "legacy plot metric shortcuts",
-      "legacy plot metric shortcuts"
-    ),
-    RemovalPlan = c(
-      "No scheduled removal.",
-      "No scheduled removal.",
-      "No scheduled removal.",
-      "No scheduled removal.",
-      "No scheduled removal.",
-      "No scheduled removal.",
-      "No scheduled removal.",
-      "No scheduled removal.",
-      "No scheduled removal.",
-      "No scheduled removal.",
-      "No scheduled removal.",
-      "No scheduled removal.",
-      "No scheduled removal."
-    ),
-    Notes = c(
-      "Compatibility wrapper for the legacy-compatible one-shot workflow.",
-      "DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.",
-      "Identical Gower/PAM implementation and result class; the preferred name makes the algorithm explicit.",
-      "Same supplied-completion checks and result class; this function does not generate imputations.",
-      "Use event-ID values in impute_ids, not a logical switch; the old wrapper retains impute and its positional order.",
-      "In fit_mfrm(), describe_mfrm_data() and review_mfrm_anchors(): TRUE maps to preserve and FALSE to collapse. Defaults are unchanged; conflicting explicit choices fail.",
-      "Accepted by fit wrappers, but user-facing summaries and docs use JML.",
-      "Backward-compatible reporting flag; values match DraftReady exactly.",
-      "Backward-compatible standard-error column; ModelSE is the preferred label.",
-      "Legacy adjusted-average column retained alongside the native label.",
-      "Legacy standardized adjusted-average column retained alongside the native label.",
-      "Accepted by plot(x, type = \"fair_average\") as a shortcut for AdjustedAverage.",
-      "Accepted by plot(x, type = \"fair_average\") as a shortcut for StandardizedAdjustedAverage."
-    ),
-    stringsAsFactors = FALSE
-  )
+  out <- .mfrmr_table_compatibility_alias_table_out
 
   if (identical(scope, "all")) {
     return(out)
@@ -826,37 +718,7 @@ compatibility_alias_table <- function(scope = c("all", "functions", "arguments",
   out[out$Surface %in% scope_map[[scope]], , drop = FALSE]
 }
 
-#' Extract canonical review components
-#'
-#' @param x A fitted `mfrm_fit`, diagnostics object, summary object, or
-#'   compatible list containing the requested review component.
-#' @param required Logical. If `TRUE`, error when no compatible review component
-#'   is found. If `FALSE`, return `NULL` instead.
-#'
-#' @details
-#' `anchor_review()` returns the fitted object's `config$anchor_review`
-#' component. `precision_review()` returns the diagnostics
-#' `precision_review` table. These helpers intentionally do not search older
-#' field names.
-#'
-#' @return
-#' `anchor_review()` returns an `mfrm_anchor_review`-like object when available.
-#' `precision_review()` returns the precision-review table when available.
-#' If `required = FALSE` and no component is available, both helpers return
-#' `NULL`.
-#'
-#' @examples
-#' fit_like <- list(config = list(
-#'   anchor_review = structure(list(issue_counts = data.frame()),
-#'                             class = "mfrm_anchor_review")
-#' ))
-#' anchor_review(fit_like)
-#' diag_like <- list(
-#'   precision_review = data.frame(Check = "SE", Status = "ok", Detail = "Model-based")
-#' )
-#' precision_review(diag_like)
-#' @name review_accessors
-#' @export
+#' @noRd
 anchor_review <- function(x, required = TRUE) {
   required <- isTRUE(required)
 
@@ -880,8 +742,7 @@ anchor_review <- function(x, required = TRUE) {
   out
 }
 
-#' @rdname review_accessors
-#' @export
+#' @noRd
 precision_review <- function(x, required = TRUE) {
   required <- isTRUE(required)
 

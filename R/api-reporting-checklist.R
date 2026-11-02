@@ -122,6 +122,9 @@
 #'   [specifications_report()], [data_quality_report()],
 #'   [build_misfit_casebook()], [build_linking_review()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("reporting_checklist", run.dontrun = TRUE)
+#' \dontrun{
 #' library(mfrmr)
 #'
 #' # Saved synthetic MML/RSM analysis of example_operational.
@@ -141,6 +144,7 @@
 #'        c("Section", "Item", "DraftReady", "NextAction"))
 #' # DraftReady is TRUE/FALSE; TRUE means draft material is available with caveats
 #' # Choose follow-up analyses for your question, not merely to make every row TRUE
+#' }
 #' @section Saved-result reuse:
 #' Supplied screening results must describe this fitted analysis. Results from
 #' another fit or older results without identity metadata are refused. See
@@ -151,6 +155,7 @@
 #' of additional input rows or unrecorded grouping columns remain standalone
 #' analyses; they cannot establish availability for this fit's checklist.
 #' @export
+#' @order 1
 reporting_checklist <- function(fit,
                                 diagnostics = NULL,
                                 bias_results = NULL,
@@ -871,7 +876,7 @@ reporting_checklist <- function(fit,
         severity = "recommended",
         plot_helper = "plot.mfrm_fit() / plot(x, type = \"wright\", view = \"unified\")",
         draw_free_route = "plot(fit, type = \"wright\", draw = FALSE)",
-        plot_return_class = "mfrm_plot_data",
+        plot_return_class = "ggplot",
         available_action = "Include a Wright map when the manuscript benefits from a shared-scale targeting display."
       ),
       add_item(
@@ -887,7 +892,7 @@ reporting_checklist <- function(fit,
         severity = "recommended",
         plot_helper = "plot(x, type = \"qc\") / plot(x, type = \"facet_dashboard\")",
         draw_free_route = "plot(fit, type = \"qc\", diagnostics = diagnostics, draw = FALSE)",
-        plot_return_class = "mfrm_plot_data",
+        plot_return_class = "ggplot",
         missing_action = "Run diagnose_mfrm() so the QC and facet dashboards can be rendered from the current analysis bundle.",
         available_action = "Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag."
       ),
@@ -904,7 +909,7 @@ reporting_checklist <- function(fit,
         severity = "recommended",
         plot_helper = "plot(x, type = \"residual_pca\")",
         draw_free_route = "plot(analyze_residual_pca(diagnostics, mode = \"overall\"), type = \"residual_pca\", mode = \"overall\", view = \"scree\", draw = FALSE)",
-        plot_return_class = "mfrm_plot_data",
+        plot_return_class = "ggplot",
         missing_action = "Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.",
         available_action = "Use residual PCA plots as exploratory structure follow-up, not as standalone dimensionality proof."
       ),
@@ -924,7 +929,7 @@ reporting_checklist <- function(fit,
         severity = "recommended",
         plot_helper = "plot.mfrm_subset_connectivity()",
         draw_free_route = "plot(subset_connectivity_report(fit, diagnostics = diagnostics), type = \"design_matrix\", draw = FALSE)",
-        plot_return_class = "mfrm_plot_data",
+        plot_return_class = "ggplot",
         missing_action = "Run subset/connectivity diagnostics before showing design-matrix or linkage visuals.",
         available_action = "Use the design-matrix view to support linkage and comparability claims."
       ),
@@ -941,7 +946,7 @@ reporting_checklist <- function(fit,
         severity = "recommended",
         plot_helper = "plot(x, type = \"displacement\") / plot(x, type = \"agreement\")",
         draw_free_route = "plot(displacement_table(fit, diagnostics = diagnostics), type = \"displacement\", draw = FALSE)",
-        plot_return_class = "mfrm_plot_data",
+        plot_return_class = "ggplot",
         missing_action = "Retain fit and residual outputs if you want displacement or inter-rater follow-up figures.",
         available_action = "Use displacement and inter-rater views to localize QC issues after dashboard screening."
       ),
@@ -955,7 +960,7 @@ reporting_checklist <- function(fit,
         ready_for_apa = FALSE,
         plot_helper = "plot(x, type = \"marginal_fit\") / plot(x, type = \"marginal_pairwise\")",
         draw_free_route = "plot(diagnostics, type = \"marginal_fit\", draw = FALSE)",
-        plot_return_class = "mfrm_plot_data",
+        plot_return_class = "ggplot",
         missing_action = "For MML reporting runs, call diagnose_mfrm(..., diagnostic_mode = \"both\") to enable strict marginal follow-up visuals where supported.",
         available_action = "Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics."
       ),
@@ -975,7 +980,7 @@ reporting_checklist <- function(fit,
         ready_for_apa = FALSE,
         plot_helper = "plot(x, type = \"bias\") / plot(x, type = \"heatmap\")",
         draw_free_route = "plot(bias_results[[1]], type = \"bias\", draw = FALSE)",
-        plot_return_class = "mfrm_plot_data",
+        plot_return_class = "ggplot",
         missing_action = "Run bias or DIF screening before discussing interaction-level visuals.",
         available_action = "Use bias/DIF plots as screening follow-up, not as formal hypothesis tests."
       ),
@@ -993,7 +998,7 @@ reporting_checklist <- function(fit,
         ready_for_apa = converged && formal_precision,
         plot_helper = "plot(x)",
         draw_free_route = "plot(compute_information(fit), draw = FALSE)",
-        plot_return_class = "mfrm_plot_data",
+        plot_return_class = "ggplot",
         missing_action = "Resolve convergence before using information or precision curves in reporting.",
         available_action = if (formal_precision) {
           "Use information curves to describe precision across theta when that is the reporting question."
@@ -1010,7 +1015,7 @@ reporting_checklist <- function(fit,
         severity = "optional",
         plot_helper = "plot.mfrm_fit() / plot.mfrm_category_curves()",
         draw_free_route = "plot(fit, type = \"ccc\", draw = FALSE)",
-        plot_return_class = "mfrm_plot_data",
+        plot_return_class = "ggplot",
         missing_action = "Add fit or threshold inputs if you want figure-ready diagnostics.",
         available_action = "Use category curves and fit visuals as local descriptive follow-up after QC screening."
       )
@@ -1033,29 +1038,7 @@ reporting_checklist <- function(fit,
     )
 
   references <- if (isTRUE(include_references)) {
-    data.frame(
-      Citation = c(
-        "American Psychological Association (2020)",
-        "Appelbaum et al. (2018)",
-        "Eckes (2005)",
-        "Koizumi et al. (2019)",
-        "Muraki (1992, 1993)",
-        "Myford & Wolfe (2003, 2004)",
-        "Linacre (1989, 2002)",
-        "Wright & Masters (1982)"
-      ),
-      Topic = c(
-        "APA 7 manuscript and statistical-reporting conventions",
-        "APA JARS-Quant reporting framework",
-        "Rater effects in MFRM",
-        "Validity / MFRM task reporting",
-        "Generalized partial-credit model and information functions",
-        "Bias and interaction analysis",
-        "MFRM and rating scale guidance",
-        "Rating scale analysis"
-      ),
-      stringsAsFactors = FALSE
-    )
+    .mfrmr_table_reporting_checklist_data
   } else {
     data.frame()
   }
@@ -1085,7 +1068,7 @@ reporting_checklist <- function(fit,
     summary = as.data.frame(section_summary, stringsAsFactors = FALSE),
     section_summary = as.data.frame(section_summary, stringsAsFactors = FALSE),
     software_scope = external_software_scope_table(fit),
-    facets_positioning = facets_positioning_guide(),
+    facets_positioning = facets_guide('positioning'),
     visual_scope = visual_scope_table(fit, checklist),
     references = references,
     settings = settings
@@ -1119,7 +1102,7 @@ external_software_scope_table <- function(fit) {
     ),
     PrimaryHelpers = c(
       "fit_mfrm() -> diagnose_mfrm() -> reporting_checklist() -> build_apa_outputs()",
-      "facets_positioning_guide(), facets_feature_coverage(), run_mfrm_facets(), facets_output_file_bundle(), facets_output_contract_review()",
+      "facets_guide('positioning'), facets_guide('coverage'), run_mfrm_facets(), facets_output_file_bundle(), facets_output_contract_review()",
       "build_conquest_overlap_bundle() -> normalize_conquest_overlap_*() -> review_conquest_overlap()",
       "export_mfrm_bundle(), export_summary_appendix(), as.data.frame()"
     ),
@@ -1265,14 +1248,13 @@ visual_scope_table <- function(fit, checklist) {
   )
 }
 
-#' Summarize a reporting-checklist bundle for manuscript work
-#'
+#' @rdname reporting_checklist
+#' @details `summary()` method: Summarize a reporting-checklist bundle for manuscript work
 #' @param object Output from [reporting_checklist()].
 #' @param top_n Maximum number of draft-action rows shown in the compact action
 #'   table.
 #' @param ... Reserved for generic compatibility.
-#'
-#' @return An object of class `summary.mfrm_reporting_checklist` with:
+#' @return For `summary()`: An object of class `summary.mfrm_reporting_checklist` with:
 #' - `overview`: run-level counts of available and draft-ready items
 #' - `section_summary`: section-level checklist coverage
 #' - `software_scope`: external-software relationship summary
@@ -1284,8 +1266,7 @@ visual_scope_table <- function(fit, checklist) {
 #' - `settings`: checklist settings rendered as a compact table
 #' - `notes`: interpretation notes
 #' @seealso [reporting_checklist()], [summary.mfrm_apa_outputs]
-#' @examples
-#' # Long-running workflow; run explicitly when needed.
+#' @examples # Long-running workflow; run explicitly when needed.
 #' # example("summary.mfrm_reporting_checklist", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -1306,7 +1287,7 @@ summary.mfrm_reporting_checklist <- function(object, top_n = 10, ...) {
   checklist <- as.data.frame(object$checklist %||% data.frame(), stringsAsFactors = FALSE)
   section_summary <- as.data.frame(object$section_summary %||% object$summary %||% data.frame(), stringsAsFactors = FALSE)
   software_scope <- as.data.frame(object$software_scope %||% data.frame(), stringsAsFactors = FALSE)
-  facets_positioning <- as.data.frame(object$facets_positioning %||% facets_positioning_guide(), stringsAsFactors = FALSE)
+  facets_positioning <- as.data.frame(object$facets_positioning %||% facets_guide('positioning'), stringsAsFactors = FALSE)
   visual_scope <- as.data.frame(object$visual_scope %||% data.frame(), stringsAsFactors = FALSE)
 
   overview <- data.frame(

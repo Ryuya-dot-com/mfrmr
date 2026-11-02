@@ -1,7 +1,7 @@
 test_that("general face chart reconstructs finite P2i response points", {
   skip_if_not_installed("lpSolve")
 
-  result <- mfrmr:::mfrmr_jml_gpcm_response_image_face_p2i_fixture(
+  result <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_p2i_fixture(
     c(2, 1, 4, 1)
   )
   expect_identical(
@@ -73,7 +73,7 @@ test_that("general face chart reconstructs finite P2i response points", {
     tolerance = 1e-12
   )
 
-  negative <- mfrmr:::mfrmr_jml_gpcm_response_image_face_p2i_fixture(
+  negative <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_p2i_fixture(
     c(1, 2, 1, 4)
   )
   expect_true(negative$finite_response_image_certified)
@@ -83,7 +83,7 @@ test_that("general face chart reconstructs finite P2i response points", {
     tolerance = 1e-12
   )
 
-  equal <- mfrmr:::mfrmr_jml_gpcm_response_image_face_p2i_fixture(
+  equal <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_p2i_fixture(
     c(3, 3, -2, -2)
   )
   expect_true(equal$finite_response_image_certified)
@@ -105,11 +105,11 @@ test_that("simplex chart reproduces every exact P2i image state", {
   )
   binary <- lapply(
     targets,
-    mfrmr:::mfrmr_jml_gpcm_binary_closure_image_state
+    .mfrmr_research$mfrmr_jml_gpcm_binary_closure_image_state
   )
   charts <- lapply(
     targets,
-    mfrmr:::mfrmr_jml_gpcm_response_image_face_p2i_fixture
+    .mfrmr_research$mfrmr_jml_gpcm_response_image_face_p2i_fixture
   )
 
   expect_identical(
@@ -190,10 +190,10 @@ test_that("first-order face lift gives an explicit finite parameter path", {
   skip_if_not_installed("lpSolve")
 
   target <- c(log(2), log(4), 0, 0)
-  result <- mfrmr:::mfrmr_jml_gpcm_response_image_face_p2i_fixture(target)
+  result <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_p2i_fixture(target)
   indices <- c(0, 1, 3, 8, 20)
   paths <- lapply(indices, function(index) {
-    mfrmr:::mfrmr_jml_gpcm_response_image_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_response_image_face_path_at(
       result,
       "support_2",
       index
@@ -224,7 +224,7 @@ test_that("first-order face lift gives an explicit finite parameter path", {
     path$maximum_absolute_raw_equation_residual <= 1e-14
   }, logical(1))))
   expect_true(all(vapply(paths, function(path) {
-    state <- mfrmr:::mfrmr_jml_gpcm_binary_closure_image_state(
+    state <- .mfrmr_research$mfrmr_jml_gpcm_binary_closure_image_state(
       path$contrasts
     )
     isTRUE(state$finite_response_image)
@@ -248,7 +248,7 @@ test_that("three-owner rank-one operator separates outer faces from lifts", {
   design <- matrix(1, nrow = 3, ncol = 1)
   owner <- 1:3
 
-  finite <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  finite <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     owner,
     c(1, 2, 4)
@@ -268,7 +268,7 @@ test_that("three-owner rank-one operator separates outer faces from lifts", {
     tolerance = 1e-12
   )
 
-  reachable <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  reachable <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     owner,
     c(1, 0, 0)
@@ -288,7 +288,7 @@ test_that("three-owner rank-one operator separates outer faces from lifts", {
     ],
     "support_2_3"
   )
-  path <- mfrmr:::mfrmr_jml_gpcm_response_image_face_path_at(
+  path <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_path_at(
     reachable,
     "support_2_3",
     20
@@ -296,7 +296,7 @@ test_that("three-owner rank-one operator separates outer faces from lifts", {
   expect_true(path$valid)
   expect_equal(path$contrasts, c(1, 0, 0), tolerance = 5e-09)
 
-  outer_only <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  outer_only <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     owner,
     c(1, -2, 0)
@@ -326,7 +326,7 @@ test_that("three-owner rank-one operator separates outer faces from lifts", {
     2L
   )
 
-  no_face <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  no_face <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     owner,
     c(1, -2, 3)
@@ -355,7 +355,7 @@ test_that("finite image reconstruction is invariant to rows and extra columns", 
   slopes <- exp(log_slopes)
   beta <- c(0.7, -0.2, 0.4)
   target <- slopes[owner] * as.numeric(design %*% beta)
-  result <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  result <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     owner,
     target
@@ -369,7 +369,7 @@ test_that("finite image reconstruction is invariant to rows and extra columns", 
   )
 
   permutation <- c(6, 2, 4, 1, 5, 3)
-  permuted <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  permuted <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design[permutation, , drop = FALSE],
     owner[permutation],
     target[permutation]
@@ -386,7 +386,7 @@ test_that("finite image reconstruction is invariant to rows and extra columns", 
   )
 
   redundant <- cbind(design, design[, 1])
-  expanded <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  expanded <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     redundant,
     owner,
     target
@@ -398,7 +398,7 @@ test_that("finite image reconstruction is invariant to rows and extra columns", 
     tolerance = 1e-11
   )
 
-  sparse <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  sparse <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     Matrix::Matrix(design, sparse = TRUE),
     owner,
     target
@@ -415,7 +415,7 @@ test_that("one-owner chart reduces to the closed additive column space", {
   skip_if_not_installed("lpSolve")
 
   design <- rbind(c(1, 0), c(0, 1), c(1, 1))
-  finite <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  finite <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     rep(1, 3),
     c(1, 2, 3)
@@ -431,7 +431,7 @@ test_that("one-owner chart reduces to the closed additive column space", {
     tolerance = 1e-12
   )
 
-  outside <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  outside <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     rep(1, 3),
     c(1, 2, 4)
@@ -455,7 +455,7 @@ test_that("near-face positive margins remain open until numerically certified", 
     c(0, 1, 1)
   )
   target <- c(1, 0, 1e-06, 0)
-  guarded <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  guarded <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     adjacent_design = design,
     slope_owner_by_row = c(1, 1, 2, 2),
     target_contrasts = target,
@@ -471,7 +471,7 @@ test_that("near-face positive margins remain open until numerically certified", 
   expect_gt(guarded$face_table$MaximumRelativeMargin[1], 0)
   expect_lt(guarded$face_table$MaximumRelativeMargin[1], 1e-05)
 
-  resolved <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  resolved <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     adjacent_design = design,
     slope_owner_by_row = c(1, 1, 2, 2),
     target_contrasts = target,
@@ -493,7 +493,7 @@ test_that("face chart and path controls fail closed", {
   skip_if_not_installed("lpSolve")
 
   design <- matrix(1, nrow = 3, ncol = 1)
-  valid <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  valid <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     1:3,
     c(1, 0, 0)
@@ -510,7 +510,7 @@ test_that("face chart and path controls fail closed", {
   )
   for (controls in control_cases) {
     result <- do.call(
-      mfrmr:::mfrmr_jml_gpcm_response_image_face_chart,
+      .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart,
       c(list(design, 1:3, c(1, 0, 0)), controls)
     )
     expect_identical(result$state, "not_evaluated_control")
@@ -539,7 +539,7 @@ test_that("face chart and path controls fail closed", {
   )
   for (arguments in input_cases) {
     result <- do.call(
-      mfrmr:::mfrmr_jml_gpcm_response_image_face_chart,
+      .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart,
       arguments
     )
     expect_identical(result$state, "not_evaluated_input")
@@ -547,7 +547,7 @@ test_that("face chart and path controls fail closed", {
     expect_false(result$response_image_face_chart_classified)
   }
 
-  offset <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  offset <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     1:3,
     c(1, 0, 0),
@@ -558,7 +558,7 @@ test_that("face chart and path controls fail closed", {
   expect_false(offset$response_image_face_chart_classified)
   expect_false(offset$zero_affine_offset_certified)
 
-  workload <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  workload <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     1:3,
     c(1, 0, 0),
@@ -568,7 +568,7 @@ test_that("face chart and path controls fail closed", {
   expect_false(workload$evaluated)
   expect_false(workload$response_image_face_chart_classified)
 
-  solver_cap <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  solver_cap <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     1:3,
     c(1, 0, 0),
@@ -585,7 +585,7 @@ test_that("face chart and path controls fail closed", {
   )
   invalid_faces <- c("support_2_3", "support_2_3", "unknown")
   for (index in seq_along(invalid_sources)) {
-    path <- mfrmr:::mfrmr_jml_gpcm_response_image_face_path_at(
+    path <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_path_at(
       invalid_sources[[index]],
       invalid_faces[index],
       1
@@ -594,21 +594,21 @@ test_that("face chart and path controls fail closed", {
     expect_identical(path$state, "not_evaluated_face_path")
   }
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_response_image_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_response_image_face_path_at(
       valid,
       "support_2_3",
       -1
     )$valid
   )
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_response_image_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_response_image_face_path_at(
       valid,
       "support_2_3",
       301
     )$valid
   )
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_response_image_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_response_image_face_path_at(
       valid,
       "support_2_3",
       1,
@@ -616,25 +616,25 @@ test_that("face chart and path controls fail closed", {
     )$valid
   )
 
-  finite <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  finite <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     1:3,
     c(1, 2, 4)
   )
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_response_image_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_response_image_face_path_at(
       finite,
       "support_1_2_3",
       1
     )$valid
   )
-  outer <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  outer <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     1:3,
     c(1, -2, 0)
   )
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_response_image_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_response_image_face_path_at(
       outer,
       "support_3",
       1

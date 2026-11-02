@@ -12,10 +12,10 @@ estimator-specific limits on structural inference. Native CML and
 comparison-only fits do not supply this consolidated reporting workflow.
 For CML, use \code{summary(fit)} and \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}, then \code{summary(ci)},
 \code{plot(ci)}, \code{\link[=apa_table]{apa_table()}} and \code{saveRDS(ci, file)}; see
-\code{vignette("mfrmr-facet-intervals", package = "mfrmr")}.
+\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-facet-intervals.html}{online facet-interval guide}.
 Ordinary one-family \code{GPCM} fits support \code{\link[=reporting_checklist]{reporting_checklist()}},
 \code{\link[=precision_review_report]{precision_review_report()}}, direct curve/graph and residual table helpers,
-and caveated APA/QC/export bundles. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when you
+and caveated APA/QC/export bundles. Use \code{mfrmr_output_guide("gpcm_capabilities")} (\link{mfrmr_gpcm_scope}) when you
 need the formal boundary for the current \code{GPCM} reporting path.
 
 In particular, \code{GPCM} \code{\link[=build_apa_outputs]{build_apa_outputs()}},
@@ -27,7 +27,7 @@ export, design forecasting, diagnostic/signal-detection screening, and
 linking synthesis use their own caveated \code{GPCM} routes and should not be
 treated as automatic operational-scoring evidence.
 
-See \code{vignette("mfrmr-networks-and-reporting")} for Lamprianou-inspired network
+See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} for Lamprianou-inspired network
 views, the FACETS/ConQuest reporting crosswalk and speaking/writing examples
 combining MFRM with G/D studies. \code{\link[=plot_data]{plot_data()}} supports long-format extraction
 and original-value cluster profiles for custom distribution plots.
@@ -61,7 +61,7 @@ Use \code{\link[=compare_mfrm]{compare_mfrm()}} for the same-data comparison tab
 \code{\link[=build_model_choice_review]{build_model_choice_review()}} and \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} for
 cautious model-role, route-boundary, and wording tables.
 \item "How should I start figure captions or visual-results wording?"
-Use \code{\link[=visual_reporting_template]{visual_reporting_template()}} for conservative caption and results
+Use \code{mfrmr_output_guide("visual_templates")} for conservative caption and results
 sentence starters, then verify availability with
 \code{reporting_checklist()$visual_scope}.
 }
@@ -114,7 +114,7 @@ Review \code{written_files} and \code{plot_errors} before treating export as com
 
 These functions serve different purposes; figures and reports are optional
 branches from the saved results, not compulsory steps before saving them.
-The worked example in \code{vignette("mfrmr-facet-intervals")} follows this route
+The worked example in \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-facet-intervals.html}{online facet-interval guide} follows this route
 through individual feedback, interval figures and save/reopen operations.
 }
 
@@ -277,7 +277,7 @@ model-based, hybrid, or exploratory.}
 often feed result tables and appendix material.}
 \item{\code{\link[=build_visual_summaries]{build_visual_summaries()}}}{Prepares publication-oriented figure
 data that can be cited from the report text.}
-\item{\code{\link[=visual_reporting_template]{visual_reporting_template()}}}{Provides conservative figure
+\item{\code{mfrmr_output_guide("visual_templates")}}{Provides conservative figure
 placement, caption-starter, results-wording, and overclaim-avoidance
 guidance for public visual helpers.}
 }
@@ -291,7 +291,7 @@ guidance for public visual helpers.}
 \item Use the checklist's \code{"Visual Displays"} rows to decide whether the next
 follow-up should be \link[=plot.mfrm_fit]{plot(x, type = "qc")}, \link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")},
 \link[=plot.mfrm_fit]{plot(x, type = "residual_pca")}, \link[=plot.mfrm_fit]{plot(x, type = "bias")}, or another public plot.
-\item Use \code{\link[=visual_reporting_template]{visual_reporting_template()}} to draft visual captions and
+\item Use \code{mfrmr_output_guide("visual_templates")} to draft visual captions and
 results-sentence starters, but do not paste the skeletons without checking
 the actual fit, diagnostics, and study context.
 \item Before formal inferential claims, review the fit decision, precision
@@ -364,7 +364,7 @@ caveated \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=bui
 \item For report/table selection, see \link{mfrmr_reports_and_tables}.
 \item For end-to-end analysis routes, see \link{mfrmr_workflow_methods}.
 \item For visual follow-up, see \link{mfrmr_visual_diagnostics}.
-\item For the \code{GPCM} support statement, see \link{gpcm_capability_matrix}.
+\item For the \code{GPCM} support statement, see \link{mfrmr_gpcm_scope}.
 \item For a longer walkthrough, see
 \code{vignette("mfrmr-reporting-and-apa", package = "mfrmr")}.
 }

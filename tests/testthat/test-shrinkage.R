@@ -200,24 +200,26 @@ test_that("plot.mfrm_fit(type = 'shrinkage') returns a plot bundle", {
     plot(fit, type = "shrinkage", draw = FALSE),
     "^Review-only display:"
   )
-  expect_s3_class(out, "mfrm_plot_data")
-  expect_true(is.data.frame(out$data$data))
+  expect_s3_class(out, "ggplot")
+  out_payload <- plot_data(out)
+  expect_true(is.data.frame(out_payload$data))
   expect_true(all(c("Facet", "Level", "Estimate", "ShrunkEstimate",
-                    "ShrinkageFactor") %in% names(out$data$data)))
-  expect_identical(out$data$mode, "empirical_bayes")
+                    "ShrinkageFactor") %in% names(out_payload$data)))
+  expect_identical(out_payload$mode, "empirical_bayes")
 
   out_ci <- .mfrmr_muffle_expected_warnings(
     plot(fit, type = "shrinkage", show_ci = TRUE, ci_level = 0.90,
          draw = FALSE),
     "^Review-only display:"
   )
-  expect_s3_class(out_ci, "mfrm_plot_data")
-  expect_true(isTRUE(out_ci$data$show_ci))
-  expect_equal(out_ci$data$ci_level, 0.90)
+  expect_s3_class(out_ci, "ggplot")
+  out_ci_payload <- plot_data(out_ci)
+  expect_true(isTRUE(out_ci_payload$show_ci))
+  expect_equal(out_ci_payload$ci_level, 0.90)
   expect_true(all(c("CI_Lower", "CI_Upper", "ShrunkCI_Lower",
                     "ShrunkCI_Upper", "CI_Level")
-                  %in% names(out_ci$data$data)))
-  expect_true(all(out_ci$data$data$CI_Level == 0.90))
+                  %in% names(out_ci_payload$data)))
+  expect_true(all(out_ci_payload$data$CI_Level == 0.90))
 })
 
 test_that("plot.mfrm_fit(type = 'shrinkage') gracefully renders with no shrinkage", {
@@ -226,18 +228,19 @@ test_that("plot.mfrm_fit(type = 'shrinkage') gracefully renders with no shrinkag
     fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
              method = "JML", maxit = 15)
   ))
-  # Without shrinkage, draw = FALSE should still return a structure
-  # with an empty data frame and mode == "none".
+  # Without shrinkage, draw = FALSE should still return a ggplot whose
+  # plot_data() contains an empty data frame and mode == "none".
   out <- .mfrmr_muffle_expected_warnings(
     plot(fit, type = "shrinkage", draw = FALSE),
     "^Review-only display:"
   )
-  expect_s3_class(out, "mfrm_plot_data")
-  expect_equal(nrow(out$data$data), 0L)
-  expect_identical(out$data$mode, "none")
+  expect_s3_class(out, "ggplot")
+  out_payload <- plot_data(out)
+  expect_equal(nrow(out_payload$data), 0L)
+  expect_identical(out_payload$mode, "none")
 })
 
-test_that("plot.mfrm_facet_sample_review runs and returns a data.frame", {
+test_that("plot.mfrm_facet_sample_review runs and returns a ggplot with data.frame payload", {
   toy <- load_mfrmr_data("example_core")
   fit <- suppressMessages(suppressWarnings(
     fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -247,16 +250,20 @@ test_that("plot.mfrm_facet_sample_review runs and returns a data.frame", {
   pdf(NULL)  # suppress device
   on.exit(dev.off(), add = TRUE)
   out <- plot(audit)
-  expect_s3_class(out, "data.frame")
-  expect_true(all(c("Facet", "Level", "N", "SampleCategory") %in% names(out)))
+  expect_s3_class(out, "ggplot")
+  tbl <- plot_data(out, "table")
+  expect_s3_class(tbl, "data.frame")
+  expect_true(all(c("Facet", "Level", "N", "SampleCategory") %in% names(tbl)))
 })
 
-test_that("plot.mfrm_facet_nesting runs and returns a matrix", {
+test_that("plot.mfrm_facet_nesting runs and returns a ggplot with matrix payload", {
   toy <- load_mfrmr_data("example_core")
   nest <- detect_facet_nesting(toy, c("Rater", "Criterion"))
   pdf(NULL)
   on.exit(dev.off(), add = TRUE)
-  m <- plot(nest)
+  p_nest <- plot(nest)
+  expect_s3_class(p_nest, "ggplot")
+  m <- plot_data(p_nest, "matrix")
   expect_true(is.matrix(m))
   expect_equal(dim(m), c(2L, 2L))
 })

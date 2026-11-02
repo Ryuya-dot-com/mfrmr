@@ -8,8 +8,11 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7,
-  fig.height = 4.5, dev.args = list(bg = "white"))
+is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
+knitr::opts_chunk$set(
+  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
+  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",collapse = TRUE, comment = "#>", fig.width = 7,
+  fig.height = 4.5, dev.args = list(bg = "white"), eval = !is_cran_check)
 ```
 
 Would a speaking assessment benefit more from additional tasks or additional
@@ -25,7 +28,7 @@ Choose the analysis that matches your question:
 | --- | --- |
 | How dependable is an observed score under a specified task/rater plan? | The G/D-study workflow below. No MFRM fit is needed. |
 | How do severity and ordered rubric categories relate to a latent trait? | The [measurement workflow](mfrmr-workflow.html), using appropriate ordered-response data. |
-| Which rating patterns deserve feedback or review? | The [agreement lesson](mfrmr-rating-agreement.html) and `mfrmr_output_guide("feedback")`. Agreement, severity and dependability answer different questions. |
+| Which rating patterns deserve feedback or review? | The [agreement lesson](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html) and `mfrmr_output_guide("feedback")`. Agreement, severity and dependability answer different questions. |
 
 MFRM simulation is another planning option, not a reason to run both analyses
 automatically. It evaluates a fitted-score or diagnostic procedure under an
@@ -41,8 +44,9 @@ for the assumptions, differences and circumstances in which one route suffices.
 
 Suppose a speaking assessment reports the equally weighted mean of Content
 and Organization scores. Tasks and raters are intended to be interchangeable
-with others from stated populations. The planned outcome is proficiency
-across those conditions, rather than performance on just one particular speech.
+with others from stated populations. The generalization target is the universe
+score (expected observed performance across those conditions), rather than
+performance on just one particular speech.
 Weights and the intended interpretation should be chosen before inspecting
 which plan has the highest coefficient.
 
@@ -298,6 +302,55 @@ protected by these intervals. This paired delta method does not apply to
 one-facet or nested designs; see the branches below and the
 [comparison help](../reference/mfrm_multivariate_d_compare.html).
 
+## Connect the comparison to resources and targets
+
+The same paired comparison can be reviewed against explicit resource limits.
+Here the hours are illustrative operational inputs for one declared future
+cohort, not estimates from the G-study. `Scenario` links each row to `plans`;
+reordering the cost table does not change the association.
+
+```{r crossed-resource-review}
+costs <- data.frame(Scenario = 1:3, RaterHours = c(40, 44, 48),
+  TaskHours = c(12, 8, 6))
+review <- recommend_mfrm_design(comparison, costs = costs,
+  limits = c(RaterHours = 46), targets = c(G = .58, Phi = .39))
+planning <- summary(review, planning = TRUE)
+planning$plans
+planning$checks
+planning$differences[, c("Scenario", "Metric", "Difference", "Lower", "Upper",
+                         "Direction", "Feasibility", "TargetStatus")]
+```
+
+The three-rater/four-task plan is within this rater-hour limit and its points
+meet both targets. Its G difference supports improvement under the model;
+its Phi difference remains `inconclusive`. A Phi point above .39 does not
+establish that population Phi exceeds .39. The four-rater/three-task plan
+exceeds the limit and stays visible as `infeasible`. Unknown costs are `NA`
+and make the relevant resource check `unavailable`, never free or passing.
+`RatingsPerPerson` is twelve here; it is not a cohort total. Supply future
+cohort totals and any further workload limits explicitly in `costs` and `limits`.
+
+`ReviewRequired` flags covariance-component or sampling-covariance concerns
+without removing signed estimates or their diagnostics. No plan is selected
+automatically: resource feasibility, point-target attainment and paired
+interval direction answer different questions. Intervals remain pointwise
+for prespecified plans; searching for a winner can introduce selection bias.
+
+```{r crossed-resource-report}
+planning_report <- mfrm_report(review, study_context = c(
+  score = "Equal-weight mean of Content and Organization over the complete plan",
+  universe = "Persons, tasks and raters sampled from the declared assessment populations",
+  resources = "Illustrative total hours for the same future cohort"))
+planning_report$tables$planning_plans
+plot(review, view = "differences")
+```
+
+The report, `plot_data()` and appendix export retain every plan, resource check,
+direction and limitation. This workflow concerns observed-score G/Phi and
+measurement SEM under the existing two-crossed-facet paired delta method.
+It does not convert Bayesian new-Person ability scores into a future-plan
+comparison, and it does not broaden the scope of the interval procedure.
+
 ## Save the result and know which operation to use
 
 | Operation | What it does | Does it calculate new intervals? |
@@ -411,7 +464,7 @@ performance or a person across performances. Keeping all pieces fixed, using
 different judges for each athlete, or studying a time trend changes the target
 or supported design. Race times and match outcomes do not automatically fit a
 judged-performance model. Annual speech-contest linking with common recordings
-also requires the separate [linking design](mfrmr-linking-and-dff.html).
+also requires the separate [linking design](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html).
 
 ## Examine a construct claim
 

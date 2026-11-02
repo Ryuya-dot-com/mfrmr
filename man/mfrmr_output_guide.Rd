@@ -2,21 +2,35 @@
 % Please edit documentation in R/help_reports_and_tables.R
 \name{mfrmr_output_guide}
 \alias{mfrmr_output_guide}
+\alias{gpcm_score_side_contract}
+\alias{gpcm_runtime_guard_coverage}
 \title{Choose an mfrmr output helper by user goal}
 \usage{
 mfrmr_output_guide(
-  scope = c("all", "public", "beginner", "psychometric", "entry", "viewer", "binary",
-    "tables", "reports", "reviews", "bundles", "exports", "compatibility", "gpcm",
-    "calibration", "simulation", "linking", "network", "response_time", "facets",
-    "conquest", "r", "models", "features", "imputation", "gtheory", "feedback", "plots")
+  scope = c("all", "public", "beginner", "core_workflow", "psychometric", "entry",
+    "viewer", "binary", "tables", "reports", "reviews", "bundles", "exports",
+    "compatibility", "gpcm", "calibration", "simulation", "linking", "network",
+    "response_time", "facets", "conquest", "r", "models", "features", "imputation",
+    "gtheory", "feedback", "plots", "intervals", "visual_templates", "gpcm_capabilities",
+    "calibration_capabilities"),
+  ...
 )
 }
 \arguments{
-\item{scope}{Which rows to return. \code{"all"} returns the full route catalogue.
-\code{"plots"} returns a separate purpose-based plot capability table (see below).
+\item{scope}{Which rows or companion matrix to return. \code{"all"} returns the
+full route catalogue. \code{"plots"} returns a purpose-based plot capability
+table (see below). \code{"intervals"} returns the confidence-interval and
+uncertainty route guide; \code{"visual_templates"} returns the figure-reporting
+template; \code{"gpcm_capabilities"} returns the GPCM workflow/score/unavailable
+capability matrix (see \link{mfrmr_gpcm_scope}); and
+\code{"calibration_capabilities"} returns the portable fixed-calibration model
+and estimator capability matrix.
 \code{"public"} returns the canonical six-step route for most users;
 \code{"beginner"} returns the same compact route rather than combining every
-beginner-labelled specialist row.
+beginner-labelled specialist row; \code{"core_workflow"} returns the concise
+five-step onboarding route across data description, shared-\code{spec} model
+fitting, diagnostics, observed-score G/D planning, and unified reporting /
+plotting.
 \code{"entry"} returns the recommended first-screen routes. \code{"viewer"} returns
 local-viewer routes built around \code{mfrm_results(include = ...)}. \code{"binary"}
 returns the two-category person-item Rasch route and checks. Other values
@@ -37,14 +51,41 @@ assigned-score multiple imputation and observed-score G/D-study workflows,
 including their own table, plot and saving routes.
 \code{"facets"}, \code{"conquest"}, and \code{"r"} return user-pathway rows for people
 arriving from those workflows.}
+
+\item{...}{Optional sub-scope or filter arguments for specialist matrices:
+\itemize{
+\item \code{scope = "intervals"}: optional \code{category} (\code{"all"}, \code{"visual"},
+\code{"table"}, \code{"reporting"}, \code{"fit"}, \code{"bias"}, \code{"linking"}, \code{"gpcm"},
+\code{"equivalence"}, \code{"hierarchical"}, or \code{"shrinkage"}).
+\item \code{scope = "visual_templates"}: optional \code{category} (\code{"all"},
+\code{"manuscript"}, \code{"appendix"}, \code{"diagnostic"}, or \code{"surface"}).
+\item \code{scope = "gpcm_capabilities"}: optional \code{status} and \code{view}
+(\code{"workflows"}, \code{"scores"}, or \code{"unavailable"}).
+Other scopes take no additional arguments.
+}}
 }
 \value{
-For \code{scope = "plots"}, a data.frame with \code{Question}, \code{InputClass},
+\itemize{
+\item For \code{scope = "plots"}, a data.frame with \code{Question}, \code{InputClass},
 \code{PlotCall}, \code{PlotName} (the name in the saved plot data), \code{DataComponent},
 \code{GGPlot}, \code{GGPlotCall} (\code{NA} when unavailable), \code{Notes}, \code{ResultFunction}
 and \code{NextStep}.
-All other scopes return a data.frame with one row per route and columns:
-\itemize{
+\item For \code{scope = "intervals"}, a data.frame mapping confidence-interval and
+uncertainty routes (\code{Route}, \code{Scope}, \code{PrimaryHelper}, \code{DisplayRoute},
+\code{DefaultLevel}, \code{IntervalColumns}, \code{Basis}, \code{UseFor},
+\code{InterpretationBoundary}, \code{GPCMStatus}, \code{Notes}).
+\item For \code{scope = "visual_templates"}, a data.frame of figure-reporting guidance
+(\code{FigureFamily}, \code{Scope}, \code{PrimaryHelper}, \code{DefaultPlacement},
+\code{WhatToReport}, \code{CaptionSkeleton}, \code{ResultsWording}, \code{WhatNotToClaim},
+\code{BeginnerCheck}, \code{ThreeDPolicy}).
+\item For \code{scope = "gpcm_capabilities"}, an \code{mfrmr_gpcm_capabilities} data.frame
+for \code{view = "workflows"}, or an ordinary data.frame for \code{view = "scores"}
+and \code{view = "unavailable"}; see \link{mfrmr_gpcm_scope}.
+\item For \code{scope = "calibration_capabilities"}, a data.frame with one row per
+model, estimator, and scoring-basis combination (\code{Model}, \code{Estimator},
+\code{ScoringBasis}, \code{PortableCalibration}, \code{AnchorSupport},
+\code{InteractionSupport}, \code{ExistingAlternative}, \code{Limitation}).
+\item All other scopes return a data.frame with one row per route and columns:
 \item \code{Scope}
 \item \code{Question}
 \item \code{OutputFamily}
@@ -112,7 +153,7 @@ For a fixed future plan, use \code{\link[=classification_table]{classification_t
 observed reference agreement and posterior ability-band probabilities.
 For DIF sensitivity, \code{scope = "linking"} points to
 \code{\link[=mantel_haenszel_table]{mantel_haenszel_table()}}, \code{\link[=ordinal_logistic_table]{ordinal_logistic_table()}} and the shared-roster
-example in \code{vignette("mfrmr-linking-and-dff")}.
+example in \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html}{online linking and DFF guide}.
 For an individual native additive RSM/PCM or experimental two-family GPCM sheet, use
 \code{mfrm_report(res, style = "rater", facet = "Rater", rater = "R01")}.
 The selected sheet omits source identifiers; the comprehensive result and
@@ -149,8 +190,8 @@ The six-step beginner route starts with ordinary RSM/PCM. The result class
 \code{mfrm_fit} alone does not establish which diagnostics or figures are valid:
 one-family GPCM, two-family GPCM and corrected JML share that class.
 Read the fitted model and estimation method in \code{summary(fit)} first.
-For GPCM, consult \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} and
-\code{vignette("mfrmr-gpcm-scope", package = "mfrmr")}.
+For GPCM, consult \code{mfrmr_output_guide("gpcm_capabilities")}, \link{mfrmr_gpcm_scope}, and
+\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html}{online GPCM scope guide}.
 Two-family GPCM and corrected JML have separate result/report and descriptive
 response-diagnostic routes; ordinary fit tests and Wright/Pathway maps do
 not apply. Corrected JML supplies point plots for slopes, locations and steps,
@@ -158,7 +199,13 @@ without structural confidence intervals.
 
 Use \code{scope = "models"} for fixed-facet, shared-rater and testlet roles,
 \code{scope = "feedback"} for the distinct rater-review targets, and
-\code{scope = "calibration"} for scoring or fixed-plan decisions.
+\code{scope = "calibration"} (together with \code{scope = "calibration_capabilities"} for
+saved calibration-artifact model/estimator support) for scoring or fixed-plan
+decisions. For JML fits, fitted-object scoring is post-hoc EAP with a
+standard-normal reference prior by default or an explicit \code{scoring_prior}
+(not ML/WLE or a JML-estimated population distribution); portable extraction
+supports RSM/PCM and shared-owner GPCM JML within their distinct source-check
+scopes, and no portable artifact stores training Person estimates.
 For exploratory bias review across eligible facet pairs, use
 \code{\link[=estimate_all_bias]{estimate_all_bias()}}, followed by \code{summary(screens)} and \code{plot(screens)}.
 Use \code{\link[=estimate_bias]{estimate_bias()}} for a prespecified pair. Retain failed pairs and
@@ -184,7 +231,7 @@ Save each complete result with \code{\link[base:saveRDS]{base::saveRDS()}} and r
 \code{\link[base:readRDS]{base::readRDS()}}; a CSV alone does not retain its design or qualifications.
 Fixed-facet output also depends on the estimator: native CML uses dedicated
 summaries and \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} plots/tables, without ordinary Person
-scoring or consolidated reports. \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}} separates that
+scoring or consolidated reports. \code{mfrmr_output_guide("intervals")} separates that
 route from MML interaction contrasts and their population-SD standardization.
 }
 
@@ -214,6 +261,9 @@ the source function's help before interpretation.
 }
 
 \examples{
+core <- mfrmr_output_guide("core_workflow")
+core[, c("Question", "MainFunction", "NextStep")]
+
 beginner <- mfrmr_output_guide("beginner")
 beginner[, c("Question", "MainFunction", "NextStep")]
 
@@ -226,6 +276,11 @@ feedback[, c("Question", "MainFunction", "DecisionBoundary")]
 
 figures <- mfrmr_output_guide("plots")
 figures[, c("Question", "ResultFunction", "GGPlot")]
+
+mfrmr_output_guide("intervals", "visual")[, c("Route", "DisplayRoute", "Basis")]
+mfrmr_output_guide("visual_templates", "manuscript")[, c("FigureFamily", "DefaultPlacement")]
+mfrmr_output_guide("gpcm_capabilities", "supported")[, c("Area", "Status")]
+mfrmr_output_guide("calibration_capabilities")[, c("Model", "Estimator", "PortableCalibration")]
 }
 \concept{GPCM boundaries}
 \concept{reporting workflow}

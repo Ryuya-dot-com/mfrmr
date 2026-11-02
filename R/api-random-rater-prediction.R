@@ -106,24 +106,25 @@ predict.mfrm_random_rater <- function(object, newdata, ability,
       row_target = "Marginal probabilities, not a joint rating distribution", quad_points = quad_points))
 }
 
-#' Plot observed-rater severity under a shared-rater RSM
+#' @rdname fit_mfrm_random_rater
+#' @details `plot()` method: Plot observed-rater severity under a shared-rater RSM
 #' @inheritParams plot.mfrm_testlet_scores
 #' @seealso [plot.mfrm_testlet_scores()] for view selection and accessible
 #'   output. The distribution view summarizes the observed conditional modes,
 #'   not the assumed rater population.
-#'
 #' @param x A result from [fit_mfrm_random_rater()].
+#'
+#' Also for `summary()`: A fitted `mfrm_random_rater` object.
 #' @param draw Logical; `FALSE` returns plot data without opening a device.
 #' @param intervals `"none"` (default) displays point estimates without
 #'   automatic prediction intervals. `"normal"` explicitly requests the
 #'   first-order approximation from `confint(x, parm = "raters")`; nominal
 #'   coverage is not established. Required for the interval-width precision
 #'   view and sorting by interval width (`sort = "uncertainty"`).
-#' @param ... Unused.
-#' @return Invisibly, an `mfrm_plot_data` object with the rater table and settings.
-#'   Use [plot_data()] for custom graphics.
-#' @details Points are conditional modes of severity relative to the rater
-#'   population mean zero; positive values mean stricter ratings. No individual
+#' @return For `plot()`: Invisibly, a `ggplot` object. [plot_data()] extracts
+#'   the rater table, display metadata, and settings.
+#' @details For `plot()`: Points are conditional modes of severity relative to the rater
+#'   population mean zero; positive values mean more severe ratings. No individual
 #'   rater intervals are supplied automatically, including for earlier saved
 #'   fits. Explicit normal whiskers are approximate 95% prediction intervals,
 #'   not qualified rater classifications. At an estimated zero variance or with

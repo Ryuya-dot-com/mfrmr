@@ -59,5 +59,5 @@ for a returned normal interval; it is not a coverage guarantee.
 }
 
 \seealso{
-\code{\link[=confint.mfrm_random_rater]{confint.mfrm_random_rater()}}, \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}}
+\code{\link[=confint.mfrm_random_rater]{confint.mfrm_random_rater()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}}
 }

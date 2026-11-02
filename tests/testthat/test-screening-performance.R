@@ -79,7 +79,8 @@ test_that("performance graphics preserve unavailable outcomes without opening hi
   expect_equal(nrow(plot_data(plot(x, condition = "Known", scope = "target", draw = FALSE))$table), 1)
   expect_error(plot(x, metric = "detection", draw = FALSE), "No planned targets")
   expect_error(plot(x, condition = "Missing", draw = FALSE), "condition labels")
-  if (requireNamespace("ggplot2", quietly = TRUE)) expect_error(as_ggplot(z), "screening performance")
+  expect_s3_class(z, "ggplot")
+  if (requireNamespace("ggplot2", quietly = TRUE)) expect_s3_class(as_ggplot(z), "ggplot")
   grDevices::pdf(tempfile(fileext = ".pdf"))
   before <- graphics::par("mar"); plot(x)
   expect_equal(graphics::par("mar"), before)
@@ -104,15 +105,15 @@ test_that("unavailable bias statistics cannot become negative screens or lower f
   expect_equal(s$BiasScreenAvailable, 0)
   expect_equal(s$BiasScreenAllTrialsLower, 0)
   expect_equal(s$BiasScreenAllTrialsUpper, 1)
-  expect_true(all(is.na(plot(x, signal = "bias", draw = FALSE)$data$y)))
+  expect_true(all(is.na(plot_data(plot(x, signal = "bias", draw = FALSE), "data")$y)))
   old <- x; old$results$BiasDetected <- FALSE
   old$results$BiasNonTargetAvailable <- NULL
   expect_true(is.na(summary(old)$detection_summary$BiasScreenRate))
   expect_true(is.na(summary(old)$detection_summary$BiasScreenFalsePositiveRate))
   expect_true(any(grepl("Rerun the simulation", summary(old)$notes)))
-  expect_true(is.na(plot(old, signal = "bias", metric = "false_positive", draw = FALSE)$data$y))
+  expect_true(is.na(plot_data(plot(old, signal = "bias", metric = "false_positive", draw = FALSE), "data")$y))
   old$results$DIFDetected <- TRUE
-  expect_true(is.na(plot(old, signal = "dif", draw = FALSE)$data$y))
+  expect_true(is.na(plot_data(plot(old, signal = "dif", draw = FALSE), "data")$y))
   expect_identical(signal_eval_threshold(c(.01, NA, .8), c(NA, 3, .1), .05, 2), c(NA, NA, FALSE))
 })
 
@@ -136,7 +137,7 @@ test_that("descriptive DIF classifications and saved missing contrasts remain un
   expect_true(is.na(summary(x)$detection_summary$DIFClassificationPower))
   old <- x; old$results$DIFContrast <- NA_real_
   expect_true(is.na(summary(old)$detection_summary$DIFPower))
-  expect_true(all(is.na(plot(old, draw = FALSE)$data$y)))
+  expect_true(all(is.na(plot_data(plot(old, draw = FALSE), "data")$y)))
   expect_error(evaluate_mfrm_signal_detection(dif_p_cut = NA_real_), "dif_p_cut")
   expect_error(evaluate_mfrm_signal_detection(bias_p_cut = 2), "bias_p_cut")
   expect_error(evaluate_mfrm_signal_detection(bias_abs_t = -1), "bias_abs_t")

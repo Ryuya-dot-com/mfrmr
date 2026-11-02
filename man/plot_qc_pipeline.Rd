@@ -16,7 +16,8 @@ plot_qc_pipeline(x, type = c("traffic_light", "detail"), draw = TRUE, ...)
 \item{...}{Additional graphical parameters passed to plotting functions.}
 }
 \value{
-Invisible verdicts tibble from the QC pipeline.
+Invisibly, a \code{ggplot} object. \code{plot_data(p, "verdicts")} returns
+the verdicts tibble from the QC pipeline.
 }
 \description{
 Visualizes the output from \code{\link[=run_qc_pipeline]{run_qc_pipeline()}} as either a traffic-light

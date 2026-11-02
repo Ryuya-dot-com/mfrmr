@@ -1,6 +1,8 @@
-#' Plot fixed-facet interval methods
-#'
+#' @rdname mfrm_facet_intervals
+#' @details `plot()` method: Plot fixed-facet interval methods
 #' @param x Output from [mfrm_facet_intervals()].
+#'
+#' Also for `print()`: An object returned by `mfrm_facet_intervals()`.
 #' @param comparison Logical. With a sandwich result, also show its ordinary
 #'   model-based interval. With source-propagated anchors, show the separate
 #'   conditional-on-anchors interval. Both use the same point estimate.
@@ -13,11 +15,10 @@
 #' @param reference Optional finite vertical reference; default zero. Use
 #'   `NULL` to omit it. This is not a rater-quality threshold.
 #' @param show_legend Logical; show the method legend (default `TRUE`).
-#' @param ... Unused.
-#' @return Invisibly, an `mfrm_plot_data` object retaining the `table`, contrast
-#'   coefficients, settings and labels. Use [plot_data()] for custom graphics;
-#'   [as_ggplot()] returns a customizable ggplot with the same saved values.
-#' @details Fixed targets use open diamonds without inferential intervals.
+#' @return For `plot()`: Invisibly, a `ggplot` object; [plot_data()] retains the
+#'   `table`, contrast coefficients, settings and labels, and [as_ggplot()]
+#'   remains idempotent on the returned object.
+#' @details For `plot()`: Fixed targets use open diamonds without inferential intervals.
 #'   A conditionally fixed anchor can have a source-propagated interval; the
 #'   comparison displays its conditional fixed value separately. Method labels
 #'   distinguish source propagation from conditional observed information.
@@ -47,7 +48,9 @@
 #'   Units follow the fixed N(0,1) ability scale. Positive effects raise
 #'   expected coded scores relative to the jointly fitted main effects. These
 #'   pointwise intervals are not fixed-baseline bias screens or fairness labels.
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @export
 plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
                                       preset = "standard",
@@ -138,39 +141,7 @@ plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
     show_legend = show_legend, xlab = if (joint) "Interaction effect / contrast (fixed N(0,1) units)" else if (standardized) "Contrast (population SD units)" else if (isTRUE(x$settings$two_family))
       "Location / contrast (fixed N(0,1) scale)" else if (interaction) "Interaction contrast (native ability units)" else if (native)
       "Location / contrast (native ability units)" else "Estimate (logits)", preset = style$name))
-  if (!draw) return(invisible(out))
-  apply_plot_preset(style)
-  old <- graphics::par(mar = c(4.5, 10, if (show_legend) 3 else 1.5, 2))
-  on.exit(graphics::par(old), add = TRUE)
-  y <- rev(seq_len(nrow(tab)))
-  values <- c(reference, tab$Estimate, tab$Lower, tab$Upper,
-    if (show_model) c(tab$ModelLower, tab$ModelUpper))
-  limits <- if (any(is.finite(values))) range(values, finite = TRUE) else c(-1, 1)
-  if (diff(limits) == 0) limits <- limits + c(-0.1, 0.1)
-  plot(tab$Estimate, y, type = "n", xlim = limits,
-    ylim = c(0.5, nrow(tab) + 0.5), yaxt = "n", xlab = out$data$xlab,
-    ylab = "", main = "")
-  if (!is.null(reference)) abline(v = reference, col = style$grid, lty = 2)
-  offset <- if (show_model) .1 else 0
-  if (show_model) {
-    segments(tab$ModelLower, y - offset, tab$ModelUpper, y - offset,
-      col = "grey50", lwd = 2)
-    points(tab$Estimate, y - offset,
-      pch = ifelse((if (propagated) tab$ConditionalStatus else tab$Status) == "fixed", 5,
-        ifelse(is.finite(tab$ModelLower) & is.finite(tab$ModelUpper), 1, 4)), col = "grey50")
-  }
-  segments(tab$Lower, y + offset, tab$Upper, y + offset,
-    col = style$accent_primary, lwd = 2)
-  shape <- ifelse(tab$Status == "fixed", 5, ifelse(tab$Status == "available", 16, 4))
-  points(tab$Estimate, y + offset, pch = shape, col = style$accent_primary)
-  axis(2, at = y, labels = labels, las = 1)
-  if (show_legend) legend(x = mean(graphics::par("usr")[1:2]),
-    y = graphics::par("usr")[4] + .6 * graphics::strheight("M"),
-    xjust = .5, yjust = 0, horiz = TRUE, xpd = NA,
-    legend = c(selected_label, if (show_model) if (propagated) "Conditional on anchors" else "Observed information"),
-    pch = c(16, if (show_model) 1), col = c(style$accent_primary, if (show_model) "grey50"),
-    bty = "n", cex = .8)
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 # Convert the draw-free payload, so base and ggplot routes share all selections.

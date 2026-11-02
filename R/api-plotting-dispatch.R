@@ -102,30 +102,42 @@
     additional_allowed = additional_allowed)
 }
 
-#' Plot design-weighted information or conditional precision
+#' @rdname compute_information
+#' @details `plot()` method: Plot design-weighted information or conditional precision
 #'
 #' Plot a saved [compute_information()] result to see where the observed
 #' assessment design provides more or less precision across ability.
 #' @inheritParams plot_information
-#' @param ... Additional base-graphics arguments for the selected view.
-#' @inherit plot_information return
+#' @param draw If `TRUE`, print the plot. Otherwise return it without drawing.
+#' @param ... Additional arguments for the selected view.
 #' @inheritSection plot_information Plot types
 #' @inheritSection plot_information Which type should I use?
 #' @inheritSection plot_information Interpreting output
-#' @inheritSection plot_information Returned data when draw = FALSE
+#' @section Returned data when draw = FALSE:
+#' `draw = FALSE` returns the reusable `ggplot` without printing it.
+#' `plot_data(p)` exposes the underlying `plot`, `information_long`,
+#' `conditional_sem`, `summary` and `settings` payloads.
+#' The overall curve comes from `x$tif`; facet contributions come from
+#' `x$iif` filtered to the selected facet.
 #' @inheritSection plot_information Typical workflow
 #' @seealso [compute_information()], [mfrmr_plot_migration]
-#' @examples
+#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_information", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "MML", model = "RSM",
 #'                  quad_points = 7, maxit = 30)
 #' info <- compute_information(fit)
-#' tif_data <- plot(info, type = "tif", draw = FALSE)
-#' head(tif_data$data$plot)
-#' iif_data <- plot(info, type = "iif", facet = "Rater", draw = FALSE)
-#' head(iif_data$data$plot)
+#'   tif_data <- plot(info, type = "tif", draw = FALSE)
+#'   head(plot_data(tif_data, "plot"))
+#'   iif_data <- plot(info, type = "iif", facet = "Rater", draw = FALSE)
+#'   head(plot_data(iif_data, "plot"))
+#' }
 #' @export
+#' @return For \code{plot()}:
+#' Invisibly, a \code{ggplot} object carrying the underlying plot data
+#' (inspect via \code{plot_data()}).
 plot.mfrm_information <- function(x, type = c("tif", "iif", "se", "sem", "csem", "both"),
                                   facet = NULL, draw = TRUE, ...) {
   .mfrm_plot_call(plot_information, x, c(list(type = match.arg(type), facet = facet, draw = draw), list(...)))
@@ -133,12 +145,16 @@ plot.mfrm_information <- function(x, type = c("tif", "iif", "se", "sem", "csem",
 
 #' Plot differential facet functioning
 #'
-#' Compare saved group contrasts as ordered bars or a heatmap. Read the
+#' Compare saved group contrasts as ordered bars, a heatmap, or a paired
+#' two-group scatterplot with optional marginal histograms. Read the
 #' analysis method and scale before interpreting the size of a difference.
-#' @param x A result from [analyze_dff()] or [analyze_dif()].
-#' @param type `"summary"` for ordered effects or `"heatmap"` for the interaction grid.
-#' @param ... Named controls described below. Both views accept `draw = FALSE`
-#'   to return plot data without drawing. Controls for the other view are rejected.
+#' @param x A result from [analyze_dff()].
+#' @param type `"summary"` for ordered effects, `"heatmap"` for the interaction
+#'   grid, or `"scatter"` for a paired two-group scatterplot with marginal
+#'   histograms (`groups`, `metric`, `marginal = c("auto", "histogram", "none")`,
+#'   `ci_level`, `show_labels`).
+#' @param ... Named controls described below. All views accept `draw = FALSE`
+#'   to return the `ggplot` object without printing. Controls for other views are rejected.
 #' @section Summary controls:
 #' - `top_n = 30` limits displayed contrasts; `sort_by` is `"abs_effect"`
 #'   (default), `"effect"`, or `"classification"`.
@@ -185,17 +201,23 @@ plot.mfrm_information <- function(x, type = c("tif", "iif", "se", "sem", "csem",
 #' fixed-target flags and subgroup linking details. A finite point or an
 #' adequate linking screen does not establish formal DFF inference. See
 #' [mfrmr_linking_and_dff] for the different linking screens.
-#' @return An `mfrm_plot_data` object. The summary's `data$data` holds the
-#'   displayed contrasts; the heatmap's `data$matrix` holds the plotted matrix.
-#'   Both retain source rows in `data$pairs`, response matches (when available)
-#'   in `data$cases`, and source settings in `data$analysis_config`.
+#' @return Invisibly, a `ggplot` object carrying the underlying plot payload
+#'   accessible via [plot_data()]. The summary's `data` component holds the
+#'   displayed contrasts; the heatmap's `matrix` holds the plotted matrix;
+#'   the scatterplot's `table` holds paired group values (`X`, `Y`) and
+#'   `marginal_histograms` records bin counts when marginal histograms are shown.
+#'   Views retain source rows in `pairs`, response matches (when available)
+#'   in `cases`, and source settings in `analysis_config`.
 #'   When supplied to [analyze_dff()], the separate prospective interaction
-#'   review is retained in `data$comparison_review`. Its states do not classify
+#'   review is retained in `comparison_review`. Its states do not classify
 #'   the displayed residual/refit effects; inspect its own model and weights.
 #'   Retain the returned notes and
 #'   unavailable values when exporting; a plot does not qualify new inference.
 #' @seealso [analyze_dff()], [dif_interaction_table()], [mfrmr_plot_migration]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_dif", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -212,13 +234,23 @@ plot.mfrm_information <- function(x, type = c("tif", "iif", "se", "sem", "csem",
 #'                  "N_Group1", "N_Group2", "PlotStatus")]
 #' table(plot_data(p, "cases")$Reason)
 #' plot_data(p, "notes")
+#' p_scatter <- plot(dff, type = "scatter", draw = FALSE)
+#' head(plot_data(p_scatter, "data"))
+#' }
 #' @export
-plot.mfrm_dif <- function(x, type = c("summary", "heatmap"), ...) {
+plot.mfrm_dif <- function(x, type = c("summary", "heatmap", "scatter"), ...) {
   type <- match.arg(type)
-  .mfrm_plot_call(if (type == "summary") plot_dif_summary else plot_dif_heatmap, x, list(...))
+  target <- switch(
+    type,
+    summary = plot_dif_summary,
+    heatmap = plot_dif_heatmap,
+    scatter = plot_dif_scatter
+  )
+  .mfrm_plot_call(target, x, list(...))
 }
 
-#' Plot a differential-functioning interaction grid
+#' @rdname dif_interaction_table
+#' @details `plot()` method: Plot a differential-functioning interaction grid
 #'
 #' Display saved residual means by facet level and group. This is a descriptive
 #' screen for follow-up; residual differences do not isolate differential functioning.
@@ -229,16 +261,20 @@ plot.mfrm_dif <- function(x, type = c("summary", "heatmap"), ...) {
 #'   `"contrast"` requires a result from [analyze_dff()].
 #' @inheritSection plot.mfrm_dif Heatmap appearance
 #' @section Interpretation:
+#' For `plot()`:
+#'
 #' Positive `"obs_exp"` values mean observed scores exceed model expectations;
 #' negative values mean they fall below expectations. These values are in
 #' score units, not logits. The `"t"` metric is a scaled residual without a
 #' calibrated test or p-value. Color and optional threshold outlines are
 #' descriptive; an unavailable cell is not a zero residual.
-#' @return An `mfrm_plot_data` object with `data$matrix`, `data$pairs`, the
+#' @return For `plot()`: Invisibly, a `ggplot` object carrying `matrix`, `pairs`, the
 #'   selected metric and retained interpretation notes. Use
 #'   `plot_data(p, "matrix")` to extract the matrix from a saved plot `p`.
 #' @seealso [dif_interaction_table()], [plot.mfrm_dif()], [mfrmr_plot_migration]
-#' @examples
+#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_dif_interaction", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
@@ -247,29 +283,28 @@ plot.mfrm_dif <- function(x, type = c("summary", "heatmap"), ...) {
 #' int <- dif_interaction_table(fit, diag, facet = "Rater",
 #'                              group = "Group", data = ratings, min_obs = 2)
 #' heat <- plot(int, type = "heatmap", metric = "obs_exp", draw = FALSE)
-#' dim(heat$data$matrix)
+#' dim(plot_data(heat, "matrix"))
 #' # Obs-Exp is in score units, not logits. A scaled residual
 #' # (metric = "t") is descriptive, not a calibrated t-test.
+#' }
 #' @export
 plot.mfrm_dif_interaction <- function(x, type = "heatmap", ...) {
   if (!identical(type, "heatmap")) stop("Interaction results support type = 'heatmap'.", call. = FALSE)
   .mfrm_plot_call(plot_dif_heatmap, x, list(...))
 }
 
-#' Plot a saved anchor-drift review
+#' @rdname detect_anchor_drift
+#' @details `plot()` method: Plot a saved anchor-drift review
 #'
 #' Inspect relative changes after the common-element offset used by
 #' [detect_anchor_drift()]. Read `summary(x)` and link support alongside the plot.
-#' @param x A saved result from [detect_anchor_drift()].
 #' @param type `"drift"` for relative changes with screening flags,
 #'   `"heatmap"` for wave-by-element patterns, or `"forest"` for per-wave
 #'   estimates with approximate normal whiskers. A linking chain is a different
 #'   result: use `plot(chain, type = "chain")` after [build_equating_chain()].
-#' @param ... `facet` optionally selects facets; `ci_level = 0.95` controls
-#'   forest whiskers only; `preset` selects `"standard"`, `"publication"`,
-#'   `"compact"`, or `"monochrome"`; `draw = FALSE` returns data without drawing.
-#'   Additional base-graphics arguments depend on the selected view.
 #' @section Interpretation:
+#' For `plot()`:
+#'
 #' Drift and heatmap views show the saved relative drift. Flags use the
 #' screening rules chosen during analysis; changing the display does not
 #' recalibrate these rules. Subtracting the common-element offset can remove
@@ -279,12 +314,12 @@ plot.mfrm_dif_interaction <- function(x, type = "heatmap", ...) {
 #' their differences. They do not include linking-offset uncertainty or
 #' cross-wave covariance, and their overlap is not a test of change. Missing
 #' standard errors produce no whisker, not a zero-width interval.
-#' @return An `mfrm_plot_data` object, or `NULL` when no drift rows remain.
-#'   Drift/heatmap data use `data$table` (and `data$matrix` for a heatmap);
-#'   forest rows use `data$data`, including `CI_Lower` and `CI_Upper`.
+#' @return For `plot()`: Invisibly, a `ggplot` object carrying the underlying
+#'   plot payload accessible via [plot_data()].
+#'   Drift/heatmap views store `table` (and `matrix` for a heatmap);
+#'   forest rows store `data`, including `CI_Lower` and `CI_Upper`.
 #' @seealso [detect_anchor_drift()], [mfrmr_plot_migration]
-#' @examples
-#' # Long-running workflow; run explicitly when needed.
+#' @examples # Long-running workflow; run explicitly when needed.
 #' # example("plot.mfrm_anchor_drift", run.dontrun = TRUE)
 #' \dontrun{
 #' ratings <- load_mfrmr_data("example_core")
@@ -301,10 +336,10 @@ plot.mfrm_dif_interaction <- function(x, type = "heatmap", ...) {
 #' drift <- detect_anchor_drift(list(W1 = fit1, W2 = fit2))
 #' drift_plot <- plot(drift, type = "drift", draw = FALSE)
 #' class(drift_plot)
-#' names(drift_plot$data)
+#' names(plot_data(drift_plot))
 #' chain <- build_equating_chain(list(F1 = fit1, F2 = fit2))
 #' chain_plot <- plot(chain, type = "chain", draw = FALSE)
-#' head(chain_plot$data$table)
+#' head(plot_data(chain_plot)$data$table)
 #' if (interactive()) {
 #'   plot(drift, type = "heatmap", preset = "publication")
 #' }
@@ -314,17 +349,17 @@ plot.mfrm_anchor_drift <- function(x, type = c("drift", "heatmap", "forest"), ..
   .mfrm_plot_call(plot_anchor_drift, x, c(list(type = match.arg(type)), list(...)))
 }
 
-#' Plot a saved QC pipeline
+#' @rdname run_qc_pipeline
+#' @details `plot()` method: Plot a saved QC pipeline
 #'
 #' Display the checks already returned by [run_qc_pipeline()]. Use the colored
 #' verdicts for triage, then read the returned detail for the reason and next review.
 #' @inheritParams plot_qc_pipeline
-#' @param ... Additional base-graphics arguments for the selected view.
+#' @param ... Additional plotting arguments for the selected view.
 #' @inherit plot_qc_pipeline details return
 #' @inheritSection plot_qc_pipeline Interpretation
 #' @seealso [run_qc_pipeline()], [mfrmr_plot_migration]
-#' @examples
-#' # Long-running workflow; run explicitly when needed.
+#' @examples # Long-running workflow; run explicitly when needed.
 #' # example("plot.mfrm_qc_pipeline", run.dontrun = TRUE)
 #' \dontrun{
 #' ratings <- load_mfrmr_data("study1")
@@ -333,23 +368,40 @@ plot.mfrm_anchor_drift <- function(x, type = c("drift", "heatmap", "forest"), ..
 #' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 300)
 #' qc <- run_qc_pipeline(fit)
-#' verdicts <- plot(qc, draw = FALSE)
-#' head(verdicts)
+#' qc_plot <- plot(qc, draw = FALSE)
+#' head(plot_data(qc_plot, "verdicts"))
 #' }
 #' @export
+#' @details For \code{plot()}:
+#' Two plot types are provided for visual triage of QC results:
+#' \itemize{
+#' \item \strong{\code{"traffic_light"}} (default): A horizontal bar chart with one row
+#' per QC check.  Bars are coloured green (Pass), amber (Warn), or red
+#' (Fail).  Provides an at-a-glance summary of the current QC review state.
+#' \item \strong{\code{"detail"}}: A panel showing the saved \code{Detail} text beside each
+#' verdict. Read this explanation and the returned table to understand
+#' why a check was flagged or unavailable.
+#' }
+#' @return For \code{plot()}:
+#' Invisibly, a \code{ggplot} object carrying the QC verdicts in \code{plot_data(p, "verdicts")}.
 plot.mfrm_qc_pipeline <- function(x, type = c("traffic_light", "detail"), draw = TRUE, ...) {
   .mfrm_plot_call(plot_qc_pipeline, x, c(list(type = match.arg(type), draw = draw), list(...)))
 }
 
-#' Plot saved bias-interaction results
+#' @rdname estimate_bias
+#' @details `plot()` method: Plot saved bias-interaction results
 #'
 #' Inspect the pattern of conditional interaction estimates from [estimate_bias()].
 #' Start with ranked interactions, then use other views to understand the pattern.
 #' @param x A result from [estimate_bias()].
 #' @param type `"scatter"`, `"ranked"`, `"heatmap"`, `"abs_t_hist"`, or `"facet_profile"`.
-#' @param ... Named controls below. `draw = FALSE` returns the plot data
+#' @param ... For `plot()`: Named controls below. `draw = FALSE` returns the plot data
 #'   without drawing. Controls do not change the fitted calibration.
+#'
+#' For `summary()`: Reserved for generic compatibility.
 #' @section Controls:
+#' For `plot()`:
+#'
 #' - `facet_a`, `facet_b`, or `interaction_facets` identify the interaction;
 #'   `top_n = 40` and `sort_by = "abs_t"` (`"abs_bias"` or `"prob"` also
 #'   accepted) select ranked interactions.
@@ -369,15 +421,17 @@ plot.mfrm_qc_pipeline <- function(x, type = c("traffic_light", "detail"), draw =
 #' @inherit plot_bias_interaction details
 #' @inheritSection plot_bias_interaction Plot types
 #' @inheritSection plot_bias_interaction Interpreting output
-#' @return An `mfrm_plot_data` object with view-specific tables, retained
-#'   screening rules and interpretation notes. Plot agreement across views
+#' @return For `plot()`: Invisibly, a `ggplot` object carrying view-specific tables, retained
+#'   screening rules and interpretation notes accessible via [plot_data()]. Plot agreement across views
 #'   is not independent evidence of bias.
-#'   Use `print(p)` or `plot_data(p, "notes")` for the interaction definition,
+#'   Use `plot_data(p, "notes")` for the interaction definition,
 #'   score-direction caveat, magnitude-only facet-profile interpretation and
 #'   conditional uncertainty qualifications outside the figure.
 #' @seealso [estimate_bias()], [bias_interaction_report()], [mfrmr_plot_migration],
 #'   [mfrmr_visual_diagnostics]
-#' @examples
+#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_bias", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -387,7 +441,20 @@ plot.mfrm_qc_pipeline <- function(x, type = c("traffic_light", "detail"), draw =
 #'   facet_a = "Rater", facet_b = "Criterion")
 #' p <- plot(bias, type = "ranked", preset = "publication", draw = FALSE)
 #' head(plot_data(p, "ranked_table"))
+#' }
 #' @export
+#' @details For \code{plot()}:
+#' Visualization front-end for \code{\link[=bias_interaction_report]{bias_interaction_report()}} with multiple views.
+#' With \code{draw = FALSE}, \code{plot_data(p)} includes \code{plot_long},
+#' \code{plot_annotations}, \code{flag_summary}, and \code{plot_settings} in addition to the
+#' view-specific \code{ranked_table}, \code{scatter_data}, \code{facet_profile}, and heatmap
+#' components. Use these fields when rebuilding the same screening view in
+#' plotly, Quarto, or a dashboard.
+#' Saved report thresholds determine flags, reference lines and returned notes;
+#' recreate \code{\link[=bias_interaction_report]{bias_interaction_report()}} from the saved bias object to change
+#' them. Scatter views attach aligned marginal histograms when
+#' \code{marginal = "auto"} (with \eqn{n \ge 8}) or \code{"histogram"}. Conditional bounds and their status
+#' remain separate from calibration-inclusive uncertainty.
 plot.mfrm_bias <- function(x, type = c("scatter", "ranked", "heatmap", "abs_t_hist", "facet_profile"), ...) {
   args <- list(...)
   if (identical(type, "bias")) {
@@ -396,20 +463,21 @@ plot.mfrm_bias <- function(x, type = c("scatter", "ranked", "heatmap", "abs_t_hi
   .mfrm_plot_call(plot_bias_interaction, x, args)
 }
 
-#' Plot saved residual PCA
+#' @rdname analyze_residual_pca
+#' @details `plot()` method: Plot saved residual PCA
 #'
 #' Display a saved residual PCA or its saved parallel-analysis comparison.
 #' Plotting does not generate a new parallel reference.
 #' @param x A result from [analyze_residual_pca()].
 #' @param type `"scree"`, `"parallel_scree"`, `"parallel_excess"`, or `"loadings"`.
 #'   Existing `"overall_*"` and `"facet_*"` spellings remain supported.
-#' @param mode `"overall"` (default) or `"facet"`. Do not also supply `mode`
-#'   when using a prefixed `type` such as `"facet_scree"`.
 #' @param ... `facet` selects a facet for `mode = "facet"` (default: the first
 #'   available facet); `component = 1` selects a loading component; `top_n = 20`
 #'   limits displayed loadings. `preset` is `"standard"`, `"publication"`,
 #'   `"compact"`, or `"monochrome"`; `draw = FALSE` returns data without drawing.
 #' @section Interpretation:
+#' For `plot()`:
+#'
 #' - `"scree"` shows component eigenvalues. A dominant early component is
 #'   exploratory evidence of residual structure, not a standalone test of
 #'   unidimensionality.
@@ -426,7 +494,9 @@ plot.mfrm_bias <- function(x, type = c("scatter", "ranked", "heatmap", "abs_t_hi
 #' plots of a saved result reuse the same PCA and do not provide independent evidence.
 #' @inherit plot_residual_pca return
 #' @seealso [analyze_residual_pca()], [mfrmr_plot_migration]
-#' @examples
+#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_residual_pca", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings_all <- load_mfrmr_data("example_core")
 #' selected_people <- unique(ratings_all$Person)[1:24]
 #' ratings <- ratings_all[
@@ -436,18 +506,32 @@ plot.mfrm_bias <- function(x, type = c("scatter", "ranked", "heatmap", "abs_t_hi
 #' diag <- diagnose_mfrm(fit, residual_pca = "overall")
 #' pca <- analyze_residual_pca(diag, mode = "overall")
 #' plt <- plot(pca, type = "scree", draw = FALSE)
-#' head(plt$data)
+#' head(plot_data(plt, "data"))
 #' # Ten replicates illustrate the display, not a stable reference cutoff.
 #' pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE,
 #'                                parallel_reps = 10, seed = 2026)
 #' pa <- plot(pca_pa, type = "parallel_scree", draw = FALSE)
-#' head(pa$data)
+#' head(plot_data(pa, "data"))
 #' plt_load <- plot(pca, type = "loadings", component = 1, draw = FALSE)
-#' head(plt_load$data)
+#' head(plot_data(plt_load, "data"))
 #' if (interactive()) {
 #'   plot(pca, type = "scree", preset = "publication")
 #' }
+#' }
 #' @export
+#' @return For \code{plot()}:
+#' Invisibly, a \code{ggplot} object whose \code{plot_data(p)} payload contains:
+#' \itemize{
+#' \item \code{plot}: \code{"scree"}, \code{"parallel_scree"}, \code{"parallel_excess"}, or
+#' \code{"loadings"}
+#' \item \code{mode}: \code{"overall"} or \code{"facet"}
+#' \item \code{facet}: facet name (or \code{NULL})
+#' \item \code{title}: plot title text
+#' \item \code{data}: underlying table used for plotting
+#' \item \code{InferenceTier}, \code{SupportsFormalInference},
+#' \code{PrimaryReportingEligible}, \code{ReportingUse}, and \code{DecisionUse}:
+#' machine-readable exploratory-screening guards
+#' }
 plot.mfrm_residual_pca <- function(x, type = "scree", mode = "overall", ...) {
   type <- .mfrm_plot_selector(type, "type")
   args <- list(...)
@@ -463,7 +547,8 @@ plot.mfrm_residual_pca <- function(x, type = "scree", mode = "overall", ...) {
   .mfrm_plot_call(plot_residual_pca, x, c(list(plot_type = type, mode = mode), args))
 }
 
-#' Plot saved ordinary-model diagnostics
+#' @rdname diagnose_mfrm
+#' @details `plot()` method: Plot saved ordinary-model diagnostics
 #'
 #' Inspect an existing diagnostic result to locate cells or elements needing
 #' follow-up. The selected display retains unavailable results and screening limits.
@@ -477,10 +562,13 @@ plot.mfrm_residual_pca <- function(x, type = "scree", mode = "overall", ...) {
 #'   Marginal views accept `facet`; pairwise plots additionally accept
 #'   `metric = "exact"` or `"adjacent"`. Bubbles accept `fit_stat` (`"Infit"`
 #'   or `"Outfit"`), `bubble_size` (`"SE"`, `"N"`, or `"equal"`), `facets`,
-#'   `include_person = FALSE`, and the heuristic `fit_range = c(0.5, 1.5)`.
+#'   `include_person = FALSE`, `marginal = c("auto", "histogram", "none")`,
+#'   and the heuristic `fit_range = c(0.5, 1.5)`.
 #'   PCA accepts `mode`, `facet`, and `component`, as described in
 #'   [plot.mfrm_residual_pca()]. Controls for other views are rejected.
 #' @section Choosing a view:
+#' For `plot()`:
+#'
 #' Marginal fit and pairwise plots require strict marginal diagnostics from
 #' [diagnose_mfrm()] with `diagnostic_mode = "both"` or `"marginal_fit"` for
 #' supported MML RSM/PCM models. Positive residuals indicate more observed
@@ -495,7 +583,7 @@ plot.mfrm_residual_pca <- function(x, type = "scree", mode = "overall", ...) {
 #' The PCA convenience route can derive PCA from the diagnostic result.
 #' For repeated PCA displays, first save [analyze_residual_pca()] and use its
 #' `plot()` method. Parallel-reference generation remains an analysis step.
-#' @return An `mfrm_plot_data` object. Use [plot_data()] to inspect its tables
+#' @return For `plot()`: Invisibly, a `ggplot` object. Use [plot_data()] to inspect its tables
 #'   and notes. The plot does not add unavailable diagnostics or qualify intervals.
 #' @seealso [diagnose_mfrm()], [plot.mfrm_residual_pca()], [mfrmr_plot_migration]
 #' @export

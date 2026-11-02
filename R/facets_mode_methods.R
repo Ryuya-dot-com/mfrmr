@@ -39,6 +39,9 @@ round_numeric_frame <- function(df, digits = 3L) {
 #'   `summary()`
 #'
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("summary.mfrm_facets_run", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
 #' out <- run_mfrm_facets(
@@ -51,6 +54,7 @@ round_numeric_frame <- function(df, digits = 3L) {
 #' s <- summary(out)
 #' s$overview[, c("Model", "Method", "Converged")]
 #' s$mapping
+#' }
 #' @export
 summary.mfrm_facets_run <- function(object, digits = 3, top_n = 10, ...) {
   if (!inherits(object, "mfrm_facets_run")) {
@@ -116,42 +120,36 @@ print.summary.mfrm_facets_run <- function(x, ...) {
   invisible(x)
 }
 
-#' @export
-print.mfrm_facets_run <- function(x, ...) {
-  print(summary(x, ...), ...)
-  invisible(x)
-}
+#' @rawNamespace S3method(print,mfrm_facets_run,print.mfrm_results)
+NULL
 
-#' Plot outputs from a legacy-compatible workflow run
-#'
+#' @rdname run_mfrm_facets
+#' @details `plot()` method: Plot outputs from a legacy-compatible workflow run
 #' @param x A `mfrm_facets_run` object from [run_mfrm_facets()].
 #' @param y Unused.
 #' @param type Plot route: `"fit"` delegates to [plot.mfrm_fit()] and `"qc"`
 #'   delegates to [plot(x, type = "qc")][plot.mfrm_fit].
 #' @param ... Additional arguments passed to the selected plot function.
-#'
-#' @details
-#' This method is a router for fast visualization from a one-shot workflow
+#' @details For `plot()`: This method is a router for fast visualization from a one-shot workflow
 #' result:
 #' - `type = "fit"` for model-level displays.
 #' - `type = "qc"` for multi-panel quality-control diagnostics.
-#'
 #' @section Interpreting output:
+#' For `plot()`:
+#'
 #' Returns the plotting object produced by the delegated route:
 #' [plot.mfrm_fit()] for `"fit"` and [plot(x, type = "qc")][plot.mfrm_fit] for `"qc"`.
-#'
 #' @section Typical workflow:
+#' For `plot()`:
+#'
 #' 1. Run [run_mfrm_facets()].
 #' 2. Start with `plot(out, type = "fit", draw = FALSE)`.
 #' 3. Continue with `plot(out, type = "qc", draw = FALSE)` for diagnostics.
-#'
-#' @return A plotting object from the delegated plot route.
-#'
+#' @return For `plot()`: A `ggplot` object (or `mfrm_plot_bundle` of `ggplot`
+#'   objects when `type = "fit"` delegates to `type = "bundle"`).
 #' @seealso [run_mfrm_facets()], [plot.mfrm_fit()], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics], [mfrmr_workflow_methods]
-#'
-#' @examples
-#' # Long-running workflow; run explicitly when needed.
+#' @examples # Long-running workflow; run explicitly when needed.
 #' # example("plot.mfrm_facets_run", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -164,9 +162,9 @@ print.mfrm_facets_run <- function(x, ...) {
 #'   maxit = 30
 #' )
 #' p_fit <- plot(out, type = "fit", draw = FALSE)
-#' p_fit$wright_map$data$plot
+#' plot_data(p_fit$wright_map)$plot
 #' p_qc <- plot(out, type = "qc", draw = FALSE)
-#' p_qc$data$plot
+#' plot_data(p_qc)$plot
 #'
 #' }
 #' @export

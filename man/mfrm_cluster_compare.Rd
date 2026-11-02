@@ -13,8 +13,8 @@ mfrm_cluster_compare(analyses)
 \method{summary}{mfrm_cluster_comparison}(object, ...)
 }
 \arguments{
-\item{analyses}{A named list of at least two results from \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}
-and/or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} or \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}},
+\item{analyses}{A named list of at least two results from \code{\link[=mfrm_cluster]{mfrm_cluster()}}
+and/or \link[=mfrm_cluster_hierarchical]{hierarchical clustering details} or \link[=mfrm_cluster_kmeans]{k-means details},
 or a named list of results from \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}. Do not mix the two
 result types. Names must be unique and nonblank. All results must use the
 same entity IDs and included entities. Selected features may differ;
@@ -88,7 +88,7 @@ silent intersection of entities or imputations. No preferred setting,
 consensus partition, or hypothesis test is returned.
 
 For an executable rater-attribute example that pairs multiple imputations
-across settings, see \code{vignette("mfrmr-external-features", package = "mfrmr")}.
+across settings, see \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html}{online feature-analysis guide}.
 }
 \examples{
 if (requireNamespace("cluster", quietly = TRUE)) {
@@ -98,9 +98,9 @@ if (requireNamespace("cluster", quietly = TRUE)) {
     Specialty = rep(c("Language", "Science"), 4))
   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
   fits <- list(
-    TwoGroups = mfrm_cluster_pam(features, k = 2),
-    ThreeGroups = mfrm_cluster_pam(features, k = 3),
-    ExperienceWeighted = mfrm_cluster_pam(features, k = 2,
+    TwoGroups = mfrm_cluster(method = "pam", features, k = 2),
+    ThreeGroups = mfrm_cluster(method = "pam", features, k = 3),
+    ExperienceWeighted = mfrm_cluster(method = "pam", features, k = 2,
       weights = c(ExperienceYears = 3, Specialty = 1)))
   comparison <- mfrm_cluster_compare(fits)
   summary(comparison)
@@ -110,7 +110,7 @@ if (requireNamespace("cluster", quietly = TRUE)) {
   experience <- mfrm_features(raters, "Rater", "ExperienceYears")
   feature_comparison <- mfrm_cluster_compare(list(
     BothFeatures = fits$TwoGroups,
-    ExperienceOnly = mfrm_cluster_pam(experience, k = 2)))
+    ExperienceOnly = mfrm_cluster(method = "pam", experience, k = 2)))
   feature_comparison$analysis_summary
   feature_comparison$weights
 }
@@ -120,6 +120,6 @@ Hubert, L. and Arabie, P. (1985). Comparing partitions.
 Journal of Classification, 2, 193--218. \doi{10.1007/BF01908075}.
 }
 \seealso{
-\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}},
-\code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}
+\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}},
+\link[=mfrm_cluster_hierarchical]{hierarchical clustering details}
 }

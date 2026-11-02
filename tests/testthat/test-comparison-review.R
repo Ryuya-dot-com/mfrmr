@@ -150,6 +150,8 @@ test_that("complete null spaces and numerical limits cannot become positive clai
 })
 
 test_that("DFF tables, plots and reports retain a separately bound prospective review", {
+  # Extended local/CI regression; see CONTRIBUTING.md.
+  skip_on_cran()
   fit <- readRDS(test_path("fixtures", "ordinary-score-integration.rds"))$fits[["PCM-JML"]]
   d <- as.data.frame(fit$prep$data)
   d$School <- ifelse(as.integer(d$Person) %% 2, "A", "B")

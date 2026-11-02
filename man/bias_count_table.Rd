@@ -102,6 +102,9 @@ cells.}
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("bias_count_table", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -122,6 +125,7 @@ if (interactive()) {
     palette = c(count = "#2b8cbe", low = "#cb181d"),
     label_angle = 45
   )
+}
 }
 }
 \seealso{

@@ -25,7 +25,9 @@ test_that("ordinary saved inputs retain their data and replay matching diagnosti
     expect_identical(x$diagnostics$residual_pca_mode, "none")
     res <- mfrm_results(x$fit, diagnostics = x$diagnostics, compute = "never")
     expect_s3_class(res, "mfrm_results")
-    expect_equal(plot(res, type = "wright", draw = FALSE)$data,
+    p_res <- plot(res, type = "wright", draw = FALSE)
+    expect_s3_class(p_res, "ggplot")
+    expect_equal(plot_data(p_res),
       plot_data(res, type = "wright"))
     expect_identical(x, before)
   }
@@ -61,7 +63,28 @@ test_that("ordinary saved analyses agree with fresh estimation and diagnostics",
       diagnostics$fair_average$stacked, c("Facet", "Element"))
     diagnostics$displacement$table <- by_key(
       diagnostics$displacement$table, c("Facet", "Level"))
+    # Optimizer evaluation counts can differ across R/compiler builds even
+    # when the fitted parameters, likelihood and convergence decisions agree.
+    calls <- diagnostics$parameter_uncertainty$source$optimizer$FunctionEvaluations
+    if (!is.null(calls)) {
+      expect_true(is.numeric(calls) && all(is.finite(calls)) &&
+                    all(calls >= 1 & calls == floor(calls)))
+      diagnostics$parameter_uncertainty$source$optimizer$FunctionEvaluations <- NULL
+    }
     diagnostics
+  }
+  max_numeric_error <- function(actual, expected) {
+    if (is.numeric(actual) && is.numeric(expected)) {
+      if (length(actual) != length(expected)) return(Inf)
+      finite <- is.finite(actual) & is.finite(expected)
+      return(max(c(0, abs(actual[finite] - expected[finite]))))
+    }
+    if (is.list(actual) && is.list(expected)) {
+      if (length(actual) != length(expected)) return(Inf)
+      return(max(c(0, vapply(seq_along(actual), function(i)
+        max_numeric_error(actual[[i]], expected[[i]]), numeric(1)))))
+    }
+    0
   }
   for (name in names(fresh)) {
     saved <- readRDS(system.file("examples", paste0(name, ".rds"),
@@ -78,8 +101,15 @@ test_that("ordinary saved analyses agree with fresh estimation and diagnostics",
     expect_identical(actual$fit$summary$InferenceReady, saved$fit$summary$InferenceReady)
     expect_identical(actual$fit$summary$ConvergenceSeverity,
       saved$fit$summary$ConvergenceSeverity)
-    expect_equal(align_tables(actual$diagnostics), align_tables(saved$diagnostics),
-      tolerance = 1e-8)
+    actual_diagnostics <- align_tables(actual$diagnostics)
+    saved_diagnostics <- align_tables(saved$diagnostics)
+    # Bias/displacement can be almost zero; a relative-only comparison divides
+    # floating-point noise by that tiny value. Keep the intended 1e-8 absolute
+    # precision, check every numeric entry, and still compare all other fields.
+    comparison <- all.equal(actual_diagnostics, saved_diagnostics,
+      tolerance = 1e-8, scale = 1)
+    expect_true(isTRUE(comparison), info = paste(comparison, collapse = "\n"))
+    expect_lte(max_numeric_error(actual_diagnostics, saved_diagnostics), 1e-8)
   }
 })
 
@@ -158,9 +188,12 @@ test_that("packaged extended examples are coherent and replay without recomputat
   expect_equal(nrow(confint(x$random_rater$intervals, level = .90)), 4)
   for (result in list(testlet, random)) {
     p <- plot(result, type = "wright", draw = FALSE)
-    expect_equal(p$data, plot_data(result, type = "wright"))
+    expect_s3_class(p, "ggplot")
+    expect_equal(plot_data(p), plot_data(result, type = "wright"))
   }
-  expect_equal(plot(x$testlet$diagnostics, draw = FALSE)$data,
+  p_tdiag <- plot(x$testlet$diagnostics, draw = FALSE)
+  expect_s3_class(p_tdiag, "ggplot")
+  expect_equal(plot_data(p_tdiag),
     plot_data(x$testlet$diagnostics))
   expect_identical(serialize(x, NULL), before)
 

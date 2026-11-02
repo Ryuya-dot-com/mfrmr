@@ -315,8 +315,9 @@ test_that("build_equating_chain returns correct class and structure", {
   expect_equal(chain$links$ToID, 2L)
   expect_true(all(chain$element_detail$LinkID == 1L))
   graph <- plot(chain, type = "graph", draw = FALSE)
-  expect_equal(graph$data$data$elements$Retained, chain$element_detail$Retained)
-  expect_equal(graph$data$data$elements$Flag, chain$element_detail$Flag)
+  expect_s3_class(graph, "ggplot")
+  expect_equal(plot_data(graph, "data")$elements$Retained, chain$element_detail$Retained)
+  expect_equal(plot_data(graph, "data")$elements$Flag, chain$element_detail$Flag)
 
   # cumulative has one row per wave
   expect_true(is.data.frame(chain$cumulative))
@@ -543,28 +544,31 @@ chain_obj <- build_equating_chain(list(F1 = fit1, F2 = fit2))
 test_that("plot_anchor_drift drift type returns data with draw=FALSE", {
   result <- plot_anchor_drift(drift_obj, type = "drift", draw = FALSE)
 
-  expect_s3_class(result, "mfrm_plot_data")
-  expect_identical(result$data$plot, "drift")
-  expect_true(is.data.frame(result$data$table))
-  expect_true(nrow(result$data$table) > 0)
-  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(result$data)))
+  expect_s3_class(result, "ggplot")
+  expect_s3_class(attr(result, "mfrmr_plot_data"), "mfrm_plot_data")
+  expect_identical(plot_data(result, "plot"), "drift")
+  expect_true(is.data.frame(plot_data(result, "table")))
+  expect_true(nrow(plot_data(result, "table")) > 0)
+  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(plot_data(result))))
 })
 
 test_that("plot_anchor_drift heatmap type returns data with draw=FALSE", {
   result <- plot_anchor_drift(drift_obj, type = "heatmap", draw = FALSE)
 
-  expect_s3_class(result, "mfrm_plot_data")
-  expect_identical(result$data$plot, "heatmap")
-  expect_true(is.matrix(result$data$matrix))
+  expect_s3_class(result, "ggplot")
+  expect_s3_class(attr(result, "mfrmr_plot_data"), "mfrm_plot_data")
+  expect_identical(plot_data(result, "plot"), "heatmap")
+  expect_true(is.matrix(plot_data(result, "matrix")))
 })
 
 test_that("plot_anchor_drift chain type returns data with draw=FALSE", {
   result <- plot_anchor_drift(chain_obj, type = "chain", draw = FALSE)
 
-  expect_s3_class(result, "mfrm_plot_data")
-  expect_identical(result$data$plot, "chain")
-  expect_true(is.data.frame(result$data$table))
-  expect_true(all(c("Wave", "Cumulative_Offset") %in% names(result$data$table)))
+  expect_s3_class(result, "ggplot")
+  expect_s3_class(attr(result, "mfrmr_plot_data"), "mfrm_plot_data")
+  expect_identical(plot_data(result, "plot"), "chain")
+  expect_true(is.data.frame(plot_data(result, "table")))
+  expect_true(all(c("Wave", "Cumulative_Offset") %in% names(plot_data(result, "table"))))
 })
 
 test_that("plot_anchor_drift drift type draws without error", {
@@ -606,7 +610,9 @@ test_that("plot_anchor_drift facet filter works", {
   result <- plot_anchor_drift(drift_obj, type = "drift", facet = "Rater",
                               draw = FALSE)
 
-  if (inherits(result, "mfrm_plot_data") && nrow(result$data$table) > 0) {
-    expect_true(all(result$data$table$Facet == "Rater"))
+  expect_s3_class(result, "ggplot")
+  tbl <- plot_data(result, "table")
+  if (is.data.frame(tbl) && nrow(tbl) > 0) {
+    expect_true(all(tbl$Facet == "Rater"))
   }
 })

@@ -38,11 +38,10 @@ labels. Public design aliases are accepted.}
 \item{...}{Reserved for generic compatibility.}
 }
 \value{
-An \code{mfrm_plot_data} object with reusable metadata, a long-form
+Invisibly, a \code{ggplot} object carrying reusable metadata, a long-form
 \code{plot_long} table, and interpretation handoff tables (\code{overview},
 \code{reading_order}, \code{next_actions}, \code{reporting_notes}, and
-\code{figure_recipes}). When \code{draw = TRUE}, the object is returned invisibly
-after drawing.
+\code{figure_recipes}) accessible via \code{\link[=plot_data]{plot_data()}}.
 }
 \description{
 Builds an integrated visual summary from
@@ -52,6 +51,9 @@ optional report-index review rates so simulation results can be inspected in
 one operating-characteristic surface.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot.mfrm_diagnostic_screening", run.dontrun = TRUE)
+\dontrun{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
 saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
@@ -63,4 +65,5 @@ plot_data(diag_eval, type = "overview", component = "plot_long")
 plot_data(diag_eval, type = "overview", component = "next_actions")
 plot_data(diag_eval, type = "overview", component = "figure_recipes")
 plot(diag_eval, type = "report", metric = "rate", draw = FALSE)
+}
 }

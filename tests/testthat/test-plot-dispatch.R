@@ -10,6 +10,37 @@ plot_dispatch_fixture <- local({
   }
 })
 
+test_that("information plots select the requested series and preserve numerical payloads", {
+  fit <- readRDS(test_path("fixtures", "ordinary-score-integration.rds"))$fits[[1L]]
+  info <- compute_information(fit)
+  for (kind in c("tif", "se", "sem", "csem", "both", "iif")) {
+    p <- plot(info, type = kind, facet = "Rater", draw = FALSE)
+    expected <- if (kind == "tif") "Information" else if (kind == "both")
+      c("Information", "Conditional SEM") else if (kind == "iif")
+      unique(as.character(subset(info$iif, Facet == "Rater")$Level)) else "Conditional SEM"
+    expect_setequal(p$data$Series, expected)
+    reference <- if (kind == "iif") subset(info$iif, Facet == "Rater")$Information else
+      if (kind == "tif") info$tif$Information else if (kind == "both")
+        c(info$tif$Information, info$tif$SE) else info$tif$SE
+    expect_equal(p$data$Value, reference)
+    expect_equal(plot_data(p, "conditional_sem"), as.data.frame(info$conditional_sem))
+    built <- ggplot2::ggplot_build(p)
+    expect_equal(length(unique(built$data[[1L]]$PANEL)), if (kind == "both") 2L else 1L)
+    if (kind == "both") expect_equal(length(built$layout$panel_scales_y), 2L)
+    path <- tempfile(fileext = ".rds")
+    saveRDS(attr(p, "mfrmr_plot_data"), path)
+    restored <- as_ggplot(readRDS(path))
+    unlink(path)
+    expect_equal(restored$data, p$data)
+  }
+  # Fixed calibration: exposure totals scale, but a person's rating plan does not.
+  duplicated <- fit
+  duplicated$prep$data <- rbind(fit$prep$data, fit$prep$data)
+  doubled <- compute_information(duplicated)
+  expect_equal(doubled$tif$Information, 2 * info$tif$Information)
+  expect_equal(doubled$tif$SE, info$tif$SE / sqrt(2))
+})
+
 test_that("only data accessors retain the public plot_ prefix", {
   expect_setequal(grep("^plot_", getNamespaceExports("mfrmr"), value = TRUE),
     c("plot_data", "plot_data_components"))
@@ -61,7 +92,8 @@ test_that("Wright dispatch retains named levels without recalculation", {
   for (style in c("native", "facets_style")) {
     p <- plot(fit, top_n = 1, highlight = list(Rater = level),
       wright_style = style, draw = FALSE)
-    marked <- subset(p$data$locations, Highlighted)
+    expect_s3_class(p, "ggplot")
+    marked <- subset(plot_data(p, "locations"), Highlighted)
     expect_identical(as.character(marked$Label), level)
     expect_identical(as.character(marked$Group), "Rater")
     expect_match(paste(plot_data(p, "notes")$Text, collapse = " "), "not a statistical flag")
@@ -173,8 +205,8 @@ test_that("residual heatmaps retain their facet, correlation scale and unavailab
   expect_equal(g$data$Value, as.vector(mat))
   built <- ggplot2::ggplot_build(g)$data[[1]]
   expect_equal(nrow(built), 9L)
-  expect_true(all(built$fill[is.na(g$data$Value)] == "grey90"))
-  expect_false(any(built$fill[!is.na(g$data$Value) & g$data$Value == 0] == "grey90"))
+  expect_true(all(built$fill[is.na(g$data$Value)] == "#CBD5E1"))
+  expect_false(any(built$fill[!is.na(g$data$Value) & g$data$Value == 0] == "#CBD5E1"))
   expect_identical(plot_data(g, "matrix"), mat)
   expect_match(paste(plot_data(g, "notes")$Text, collapse = " "), "not zero")
   expect_null(g$labels$title)
@@ -206,13 +238,13 @@ agreement_plot_fixture <- function() {
 
 test_that("saved agreement plots use their own review thresholds", {
   a <- agreement_plot_fixture()
-  expect_equal(plot(a, draw = FALSE)$data$reference_lines$value, .8)
-  expect_equal(plot(a, type = "agreement", metric = "correlation", draw = FALSE)$data$reference_lines$value, .6)
+  expect_equal(plot_data(plot(a, draw = FALSE), "reference_lines")$value, .8)
+  expect_equal(plot_data(plot(a, type = "agreement", metric = "correlation", draw = FALSE), "reference_lines")$value, .6)
   expect_error(plot(a, exact_warn = .5, draw = FALSE), "saved thresholds")
   expect_error(plot(a, corr_warn = .3, draw = FALSE), "saved thresholds")
   expect_no_error(plot(a, exact_warn = .8, corr_warn = .6, draw = FALSE))
-  expect_equal(nrow(plot(a, top_n = 1, draw = FALSE)$data$table), 1L)
-  expect_equal(nrow(plot(a, type = "agreement", metric = "difference", top_n = 1, draw = FALSE)$data$table), 4L)
+  expect_equal(nrow(plot_data(plot(a, top_n = 1, draw = FALSE), "table")), 1L)
+  expect_equal(nrow(plot_data(plot(a, type = "agreement", metric = "difference", top_n = 1, draw = FALSE), "table")), 4L)
 })
 
 test_that("agreement ggplots preserve selected metrics, missing pairs and expected values", {
@@ -221,8 +253,9 @@ test_that("agreement ggplots preserve selected metrics, missing pairs and expect
   for (metric in c("exact", "correlation", "difference")) {
     p <- plot(a, type = "agreement", metric = metric, draw = FALSE,
       palette = c(ok = "navy", flag = "orange", expected = "purple"))
+    expect_s3_class(p, "ggplot")
     g <- as_ggplot(p); b <- ggplot2::ggplot_build(g)
-    tab <- p$data$table
+    tab <- plot_data(p, "table")
     if (metric == "difference") {
       expect_equal(b$data[[1]]$x, tab$MeanDiff)
       expect_equal(b$data[[1]]$y, tab$MAD)
@@ -243,7 +276,7 @@ test_that("agreement ggplots preserve selected metrics, missing pairs and expect
     ref <- b$data[[length(b$data)]]
     expect_equal(if (metric == "difference") ref$xintercept else ref$yintercept,
       if (metric == "difference") 0 else if (metric == "exact") .8 else .6)
-    expect_identical(plot_data(g), p$data)
+    expect_identical(plot_data(g), plot_data(p))
     expect_null(g$labels$title)
     expect_null(g$labels$caption)
     expect_silent(ggplot2::ggplotGrob(g))
@@ -265,19 +298,21 @@ test_that("agreement heatmaps retain facet labels, metric scales and monochrome"
   for (preset in c("standard", "monochrome")) for (metric in c("exact", "correlation")) {
     p <- plot(fit, type = "agreement", view = "heatmap", rater_facet = "Judge",
       metric = metric, preset = preset, draw = FALSE)
+    expect_s3_class(p, "ggplot")
     g <- as_ggplot(p); b <- ggplot2::ggplot_build(g)
     expect_identical(g$labels$x, "Judge")
     expect_identical(g$labels$y, "Judge")
     expect_equal(g$scales$get_scales("fill")$limits, if (metric == "exact") c(0, 1) else c(-1, 1))
-    expect_true(all(is.na(diag(p$data$matrix))))
-    values <- as.numeric(p$data$matrix)
+    expect_true(all(is.na(diag(plot_data(p, "matrix")))))
+    values <- as.numeric(plot_data(p, "matrix"))
     expect_identical(g$data$Value, values)
-    expect_true(all(b$data[[1]]$fill[is.na(values)] == "grey90"))
+    expected_missing <- if (preset == "monochrome") "gray82" else "#CBD5E1"
+    expect_true(all(b$data[[1]]$fill[is.na(values)] == expected_missing))
     expect_true(all(b$data[[2]]$label[is.na(values)] == ""))
-    expect_identical(plot_data(g), p$data)
+    expect_identical(plot_data(g), plot_data(p))
     expect_silent(ggplot2::ggplotGrob(g))
     if (preset == "monochrome") {
-      rgb <- grDevices::col2rgb(p$data$colors)
+      rgb <- grDevices::col2rgb(plot_data(p, "colors"))
       expect_equal(rgb[1, ], rgb[2, ])
       expect_equal(rgb[2, ], rgb[3, ])
     }

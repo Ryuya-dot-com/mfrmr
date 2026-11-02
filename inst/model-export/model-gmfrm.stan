@@ -39,12 +39,12 @@ parameters {
 transformed parameters {
   vector[L] locations = location_basis * location_free;
   matrix[G, C - 1] steps = step_free * step_basis';
-  vector[N] eta = theta[person] + X * location_free;
   vector[A] log_component_slopes = slope_basis * log_slope_free;
   vector[A] component_slopes = exp(log_component_slopes);
-  vector[N] effective_slopes = exp(slope_X * log_slope_free);
 }
 model {
+  vector[N] eta = theta[person] + X * location_free;
+  vector[N] effective_slopes = exp(slope_X * log_slope_free);
   theta ~ std_normal();
   log_slope_free ~ normal(0, log_slope_sd);
   location_free ~ normal(0, location_sd);
@@ -55,9 +55,14 @@ model {
 generated quantities {
   vector[N] log_lik;
   array[N] int y_rep;
-  for (n in 1:N) {
-    vector[C] logits = effective_slopes[n] * mfrmr_logits(eta[n], steps[owner[n]]);
-    log_lik[n] = categorical_logit_lpmf(y[n] | logits);
-    y_rep[n] = categorical_logit_rng(logits);
+  // Row-level work vectors need not be written for every retained draw.
+  {
+    vector[N] eta = theta[person] + X * location_free;
+    vector[N] effective_slopes = exp(slope_X * log_slope_free);
+    for (n in 1:N) {
+      vector[C] logits = effective_slopes[n] * mfrmr_logits(eta[n], steps[owner[n]]);
+      log_lik[n] = categorical_logit_lpmf(y[n] | logits);
+      y_rep[n] = categorical_logit_rng(logits);
+    }
   }
 }

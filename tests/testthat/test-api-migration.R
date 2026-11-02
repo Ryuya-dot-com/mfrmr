@@ -13,13 +13,13 @@ test_that("PAM entry names preserve partitions and saved-result methods", {
   expect_identical(plot_data(readRDS(path)), plot_data(new))
 })
 
-test_that("imputation-review names preserve selected events and reject ambiguous inputs", {
+test_that("imputation review preserves event IDs with positional and named arguments", {
   d <- data.frame(Event = c("001", "1", "3", "4"), Person = c("A", "A", "B", "B"),
     Rater = c("X", "Y", "X", "Y"), Score = c(0, NA, 1, 2))
   a <- b <- d
   a$Score[2] <- 1; b$Score[2] <- 2
   provenance <- list(method = "supplied test completions")
-  old <- mfrm_response_imputations(d, list(a, b), "Person", "Rater", "Score",
+  old <- review_mfrm_imputations(d, list(a, b), "Person", "Rater", "Score",
     "Event", "1", 0:2, imputation_model = provenance)
   new <- review_mfrm_imputations(d, list(a, b), "Person", "Rater", "Score",
     "Event", impute_ids = "1", categories = 0:2, imputation_model = provenance)
@@ -121,7 +121,14 @@ test_that("category summaries distinguish chosen policy, recoding and missing le
 
 test_that("the migration table exposes canonical functions and category meaning", {
   aliases <- compatibility_alias_table()
-  expect_identical(aliases$PreferredName[match(c("mfrm_cluster", "mfrm_response_imputations"), aliases$Alias)],
-    c("mfrm_cluster_pam", "review_mfrm_imputations"))
+  expect_identical(aliases$PreferredName[match(c("mfrm_cluster_pam", "mfrm_response_imputations"), aliases$Alias)],
+    c("mfrm_cluster", "review_mfrm_imputations"))
+  expect_identical(aliases$Lifecycle[match(c("mfrm_cluster_pam", "mfrm_response_imputations"), aliases$Alias)],
+    rep("removed_export", 2))
   expect_identical(aliases$PreferredName[aliases$Alias == "keep_original"], "category_policy")
+  removed_rows <- aliases[aliases$Lifecycle == "removed_export", , drop = FALSE]
+  expect_true(all(grepl("0\\.3\\.0", removed_rows$RemovalPlan)))
+  expect_false(any(grepl("0\\.2\\.5|migration_025", aliases$RemovalPlan)))
+  expect_gt(length(utils::help("mfrmr_api_migration_030", package = "mfrmr")), 0L)
+  expect_gt(length(utils::help("mfrmr_api_migration_025", package = "mfrmr")), 0L)
 })

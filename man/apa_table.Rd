@@ -2,6 +2,8 @@
 % Please edit documentation in R/api-reports.R
 \name{apa_table}
 \alias{apa_table}
+\alias{summary.apa_table}
+\alias{plot.apa_table}
 \title{Build an APA-oriented table handoff using base R structures}
 \usage{
 apa_table(
@@ -16,22 +18,39 @@ apa_table(
   whexact = FALSE,
   branch = c("apa", "facets")
 )
+
+\method{summary}{apa_table}(object, digits = 3, top_n = 8, ...)
+
+\method{plot}{apa_table}(
+  x,
+  y = NULL,
+  type = c("numeric_profile", "first_numeric"),
+  main = NULL,
+  palette = NULL,
+  label_angle = 45,
+  draw = TRUE,
+  ...
+)
 }
 \arguments{
-\item{x}{A data.frame, \code{mfrm_fit}, \code{summary()} output supported by
+\item{x}{For \code{apa_table()}: A data.frame, \code{mfrm_fit}, \code{summary()} output supported by
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, an \code{mfrm_summary_table_bundle}, diagnostics
 list, bias-result list, saved RSM/PCM fixed-facet intervals, or saved
 GPCM slope/curve/bootstrap inference. Ordinary Person-score results also
-support \code{which = "decisions"} when cut scores were requested.}
+support \code{which = "decisions"} when cut scores were requested.
+
+For \code{plot()}: Output from \code{\link[=apa_table]{apa_table()}}.}
 
 \item{which}{Optional table selector when \code{x} has multiple tables.}
 
 \item{diagnostics}{Optional diagnostics from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} (used when
 \code{x} is \code{mfrm_fit} and \code{which} targets diagnostics tables).}
 
-\item{digits}{Uniform number of rounding digits for numeric columns,
+\item{digits}{For \code{apa_table()}: Uniform number of rounding digits for numeric columns,
 except saved decision probabilities, boundaries and priors, which are
-retained at full precision in \code{table}.}
+retained at full precision in \code{table}.
+
+For \code{summary()}: Number of digits used for numeric summaries.}
 
 \item{caption}{Optional caption text.}
 
@@ -47,6 +66,25 @@ metadata for fit-based tables.}
 
 \item{branch}{Output branch:
 \code{"apa"} for manuscript-oriented labels, \code{"facets"} for FACETS-aligned labels.}
+
+\item{object}{Output from \code{\link[=apa_table]{apa_table()}}.}
+
+\item{top_n}{Maximum numeric columns shown in \code{numeric_profile}.}
+
+\item{...}{Reserved for generic compatibility.}
+
+\item{y}{Reserved for generic compatibility.}
+
+\item{type}{Plot type: \code{"numeric_profile"} (column means) or
+\code{"first_numeric"} (distribution of the first numeric column).}
+
+\item{main}{Optional title override.}
+
+\item{palette}{Optional named color overrides.}
+
+\item{label_angle}{Axis-label rotation angle for bar-type plots.}
+
+\item{draw}{If \code{TRUE}, draw using base graphics.}
 }
 \value{
 A list of class \code{apa_table} with fields:
@@ -58,6 +96,11 @@ A list of class \code{apa_table} with fields:
 \item \code{digits}
 \item \code{branch}, \code{style}
 }
+
+For \code{summary()}: An object of class \code{summary.apa_table}.
+
+For \code{plot()}: Invisibly, a \code{ggplot} object carrying its saved plot
+payload accessible via \code{\link[=plot_data]{plot_data()}}.
 }
 \description{
 Build an APA-oriented table handoff using base R structures
@@ -93,6 +136,16 @@ and \code{"clusters"}/\code{"contrasts"} when present. Saved profile intervals a
 expose \code{"profile"}, \code{"profile_endpoints"}, \code{"profile_checks"} and \code{"wald"}.
 Target and method columns are preserved.
 }
+
+\code{summary()} method: Summarize an APA/FACETS table object
+
+For \code{summary()}: Compact summary helper for QA of table data before manuscript export.
+
+\code{plot()} method: Plot an APA/FACETS table object using base R
+
+For \code{plot()}: Quick visualization helper for numeric columns in \code{\link[=apa_table]{apa_table()}} output.
+It is intended for table QA and exploratory checks, not final publication
+graphics.
 }
 \section{Interpreting output}{
 
@@ -106,6 +159,21 @@ establish CEFR alignment or a decision rule.
 \item \code{which}: source component that produced the table.
 \item \code{caption}/\code{note}: manuscript-oriented metadata stored with the table.
 }
+
+
+For \code{summary()}:
+\itemize{
+\item \code{overview}: table size/composition and missingness.
+\item \code{numeric_profile}: quick distribution summary of numeric columns.
+\item \code{caption}/\code{note}: text metadata readiness.
+}
+
+
+For \code{plot()}:
+\itemize{
+\item \code{"numeric_profile"}: compares column means to spot scale/centering mismatches.
+\item \code{"first_numeric"}: checks distribution shape of the first numeric column.
+}
 }
 
 \section{Typical workflow}{
@@ -114,6 +182,22 @@ establish CEFR alignment or a decision rule.
 \item Build table object with \code{apa_table(...)}.
 \item Inspect quickly with \code{summary(tbl)}.
 \item Render base preview via \code{plot(tbl, ...)} or export \code{tbl$table}.
+}
+
+
+For \code{summary()}:
+\enumerate{
+\item Build table with \code{\link[=apa_table]{apa_table()}}.
+\item Run \code{summary(tbl)} and inspect \code{overview}.
+\item Use \code{\link[=plot.apa_table]{plot.apa_table()}} for quick numeric checks if needed.
+}
+
+
+For \code{plot()}:
+\enumerate{
+\item Build table with \code{\link[=apa_table]{apa_table()}}.
+\item Run \code{summary(tbl)} for metadata.
+\item Use \code{plot(tbl, type = "numeric_profile")} for quick numeric QC.
 }
 }
 
@@ -134,8 +218,42 @@ tbl # Prints the table, caption, and note
 # Extract the ordinary data frame for further formatting or export
 tbl$table
 # This table summarizes facets; use as.data.frame(fit) for individual estimates
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("summary.apa_table", run.dontrun = TRUE)
+\dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+tbl <- apa_table(fit, which = "summary")
+summary(tbl)
+}
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot.apa_table", run.dontrun = TRUE)
+\dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+tbl <- apa_table(fit, which = "summary")
+p <- plot(tbl, draw = FALSE)
+p2 <- plot(tbl, type = "first_numeric", draw = FALSE)
+if (interactive()) {
+  plot(
+    tbl,
+    type = "numeric_profile",
+    main = "APA Numeric Profile (Customized)",
+    palette = c(numeric_profile = "#2b8cbe", grid = "#d9d9d9"),
+    label_angle = 45
+  )
+}
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
 \code{\link[=reporting_checklist]{reporting_checklist()}}, \link{mfrmr_reporting_and_apa}, \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}
+
+\code{\link[=apa_table]{apa_table()}}, \code{\link[=plot]{plot()}}
+
+\code{\link[=apa_table]{apa_table()}}, \code{\link[base:summary]{base::summary()}}
 }

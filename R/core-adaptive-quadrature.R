@@ -39,6 +39,54 @@ mfrmr_adaptive_quadrature_basis <- function(idx, config, params, quad, base_eta,
   }
   persons <- sort(unique(idx$person))
   groups <- split(seq_along(idx$person), factor(idx$person, levels = persons))
+  if (length(persons) > 0L && mfrm_use_cpp11_backend(config)) {
+    group_starts <- c(0L, cumsum(lengths(groups)))
+    group_rows <- as.integer(unlist(groups, use.names = FALSE))
+    model_code <- mfrm_model_code(config$model)
+    step_cum_rsm <- if (model_code == 0L) c(0, cumsum(params$steps)) else numeric(0)
+    step_cum_mat <- if (model_code == 0L) matrix(0, 0L, 0L) else mfrm_step_cum_matrix(params$steps_mat)
+    step_idx <- if (model_code == 0L) integer(0) else as.integer(idx$step_idx)
+    slopes <- if (model_code == 2L) as.double(params$slopes) else numeric(0)
+    slope_idx <- if (model_code == 2L) as.integer(idx$slope_idx) else integer(0)
+    init_nodes <- as.matrix(basis$nodes)
+    if (!is.double(init_nodes)) storage.mode(init_nodes) <- "double"
+    init_log_weights <- as.matrix(basis$log_weights)
+    if (!is.double(init_log_weights)) storage.mode(init_log_weights) <- "double"
+
+    res <- mfrm_cpp_adaptive_quad_basis(
+      model_code = model_code,
+      k_cat = as.integer(config$n_cat),
+      persons = as.integer(persons),
+      group_starts = as.integer(group_starts),
+      group_rows = group_rows,
+      score_k = as.integer(idx$score_k),
+      weights = as.double(weights),
+      base_eta = as.double(base_eta),
+      step_cum_rsm = as.double(step_cum_rsm),
+      step_cum_mat = step_cum_mat,
+      step_idx = step_idx,
+      slopes = slopes,
+      slope_idx = slope_idx,
+      mu = as.double(mu),
+      sigma = as.double(sigma),
+      quad_nodes = as.double(quad$nodes),
+      log_quad_weights = log(as.double(quad$weights)),
+      log_dnorm_quad_nodes = stats::dnorm(as.double(quad$nodes), log = TRUE),
+      init_nodes = init_nodes,
+      init_log_weights = init_log_weights
+    )
+    if (res$error_code != 0L) {
+      if (res$error_code == 3L) {
+        stop(res$error_message, call. = FALSE)
+      }
+      stop(new_adaptive_quadrature_numeric_error(res$error_message))
+    }
+    dimnames(res$nodes) <- dimnames(basis$nodes)
+    dimnames(res$log_weights) <- dimnames(basis$log_weights)
+    basis$nodes <- res$nodes
+    basis$log_weights <- res$log_weights
+    return(basis)
+  }
   for (i in seq_along(groups)) {
     person <- persons[i]
     rows <- groups[[i]]
@@ -272,6 +320,42 @@ mfrmr_adaptive_quadrature_overview <- function(review) {
   out
 }
 
+pack_pattern_csc_designs <- function(mat_list) {
+  n_pat <- length(mat_list)
+  pat_col_starts <- integer(n_pat + 1L)
+  active_cols_list <- vector("list", n_pat)
+  col_counts_list <- vector("list", n_pat)
+  row_i_list <- vector("list", n_pat)
+  val_x_list <- vector("list", n_pat)
+  total_active <- 0L
+  for (pat in seq_len(n_pat)) {
+    m <- mat_list[[pat]]
+    if (!inherits(m, "dgCMatrix")) {
+      m <- methods::as(methods::as(methods::as(m, "dMatrix"), "generalMatrix"), "CsparseMatrix")
+    }
+    counts <- diff(m@p)
+    nz_cols <- which(counts > 0L)
+    active_cols_list[[pat]] <- nz_cols - 1L
+    col_counts_list[[pat]] <- counts[nz_cols]
+    row_i_list[[pat]] <- m@i
+    val_x_list[[pat]] <- m@x
+    total_active <- total_active + length(nz_cols)
+    pat_col_starts[pat + 1L] <- total_active
+  }
+  active_col <- if (total_active > 0L) as.integer(unlist(active_cols_list, use.names = FALSE)) else integer(0)
+  col_counts <- if (total_active > 0L) as.integer(unlist(col_counts_list, use.names = FALSE)) else integer(0)
+  col_val_starts <- c(0L, cumsum(col_counts))
+  row_i <- if (total_active > 0L) as.integer(unlist(row_i_list, use.names = FALSE)) else integer(0)
+  val_x <- if (total_active > 0L) as.double(unlist(val_x_list, use.names = FALSE)) else numeric(0)
+  list(
+    pat_col_starts = as.integer(pat_col_starts),
+    active_col = active_col,
+    col_val_starts = as.integer(col_val_starts),
+    row_i = row_i,
+    val_x = val_x
+  )
+}
+
 # The gradient differentiates the finite adaptive sum, including mode, scale
 # and Jacobian, in the optimizer's actual free coordinates.
 mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points,
@@ -317,6 +401,35 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points,
                                  , drop = FALSE],
          log_slope = log_slope_design[rows, , drop = FALSE])
   })
+  cum_packed <- pack_pattern_csc_designs(lapply(designs, `[[`, "cumulative"))
+  has_log_slopes <- length(slices[["log_slopes"]]) > 0L
+  ls_packed <- if (has_log_slopes) {
+    pack_pattern_csc_designs(lapply(designs, `[[`, "log_slope"))
+  } else {
+    list(
+      pat_col_starts = integer(length(groups) + 1L),
+      active_col = integer(0),
+      col_val_starts = 0L,
+      row_i = integer(0),
+      val_x = numeric(0)
+    )
+  }
+  pat_row_starts <- as.integer(c(0L, cumsum(lengths(groups))))
+  pat_obs_idx <- if (length(groups) > 0L) as.integer(unlist(groups, use.names = FALSE)) else integer(0)
+  log_rule_weights <- log(as.double(rule$weights))
+  log_dnorm_rule_nodes <- stats::dnorm(as.double(rule$nodes), log = TRUE)
+  beta_cols0 <- if (length(slices[["beta"]])) as.integer(slices[["beta"]] - 1L) else integer(0)
+  log_sigma2_col0 <- if (length(slices[["log_sigma2"]])) as.integer(slices[["log_sigma2"]][1L] - 1L) else -1L
+  summary_pat_map <- if (include_person_summaries) {
+    mp <- integer(length(patterns$person_ids))
+    for (i in seq_along(groups)) {
+      mp[patterns$group_positions[[i]]] <- i
+    }
+    mp
+  } else {
+    integer(0)
+  }
+
   function(par) {
     if (length(par) != p || any(!is.finite(par))) {
       stop("Adaptive MML requires a finite free-parameter vector of the expected length.", call. = FALSE)
@@ -329,6 +442,80 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points,
     )
     mu <- if (isTRUE(basis$transformed)) basis$mu else rep(0, config$n_person)
     sigma <- if (isTRUE(basis$transformed)) basis$sigma else 1
+
+    if (mfrm_use_cpp11_backend(config)) {
+      model_code <- mfrm_model_code(config$model)
+      step_cum_rsm <- if (model_code == 0L) c(0, cumsum(params$steps)) else numeric(0)
+      step_cum_mat <- if (model_code == 0L) matrix(0, 0L, 0L) else mfrm_step_cum_matrix(params$steps_mat)
+      step_idx_cpp <- if (model_code == 0L) integer(0) else as.integer(idx$step_idx)
+      slopes_cpp <- if (model_code == 2L) as.double(params$slopes) else numeric(0)
+      slope_idx_cpp <- if (model_code == 2L) as.integer(idx$slope_idx) else integer(0)
+      pat_pop_design <- if (length(beta_cols0) > 0L) {
+        pm <- as.matrix(population$design_matrix[population$person_lookup[person_ids], , drop = FALSE])
+        if (!is.double(pm)) storage.mode(pm) <- "double"
+        pm
+      } else {
+        matrix(0, 0L, 0L)
+      }
+
+      res <- mfrm_cpp_adaptive_mml_eval(
+        model_code = model_code,
+        k_cat = as.integer(config$n_cat),
+        p_dim = as.integer(p),
+        pat_person_ids = as.integer(person_ids),
+        pat_multiplicity = as.double(multiplicity),
+        pat_row_starts = pat_row_starts,
+        pat_obs_idx = pat_obs_idx,
+        score_k = as.integer(idx$score_k),
+        weights = as.double(weights),
+        base_eta = as.double(base),
+        step_cum_rsm = as.double(step_cum_rsm),
+        step_cum_mat = step_cum_mat,
+        step_idx = step_idx_cpp,
+        slopes = slopes_cpp,
+        slope_idx = slope_idx_cpp,
+        mu = as.double(mu),
+        sigma = as.double(sigma),
+        rule_nodes = as.double(rule$nodes),
+        log_rule_weights = log_rule_weights,
+        log_dnorm_rule_nodes = log_dnorm_rule_nodes,
+        cum_pat_col_starts = cum_packed$pat_col_starts,
+        cum_active_col = cum_packed$active_col,
+        cum_col_val_starts = cum_packed$col_val_starts,
+        cum_row_i = cum_packed$row_i,
+        cum_val_x = cum_packed$val_x,
+        has_log_slopes = has_log_slopes,
+        ls_pat_col_starts = ls_packed$pat_col_starts,
+        ls_active_col = ls_packed$active_col,
+        ls_col_val_starts = ls_packed$col_val_starts,
+        ls_row_i = ls_packed$row_i,
+        ls_val_x = ls_packed$val_x,
+        beta_cols0 = beta_cols0,
+        pat_pop_design = pat_pop_design,
+        log_sigma2_col0 = log_sigma2_col0,
+        include_person_summaries = isTRUE(include_person_summaries)
+      )
+      if (res$error_code != 0L) {
+        if (res$error_code == 3L) {
+          stop(res$error_message, call. = FALSE)
+        }
+        stop(new_adaptive_quadrature_numeric_error(res$error_message))
+      }
+      if (!is.finite(res$value) || any(!is.finite(res$gradient))) {
+        stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive MML objective or gradient."))
+      }
+      out <- list(value = res$value, gradient = res$gradient)
+      if (include_person_summaries) {
+        person_summaries <- res$pat_summaries[summary_pat_map, , drop = FALSE]
+        colnames(person_summaries) <- c("LogMarginal", "EAP", "PosteriorSD")
+        if (any(!is.finite(person_summaries))) {
+          stop(new_adaptive_quadrature_numeric_error("Non-finite posterior moments."))
+        }
+        out$per_person <- data.frame(PersonIndex = patterns$person_ids, person_summaries)
+      }
+      return(out)
+    }
+
     value <- 0
     gradient <- numeric(p)
     if (include_person_summaries) {

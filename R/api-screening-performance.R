@@ -72,6 +72,7 @@
 #' summary(performance)
 #' plot(performance)
 #' @export
+#' @order 1
 mfrm_screening_performance <- function(roster, results, rule, level = .95) {
   ids <- c("Condition", "Replicate", "Target")
   validate <- function(data, outcome, name) {
@@ -167,8 +168,10 @@ mfrm_screening_rate <- function(flag, level = .95) {
 }
 
 #' @rdname mfrm_screening_performance
-#' @param x,object An object returned by `mfrm_screening_performance()`.
-#' @param ... Unused by print and summary methods.
+#' @param object An object returned by `mfrm_screening_performance()`.
+#' @param ... For `summary.mfrm_screening_performance()`: Unused by print and summary methods.
+#'
+#' For `plot()`: Unused.
 #' @export
 summary.mfrm_screening_performance <- function(object, ...) {
   list(by_target = object$by_target, by_family = object$by_family, settings = object$settings)
@@ -184,18 +187,19 @@ print.mfrm_screening_performance <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot screening performance and unresolved outcomes
-#'
+#' @rdname mfrm_screening_performance
+#' @details `plot()` method: Plot screening performance and unresolved outcomes
 #' @param x Output from [mfrm_screening_performance()].
+#'
+#' Also for `summary()`: An object returned by `mfrm_screening_performance()`.
 #' @param scope `"family"` (default) shows any-flag events once per replication;
 #'   `"target"` shows each individual target separately.
 #' @param metric `"false_flags"` (default) or `"detection"`.
 #' @param condition Optional condition labels to include, matched exactly.
-#' @param draw Logical; `FALSE` returns exact plot data without opening a device.
-#' @param ... Unused.
-#' @return Invisibly, an `mfrm_plot_data` object. Use [plot_data()] for custom
-#'   graphics; automatic [as_ggplot()] conversion is unavailable.
-#' @details Blue points and whiskers show conditional rates and their exact
+#' @param draw Logical; `FALSE` returns the `ggplot` object without opening a device.
+#' @return For `plot()`: Invisibly, a `ggplot` object. Use [plot_data()] to inspect
+#'   underlying tables and notes.
+#' @details For `plot()`: Blue points and whiskers show conditional rates and their exact
 #'   binomial Monte Carlo intervals. Gray segments bound the realized all-trial
 #'   proportion by assigning unresolved outcomes negative or positive; these
 #'   are not confidence intervals. A row with no known outcomes has no point
@@ -224,18 +228,5 @@ plot.mfrm_screening_performance <- function(x, scope = c("family", "target"),
     title = title, scope = scope, metric = metric, settings = x$settings,
     subtitle = sprintf("Conditional rates and %.0f%% Monte Carlo intervals", 100 * x$settings$level),
     caption = "Gray segments: bounds from unresolved outcomes (not confidence intervals)"))
-  if (!draw) return(invisible(out))
-  old <- graphics::par(mar = c(7, 12, 5, 5))
-  on.exit(graphics::par(old), add = TRUE)
-  y <- rev(seq_len(nrow(tab)))
-  graphics::plot(NA_real_, NA_real_, xlim = c(0, 1), ylim = c(.5, nrow(tab) + .5),
-    xlab = "Proportion", ylab = "", yaxt = "n", main = "")
-  graphics::segments(tab$AllTrialsLower, y, tab$AllTrialsUpper, y, col = "grey75", lwd = 6)
-  graphics::segments(tab$MCLower, y, tab$MCUpper, y, col = "#2274A5", lwd = 2)
-  graphics::points(tab$Rate, y, pch = 16, col = "#2274A5")
-  axis_labels <- vapply(labels, function(label) paste(strwrap(label, width = 32), collapse = "\n"), character(1))
-  graphics::axis(2, at = y, labels = axis_labels, las = 1, cex.axis = .8)
-  graphics::axis(4, at = y, labels = paste0(tab$Available, "/", tab$Planned), las = 1, tick = FALSE, cex.axis = .8)
-  graphics::text(1.08, nrow(tab) + .8, "Known /\nplanned", xpd = NA, cex = .7)
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }

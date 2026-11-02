@@ -196,20 +196,38 @@ predict.mfrm_fit <- function(object, newdata = NULL, type = c("response", "prob"
 }
 
 #' @rdname mfrm_fit_responses
-#' @export
-fitted.mfrm_cml_fit <- fitted.mfrm_fit
+#' @name fitted.mfrm_cml_fit
+#' @aliases fitted.mfrm_cml_fit
+#' @usage \method{fitted}{mfrm_cml_fit}(object, type = c("response", "prob"), ...)
+#' @rawNamespace S3method(fitted,mfrm_cml_fit,fitted.mfrm_fit)
+NULL
 #' @rdname mfrm_fit_responses
-#' @export
-fitted.mfrm_comparison_fit <- fitted.mfrm_fit
+#' @name fitted.mfrm_comparison_fit
+#' @aliases fitted.mfrm_comparison_fit
+#' @usage \method{fitted}{mfrm_comparison_fit}(object, type = c("response", "prob"), ...)
+#' @rawNamespace S3method(fitted,mfrm_comparison_fit,fitted.mfrm_fit)
+NULL
 #' @rdname mfrm_fit_responses
-#' @export
-residuals.mfrm_cml_fit <- residuals.mfrm_fit
+#' @name residuals.mfrm_cml_fit
+#' @aliases residuals.mfrm_cml_fit
+#' @usage \method{residuals}{mfrm_cml_fit}(object, type = c("response", "pearson"), ...)
+#' @rawNamespace S3method(residuals,mfrm_cml_fit,residuals.mfrm_fit)
+NULL
 #' @rdname mfrm_fit_responses
-#' @export
-residuals.mfrm_comparison_fit <- residuals.mfrm_fit
+#' @name residuals.mfrm_comparison_fit
+#' @aliases residuals.mfrm_comparison_fit
+#' @usage \method{residuals}{mfrm_comparison_fit}(object, type = c("response", "pearson"), ...)
+#' @rawNamespace S3method(residuals,mfrm_comparison_fit,residuals.mfrm_fit)
+NULL
 #' @rdname mfrm_fit_responses
-#' @export
-predict.mfrm_cml_fit <- predict.mfrm_fit
+#' @name predict.mfrm_cml_fit
+#' @aliases predict.mfrm_cml_fit
+#' @usage \method{predict}{mfrm_cml_fit}(object, newdata = NULL, type = c("response", "prob"), ...)
+#' @rawNamespace S3method(predict,mfrm_cml_fit,predict.mfrm_fit)
+NULL
 #' @rdname mfrm_fit_responses
-#' @export
-predict.mfrm_comparison_fit <- predict.mfrm_fit
+#' @name predict.mfrm_comparison_fit
+#' @aliases predict.mfrm_comparison_fit
+#' @usage \method{predict}{mfrm_comparison_fit}(object, newdata = NULL, type = c("response", "prob"), ...)
+#' @rawNamespace S3method(predict,mfrm_comparison_fit,predict.mfrm_fit)
+NULL

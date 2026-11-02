@@ -25,11 +25,11 @@
 #'   affected groups is returned in the notes, outside the figure.
 #' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`,
 #'   or `"monochrome"`).
-#' @param draw If `TRUE`, draw with base graphics.
+#' @param draw If `TRUE`, print the plot. Otherwise return it without drawing.
 #'
-#' @return An `mfrm_plot_data` object with a `data` slot containing
-#'   columns `Group`, `Step`, `Threshold`, `Disordered` for each ladder
-#'   row.
+#' @return A `ggplot` object. Use `plot_data(p, "data")` to access the
+#'   `Group`, `Step`, `StepOwner`, `StepIndex`, `Threshold`, and `Disordered`
+#'   columns for each ladder row.
 #'
 #' @section Interpreting output:
 #' Each ladder shows centered step offsets for one step-owner level, including
@@ -39,20 +39,26 @@
 #' Missing steps remain unavailable and are not bridged by connecting lines.
 #' No intervals or full ability-axis crossings are calculated. Save the result
 #' of `plot()` to retain its model context and interpretation notes.
-#' Automatic ggplot conversion of this ladder is unavailable; use base graphics
-#' or [plot_data()] for custom graphics. The saved [rating_scale_table()]
-#' threshold view has its own ggplot conversion.
+#' Use [plot_data()] for custom graphics or [as_ggplot()] to redraw a saved
+#' plot payload. The saved [rating_scale_table()] threshold view is also
+#' available as a separate plot route.
 #'
 #' @seealso [category_structure_report()], [category_curves_report()],
 #'   [plot.mfrm_fit()] (`type = "ccc"`).
 #'
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot_threshold_ladder", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 7, maxit = 30)
 #' p <- plot(fit, type = "thresholds", draw = FALSE)
-#' head(p$data$data)
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' head(plot_data(p, "data"))
+#' }
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
@@ -89,51 +95,6 @@ plot_threshold_ladder <- function(fit,
     "Centered step offsets (logit)"
   }
 
-  if (isTRUE(draw)) {
-    apply_plot_preset(style)
-    old_mar <- graphics::par("mar")
-    on.exit(graphics::par(mar = old_mar), add = TRUE)
-    graphics::par(mar = c(max(old_mar[1], 5), old_mar[2], 1.5, old_mar[4]))
-    groups <- unique(rows$Group)
-    n_grp <- length(groups)
-    x_pos <- seq_along(groups)
-    y_lim <- if (any(is.finite(rows$Threshold))) range(rows$Threshold, finite = TRUE) else c(-1, 1)
-    y_lim <- y_lim + c(-0.15, 0.15) * max(diff(y_lim), 1)
-    plot(
-      x = numeric(0), y = numeric(0),
-      xlim = c(0.5, n_grp + 0.5), ylim = y_lim,
-      xaxt = "n", xlab = context$StepOwner, ylab = "Step offset (logit)",
-      main = ""
-    )
-    axis(1, at = x_pos, labels = groups, las = 2, cex.axis = 0.85)
-    abline(h = 0, lty = 2, col = style$neutral)
-    for (i in seq_along(groups)) {
-      sub <- rows[rows$Group == groups[i], , drop = FALSE]
-      sub <- sub[order(seq_len(nrow(sub))), , drop = FALSE]
-      tau_vec <- sub$Threshold
-      x <- x_pos[i]
-      if (length(tau_vec) >= 2L) {
-        for (k in seq_len(length(tau_vec) - 1L)) {
-          if (!all(is.finite(tau_vec[c(k, k + 1L)]))) next
-          if (!isTRUE(sub$StepIndex[k + 1L] - sub$StepIndex[k] == 1L)) next
-          col_seg <- if (isTRUE(highlight_disorder) && isTRUE(sub$Disordered[k + 1L])) {
-            style$fail
-          } else {
-            style$accent_primary
-          }
-          segments(x, tau_vec[k], x, tau_vec[k + 1L],
-                             col = col_seg, lwd = 2)
-        }
-      }
-      points(rep(x, length(tau_vec)), tau_vec,
-                       pch = 19, col = style$accent_primary)
-      text(x + 0.15, tau_vec, labels = sub$Step,
-                     cex = 0.7, adj = 0)
-      if (any(!is.finite(tau_vec))) text(x, mean(y_lim),
-        paste(sub$Step[!is.finite(tau_vec)], "unavailable", collapse = "; "), cex = 0.65)
-    }
-  }
-
   out <- new_mfrm_plot_data(
     "threshold_ladder",
     list(
@@ -143,6 +104,7 @@ plot_threshold_ladder <- function(fit,
       notes = c(category_owner_notes(context),
         "Ladders show one set per step owner, independently of slope ownership. Only consecutive available steps are connected; disorder is not an automatic category-merging rule."),
       n_disorder_groups = n_disorder_groups,
+      highlight_disorder = isTRUE(highlight_disorder),
       title = plot_title,
       subtitle = plot_subtitle,
       legend = new_plot_legend(
@@ -157,7 +119,7 @@ plot_threshold_ladder <- function(fit,
       preset = style$name
     )
   )
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 
@@ -184,9 +146,9 @@ plot_threshold_ladder <- function(fit,
 #'   [compute_person_fit_indices()] (`lz_star` when available, otherwise
 #'   `lz` with a caveat).
 #' @param preset Visual preset, including `"monochrome"`.
-#' @param draw If `TRUE`, draw with base graphics.
+#' @param draw If `TRUE`, print the `ggplot` object.
 #'
-#' @return An `mfrm_plot_data` object whose reusable plot data include
+#' @return Invisibly, a `ggplot` object. Its [plot_data()] components include
 #'   `data` with one row per person, `plot_long` for custom R graphics,
 #'   `person_fit_indices` from [compute_person_fit_indices()], and compact
 #'   flag/status summaries.
@@ -202,6 +164,9 @@ plot_threshold_ladder <- function(fit,
 #'   [build_misfit_casebook()].
 #'
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot_person_fit", run.dontrun = TRUE)
+#' \dontrun{
 #' library(mfrmr)
 #'
 #' # Saved synthetic MML/RSM analysis of example_operational.
@@ -216,7 +181,10 @@ plot_threshold_ladder <- function(fit,
 #' plot(fit, type = "person_fit", diagnostics = diagnostics)
 #' # Values above 1 indicate more response variation than expected, below 1 less
 #' # The reference bands flag patterns for review, not automatic exclusion
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' }
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
@@ -227,9 +195,11 @@ plot_person_fit <- function(fit,
                             upper = 1.5,
                             top_n_label = 12L,
                             preset = c("standard", "publication", "compact", "monochrome"),
+                            marginal = c("auto", "histogram", "none"),
                             draw = TRUE,
                             fit_index = c("meansquare", "loglik")) {
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
+  marginal <- .mfrmr_resolve_marginal_arg(marginal)
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -345,79 +315,6 @@ plot_person_fit <- function(fit,
   z_5pct <- stats::qnorm(0.975)
   z_1pct <- stats::qnorm(0.995)
 
-  if (isTRUE(draw)) {
-    apply_plot_preset(style)
-    old_mar <- graphics::par("mar")
-    on.exit(graphics::par(mar = old_mar), add = TRUE)
-    graphics::par(mar = c(max(old_mar[1], 5), old_mar[2], 1.5, old_mar[4]))
-    if (identical(fit_index, "meansquare") && !any(plot_available)) {
-      plot.new()
-      text(.5, .5, "No complete Infit/Outfit pairs are available")
-    } else if (identical(fit_index, "meansquare")) {
-      cex_size <- 0.6 + 1.6 * sqrt(m$N / max(m$N, na.rm = TRUE))
-      x_rng <- range(c(m$Infit, lower, upper), finite = TRUE)
-      y_rng <- range(c(m$Outfit, lower, upper), finite = TRUE)
-      x_pad <- if (diff(x_rng) > 0) c(-0.05, 0.05) * diff(x_rng) else c(-0.1, 0.1)
-      y_pad <- if (diff(y_rng) > 0) c(-0.05, 0.05) * diff(y_rng) else c(-0.1, 0.1)
-      plot(
-        x = m$Infit, y = m$Outfit,
-        xlab = "Infit MnSq", ylab = "Outfit MnSq",
-        main = "",
-        pch = 21, bg = m$Color, col = "white",
-        cex = cex_size,
-        xlim = x_rng + x_pad, ylim = y_rng + y_pad
-      )
-      abline(h = 1, v = 1, lty = 3, col = style$neutral)
-      abline(h = c(lower, upper), v = c(lower, upper),
-                       lty = 2, col = style$grid)
-      n_lbl <- min(top_n_label, nrow(m))
-      if (n_lbl > 0L) {
-        text(
-          x = m$Infit[seq_len(n_lbl)],
-          y = m$Outfit[seq_len(n_lbl)],
-          labels = as.character(m$Level[seq_len(n_lbl)]),
-          cex = 0.7, pos = 4, offset = 0.5
-        )
-      }
-    } else {
-      ranked <- m[is.finite(m$ReportValue), , drop = FALSE]
-      ranked <- ranked[order(ranked$ReportValue), , drop = FALSE]
-      if (nrow(ranked) == 0L) {
-        plot.new()
-        text(.5, .5, "No finite lz/lz* report index available")
-      } else {
-        y <- seq_len(nrow(ranked))
-        x_rng <- range(c(ranked$ReportValue, -z_1pct, -z_5pct, z_5pct, z_1pct),
-                       finite = TRUE)
-        x_pad <- if (diff(x_rng) > 0) c(-0.08, 0.08) * diff(x_rng) else c(-0.5, 0.5)
-        plot(
-          x = ranked$ReportValue, y = y,
-          xlab = "Person-fit report index",
-          ylab = "Persons ordered by report index",
-          yaxt = "n",
-          main = "",
-          pch = 21, bg = ranked$ReviewColor, col = "white",
-          cex = 0.85 + 1.2 * sqrt(ranked$N / max(ranked$N, na.rm = TRUE)),
-          xlim = x_rng + x_pad
-        )
-        abline(v = 0, lty = 3, col = style$neutral)
-        abline(v = c(-z_5pct, z_5pct), lty = 2, col = style$grid)
-        abline(v = c(-z_1pct, z_1pct), lty = 3, col = style$grid)
-        label_order <- order(abs(ranked$ReportValue), decreasing = TRUE)
-        n_lbl <- min(top_n_label, length(label_order))
-        if (n_lbl > 0L) {
-          idx <- label_order[seq_len(n_lbl)]
-          text(
-            x = ranked$ReportValue[idx],
-            y = y[idx],
-            labels = as.character(ranked$Level[idx]),
-            cex = 0.7, pos = 4, offset = 0.5
-          )
-        }
-      }
-    }
-  }
-
   payload <- data.frame(
     Person = as.character(m$Level),
     Infit = m$Infit,
@@ -527,10 +424,12 @@ plot_person_fit <- function(fit,
                   unname(review_color[c("not_flagged", "review_5pct", "review_1pct")]))
       ),
       reference_lines = reference_lines,
+      top_n_label = top_n_label,
+      marginal = marginal,
       preset = style$name
     )
   )
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 
@@ -555,9 +454,9 @@ plot_person_fit <- function(fit,
 #'   gray `+/-0.5` and `+/-1.0` logit guides and describes them in the
 #'   returned annotations. These distances are not equivalence bounds.
 #' @param preset Visual preset.
-#' @param draw If `TRUE`, draw with base graphics.
+#' @param draw If `TRUE`, print the `ggplot` object.
 #'
-#' @return An `mfrm_plot_data` object. Its `data$data` table contains
+#' @return Invisibly, a `ggplot` object. Its `plot_data(p, "data")` table contains
 #'   columns `Level`, `Estimate`, `SE`, `CI_Lower`, `CI_Upper`, and `Band`,
 #'   where `Band` contains numerical absolute-location ranges, not judgments
 #'   about severity or quality. The ranges remain in the table when hidden.
@@ -565,7 +464,7 @@ plot_person_fit <- function(fit,
 #'   `PrecisionTier`, `CIUse`, `CIEligible`, `SupportsFormalInference` and
 #'   the normal interval method/level. Source precision labels are retained;
 #'   missing precision metadata cannot qualify an interval for inference.
-#'   The enclosing `data` list retains the facet, confidence level and plot
+#'   The full `plot_data(p)` list retains the facet, confidence level and plot
 #'   annotations and diagnostics identity check (`source_status`); keep these
 #'   with the table when reporting the results. Fit readiness and interpretation
 #'   notes are returned. Titles and notes are not automatically drawn.
@@ -574,7 +473,7 @@ plot_person_fit <- function(fit,
 #' Zero is the sum-to-zero reference for the default centered facet; describe
 #' any different constraints or anchors used in the fit. With the default
 #' negative facet orientation, higher estimates reduce expected coded scores.
-#' This means stricter scoring when higher scores represent better performance;
+#' This means more severe scoring when higher scores represent better performance;
 #' check the rubric direction before using that substantive interpretation.
 #' The axis names the selected facet's location rather than assuming that
 #' lower coded scores are less favorable. Returned notes state its fitted sign.
@@ -611,6 +510,9 @@ plot_person_fit <- function(fit,
 #' @concept rater severity
 #'
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot_rater_severity_profile", run.dontrun = TRUE)
+#' \dontrun{
 #' library(mfrmr)
 #'
 #' # Saved synthetic MML/RSM analysis of example_operational.
@@ -623,10 +525,13 @@ plot_person_fit <- function(fit,
 #'
 #' # Compare signed severity estimates and their intervals
 #' severity <- plot(fit, type = "rater_severity", diagnostics = diagnostics, show_bands = FALSE)
-#' severity$data$data[, c("Level", "Estimate", "SE", "CI_Lower", "CI_Upper")]
-#' # Higher estimates mean stricter ratings with this example's default orientation
+#' plot_data(severity, "data")[, c("Level", "Estimate", "SE", "CI_Lower", "CI_Upper")]
+#' # Higher estimates mean more severe ratings with this example's default orientation
 #' # The optional magnitude bands are omitted from this first comparison
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' }
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
@@ -718,52 +623,6 @@ plot_rater_severity_profile <- function(fit,
     if (isTRUE(show_bands)) "; shaded guides at +/-0.5 and +/-1.0 logits" else ""
   )
 
-  if (isTRUE(draw)) {
-    apply_plot_preset(style)
-    old_mar <- graphics::par("mar")
-    on.exit(graphics::par(mar = old_mar), add = TRUE)
-    label_width <- max(graphics::strwidth(as.character(m$Level), units = "inches", cex = 0.85))
-    label_margin <- label_width / (graphics::par("csi") * graphics::par("mex")) + 1.2
-    if (label_width + graphics::par("mai")[4] + 1.25 >= graphics::par("fin")[1]) {
-      stop("Facet labels need more horizontal space; use a wider graphics device or inspect the table with `draw = FALSE`.", call. = FALSE)
-    }
-    graphics::par(mar = c(max(old_mar[1], 5),
-                          max(old_mar[2], label_margin), old_mar[3:4]))
-    y <- seq_len(nrow(m))
-    xrange <- geometry$xrange
-    plot(
-      x = m$Estimate, y = y,
-      type = "n",
-      xlim = xrange,
-      yaxt = "n",
-      xlab = axis_label,
-      ylab = "",
-      main = ""
-    )
-    if (isTRUE(show_bands)) {
-      usr <- graphics::par("usr")
-      rect(-0.5, usr[3], 0.5, usr[4], border = NA,
-                     col = grDevices::adjustcolor(band_colors[1L], alpha.f = 0.10))
-      rect(-1.0, usr[3], -0.5, usr[4], border = NA,
-                     col = grDevices::adjustcolor(band_colors[2L], alpha.f = 0.08))
-      rect(0.5, usr[3], 1.0, usr[4], border = NA,
-                     col = grDevices::adjustcolor(band_colors[3L], alpha.f = 0.08))
-    }
-    abline(v = 0, lty = 2, col = style$neutral)
-    valid <- geometry$interval
-    if (any(valid)) {
-      segments(m$CI_Lower[valid], y[valid],
-                         m$CI_Upper[valid], y[valid],
-                         col = style$accent_primary, lwd = 2)
-    }
-    points(m$Estimate[geometry$shown], y[geometry$shown],
-      pch = geometry$shape[geometry$shown], col = style$accent_primary)
-    if (any(!geometry$shown)) text(mean(xrange), y[!geometry$shown],
-      "Unavailable", col = style$neutral, cex = 0.85)
-    axis(2, at = y, labels = as.character(m$Level), las = 1,
-                   cex.axis = 0.85)
-  }
-
   out <- new_mfrm_plot_data(
     "rater_severity_profile",
     list(
@@ -800,7 +659,7 @@ plot_rater_severity_profile <- function(fit,
     )
   )
   out <- .mfrm_attach_plot_readiness(out, readiness)
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 .mfrm_severity_geometry <- function(table) {
@@ -817,17 +676,17 @@ plot_rater_severity_profile <- function(fit,
 
 #' Summary plot of differential functioning effect sizes
 #'
-#' Compact effect-size summary for a [analyze_dff()] / [analyze_dif()]
+#' Compact effect-size summary for a [analyze_dff()]
 #' result. Shows each contrast's signed effect size as a horizontal bar
 #' with a vertical reference at zero and a neutral colour. Residual comparisons
 #' do not provide differential-functioning tests or classifications.
 #'
-#' @param x Output from [analyze_dff()] or [analyze_dif()].
+#' @param x Output from [analyze_dff()].
 #' @param top_n Maximum rows shown (default `30`).
 #' @param sort_by `"abs_effect"` (default), `"effect"`, or
 #'   `"classification"`.
 #' @param preset Visual preset.
-#' @param draw If `TRUE`, draw with base graphics.
+#' @param draw If `TRUE`, print the `ggplot` object.
 #' @param ci_level Optional confidence level for approximate normal
 #'   intervals drawn from `Effect +/- z * SE` when finite standard errors are
 #'   available for linked refits. Residual comparisons require `NULL` (default)
@@ -838,7 +697,7 @@ plot_rater_severity_profile <- function(fit,
 #' @param effect_axis_label Optional x-axis label override. When `NULL`, the
 #'   label is chosen from the DFF method.
 #'
-#' @return An `mfrm_plot_data` object whose `data` slot contains
+#' @return Invisibly, a `ggplot` object. The `plot_data(p, "data")` table contains
 #'   columns `Pair`, `Effect`, `SE`, `Classification`, `Color`.
 #'
 #' @section Interpreting output:
@@ -850,13 +709,15 @@ plot_rater_severity_profile <- function(fit,
 #' Residual differences do not isolate differential functioning. Linked refit
 #' intervals omit estimated-anchor uncertainty and cross-refit covariance.
 #'
-#' @seealso [analyze_dff()], [analyze_dif()], [plot(x, type = "heatmap")][plot.mfrm_dif].
+#' @seealso [analyze_dff()], [plot(x, type = "heatmap")][plot.mfrm_dif].
 #'
 #' @concept confidence intervals
 #' @concept visual diagnostics
 #' @concept DFF DIF
 #'
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
@@ -871,7 +732,7 @@ plot_dif_summary <- function(x,
                              effect_axis_label = NULL) {
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(x, c("mfrm_dff", "mfrm_dif"))) {
-    stop("`x` must be output from analyze_dff() or analyze_dif().",
+    stop("`x` must be output from analyze_dff().",
          call. = FALSE)
   }
   validate_dff_residual_output(x)
@@ -964,47 +825,6 @@ plot_dif_summary <- function(x,
     plot_subtitle <- paste(plot_subtitle, "Residual differences do not isolate differential functioning.", sep = ". ")
   }
 
-  if (isTRUE(draw)) {
-    apply_plot_preset(style)
-    old_mar <- graphics::par("mar")
-    on.exit(graphics::par(mar = old_mar), add = TRUE)
-    label_width <- max(graphics::strwidth(tbl$Pair, units = "inches", cex = 0.7))
-    label_margin <- label_width / (graphics::par("csi") * graphics::par("mex")) + 1.2
-    if (label_width + graphics::par("mai")[4] + 1.25 >= graphics::par("fin")[1]) {
-      stop("Comparison labels need more horizontal space; use a wider graphics device or inspect the table with `draw = FALSE`.", call. = FALSE)
-    }
-    graphics::par(mar = c(max(old_mar[1], 5),
-                          max(old_mar[2], label_margin), 1.5, old_mar[4]))
-    y <- rev(seq_len(nrow(tbl)))
-    x_values <- c(tbl$Effect, tbl$CI_Lower, tbl$CI_Upper, 0,
-                  effect_thresholds, -effect_thresholds)
-    x_range <- range(x_values, finite = TRUE)
-    if (!all(is.finite(x_range)) || diff(x_range) == 0) {
-      x_range <- x_range[1] + c(-1, 1)
-    }
-    xlim <- x_range + c(-0.05, 0.05) * diff(x_range)
-    plot(
-      x = tbl$Effect, y = y, type = "n",
-      xlim = xlim, yaxt = "n",
-      xlab = axis_label, ylab = "",
-      main = ""
-    )
-    abline(v = 0, lty = 2, col = style$neutral)
-    if (length(effect_thresholds) > 0L) {
-      for (thr in effect_thresholds) {
-        abline(v = c(-thr, thr), lty = 3, col = style$warn)
-      }
-    }
-    if (!is.null(ci_level) && any(is.finite(tbl$CI_Lower) & is.finite(tbl$CI_Upper))) {
-      segments(tbl$CI_Lower, y, tbl$CI_Upper, y,
-                         col = style$neutral, lwd = 1)
-    }
-    segments(0, y, tbl$Effect, y,
-                       col = tbl$Color, lwd = 5)
-    points(tbl$Effect, y, pch = 19, col = tbl$Color)
-    axis(2, at = y, labels = tbl$Pair, las = 1, cex.axis = 0.7)
-  }
-
   payload <- data.frame(
     Pair = as.character(tbl$Pair),
     Effect = tbl$Effect,
@@ -1084,7 +904,7 @@ plot_dif_summary <- function(x,
     data.frame(Type = guide$Item, Text = paste(guide$Meaning, guide$ReportingNote)))
   if (!is.null(x$comparison_review)) out$data$notes <- rbind(out$data$notes,
     data.frame(Type = "Comparison review", Text = "A separate prospective interaction review is retained in comparison_review; its states do not classify the displayed residual/refit effects."))
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 
@@ -1104,14 +924,13 @@ plot_dif_summary <- function(x,
 #'   `"Rater"`).
 #' @param ci_level Confidence level for the rater severity panel.
 #' @param preset Visual preset.
-#' @param draw If `TRUE`, draw the composite immediately with
-#'   `graphics::layout()`.
+#' @param draw If `TRUE`, print the composite `ggplot` object.
 #'
-#' @return Invisibly, an `mfrm_plot_data` object whose `data` slot
+#' @return Invisibly, a `ggplot` object. `plot_data(p, "data")`
 #'   bundles the four panel data objects under `wright`, `severity`,
 #'   `threshold`, and `summary`. Fit readiness is retained in
-#'   `data$fit_readiness`, `data$interpretation_status`, and
-#'   `data$interpretation_note`.
+#'   `plot_data(p, "fit_readiness")`, `plot_data(p, "interpretation_status")`, and
+#'   `plot_data(p, "interpretation_note")`.
 #'
 #' @section Interpreting output:
 #' Designed as a single-figure Methods or Results draft. The
@@ -1132,13 +951,19 @@ plot_dif_summary <- function(x,
 #' @concept visual diagnostics
 #'
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot_apa_figure_one", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' p <- plot(fit, type = "apa_summary", draw = FALSE)
-#' names(p$data)
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' names(plot_data(p, "data"))
+#' }
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
@@ -1237,36 +1062,13 @@ plot_apa_figure_one <- function(fit,
     summary_lines <- "Summary table unavailable."
   }
 
-  if (isTRUE(draw)) {
-    old_par <- graphics::par()[c("mfrow", "cex", "mex")]
-    on.exit(graphics::par(old_par), add = TRUE)
-    graphics::layout(matrix(c(1, 2, 3, 4), nrow = 2L, byrow = TRUE))
-    muffle_nested_readiness(
-      plot(fit, type = "wright", renderer = "facets", show_ci = FALSE,
-           preset = preset, draw = TRUE)
-    )
-    plot_rater_severity_profile(fit, diagnostics = diagnostics,
-                                facet = rater_facet,
-                                ci_level = ci_level,
-                                preset = preset, draw = TRUE)
-    plot_threshold_ladder(fit, preset = preset, draw = TRUE)
-    apply_plot_preset(style)
-    plot.new()
-    display_lines <- unlist(lapply(summary_lines, strwrap,
-      width = max(25L, floor(graphics::par("pin")[1] * 15))), use.names = FALSE)
-    text(
-      x = 0, y = seq(0.95, 0.05, length.out = length(display_lines)),
-      labels = display_lines, adj = 0, cex = 0.9
-    )
-  }
-
   out <- new_mfrm_plot_data(
     "apa_figure_one",
     list(
       data = list(
-        wright = wright,
-        severity = severity,
-        threshold = threshold,
+        wright = attr(wright, "mfrmr_plot_data", exact = TRUE) %||% wright,
+        severity = attr(severity, "mfrmr_plot_data", exact = TRUE) %||% severity,
+        threshold = attr(threshold, "mfrmr_plot_data", exact = TRUE) %||% threshold,
         summary = summary_lines
       ),
       title = "APA Figure 1: Wright + severity + threshold + summary",
@@ -1278,5 +1080,5 @@ plot_apa_figure_one <- function(fit,
   if (!isTRUE(readiness$ready)) {
     warning(readiness$detail, call. = FALSE)
   }
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }

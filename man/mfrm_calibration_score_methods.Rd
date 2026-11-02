@@ -47,8 +47,8 @@ edge-mass views. Interval plots always label the displayed Persons.}
 
 \item{main}{Optional plot title.}
 
-\item{draw}{If \code{TRUE}, draw with base R graphics. The returned
-\code{mfrm_plot_data} is available invisibly in either case.}
+\item{draw}{If \code{TRUE}, print the \code{ggplot} figure on the active graphics
+device. The \code{ggplot} object is returned invisibly in either case.}
 
 \item{preset}{Visual preset: \code{"standard"}, \code{"publication"}, \code{"compact"},
 or \code{"monochrome"}.}
@@ -62,7 +62,8 @@ retains unrounded \code{quadrature_review} and a compact \code{quadrature_overvi
 When cut scores were requested, \code{decisions} preserves every probability,
 cut boundary and actual scoring prior without rounding; unavailable
 Persons remain in that table with \code{NA} probabilities.
-\code{plot()} returns an \code{mfrm_plot_data} with the selected plotting table,
+\code{plot()} returns a \code{ggplot} object (invisibly) whose underlying payload
+(accessible via \code{\link[=plot_data]{plot_data()}}) retains the selected plotting table,
 selection accounting, unplotted Person dispositions, interpretation
 guidance, and plotting settings.
 }
@@ -105,43 +106,20 @@ re-summarized. Saved grid-based intervals retain their original endpoints;
 printed results and interval plots explain that their posterior mass can
 differ from the requested level.
 Its print method shows at most ten rows from each table so routine console
-output stays compact. Base and ggplot2 renderers distinguish scored and
-review states by shape as well as colour.
-\code{as_ggplot(p)} and \code{as_ggplot(p, component = "data")} preserve the same
-selected view, saved bounds, review symbols and unplotted dispositions.
+output stays compact. Plots distinguish scored and review states by shape
+as well as colour.
+\code{plot(x)} returns a \code{ggplot} object directly; \code{as_ggplot(p)} and
+\code{as_ggplot(p, component = "data")} preserve the same selected view, saved
+bounds, review symbols and unplotted dispositions for both \code{ggplot} and
+legacy \code{mfrm_plot_data} objects.
 Use \code{\link[=plot_data]{plot_data()}} to extract other components. Changing the interval level
 requires an explicit scoring call; conversion does not recompute intervals.
 Notes remain in the returned object and are not automatically drawn.
 }
 \section{Session plot defaults}{
 
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
 }
 
 \examples{
@@ -160,8 +138,8 @@ q_review <- mml_quadrature_sensitivity(
 )
 summary(q_review) # Inspect movement; these grids are not universal cutoffs.
 fit <- q_review$fits$q61
-calibration <- freeze_mfrm_calibration(
-  validate_mfrm_calibration(extract_mfrm_calibration(
+calibration <- update(status = "frozen", 
+  update(status = "validated", extract_mfrm_calibration(
     fit, quadrature_review = q_review, scoring_quad_points = 121
   ))
 )
@@ -176,7 +154,7 @@ plot(scores, type = "edge_mass", draw = FALSE)
 }
 }
 \seealso{
-\link{mfrm_calibration_workflow}, \link{mfrm_calibration_capabilities},
+\link{mfrm_calibration_workflow}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
 \code{\link[=plot_data]{plot_data()}}, \code{\link[=plot_data_components]{plot_data_components()}}, \code{\link[=as_ggplot]{as_ggplot()}}, \code{\link[=apa_table]{apa_table()}},
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}},
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for conditional-decision interpretation

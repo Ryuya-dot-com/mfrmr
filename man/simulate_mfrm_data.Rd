@@ -299,6 +299,9 @@ record any injected detection targets.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("simulate_mfrm_data", run.dontrun = TRUE)
+\dontrun{
 sim <- simulate_mfrm_data(
   n_person = 40,
   n_rater = 4,
@@ -308,6 +311,7 @@ sim <- simulate_mfrm_data(
 )
 head(sim)
 names(attr(sim, "mfrm_truth"))
+}
 }
 \seealso{
 \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

@@ -3,7 +3,7 @@
 #' Inspect within-sample separation, individual feature profiles, or pairwise
 #' co-membership across imputations using existing clustering results.
 #'
-#' @param x An object returned by [mfrm_cluster_pam()], [mfrm_cluster_kmeans()] or
+#' @param x An object returned by [mfrm_cluster()] or
 #'   [mfrm_cluster_imputed()], as appropriate.
 #' @param type For a single partition, `"silhouette"` or `"profile"`.
 #' @param feature A single selected feature name, required for `type = "profile"`.
@@ -20,10 +20,9 @@
 #' @param preset Plot style: `"standard"`, `"publication"`, `"compact"`, or
 #'   `"monochrome"`.
 #' @param ... Reserved for future use; additional arguments are rejected.
-#' @return Invisibly, an `mfrm_plot_data` object. Its `data` contains the plotted
+#' @return Invisibly, a `ggplot` object. [plot_data()] extracts the plotted
 #'   table or matrix, title, subtitle, legend, and excluded IDs. Heatmaps also
-#'   retain the displayed IDs and the number of imputations. Use [plot_data()]
-#'   to extract this payload for custom graphics. Profile plots also retain
+#'   retain the displayed IDs and the number of imputations. Profile plots also retain
 #'   `observations`: original-unit entity values and group/exclusion status,
 #'   suitable for custom distribution plots; see [plot_data()].
 #'   [as_ggplot()] converts imputation co-membership heatmaps using the saved
@@ -61,15 +60,18 @@
 #' not membership probabilities, sampling stability, or a consensus partition.
 #' Rows and columns follow input order or explicit `ids`; no hierarchical
 #' clustering is performed. PAM is nonhierarchical and these plots do not
-#' provide a dendrogram. Use [mfrm_cluster_hierarchical()] for a separate
+#' provide a dendrogram. Use `mfrm_cluster(..., method = "hierarchical")` for a separate
 #' hierarchical analysis and its dendrogram.
-#' @seealso [mfrm_cluster_pam()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
+#' @seealso [mfrm_cluster()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_clusters", run.dontrun = TRUE)
+#' \dontrun{
 #' if (requireNamespace("cluster", quietly = TRUE)) {
 #'   raters <- data.frame(Rater = paste0("R", 1:6),
 #'     ExperienceYears = c(1, 2, 3, 12, 13, 14),
 #'     Specialty = factor(rep(c("Language", "Science"), each = 3)))
-#'   groups <- mfrm_cluster_pam(mfrm_features(raters, "Rater",
+#'   groups <- mfrm_cluster(method = "pam", mfrm_features(raters, "Rater",
 #'     c("ExperienceYears", "Specialty")), k = 2)
 #'   plot(groups)
 #'   plot(groups, type = "profile", feature = "ExperienceYears")
@@ -77,11 +79,14 @@
 #'   values <- plot_data(plot(groups, draw = FALSE))
 #'   values$table
 #' }
+#' }
 #' @name plot.mfrm_clusters
 NULL
 
 #' @rdname plot.mfrm_clusters
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @export
 plot.mfrm_clusters <- function(x, type = c("silhouette", "profile"),
                                feature = NULL, labels = NULL, draw = TRUE,
@@ -116,21 +121,7 @@ plot.mfrm_clusters <- function(x, type = c("silhouette", "profile"),
       caption = sprintf("Dashed: overall mean %.3f | In-sample separation", average),
       reference_lines = new_reference_lines("x", average, "Overall mean", "dashed", "mean"),
       preset = style$name))
-    if (!draw) return(invisible(out))
-    apply_plot_preset(style)
-    old <- graphics::par(mar = c(6, 7, 5, if (show_labels) 6 else 2))
-    on.exit(graphics::par(old), add = TRUE)
-    pos <- seq_len(nrow(tab))
-    plot(NA, xlim = c(-1, 1), ylim = c(nrow(tab) + 0.5, 0.5),
-      xlab = "Silhouette width", ylab = "", yaxt = "n", main = "")
-    abline(v = 0, col = style$grid)
-    rect(0, pos - 0.4, tab$Silhouette, pos + 0.4, border = NA,
-      col = ifelse(tab$Cluster %% 2L == 1L, style$accent_primary, style$accent_secondary))
-    abline(v = average, lty = 2, col = style$foreground)
-    centers <- tapply(pos, tab$Cluster, mean)
-    axis(2, at = centers, labels = paste("Group", names(centers)), las = 1)
-    if (show_labels) axis(4, at = pos, labels = tab$ID, las = 1, tick = FALSE)
-    return(invisible(out))
+    return(.mfrm_finalize_ggplot(out, draw = draw))
   }
   if (!is.character(feature) || length(feature) != 1L || is.na(feature) ||
       !feature %in% x$feature_data$features) {
@@ -164,25 +155,13 @@ plot.mfrm_clusters <- function(x, type = c("silhouette", "profile"),
   }
   payload$caption <- if (numeric) "Mean: circles | Median: triangles. Descriptive summaries without confidence intervals." else "Within-group proportion"
   out <- new_mfrm_plot_data("cluster_profile", payload)
-  if (!draw) return(invisible(out))
-  apply_plot_preset(style)
-  if (!numeric) {
-    draw_cluster_proportions(mat, title, subtitle, style, TRUE, "Within-group proportion")
-  } else {
-    old <- graphics::par(mar = c(6, 9, 5, 2))
-    on.exit(graphics::par(old), add = TRUE)
-    pos <- seq_len(nrow(tab))
-    plot(tab$Mean, pos, xlim = range(c(tab$Mean, tab$Median)),
-      ylim = c(nrow(tab) + 0.5, 0.5), pch = 16, col = style$accent_primary,
-      xlab = paste(feature, "(original units)"), ylab = "", yaxt = "n", main = "")
-    points(tab$Median, pos, pch = 17, col = style$accent_secondary)
-    axis(2, at = pos, labels = group_labels, las = 1)
-  }
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 #' @rdname plot.mfrm_clusters
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @export
 plot.mfrm_imputed_clusters <- function(x, ids = NULL, labels = NULL, draw = TRUE,
                                        preset = "standard", ...) {
@@ -209,11 +188,7 @@ plot.mfrm_imputed_clusters <- function(x, ids = NULL, labels = NULL, draw = TRUE
     labels = show_labels, method = method, linkage = linkage, title = title, subtitle = subtitle,
     caption = "Fraction of all supplied imputations | Grey: unavailable",
     legend = cluster_proportion_legend(style), preset = style$name))
-  if (!draw) return(invisible(out))
-  apply_plot_preset(style)
-  draw_cluster_proportions(mat, title, subtitle, style, show_labels,
-    "Fraction of imputations | Grey: unavailable")
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 check_cluster_plot_flags <- function(draw, labels) {
@@ -227,28 +202,6 @@ cluster_proportion_legend <- function(style) {
   new_plot_legend(c(as.character(seq(0, 1, 0.25)), "Unavailable"),
     c(rep("proportion", 5), "missing"), rep("fill", 6),
     c(grDevices::colorRampPalette(c("white", style$accent_primary))(5), "grey70"))
-}
-
-draw_cluster_proportions <- function(mat, title, subtitle, style, labels, caption) {
-  old <- graphics::par(mar = c(if (labels) 7 else 4, if (labels) 9 else 4, 5, 7))
-  on.exit(graphics::par(old), add = TRUE)
-  nr <- nrow(mat)
-  nc <- ncol(mat)
-  plot(NA, xlim = c(0.5, nc + 0.5), ylim = c(0.5, nr + 0.5),
-    xaxs = "i", yaxs = "i", xlab = "", ylab = "", axes = FALSE, main = "")
-  rect(0.5, 0.5, nc + 0.5, nr + 0.5, col = "grey70", border = NA)
-  image(seq(0.5, nc + 0.5), seq(0.5, nr + 0.5),
-    t(mat[nr:1, , drop = FALSE]), add = TRUE, useRaster = TRUE,
-    col = grDevices::colorRampPalette(c("white", style$accent_primary))(100),
-    breaks = seq(0, 1, length.out = 101))
-  if (labels) {
-    axis(1, at = seq_len(nc), labels = colnames(mat), las = 2, tick = FALSE)
-    axis(2, at = seq_len(nr), labels = rev(rownames(mat)), las = 1, tick = FALSE)
-  }
-  graphics::box()
-  key <- cluster_proportion_legend(style)
-  legend(nc + 0.5 + 0.03 * nc, nr + 0.5, legend = key$label,
-    fill = key$value, bty = "n", xpd = NA, cex = 0.8)
 }
 
 # Preserve the complete co-membership view, including unavailable pairs.

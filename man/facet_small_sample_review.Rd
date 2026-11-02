@@ -2,12 +2,21 @@
 % Please edit documentation in R/api-hierarchical-audit.R
 \name{facet_small_sample_review}
 \alias{facet_small_sample_review}
+\alias{plot.mfrm_facet_sample_review}
 \title{Review rating counts for each facet level}
 \usage{
 facet_small_sample_review(
   fit,
   diagnostics = NULL,
   thresholds = c(sparse = 10, marginal = 30, standard = 50)
+)
+
+\method{plot}{mfrm_facet_sample_review}(
+  x,
+  top_n = NULL,
+  preset = c("standard", "publication", "compact", "monochrome"),
+  draw = TRUE,
+  ...
 )
 }
 \arguments{
@@ -22,6 +31,17 @@ When supplied, per-level \code{Infit} and \code{Outfit} are added. \code{Estimat
 three names with finite, positive values satisfying
 \verb{sparse < marginal < standard}; their order in the vector is immaterial.
 The defaults are package screening choices, not precision thresholds.}
+
+\item{x}{An \code{mfrm_facet_sample_review} object.}
+
+\item{top_n}{Optional integer; trim the y-axis to the \code{top_n}
+smallest level counts per facet. \code{NULL} (default) keeps all.}
+
+\item{preset}{One of \code{"standard"}, \code{"publication"}, \code{"compact"}, \code{"monochrome"}.}
+
+\item{draw}{Logical; print the \code{ggplot} figure when \code{TRUE}.}
+
+\item{...}{Reserved.}
 }
 \value{
 A list of class \code{mfrm_facet_sample_review} with:
@@ -34,6 +54,9 @@ A list of class \code{mfrm_facet_sample_review} with:
 \item \code{notes}: count definition and interpretation limits, also shown by
 \code{print()} and \code{summary()}.
 }
+
+For \code{plot()}: Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts the
+plotted table, thresholds, and interpretation \code{notes}.
 }
 \description{
 Reports per-level observation counts, SE, and fit statistics for every
@@ -49,6 +72,15 @@ examinees; for a person it counts that person's ratings. Repeated or
 dependent ratings need not supply independent information. Review the
 counts alongside targeting, connectedness, category use, the estimation
 method, and available uncertainty estimates before drawing conclusions.
+
+\code{plot()} method: Plot a facet sample-size review
+
+Per-level observation counts rendered as a horizontal bar chart
+coloured by the count band assigned in
+\code{\link[=facet_small_sample_review]{facet_small_sample_review()}}. Vertical dashed lines mark the
+sparse / marginal / standard thresholds so reviewers see where
+every facet level sits relative to the selected screening thresholds.
+Counts and colours do not establish measurement precision.
 }
 \section{Interpreting output}{
 
@@ -83,6 +115,12 @@ about the band when \code{fit$summary$FacetSampleSizeFlag} is set.
 }
 }
 
+\section{Session plot defaults}{
+
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
+}
+
 \examples{
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -111,4 +149,6 @@ PMID: 29894984.
 \code{\link[=detect_facet_nesting]{detect_facet_nesting()}}, \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}},
 \code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}},
 \code{\link[=reporting_checklist]{reporting_checklist()}}.
+
+\code{\link[=facet_small_sample_review]{facet_small_sample_review()}}.
 }

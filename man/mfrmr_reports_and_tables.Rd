@@ -90,7 +90,7 @@ Use \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and 
 For ordinary MML/JML \code{RSM} / \code{PCM}, use \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
 and \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} or \code{\link[=export_summary_appendix]{export_summary_appendix()}}. For
 \code{GPCM}, use the same route only where
-\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} marks it as \code{supported_with_caveat}: direct
+\code{mfrmr_output_guide("gpcm_capabilities")} marks it as \code{supported_with_caveat}: direct
 table/plot helpers, summary-table appendix export, caveated
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}, and caveated \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} are available
 with a \code{gpcm_boundary}; score-side exports and design-forecasting evidence

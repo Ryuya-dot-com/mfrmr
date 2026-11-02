@@ -4,6 +4,7 @@
 \alias{compare_mfrm}
 \alias{summary.mfrm_extended_comparison}
 \alias{print.mfrm_extended_comparison}
+\alias{plot.mfrm_extended_comparison}
 \title{Compare two or more fitted MFRM models}
 \usage{
 compare_mfrm(
@@ -18,11 +19,33 @@ compare_mfrm(
 \method{summary}{mfrm_extended_comparison}(object, ...)
 
 \method{print}{mfrm_extended_comparison}(x, ...)
+
+\method{plot}{mfrm_extended_comparison}(
+  x,
+  style = c("paired", "difference"),
+  facet = NULL,
+  draw = TRUE,
+  palette = c("accessible", "mono"),
+  title = NULL,
+  caption = NULL,
+  show_title = FALSE,
+  show_notes = FALSE,
+  show_labels = metric \%in\% c("effects", "infit", "outfit"),
+  text_scale = 1,
+  point_size = 2.5,
+  metric = c("effects", "expected_score", "variance", "infit", "outfit", "probability",
+    "person"),
+  category = NULL,
+  marginal = c("auto", "histogram", "none"),
+  ...
+)
 }
 \arguments{
-\item{...}{Two or more \code{mfrm_fit} objects, or exactly one ordinary
+\item{...}{For \code{compare_mfrm()}: Two or more \code{mfrm_fit} objects, or exactly one ordinary
 \code{mfrm_fit} and one \code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} or \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} result.
-The latter route is descriptive; see the extended-model section.}
+The latter route is descriptive; see the extended-model section.
+
+For \code{plot()}: Unused.}
 
 \item{labels}{Optional character vector of labels for each model.
 If \code{NULL}, labels are generated from model/method combinations.}
@@ -48,7 +71,53 @@ results in fit order for an ordinary versus extended RSM comparison.
 Both must score the same complete source roster, return the same Person
 IDs and use the same conditional interval level. No scoring is run here.}
 
-\item{object, x}{An extended-model comparison returned by \code{compare_mfrm()}.}
+\item{object}{An extended-model comparison returned by \code{compare_mfrm()}.}
+
+\item{x}{A descriptive extended-model result from \code{\link[=compare_mfrm]{compare_mfrm()}}.
+
+Also for \code{compare_mfrm()}: An extended-model comparison returned by \code{compare_mfrm()}.}
+
+\item{style}{\code{"paired"} plots comparison against reference with an equality
+line. \code{"difference"} plots comparison minus reference against their mean.}
+
+\item{facet}{Panels to display; \code{NULL} includes all. For effects and group
+indices these are facet names; for row moments the panel is
+\code{"Selected ratings"}; for probabilities it is \code{"Score k"} for category k.}
+
+\item{draw}{\code{FALSE} returns plot data without opening a device.}
+
+\item{palette}{\code{"accessible"} uses blue points and a dashed grey reference;
+\code{"mono"} uses dark grey points. Meaning does not depend on colour.}
+
+\item{title, caption}{\code{NULL} uses the default text; a string replaces it;
+\code{""} removes it. Interpretation notes remain in the saved plot data.}
+
+\item{show_title, show_notes}{Show the title and caption, respectively.
+\code{FALSE} hides text without deleting its metadata.}
+
+\item{show_labels}{Show matched IDs beside the points. Defaults to \code{TRUE}
+for effects and group indices, \code{FALSE} for rating-level moments and
+probabilities. Consult the retained table when labels are hidden.}
+
+\item{text_scale}{Positive multiplier for text size.}
+
+\item{point_size}{Positive point size in ggplot millimetres; base graphics
+use the corresponding relative size (2.5 is the default).}
+
+\item{metric}{\code{"effects"} compares centered facet locations (default).
+\code{"expected_score"}, \code{"variance"}, \code{"infit"}, \code{"outfit"} and
+\code{"probability"} require saved \code{response_diagnostics} in \code{\link[=compare_mfrm]{compare_mfrm()}}.
+These compare the same posterior predictive target in original score
+units, squared score units, descriptive mean squares or probabilities.
+\code{"person"} requires saved \code{person_scores} and compares EAPs centered at
+each fitted population mean, in logits. No difference interval is drawn.}
+
+\item{category}{Numeric score categories to display with
+\code{metric = "probability"}; \code{NULL} includes all categories.}
+
+\item{marginal}{Marginal histogram display on single-panel scatterplots:
+\code{"auto"} (default; displayed when at least 8 finite pairs are plotted on
+a single panel), \code{"histogram"}, or \code{"none"}.}
 }
 \value{
 With one extended model, an \code{mfrm_extended_comparison} containing \code{models},
@@ -73,6 +142,11 @@ considered comparable. Includes a conservative \code{nesting_review} plus
 \code{lrt_status} / \code{lrt_reason} so withheld LRTs are explicit rather than
 silently absent.
 }
+
+For \code{plot()}: Invisibly, a \code{ggplot} object carrying the underlying
+\code{mfrm_plot_data} payload (accessible via \code{\link[=plot_data]{plot_data()}}) with source effects,
+checks, interpretation notes, marginal histogram bins, and a text alternative.
+\code{\link[=as_ggplot]{as_ggplot()}} supports saved payloads without estimation.
 }
 \description{
 Produce a side-by-side comparison of multiple \code{\link[=fit_mfrm]{fit_mfrm()}} results using
@@ -186,6 +260,22 @@ chi-square p-value can be incorrect. At large Person counts, a very small
 practical improvement can also become statistically significant. Read the
 p-value as formal nested-fit evidence, not as an automatic practical model
 preference or evidence that a subscore is useful.
+
+\code{plot()} method: Plot matched facet effects or posterior predictions across MFRMs
+
+For \code{plot()}: Points are centered at the unweighted mean within each complete
+matched facet. These displays compare fitted summaries, including
+shrinkage, rather than testing differences or choosing a better model.
+The equality/zero line is a descriptive reference. No difference intervals
+or limits of agreement are computed. Unavailable rows remain in plot data.
+Select \code{facet} or use \code{show_labels = FALSE} for crowded displays.
+
+Predictive quantities are not centered. Each row label maps through
+\code{data$response_events} and the comparison's \code{responses$rows}, which retain
+both original input row numbers. Infit/Outfit use selected rows in each
+group; posterior conditioning retains all observed source ratings.
+Smaller residual indices do not establish better prediction or model
+adequacy. There are no ordinary fit cutoffs, tests or automatic ranking.
 }
 \section{Ordinary versus extended RSMs}{
 
@@ -416,6 +506,9 @@ problems in multivariate analysis. \emph{Psychometrika, 52}(3), 333-343.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("compare_mfrm", run.dontrun = TRUE)
+\dontrun{
 # Load one dataset for both models
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -451,7 +544,8 @@ comparison$table[, c("Label", "AIC", "Delta_AIC", "BIC", "Delta_BIC")]
 # For close or consequential comparisons, check a denser shared grid with
 # mml_quadrature_sensitivity() before choosing a model
 # For a PCM/GPCM equal-slope test, see the matched-population example in
-# vignette("mfrmr-gpcm-scope"); request compare_mfrm(..., nested = TRUE).
+# https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html; request compare_mfrm(..., nested = TRUE).
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

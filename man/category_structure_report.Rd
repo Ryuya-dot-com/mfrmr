@@ -91,6 +91,9 @@ base renderer or explicitly grouped custom graphics from \code{\link[=plot_data]
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("category_structure_report", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -100,6 +103,7 @@ summary(out)
 head(out$category_table[, c("Category", "Count", "Infit", "Outfit")])
 p_cs <- plot(out, draw = FALSE)
 p_cs$data$plot
+}
 }
 \seealso{
 \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=category_curves_report]{category_curves_report()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}},

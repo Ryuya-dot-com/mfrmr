@@ -73,9 +73,9 @@ fit <- fit_mfrm(
 ```
 
 For PCM, choose an explicit `step_facet` from the rubric and question.
-For GPCM, read `gpcm_capability_matrix()` before using downstream helpers:
-one slope owner and two slope families have different estimation and output
-routes. The former "bounded GPCM" label described implementation scope,
+For GPCM, read `mfrmr_output_guide("gpcm_capabilities")` before using downstream
+helpers: one slope owner and two slope families have different estimation and
+output routes. The former "bounded GPCM" label described implementation scope,
 not a distinct model or a finite slope box. Two-family GPCM and corrected JML
 do not support the ordinary diagnostic and Wright-map calls below.
 

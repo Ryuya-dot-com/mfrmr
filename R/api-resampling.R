@@ -477,11 +477,8 @@ summary.mfrm_resamples <- function(object, top_n = 10, ...) {
   out
 }
 
-#' @export
-print.mfrm_resamples <- function(x, ...) {
-  print(summary(x), ...)
-  invisible(x)
-}
+#' @rawNamespace S3method(print,mfrm_resamples,print.mfrm_bundle)
+NULL
 
 #' @export
 print.summary.mfrm_resamples <- function(x, ...) {

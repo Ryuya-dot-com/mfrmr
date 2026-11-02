@@ -12,8 +12,8 @@ test_that("aggregated convex derivatives agree with the observation-level engine
   for (K in c(1L, 3L)) {
     problem <- zero_location_fixture(K); x <- problem$common
     z <- .2*sin(seq_along(problem$start)); z[length(z)] <- 0
-    ev <- mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, "common_scale")
-    loc <- mfrm_gmfrm_zero_location_problem(z, x$idx, x$config, x$sizes)
+    ev <- .mfrmr_research$mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, "common_scale")
+    loc <- .mfrmr_research$mfrm_gmfrm_zero_location_problem(z, x$idx, x$config, x$sizes)
     a <- loc$evaluate(loc$start); old <- ev$evaluate(z); at <- loc$location
     expect_true(loc$support$finite_unique)
     expect_equal(a$value, old$value, tolerance = 1e-12)
@@ -30,13 +30,13 @@ test_that("aggregated convex derivatives agree with the observation-level engine
       .4*loc$evaluate(left)$value + .6*loc$evaluate(right)$value)
     # At zero variance, regrouping Persons cannot alter the location problem.
     idx <- x$idx; idx$person <- rev(idx$person)
-    other <- mfrm_gmfrm_zero_location_problem(z, idx, x$config, x$sizes)
+    other <- .mfrmr_research$mfrm_gmfrm_zero_location_problem(z, idx, x$config, x$sizes)
     expect_identical(other$evaluate(loc$start), a)
     # Removing one observation exercises incomplete cell counts.
     idx$score_k <- idx$score_k[-1L]; idx$slope_idx <- idx$slope_idx[-1L]
     idx$person <- idx$person[-1L]; idx$weight <- rep(1, length(idx$score_k))
-    sparse <- mfrm_gmfrm_zero_location_problem(z, idx, x$config, x$sizes)
-    ref <- mfrm_gmfrm_natural_evaluator(idx, x$config, x$sizes, "common_scale")
+    sparse <- .mfrmr_research$mfrm_gmfrm_zero_location_problem(z, idx, x$config, x$sizes)
+    ref <- .mfrmr_research$mfrm_gmfrm_natural_evaluator(idx, x$config, x$sizes, "common_scale")
     expect_equal(sparse$evaluate(loc$start)$value, ref$value(z), tolerance = 1e-12)
   }
 })
@@ -45,9 +45,9 @@ test_that("Newton search recovers the known finite optimum with fixed unequal sl
   for (K in c(1L, 3L)) {
     problem <- zero_location_fixture(K, uniform = TRUE); x <- problem$common
     z <- .4*cos(seq_along(problem$start)); z[length(z)] <- 0
-    loc <- mfrm_gmfrm_zero_location_problem(z, x$idx, x$config, x$sizes)
+    loc <- .mfrmr_research$mfrm_gmfrm_zero_location_problem(z, x$idx, x$config, x$sizes)
     for (start in list(loc$start, -loc$start, loc$start*0)) {
-      fit <- mfrm_gmfrm_zero_location_search(loc, start)
+      fit <- .mfrmr_research$mfrm_gmfrm_zero_location_search(loc, start)
       expect_identical(fit$status, "stationary_convex_candidate")
       expect_lt(max(abs(fit$parameters)), 1e-7)
       expect_equal(fit$evaluation$value, nrow(problem$specification$data)*log(K + 1L), tolerance = 1e-12)
@@ -61,9 +61,9 @@ test_that("Newton search recovers the known finite optimum with fixed unequal sl
 test_that("nonuniform inner solution agrees with a separate quasi-Newton search", {
   problem <- zero_location_fixture(3L); x <- problem$common
   z <- .2*sin(seq_along(problem$start)); z[length(z)] <- 0
-  loc <- mfrm_gmfrm_zero_location_problem(z, x$idx, x$config, x$sizes)
-  fit <- mfrm_gmfrm_zero_location_search(loc)
-  ev <- mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, "common_scale")
+  loc <- .mfrmr_research$mfrm_gmfrm_zero_location_problem(z, x$idx, x$config, x$sizes)
+  fit <- .mfrmr_research$mfrm_gmfrm_zero_location_search(loc)
+  ev <- .mfrmr_research$mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, "common_scale")
   embed <- function(l) replace(z, loc$location, l)
   reference <- optim(loc$start*0, function(l) ev$value(embed(l)),
     function(l) ev$gradient(embed(l))[loc$location], method = "BFGS",
@@ -77,16 +77,16 @@ test_that("nonuniform inner solution agrees with a separate quasi-Newton search"
 test_that("missing finite-solution evidence and invalid inputs are explicit", {
   problem <- zero_location_fixture(1L); x <- problem$common; z <- problem$start*0
   idx <- x$idx; idx$score_k[] <- 0L
-  loc <- mfrm_gmfrm_zero_location_problem(z, idx, x$config, x$sizes)
+  loc <- .mfrmr_research$mfrm_gmfrm_zero_location_problem(z, idx, x$config, x$sizes)
   expect_false(loc$support$finite_unique)
-  fit <- mfrm_gmfrm_zero_location_search(loc)
+  fit <- .mfrmr_research$mfrm_gmfrm_zero_location_search(loc)
   expect_identical(fit$status, "finite_optimum_not_certified")
   expect_identical(fit$parameters, z[loc$location])
   expect_gt(max(abs(fit$evaluation$gradient)), 1)
-  expect_error(mfrm_gmfrm_zero_location_search(loc, maxit = 0), "positive integer")
-  expect_error(mfrm_gmfrm_zero_location_problem(replace(z, length(z), 1), idx, x$config, x$sizes), "common-zero")
-  expect_error(mfrm_gmfrm_zero_location_problem(z + 1i, idx, x$config, x$sizes), "common-zero")
+  expect_error(.mfrmr_research$mfrm_gmfrm_zero_location_search(loc, maxit = 0), "positive integer")
+  expect_error(.mfrmr_research$mfrm_gmfrm_zero_location_problem(replace(z, length(z), 1), idx, x$config, x$sizes), "common-zero")
+  expect_error(.mfrmr_research$mfrm_gmfrm_zero_location_problem(z + 1i, idx, x$config, x$sizes), "common-zero")
   expect_error(loc$evaluate(loc$start + NA_real_), "finite real")
   idx$weight <- 2
-  expect_error(mfrm_gmfrm_zero_location_problem(z, idx, x$config, x$sizes), "unweighted")
+  expect_error(.mfrmr_research$mfrm_gmfrm_zero_location_problem(z, idx, x$config, x$sizes), "unweighted")
 })

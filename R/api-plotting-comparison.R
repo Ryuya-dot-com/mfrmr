@@ -6,8 +6,9 @@
 #'   are comparison minus reference, on the fitted coordinate scale.
 #' @param type `"wright"` for distributions/locations or `"ccc"` for category
 #'   probabilities at the zero additive-facet reference profile.
-#' @param view `"comparison"` for paired displays or `"difference"` for
-#'   matched location differences versus means, or probability differences.
+#' @param view `"comparison"` for paired displays, `"difference"` for
+#'   matched location differences versus means (or probability differences),
+#'   or `"scatter"` for 2D location scatterplots (`type = "wright"`).
 #' @param labels Two distinct, nonempty display labels, reference first.
 #' @param curve_groups Optional step-facet levels to compare. By default all
 #'   groups are required in both fits. An RSM common scale is explicitly paired
@@ -15,6 +16,10 @@
 #' @param panel CCC layout: `"auto"` uses category panels in monochrome or
 #'   with more than five categories, otherwise `"group"`. `"category"` always
 #'   separates categories; `"group"` overlays categories within each group.
+#' @param facet Optional facet or kind filter (`"Person"`, facet name, or `"Step"`)
+#'   for `type = "wright"` comparisons.
+#' @param marginal Marginal histogram display on single-panel Wright scatterplots:
+#'   `"auto"` (default), `"histogram"`, or `"none"`.
 #' @param theta_range Finite increasing length-two predictor range for CCCs.
 #' @param theta_points Integer number of grid points, at least two.
 #' @param preset Existing visual preset; monochrome uses shapes/line types
@@ -54,9 +59,9 @@
 #' score label shown in the plot. `ExpectedScoreDifference` uses the native
 #' internal score coding, which need not equal the original score increments.
 #'
-#' @return An `mfrm_plot_data` object. `data$locations` and `data$differences`
-#'   describe Wright coordinates and matches; `data$probabilities`,
-#'   `data$differences` and `data$summary` describe CCCs. Both types return
+#' @return Invisibly, a `ggplot` object. Use [plot_data()] to read the following components. `plot_data(p, "locations")` and `plot_data(p, "differences")`
+#'   describe Wright coordinates and matches; `plot_data(p, "probabilities")`,
+#'   `plot_data(p, "differences")` and `plot_data(p, "summary")` describe CCCs. Both types return
 #'   `group_selection`, `category_labels`, `basis`, `scale_contracts`,
 #'   `fit_readiness`, `notes` and display `settings`. `source_plots` preserves
 #'   the native draw-free payloads and their exclusions/interpretation metadata.
@@ -100,20 +105,24 @@
 #'     curve_groups = "Content", labels = c("RSM", "PCM"))
 #' }
 #'
-#' # Plot data are available even without ggplot2
+#' # Plot data remain accessible via plot_data()
 #' paired <- plot(fit_rsm, comparison = fit_pcm, draw = FALSE)
-#' head(paired$data$differences)
+#' head(plot_data(paired, "differences"))
 #' # Differences are PCM minus RSM; no difference SE or significance test is computed
 #' }
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
-                              view = c("comparison", "difference"),
+                              view = c("comparison", "difference", "scatter"),
                               labels = c("Reference", "Comparison"),
                               curve_groups = NULL, panel = c("auto", "category", "group"),
+                              facet = NULL,
+                              marginal = c("auto", "histogram", "none"),
                               theta_range = c(-6, 6), theta_points = 241L,
                               preset = c("standard", "publication", "compact", "monochrome"),
                               show_title = FALSE, show_notes = FALSE, draw = TRUE) {
@@ -123,6 +132,13 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   type <- match.arg(type); view <- match.arg(view); panel <- match.arg(panel)
   preset <- match.arg(preset)
+  marginal <- .mfrmr_resolve_marginal_arg(marginal)
+  if (identical(type, "ccc") && identical(view, "scatter")) {
+    stop("`view = 'scatter'` is supported for Wright location comparisons (`type = 'wright'`).", call. = FALSE)
+  }
+  if (!is.null(facet) && (!is.character(facet) || !length(facet) || anyNA(facet) || any(!nzchar(facet)))) {
+    stop("`facet` must be NULL or one or more non-empty facet/panel names.", call. = FALSE)
+  }
   fits <- list(reference, comparison)
   if (!all(vapply(fits, inherits, logical(1), "mfrm_fit"))) stop(
     "Both inputs must be mfrm_fit objects.", call. = FALSE)
@@ -184,10 +200,11 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
   source <- lapply(fits, function(f) plot(f, type = type, draw = FALSE,
     top_n = Inf, show_ci = FALSE, theta_range = theta_range, theta_points = theta_points,
     preset = preset))
+  source_payloads <- lapply(source, plot_data)
   tagged <- function(tables) dplyr::bind_rows(lapply(seq_along(tables), function(i) {
     t <- tables[[i]]; t$Fit <- rep(labels[i], nrow(t)); t
   }))
-  notes <- tagged(lapply(source, function(p) p$data$notes))
+  notes <- tagged(lapply(source_payloads, function(d) d$notes))
   notes <- dplyr::bind_rows(notes, data.frame(Type = c("basis", "uncertainty", "selection"), Text = c(
       "Descriptive comparison on fitted coordinates; no alignment or refitting. Matching recorded settings does not prove scale equivalence or identical observations. Differences are comparison minus reference.",
     "No difference SE, covariance, confidence interval or significance test is computed. Source readiness is retained; overlap does not establish equivalence.",
@@ -197,17 +214,18 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
       "Reference profile: additive facet effects and interactions fixed at zero",
     display = list(show_title = show_title, show_notes = show_notes), preset = preset,
     settings = list(type = type, view = view, labels = labels, panel = panel,
+      facet = facet, marginal = marginal,
       theta_range = theta_range, theta_points = theta_points, alignment = "none"),
     group_selection = selection, category_labels = category_labels[[1]], basis = basis,
-    scale_contracts = tagged(scales), fit_readiness = tagged(lapply(source, function(p) p$data$fit_readiness)),
+    scale_contracts = tagged(scales), fit_readiness = tagged(lapply(source_payloads, function(d) d$fit_readiness)),
     notes = notes, source_plots = stats::setNames(source, labels))
-  if (any(vapply(source, function(p) identical(p$data$interpretation_status, "review_only"), logical(1)))) {
+  if (any(vapply(source_payloads, function(d) identical(d$interpretation_status, "review_only"), logical(1)))) {
     data$interpretation_status <- "review_only"
     data$subtitle <- paste("REVIEW ONLY -", data$subtitle)
   }
   if (type == "ccc") {
-    probabilities <- lapply(seq_along(source), function(i) {
-      p <- source[[i]]$data$probabilities
+    probabilities <- lapply(seq_along(source_payloads), function(i) {
+      p <- source_payloads[[i]]$probabilities
       dplyr::bind_rows(lapply(seq_len(nrow(selected)), function(j) {
         t <- p[p$CurveGroup == selected[[if (i == 1L) "ReferenceGroup" else "ComparisonGroup"]][j], ]
         t$SourceCurveGroup <- t$CurveGroup; t$CurveGroup <- selected$CurveGroup[j]; t
@@ -234,7 +252,7 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
       "Category is the internal code; OriginalCategory is the displayed score label. ExpectedScoreDifference uses native internal score coding, not necessarily original score increments."))
   } else {
     data$locations <- tagged(lapply(seq_along(fits), function(i)
-      .comparison_wright_locations(fits[[i]], source[[i]]$data, specs[[i]], selected,
+      .comparison_wright_locations(fits[[i]], source_payloads[[i]], specs[[i]], selected,
         if (i == 1L) "ReferenceGroup" else "ComparisonGroup", category_labels[[i]])))
     keys <- c("Kind", "Facet", "Level")
     t <- data$locations
@@ -244,14 +262,19 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
     for (nm in c("Status_Reference", "Status_Comparison")) differences[[nm]][is.na(differences[[nm]])] <- "unmatched"
     differences$Difference <- differences$Estimate_Comparison - differences$Estimate_Reference
     differences$Mean <- (differences$Estimate_Comparison + differences$Estimate_Reference) / 2
+    if (!is.null(facet)) {
+      avail_facets <- unique(c(as.character(differences$Facet), as.character(differences$Kind)))
+      if (!all(facet %in% avail_facets)) {
+        stop("`facet` must match available facets/kinds: ", paste(avail_facets, collapse = ", "), ".", call. = FALSE)
+      }
+    }
     data$differences <- differences
     data$notes <- dplyr::bind_rows(data$notes, data.frame(Type = "availability", Text = sprintf(
       "%d of %d matched/unmatched location rows have finite differences. Boundary, non-finite and source-excluded values remain unavailable. Violins summarize eligible person point estimates only; individual identities remain in the tables.",
       sum(is.finite(differences$Difference)), nrow(differences))))
   }
   out <- new_mfrm_plot_data("paired_model_comparison", data)
-  if (draw) print(as_ggplot(out))
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 .comparison_wright_locations <- function(fit, source, spec, selection, group_column, categories) {
@@ -334,26 +357,76 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
     xlab <- "Relative response propensity (logits)"
     ylab <- if (difference) paste("Probability difference:", labels[2], "-", labels[1]) else "Category probability"
   } else {
-    t <- if (difference) payload$differences else payload$locations
+    is_scatter <- identical(settings$view, "scatter")
+    t <- if (difference || is_scatter) payload$differences else payload$locations
+    if (!is.null(settings$facet)) {
+      t <- t[t$Facet %in% settings$facet | t$Kind %in% settings$facet, , drop = FALSE]
+    }
     panels <- unique(t[, c("Kind", "Facet"), drop = FALSE])
     panels$Panel <- seq_len(nrow(panels))
     t <- dplyr::left_join(t, panels, by = c("Kind", "Facet"))
     panel_labels <- ifelse(panels$Kind == "Step", paste0("Steps: ", panels$Facet), panels$Facet)
     panel_labels <- make.unique(panel_labels)
     t$Panel <- factor(t$Panel, levels = panels$Panel, labels = panel_labels)
-    if (difference) {
+    if (is_scatter) {
+      t_fin <- t[is.finite(t$Estimate_Reference) & is.finite(t$Estimate_Comparison), , drop = FALSE]
+      lim <- if (nrow(t_fin)) range(c(t_fin$Estimate_Reference, t_fin$Estimate_Comparison), finite = TRUE) else c(-1, 1)
+      if (diff(lim) == 0) lim <- lim + c(-0.5, 0.5)
+      pad <- 0.06 * diff(lim)
+      lim <- lim + c(-pad, pad)
+      if (nrow(panels) > 1L) {
+        p_cols <- .plot_series_colors(levels(t$Panel), payload$preset)
+        p <- ggplot2::ggplot(t_fin, ggplot2::aes(
+          x = .data$Estimate_Reference, y = .data$Estimate_Comparison,
+          colour = .data$Panel, shape = .data$Panel
+        )) +
+          ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey50", linewidth = 0.45) +
+          ggplot2::geom_point(size = 2.2, alpha = 0.85) +
+          ggplot2::scale_colour_manual(values = p_cols, name = NULL) +
+          ggplot2::scale_shape_manual(
+            values = stats::setNames(rep(c(16, 17, 15, 18, 1, 2), length.out = length(levels(t$Panel))), levels(t$Panel)),
+            name = NULL
+          ) +
+          ggplot2::coord_equal(xlim = lim, ylim = lim)
+      } else {
+        p <- ggplot2::ggplot(t_fin, ggplot2::aes(x = .data$Estimate_Reference, y = .data$Estimate_Comparison)) +
+          ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey50", linewidth = 0.45) +
+          ggplot2::geom_point(colour = colors[2], size = 2.2, alpha = 0.85) +
+          ggplot2::coord_equal(xlim = lim, ylim = lim)
+      }
+      if (!nrow(t_fin)) {
+        p <- p + ggplot2::annotate("text", x = 0, y = 0, label = "No finite matched values", size = 3.2)
+      }
+      xlab <- paste0(labels[1], " fitted location (logits)")
+      ylab <- paste0(labels[2], " fitted location (logits)")
+      panel_count <- 1L
+      scatter_x <- t_fin$Estimate_Reference
+      scatter_y <- t_fin$Estimate_Comparison
+    } else if (difference) {
       t <- t[is.finite(t$Difference), ]
+      single_diff <- nrow(panels) == 1L
       p <- ggplot2::ggplot(t, ggplot2::aes(.data$Mean, .data$Difference)) +
         ggplot2::geom_hline(yintercept = 0, colour = "grey55", linewidth = 0.4) +
-        ggplot2::geom_point(shape = 21, fill = colors[2], size = 1.8, alpha = 0.8) +
-        ggplot2::facet_wrap(~ Panel, scales = "free_x", drop = FALSE, labeller = ggplot2::label_wrap_gen(24))
+        ggplot2::geom_point(shape = 21, fill = colors[2], size = 1.8, alpha = 0.8)
+      if (!single_diff) {
+        p <- p + ggplot2::facet_wrap(~ Panel, scales = "free_x", drop = FALSE, labeller = ggplot2::label_wrap_gen(24))
+      }
       empty <- panels$Panel[!panels$Panel %in% as.integer(t$Panel)]
-      if (length(empty)) p <- p + ggplot2::geom_label(data = data.frame(
-        Panel = factor(empty, levels = panels$Panel, labels = panel_labels)),
-        ggplot2::aes(x = 0, y = 0, label = "No finite matched values"),
-        inherit.aes = FALSE, size = 3)
+      if (length(empty)) {
+        if (single_diff) {
+          p <- p + ggplot2::annotate("label", x = 0, y = 0, label = "No finite matched values", size = 3)
+        } else {
+          p <- p + ggplot2::geom_label(data = data.frame(
+            Panel = factor(empty, levels = panels$Panel, labels = panel_labels)),
+            ggplot2::aes(x = 0, y = 0, label = "No finite matched values"),
+            inherit.aes = FALSE, size = 3)
+        }
+      }
       xlab <- "Mean of fitted locations (logits)"
       ylab <- paste("Location difference (logits):", labels[2], "-", labels[1])
+      panel_count <- if (single_diff) 1L else nrow(panels)
+      scatter_x <- if (single_diff) t$Mean else NULL
+      scatter_y <- if (single_diff) t$Difference else NULL
     } else {
       t <- t[is.finite(t$Estimate), ]
       t$Fit <- factor(t$Fit, levels = labels)
@@ -391,11 +464,23 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
         ggplot2::facet_wrap(~ Panel, nrow = 1, drop = FALSE, labeller = ggplot2::label_wrap_gen(24)) +
         ggplot2::guides(colour = "none", fill = "none", shape = "none")
       xlab <- NULL; ylab <- "Fitted location (logits)"
+      panel_count <- nrow(panels)
+      scatter_x <- NULL; scatter_y <- NULL
     }
-    panel_count <- nrow(panels)
   }
   if (panel_count > 8L) warning("Many comparison panels; select curve_groups or enlarge the export. All selected panels are retained.", call. = FALSE)
-  p <- p + .mfrmr_gg_theme() + ggplot2::theme(legend.position = "bottom",
+  p <- p + .mfrmr_gg_theme(payload$preset) + ggplot2::theme(legend.position = "bottom",
     strip.text = ggplot2::element_text(size = 9))
-  .mfrmr_gg_labs(p, payload, x = xlab, y = paste(strwrap(ylab, width = 48L), collapse = "\n"))
+  p <- .mfrmr_gg_labs(p, payload, x = xlab, y = paste(strwrap(ylab, width = 48L), collapse = "\n"))
+  if (settings$type == "wright" && !is.null(scatter_x)) {
+    p <- .mfrmr_attach_marginal_histograms(
+      p,
+      x = scatter_x,
+      y = scatter_y,
+      marginal = settings$marginal %||% "auto",
+      preset = payload$preset,
+      single_panel = TRUE
+    )
+  }
+  p
 }

@@ -10,6 +10,21 @@ mfrm_population_label <- function(population = NULL) {
 
 mfrm_parameter_map <- function(bundle) {
   d <- bundle$stan_data
+  roles <- bundle$model_roles
+  if (!is.null(roles)) {
+    facets <- unique(bundle$levels$Facet[bundle$levels$Facet != "Person"])
+    owners <- unique(as.character(bundle$slope_levels$Owner))
+    uncentered <- unique(bundle$levels$Facet[bundle$levels$Facet != "Person" & !bundle$levels$Centered])
+    if (!identical(bundle$model, "GPCM") || !identical(roles$equation, "full_predictor_product") ||
+        !identical(roles$population, "fixed_N01") || !isTRUE(roles$link_scale == 1) ||
+        !setequal(roles$facets, facets) || !identical(roles$slope_facets, owners) ||
+        length(owners) != 2L || !identical(roles$slope_reference, owners[1L]) ||
+        !identical(roles$slope_prior_reference, roles$slope_reference) ||
+        !identical(roles$noncenter_facet, uncentered) ||
+        length(roles$step_facet) != 1L || !roles$step_facet %in% facets ||
+        !identical(bundle$step_owners, bundle$levels$Level[bundle$levels$Facet == roles$step_facet]))
+      stop("Two-family model roles disagree with the exported parameter map.")
+  }
   population_label <- mfrm_population_label(bundle$population)
   free_population <- !is.null(bundle$population)
   rows <- list()
@@ -49,7 +64,7 @@ mfrm_parameter_map <- function(bundle) {
     value <- if (fixed && !is.null(d$step_offset)) d$step_offset[index] else 0
     spec <- bundle$constraints$steps[[g]]
     anchored <- !is.null(spec) && !is.na(spec$anchors[k])
-    add(paste0("steps[", g, ",", k, "]"), "step_offset", "Step owner", bundle$step_owners[g],
+    add(paste0("steps[", g, ",", k, "]"), "step_offset", if (is.null(roles)) "Step owner" else roles$step_facet, bundle$step_owners[g],
       fixed, value, anchored, paste0("Transition ", bundle$categories$Score[k], " to ",
         bundle$categories$Score[k + 1L], "; saved within-owner sum constraint."),
       "Higher offsets reduce the adjacent-category odds of the higher coded score.",
@@ -100,24 +115,187 @@ mfrm_sampling_review <- function(parameters, sampler, chains) {
   do.call(rbind, checks)
 }
 
+mfrm_draws_should_na <- function(x, tol = .Machine$double.eps) {
+  anyNA(x) || any(is.infinite(x)) || !length(x) || abs(max(x) - min(x)) < tol
+}
+
+mfrm_draws_split_chains <- function(x) {
+  x <- as.matrix(x)
+  niter <- nrow(x)
+  if (niter <= 1L) return(x)
+  half <- niter / 2
+  cbind(x[seq_len(floor(half)), , drop = FALSE], x[ceiling(half + 1):niter, , drop = FALSE])
+}
+
+mfrm_draws_z_scale <- function(x, c = 3 / 8) {
+  r <- rank(as.array(x), ties.method = "average")
+  S <- length(r)
+  z <- stats::qnorm((r - c) / (S - 2 * c + 1))
+  z[is.na(x)] <- NA_real_
+  if (!is.null(dim(x))) z <- array(z, dim = dim(x), dimnames = dimnames(x))
+  z
+}
+
+mfrm_draws_autocovariance <- function(x) {
+  N <- length(x)
+  varx <- stats::var(x)
+  if (is.na(varx) || varx == 0) return(rep(0, N))
+  M <- stats::nextn(N)
+  yc <- c(x - mean(x), rep.int(0, 2L * M - N))
+  ac <- Re(stats::fft(abs(stats::fft(yc))^2, inverse = TRUE)[seq_len(N)])
+  ac / ac[1L] * varx * (N - 1) / N
+}
+
+mfrm_draws_rhat_split <- function(x) {
+  x <- as.matrix(x)
+  if (mfrm_draws_should_na(x) || ncol(x) < 2L || nrow(x) < 2L) return(NA_real_)
+  niter <- nrow(x)
+  c_mean <- colMeans(x)
+  c_var <- colSums((x - rep(c_mean, each = niter))^2) / (niter - 1)
+  var_b <- niter * stats::var(c_mean)
+  var_w <- mean(c_var)
+  if (!is.finite(var_w) || var_w <= 0) return(NA_real_)
+  sqrt((var_b / var_w + niter - 1) / niter)
+}
+
+mfrm_draws_rhat <- function(x) {
+  x <- as.matrix(x)
+  if (mfrm_draws_should_na(x)) return(NA_real_)
+  rb <- mfrm_draws_rhat_split(mfrm_draws_z_scale(mfrm_draws_split_chains(x)))
+  rt <- mfrm_draws_rhat_split(mfrm_draws_z_scale(mfrm_draws_split_chains(abs(x - stats::median(x)))))
+  if (is.na(rb) || is.na(rt)) return(NA_real_)
+  max(rb, rt)
+}
+
+mfrm_draws_ess <- function(x) {
+  x <- as.matrix(x)
+  nchains <- ncol(x); niter <- nrow(x)
+  if (niter < 3L || mfrm_draws_should_na(x)) return(NA_real_)
+  acov <- apply(x, 2L, mfrm_draws_autocovariance)
+  if (!is.matrix(acov)) acov <- matrix(acov, nrow = niter)
+  acov_means <- rowMeans(acov)
+  mean_var <- acov_means[1L] * niter / (niter - 1)
+  var_plus <- mean_var * (niter - 1) / niter
+  if (nchains > 1L) var_plus <- var_plus + stats::var(colMeans(x))
+  if (!is.finite(var_plus) || var_plus <= 0) return(NA_real_)
+  rho_hat_t <- rep.int(0, niter)
+  t <- 0L
+  rho_hat_even <- 1
+  rho_hat_t[t + 1L] <- rho_hat_even
+  rho_hat_odd <- 1 - (mean_var - acov_means[t + 2L]) / var_plus
+  rho_hat_t[t + 2L] <- rho_hat_odd
+  while (t < nrow(acov) - 5L && !is.nan(rho_hat_even + rho_hat_odd) && (rho_hat_even + rho_hat_odd > 0)) {
+    t <- t + 2L
+    rho_hat_even <- 1 - (mean_var - acov_means[t + 1L]) / var_plus
+    rho_hat_odd <- 1 - (mean_var - acov_means[t + 2L]) / var_plus
+    if ((rho_hat_even + rho_hat_odd) >= 0) {
+      rho_hat_t[t + 1L] <- rho_hat_even
+      rho_hat_t[t + 2L] <- rho_hat_odd
+    }
+  }
+  max_t <- t
+  if (rho_hat_even > 0) rho_hat_t[max_t + 1L] <- rho_hat_even
+  t <- 0L
+  while (t <= max_t - 4L) {
+    t <- t + 2L
+    if (rho_hat_t[t + 1L] + rho_hat_t[t + 2L] > rho_hat_t[t - 1L] + rho_hat_t[t]) {
+      rho_hat_t[t + 1L] <- (rho_hat_t[t - 1L] + rho_hat_t[t]) / 2
+      rho_hat_t[t + 2L] <- rho_hat_t[t + 1L]
+    }
+  }
+  ess <- nchains * niter
+  tau_hat <- -1 + 2 * sum(rho_hat_t[seq_len(max_t)]) + rho_hat_t[max_t + 1L]
+  tau_bound <- 1 / log10(ess)
+  if (tau_hat < tau_bound) tau_hat <- tau_bound
+  ess / tau_hat
+}
+
+mfrm_draws_ess_bulk <- function(x) {
+  mfrm_draws_ess(mfrm_draws_z_scale(mfrm_draws_split_chains(x)))
+}
+
+mfrm_draws_ess_quantile <- function(x, prob) {
+  if (mfrm_draws_should_na(x)) return(NA_real_)
+  x <- as.matrix(x)
+  if (prob == 1) {
+    len <- length(x)
+    prob <- (len - 0.5) / len
+  }
+  I <- x <= stats::quantile(x, prob, names = FALSE)
+  mfrm_draws_ess(mfrm_draws_split_chains(I))
+}
+
+mfrm_draws_ess_tail <- function(x) {
+  e1 <- mfrm_draws_ess_quantile(x, 0.05)
+  e2 <- mfrm_draws_ess_quantile(x, 0.95)
+  if (is.na(e1) || is.na(e2)) return(NA_real_)
+  min(e1, e2)
+}
+
+mfrm_draws_mcse_quantile <- function(x, prob) {
+  ess <- mfrm_draws_ess_quantile(x, prob)
+  if (is.na(ess) || !is.finite(ess)) return(NA_real_)
+  p <- c(0.1586553, 0.8413447)
+  a <- stats::qbeta(p, ess * prob + 1, ess * (1 - prob) + 1)
+  ssims <- sort(as.numeric(x))
+  S <- length(ssims)
+  th1 <- ssims[max(floor(a[1L] * S), 1L)]
+  th2 <- ssims[min(ceiling(a[2L] * S), S)]
+  (th2 - th1) / 2
+}
+
+mfrm_summarize_draw_array <- function(draws_array, level = 0.95) {
+  vars <- dimnames(draws_array)[[3L]]
+  alpha_low <- (1 - level) / 2
+  alpha_high <- 1 - alpha_low
+  n_var <- length(vars)
+  n_iter <- dim(draws_array)[1L]
+  n_chain <- dim(draws_array)[2L]
+  mean_v <- median_v <- sd_v <- lower_v <- upper_v <- numeric(n_var)
+  rhat_v <- ess_b <- ess_t <- mcse_l <- mcse_u <- numeric(n_var)
+  for (j in seq_len(n_var)) {
+    mat <- matrix(draws_array[, , j], nrow = n_iter, ncol = n_chain)
+    vec <- as.numeric(mat)
+    mean_v[j] <- base::mean(vec)
+    median_v[j] <- stats::median(vec)
+    sd_v[j] <- stats::sd(vec)
+    qs <- stats::quantile(vec, probs = c(alpha_low, alpha_high), names = FALSE)
+    lower_v[j] <- qs[1L]
+    upper_v[j] <- qs[2L]
+    rhat_v[j] <- mfrm_draws_rhat(mat)
+    ess_b[j] <- mfrm_draws_ess_bulk(mat)
+    ess_t[j] <- mfrm_draws_ess_tail(mat)
+    mcse_l[j] <- mfrm_draws_mcse_quantile(mat, alpha_low)
+    mcse_u[j] <- mfrm_draws_mcse_quantile(mat, alpha_high)
+  }
+  data.frame(
+    variable = vars,
+    mean = mean_v, median = median_v, sd = sd_v,
+    lower = lower_v, upper = upper_v,
+    rhat = rhat_v, ess_bulk = ess_b, ess_tail = ess_t,
+    mcse_lower = mcse_l, mcse_upper = mcse_u,
+    stringsAsFactors = FALSE
+  )
+}
+
 summarize_mfrm_draws <- function(draws, bundle, sampler, backend) {
-  draws <- posterior::as_draws_array(draws)
+  if (!(is.array(draws) && length(dim(draws)) == 3L && is.numeric(draws) &&
+        !is.null(dimnames(draws)[[3L]]))) {
+    draws <- posterior::as_draws_array(draws)
+  }
+  raw_draws <- array(as.numeric(draws), dim = dim(draws),
+    dimnames = list(NULL, NULL, dimnames(draws)[[3L]]))
+  var_names <- dimnames(raw_draws)[[3L]]
   map <- mfrm_parameter_map(bundle)
-  if (anyDuplicated(map$variable) || !all(map$variable %in% posterior::variables(draws)))
+  if (anyDuplicated(map$variable) || !all(map$variable %in% var_names))
     stop("Draws do not contain the complete exported parameter map. Keep fit.rds and check the matching bundle.")
   # Fixed status comes from the model map, never from a zero sample variance.
   for (i in which(!is.na(map$fixed_value))) {
-    v <- draws[, , map$variable[i]]
+    v <- raw_draws[, , map$variable[i]]
     if (any(!is.finite(v)) || any(abs(v - map$fixed_value[i]) > 1e-7 * max(1, abs(map$fixed_value[i]))))
       stop("Draws disagree with fixed constraints. Check that fit.rds and model-data.rds belong together.")
   }
-  p <- as.data.frame(posterior::summarise_draws(draws,
-    mean = base::mean, median = stats::median, sd = stats::sd,
-    lower = function(x) unname(stats::quantile(x, .025)),
-    upper = function(x) unname(stats::quantile(x, .975)),
-    rhat = posterior::rhat, ess_bulk = posterior::ess_bulk, ess_tail = posterior::ess_tail,
-    mcse_lower = function(x) unname(posterior::mcse_quantile(x, .025)),
-    mcse_upper = function(x) unname(posterior::mcse_quantile(x, .975))))
+  p <- mfrm_summarize_draw_array(raw_draws, level = .95)
   m <- map[match(p$variable, map$variable), setdiff(names(map), "variable"), drop = FALSE]
   unknown <- is.na(m$value_role)
   m$value_role[unknown] <- "sampling_coordinate"
@@ -132,7 +310,7 @@ summarize_mfrm_draws <- function(draws, bundle, sampler, backend) {
   width <- p$upper - p$lower
   p$endpoint_mcse_fraction <- ifelse(is.finite(width) & width > 0,
     pmax(p$mcse_lower, p$mcse_upper) / width, NA_real_)
-  checks <- mfrm_sampling_review(p, sampler, dim(draws)[2L])
+  checks <- mfrm_sampling_review(p, sampler, dim(raw_draws)[2L])
   flagged <- checks$Status != "no_flag"
   status <- if (any(flagged)) "sampling_review_required" else "no_sampling_flags_detected"
   p$sampling_review <- status
@@ -153,7 +331,7 @@ summarize_mfrm_draws <- function(draws, bundle, sampler, backend) {
     Why = if (any(flagged)) paste(why[flagged], collapse = "; ") else "Listed sampling checks detected no flags.",
     NextAction = if (any(flagged)) "Read sampling-review.csv before interpreting estimates or intervals." else
       "Review model fit, priors and target-specific Monte Carlo error before reporting.")
-  result <- list(schema_version = if (is.null(bundle$population)) 1L else 2L, chains = as.integer(dim(draws)[2L]),
+  result <- list(schema_version = if (is.null(bundle$population)) 1L else 2L, chains = as.integer(dim(raw_draws)[2L]),
     model_data_md5 = if (file.exists("model-data.rds")) unname(tools::md5sum("model-data.rds")) else NA_character_,
     parameters = p, sampler = sampler, decision = decision, checks = checks,
     backend = backend, interval = "equal-tailed posterior credible interval for varying parameters", level = .95,
@@ -164,12 +342,31 @@ summarize_mfrm_draws <- function(draws, bundle, sampler, backend) {
       "Higher coded scores need not mean better performance; retain the original rubric direction.",
       "Review prior sensitivity and posterior predictive fit; Bayesian intervals do not validate MML coverage.",
       "Screening criteria: https://mc-stan.org/learn-stan/diagnostics-warnings.html"))
+  if (!is.null(bundle$model_roles)) {
+    r <- bundle$model_roles
+    result$notes <- c(result$notes,
+      paste0("Two-family full-predictor model: slope facets ", paste(r$slope_facets, collapse = ", "),
+        "; geometric-mean-one reference ", r$slope_reference, "; step facet ", r$step_facet,
+        "; uncentered location facet ", r$noncenter_facet, "."),
+      "The log-slope prior is tied to the exported geometric-mean-one reference. Exporting another reference with fresh independent priors changes the Bayesian model.")
+  }
   for (name in c("parameters", "sampler", "checks", "decision")) {
     file <- c(parameters = "parameter-summary.csv", sampler = "sampler-diagnostics.csv",
       checks = "sampling-review.csv", decision = "summary-decision.csv")[[name]]
     utils::write.csv(result[[name]], file, row.names = FALSE, fileEncoding = "UTF-8")
   }
   saveRDS(result, "posterior-summary.rds")
+  draws_ordered <- raw_draws[, , result$parameters$variable, drop = FALSE]
+  draws_bundle <- list(
+    schema_version = result$schema_version,
+    backend = backend,
+    chains = result$chains,
+    iterations = as.integer(dim(draws_ordered)[1L]),
+    model_data_md5 = result$model_data_md5,
+    posterior_summary_md5 = if (file.exists("posterior-summary.rds")) unname(tools::md5sum("posterior-summary.rds")) else NA_character_,
+    draws = draws_ordered
+  )
+  saveRDS(draws_bundle, "posterior-draws.rds")
   cat("Posterior review (", backend, ")\n", sep = "")
   cat(decision$Interpretation, "\nWhy: ", decision$Why, "\nNext: ", decision$NextAction, "\n", sep = "")
   cat("Fixed values have no estimated interval. Sampling checks do not establish model validity.\n")

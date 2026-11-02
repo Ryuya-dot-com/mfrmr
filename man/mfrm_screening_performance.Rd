@@ -4,6 +4,7 @@
 \alias{mfrm_screening_performance}
 \alias{summary.mfrm_screening_performance}
 \alias{print.mfrm_screening_performance}
+\alias{plot.mfrm_screening_performance}
 \title{Evaluate screening outcomes against a planned simulation roster}
 \usage{
 mfrm_screening_performance(roster, results, rule, level = 0.95)
@@ -11,6 +12,15 @@ mfrm_screening_performance(roster, results, rule, level = 0.95)
 \method{summary}{mfrm_screening_performance}(object, ...)
 
 \method{print}{mfrm_screening_performance}(x, ...)
+
+\method{plot}{mfrm_screening_performance}(
+  x,
+  scope = c("family", "target"),
+  metric = c("false_flags", "detection"),
+  condition = NULL,
+  draw = TRUE,
+  ...
+)
 }
 \arguments{
 \item{roster}{Data frame with \code{Condition}, \code{Replicate}, \code{Target} identifiers
@@ -32,9 +42,24 @@ thresholds, comparison family and any selection/refitting procedure.}
 default 0.95. These describe simulation uncertainty, not an interval for
 rater severity or a guarantee of screening accuracy.}
 
-\item{...}{Unused by print and summary methods.}
+\item{object}{An object returned by \code{mfrm_screening_performance()}.}
 
-\item{x, object}{An object returned by \code{mfrm_screening_performance()}.}
+\item{...}{For \code{summary.mfrm_screening_performance()}: Unused by print and summary methods.
+
+For \code{plot()}: Unused.}
+
+\item{x}{Output from \code{\link[=mfrm_screening_performance]{mfrm_screening_performance()}}.
+
+Also for \code{summary()}: An object returned by \code{mfrm_screening_performance()}.}
+
+\item{scope}{\code{"family"} (default) shows any-flag events once per replication;
+\code{"target"} shows each individual target separately.}
+
+\item{metric}{\code{"false_flags"} (default) or \code{"detection"}.}
+
+\item{condition}{Optional condition labels to include, matched exactly.}
+
+\item{draw}{Logical; \code{FALSE} returns the \code{ggplot} object without opening a device.}
 }
 \value{
 An \code{mfrm_screening_performance} object with \code{by_target}, \code{by_family},
@@ -47,6 +72,9 @@ bound the realized proportion across all planned trials by assigning every
 unknown outcome negative or positive. These latter bounds are not confidence
 intervals. A family with no relevant targets has zero planned trials and
 undefined rates. \code{CompleteScreens} counts fully observed families.
+
+For \code{plot()}: Invisibly, a \code{ggplot} object. Use \code{\link[=plot_data]{plot_data()}} to inspect
+underlying tables and notes.
 }
 \description{
 In a simulation where the true problem status is known, summarize how often
@@ -78,6 +106,15 @@ difference alone is not rater misfit. Known simulation truth is required;
 labeling unknown real-world rater quality does not create a validation study.
 Define computable screening output separately from formal inference eligibility.
 The recorded rule cannot prove that it was selected before seeing outcomes.
+
+\code{plot()} method: Plot screening performance and unresolved outcomes
+
+For \code{plot()}: Blue points and whiskers show conditional rates and their exact
+binomial Monte Carlo intervals. Gray segments bound the realized all-trial
+proportion by assigning unresolved outcomes negative or positive; these
+are not confidence intervals. A row with no known outcomes has no point
+estimate. Right-hand counts show available/planned events. No model is
+fitted and no threshold is selected by this plot.
 }
 \examples{
 roster <- expand.grid(Condition = "Null", Replicate = 1:4,

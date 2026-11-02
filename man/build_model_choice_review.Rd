@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-advanced.R
 \name{build_model_choice_review}
 \alias{build_model_choice_review}
+\alias{summary.mfrm_model_choice_review}
 \title{Build a model-choice review across RSM, PCM, and GPCM fits}
 \usage{
 build_model_choice_review(
@@ -13,9 +14,13 @@ build_model_choice_review(
   top_n = 10L,
   warn_constraints = TRUE
 )
+
+\method{summary}{mfrm_model_choice_review}(object, digits = 3, ...)
 }
 \arguments{
-\item{...}{Two or more fitted \code{mfrm_fit} objects from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
+\item{...}{For \code{build_model_choice_review()}: Two or more fitted \code{mfrm_fit} objects from \code{\link[=fit_mfrm]{fit_mfrm()}}.
+
+For \code{summary()}: Reserved for generic compatibility.}
 
 \item{labels}{Optional labels for the supplied fits. If omitted, names from
 \code{...} are used when available; otherwise labels are generated from
@@ -29,9 +34,15 @@ at least one \code{RSM}/\code{PCM} reference plus one \code{GPCM} fit, also run
 \code{run_weighting_review = TRUE}.}
 
 \item{warn_constraints}{Passed to \code{\link[=compare_mfrm]{compare_mfrm()}}.}
+
+\item{object}{Output from \code{\link[=build_model_choice_review]{build_model_choice_review()}}.}
+
+\item{digits}{Number of digits for printed numeric values.}
 }
 \value{
 An object of class \code{mfrm_model_choice_review}.
+
+For \code{summary()}: An object of class \code{summary.mfrm_model_choice_review}.
 }
 \description{
 Build a model-choice review across RSM, PCM, and GPCM fits
@@ -51,7 +62,7 @@ and the stored fit-readiness decision for every supplied model;
 recovery, fair averages, bias screening, and summary-appendix handoff;
 \item report wording templates that avoid treating better \code{GPCM} fit as
 an automatic operational-scoring decision;
-\item \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when \code{GPCM} is present;
+\item \code{mfrmr_output_guide("gpcm_capabilities")} when \code{GPCM} is present;
 \item optionally, \code{\link[=build_weighting_review]{build_weighting_review()}} for the first Rasch-family reference
 versus \code{GPCM} pair.
 }
@@ -65,6 +76,8 @@ slopes on the log scale with geometric mean 1, and keeps several downstream scor
 outside the documented boundary.
 Model-choice ranking also requires the current selectable IC contract:
 q<31 fits retain raw criteria but produce a screening/review-only bundle.
+
+\code{summary()} method: Summarize a model-choice review
 }
 \examples{
 toy <- load_mfrmr_data("example_core")
@@ -78,5 +91,7 @@ summary(review)
 }
 \seealso{
 \code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=build_weighting_review]{build_weighting_review()}},
-\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}, \code{\link[=compute_information]{compute_information()}}
+\link{mfrmr_gpcm_scope}, \code{\link[=compute_information]{compute_information()}}
+
+\code{\link[=build_model_choice_review]{build_model_choice_review()}}
 }

@@ -77,6 +77,9 @@ matrix requires space quadratic in the number of declared categories;
 these are categorical-score interfaces, not continuous-score ICCs.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("pairwise_kappa_table", run.dontrun = TRUE)
+\dontrun{
 data("mfrmr_example_agreement", package = "mfrmr")
 ratings <- mfrmr_example_agreement
 head(ratings) # One rater's score for one Person-Task response.
@@ -86,6 +89,7 @@ pairs$table
 pairs$cases # Included marks the shared nonmissing ratings for each pair.
 # R2 gives every response one category more than R1: equal rankings do not
 # imply agreement. Do not treat two Tasks by the same Person as one response.
+}
 }
 \references{
 Cohen, J. (1968). Weighted kappa: nominal scale agreement with provision

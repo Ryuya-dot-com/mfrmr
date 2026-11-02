@@ -8,7 +8,7 @@ test_that("segmented native-coordinate scores agree with independent response in
     problem <- mfrm_gmfrm_problem(data, maximum, gauss_hermite_normal(121L),
       c("First owner", "Second owner"), "Candidate", "Rating")
     setup <- problem$common; par <- unname(problem$start + .2 * sin(seq_along(problem$start)))
-    ev <- mfrm_gmfrm_segmented_evaluator(setup$idx, setup$config, setup$sizes)
+    ev <- .mfrmr_research$mfrm_gmfrm_segmented_evaluator(setup$idx, setup$config, setup$sizes)
     expect_error(ev$value(NULL), "finite free-parameter")
     expect_error(ev$value(NULL), "finite free-parameter")
     result <- ev$evaluate(par)
@@ -38,13 +38,13 @@ test_that("segmented native-coordinate scores agree with independent response in
     expect_error(ev$gradient(NULL), "finite free-parameter")
     expect_error(ev$gradient(NULL), "finite free-parameter")
     cfg <- setup$config; cfg$population_spec$active <- TRUE
-    expect_error(mfrm_gmfrm_segmented_evaluator(setup$idx, cfg, setup$sizes), "fixed N")
+    expect_error(.mfrmr_research$mfrm_gmfrm_segmented_evaluator(setup$idx, cfg, setup$sizes), "fixed N")
     idx <- setup$idx; idx$weight <- rep(2, length(idx$score_k))
-    expect_error(mfrm_gmfrm_segmented_evaluator(idx, setup$config, setup$sizes), "unweighted")
+    expect_error(.mfrmr_research$mfrm_gmfrm_segmented_evaluator(idx, setup$config, setup$sizes), "unweighted")
 
     # optim owns/reuses its callbacks' input buffers; the cached key must not.
     fit <- optim(par, ev$value, ev$gradient, method = "BFGS", control = list(maxit = 2L))
-    fresh <- mfrm_gmfrm_segmented_evaluator(setup$idx, setup$config, setup$sizes)
+    fresh <- .mfrmr_research$mfrm_gmfrm_segmented_evaluator(setup$idx, setup$config, setup$sizes)
     expect_equal(ev$value(fit$par), fresh$value(fit$par), tolerance = 0)
     expect_equal(ev$gradient(fit$par), fresh$gradient(fit$par), tolerance = 0)
     C <- numeric(length(par)); C[length(par)] <- 1
@@ -58,16 +58,16 @@ test_that("segmented native-coordinate scores agree with independent response in
 
 test_that("segmented Legendre rules preserve polynomial integrals", {
   for (n in c(16L, 32L)) {
-    q <- mfrm_legendre_unit_rule(n)
+    q <- .mfrmr_research$mfrm_legendre_unit_rule(n)
     expect_lt(max(abs(vapply(0:(2*n-1L), function(k)
       sum(q$weights * q$nodes^k) - 1/(k+1), 0))), 2e-14)
   }
-  expect_error(mfrm_legendre_unit_rule(1), "Invalid")
+  expect_error(.mfrmr_research$mfrm_legendre_unit_rule(1), "Invalid")
 })
 
 test_that("segmented accuracy refusals retain the failing point and integration evidence", {
-  original_rule <- mfrm_legendre_unit_rule
-  testthat::local_mocked_bindings(mfrm_legendre_unit_rule = function(order) {
+  original_rule <- .mfrmr_research$mfrm_legendre_unit_rule
+  local_research_bindings(mfrm_legendre_unit_rule = function(order) {
     rule <- original_rule(order)
     if (order == 32L) rule$weights <- rule$weights * 1.01
     rule
@@ -78,7 +78,7 @@ test_that("segmented accuracy refusals retain the failing point and integration 
   problem <- mfrm_gmfrm_problem(data, 2, gauss_hermite_normal(15L),
     c("Task", "Rater"), "Person", "Score")
   x <- problem$common
-  ev <- mfrm_gmfrm_segmented_evaluator(x$idx, x$config, x$sizes)
+  ev <- .mfrmr_research$mfrm_gmfrm_segmented_evaluator(x$idx, x$config, x$sizes)
   error <- tryCatch(ev$value(problem$start), error = identity)
   expect_s3_class(error, "mfrmr_adaptive_quadrature_numeric_error")
   expect_identical(error$parameters, problem$start)
@@ -94,7 +94,7 @@ test_that("local coordinates retain narrow category transitions", {
   # displacement in one double first instead loses about 8e-4 here.
   for (categories in c(2L, 4L)) for (n in 1:2) {
     displacement <- c(1e-13, -1e-13)[seq_len(n)]
-    logits <- mfrm_segmented_relative_logits(rep(1, n), displacement,
+    logits <- .mfrmr_research$mfrm_segmented_relative_logits(rep(1, n), displacement,
       -(seq_len(categories) - 1L), 1e13)
     expect_identical(dim(logits), c(n, categories))
     expect_equal(sweep(logits, 1L, logits[, 1L]),

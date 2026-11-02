@@ -63,6 +63,8 @@
 #'   rule = "Illustrative fixed-rater residual screen; no exclusion/refit")
 #' plot(sensitivity, direction = "overfit")
 #' @export
+#' @param draw For `plot()`: `FALSE` returns plot data without opening a device.
+#' @order 1
 mfrm_screening_sensitivity <- function(roster, measures, thresholds, rule,
     statistic = c("either", "infit", "outfit"), zstd_cut = NULL, level = .95) {
   statistic <- match.arg(statistic)
@@ -112,8 +114,10 @@ mfrm_screening_sensitivity <- function(roster, measures, thresholds, rule,
 }
 
 #' @rdname mfrm_screening_sensitivity
-#' @param x,object An `mfrm_screening_sensitivity` object.
-#' @param ... Unused by print and summary.
+#' @param object An `mfrm_screening_sensitivity` object.
+#' @param ... For `summary.mfrm_screening_sensitivity()`: Unused by print and summary.
+#'
+#' For `plot()`: Unused.
 #' @export
 summary.mfrm_screening_sensitivity <- function(object, ...) {
   list(by_family = object$by_family, by_target = object$by_target, settings = object$settings)
@@ -127,8 +131,11 @@ print.mfrm_screening_sensitivity <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot directional screening rates across threshold profiles
+#' @rdname mfrm_screening_sensitivity
+#' @details `plot()` method: Plot directional screening rates across threshold profiles
 #' @param x Output from [mfrm_screening_sensitivity()].
+#'
+#' Also for `summary()`: An `mfrm_screening_sensitivity` object.
 #' @param style `"tiles"` shows a labelled rate matrix. `"curves"` shows
 #'   profile comparisons with pointwise Monte Carlo intervals by condition.
 #' @param direction One or more of `"either"`, `"underfit"`, `"overfit"`.
@@ -140,10 +147,9 @@ print.mfrm_screening_sensitivity <- function(x, ...) {
 #' @param palette `"accessible"` uses a sequential blue scale for tiles and
 #'   blue/orange/purple lines with different symbols. `"mono"` uses greys.
 #' @param show_labels Show percentages and known/planned counts in tiles.
-#' @param ... Unused.
-#' @return Invisibly, `mfrm_plot_data` with exact selected tables, settings,
-#'   notes and alternative text. [as_ggplot()] supports either style.
-#' @details Tile shading is supplemented by numeric labels; missing estimates
+#' @return For `plot()`: Invisibly, a `ggplot` object carrying exact selected tables, settings,
+#'   notes, and alternative text accessible via [plot_data()].
+#' @details For `plot()`: Tile shading is supplemented by numeric labels; missing estimates
 #'   are labelled NA. Profile order is supplied order, not an optimized ranking.
 #'   Curves connect discrete profile choices, not a continuous threshold scale.
 #'   Tile plots do not display uncertainty intervals: consult the retained table
@@ -185,43 +191,10 @@ plot.mfrm_screening_sensitivity <- function(x, style = c("tiles", "curves"),
     display = list(style = style, quantity = quantity, palette = palette, show_title = show_title,
       show_notes = show_notes, show_labels = show_labels, text_scale = text_scale, point_size = point_size))
   out <- new_mfrm_plot_data("screening_sensitivity", payload)
-  if (draw) mfrm_draw_screening_sensitivity(payload)
-  invisible(out)
-}
-
-mfrm_draw_screening_sensitivity <- function(payload) {
-  opt <- payload$display; tab <- payload$table; profiles <- levels(tab$Profile)
-  directions <- levels(tab$Direction); conditions <- levels(tab$Condition)
-  tiles <- opt$style == "tiles"; panels <- if (tiles) directions else conditions
-  old <- graphics::par(mfrow = c(ceiling(length(panels)/min(3,length(panels))), min(3,length(panels))),
-    mar = if (tiles) c(5, 11, 3, 1) else c(5, 4, 3, 1),
-    oma = c(if (opt$show_notes) 5 else 0, 0, if (opt$show_title) 3 else 0, 0), cex = opt$text_scale)
-  on.exit(graphics::par(old), add = TRUE)
-  colour <- if (opt$palette == "mono") c("#111111", "#666666", "#999999") else c("#0072B2", "#D55E00", "#7B3294")
-  for (panel in panels) {
-    d <- if (tiles) tab[tab$Direction == panel, ] else tab[tab$Condition == panel, ]
-    if (tiles) {
-      graphics::plot(NA_real_, NA_real_, xlim = c(.5,length(profiles)+.5), ylim = c(.5,length(conditions)+.5), axes = FALSE, xlab = "Threshold profile", ylab = "", main = panel)
-      xx <- as.integer(d$Profile); yy <- length(conditions)+1-as.integer(d$Condition)
-      colours <- mfrm_screening_tile_colours(d$Value, opt$palette)
-      graphics::rect(xx-.48, yy-.48, xx+.48, yy+.48, col = colours$fill, border = "white")
-      if (opt$show_labels) graphics::text(xx, yy, d$Label, cex = .7,
-        col = colours$text)
-      graphics::axis(1, seq_along(profiles), profiles, cex.axis = .7)
-      graphics::axis(2, seq_along(conditions), rev(conditions), las = 1, tick = FALSE, cex.axis = .75)
-    } else {
-      graphics::plot(NA_real_, NA_real_, xlim = c(.8,length(profiles)+.2), ylim = c(0,1), xaxt = "n", xlab = "Threshold profile", ylab = "Proportion", main = panel, bty = "n")
-      graphics::axis(1, seq_along(profiles), profiles, cex.axis = .7)
-      for (j in seq_along(directions)) {
-        a <- d[d$Direction == directions[j], ]; xx <- as.integer(a$Profile)
-        if (opt$quantity == "rate") graphics::segments(xx,a$MCLower,xx,a$MCUpper,col=colour[j])
-        graphics::lines(xx,a$Value,type="b",col=colour[j],pch=c(16,17,15)[j],lty=j,cex=opt$point_size/2.5)
-      }
-      graphics::legend("topleft", directions, col=colour[seq_along(directions)], pch=c(16,17,15)[seq_along(directions)],lty=seq_along(directions),bty="n",cex=.65)
-    }
-  }
-  if (opt$show_title) graphics::mtext(payload$title,side=3,outer=TRUE,line=1)
-  if (opt$show_notes) graphics::mtext(paste(strwrap(payload$caption,100),collapse="\n"),side=1,outer=TRUE,line=1,cex=.7)
+  p <- .mfrm_finalize_ggplot(out, draw = FALSE)
+  attr(p, "mfrmr_alt_text") <- payload$alt_text
+  if (isTRUE(draw)) .mfrm_draw_ggplot_clean(p)
+  invisible(p)
 }
 
 mfrm_screening_tile_colours <- function(value, palette) {
@@ -252,7 +225,7 @@ mfrm_screening_tile_colours <- function(value, palette) {
       ggplot2::facet_wrap(~Condition,ncol=min(3,nlevels(tab$Condition))) + ggplot2::scale_y_continuous(limits=c(0,1)) +
       ggplot2::scale_colour_manual(values=if(opt$palette=="mono") c("#111111","#666666","#999999") else c("#0072B2","#D55E00","#7B3294"))
   }
-  p <- p + .mfrmr_gg_theme() + ggplot2::theme(text=ggplot2::element_text(size=11*opt$text_scale))
+  p <- p + .mfrmr_gg_theme_styled("standard") + ggplot2::theme(text=ggplot2::element_text(size=11*opt$text_scale))
   p <- .mfrmr_gg_labs(p,payload,x="Threshold profile",y=if(opt$style=="tiles") NULL else "Proportion") + ggplot2::labs(alt=payload$alt_text)
   attr(p,"mfrmr_alt_text") <- payload$alt_text
   p

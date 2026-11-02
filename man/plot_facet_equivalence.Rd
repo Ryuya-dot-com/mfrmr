@@ -27,11 +27,11 @@ plot_facet_equivalence(
 \item{draw}{If \code{TRUE} (default), draw the plot. If \code{FALSE}, return the
 prepared plotting data.}
 
-\item{...}{Additional graphical arguments passed to base plotting functions.}
+\item{...}{Reserved for compatibility; use the named plot controls.}
 }
 \value{
-Invisibly returns the plotting data and inference/covariance basis.
-With \code{draw = FALSE}, returns the data without drawing.
+Invisibly, a \code{ggplot} object. Use \code{\link[=plot_data]{plot_data()}} for the plotting
+data and inference/covariance basis. \code{draw = FALSE} returns the plot without printing.
 }
 \description{
 Plot facet-equivalence results
@@ -75,12 +75,17 @@ This renderer is internal. Use the corresponding \code{plot()} route in
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot_facet_equivalence", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 31, maxit = 150)
 eq <- analyze_facet_equivalence(fit, facet = "Rater")
-pdat <- plot(eq, type = "facet_equivalence", view = "forest", draw = FALSE)
+p <- plot(eq, type = "facet_equivalence", view = "forest", draw = FALSE)
+pdat <- plot_data(p)
 c(pdat$facet, pdat$type)
+}
 }
 \seealso{
 \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}}

@@ -47,7 +47,7 @@ test_that("parameter-block names are refused before fitting and on saved configu
 
 test_that("similar facet names cannot create absent parameter blocks", {
   withr::local_options(warnPartialMatchDollar = TRUE)
-  for (population in c(FALSE, TRUE)) for (model in c("RSM", "PCM", "GPCM")) {
+  for (population in c(FALSE, TRUE)) for (model in if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) c("RSM", "PCM", "GPCM") else if (population) c("PCM", "GPCM") else "RSM") {
     b <- .map_setup(model, population = population)
     par <- .2 * sin(seq_len(sum(unlist(b$sizes))))
     reference <- mfrmr_make_adaptive_mml_evaluator(b$idx, b$config, b$sizes, 7L)(par)

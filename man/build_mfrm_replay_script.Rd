@@ -177,6 +177,9 @@ scenario; its source is recorded without asserting a match to the fit.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("build_mfrm_replay_script", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 # Saved synthetic MML/RSM analysis of example_operational.
 # For your own data, fit a model first; see ?fit_mfrm.
@@ -185,6 +188,7 @@ fit <- example_fit$fit
 replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
 replay$summary[, c("ScriptMode", "ResidualPCA", "BiasPairs")]
 cat(substr(replay$script, 1, 120))
+}
 }
 \seealso{
 \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}

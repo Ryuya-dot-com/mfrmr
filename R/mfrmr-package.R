@@ -9,7 +9,7 @@
 #' with `parm = "slopes"`
 #' supplies approximate relative-slope intervals for eligible MML fits; model
 #' ranking and matched PCM/GPCM tests use separate checks in [compare_mfrm()].
-#' [gpcm_capability_matrix()] explains the supported uses.
+#' `mfrmr_output_guide("gpcm_capabilities")` (see [mfrmr_gpcm_scope]) explains the supported uses.
 #' An experimental two-family `GPCM` route also provides estimation and
 #' conditional scoring, with explicit uncertainty limitations.
 #' Native RSM/PCM conditional maximum likelihood (`CML`) conditions on Person
@@ -28,7 +28,6 @@
 #' the question you want to answer.
 #'
 #' @useDynLib mfrmr, .registration = TRUE
-#' @importMethodsFrom Matrix %*%
 #'
 #' @details
 #' Start with the complete script in the Examples section:
@@ -57,12 +56,34 @@
 #' For your own data, first inspect the design and score categories with
 #' [describe_mfrm_data()].
 #'
-#' @section Optional packages:
-#' The basic example below uses packages installed with mfrmr. Its base-R
-#' plots do not need ggplot2. Additional packages support particular features;
-#' you do not need to install all suggested packages to get started.
+#' @section Core five-step workflow:
+#' Across the package's three pillars (measurement models, G-theory assessment
+#' planning, and rater feedback / decisions), most analyses follow five entry
+#' points (`mfrmr_output_guide("core_workflow")`):
 #'
-#' - [as_ggplot()] needs ggplot2 for ggplot2 rendering.
+#' 1. **Inspect data and anchors**: [describe_mfrm_data()] (and
+#'    [review_mfrm_anchors()] when linking across waves or subsets).
+#' 2. **Fit the measurement model**: [fit_mfrm()], passing either the 16 core
+#'    arguments directly or a reusable `spec = list(...)` plus optional
+#'    numerical `control = list(...)` (see [fit_mfrm_technical_details] for all
+#'    33 `spec` and 21 `control` keys). The same `spec` list can be shared
+#'    unchanged across [describe_mfrm_data()], [review_mfrm_anchors()],
+#'    [fit_mfrm()], and [export_mfrm_model()].
+#' 3. **Diagnose model fit and rater effects**: [diagnose_mfrm()] (use
+#'    `diagnostic_mode = "both"` for final RSM/PCM MML runs).
+#' 4. **Plan future designs under G-theory**: [mfrm_g_study()] and
+#'    [mfrm_d_study()] on observed ratings (separate from latent-logit MFRM
+#'    separation).
+#' 5. **Report and visualize**: [mfrm_results()], [mfrm_report()], and `plot()`
+#'    (all 62 `plot()` methods render and return `ggplot2` objects directly;
+#'    extract underlying tables and cautions via [plot_data()]).
+#'
+#' @section Optional packages:
+#' The basic example below uses packages installed with mfrmr, including
+#' `ggplot2` for all `plot()` methods and [as_ggplot()]. Additional suggested
+#' packages support particular specialist features; you do not need to install
+#' all suggested packages to get started.
+#'
 #' - [as_kable()] needs knitr and [as_flextable()] needs flextable for their
 #'   respective table formats.
 #' - [fit_mfrm_random_rater()] needs RTMB version 2.0 or later for shared
@@ -70,10 +91,12 @@
 #' - Corrected JML in [fit_mfrm()], requested with `jml_correction_order`,
 #'   needs nleqslv to solve the adjusted equations.
 #' - [ordinal_logistic_table()] needs ordinal for ordinal-logistic DIF.
+#' - `export_mfrm_model(..., format = "stan", run_cmdstan = TRUE)` needs
+#'   cmdstanr and a configured CmdStan installation for live MCMC sampling.
 #'
 #' These are common examples; other optional analyses name their dependencies
 #' in their own help. A missing-package message identifies what to install.
-#' For example, use `install.packages("ggplot2")` if you want [as_ggplot()].
+#' For example, use `install.packages("flextable")` if you want [as_flextable()].
 #'
 #' A saved [mfrm_results()] bundle can be reopened with [base::readRDS()] and
 #' passed to [mfrm_report()] without refitting or installing optional estimation
@@ -88,10 +111,13 @@
 #' Native response models use the logistic metric (L-metric), with scaling
 #' constant \eqn{D = 1}; no extra 1.7 normal-ogive approximation factor is used.
 #' This is distinct from choosing a normal ability distribution. See the
-#' "Logistic metric (D = 1)" section of [fit_mfrm()] for logit interpretation
-#' with fixed or varying slopes and comparison with other software.
+#' "Logistic metric (D = 1)" section of [fit_mfrm_technical_details] (linked
+#' from [fit_mfrm()]) for logit interpretation with fixed or varying slopes and
+#' comparison with other software.
 #'
 #' @section Where to go next:
+#' - [fit_mfrm_technical_details] for full equations, identification rules,
+#'   numerical controls, and return-object provenance of [fit_mfrm()].
 #' - [mfrmr_methods_reference] for the question-to-calculation map, plain-language
 #'   explanations and links to the methodological literature.
 #' - [mfrmr_workflow_methods] and `vignette("mfrmr-workflow", package = "mfrmr")`
@@ -103,7 +129,7 @@
 #' - [mfrmr_linking_and_dff] for linking and differential facet functioning.
 #' - [classification_table()] for fixed-plan future classification accuracy,
 #'   consistency and conditional precision under ordinary RSM/PCM calibration.
-#' - [gpcm_capability_matrix] for the `GPCM` extension.
+#' - [mfrmr_gpcm_scope] for the `GPCM` extension.
 #' - [mfrmr_output_guide()] for the broader purpose-to-function map.
 #'
 #' A printable reference card is available at
@@ -112,7 +138,7 @@
 #' @section Portable fixed calibration:
 #' A saved, versioned calibration artifact can be created from an eligible
 #' one-scale `RSM` or `PCM` MML fit under the fixed standard-normal scoring
-#' basis. Use [mfrm_calibration_capabilities()] before extraction, then follow
+#' basis. Use `mfrmr_output_guide("calibration_capabilities")` before extraction, then follow
 #' [mfrm_calibration_workflow] to review, validate, freeze, save, load, and
 #' score the artifact. Review the returned batch with
 #' [mfrm_calibration_score_methods] before using its estimates. One-family GPCM
@@ -140,7 +166,7 @@
 #'   for ordered-response `RSM` / `PCM` models with a one-dimensional
 #'   conditional-normal population model and explicit one-row-per-person
 #'   covariates expanded through `stats::model.matrix()`
-#' - `GPCM` support is summarized by [gpcm_capability_matrix()]
+#' - `GPCM` support is summarized by `mfrmr_output_guide("gpcm_capabilities")` ([mfrmr_gpcm_scope])
 #' - `GPCM` supports the core fit/summary/scoring/information
 #'   path, direct Wright/pathway/CCC plots, residual-PCA follow-up, and the
 #'   residual-based diagnostics tables/plots as exploratory tools
@@ -193,12 +219,12 @@
 #'
 #' Function families:
 #' - Model fitting: [fit_mfrm()], [summary.mfrm_fit()], [plot.mfrm_fit()]
-#' - Legacy-compatible workflow wrapper: [run_mfrm_facets()], [mfrmRFacets()]
+#' - Legacy-compatible workflow wrapper: [run_mfrm_facets()], [run_mfrm_facets()]
 #' - Diagnostics: [diagnose_mfrm()], `summary(diag)`,
 #'   [analyze_residual_pca()], [plot(x, type = "residual_pca")][plot.mfrm_fit]
 #' - Bias and interaction: [estimate_bias()], [estimate_all_bias()],
 #'   `summary(bias)`, [bias_interaction_report()], [plot(x, type = "bias")][plot.mfrm_fit]
-#' - Differential functioning: [analyze_dff()], [analyze_dif()],
+#' - Differential functioning: [analyze_dff()],
 #'   [mantel_haenszel_table()] for separately matched binary responses,
 #'   [ordinal_logistic_table()] for matched cumulative-logit comparisons,
 #'   [dif_interaction_table()], [plot(x, type = "heatmap")][plot.mfrm_dif], [dif_report()]
@@ -232,7 +258,7 @@
 #' - Dashboards: [facet_quality_dashboard()], [plot(x, type = "facet_dashboard")][plot.mfrm_fit]
 #' - Export / reproducibility: [build_mfrm_manifest()], [build_mfrm_replay_script()],
 #'   [build_conquest_overlap_bundle()], `normalize_conquest_overlap_exports()`,
-#'   [normalize_conquest_overlap_files()],
+#'   file input through `normalize_conquest_overlap_tables(input = "files")`,
 #'   [normalize_conquest_overlap_tables()],
 #'   [review_conquest_overlap()],
 #'   [export_mfrm_bundle()] for the diagnostics-compatible Rasch-family route;
@@ -336,7 +362,7 @@
 #'    forecasting, diagnostic-screening, and signal-detection helpers are
 #'    available, while full score-side FACETS review, posterior-predictive
 #'    checks, and `MCMC` estimation are not available for `GPCM`. Use
-#'    [gpcm_capability_matrix()] as the formal boundary statement.
+#'    `mfrmr_output_guide("gpcm_capabilities")` ([mfrmr_gpcm_scope]) as the formal boundary statement.
 #'
 #' @section Model formulation:
 #' The Rasch-family branch used by `RSM` and `PCM` extends the basic Rasch
@@ -392,9 +418,10 @@
 #' `GPCM` a slope-aware sensitivity/extension route, not a replacement for the
 #' equal-weighting `RSM`/`PCM` interpretation.
 #' A separate provisional two-family MML route fits the multiplicative
-#' Uto--Ueno equation with explicit fixed-N(0,1) identification, exactly two
-#' facets and second-owner steps. The first family's slopes have geometric mean
-#' one and the second family's slopes are free. Fixed-grid EM and adaptive
+#' Uto--Ueno equation with explicit fixed-N(0,1) identification and allows
+#' additional fixed additive facets. Step ownership and the noncentered
+#' location facet are explicit. The named reference family's slopes have
+#' geometric mean one and the other family's slopes are free. Fixed-grid EM and adaptive
 #' direct MML supply summaries and conditional fitted curves without intervals.
 #' Both support separately checked experimental component log-Wald and
 #' location/contrast intervals and descriptive posterior residuals; component
@@ -404,7 +431,8 @@
 #' posterior intervals, excluding calibration uncertainty. Coverage and
 #' population transport remain unqualified. The one-family diagnostic and
 #' inference routes below do not apply to it. See the
-#' Two slope families section of [fit_mfrm()]. Unit slopes reduce to the
+#' "Two slope families" section of [fit_mfrm_technical_details] (linked from
+#' [fit_mfrm()]). Unit slopes reduce to the
 #' equal-discrimination PCM kernel.
 #' Under default one-family MML, an intercept-only person distribution
 #' \eqn{N(\beta_0,\sigma^2)} is estimated. The geometric-mean-one slopes are
@@ -519,7 +547,7 @@
 #' replaces separation / reliability and inter-rater agreement
 #' summaries. The full derivation, with notation and pairwise
 #' local-dependence events, lives in
-#' `vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")`.
+#' [online MML and marginal-fit guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-mml-and-marginal-fit.html).
 #'
 #' @section Statistical background:
 #' Key statistics reported throughout the package:
@@ -584,7 +612,7 @@
 #' ZSTD values are not numerically interchangeable across the two residual
 #' bases, most visibly for extreme-scoring persons. Use `method = "JML"`
 #' when an external FACETS fit comparison requires a JMLE-style residual
-#' basis, and see [facets_fit_df_guide()] for the separate
+#' basis, and see [facets_guide()] for the separate
 #' standardization-side df/ZSTD conventions.
 #'
 #' **PTMEA (Point-Measure Correlation)**
@@ -832,17 +860,13 @@
 #' @importFrom dplyr starts_with summarize transmute ungroup
 #' @importFrom tidyr drop_na expand_grid pivot_wider replace_na unite
 #' @importFrom tibble as_tibble column_to_rownames tibble
-#' @importFrom purrr map map_dbl map_dfr pmap_chr
-#' @importFrom stringr regex str_count str_detect str_extract str_pad
-#' @importFrom stringr str_replace str_replace_all str_trunc
-#' @importFrom psych cor.smooth describe principal
 #' @importFrom utils combn data globalVariables head modifyList packageVersion
 #' @importFrom utils read.csv tail write.csv
 #' @importFrom graphics abline arrows axis barplot dotchart hist image legend lines mtext plot plot.new points rect segments text title
 #' @importFrom stats cutree hclust kmeans nlminb optim optimHess optimize qt
 #' @importFrom utils zip
 #' @importFrom cli cli_progress_bar cli_progress_done cli_progress_update
-#' @importFrom lifecycle deprecate_soft
+#' @importFrom gtable gtable_add_cols gtable_add_grob gtable_add_rows gtable_matrix
 #' @importFrom rlang .data
 #' @importFrom stats ave confint na.omit optim p.adjust pchisq predict pt qnorm rnorm sd setNames uniroot
 #'

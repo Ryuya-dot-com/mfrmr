@@ -23,24 +23,35 @@ interaction_em_fixture <- local({
 interaction_em_reference <- function(par, fit, quad) {
   cfg <- fit$config; d <- fit$prep$data
   p <- expand_params(par, build_param_sizes(cfg), cfg)
-  row_ll <- vapply(seq_len(nrow(d)), function(j) {
-    eta <- quad$nodes + sum(vapply(cfg$facet_names, function(f)
-      cfg$facet_signs[[f]] * p$facets[[f]][as.character(d[[f]][j])], numeric(1)))
-    for (nm in names(p$interactions)) {
-      facets <- strsplit(nm, ":", fixed = TRUE)[[1]]
-      eta <- eta + p$interactions[[nm]][as.character(d[[facets[1]]][j]),
-                                      as.character(d[[facets[2]]][j])]
-    }
-    steps <- if (cfg$model == "RSM") p$steps else p$steps_mat[as.character(d$Criterion[j]), ]
-    logits <- sweep(outer(eta, 0:length(steps)), 2, c(0, cumsum(steps)), "-")
-    maximum <- apply(logits, 1, max)
-    (logits[, d$Score[j] - cfg$rating_min + 1] - maximum -
-       log(rowSums(exp(logits - maximum)))) * d$Weight[j]
-  }, numeric(length(quad$nodes)))
-  person_ll <- t(vapply(split(seq_len(nrow(d)), as.character(d$Person)),
-    function(rows) rowSums(row_ll[, rows, drop = FALSE]), numeric(length(quad$nodes))))
-  logpost <- sweep(person_ll, 2, log(quad$weights), "+")
-  maximum <- apply(logpost, 1, max)
+  # Literal category logits, evaluated for all observations together. The
+  # reference still uses no production probability, posterior or score kernel.
+  offset <- Reduce(`+`, lapply(cfg$facet_names, function(f)
+    cfg$facet_signs[[f]] * p$facets[[f]][as.character(d[[f]])]))
+  for (nm in names(p$interactions)) {
+    facets <- strsplit(nm, ":", fixed = TRUE)[[1]]
+    block <- p$interactions[[nm]]
+    at <- cbind(match(as.character(d[[facets[1]]]), rownames(block)),
+                match(as.character(d[[facets[2]]]), colnames(block)))
+    offset <- offset + block[at]
+  }
+  steps <- if (cfg$model == "RSM") {
+    matrix(rep(p$steps, each = nrow(d)), nrow(d))
+  } else p$steps_mat[as.character(d$Criterion), , drop = FALSE]
+  cumulative <- cbind(0, t(apply(steps, 1L, cumsum)))
+  eta <- outer(quad$nodes, as.numeric(offset), `+`)
+  logits <- lapply(seq_len(ncol(cumulative)), function(k)
+    sweep((k - 1L) * eta, 2L, cumulative[, k], `-`))
+  maximum <- Reduce(pmax, logits)
+  row_ll <- -maximum - log(Reduce(`+`, lapply(logits, function(x) exp(x - maximum))))
+  categories <- d$Score - cfg$rating_min + 1L
+  for (k in seq_along(logits)) {
+    columns <- which(categories == k)
+    row_ll[, columns] <- row_ll[, columns, drop = FALSE] + logits[[k]][, columns, drop = FALSE]
+  }
+  row_ll <- sweep(row_ll, 2L, d$Weight, `*`)
+  person_ll <- rowsum(t(row_ll), as.character(d$Person), reorder = TRUE)
+  logpost <- sweep(person_ll, 2L, log(quad$weights), `+`)
+  maximum <- apply(logpost, 1L, max)
   weights <- exp(logpost - maximum)
   posterior <- weights / rowSums(weights)
   list(loglik = sum(maximum + log(rowSums(weights))), row_ll = t(row_ll),
@@ -134,6 +145,8 @@ test_that("interaction EM checkpoint resumes the same constrained objective", {
 })
 
 test_that("hybrid interactions preserve joint intervals and downstream reports", {
+  # Extended local/CI regression; see CONTRIBUTING.md.
+  skip_on_cran()
   d <- load_mfrmr_data("example_core")
   for (model in c("RSM", "PCM")) {
     args <- list(data=d, person="Person", facets=c("Rater","Criterion"), score="Score",

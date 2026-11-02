@@ -83,6 +83,9 @@ storage is quadratic in the declared category count. Custom weights and
 circular, bipolar, radical and ratio weights are not implemented.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("gwet_ac2_table", run.dontrun = TRUE)
+\dontrun{
 data("mfrmr_example_agreement", package = "mfrmr")
 ratings <- mfrmr_example_agreement
 ac <- gwet_ac2_table(ratings, rater = "Rater",
@@ -90,6 +93,7 @@ ac <- gwet_ac2_table(ratings, rater = "Rater",
 ac$table
 ac$unit_summary # Number of observed ratings and pairability for each response.
 ac$notes # Read the panel coefficient together with its assumptions.
+}
 }
 \references{
 Gwet, K. L. Author implementation of AC1/AC2, \code{gwet.ac1.raw},

@@ -4,12 +4,13 @@
 #' the dependence between plans estimated from the same G-study. This first
 #' interval method requires two common random facets and an explicit normal
 #' random-effects assumption.
-#'
-#' @param x A result from [mfrm_d_study()] with at least two plans.
+#' @param x For `mfrm_multivariate_d_compare()`: A result from [mfrm_d_study()] with at least two plans.
 #'   It must retain `negative_components = "raw"`; this inference does not
 #'   describe GENOVA-adjusted component estimators.
 #'   For population plan-difference intervals alongside GENOVA-adjusted points,
 #'   use the supported `reference` methods in [confint.mfrm_multivariate_d_study()].
+#'
+#' For `plot()`: A result from [mfrm_multivariate_d_compare()].
 #' @param reference Row number of the reference plan in `x$design_grid`.
 #' @param score One original score name. With no selection, use the sole
 #'   composite, or the first original score if there is no composite.
@@ -19,9 +20,7 @@
 #'   distributed random-effect vectors with constant component covariances.
 #'   This assumption is not tested by the function.
 #' @param level Pointwise confidence level between zero and one, default .95.
-#'
-#' @details
-#' Use this comparison when choosing between plans specified before inspecting
+#' @details Use this comparison when choosing between plans specified before inspecting
 #' their estimates. For example, compare two raters and six tasks with three
 #' raters and four tasks. A positive G/Phi difference favors the comparison
 #' plan; a negative SEM difference favors it. An interval containing zero means
@@ -76,7 +75,6 @@
 #' analyzed data. For incomplete sources, covariance computation processes
 #' blocks of rows to avoid a full observation-by-observation matrix; its running
 #' time is still quadratic in the number of observed ratings.
-#'
 #' @section Calculation and source of the approximation:
 #' For one selected score or fixed composite, write its observed values as
 #' the vector \eqn{z}. Its seven raw component estimates can be written as
@@ -115,7 +113,6 @@
 #' the G/D targets and these mathematical steps; none validates this entire
 #' package procedure for every supported design. This is not an implementation
 #' of all GENOVA-family interval methods.
-#'
 #' @return An `mfrm_multivariate_d_comparison` list with `comparisons` (one row
 #'   per comparison plan and metric), `covariance` (joint sampling covariance
 #'   of those differences), `design_grid`, `reference`, selected score/composite
@@ -130,8 +127,9 @@
 #'   `print()` returns the same comparison invisibly without recomputation.
 #'   `summary()` returns the comparison table. `Status` describes interval
 #'   availability; point differences can remain available without an interval.
-#' @references
-#' Brennan, R. L. (2001). *Generalizability theory*. Springer.
+#'   After [recommend_mfrm_design()] attaches costs and targets,
+#'   `summary(x, planning = TRUE)` returns the saved planning tables and notes.
+#' @references Brennan, R. L. (2001). *Generalizability theory*. Springer.
 #' \doi{10.1007/978-1-4757-3456-0}. G/D targets and sampling variability.
 #'
 #' Rao, C. R. (1971). Estimation of variance and covariance components--MINQUE
@@ -147,7 +145,9 @@
 #' *The American Statistician, 46*(1), 27--29.
 #' \doi{10.1080/00031305.1992.10475842}. Taylor/moment approximation framework.
 #' @seealso [mfrm_d_study()], [plot.mfrm_multivariate_d_comparison()]
-#' @examples
+#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("mfrm_multivariate_d_compare", run.dontrun = TRUE)
+#' \dontrun{
 #' # Existing fictional ratings: one row per Person-Rater-Task, two scores.
 #' data("mfrmr_example_gtheory_crossed", package = "mfrmr")
 #' ratings <- mfrmr_example_gtheory_crossed
@@ -162,7 +162,9 @@
 #' plot(comparison) # G/Phi for each plan, including the reference.
 #' plot(comparison, type = "sem")
 #' plot(comparison, view = "differences") # Paired difference intervals.
+#' }
 #' @export
+#' @order 1
 mfrm_multivariate_d_compare <- function(x, reference = 1L, score = NULL,
                                        composite = NULL, assumption, level = .95) {
   if (missing(assumption) || !identical(assumption, "normal")) {
@@ -321,11 +323,23 @@ mfrm_multivariate_d_compare <- function(x, reference = 1L, score = NULL,
 
 #' @rdname mfrm_multivariate_d_compare
 #' @param object A result from `mfrm_multivariate_d_compare()`.
-#' @param ... Further table-printing arguments for `print()`; unused arguments
+#' @param planning For `summary()`: `FALSE` returns the unchanged comparison
+#'   table. `TRUE` returns the planning review attached by
+#'   [recommend_mfrm_design()], without calculation.
+#' @param ... For `summary.mfrm_multivariate_d_comparison()`: Further table-printing arguments for `print()`; unused arguments
 #'   to `summary()` are rejected.
+#'
+#' For `plot()`: Reserved; additional arguments are rejected.
 #' @export
-summary.mfrm_multivariate_d_comparison <- function(object, ...) {
+summary.mfrm_multivariate_d_comparison <- function(object, ..., planning = FALSE) {
   rlang::check_dots_empty()
+  if (!is.logical(planning) || length(planning) != 1L || is.na(planning))
+    stop("`planning` must be TRUE or FALSE.", call. = FALSE)
+  if (planning) {
+    if (is.null(object$planning))
+      stop("Attach costs and targets with recommend_mfrm_design() first.", call. = FALSE)
+    return(object$planning)
+  }
   object$comparisons
 }
 
@@ -349,6 +363,13 @@ print.mfrm_multivariate_d_comparison <- function(x, digits = NULL, row.names = F
   cat("An interval containing zero does not establish equivalence.\n")
   if (any(!x$component_diagnostics$PositiveSemidefinite) || !x$sampling_covariance_psd) {
     cat("Non-PSD covariance estimates: inspect component and sampling-covariance diagnostics.\n")
+  }
+  if (!is.null(x$planning)) {
+    cat("\nResource feasibility and point targets (all plans retained):\n")
+    print(x$planning$plans, digits = digits, row.names = row.names, ...)
+    print(x$planning$costs, digits = digits, row.names = row.names, ...)
+    print(x$planning$differences[c("Scenario", "Metric", "Direction")], row.names = row.names)
+    cat(paste(x$planning$notes, collapse = "\n"), "\n")
   }
   invisible(x)
 }

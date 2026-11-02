@@ -4,29 +4,36 @@
 \alias{plot.mfrm_dif}
 \title{Plot differential facet functioning}
 \usage{
-\method{plot}{mfrm_dif}(x, type = c("summary", "heatmap"), ...)
+\method{plot}{mfrm_dif}(x, type = c("summary", "heatmap", "scatter"), ...)
 }
 \arguments{
-\item{x}{A result from \code{\link[=analyze_dff]{analyze_dff()}} or \code{\link[=analyze_dif]{analyze_dif()}}.}
+\item{x}{A result from \code{\link[=analyze_dff]{analyze_dff()}}.}
 
-\item{type}{\code{"summary"} for ordered effects or \code{"heatmap"} for the interaction grid.}
+\item{type}{\code{"summary"} for ordered effects, \code{"heatmap"} for the interaction
+grid, or \code{"scatter"} for a paired two-group scatterplot with marginal
+histograms (\code{groups}, \code{metric}, \code{marginal = c("auto", "histogram", "none")},
+\code{ci_level}, \code{show_labels}).}
 
-\item{...}{Named controls described below. Both views accept \code{draw = FALSE}
-to return plot data without drawing. Controls for the other view are rejected.}
+\item{...}{Named controls described below. All views accept \code{draw = FALSE}
+to return the \code{ggplot} object without printing. Controls for other views are rejected.}
 }
 \value{
-An \code{mfrm_plot_data} object. The summary's \code{data$data} holds the
-displayed contrasts; the heatmap's \code{data$matrix} holds the plotted matrix.
-Both retain source rows in \code{data$pairs}, response matches (when available)
-in \code{data$cases}, and source settings in \code{data$analysis_config}.
+Invisibly, a \code{ggplot} object carrying the underlying plot payload
+accessible via \code{\link[=plot_data]{plot_data()}}. The summary's \code{data} component holds the
+displayed contrasts; the heatmap's \code{matrix} holds the plotted matrix;
+the scatterplot's \code{table} holds paired group values (\code{X}, \code{Y}) and
+\code{marginal_histograms} records bin counts when marginal histograms are shown.
+Views retain source rows in \code{pairs}, response matches (when available)
+in \code{cases}, and source settings in \code{analysis_config}.
 When supplied to \code{\link[=analyze_dff]{analyze_dff()}}, the separate prospective interaction
-review is retained in \code{data$comparison_review}. Its states do not classify
+review is retained in \code{comparison_review}. Its states do not classify
 the displayed residual/refit effects; inspect its own model and weights.
 Retain the returned notes and
 unavailable values when exporting; a plot does not qualify new inference.
 }
 \description{
-Compare saved group contrasts as ordered bars or a heatmap. Read the
+Compare saved group contrasts as ordered bars, a heatmap, or a paired
+two-group scatterplot with optional marginal histograms. Read the
 analysis method and scale before interpreting the size of a difference.
 }
 \section{Summary controls}{
@@ -104,6 +111,9 @@ intervals omit estimated-anchor uncertainty and cross-refit covariance.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot.mfrm_dif", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -120,6 +130,9 @@ comparisons[, c("Level", "Group1", "Group2", "Contrast",
                  "N_Group1", "N_Group2", "PlotStatus")]
 table(plot_data(p, "cases")$Reason)
 plot_data(p, "notes")
+p_scatter <- plot(dff, type = "scatter", draw = FALSE)
+head(plot_data(p_scatter, "data"))
+}
 }
 \seealso{
 \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=dif_interaction_table]{dif_interaction_table()}}, \link{mfrmr_plot_migration}

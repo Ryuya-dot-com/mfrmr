@@ -96,7 +96,7 @@ population mean and variance; it does not use the RSM default fixed N(0,1).
 Exact agreement proportions describe the retained benchmark mix. Accuracy
 logits adjust for the specified difficulty structure under the response
 model, local independence and a connected identifiable design. They are
-neither ordinary rater severity nor examinee proficiency. Binary coding
+neither ordinary rater severity nor examinee ability. Binary coding
 discards the direction and magnitude of disagreements. The native fit's
 readiness and estimate-use labels remain visible; finite numbers do not
 establish reportability, model fit or transport to other benchmarks.

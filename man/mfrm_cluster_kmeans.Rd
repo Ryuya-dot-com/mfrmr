@@ -3,22 +3,11 @@
 \name{mfrm_cluster_kmeans}
 \alias{mfrm_cluster_kmeans}
 \title{K-means groups from numeric features or retained principal components}
-\usage{
-mfrm_cluster_kmeans(
-  x,
-  k,
-  weights = NULL,
-  missing = c("error", "omit"),
-  scale = TRUE,
-  nstart = 25,
-  iter.max = 100,
-  seed = 1,
-  silhouette = TRUE
-)
-}
 \arguments{
-\item{x}{A table reviewed with \code{\link[=mfrm_features]{mfrm_features()}}. For \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}},
-a result from \code{mfrm_pca()} is also accepted.}
+\item{x}{For \code{mfrm_pca()}: A table reviewed with \code{\link[=mfrm_features]{mfrm_features()}}. For \code{mfrm_cluster(..., method = "kmeans")},
+a result from \code{mfrm_pca()} is also accepted.
+
+For \code{plot()}: A result from \code{\link[=mfrm_pca]{mfrm_pca()}}.}
 
 \item{k}{Number of groups, an integer from 2 to one less than the number of
 included entities, and no greater than their number of distinct profiles.
@@ -60,12 +49,16 @@ for a one-entity group and zero for identical values in a larger group.
 A singleton's silhouette is zero by convention, not evidence of separation.
 }
 \description{
+For new code use \code{mfrm_cluster(..., method = "kmeans")}.
+The former method-specific entry is no longer exported. This guide retains
+the method's settings, geometry and interpretation.
+}
+\details{
 Divide people, raters or tasks into k groups with similar numeric attributes.
 The algorithm minimizes squared distances within groups, using the numeric
 features or retained principal components supplied by you. The groups are
 descriptive; they do not measure ability or rater quality.
-}
-\details{
+
 Uses \code{\link[stats:kmeans]{stats::kmeans()}} with Hartigan-Wong updates and the stated
 random starts. Warnings, nonconvergence and nonfinite sums of squares stop
 the analysis; no failed run is silently presented as a usable result.
@@ -79,7 +72,7 @@ Full-rank PCA preserves the distance objective; truncation changes it.
 No component whitening is performed. The centers of a truncated PCA are
 coordinates in that subspace; \code{profiles} describe the original attributes.
 Categorical codes must not be converted to numeric solely to pass this
-interface. Use \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}} for Gower/PAM mixed-feature groups.
+interface. Use \code{\link[=mfrm_cluster]{mfrm_cluster()}} for Gower/PAM mixed-feature groups.
 
 Compare fitted partitions using \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}. Silhouettes
 calculated in different geometries are not directly comparable evidence
@@ -97,7 +90,7 @@ this ratio even without meaningful groups. These sums have squared units
 of the transformed coordinates (SD-scaled/weighted features or retained PCs),
 not necessarily original feature units. Compare them only for the same rows
 and geometry. For silhouette a(i), b(i), range, singleton conventions and
-profile denominators, see the metric section of \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}.
+profile denominators, see the metric section of \code{\link[=mfrm_cluster]{mfrm_cluster()}}.
 }
 
 \examples{
@@ -106,14 +99,14 @@ raters <- data.frame(Rater = paste0("R", 1:8),
   WorkshopHours = c(4, 12, 8, 20, 12, 28, 16, 32),
   AnnualRatings = c(80, 120, 90, 160, 280, 350, 300, 400))
 features <- mfrm_features(raters, "Rater", names(raters)[-1])
-direct <- mfrm_cluster_kmeans(features, 2, seed = 17, silhouette = FALSE)
-reduced <- mfrm_cluster_kmeans(mfrm_pca(features, components = 2), 2,
+direct <- mfrm_cluster(method = "kmeans", features, 2, seed = 17, silhouette = FALSE)
+reduced <- mfrm_cluster(method = "kmeans", mfrm_pca(features, components = 2), 2,
   seed = 17, silhouette = FALSE)
 summary(mfrm_cluster_compare(list(Features = direct, TwoPCs = reduced)))
 direct$centers
 direct$profiles$numeric
 }
 \seealso{
-\code{\link[=mfrm_pca]{mfrm_pca()}}, \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}},
+\code{\link[=mfrm_pca]{mfrm_pca()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}},
 \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}, \code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}}, \code{\link[stats:kmeans]{stats::kmeans()}}
 }

@@ -169,16 +169,39 @@ collapse_gpcm_log_slopes <- function(log_slopes, spec) {
 
 # Called only after mfrm_gmfrm_problem() validates the limited model contract.
 # Public dispatch preserves this model specification through its admitted outputs.
+mfrm_gmfrm_roles <- function(facets, slope_facets, step_facet, noncenter_facet,
+                              slope_reference = slope_facets[1L]) {
+  names_ok <- function(x) is.character(x) && length(x) > 0L &&
+    !anyNA(x) && all(nzchar(trimws(x))) && !anyDuplicated(x)
+  if (!names_ok(facets) || !names_ok(slope_facets) || length(slope_facets) != 2L ||
+      !all(slope_facets %in% facets))
+    stop("Two slope families require exactly two distinct slope_facet names among the declared facets.", call. = FALSE)
+  if (!names_ok(slope_reference) || length(slope_reference) != 1L ||
+      !slope_reference %in% slope_facets)
+    stop("`slope_reference` must name one of the two slope facets.", call. = FALSE)
+  if (!names_ok(step_facet) || length(step_facet) != 1L || !step_facet %in% facets ||
+      !names_ok(noncenter_facet) || length(noncenter_facet) != 1L || !noncenter_facet %in% facets)
+    stop("Two-family step_facet and noncenter_facet must each name one declared non-Person facet.", call. = FALSE)
+  owners <- c(unname(slope_reference), setdiff(slope_facets, slope_reference))
+  list(facets = c(owners, sort(setdiff(facets, owners))), slope_facets = owners,
+    step_facet = unname(step_facet), noncenter_facet = unname(noncenter_facet),
+    slope_reference = unname(slope_reference))
+}
+
 mfrm_gmfrm_common_setup <- function(data, max_score,
                                     slope_facets = c("Task", "Rater"),
-                                    person = "Person", score = "Score") {
-  data[c(person, slope_facets)] <- lapply(data[c(person, slope_facets)], as.character)
-  prep <- prepare_mfrm_data(data, person, slope_facets, score,
+                                    person = "Person", score = "Score",
+                                    facets = slope_facets, step_facet = slope_facets[2L],
+                                    noncenter_facet = slope_facets[2L],
+                                    slope_reference = slope_facets[1L]) {
+  roles <- mfrm_gmfrm_roles(facets, slope_facets, step_facet, noncenter_facet, slope_reference)
+  facets <- roles$facets; slope_facets <- roles$slope_facets
+  data[c(person, facets)] <- lapply(data[c(person, facets)], as.character)
+  prep <- prepare_mfrm_data(data, person, facets, score,
                             rating_min = 0, rating_max = max_score, keep_original = TRUE)
-  step_facet <- slope_facets[2L]
   built <- build_estimation_config(prep, "GPCM", "MML", step_facet, slope_facets[1L],
-    weight_col = NULL, facet_signs = setNames(rep(-1, 2L), slope_facets),
-    positive_facets = character(), noncenter_facet = step_facet,
+    weight_col = NULL, facet_signs = setNames(rep(-1, length(facets)), facets),
+    positive_facets = character(), noncenter_facet = noncenter_facet,
     dummy_facets = character(), anchor_df = NULL, group_anchor_df = NULL)
   config <- built$config
   config$slope_facet <- slope_facets
@@ -218,7 +241,7 @@ mfrm_gpcm_product_inference <- function(fit) {
       identical(config$posterior_basis, "fixed_standard_normal") &&
       identical(config$estimation_control$mml_engine_used, if (adaptive) "direct" else "em") &&
       is.null(config$weight_col) && all(fit$prep$data$Weight == 1) &&
-      identical(config$noncenter_facet, config$slope_facet[2]),
+      config$noncenter_facet %in% config$facet_names,
       "Two-family intervals require unweighted fixed-N(0,1) MML with fixed-grid EM or adaptive direct integration.")) return(refuse())
   specification <- fit$gmfrm$specification
   reference <- tryCatch(do.call(mfrm_gmfrm_common_setup,

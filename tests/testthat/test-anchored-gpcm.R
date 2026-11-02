@@ -2,12 +2,15 @@ anchored_gpcm_fixture <- local({
   cache <- NULL
   function(case) {
     if(is.null(cache)) cache <<- readRDS(test_path('fixtures','anchored-gpcm.rds'))
+    local_cran_fixture_information(cache[[case]]$fit, paste0("anchor-", case), .env = parent.frame())
     cache[[case]]
   }
 })
 
 for (case in c('shared','separate_group','fixed_population')) {
   test_that(paste(case,'GPCM keeps anchored coordinates in joint uncertainty'), {
+    # Grouped/separate ownership is the live joint-information representative.
+    if (case != 'separate_group') skip_on_cran()
     x <- anchored_gpcm_fixture(case); fit <- x$fit; ref <- x$reference
     original_parameters <- fit$opt$par
     information <- compute_mml_parameter_covariance(fit)

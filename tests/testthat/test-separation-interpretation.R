@@ -3,7 +3,7 @@ test_that("reliability wording survives report, APA and console routes", {
   precision <- precision_review_report(fit, diagnostics = diagnostics)
   results <- mfrm_results(fit, include = c("fit", "precision"), diagnostics = diagnostics)
   report <- mfrm_report(results)
-  apa <- build_apa_report_text(fit, diagnostics)
+  apa <- build_apa_reporting_contract(fit, diagnostics)$report_text
   console <- paste(capture.output(print(summary(diagnostics))), collapse = " ")
   # Check each independent reporting route, not just the shared sentence helper.
   for (text in list(precision$fit_separation_basis$Interpretation,

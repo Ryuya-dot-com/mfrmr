@@ -53,7 +53,7 @@ local({
     expect_identical(id$ConstraintType[1:2], c('typed_anchor_expansion_facet','uncentered'))
     expect_identical(id$FreeDimension[1:2], as.integer(c(if (case=='RSM_group') 1 else 2,4)))
     expect_equal(nrow(review_mfrm_calibration(draft)),0)
-    frozen <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
+    frozen <- update(object = update(object = draft, status = "validated"), status = "frozen")
     path <- tempfile(fileext='.rds'); on.exit(unlink(path),add=TRUE)
     save_mfrm_calibration(frozen,path)
     reopened <- load_mfrm_calibration(path)
@@ -119,7 +119,7 @@ test_that('explicit extraction distinguishes legacy and uncentered maps without 
   old$integrity$semantic_components <- mfrmr_calibration_semantic_components(old)
   # Old files' coarse labels cannot prove centering; retain the coordinates
   # and labels rather than treating a load as migration or re-estimation.
-  old <- freeze_mfrm_calibration(validate_mfrm_calibration(old))
+  old <- update(object = update(object = old, status = "validated"), status = "frozen")
   path <- tempfile(fileext='.rds'); on.exit(unlink(path),add=TRUE)
   save_mfrm_calibration(old,path)
   expect_identical(load_mfrm_calibration(path),old)

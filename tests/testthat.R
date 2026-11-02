@@ -12,46 +12,34 @@ is_cran_check <- local({
 
 # Keep live estimation, independent numerical checks and representative public paths.
 # Broader report/plot/portable-scoring combinations run in the complete suite.
+# See CONTRIBUTING.md for representative cases and full-suite commands.
 # Always retain posterior-summary: archive encoding can break its public reader
-# even when loaded values are identical. See CONTRIBUTING.md for coverage.
+# even when loaded values are identical.
 cran_light_tests <- c(
-  "api-migration",
+  "population-identification",
+  "cran-smoke",
+  "fit-mfrm-ux-u0",
+  "api-consolidation",
+  "static-table-isolation",
   "model-export",
-  "model-export-affine",
-  "model-export-summary",
   "posterior-summary",
-  "adaptive-likelihood",
+  "posterior-contrasts",
+  "posterior-scoring",
   "adaptive-quadrature-review",
   "calibration-public-api",
-  "conditional-scoring",
-  "decision-probabilities",
   "classification",
   "bias-numerics",
   "marginal-fit-availability",
-  "mml-starts",
   "interaction-em",
-  "facets-manual-consistency",
-  "facets-results",
-  "parameter-map-invariants",
   "likelihood-numerics",
   "source-posterior-numerics",
   "preparation-invariants",
-  "anchor-centering",
   "anchor-migration",
-  "anchored-calibration",
-  "anchored-gpcm",
-  "cran-smoke",
   "cml",
-  "cml-comparisons",
-  "comparison-review",
   "compiled-header-contract",
   "data-and-citation",
-  "design-evaluation-denominators",
-  "extended-example-replay",
-  "simulation-example-replay",
   "results-csv-encoding",
   "feature-clustering",
-  "response-imputation",
   "linking-numerics",
   "random-rater",
   "random-rater-profile",
@@ -61,14 +49,13 @@ cran_light_tests <- c(
   "multivariate-gtheory",
   "gstudy-sampling-vcov",
   "gstudy-example-replay",
-  "dstudy-summary",
   "dstudy-delta",
+  "finite-plan-review",
   "multivariate-nested-gtheory",
   "icc-input",
   "mantel-haenszel",
   "ordinal-logistic",
   "mml-cpp11-backend",
-  "missing-codes-integration",
   "bundle-summary-privacy",
   "gpcm-ic-eligibility",
   "gpcm-lrt",
@@ -76,19 +63,135 @@ cran_light_tests <- c(
   "gpcm-inference-extensions",
   "gpcm-pattern-cache",
   "gmfrm-public-workflow",
-  "gmfrm-portable",
   "gmfrm-em",
+  "gmfrm-roles",
   "jml-public-workflow",
-  "study-report",
-  "planning-report-connections",
-  "report-modules",
   "residual-network",
-  "network-inference",
   "prefit-network",
   "krippendorff-alpha",
   "namespace-contract",
   "optimizer-curvature",
-  "vignette-artifacts"
+  "vignette-artifacts",
+  "facets-results"
+)
+
+# These detailed files remain in the unfiltered NOT_CRAN=true suite.
+extended_regression_tests <- c(
+  "api-migration",
+  "conditional-scoring",
+  "mml-starts",
+  "parameter-map-invariants",
+  "anchor-centering",
+  "anchored-calibration",
+  "anchored-gpcm",
+  "cml-comparisons",
+  "comparison-review",
+  "design-evaluation-denominators",
+  "response-imputation",
+  "missing-codes-integration",
+  "study-report",
+  "network-inference",
+  "model-export-affine",
+  "model-export-summary",
+  "decision-probabilities",
+  "facets-manual-consistency",
+  "extended-example-replay",
+  "simulation-example-replay",
+  "dstudy-summary",
+  "gmfrm-portable",
+  "planning-report-connections",
+  "report-modules",
+  "model-export-spec",
+  "numerical-kernel-equivalence",
+  "optional-examples",
+  "anchor-equating",
+  "anchor-population-replay",
+  "as-kable",
+  "automated-scoring",
+  "cluster-comparison",
+  "conquest-contract-repairs",
+  "core-workflow",
+  "data-quality-consistency",
+  "diagnostic-screening-validation",
+  "facets-output-contract-review",
+  "fair-jeffreys-delta",
+  "mfrm-results",
+  "misfit-casebook",
+  "misfit-thresholds",
+  "model-choice-review",
+  "pairwise-icc",
+  "peer-review-simulation",
+  "plot-dispatch",
+  "population-intervals",
+  "q3-and-person-fit",
+  "random-rater-intervals",
+  "random-rater-scoring",
+  "rater-accuracy",
+  "rater-centrality",
+  "recovery-simulation",
+  "recovery-summary-inference",
+  "reference-benchmark",
+  "report-functions",
+  "resampling-units",
+  "resampling-validation",
+  "response-time-review",
+  "rsm-pcm-nesting",
+  "score-comparison",
+  "scoring-prior",
+  "screening-performance",
+  "screening-sensitivity",
+  "separation-interpretation",
+  "shrinkage",
+  "shrinkage-numerics",
+  "single-person-calibration",
+  "testlet-integration",
+  "testlet-population",
+  "testlet-selection",
+  "unexpected-prevalence",
+  "weighted-agreement",
+  "weighting-audit",
+  "wright-facets-style",
+  "zero-count-score-support",
+  "ggplot-unification-v1",
+  "posterior-contrasts-live",
+  "posterior-scoring-live"
+)
+
+# Research references and source-publication checks stay in the repository and
+# run separately after full package checks, using the same installed package.
+reference_tests <- c(
+  "source-publication",
+  "gmfrm-bounded-search",
+  "gmfrm-candidate",
+  "gmfrm-coordinates",
+  "gmfrm-interior-finish",
+  "gmfrm-natural-search",
+  "gmfrm-natural",
+  "gmfrm-procedure",
+  "gmfrm-reference-patterns",
+  "gmfrm-result",
+  "gmfrm-run",
+  "gmfrm-segmented-optimizer",
+  "gmfrm-segmented",
+  "gmfrm-selection",
+  "gmfrm-wald",
+  "gmfrm-zero-location",
+  "gmfrm-zero-profile-search",
+  "gmfrm-zero-profile",
+  "jml-gpcm-binary-closure-envelope",
+  "jml-gpcm-higher-order-face-lifts",
+  "jml-gpcm-response-image-face-chart",
+  "jml-gpcm-response-quotient-closure",
+  "jml-gpcm-saturated-response-envelope",
+  "jml-gpcm-boundary-compactification-reference",
+  "jml-gpcm-exponential-balance-reference",
+  "jml-gpcm-global-existence-reference",
+  "jml-gpcm-lexicographic-limit-reference",
+  "jml-gpcm-parameter-path-reachability-reference",
+  "jml-gpcm-parameter-sequence-flag-reference",
+  "jml-gpcm-rate-hierarchy-reference",
+  "jml-gpcm-sequence-remainder-diagnostic-reference",
+  "fixed-calibration-anchors-reference"
 )
 
 cran_light_filter <- paste0(
@@ -107,20 +210,10 @@ if (is_cran_check) {
   # documentation scans and broad regression tests remain in the complete
   # local/CI suite, which must be run with NOT_CRAN=true.
   local({
-    # CRAN permits at most two concurrent cores. Keep each worker's numerical
-    # libraries single-threaded, retain an explicit serial override, and leave
-    # the complete regression suite below unchanged.
-    requested <- suppressWarnings(as.integer(getOption(
-      "Ncpus", Sys.getenv("TESTTHAT_CPUS", "2")
-    )))
-    if (length(requested) != 1L || is.na(requested) || requested < 1L) {
-      stop("Ncpus / TESTTHAT_CPUS must specify a positive integer.")
-    }
-    withr::local_options(Ncpus = min(2L, requested))
+    # Short files share one session; do not start parallel worker libraries.
+    withr::local_options(Ncpus = 1L)
     withr::local_envvar(c(
-      TESTTHAT_PARALLEL = if (utils::packageVersion("testthat") >= "3.1.0") {
-        Sys.getenv("TESTTHAT_PARALLEL", "true")
-      } else "false",
+      TESTTHAT_PARALLEL = "false", TESTTHAT_CPUS = "1",
       OMP_NUM_THREADS = "1", OPENBLAS_NUM_THREADS = "1",
       MKL_NUM_THREADS = "1", VECLIB_MAXIMUM_THREADS = "1",
       BLIS_NUM_THREADS = "1"

@@ -147,6 +147,9 @@ and missing intervals. A slope value of one is not a rater-quality threshold.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("mfrm_curve_intervals", run.dontrun = TRUE)
+\dontrun{
 # How do category probabilities vary with ability in one rating context?
 ratings <- load_mfrmr_data("example_core")
 # Reuse the synthetic GPCM fit; estimation uses 61 quadrature points.
@@ -168,6 +171,7 @@ file <- tempfile(fileext = ".rds")
 saveRDS(curves, file) # Keep the complete result, including context and notes
 saved <- readRDS(file)
 saved$settings
+}
 }
 \seealso{
 \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}, \code{\link[=category_curves_report]{category_curves_report()}}, \code{\link[=compute_information]{compute_information()}}

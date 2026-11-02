@@ -29,7 +29,7 @@
 #'   Unequal block sizes do not imply equal block weights. The influence of an
 #'   additional response depends on its block and the fitted model; integrating
 #'   local effects is not a general correction for assignment or content bias.
-#'   See `vignette("mfrmr-testlet-applications")` for a complete-roster
+#'   See [online testlet-applications guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlet-applications.html) for a complete-roster
 #'   comparison of one-point changes in five- versus two-criterion tasks.
 #'
 #'   EAP, posterior SD and intervals use continuous ability integration. Interval
@@ -53,7 +53,7 @@
 #'   sparse, unequal-block condition with 120 Persons. The original numerical
 #'   failures and their repair remain separately documented. Accounting for
 #'   dependence improved coverage relative to ordinary RSM, but did not consistently improve EAP
-#'   mean squared error. See `vignette("mfrmr-testlets")` for the comparison,
+#'   mean squared error. See [online testlet guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlets.html) for the comparison,
 #'   Monte Carlo uncertainty and numerical-selection correction.
 #'   These intervals neither correct calibration-estimation uncertainty nor
 #'   guarantee 95% coverage for each fixed ability. Person contrasts and
@@ -66,11 +66,15 @@
 #'   Keep `table$Status` and `table$Reason` with exported scores: `prior_only`
 #'   describes the assumed population without observed responses for that Person;
 #'   `unavailable` withholds the estimate, SD and bounds with a recorded cause.
-#' @param x A scoring result.
+#' @param x For `predict.mfrm_testlet()`: A scoring result.
+#'
+#' For `plot()`: A result from [predict.mfrm_testlet()].
 #' @param persons Distinct Person IDs to return, or `NULL` for all. This
 #'   selects outputs while retaining the complete supplied scoring roster.
 #' @seealso [fit_mfrm_testlet()], [plot.mfrm_testlet_scores()], [mfrm_results()]
-#' @examples
+#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("predict.mfrm_testlet", run.dontrun = TRUE)
+#' \dontrun{
 #' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
 #' fit <- example$testlet$fit
 #' scores <- example$testlet$scores
@@ -80,7 +84,9 @@
 #' # Selecting outputs retains the complete source roster for model maps.
 #' scores$table
 #' plot(scores)
+#' }
 #' @export
+#' @order 1
 predict.mfrm_testlet <- function(object, newdata = NULL, level = .95,
     quad_points = object$settings$quad_points,
     missing = if (is.null(newdata)) object$settings$missing else "fail", persons = NULL, ...) {
@@ -239,25 +245,25 @@ print.mfrm_testlet_scores <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot testlet-model fixed-facet estimates
+#' @rdname fit_mfrm_testlet
+#' @details `plot()` method: Plot testlet-model fixed-facet estimates
 #' @inheritParams plot.mfrm_testlet_scores
 #' @param x An object from [fit_mfrm_testlet()].
+#'
+#' Also for `fit_mfrm_testlet()`: An `mfrm_testlet` result.
 #' @param facet A fixed facet to display; defaults to the first fixed facet.
 #' @param draw `FALSE` returns plot data without opening a device.
 #' @param intervals `"none"` (default) shows points only; `"normal"`
 #'   explicitly requests observed-information normal-approximation bounds.
 #'   Interval-width views or sorting require this explicit selection.
-#' @param level Nominal level of explicitly requested calibration intervals;
-#'   default 0.95. This does not establish finite-sample coverage.
-#' @param ... Unused.
-#' @return Invisibly, an `mfrm_plot_data` object; use [plot_data()].
-#' @details Requested whiskers are observed-information normal approximations
+#' @return For `plot()`: Invisibly, a `ggplot` object; use [plot_data()].
+#' @details For `plot()`: Requested whiskers are observed-information normal approximations
 #'   for calibration parameters; finite-sample coverage is not established. Missing
 #'   intervals remain missing; points do not classify rater quality.
 #'   [plot_data()] and [plot_data_components()] provide the same table without
 #'   drawing. [as_ggplot()] preserves the interval meaning and missing whiskers.
 #' @seealso [mfrmr_workflow_methods], [mfrmr_output_guide()],
-#'   [mfrmr_interval_guide()], [plot.mfrm_testlet_scores()]
+#'   [plot.mfrm_testlet_scores()]
 #' @export
 plot.mfrm_testlet <- function(x, facet = x$input$columns$facets[1], draw = TRUE,
     style = c("interval", "precision", "distribution"),
@@ -280,7 +286,8 @@ plot.mfrm_testlet <- function(x, facet = x$input$columns$facets[1], draw = TRUE,
     reference = reference, text_scale = text_scale, point_size = point_size)
 }
 
-#' Plot conditional Person scores from a testlet model
+#' @rdname predict.mfrm_testlet
+#' @details `plot()` method: Plot conditional Person scores from a testlet model
 #' @param style `"interval"` keeps every labeled row; `"precision"` plots
 #'   estimates against interval width (upper minus lower bound); `"distribution"`
 #'   shows the empirical cumulative distribution of finite point estimates,
@@ -303,7 +310,9 @@ plot.mfrm_testlet <- function(x, facet = x$input$columns$facets[1], draw = TRUE,
 #' @param point_size Positive point size in ggplot millimetres; base graphics
 #'   use the corresponding relative size (2.5 is the default).
 #' @section Choosing a view:
-#'   Interval plots answer where estimates lie and how uncertain they are.
+#' For `plot()`:
+#'
+#' Interval plots answer where estimates lie and how uncertain they are.
 #'   Precision plots help identify estimates with wider intervals; width is
 #'   neither a fit statistic nor a reliability coefficient. Finite intervals
 #'   are required and excluded rows remain in `display_data` with reasons.
@@ -312,7 +321,9 @@ plot.mfrm_testlet <- function(x, facet = x$input$columns$facets[1], draw = TRUE,
 #'   latent population distribution, show posterior densities, or imply
 #'   independent observations.
 #' @section Accessible and reusable output:
-#'   Colours are supplemented by point shapes; open circles mean prior only.
+#' For `plot()`:
+#'
+#' Colours are supplemented by point shapes; open circles mean prior only.
 #'   Use `palette = "mono"` for monochrome reproduction. [plot_data()] retains
 #'   the complete source `table`, `display_data` with inclusion reasons,
 #'   `alt_text`, interpretation `notes`, and display settings. Supply the text
@@ -322,18 +333,16 @@ plot.mfrm_testlet <- function(x, facet = x$input$columns$facets[1], draw = TRUE,
 #'   `labs(alt = ...)`, and allows further `labs()`, `theme()` and scale edits.
 #'   Rendering does not fit, score or resample. Use the same controls through
 #'   `plot(results, type = "scores", style = "precision")`.
-#' @param x A result from [predict.mfrm_testlet()].
 #' @param draw `FALSE` returns plot data without opening a device.
-#' @param ... Unused.
-#' @return Invisibly, an `mfrm_plot_data` object retaining all requested Persons,
-#'   their statuses, interval endpoints and settings; use [plot_data()].
-#' @details In the default interval view, empty rows remain labeled. Open circles mark prior-only results;
+#' @return For `plot()`: Invisibly, a `ggplot` object; [plot_data()] retains all
+#'   requested Persons, their statuses, interval endpoints and settings.
+#' @details For `plot()`: In the default interval view, empty rows remain labeled. Open circles mark prior-only results;
 #'   filled points are response-based conditional scores. The intervals exclude
 #'   calibration-estimation uncertainty and are not tests of Person differences.
 #'   [as_ggplot()] preserves all labeled rows, prior-only symbols and the
 #'   conditional-interval note. [plot_data()] retains statuses and reasons for
 #'   custom graphics or table export; conversion does not rerun scoring.
-#' @seealso [plot.mfrm_testlet()], [plot_data_components()], [mfrmr_interval_guide()]
+#' @seealso [plot.mfrm_testlet()], [plot_data_components()], [mfrmr_output_guide()]
 #' @export
 plot.mfrm_testlet_scores <- function(x, draw = TRUE,
     style = c("interval", "precision", "distribution"),

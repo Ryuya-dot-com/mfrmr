@@ -9,7 +9,11 @@ cml_comparison_example <- function() {
   }))
 }
 
-cml_comparison_args <- function(model = "RSM", owner = NULL, positive = NULL) {
+cml_comparison_args <- local({
+  cache <- list()
+  function(model = "RSM", owner = NULL, positive = NULL) {
+  key <- paste(model, paste(owner, collapse = "|"), paste(positive, collapse = "|"), sep = ":")
+  if (!is.null(cache[[key]])) return(cache[[key]])
   d <- cml_comparison_example()
   W <- rbind(panel = c(1, -.5, -.5), pair = c(1, -1, 0), twice = c(2, -2, 0))
   colnames(W) <- c("R1", "R2", "R3")
@@ -18,9 +22,11 @@ cml_comparison_args <- function(model = "RSM", owner = NULL, positive = NULL) {
     comparisons = list(facet = "Rater", group = "Group", groups = c("A", "B"),
       contrasts = W, model = model, method = "CML", step_facet = owner,
       positive_facets = positive))
-  c(list(data = d, fit_scope = "comparisons", comparison_review = review,
+  cache[[key]] <<- c(list(data = d, fit_scope = "comparisons", comparison_review = review,
     interaction_policy = "silent"), review$comparison_review$fit_arguments)
-}
+  cache[[key]]
+  }
+})
 
 # Explicitly enumerate support at the observed totals; no ESF or DP recursion.
 cml_comparison_patterns <- function(problem) lapply(problem$groups, function(g) {
@@ -89,7 +95,9 @@ test_that("conditional support DP agrees with enumerated patterns, including res
 test_that("partial CML contrasts and joint covariance agree with an independent QR and enumeration fit", {
   skip_if_not_installed("lpSolve")
   for (setting in list(list("RSM", NULL), list("PCM", "Rater"), list("PCM", "Group"))) {
-    for (positive in list(NULL, "Rater")) {
+    directions <- if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) list(NULL, "Rater") else
+      if (identical(setting[[2]], "Rater")) list("Rater") else list(NULL)
+    for (positive in directions) {
       a <- cml_comparison_args(setting[[1]], setting[[2]], positive)
       f <- do.call(fit_mfrm, a); tab <- interaction_effect_table(f)
       expect_identical(tab$ConditionalState, c("target_unidentified", rep("target_identified_only", 2)))
@@ -168,6 +176,8 @@ test_that("CML review uses actual totals and unavailable fits retain their reaso
 })
 
 test_that("retained incomplete school examples and reversed origins give reproducible CML inference", {
+  # Extended local/CI regression; see CONTRIBUTING.md.
+  skip_on_cran()
   skip_if_not_installed("lpSolve")
   cases <- readRDS(test_path("fixtures", "partial-comparisons.rds"))
   for (name in c("RSM-JML", "PCM-JML")) {

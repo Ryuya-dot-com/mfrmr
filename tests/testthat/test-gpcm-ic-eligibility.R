@@ -190,3 +190,53 @@ test_that('bootstrap singleton exception checks fresh support without relaxing n
   contract$ICSelectable <- FALSE
   expect_false(check()$eligible)
 })
+
+test_that("local solution checks reject invalid points before Hessian evaluation", {
+  fit <- list(config = list(model = "GPCM", method = "MML",
+      estimation_control = list(quad_points = 15L)),
+    summary = list(Method = "MML"), prep = list(),
+    opt = list(par = c(0, 0), value = 10,
+      optimizer_diagnostics = list(ConvergenceSeverity = "pass", GradientReviewTolerance = 1e-4)))
+  counts <- c(value = 0L, gradient = 0L)
+  local_mocked_bindings(
+    mfrmr_get_readiness_record = function(...) list(fit = data.frame(
+      InputState = "pass", CategoryState = "adequate", NumericalState = "ready")),
+    mfrm_inference_ready = function(...) FALSE,
+    mfrm_fit_decision_summary = function(...) data.frame(Why = "review"),
+    mfrm_mml_inference_identification = function(...) list(excluded = FALSE),
+    build_param_sizes = function(...) list(x = 2L),
+    build_indices = function(...) list(),
+    make_param_cache = function(...) {
+      cache <- new.env(parent = emptyenv())
+      cache$ensure <- function(par) cache$par <- par
+      cache
+    },
+    mfrm_loglik_mml_cached = function(cache, ...) {
+      counts["value"] <<- counts["value"] + 1L
+      10 + sum(cache$par^2) / 2
+    },
+    mfrm_grad_mml_cached = function(cache, ...) {
+      counts["gradient"] <<- counts["gradient"] + 1L
+      cache$par
+    }, .package = "mfrmr")
+  ordinary <- compute_mml_parameter_covariance(fit)
+  ordinary_counts <- counts
+  counts[] <- 0L
+  checked <- compute_mml_parameter_covariance(fit, solution_tolerance = 1e-4)
+  expect_identical(checked, ordinary)
+  expect_identical(counts, ordinary_counts)
+
+  # Both refusals must retain their public reason and stop before differentiation.
+  local_mocked_bindings(optimHess = function(...) stop("Unexpected Hessian"), .package = "stats")
+  contract <- data.frame(StoredICConsistent = TRUE, ICSelectable = TRUE)
+  stale <- fit; stale$opt$par[1] <- .1
+  mismatch <- mfrm_ic_fit_check(stale, contract)
+  expect_false(mismatch$eligible)
+  expect_identical(mismatch$review,
+    "The retained objective does not match reevaluation at the supplied data and parameters.")
+  stale$opt$value <- 10 + sum(stale$opt$par^2) / 2
+  nonstationary <- mfrm_ic_fit_check(stale, contract)
+  expect_false(nonstationary$eligible)
+  expect_identical(nonstationary$review,
+    "The reevaluated MML gradient exceeds the numerical convergence tolerance.")
+})

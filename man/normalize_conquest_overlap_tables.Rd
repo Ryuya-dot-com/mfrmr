@@ -14,7 +14,11 @@ normalize_conquest_overlap_tables(
   conquest_item_estimate = "auto",
   conquest_case_person = "auto",
   conquest_case_estimate = "auto",
-  keep_extra_columns = TRUE
+  keep_extra_columns = TRUE,
+  input = c("tables", "files"),
+  population_delimiter = "auto",
+  item_delimiter = "auto",
+  case_delimiter = "auto"
 )
 }
 \arguments{
@@ -53,6 +57,15 @@ EAP estimates. \code{"auto"} tries conservative aliases such as \code{Estimate},
 
 \item{keep_extra_columns}{If \code{TRUE}, keep all remaining columns after the
 standardized identifier and estimate columns.}
+
+\item{input}{\code{"tables"} for data frames (the default), or \code{"files"} for
+extracted CSV/TSV/TXT paths supplied through the same three input arguments.
+This does not parse raw ConQuest parameter/report exports; those retain
+their separate bundle-dependent \code{\link[=normalize_conquest_overlap_exports]{normalize_conquest_overlap_exports()}} route.}
+
+\item{population_delimiter, item_delimiter, case_delimiter}{File delimiters
+used only with \code{input = "files"}: \code{"auto"}, \code{"comma"}, \code{"tab"},
+\code{"semicolon"}, or the corresponding literal separator.}
 }
 \value{
 A named list with class \code{mfrm_conquest_overlap_tables}.

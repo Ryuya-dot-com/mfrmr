@@ -349,6 +349,12 @@ population and conditions before interpreting a projected improvement.
 tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 g_task <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
 g_task$components
+g_task$component_diagnostics
+# To compare future designs, see ?mfrm_d_study.
+
+# Optional planning, incomplete designs, renamed facets and nesting examples.
+# example("mfrm_g_study", run.dontrun = TRUE)
+\dontrun{
 d_task <- mfrm_d_study(g_task,
   design_grid = data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
 d_task$coefficients
@@ -408,6 +414,7 @@ d_nested <- mfrm_d_study(g_nested,
 summary(d_nested)
 plot(d_nested, x_var = "Raters") # Raters on the axis means raters PER TASK.
 plot(d_nested, x_var = "Tasks", type = "sem")
+}
 }
 \references{
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.

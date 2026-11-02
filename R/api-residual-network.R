@@ -9,11 +9,14 @@
   if (!is.numeric(min_pairs) || is.complex(min_pairs) || length(min_pairs) != 1L ||
       !is.finite(min_pairs) || min_pairs < 3 || min_pairs != floor(min_pairs))
     stop("`min_pairs` must be a single integer of at least 3.", call. = FALSE)
-  if (is.null(diagnostics)) diagnostics <- suppressMessages(diagnose_mfrm(
-    fit, residual_pca = "none", diagnostic_mode = "legacy"))
-  mfrm_results_validate_diagnostics_identity(fit, diagnostics,
-    helper = "Residual associations")
-  obs <- as.data.frame(diagnostics$obs)
+  obs <- if (is.null(diagnostics)) {
+    compute_obs_table(.mfrm_validate_diagnostic_fit(fit))
+  } else {
+    mfrm_results_validate_diagnostics_identity(fit, diagnostics,
+      helper = "Residual associations")
+    diagnostics$obs
+  }
+  obs <- as.data.frame(obs)
   if (!all(c("Person", facet, "StdResidual") %in% names(obs)))
     stop("Diagnostics require Person, the selected facet and StdResidual.", call. = FALSE)
   valid <- !is.na(obs$Person) & !is.na(obs[[facet]])
@@ -167,9 +170,12 @@
 #' Golino, H. F., & Epskamp, S. (2017). Exploratory graph analysis: A new
 #' approach for estimating the number of dimensions in psychological research.
 #' *PLOS ONE, 12*, e0174035. \doi{10.1371/journal.pone.0174035}.
-#' @seealso [mfrm_cluster_kmeans()], [mfrm_cluster_hierarchical()],
+#' @seealso [k-means details][mfrm_cluster_kmeans], [hierarchical clustering details][mfrm_cluster_hierarchical],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("mfrm_residual_network", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -181,7 +187,9 @@
 #' plot(net, type = "matrix", draw = FALSE)
 #' report <- mfrm_report(net)
 #' build_summary_table_bundle(report)$table_index
+#' }
 #' @export
+#' @order 1
 mfrm_residual_network <- function(fit, diagnostics = NULL, facet = "Rater",
     min_pairs = 5L, missing = c("pairwise", "complete"), min_abs = 0,
     clusters = NULL, linkage = c("average", "complete")) {
@@ -252,7 +260,9 @@ summary.mfrm_residual_network <- function(object, ...) {
 }
 
 #' @rdname mfrm_residual_network
-#' @param x An `mfrm_residual_network`.
+#' @param x For `print.mfrm_residual_network()`: An `mfrm_residual_network`.
+#'
+#' For `plot()`: A result from [mfrm_residual_network()].
 #' @export
 print.mfrm_residual_network <- function(x, ...) {
   rlang::check_dots_empty()
@@ -264,7 +274,8 @@ print.mfrm_residual_network <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot saved residual associations and exploratory groups
+#' @rdname mfrm_residual_network
+#' @details `plot()` method: Plot saved residual associations and exploratory groups
 #'
 #' Compare the full matrix with its thresholded network, then inspect the
 #' clustering tree when requested. Network positions are a deterministic
@@ -274,15 +285,14 @@ print.mfrm_residual_network <- function(x, ...) {
 #' encode quality. Dendrogram labels append the chosen group number in square
 #' brackets; these numbers are labels, not ranks. Titles and cautions are retained in [plot_data()], not
 #' printed into the figure.
-#' @param x A result from [mfrm_residual_network()].
 #' @param type `"network"`, `"matrix"` or `"dendrogram"`.
 #' @param preset Visual preset; see [mfrmr_visual_diagnostics].
-#' @param draw Whether to draw with base graphics.
-#' @param ... Reserved; unused arguments are rejected.
-#' @return Invisibly, an `mfrm_plot_data` containing the selected view, saved
-#'   matrix, nodes, pairs, edges, clustering, settings and interpretation notes.
-#'   Plotting does not recompute residuals or clustering. Save the analysis
-#'   object to redraw every view. The matrix supports [as_ggplot()].
+#' @param draw Whether to print the `ggplot` figure; `FALSE` returns the `ggplot`
+#'   object without drawing.
+#' @return For `plot()`: Invisibly, a `ggplot` object. [plot_data()] extracts the
+#'   selected view, saved matrix, nodes, pairs, edges, clustering, settings and
+#'   interpretation notes. Plotting does not recompute residuals or clustering.
+#'   Save the analysis object to redraw every view.
 #' @export
 plot.mfrm_residual_network <- function(x, type = c("network", "matrix", "dendrogram"),
     preset = c("standard", "publication", "compact", "monochrome"), draw = TRUE, ...) {
@@ -293,63 +303,10 @@ plot.mfrm_residual_network <- function(x, type = c("network", "matrix", "dendrog
     stop("No clustering tree is available: ", x$clustering$reason, call. = FALSE)
   n <- nrow(x$nodes); angle <- 2 * pi * (seq_len(n) - 1L) / n
   layout <- data.frame(Level = x$nodes$Level, X = cos(angle), Y = sin(angle))
-  if (isTRUE(draw)) {
-    apply_plot_preset(style)
-    old <- graphics::par(c("mar", "xpd")); on.exit(graphics::par(old), add = TRUE)
-    if (type == "dendrogram") {
-      graphics::par(mar = c(4, 2, 1, 10))
-      tree <- stats::dendrapply(stats::as.dendrogram(x$clustering$tree), function(node) {
-        if (stats::is.leaf(node)) {
-          label <- attr(node, "label")
-          attr(node, "label") <- paste0(label, " [", x$clustering$membership[[label]], "]")
-        }
-        node
-      })
-      graphics::plot(tree, horiz = TRUE, main = "", axes = FALSE,
-        nodePar = list(lab.cex = .85, pch = NA),
-        xlab = paste(x$settings$Linkage, "linkage distance"))
-      graphics::axis(1)
-    } else if (type == "matrix") {
-      graphics::par(mar = c(6, 6, 3, 2))
-      graphics::plot(NA, xlim = c(.5, n + .5), ylim = c(.5, n + .5),
-        xlab = "", ylab = "", axes = FALSE, xaxs = "i", yaxs = "i", asp = 1)
-      palette <- grDevices::hcl.colors(101, "RdBu", rev = TRUE)
-      for (i in seq_len(n)) for (j in seq_len(n)) {
-        r <- x$matrix[i, j]
-        col <- if (is.finite(r)) palette[1L + round((r + 1) * 50)] else "grey80"
-        graphics::rect(i - .5, j - .5, i + .5, j + .5, col = col, border = "white")
-        if (n <= 12L && is.finite(r)) graphics::text(i, j, sprintf("%.2f", r),
-          col = if (abs(r) > .65) "white" else "black")
-      }
-      graphics::axis(1, seq_len(n), x$nodes$Level, las = 2)
-      graphics::axis(2, seq_len(n), x$nodes$Level, las = 1)
-      graphics::legend("top", inset = c(0, -.12), legend = c("-1", "0", "+1", "Unavailable"),
-        fill = c(palette[c(1, 51, 101)], "grey80"), horiz = TRUE,
-        cex = .75, bty = "n", xpd = NA)
-    } else {
-      graphics::par(mar = c(1, 1, 2, 1))
-      graphics::plot(layout$X, layout$Y, type = "n", axes = FALSE, xlab = "", ylab = "",
-        xlim = c(-1.5, 1.5), ylim = c(-1.4, 1.4), asp = 1)
-      for (i in seq_len(nrow(x$edges))) {
-        a <- match(x$edges$Level1[i], layout$Level); b <- match(x$edges$Level2[i], layout$Level)
-        r <- x$edges$ResidualCor[i]
-        color <- if (style$name == "monochrome") "grey35" else if (r > 0) "#B2182B" else "#2166AC"
-        graphics::segments(layout$X[a], layout$Y[a], layout$X[b], layout$Y[b],
-          col = color, lty = if (r > 0) 1 else 2, lwd = 1 + 4 * abs(r))
-      }
-      graphics::points(layout$X, layout$Y, pch = 21, bg = "white", cex = 2)
-      for (i in seq_len(n)) graphics::text(layout$X[i] * 1.12, layout$Y[i] * 1.12,
-        layout$Level[i], cex = .85, adj = c(
-          if (layout$X[i] > .7) 0 else if (layout$X[i] < -.7) 1 else .5,
-          if (layout$Y[i] > .7) 0 else if (layout$Y[i] < -.7) 1 else .5))
-      graphics::legend("top", legend = c("Positive", "Negative"), lty = c(1, 2),
-        col = if (style$name == "monochrome") rep("grey35", 2) else c("#B2182B", "#2166AC"),
-        bty = "n", horiz = TRUE)
-    }
-  }
-  invisible(new_mfrm_plot_data(if (type == "matrix") "local_dependence_heatmap" else "residual_network",
+  out <- new_mfrm_plot_data(if (type == "matrix") "local_dependence_heatmap" else "residual_network",
     list(type = type, matrix = x$matrix, nodes = x$nodes, pairs = x$pairs,
       edges = x$edges, layout = layout, clustering = x$clustering,
       settings = x$settings, facet = x$settings$Facet, notes = x$notes,
-      title = "Residual association exploration", preset = style$name)))
+      title = "Residual association exploration", preset = style$name))
+  .mfrm_finalize_ggplot(out, draw = draw)
 }

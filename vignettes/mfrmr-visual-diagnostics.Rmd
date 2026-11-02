@@ -10,6 +10,8 @@ vignette: >
 ```{r, include = FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
+  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
+  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
@@ -18,7 +20,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-Start with the [interactive ggplot2 gallery](https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html)
+Start with the [interactive ggplot2 gallery](https://ryuya-dot-com.github.io/mfrmr/dev/articles/visual-gallery.html)
 for three worked examples with Plotly views, static figures and underlying values.
 
 This vignette connects figures to questions about fitted ratings, external
@@ -48,13 +50,13 @@ scripts, `help("mfrmr_plot_migration")` gives every replacement and explains
 which `type`, `view` and `metric` controls apply.
 
 For observed rating agreement before model fitting, the
-[rating-agreement tutorial](mfrmr-rating-agreement.html#see-the-disagreement-then-compare-the-coefficients)
+[rating-agreement tutorial](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html#see-the-disagreement-then-compare-the-coefficients)
 shows matched-score counts and pairwise QWK with retained sample sizes. Those
 custom ggplots use `pairwise_kappa_table()` output. They are distinct from
 the fitted-workflow exact-agreement/correlation heatmap below.
 
 For group comparisons of a rater or task, the
-[DFF tutorial](mfrmr-linking-and-dff.html#compare-group-residuals) pairs a
+[DFF tutorial](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html#compare-group-residuals) pairs a
 summary figure with response counts, display omissions and exclusion reasons.
 It explains why residual differences and linked-refit differences have
 different sign interpretations and what subgroup linking can establish.
@@ -88,16 +90,18 @@ gallery <- data.frame(
     "Subset coverage", "Feature dendrogram", "D-study coefficient curves"))
 rows <- figures[match(gallery$PlotName, figures$PlotName), ]
 stopifnot(!anyNA(rows$Question))
-support <- c(dedicated = "Base R and dedicated ggplot conversion",
-  native = "Returns ggplot directly",
-  generic = "Base R; ggplot offers a different, table-based view",
-  unavailable = "Base R; custom graphics from the saved data")
+support <- c(dedicated = "ggplot2 figure and dedicated component converter",
+  native = "Returns ggplot2 directly",
+  generic = "ggplot2 figure; component converter offers a table-based view",
+  unavailable = "Custom graphics from plot_data()")
 cat('::: {.mfrmr-gallery}
 
 ')
 for (i in seq_len(nrow(gallery))) {
   preview <- if (!is_cran_check) paste0("!", "[", gallery$Preview[i],
-    " preview]", "(", knitr::fig_chunk(gallery$Chunk[i], "png", number = 1),
+    " preview]", "(", knitr::fig_chunk(gallery$Chunk[i],
+      if (identical(knitr::opts_chunk$get("dev"), "svglite")) "svg" else "png",
+      number = 1),
     "){loading=\"lazy\"} ") else ""
   cat(sprintf('::: {.mfrmr-gallery-card}
 
@@ -132,10 +136,12 @@ window. Change it to `TRUE` to display it, or follow `GGPlotCall` to customize
 it with ggplot2. A data component is a table to inspect; passing that component
 to `as_ggplot()` may produce a different view from the full figure.
 
-`dedicated` means there is a converter for the figure; `native` means the plot
-already returns ggplot. `generic` describes a table-based graphic that need
-not reproduce the original layout or annotations. `unavailable` still allows
-the original plot and custom graphics from `plot_data(p)`. This is a selected
+`dedicated` means the figure has a dedicated `as_ggplot()` component converter
+in addition to the `ggplot` returned directly by `plot()`; `native` means the
+plot was originally authored as a direct `ggplot`. `generic` describes a
+table-based `as_ggplot(..., component = ...)` graphic that need not reproduce
+the full multi-layer layout. Custom graphics can always be constructed from
+`plot_data(p)`. This is a selected
 map, not a claim that every plot or component has been covered. Graphical
 support does not extend the model's statistical assumptions.
 
@@ -234,7 +240,7 @@ A logit value needs a rubric direction and a model role. For comprehensibility,
 1 = easy / 4 = difficult makes them mean more difficult speech. In both cases,
 higher Person locations predict higher coded scores. With the default negative
 Rater orientation, higher Rater locations predict **lower** coded scores, so
-"stricter" is appropriate only when higher scores are more favorable.
+"more severe" is appropriate only when higher scores are more favorable.
 
 Record both endpoint labels with the analysis. `positive_facets` changes the
 orientation of the selected facet parameters; it does not reverse the outcome
@@ -248,7 +254,7 @@ the fitted signs but cannot infer the substantive meaning of your rubric.
 Use the Wright map first when you want one shared logit view of persons,
 facet levels, and step thresholds.
 
-```{r wright, dev="png", fig.alt = "Wright map of person abilities, facet levels and category steps on the fitted logit scale, with requested uncertainty intervals. Higher facet locations indicate stricter scoring or greater difficulty."}
+```{r wright, fig.alt = "Wright map of person abilities, facet levels and category steps on the fitted logit scale, with requested uncertainty intervals. Higher facet locations indicate more severe scoring or greater difficulty."}
 wright <- plot(fit, type = "wright", preset = "publication", show_ci = TRUE)
 ```
 
@@ -348,7 +354,7 @@ levels and the 12 persons furthest from expected fit. It is a review screen,
 not a representative sample of person fit. Labels are limited to flagged
 facet levels; the table below identifies every displayed row.
 
-```{r fit-pathway, dev="png", fig.alt = "Infit mean squares against fitted locations for all facet levels and the 12 persons furthest from expected fit, with requested location intervals. Labels are limited to flagged facet levels; the accompanying table identifies the points. Mean-square bands are descriptive review thresholds, not automatic decisions."}
+```{r fit-pathway, fig.alt = "Infit mean squares against fitted locations for all facet levels and the 12 persons furthest from expected fit, with requested location intervals. Labels are limited to flagged facet levels; the accompanying table identifies the points. Mean-square bands are descriptive review thresholds, not automatic decisions."}
 fit_pathway <- plot(
   fit,
   type = "fit_pathway",
@@ -400,7 +406,7 @@ Category curves ask which ordered score is most probable at each ability.
 They complement the expected-score pathway: a single expected score can hide
 which categories contribute to it.
 
-```{r category-curves, dev="png", fig.alt="Predicted category probabilities across ability for the fitted rating scale. Line patterns and colours identify categories; the curves use a reference profile with other additive facet effects fixed at zero."}
+```{r category-curves, fig.alt="Predicted category probabilities across ability for the fitted rating scale. Line patterns and colours identify categories; the curves use a reference profile with other additive facet effects fixed at zero."}
 category_curves <- plot(fit, type = "ccc", preset = "monochrome")
 ```
 
@@ -420,7 +426,7 @@ and use `plot(result, type = "counts")` or `type = "thresholds"`; both support
 `as_ggplot()`. Counts in that figure are pooled: inspect `owner_category_table`
 for each step owner's denominator and category support. Stored step SEs are
 not curve or gap intervals. The separate `category_curves_report()` bundle
-uses base graphics for its multi-family overview and selected curve views;
+also returns a `ggplot` for its multi-family overview and selected curve views;
 custom graphics from `plot_data()` must retain the curve family and group.
 
 ## 2. Local response and level issues
@@ -495,7 +501,7 @@ Interpretation:
 When the design may be incomplete or spread across subsets, inspect the
 coverage matrix before interpreting cross-subset contrasts.
 
-```{r linking, dev="png", fig.alt = "Observation shares above a matrix of relative facet-level coverage across observed subsets. Matrix cells compare each subset with the largest observed count for that facet; they are not completion rates for planned assignments."}
+```{r linking, fig.alt = "Observation shares above a matrix of relative facet-level coverage across observed subsets. Matrix cells compare each subset with the largest observed count for that facet; they are not completion rates for planned assignments."}
 sc <- subset_connectivity_report(fit, diagnostics = diag)
 coverage <- plot(sc, type = "design_matrix", preset = "publication")
 ```
@@ -896,16 +902,18 @@ Interpretation:
 For repeat plotting, save `bias_interaction_report(bias, ...)` after choosing
 the review thresholds. `plot(result, type = "scatter")` compares the
 observed-minus-expected score average with conditional bias in logits;
-`type = "ranked"` shows saved interaction estimates. These two views support
-`as_ggplot()`, including conditional bounds when `show_ci = TRUE`. They hold
-calibration fixed. The other bias views use base or custom graphics.
+`type = "ranked"` shows saved interaction estimates. Both `plot()` and
+`as_ggplot()` return `ggplot` objects, including conditional bounds when
+`show_ci = TRUE`, and hold calibration fixed (`type = "scatter"` adds aligned
+marginal histograms when at least eight finite pairs are available).
 
 Rater centrality and halo have different targets. `rater_centrality_table()`
 returns indirect indices in a plain list; save the list and review source
 status and unavailable-index reasons alongside its data frames.
 `rater_halo_network_analysis()` returns observed-score profile correlations.
-Its `edge_distribution`, selected `halo_summary` metric and retained-edge
-`matrix` views support `as_ggplot()`; use base graphics for the network.
+Its `network`, `edge_distribution`, selected `halo_summary` metric and
+retained-edge `matrix` views all return `ggplot` objects via `plot()` and
+`as_ggplot()`.
 Save the whole halo result to retain its pair counts, edge filters and caveats.
 Neither result is automatically added to an aggregate `mfrm_report()`.
 These views do not distinguish halo from horn effects: a negative impression
@@ -943,8 +951,8 @@ When you build a custom figure, keep the helper's guidance tables with the
 plot data:
 
 ```{r custom-guidance}
-names(wright_payload$data)
-wright_payload$data$reference_lines
+plot_data_components(wright_payload)
+plot_data(wright_payload, "reference_lines")
 ```
 
 Those metadata are the guardrails for captions and interpretation. They let
@@ -979,11 +987,12 @@ refitting or recalculating uncertainty:
 as_ggplot(saved_figure)
 ```
 
-`as_ggplot()` requires the optional ggplot2 package. Save the fit and matching
+`ggplot2` is imported by `mfrmr`, so both `plot()` and `as_ggplot()` return
+`ggplot` objects directly (and `as_ggplot()` also converts saved `0.2.x`
+`mfrm_plot_data` objects). Save the fit and matching
 diagnostics too if you want to choose a different analysis view later. The
-plot guide above distinguishes dedicated conversions, different table-based
-views and plots without automatic conversion. This example does not promise
-the same layout for every renderer or conversion of every plot family.
+plot guide above distinguishes dedicated figure views and table-based
+component views.
 
 ### Set an appearance once for several plots
 
@@ -996,7 +1005,10 @@ local({
   on.exit(options(old))
   saved <- plot(fit, type = "ccc", draw = FALSE)
   special <- plot(fit, type = "ccc", preset = "publication", draw = FALSE)
-  c(session_default = saved$data$preset, explicit_override = special$data$preset)
+  c(
+    session_default = plot_data(saved, "preset"),
+    explicit_override = plot_data(special, "preset")
+  )
 })
 ```
 
@@ -1024,7 +1036,7 @@ In the development version, eight existing helpers accept `title`:
 plain <- plot(fit, type = "bubble", diagnostics = diag, view = "infit_outfit", title = NULL, preset = "monochrome", draw = FALSE)
 as_ggplot(plain)
 # Reuse the saved values, screening references and interval settings.
-plain$data$reference_lines
+plot_data(plain, "reference_lines")
 ```
 
 Omit `title` for the default heading, supply `title = "Scoring patterns"` to
@@ -1037,8 +1049,8 @@ hidden.
 Existing `main` calls and positional arguments still work without deprecation
 warnings. `main = NULL` retains its earlier meaning of "use the default
 heading". Do not supply both `main` and `title`, even with the same value.
-These aliases do not imply that every plot has an `as_ggplot()` converter;
-consult `mfrmr_output_guide("plots")` for the supported route.
+Consult `mfrmr_output_guide("plots")` for the available figure views and
+table components.
 
 ### Fair Scores and annotations outside the figure
 
@@ -1051,17 +1063,17 @@ not by themselves establish rater bias.
 
 ```{r fair-score-data, eval=FALSE}
 p_fair <- plot(fit, type = "fair_average", diagnostics = diag, facet = "Rater", metric = "FairZ", view = "measure", show_ci = TRUE, preset = "monochrome", show_title = FALSE, show_notes = FALSE, draw = FALSE)
-p_fair$data$notes
-p_fair$data$plot_data
-p_fair$data$excluded
-# Requires ggplot2:
+plot_data(p_fair, "notes")
+plot_data(p_fair, "plot_data")
+plot_data(p_fair, "excluded")
 g_fair <- as_ggplot(p_fair)
 g_fair
 attr(g_fair, "mfrmr_notes")
 ```
 
-Use `draw = TRUE` to draw the base-R version. Titles and notes remain in the
-returned object when hidden in the figure. The same annotation controls apply
+Use `draw = TRUE` to draw the `ggplot` immediately on the active graphics
+device. Titles and notes remain in `plot_data(p_fair)` when hidden in the
+figure. The same annotation controls apply
 to Wright, expected-score pathway, and CCC plots; they do not change readiness
 or interval eligibility. Keep the applicable notes in the surrounding caption
 or report. Other plotting helpers have their own documented options.
@@ -1097,7 +1109,7 @@ use them after the main screens above.
 - `plot(fit_a, type = "trajectory", comparison = list(T2 = fit_b), labels = c("T1", "T2"))` tracks rater
   severity across named waves. The helper does not perform linking;
   supply waves that have already been placed on a common anchored
-  scale (see `vignette("mfrmr-linking-and-dff")`) before interpreting
+  scale (see [mfrmr Linking and DFF](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html)) before interpreting
   movement as rater drift.
 - `plot(fit, type = "agreement", view = "heatmap", diagnostics = diagnostics)` renders a
   compact pairwise rater x rater agreement matrix; pass
@@ -1183,7 +1195,7 @@ fit_eb <- apply_empirical_bayes_shrinkage(fit)
 
 shrink <- plot(fit_eb, type = "shrinkage", view = "funnel", show_ci = TRUE, ci_level = 0.95, preset = "publication", draw = FALSE)
 
-head(shrink$data$table[, c(
+head(plot_data(shrink, "table")[, c(
   "Facet", "Level", "RawEstimate", "RawCI_Lower", "RawCI_Upper",
   "ShrunkEstimate", "ShrunkCI_Lower", "ShrunkCI_Upper",
   "ShrinkageFactor"
@@ -1215,18 +1227,18 @@ backgrounds <- data.frame(
     "Advanced", "Advanced", "Specialist", "Specialist"),
     levels = c("Basic", "Advanced", "Specialist")))
 features <- mfrm_features(backgrounds, "Rater", c("Years", "Training"))
-hierarchy <- mfrm_cluster_hierarchical(features, k = 3, linkage = "average")
+hierarchy <- mfrm_cluster(method = "hierarchical", features, k = 3, linkage = "average")
 ```
 
-```{r feature-hierarchy, dev="png", fig.alt="Average-linkage dendrogram for eight fictional raters, based on Gower dissimilarities in experience and ordered training level. Labelled leaves identify raters and boxes show the requested three groups; heights are dissimilarities, not significance levels."}
+```{r feature-hierarchy, fig.alt="Average-linkage dendrogram for eight fictional raters, based on Gower dissimilarities in experience and ordered training level. Labelled leaves identify raters and boxes show the requested three groups; heights are dissimilarities, not significance levels."}
 hierarchy_plot <- plot(hierarchy, preset = "monochrome")
 ```
 
 Three groups were requested; the diagram does not select that number or
 establish that the groups are real. Feature weights, coding and linkage can
 change the branches. The full tree and memberships in leaf order are available
-for inspection. The development version supports both the base plot and a
-dedicated ggplot conversion of this saved tree.
+for inspection via `plot_data()`, and both `plot()` and `as_ggplot()` return
+`ggplot` objects for this saved tree.
 
 ```{r hierarchy-values}
 plot_data(hierarchy_plot, component = "table")
@@ -1248,7 +1260,7 @@ correspond to a unique horizontal height cut. Removing titles or captions
 with `ggplot2::labs()` leaves the tree and memberships in `plot_data()`.
 
 For imputed features, group comparisons and PCA, continue with
-[Exploring person, rater, and task attributes](mfrmr-external-features.html).
+[Exploring person, rater, and task attributes](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html).
 
 ### D-study planning {#figure-d-study-planning}
 
@@ -1287,7 +1299,7 @@ planned <- mfrm_d_study(gstudy,
   data.frame(Tasks = c(3, 6, 12)), weights = c(V = 0.5, W = 0.5))
 ```
 
-```{r d-study-planning, dev="png", fig.alt="G and Phi coefficients for an equally weighted V and W composite at three, six and twelve planned Tasks. Separate panels distinguish relative and absolute decisions; points identify requested designs, and lines guide the eye."}
+```{r d-study-planning, fig.alt="G and Phi coefficients for an equally weighted V and W composite at three, six and twelve planned Tasks. Separate panels distinguish relative and absolute decisions; points identify requested designs, and lines guide the eye."}
 planning_plot <- plot(planned, type = "coefficients", preset = "monochrome")
 ```
 
@@ -1306,8 +1318,10 @@ plot_data(planning_plot, component = "table")
 ```
 
 Use `?mfrm_d_study` for score/composite selection and supported
-crossed or nested designs. An ordinary `mfrm_d_study` object has its own base
-plot; its automatic ggplot conversion is currently unavailable.
+crossed or nested designs. Both univariate (`mfrm_d_study`) and multivariate
+(`mfrm_multivariate_d_study`) D-Study objects return `ggplot` projections via
+`plot()` and `as_ggplot()`, with underlying tables accessible through
+`plot_data()`.
 
 ## Portable score-batch review
 
@@ -1328,7 +1342,7 @@ Persons with no valid responses remain in the summary and draw-free plot
 payload rather than being assigned an artificial coordinate. These displays
 do not replace source-fit diagnostics, and their uncertainty is conditional on
 the frozen point calibration. See
-`vignette("mfrmr-portable-calibration", package = "mfrmr")` for the complete
+[Portable calibration and fresh-session scoring](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-portable-calibration.html) for the complete
 fresh-session workflow.
 
 ## Recommended sequence
@@ -1352,4 +1366,4 @@ For a compact visual workflow:
 
 - `help("mfrmr_visual_diagnostics", package = "mfrmr")`
 - `help("mfrmr_workflow_methods", package = "mfrmr")`
-- `mfrmr_interval_guide("shrinkage")`
+- `mfrmr_output_guide("intervals", "shrinkage")`

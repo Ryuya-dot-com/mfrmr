@@ -72,70 +72,11 @@ mfrm_extended_estimate_plot <- function(table, labels, name, default_title, xlab
       limits = limits, padding = padding), display_data = display_data,
     distribution = distribution, distribution_path = distribution_path), extra)
   out <- new_mfrm_plot_data(name, payload)
-  if (draw) mfrm_draw_extended_estimates(payload)
-  invisible(out)
-}
-
-mfrm_draw_extended_estimates <- function(payload) {
-  opt <- payload$display; style <- opt$style
-  tab <- payload$table[opt$rows, , drop = FALSE]
-  dd <- payload$display_data[opt$rows, , drop = FALSE]
-  colour <- if (opt$palette == "mono") "#222222" else "#0072B2"
-  caption <- if (opt$show_notes) payload$caption else ""
-  caption_lines <- unlist(lapply(strsplit(caption, "\n", fixed = TRUE)[[1]], strwrap, width = 85))
-  left <- if (style == "interval" && opt$show_labels) max(5, min(18, max(nchar(dd$Label), 0) * .55 + 1)) else 5
-  title <- if (opt$show_title) payload$title else ""
-  title_lines <- unlist(lapply(strsplit(title, "\n", fixed = TRUE)[[1]], strwrap,
-    width = max(20, floor(grDevices::dev.size("in")[1] * 7 / opt$text_scale))))
-  old <- graphics::par(mar = c(5 + length(caption_lines) * .85, left,
-    1.5 + length(title_lines) * 1.5, 2), cex = opt$text_scale)
-  on.exit(graphics::par(old), add = TRUE)
-  title <- paste(title_lines, collapse = "\n")
-  y <- rev(seq_len(nrow(tab))); comparison <- isTRUE(payload$settings$comparison)
-  offset <- if (comparison) .12 else 0
-  ylim <- switch(style, interval = c(.5, max(1, nrow(tab)) + .5 + as.numeric(comparison)),
-    precision = range(c(0, dd$Width[dd$Included]), finite = TRUE), distribution = c(0, 1))
-  if (diff(ylim) == 0) ylim <- ylim + c(0, 1)
-  if (style == "precision") ylim[2] <- ylim[2] * 1.15
-  plot(NA_real_, NA_real_, type = "n", xlim = opt$limits, ylim = ylim,
-    xlab = payload$xlab, ylab = payload$ylab, main = title,
-    yaxt = if (style == "interval") "n" else "s", bty = "n")
-  abline(h = if (style == "interval") y else graphics::axTicks(2), col = "grey92")
-  if (!is.null(opt$reference)) abline(v = opt$reference, lty = 2, col = "grey45")
-  if (style == "interval") {
-    if (comparison) segments(tab$OrdinaryLower, y - offset, tab$OrdinaryUpper, y - offset,
-      col = "grey35", lty = 2, lwd = 1.5)
-    segments(pmax(opt$limits[1], tab$Lower), y + offset,
-      pmin(opt$limits[2], tab$Upper), y + offset, col = dd$Colour, lwd = 1.5)
-    for (i in seq_len(nrow(tab))) {
-      if (is.infinite(tab$Lower[i])) arrows(opt$limits[1] + opt$padding, y[i] + offset,
-        opt$limits[1], y[i] + offset, length = .08, col = dd$Colour[i])
-      if (is.infinite(tab$Upper[i])) arrows(opt$limits[2] - opt$padding, y[i] + offset,
-        opt$limits[2], y[i] + offset, length = .08, col = dd$Colour[i])
-    }
-    points(tab$Estimate[dd$Included], (y + offset)[dd$Included],
-      pch = dd$Shape[dd$Included], col = dd$Colour[dd$Included], cex = opt$point_size / 2.5)
-    if (opt$show_labels) axis(2, at = y, labels = dd$Label, las = 1, tick = FALSE)
-    if (comparison) legend("top", horiz = TRUE, bty = "n", cex = .8,
-      legend = c(paste("Bootstrap", payload$settings$method), "Ordinary normal"),
-      col = c(colour, "grey35"), lty = c(1, 2))
-  } else if (style == "precision") {
-    keep <- dd$Included
-    points(dd$Estimate[keep], dd$Width[keep], pch = dd$Shape[keep],
-      col = dd$Colour[keep], cex = opt$point_size / 2.5)
-    if (opt$show_labels && any(keep)) text(dd$Estimate[keep], dd$Width[keep], dd$Label[keep], pos = 3, cex = .8)
-  } else if (nrow(payload$distribution)) {
-    path <- payload$distribution_path; ecdf <- payload$distribution
-    graphics::polygon(c(path$Estimate, rev(range(path$Estimate))),
-      c(path$Cumulative, 0, 0), col = grDevices::adjustcolor(colour, alpha.f = .12), border = NA)
-    lines(path, col = colour, lwd = 2)
-    points(ecdf, col = colour, pch = 16, cex = opt$point_size / 2.5)
-    graphics::rug(dd$Estimate[dd$Included], col = colour)
-  }
-  if (style != "interval" && !any(dd$Included)) text(mean(opt$limits), mean(ylim), "No eligible estimates")
-  for (i in seq_along(caption_lines)) mtext(caption_lines[i], side = 1,
-    line = 4 + (i - 1) * .85, cex = .7, adj = 0)
-  invisible(payload)
+  p <- .mfrm_finalize_ggplot(out, draw = FALSE)
+  attr(p, "mfrmr_alt_text") <- payload$alt_text
+  attr(p, "mfrmr_display_data") <- payload$display_data
+  if (isTRUE(draw)) .mfrm_draw_ggplot_clean(p)
+  invisible(p)
 }
 
 .mfrmr_gg_extended_estimates <- function(payload) {

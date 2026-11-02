@@ -114,7 +114,7 @@ criterion effects, and an estimated normal person-population mean and SD.
 Relative criterion slopes have geometric mean one. Facet locations are
 centered within each facet. Higher Person locations predict higher coded
 scores; higher default Rater locations predict lower coded scores, meaning
-stricter scoring only when higher scores are more favorable. The permitted score scale was
+more severe scoring only when higher scores are more favorable. The permitted score scale was
 `r params$rating_min`–`r params$rating_max`, including unused permitted categories.
 
 ```{r fit-settings}
@@ -279,7 +279,7 @@ knitr::kable(report$first_screen[, c("Area", "Status", "MainIssue", "NextAction"
 The full draft and table/figure wording are saved with the analysis. Review
 them against the study context rather than copying every generated sentence.
 Use `reporting_checklist()` for the manuscript coverage map and
-`visual_reporting_template()` for figure-caption starters.
+`mfrmr_output_guide("visual_templates")` for figure-caption starters.
 
 ## Files and references
 

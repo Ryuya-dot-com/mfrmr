@@ -138,6 +138,9 @@
 #' Psychological Measurement, 37*(3), 226-241. \doi{10.1177/0146621612471888}.
 #' @seealso [predict_mfrm_units()], [score_comparison_table()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("classification_table", run.dontrun = TRUE)
+#' \dontrun{
 #' ratings <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(ratings, person = "Person", facets = c("Rater", "Criterion"),
 #'   score = "Score", method = "MML", model = "RSM",
@@ -157,6 +160,7 @@
 #' result$cuts
 #' result$settings$calibration # These probabilities hold calibration fixed.
 #' # No population average is inferred from this three-point inspection grid.
+#' }
 #' @export
 classification_table <- function(fit, rating_plan, cut_scores, score_cuts, theta,
                                  theta_weights = NULL, operational_cuts = cut_scores,

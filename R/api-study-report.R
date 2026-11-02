@@ -2,7 +2,7 @@
   "mfrm_design_recommendation", "mfrm_d_study",
   "mfrm_multivariate_d_study", "mfrm_multivariate_d_comparison", "mfrm_residual_network",
   "mfrm_rater_network", "mfrm_halo_network", "mfrm_network_ergm",
-  "mfrm_posterior_summary", "mfrm_bias_collection",
+  "mfrm_posterior_summary", "mfrm_posterior_scores", "mfrm_bias_collection",
   .mfrm_review_report_classes())
 
 .mfrm_review_report_classes <- function() c("mfrm_bias", "mfrm_anchor_review",
@@ -117,6 +117,10 @@
     add("source_model", x$source, "study_design", "Exported model, response scale and stored credible level")
     add("posterior_decision", x$decision, "study_diagnostics", "Saved sampling screen; not inference certification")
     add("parameters", x$parameters, "study_estimates", "All mapped posterior summaries and internal sampling coordinates")
+    if (!is.null(x$contrasts)) {
+      add("contrasts", x$contrasts, "study_estimates",
+          "Shared-calibration posterior contrasts, retaining fixed constraints and sampling review")
+    }
     add("sampling_review", x$checks, "study_diagnostics", "Sampling criteria, flags and next actions")
     add("sampler_diagnostics", x$sampler, "study_diagnostics", "Per-chain sampling diagnostics")
     add("parameter_map", x$parameter_map, "study_design", "Original identities, fixed constraints, references and directions")
@@ -127,11 +131,50 @@
     constraints <- unlist(x$constraints, use.names = TRUE)
     if (length(constraints)) add("constraints", data.frame(Setting = names(constraints), Value = unname(constraints)),
       "study_design", "Retained facet/group/step constraint specifications")
-    notes <- c(x$notes, "This report contains stored marginal posterior summaries, not joint draws or native MML diagnostics.",
+    draws_note <- if (is.null(x$draws)) {
+      "This report contains stored marginal posterior summaries, not joint draws or native MML diagnostics."
+    } else {
+      paste0(
+        "Joint posterior draws (", x$chains, " chains x ", x$draws$iterations,
+        " iterations) are attached for shared-calibration contrasts and credible intervals; native MML diagnostics are not available from this object."
+      )
+    }
+    contrast_note <- if (!is.null(x$contrasts)) {
+      "Posterior contrast SDs, equal-tailed credible intervals and tail probabilities (`prob_gt_zero`, `prob_lt_zero`) condition on the model, priors and fixed anchors; they are not frequentist SEs, Wald confidence intervals or two-sided p-values."
+    } else character()
+    notes <- c(x$notes, draws_note, contrast_note,
       "Report the likelihood, priors, population and anchor constraints, sampling diagnostics, prior sensitivity and posterior predictive checks separately.")
     issue <- paste(x$decision$Interpretation, x$decision$Why)
-    route <- "report$tables$sampling_review; plot(x); confint(x)"
+    route <- if (!is.null(x$contrasts)) {
+      "report$tables$sampling_review; report$tables$contrasts; plot(x, quantity = 'contrast'); confint(x, parm = 'contrasts')"
+    } else {
+      "report$tables$sampling_review; plot(x); confint(x)"
+    }
     title_route <- "export_mfrm_model() -> external sampling -> read_mfrm_posterior()"
+  } else if (inherits(x, "mfrm_posterior_scores")) {
+    .mfrm_validate_posterior_scores(x)
+    s <- summary(x)
+    title <- "External Bayesian new-Person posterior scores"
+    add("overview", s$overview, "study_design", "Calibration source, conditioning mode, draw count and variance summary")
+    add("posterior_decision", x$posterior_decision, "study_diagnostics", "Source calibration sampling screen; not inference certification")
+    add("estimates", x$estimates, "study_estimates", "New-Person posterior ability estimates, variance decomposition, intervals and statuses")
+    add("dispositions", x$person_dispositions, "study_diagnostics", "Person row counts, calibration-membership flags and scoring statuses")
+    if (!is.null(x$decisions)) {
+      add("decisions", x$decisions, "study_estimates", "Cut-score posterior probabilities and between-draw calibration spread")
+    }
+    if (!is.null(x$predictive)) {
+      add("predictive", x$predictive, "study_estimates", "Row-level posterior predictive expected scores, predictive SDs and category probabilities")
+    }
+    add("source_model", x$source, "study_design", "Source exported Bayesian model and model-data checksum")
+    add("categories", x$categories, "study_design", "Original and internal score categories")
+    notes <- x$notes
+    issue <- paste(x$posterior_decision$Interpretation[1L], x$posterior_decision$Why[1L])
+    route <- if (!is.null(x$decisions)) {
+      "report$tables$estimates; report$tables$decisions; apa_table(x, which = 'decisions'); plot(x)"
+    } else {
+      "report$tables$estimates; confint(x); plot(x)"
+    }
+    title_route <- "read_mfrm_posterior() -> predict(posterior, newdata = ...)"
   } else if (inherits(x, "mfrm_bias_collection")) {
     s <- summary(x)
     title <- "Exploratory bias interactions"
@@ -180,7 +223,7 @@
       add("constraints", data.frame(CenteringScope = x$centering_scope %||% NA_character_),
         "study_design", "Stored centering convention")
       notes <- c(notes, "Anchor review checks receiving-data compatibility; it does not establish invariance, successful estimation or propagation of source-calibration uncertainty.")
-      title_route <- "review_mfrm_anchors() / anchor_review()"
+      title_route <- "review_mfrm_anchors() / fit$config$anchor_review"
       route <- "report$tables$anchors; report$tables$anchor_issues; build_linking_review()"
       issue <- "Record anchor source, values, units/direction, centering, invariance rationale and conditional or propagated uncertainty."
     } else if (inherits(x, "mfrm_linking_review")) {
@@ -268,6 +311,14 @@
       notes <- c("Differences share one estimated source: use paired uncertainty, not independent-plan SEs.",
         "Positive G/Phi differences and negative SEM differences favor the comparison plan. This is not a cost-effectiveness ranking.",
         "The stored normal-theory paired delta intervals are approximate, pointwise and not selection-adjusted. Unavailable rows remain present.")
+      if (!is.null(x$planning)) {
+        add("planning_plans", x$planning$plans, "study_estimates", "All plan points, resource feasibility and point-target status")
+        add("planning_costs", x$planning$costs, "study_design", "User-supplied resources and units keyed by Scenario")
+        add("planning_checks", x$planning$checks, "study_diagnostics", "Every requested resource limit and point target, including unavailable values")
+        add("planning_differences", x$planning$differences, "study_estimates", "Paired interval directions, separate from feasibility and point targets")
+        add("planning_basis", x$planning$basis, "study_design", "Observed-score target, reference, design and uncertainty basis")
+        notes <- c(notes, x$planning$notes)
+      }
     } else {
       add("score_definition", data.frame(Score = design$scores, Role = "Fixed observed-score component",
         Direction = "Specify rubric endpoints and any recoding in the manuscript"),
@@ -346,6 +397,11 @@
     first$NextAction <- if (x$decision$Status == "sampling_review_required")
       "Read report$tables$sampling_review; resolve recorded sampling concerns before interpretation." else
         "Review priors, posterior predictive fit and the study context before reporting."
+  } else if (inherits(x, "mfrm_posterior_scores")) {
+    first$Readiness <- x$posterior_decision$Interpretation[1L]
+    first$NextAction <- if (identical(x$posterior_decision$Status[1L], "sampling_review_required"))
+      "Resolve calibration sampling concerns in the source posterior bundle before interpreting new-Person scores." else
+        "Review calibration priors, conditioning mode, person response coverage and the study context before reporting."
   }
   index <- data.frame(Area = unname(descriptions), EvidenceStatus = "stored",
     PrimaryTable = names(tables), Role = unname(roles), PlotRoute = "plot(report$source)")

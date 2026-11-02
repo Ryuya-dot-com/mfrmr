@@ -69,8 +69,7 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 
 #' Run a legacy-compatible estimation workflow wrapper
 #'
-#' This helper mirrors `mfrmRFacets.R` behavior as a package API and keeps
-#' legacy-compatible defaults (`model = "RSM"`, `method = "JML"`), while allowing
+#' This workflow uses legacy-compatible defaults (`model = "RSM"`, `method = "JML"`), while allowing
 #' users to choose compatible estimation options.
 #'
 #' `run_mfrm_facets()` is intended as a one-shot workflow helper:
@@ -203,6 +202,7 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #'   `"fixed"` (default) or `"adaptive"`. Adaptive integration requires the
 #'   direct MML engine.
 #' @export
+#' @order 1
 run_mfrm_facets <- function(data,
                             person = NULL,
                             facets = NULL,
@@ -319,52 +319,3 @@ run_mfrm_facets <- function(data,
   out
 }
 
-#' Compatibility alias for the legacy-compatible workflow
-#'
-#' @rdname run_mfrm_facets
-#' @export
-mfrmRFacets <- function(data,
-                        person = NULL,
-                        facets = NULL,
-                        score = NULL,
-                        weight = NULL,
-                        keep_original = FALSE,
-                        model = c("RSM", "PCM"),
-                        method = c("JML", "JMLE", "MML"),
-                        step_facet = NULL,
-                        anchors = NULL,
-                        group_anchors = NULL,
-                        noncenter_facet = "Person",
-                        dummy_facets = NULL,
-                        positive_facets = NULL,
-                        quad_points = 15,
-                        maxit = 400,
-                        reltol = 1e-9,
-                        mml_engine = c("direct", "em", "hybrid"),
-                        top_n_interactions = 20L,
-                        mml_integration = c("fixed", "adaptive"),
-                            centering_scope = c("facet", "remainder", "anchor_origin")) {
-  run_mfrm_facets(
-    data = data,
-    person = person,
-    facets = facets,
-    score = score,
-    weight = weight,
-    keep_original = keep_original,
-    model = model,
-    method = method,
-    step_facet = step_facet,
-    anchors = anchors,
-    group_anchors = group_anchors,
-    noncenter_facet = noncenter_facet,
-    centering_scope = match.arg(centering_scope),
-    dummy_facets = dummy_facets,
-    positive_facets = positive_facets,
-    quad_points = quad_points,
-    maxit = maxit,
-    reltol = reltol,
-    mml_engine = mml_engine,
-    mml_integration = mml_integration,
-    top_n_interactions = top_n_interactions
-  )
-}

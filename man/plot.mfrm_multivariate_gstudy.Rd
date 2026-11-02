@@ -84,7 +84,7 @@ interval help for requirements and numerical endpoint bands.}
 \item{...}{Reserved; additional arguments are rejected.}
 }
 \value{
-Invisibly, an \code{mfrm_plot_data} object with \code{table} (source, display label, selected
+Invisibly, a \code{ggplot} object; \code{\link[=plot_data]{plot_data()}} extracts \code{table} (source, display label, selected
 estimate, sign status and full component-matrix PSD diagnostic),
 \code{weights}, \code{score}, \code{kind}, \code{source_design}, \code{source_rows}, axis labels and
 notes. \code{plot}, \code{panels} and \code{ncol} describe the view. Component tables include
@@ -217,6 +217,9 @@ Titles and explanations are returned separately from the figure. Use
 graphics and optional \code{\link[=as_ggplot]{as_ggplot()}} conversion are supported.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot.mfrm_multivariate_gstudy", run.dontrun = TRUE)
+\dontrun{
 tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 g <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
 p <- plot(g, weights = c(V = .5, W = .5), preset = "monochrome",
@@ -228,6 +231,7 @@ covariance_plot <- plot(g, type = "covariance")
 plot_data(covariance_plot, "table")
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   as_ggplot(p)
+}
 }
 }
 \seealso{

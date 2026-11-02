@@ -4,6 +4,13 @@ This per-function record complements the concise release highlights in NEWS.
 For saved analyses, start with `help("mfrmr_workflow_methods")`; for reporting,
 use `vignette("mfrmr-reporting-and-apa")`.
 
+Complete worked examples remain in each help topic. Short primary workflows run
+with `example("topic")`; supplementary workflows show an explicit
+`example("topic", run.dontrun = TRUE)` command. Long fitting and external-software
+examples retain their existing opt-in status, inputs and numerical settings.
+Executing help examples displays their tables and summaries through R's standard
+example interface.
+
 Fixed-quadrature MML fitting and observed-information calculations now aggregate
 observation scores before projecting them onto facet, interaction, step and
 slope parameters. This avoids repeated grouping at each integration point in
@@ -39,9 +46,9 @@ results. A wording or display correction alone does not require refitting.
   need to be repeated. A single-preset appendix export was already filtered.
 
 - `build_conquest_overlap_bundle(fit = ...)` now records the quadrature-point
-  count from the supplied fit, rather than the helper's default. Rebuild an
-  affected bundle to correct its settings table; this does not require
-  refitting or change the fitted estimates.
+  count from the supplied fit, rather than the default used without a fit.
+  Rebuild an affected bundle to correct its settings table; this does not
+  require refitting or change the fitted estimates.
 
 - ERGM results now support `coef()`, `vcov()` and `confint()` alongside
   `summary()`, `plot()` and reporting. Coefficient intervals retain unavailable
@@ -132,7 +139,7 @@ results. A wording or display correction alone does not require refitting.
   other refusals retain the candidate and diagnostic history. Success does
   not establish global optimality or nominal interval coverage.
   Two-family automatic histories use `check_refused` when a prerequisite
-  check stops refinement. The former development label `nonintegration_refusal`
+  check stops refinement. The former label `nonintegration_refusal`
   did not identify the cause; a failed higher-order information check also
   stops refinement. Inspect the retained check table. Existing saved histories
   keep their original labels; the stopping rules and numerical results are unchanged.
@@ -190,7 +197,7 @@ results. A wording or display correction alone does not require refitting.
   locations do not identify an adjustment rule; their fit placeholders remain
   unavailable for plotting.
   Measure and category-curve plots also keep their legends separate from axis
-  labels when recorded figures are redrawn at pkgdown dimensions.
+  labels during saved-plot replay.
 
 - Ordinary additive RSM/PCM JML now accepts group means with explicit
   `centering_scope = "anchor_origin"`. Direct or group anchors supply their
@@ -1054,8 +1061,8 @@ uncertainty, subgroup comparisons and design planning.
   Previously ignored extra arguments, including unsupported composite weights,
   are rejected. See the compatibility guide for migration and model-specific limits.
   D-study curve legends now recalculate text spacing when recorded plots are
-  redrawn at a different size, preventing overlapping plan labels in pkgdown
-  examples and saved-plot replay.
+  redrawn at a different size, preventing overlapping plan labels in saved
+  figures and tutorials.
 
 * **Breaking change:** `confint(fit)` now targets the free coefficients from
   `coef(fit)` for supported native MML/CML fits. Coefficient names or positions
@@ -1700,8 +1707,7 @@ uncertainty, subgroup comparisons and design planning.
   of separation.
 
 * Help for saved-result `plot()` methods now explains display controls,
-  returned tables and interpretation on the public method pages. Corresponding
-  examples have moved there from the internal drawing helpers. Residual
+  returned tables and interpretation, with examples on the same pages. Residual
   heatmaps are described in score units, QC detail panels show saved check
   explanations, and anchor forest whiskers are distinguished from intervals
   for changes between waves.
@@ -1868,14 +1874,12 @@ uncertainty, subgroup comparisons and design planning.
   residual diagnostics remain unsupported for these models; the available
   posterior summaries are descriptive and have no ordinary-model cutoffs.
 
-* The roadmap now summarizes feature availability, limitations and release
-  milestones. The contributor guide focuses on reusable development procedures.
-  Calibration help explains validation and freezing in terms of the saved
+* Calibration help explains validation and freezing in terms of the saved
   model and settings.
 
-* Reports and numerical-check notes explain review actions and limitations
-  without development-stage wording. The reporting checklist describes current
-  plot support, including the absence of a native 3D information surface.
+* Reports and numerical-check notes give plain-language review actions and
+  limitations. The reporting checklist describes current plot support,
+  including the absence of a native 3D information surface.
   Manifest help distinguishes optimizer convergence from numerical checks for
   inference and from the statistical adequacy of an interval method.
 
@@ -2029,7 +2033,7 @@ uncertainty, subgroup comparisons and design planning.
   fitting. Flexible input designs and available estimates do not establish
   general robustness or extend the requirements of downstream outputs.
 
-* `plot_reliability_snapshot()` now rejects corrected-JML and two-family
+* `plot(fit, type = "reliability")` now rejects corrected-JML and two-family
   GPCM fits even when diagnostics are supplied. Plotted values retain existing
   precision/use flags in their returned table, and ordinary-JML notes identify
   exploratory screening. Reliability, separation and strata calculations are
@@ -2365,7 +2369,7 @@ uncertainty, subgroup comparisons and design planning.
   distinguish high rater separation reliability (distinguishable severities)
   from high Person separation reliability (distinguishable abilities). Low
   rater values can also reflect imprecision and do not establish agreement.
-  `plot_reliability_snapshot()` retains this interpretation in its help,
+  `plot(fit, type = "reliability")` retains this interpretation in its help,
   caption and saved notes, and removes the universal .70/.90 quality lines.
   Numerical reliability estimates are unchanged.
 
@@ -2437,9 +2441,9 @@ uncertainty, subgroup comparisons and design planning.
   information checks. Previously these fits could remain stalled with optimizer
   code zero and a gradient too large for inference.
 
-* Corrected JML reuses the existing vectorized row-maximum helper in its
-  repeated probability evaluations. The profile equations, numerical
-  tolerances and handling of nonfinite values are unchanged.
+* Corrected JML reduces repeated work in probability evaluations, with
+  unchanged profile equations, numerical tolerances and handling of nonfinite
+  values.
 
 * Corrected JML checks for singleton assignment rosters before differentiating
   its covariance equations. Fixed-roster covariance remains unavailable in
@@ -2486,7 +2490,7 @@ uncertainty, subgroup comparisons and design planning.
   The supplied nodes and weights, likelihood and score checks are preserved.
 
 * Multivariate D-study comparison plots now fit standard landscape graphics
-  devices, including recorded-plot replay during documentation-site builds.
+  devices, including recorded plots redrawn at a different size.
   More compact margin spacing preserves both panels, labels, reference points
   and intervals without changing the plotted values.
 
@@ -3572,10 +3576,9 @@ uncertainty, subgroup comparisons and design planning.
 * Testlet fitting now selects a converged optimization start when a failed
   start has an indistinguishable objective within floating-point precision.
   Gradient, integration, search-bound and information checks are unchanged.
-  A 480-dataset comparison exposed fourteen such failures; all fourteen
-  passed targeted refits, while four controls retained identical estimates
-  and scores. Refit affected saved models and regenerate their scores;
-  printing an older unavailable result does not repair it.
+  A 480-dataset comparison included fourteen fits affected by this
+  start-selection issue. Refit affected saved models and regenerate their
+  scores; printing an older unavailable result does not repair it.
 * The testlet tutorial now reports an estimated-population comparison with
   ordinary RSM, including original failures, their separate numerical repair,
   Monte Carlo uncertainty and known-calibration references. Corrected Person
@@ -4428,7 +4431,7 @@ and action needed for each affected workflow.
   differences in observed-minus-expected scores without SEs, p-values,
   confidence intervals or positive/negative classifications. These differences
   do not isolate differential functioning. Existing test columns remain as
-  `NA` for compatibility. `plot_dif_summary()` refuses residual confidence
+  `NA` for compatibility. `plot(dif, type = "summary")` refuses residual confidence
   intervals. Recreate older residual results, summaries and reports using
   the existing fit and original data; no model refit is needed.
 
@@ -4595,9 +4598,9 @@ and action needed for each affected workflow.
   `AvailableReps` counts returned facet results. Re-summarize an existing
   evaluation object to apply the correction without refitting.
 
-* Design-evaluation notes now use aggregated run summaries. Passing raw facet
-  results to the notes helper previously caused missing-column warnings and
-  omitted the corresponding convergence and performance notes.
+* Design-evaluation summaries now include the appropriate convergence and
+  performance notes without missing-column warnings. Previously, these notes
+  could be omitted even when the run summaries contained the required values.
 
 * `evaluate_mfrm_design(parallel = "future")` now dispatches replications
   through the active future plan while preserving the same preallocated
@@ -4613,7 +4616,7 @@ and action needed for each affected workflow.
   GPCM fair-score SEs remain unavailable if any gradient component is missing,
   rather than replacing the missing uncertainty with zero.
 
-* `plot_fair_average(plot_type = "measure")` connects person/facet measures
+* `plot(fit, type = "fair_average", view = "measure")` connects person/facet measures
   to Fair Scores alongside the observed-score and gap views. Base/ggplot
   share colours and six point shapes, grayscale, and title/note controls;
   full notes and excluded rows remain available in the returned data.
@@ -4636,7 +4639,6 @@ and action needed for each affected workflow.
 * Corrected the G/Phi interpretation example: under the implemented
   nonnegative main-effect decomposition, `Phi <= G`; `Phi < G`, not `G < Phi`,
   indicates that absolute decisions carry additional facet-main-effect error.
-  A D-study regression check now preserves this ordering.
 
 * Linking-chain plots add `type = "offset_sensitivity"`. Each common-element
   deletion reruns preliminary offsets, screening, weighted/unweighted offsets
@@ -4647,9 +4649,9 @@ and action needed for each affected workflow.
   comparisons. Inconsistent source offsets require rebuilding the chain. No
   source model is refitted and no new uncertainty interval is calculated.
 
-* The shared link-offset helper records contributors and the all-finite-row
-  screening fallback. Non-finite preliminary weighted offsets now return an
-  unavailable result rather than failing during the subsequent screening test.
+* Linking results record contributors and whether screening falls back to all
+  finite rows. Non-finite preliminary weighted offsets now return an unavailable
+  result rather than failing during the subsequent screening test.
 
 * Linking chains add `type = "links"` and `type = "anchor_removal"` plot views.
   They summarize recorded retained connections and remove each common-element
@@ -4687,15 +4689,15 @@ and action needed for each affected workflow.
   inference readiness. A converged fit awaiting statistical review no longer
   has its convergence described as unknown.
 
-* `plot_compare_mfrm()` adds paired Wright distributions/locations and CCCs,
+* `plot(reference, comparison = comparison)` adds paired Wright distributions/locations and CCCs,
   plus matched-location and probability-difference views. Existing source
   coordinates and probability calculations are reused, with explicit group
   selection, original score labels, source readiness and returned notes.
   Monochrome/many-category CCCs use category panels by default. Incompatible
   recorded comparison bases fail without automatic alignment. Drawing uses
   optional ggplot2; draw-free data need no renderer. No difference SEs or CIs
-  are calculated. The shared Wright builder also handles a single person
-  without calling the undefined one-observation FD histogram rule.
+  are calculated. Wright maps also handle a single person without applying the
+  undefined one-observation FD histogram rule.
 
 * Rater-severity profiles reserve space for complete labels and explain when
   the device is too narrow. FACETS-style maps warn about crowded facet labels;
@@ -4765,7 +4767,7 @@ and action needed for each affected workflow.
   and multi-group CCC plots clean up their own layouts before subsequent plots.
   Wright titles, pathway endpoint labels, and plot footnotes have more room;
   subgroup densities now draw in the Wright map's person panel.
-  `plot_apa_figure_one()` uses a single-panel FACETS-style Wright map without
+  `plot(fit, type = "apa_summary")` uses a single-panel FACETS-style Wright map without
   CI whiskers (also reflected in its returned Wright payload), so all four
   panels share one page; its summary text wraps within the panel.
 
@@ -4799,10 +4801,6 @@ and action needed for each affected workflow.
 
 * Replay scripts now preserve facet-interaction specifications and their
   support policy.
-
-* Latent-regression reference benchmarks no longer attempt Person scoring when
-  their fitted model is not scoring-ready. The posterior-shift check is kept as
-  an explicit unevaluated warning instead of using a review-only score.
 
 * Manuscript examples now pass the same diagnostics to tables and Wright maps,
   save full-precision CSVs with separate captions/notes and a PNG, and include

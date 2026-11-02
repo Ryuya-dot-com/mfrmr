@@ -92,6 +92,9 @@ See \link{mfrmr_compatibility_layer} for migration instructions.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("displacement_table", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -100,6 +103,7 @@ disp <- displacement_table(fit, anchored_only = FALSE)
 summary(disp)
 p_disp <- plot(disp, draw = FALSE)
 p_disp$data$plot
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}

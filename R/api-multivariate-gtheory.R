@@ -318,6 +318,12 @@
 #' tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 #' g_task <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
 #' g_task$components
+#' g_task$component_diagnostics
+#' # To compare future designs, see ?mfrm_d_study.
+#'
+#' # Optional planning, incomplete designs, renamed facets and nesting examples.
+#' # example("mfrm_g_study", run.dontrun = TRUE)
+#' \dontrun{
 #' d_task <- mfrm_d_study(g_task,
 #'   design_grid = data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
 #' d_task$coefficients
@@ -377,6 +383,7 @@
 #' summary(d_nested)
 #' plot(d_nested, x_var = "Raters") # Raters on the axis means raters PER TASK.
 #' plot(d_nested, x_var = "Tasks", type = "sem")
+#' }
 #' @aliases mfrm_multivariate_gstudy
 #' @export
 mfrm_g_study <- function(data, scores, person = "Person",
@@ -983,10 +990,13 @@ mfrm_g_study <- function(data, scores, person = "Person",
 #'   weights = c(V = -1, W = 1))
 #' summary(d)
 #' plot(d)
-#' plot(d, type = "sem")
 #' # G rises from 0.300 to 0.462, conditional on these estimated components.
 #' # This is a planning projection, not evidence from twelve observed tasks.
 #'
+#' # Optional alternative views, GENOVA conventions and composite weights.
+#' # example("mfrm_d_study", run.dontrun = TRUE)
+#' \dontrun{
+#' plot(d, type = "sem")
 #' # Without weights, report the original scores without creating a composite.
 #' individual <- mfrm_d_study(g, data.frame(Tasks = c(6, 12)))
 #' plot(individual, score = "V")
@@ -1011,6 +1021,7 @@ mfrm_g_study <- function(data, scores, person = "Person",
 #' plot(alternatives, composite = "Equal")
 #' plot(alternatives, composite = "Difference", type = "sem")
 #' # Choose weights for the intended interpretation, not solely for higher G.
+#' }
 #' @name mfrm_d_study
 #' @aliases mfrm_multivariate_d_study
 #' @method mfrm_d_study mfrm_multivariate_gstudy

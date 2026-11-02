@@ -55,6 +55,7 @@ jobs:
           r-version: ${{ inputs.r }}
           http-user-agent: ${{ inputs.http-user-agent }}
           use-public-rspm: true
+          extra-repositories: https://stan-dev.r-universe.dev
 
       - name: Install XQuartz runtime on macOS
         if: runner.os == 'macOS'
@@ -62,15 +63,8 @@ jobs:
           brew install --cask xquartz
           test -f /opt/X11/lib/libXrender.1.dylib
 
-      - name: Check release metadata consistency
-        run: |
-          source("inst/validation/release-readiness.R")
-          status <- mfrmr_release_readiness_source_truth_status(
-            mfrmr_release_readiness_paths(".")
-          )
-          print(status)
-          stopifnot(isTRUE(status$SourceTruthOK[[1L]]))
-        shell: Rscript {0}
+      - name: Check public source and version metadata
+        run: Rscript scripts/check-publication-boundary.R
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -97,7 +91,7 @@ jobs:
           tlmgr update --self
           tlmgr install inconsolata times helvetic courier fancyvrb microtype makeindex
 
-      - name: Exact source-tarball R CMD check (G4 confirmation held)
+      - name: Check source package
         id: package-check
         if: ${{ !inputs.manual-only }}
         env:
@@ -126,6 +120,23 @@ jobs:
               filter = "^numeric-feature-workflows$", package = "mfrmr",
               load_package = "installed", reporter = "tap")
           }
+
+      - name: Check repository research references against the checked package
+        if: ${{ inputs.full && !inputs.cran-timing && steps.package-check.outcome == 'success' }}
+        shell: Rscript {0}
+        run: |
+          checked_library <- normalizePath(
+            "validation-results/release-check/check/mfrmr.Rcheck",
+            winslash = "/", mustWork = TRUE
+          )
+          stopifnot(file.exists(file.path(checked_library, "mfrmr", "DESCRIPTION")))
+          Sys.setenv(R_LIBS = paste(c(checked_library, .libPaths()),
+                                   collapse = .Platform$path.sep))
+          status <- system2(file.path(R.home("bin"), "Rscript"), c(
+            "--vanilla", "scripts/run-regression.R", ".", "reference",
+            "validation-results/release-check/reference"
+          ))
+          if (status != 0L) quit(status = status)
 
       - name: Diagnose indexed manuals without repeating the package check
         if: ${{ inputs.cran-timing && inputs.manual-only }}
@@ -192,50 +203,26 @@ jobs:
             validation-results/release-check/dependency-versions.csv
             validation-results/release-check/session-info.txt
             validation-results/release-check/portability
+            validation-results/release-check/reference
             validation-results/release-check/manual-diagnostic
           if-no-files-found: ignore
 
-      - name: Repository validation review
-        if: ${{ !inputs.cran-timing }}
-        run: |
-          source("inst/validation/release-readiness.R")
-          maintenance <- new.env(parent = globalenv())
-          sys.source(
-            paste0(
-              "inst/validation/",
-              "fixed-calibration-g4-maintenance-admission-0.2.4.R"
-            ),
-            envir = maintenance
-          )
-          tarball <- list.files(
-            "validation-results/release-check",
-            pattern = "^mfrmr_[0-9.]+[.]tar[.]gz$", full.names = TRUE
-          )
-          if (length(tarball) != 1L) {
-            stop("The checked source tarball is unavailable.", call. = FALSE)
-          }
-          readiness <- mfrmr_release_readiness_review(
-            pkg_dir = ".",
-            check_log = file.path(
-              "validation-results/release-check/check/",
-              "mfrmr.Rcheck/00check.log"
-            ),
-            tarball = tarball
-          )
-          print(summary(readiness))
-          admission <- maintenance$mfrmr_fc_g4m_review(".")
-          stopifnot(
-            isTRUE(readiness$source_truth_status$SourceTruthOK[[1L]]),
-            isTRUE(readiness$check_status$CheckPassed[[1L]]),
-            isTRUE(readiness$ci_workflow_status$CIWorkflowOK[[1L]]),
-            isTRUE(admission$MaintenanceBridgeComplete),
-            isTRUE(admission$LegacyV5AutomaticIssuanceDisabled),
-            isTRUE(admission$V6ConfirmationContractFrozen),
-            !isTRUE(admission$PostMaintenanceG4Complete)
-          )
-          cat(
-            "Package check complete; no G4 receipt issued; G6 and public ",
-            "API remain unauthorized.\n",
-            sep = ""
-          )
+      - name: Verify retained package-check results
+        if: ${{ !inputs.manual-only }}
         shell: Rscript {0}
+        run: |
+          root <- "validation-results/release-check"
+          receipt <- readRDS(file.path(root, "release-check-receipt.rds"))
+          tarball <- list.files(root, pattern = "^mfrmr_[0-9.]+[.]tar[.]gz$",
+                                full.names = TRUE)
+          log <- file.path(root, "check", "mfrmr.Rcheck", "00check.log")
+          stopifnot(length(tarball) == 1L, file.exists(log),
+                    isTRUE(receipt$CheckComplete),
+                    identical(receipt$Errors, 0L), identical(receipt$Warnings, 0L),
+                    identical(receipt$CandidateGitCommit, Sys.getenv("GITHUB_SHA")),
+                    identical(receipt$PackageVersion, unname(read.dcf("DESCRIPTION")[1, "Version"])),
+                    identical(receipt$SourceTarballSHA256,
+                              digest::digest(file = tarball, algo = "sha256", serialize = FALSE)),
+                    identical(receipt$CheckLogSHA256,
+                              digest::digest(file = log, algo = "sha256", serialize = FALSE)))
+          cat("Checked source, log and receipt agree.\n")

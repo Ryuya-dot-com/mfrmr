@@ -44,12 +44,11 @@ FACETS-style output contract.
 \section{Compatibility map}{
 
 \describe{
-\item{\code{\link[=facets_positioning_guide]{facets_positioning_guide()}}}{User-facing wording for the package's
+\item{\code{\link[=facets_guide]{facets_guide()}}}{User-facing wording for the package's
 relationship to FACETS. Use before describing compatibility outputs in a
 report or migration note.}
 \item{\code{\link[=run_mfrm_facets]{run_mfrm_facets()}}}{One-shot legacy-compatible wrapper that fits,
 diagnoses, and returns key tables in one object.}
-\item{\code{\link[=mfrmRFacets]{mfrmRFacets()}}}{Alias for \code{\link[=run_mfrm_facets]{run_mfrm_facets()}} kept for continuity.}
 \item{\code{\link[=build_fixed_reports]{build_fixed_reports()}}}{Fixed-width interaction and pairwise text
 blocks. Best when a text-only compatibility artifact is required.}
 \item{\code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}}}{Graphfile/scorefile style CSV and
@@ -141,8 +140,8 @@ as callable aliases. Their help aliases lead to the new topics.\tabular{lll}{
    Former call \tab Current call \tab What it does \cr
    \code{evaluate_mfrm_recovery(...)} \tab \code{simulate_mfrm_recovery(...)} \tab Generate data repeatedly, refit, and summarize parameter recovery. \cr
    \code{build_peer_review_design_review(x)} \tab \code{review_peer_design(x)} \tab Read existing peer-assessment assignment metadata; no assignment generation or model fitting. \cr
-   \code{gpcm_score_side_contract(status)} \tab \code{gpcm_capability_matrix(status, view = "scores")} \tab Read score availability, limitations and alternatives. \cr
-   \code{gpcm_runtime_guard_coverage()} \tab \code{gpcm_capability_matrix(view = "unavailable")} \tab Read blocked/deferred workflows and alternatives. \cr
+   \code{gpcm_score_side_contract(status)} \tab \code{mfrmr_output_guide("gpcm_capabilities", status, view = "scores")} \tab Read score availability, limitations and alternatives. \cr
+   \code{gpcm_runtime_guard_coverage()} \tab \code{mfrmr_output_guide("gpcm_capabilities", view = "unavailable")} \tab Read blocked/deferred workflows and alternatives. \cr
 }
 
 
@@ -192,7 +191,7 @@ it. The corrected calculation preserves the statistical method, matching
 and multiplicity settings; no MFRM fitting is involved. Regenerate CSV
 exports from the new result.
 \itemize{
-\item Start FACETS-facing reports with \code{\link[=facets_positioning_guide]{facets_positioning_guide()}} when readers
+\item Start FACETS-facing reports with \code{\link[=facets_guide]{facets_guide()}} when readers
 might otherwise assume FACETS numerical reproduction.
 \item Keep compatibility wrappers only where a downstream consumer truly needs
 the old layout or fixed-width format.
@@ -683,7 +682,7 @@ retaining its package-native GPCM caveats.
 
 \itemize{
 \item For FACETS coverage and boundary wording, see
-\code{\link[=facets_positioning_guide]{facets_positioning_guide()}} and \code{\link[=facets_feature_coverage]{facets_feature_coverage()}}.
+\code{\link[=facets_guide]{facets_guide()}} with topic = "positioning" or "coverage".
 \item For standard reports/tables, see \link{mfrmr_reports_and_tables}.
 \item For manuscript-draft reporting, see \link{mfrmr_reporting_and_apa}.
 \item For visual diagnostics, see \link{mfrmr_visual_diagnostics}.

@@ -108,8 +108,10 @@ test_that("penalized two-stage covariance retains shared events and paired contr
     expect_lt(max(abs(unname(attr(ci, "linearization")$anchor_coupling[, 1]) - empirical)), 2e-4)
     path <- tempfile(fileext = ".rds"); withr::defer(unlink(path))
     saveRDS(ci, path); expect_identical(readRDS(path), ci)
-    expect_equal(plot(ci, draw = FALSE)$data$data$Estimate, ci$Estimate)
-    expect_match(plot(ci, draw = FALSE)$data$notes$Text, "Analytic Jeffreys")
+    p_ci <- plot(ci, draw = FALSE)
+    expect_s3_class(p_ci, "ggplot")
+    expect_equal(plot_data(p_ci, "data")$Estimate, ci$Estimate)
+    expect_match(plot_data(p_ci, "notes")$Text, "Analytic Jeffreys")
     expect_output(print(ci), "Analytic Jeffreys two-stage")
   }
 })

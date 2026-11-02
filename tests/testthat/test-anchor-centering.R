@@ -1,3 +1,45 @@
+test_that("anchor observation counts keep group order and weighted-sum precision", {
+  counts <- .mfrmr_anchor_observation_counts(
+    c("z", "a", "a", "a", NA_character_, "é"), c(.1, 1e16, 1, 1, .5, .2))
+  expect_identical(counts$level, c("a", "z", "é", NA_character_))
+  expect_identical(counts$raw, c(3L, 1L, 1L, 1L))
+  # R's sum uses extended precision only where the platform provides it.
+  expect_identical(counts$weighted, c(sum(c(1e16, 1, 1)), .1, .2, .5))
+  expect_identical(.mfrmr_anchor_observation_counts(character(), numeric()),
+    list(level = character(), raw = integer(), weighted = numeric()))
+})
+
+test_that("empty anchors preserve the full audit and weighted design checks", {
+  ratings <- data.frame(Person = c("p1", "p1", "p2", "p2"),
+    Rater = c("r1", "r2", "r1", "r2"), Score = c(0, 1, 1, 0),
+    Weight = c(1, 2, 3, 4))
+  prep <- prepare_mfrm_data(ratings, "Person", "Rater", "Score", weight_col = "Weight")
+  # These rows are discarded by normalization. They exercise the general
+  # audit path, independently of the empty-input shortcut.
+  missing_anchor <- data.frame(Facet = NA_character_, Level = NA_character_,
+    Anchor = NA_real_)
+  missing_group <- data.frame(Facet = NA_character_, Level = NA_character_,
+    Group = NA_character_, GroupValue = NA_real_)
+  for (scope in c("facet", "remainder", "anchor_origin")) {
+    args <- list(prep = prep, centering_scope = scope, dummy_facets = "Rater",
+      min_common_anchors = 2L, min_obs_per_element = 5, min_obs_per_category = 6)
+    actual <- do.call(audit_anchor_tables, args)
+    reference <- do.call(audit_anchor_tables, c(args,
+      list(anchor_df = missing_anchor, group_anchor_df = missing_group)))
+    expect_identical(actual, reference, info = scope)
+    expect_identical(do.call(audit_anchor_tables, c(args,
+      list(anchor_df = data.frame(), group_anchor_df = data.frame()))), reference)
+    expect_identical(unname(actual$issue_counts$N), rep(0L, 13L))
+    expect_identical(actual$facet_summary$FreeLevels, c(2L, 2L))
+    expect_equal(actual$design_checks$category_counts$WeightedN, c(5, 5))
+    low <- actual$design_checks$low_observation_levels
+    expect_equal(low$WeightedN, c(3, 4))
+    expect_identical(low$Level, c("p1", "r1"))
+    actual$issues$unknown_anchor_facets$new_column <- logical()
+    expect_identical(do.call(audit_anchor_tables, args), reference)
+  }
+})
+
 local({
   ratings <- load_mfrmr_data("example_core")
   anchor <- data.frame(Facet = "Rater", Level = "R01", Anchor = .7)
@@ -115,7 +157,7 @@ test_that("compatibility wrappers forward explicit and default centering", {
   expect_error(run_mfrm_facets(ratings, "Person", c("Rater", "Criterion"), "Score",
     centering_scope = "remainder"), "captured fitting arguments")
   expect_identical(captured$centering_scope, "remainder")
-  expect_error(mfrmRFacets(ratings, "Person", c("Rater", "Criterion"), "Score"),
+  expect_error(run_mfrm_facets(ratings, "Person", c("Rater", "Criterion"), "Score"),
     "captured fitting arguments")
   expect_identical(captured$centering_scope, "facet")
 })

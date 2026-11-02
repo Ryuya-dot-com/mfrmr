@@ -203,7 +203,6 @@ mfrmr_fit_comparisons <- function(a, supplied) {
 }
 
 #' @rdname fit_mfrm
-#' @param ... Unused.
 #' @export
 print.mfrm_comparison_fit <- function(x, ...) {
   cat("Requested joint-fit interaction comparisons\n")

@@ -5,7 +5,8 @@
 \alias{summary.mfrm_facets_results}
 \alias{print.mfrm_facets_results}
 \alias{as.data.frame.mfrm_facets_results}
-\title{Read FACETS results for standalone visualization}
+\alias{plot.mfrm_facets_results}
+\title{Read FACETS results for standalone visualization and fit review}
 \usage{
 read_facets_results(
   file = NULL,
@@ -33,10 +34,25 @@ read_facets_results(
   ...,
   component = c("elements", "curves")
 )
+
+\method{plot}{mfrm_facets_results}(
+  x,
+  type = c("measure", "wright", "fit", "infit_outfit", "ccc", "expected"),
+  facets = NULL,
+  statistic = c("infit", "outfit"),
+  draw = TRUE,
+  show_title = FALSE,
+  show_notes = FALSE,
+  show_legend = TRUE,
+  scales = NULL,
+  label_map = NULL,
+  ...
+)
 }
 \arguments{
-\item{file}{Scorefile input as described below, or \code{NULL} when only
-\code{graph_file} is supplied.}
+\item{file}{Scorefile input (a vector of file paths, a directory containing
+\code{score.N.txt} files, or a data frame), or \code{NULL} when only \code{graph_file} is
+supplied.}
 
 \item{facet}{Optional facet name to assign when the file does not contain a
 facet column. Use this for one-facet CSV exports.}
@@ -78,15 +94,51 @@ CSV, tab-separated or validated ASCII fixed-width format. Supply an export
 from the same analysis when also importing element results. File identity
 is recorded, but the reader cannot certify that the exports belong together.}
 
-\item{object, x}{A saved \code{mfrm_facets_results} object.}
+\item{object}{A saved \code{mfrm_facets_results} object.}
 
 \item{...}{Must be empty.}
 
 \item{component}{\code{"elements"} (default) or \code{"curves"} for Graphfile results.}
 
+\item{x}{Saved output of \code{\link[=read_facets_results]{read_facets_results()}}.
+
+Also for \code{summary()}: A saved \code{mfrm_facets_results} object.}
+
 \item{row.names}{Optional row names for the exported data frame.}
 
 \item{optional}{Passed to \code{\link[=as.data.frame]{as.data.frame()}}.}
+
+\item{type}{\code{"measure"} for labelled element locations by facet; \code{"wright"}
+for points by facet on one measure axis; \code{"fit"} for measure versus mean
+square; or \code{"infit_outfit"} for Infit versus Outfit. Wright maps require
+the explicit \code{common_scale = TRUE} declaration at import.
+\code{"ccc"} plots Graphfile category probabilities and \code{"expected"} plots
+Graphfile expected scores, each in separate scale panels.}
+
+\item{facets}{Optional character vector of facet names to display.}
+
+\item{statistic}{\code{"infit"} or \code{"outfit"}, used for \code{type = "fit"}.}
+
+\item{draw}{Logical; print the \code{ggplot} figure when true.}
+
+\item{show_title, show_notes}{Logical; show title/interpretation notes in the
+plot, off by default. Notes always remain in the returned data.}
+
+\item{show_legend}{Logical; display the source-status symbol key or category
+curve key below the panels. Defaults to true.}
+
+\item{scales}{Optional vector of Graphfile scale numbers for curve plots.
+Facet selectors do not apply to curves, and scale selectors do not apply
+to element plots.}
+
+\item{label_map}{Optional data frame with character columns \code{Facet},
+\code{ElementID} and \code{DisplayLabel} for element plots. Keys must match exported
+IDs in \code{x}, including any leading zeros, and must be unique within a facet.
+A partial map is allowed; unmapped rows retain their source labels.
+Mapping is checked against the full result before \code{facets} selection.
+This changes display labels only, not source labels or element identity.
+Curve plots do not accept this map. Only \code{type = "measure"} draws element
+labels; the other element plots retain them in returned plot data.}
 }
 \value{
 A \code{mfrm_facets_results} list with \code{table} (all imported rows, source
@@ -103,20 +155,32 @@ replaces the earlier candidate's ambiguous \code{Anchored} summary column.
 \code{as.data.frame()} exports the
 element table. Use \code{component = "curves"} with either method to inspect
 Graphfile curves. Use \code{saveRDS()} to retain the full object.
+
+For \code{plot()}: Invisibly a \code{ggplot} object whose underlying payload
+(accessible via \code{\link[=plot_data]{plot_data()}}) retains every selected row in \code{plot_data}
+with \code{X}, \code{Y}, \code{Available} and \code{Reason}; element plots also have \code{Symbol},
+and curves have \code{Series}, \code{Color}, \code{LineType} and \code{Segment}.
+Unavailable numerical coordinates are \code{NA} (measure plots retain label
+positions). Original reported values/status remain in the same rows.
+\code{notes}, \code{sources} and \code{metadata} describe interpretation and origin.
+\code{label_map} retains a supplied display map. Filtering and display labels
+do not change the saved results.
 }
 \description{
 Import reported element measures, fit statistics and optional Graphfile
 curves without refitting a model.
-Use \code{\link[=plot.mfrm_facets_results]{plot.mfrm_facets_results()}} to inspect the saved results.
+Use \code{\link[=plot.mfrm_facets_results]{plot.mfrm_facets_results()}} to inspect the saved results, or pass the
+returned object to \code{\link[=facets_fit_review]{facets_fit_review()}} for external FACETS-vs-mfrmr fit
+comparison.
 }
 \details{
 Each file must describe one analysis. Supply a vector of facet files or a
 directory containing \code{score.N.txt} files, or a named delimited table. Comma,
 tab and semicolon Scorefiles retain their native facet heading lines. Numeric
 facet numbers default to \code{Facet1}, \code{Facet2}, etc.; supply \code{facet_map} to name
-them. A data frame is also accepted. The supported layouts follow
-\code{\link[=read_facets_fit_table]{read_facets_fit_table()}}. Use named delimited files for non-ASCII labels; fixed-width
-imports require ASCII because byte and character widths can differ.
+them. A data frame is also accepted. Validated fixed-field Scorefile layouts
+and named delimited tables are supported; use named delimited files for
+non-ASCII labels because byte and character widths can differ.
 For text output from FACETS, request \code{Scorefile=score.txt},
 \verb{Heading lines=Yes}, \code{QM=Double} and \code{CSV=Commas}, \code{Tabs} or \code{Semicolons}.
 Check that the files were actually generated; a zero process exit code alone
@@ -173,6 +237,43 @@ sums outside that rounding allowance are withheld from probability plots.
 Incomplete probability vectors remain flagged, with available individual
 probabilities retained. Nothing is renormalized, smoothed or extrapolated.
 These are source-consistency checks, not validation of the fitted model.
+
+\code{plot()} method: Plot imported FACETS measures, fit statistics and curves
+
+For \code{plot()}: Each measure panel has its own axis; the Wright display shares one measure
+axis without centering, reversing signs or inventing category thresholds.
+Filled circles denote estimated elements, squares direct/group anchor flags, downward/upward
+triangles extreme low/high source status, diamonds single observations and
+open circles unknown source status. The symbol key is in \code{plot_data(p, "legend")}.
+A square marks source Status 1; it does not identify an individually fixed
+measure. Group-anchor members can vary around a fixed group mean, and
+\code{GroupRaw} may instead be a reporting group. Check the original specification
+or Table 7 to distinguish direct and group anchors. Returned notes retain
+this limitation, also when plotting imports saved by an earlier version;
+the source object is not changed. Recreate saved plot-data objects with
+\code{plot()} to obtain the revised legend and notes.
+Duplicate display labels are disambiguated by element key in measure plots.
+Use \code{label_map} to display local names while retaining the original FACETS
+labels and IDs. It cannot recover names lost in an export; supply the known
+correspondence yourself. Character preservation and font rendering are
+separate: choose an installed font with the required glyphs on the graphics
+device. With Cairo support, \code{\link[grDevices:png]{grDevices::png()}} with \code{type = "cairo"} and
+\code{\link[grDevices:cairo_pdf]{grDevices::cairo_pdf()}} accept a \code{family} such as \code{"Meiryo"} on Windows
+when installed. Font availability differs across systems. The plot does not
+install fonts or change global font settings.
+Infit/Outfit reference lines at one describe the model reference, not a
+fairness or acceptability cutoff. No confidence bars are calculated.
+Extreme/single-observation fit placeholders and unmeasurable/no-data elements
+are retained as unavailable. A plot can have no usable points; inspect its
+row-level reasons. Unknown status is displayed explicitly, not certified.
+Graphfile curves join consecutive exported coordinates with straight line
+segments; this does not calculate new model predictions. Missing or invalid
+rows break the lines. The legend identifies source category labels. Expected
+scores and category labels retain their source coding. Each panel has its
+own reported Measure axis, independent of element-plot scale declarations.
+For curves, \code{plot_data(p, "data")} holds the raw Graphfile table,
+\code{plot_data(p, "plot_data")} the selected long rows, and
+\code{plot_data(p, "diagnostics")} the probability-sum checks.
 }
 \examples{
 # Small synthetic binary-rating analysis exported by FACETS.
@@ -183,6 +284,30 @@ result <- read_facets_results(path,
 summary(result) # Availability, not a model-adequacy assessment.
 result$table[, c("Facet", "ElementID", "Label", "Estimate", "SourceStatus")]
 plot(result, type = "measure", facets = "Rater", draw = FALSE)
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot.mfrm_facets_results", run.dontrun = TRUE)
+\dontrun{
+path <- system.file("extdata", "facets-example", package = "mfrmr")
+result <- read_facets_results(path,
+  facet_map = c("Person", "Rater", "Task"), source_version = "4.5.0")
+plot(result, type = "measure", facets = "Person")
+p <- plot(result, type = "infit_outfit", facets = "Rater", draw = FALSE)
+plot_data(p, "plot_data")[, c("Label", "X", "Y", "Available", "Reason")]
+plot_data(p, "notes")
+# Display names are joined by facet and exported ID, never by row order.
+labels <- data.frame(Facet = "Person", ElementID = c("1", "2"),
+  DisplayLabel = c("Participant A", "Participant B"))
+labelled <- plot(result, facets = "Person", label_map = labels, draw = FALSE)
+plot_data(labelled, "plot_data")[, c("ElementID", "Label", "DisplayLabel")]
+# A separate synthetic PCM analysis, with four exported scale curves.
+graph_path <- system.file("extdata", "facets-graph-example", "graph.txt",
+  package = "mfrmr")
+curves <- read_facets_results(graph_file = graph_path, source_version = "4.5.0")
+summary(curves, component = "curves")
+plot(curves, type = "ccc", scales = 1)
+expected <- plot_data(curves, "plot_data", type = "expected", scales = 1)
+head(expected[, c("Scale", "Measure", "Value", "Available")])
+}
 }
 \references{
 FACETS Scorefile specification:

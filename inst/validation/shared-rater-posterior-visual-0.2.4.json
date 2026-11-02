@@ -1,10 +1,10 @@
 {
   "scope": "Fixed-calibration posterior for one saved response example; not interval coverage or model ranking",
   "source_sha256": {
-    "/Users/tohokusla/Dropbox/MFRM_Application/mfrmr/development/inst/validation/shared-rater-posterior-visual-0.2.4.py": "4ec4d8d1f5892767e33a483074e1f7ec272a6b1d3026227be464890bc32f8a84",
-    "/Users/tohokusla/Dropbox/MFRM_Application/mfrmr/research-notes/2026-09-17-random-effects-rating-design/model-sharing-check.py": "ab03f6c182a427713ed8046d259edd31923e3be18295fe2701d6f8d9cfed8e9e",
-    "/Users/tohokusla/Dropbox/MFRM_Application/mfrmr/research-notes/2026-09-17-random-effects-rating-design/model-sharing-check.json": "f5af899295ac9da2508fc3f8b24e2c53810bf563fc549d8dacf0f26dcc9610cb",
-    "/Users/tohokusla/Dropbox/MFRM_Application/mfrmr/development/inst/validation/shared-rater-fixed-point-0.2.4-values.csv": "2672665c53a8f76ec0e9a2dcfddea02099dd12425e8d6ae81b3541289caa2437"
+    "development/inst/validation/shared-rater-posterior-visual-0.2.4.py": "4ec4d8d1f5892767e33a483074e1f7ec272a6b1d3026227be464890bc32f8a84",
+    "research-notes/2026-09-17-random-effects-rating-design/model-sharing-check.py": "ab03f6c182a427713ed8046d259edd31923e3be18295fe2701d6f8d9cfed8e9e",
+    "research-notes/2026-09-17-random-effects-rating-design/model-sharing-check.json": "f5af899295ac9da2508fc3f8b24e2c53810bf563fc549d8dacf0f26dcc9610cb",
+    "development/inst/validation/shared-rater-fixed-point-0.2.4-values.csv": "2672665c53a8f76ec0e9a2dcfddea02099dd12425e8d6ae81b3541289caa2437"
   },
   "loglik": -7.618451151235055,
   "mean": [

@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-plotting.R
 \name{plot_fair_average}
 \alias{plot_fair_average}
-\title{Plot fair-average diagnostics using base R}
+\title{Plot fair-average diagnostics with ggplot2}
 \usage{
 plot_fair_average(
   x,
@@ -17,6 +17,7 @@ plot_fair_average(
   preset = c("standard", "publication", "compact", "monochrome"),
   show_title = FALSE,
   show_notes = FALSE,
+  marginal = c("auto", "histogram", "none"),
   ...
 )
 }
@@ -50,26 +51,27 @@ diagnostic-only and unavailable intervals, including stored bundles.}
 default \code{0.95}. The returned plot-data object gains \code{CI_Lower},
 \code{CI_Upper}, and \code{CI_Level} columns for downstream reuse.}
 
-\item{draw}{If \code{TRUE}, draw with base graphics.}
+\item{draw}{If \code{TRUE}, print the \code{ggplot} object.}
 
 \item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 
 \item{show_title}{Show the figure title. The title remains in the return value.}
 
 \item{show_notes}{Show short figure annotations. Full interpretation and
-uncertainty notes remain in \code{data$notes} and the ggplot \code{mfrmr_notes} attribute.}
+uncertainty notes remain in \code{plot_data(p, "notes")} and the ggplot \code{mfrmr_notes} attribute.}
 
 \item{...}{Additional arguments passed to \code{\link[=fair_average_table]{fair_average_table()}} when \code{x} is \code{mfrm_fit}.}
 }
 \value{
-A plotting-data object of class \code{mfrm_plot_data}.
+Invisibly, a \code{ggplot} object. Use \code{\link[=plot_data]{plot_data()}} to retrieve its
+reusable plotting data and notes.
 With \code{draw = FALSE}, the returned plot data includes \code{title}, \code{subtitle},
 \code{legend}, \code{reference_lines}, and the stacked fair-average \code{data}.
 \code{plot_data} contains the displayed rows and coordinates; \code{excluded} retains
 non-finite rows. \code{notes} explains the reference, uncertainty and row selection.
 }
 \description{
-Plot fair-average diagnostics using base R
+Plot fair-average diagnostics with ggplot2
 }
 \details{
 FairM is an expected score at the mean measures of the other facets; for
@@ -115,44 +117,22 @@ For a plot-selection guide and a longer walkthrough, see
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
 }
 
+\section{Session plot defaults}{
+
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
+}
+
 \section{Migration in 0.2.4}{
 
 This renderer is internal. Use the corresponding \code{plot()} route in
 \link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
-\section{Session plot defaults}{
-
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
-}
-
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot_fair_average", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 
 # Saved synthetic MML/RSM analysis of example_operational.
@@ -171,6 +151,7 @@ plot(fit, type = "fair_average", diagnostics = diagnostics,
 plot(fit, type = "fair_average", diagnostics = diagnostics,
   facet = "Person", metric = "FairM", view = "difference")
 # A positive gap means the observed average is higher than the model-based FairM
+}
 }
 \seealso{
 \code{\link[=fair_average_table]{fair_average_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")},

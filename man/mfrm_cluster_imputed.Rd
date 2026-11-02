@@ -44,7 +44,7 @@ If all selected features are already complete, supply the empty
 \code{x$missing} table. This retains one partition per imputation so the result
 can be compared with other feature selections from the same model.}
 
-\item{k, weights}{As in \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}. The same choices apply to every
+\item{k, weights}{As in \code{\link[=mfrm_cluster]{mfrm_cluster()}}. The same choices apply to every
 imputation.}
 
 \item{missing}{Either \code{"error"} (default) or \code{"omit"}, applied to missing
@@ -55,7 +55,7 @@ IDs with unavailable memberships and pairwise proportions.}
 for every completion. Hierarchical analyses retain separate trees.}
 
 \item{linkage}{For \code{method = "hierarchical"}, \code{"average"} (the default when
-\code{NULL}) or \code{"complete"}; see \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}. Must be \code{NULL}
+\code{NULL}) or \code{"complete"}; see \link[=mfrm_cluster_hierarchical]{hierarchical clustering details}. Must be \code{NULL}
 for PAM and k-means, which have no linkage.}
 
 \item{components}{For k-means, \code{NULL} uses numeric features directly. An integer
@@ -63,7 +63,7 @@ fits PCA separately in each completion and uses that many leading components.
 No whitening, pooled PCA basis or component-sign matching is performed.}
 
 \item{scale, nstart, iter.max, seed, silhouette}{For \code{method = "kmeans"}, as in
-\code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}}. These arguments must not be supplied for other methods.
+\link[=mfrm_cluster_kmeans]{k-means details}. These arguments must not be supplied for other methods.
 The same seed and settings are used for every completion; sensitivity still
 includes possible changes in local optima. Review alternative seeds separately.}
 
@@ -134,7 +134,7 @@ completed analyses also increases memory use with the imputation count.
 The short example below illustrates the interface using \code{mice::nhanes2}.
 For a complete example with fictional rater attributes, explicit missingness
 reasons, imputation diagnostics, and comparisons of group counts and weights,
-see \code{vignette("mfrmr-external-features", package = "mfrmr")}.
+see \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html}{online feature-analysis guide}.
 }
 \examples{
 # Optional integration example (loads additional modelling or rendering packages).
@@ -163,7 +163,7 @@ if (requireNamespace("mice", quietly = TRUE) &&
 }
 }
 \seealso{
-\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
-\code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}, \code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}},
+\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
+\link[=mfrm_cluster_hierarchical]{hierarchical clustering details}, \code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}},
 \code{\link[mice:mice]{mice::mice()}}, \code{\link[mice:complete]{mice::complete()}}
 }

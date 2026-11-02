@@ -4,6 +4,7 @@
 \alias{confint.mfrm_fair_average}
 \alias{summary.mfrm_fair_intervals}
 \alias{print.mfrm_fair_intervals}
+\alias{plot.mfrm_fair_intervals}
 \title{Intervals for common-plan Person expected scores}
 \usage{
 \method{confint}{mfrm_fair_average}(
@@ -27,6 +28,8 @@
 \method{summary}{mfrm_fair_intervals}(object, ...)
 
 \method{print}{mfrm_fair_intervals}(x, ...)
+
+\method{plot}{mfrm_fair_intervals}(x, draw = TRUE, show_title = FALSE, show_notes = FALSE, ...)
 }
 \arguments{
 \item{object}{For \code{confint()}, output from \code{\link[=fair_average_table]{fair_average_table()}} with
@@ -103,7 +106,13 @@ Default \code{.95}. This measures finite-replication error, separately from
 
 \item{...}{Must be empty.}
 
-\item{x}{A saved \code{mfrm_fair_intervals} result.}
+\item{x}{For \code{print.mfrm_fair_intervals()}: A saved \code{mfrm_fair_intervals} result.
+
+For \code{plot()}: Saved output of \code{\link[=confint.mfrm_fair_average]{confint.mfrm_fair_average()}}.}
+
+\item{draw}{Logical; print the \code{ggplot} figure when \code{TRUE}.}
+
+\item{show_title, show_notes}{Logical; display title/cautions, off by default.}
 }
 \value{
 An \code{mfrm_fair_intervals} data frame with estimates, numerical bounds,
@@ -128,6 +137,9 @@ Their SE and simulation-count columns are missing; the radius is not an SE.
 \code{summary()} reports the same table without recalculation; \code{as.data.frame()}
 supports export and \code{saveRDS()} preserves the full evidence. See
 \code{\link[=plot.mfrm_fair_intervals]{plot.mfrm_fair_intervals()}} for display and interpretation.
+
+For \code{plot()}: Invisibly a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} retains all
+result rows, uncertainty labels, \code{monte_carlo} enclosures, and \code{notes}.
 }
 \description{
 Fixed-Person parametric refit intervals or a local delta approximation for a
@@ -257,6 +269,17 @@ probability 0.5 and 0.452709 at probability 0.1. For an all-zero sample,
 its upper basic limit equals the fitted score \eqn{0.5/7}; the bootstrap
 estimator cannot fall below its own score floor. This is an interval-method
 limitation, not inner Monte Carlo error, and more refits do not remove it.
+
+\code{plot()} method: Plot common-plan expected-score intervals
+
+For \code{plot()}: Points are common-plan expected scores or declared paired differences.
+Bars show only available pointwise bounds under the saved method. Missing
+bars are not zero uncertainty. Plotting never recalculates the fit or removes
+unresolved rows from the saved result. For refit results the bars show the
+empirical interval; endpoint Monte Carlo enclosures are retained in the
+returned table and \code{plot_data(p)$monte_carlo}, not drawn as sampling intervals. See
+\code{\link[=confint.mfrm_fair_average]{confint.mfrm_fair_average()}} for
+the estimand, assumptions and finite-sample limitations.
 }
 \section{Explicit Jeffreys generating model}{
 
@@ -421,6 +444,10 @@ bounded <- confint(fair, parm = c("P001", "P002"), method = "bounded")
 bounded[, c("Target", "Estimate", "DesignEstimate", "CI_Lower", "CI_Upper", "Informative")]
 attr(bounded, "support") # Check how much of the plan was actually observed.
 }
+# Continue the confint.mfrm_fair_average() example:
+# plot(ci)
+# p <- plot(ci, draw = FALSE)
+# plot_data(p, "notes")
 }
 \references{
 Murphy, K. M., and Topel, R. H. (1985). Estimation and inference

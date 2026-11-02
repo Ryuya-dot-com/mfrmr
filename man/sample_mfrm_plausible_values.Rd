@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-prediction.R
 \name{sample_mfrm_plausible_values}
 \alias{sample_mfrm_plausible_values}
+\alias{summary.mfrm_plausible_values}
 \title{Sample approximate plausible values under fitted posterior scoring}
 \usage{
 sample_mfrm_plausible_values(
@@ -21,6 +22,8 @@ sample_mfrm_plausible_values(
   seed = NULL,
   scoring_prior = NULL
 )
+
+\method{summary}{mfrm_plausible_values}(object, digits = 3, ...)
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}} estimated with \code{method = "MML"} or
@@ -83,6 +86,12 @@ checks are shared with that function and retained in the returned settings.}
 passed to \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}. \code{NULL} retains the fitted scoring prior.
 Estimates and draws retain both the original and the supplied prior;
 checks of the fitted calibration and numerical accuracy are unchanged.}
+
+\item{object}{Output from \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}.}
+
+\item{digits}{Number of digits used in numeric summaries.}
+
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 An object of class \code{mfrm_plausible_values} with components:
@@ -97,6 +106,17 @@ latent-regression scoring
 \item \code{input_data}: cleaned canonical scoring rows retained from \code{new_data}
 \item \code{person_data}: cleaned or supplied person-level background data used for
 latent-regression scoring; \code{NULL} otherwise
+\item \code{settings}: scoring settings
+\item \code{notes}: interpretation notes
+}
+
+For \code{summary()}: An object of class \code{summary.mfrm_plausible_values} with:
+\itemize{
+\item \code{draw_summary}: empirical summaries of the sampled values by person
+\item \code{estimates}: companion posterior EAP summaries
+\item \code{row_review}: row-preparation review
+\item \code{population_review}: optional person-level omission review for
+latent-regression scoring
 \item \code{settings}: scoring settings
 \item \code{notes}: interpretation notes
 }
@@ -127,6 +147,8 @@ layered on top of the fitted joint-likelihood calibration, whereas the
 latent-regression \code{MML} path uses the fitted one-dimensional conditional
 normal population model. Neither path should be described as a full
 many-facet plausible-values system with all ConQuest-style extensions.
+
+\code{summary()} method: Summarize approximate plausible values from posterior scoring
 }
 \section{Interpreting output}{
 
@@ -184,6 +206,9 @@ values without refitting the calibration. See \link{mfrmr_compatibility_layer}.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("sample_mfrm_plausible_values", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 keep_people <- unique(toy$Person)[1:18]
 toy_fit <- fit_mfrm(
@@ -202,6 +227,30 @@ new_units <- data.frame(
 pv <- sample_mfrm_plausible_values(toy_fit, new_units, n_draws = 3, seed = 1)
 summary(pv)$draw_summary
 }
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("summary.mfrm_plausible_values", run.dontrun = TRUE)
+\dontrun{
+toy <- load_mfrmr_data("example_core")
+keep_people <- unique(toy$Person)[1:18]
+toy_fit <- fit_mfrm(
+  toy[toy$Person \%in\% keep_people, , drop = FALSE],
+  "Person", c("Rater", "Criterion"), "Score",
+  method = "MML",
+  quad_points = 5,
+  maxit = 30
+)
+new_units <- data.frame(
+  Person = c("NEW01", "NEW01"),
+  Rater = unique(toy$Rater)[1],
+  Criterion = unique(toy$Criterion)[1:2],
+  Score = c(2, 3)
+)
+pv <- sample_mfrm_plausible_values(toy_fit, new_units, n_draws = 3, seed = 1)
+summary(pv)
+}
+}
 \seealso{
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \link{summary.mfrm_plausible_values}
+
+\code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}
 }

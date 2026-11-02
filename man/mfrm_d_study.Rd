@@ -353,10 +353,13 @@ d <- mfrm_d_study(g, data.frame(Tasks = c(6, 12)),
   weights = c(V = -1, W = 1))
 summary(d)
 plot(d)
-plot(d, type = "sem")
 # G rises from 0.300 to 0.462, conditional on these estimated components.
 # This is a planning projection, not evidence from twelve observed tasks.
 
+# Optional alternative views, GENOVA conventions and composite weights.
+# example("mfrm_d_study", run.dontrun = TRUE)
+\dontrun{
+plot(d, type = "sem")
 # Without weights, report the original scores without creating a composite.
 individual <- mfrm_d_study(g, data.frame(Tasks = c(6, 12)))
 plot(individual, score = "V")
@@ -381,6 +384,7 @@ summary(alternatives) # Original scores plus all three named composites.
 plot(alternatives, composite = "Equal")
 plot(alternatives, composite = "Difference", type = "sem")
 # Choose weights for the intended interpretation, not solely for higher G.
+}
 }
 \references{
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.

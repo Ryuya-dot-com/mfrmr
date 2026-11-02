@@ -106,6 +106,9 @@ a useful SE in a small sample or correct normal-reference coverage.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("vcov.mfrm_multivariate_gstudy", run.dontrun = TRUE)
+\dontrun{
 data("mfrmr_example_gtheory_crossed", package = "mfrmr")
 ratings <- mfrmr_example_gtheory_crossed
 # Complete balanced ratings: compute both targets directly.
@@ -131,6 +134,7 @@ attr(incomplete$covariance, "notes")
 # To repeat the full incomplete-data calculation:
 # source(system.file("examples", "gstudy-sampling.R", package = "mfrmr"))
 # incomplete <- gstudy_sampling_example()
+}
 }
 \references{
 Magnus, J. R. (1978). The moments of products of quadratic forms in normal

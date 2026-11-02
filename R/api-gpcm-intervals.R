@@ -461,7 +461,7 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #'   Zeileis, A., Koll, S., and Graham, N. (2020). Various Versatile Variances:
 #'   An Object-Oriented Implementation of Clustered Covariances in R.
 #'   Journal of Statistical Software, 95(1), 1--36. \doi{10.18637/jss.v095.i01}.
-#' @seealso [gpcm_capability_matrix()], [build_weighting_review()]
+#' @seealso [mfrmr_output_guide()], [mfrmr_gpcm_scope], [build_weighting_review()]
 #' @examples
 #' # Long-running workflow; run explicitly when needed.
 #' # example("confint.mfrm_fit", run.dontrun = TRUE)
@@ -640,8 +640,11 @@ confint.mfrm_cml_fit <- function(object, parm = NULL, level = .95, ...) {
 }
 
 #' @rdname confint.mfrm_fit
-#' @export
-confint.mfrm_comparison_fit <- confint.mfrm_cml_fit
+#' @name confint.mfrm_comparison_fit
+#' @aliases confint.mfrm_comparison_fit
+#' @usage \method{confint}{mfrm_comparison_fit}(object, parm = NULL, level = 0.95, ...)
+#' @rawNamespace S3method(confint,mfrm_comparison_fit,confint.mfrm_cml_fit)
+NULL
 
 #' @export
 #' @noRd

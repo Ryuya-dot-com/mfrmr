@@ -37,13 +37,15 @@ test_that("evaluate_mfrm_diagnostic_screening reports well-specified and local-d
 
     if (identical(model, "RSM")) {
       overview_plot <- plot(diag_eval, type = "overview", draw = FALSE)
-      expect_s3_class(overview_plot, "mfrm_plot_data")
-      expect_identical(overview_plot$name, "diagnostic_screening")
-      expect_identical(overview_plot$data$type, "overview")
-      expect_true(all(c("Signal", "Value", "SourceTable", "group") %in% names(overview_plot$data$plot_long)))
-      expect_true(any(overview_plot$data$plot_long$Signal == "Strict combined any-flag rate"))
+      expect_s3_class(overview_plot, "ggplot")
+      expect_s3_class(attr(overview_plot, "mfrmr_plot_data"), "mfrm_plot_data")
+      expect_identical(attr(overview_plot, "mfrmr_plot_data")$name, "diagnostic_screening")
+      overview_pd <- mfrmr::plot_data(overview_plot)
+      expect_identical(overview_pd$type, "overview")
+      expect_true(all(c("Signal", "Value", "SourceTable", "group") %in% names(overview_pd$plot_long)))
+      expect_true(any(overview_pd$plot_long$Signal == "Strict combined any-flag rate"))
       expect_true(any(mfrmr::plot_data(diag_eval, type = "overview", component = "plot_long")$Signal == "Strict combined any-flag rate"))
-      expect_true(all(c("overview", "reading_order", "next_actions", "reporting_notes", "figure_recipes") %in% names(overview_plot$data)))
+      expect_true(all(c("overview", "reading_order", "next_actions", "reporting_notes", "figure_recipes") %in% names(overview_pd)))
       expect_true(any(mfrmr::plot_data(overview_plot, component = "next_actions")$Area == "Appendix and plot-data handoff"))
       expect_true(any(mfrmr::plot_data(overview_plot, component = "figure_recipes")$FigureID == "overview_rates"))
       expect_true(any(mfrmr::plot_data_components(overview_plot)$Component == "next_actions"))
@@ -65,10 +67,10 @@ test_that("evaluate_mfrm_diagnostic_screening reports well-specified and local-d
       expect_true(any(grepl("operating-characteristic", diag_summary$notes, fixed = TRUE)))
 
       contrast_plot <- plot(diag_eval, type = "contrast", metric = "count", draw = FALSE)
-      expect_s3_class(contrast_plot, "mfrm_plot_data")
-      expect_identical(contrast_plot$data$type, "contrast")
-      expect_true(any(contrast_plot$data$plot_long$Metric == "DeltaPairwiseFlaggedLevelPairs"))
-      expect_true(all(contrast_plot$data$plot_long$Scenario == "local_dependence"))
+      expect_s3_class(contrast_plot, "ggplot")
+      expect_identical(mfrmr::plot_data(contrast_plot, "type"), "contrast")
+      expect_true(any(mfrmr::plot_data(contrast_plot, "plot_long")$Metric == "DeltaPairwiseFlaggedLevelPairs"))
+      expect_true(all(mfrmr::plot_data(contrast_plot, "plot_long")$Scenario == "local_dependence"))
     }
   }
 })
@@ -167,16 +169,16 @@ test_that("evaluate_mfrm_diagnostic_screening can retain report-index review sig
   expect_true(all(diag_eval$report_signal_summary$ReportIndexAvailabilityRate > 0))
 
   report_plot <- plot(diag_eval, type = "report", metric = "rate", draw = FALSE)
-  expect_s3_class(report_plot, "mfrm_plot_data")
-  expect_identical(report_plot$data$type, "report")
-  expect_true(any(report_plot$data$plot_long$Signal == "Report-index availability rate"))
-  expect_true(any(report_plot$data$plot_long$Signal == "Fit review rate"))
+  expect_s3_class(report_plot, "ggplot")
+  expect_identical(mfrmr::plot_data(report_plot, "type"), "report")
+  expect_true(any(mfrmr::plot_data(report_plot, "plot_long")$Signal == "Report-index availability rate"))
+  expect_true(any(mfrmr::plot_data(report_plot, "plot_long")$Signal == "Fit review rate"))
   expect_true(any(mfrmr::plot_data(report_plot, component = "next_actions")$Area == "Report-index signals" &
                     mfrmr::plot_data(report_plot, component = "next_actions")$Status == "ok"))
 
   count_plot <- plot(diag_eval, type = "overview", metric = "count", draw = FALSE)
-  expect_s3_class(count_plot, "mfrm_plot_data")
-  expect_true(any(count_plot$data$plot_long$Signal == "Mean report fit signals"))
+  expect_s3_class(count_plot, "ggplot")
+  expect_true(any(mfrmr::plot_data(count_plot, "plot_long")$Signal == "Mean report fit signals"))
   expect_true(any(mfrmr::plot_data_components(count_plot)$Component == "plot_long"))
   expect_true(any(mfrmr::plot_data_components(count_plot)$Component == "reporting_notes"))
   expect_true(any(mfrmr::plot_data_components(count_plot)$Component == "figure_recipes"))
@@ -221,6 +223,6 @@ test_that("evaluate_mfrm_diagnostic_screening supports caveated GPCM screening o
   expect_true(any(grepl("GPCM boundary", printed, fixed = TRUE)))
 
   diag_plot <- plot(diag_eval, type = "overview", metric = "rate", draw = FALSE)
-  expect_s3_class(diag_plot, "mfrm_plot_data")
-  expect_true(nrow(diag_plot$data$gpcm_boundary) > 0L)
+  expect_s3_class(diag_plot, "ggplot")
+  expect_true(nrow(mfrmr::plot_data(diag_plot, "gpcm_boundary")) > 0L)
 })

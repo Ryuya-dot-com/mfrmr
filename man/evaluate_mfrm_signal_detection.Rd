@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-simulation.R
 \name{evaluate_mfrm_signal_detection}
 \alias{evaluate_mfrm_signal_detection}
+\alias{plot.mfrm_signal_detection}
 \title{Evaluate DIF power and bias-screening behavior under known simulated signals}
 \usage{
 evaluate_mfrm_signal_detection(
@@ -43,6 +44,17 @@ evaluate_mfrm_signal_detection(
   bias_p_cut = 0.05,
   bias_abs_t = 2,
   seed = NULL
+)
+
+\method{plot}{mfrm_signal_detection}(
+  x,
+  signal = c("dif", "bias"),
+  metric = c("power", "false_positive", "estimate", "screen_rate",
+    "screen_false_positive"),
+  x_var = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
+  group_var = NULL,
+  draw = TRUE,
+  ...
 )
 }
 \arguments{
@@ -164,6 +176,30 @@ target DIF detection. When omitted, the effective default is \code{0.43} for
 \item{seed}{Optional seed for reproducible replications. Trial seeds are
 allocated before execution and cover generation, fitting and diagnostics.
 A supplied seed preserves the caller's RNG state.}
+
+\item{x}{Output from \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}.}
+
+\item{signal}{Whether to plot DIF or bias screening results.}
+
+\item{metric}{Metric to plot. For \code{signal = "bias"}, prefer
+\code{metric = "screen_rate"} for the screening hit rate. The older
+\code{metric = "power"} spelling is retained as a backwards-compatible alias
+that maps to \code{BiasScreenRate}.
+\code{"estimate"} plots the signed reference-minus-focal DIF contrast or
+the additive bias shift. A refit contrast requires common-scale linking.}
+
+\item{x_var}{Design variable used on the x-axis. When \code{x} was generated from
+a \code{sim_spec} with custom public facet names, the corresponding aliases
+(for example \code{n_judge}, \code{n_task}, \code{judge_per_person}) are also accepted.
+Role keywords (\code{person}, \code{rater}, \code{criterion}, \code{assignment}) are accepted
+as an abstraction over the current two-facet schema.}
+
+\item{group_var}{Optional design variable used for separate lines. The same
+alias rules as \code{x_var} apply.}
+
+\item{draw}{If \code{TRUE}, print the \code{ggplot} object; otherwise return the \code{ggplot} object invisibly without drawing.}
+
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 An object of class \code{mfrm_signal_detection} with:
@@ -191,6 +227,20 @@ is used
 \item \code{ademp}: simulation-study metadata (aims, DGM, estimands, methods, performance measures)
 \item \code{notes}: short interpretation notes
 }
+
+For \code{plot()}: Invisibly, a \code{ggplot} object whose reusable payload
+(accessible via \code{\link[=plot_data]{plot_data()}}) includes
+resolved canonical variables (\code{x_var}, \code{group_var}) together with public
+labels (\code{x_label}, \code{group_label}), \code{design_variable_aliases},
+\code{design_descriptor}, \code{planning_scope}, \code{planning_constraints},
+\code{planning_schema},
+\code{display_metric}, and \code{interpretation_note} so
+callers can label bias-side plots as screening summaries rather than
+formal power/error-rate displays.
+\code{summary_table} retains per-design means and availability denominators;
+\code{notes} retains interpretation and legacy-result restrictions. If additional
+design variables are collapsed, each plotted point is an equally weighted
+average of available design-level means, not a pooled trial/cell rate.
 }
 \description{
 Evaluate DIF power and bias-screening behavior under known simulated signals
@@ -321,6 +371,8 @@ If that specification also stores a latent-regression population generator,
 each replication carries simulated one-row-per-person background data into
 the MML fit. This remains a screening-oriented Monte Carlo study; it is not
 a person-level posterior prediction for one observed sample.
+
+\code{plot()} method: Plot DIF/bias screening simulation results
 }
 \section{References}{
 
@@ -356,7 +408,20 @@ sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
 s_sig <- summary(sig_eval)
 s_sig$overview
 }
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_signal_detection", run.dontrun = TRUE)
+\dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-signal-detection.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sig_eval <- saved$result
+plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALSE)
+}
 }
 \seealso{
-\code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=estimate_bias]{estimate_bias()}}
+\code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=estimate_bias]{estimate_bias()}}
+
+\code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}, \link{summary.mfrm_signal_detection}
 }

@@ -6,7 +6,7 @@ local({
   wright <- paste(
     "Wright map with a Person histogram beside rater and criterion locations",
     "and shared category steps on the logit scale. Facet whiskers show",
-    "approximate normal intervals; higher facet locations mean stricter scoring.")
+    "approximate normal intervals; higher facet locations mean more severe scoring or greater difficulty.")
   curves <- paste(
     "Four category-probability curves across the ability scale, distinguished",
     "by color and line pattern. Low categories dominate at lower abilities",
@@ -122,7 +122,7 @@ local({
         "These are descriptive feature groups, not quality classifications.")),
     plot.mfrm_fit = c(wright,
       paste("Signed severity estimates for six raters. R06 has the highest",
-        "and R01 the lowest estimate. Positive values mean stricter scoring",
+        "and R01 the lowest estimate. Positive values mean more severe scoring",
         "relative to the fitted reference; no intervals are drawn."), curves),
     score_mfrm_random_rater = paste(
       "Conditional EAP estimates and equal-tail intervals for Persons P001",
@@ -153,7 +153,7 @@ local({
     fit_mfrm_random_rater = paste(
       "Conditional-mode severity estimates for four observed raters under",
       "the shared random-rater model. R02 is lowest and R04 highest; positive",
-      "values indicate stricter ratings. No intervals or quality flags are shown."),
+      "values indicate more severe ratings. No intervals or quality flags are shown."),
     plot_marginal_fit = c(marginal,
       paste("Observed-minus-expected category proportions by facet level,",
         "using marginal model probabilities. Small bars on either side of",
@@ -202,7 +202,7 @@ local({
     plot_rater_severity_profile = paste(
       "Six rater locations with approximate 95 percent normal intervals and",
       "no magnitude bands. With this example's coding, positive values mean",
-      "stricter ratings; zero is the fitted reference, not a quality standard.",
+      "more severe ratings; zero is the fitted reference, not a quality standard.",
       "These are individual intervals, not pairwise equivalence tests."),
     mfrm_population_intervals = c(
       paste("Conditional population intercept and coefficient for the example's",
@@ -216,7 +216,7 @@ local({
     confint.mfrm_fit = paste(
       "Four rater discriminations with pointwise 95 percent model-information",
       "intervals on the relative slope scale, whose geometric mean is one.",
-      "Larger slopes mean steeper response curves, not stricter or better raters."),
+      "Larger slopes mean steeper response curves, not more severe or better raters."),
     mfrm_curve_intervals = paste(
       "Fitted probabilities for score categories 1 to 4 across ability values",
       "from minus two to two for the selected example rater and criterion.",
@@ -310,7 +310,7 @@ local({
         "as tasks increase, conditional on the estimated components.")),
     fit_mfrm_testlet = paste(
       "Fixed-rater severity point estimates under the testlet model.",
-      "R02 is lowest and R04 highest; positive values mean stricter ratings.",
+      "R02 is lowest and R04 highest; positive values mean more severe ratings.",
       "No intervals or rater-quality classifications are shown."),
     plot.mfrm_pca = c(
       paste("Scree plot of transformed external features. The first principal",
@@ -328,6 +328,10 @@ local({
         "levels; the shaded band is a review aid, not a formal model-fit test."),
       curves)
   )
+  descriptions$mfrm_d_study <- list(
+    `1` = difference_reliability, `6` = descriptions$mfrm_d_study)
+  descriptions$read_mfrm_posterior <- descriptions$plot.mfrm_posterior_summary
+  descriptions$recommend_mfrm_design <- descriptions$plot.mfrm_design_recommendation
   descriptions$plot.mfrm_multivariate_gstudy[['4']] <- c(
     descriptions$plot.mfrm_multivariate_gstudy[['3']], component_intervals)
   descriptions$mfrmr_model_maps[['2']] <- c(

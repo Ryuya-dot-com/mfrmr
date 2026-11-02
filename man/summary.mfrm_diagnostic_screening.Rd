@@ -42,6 +42,9 @@ marginal, pairwise, and report-review signals are screening readouts rather
 than pass/fail evidence.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("summary.mfrm_diagnostic_screening", run.dontrun = TRUE)
+\dontrun{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
 saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
@@ -49,6 +52,7 @@ saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
 # Inspect saved$generation_warnings and the result's run/status tables.
 diag_eval <- saved$result
 summary(diag_eval)
+}
 }
 \seealso{
 \code{\link[=evaluate_mfrm_diagnostic_screening]{evaluate_mfrm_diagnostic_screening()}}, \link{plot.mfrm_diagnostic_screening}, \code{\link[=plot_data]{plot_data()}}

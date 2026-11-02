@@ -38,6 +38,9 @@ The printed text is the same content stored in
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("print.mfrm_apa_text", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -45,4 +48,5 @@ fit <- example_fit$fit
 diag <- example_fit$diagnostics
 apa <- build_apa_outputs(fit, diag)
 apa$report_text
+}
 }

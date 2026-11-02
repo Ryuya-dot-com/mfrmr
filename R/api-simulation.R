@@ -225,6 +225,9 @@
 #'   also included.
 #' @seealso [evaluate_mfrm_design()], [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("simulate_mfrm_data", run.dontrun = TRUE)
+#' \dontrun{
 #' sim <- simulate_mfrm_data(
 #'   n_person = 40,
 #'   n_rater = 4,
@@ -234,6 +237,7 @@
 #' )
 #' head(sim)
 #' names(attr(sim, "mfrm_truth"))
+#' }
 #' @export
 simulate_mfrm_data <- function(n_person = 50,
                                n_rater = 4,
@@ -1650,34 +1654,6 @@ simulation_structural_facet_table <- function(sim_spec = NULL, facet_names = NUL
   )
 }
 
-simulation_structural_design_template <- function(sim_spec = NULL, facet_names = NULL) {
-  structural_facet_table <- if (is.null(facet_names)) {
-    simulation_structural_facet_table(sim_spec)
-  } else {
-    simulation_structural_facet_table(facet_names = facet_names)
-  }
-
-  facet_counts <- stats::setNames(
-    as.list(unname(structural_facet_table$level_count %||% rep(NA_integer_, nrow(structural_facet_table)))),
-    as.character(structural_facet_table$structural_facet_key)
-  )
-
-  assignment_value <- NA_integer_
-  if (!is.null(sim_spec)) {
-    assignment_value <- as.integer(sim_spec$raters_per_person %||% NA_integer_)
-  }
-
-  list(
-    facets = facet_counts,
-    assignment = assignment_value,
-    note = paste(
-      "Structural design metadata mirrors the named facet counts in",
-      "`design$facets` while keeping the assignment axis at the top level."
-    )
-  )
-}
-
-
 simulation_build_ademp <- function(purpose,
                                    design_grid,
                                    generator_model,
@@ -2080,19 +2056,13 @@ recovery_safe_mean <- function(x) {
   mean(x)
 }
 
-recovery_safe_sd <- function(x) {
-  x <- suppressWarnings(as.numeric(x))
-  x <- x[is.finite(x)]
-  if (length(x) <= 1L) return(NA_real_)
-  stats::sd(x)
-}
 
 recovery_safe_cor <- function(x, y) {
   x <- suppressWarnings(as.numeric(x))
   y <- suppressWarnings(as.numeric(y))
   ok <- is.finite(x) & is.finite(y)
-  sdx <- recovery_safe_sd(x[ok])
-  sdy <- recovery_safe_sd(y[ok])
+  sdx <- design_eval_safe_sd(x[ok])
+  sdy <- design_eval_safe_sd(y[ok])
   if (sum(ok) <= 1L || !is.finite(sdx) || !is.finite(sdy) || sdx == 0 || sdy == 0) {
     return(NA_real_)
   }
@@ -3263,11 +3233,8 @@ print.summary.mfrm_recovery_simulation <- function(x, ...) {
   invisible(x)
 }
 
-#' @export
-print.mfrm_recovery_simulation <- function(x, ...) {
-  print(summary(x), ...)
-  invisible(x)
-}
+#' @rawNamespace S3method(print,mfrm_recovery_simulation,print.mfrm_bundle)
+NULL
 
 recovery_assessment_threshold <- function(thresholds,
                                           parameter_type,
@@ -4564,11 +4531,8 @@ print.summary.mfrm_recovery_assessment <- function(x, ...) {
   invisible(x)
 }
 
-#' @export
-print.mfrm_recovery_assessment <- function(x, ...) {
-  print(summary(x), ...)
-  invisible(x)
-}
+#' @rawNamespace S3method(print,mfrm_recovery_assessment,print.mfrm_bundle)
+NULL
 
 recovery_assessment_status_rank <- function(status) {
   ranks <- c(ok = 1L, not_assessed = 2L, not_available = 2L,
@@ -4593,34 +4557,7 @@ recovery_assessment_status_palette <- function(status) {
 }
 
 recovery_assessment_reading_order <- function() {
-  data.frame(
-    Step = seq_len(6L),
-    Route = c(
-      "summary(recovery_review)",
-      "recovery_review$condition_reporting_notes, then recovery_review$condition_review",
-      "recovery_review$diagnostic_reporting_notes, then recovery_review$diagnostic_review",
-      "plot(recovery_review, type = \"status\")",
-      "plot(recovery_review, type = \"metrics\")",
-      "recovery_review$source$recovery"
-    ),
-    WhatToRead = c(
-      "Overall run status, next actions, and compact checklist.",
-      "Generator-condition caveats, then GPCM slope-regime and generated score-support metadata.",
-      "Reporter-facing fit/separation caveats, then optional operating characteristics retained by include_diagnostics = TRUE.",
-      "Checklist domains ordered by attention status.",
-      "Parameter groups behind RMSE, bias, coverage, SE, or Monte Carlo statuses.",
-      "Row-level truth-estimate comparisons for the parameter groups that need follow-up."
-    ),
-    Purpose = c(
-      "Decide whether the assessment is ready to inspect.",
-      "Separate generator stress conditions and sparse score support from parameter-recovery performance before interpreting metrics.",
-      "Check diagnostic behavior without treating fit or separation as parameter-recovery criteria.",
-      "Find the part of the assessment that needs attention first.",
-      "Identify the specific parameter group and metric driving the status.",
-      "Diagnose the underlying recovery pattern before changing design or fit settings."
-    ),
-    stringsAsFactors = FALSE
-  )
+  .mfrmr_table_recovery_assessment_reading_order_data
 }
 
 recovery_assessment_plot_guidance <- function(type, metric = NULL) {
@@ -4701,8 +4638,8 @@ recovery_assessment_plot_metric_spec <- function(metric, thresholds) {
 #'   its status.
 #' @param metric Metric used when `type = "metrics"`. Supported values are
 #'   `"rmse"`, `"bias"`, `"coverage"`, `"se_available"`, and `"mcse_rmse"`.
-#' @param draw If `TRUE`, draw with base graphics. If `FALSE`, return an
-#'   `mfrm_plot_data` object with reusable plot tables and metadata.
+#' @param draw If `TRUE`, print the `ggplot` object. If `FALSE`, return the
+#'   `ggplot` object invisibly without drawing (tables and notes via [plot_data()]).
 #' @export
 plot.mfrm_recovery_assessment <- function(x,
                                           y = NULL,
@@ -4775,16 +4712,7 @@ plot.mfrm_recovery_assessment <- function(x,
       reference_lines = new_reference_lines()
     )
     out <- new_mfrm_plot_data("recovery_assessment", payload)
-    if (!isTRUE(draw)) return(out)
-    graphics::barplot(
-      status_tbl$Checks,
-      names.arg = status_tbl$Status,
-      col = recovery_assessment_status_palette(status_tbl$Status),
-      border = NA,
-      ylab = "Checklist checks",
-      main = ""
-    )
-    return(invisible(out))
+    return(.mfrm_finalize_ggplot(out, draw = draw))
   }
 
   metric_review <- as.data.frame(x$metric_review %||% data.frame(), stringsAsFactors = FALSE)
@@ -4873,28 +4801,7 @@ plot.mfrm_recovery_assessment <- function(x,
     reference_lines = reference_lines
   )
   out <- new_mfrm_plot_data("recovery_assessment", payload)
-  if (!isTRUE(draw)) return(out)
-  op <- graphics::par()["mar"]
-  on.exit(graphics::par(op), add = TRUE)
-  graphics::par(mar = c(8, 4, 3, 1))
-  ylim <- range(c(0, plot_tbl$Value, reference_lines$value), na.rm = TRUE)
-  if (!all(is.finite(ylim)) || diff(ylim) == 0) {
-    ylim <- range(plot_tbl$Value + c(-0.1, 0.1), na.rm = TRUE)
-  }
-  graphics::barplot(
-    plot_tbl$Value,
-    names.arg = truncate_axis_label(plot_tbl$PlotGroup, width = 26L),
-    las = 2,
-    col = recovery_assessment_status_palette(plot_tbl$Status),
-    border = NA,
-    ylim = ylim,
-    ylab = spec$label,
-    main = ""
-  )
-  if (nrow(reference_lines) > 0L && is.finite(reference_lines$value[1])) {
-    graphics::abline(h = reference_lines$value[1], lty = 2, col = "grey35")
-  }
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 recovery_plot_metric_col <- function(metric) {
@@ -4989,8 +4896,13 @@ recovery_plot_status_table <- function(rep_tbl) {
 #' @param comparison Error/estimate scale for row-level routes. `"aligned"`
 #'   uses `EstimateAligned` / `ErrorAligned`; `"unaligned"` uses `Estimate` /
 #'   `ErrorRaw` on the same comparison scale.
-#' @param draw If `TRUE`, draw with base graphics. If `FALSE`, return an
-#'   `mfrm_plot_data` object with reusable plot tables and metadata.
+#' @param marginal Marginal histogram display for `type = "scatter"`: `"auto"`
+#'   (default; shown when at least 8 finite pairs are plotted), `"histogram"`,
+#'   or `"none"`.
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or
+#'   `"monochrome"`).
+#' @param draw If `TRUE`, print the `ggplot` object. If `FALSE`, return the
+#'   `ggplot` object invisibly without drawing.
 #' @param ... Reserved for generic compatibility.
 #'
 #' @details
@@ -4999,18 +4911,21 @@ recovery_plot_status_table <- function(rep_tbl) {
 #' recovery estimands easier to inspect during model-development and design
 #' checks. Coverage is displayed only for groups with valid centered structural
 #' intervals, conditional on availability. Summary/coverage routes refresh
-#' aggregates from saved rows; their `data$availability_table` preserves all
+#' aggregates from saved rows; their `availability_table` component preserves all
 #' selected groups, including those omitted from drawing. Inspect counts,
-#' availability rates, MCSEs and `CIReasons` there and in `summary(x)`.
+#' availability rates, MCSEs and `CIReasons` via [plot_data()] and in `summary(x)`.
 #' A wholly unavailable coverage plot gives an informative error; it does not
 #' draw missing coverage as zero. See [simulate_mfrm_recovery()] for the target
 #' and the treatment of legacy saved intervals. A zero mean-aligned bias is an
 #' identification identity, not evidence of unbiased estimation.
 #'
-#' @return An `mfrm_plot_data` object. When `draw = TRUE`, the object is returned
-#'   invisibly after drawing.
-#' @seealso [simulate_mfrm_recovery()], [summary()]
+#' @return Invisibly, a `ggplot` object carrying reusable plot tables and
+#'   metadata accessible via [plot_data()].
+#' @seealso [simulate_mfrm_recovery()], [base::summary()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_recovery_simulation", run.dontrun = TRUE)
+#' \dontrun{
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
 #' saved <- readRDS(system.file("examples", "simulation-recovery.rds",
@@ -5018,6 +4933,7 @@ recovery_plot_status_table <- function(rep_tbl) {
 #' # Inspect saved$generation_warnings and the result's run/status tables.
 #' rec <- saved$result
 #' plot(rec, type = "summary", metric = "rmse", draw = FALSE)
+#' }
 #' @export
 plot.mfrm_recovery_simulation <- function(x,
                                           y = NULL,
@@ -5031,13 +4947,18 @@ plot.mfrm_recovery_simulation <- function(x,
                                           parameter_type = NULL,
                                           facet = NULL,
                                           comparison = c("aligned", "unaligned"),
+                                          marginal = c("auto", "histogram", "none"),
+                                          preset = c("standard", "publication", "compact", "monochrome"),
                                           draw = TRUE,
                                           ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(x, "mfrm_recovery_simulation")) {
     stop("`x` must be output from simulate_mfrm_recovery().", call. = FALSE)
   }
   type <- match.arg(type)
   comparison <- match.arg(comparison)
+  marginal <- match.arg(marginal)
+  style <- resolve_plot_preset(preset)
   metric_col <- recovery_plot_metric_col(metric)
   metric_label <- recovery_plot_metric_label(metric_col)
   notes <- as.character(x$notes %||% character(0))
@@ -5097,37 +5018,12 @@ plot.mfrm_recovery_simulation <- function(x,
         paste("Parameter recovery:", metric_label)
       },
       subtitle = "Summary by parameter type, facet, and comparison scale",
+      preset = style$name,
       legend = new_plot_legend(),
       reference_lines = reference_lines
     )
     out <- new_mfrm_plot_data("recovery_simulation", payload)
-    if (!isTRUE(draw)) return(out)
-    op <- graphics::par()["mar"]
-    on.exit(graphics::par(op), add = TRUE)
-    graphics::par(mar = c(8, 4, 3, 1))
-    cols <- grDevices::hcl.colors(nrow(plot_tbl), "Dark 3")
-    ylim <- range(c(0, plot_tbl$Value, reference_lines$value), na.rm = TRUE)
-    if (identical(metric_col, "Coverage95") || identical(metric_col, "SEAvailableRate")) {
-      ylim <- c(0, 1)
-    } else if (!all(is.finite(ylim)) || diff(ylim) == 0) {
-      ylim <- range(plot_tbl$Value + c(-0.1, 0.1), na.rm = TRUE)
-    }
-    graphics::barplot(
-      plot_tbl$Value,
-      names.arg = truncate_axis_label(plot_tbl$PlotGroup, width = 26L),
-      las = 2,
-      cex.names = 0.75,
-      col = cols,
-      border = NA,
-      ylim = ylim,
-      ylab = metric_label,
-      main = ""
-    )
-    if (0 >= ylim[1] && 0 <= ylim[2]) graphics::abline(h = 0, col = "grey55")
-    if (nrow(reference_lines) > 0L) {
-      graphics::abline(h = reference_lines$value, lty = 2, col = "grey35")
-    }
-    return(invisible(out))
+    return(.mfrm_finalize_ggplot(out, draw = draw))
   }
 
   if (identical(type, "replications")) {
@@ -5146,23 +5042,12 @@ plot.mfrm_recovery_simulation <- function(x,
       notes = notes,
       title = "Parameter recovery: replication status",
       subtitle = "Run, convergence, and timing summary",
+      preset = style$name,
       legend = new_plot_legend(),
       reference_lines = new_reference_lines()
     )
     out <- new_mfrm_plot_data("recovery_simulation", payload)
-    if (!isTRUE(draw)) return(out)
-    cols <- c(converged = "#238b45", not_converged = "#b65e16", failed = "#b11f24")
-    bar_cols <- unname(cols[status_tbl$Status])
-    bar_cols[is.na(bar_cols)] <- "#6b7280"
-    graphics::barplot(
-      status_tbl$Reps,
-      names.arg = status_tbl$Status,
-      col = bar_cols,
-      border = NA,
-      ylab = "Replications",
-      main = ""
-    )
-    return(invisible(out))
+    return(.mfrm_finalize_ggplot(out, draw = draw))
   }
 
   recovery_tbl <- recovery_plot_filter(x$recovery, parameter_type, facet)
@@ -5198,22 +5083,12 @@ plot.mfrm_recovery_simulation <- function(x,
       notes = notes,
       title = "Parameter recovery: error distribution",
       subtitle = paste("Comparison:", comparison),
+      preset = style$name,
       legend = new_plot_legend(),
       reference_lines = new_reference_lines("y", 0, "zero error", "solid", "zero_error")
     )
     out <- new_mfrm_plot_data("recovery_simulation", payload)
-    if (!isTRUE(draw)) return(out)
-    graphics::boxplot(
-      ErrorForPlot ~ PlotGroup,
-      data = plot_tbl,
-      las = 2,
-      col = "#dbeafe",
-      border = "#334e68",
-      ylab = payload$metric_label,
-      main = ""
-    )
-    graphics::abline(h = 0, col = "grey45", lty = 2)
-    return(invisible(out))
+    return(.mfrm_finalize_ggplot(out, draw = draw))
   }
 
   plot_tbl <- recovery_tbl[is.finite(recovery_tbl$TruthForPlot) &
@@ -5232,32 +5107,13 @@ plot.mfrm_recovery_simulation <- function(x,
     notes = notes,
     title = "Parameter recovery: truth versus estimate",
     subtitle = paste("Comparison:", comparison),
+    marginal = marginal,
+    preset = style$name,
     legend = new_plot_legend(),
     reference_lines = new_reference_lines("xy", NA_real_, "identity line", "solid", "perfect_recovery")
   )
   out <- new_mfrm_plot_data("recovery_simulation", payload)
-  if (!isTRUE(draw)) return(out)
-  groups <- unique(as.character(plot_tbl$PlotGroup))
-  cols <- grDevices::hcl.colors(max(1L, length(groups)), "Dark 3")
-  group_idx <- match(as.character(plot_tbl$PlotGroup), groups)
-  lim <- range(c(plot_tbl$TruthForPlot, plot_tbl$EstimateForPlot), na.rm = TRUE)
-  if (!all(is.finite(lim)) || diff(lim) == 0) lim <- lim + c(-0.1, 0.1)
-  graphics::plot(
-    plot_tbl$TruthForPlot,
-    plot_tbl$EstimateForPlot,
-    xlab = "Truth",
-    ylab = payload$metric_label,
-    main = "",
-    xlim = lim,
-    ylim = lim,
-    pch = 16,
-    col = cols[group_idx]
-  )
-  graphics::abline(0, 1, col = "grey35", lty = 2)
-  if (length(groups) > 1L && length(groups) <= 8L) {
-    graphics::legend("topleft", legend = groups, col = cols, pch = 16, bty = "n", cex = 0.8)
-  }
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 design_eval_result_prototype <- function() {
@@ -6258,6 +6114,9 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #' - `notes`: short interpretation notes
 #' @seealso [evaluate_mfrm_design()], [plot.mfrm_design_evaluation]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("summary.mfrm_design_evaluation", run.dontrun = TRUE)
+#' \dontrun{
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
 #' saved <- readRDS(system.file("examples", "simulation-design.rds",
@@ -6267,6 +6126,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #' s <- summary(sim_eval)
 #' s$overview
 #' head(s$design_summary)
+#' }
 #' @export
 summary.mfrm_design_evaluation <- function(object, digits = 3, ...) {
   if (!is.list(object) || is.null(object$results) || is.null(object$rep_overview)) {
@@ -6393,14 +6253,16 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
 #'   `"zerocommonpairs"`, or `"pairsshorttarget"` to review planned
 #'   missingness and rater-pair linkage separately from recovery metrics
 #'
-#' @return If `draw = TRUE`, invisibly returns a plotting-data list. If
-#'   `draw = FALSE`, returns that list directly. The returned list includes
-#'   resolved canonical variables (`x_var`, `group_var`) together with public
-#'   labels (`x_label`, `group_label`), `design_variable_aliases`, and
-#'   `design_descriptor`, plus `planning_scope`, `planning_constraints`, and
-#'   `planning_schema`.
+#' @return Invisibly, a `ggplot` object whose reusable payload (accessible via
+#'   [plot_data()]) includes resolved canonical variables (`x_var`, `group_var`)
+#'   together with public labels (`x_label`, `group_label`),
+#'   `design_variable_aliases`, and `design_descriptor`, plus `planning_scope`,
+#'   `planning_constraints`, and `planning_schema`.
 #' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_design_evaluation", run.dontrun = TRUE)
+#' \dontrun{
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
 #' saved <- readRDS(system.file("examples", "simulation-design.rds",
@@ -6408,7 +6270,9 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
 #' # Inspect saved$generation_warnings and the result's run/status tables.
 #' sim_eval <- saved$result
 #' p <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
-#' c(p$facet, p$x_var)
+#' pd <- plot_data(p)
+#' c(pd$facet, pd$x_var)
+#' }
 #' @export
 plot.mfrm_design_evaluation <- function(x,
                                         facet = c("Rater", "Criterion", "Person"),
@@ -6501,38 +6365,20 @@ plot.mfrm_design_evaluation <- function(x,
     data = agg_tbl
   )
 
-  if (!isTRUE(draw)) return(out)
-
-  groups <- unique(as.character(agg_tbl$group))
-  cols <- grDevices::hcl.colors(max(1L, length(groups)), "Set 2")
-  x_vals <- sort(unique(agg_tbl[[x_var]]))
-  y_range <- range(agg_tbl$y, na.rm = TRUE)
-  if (!all(is.finite(y_range))) stop("Selected metric has no finite values to plot.")
-
-  graphics::plot(
-    x = x_vals,
-    y = rep(NA_real_, length(x_vals)),
-    type = "n",
-    xlab = x_label,
-    ylab = metric_col,
-    main = "",
-    ylim = y_range
-  )
-  for (i in seq_along(groups)) {
-    sub <- agg_tbl[as.character(agg_tbl$group) == groups[i], , drop = FALSE]
-    sub <- sub[order(sub[[x_var]]), , drop = FALSE]
-    graphics::lines(sub[[x_var]], sub$y, type = "b", lwd = 2, pch = 16 + (i - 1L) %% 5L, col = cols[i])
+  if (isTRUE(draw) && !any(is.finite(agg_tbl$y))) {
+    stop("Selected metric has no finite values to plot.")
   }
-  if (length(groups) > 1L) {
-    graphics::legend("topleft", legend = groups, col = cols, lty = 1, lwd = 2, pch = 16 + (seq_along(groups) - 1L) %% 5L, bty = "n")
-  }
-
-  invisible(out)
+  out_pd <- new_mfrm_plot_data("design_evaluation", out)
+  .mfrm_finalize_ggplot(out_pd, draw = draw)
 }
 
-#' Recommend a design condition from simulation results
+#' Review assessment plans against declared planning criteria
+#' @param x For `recommend_mfrm_design()`: Output from [evaluate_mfrm_design()],
+#'   [summary.mfrm_design_evaluation()], or [mfrm_multivariate_d_compare()].
+#'   The last input reviews observed-score D-study plans with their saved paired
+#'   uncertainty; it does not use the simulation-screening defaults.
 #'
-#' @param x Output from [evaluate_mfrm_design()] or [summary.mfrm_design_evaluation()].
+#' For `plot()`: A simulation-based result from [recommend_mfrm_design()].
 #' @param facets Non-empty vector of facets that must satisfy the planning
 #'   thresholds. By default, use the stored non-person facet names; for older
 #'   objects without these names, use the non-person facets in the summary.
@@ -6556,9 +6402,54 @@ plot.mfrm_design_evaluation <- function(x,
 #'   (default `TRUE`). This covers both non-person facets regardless of which
 #'   performance metrics are selected through `facets`. Set `FALSE` only to
 #'   explicitly omit this structural screen; the recorded status is retained.
+#' @param costs For a saved D-study comparison only: an optional data frame
+#'   with `Scenario` (each row number of `x$design_grid` exactly once, including
+#'   the reference) and numeric nonnegative resource columns, such as
+#'   `TotalRatings` or `RaterHours`. Rows may be reordered. `NA` means unknown,
+#'   never zero. Name each column to identify its unit; the function does not
+#'   infer costs or a future number of Persons from the source sample size.
+#' @param limits For a D-study comparison: a named numeric vector of finite
+#'   nonnegative upper bounds for columns in `costs`. Unspecified columns are
+#'   descriptive only. `NULL` requests no feasibility screen.
+#' @param targets For a D-study comparison: a named numeric vector of point
+#'   targets, with minimum `G`/`Phi` in `[0,1]` and maximum `RelativeSEM`/
+#'   `AbsoluteSEM` in the selected score units. `NULL` requests no target
+#'   screen. There is no default target or interval-based attainment claim.
+#' @section Observed-score plans with paired uncertainty:
+#' Pass a saved [mfrm_multivariate_d_compare()] result to connect finite
+#' prespecified plans, costs, limits and point targets without refitting or
+#' calculating new intervals. Its two-crossed-random-facet, raw-component and
+#' normal-effects scope is unchanged. All plans, including the reference,
+#' infeasible plans and unavailable values, remain present in original order.
+#' Explicit simulation-only arguments (such as `min_reliability` or `prefer`)
+#' are rejected for this route. Separation reliability and observed-score
+#' G/Phi are different targets.
 #'
-#' @details
-#' This helper screens simulated designs under user-chosen planning criteria.
+#' The returned comparison retains its class and original numeric results.
+#' `summary(result, planning = TRUE)` returns `plans`, `costs`, `checks`,
+#' `differences`, `basis` and `notes`. `plans$Feasibility` concerns only requested
+#' resource limits; `plans$TargetStatus` concerns point estimates only.
+#' `differences$Direction` is `improved` or `worse` only when the saved paired
+#' interval excludes zero in the corresponding direction (larger G/Phi or
+#' smaller SEM). It is `inconclusive` when zero is included, `identical_plan`
+#' for the same facet counts, and `unavailable` without a usable interval.
+#' These labels do not establish equivalence or a practically important effect.
+#'
+#' `ReviewRequired` retains non-PSD component/sampling-covariance concerns;
+#' calculable points and bounds are not removed or repaired. Passing point
+#' targets does not establish population target attainment. The function does
+#' not select a winner, optimize costs, combine incompatible objectives, or
+#' adjust for searching among plans. Pointwise intervals cannot support a
+#' post-selection guarantee. Use [mfrm_report()] with `study_context` to record
+#' the intended score, sampled universe, resource units and decision criteria.
+#' `plot(result)` and `plot(result, view = "differences")` retain planning
+#' tables and cautions through [plot_data()]. Save the complete object with
+#' `saveRDS()`; a single CSV loses source, weights and assumptions.
+#'
+#' This route concerns observed-score means under a common G-study. It is
+#' not a latent-ability or Bayesian future-plan prediction. The posterior
+#' scoring API does not yet provide a paired future-plan comparison.
+#' @details For simulation inputs, this helper screens designs under user-chosen planning criteria.
 #' The default targets non-Person facet calibration: high separation reliability
 #' means that facet-level differences can be distinguished, not that raters
 #' agree. Use `facets = "Person"` to target Person differentiation instead.
@@ -6627,13 +6518,11 @@ plot.mfrm_design_evaluation <- function(x,
 #' assignments, an observed maximum does not guarantee that future assignments
 #' will respect the same limit. The limits constrain workload, not monetary
 #' cost or scoring time. Ranking among passing designs still follows `prefer`.
-#'
 #' @section Typical workflow:
 #' 1. Run [evaluate_mfrm_design()].
 #' 2. Review [summary.mfrm_design_evaluation()] and [plot.mfrm_design_evaluation()].
 #' 3. Use `recommend_mfrm_design(...)` to identify the smallest acceptable design.
-#'
-#' @return A list of class `mfrm_design_recommendation` with:
+#' @return For simulation inputs, a list of class `mfrm_design_recommendation` with:
 #' - `facet_table`: facet-level threshold checks, including design-variable
 #'   alias columns when applicable
 #' - `design_table`: design-level aggregated checks, including design-variable
@@ -6651,9 +6540,14 @@ plot.mfrm_design_evaluation <- function(x,
 #' - `planning_schema`: structured planning metadata
 #' - `caveats`: fixed-effects and connectivity interpretations and suggested
 #'   post-fit reviews
-#' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation], [plot.mfrm_design_evaluation]
-#' @examples
-#' # One saved replication illustrates output structure, not precise rates.
+#'
+#' For a saved D-study comparison, the same `mfrm_multivariate_d_comparison`
+#' object with a `planning` list as described above. Numeric comparisons and
+#' their joint covariance are unchanged; `summary(result)` still returns the
+#' original comparison table. No unique recommended row is selected.
+#' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation], [plot.mfrm_design_evaluation],
+#'   [mfrm_multivariate_d_compare()]
+#' @examples # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
 #' saved <- readRDS(system.file("examples", "simulation-design.rds",
 #'   package = "mfrmr", mustWork = TRUE))
@@ -6663,7 +6557,22 @@ plot.mfrm_design_evaluation <- function(x,
 #'   sim_eval, max_ratings = 48, max_ratings_per_rater = 24
 #' )
 #' rec$recommended
+#'
+#' # Observed-score planning: declared tasks/raters, paired differences and costs
+#' data("mfrmr_example_gtheory_crossed", package = "mfrmr")
+#' g <- mfrm_g_study(mfrmr_example_gtheory_crossed, c("Content", "Organization"))
+#' d <- mfrm_d_study(g, data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3)),
+#'   weights = c(Content = .5, Organization = .5))
+#' comparison <- mfrm_multivariate_d_compare(d, assumption = "normal")
+#' # Illustrative operational hours for the same future cohort, supplied by the user
+#' costs <- data.frame(Scenario = 1:3, RaterHours = c(40, 44, 48),
+#'   TaskHours = c(12, 8, 6))
+#' review <- recommend_mfrm_design(comparison, costs = costs,
+#'   limits = c(RaterHours = 46), targets = c(G = .58, Phi = .39))
+#' summary(review, planning = TRUE)$plans
+#' summary(review, planning = TRUE)$differences
 #' @export
+#' @order 1
 recommend_mfrm_design <- function(x,
                                   facets = c("Rater", "Criterion"),
                                   min_separation = 2,
@@ -6674,10 +6583,22 @@ recommend_mfrm_design <- function(x,
                                   prefer = c("n_person", "raters_per_person", "n_rater", "n_criterion"),
                                   max_ratings = NULL,
                                   max_ratings_per_rater = NULL,
-                                  require_connected = TRUE) {
+                                  require_connected = TRUE,
+                                  costs = NULL, limits = NULL, targets = NULL) {
+  supplied <- names(match.call())[-1L]
+  planning_arguments <- c("costs", "limits", "targets")
+  if (inherits(x, "mfrm_multivariate_d_comparison")) {
+    extra <- setdiff(supplied, c("x", planning_arguments))
+    if (length(extra)) stop("Simulation-screening arguments do not apply to D-study comparisons: ",
+      paste(extra, collapse = ", "), ". Use costs, limits and targets.", call. = FALSE)
+    return(.mfrm_plan_review(x, costs, limits, targets))
+  }
+  if (any(planning_arguments %in% supplied))
+    stop("`costs`, `limits` and `targets` require a saved mfrm_multivariate_d_compare() result.", call. = FALSE)
+  simulation_arguments <- setdiff(names(formals(recommend_mfrm_design))[-1L], planning_arguments)
   threshold_sources <- stats::setNames(
-    ifelse(names(formals(recommend_mfrm_design))[-1L] %in% names(match.call())[-1L],
-      "user_supplied", "default"), names(formals(recommend_mfrm_design))[-1L])
+    ifelse(simulation_arguments %in% supplied,
+      "user_supplied", "default"), simulation_arguments)
   if (missing(facets)) threshold_sources["facets"] <- "stored_facet_names"
   for (name in c("min_separation", "min_reliability", "max_severity_rmse",
                  "max_misfit_rate", "min_convergence_rate")) {
@@ -8124,69 +8045,15 @@ evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
 }
 
 diagnostic_screening_plot_long_safe <- function(object, type, metric = NULL) {
-  plot_data <- tryCatch(
-    plot(object, type = type, metric = metric, draw = FALSE),
+  pl <- tryCatch(
+    plot_data(object, component = "plot_long", type = type, metric = metric),
     error = function(e) NULL
   )
-  if (!inherits(plot_data, "mfrm_plot_data")) {
-    return(tibble::tibble())
-  }
-  tibble::as_tibble(plot_data$data$plot_long %||% tibble::tibble())
+  tibble::as_tibble(pl %||% tibble::tibble())
 }
 
 diagnostic_screening_reading_order <- function(include_report = FALSE) {
-  out <- data.frame(
-    Step = 1:10,
-    Table = c(
-      "overview",
-      "reading_order",
-      "next_actions",
-      "reporting_notes",
-      "figure_recipes",
-      "scenario_summary",
-      "performance_summary",
-      "scenario_contrast",
-      "report_signal_summary",
-      "plot_overview_rate"
-    ),
-    WhatToRead = c(
-      "Design count, replication count, scenarios, model, convergence, and whether report signals were retained.",
-      "Recommended reading sequence for diagnostic-screening summaries.",
-      "Action-oriented triage for replication count, run completion, contrasts, report signals, and export.",
-      "Reporting boundaries and recommended wording safeguards.",
-      "Figure and display recipes linking plot() calls, plot_data() extraction, caption focus, and interpretation boundaries.",
-      "Scenario-by-design legacy, strict marginal, and strict pairwise screening summaries.",
-      "Operating-characteristic rates, Type I/sensitivity proxy labels, agreement rates, and runtime summaries.",
-      "Misspecification-minus-well-specified deltas when a baseline scenario was evaluated.",
-      "Optional mfrm_report() report-index availability/readiness and review-signal summaries.",
-      "Long-form draw-free visualization table for the main overview-rate display."
-    ),
-    Purpose = c(
-      "Confirm that the simulation ran as intended before interpreting screening behavior.",
-      "Avoid treating every exported table as equal-priority evidence.",
-      "Decide whether to increase replications, inspect run failures, read contrasts, request report signals, or export appendices.",
-      "Keep simulation screening language distinct from inferential and parameter-recovery conclusions.",
-      "Choose the smallest figure set that matches the reporting purpose before styling or rendering.",
-      "Compare raw screening surfaces across scenarios and design conditions.",
-      "Separate operating behavior from runtime and from inferential or validation conclusions.",
-      "Inspect whether misspecification shifts strict screens beyond the well-specified baseline.",
-      "Use only when include_report = TRUE; otherwise treat absence as not requested.",
-      "Reuse for ggplot2, plotly, Quarto, or supplementary figure construction."
-    ),
-    InterpretationBoundary = c(
-      "Run completion and convergence are prerequisites for interpretation, not proof that the diagnostic screen is calibrated.",
-      "Reading order is guidance for human review, not a statistical decision rule.",
-      "Next actions are workflow prompts, not statistical decisions.",
-      "Use cautious wording unless replication count, design, and scenario coverage support stronger claims.",
-      "Figure recipes are reporting workflow guidance; they do not add evidence beyond the underlying summary tables.",
-      "Scenario means and flag rates are operating-characteristic readouts, not formal inferential p-values.",
-      "Type I and sensitivity labels are simulation proxies tied to the evaluated scenarios.",
-      "Contrasts are descriptive deltas and depend on the selected baseline, design, and replication count.",
-      "Report signals summarize the package reporting layer; they do not validate the model or the simulation design.",
-      "Plot data are a presentation handoff and should not be reinterpreted as a separate analysis."
-    ),
-    stringsAsFactors = FALSE
-  )
+  out <- .mfrmr_table_diagnostic_screening_reading_order_out
   if (!isTRUE(include_report)) {
     out$Purpose[out$Table == "report_signal_summary"] <- "Skipped unless include_report = TRUE."
     out$InterpretationBoundary[out$Table == "report_signal_summary"] <- "An empty table means report-index review was not requested, not that no reporting issues exist."
@@ -8515,6 +8382,9 @@ diagnostic_screening_interpretation_payload <- function(object, overview = NULL)
 #'
 #' @seealso [evaluate_mfrm_diagnostic_screening()], [plot.mfrm_diagnostic_screening], [plot_data()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("summary.mfrm_diagnostic_screening", run.dontrun = TRUE)
+#' \dontrun{
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
 #' saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
@@ -8522,6 +8392,7 @@ diagnostic_screening_interpretation_payload <- function(object, overview = NULL)
 #' # Inspect saved$generation_warnings and the result's run/status tables.
 #' diag_eval <- saved$result
 #' summary(diag_eval)
+#' }
 #' @export
 summary.mfrm_diagnostic_screening <- function(object, digits = 3, ...) {
   if (!is.list(object) || is.null(object$results) || is.null(object$scenario_summary)) {
@@ -8940,13 +8811,15 @@ diagnostic_screening_plot_group_labels <- function(plot_tbl, group_var = NULL) {
 #' @param draw Logical; if `FALSE`, return the plot-data bundle without drawing.
 #' @param ... Reserved for generic compatibility.
 #'
-#' @return An `mfrm_plot_data` object with reusable metadata, a long-form
+#' @return Invisibly, a `ggplot` object carrying reusable metadata, a long-form
 #'   `plot_long` table, and interpretation handoff tables (`overview`,
 #'   `reading_order`, `next_actions`, `reporting_notes`, and
-#'   `figure_recipes`). When `draw = TRUE`, the object is returned invisibly
-#'   after drawing.
+#'   `figure_recipes`) accessible via [plot_data()].
 #'
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot.mfrm_diagnostic_screening", run.dontrun = TRUE)
+#' \dontrun{
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
 #' saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
@@ -8958,6 +8831,7 @@ diagnostic_screening_plot_group_labels <- function(plot_tbl, group_var = NULL) {
 #' plot_data(diag_eval, type = "overview", component = "next_actions")
 #' plot_data(diag_eval, type = "overview", component = "figure_recipes")
 #' plot(diag_eval, type = "report", metric = "rate", draw = FALSE)
+#' }
 #' @export
 plot.mfrm_diagnostic_screening <- function(x,
                                            type = c("overview", "report", "contrast", "runtime"),
@@ -9052,59 +8926,7 @@ plot.mfrm_diagnostic_screening <- function(x,
     reference_lines = new_reference_lines()
   )
   out <- new_mfrm_plot_data("diagnostic_screening", payload)
-  if (!isTRUE(draw)) return(out)
-
-  groups <- unique(as.character(plot_tbl$group))
-  cols <- grDevices::hcl.colors(max(1L, length(groups)), "Set 2")
-  x_vals <- sort(unique(plot_tbl[[x_var]]))
-  y_range <- range(plot_tbl$Value, na.rm = TRUE)
-  if (!all(is.finite(y_range))) {
-    stop("Selected diagnostic-screening metric has no finite values to plot.", call. = FALSE)
-  }
-
-  graphics::plot(
-    x = x_vals,
-    y = rep(NA_real_, length(x_vals)),
-    type = "n",
-    ylim = y_range,
-    xlab = x_label,
-    ylab = paste("Diagnostic-screening", spec_bundle$metric),
-    main = ""
-  )
-  for (i in seq_along(groups)) {
-    g_tbl <- plot_tbl[as.character(plot_tbl$group) == groups[i], , drop = FALSE]
-    g_tbl <- g_tbl[order(g_tbl[[x_var]]), , drop = FALSE]
-    graphics::lines(g_tbl[[x_var]], g_tbl$Value, col = cols[i], lwd = 2)
-    graphics::points(g_tbl[[x_var]], g_tbl$Value, col = cols[i], pch = 19)
-  }
-  graphics::legend(
-    "topright",
-    legend = groups,
-    col = cols,
-    lty = 1,
-    pch = 19,
-    cex = 0.75,
-    bty = "n"
-  )
-  invisible(out)
-}
-
-signal_eval_resolve_level <- function(value, prefix, n_levels, arg_name) {
-  if (is.null(value)) {
-    return(sprintf("%s%02d", prefix, n_levels))
-  }
-  if (is.numeric(value)) {
-    idx <- as.integer(value[1])
-    if (!is.finite(idx) || idx < 1L || idx > n_levels) {
-      stop("`", arg_name, "` must be between 1 and ", n_levels, ".")
-    }
-    return(sprintf("%s%02d", prefix, idx))
-  }
-  value <- as.character(value[1])
-  if (!nzchar(value) || is.na(value)) {
-    stop("`", arg_name, "` must be a non-empty label or index.")
-  }
-  value
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 signal_eval_resolve_level_from_choices <- function(value, available_levels, arg_name) {
@@ -9605,7 +9427,7 @@ signal_eval_metric_col <- function(signal, metric) {
 #' - `settings`: signal-analysis settings
 #' - `ademp`: simulation-study metadata (aims, DGM, estimands, methods, performance measures)
 #' - `notes`: short interpretation notes
-#' @seealso [simulate_mfrm_data()], [evaluate_mfrm_design()], [analyze_dff()], [analyze_dif()], [estimate_bias()]
+#' @seealso [simulate_mfrm_data()], [evaluate_mfrm_design()], [analyze_dff()], [estimate_bias()]
 #' @examples
 #' # Long-running workflow; run explicitly when needed.
 #' # example("evaluate_mfrm_signal_detection", run.dontrun = TRUE)
@@ -9621,6 +9443,7 @@ signal_eval_metric_col <- function(signal, metric) {
 #' s_sig$overview
 #' }
 #' @export
+#' @order 1
 evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
                                            n_rater = c(4),
                                            n_criterion = c(4),
@@ -10180,6 +10003,9 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
 #' - `notes`: short interpretation notes, including the bias-side screening caveat
 #' @seealso [evaluate_mfrm_signal_detection()], [plot.mfrm_signal_detection]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("summary.mfrm_signal_detection", run.dontrun = TRUE)
+#' \dontrun{
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
 #' saved <- readRDS(system.file("examples", "simulation-signal-detection.rds",
@@ -10187,6 +10013,7 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
 #' # Inspect saved$generation_warnings and the result's run/status tables.
 #' sig_eval <- saved$result
 #' summary(sig_eval)
+#' }
 #' @export
 summary.mfrm_signal_detection <- function(object, digits = 3, ...) {
   if (!is.list(object) || is.null(object$results) || is.null(object$rep_overview)) {
@@ -10311,8 +10138,8 @@ signal_detection_metric_label <- function(signal, metric_col) {
   )
 }
 
-#' Plot DIF/bias screening simulation results
-#'
+#' @rdname evaluate_mfrm_signal_detection
+#' @details `plot()` method: Plot DIF/bias screening simulation results
 #' @param x Output from [evaluate_mfrm_signal_detection()].
 #' @param signal Whether to plot DIF or bias screening results.
 #' @param metric Metric to plot. For `signal = "bias"`, prefer
@@ -10328,11 +10155,10 @@ signal_detection_metric_label <- function(signal, metric_col) {
 #'   as an abstraction over the current two-facet schema.
 #' @param group_var Optional design variable used for separate lines. The same
 #'   alias rules as `x_var` apply.
-#' @param draw If `TRUE`, draw with base graphics; otherwise return plotting data.
+#' @param draw If `TRUE`, print the `ggplot` object; otherwise return the `ggplot` object invisibly without drawing.
 #' @param ... Reserved for generic compatibility.
-#'
-#' @return If `draw = TRUE`, invisibly returns plotting data. If `draw = FALSE`,
-#'   returns that plotting-data list directly. The returned list includes
+#' @return For `plot()`: Invisibly, a `ggplot` object whose reusable payload
+#'   (accessible via [plot_data()]) includes
 #'   resolved canonical variables (`x_var`, `group_var`) together with public
 #'   labels (`x_label`, `group_label`), `design_variable_aliases`,
 #'   `design_descriptor`, `planning_scope`, `planning_constraints`,
@@ -10345,8 +10171,7 @@ signal_detection_metric_label <- function(signal, metric_col) {
 #'   design variables are collapsed, each plotted point is an equally weighted
 #'   average of available design-level means, not a pooled trial/cell rate.
 #' @seealso [evaluate_mfrm_signal_detection()], [summary.mfrm_signal_detection]
-#' @examples
-#' # Long-running workflow; run explicitly when needed.
+#' @examples # Long-running workflow; run explicitly when needed.
 #' # example("plot.mfrm_signal_detection", run.dontrun = TRUE)
 #' \dontrun{
 #' # One saved replication illustrates output structure, not precise rates.
@@ -10453,32 +10278,9 @@ plot.mfrm_signal_detection <- function(x,
     summary_table = plot_tbl,
     data = agg_tbl
   )
-  if (!isTRUE(draw)) return(out)
-
-  groups <- unique(as.character(agg_tbl$group))
-  cols <- grDevices::hcl.colors(max(1L, length(groups)), "Set 2")
-  x_vals <- sort(unique(agg_tbl[[x_var]]))
-  if (!any(is.finite(agg_tbl$y))) stop("Selected metric is unavailable for these results.", call. = FALSE)
-  y_range <- range(agg_tbl$y, na.rm = TRUE)
-  if (!all(is.finite(y_range))) stop("Selected metric has no finite values to plot.")
-
-  graphics::plot(
-    x = x_vals,
-    y = rep(NA_real_, length(x_vals)),
-    type = "n",
-    xlab = x_label,
-    ylab = out$display_metric,
-    main = "",
-    ylim = y_range
-  )
-  for (i in seq_along(groups)) {
-    sub <- agg_tbl[as.character(agg_tbl$group) == groups[i], , drop = FALSE]
-    sub <- sub[order(sub[[x_var]]), , drop = FALSE]
-    graphics::lines(sub[[x_var]], sub$y, type = "b", lwd = 2, pch = 16 + (i - 1L) %% 5L, col = cols[i])
+  if (isTRUE(draw) && !any(is.finite(agg_tbl$y))) {
+    stop("Selected metric is unavailable for these results.", call. = FALSE)
   }
-  if (length(groups) > 1L) {
-    graphics::legend("topleft", legend = groups, col = cols, lty = 1, lwd = 2, pch = 16 + (seq_along(groups) - 1L) %% 5L, bty = "n")
-  }
-
-  invisible(out)
+  out_pd <- new_mfrm_plot_data("signal_detection", out)
+  .mfrm_finalize_ggplot(out_pd, draw = draw)
 }

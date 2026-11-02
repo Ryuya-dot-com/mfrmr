@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-prediction.R
 \name{predict_mfrm_units}
 \alias{predict_mfrm_units}
+\alias{summary.mfrm_unit_prediction}
 \title{Score future or partially observed units under the fitted scoring basis}
 \usage{
 predict_mfrm_units(
@@ -23,6 +24,8 @@ predict_mfrm_units(
   scoring_prior = NULL,
   cut_scores = NULL
 )
+
+\method{summary}{mfrm_unit_prediction}(object, digits = 3, ...)
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}} estimated with \code{method = "MML"} or
@@ -121,6 +124,13 @@ uncertainty are excluded. This is not a Person-difference test or a
 probability of passing a future administration. Cut labels alone do not
 establish CEFR alignment. Tiny tails have absolute, not relative, numerical
 accuracy. Use \code{apa_table(x, which = "decisions")} or export the saved table.}
+
+\item{object}{Output from \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.}
+
+\item{digits}{Number of digits used in numeric summaries. Decision
+probabilities, cut boundaries and scoring priors are not rounded.}
+
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 An object of class \code{mfrm_unit_prediction} with components:
@@ -139,6 +149,17 @@ integration comparison and its compact overview
 \item \code{input_data}: cleaned canonical scoring rows retained from \code{new_data}
 \item \code{person_data}: cleaned or supplied person-level background data used for
 latent-regression scoring; \code{NULL} otherwise
+\item \code{settings}: scoring settings
+\item \code{notes}: interpretation notes
+}
+
+For \code{summary()}: An object of class \code{summary.mfrm_unit_prediction} with:
+\itemize{
+\item \code{estimates}: posterior summaries by person
+\item \code{decisions}: unrounded conditional probabilities, when requested
+\item \code{row_review}: row-preparation review
+\item \code{population_review}: optional person-level omission review for
+latent-regression scoring
 \item \code{settings}: scoring settings
 \item \code{notes}: interpretation notes
 }
@@ -203,12 +224,14 @@ original \code{JML} fit itself estimated a population model. It does not reprodu
 the training Person joint maximum-likelihood estimates or provide ML/WLE
 scoring for new Persons. Posterior uncertainty conditions on the fitted
 calibration; it does not include calibration-parameter uncertainty.
+
+\code{summary()} method: Summarize posterior unit scoring output
 }
 \section{Experimental two-family scoring}{
 
 Two-family GPCM MML supports new Persons with known non-Person facet levels,
 unit weights and the retained fixed N(0,1) prior. Both slope components,
-facet locations and the second owner's category steps remain fixed. New
+all facet locations and the declared step owner's category steps remain fixed. New
 combinations of known levels are allowed under the fitted product model;
 this does not validate those combinations empirically. Repeated Person-facet
 combinations are rejected. Missing responses are omitted with a warning and
@@ -528,6 +551,10 @@ pred_units <- predict_mfrm_units(toy_fit, new_units,
   scoring_quad_points = 121, cut_scores = cuts)
 summary(pred_units)$estimates[, c("Person", "Estimate", "Lower", "Upper")]
 pred_units$decisions
+
+# Optional prior-sensitivity comparison performs another scoring calculation.
+# example("predict_mfrm_units", run.dontrun = TRUE)
+\dontrun{
 apa_table(pred_units, which = "decisions")
 # Compare assumptions on the same response rows, without refitting.
 alternative <- predict_mfrm_units(
@@ -551,7 +578,11 @@ saveRDS(pred_units, saved)
 apa_table(readRDS(saved), which = "decisions")
 unlink(saved)
 }
+}
 \seealso{
 \code{\link[=score_mfrm_persons]{score_mfrm_persons()}}, \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}}, \code{\link[=classification_table]{classification_table()}}, \code{\link[=apa_table]{apa_table()}},
 \code{\link[=predict_mfrm_population]{predict_mfrm_population()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}, \link{summary.mfrm_unit_prediction}
+
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for an executable scoring and reporting
+example; \code{\link[=apa_table]{apa_table()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}}
 }

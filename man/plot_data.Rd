@@ -51,7 +51,7 @@ one.
 Titles, subtitles, and explanatory footnotes are omitted from figures by
 default. Use \code{plot_data(p, "title")} for the suggested title and
 \code{plot_data(p, "notes")} for a \code{Type}/\code{Text} table of descriptions and cautions.
-This works for returned base-graphics payloads and mfrmr-generated ggplots,
+This works for saved \verb{0.2.x} plot payloads and mfrmr-generated ggplots,
 including after \code{saveRDS()}/\code{readRDS()}. Printing an \code{mfrm_plot_data} object
 also displays its notes in the console. Axes, legends, panel headings and
 data/status symbols remain in the figure. Removing figure text does not
@@ -66,7 +66,7 @@ select the plotted population explicitly. \code{table} is the summary, not raw
 observations. Export either with write.csv; use the observations for custom
 box/violin/raincloud plots. Feature units are the original units, supplied by
 the study. A smooth density is usually inappropriate for a few ordinal bins.
-\code{vignette("mfrmr-networks-and-reporting")} demonstrates custom plots and CSVs.
+\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} demonstrates custom plots and CSVs.
 }
 
 \examples{

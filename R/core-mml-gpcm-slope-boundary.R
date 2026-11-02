@@ -68,7 +68,7 @@ audit_mfrm_mml_gpcm_slope_boundary <- function(
                      optimizer_log_likelihood = NA_real_,
                      likelihood_difference = NA_real_) {
     list(
-      contract_version = mfrmr_boundary_contract_version(),
+      contract_version = mfrmr_readiness_contract_version(),
       method = method,
       model = model,
       scope = paste(
@@ -487,46 +487,14 @@ audit_mfrm_mml_gpcm_slope_boundary <- function(
   targets$ReasonCodes[group_support$EffectiveObservations == 0L] <-
     "no_positive_weight_observations"
 
-  loading_rows <- list()
-  loading_cursor <- 0L
-  slices <- build_param_slices(sizes)
-  optimizer_indices <- as.integer(slices[["log_slopes"]] %||% integer(0))
-  for (certificate_index in certified_rows) {
-    certificate <- certificates[certificate_index, , drop = FALSE]
-    expanded_direction <- rep(0, n_levels)
-    expanded_direction[certificate$PositiveIndex] <- 1
-    expanded_direction[certificate$NegativeIndex] <- -1
-    expanded_keep <- which(expanded_direction != 0)
-    loading_cursor <- loading_cursor + 1L
-    loading_rows[[loading_cursor]] <- data.frame(
-      PairId = certificate$PairId,
-      CoordinateType = "expanded_log_slope",
-      OptimizerIndex = rep(NA_integer_, length(expanded_keep)),
-      Coordinate = paste0("expanded_log_slope:", levels[expanded_keep]),
-      Level = levels[expanded_keep],
-      Loading = expanded_direction[expanded_keep],
-      stringsAsFactors = FALSE
-    )
-    free_direction <- expanded_direction[seq_len(n_levels - 1L)]
-    free_keep <- which(free_direction != 0)
-    if (length(free_keep) > 0L) {
-      loading_cursor <- loading_cursor + 1L
-      loading_rows[[loading_cursor]] <- data.frame(
-        PairId = certificate$PairId,
-        CoordinateType = "optimizer_log_slope",
-        OptimizerIndex = optimizer_indices[free_keep],
-        Coordinate = paste0("log_slopes:", levels[free_keep]),
-        Level = levels[free_keep],
-        Loading = free_direction[free_keep],
-        stringsAsFactors = FALSE
-      )
-    }
-  }
-  direction_loadings <- if (length(loading_rows) == 0L) {
-    empty_loadings
-  } else {
-    do.call(rbind, loading_rows)
-  }
+  direction_loadings <- mfrmr_gpcm_slope_direction_loadings(
+    certified_rows = certified_rows,
+    certificates = certificates,
+    levels = levels,
+    n_levels = n_levels,
+    sizes = sizes,
+    empty_loadings = empty_loadings
+  )
 
   any_certified <- length(certified_rows) > 0L
   finish(

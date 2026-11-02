@@ -1,7 +1,7 @@
 # Generalized ESF coefficients and conditional sufficient-statistic moments.
 # Log coefficients avoid overflow; the covariance recursion avoids subtracting
 # two large raw second moments.
-mfrmr_cml_esf <- function(features, par, information = FALSE) {
+mfrmr_cml_esf_r <- function(features, par, information = FALSE) {
   p <- length(par)
   logz <- 0
   means <- matrix(0, 1L, p)
@@ -35,6 +35,14 @@ mfrmr_cml_esf <- function(features, par, information = FALSE) {
     logz <- next_logz; means <- next_means; covs <- next_covs
   }
   list(logz = logz, means = means, covariance = covs)
+}
+
+mfrmr_cml_esf <- function(features, par, information = FALSE) {
+  if (isTRUE(getOption("mfrmr.use_cpp11_backend", TRUE)) &&
+      mfrm_cpp11_backend_available()) {
+    return(mfrm_cpp_cml_esf(features, as.double(par), isTRUE(information)))
+  }
+  mfrmr_cml_esf_r(features, par, information = information)
 }
 
 mfrmr_cml_problem <- function(prep, idx, cfg, sizes) {
@@ -382,7 +390,6 @@ mfrmr_cml_facet_intervals <- function(fit, facet, contrasts, method, clusters, a
 #' @param object,x A fitted CML result for its summary, print, covariance and
 #'   log-likelihood methods, or a comparison-only result for its summary and
 #'   print methods.
-#' @param ... Unused by the CML methods.
 #' @export
 summary.mfrm_cml_fit <- function(object, ...) {
   locations <- do.call(rbind, lapply(object$config$facet_names, function(facet) {

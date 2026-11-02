@@ -3,9 +3,6 @@
 \name{facets_fit_df_guide}
 \alias{facets_fit_df_guide}
 \title{Guide FACETS-style fit df and ZSTD standardization}
-\usage{
-facets_fit_df_guide(include_references = TRUE)
-}
 \arguments{
 \item{include_references}{If \code{TRUE}, include source-reference rows for the
 FACETS/Winsteps documentation and Rasch measurement texts that motivate the
@@ -24,7 +21,7 @@ A bundle of class \code{mfrm_facets_fit_df_guide} with:
 }
 }
 \description{
-\code{facets_fit_df_guide()} gives a compact user-facing guide to the degrees of
+\code{facets_guide('fit_df')} gives a compact user-facing guide to the degrees of
 freedom and ZSTD standardization choices used when comparing mfrmr fit
 output with FACETS-style fit tables.
 }
@@ -46,10 +43,11 @@ ZSTD at +/-9. Both FACETS WHEXACT choices use a cube root; NO omits q/3.
 Small-df availability differences require checking the selected convention.
 }
 \examples{
-facets_fit_df_guide()
-facets_fit_df_guide()$decision_guide
+facets_guide('fit_df')
+facets_guide('fit_df')$decision_guide
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=fit_measures_table]{fit_measures_table()}},
 \code{\link[=facets_fit_review]{facets_fit_review()}}
 }
+\keyword{internal}

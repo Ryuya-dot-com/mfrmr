@@ -4,6 +4,7 @@
 \alias{mfrm_screening_sensitivity}
 \alias{summary.mfrm_screening_sensitivity}
 \alias{print.mfrm_screening_sensitivity}
+\alias{plot.mfrm_screening_sensitivity}
 \title{Compare fit-screening thresholds against known simulation truth}
 \usage{
 mfrm_screening_sensitivity(
@@ -19,6 +20,25 @@ mfrm_screening_sensitivity(
 \method{summary}{mfrm_screening_sensitivity}(object, ...)
 
 \method{print}{mfrm_screening_sensitivity}(x, ...)
+
+\method{plot}{mfrm_screening_sensitivity}(
+  x,
+  style = c("tiles", "curves"),
+  direction = "either",
+  metric = c("false_flags", "detection"),
+  condition = NULL,
+  quantity = c("rate", "unavailable"),
+  draw = TRUE,
+  palette = c("accessible", "mono"),
+  title = NULL,
+  caption = NULL,
+  show_title = FALSE,
+  show_notes = FALSE,
+  show_labels = TRUE,
+  text_scale = 1,
+  point_size = 2.5,
+  ...
+)
 }
 \arguments{
 \item{roster}{Data frame with \code{Condition}, \code{Replicate}, \code{Target} identifiers
@@ -53,9 +73,45 @@ chosen df convention and residual definition in \code{rule}.}
 default 0.95. These describe simulation uncertainty, not an interval for
 rater severity or a guarantee of screening accuracy.}
 
-\item{...}{Unused by print and summary.}
+\item{object}{An \code{mfrm_screening_sensitivity} object.}
 
-\item{x, object}{An \code{mfrm_screening_sensitivity} object.}
+\item{...}{For \code{summary.mfrm_screening_sensitivity()}: Unused by print and summary.
+
+For \code{plot()}: Unused.}
+
+\item{x}{Output from \code{\link[=mfrm_screening_sensitivity]{mfrm_screening_sensitivity()}}.
+
+Also for \code{summary()}: An \code{mfrm_screening_sensitivity} object.}
+
+\item{style}{\code{"tiles"} shows a labelled rate matrix. \code{"curves"} shows
+profile comparisons with pointwise Monte Carlo intervals by condition.}
+
+\item{direction}{One or more of \code{"either"}, \code{"underfit"}, \code{"overfit"}.}
+
+\item{metric}{\code{"false_flags"} or \code{"detection"} chooses the family event.}
+
+\item{condition}{Optional condition labels to display.}
+
+\item{quantity}{\code{"rate"} (default) or \code{"unavailable"}, the proportion of
+planned family events whose outcome is unresolved.}
+
+\item{draw}{For \code{plot()}: \code{FALSE} returns plot data without opening a device.}
+
+\item{palette}{\code{"accessible"} uses a sequential blue scale for tiles and
+blue/orange/purple lines with different symbols. \code{"mono"} uses greys.}
+
+\item{title, caption}{\code{NULL} uses the default text; a string replaces it;
+\code{""} removes it. Interpretation notes remain in the saved plot data.}
+
+\item{show_title, show_notes}{Show the title and caption, respectively.
+\code{FALSE} hides text without deleting its metadata.}
+
+\item{show_labels}{Show percentages and known/planned counts in tiles.}
+
+\item{text_scale}{Positive multiplier for text size.}
+
+\item{point_size}{Positive point size in ggplot millimetres; base graphics
+use the corresponding relative size (2.5 is the default).}
 }
 \value{
 An \code{mfrm_screening_sensitivity} object with \code{by_target}, \code{by_family},
@@ -63,6 +119,9 @@ aligned \code{outcomes}, replication-level \code{family_outcomes}, source \code{
 and \code{measures}, \code{thresholds} and \code{settings}. Each result table identifies
 \code{Profile}, \code{Lower}, \code{Upper} and \code{Direction}; the remaining columns have
 the meanings documented by \code{\link[=mfrm_screening_performance]{mfrm_screening_performance()}}.
+
+For \code{plot()}: Invisibly, a \code{ggplot} object carrying exact selected tables, settings,
+notes, and alternative text accessible via \code{\link[=plot_data]{plot_data()}}.
 }
 \description{
 See how detection and false-flag rates change when you change fit-screening
@@ -93,6 +152,15 @@ same replications. No automatic exclusion or refitting is performed.
 This helper does not qualify the supplied statistics. In particular,
 ordinary Rasch bands must not be transferred to extended-model posterior-
 predictive residual summaries that lack the same reference distribution.
+
+\code{plot()} method: Plot directional screening rates across threshold profiles
+
+For \code{plot()}: Tile shading is supplemented by numeric labels; missing estimates
+are labelled NA. Profile order is supplied order, not an optimized ranking.
+Curves connect discrete profile choices, not a continuous threshold scale.
+Tile plots do not display uncertainty intervals: consult the retained table
+or curve view. Exact intervals are pointwise and conditional on known
+outcomes; all-trial bounds are retained, not confidence intervals.
 }
 \examples{
 roster <- expand.grid(Condition = "Null", Replicate = 1:4,

@@ -2,6 +2,8 @@
 % Please edit documentation in R/api-dashboards.R
 \name{facet_quality_dashboard}
 \alias{facet_quality_dashboard}
+\alias{summary.mfrm_facet_dashboard}
+\alias{plot.mfrm_facet_dashboard}
 \title{Facet-quality dashboard for facet-level screening}
 \usage{
 facet_quality_dashboard(
@@ -17,6 +19,10 @@ facet_quality_dashboard(
   bias_abs_size_warn = 0.5,
   bias_p_max = 0.05
 )
+
+\method{summary}{mfrm_facet_dashboard}(object, digits = 3, top_n = 10, ...)
+
+\method{plot}{mfrm_facet_dashboard}(x, y = NULL, type = c("severity", "flags"), ...)
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
@@ -58,6 +64,22 @@ bias-row flags from a raw bias bundle.}
 
 \item{bias_p_max}{Probability cutoff used when deriving bias-row flags
 from a raw bias bundle.}
+
+\item{object}{Output from \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.}
+
+\item{digits}{Number of digits for printed numeric values.}
+
+\item{top_n}{Number of flagged levels to preview.}
+
+\item{...}{For \code{plot()}: Display controls from \code{\link[=plot_facet_quality_dashboard]{plot_facet_quality_dashboard()}}.
+
+For \code{summary()}: Reserved for generic compatibility.}
+
+\item{x}{A result from \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.}
+
+\item{y}{Ignored; present for generic compatibility.}
+
+\item{type}{\code{"severity"} or \code{"flags"}.}
 }
 \value{
 An object of class \code{mfrm_facet_dashboard} (also inheriting from
@@ -69,6 +91,11 @@ review priority, \code{flagged} keeps only levels requiring follow-up,
 \code{bias_sources} records which bias-result bundles contributed to the
 counts, \code{settings} stores the resolved thresholds, and \code{notes} gives short
 interpretation messages about how to read the dashboard.
+
+For \code{summary()}: An object of class \code{summary.mfrm_facet_dashboard}.
+
+For \code{plot()}: Invisibly, a \code{ggplot} object carrying the dashboard
+payload and screening cautions accessible via \code{\link[=plot_data]{plot_data()}}.
 }
 \description{
 Build a compact dashboard for one facet at a time, combining facet
@@ -79,7 +106,7 @@ The dashboard screens individual facet elements across four
 complementary criteria:
 \itemize{
 \item \strong{Severity}: elements with \eqn{|\mathrm{Estimate}| >}
-\code{severity_warn} logits are flagged as unusually harsh or lenient.
+\code{severity_warn} logits are flagged as unusually severe or lenient.
 \item \strong{Misfit}: elements with Infit or Outfit MnSq outside the
 configured heuristic review band are flagged. The band defaults to the package
 pair returned by \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}} (Linacre 0.5-1.5);
@@ -115,6 +142,10 @@ Fit-readiness restrictions are retained in \code{fit_readiness},
 \code{interpretation_status} and \code{notes}. Review overlap with
 \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and category use with \code{\link[=data_quality_report]{data_quality_report()}}
 before interpreting between-rater differences.
+
+\code{summary()} method: Summarize a facet-quality dashboard
+
+\code{plot()} method: Plot a saved facet-quality dashboard
 }
 \section{Output}{
 
@@ -150,6 +181,9 @@ diagnostics without refitting the model.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("facet_quality_dashboard", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 toy <- toy[toy$Person \%in\% unique(toy$Person)[1:8], ]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -157,6 +191,21 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 dash <- facet_quality_dashboard(fit, diagnostics = diag)
 summary(dash)
 }
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("summary.mfrm_facet_dashboard", run.dontrun = TRUE)
+\dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+summary(facet_quality_dashboard(fit, diagnostics = diag))
+}
+}
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \link[=plot.mfrm_fit]{plot(x, type = "qc")}
+
+\code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}, \link[=plot.mfrm_fit]{plot(x, type = "facet_dashboard")}
+
+\link{mfrmr_plot_migration}
 }

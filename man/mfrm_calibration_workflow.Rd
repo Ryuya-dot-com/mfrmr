@@ -2,12 +2,13 @@
 % Please edit documentation in R/api-calibration.R
 \name{mfrm_calibration_workflow}
 \alias{mfrm_calibration_workflow}
-\alias{extract_mfrm_calibration}
-\alias{review_mfrm_calibration}
 \alias{validate_mfrm_calibration}
 \alias{freeze_mfrm_calibration}
 \alias{supersede_mfrm_calibration}
 \alias{retire_mfrm_calibration}
+\alias{extract_mfrm_calibration}
+\alias{review_mfrm_calibration}
+\alias{update.mfrm_calibration}
 \alias{save_mfrm_calibration}
 \alias{load_mfrm_calibration}
 \alias{score_mfrm_calibration}
@@ -24,13 +25,7 @@ extract_mfrm_calibration(
 
 review_mfrm_calibration(calibration)
 
-validate_mfrm_calibration(calibration, validated_at_utc = NULL)
-
-freeze_mfrm_calibration(calibration, frozen_at_utc = NULL)
-
-supersede_mfrm_calibration(calibration, record_id, superseded_at_utc = NULL)
-
-retire_mfrm_calibration(calibration, record_id, retired_at_utc = NULL)
+\method{update}{mfrm_calibration}(object, status, record_id = NULL, at_utc = NULL, ...)
 
 save_mfrm_calibration(calibration, file, overwrite = FALSE)
 
@@ -77,13 +72,20 @@ procedural evidence but leaves acceptable numerical movement to the user.}
 
 \item{calibration}{An \code{mfrm_calibration} object.}
 
-\item{validated_at_utc, frozen_at_utc}{Optional RFC3339 UTC timestamps for
-reproducible lifecycle records. Omit them to use the current time.}
+\item{object}{An \code{mfrm_calibration} object for \code{update()}.}
+
+\item{status}{Required target state for \code{update()}: \code{"validated"}, \code{"frozen"},
+\code{"superseded"}, or \code{"retired"}. Only documented lifecycle transitions are
+allowed; changing the entry point does not allow thawing or editing a
+frozen calibration.}
 
 \item{record_id}{A nonempty identifier for a terminal superseded or retired
 record. It must differ from the frozen parent identifier.}
 
-\item{superseded_at_utc, retired_at_utc}{Optional RFC3339 UTC timestamps.}
+\item{at_utc}{Optional RFC3339 UTC timestamp for the requested transition.
+Omit it to use the current time.}
+
+\item{...}{Additional arguments to \code{update()} are rejected.}
 
 \item{file}{A path ending in \code{.rds}.}
 
@@ -122,8 +124,8 @@ SD and representable positive variance. A supplied prior automatically
 receives numerical scoring checks and does not modify the frozen artifact.
 Legacy artifacts with discrete grid-endpoint intervals require re-extraction
 before using this option. The prior is common to all scored persons;
-covariate-dependent overrides are not supported. Two-family GPCM format 6
-requires \code{scoring_prior = NULL} and retains the fixed N(0,1) prior.}
+covariate-dependent overrides are not supported. Two-family GPCM formats 6 and 7
+require \code{scoring_prior = NULL} and retains the fixed N(0,1) prior.}
 
 \item{cut_scores}{Optional named, strictly increasing finite ability cuts
 for \code{score_mfrm_calibration()}. Ordinary RSM/PCM with unit weights and
@@ -134,9 +136,8 @@ uncertainty. Unscored Persons remain unavailable. Cut names do not establish
 CEFR alignment. See \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for interpretation and reporting.}
 }
 \value{
-\code{extract_mfrm_calibration()}, \code{validate_mfrm_calibration()},
-\code{freeze_mfrm_calibration()}, \code{supersede_mfrm_calibration()},
-\code{retire_mfrm_calibration()}, and \code{load_mfrm_calibration()} return an
+\code{extract_mfrm_calibration()}, \code{update()}, and
+\code{load_mfrm_calibration()} return an
 \code{mfrm_calibration}. \code{review_mfrm_calibration()} returns a data frame of
 structured refusals, with zero rows for an acceptable object.
 \code{save_mfrm_calibration()} invisibly returns the normalized path.
@@ -158,8 +159,10 @@ two-family GPCM MML retains a fixed N(0,1) prior and its own source checks.
 RSM/PCM and shared-owner GPCM JML support portable post-hoc EAP with a
 standard-normal reference prior; explicit corrected GPCM JML preserves its
 correction order and uses adjusted-equation checks, as described below.
-\code{\link[=validate_mfrm_calibration]{validate_mfrm_calibration()}} and \code{\link[=freeze_mfrm_calibration]{freeze_mfrm_calibration()}} are separate,
-fail-closed transitions. Only a frozen artifact can be passed to
+\code{update(calibration, status = "validated")} and
+\code{update(calibration, status = "frozen")} are separate, fail-closed transitions.
+They return a new object without overwriting the input or a saved file.
+Only a frozen artifact can be passed to
 \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}}.
 }
 \details{
@@ -178,27 +181,30 @@ locations and log slopes are centered; the second owner's locations and
 slopes remain free. Both fitting engines retain their fixed or adaptive
 scoring algorithm. Source identity/convergence and finer-integration checks
 must pass; review-only sources cannot be exported for frozen scoring.
+Extended additive/step/location roles use format 7, with explicit named
+slope reference and noncentered location facet; format 6 keeps its original
+meaning. All other location facets and each declared step set are centered.
 No separate \code{quadrature_review} is accepted for this route. The file contains
 component slopes and observed facet combinations, without training responses,
 Person estimates or an executable fit. Known levels may form new combinations;
-\code{row_dispositions$ObservedContext} identifies whether each pair occurred in
+\code{row_dispositions$ObservedContext} identifies whether each full facet context occurred in
 calibration. New combinations are model-based, not empirically validated.
 Prior overrides and \code{event_id} extensions are unsupported; repeated Person-
 facet cells are rejected. Facet names must not collide with scoring/disposition
 columns (\code{Person}, \code{Score}, \code{Weight}, \code{InputRow}, \code{EventId}, \code{Disposition},
 \code{ReasonCode}, \code{CalibrationId}, \code{ObservedContext}).
 
-For format 6, use the same extract, validate, freeze, save, load and score
+For formats 6 and 7, use the same extract, validate, freeze, save, load and score
 functions as below. Each new batch must pass its own integration checks;
 validation and freezing do not establish sampling coverage, global
 identification, boundary absence or population transport. Posterior
-intervals exclude calibration uncertainty. Older readers refuse format 6;
-existing formats 1--5 keep their original interpretation.
+intervals exclude calibration uncertainty. Readers without format 7 support
+refuse it explicitly; existing formats 1--6 keep their original interpretation.
 RSM/PCM JML uses file format 3, with unit weights, no anchors or interactions,
 a finite identified source and a post-hoc N(0,1) reference prior. This prior
 is not estimated by JML. Estimated-population RSM/PCM and latent regression
 use fitted-object routes; other structures follow their documented capabilities.
-See \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}}.
+See \code{mfrmr_output_guide("calibration_capabilities")}.
 
 One-family GPCM MML extraction freshly evaluates the native fit's local likelihood,
 gradient, unregularized information and source-integration stability using

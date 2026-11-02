@@ -177,8 +177,10 @@ test_that("legacy summaries cannot retain invalid coverage or stale MCSE", {
   expect_true(any(grepl("Legacy point comparisons", s$notes)))
   expect_equal(assess_mfrm_recovery(object)$metric_review$RMSE, s$recovery_summary$RMSE)
   expect_true(any(grepl("Legacy point comparisons", assess_mfrm_recovery(object)$notes)))
-  expect_equal(plot(object, draw = FALSE)$data$plot_table$Value, s$recovery_summary$RMSE)
-  expect_true(any(grepl("Legacy point comparisons", plot(object, draw = FALSE)$data$notes)))
+  p_legacy <- plot(object, draw = FALSE)
+  expect_s3_class(p_legacy, "ggplot")
+  expect_equal(plot_data(p_legacy, "plot_table")$Value, s$recovery_summary$RMSE)
+  expect_true(any(grepl("Legacy point comparisons", attr(p_legacy, "mfrmr_plot_data")$data$notes)))
   expect_error(plot(object, type = "coverage", draw = FALSE), "No finite coverage")
 })
 
@@ -204,7 +206,8 @@ test_that("identified zero bias is not an adequacy pass and reviews retain denom
   expect_match(printed, "zero by construction")
   expect_equal(summary(object)$recovery_targets, tibble::as_tibble(targets))
   p <- plot(object, draw = FALSE)
-  expect_equal(p$data$availability_table$CoverageAvailabilityRate, 1)
+  expect_s3_class(p, "ggplot")
+  expect_equal(plot_data(p, "availability_table")$CoverageAvailabilityRate, 1)
 })
 
 test_that("named recovery thresholds keep their parameter-specific meaning", {

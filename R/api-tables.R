@@ -140,6 +140,9 @@
 #'   [pairwise_icc_table()], [pairwise_kappa_table()], [gwet_ac2_table()],
 #'   [krippendorff_alpha_table()], [mfrmr_visual_diagnostics]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("interrater_agreement_table", run.dontrun = TRUE)
+#' \dontrun{
 #' library(mfrmr)
 #'
 #' # Saved synthetic MML/RSM analysis of example_operational.
@@ -154,6 +157,7 @@
 #' # N is the number of matched ratings; Exact is the fraction with identical scores
 #' # MeanDiff = Rater1 minus Rater2: positive means Rater1 assigned higher scores
 #' # These observed-score comparisons are distinct from fitted rater severity
+#' }
 #' @export
 interrater_agreement_table <- function(fit,
                                        diagnostics = NULL,
@@ -167,7 +171,7 @@ interrater_agreement_table <- function(fit,
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
   if (is.null(diagnostics)) {
-    diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+    diagnostics <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "legacy")
   }
   if (is.null(diagnostics$obs) || nrow(diagnostics$obs) == 0) {
     stop("`diagnostics$obs` is empty. Run diagnose_mfrm() first.")
@@ -329,6 +333,9 @@ interrater_agreement_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [interrater_agreement_table()], [plot(x, type = "facets_chisq")][plot.mfrm_fit]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("facets_chisq_table", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -337,6 +344,7 @@ interrater_agreement_table <- function(fit,
 #' summary(chi)
 #' p_chi <- plot(chi, draw = FALSE)
 #' p_chi$data$plot
+#' }
 #' @export
 facets_chisq_table <- function(fit,
                                diagnostics = NULL,
@@ -488,6 +496,9 @@ facets_chisq_table <- function(fit,
 #' @seealso [diagnose_mfrm()], [displacement_table()], [fair_average_table()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("unexpected_response_table", run.dontrun = TRUE)
+#' \dontrun{
 #' library(mfrmr)
 #' # Saved synthetic MML/RSM analysis of example_operational.
 #' # For your own data, fit a model first; see ?fit_mfrm.
@@ -501,6 +512,7 @@ facets_chisq_table <- function(fit,
 #' unexpected$table   # Only the five highest-ranked cases
 #' plot(unexpected)
 #' # The rule is exploratory: inspect the scoring context before changing a rating
+#' }
 #' @section Saved-result reuse:
 #' The returned `fit_identity` records the fitted analysis for reuse with
 #' reports and exports. Recreate older results from the saved fit and matching
@@ -925,7 +937,7 @@ fair_average_table <- function(fit,
       "facet-measure SEs, not fair-average SEs. Use `fair_se = TRUE` ",
       "to request structural delta-method fair-average SEs for non-person ",
       "rows when the MML observed-information Hessian is available. ",
-      "See `gpcm_capability_matrix()` for the current support contract."
+      "See `mfrmr_output_guide(\"gpcm_capabilities\")` for the current support contract."
     )
   }
   if (!is.null(reference_plan)) {
@@ -989,6 +1001,9 @@ fair_average_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [fair_average_table()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("displacement_table", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -997,6 +1012,7 @@ fair_average_table <- function(fit,
 #' summary(disp)
 #' p_disp <- plot(disp, draw = FALSE)
 #' p_disp$data$plot
+#' }
 #' @section Saved-result reuse:
 #' The returned `fit_identity` records the fitted analysis for reuse with
 #' reports and exports. Recreate older results from the saved fit and matching
@@ -1131,6 +1147,9 @@ displacement_table <- function(fit,
 #' @seealso [diagnose_mfrm()], [rating_scale_table()], [describe_mfrm_data()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("measurable_summary_table", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -1139,6 +1158,7 @@ displacement_table <- function(fit,
 #' summary(t5)
 #' p_t5 <- plot(t5, draw = FALSE)
 #' p_t5$data$plot
+#' }
 #' @export
 measurable_summary_table <- function(fit, diagnostics = NULL) {
   if (!inherits(fit, "mfrm_fit")) {
@@ -1579,6 +1599,9 @@ rating_scale_table <- function(fit,
 #' @seealso [estimate_bias()], [unexpected_after_bias_table()], [build_fixed_reports()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("bias_count_table", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -1599,6 +1622,7 @@ rating_scale_table <- function(fit,
 #'     palette = c(count = "#2b8cbe", low = "#cb181d"),
 #'     label_angle = 45
 #'   )
+#' }
 #' }
 #' @export
 bias_count_table <- function(bias_results,
@@ -1800,6 +1824,9 @@ bias_count_table <- function(bias_results,
 #' @seealso [estimate_bias()], [unexpected_response_table()], [bias_count_table()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("unexpected_after_bias_table", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -1810,6 +1837,7 @@ bias_count_table <- function(bias_results,
 #' summary(t10)
 #' p_t10 <- plot(t10, draw = FALSE)
 #' p_t10$data$plot
+#' }
 #' @section Saved-result reuse:
 #' The returned `fit_identity` records the fitted analysis for reuse with
 #' reports and exports. Recreate older results from the saved fit and matching
@@ -2870,197 +2898,8 @@ table3_iteration_report <- function(fit,
 #' t6 <- subset_connectivity_report(fit)
 #' @keywords internal
 #' @noRd
-build_subset_connectivity_edges <- function(fit, nodes_tbl, keep_subsets) {
-  data <- as.data.frame(fit$prep$data %||% data.frame(), stringsAsFactors = FALSE)
-  source_cols <- fit$config$source_columns %||% list()
-  person_col <- if ("Person" %in% names(data)) "Person" else as.character(source_cols$person)
-  facet_cols <- as.character(fit$prep$facet_names %||% fit$config$facet_names %||% source_cols$facets %||% character(0))
-  cols <- c(person_col, facet_cols)
-  cols <- cols[nzchar(cols)]
-  if (!is.data.frame(data) || nrow(data) == 0L || length(cols) < 2L ||
-      !all(cols %in% names(data)) || !is.data.frame(nodes_tbl) ||
-      nrow(nodes_tbl) == 0L || !"Node" %in% names(nodes_tbl)) {
-    return(data.frame())
-  }
-  node_lookup <- nodes_tbl[, intersect(c("Node", "Subset", "Facet", "Level"), names(nodes_tbl)), drop = FALSE]
-  node_lookup$Node <- as.character(node_lookup$Node)
-  if ("Subset" %in% names(node_lookup)) {
-    node_lookup$Subset <- suppressWarnings(as.integer(node_lookup$Subset))
-    node_lookup <- node_lookup[node_lookup$Subset %in% keep_subsets, , drop = FALSE]
-  }
-  if (nrow(node_lookup) == 0L) return(data.frame())
+NULL
 
-  long <- do.call(rbind, lapply(cols, function(col) {
-    data.frame(
-      Row = seq_len(nrow(data)),
-      Facet = col,
-      Level = as.character(data[[col]]),
-      stringsAsFactors = FALSE
-    )
-  }))
-  long <- long[!is.na(long$Level) & nzchar(long$Level), , drop = FALSE]
-  long <- merge(
-    long,
-    node_lookup[, c("Facet", "Level", "Node", "Subset"), drop = FALSE],
-    by = c("Facet", "Level"),
-    all.x = FALSE,
-    all.y = FALSE
-  )
-  if (nrow(long) == 0L) return(data.frame())
-  split_rows <- split(long, long$Row)
-  edge_list <- lapply(split_rows, function(row_tbl) {
-    row_tbl <- row_tbl[!duplicated(row_tbl$Node), , drop = FALSE]
-    row_tbl <- row_tbl[order(row_tbl$Node), , drop = FALSE]
-    if (nrow(row_tbl) < 2L) return(NULL)
-    cmb <- utils::combn(seq_len(nrow(row_tbl)), 2L)
-    from <- row_tbl[cmb[1, ], , drop = FALSE]
-    to <- row_tbl[cmb[2, ], , drop = FALSE]
-    data.frame(
-      Subset = from$Subset,
-      From = from$Node,
-      To = to$Node,
-      FromFacet = from$Facet,
-      FromLevel = from$Level,
-      ToFacet = to$Facet,
-      ToLevel = to$Level,
-      stringsAsFactors = FALSE
-    )
-  })
-  edges <- do.call(rbind, edge_list[!vapply(edge_list, is.null, logical(1))])
-  if (!is.data.frame(edges) || nrow(edges) == 0L) return(data.frame())
-  edges |>
-    dplyr::group_by(
-      .data$Subset, .data$From, .data$To, .data$FromFacet, .data$FromLevel,
-      .data$ToFacet, .data$ToLevel
-    ) |>
-    dplyr::summarise(Weight = dplyr::n(), .groups = "drop") |>
-    dplyr::arrange(.data$Subset, dplyr::desc(.data$Weight), .data$From, .data$To) |>
-    as.data.frame(stringsAsFactors = FALSE)
-}
-
-table6_subsets_listing <- function(fit,
-                                   diagnostics = NULL,
-                                   top_n_subsets = NULL,
-                                   min_observations = 0) {
-  signal_legacy_name_deprecation(
-    old_name = "table6_subsets_listing",
-    new_name = "subset_connectivity_report",
-    suppress_if_called_from = "subset_connectivity_report"
-  )
-  if (!inherits(fit, "mfrm_fit")) {
-    stop("`fit` must be an mfrm_fit object from fit_mfrm().")
-  }
-  if (is.null(diagnostics)) {
-    diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
-  }
-
-  mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "subset_connectivity_report()")
-
-  summary_tbl <- if (!is.null(diagnostics$subsets$summary)) {
-    as.data.frame(diagnostics$subsets$summary, stringsAsFactors = FALSE)
-  } else {
-    data.frame()
-  }
-  nodes_tbl <- if (!is.null(diagnostics$subsets$nodes)) {
-    as.data.frame(diagnostics$subsets$nodes, stringsAsFactors = FALSE)
-  } else {
-    data.frame()
-  }
-
-  source_subsets <- nrow(summary_tbl)
-  if (nrow(summary_tbl) == 0 || nrow(nodes_tbl) == 0) {
-    return(list(
-      summary = summary_tbl,
-      listing = data.frame(),
-      nodes = nodes_tbl,
-      edges = data.frame(),
-      settings = list(
-        top_n_subsets = if (is.null(top_n_subsets)) NA_integer_ else max(1L, as.integer(top_n_subsets)),
-        min_observations = as.numeric(min_observations),
-        source_subsets = source_subsets,
-        retained_subsets = 0L,
-        is_disjoint = FALSE
-      )
-    ))
-  }
-
-  summary_tbl$Subset <- suppressWarnings(as.integer(summary_tbl$Subset))
-  summary_tbl$Observations <- suppressWarnings(as.numeric(summary_tbl$Observations))
-  total_obs <- sum(summary_tbl$Observations, na.rm = TRUE)
-  summary_tbl$ObservationPercent <- ifelse(
-    is.finite(total_obs) && total_obs > 0,
-    100 * summary_tbl$Observations / total_obs,
-    NA_real_
-  )
-  summary_tbl <- summary_tbl |>
-    dplyr::arrange(dplyr::desc(.data$Observations), .data$Subset)
-
-  min_observations <- as.numeric(min_observations)
-  if (is.finite(min_observations) && min_observations > 0) {
-    summary_tbl <- summary_tbl |>
-      dplyr::filter(.data$Observations >= min_observations)
-  }
-  if (!is.null(top_n_subsets)) {
-    summary_tbl <- summary_tbl |>
-      dplyr::slice_head(n = max(1L, as.integer(top_n_subsets)))
-  }
-
-  keep_subsets <- unique(summary_tbl$Subset)
-  nodes_tbl <- nodes_tbl |>
-    dplyr::mutate(Subset = suppressWarnings(as.integer(.data$Subset))) |>
-    dplyr::filter(.data$Subset %in% keep_subsets)
-
-  listing_tbl <- if (nrow(nodes_tbl) == 0) {
-    data.frame()
-  } else {
-    nodes_tbl |>
-      dplyr::group_by(.data$Subset, .data$Facet) |>
-      dplyr::summarise(
-        LevelsN = dplyr::n_distinct(.data$Level),
-        Levels = paste(sort(unique(as.character(.data$Level))), collapse = ", "),
-        .groups = "drop"
-      ) |>
-      dplyr::left_join(
-        summary_tbl |>
-          dplyr::select("Subset", "Observations", "ObservationPercent"),
-        by = "Subset"
-      ) |>
-      dplyr::group_by(.data$Facet) |>
-      dplyr::mutate(MaxLevelsN = max(.data$LevelsN, na.rm = TRUE)) |>
-      dplyr::ungroup() |>
-      dplyr::mutate(
-        Ruler = purrr::map2_chr(
-          .data$LevelsN,
-          .data$MaxLevelsN,
-          function(levels_n, max_levels_n) {
-            width <- 20L
-            if (!is.finite(max_levels_n) || max_levels_n <= 0 || !is.finite(levels_n)) {
-              return("")
-            }
-            fill <- as.integer(round(width * levels_n / max_levels_n))
-            fill <- min(width, max(1L, fill))
-            paste0("[", strrep("=", fill), strrep(".", width - fill), "]")
-          }
-        )
-      ) |>
-      dplyr::select(-"MaxLevelsN") |>
-      dplyr::arrange(.data$Subset, .data$Facet)
-  }
-
-  list(
-    summary = as.data.frame(summary_tbl, stringsAsFactors = FALSE),
-    listing = as.data.frame(listing_tbl, stringsAsFactors = FALSE),
-    nodes = as.data.frame(nodes_tbl, stringsAsFactors = FALSE),
-    edges = build_subset_connectivity_edges(fit, as.data.frame(nodes_tbl, stringsAsFactors = FALSE), keep_subsets),
-    settings = list(
-      top_n_subsets = if (is.null(top_n_subsets)) NA_integer_ else max(1L, as.integer(top_n_subsets)),
-      min_observations = min_observations,
-      source_subsets = source_subsets,
-      retained_subsets = nrow(summary_tbl),
-      is_disjoint = nrow(summary_tbl) > 1
-    )
-  )
-}
 
 #' Build a legacy-compatible Table 6.2 facet-statistics graphic summary
 #'
@@ -3251,15 +3090,6 @@ table6_2_facet_statistics <- function(fit,
       marker_legend = c(M = "mean", S = "+/-1 SD", Q = "+/-2 SD", X = "+/-3 SD")
     )
   )
-}
-
-closest_theta_for_target <- function(theta, y, target) {
-  if (length(theta) == 0 || length(y) == 0 || !is.finite(target)) return(NA_real_)
-  ok <- is.finite(theta) & is.finite(y)
-  if (!any(ok)) return(NA_real_)
-  theta <- theta[ok]
-  y <- y[ok]
-  theta[which.min(abs(y - target))]
 }
 
 has_marginal_fit_bundle <- function(diagnostics) {
@@ -3988,19 +3818,6 @@ build_data_quality_quality_flags <- function(summary_tbl,
   out$SeverityRank <- NULL
   row.names(out) <- NULL
   out
-}
-
-empty_data_quality_quality_overview <- function() {
-  data.frame(
-    Area = character(0),
-    Status = character(0),
-    Count = integer(0),
-    Unit = character(0),
-    PercentOfData = numeric(0),
-    Message = character(0),
-    NextStep = character(0),
-    stringsAsFactors = FALSE
-  )
 }
 
 build_data_quality_quality_overview <- function(summary_tbl,
@@ -5196,7 +5013,7 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' [export_mfrm_bundle()] for file handoff. Use
 #' `facets_output_file_bundle()` for its native graph/observation-row contract.
 #' Its score file is not the element-level FACETS Scorefile format; use
-#' [read_facets_fit_table()] to import actual FACETS element output.
+#' [read_facets_results()] to import actual FACETS element output.
 #'
 #' @section GPCM boundary:
 #' For `GPCM`, graph output and package-native scorefile output are
@@ -5214,8 +5031,8 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' The scorefile also carries explicit score-side caveat columns. It is not a
 #' FACETS score-side equivalence file, does not export FACETS-equivalent
 #' score-side standard errors, and does not establish an operational
-#' score-scale decision. Use [gpcm_capability_matrix()] with `view = "scores"` and
-#' [gpcm_capability_matrix()] for the current scope.
+#' score-scale decision. Use `mfrmr_output_guide("gpcm_capabilities", view = "scores")` and
+#' `mfrmr_output_guide("gpcm_capabilities")` ([mfrmr_gpcm_scope]) for the current scope.
 #'
 #' @section Typical workflow:
 #' 1. Fit and diagnose model.
@@ -6179,9 +5996,11 @@ infer_facet_names <- function(diagnostics) {
 #' Legacy-compatible residual diagnostics can be inspected in two ways:
 #' 1) overall residual PCA on the person x combined-facet matrix
 #' 2) facet-specific residual PCA on person x facet-level matrices
-#'
 #' @param diagnostics Output from [diagnose_mfrm()] or [fit_mfrm()].
-#' @param mode `"overall"`, `"facet"`, or `"both"`.
+#' @param mode For `analyze_residual_pca()`: `"overall"`, `"facet"`, or `"both"`.
+#'
+#' For `plot()`: `"overall"` (default) or `"facet"`. Do not also supply `mode`
+#'   when using a prefixed `type` such as `"facet_scree"`.
 #' @param facets Optional subset of facets. This selects the facet-specific
 #'   analyses and the facets combined to define columns in the overall PCA.
 #' @param pca_max_factors Maximum number of components retained for loadings,
@@ -6200,9 +6019,7 @@ infer_facet_names <- function(diagnostics) {
 #'   diagnostics. See Model-generated reference below for restrictions.
 #' @param seed Optional integer seed for reproducible simulation. When supplied,
 #'   the caller's random-number state is restored after the calculation.
-#'
-#' @details
-#' The function works on standardized residual structures derived from
+#' @details The function works on standardized residual structures derived from
 #' [diagnose_mfrm()]. When a fitted object from [fit_mfrm()] is supplied,
 #' diagnostics are computed internally.
 #'
@@ -6266,7 +6083,6 @@ infer_facet_names <- function(diagnostics) {
 #' desired tables separately with [utils::write.csv()]. [as_ggplot()] converts
 #' a saved plot payload without redoing PCA. A blank unavailable plot is not
 #' evidence of an absence of residual structure.
-#'
 #' @section Interpreting output:
 #' Use `overall_table` first:
 #' - early components with noticeably larger eigenvalues or proportions
@@ -6281,7 +6097,6 @@ infer_facet_names <- function(diagnostics) {
 #'
 #' Finally, inspect loadings via [plot(x, type = "residual_pca")][plot.mfrm_fit] to identify which
 #' variables/elements drive each component.
-#'
 #' @section Model-generated reference:
 #' `parallel_method = "model_bootstrap"` is an exploratory parametric-bootstrap
 #' reference for native RSM/PCM MML fits with a fixed standard-normal population,
@@ -6318,7 +6133,6 @@ infer_facet_names <- function(diagnostics) {
 #' replicates nor this algorithm establishes calibrated false-flag rates or
 #' proves unidimensionality. Inspect convergence, quadrature sensitivity,
 #' overlap and competing dependence explanations before substantive use.
-#'
 #' @section Dimensionality and network follow-up:
 #' Checking a one-dimensional model does not require fitting a multidimensional
 #' alternative first. Residual structure can also reflect testlet, rater or
@@ -6330,9 +6144,7 @@ infer_facet_names <- function(diagnostics) {
 #' decision is supplied here. Residual communities would describe remaining
 #' associations, not automatically latent dimensions. See
 #' `vignette("mfrmr-visual-diagnostics")` for alternatives and their scope.
-#'
-#' @references
-#' The residual-PCA idea follows the Rasch residual-structure literature,
+#' @references The residual-PCA idea follows the Rasch residual-structure literature,
 #' especially Linacre's discussions of principal components of Rasch residuals.
 #' The current `mfrmr` implementation should be interpreted as an exploratory
 #' extension for many-facet workflows rather than as a direct reproduction of a
@@ -6382,15 +6194,12 @@ infer_facet_names <- function(diagnostics) {
 #'   for research. *Language Testing*, 38(1), 6-40.
 #' - Tseng, W.-T. (2016). Measuring English vocabulary size via computerized
 #'   adaptive testing. *Computers & Education*, 97, 69-85.
-#'
 #' @section Typical workflow:
 #' 1. Fit model and run [diagnose_mfrm()] with `residual_pca = "none"` or `"both"`.
 #' 2. Call `analyze_residual_pca(..., mode = "both")`.
 #' 3. Review `summary(pca)`, then plot scree/loadings.
 #' 4. Cross-check with fit/misfit diagnostics before conclusions.
-#'
-#' @return
-#' A named list with:
+#' @return A named list with:
 #' - `mode`: resolved mode used for computation
 #' - `facet_names`: facets analyzed
 #' - `overall`: overall PCA bundle (or `NULL`)
@@ -6411,10 +6220,8 @@ infer_facet_names <- function(diagnostics) {
 #'   `PrimaryReportingEligible`, `ReportingUse`, and `DecisionUse`:
 #'   machine-readable guards that keep this route exploratory and prohibit an
 #'   automatic dimensionality or subscore decision.
-#'
 #' @seealso [diagnose_mfrm()], [plot(x, type = "residual_pca")][plot.mfrm_fit], [mfrmr_visual_diagnostics]
-#' @examples
-#' # Saved synthetic JML/RSM analysis of example_core.
+#' @examples # Saved synthetic JML/RSM analysis of example_core.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
@@ -6425,10 +6232,15 @@ infer_facet_names <- function(diagnostics) {
 #' p <- plot(pca, type = "residual_pca", mode = "overall", view = "scree", draw = FALSE)
 #' p$data$plot
 #' head(p$data)
+#' # Optional permutation reference repeats the PCA calculation.
+#' # example("analyze_residual_pca", run.dontrun = TRUE)
+#' \dontrun{
 #' pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE, parallel_reps = 10)
 #' head(pca_pa$overall_table)
+#' }
 #' head(pca$overall_table)
 #' @export
+#' @order 1
 analyze_residual_pca <- function(diagnostics,
                                  mode = c("overall", "facet", "both"),
                                  facets = NULL,
@@ -6462,12 +6274,9 @@ analyze_residual_pca <- function(diagnostics,
     source_fit <- diagnostics
   }
   if (inherits(diagnostics, "mfrm_fit")) {
-    diagnostics <- diagnose_mfrm(
-      diagnostics,
-      diagnostic_mode = "legacy", # PCA uses observation residuals, not marginal-fit tables.
-      residual_pca = "none",
-      pca_max_factors = pca_max_factors
-    )
+    fit <- .mfrm_validate_diagnostic_fit(diagnostics)
+    diagnostics <- list(obs = compute_obs_table(fit),
+                        facet_names = fit$config$facet_names)
   }
 
   if (!is.list(diagnostics)) {
@@ -6699,7 +6508,7 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' @param component Component index for loadings plot.
 #' @param top_n Maximum number of variables shown in loadings plot.
 #' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
-#' @param draw If `TRUE`, draws the plot using base graphics.
+#' @param draw If `TRUE`, prints the `ggplot` object.
 #'
 #' @details
 #' `x` can be either:
@@ -6739,8 +6548,7 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' 2. Build PCA object via [analyze_residual_pca()] (or pass diagnostics directly).
 #' 3. Use scree plot first, then loadings plot for targeted interpretation.
 #'
-#' @return
-#' A named list of plotting data (class `mfrm_plot_data`) with:
+#' @return Invisibly, a `ggplot` object. [plot_data()] returns a named list with:
 #' - `plot`: `"scree"`, `"parallel_scree"`, `"parallel_excess"`, or
 #'   `"loadings"`
 #' - `mode`: `"overall"` or `"facet"`
@@ -6752,7 +6560,9 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #'   machine-readable exploratory-screening guards
 #'
 #' @seealso [analyze_residual_pca()], [diagnose_mfrm()]
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
@@ -6821,44 +6631,6 @@ plot_residual_pca <- function(x,
       } else {
         paste0("Facet-specific permutation comparison: ", facet, ".\n", reference_note)
       }
-      if (isTRUE(draw)) {
-        apply_plot_preset(style)
-        yr <- range(c(tbl$Eigenvalue, tbl$ParallelMean, tbl$ParallelCutoff, rasch_refs), finite = TRUE)
-        plot(
-          x = tbl$Component,
-          y = tbl$Eigenvalue,
-          type = "b",
-          pch = 16,
-          col = style$accent_primary,
-          xlab = "Component",
-          ylab = "Eigenvalue",
-          ylim = yr,
-          main = "",
-          sub = ""
-        )
-        abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
-        abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-        lines(
-          x = tbl$Component,
-          y = tbl$ParallelCutoff,
-          type = "b",
-          pch = 17,
-          lty = 2,
-          col = style$accent_secondary
-        )
-        lines(
-          x = tbl$Component,
-          y = tbl$ParallelMean,
-          type = "l",
-          lty = 3,
-          col = style$accent_tertiary
-        )
-        abline(h = rasch_refs, lty = 2, col = style$neutral)
-        legend("topright", bty = "n", cex = .8,
-          legend = c("Observed residual eigenvalues", q_label, "Parallel mean", rasch_ref_labels),
-          col = c(style$accent_primary, style$accent_secondary, style$accent_tertiary, style$neutral),
-          lty = c(1, 2, 3, 2), pch = c(16, 17, NA, NA))
-      }
       out <- new_mfrm_plot_data(
         "residual_pca",
         list(
@@ -6886,7 +6658,7 @@ plot_residual_pca <- function(x,
           preset = style$name
         )
       )
-      return(invisible(out))
+      return(.mfrm_finalize_ggplot(out, draw = draw))
     }
 
     if (plot_type == "parallel_excess") {
@@ -6895,21 +6667,6 @@ plot_residual_pca <- function(x,
       cutoff_label <- if (model_reference) "Refitted-model cutoff" else "Permutation cutoff"
       subtitle <- paste0("Observed residual eigenvalue minus ", tolower(cutoff_label),
         ".\n", reference_note)
-      if (isTRUE(draw)) {
-        apply_plot_preset(style)
-        cols <- ifelse(tbl$ExceedsParallelCutoff, style$accent_secondary, style$neutral)
-        barplot(
-          height = tbl$ExcessOverParallelCutoff,
-          names.arg = tbl$Component,
-          col = cols,
-          border = style$background,
-          xlab = "Component",
-          ylab = "Eigenvalue minus cutoff",
-          main = "",
-          sub = ""
-        )
-        abline(h = 0, lty = 2, col = style$neutral)
-      }
       out <- new_mfrm_plot_data(
         "residual_pca",
         list(
@@ -6934,24 +6691,7 @@ plot_residual_pca <- function(x,
           preset = style$name
         )
       )
-      return(invisible(out))
-    }
-
-    if (isTRUE(draw)) {
-      apply_plot_preset(style)
-      plot(
-        x = tbl$Component,
-        y = tbl$Eigenvalue,
-        type = "b",
-        pch = 16,
-        col = style$accent_primary,
-        xlab = "Component",
-        ylab = "Eigenvalue",
-        main = ""
-      )
-      abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
-      abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-      abline(h = rasch_refs, lty = 2, col = style$neutral)
+      return(.mfrm_finalize_ggplot(out, draw = draw))
     }
 
     out <- new_mfrm_plot_data(
@@ -6980,7 +6720,7 @@ plot_residual_pca <- function(x,
         preset = style$name
       )
     )
-    return(invisible(out))
+    return(.mfrm_finalize_ggplot(out, draw = draw))
   }
 
   load_tbl <- extract_loading_table(
@@ -6993,22 +6733,6 @@ plot_residual_pca <- function(x,
   load_tbl <- load_tbl[order(load_tbl$Loading), , drop = FALSE]
   title <- paste0(title_suffix, " (Loadings: PC", as.integer(component), ")")
   subtitle <- paste0("Top ", min(nrow(load_tbl), as.integer(top_n)), " absolute loadings")
-
-  if (isTRUE(draw)) {
-    apply_plot_preset(style)
-    cols <- ifelse(load_tbl$Loading >= 0, style$accent_tertiary, style$accent_secondary)
-    barplot(
-      height = load_tbl$Loading,
-      names.arg = load_tbl$Variable,
-      horiz = TRUE,
-      las = 1,
-      col = cols,
-      border = style$background,
-      xlab = "Loading",
-      main = ""
-    )
-    abline(v = 0, lty = 2, col = style$neutral)
-  }
 
   out <- new_mfrm_plot_data(
     "residual_pca",
@@ -7035,7 +6759,7 @@ plot_residual_pca <- function(x,
       preset = style$name
     )
   )
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 bias_person_screen_note <- function(fit = NULL) {
@@ -7115,7 +6839,7 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' from the main-effects model: a specific rater-criterion (or higher-order)
 #' combination produces scores that are consistently higher or lower than
 #' predicted by the main effects alone.  For example, Rater A might be
-#' unexpectedly harsh on Criterion 2 despite being lenient overall.
+#' unexpectedly severe on Criterion 2 despite being lenient overall.
 #'
 #' Mathematically, the bias term \eqn{b_{jc}} for rater \eqn{j} on
 #' criterion \eqn{c} modifies the linear predictor:
@@ -7330,6 +7054,9 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' @seealso [interaction_effect_table()], [build_fixed_reports()],
 #'   [build_apa_outputs()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("estimate_bias", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -7355,6 +7082,7 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' extreme_bias <- estimate_bias(fit, diag, "Rater", "Criterion", xtreme = .5)
 #' head(extreme_bias$table[, c("Bias Size", "PrimaryBias", "BiasStatus", "SEBasis")])
 #'
+#' }
 #' @section References:
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
 #'   (FACETS Table 13 corresponds to the bias / interaction
@@ -7377,6 +7105,7 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' diagnostics using the original screening options; no model refit is needed.
 #' See [mfrmr_compatibility_layer] for migration instructions.
 #' @export
+#' @order 1
 estimate_bias <- function(fit,
                           diagnostics,
                           facet_a = NULL,
@@ -7591,6 +7320,9 @@ estimate_bias <- function(fit,
 #' @seealso [estimate_bias()], [build_apa_outputs()], [bias_interaction_report()],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("build_fixed_reports", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -7611,6 +7343,7 @@ estimate_bias <- function(fit,
 #'     palette = c(pos = "#1b9e77", neg = "#d95f02"),
 #'     label_angle = 45
 #'   )
+#' }
 #' }
 #' @export
 build_fixed_reports <- function(bias_results,
@@ -8228,34 +7961,8 @@ table13_bias_plot_export <- function(x,
 #' @noRd
 build_bias_heatmap_data <- function(scatter) {
   empty_matrix <- matrix(numeric(0), nrow = 0L, ncol = 0L)
-  reference_notes <- data.frame(
-    Reference = c(
-      "Linacre (1989); FACETS Table 13 / Table 14 interaction logic",
-      "FACETS Tutorial 3: bias / interaction report",
-      "mfrmr estimate_bias() screening label"
-    ),
-    Role = c(
-      "Local behavior is contrasted with general facet behavior before substantive interpretation.",
-      "Table 13 highlights conspicuous interaction cells; plots are follow-up aids, not replacements for the table.",
-      "Heatmap cells inherit the conditional screening interpretation of estimate_bias()."
-    ),
-    stringsAsFactors = FALSE
-  )
-  interpretation_guide <- data.frame(
-    Topic = c("Definition", "Cell", "Sign", "Score coding", "Absolute profile",
-      "Flag outline", "Higher-order interactions", "Use of results"),
-    Guidance = c(
-      "Bias here is a conditional interaction departure from the baseline model, not overall rater severity, estimator bias, or evidence of prejudice or unfairness.",
-      "Each cell represents a Facet1 level by Facet2 level interaction row from the bias table.",
-      "Positive Bias Size increases expected coded scores relative to the baseline; negative Bias Size decreases them. This additive-shift sign is distinct from a negatively oriented rater's severity sign.",
-      "Whether a higher coded score favors the performance depends on the rubric; category labels alone do not reverse scoring.",
-      "Mean absolute bias in the facet-profile view measures magnitude and discards direction; return to signed cell rows before interpreting favoring or penalizing.",
-      "Flagged cells crossed at least one current screening rule for |t|, |bias|, or tail probability.",
-      "When the source bias table contains more than two facets, the heatmap keeps the largest absolute bias row for each first-two-facet cell and reports the number of collapsed rows.",
-      "Use the heatmap for pattern recognition and follow-up; it does not upgrade screening statistics to confirmatory inference."
-    ),
-    stringsAsFactors = FALSE
-  )
+  reference_notes <- .mfrmr_table_build_bias_heatmap_data_reference_notes
+  interpretation_guide <- .mfrmr_table_build_bias_heatmap_data_interpretation_guide
 
   scatter <- as.data.frame(scatter %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(scatter) == 0L ||
@@ -8608,6 +8315,7 @@ plot_table13_bias <- function(x,
                               palette = NULL,
                               label_angle = 45,
                               preset = c("standard", "publication", "compact", "monochrome"),
+                              marginal = c("auto", "histogram", "none"),
                               draw = TRUE) {
   signal_legacy_name_deprecation(
     old_name = "plot_table13_bias",
@@ -8615,6 +8323,7 @@ plot_table13_bias <- function(x,
     suppress_if_called_from = "plot_bias_interaction"
   )
   plot <- match.arg(tolower(plot), c("scatter", "ranked", "heatmap", "abs_t_hist", "facet_profile"))
+  marginal <- match.arg(marginal)
   sort_by <- match.arg(tolower(sort_by), c("abs_t", "abs_bias", "prob"))
   top_n <- max(1L, as.integer(top_n))
   label_angle <- suppressWarnings(as.numeric(label_angle[1]))
@@ -8819,224 +8528,16 @@ plot_table13_bias <- function(x,
     CIRequested = isTRUE(show_ci),
     CIAvailable = isTRUE(ci_available),
     CILevel = if (isTRUE(show_ci)) ci_level else NA_real_,
+    Marginal = marginal,
     Preset = style$name,
     stringsAsFactors = FALSE
   )
-
-  if (isTRUE(draw)) {
-    apply_plot_preset(style)
-    if (plot == "scatter") {
-      scatter_plot <- scatter[is.finite(scatter$ObsExpAverage) & is.finite(scatter$BiasSize), , drop = FALSE]
-      if (nrow(scatter_plot) == 0) {
-        plot.new()
-        text(0.5, 0.5, "No data")
-      } else {
-        col <- ifelse(as.logical(scatter_plot$Flag), pal["flag"], pal["normal"])
-        # Widen ylim when CI whiskers are drawn so the plot fits them.
-        ylim <- if (ci_available && all(c("CI_Lower", "CI_Upper") %in% names(scatter_plot))) {
-          range(c(scatter_plot$BiasSize, scatter_plot$CI_Lower,
-                  scatter_plot$CI_Upper, -thr$abs_bias_warn,
-                  thr$abs_bias_warn), finite = TRUE)
-        } else {
-          NULL
-        }
-        plot(
-          x = scatter_plot$ObsExpAverage,
-          y = scatter_plot$BiasSize,
-          pch = 16,
-          col = col,
-          xlab = "Obs-Exp Average",
-          ylab = "Bias Size (logits)",
-          main = "",
-          ylim = ylim
-        )
-        if (ci_available && all(c("CI_Lower", "CI_Upper") %in% names(scatter_plot))) {
-          valid <- is.finite(scatter_plot$CI_Lower) & is.finite(scatter_plot$CI_Upper)
-          if (any(valid)) {
-            segments(
-              x0 = scatter_plot$ObsExpAverage[valid],
-              y0 = scatter_plot$CI_Lower[valid],
-              x1 = scatter_plot$ObsExpAverage[valid],
-              y1 = scatter_plot$CI_Upper[valid],
-              col = col[valid], lwd = 1,
-              lty = ifelse(scatter_plot$CI_Complete[valid], 1, 2)
-            )
-          }
-        }
-        abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
-        abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-        abline(h = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn), lty = c(2, 1, 2), col = c(style$neutral, style$axis, style$neutral))
-        abline(v = 0, lty = 2, col = style$neutral)
-      }
-    } else if (plot == "ranked") {
-      ranked_plot <- ranked[is.finite(suppressWarnings(as.numeric(ranked$BiasSize))), , drop = FALSE]
-      if (nrow(ranked_plot) == 0) {
-        plot.new()
-        text(0.5, 0.5, "No data")
-      } else {
-        sub <- ranked_plot[seq_len(min(nrow(ranked_plot), top_n)), , drop = FALSE]
-        y <- rev(seq_len(nrow(sub)))
-        vals <- rev(suppressWarnings(as.numeric(sub$BiasSize)))
-        lbl <- truncate_axis_label(rev(as.character(sub$Pair)), width = 28L)
-        old_mar <- graphics::par("mar")
-        on.exit(graphics::par(mar = old_mar), add = TRUE)
-        label_width <- max(graphics::strwidth(lbl, units = "inches", cex = .75))
-        if (label_width + graphics::par("mai")[4] + 1.25 >= graphics::par("fin")[1])
-          stop("Bias labels need a wider graphics device; use `draw = FALSE` to inspect the table.", call. = FALSE)
-        graphics::par(mar = c(old_mar[1],
-          max(old_mar[2], label_width / (graphics::par("csi") * graphics::par("mex")) + 1.2),
-          old_mar[3:4]))
-        col <- ifelse(rev(as.logical(sub$Flag)), pal["flag"], pal["normal"])
-        # CI whiskers need their own x-range so the plot fits them.
-        have_sub_ci <- ci_available && all(c("CI_Lower", "CI_Upper") %in% names(sub))
-        ci_lo <- if (have_sub_ci) rev(suppressWarnings(as.numeric(sub$CI_Lower))) else NULL
-        ci_hi <- if (have_sub_ci) rev(suppressWarnings(as.numeric(sub$CI_Upper))) else NULL
-        xlim <- if (have_sub_ci) {
-          range(c(vals, ci_lo, ci_hi, -thr$abs_bias_warn, thr$abs_bias_warn),
-                finite = TRUE)
-        } else {
-          NULL
-        }
-        plot(
-          x = vals,
-          y = y,
-          type = "n",
-          yaxt = "n",
-          ylab = "",
-          xlab = "Bias Size (logits)",
-          main = "",
-          xlim = xlim
-        )
-        abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-        segments(0, y, vals, y, col = style$neutral)
-        if (have_sub_ci) {
-          valid <- is.finite(ci_lo) & is.finite(ci_hi)
-          if (any(valid)) {
-            segments(
-              x0 = ci_lo[valid], y0 = y[valid],
-              x1 = ci_hi[valid], y1 = y[valid],
-              col = col[valid], lwd = 2,
-              lty = ifelse(rev(sub$CI_Complete)[valid], 1, 2)
-            )
-          }
-        }
-        points(vals, y, pch = 16, col = col)
-        axis(side = 2, at = y, labels = lbl, las = las_rank, cex.axis = 0.75)
-        abline(v = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn), lty = c(2, 1, 2), col = c(style$neutral, style$axis, style$neutral))
-      }
-    } else if (plot == "heatmap") {
-      # Cell-color heatmap of bias size for the two interaction facets.
-      # Diverging palette, centred at zero. Flagged cells get a heavy
-      # outline so they remain visible against the colour fill.
-      mat_bias <- heatmap_data$matrix
-      mat_flag <- heatmap_data$flag_matrix
-      a_lvls <- heatmap_data$y_levels
-      b_lvls <- heatmap_data$x_levels
-      if (length(mat_bias) == 0L || length(a_lvls) == 0L ||
-          length(b_lvls) == 0L) {
-        plot.new()
-        text(0.5, 0.5, "No data")
-      } else {
-        # Diverging palette around zero with symmetric range.
-        max_abs <- max(abs(mat_bias), na.rm = TRUE)
-        if (!is.finite(max_abs) || max_abs == 0) max_abs <- 1
-        cols <- grDevices::colorRampPalette(
-          c("#2166AC", "#FFFFFF", "#B2182B")
-        )(101)
-        old_par <- graphics::par()["mar"]
-        on.exit(graphics::par(old_par), add = TRUE)
-        graphics::par(mar = c(max(5, label_angle / 9 + 4),
-                              max(5, max(nchar(a_lvls)) * 0.55 + 2),
-                              3, 1))
-        image(
-          x = seq_len(length(b_lvls)),
-          y = seq_len(length(a_lvls)),
-          z = t(mat_bias),
-          col = cols,
-          zlim = c(-max_abs, max_abs),
-          xaxt = "n", yaxt = "n",
-          xlab = bundle$summary$InteractionFacets[1] %||% "",
-          ylab = "",
-          main = ""
-        )
-        axis(1, at = seq_len(length(b_lvls)), labels = b_lvls,
-                       las = if (label_angle >= 45) 2 else 1,
-                       cex.axis = 0.8)
-        axis(2, at = seq_len(length(a_lvls)), labels = a_lvls,
-                       las = 1, cex.axis = 0.8)
-        # Flagged cells: thick outline so they stand out.
-        for (i in seq_len(nrow(mat_flag))) {
-          for (j in seq_len(ncol(mat_flag))) {
-            if (isTRUE(mat_flag[i, j])) {
-              rect(j - 0.5, i - 0.5, j + 0.5, i + 0.5,
-                             border = pal["flag"], lwd = 2)
-            }
-            v <- mat_bias[i, j]
-            if (is.finite(v)) {
-              text(j, i, sprintf("%.2f", v),
-                             cex = 0.7,
-                             col = if (abs(v) > max_abs * 0.6) "white" else "black")
-            }
-          }
-        }
-      }
-    } else if (plot == "abs_t_hist") {
-      tvals <- abs(suppressWarnings(as.numeric(scatter$t)))
-      tvals <- tvals[is.finite(tvals)]
-      if (length(tvals) == 0) {
-        plot.new()
-        text(0.5, 0.5, "No data")
-      } else {
-        hist(
-          x = tvals,
-          breaks = "FD",
-          col = pal["hist"],
-          border = style$background,
-          xlab = "|t|",
-          main = ""
-        )
-        abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-        abline(v = thr$abs_t_warn, lty = 2, col = style$neutral)
-      }
-    } else {
-      if (nrow(profile) == 0 || !all(c("Facet", "Level", "MeanAbsBias", "FlagRate") %in% names(profile))) {
-        plot.new()
-        text(0.5, 0.5, "No data")
-      } else {
-        prof <- profile |>
-          dplyr::mutate(
-            MeanAbsBias = suppressWarnings(as.numeric(.data$MeanAbsBias)),
-            FlagRate = suppressWarnings(as.numeric(.data$FlagRate))
-          ) |>
-          dplyr::filter(is.finite(.data$MeanAbsBias)) |>
-          dplyr::arrange(.data$Facet, dplyr::desc(.data$MeanAbsBias))
-        if (nrow(prof) == 0) {
-          plot.new()
-          text(0.5, 0.5, "No data")
-        } else {
-          lbl <- truncate_axis_label(paste0(prof$Facet, ": ", prof$Level), width = 34L)
-          cols <- ifelse(is.finite(prof$FlagRate) & prof$FlagRate > 0, pal["flag"], pal["profile"])
-          dotchart(
-            x = prof$MeanAbsBias,
-            labels = lbl,
-            pch = 16,
-            color = cols,
-            cex = 0.8,
-            cex.axis = 0.75,
-            xlab = "Mean |Bias Size| (logits)",
-            main = ""
-          )
-          abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-          abline(v = thr$abs_bias_warn, lty = 2, col = style$neutral)
-        }
-      }
-    }
-  }
 
   out <- new_mfrm_plot_data(
     "table13_bias",
     list(
       plot = plot,
+      marginal = marginal,
       notes = rbind(data.frame(Type = "interpretation", Text = heatmap_data$interpretation_guide$Guidance),
         data.frame(Type = "uncertainty", Text = ci_notes)),
       palette = pal,
@@ -9067,7 +8568,7 @@ plot_table13_bias <- function(x,
       preset = style$name
     )
   )
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 # Human-friendly API aliases (preferred names)

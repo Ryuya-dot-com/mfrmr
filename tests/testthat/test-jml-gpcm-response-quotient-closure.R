@@ -3,7 +3,7 @@ canonical_response_quotient_source <- function(
     second = 2,
     additive_offset = rep(0, 4),
     additive_center = c(0, 0, 0)) {
-  mfrmr:::mfrmr_jml_gpcm_exponential_balance_limit(
+  .mfrmr_research$mfrmr_jml_gpcm_exponential_balance_limit(
     adjacent_design = rbind(
       c(1, 0, -1),
       c(0, 1, -1),
@@ -31,13 +31,13 @@ call_response_quotient_obstruction <- function(source, ...) {
     zero_relation_coefficients = c(1, -1)
   )
   do.call(
-    mfrmr:::mfrmr_jml_gpcm_response_quotient_closure_obstruction,
+    .mfrmr_research$mfrmr_jml_gpcm_response_quotient_closure_obstruction,
     utils::modifyList(defaults, list(...))
   )
 }
 
 test_that("a binary GPCM response-equivalence quotient image is not closed", {
-  result <- mfrmr:::mfrmr_jml_gpcm_response_quotient_binary_counterexample()
+  result <- .mfrmr_research$mfrmr_jml_gpcm_response_quotient_binary_counterexample()
   source <- result$source_exponential_balance
 
   expect_identical(
@@ -130,7 +130,7 @@ test_that("the canonical finite response sequence has the declared limit", {
   expect_true(source$parameter_path_divergent)
 
   finite <- lapply(indices, function(index) {
-    mfrmr:::mfrmr_jml_gpcm_exponential_balance_loglik_at(source, index)
+    .mfrmr_research$mfrmr_jml_gpcm_exponential_balance_loglik_at(source, index)
   })
   expect_true(all(vapply(finite, `[[`, logical(1), "valid")))
   expect_true(all(is.finite(vapply(

@@ -177,6 +177,9 @@
 #' @seealso [plot.mfrm_response_diagnostics()], [mfrm_results()],
 #'   [score_mfrm_random_rater()], [predict.mfrm_testlet()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("mfrm_response_diagnostics", run.dontrun = TRUE)
+#' \dontrun{
 #' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
 #' fit <- example$testlet$fit
 #' residuals <- example$testlet$diagnostics
@@ -185,7 +188,9 @@
 #' residuals$measures
 #' plot(residuals)
 #' mfrm_results(fit, response_diagnostics = residuals, compute = "never")
+#' }
 #' @export
+#' @order 1
 mfrm_response_diagnostics <- function(fit, rows = NULL, group_by = NULL,
     quad_points = fit$settings$quad_points %||% fit$config$estimation_control$quad_points) {
   if (mfrm_has_jml_adjustment(fit)) {
@@ -350,8 +355,10 @@ mfrm_random_rater_response_probabilities <- function(input, calibration, rows, o
 }
 
 #' @rdname mfrm_response_diagnostics
-#' @param object,x A saved response-diagnostics result.
-#' @param ... Unused.
+#' @param object A saved response-diagnostics result.
+#' @param ... For `summary.mfrm_response_diagnostics()`: Unused.
+#'
+#' For `plot()`: Unused; ordinary-model threshold arguments are not accepted.
 #' @export
 summary.mfrm_response_diagnostics <- function(object, ...) {
   list(measures = object$measures, status_counts = table(object$rows$Status), settings = object$settings)

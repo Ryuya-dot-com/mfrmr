@@ -236,12 +236,14 @@ test_that("native CML fits expose conditional covariance and reusable facet inte
     expect_error(mfrm_results(fit, intervals = ci), "plot\\(ci\\).*saveRDS")
     expect_equal(ci$table$Estimate, unname(2 * fit$facets$others$Estimate[1L]))
     expect_equal(ci$covariance, ci$target_jacobian %*% vcov(fit) %*% t(ci$target_jacobian))
-    expect_s3_class(plot(ci, draw = FALSE), "mfrm_plot_data")
-    notes <- plot(ci, draw = FALSE)$data$subtitle
+    p_ci <- plot(ci, draw = FALSE)
+    expect_s3_class(p_ci, "ggplot")
+    expect_s3_class(attr(p_ci, "mfrmr_plot_data"), "mfrm_plot_data")
+    notes <- plot_data(p_ci, "subtitle")
     expect_match(notes, "Conditional information")
     expect_false(grepl("Weak information", notes))
     if (requireNamespace("ggplot2", quietly = TRUE)) {
-      graphic <- ggplot2::ggplot_build(as_ggplot(plot(ci, draw = FALSE)))
+      graphic <- ggplot2::ggplot_build(as_ggplot(p_ci))
       expect_true(all(!is.na(graphic$data[[1L]]$colour)))
       expect_true(all(!is.na(graphic$data[[1L]]$linetype)))
     }

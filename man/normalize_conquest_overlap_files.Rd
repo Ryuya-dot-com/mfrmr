@@ -3,23 +3,6 @@
 \name{normalize_conquest_overlap_files}
 \alias{normalize_conquest_overlap_files}
 \title{Normalize extracted ConQuest overlap files to the \code{mfrmr} review contract}
-\usage{
-normalize_conquest_overlap_files(
-  population_file,
-  item_file,
-  case_file,
-  population_delimiter = c("auto", "comma", "tab", "semicolon", ",", "\\t", ";"),
-  item_delimiter = c("auto", "comma", "tab", "semicolon", ",", "\\t", ";"),
-  case_delimiter = c("auto", "comma", "tab", "semicolon", ",", "\\t", ";"),
-  conquest_population_term = "auto",
-  conquest_population_estimate = "auto",
-  conquest_item_id = "auto",
-  conquest_item_estimate = "auto",
-  conquest_case_person = "auto",
-  conquest_case_estimate = "auto",
-  keep_extra_columns = TRUE
-)
-}
 \arguments{
 \item{population_file}{Path to an extracted ConQuest population-parameter
 table in CSV/TSV/TXT form.}
@@ -70,10 +53,12 @@ standardized identifier and estimate columns.}
 A named list with class \code{mfrm_conquest_overlap_tables}.
 }
 \description{
-Normalize extracted ConQuest overlap files to the \code{mfrmr} review contract
+Use \code{normalize_conquest_overlap_tables(..., input = "files")}.
+The former file-specific entry is no longer exported. This guide retains
+its file format and provenance details.
 }
 \details{
-This helper is a thin file-wrapper around \code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}}.
+The file-input route of \code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}} reads these formats.
 It is intentionally limited to already extracted tabular files and does not
 parse raw ConQuest report text.
 
@@ -82,7 +67,7 @@ The recommended workflow is:
 \item export a bundle for the documented comparison scope with
 \code{\link[=build_conquest_overlap_bundle]{build_conquest_overlap_bundle()}};
 \item extract the relevant ConQuest tables to CSV/TSV/TXT files;
-\item call \code{normalize_conquest_overlap_files()} on those files;
+\item call \code{normalize_conquest_overlap_tables(..., input = "files")};
 \item pass the result to \code{\link[=review_conquest_overlap]{review_conquest_overlap()}}.
 }
 
@@ -125,10 +110,10 @@ utils::write.csv(
   case_path,
   row.names = FALSE
 )
-normalized <- normalize_conquest_overlap_files(
-  population_file = pop_path,
-  item_file = item_path,
-  case_file = case_path,
+normalized <- normalize_conquest_overlap_tables(input = "files", 
+  conquest_population = pop_path,
+  conquest_item_estimates = item_path,
+  conquest_case_eap = case_path,
   conquest_population_term = "Term",
   conquest_population_estimate = "Est",
   conquest_item_id = "Item",

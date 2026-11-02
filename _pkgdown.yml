@@ -3,24 +3,99 @@ url: https://ryuya-dot-com.github.io/mfrmr/
 template:
   bootstrap: 5
 
+figures:
+  bg: "transparent"
+
 development:
-  mode: unreleased
+  mode: auto
 
 articles:
   - title: "Start with a picture"
     navbar: ~
     contents:
+      - articles/mfrmr
       - articles/visual-gallery
   - title: "Analysis guides"
     navbar: "Analysis guides"
     contents:
       - starts_with("mfrmr-")
+      - starts_with("articles/mfrmr-")
 
 redirects:
+  - [NEWS.html, news/index.html]
+  - [reference/plot.apa_table.html, reference/apa_table.html]
+  - [reference/plot.mfrm_anchor_drift.html, reference/detect_anchor_drift.html]
+  - [reference/plot.mfrm_anchor_review.html, reference/review_mfrm_anchors.html]
+  - [reference/plot.mfrm_bias.html, reference/estimate_bias.html]
+  - [reference/plot.mfrm_bias_collection.html, reference/estimate_all_bias.html]
+  - [reference/plot.mfrm_data_description.html, reference/describe_mfrm_data.html]
+  - [reference/plot.mfrm_design_recommendation.html, reference/recommend_mfrm_design.html]
+  - [reference/plot.mfrm_diagnostics.html, reference/diagnose_mfrm.html]
+  - [reference/plot.mfrm_dif_interaction.html, reference/dif_interaction_table.html]
+  - [reference/plot.mfrm_extended_comparison.html, reference/compare_mfrm.html]
+  - [reference/plot.mfrm_facet_dashboard.html, reference/facet_quality_dashboard.html]
+  - [reference/plot.mfrm_facet_equivalence.html, reference/analyze_facet_equivalence.html]
+  - [reference/plot.mfrm_facet_intervals.html, reference/mfrm_facet_intervals.html]
+  - [reference/plot.mfrm_facet_sample_review.html, reference/facet_small_sample_review.html]
+  - [reference/plot.mfrm_facets_results.html, reference/read_facets_results.html]
+  - [reference/plot.mfrm_facets_run.html, reference/run_mfrm_facets.html]
+  - [reference/plot.mfrm_fair_intervals.html, reference/confint.mfrm_fair_average.html]
+  - [reference/plot.mfrm_information.html, reference/compute_information.html]
+  - [reference/plot.mfrm_multivariate_d_comparison.html, reference/mfrm_multivariate_d_compare.html]
+  - [reference/plot.mfrm_network_ergm.html, reference/fit_rater_network.html]
+  - [reference/plot.mfrm_pca.html, reference/mfrm_pca.html]
+  - [reference/plot.mfrm_pooled.html, reference/pool_mfrm_imputed.html]
+  - [reference/plot.mfrm_population_intervals.html, reference/mfrm_population_intervals.html]
+  - [reference/plot.mfrm_posterior_summary.html, reference/read_mfrm_posterior.html]
+  - [reference/plot.mfrm_qc_pipeline.html, reference/run_qc_pipeline.html]
+  - [reference/plot.mfrm_random_rater.html, reference/fit_mfrm_random_rater.html]
+  - [reference/plot.mfrm_random_rater_intervals.html, reference/mfrm_random_rater_intervals.html]
+  - [reference/plot.mfrm_random_rater_scores.html, reference/score_mfrm_random_rater.html]
+  - [reference/plot.mfrm_residual_network.html, reference/mfrm_residual_network.html]
+  - [reference/plot.mfrm_residual_pca.html, reference/analyze_residual_pca.html]
+  - [reference/plot.mfrm_response_diagnostics.html, reference/mfrm_response_diagnostics.html]
+  - [reference/plot.mfrm_response_time_review.html, reference/response_time_review.html]
+  - [reference/plot.mfrm_screening_performance.html, reference/mfrm_screening_performance.html]
+  - [reference/plot.mfrm_screening_sensitivity.html, reference/mfrm_screening_sensitivity.html]
+  - [reference/plot.mfrm_signal_detection.html, reference/evaluate_mfrm_signal_detection.html]
+  - [reference/plot.mfrm_summary_table_bundle.html, reference/build_summary_table_bundle.html]
+  - [reference/plot.mfrm_testlet.html, reference/fit_mfrm_testlet.html]
+  - [reference/plot.mfrm_testlet_scores.html, reference/predict.mfrm_testlet.html]
+  - [reference/summary.apa_table.html, reference/apa_table.html]
+  - [reference/summary.mfrm_anchor_review.html, reference/review_mfrm_anchors.html]
+  - [reference/summary.mfrm_apa_outputs.html, reference/build_apa_outputs.html]
+  - [reference/summary.mfrm_bias.html, reference/estimate_bias.html]
+  - [reference/summary.mfrm_bias_collection.html, reference/estimate_all_bias.html]
+  - [reference/summary.mfrm_data_description.html, reference/describe_mfrm_data.html]
+  - [reference/summary.mfrm_design_recommendation.html, reference/recommend_mfrm_design.html]
+  - [reference/summary.mfrm_facet_dashboard.html, reference/facet_quality_dashboard.html]
+  - [reference/summary.mfrm_linking_review.html, reference/build_linking_review.html]
+  - [reference/summary.mfrm_misfit_casebook.html, reference/build_misfit_casebook.html]
+  - [reference/summary.mfrm_model_choice_review.html, reference/build_model_choice_review.html]
+  - [reference/summary.mfrm_network_review.html, reference/build_mfrm_network_review.html]
+  - [reference/summary.mfrm_peer_review_design_review.html, reference/review_peer_design.html]
+  - [reference/summary.mfrm_person_fit_indices.html, reference/compute_person_fit_indices.html]
+  - [reference/summary.mfrm_plausible_values.html, reference/sample_mfrm_plausible_values.html]
+  - [reference/summary.mfrm_reporting_checklist.html, reference/reporting_checklist.html]
+  - [reference/summary.mfrm_response_time_review.html, reference/response_time_review.html]
+  - [reference/summary.mfrm_summary_table_bundle.html, reference/build_summary_table_bundle.html]
+  - [reference/summary.mfrm_threshold_profiles.html, reference/mfrm_threshold_profiles.html]
+  - [reference/summary.mfrm_unit_prediction.html, reference/predict_mfrm_units.html]
+  - [reference/summary.mfrm_weighting_review.html, reference/build_weighting_review.html]
   - [reference/evaluate_mfrm_recovery.html, reference/simulate_mfrm_recovery.html]
   - [reference/build_peer_review_design_review.html, reference/review_peer_design.html]
-  - [reference/gpcm_score_side_contract.html, reference/gpcm_capability_matrix.html]
-  - [reference/gpcm_runtime_guard_coverage.html, reference/gpcm_capability_matrix.html]
+  - [reference/gpcm_score_side_contract.html, reference/mfrmr_output_guide.html]
+  - [reference/gpcm_runtime_guard_coverage.html, reference/mfrmr_output_guide.html]
+  - [reference/gpcm_capability_matrix.html, reference/mfrmr_gpcm_scope.html]
+  - [reference/mfrm_calibration_capabilities.html, reference/mfrmr_output_guide.html]
+  - [reference/mfrmr_interval_guide.html, reference/mfrmr_output_guide.html]
+  - [reference/visual_reporting_template.html, reference/mfrmr_output_guide.html]
+  - [reference/read_facets_fit_table.html, reference/read_facets_results.html]
+  - [reference/import_mirt_fit.html, reference/import_irt_fit.html]
+  - [reference/import_tam_fit.html, reference/import_irt_fit.html]
+  - [reference/import_erm_fit.html, reference/import_irt_fit.html]
+  - [reference/review_accessors.html, reference/mfrmr_api_migration_030.html]
+  - [reference/mfrmr_api_migration_025.html, reference/mfrmr_api_migration_030.html]
   - [reference/export_mfrm.html, reference/export_mfrm_tables.html]
   - [README.html, index.html]
   - [NEWS.html, news/index.html]
@@ -39,6 +114,7 @@ reference:
       - mfrmr_agreement_data
       - describe_mfrm_data
       - fit_mfrm
+      - fit_mfrm_technical_details
       - summary.mfrm_jeffreys_fit
       - mfrm_fit_extractors
       - mfrm_fit_responses
@@ -48,7 +124,6 @@ reference:
       - mfrm_report
       - export_mfrm_results
       - mfrmr_output_guide
-      - mfrmr_interval_guide
       - mfrmr_workflow_methods
       - mfrmr_methods_reference
 
@@ -70,7 +145,6 @@ reference:
       - review_mfrm_imputations
       - fit_mfrm_imputed
       - pool_mfrm_imputed
-      - plot.mfrm_pooled
 
   - title: "G-theory assessment planning"
     desc: "Separate observed-score variation, project specified future plans, and compare eligible prespecified plans. Start with the G-theory planning article."
@@ -85,7 +159,6 @@ reference:
       - plot.mfrm_dstudy_intervals
       - plot.mfrm_multivariate_d_study
       - mfrm_multivariate_d_compare
-      - plot.mfrm_multivariate_d_comparison
       - mfrm_generalizability
       - mfrm_d_study_main_effects
       - plot.mfrm_d_study
@@ -94,15 +167,12 @@ reference:
     desc: "Review fixed-facet estimates and contrasts, and experimental conditional-normal population intervals, under their respective assumptions."
     contents:
       - mfrm_facet_intervals
-      - plot.mfrm_facet_intervals
       - mfrm_population_intervals
-      - plot.mfrm_population_intervals
 
   - title: "Response probabilities and residuals"
     desc: "Describe observed ratings using each supported model's probability definition, without automatic fit cutoffs."
     contents:
       - mfrm_response_diagnostics
-      - plot.mfrm_response_diagnostics
 
   - title: "Shared random raters"
     desc: "Estimate a rater population and distinguish observed-rater feedback from replacement-rater probabilities."
@@ -110,12 +180,9 @@ reference:
       - fit_mfrm_random_rater
       - score_mfrm_random_rater
       - mfrmr_model_maps
-      - plot.mfrm_random_rater_scores
       - confint.mfrm_random_rater
       - predict.mfrm_random_rater
-      - plot.mfrm_random_rater
       - mfrm_random_rater_intervals
-      - plot.mfrm_random_rater_intervals
 
   - title: "Person-specific testlets"
     desc: "Model local dependence within a Person and score conditionally on fitted calibration."
@@ -123,8 +190,6 @@ reference:
       - fit_mfrm_testlet
       - confint.mfrm_testlet
       - predict.mfrm_testlet
-      - plot.mfrm_testlet
-      - plot.mfrm_testlet_scores
 
   - title: "Person scoring and conditional decisions"
     desc: "Score Persons, report posterior ability-band probabilities, or evaluate future fixed-plan classification accuracy, consistency and conditional precision."
@@ -132,13 +197,11 @@ reference:
       - score_mfrm_persons
       - predict_mfrm_units
       - classification_table
-      - summary.mfrm_unit_prediction
       - sample_mfrm_plausible_values
 
   - title: "Portable fixed calibration"
     desc: "Create, validate, freeze, persist, and apply eligible RSM/PCM or GPCM MML/JML calibrations; review and export later score batches."
     contents:
-      - mfrm_calibration_capabilities
       - mfrm_calibration_workflow
       - mfrm_calibration_methods
       - mfrm_calibration_score_methods
@@ -147,8 +210,7 @@ reference:
     desc: "Relative-slope intervals, model comparisons, and the scope of GPCM workflows."
     contents:
       - compare_mfrm
-      - plot.mfrm_extended_comparison
-      - gpcm_capability_matrix
+      - mfrmr_gpcm_scope
       - bootstrap_mfrm_gpcm
       - mfrm_curve_intervals
       - plot.mfrm_slope_intervals
@@ -164,7 +226,6 @@ reference:
     contents:
       - fit_measures_table
       - facet_quality_dashboard
-      - precision_review
       - precision_review_report
       - measurable_summary_table
       - rating_scale_table
@@ -179,30 +240,17 @@ reference:
       - rater_network_analysis
       - rater_halo_network_analysis
       - fit_rater_network
-      - plot.mfrm_network_ergm
       - fit_rater_accuracy
       - unexpected_response_table
       - displacement_table
       - analyze_residual_pca
       - mfrm_residual_network
-      - plot.mfrm_residual_network
       - q3_statistic
       - compute_person_fit_indices
       - run_qc_pipeline
       - mfrmr_visual_diagnostics
       - mfrmr_plot_migration
-      - plot.mfrm_information
       - plot.mfrm_dif
-      - plot.mfrm_dif_interaction
-      - plot.mfrm_anchor_drift
-      - plot.mfrm_qc_pipeline
-      - plot.mfrm_bias
-      - plot.mfrm_bias_collection
-      - plot.mfrm_residual_pca
-      - plot.mfrm_diagnostics
-      - plot.mfrm_facet_equivalence
-      - plot.mfrm_facet_dashboard
-      - plot.mfrm_response_time_review
 
   - title: "Reporting, tables, and exports"
     desc: "Connect the study question to draft tables, figures, interpretation and saved evidence; see the reporting article for optional sections and model-specific routes."
@@ -217,7 +265,7 @@ reference:
       - export_mfrm_bundle
       - export_mfrm_model
       - read_mfrm_posterior
-      - plot.mfrm_posterior_summary
+      - predict.mfrm_posterior_summary
       - apa_table
       - as_kable
       - as_flextable
@@ -239,9 +287,7 @@ reference:
       - evaluate_mfrm_diagnostic_screening
       - evaluate_mfrm_signal_detection
       - mfrm_screening_performance
-      - plot.mfrm_screening_performance
       - mfrm_screening_sensitivity
-      - plot.mfrm_screening_sensitivity
       - predict_mfrm_population
       - build_mfrm_resampling_spec
       - draw_mfrm_resamples
@@ -251,7 +297,6 @@ reference:
     contents:
       - make_anchor_table
       - review_mfrm_anchors
-      - anchor_review
       - anchor_to_baseline
       - detect_anchor_drift
       - build_equating_chain
@@ -261,7 +306,6 @@ reference:
       - analyze_dff
       - mantel_haenszel_table
       - ordinal_logistic_table
-      - analyze_dif
       - dif_interaction_table
       - dif_report
       - mfrm_dff_methods
@@ -270,32 +314,24 @@ reference:
   - title: "FACETS and related-package migration"
     desc: "FACETS handoff, external-table review, and related package import adapters."
     contents:
-      - facets_positioning_guide
-      - facets_term_crosswalk
-      - facets_feature_coverage
-      - facets_visual_contract
-      - facets_fit_df_guide
+
       - facets_fit_review
       - facets_output_file_bundle
       - facets_output_contract_review
-      - read_facets_fit_table
       - read_facets_results
-      - plot.mfrm_facets_results
-      - import_facets_fit_table
+      - facets_guide
       - run_mfrm_facets
-      - import_mirt_fit
-      - import_tam_fit
-      - import_erm_fit
+      - import_irt_fit
       - mfrmr_compatibility_layer
+      - mfrmr_api_migration_030
 
   - title: "External features and exploratory groups"
     desc: "Review entity-level external attributes and describe exploratory groups."
     contents:
       - mfrm_features
-      - mfrm_cluster_pam
+      - mfrm_cluster
       - mfrm_cluster_hierarchical
       - mfrm_pca
-      - plot.mfrm_pca
       - mfrm_cluster_kmeans
       - mfrm_cluster_imputed
       - mfrm_cluster_compare
@@ -327,7 +363,6 @@ reference:
       - facets_chisq_table
       - fair_average_table
       - confint.mfrm_fair_average
-      - plot.mfrm_fair_intervals
       - interaction_effect_table
       - mfrm_misfit_thresholds
       - mfrm_results_interactive
@@ -336,59 +371,30 @@ reference:
       - normalize_conquest_overlap_exports
       - normalize_conquest_overlap_files
       - normalize_conquest_overlap_tables
-      - plot.apa_table
-      - plot.mfrm_anchor_review
       - plot.mfrm_bundle
-      - plot.mfrm_data_description
       - plot.mfrm_design_evaluation
       - plot.mfrm_diagnostic_screening
       - plot.mfrm_facet_nesting
-      - plot.mfrm_facet_sample_review
-      - plot.mfrm_facets_run
       - plot.mfrm_fit
       - plot.mfrm_recovery_simulation
-      - plot.mfrm_signal_detection
-      - plot.mfrm_summary_table_bundle
       - print.mfrm_apa_text
       - recode_missing_codes
       - recommend_mfrm_design
-      - summary.mfrm_design_recommendation
-      - plot.mfrm_design_recommendation
       - reference_case_benchmark
       - reference_case_review
       - review_conquest_overlap
       - response_time_review
       - shrinkage_report
       - specifications_report
-      - summary.apa_table
-      - summary.mfrm_anchor_review
-      - summary.mfrm_apa_outputs
-      - summary.mfrm_bias
-      - summary.mfrm_bias_collection
       - summary.mfrm_bundle
-      - summary.mfrm_data_description
       - summary.mfrm_design_evaluation
       - summary.mfrm_diagnostic_screening
       - summary.mfrm_diagnostics
-      - summary.mfrm_facet_dashboard
       - summary.mfrm_facets_run
       - summary.mfrm_fit
-      - summary.mfrm_linking_review
-      - summary.mfrm_misfit_casebook
-      - summary.mfrm_model_choice_review
-      - summary.mfrm_network_review
-      - summary.mfrm_peer_review_design_review
-      - summary.mfrm_person_fit_indices
-      - summary.mfrm_plausible_values
       - summary.mfrm_population_prediction
-      - summary.mfrm_reporting_checklist
-      - summary.mfrm_response_time_review
       - summary.mfrm_signal_detection
-      - summary.mfrm_summary_table_bundle
-      - summary.mfrm_threshold_profiles
-      - summary.mfrm_weighting_review
       - unexpected_after_bias_table
-      - visual_reporting_template
       - write_mfrm_residual_file
       - write_mfrm_subset_file
       - launch_mfrmr_viewer

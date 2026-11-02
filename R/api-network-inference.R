@@ -98,9 +98,10 @@
 #' Model network configurations and rater covariates after examining shared
 #' rating coverage with [rater_network_analysis()] or
 #' [rater_halo_network_analysis()]. Estimation uses the optional `ergm` package.
-#'
-#' @param x A rater or halo network result. All eligible pair metrics are used,
+#' @param x For `fit_rater_network()`: A rater or halo network result. All eligible pair metrics are used,
 #'   before graph/plot filtering; missing comparisons never become zero ties.
+#'
+#' For `plot()`: Output from [fit_rater_network()].
 #' @param terms One-sided ERGM formula, for example `~ edges + mutual` for a
 #'   directed network, or `~ edges + nodecov("Experience")`. See
 #'   `ergm::ergmTerm` for terms appropriate to the declared graph.
@@ -118,9 +119,7 @@
 #'   e.g. `~ degree + distance` for an undirected graph. See `ergm::gof.ergm`.
 #' @param gof_control Optional `ergm::control.gof.ergm()` object.
 #' @param seed Optional integer seed; the caller's RNG state is restored.
-#'
-#' @details
-#' This is a binary ERGM, not a valued/signed ERGM or a rating-response model.
+#' @details This is a binary ERGM, not a valued/signed ERGM or a rating-response model.
 #' A coefficient is a conditional network log-odds coefficient for its change
 #' statistic; it is not an MFRM severity, a causal rater effect or an independent
 #' rating-level regression. Thresholds, sampling of raters, overlap and node
@@ -145,7 +144,6 @@
 #' on the chosen network model and adequate estimation. Small rater networks
 #' may not support complex models. Neither mfrmr nor this wrapper validates
 #' arbitrary ERGM specifications or corrects estimated-edge uncertainty.
-#'
 #' @return An `mfrm_network_ergm` object with the backend `fit`, binary `network`,
 #'   complete `dyads`, `nodes`, coefficient/diagnostic/settings tables, backend
 #'   warnings and optional `gof` with long-form simulation tables.
@@ -154,14 +152,12 @@
 #'   approximate pointwise normal intervals without refitting. `plot()` uses
 #'   the originally stored 95% intervals or saved simulation GOF.
 #'   Use [mfrm_report()] and [export_summary_appendix()] for stored reporting.
-#' @references
-#' Lamprianou, I. (2018). Investigation of rater effects using social network
+#' @references Lamprianou, I. (2018). Investigation of rater effects using social network
 #' analysis and exponential random graph models. Educational and Psychological
 #' Measurement, 78, 430--459. doi:10.1177/0013164416689696.
 #' @seealso [rater_network_analysis()], [rater_halo_network_analysis()],
 #'   [plot.mfrm_network_ergm()]
-#' @examples
-#' # Optional integration example (loads additional modelling or rendering packages).
+#' @examples # Optional integration example (loads additional modelling or rendering packages).
 #' # example("fit_rater_network", run.dontrun = TRUE)
 #' \dontrun{
 #' if (requireNamespace("ergm", quietly = TRUE) &&
@@ -181,6 +177,7 @@
 #' }
 #' }
 #' @export
+#' @order 1
 fit_rater_network <- function(x, terms, threshold, relation = c("greater", "less"),
                               node_data = NULL, missing = c("error", "model"),
                               control = NULL, gof = NULL, gof_control = NULL, seed = NULL) {
@@ -304,7 +301,10 @@ print.mfrm_network_ergm <- function(x, ...) {
 
 #' @rdname fit_rater_network
 #' @param object An `mfrm_network_ergm` result.
-#' @param ... Unused; unexpected arguments are rejected by extractors.
+#' @param ... For `summary.mfrm_network_ergm()`: Unused; unexpected arguments are rejected by extractors.
+#'
+#' For `plot()`: For GOF, arguments passed to ergm's `plot.gof`; for coefficients,
+#'   arguments passed to base [graphics::plot()].
 #' @export
 summary.mfrm_network_ergm <- function(object, ...) {
   object[c("settings", "coefficients", "diagnostics", "gof_table", "warnings", "notes")]
@@ -366,40 +366,39 @@ confint.mfrm_network_ergm <- function(object, parm = NULL, level = .95, ...) {
   out
 }
 
-#' Plot ERGM model checks or coefficient intervals
-#' @param x Output from [fit_rater_network()].
+#' @rdname fit_rater_network
+#' @details `plot()` method: Plot ERGM model checks or coefficient intervals
 #' @param type `"coefficients"` or `"gof"` (requires saved GOF).
-#' @param draw Whether to draw; `FALSE` returns plot data only.
-#' @param ... For GOF, arguments passed to ergm's `plot.gof`; for coefficients,
-#'   arguments passed to base [graphics::plot()].
-#' @return Invisibly, an `mfrm_plot_data` object containing coefficient rows or
-#'   GOF summaries and long-form simulation draws. Use [plot_data()] to export.
-#' @details Coefficient intervals are approximate pointwise normal intervals.
-#'   They are not evidence of MCMC convergence. The GOF plot delegates to ergm;
-#'   its graphical options remain available through `...`.
+#' @param draw Whether to print the `ggplot` figure; `FALSE` returns the `ggplot`
+#'   object without drawing.
+#' @param preset Visual preset; see [mfrmr_visual_diagnostics].
+#' @return For `plot()`: Invisibly, a `ggplot` object. [plot_data()] extracts
+#'   coefficient rows or GOF summaries and long-form simulation draws.
+#' @details For `plot()`: Coefficient intervals are approximate pointwise normal intervals.
+#'   They are not evidence of MCMC convergence.
 #' @export
-plot.mfrm_network_ergm <- function(x, type = c("coefficients", "gof"), draw = TRUE, ...) {
+plot.mfrm_network_ergm <- function(x,
+                                   type = c("coefficients", "gof"),
+                                   draw = TRUE,
+                                   preset = c("standard", "publication", "compact", "monochrome"),
+                                   ...) {
   type <- match.arg(type)
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
+  style <- resolve_plot_preset(preset)
   if (type == "gof" && is.null(x$gof)) stop("No saved GOF: supply gof when fitting.", call. = FALSE)
-  if (isTRUE(draw)) {
-    if (type == "gof") {
-      args <- list(x = x$gof, main = "")
-      dots <- list(...); args[names(dots)] <- dots
-      do.call(graphics::plot, args)
-    } else {
-      z <- x$coefficients; keep <- is.finite(z$Estimate) & is.finite(z$Lower) & is.finite(z$Upper)
-      z <- z[keep, , drop = FALSE]
-      if (!nrow(z)) stop("No finite coefficient intervals to plot.", call. = FALSE)
-      args <- list(x = z$Estimate, y = seq_len(nrow(z)),
-        xlim = range(c(z$Lower, z$Upper)), yaxt = "n", xlab = "Conditional log-odds coefficient", ylab = "", main = "")
-      dots <- list(...); args[names(dots)] <- dots
-      do.call(graphics::plot, args)
-      graphics::segments(z$Lower, seq_len(nrow(z)), z$Upper, seq_len(nrow(z)))
-      graphics::axis(2, seq_len(nrow(z)), z$Term, las = 1)
-      graphics::abline(v = 0, lty = 2)
-    }
+  if (isTRUE(draw) && type == "coefficients") {
+    z <- x$coefficients
+    keep <- is.finite(z$Estimate) & is.finite(z$Lower) & is.finite(z$Upper)
+    if (!any(keep)) stop("No finite coefficient intervals to plot.", call. = FALSE)
   }
-  invisible(new_mfrm_plot_data("network_ergm", list(plot = type,
+  dots <- list(...)
+  out <- new_mfrm_plot_data("network_ergm", list(
+    plot = type,
     table = if (type == "gof") x$gof_table else x$coefficients,
-    draws = if (type == "gof") x$gof_draws else NULL, notes = x$notes)))
+    draws = if (type == "gof") x$gof_draws else NULL,
+    notes = x$notes,
+    title = dots$main %||% if (type == "gof") "ERGM goodness-of-fit" else "ERGM coefficient intervals",
+    preset = style$name
+  ))
+  .mfrm_finalize_ggplot(out, draw = draw)
 }

@@ -36,31 +36,34 @@ test_that("named Wright selection adds omitted levels without changing estimates
   original <- serialize(fit, NULL)
   full <- plot(fit, top_n = Inf, draw = FALSE)
   compact <- plot(fit, top_n = 1, draw = FALSE)
-  candidates <- subset(full$data$locations, PlotType == "Facet level")
+  full_pd <- plot_data(full)
+  compact_pd <- plot_data(compact)
+  candidates <- subset(full_pd$locations, PlotType == "Facet level")
   omitted <- candidates[!paste(candidates$Group, candidates$Label) %in%
-    paste(compact$data$locations$Group, compact$data$locations$Label), ][1, ]
+    paste(compact_pd$locations$Group, compact_pd$locations$Label), ][1, ]
   selection <- setNames(list(as.character(omitted$Label)), as.character(omitted$Group))
   marked <- plot(fit, top_n = 1, highlight = selection, draw = FALSE)
+  marked_pd <- plot_data(marked)
   key <- function(z) paste(z$Group, z$Label)
-  expect_setequal(key(marked$data$locations), c(key(compact$data$locations), key(omitted)))
-  selected <- subset(marked$data$locations, Highlighted)
+  expect_setequal(key(marked_pd$locations), c(key(compact_pd$locations), key(omitted)))
+  selected <- subset(marked_pd$locations, Highlighted)
   expect_equal(nrow(selected), 1L)
   expect_identical(selected$DisplayLabel, paste0("> ", selected$Label))
   numeric_cols <- c("Estimate", "SE", "CI_Lower", "CI_Upper")
-  expect_equal(as.data.frame(marked$data$locations[numeric_cols]),
-    as.data.frame(full$data$locations[match(key(marked$data$locations),
-      key(full$data$locations)), numeric_cols]))
-  expect_identical(marked$data$y_range, compact$data$y_range)
-  expect_identical(marked$data$y_range, full$data$y_range)
-  expect_equal(marked$data$retention$Shown[1], compact$data$retention$Shown[1] + 1)
-  expect_equal(marked$data$retention$Omitted[1], compact$data$retention$Omitted[1] - 1)
-  expect_match(paste(marked$data$notes$Text, collapse = " "), "not a statistical flag")
+  expect_equal(as.data.frame(marked_pd$locations[numeric_cols]),
+    as.data.frame(full_pd$locations[match(key(marked_pd$locations),
+      key(full_pd$locations)), numeric_cols]))
+  expect_identical(marked_pd$y_range, compact_pd$y_range)
+  expect_identical(marked_pd$y_range, full_pd$y_range)
+  expect_equal(marked_pd$retention$Shown[1], compact_pd$retention$Shown[1] + 1)
+  expect_equal(marked_pd$retention$Omitted[1], compact_pd$retention$Omitted[1] - 1)
+  expect_match(paste(marked_pd$notes$Text, collapse = " "), "not a statistical flag")
   expect_identical(serialize(fit, NULL), original)
 
   unified <- plot(fit, view = "unified", top_n = 1, highlight = selection, draw = FALSE)
-  expect_equal(unified$locations, marked$data$locations)
+  expect_equal(plot_data(unified, "locations"), marked_pd$locations)
   bundle <- plot(fit, type = "bundle", top_n = 1, highlight = selection, draw = FALSE)
-  expect_equal(bundle$wright_map$data$locations, marked$data$locations)
+  expect_equal(plot_data(plot_data(bundle)$wright_map, "locations"), marked_pd$locations)
 
   # Compaction must not hide an opposite endpoint of the fitted ruler.
   fit$facets$others$Estimate[1:2] <- c(100, -99)
@@ -73,11 +76,12 @@ test_that("Wright selection survives both layouts and saved ggplot conversion", 
   levels <- fit$facets$others
   selection <- lapply(split(as.character(levels$Level), levels$Facet), head, 1)
   p <- plot(fit, highlight = selection, renderer = "facets", draw = FALSE)
-  ruler <- p$data$facets_style$facet_ruler
+  p_pd <- plot_data(p)
+  ruler <- p_pd$facets_style$facet_ruler
   expect_equal(sum(ruler$Highlighted), length(selection))
   expect_true(all(startsWith(ruler$DisplayLabel[ruler$Highlighted], "> ")))
-  expect_true(any(grepl("> ", p$data$facets_style$facet_cells$CellLabel, fixed = TRUE)))
-  expect_true(all(p$data$retention$Complete))
+  expect_true(any(grepl("> ", p_pd$facets_style$facet_cells$CellLabel, fixed = TRUE)))
+  expect_true(all(p_pd$retention$Complete))
   for (renderer in c("native", "facets")) {
     p <- plot(fit, highlight = selection, renderer = renderer, draw = FALSE)
     saved <- unserialize(serialize(p, NULL))
@@ -128,14 +132,15 @@ test_that("plot readiness preserves a failed numerical state", {
     "Numerical=fail",
     fixed = TRUE
   )
-  numerical <- out$data$fit_readiness[
-    out$data$fit_readiness$Domain == "Numerical",
+  out_pd <- plot_data(out)
+  numerical <- out_pd$fit_readiness[
+    out_pd$fit_readiness$Domain == "Numerical",
     ,
     drop = FALSE
   ]
   expect_identical(numerical$Status, "fail")
-  expect_identical(out$data$interpretation_status, "review_only")
-  expect_match(out$data$subtitle, "REVIEW ONLY", fixed = TRUE)
+  expect_identical(out_pd$interpretation_status, "review_only")
+  expect_match(out_pd$subtitle, "REVIEW ONLY", fixed = TRUE)
 })
 
 test_that("native top_n compacts facets but retains every step transition", {
@@ -144,44 +149,48 @@ test_that("native top_n compacts facets but retains every step transition", {
   compact <- plot(fit, type = "wright", top_n = 2L, draw = FALSE)
   complete <- plot(fit, type = "wright", top_n = Inf, draw = FALSE)
   facets <- plot(fit, type = "wright", renderer = "facets", top_n = 2L, draw = FALSE)
+  full_pd <- plot_data(full)
+  compact_pd <- plot_data(compact)
+  complete_pd <- plot_data(complete)
+  facets_pd <- plot_data(facets)
 
-  expect_identical(compact$data$wright_style, "native")
-  expect_true(compact$data$show_ci)
-  expect_identical(compact$data$uncertainty_display, "native_mfrmr_ci")
+  expect_identical(compact_pd$wright_style, "native")
+  expect_true(compact_pd$show_ci)
+  expect_identical(compact_pd$uncertainty_display, "native_mfrmr_ci")
   expect_identical(
-    full$data$display_settings$AutoRangePolicy,
+    full_pd$display_settings$AutoRangePolicy,
     "all_fitted_locations"
   )
-  expect_equal(full$data$locations$DisplayEstimate, full$data$locations$Estimate)
+  expect_equal(full_pd$locations$DisplayEstimate, full_pd$locations$Estimate)
   expect_equal(
-    full$data$y_range,
-    range(c(full$data$locations$Estimate, full$data$person$Estimate))
+    full_pd$y_range,
+    range(c(full_pd$locations$Estimate, full_pd$person$Estimate))
   )
-  full_steps <- full$data$locations[
-    full$data$locations$PlotType == "Step threshold",
+  full_steps <- full_pd$locations[
+    full_pd$locations$PlotType == "Step threshold",
     ,
     drop = FALSE
   ]
-  full_location_keys <- paste(full$data$locations$Group, full$data$locations$Label)
-  full_label_keys <- paste(full$data$label_points$Group, full$data$label_points$Label)
+  full_location_keys <- paste(full_pd$locations$Group, full_pd$locations$Label)
+  full_label_keys <- paste(full_pd$label_points$Group, full_pd$label_points$Label)
   expect_setequal(full_label_keys, full_location_keys)
   expect_true(all(c(
     "LabelX", "LabelY", "LabelSide", "LabelText", "LabelDisplaced"
-  ) %in% names(full$data$label_points)))
-  full_step_labels <- full$data$label_points[
-    full$data$label_points$PlotType == "Step threshold",
+  ) %in% names(full_pd$label_points)))
+  full_step_labels <- full_pd$label_points[
+    full_pd$label_points$PlotType == "Step threshold",
     ,
     drop = FALSE
   ]
   expect_equal(full_steps$X, full_steps$XBase)
   expect_true(all(grepl("\\([+-][0-9]", full_step_labels$LabelText)))
-  compact_steps <- compact$data$locations[
-    compact$data$locations$PlotType == "Step threshold",
+  compact_steps <- compact_pd$locations[
+    compact_pd$locations$PlotType == "Step threshold",
     ,
     drop = FALSE
   ]
-  compact_step_labels <- compact$data$label_points[
-    compact$data$label_points$PlotType == "Step threshold",
+  compact_step_labels <- compact_pd$label_points[
+    compact_pd$label_points$PlotType == "Step threshold",
     ,
     drop = FALSE
   ]
@@ -192,33 +201,33 @@ test_that("native top_n compacts facets but retains every step transition", {
     as.character(full_steps$Label)
   )
   expect_true(all(grepl(" -> ", compact_step_labels$Label, fixed = TRUE)))
-  expect_identical(compact$data$label_limit, 2L)
+  expect_identical(compact_pd$label_limit, 2L)
   expect_true(all(c("Component", "Shown", "Total", "Omitted", "Complete", "RequestedTopN") %in%
-                    names(compact$data$retention)))
-  compact_all <- compact$data$retention[
-    compact$data$retention$Component == "All locations",
+                    names(compact_pd$retention)))
+  compact_all <- compact_pd$retention[
+    compact_pd$retention$Component == "All locations",
     ,
     drop = FALSE
   ]
   expect_equal(compact_all$Shown + compact_all$Omitted, compact_all$Total)
   expect_gt(compact_all$Omitted, 0L)
   expect_false(compact_all$Complete)
-  expect_match(compact$data$retention_note, "Use `top_n = Inf`", fixed = TRUE)
-  expect_match(compact$data$subtitle, "facet locations", fixed = TRUE)
-  complete_all <- complete$data$retention[
-    complete$data$retention$Component == "All locations",
+  expect_match(compact_pd$retention_note, "Use `top_n = Inf`", fixed = TRUE)
+  expect_match(compact_pd$subtitle, "facet locations", fixed = TRUE)
+  complete_all <- complete_pd$retention[
+    complete_pd$retention$Component == "All locations",
     ,
     drop = FALSE
   ]
   expect_equal(complete_all$Shown, complete_all$Total)
   expect_equal(complete_all$Omitted, 0L)
   expect_true(complete_all$Complete)
-  expect_identical(complete$data$retention_note, "")
-  expect_equal(nrow(complete$data$locations), complete_all$Total)
-  expect_identical(facets$data$renderer, "facets")
-  expect_false(facets$data$show_ci)
-  expect_identical(facets$data$uncertainty_display, "facets_style_no_ci")
-  expect_equal(nrow(facets$data$locations), nrow(full$data$locations))
+  expect_identical(complete_pd$retention_note, "")
+  expect_equal(nrow(complete_pd$locations), complete_all$Total)
+  expect_identical(facets_pd$renderer, "facets")
+  expect_false(facets_pd$show_ci)
+  expect_identical(facets_pd$uncertainty_display, "facets_style_no_ci")
+  expect_equal(nrow(facets_pd$locations), nrow(full_pd$locations))
 })
 
 test_that("Wright CI payload stores absolute endpoints", {
@@ -230,7 +239,7 @@ test_that("Wright CI payload stores absolute endpoints", {
     ci_level = 0.90,
     draw = FALSE
   ))
-  loc <- out$data$locations
+  loc <- plot_data(out, "locations")
   loc <- loc[loc$PlotType == "Facet level" & is.finite(loc$SE), , drop = FALSE]
   expect_gt(nrow(loc), 0L)
   z <- stats::qnorm(0.95)
@@ -260,9 +269,10 @@ test_that("supplied diagnostics drive Wright SE metadata and must match coordina
     ci_level = 0.95,
     draw = FALSE
   )
-  loc <- out$data$locations[
-    as.character(out$data$locations$Group) == facet &
-      as.character(out$data$locations$Label) == level,
+  out_locs <- plot_data(out, "locations")
+  loc <- out_locs[
+    as.character(out_locs$Group) == facet &
+      as.character(out_locs$Label) == level,
     , drop = FALSE
   ]
   expect_equal(nrow(loc), 1L)
@@ -277,9 +287,10 @@ test_that("supplied diagnostics drive Wright SE metadata and must match coordina
     show_ci = TRUE,
     draw = FALSE
   )
-  unified_loc <- unified$locations[
-    as.character(unified$locations$Group) == facet &
-      as.character(unified$locations$Label) == level,
+  unified_locs <- plot_data(unified, "locations")
+  unified_loc <- unified_locs[
+    as.character(unified_locs$Group) == facet &
+      as.character(unified_locs$Label) == level,
     , drop = FALSE
   ]
   expect_equal(unified_loc$Estimate, fitted_estimate)
@@ -309,27 +320,28 @@ test_that("FACETS-style Wright payload is complete and explicitly visual", {
     draw = FALSE
   )
 
-  expect_identical(out$data$wright_style, "facets_style")
-  expect_identical(out$data$renderer, "facets")
-  expect_true(out$data$show_ci)
-  expect_identical(out$data$uncertainty_display, "hybrid_mfrmr_ci")
-  expect_match(out$data$subtitle, "Hybrid", fixed = TRUE)
-  expect_true(any(grepl("CI", out$data$legend$label, fixed = TRUE)))
-  expect_true(any(out$data$legend$role == "uncertainty"))
-  expect_match(out$data$visual_contract, "not FACETS numerical equivalence", fixed = TRUE)
-  fs <- out$data$facets_style
+  out_pd <- plot_data(out)
+  expect_identical(out_pd$wright_style, "facets_style")
+  expect_identical(out_pd$renderer, "facets")
+  expect_true(out_pd$show_ci)
+  expect_identical(out_pd$uncertainty_display, "hybrid_mfrmr_ci")
+  expect_match(out_pd$subtitle, "Hybrid", fixed = TRUE)
+  expect_true(any(grepl("CI", out_pd$legend$label, fixed = TRUE)))
+  expect_true(any(out_pd$legend$role == "uncertainty"))
+  expect_match(out_pd$visual_contract, "not FACETS numerical equivalence", fixed = TRUE)
+  fs <- out_pd$facets_style
   expect_true(all(c(
     "ruler_rows", "person_frequency", "person_placements", "facet_ruler",
     "facet_cells", "step_ruler", "score_transitions", "category_labels",
     "headers", "settings"
   ) %in% names(fs)))
-  expect_equal(sum(fs$person_frequency$Count), nrow(out$data$person))
-  expect_equal(nrow(fs$facet_ruler), sum(out$data$locations$PlotType == "Facet level"))
+  expect_equal(sum(fs$person_frequency$Count), nrow(out_pd$person))
+  expect_equal(nrow(fs$facet_ruler), sum(out_pd$locations$PlotType == "Facet level"))
   expect_setequal(
     paste(fs$facet_ruler$Facet, fs$facet_ruler$Level, sep = "::"),
     paste(
-      out$data$locations$Group[out$data$locations$PlotType == "Facet level"],
-      out$data$locations$Label[out$data$locations$PlotType == "Facet level"],
+      out_pd$locations$Group[out_pd$locations$PlotType == "Facet level"],
+      out_pd$locations$Label[out_pd$locations$PlotType == "Facet level"],
       sep = "::"
     )
   )
@@ -378,7 +390,7 @@ test_that("FACETS-style headers and transitions respect fit metadata", {
     category_labels = rubric,
     draw = FALSE
   )
-  fs <- out$data$facets_style
+  fs <- plot_data(out, "facets_style")
   expect_true(paste0("+", positive_facet) %in% fs$headers$Header)
   expect_equal(fs$category_labels$OriginalScore, as.character(mapped_scores))
   expect_true(all(fs$step_ruler$LowerScore %in% as.character(mapped_scores)))
@@ -407,12 +419,13 @@ test_that("named Wright category labels must cover original score keys after rec
     category_labels = valid,
     draw = FALSE
   )
+  out_fs <- plot_data(out, "facets_style")
   expect_equal(
-    out$data$facets_style$category_labels$OriginalScore,
+    out_fs$category_labels$OriginalScore,
     as.character(original_scores)
   )
   expect_equal(
-    out$data$facets_style$category_labels$RubricLabel,
+    out_fs$category_labels$RubricLabel,
     unname(valid)
   )
 
@@ -464,7 +477,7 @@ test_that("FACETS-style range, ruler resolution, and extremes are controllable",
     extreme_placement = "ends",
     draw = FALSE
   )
-  fs <- out$data$facets_style
+  fs <- plot_data(out, "facets_style")
   expect_equal(range(fs$ruler_rows$Logit), c(-2, 2))
   expect_equal(unique(diff(fs$ruler_rows$Logit)), 0.5)
   expect_equal(fs$person_placements$RulerValue[1:2], c(-2, 2))
@@ -478,7 +491,7 @@ test_that("FACETS-style range, ruler resolution, and extremes are controllable",
     draw = FALSE
   )
   expect_false(identical(
-    estimates$data$facets_style$person_placements$DisplayEstimate[1:2],
+    plot_data(estimates, "facets_style")$person_placements$DisplayEstimate[1:2],
     c(-2, 2)
   ))
 })
@@ -491,8 +504,9 @@ test_that("FACETS-style thresholds can be omitted and base renderer draws", {
     show_thresholds = FALSE,
     draw = FALSE
   )
-  expect_equal(nrow(no_steps$facets_style$step_ruler), 0L)
-  expect_equal(nrow(no_steps$facets_style$score_transitions), 0L)
+  no_steps_fs <- plot_data(no_steps, "facets_style")
+  expect_equal(nrow(no_steps_fs$step_ruler), 0L)
+  expect_equal(nrow(no_steps_fs$score_transitions), 0L)
 
   grDevices::pdf(nullfile())
   on.exit(grDevices::dev.off(), add = TRUE)
@@ -514,13 +528,15 @@ test_that("plot_wright_unified uses the same renderer-specific uncertainty contr
   fit <- make_wright_ready_fit()
 
   native <- plot_wright_unified(fit, top_n = Inf, draw = FALSE)
-  expect_true(native$show_ci)
-  expect_identical(native$uncertainty_display, "native_mfrmr_ci")
-  expect_true(all(native$retention$Omitted == 0L))
+  native_pd <- plot_data(native)
+  expect_true(native_pd$show_ci)
+  expect_identical(native_pd$uncertainty_display, "native_mfrmr_ci")
+  expect_true(all(native_pd$retention$Omitted == 0L))
 
   facets <- plot_wright_unified(fit, renderer = "facets", draw = FALSE)
-  expect_false(facets$show_ci)
-  expect_identical(facets$uncertainty_display, "facets_style_no_ci")
+  facets_pd <- plot_data(facets)
+  expect_false(facets_pd$show_ci)
+  expect_identical(facets_pd$uncertainty_display, "facets_style_no_ci")
 
   hybrid <- plot_wright_unified(
     fit,
@@ -528,9 +544,10 @@ test_that("plot_wright_unified uses the same renderer-specific uncertainty contr
     show_ci = TRUE,
     draw = FALSE
   )
-  expect_true(hybrid$show_ci)
-  expect_identical(hybrid$uncertainty_display, "hybrid_mfrmr_ci")
-  expect_match(hybrid$title, "hybrid", ignore.case = TRUE)
+  hybrid_pd <- plot_data(hybrid)
+  expect_true(hybrid_pd$show_ci)
+  expect_identical(hybrid_pd$uncertainty_display, "hybrid_mfrmr_ci")
+  expect_match(hybrid_pd$title, "hybrid", ignore.case = TRUE)
 })
 
 test_that("boundary separation uses one robust range and explicit CI display metadata", {
@@ -553,35 +570,36 @@ test_that("boundary separation uses one robust range and explicit CI display met
     show_ci = TRUE,
     draw = FALSE
   ))
-  settings <- native$data$display_settings
+  native_pd <- plot_data(native)
+  settings <- native_pd$display_settings
   expect_identical(settings$AutoRangePolicy, "boundary_levels_at_ends")
-  expect_equal(native$data$y_range, c(settings$LowerLogit, settings$UpperLogit))
-  expect_lt(diff(native$data$y_range), 10)
+  expect_equal(native_pd$y_range, c(settings$LowerLogit, settings$UpperLogit))
+  expect_lt(diff(native_pd$y_range), 10)
 
-  boundary_native <- native$data$locations[
-    native$data$locations$BoundarySeparated,
+  boundary_native <- native_pd$locations[
+    native_pd$locations$BoundarySeparated,
     ,
     drop = FALSE
   ]
   expect_equal(boundary_native$OriginalEstimate, boundary_native$Estimate)
   expect_equal(boundary_native$CI_Lower, boundary_native$OriginalCI_Lower)
   expect_equal(boundary_native$CI_Upper, boundary_native$OriginalCI_Upper)
-  expect_true(all(boundary_native$DisplayEstimate >= native$data$y_range[1]))
-  expect_true(all(boundary_native$DisplayEstimate <= native$data$y_range[2]))
+  expect_true(all(boundary_native$DisplayEstimate >= native_pd$y_range[1]))
+  expect_true(all(boundary_native$DisplayEstimate <= native_pd$y_range[2]))
   expect_setequal(boundary_native$BoundaryEnd, c("lower", "upper"))
   expect_true(all(boundary_native$CIDisplayStatus == "boundary_endpoint_marker"))
   expect_true(all(grepl("(", boundary_native$DisplayLabel, fixed = TRUE)))
 
   drawn_key <- mfrmr:::.wright_native_legend_spec(
-    native$data,
+    native_pd,
     show_ci = TRUE,
     ci_level = 0.95
   )
-  expect_identical(as.character(native$data$legend$label), drawn_key$label)
+  expect_identical(as.character(native_pd$legend$label), drawn_key$label)
   expect_true(all(c(
     "Person density", "Facet level", "Step threshold", "IQR / range",
     "95% mfrmr CI", "Boundary level / CI beyond ruler"
-  ) %in% native$data$legend$label))
+  ) %in% native_pd$legend$label))
 
   facets <- suppressWarnings(plot(
     fit,
@@ -590,10 +608,10 @@ test_that("boundary separation uses one robust range and explicit CI display met
     show_ci = TRUE,
     draw = FALSE
   ))
-  fs <- facets$data$facets_style
+  fs <- plot_data(facets, "facets_style")
   expect_equal(
     c(fs$settings$LowerLogit, fs$settings$UpperLogit),
-    native$data$y_range
+    native_pd$y_range
   )
   expect_identical(fs$settings$AutoRangePolicy, "boundary_levels_at_ends")
   boundary_facets <- fs$facet_ruler[fs$facet_ruler$BoundarySeparated, , drop = FALSE]
@@ -603,16 +621,8 @@ test_that("boundary separation uses one robust range and explicit CI display met
 
   grDevices::pdf(nullfile(), width = 12, height = 8)
   on.exit(grDevices::dev.off(), add = TRUE)
-  expect_silent(mfrmr:::draw_wright_map(
-    native$data,
-    show_ci = TRUE,
-    ci_level = 0.95
-  ))
-  expect_silent(mfrmr:::draw_wright_map(
-    facets$data,
-    show_ci = TRUE,
-    ci_level = 0.95
-  ))
+  expect_silent(print(native))
+  expect_silent(print(facets))
 })
 
 test_that("FACETS-style Wright arguments are validated", {

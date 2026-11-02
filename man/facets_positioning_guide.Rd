@@ -3,9 +3,6 @@
 \name{facets_positioning_guide}
 \alias{facets_positioning_guide}
 \title{FACETS Positioning Guide}
-\usage{
-facets_positioning_guide()
-}
 \value{
 A data.frame with columns:
 \itemize{
@@ -16,7 +13,7 @@ A data.frame with columns:
 }
 }
 \description{
-\code{facets_positioning_guide()} gives user-facing wording for the relationship
+\code{facets_guide('positioning')} gives user-facing wording for the relationship
 between \code{mfrmr} and FACETS. Use it when a report, migration note, or
 methods appendix must make clear that \code{mfrmr} is not a FACETS numerical
 clone.
@@ -35,7 +32,7 @@ one observed score scale are used per fit; nominal and count-response
 families, mixed families, multiple independent scales,
 general threshold anchoring, and importing FACETS or third-party frozen
 calibrations are not part of the current public estimator; native portable
-calibration is available within the scope of \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}},
+calibration is available within the scope of \code{mfrmr_output_guide("calibration_capabilities")},
 and posterior scoring from an existing fitted object remains separate;
 \item extension surface: native R tables, plot data, GPCM diagnostics,
 network views, and G/D-study helpers are package extensions, not promises
@@ -43,9 +40,10 @@ of FACETS menu-level reproduction.
 }
 }
 \examples{
-facets_positioning_guide()
+facets_guide('positioning')
 }
 \seealso{
-\code{\link[=facets_feature_coverage]{facets_feature_coverage()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
-\code{\link[=read_facets_fit_table]{read_facets_fit_table()}}, \code{\link[=facets_fit_review]{facets_fit_review()}}
+\code{\link[=facets_guide]{facets_guide()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
+\code{\link[=read_facets_results]{read_facets_results()}}, \code{\link[=facets_fit_review]{facets_fit_review()}}
 }
+\keyword{internal}

@@ -10,61 +10,79 @@
 # Imported bundles retain `mfrm_fit` inheritance for measurement displays,
 # with a distinct first class and source-scale metadata for restricted dispatch.
 
-#' Import an `mirt` fit to an mfrmr-compatible bundle
+#' Import an external IRT fit (`mirt`, `TAM`, or `eRm`) to an mfrmr-compatible bundle
 #'
-#' Extracts item, step, and person parameters from a [mirt::mirt()]
-#' fit and returns an `mfrm_imported_fit` object. The returned
-#' object has the public slots `summary`, `facets$person`,
-#' `facets$others`, `steps`, `config`, and `source` that the mfrmr
-#' plot and table helpers expect. Only unidimensional Rasch and partial-credit
-#' response models with positive slopes and ordinary category scores are
-#' supported. Graded-response, guessing and multidimensional models are refused.
-#' With `compute_fit = TRUE`, source Infit / Outfit statistics are attached.
+#' Extracts item, step, and person parameters from a supported unidimensional
+#' [mirt::mirt()], [TAM::tam.mml()], [TAM::tam.mml.mfr()], [eRm::RM()],
+#' [eRm::PCM()], or [eRm::RSM()] fit and returns an `mfrm_imported_fit` object
+#' with the public slots `summary`, `facets$person`, `facets$others`, `steps`,
+#' `config`, and `source` expected by measurement-side `summary()` and `plot()`
+#' helpers.
 #'
-#' @param fit An object returned by [mirt::mirt()] (a
-#'   `SingleGroupClass`).
-#' @param model One of `"RSM"`, `"PCM"`, `"GPCM"`. The importer
-#'   does not reconstruct all source constraints; pass the model that was
-#'   estimated. Non-unit slopes require `"GPCM"`. A polytomous `"RSM"`
-#'   import requires source item type `"rsm"`.
-#' @param item_facet Name to assign to the item facet in the
-#'   imported bundle (default `"Item"`).
-#' @param compute_fit Logical. When `TRUE`, run [mirt::itemfit()]
-#'   and [mirt::personfit()] to populate Infit / Outfit / OutfitZSTD
-#'   columns on the returned facet tables, plus build a
-#'   measurement-side diagnostics bundle. Person fit uses source EAP scores.
-#'   Default `FALSE` extracts parameters without calculating fit statistics.
+#' @param fit A fitted object from [mirt::mirt()] (`SingleGroupClass`),
+#'   [TAM::tam.mml()] / [TAM::tam.mml.mfr()], or [eRm::RM()] / [eRm::PCM()] /
+#'   [eRm::RSM()].
+#' @param model Declared response model: one of `"RSM"`, `"PCM"`, or `"GPCM"`.
+#'   The importer does not reconstruct all source constraints; pass the model
+#'   that was estimated. Non-unit `mirt` or `TAM` slopes require `"GPCM"`. A
+#'   polytomous `"RSM"` import from `mirt` requires source item type `"rsm"`.
+#'   For `eRm`, pass `"PCM"` or `"RSM"` matching `fit$model` (either is accepted
+#'   for binary `RM`; `"GPCM"` and linear extensions are unsupported).
+#' @param item_facet Name to assign to the item facet in the imported bundle
+#'   (default `"Item"`). Ignored when importing a multi-facet `tam.mml.mfr` fit,
+#'   whose combined response conditions are labelled `"DesignCell"`.
+#' @param compute_fit Logical. When `TRUE` for `mirt` or `TAM` imports, compute
+#'   source Infit / Outfit statistics ([mirt::itemfit()] + [mirt::personfit()],
+#'   or [TAM::msq.itemfit()] + [TAM::tam.personfit()]) and attach a
+#'   measurement-side `mfrm_diagnostics` bundle. Default `FALSE`. Not supported
+#'   for `eRm` imports.
+#' @param source Source package adapter: `"auto"` (default, detected from the
+#'   class of `fit`), `"mirt"`, `"tam"`, or `"erm"`.
 #'
 #' @return An `mfrm_imported_fit` object. Slots:
 #' \describe{
-#'   \item{`summary`}{Model / method / N / LogLik / AIC / BIC.}
-#'   \item{`facets$person`}{Person ID, Estimate, SE, Extreme, plus
-#'     Infit / Outfit / OutfitZSTD / Zh when `compute_fit = TRUE`.}
-#'   \item{`facets$others`}{Item-level estimates and slopes; with
-#'     `compute_fit = TRUE`, also available Infit / Outfit statistics.}
+#'   \item{`summary`}{Model / method / source / N / LogLik / AIC / BIC (with
+#'     explicit `Native*` provenance and `ICEligible = FALSE` on `TAM` imports).}
+#'   \item{`facets$person`}{Person ID, Estimate, SE, Extreme, plus available
+#'     fit columns when `compute_fit = TRUE`.}
+#'   \item{`facets$others`}{Item or design-cell estimates (and slopes for `mirt`
+#'     / `TAM`, transformed SEs where available), plus fit statistics when
+#'     `compute_fit = TRUE`.}
 #'   \item{`steps`}{Absolute adjacent-category thresholds on the source ability
 #'     scale, labelled in `Parameterization`; these are not centered step
-#'     deviations. Rating-scale offsets are included.}
-#'   \item{`config`}{List with the declared `model` and facet names
-#'     used for the import; downstream plot and table helpers consult
-#'     this to dispatch correctly on the imported bundle.}
+#'     deviations.}
+#'   \item{`config`}{List with declared `model`, `method`, `facet_names`, and
+#'     `source` metadata.}
 #'   \item{`diagnostics`}{`mfrm_diagnostics`-shape bundle when
 #'     `compute_fit = TRUE`; `NULL` otherwise.}
-#'   \item{`source`}{Imported-from metadata.}
+#'   \item{`source`}{Source package version, scale convention, person scoring
+#'     basis, and native parameter tables where applicable.}
 #' }
 #'
 #' @section Source scale:
-#' Item difficulty is the mean of its absolute adjacent-category thresholds.
-#' Source identification and slopes are retained without rescaling. For mirt
-#' `gpcmIRT` and `rsm`, the category offset is included as `b - c / a`.
-#' Binary and polytomous items may be mixed; thresholds are read using each
-#' item's response model and category count. Inapplicable padding columns in
-#' the source coefficient table are not missing estimated thresholds.
-#' Person estimates are EAP; the `SE` column contains conditional posterior
-#' SDs, not sampling SEs. Person labels use retained source row names or
-#' P-prefixed row positions. Original identifiers discarded by mirt cannot be
-#' recovered. Imported summaries describe these conventions without assuming
-#' a native mfrmr population distribution or slope normalization.
+#' Item difficulty is the mean of its absolute adjacent-category thresholds, and
+#' source scale identification and slopes are retained without rescaling:
+#' - **`mirt`:** Unidimensional `Rasch`, `2PL`, `gpcm`, `gpcmIRT`, and `rsm`
+#'   items with positive slopes and ordinary `0..(K-1)` category scores are
+#'   supported; graded-response, guessing, custom-scoring, and multidimensional
+#'   models are refused. For `gpcmIRT` and `rsm`, the category offset is
+#'   included as `b - c / a`. Person estimates are EAP with conditional
+#'   posterior SDs in `SE`.
+#' - **`TAM`:** Unidimensional MML fits (`tam.mml`, `tam.mml.mfr`) with positive
+#'   constant adjacent-category slopes are supported; `tam.jml` and
+#'   multidimensional (`ndim > 1`) fits are refused. Multi-facet `tam.mml.mfr`
+#'   fits combine facet effects per design cell and retain the original
+#'   coefficient table in `source$native_parameters`. Transformed item SEs are
+#'   retained only when the location is a scalar multiple of a single fixed-slope
+#'   source coefficient; otherwise `SE` is `NA`. Person estimates retain source
+#'   EAP and conditional posterior SD, while `TAM::tam.personfit()` uses WLE
+#'   scores (recorded in `FitBasis`). TAM-native AIC, BIC, and `aBIC` are kept
+#'   under `Native*` fields with `ICStatus = "imported_native_descriptive"` and
+#'   `ICEligible = FALSE`.
+#' - **`eRm`:** Conditional ML cumulative easiness coefficients from `RM`,
+#'   `PCM`, or `RSM` are negated and differenced into absolute adjacent-category
+#'   difficulties, with scalar-transformed item-location SEs and ML person
+#'   parameters (retaining `source_extrapolated` flags for extremes).
 #'
 #' @section Imported uncertainty:
 #' Imported SEs retain the source package's interpretation. The measurement-side
@@ -75,7 +93,7 @@
 #' remain descriptive. Imported Wright maps show points only: source uncertainty
 #' conventions do not establish one common confidence-interval calculation.
 #' Re-import older saved bundles from the existing source-package fit to update
-#' difficulties, thresholds and uncertainty labels. The mirt and TAM importers
+#' difficulties, thresholds and uncertainty labels. The `mirt` and `TAM` paths
 #' accept `compute_fit = TRUE` when source fit statistics are needed; no model
 #' re-estimation is required.
 #'
@@ -86,25 +104,88 @@
 #' response-level diagnostics, [run_qc_pipeline()], bias/DIF analysis, anchoring
 #' and portable calibration are unavailable for imported bundles. This is a
 #' one-way fitted-object import of the documented fields.
-#' @seealso [import_tam_fit()], [import_erm_fit()]
+#' @seealso [fit_mfrm()], [read_facets_results()], [mfrmr_api_migration_030]
 #' @examples
-#' # Optional integration example (loads additional modelling or rendering packages).
-#' # example("import_mirt_fit", run.dontrun = TRUE)
+#' # Optional integration example (loads additional modelling packages).
+#' # example("import_irt_fit", run.dontrun = TRUE)
 #' \dontrun{
-#' if (requireNamespace("mirt", quietly = TRUE)) {
-#'   response_matrix <- matrix(sample(0:1, 120, replace = TRUE), nrow = 40)
+#' if (requireNamespace("TAM", quietly = TRUE)) {
+#'   response_matrix <- matrix(sample(0:2, 60, replace = TRUE), nrow = 20)
 #'   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
-#'   fit <- mirt::mirt(response_matrix, 1, itemtype = "Rasch", verbose = FALSE)
-#'   imported <- import_mirt_fit(fit, model = "RSM")
-#'   imported$summary
+#'   fit_tam <- TAM::tam.mml(resp = response_matrix, irtmodel = "PCM", verbose = FALSE)
+#'   imported <- import_irt_fit(fit_tam, model = "PCM")
+#'   summary(imported)
 #' }
 #' }
 #' @export
+import_irt_fit <- function(fit,
+                           model = c("RSM", "PCM", "GPCM"),
+                           item_facet = "Item",
+                           compute_fit = FALSE,
+                           source = c("auto", "mirt", "tam", "erm")) {
+  model <- match.arg(model)
+  source <- match.arg(source)
+  if (!is.logical(compute_fit) || length(compute_fit) != 1L || is.na(compute_fit)) {
+    stop("`compute_fit` must be a single non-missing logical (`TRUE` or `FALSE`).", call. = FALSE)
+  }
+  if (!is.character(item_facet) || length(item_facet) != 1L || is.na(item_facet) || !nzchar(item_facet)) {
+    stop("`item_facet` must be a non-empty character string.", call. = FALSE)
+  }
+  if (identical(source, "auto")) {
+    if (methods::is(fit, "SingleGroupClass") ||
+        methods::is(fit, "MultipleGroupClass") ||
+        methods::is(fit, "MixedClass") ||
+        methods::is(fit, "DiscreteClass")) {
+      source <- "mirt"
+    } else if (inherits(fit, c("tam.mml", "tam.mml.2pl", "tam.mml.3pl", "tam.jml", "tam", "tamaan"))) {
+      source <- "tam"
+    } else if (inherits(fit, c("eRm", "dRm", "rsm", "pcm", "lltm", "lrsm", "lpcm"))) {
+      source <- "erm"
+    } else {
+      stop(
+        "`fit` could not be matched to a supported external IRT result (`mirt`, `TAM`, or `eRm`). ",
+        "Supply a fitted `mirt`, `TAM`, or `eRm` object, or set `source` explicitly.",
+        call. = FALSE
+      )
+    }
+  }
+  switch(
+    source,
+    mirt = import_mirt_fit(
+      fit = fit,
+      model = model,
+      item_facet = item_facet,
+      compute_fit = compute_fit
+    ),
+    tam = import_tam_fit(
+      fit = fit,
+      model = model,
+      item_facet = item_facet,
+      compute_fit = compute_fit
+    ),
+    erm = {
+      if (isTRUE(compute_fit)) {
+        stop(
+          "`compute_fit = TRUE` is not supported for `eRm` imports; ",
+          "`import_irt_fit()` supports source fit attachment only for `mirt` and `TAM`.",
+          call. = FALSE
+        )
+      }
+      import_erm_fit(
+        fit = fit,
+        model = model,
+        item_facet = item_facet
+      )
+    }
+  )
+}
+
+#' @noRd
 import_mirt_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
                              item_facet = "Item",
                              compute_fit = FALSE) {
   if (!requireNamespace("mirt", quietly = TRUE)) {
-    stop("`import_mirt_fit()` requires the `mirt` package (suggested).",
+    stop("`import_irt_fit()` requires the `mirt` package (suggested).",
          call. = FALSE)
   }
   if (!methods::is(fit, "SingleGroupClass")) {
@@ -356,84 +437,12 @@ import_mirt_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
   list(item = item_df, person = person_df)
 }
 
-#' Import a `TAM` fit to an mfrmr-compatible bundle
-#'
-#' Extracts item / step / person parameters from a unidimensional
-#' [TAM::tam.mml()] or [TAM::tam.mml.mfr()] fit. Difficulties and absolute
-#' adjacent-category thresholds are derived from the source category logits,
-#' rather than inferred from coefficient names. Source slopes and scale
-#' identification are retained.
-#'
-#' @param fit An object returned by `TAM::tam.mml()` or
-#'   `TAM::tam.mml.mfr()`.
-#' @param model Declared response model: `"RSM"`, `"PCM"`, or `"GPCM"`.
-#'   Non-unit source slopes require `"GPCM"`; import does not reconstruct
-#'   all source constraints or certify equivalence to a native mfrmr model.
-#' @param item_facet Name to assign to the item facet for the
-#'   single-facet path. Ignored when the input is a multi-facet
-#'   `tam.mml.mfr` fit, whose combined response conditions are labelled
-#'   `"DesignCell"`.
-#' @param compute_fit Logical. When `TRUE`, run [TAM::msq.itemfit()]
-#'   and [TAM::tam.personfit()] to populate Infit / Outfit columns
-#'   on the returned facet tables, plus build a measurement-side
-#'   `mfrm_diagnostics` bundle. Default `FALSE`.
-#'
-#' @details
-#' Each item difficulty is the mean of its absolute adjacent-category thresholds.
-#' Positive constant adjacent-category slopes are required. For multi-facet
-#' fits, each returned difficulty combines all facet effects for that response
-#' condition. Separate facet coordinates are not reconstructed; the original
-#' coefficient table remains in `source$native_parameters`.
-#'
-#' A transformed item SE is retained only when the location is a scalar multiple
-#' of one source coefficient and its slope is fixed. Otherwise it is missing:
-#' marginal coefficient SEs cannot replace the required joint covariance.
-#' Persons retain source EAP and conditional posterior SD. Item fit is averaged
-#' over source posteriors; `TAM::tam.personfit()` uses WLE scores. `FitBasis`
-#' records this distinction without replacing the imported EAP estimates.
-#' Person `Extreme` flags use observed responses and each item's fitted category
-#' support, including unobserved categories. `NObserved` counts responses used
-#' for this check. `ResponseStatus` distinguishes observed, entirely missing,
-#' and unavailable response information. Entirely missing or unverifiable rows
-#' have `Extreme = NA`; finite posterior scores do not imply nonextreme data.
-#' Re-import older TAM objects to recover these flags; saved imported objects
-#' without the source responses cannot reconstruct them.
-#'
-#' The public imported-fit surface is deliberately unidimensional and MML-only.
-#' A `tam.jml` object is not silently relabelled as MML, and a TAM fit with
-#' `ndim > 1` is rejected rather than flattened into one mfrmr scale. Keep
-#' multidimensional TAM fits in a separate validation workflow.
-#'
-#' TAM-native AIC, BIC, and adjusted BIC are retained as explicitly named
-#' `Native*` fields. Compatibility `AIC` and `BIC` columns still mirror the
-#' native TAM values, but the imported object has
-#' `ICStatus = "imported_native_descriptive"`, `ICEligible = FALSE`, and cannot
-#' enter [compare_mfrm()] as a current mfrmr IC contract. In particular, TAM's
-#' native `aBIC` is not relabelled as the package's Sclove `SABIC`. The source
-#' metadata also retains the TAM version, dimension count, iterations, and
-#' iteration ceiling used for the conservative imported convergence status.
-#'
-#' @inheritSection import_mirt_fit Imported uncertainty
-#' @inheritSection import_mirt_fit Scope
-#'
-#' @return An `mfrm_imported_fit` object. Slots mirror
-#'   [import_mirt_fit()], with explicit TAM-native IC provenance in `summary`
-#'   and `source`.
-#' @seealso [import_mirt_fit()], [import_erm_fit()]
-#' @examples
-#' if (requireNamespace("TAM", quietly = TRUE)) {
-#'   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
-#'   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
-#'   fit <- TAM::tam.mml(resp = response_matrix, irtmodel = "PCM")
-#'   imported <- import_tam_fit(fit, model = "PCM")
-#'   imported$summary
-#' }
-#' @export
+#' @noRd
 import_tam_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
                             item_facet = "Item",
                             compute_fit = FALSE) {
   if (!requireNamespace("TAM", quietly = TRUE)) {
-    stop("`import_tam_fit()` requires the `TAM` package (suggested).",
+    stop("`import_irt_fit()` requires the `TAM` package (suggested).",
          call. = FALSE)
   }
   import_scope <- .tam_validate_import_scope(fit)
@@ -580,7 +589,7 @@ import_tam_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
 .tam_validate_import_scope <- function(fit) {
   if (inherits(fit, "tam.jml")) {
     stop(
-      "`import_tam_fit()` does not import `tam.jml` objects as MML. Keep TAM JML output in an explicitly JML-labelled external workflow.",
+      "`import_irt_fit()` does not import `tam.jml` objects as MML. Keep TAM JML output in an explicitly JML-labelled external workflow.",
       call. = FALSE
     )
   }
@@ -600,7 +609,7 @@ import_tam_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
   dimensions <- as.integer(round(dimensions_raw))
   if (dimensions != 1L) {
     stop(
-      "`import_tam_fit()` supports unidimensional TAM MML only; `ndim = ",
+      "`import_irt_fit()` supports unidimensional TAM MML only; `ndim = ",
       dimensions,
       "` must remain in a separate multidimensional validation workflow and cannot be exposed as one mfrmr scale.",
       call. = FALSE
@@ -858,46 +867,11 @@ import_tam_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
   list(item = item_df, person = person_df)
 }
 
-#' Import an `eRm` fit to an mfrmr-compatible bundle
-#'
-#' Extracts item / person parameters from an [eRm::PCM()],
-#' [eRm::RM()] or [eRm::RSM()] fit. Source cumulative easiness coefficients
-#' are converted to absolute adjacent-category difficulties. One item location
-#' is returned per item: the mean of its thresholds. Source identification is
-#' retained. Current `eRm` person tables use `Person Parameter` and
-#' `Std.Error`; historical `theta` / `thetapar` estimate labels are also
-#' accepted. Unknown or internally misaligned person-table schemas stop with an
-#' explicit error rather than silently recycling rows. Same caveats as
-#' [import_mirt_fit()].
-#'
-#' @param fit An object returned by `eRm::PCM()`, `eRm::RM()`, or
-#'   `eRm::RSM()`.
-#' @param model Matching `"PCM"` or `"RSM"` label; either is accepted for a
-#'   binary `RM`. `"GPCM"` and linear extensions are unsupported.
-#' @param item_facet Name to assign to the item facet.
-#'
-#' @return An `mfrm_imported_fit` object.
-#' @details
-#' Item-location SEs use the corresponding scalar transformation of the source
-#' cumulative coefficient SE. Person maximum-likelihood estimates and conditional
-#' SEs retain source conventions, including labelled extreme-score extrapolations.
-#' The original coefficient table is retained in `source$native_parameters`.
-#' @inheritSection import_mirt_fit Imported uncertainty
-#' @inheritSection import_mirt_fit Scope
-#' @seealso [import_mirt_fit()], [import_tam_fit()]
-#' @examples
-#' if (requireNamespace("eRm", quietly = TRUE)) {
-#'   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
-#'   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
-#'   fit <- eRm::PCM(response_matrix)
-#'   imported <- import_erm_fit(fit, model = "PCM")
-#'   imported$summary
-#' }
-#' @export
+#' @noRd
 import_erm_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
                             item_facet = "Item") {
   if (!requireNamespace("eRm", quietly = TRUE)) {
-    stop("`import_erm_fit()` requires the `eRm` package (suggested).",
+    stop("`import_irt_fit()` requires the `eRm` package (suggested).",
          call. = FALSE)
   }
   if (!is.list(fit) || is.null(fit$betapar)) {
@@ -1281,7 +1255,7 @@ print.mfrm_imported_fit <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname import_mirt_fit
+#' @rdname import_irt_fit
 #' @param object,x An imported measurement bundle.
 #' @param digits Number of digits for displayed estimates.
 #' @param ... Additional arguments (unused by imported summaries).
@@ -1301,7 +1275,7 @@ summary.mfrm_imported_fit <- function(object, digits = 3L, ...) {
   ), class = c("summary.mfrm_imported_fit", "list"))
 }
 
-#' @rdname import_mirt_fit
+#' @rdname import_irt_fit
 #' @export
 print.summary.mfrm_imported_fit <- function(x, ...) {
   cat("Imported measurement summary\n")

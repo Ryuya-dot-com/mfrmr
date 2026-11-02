@@ -32,20 +32,20 @@ plot types.}
 
 \item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 
-\item{draw}{If \code{FALSE}, return the plot data invisibly without drawing.}
+\item{draw}{If \code{FALSE}, return the \code{ggplot} object invisibly without printing.}
 
-\item{...}{Additional graphical parameters passed to base plotting
-functions.}
+\item{...}{Reserved for compatibility; use the named plot controls.}
 }
 \value{
-A plotting-data object of class \code{mfrm_plot_data}. With
-\code{draw = FALSE}, \code{result$data$table} contains the filtered drift or chain
-table, \code{result$data$matrix} contains the heatmap matrix when requested,
+Invisibly, a \code{ggplot} object. Use \code{\link[=plot_data]{plot_data()}} to retrieve its
+reusable plotting data and notes. With
+\code{draw = FALSE}, \code{plot_data(p, "table")} contains the filtered drift or chain
+table, \code{plot_data(p, "matrix")} contains the heatmap matrix when requested,
 and the returned plot data includes package-native \code{title}, \code{subtitle},
 \code{legend}, and \code{reference_lines}.
 }
 \description{
-Creates base-R plots for inspecting anchor drift across calibration waves
+Creates ggplot2 figures for inspecting anchor drift across calibration waves
 or visualising the cumulative offset in a screened linking chain.
 }
 \details{
@@ -111,7 +111,7 @@ and then use the plot to see where the flagged values sit.
 \code{\link[=build_equating_chain]{build_equating_chain()}}.
 \item Start with \code{draw = FALSE} if you want the plotting data for custom
 reporting.
-\item Use the base-R plot for quick screening and then inspect the underlying
+\item Use the plot for quick screening and then inspect the underlying
 tables for exact values.
 }
 }
@@ -123,41 +123,16 @@ For a plot-selection guide and a longer walkthrough, see
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
 }
 
+\section{Session plot defaults}{
+
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
+}
+
 \section{Migration in 0.2.4}{
 
 This renderer is internal. Use the corresponding \code{plot()} route in
 \link{mfrmr_plot_migration}; the former exported name is no longer available.
-}
-
-\section{Session plot defaults}{
-
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \seealso{

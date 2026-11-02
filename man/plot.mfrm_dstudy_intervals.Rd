@@ -31,10 +31,10 @@ future plan, with at most \code{ncol} columns.}
 \item{...}{Reserved; additional arguments are rejected.}
 }
 \value{
-Invisibly, an \code{mfrm_plot_data} object retaining the exact \code{table},
+Invisibly, a \code{ggplot} object; \code{\link[=plot_data]{plot_data()}} retains the exact \code{table},
 \code{unavailable} rows, source \code{intervals}, \code{design_grid}, \code{weights} and \code{notes}.
-Use \code{\link[=plot_data]{plot_data()}} to inspect them and \code{\link[=as_ggplot]{as_ggplot()}} on the returned object
-for an editable plot. No title or explanatory footnote is drawn.
+\code{\link[=as_ggplot]{as_ggplot()}} remains idempotent on the returned object.
+No title or explanatory footnote is drawn.
 }
 \description{
 Compare future plans on one shared coefficient or SEM axis. Each plan has adjacent
@@ -84,36 +84,14 @@ the saved interval object and notes retain the reason and affected ranges.
 }
 \section{Session plot defaults}{
 
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot.mfrm_dstudy_intervals", run.dontrun = TRUE)
+\dontrun{
 tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 g <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
 d <- mfrm_d_study(g, data.frame(Tasks = c(6, 12)))
@@ -121,6 +99,7 @@ ci <- confint(d, assumption = "normal")
 p <- plot(ci, draw = FALSE)
 plot_data(p, "notes")
 if (requireNamespace("ggplot2", quietly = TRUE)) as_ggplot(p)
+}
 }
 \seealso{
 \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}}

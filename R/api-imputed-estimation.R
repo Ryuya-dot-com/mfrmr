@@ -53,10 +53,22 @@ fit_mfrm_imputed <- function(x, model = c("RSM", "PCM"), step_facet = NULL, ...)
     "person_data", "person_id", "population_policy", "population_sd", "facet_shrinkage",
     "facet_prior_sd", "shrink_person", "checkpoint", "gpcm_mml_identification",
     "slope_facet", "mml_integration", "attach_diagnostics")
-  allowed <- setdiff(names(formals(fit_mfrm)), c(blocked, "model", "step_facet"))
+  allowed <- setdiff(.mfrm_fit_canonical_names(), c(blocked, "model", "step_facet"))
   if (length(dots) && (is.null(names(dots)) || anyNA(names(dots)) ||
-      any(!nzchar(names(dots))) || anyDuplicated(names(dots)) ||
-      any(!names(dots) %in% allowed))) {
+      any(!nzchar(names(dots))) || anyDuplicated(names(dots)))) {
+    stop("Use named, supported shared fitting controls; the workflow fixes data, scale and MML identification.", call. = FALSE)
+  }
+  if ("spec" %in% names(dots) || "control" %in% names(dots)) {
+    spec_in <- if ("spec" %in% names(dots)) .mfrm_validate_spec_list(dots$spec, "fit_mfrm_imputed()") else list()
+    ctrl_in <- if ("control" %in% names(dots)) .mfrm_validate_control_list(dots$control, "fit_mfrm_imputed()") else list()
+    rest_dots <- dots[setdiff(names(dots), c("spec", "control"))]
+    merged_nms <- c(names(spec_in), names(ctrl_in), names(rest_dots))
+    if (anyDuplicated(merged_nms)) {
+      stop("Use named, supported shared fitting controls; the workflow fixes data, scale and MML identification.", call. = FALSE)
+    }
+    dots <- c(spec_in, ctrl_in, rest_dots)
+  }
+  if (length(dots) && any(!names(dots) %in% allowed)) {
     stop("Use named, supported shared fitting controls; the workflow fixes data, scale and MML identification.", call. = FALSE)
   }
   arguments <- c(list(person = s$person, facets = s$facets, score = s$score,
@@ -111,9 +123,10 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #' raters across completed-data fits. Rubin's rules include uncertainty within
 #' each fit and variation between imputations. The calculation uses the full
 #' covariance for one non-Person facet; it does not pool Person ability scores.
-#'
-#' @param x Output from [fit_mfrm_imputed()]. All completions must have
+#' @param x For `pool_mfrm_imputed()`: Output from [fit_mfrm_imputed()]. All completions must have
 #'   inference-ready RSM/PCM MML fits and unregularized observed information.
+#'
+#' For `plot()`: Output from [pool_mfrm_imputed()].
 #' @param facet A non-person facet column name, for example `"Rater"`.
 #' @param contrasts Optional numeric matrix with one named row per target and
 #'   columns named by all facet levels. For example, a row with coefficients
@@ -126,7 +139,6 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #'   of freedom are inferred from rating-row counts: ratings within a person
 #'   are not independent sampling units. A supplied finite value requires a
 #'   defensible complete-data reference distribution for the chosen target.
-#'
 #' @return An `mfrm_pooled` object containing `table`, `within`, `between`
 #'   and `total` covariance matrices, `estimates` by imputation, each
 #'   `complete_covariance`, the exact `contrasts`, `facet_levels`, `settings`
@@ -142,7 +154,6 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #'   numerical resolution loss and intervals outside the numeric range.
 #'   An unavailable interval retains its point estimate and variance.
 #'   `notes` records the imputation and inference assumptions for saved reuse.
-#'
 #' @details For a common target, `Qbar` is the mean completed-data estimate,
 #'   `Ubar` the mean complete-data covariance and `B` their between-imputation
 #'   covariance. The total is `T = Ubar + (1 + 1/m) B`. The scalar t-reference
@@ -174,7 +185,7 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #' They are not robust intervals, simultaneous rater decisions or general
 #' coverage guarantees. Do not pool EAPs, posterior SDs, fit statistics, cluster
 #' labels or likelihood-ratio tests with this function. See the executable
-#' assigned-score example in `vignette("mfrmr-response-imputation")`.
+#' assigned-score example in [online response-imputation guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-response-imputation.html).
 #' It compares joint RSM predictive completions with direct observed-score
 #' inference. Proper calibration priors in the imputer and MML estimates in
 #' the completed-data analyses do not give exactly identical Bayesian moments:
@@ -195,7 +206,6 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #' require conditions including a consistent point estimator and appropriate
 #' resampling units. This function implements Rubin pooling, not that outer
 #' bootstrap procedure.
-#'
 #' @section Bounded evaluation:
 #' A joint-RSM imputation example was examined using 200 independent datasets,
 #' each analyzed with MAR and low-score-dependent MNAR missingness. The design
@@ -211,7 +221,6 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #' These results concern that imputer, contrast and design, not arbitrary
 #' supplied completions or general coverage. See the assigned-score vignette
 #' for direct-MML/Bayesian comparisons, interval widths and failure accounting.
-#'
 #' @references Rubin, D. B. (1987). *Multiple Imputation for Nonresponse in
 #'   Surveys*. Wiley. Barnard, J. and Rubin, D. B. (1999). Small-sample degrees
 #'   of freedom with multiple imputation. *Biometrika*, 86, 948--955.
@@ -223,6 +232,7 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #'   \doi{10.1177/0962280220932189}.
 #' @seealso [mice::pool.scalar()], [review_mfrm_imputations()], [fit_mfrm_imputed()]
 #' @export
+#' @order 1
 pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
                              df_complete = Inf) {
   if (!inherits(x, "mfrm_imputed_fits") || length(x$fits) < 2L ||

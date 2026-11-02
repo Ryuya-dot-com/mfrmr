@@ -13,7 +13,7 @@ p2l_binary_owner <- function() {
 
 test_that("saturated ordered-category likelihood helpers are exact", {
   adjacent <- c(log(2), log(3), log(4), log(5))
-  cumulative <- mfrmr:::mfrmr_jml_gpcm_saturated_envelope_cumulative(
+  cumulative <- .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_cumulative(
     adjacent,
     observations = 2,
     categories = 3
@@ -27,12 +27,12 @@ test_that("saturated ordered-category likelihood helpers are exact", {
   mass <- rbind(c(1, 2, 8), c(1, 3, 15))
   expected <- sum(mass * log(mass / rowSums(mass)))
   expect_equal(
-    mfrmr:::mfrmr_jml_gpcm_saturated_envelope_loglik(adjacent, mass),
+    .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_loglik(adjacent, mass),
     expected,
     tolerance = 1e-14
   )
   expect_equal(
-    mfrmr:::mfrmr_jml_gpcm_saturated_envelope_logsumexp(c(1000, 999)),
+    .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_logsumexp(c(1000, 999)),
     1000 + log1p(exp(-1)),
     tolerance = 0
   )
@@ -42,7 +42,7 @@ test_that("positive binary masses can have a nonattained saturated JML bound", {
   skip_if_not_installed("lpSolve")
 
   result <-
-    mfrmr:::mfrmr_jml_gpcm_saturated_envelope_p2i_binary_fixture()
+    .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_p2i_binary_fixture()
   expected <- c(log(2), log(4), 0, 0)
   mass <- cbind(rep(1, 4), c(2, 4, 1, 1))
   expected_value <- sum(mass * log(mass / rowSums(mass)))
@@ -149,10 +149,10 @@ test_that("certified finite parameter paths attain the saturated supremum", {
   skip_if_not_installed("lpSolve")
 
   result <-
-    mfrmr:::mfrmr_jml_gpcm_saturated_envelope_p2i_binary_fixture()
+    .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_p2i_binary_fixture()
   indices <- c(0, 1, 3, 8, 20)
   paths <- lapply(indices, function(index) {
-    mfrmr:::mfrmr_jml_gpcm_saturated_envelope_path_at(result, index)
+    .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_path_at(result, index)
   })
   expect_true(all(vapply(paths, `[[`, logical(1), "valid")))
   expect_true(all(vapply(
@@ -198,7 +198,7 @@ test_that("finite saturated targets certify finite global JMLEs", {
 
   design <- p2l_binary_design()
   owner <- p2l_binary_owner()
-  finite <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  finite <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     design,
     owner,
     cbind(rep(1, 4), c(4, 2, 4, 2))
@@ -238,7 +238,7 @@ test_that("finite saturated targets certify finite global JMLEs", {
     tolerance = 1e-14
   )
 
-  intersection <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  intersection <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     design,
     owner,
     cbind(rep(1, 4), rep(2, 4))
@@ -250,7 +250,7 @@ test_that("finite saturated targets certify finite global JMLEs", {
     tolerance = 0
   )
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_saturated_envelope_path_at(finite, 1)$valid
+    .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_path_at(finite, 1)$valid
   )
 })
 
@@ -258,7 +258,7 @@ test_that("outside saturated targets retain a strict but uncomputed bound", {
   skip_if_not_installed("lpSolve")
 
   target <- c(1, -2, 0, 1)
-  result <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  result <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     p2l_binary_design(),
     p2l_binary_owner(),
     cbind(rep(1, 4), exp(target))
@@ -298,7 +298,7 @@ test_that("outside saturated targets retain a strict but uncomputed bound", {
     "constrained_closure_likelihood_envelope_below_saturated_bound"
   )
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_saturated_envelope_path_at(result, 1)$valid
+    .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_path_at(result, 1)$valid
   )
 })
 
@@ -313,7 +313,7 @@ test_that("the theorem extends from binary to ordered polytomous mass", {
   )
   first_transition <- c(log(2), log(4), 0, 0)
   mass <- cbind(1, exp(first_transition), exp(first_transition))
-  result <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  result <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     design,
     rep(p2l_binary_owner(), 2),
     mass
@@ -338,13 +338,13 @@ test_that("the theorem extends from binary to ordered polytomous mass", {
     tolerance = 2e-14
   )
 
-  path <- mfrmr:::mfrmr_jml_gpcm_saturated_envelope_path_at(result, 8)
+  path <- .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_path_at(result, 8)
   expect_true(path$valid)
   expect_lt(path$contrast_distance_to_target, 6e-04)
   expect_lt(path$target_minus_path_log_likelihood, 2e-07)
 
   finite_mass <- rbind(c(1, 2, 6), c(2, 3, 12))
-  finite <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  finite <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     diag(4),
     c(1, 2, 1, 2),
     finite_mass
@@ -361,7 +361,7 @@ test_that("positive mass supplies strict concavity and contrast coercivity", {
   mass <- cbind(rep(1, 4), c(2, 4, 1, 1))
   optimum <- log(mass[, 2] / mass[, 1])
   perturbation <- c(0.3, -0.4, 0.2, -0.1)
-  loglik <- mfrmr:::mfrmr_jml_gpcm_saturated_envelope_loglik
+  loglik <- .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_loglik
 
   optimum_value <- loglik(optimum, mass)
   plus <- loglik(optimum + perturbation, mass)
@@ -384,10 +384,10 @@ test_that("classification respects mass scaling and aligned row permutations", {
   design <- p2l_binary_design()
   owner <- p2l_binary_owner()
   mass <- cbind(rep(1, 4), c(2, 4, 1, 1))
-  original <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  original <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     design, owner, mass
   )
-  scaled <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  scaled <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     design, owner, 7 * mass
   )
   expect_identical(scaled$state, original$state)
@@ -403,7 +403,7 @@ test_that("classification respects mass scaling and aligned row permutations", {
   )
 
   permutation <- c(3, 1, 4, 2)
-  permuted <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  permuted <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     design[permutation, , drop = FALSE],
     owner[permutation],
     mass[permutation, , drop = FALSE]
@@ -420,10 +420,10 @@ test_that("classification respects mass scaling and aligned row permutations", {
     tolerance = 1e-14
   )
 
-  sparse <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  sparse <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     Matrix::Matrix(design, sparse = TRUE), owner, mass
   )
-  expanded <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  expanded <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     cbind(design, 0), owner, mass
   )
   expect_identical(sparse$state, original$state)
@@ -439,7 +439,7 @@ test_that("malformed saturated-envelope inputs fail closed", {
   owner <- p2l_binary_owner()
   mass <- cbind(rep(1, 4), c(2, 4, 1, 1))
   evaluate <- function(...) {
-    mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+    .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
       design, owner, mass, ...
     )
   }
@@ -497,7 +497,7 @@ test_that("malformed saturated-envelope inputs fail closed", {
     )
     arguments[names(replacement)] <- replacement
     result <- expect_silent(do.call(
-      mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope,
+      .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope,
       arguments
     ))
     expect_identical(result$state, "not_evaluated_input")
@@ -512,7 +512,7 @@ test_that("numerical and workload ambiguity never promotes an envelope", {
 
   design <- p2l_binary_design()
   owner <- p2l_binary_owner()
-  near <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  near <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     design,
     owner,
     cbind(rep(1, 4), exp(c(1, 0, 1e-06, 0))),
@@ -526,7 +526,7 @@ test_that("numerical and workload ambiguity never promotes an envelope", {
   expect_false(near$finite_jmle_existence_certified)
   expect_false(near$finite_jmle_nonexistence_certified)
 
-  face_cap <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  face_cap <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     design,
     owner,
     cbind(rep(1, 4), c(2, 4, 1, 1)),
@@ -535,7 +535,7 @@ test_that("numerical and workload ambiguity never promotes an envelope", {
   expect_identical(face_cap$state, "not_evaluated_face_chart")
   expect_false(face_cap$saturated_response_envelope_classified)
 
-  hierarchy_cap <- mfrmr:::mfrmr_jml_gpcm_saturated_response_envelope(
+  hierarchy_cap <- .mfrmr_research$mfrmr_jml_gpcm_saturated_response_envelope(
     matrix(1, nrow = 3, ncol = 1),
     1:3,
     cbind(rep(1, 3), exp(c(1, -2, 0))),
@@ -557,7 +557,7 @@ test_that("saturated-envelope path controls fail closed", {
   skip_if_not_installed("lpSolve")
 
   result <-
-    mfrmr:::mfrmr_jml_gpcm_saturated_envelope_p2i_binary_fixture()
+    .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_p2i_binary_fixture()
   invalid <- list(
     list(result, -1),
     list(result, 1.5),
@@ -569,7 +569,7 @@ test_that("saturated-envelope path controls fail closed", {
   )
   for (arguments in invalid) {
     path <- do.call(
-      mfrmr:::mfrmr_jml_gpcm_saturated_envelope_path_at,
+      .mfrmr_research$mfrmr_jml_gpcm_saturated_envelope_path_at,
       arguments
     )
     expect_false(path$valid)

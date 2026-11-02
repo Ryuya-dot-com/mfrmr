@@ -37,6 +37,9 @@ a forecast-uncertainty result
 Summarize a population-level design forecast
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("summary.mfrm_population_prediction", run.dontrun = TRUE)
+\dontrun{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
 saved <- readRDS(system.file("examples", "simulation-population.rds",
@@ -46,6 +49,7 @@ pred <- saved$result
 s <- summary(pred)
 s$overview
 s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
+}
 }
 \seealso{
 \code{\link[=predict_mfrm_population]{predict_mfrm_population()}}

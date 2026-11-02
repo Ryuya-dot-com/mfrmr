@@ -67,6 +67,9 @@ The returned bundle now includes:
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("facet_statistics_report", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -75,6 +78,7 @@ out <- facet_statistics_report(fit)
 summary(out)
 p_fs <- plot(out, draw = FALSE)
 p_fs$data$plot
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")},

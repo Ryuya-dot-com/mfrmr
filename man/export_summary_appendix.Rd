@@ -134,6 +134,9 @@ workflows.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("export_summary_appendix", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -147,6 +150,7 @@ appendix <- export_summary_appendix(
   overwrite = TRUE
 )
 appendix$summary
+}
 }
 \seealso{
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}},

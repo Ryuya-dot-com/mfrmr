@@ -209,15 +209,6 @@ mfrm_results_include_presets <- function() {
   )
 }
 
-mfrm_results_include_preset_table <- function() {
-  presets <- mfrm_results_include_presets()
-  data.frame(
-    Preset = names(presets),
-    Sections = vapply(presets, paste, collapse = ", ", character(1)),
-    stringsAsFactors = FALSE
-  )
-}
-
 mfrm_results_resolve_include <- function(include) {
   if (is.null(include) || length(include) == 0L) include <- "standard"
   requested <- unique(tolower(trimws(as.character(include))))
@@ -946,7 +937,7 @@ mfrm_results_misfit_review_bundle <- function(fit, diagnostics, top_n = 50L) {
   unexpected <- unexpected_response_table(fit, diagnostics = diagnostics, top_n = top_n)
   displacement <- displacement_table(fit, diagnostics = diagnostics, top_n = top_n)
   pathway <- plot(fit, type = "pathway", draw = FALSE)
-  pathway_data <- pathway$data %||% list()
+  pathway_data <- plot_data(pathway) %||% list()
   guidance <- data.frame(
     Area = c("Unexpected responses", "Displacement", "Pathway map", "Interpretation boundary"),
     Status = c(
@@ -1020,7 +1011,7 @@ mfrm_results_linking_review_bundle <- function(fit) {
       "summary(res$components$linking_review); plot(res, type = \"anchors\")",
       "detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2)); plot(drift)",
       "build_equating_chain(list(Form1 = fit1, Form2 = fit2)); plot(chain, type = \"chain\")",
-      "gpcm_capability_matrix()",
+      "mfrmr_output_guide(\"gpcm_capabilities\")",
       "build_summary_table_bundle(res$components$linking_review)"
     ),
     Detail = c(
@@ -1093,7 +1084,7 @@ mfrm_results_response_time_bundle <- function(ctx,
     Detail = c(
       paste0("Response-time column `", time_col, "` was reviewed outside the fitted MFRM likelihood."),
       "Response-time summaries do not estimate speed parameters, modify logits, or create automatic exclusion rules.",
-      "Distribution, person, facet, and score views can be extracted as mfrm_plot_data objects."
+      "Distribution, person, facet, and score views return ggplot objects whose tables can be extracted via plot_data()."
     ),
     stringsAsFactors = FALSE
   )
@@ -1403,7 +1394,7 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
     )
   } else if (mfrm_has_product_slopes(fit)) {
     add("Diagnostics", "not_available", "diagnostics_unsupported",
-      "gpcm_capability_matrix()",
+      "mfrmr_output_guide(\"gpcm_capabilities\")",
       "Ordinary diagnostics are not supported for two-family GPCM. Separately saved descriptive response diagnostics do not supply ordinary fit tests.")
   } else {
     diagnostics_not_computed <- nrow(status) > 0L &&
@@ -1619,7 +1610,7 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
       "Model scope",
       "info",
       "bounded_gpcm_scope",
-      "gpcm_capability_matrix()",
+      "mfrmr_output_guide(\"gpcm_capabilities\")",
       "GPCM results should be read through the documented capability matrix and caveats."
     )
   }
@@ -1822,7 +1813,7 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
       13L,
       "GPCM scope",
       "Check GPCM support boundaries before interpreting advanced outputs.",
-      "gpcm_capability_matrix()",
+      "mfrmr_output_guide(\"gpcm_capabilities\")",
       "The GPCM route is supported with documented helper-specific caveats and should not be treated as a universal Rasch-family replacement."
     )
   }
@@ -2375,7 +2366,7 @@ mfrm_report_section_plan <- function(x, sx, style) {
       "GPCM scope",
       "caveat",
       "The fitted model is GPCM.",
-      "gpcm_capability_matrix(); mfrmr_output_guide(\"gpcm\")",
+      "mfrmr_output_guide(\"gpcm_capabilities\"); mfrmr_output_guide(\"gpcm\")",
       "Use direct outputs with documented helper-specific caveats.",
       "Do not present GPCM helper coverage as universal equivalence with all RSM/PCM report routes."
     )
@@ -2386,57 +2377,7 @@ mfrm_report_section_plan <- function(x, sx, style) {
 }
 
 mfrm_report_evidence_boundary <- function() {
-  data.frame(
-    EvidenceSource = c(
-      "Model setup and convergence",
-      "Fit, separation, and precision",
-      "Category functioning",
-      "Bias and DFF screening",
-      "Misfit and pathway maps",
-      "Anchors, linking, and drift",
-      "Network and connectivity",
-      "Response-time QC",
-      "GPCM helper coverage",
-      "APA-style wording"
-    ),
-    Use = c(
-      "Document estimation settings, data roles, and run stability.",
-      "Separate fit-size, standardized fit, separation, reliability, and uncertainty evidence.",
-      "Describe how score categories function and where thresholds or curves need review.",
-      "Identify candidate contrasts for follow-up fairness or interaction review.",
-      "Localize unexpected observations for case review and substantive interpretation.",
-      "Assess anchor readiness and operational scale-maintenance workflow.",
-      "Describe design overlap, sparseness, and connectedness.",
-      "Describe rapid/slow-response timing patterns as separate QC context.",
-      "State which GPCM summaries are supported and which are caveated.",
-      "Draft report prose, captions, and section maps."
-    ),
-    DoNotUseAs = c(
-      "Proof that the construct interpretation is valid.",
-      "A single pass/fail psychometric rule.",
-      "Standalone validity evidence.",
-      "Final fairness, bias, or invariance conclusion.",
-      "Automatic exclusion rule for persons, raters, items, or observations.",
-      "Single-fit evidence of drift or completed equating.",
-      "A replacement for fit, precision, or bias diagnostics.",
-      "A fitted speed parameter, speed-accuracy model, or automatic exclusion rule.",
-      "A claim that every RSM/PCM report pathway has an equivalent GPCM route.",
-      "Final manuscript text without study-specific editing."
-    ),
-    RecommendedRoute = c(
-      "summary(res)$overview; specifications_report(fit)",
-      "summary(res$components$precision_review); precision_review_report()",
-      "rating_scale_table(); category_structure_report(); category_curves_report()",
-      "mfrm_results(fit, include = \"bias\"); estimate_bias(); bias_interaction_report()",
-      "mfrm_results(fit, include = \"misfit_review\"); unexpected_response_table(); plot(res, type = \"pathway\")",
-      "mfrm_results(fit, include = \"linking\"); review_mfrm_anchors(); detect_anchor_drift(); build_equating_chain()",
-      "mfrm_results(fit, include = \"network\"); build_mfrm_network_review()",
-      "mfrm_results(fit, include = \"response_time\", response_time = ..., response_time_data = ...); response_time_review()",
-      "gpcm_capability_matrix(); mfrmr_output_guide(\"gpcm\")",
-      "mfrm_report(res, style = \"apa\"); build_apa_outputs()"
-    ),
-    stringsAsFactors = FALSE
-  )
+  .mfrmr_table_mfrm_report_evidence_boundary_data
 }
 
 mfrm_report_fit_criteria <- function(x) {
@@ -2478,90 +2419,11 @@ mfrm_report_fit_criteria <- function(x) {
 }
 
 mfrm_report_zstd_conventions <- function() {
-  data.frame(
-    Convention = c(
-      "engine df",
-      "FACETS-style df",
-      "Wilson-Hilferty ZSTD",
-      "FACETS WHEXACT=NO",
-      "Report comparison route"
-    ),
-    FormulaOrRule = c(
-      "Infit df = sum(Var * Weight); Outfit df = sum(Weight).",
-      "Fourth-moment Wright-Masters-style df: 2 * numerator^2 / denominator; package columns DF_*_FACETS.",
-      "(MnSq^(1/3) - (1 - 2 / (9 * df))) / sqrt(2 / (9 * df)).",
-      "3 * (MnSq^(1/3) - 1) / sqrt(2/df) when whexact = TRUE; legacy_linear explicitly retains the old linear approximation.",
-      "Keep engine and FACETS-style columns side by side with fit_df_method = \"both\"."
-    ),
-    PackageConstraint = c(
-      "zstd_from_mnsq() returns NA when df < 1 to avoid unstable Wilson-Hilferty signs.",
-      "zstd_from_mnsq_facets() allows positive df below 1 and caps reported ZSTD at +/-9.",
-      "Requires finite positive MnSq and usable df; small df can dominate the transformation.",
-      "Still requires usable df; use only when the analysis intentionally follows that convention.",
-      "Compare MnSq first, then df, then ZSTD; classify flag changes as convention-sensitive."
-    ),
-    ReportingImplication = c(
-      "The explicit engine convention withholds very small df; this is an availability rule, not a calibrated conservative test.",
-      "This option applies the documented fourth-moment df/ZSTD convention; agreement with external FACETS output must be checked separately.",
-      "ZSTD is a standardization of MnSq, not a separate residual-fit statistic.",
-      "State the transformation setting before interpreting ZSTD.",
-      "Do not explain fit decisions from ZSTD alone when MnSq, df, or threshold profile differs."
-    ),
-    SourceBasis = c(
-      "Package-native numerical guard for Wilson-Hilferty stability.",
-      "FACETS/Winsteps fit-standardization documentation and Wright-Masters fourth-moment df convention.",
-      "Wilson-Hilferty cube-root approximation used in Rasch fit standardization.",
-      "Winsteps/FACETS WHEXACT documentation.",
-      "facets_fit_df_guide(); facets_fit_review(); fit_measures_table()."
-    ),
-    Route = c(
-      "diagnose_mfrm(fit_df_method = \"engine\")",
-      "diagnose_mfrm(fit_df_method = \"facets\")",
-      "fit_measures_table(..., fit_df_method = \"engine\" or \"facets\")",
-      "diagnose_mfrm(..., whexact = TRUE)",
-      "fit_measures_table(..., fit_df_method = \"both\")"
-    ),
-    stringsAsFactors = FALSE
-  )
+  .mfrmr_table_mfrm_report_zstd_conventions_data
 }
 
 mfrm_report_fit_decision_policy <- function() {
-  data.frame(
-    Step = seq_len(6L),
-    Rule = c(
-      "Choose and state the MnSq band",
-      "Read MnSq before ZSTD",
-      "Keep ZSTD convention visible",
-      "Separate fit from precision",
-      "Treat profile disagreement as sensitivity evidence",
-      "Use local review before action"
-    ),
-    Rationale = c(
-      "Published bands differ by setting; the active band and sensitivity profiles should both be visible.",
-      "MnSq is the size of the fit signal; ZSTD is a df-dependent standardization of that signal.",
-      "FACETS-style df can change |ZSTD| flags even when MnSq is unchanged.",
-      "Fit, separation, reliability, and strata answer different questions.",
-      "A row can be flagged under one defensible band and not another; report this as a review sensitivity.",
-      "Element fit flags are prompts for inspecting responses, raters, items, categories, or design links."
-    ),
-    RecommendedRoute = c(
-      "fit_measures_table(threshold_profiles = \"all\")",
-      "fit_measures_table()$table[, c(\"Infit\", \"Outfit\", \"FitStatus\")]",
-      "fit_measures_table(fit_df_method = \"both\")$df_sensitivity",
-      "precision_review_report()$fit_separation_basis",
-      "fit_measures_table()$profile_summary_by_facet",
-      "unexpected_response_table(); displacement_table(); plot(res, type = \"pathway\")"
-    ),
-    ReportBoundary = c(
-      "Do not silently mix bands across reports.",
-      "Do not treat ZSTD as independent evidence from MnSq.",
-      "Do not call a df-sensitive ZSTD change a substantive fit change without MnSq/context evidence.",
-      "Do not use high reliability to excuse misfit or good fit to imply high precision.",
-      "Do not present one threshold profile as universal.",
-      "Do not remove levels or observations from fit flags alone."
-    ),
-    stringsAsFactors = FALSE
-  )
+  .mfrmr_table_mfrm_report_fit_decision_policy_data
 }
 
 mfrm_report_fit_bundle <- function(x) {
@@ -2992,6 +2854,80 @@ mfrm_report_template_enrich <- function(df,
   df
 }
 
+mfrm_report_component_bundle <- function(x, name, class_name,
+                                         unavailable_source = "not_requested") {
+  comps <- x$components %||% list()
+  if (name %in% names(comps) && inherits(comps[[name]], class_name)) {
+    return(list(
+      available = TRUE,
+      bundle = comps[[name]],
+      source = paste0("res$components$", name)
+    ))
+  }
+  list(
+    available = FALSE,
+    bundle = NULL,
+    source = unavailable_source
+  )
+}
+
+mfrm_report_template_builder <- function(style, boundary_type, include_facet = FALSE) {
+  audience <- mfrm_report_fit_template_audience(style)
+  rows <- list()
+  list(
+    unavailable = function(topic, template, evidence, caveat, route) {
+      mfrm_report_template_enrich(
+        data.frame(
+          Audience = audience,
+          Topic = as.character(topic),
+          Template = as.character(template),
+          EvidenceUsed = as.character(evidence),
+          Caveat = as.character(caveat),
+          Route = as.character(route),
+          Style = style,
+          stringsAsFactors = FALSE
+        ),
+        boundary_type = boundary_type,
+        default_claim_strength = "not_supported_without_followup"
+      )
+    },
+    add = function(topic, template, evidence, caveat, route, facet = NA_character_) {
+      row <- if (isTRUE(include_facet)) {
+        data.frame(
+          Audience = audience,
+          Topic = as.character(topic),
+          Facet = facet,
+          Template = as.character(template),
+          EvidenceUsed = as.character(evidence),
+          Caveat = as.character(caveat),
+          Route = as.character(route),
+          Style = style,
+          stringsAsFactors = FALSE
+        )
+      } else {
+        data.frame(
+          Audience = audience,
+          Topic = as.character(topic),
+          Template = as.character(template),
+          EvidenceUsed = as.character(evidence),
+          Caveat = as.character(caveat),
+          Route = as.character(route),
+          Style = style,
+          stringsAsFactors = FALSE
+        )
+      }
+      rows[[length(rows) + 1L]] <<- row
+    },
+    finish = function(default_claim_strength = "write_with_caveat") {
+      mfrm_report_template_enrich(
+        do.call(rbind, rows),
+        boundary_type = boundary_type,
+        default_claim_strength = default_claim_strength
+      )
+    }
+  )
+}
+
 mfrm_report_fit_reporting_templates <- function(style,
                                                 fit_evidence_summary,
                                                 fit_threshold_sensitivity,
@@ -3001,7 +2937,7 @@ mfrm_report_fit_reporting_templates <- function(style,
   th <- as.data.frame(fit_threshold_sensitivity %||% data.frame(), stringsAsFactors = FALSE)
   df <- as.data.frame(fit_df_sensitivity_summary %||% data.frame(), stringsAsFactors = FALSE)
   available <- nrow(ev) > 0L && as.character(ev$Status[1] %||% "") %in% "available"
-  audience <- mfrm_report_fit_template_audience(style)
+  builder <- mfrm_report_template_builder(style, "fit_not_validity")
   style_lead <- switch(
     style,
     apa = "Report in the manuscript as a descriptive diagnostic, then cite the exact table route.",
@@ -3013,34 +2949,19 @@ mfrm_report_fit_reporting_templates <- function(style,
   )
 
   if (!available) {
-    return(mfrm_report_template_enrich(data.frame(
-      Audience = audience,
-      Topic = "Fit evidence unavailable",
-      Template = paste0(
+    return(builder$unavailable(
+      "Fit evidence unavailable",
+      paste0(
         "Result-specific fit wording was not generated because the stored ",
         "mfrm_results object does not contain a fit-measures component. This is an output-collection state, not evidence of numerical failure."
       ),
-      EvidenceUsed = "fit_evidence_summary",
-      Caveat = "Rebuild the result with mfrm_results(fit, include = c(\"diagnostics\", \"tables\")) before reporting fit counts.",
-      Route = "mfrm_results(fit, include = c(\"diagnostics\", \"tables\"))",
-      Style = style,
-      stringsAsFactors = FALSE
-    ), boundary_type = "fit_not_validity", default_claim_strength = "not_supported_without_followup"))
+      "fit_evidence_summary",
+      "Rebuild the result with mfrm_results(fit, include = c(\"diagnostics\", \"tables\")) before reporting fit counts.",
+      "mfrm_results(fit, include = c(\"diagnostics\", \"tables\"))"
+    ))
   }
 
-  rows <- list()
-  add <- function(topic, template, evidence, caveat, route) {
-    rows[[length(rows) + 1L]] <<- data.frame(
-      Audience = audience,
-      Topic = as.character(topic),
-      Template = as.character(template),
-      EvidenceUsed = as.character(evidence),
-      Caveat = as.character(caveat),
-      Route = as.character(route),
-      Style = style,
-      stringsAsFactors = FALSE
-    )
-  }
+  add <- builder$add
 
   rows_n <- mfrm_report_fmt_int(ev$Rows[1])
   underfit <- mfrm_report_fmt_int(ev$UnderfitRows[1])
@@ -3133,27 +3054,13 @@ mfrm_report_fit_reporting_templates <- function(style,
     "report$fit_decision_policy"
   )
 
-  mfrm_report_template_enrich(
-    do.call(rbind, rows),
-    boundary_type = "fit_not_validity",
-    default_claim_strength = "write_with_caveat"
-  )
+  builder$finish()
 }
 
 mfrm_report_precision_bundle <- function(x) {
-  comps <- x$components %||% list()
-  if ("precision_review" %in% names(comps) &&
-      inherits(comps$precision_review, "mfrm_precision_review")) {
-    return(list(
-      available = TRUE,
-      bundle = comps$precision_review,
-      source = "res$components$precision_review"
-    ))
-  }
-  list(
-    available = FALSE,
-    bundle = NULL,
-    source = "not_available"
+  mfrm_report_component_bundle(
+    x, "precision_review", "mfrm_precision_review",
+    unavailable_source = "not_available"
   )
 }
 
@@ -3198,29 +3105,7 @@ mfrm_report_precision_evidence_summary <- function(x) {
     stringsAsFactors = FALSE
   )
   if (!isTRUE(precision_info$available) && nrow(reliability_tbl) == 0L) {
-    return(data.frame(
-      Status = "not_available",
-      PrecisionTier = NA_character_,
-      SupportsFormalInference = NA,
-      ReliabilityRows = NA_integer_,
-      ReviewOrWarnChecks = NA_integer_,
-      MinSeparation = NA_real_,
-      MaxSeparation = NA_real_,
-      MinReliability = NA_real_,
-      MaxReliability = NA_real_,
-      MinStrata = NA_real_,
-      MaxStrata = NA_real_,
-      ZeroSeparationRows = NA_integer_,
-      ZeroReliabilityRows = NA_integer_,
-      ReliabilityUse = NA_character_,
-      Source = "not_available",
-      Route = "mfrm_results(fit, include = \"precision\")",
-      Boundary = paste0(
-        "Precision/separation wording requires the stored precision review ",
-        "or diagnostics$reliability. Rebuild the result with precision included."
-      ),
-      stringsAsFactors = FALSE
-    ))
+    return(.mfrmr_table_mfrm_report_precision_evidence_summary_data)
   }
 
   precision <- precision_info$bundle %||% list()
@@ -3320,37 +3205,21 @@ mfrm_report_precision_reporting_templates <- function(style,
                                                       precision_by_facet = data.frame()) {
   ev <- as.data.frame(precision_evidence_summary %||% data.frame(), stringsAsFactors = FALSE)
   basis <- as.data.frame(precision_basis %||% data.frame(), stringsAsFactors = FALSE)
-  audience <- mfrm_report_fit_template_audience(style)
+  builder <- mfrm_report_template_builder(style, "precision_not_agreement", include_facet = TRUE)
   if (nrow(ev) == 0L || as.character(ev$Status[1] %||% "") %in% "not_available") {
-    return(mfrm_report_template_enrich(data.frame(
-      Audience = audience,
-      Topic = "Precision evidence unavailable",
-      Template = paste0(
+    return(builder$unavailable(
+      "Precision evidence unavailable",
+      paste0(
         "Precision, separation, reliability, and strata wording was not ",
         "generated because no stored precision evidence was available."
       ),
-      EvidenceUsed = "precision_evidence_summary",
-      Caveat = "Rebuild the result with mfrm_results(fit, include = \"precision\") before writing precision claims.",
-      Route = "mfrm_results(fit, include = \"precision\")",
-      Style = style,
-      stringsAsFactors = FALSE
-    ), boundary_type = "precision_not_agreement", default_claim_strength = "not_supported_without_followup"))
+      "precision_evidence_summary",
+      "Rebuild the result with mfrm_results(fit, include = \"precision\") before writing precision claims.",
+      "mfrm_results(fit, include = \"precision\")"
+    ))
   }
 
-  rows <- list()
-  add <- function(topic, template, evidence, caveat, route, facet = NA_character_) {
-    rows[[length(rows) + 1L]] <<- data.frame(
-      Audience = audience,
-      Topic = as.character(topic),
-      Facet = facet,
-      Template = as.character(template),
-      EvidenceUsed = as.character(evidence),
-      Caveat = as.character(caveat),
-      Route = as.character(route),
-      Style = style,
-      stringsAsFactors = FALSE
-    )
-  }
+  add <- builder$add
 
   tier <- as.character(ev$PrecisionTier[1] %||% "")
   supports <- isTRUE(ev$SupportsFormalInference[1])
@@ -3419,52 +3288,17 @@ mfrm_report_precision_reporting_templates <- function(style,
     "report$precision_basis; report$fit_decision_policy"
   )
 
-  mfrm_report_template_enrich(
-    do.call(rbind, rows),
-    boundary_type = "precision_not_agreement",
-    default_claim_strength = "write_with_caveat"
-  )
+  builder$finish()
 }
 
 mfrm_report_bias_bundle <- function(x) {
-  comps <- x$components %||% list()
-  if ("bias_screen" %in% names(comps) &&
-      inherits(comps$bias_screen, "mfrm_bias_screen")) {
-    return(list(
-      available = TRUE,
-      bundle = comps$bias_screen,
-      source = "res$components$bias_screen"
-    ))
-  }
-  list(
-    available = FALSE,
-    bundle = NULL,
-    source = "not_requested"
-  )
+  mfrm_report_component_bundle(x, "bias_screen", "mfrm_bias_screen")
 }
 
 mfrm_report_bias_evidence_summary <- function(x) {
   bias_info <- mfrm_report_bias_bundle(x)
   if (!isTRUE(bias_info$available)) {
-    return(data.frame(
-      Status = "not_requested",
-      Rows = NA_integer_,
-      Facets = NA_integer_,
-      NonPersonFacets = NA_integer_,
-      MaxAbsBias = NA_real_,
-      MaxAbsStdResidual = NA_real_,
-      ResidualTScreenPositiveRows = NA_integer_,
-      ChiSqScreenPositiveRows = NA_integer_,
-      ExplicitInteractionSelected = FALSE,
-      InteractionStatus = "not_requested",
-      Source = "not_requested",
-      Route = "mfrm_results(fit, include = \"bias\")",
-      Boundary = paste0(
-        "Bias/DFF wording requires the bias preset or an explicit bias/DFF ",
-        "helper call. Do not infer fairness conclusions from omitted sections."
-      ),
-      stringsAsFactors = FALSE
-    ))
+    return(.mfrmr_table_mfrm_report_bias_evidence_summary_data)
   }
 
   bias_bundle <- bias_info$bundle
@@ -3513,36 +3347,21 @@ mfrm_report_bias_evidence_summary <- function(x) {
 
 mfrm_report_bias_reporting_templates <- function(style, bias_evidence_summary) {
   ev <- as.data.frame(bias_evidence_summary %||% data.frame(), stringsAsFactors = FALSE)
-  audience <- mfrm_report_fit_template_audience(style)
+  builder <- mfrm_report_template_builder(style, "screen_not_fairness_decision")
   if (nrow(ev) == 0L || !as.character(ev$Status[1] %||% "") %in% "available") {
-    return(mfrm_report_template_enrich(data.frame(
-      Audience = audience,
-      Topic = "Bias/DFF evidence not requested",
-      Template = paste0(
+    return(builder$unavailable(
+      "Bias/DFF evidence not requested",
+      paste0(
         "Bias, DFF, or fairness-screen wording was not generated because ",
         "the mfrm_results object was not built with include = \"bias\"."
       ),
-      EvidenceUsed = "bias_evidence_summary",
-      Caveat = "Request the bias preset or run an explicit bias/DFF helper before writing fairness language.",
-      Route = "mfrm_results(fit, include = \"bias\"); estimate_bias(); analyze_dff()",
-      Style = style,
-      stringsAsFactors = FALSE
-    ), boundary_type = "screen_not_fairness_decision", default_claim_strength = "not_supported_without_followup"))
+      "bias_evidence_summary",
+      "Request the bias preset or run an explicit bias/DFF helper before writing fairness language.",
+      "mfrm_results(fit, include = \"bias\"); estimate_bias(); analyze_dff()"
+    ))
   }
 
-  rows <- list()
-  add <- function(topic, template, evidence, caveat, route) {
-    rows[[length(rows) + 1L]] <<- data.frame(
-      Audience = audience,
-      Topic = as.character(topic),
-      Template = as.character(template),
-      EvidenceUsed = as.character(evidence),
-      Caveat = as.character(caveat),
-      Route = as.character(route),
-      Style = style,
-      stringsAsFactors = FALSE
-    )
-  }
+  add <- builder$add
   style_lead <- switch(
     style,
     apa = "Report as a screening diagnostic only when bias or DFF was a study question.",
@@ -3612,28 +3431,11 @@ mfrm_report_bias_reporting_templates <- function(style, bias_evidence_summary) {
     "Do not present screen positives or null screens as standalone fairness decisions.",
     "report$evidence_boundary; reporting_checklist()"
   )
-  mfrm_report_template_enrich(
-    do.call(rbind, rows),
-    boundary_type = "screen_not_fairness_decision",
-    default_claim_strength = "write_with_caveat"
-  )
+  builder$finish()
 }
 
 mfrm_report_misfit_bundle <- function(x) {
-  comps <- x$components %||% list()
-  if ("misfit_review" %in% names(comps) &&
-      inherits(comps$misfit_review, "mfrm_misfit_review")) {
-    return(list(
-      available = TRUE,
-      bundle = comps$misfit_review,
-      source = "res$components$misfit_review"
-    ))
-  }
-  list(
-    available = FALSE,
-    bundle = NULL,
-    source = "not_requested"
-  )
+  mfrm_report_component_bundle(x, "misfit_review", "mfrm_misfit_review")
 }
 
 mfrm_report_first_column <- function(df, candidates) {
@@ -3666,27 +3468,7 @@ mfrm_report_flag_rows <- function(df, candidates) {
 mfrm_report_misfit_evidence_summary <- function(x) {
   misfit_info <- mfrm_report_misfit_bundle(x)
   if (!isTRUE(misfit_info$available)) {
-    return(data.frame(
-      Status = "not_requested",
-      UnexpectedRows = NA_integer_,
-      DisplacementRows = NA_integer_,
-      PathwayFitRows = NA_integer_,
-      PathwayStatusRows = NA_integer_,
-      CurveFitStatusRows = NA_integer_,
-      UnexpectedScreenPositiveRows = NA_integer_,
-      DisplacementFlaggedRows = NA_integer_,
-      MaxAbsStdResidual = NA_real_,
-      MaxAbsDisplacement = NA_real_,
-      MaxAbsDisplacementT = NA_real_,
-      PathwayAvailable = FALSE,
-      Source = "not_requested",
-      Route = "mfrm_results(fit, include = \"misfit_review\")",
-      Boundary = paste0(
-        "Misfit/pathway wording requires the misfit_review preset or explicit ",
-        "unexpected-response, displacement, and pathway helper calls."
-      ),
-      stringsAsFactors = FALSE
-    ))
+    return(.mfrmr_table_mfrm_report_misfit_evidence_summary_data)
   }
 
   bundle <- misfit_info$bundle
@@ -3753,36 +3535,21 @@ mfrm_report_misfit_evidence_summary <- function(x) {
 
 mfrm_report_misfit_reporting_templates <- function(style, misfit_evidence_summary) {
   ev <- as.data.frame(misfit_evidence_summary %||% data.frame(), stringsAsFactors = FALSE)
-  audience <- mfrm_report_fit_template_audience(style)
+  builder <- mfrm_report_template_builder(style, "misfit_not_exclusion_rule")
   if (nrow(ev) == 0L || !as.character(ev$Status[1] %||% "") %in% "available") {
-    return(mfrm_report_template_enrich(data.frame(
-      Audience = audience,
-      Topic = "Misfit/pathway evidence not requested",
-      Template = paste0(
+    return(builder$unavailable(
+      "Misfit/pathway evidence not requested",
+      paste0(
         "Misfit/pathway wording was not generated because the mfrm_results ",
         "object was not built with include = \"misfit_review\"."
       ),
-      EvidenceUsed = "misfit_evidence_summary",
-      Caveat = "Request the misfit_review preset or run the local misfit helpers before writing case-review language.",
-      Route = "mfrm_results(fit, include = \"misfit_review\"); build_misfit_casebook()",
-      Style = style,
-      stringsAsFactors = FALSE
-    ), boundary_type = "misfit_not_exclusion_rule", default_claim_strength = "not_supported_without_followup"))
+      "misfit_evidence_summary",
+      "Request the misfit_review preset or run the local misfit helpers before writing case-review language.",
+      "mfrm_results(fit, include = \"misfit_review\"); build_misfit_casebook()"
+    ))
   }
 
-  rows <- list()
-  add <- function(topic, template, evidence, caveat, route) {
-    rows[[length(rows) + 1L]] <<- data.frame(
-      Audience = audience,
-      Topic = as.character(topic),
-      Template = as.character(template),
-      EvidenceUsed = as.character(evidence),
-      Caveat = as.character(caveat),
-      Route = as.character(route),
-      Style = style,
-      stringsAsFactors = FALSE
-    )
-  }
+  add <- builder$add
   style_lead <- switch(
     style,
     apa = "Report local misfit as follow-up case review only when it was part of the analysis plan.",
@@ -3858,28 +3625,11 @@ mfrm_report_misfit_reporting_templates <- function(style, misfit_evidence_summar
     "Do not present unexpected-response, displacement, or pathway flags as automatic exclusion or acceptance rules.",
     "report$evidence_boundary; reporting_checklist()"
   )
-  mfrm_report_template_enrich(
-    do.call(rbind, rows),
-    boundary_type = "misfit_not_exclusion_rule",
-    default_claim_strength = "write_with_caveat"
-  )
+  builder$finish()
 }
 
 mfrm_report_linking_bundle <- function(x) {
-  comps <- x$components %||% list()
-  if ("linking_review" %in% names(comps) &&
-      inherits(comps$linking_review, "mfrm_linking_review")) {
-    return(list(
-      available = TRUE,
-      bundle = comps$linking_review,
-      source = "res$components$linking_review"
-    ))
-  }
-  list(
-    available = FALSE,
-    bundle = NULL,
-    source = "not_requested"
-  )
+  mfrm_report_component_bundle(x, "linking_review", "mfrm_linking_review")
 }
 
 mfrm_report_linking_guidance_status <- function(review, area, default = "not_available") {
@@ -3901,37 +3651,7 @@ mfrm_report_sum_numeric_column <- function(df, column) {
 mfrm_report_linking_evidence_summary <- function(x) {
   linking_info <- mfrm_report_linking_bundle(x)
   if (!isTRUE(linking_info$available)) {
-    return(data.frame(
-      Status = "not_requested",
-      AnchorReviewAvailable = FALSE,
-      DriftAvailable = FALSE,
-      ChainAvailable = FALSE,
-      ReviewStatus = "not_requested",
-      TopRiskRows = NA_integer_,
-      AnchorRiskRows = NA_integer_,
-      DriftRiskRows = NA_integer_,
-      ChainRiskRows = NA_integer_,
-      GroupViews = NA_integer_,
-      AnchorFacetRows = NA_integer_,
-      AnchoredLevels = NA_integer_,
-      GroupAnchoredLevels = NA_integer_,
-      OverlapLevels = NA_integer_,
-      AnchorIssueTypes = NA_integer_,
-      AnchorIssueRows = NA_integer_,
-      LowObservationLevels = NA_integer_,
-      LowCategoryRows = NA_integer_,
-      DriftReviewStatus = "not_requested",
-      EquatingChainStatus = "not_requested",
-      GPCMSupport = NA_character_,
-      SourceModels = NA_character_,
-      Source = "not_requested",
-      Route = "mfrm_results(fit, include = \"linking\")",
-      Boundary = paste0(
-        "Linking/anchor wording requires the linking preset or explicit ",
-        "anchor, drift, or equating-chain helper calls."
-      ),
-      stringsAsFactors = FALSE
-    ))
+    return(.mfrmr_table_mfrm_report_linking_evidence_summary_data)
   }
 
   review <- linking_info$bundle
@@ -3997,36 +3717,21 @@ mfrm_report_linking_evidence_summary <- function(x) {
 
 mfrm_report_linking_reporting_templates <- function(style, linking_evidence_summary) {
   ev <- as.data.frame(linking_evidence_summary %||% data.frame(), stringsAsFactors = FALSE)
-  audience <- mfrm_report_fit_template_audience(style)
+  builder <- mfrm_report_template_builder(style, "anchor_not_drift_absence")
   if (nrow(ev) == 0L || !as.character(ev$Status[1] %||% "") %in% "available") {
-    return(mfrm_report_template_enrich(data.frame(
-      Audience = audience,
-      Topic = "Linking evidence not requested",
-      Template = paste0(
+    return(builder$unavailable(
+      "Linking evidence not requested",
+      paste0(
         "Anchor/linking wording was not generated because the mfrm_results ",
         "object was not built with include = \"linking\"."
       ),
-      EvidenceUsed = "linking_evidence_summary",
-      Caveat = "Request the linking preset or run explicit anchor, drift, or equating-chain helpers before writing linking claims.",
-      Route = "mfrm_results(fit, include = \"linking\"); review_mfrm_anchors(); detect_anchor_drift(); build_equating_chain()",
-      Style = style,
-      stringsAsFactors = FALSE
-    ), boundary_type = "anchor_not_drift_absence", default_claim_strength = "not_supported_without_followup"))
+      "linking_evidence_summary",
+      "Request the linking preset or run explicit anchor, drift, or equating-chain helpers before writing linking claims.",
+      "mfrm_results(fit, include = \"linking\"); review_mfrm_anchors(); detect_anchor_drift(); build_equating_chain()"
+    ))
   }
 
-  rows <- list()
-  add <- function(topic, template, evidence, caveat, route) {
-    rows[[length(rows) + 1L]] <<- data.frame(
-      Audience = audience,
-      Topic = as.character(topic),
-      Template = as.character(template),
-      EvidenceUsed = as.character(evidence),
-      Caveat = as.character(caveat),
-      Route = as.character(route),
-      Style = style,
-      stringsAsFactors = FALSE
-    )
-  }
+  add <- builder$add
   style_lead <- switch(
     style,
     apa = "Report anchor/linking evidence only for the scale-maintenance question addressed by the design.",
@@ -4105,7 +3810,7 @@ mfrm_report_linking_reporting_templates <- function(style, linking_evidence_summ
     ),
     "linking_evidence_summary; support_status",
     "Do not extend RSM/PCM linking synthesis wording to GPCM without an explicit validation route.",
-    "gpcm_capability_matrix(); mfrmr_output_guide(\"gpcm\")"
+    "mfrmr_output_guide(\"gpcm_capabilities\"); mfrmr_output_guide(\"gpcm\")"
   )
   add(
     "Boundary wording",
@@ -4118,11 +3823,7 @@ mfrm_report_linking_reporting_templates <- function(style, linking_evidence_summ
     "Do not report anchor evidence as automatic drift absence, completed equating, DFF support, or validity proof.",
     "report$evidence_boundary; reporting_checklist()"
   )
-  mfrm_report_template_enrich(
-    do.call(rbind, rows),
-    boundary_type = "anchor_not_drift_absence",
-    default_claim_strength = "write_with_caveat"
-  )
+  builder$finish()
 }
 
 mfrm_report_section_row <- function(sections, section) {
@@ -4191,7 +3892,7 @@ mfrm_report_claim_readiness <- function(x, sections, style) {
     "Fit, separation, and precision",
     "Selected MnSq threshold profile, observed fit-status counts, ZSTD convention, fit df, df-sensitivity rows, separation, reliability, strata, and uncertainty/context notes.",
     "Report MnSq fit, ZSTD standardization, separation, and reliability as separate evidence streams with the selected threshold profile stated.",
-    "Use report$fit_evidence_summary, report$fit_threshold_sensitivity, report$fit_df_sensitivity_summary, precision_review_report(), and facets_fit_df_guide().",
+    "Use report$fit_evidence_summary, report$fit_threshold_sensitivity, report$fit_df_sensitivity_summary, precision_review_report(), and facets_guide('fit_df').",
     "Do not reduce these indices to one pass/fail claim, and do not interpret a df-sensitive ZSTD flag without MnSq and context."
   )
   add(
@@ -4256,7 +3957,7 @@ mfrm_report_claim_readiness <- function(x, sections, style) {
       "GPCM scope",
       "Capability-matrix row for each helper used with GPCM outputs.",
       "Report GPCM outputs through documented helper-specific caveats.",
-      "Use gpcm_capability_matrix() and mfrmr_output_guide(\"gpcm\").",
+      "Use mfrmr_output_guide(\"gpcm_capabilities\") and mfrmr_output_guide(\"gpcm\").",
       "Do not imply full equivalence with every RSM/PCM report route.",
       status = "caveat"
     )
@@ -5307,30 +5008,7 @@ mfrm_report_claim_count_table <- function(claim_readiness) {
 }
 
 mfrm_report_route_table <- function() {
-  data.frame(
-    Surface = c(
-      "First screen",
-      "Detailed evidence routes",
-      "Template boundaries",
-      "Markdown report",
-      "Download folder"
-    ),
-    Route = c(
-      "report$first_screen",
-      "report$report_index",
-      "report$template_index",
-      "mfrm_report(res, output = \"markdown\")",
-      "export_mfrm_results(res, include = \"report\")"
-    ),
-    Use = c(
-      "Start here; read the overall row and next-action route.",
-      "Open when the first screen points to a specific evidence area.",
-      "Open before using APA/QC/validation wording.",
-      "Use after the evidence status and caveats have been reviewed.",
-      "Use when report tables, Markdown, and HTML need to be handed off."
-    ),
-    stringsAsFactors = FALSE
-  )
+  .mfrmr_table_mfrm_report_route_table_data
 }
 
 #' @export
@@ -6045,19 +5723,7 @@ mfrm_results_export_include <- function(include, preset = NULL) {
 }
 
 mfrm_results_export_privacy_notice <- function() {
-  data.frame(
-    PrivacyClass = "analysis_archive",
-    Deidentified = FALSE,
-    ShareableWithoutReview = FALSE,
-    Notice = paste0(
-      "This export is an analysis archive, not a deidentified or automatically ",
-      "shareable package. It can contain direct person identifiers, person-level ",
-      "estimates, original facet labels, local file paths, and a complete RDS ",
-      "result object. Review and transform every file under the applicable data-",
-      "handling policy before sharing it."
-    ),
-    stringsAsFactors = FALSE
-  )
+  .mfrmr_table_mfrm_results_export_privacy_notice_data
 }
 
 mfrm_results_export_component_sensitivity <- function(component) {
@@ -7274,8 +6940,8 @@ mfrm_results <- function(fit,
                          response_diagnostics = NULL,
                          calibration_intervals = c("none", "normal"),
                          calibration_level = .95) {
-  if (inherits(fit, "mfrm_posterior_summary"))
-    stop("Send saved posterior summaries directly to mfrm_report(), plot() or confint(). mfrm_results() requires a supported native fit and does not reconstruct native diagnostics from marginal posterior summaries.", call. = FALSE)
+  if (inherits(fit, c("mfrm_posterior_summary", "mfrm_posterior_scores")))
+    stop("Send saved posterior summaries or posterior Person scores directly to mfrm_report(), plot() or confint(). mfrm_results() requires a supported native fit and does not reconstruct native diagnostics from external Bayesian outputs.", call. = FALSE)
   if (inherits(fit, "mfrm_cml_fit") ||
       (inherits(fit, "mfrm_comparison_fit") && identical(fit$config$method, "CML"))) {
     stop(paste0("mfrm_results() does not support CML fits. Use summary(fit) for structural estimates ",

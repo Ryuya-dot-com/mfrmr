@@ -24,7 +24,7 @@ test_that("native Graphfile coordinates and category coding survive import", {
   expect_equal(summary(x, component = "curves")$ProbabilityCheckIssues, rep(0L, 4))
   d <- as.data.frame(x, component = "curves")
   expect_identical(d, x$graph$curves)
-  p <- plot(x, type = "ccc", scales = 1, draw = FALSE)$data
+  p <- plot_data(plot(x, type = "ccc", scales = 1, draw = FALSE))
   expect_equal(p$plot_data$Y[p$plot_data$SourceRow == 2], c(.9519, .0474, .0007, 0))
   expect_equal(p$plot_data$ValueRaw[p$plot_data$SourceRow == 2], c(".9519", ".0474", ".0007", ".0000"))
   expect_equal(p$plot_data$ValueResolution, rep(.0001, 4004))
@@ -37,7 +37,7 @@ test_that("native Graphfile coordinates and category coding survive import", {
   expect_output(print(x), "Graphfile curves")
   binary <- read_facets_results(graph_file = test_path("fixtures", "facets-graph-binary_csv.txt"))
   expect_identical(binary$graph$categories, c("1", "2"))
-  expect_equal(plot(binary, type = "expected", draw = FALSE)$data$plot_data$Y[1], 1.0474)
+  expect_equal(plot_data(plot(binary, type = "expected", draw = FALSE), "plot_data")$Y[1], 1.0474)
   expect_equal(binary$graph$table$ExpCat[1], "1")
 })
 
@@ -56,7 +56,7 @@ test_that("fixed and tab Graphfiles retain source values and precision", {
   z <- read_facets_results(graph_file = path)
   expect_equal(z$graph$categories, c("10", "20"))
   expect_equal(z$graph$layout, "tab")
-  expect_equal(plot(z, type = "expected", draw = FALSE)$data$plot_data$Y, c(12.5, 18))
+  expect_equal(plot_data(plot(z, type = "expected", draw = FALSE), "plot_data")$Y, c(12.5, 18))
   expect_equal(z$graph$curves$MeasureResolution, rep(.001, 6))
 })
 
@@ -67,11 +67,11 @@ test_that("probability checks use printed precision without renormalizing", {
   x <- read_facets_results(graph_file = path)
   expect_equal(x$graph$diagnostics$ProbabilitySum, c(.99, .9, .99, .99))
   expect_equal(x$graph$diagnostics$RoundingAllowance, c(.015, .015, .00015, .015))
-  p <- plot(x, type = "ccc", draw = FALSE)$data$plot_data
+  p <- plot_data(plot(x, type = "ccc", draw = FALSE), "plot_data")
   expect_equal(p$Available, rep(c(TRUE, FALSE, FALSE, TRUE), 3))
   expect_equal(p$Value, rep(c(.33, .30, .33, .33), 3))
   expect_equal(p$Y, rep(c(.33, NA, NA, .33), 3))
-  expect_true(all(plot(x, type = "expected", draw = FALSE)$data$plot_data$Available))
+  expect_true(all(plot_data(plot(x, type = "expected", draw = FALSE), "plot_data")$Available))
   expect_equal(summary(x, component = "curves")$ProbabilityCheckIssues, 2L)
 })
 
@@ -80,7 +80,7 @@ test_that("missing and invalid graph rows are retained and break curve segments"
     '1,-2,.2,0,.8,.2', '1,-1,NA,0,,.3', '1,NA,.5,1,.5,.5',
     '1,1,<.8,1,1.1,-.1', '1,2,.9,1,.1,.9'))
   x <- read_facets_results(graph_file = path)
-  p <- plot(x, type = "ccc", draw = FALSE)$data$plot_data
+  p <- plot_data(plot(x, type = "ccc", draw = FALSE), "plot_data")
   low <- p[p$Category == "low", ]
   expect_equal(low$Available, c(TRUE, FALSE, FALSE, FALSE, TRUE))
   expect_equal(low$Segment, c(0L, NA_integer_, NA_integer_, NA_integer_, 3L))
@@ -89,7 +89,7 @@ test_that("missing and invalid graph rows are retained and break curve segments"
   expect_match(low$Reason[3], "measure:")
   expect_equal(x$graph$diagnostics$ProbabilityStatus[2], "incomplete_or_invalid")
   expect_true(p$Available[p$Category == "high" & p$SourceRow == 3])
-  e <- plot(x, type = "expected", draw = FALSE)$data$plot_data
+  e <- plot_data(plot(x, type = "expected", draw = FALSE), "plot_data")
   expect_equal(e$Available, c(TRUE, FALSE, FALSE, FALSE, TRUE))
   expect_equal(e$ValueRaw[4], "<.8")
   expect_equal(nrow(x$graph$table), 5L)
@@ -109,7 +109,7 @@ test_that("Graphfile rejects ambiguous identity, schema and grid order", {
   expect_error(read_facets_results(), "Supply")
   expect_error(read_facets_results(graph_file = c('one', 'two')), "one existing")
   decreasing <- read(c(header, '1,2,.9,1,.1,.9', good))
-  expect_equal(plot(decreasing, type = "expected", draw = FALSE)$data$plot_data$X, c(2, 0))
+  expect_equal(plot_data(plot(decreasing, type = "expected", draw = FALSE), "plot_data")$X, c(2, 0))
   single <- read(c(header, good))
   expect_true(all(single$graph$curves$Available))
 })
@@ -120,9 +120,9 @@ test_that("curves coexist with elements without implicit scale alignment", {
     graph_file = native$sources$Path, measure_units = "transformed units", common_scale = TRUE)
   expect_equal(x$sources$SourceID, c(1L, 2L))
   expect_true(all(x$graph$curves$SourceID == 2L))
-  expect_equal(plot(x, draw = FALSE)$data$plot_data$X, 100)
-  expect_equal(plot(x, type = "expected", scales = 2, draw = FALSE)$data$xlab, "Graphfile measure")
-  expect_true(is.na(plot(x, type = "expected", scales = 2, draw = FALSE)$data$metadata$measure_units))
+  expect_equal(plot_data(plot(x, draw = FALSE), "plot_data")$X, 100)
+  expect_equal(plot_data(plot(x, type = "expected", scales = 2, draw = FALSE), "xlab"), "Graphfile measure")
+  expect_true(is.na(plot_data(plot(x, type = "expected", scales = 2, draw = FALSE), "metadata")$measure_units))
   expect_equal(unique(plot_data(x, "plot_data", type = "ccc", scales = c(4, 2))$Scale), c("2", "4"))
   expect_error(plot(x, type = "ccc", facets = "Task", draw = FALSE), "scales")
   expect_error(plot(x, scales = 1, draw = FALSE), "only")
@@ -174,23 +174,27 @@ test_that("FACETS plots preserve all rows and require explicit shared coordinate
   x <- facets_result_example()
   before <- x
   p <- plot(x, type = "measure", facets = "Person", draw = FALSE)
-  expect_s3_class(p, "mfrm_plot_data")
-  expect_equal(p$data$plot_data$X, x$table$Estimate[1:6])
-  expect_equal(p$data$plot_data$Symbol, c(25L, 25L, 24L, 19L, 15L, 19L))
-  expect_false(p$data$display$show_title)
-  expect_false(p$data$display$show_notes)
+  expect_s3_class(p, "ggplot")
+  p_payload <- plot_data(p)
+  expect_equal(p_payload$plot_data$X, x$table$Estimate[1:6])
+  expect_equal(p_payload$plot_data$Symbol, c(25L, 25L, 24L, 19L, 15L, 19L))
+  expect_false(p_payload$display$show_title)
+  expect_false(p_payload$display$show_notes)
   expect_error(plot(x, type = "wright", draw = FALSE), "common_scale")
   y <- facets_result_example(common_scale = TRUE, measure_units = "logits")
   w <- plot(y, type = "wright", draw = FALSE)
-  expect_equal(w$data$plot_data$Y, y$table$Estimate)
-  expect_equal(w$data$plot_data$X, c(rep(1, 6), rep(2, 2), rep(3, 3)))
+  expect_s3_class(w, "ggplot")
+  expect_equal(plot_data(w, "plot_data")$Y, y$table$Estimate)
+  expect_equal(plot_data(w, "plot_data")$X, c(rep(1, 6), rep(2, 2), rep(3, 3)))
   for (type in c("fit", "infit_outfit")) {
     p <- plot(x, type = type, draw = FALSE)
-    expect_equal(nrow(p$data$plot_data), 11L)
-    expect_false(any(p$data$plot_data$Available[1:3]))
-    expect_true(all(is.na(p$data$plot_data$X[1:3])))
-    expect_match(p$data$plot_data$Reason[1], "source_fit_not_interpretable")
-    expect_equal(p$data$reference_lines$value, rep(1, if (type == "fit") 1 else 2))
+    expect_s3_class(p, "ggplot")
+    pd <- plot_data(p)
+    expect_equal(nrow(pd$plot_data), 11L)
+    expect_false(any(pd$plot_data$Available[1:3]))
+    expect_true(all(is.na(pd$plot_data$X[1:3])))
+    expect_match(pd$plot_data$Reason[1], "source_fit_not_interpretable")
+    expect_equal(pd$reference_lines$value, rep(1, if (type == "fit") 1 else 2))
   }
   expect_identical(x, before)
   expect_equal(plot_data(x, "plot_data", facets = "Person")$X, x$table$Estimate[1:6])
@@ -216,7 +220,7 @@ test_that("native group-anchor flags do not imply individually fixed measures", 
     expect_false("Anchored" %in% names(sm))
     expect_output(print(x), "individual measure need not be fixed", fixed = TRUE)
     for (type in c("measure", "fit", "infit_outfit")) {
-      p <- plot(x, type = type, draw = FALSE)$data
+      p <- plot_data(plot(x, type = type, draw = FALSE))
       expect_equal(p$plot_data$Symbol[1:2], c(15L, 15L))
       expect_true("Direct/group anchor" %in% p$legend$label)
       expect_false("Anchored" %in% p$legend$label)
@@ -229,9 +233,9 @@ test_that("native group-anchor flags do not imply individually fixed measures", 
     old <- unserialize(before)
     old$notes <- old$notes[old$notes$Type != "anchor_status", , drop = FALSE]
     old_bytes <- serialize(old, NULL)
-    updated <- plot(old, draw = FALSE)$data
+    updated <- plot_data(plot(old, draw = FALSE))
     expect_equal(sum(updated$notes$Type == "anchor_status"), 1L)
-    expect_identical(updated$plot_data, plot(x, draw = FALSE)$data$plot_data)
+    expect_identical(updated$plot_data, plot_data(plot(x, draw = FALSE), "plot_data"))
     expect_identical(serialize(old, NULL), old_bytes)
     expect_identical(serialize(x, NULL), before)
 
@@ -279,7 +283,7 @@ test_that("native G/X extreme group members retain unavailable fit placeholders"
     expect_equal(summary(x)$Extreme, 1L)
     raw <- serialize(x, NULL)
     for (type in c("measure", "fit", "infit_outfit")) {
-      p <- plot(x, type = type, draw = FALSE)$data
+      p <- plot_data(plot(x, type = type, draw = FALSE))
       z <- p$plot_data[match(c("3", "24"), p$plot_data$ElementID), ]
       expect_identical(z$Available, c(type == "measure", TRUE))
       expect_identical(z$Symbol, c(if (boundary == "low") 25L else 24L, 15L))
@@ -299,7 +303,7 @@ test_that("reporting groups and SEs cannot silently determine an anchor subtype"
   expect_identical(x$table$GroupRaw, d$Group)
   expect_identical(x$table$SE, d$SE)
   expect_equal(summary(x)$AnchorFlagged, 5L)
-  expect_identical(plot(x, draw = FALSE)$data$plot_data$Symbol, rep(15L, 5))
+  expect_identical(plot_data(plot(x, draw = FALSE), "plot_data")$Symbol, rep(15L, 5))
   expect_match(x$notes$Text[x$notes$Type == "anchor_status"], "GroupRaw, imported group size")
   # Curves have no element anchor flags, but retain the same summary schema.
   empty <- summary(facets_graph_example())
@@ -317,12 +321,12 @@ test_that("FACETS missing, censored and unmeasurable values remain distinct", {
   expect_equal(x$table$EstimateAvailable, c(FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE))
   expect_equal(x$table$EstimateRaw[4], "<2.0")
   expect_equal(x$table$InfitReason[7], "invalid_mean_square")
-  p <- plot(x, type = "fit", draw = FALSE)$data$plot_data
+  p <- plot_data(plot(x, type = "fit", draw = FALSE), "plot_data")
   expect_equal(p$Available, c(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE))
   expect_equal(nrow(p), 7L)
   expect_equal(summary(x)$UnknownStatus, 2L)
   x <- read_facets_results(data.frame(Facet = "Rater", Level = "A", Measure = NA_real_))
-  expect_false(plot(x, draw = FALSE)$data$plot_data$Available)
+  expect_false(plot_data(plot(x, draw = FALSE), "plot_data")$Available)
 })
 
 test_that("FACETS duplicate labels retain IDs while ambiguous keys fail", {
@@ -330,7 +334,7 @@ test_that("FACETS duplicate labels retain IDs while ambiguous keys fail", {
     Label = c("same", "same"), Measure = c(.5, -.5))
   x <- read_facets_results(d)
   expect_equal(x$table$Label, c("same", "same"))
-  expect_equal(plot(x, draw = FALSE)$data$plot_data$DisplayLabel, c("same [01]", "same [02]"))
+  expect_equal(plot_data(plot(x, draw = FALSE), "plot_data")$DisplayLabel, c("same [01]", "same [02]"))
   expect_error(read_facets_results(d[c(1, 1), ]), "Duplicate")
   d$ElementID <- NULL
   expect_error(read_facets_results(d), "distinct element IDs")

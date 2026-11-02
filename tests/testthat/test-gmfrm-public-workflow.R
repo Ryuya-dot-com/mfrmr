@@ -42,8 +42,8 @@ test_that("two-family input never silently changes requested model options", {
   expect_error(bad("mml_engine", "direct"), "Two slope families require")
   expect_error(bad("method", "JML"), "method = 'MML'", fixed = TRUE)
   expect_error(bad("gpcm_mml_identification", "free_population"), "fixed_standard_normal")
-  expect_error(bad("step_facet", "観点 名"), "second slope facet")
-  expect_error(bad("noncenter_facet", "Person"), "second slope facet")
+  expect_error(bad("step_facet", "Unknown"), "declared non-Person facet")
+  expect_error(bad("noncenter_facet", "Person"), "declared non-Person facet")
   expect_error(bad("slope_facet", c("観点 名", "Judge-ID", "Third")), "exactly two")
   for (option in c("anchors", "weight", "population_formula", "reltol", "checkpoint",
                    "attach_diagnostics", "missing_codes", "facet_shrinkage")) {
@@ -72,6 +72,8 @@ test_that("two-family input never silently changes requested model options", {
 })
 
 test_that("public conditional curves match the product equation and retain unavailable intervals", {
+  # Extended local/CI regression; see CONTRIBUTING.md.
+  skip_on_cran()
   # The fixture keeps Japanese facet names; the default PDF font cannot encode them.
   grDevices::pdf(NULL, family = "Japan1")
   on.exit(grDevices::dev.off(), add = TRUE)

@@ -33,6 +33,12 @@ local({
   stopifnot(identical(hash, tools::md5sum(file)))
   unlink(file)
 
+  file <- page("mfrm_d_study", 1L)
+  run_hook()
+  stopifnot(grepl("W minus V", get_alt(file)),
+    grepl("no uncertainty intervals", get_alt(file)))
+  unlink(file)
+
   file <- page("mfrm_d_study", 6L)
   run_hook()
   alt <- get_alt(file)
@@ -40,6 +46,16 @@ local({
     grepl("original-source", alt[4]), grepl("equally weighted", alt[5]),
     grepl("SEM", alt[6]))
   unlink(file)
+
+  for (pair in list(
+    c("read_mfrm_posterior", "plot.mfrm_posterior_summary"),
+    c("recommend_mfrm_design", "plot.mfrm_design_recommendation"))) {
+    files <- vapply(pair, page, character(1), n = 1L)
+    run_hook()
+    stopifnot(nzchar(get_alt(files[1])),
+      identical(get_alt(files[1]), get_alt(files[2])))
+    unlink(files)
+  }
 
   # ggplot2 is optional in these examples. Test both actual image sequences.
   for (n in c(7L, 9L)) {

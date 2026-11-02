@@ -65,15 +65,18 @@ test_that("plot_response_time_review returns reusable plot data", {
 
   for (tp in c("distribution", "person", "facet", "score")) {
     p <- plot_response_time_review(rt, type = tp, draw = FALSE)
-    expect_s3_class(p, "mfrm_plot_data")
-    expect_identical(p$name, "response_time_review")
-    expect_true(is.data.frame(p$data$table))
-    expect_true(is.data.frame(p$data$thresholds))
-    expect_identical(p$data$type, tp)
+    expect_s3_class(p, "ggplot")
+    pd <- attr(p, "mfrmr_plot_data")
+    expect_s3_class(pd, "mfrm_plot_data")
+    expect_identical(pd$name, "response_time_review")
+    expect_true(is.data.frame(plot_data(p, "table")))
+    expect_true(is.data.frame(plot_data(p, "thresholds")))
+    expect_identical(plot_data(p, "type"), tp)
   }
 
   p_method <- plot(rt, type = "person", draw = FALSE)
-  expect_s3_class(p_method, "mfrm_plot_data")
+  expect_s3_class(p_method, "ggplot")
+  expect_s3_class(attr(p_method, "mfrmr_plot_data"), "mfrm_plot_data")
   components <- plot_data_components(p_method)
   expect_true(any(components$Component == "table" &
                     components$Role == "primary_data"))

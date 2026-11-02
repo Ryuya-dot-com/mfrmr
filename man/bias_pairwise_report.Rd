@@ -199,6 +199,9 @@ summaries and fixed-report plots reject older pairwise calculations.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("bias_pairwise_report", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -212,6 +215,7 @@ s$summary
 head(out$table)
 # For target Rater, compare that rater's local severity across criteria.
 # Read Context1 minus Context2 and the conditional SE before follow-up.
+}
 }
 \seealso{
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=bias_interaction_report]{bias_interaction_report()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}

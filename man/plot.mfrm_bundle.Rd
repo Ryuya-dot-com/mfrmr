@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-methods.R
 \name{plot.mfrm_bundle}
 \alias{plot.mfrm_bundle}
-\title{Plot report/table bundles with base R defaults}
+\title{Plot report/table bundles with ggplot2}
 \usage{
 \method{plot}{mfrm_bundle}(x, y = NULL, type = NULL, ...)
 }
@@ -16,10 +16,11 @@
 \item{...}{Additional arguments forwarded to class-specific plotters.}
 }
 \value{
-A plotting-data object of class \code{mfrm_plot_data}.
+A \code{ggplot} object (invisibly), carrying the underlying \code{mfrm_plot_data}
+payload accessible via \code{\link[=plot_data]{plot_data()}}.
 }
 \description{
-Plot report/table bundles with base R defaults
+Plot report/table bundles with ggplot2
 }
 \details{
 \code{plot()} dispatches by bundle class:
@@ -33,7 +34,7 @@ Plot report/table bundles with base R defaults
 \item \code{mfrm_bias_count} -> bias-count plots (cell counts / low-count rates)
 \item \code{mfrm_fixed_reports} -> pairwise-contrast diagnostics
 \item \code{mfrm_visual_summaries} -> warning/summary message count plots
-\item \code{mfrm_category_structure} -> default base-R category plots
+\item \code{mfrm_category_structure} -> category count and boundary plots
 \item \code{mfrm_category_curves} -> overview (default), ogive, CCC / category
 probability / conditional probability, cumulative, total-information, and
 category-specific-information plots
@@ -67,7 +68,7 @@ plots (\code{formats}, \code{artifact_groups}, \code{selection_tables},
 }
 
 If a class is outside these families, use dedicated plotting helpers
-or custom base R graphics on component tables.
+or custom \code{ggplot2} graphics on component tables.
 
 For \code{mfrm_category_curves}, pass \code{preset = "monochrome"} for
 grayscale/line-type output. Cumulative \code{.5} boundary lines are shown
@@ -77,16 +78,16 @@ only for interpretable in-range boundaries by default; use
 suppress those vertical boundary lines. Use
 \code{plot_data(x, component = "plot_long")} on a category-curve bundle when
 you want one ggplot2/plotly-friendly table across all curve families.
-Keep curve families and groups separate in custom figures. Automatic
-\code{\link[=as_ggplot]{as_ggplot()}} conversion supports rating-scale counts/thresholds and
-category-structure counts; it is unavailable for category-curve bundles and
-category-structure boundary views. Step displays use point estimates and
-do not turn stored step SEs into crossing, gap or curve intervals.
+Keep curve families and groups separate in custom figures. All category-curve,
+category-structure, rating-scale, and network bundle views render natively
+via \code{ggplot2}. Step displays use point estimates and do not turn stored step
+SEs into crossing, gap or curve intervals.
 }
 \section{Interpreting output}{
 
-The returned object is plotting data (\code{mfrm_plot_data}) that captures
-the selected route and reusable data; set \code{draw = TRUE} for immediate base graphics.
+The returned object is a \code{ggplot} object whose underlying plot payload and
+notes remain accessible via \code{\link[=plot_data]{plot_data()}} and \code{\link[=plot_data_components]{plot_data_components()}}; set
+\code{draw = TRUE} for immediate display.
 }
 
 \section{Typical workflow}{
@@ -94,8 +95,14 @@ the selected route and reusable data; set \code{draw = TRUE} for immediate base 
 \enumerate{
 \item Create bundle output (e.g., \code{unexpected_response_table()}).
 \item Inspect routing with \code{summary(bundle)} if needed.
-\item Call \code{plot(bundle, type = ..., draw = FALSE)} to obtain reusable plot data.
+\item Call \code{p <- plot(bundle, type = ..., draw = FALSE)} and inspect \code{plot_data(p)} when needed.
 }
+}
+
+\section{Session plot defaults}{
+
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
 }
 
 \section{Network display controls}{
@@ -114,7 +121,7 @@ Constructor filters such as \code{min_weight} change calculated metrics;
 \code{display_min_weight} does not. Returned \code{source_edges} retain the calculated
 graph, \code{edges} the displayed graph, and \code{coordinates} the actual positions.
 Titles are metadata by default; add a title explicitly via \code{graphical}.
-See \code{vignette("mfrmr-networks-and-reporting")} for bipartite assignment,
+See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} for bipartite assignment,
 directional disagreement and rater-by-criterion examples inspired by Lamprianou.
 With \code{\link[=rater_network_analysis]{rater_network_analysis()}} and \code{weight_metric = "DirectionalMagnitude"},
 \verb{type = "fit", metric = "SWS"} (or \code{"PUS"}) shows the published network
@@ -126,37 +133,6 @@ returned table, rather than substituting zero. For signed alpha,
 zero and undefined values separately. Network drawings use magnitude for
 edge width and dashed lines for negative agreement. Use
 \code{\link[=plot.mfrm_network_ergm]{plot.mfrm_network_ergm()}} for ERGM coefficient intervals and simulated GOF.
-}
-
-\section{Session plot defaults}{
-
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{

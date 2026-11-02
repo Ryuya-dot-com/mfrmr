@@ -144,6 +144,9 @@ This is also distinct from posterior ability-band probabilities in
 the future plan or the normal approximation.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("classification_table", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(ratings, person = "Person", facets = c("Rater", "Criterion"),
   score = "Score", method = "MML", model = "RSM",
@@ -163,6 +166,7 @@ result$table
 result$cuts
 result$settings$calibration # These probabilities hold calibration fixed.
 # No population average is inferred from this three-point inspection grid.
+}
 }
 \references{
 Rudner, L. M. (2001). Computing the expected proportions of misclassified

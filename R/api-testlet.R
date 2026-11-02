@@ -106,7 +106,7 @@
 #' according to the assessment process; only one nonoverlapping membership
 #' is supported. A nonzero local variance does not by itself establish halo.
 #' For one rater effect shared across persons, see [fit_mfrm_random_rater()].
-#' The two models cannot currently be combined. See [gpcm_capability_matrix()]
+#' The two models cannot currently be combined. See [mfrmr_gpcm_scope]
 #' for the relationship to fixed discrimination and local independence.
 #'
 #' @section Comparison with ordinary MFRM:
@@ -124,7 +124,7 @@
 #' score or interval changes do not establish which model is better.
 #' @section Assessment applications:
 #' With `testlet = "Task"`, the local effect is shared by a Person's ratings
-#' on that task. `vignette("mfrmr-testlet-applications")` provides runnable
+#' on that task. [online testlet-applications guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlet-applications.html) provides runnable
 #' examples of allocating a fixed rating budget across tasks and comparing
 #' score sensitivity when tasks have unequal numbers of criteria. Its small
 #' enumeration reports model-conditional posterior precision and marginal EAP
@@ -152,7 +152,7 @@
 #'   for missing or explicitly requested normal bounds; see
 #'   [confint.mfrm_testlet()] for the status meanings. A retained point is not
 #'   certified by interval availability. Inspect `checks` before interpreting it.
-#' @param object,x An `mfrm_testlet` result.
+#' @param object An `mfrm_testlet` result.
 #' @param ... Unused.
 #' @references Wang, W.-C. and Wilson, M. (2005). The Rasch testlet model.
 #'   *Applied Psychological Measurement*, 29, 126--149.
@@ -164,6 +164,9 @@
 #' @seealso [predict.mfrm_testlet()], [plot.mfrm_testlet()], [mfrm_results()],
 #'   [mfrm_response_diagnostics()] for descriptive posterior predictive residuals.
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("fit_mfrm_testlet", run.dontrun = TRUE)
+#' \dontrun{
 #' # Saved fit for the synthetic example_core ratings.
 #' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
 #' fit <- example$testlet$fit
@@ -174,8 +177,11 @@
 #' fit$checks
 #' plot(fit, facet = "Rater")
 #' # The complete regeneration recipe is included with the package:
-#' system.file("examples", "extended-models.R", package = "mfrmr")
+#' recipe <- system.file("examples", "extended-models.R", package = "mfrmr")
+#' # Run source(recipe) separately to regenerate the saved fits.
+#' }
 #' @export
+#' @order 1
 fit_mfrm_testlet <- function(data, person, score, testlet, facets = character(),
     score_levels, testlet_variance = NULL, quad_points = 31L, maxit = 300L,
     variance_max = 16, missing = c("fail", "omit"), person_sd = NULL,
@@ -233,8 +239,11 @@ fit_mfrm_testlet <- function(data, person, score, testlet, facets = character(),
 #' @param calibration_intervals For summaries, `"none"` (default) omits
 #'   calibration bounds; `"normal"` explicitly requests their pointwise normal
 #'   approximation. Person scoring remains a separate conditional output.
-#' @param level Nominal level for explicitly requested summary calibration
+#' @param level For `summary.mfrm_testlet()`: Nominal level for explicitly requested summary calibration
 #'   intervals; default 0.95. Numerical and variance-boundary restrictions remain.
+#'
+#' For `plot()`: Nominal level of explicitly requested calibration intervals;
+#'   default 0.95. This does not establish finite-sample coverage.
 #' @export
 summary.mfrm_testlet <- function(object, ..., calibration_intervals = c("none", "normal"), level = .95) {
   rlang::check_dots_empty()
@@ -329,8 +338,33 @@ mfrm_testlet_logsum_rows <- function(x) {
   largest + log(rowSums(exp(x - largest)))
 }
 
-# Factorization generalizes the independently checked two-rater calculation.
-mfrm_testlet_kernel <- function(input, par, theta, rule, gradient = FALSE, persons = seq_along(input$persons)) {
+mfrm_testlet_csr <- function(input) {
+  if (!is.null(input$.cpp_csr)) return(input$.cpp_csr)
+  p_counts <- lengths(input$cells)
+  person_block_ptr <- c(0L, cumsum(as.integer(p_counts)))
+  all_blocks <- unlist(input$cells, recursive = FALSE, use.names = FALSE)
+  b_counts <- if (length(all_blocks)) vapply(all_blocks, nrow, integer(1)) else integer(0)
+  block_entry_ptr <- c(0L, cumsum(b_counts))
+  entry_cell <- if (length(all_blocks)) {
+    as.integer(unlist(lapply(all_blocks, `[[`, "Cell"), use.names = FALSE)) - 1L
+  } else {
+    integer(0)
+  }
+  entry_count <- if (length(all_blocks)) {
+    as.integer(unlist(lapply(all_blocks, `[[`, "Count"), use.names = FALSE))
+  } else {
+    integer(0)
+  }
+  list(
+    person_block_ptr = person_block_ptr,
+    block_entry_ptr = block_entry_ptr,
+    entry_cell = entry_cell,
+    entry_count = entry_count
+  )
+}
+
+# Pure-R oracle retained for independent verification under mfrmr.use_cpp11_backend = FALSE.
+mfrm_testlet_kernel_r <- function(input, par, theta, rule, gradient = FALSE, persons = seq_along(input$persons)) {
   nb <- ncol(input$X); ns <- length(input$score_levels) - 1L; v <- par[nb + ns + 1L]
   if (!is.finite(v) || v < 0) stop("Local variance must be nonnegative.", call. = FALSE)
   gamma <- if (v == 0) 0 else sqrt(v) * rule$nodes
@@ -338,11 +372,18 @@ mfrm_testlet_kernel <- function(input, par, theta, rule, gradient = FALSE, perso
   nq <- length(theta); ng <- length(gamma); np <- length(persons); npar <- nb + ns + 1L
   latent <- as.vector(outer(theta, gamma, "+")); steps <- par[nb + seq_len(ns)]
   nd <- nrow(input$design_X); cache <- vector("list", nd * (ns + 1L))
-  for (j in seq_len(nd)) {
+  designs <- seq_len(nd)
+  if (nq > 0L && length(persons) < length(input$persons)) {
+    cells <- unlist(lapply(persons, function(p)
+      unlist(lapply(input$cells[[p]], `[[`, "Cell"), use.names = FALSE)), use.names = FALSE)
+    # Cell = design + category * nd; retain the original design order.
+    designs <- sort(unique((cells - 1L) %% nd + 1L))
+  }
+  for (j in designs) {
     eta <- latent - sum(input$design_X[j, ] * par[seq_len(nb)])
     logw <- outer(eta, 0:ns) - matrix(c(0, cumsum(steps)), length(eta), ns + 1L, byrow = TRUE)
     logw <- logw - row_max_fast(logw)
-    den <- mfrm_testlet_logsum_rows(logw)
+    den <- log(rowSums(exp(logw)))
     if (gradient) {
       prob <- exp(logw - den)
       mean <- as.vector(prob %*% (0:ns))
@@ -387,6 +428,42 @@ mfrm_testlet_kernel <- function(input, par, theta, rule, gradient = FALSE, perso
   list(loglik = loglik, score = scores, theta_score = theta_score, theta_curvature = theta_curvature)
 }
 
+# Factorization generalizes the independently checked two-rater calculation.
+mfrm_testlet_kernel <- function(input, par, theta, rule, gradient = FALSE, persons = seq_along(input$persons)) {
+  nb <- ncol(input$X); ns <- length(input$score_levels) - 1L; v <- par[nb + ns + 1L]
+  if (!is.finite(v) || v < 0) stop("Local variance must be nonnegative.", call. = FALSE)
+  n_total_p <- length(input$persons)
+  persons_int <- as.integer(persons)
+  use_cpp <- isTRUE(getOption("mfrmr.use_cpp11_backend", TRUE)) &&
+    mfrm_cpp11_backend_available() &&
+    all(is.finite(par[seq_len(nb + ns + 1L)])) &&
+    all(is.finite(theta)) &&
+    !anyNA(persons_int) &&
+    all(persons_int >= 1L & persons_int <= n_total_p)
+  if (!use_cpp) {
+    return(mfrm_testlet_kernel_r(input, par, theta, rule, gradient = gradient, persons = persons))
+  }
+  csr <- mfrm_testlet_csr(input)
+  design_mat <- input$design_X
+  if (!is.matrix(design_mat) || !is.double(design_mat)) {
+    storage.mode(design_mat) <- "double"
+  }
+  mfrm_cpp_testlet_kernel(
+    design_X = design_mat,
+    ns = as.integer(ns),
+    par = as.double(par),
+    theta = as.double(theta),
+    rule_nodes = as.double(rule$nodes),
+    rule_weights = as.double(rule$weights),
+    gradient = isTRUE(gradient),
+    persons = persons_int,
+    person_block_ptr = csr$person_block_ptr,
+    block_entry_ptr = csr$block_entry_ptr,
+    entry_cell = csr$entry_cell,
+    entry_count = csr$entry_count
+  )
+}
+
 mfrm_testlet_person_variance <- function(input, par) {
   at <- ncol(input$X) + length(input$score_levels) + 1L
   # Older saved fits contain only fixed coordinates and the local variance.
@@ -427,38 +504,50 @@ mfrm_testlet_select_run <- function(runs) {
   at
 }
 
+mfrm_testlet_optimize_stage <- function(input, rule, start, nv, np, maxit,
+                                        variance_max, person_variance_max,
+                                        fixed_v, fixed_p) {
+  fixed_at <- integer()
+  if (!is.null(fixed_v)) { start[nv] <- fixed_v; fixed_at <- c(fixed_at, nv) }
+  if (!is.null(fixed_p)) { start[np] <- fixed_p; fixed_at <- c(fixed_at, np) }
+  free <- setdiff(seq_len(np), fixed_at)
+  expand <- function(p) {
+    z <- start; z[free] <- p
+    # L-BFGS-B can evaluate a boundary a few floating-point units below zero.
+    if (any(z[c(nv, np)] < -1e-12)) stop("Optimizer evaluated a negative variance.")
+    z[c(nv, np)] <- pmax(0, z[c(nv, np)])
+    z
+  }
+  previous <- value <- NULL
+  evaluate <- function(p) {
+    if (!identical(previous, p)) {
+      value <<- mfrm_testlet_evaluate(input, expand(p), rule)
+      previous <<- p + 0
+    }
+    value
+  }
+  fit <- stats::optim(start[free], function(p) -evaluate(p)$loglik,
+    function(p) -evaluate(p)$gradient[free], method = "L-BFGS-B",
+    lower = c(rep(-20, nv - 1), 0, 0)[free],
+    upper = c(rep(20, nv - 1), variance_max, person_variance_max)[free],
+    control = list(maxit = maxit, factr = 10, pgtol = 1e-7))
+  fit$parameters <- expand(fit$par); fit$fixed_variance <- fixed_v
+  fit$fixed_person_variance <- fixed_p
+  fit
+}
+
 mfrm_testlet_fit <- function(input, order, maxit, fixed, variance_max,
     fixed_person = 1, person_variance_max = 16) {
+  work_input <- input
+  work_input$.cpp_csr <- mfrm_testlet_csr(input)
   rule <- gauss_hermite_normal(order); high <- gauss_hermite_normal(2 * order + 1L)
-  nb <- ncol(input$X); ns <- length(input$score_levels) - 1L; nv <- nb + ns + 1L
+  nb <- ncol(work_input$X); ns <- length(work_input$score_levels) - 1L; nv <- nb + ns + 1L
   np <- nv + 1L
   start <- c(rep(0, nb), seq(-.5, .5, length.out = ns), 0,
     if (is.null(fixed_person)) min(1, person_variance_max / 2) else fixed_person)
-  optimize <- function(start, fixed_v, fixed_p) {
-    fixed_at <- integer()
-    if (!is.null(fixed_v)) { start[nv] <- fixed_v; fixed_at <- c(fixed_at, nv) }
-    if (!is.null(fixed_p)) { start[np] <- fixed_p; fixed_at <- c(fixed_at, np) }
-    free <- setdiff(seq_len(np), fixed_at)
-    expand <- function(p) {
-      z <- start; z[free] <- p
-      # L-BFGS-B can evaluate a boundary a few floating-point units below zero.
-      if (any(z[c(nv, np)] < -1e-12)) stop("Optimizer evaluated a negative variance.")
-      z[c(nv, np)] <- pmax(0, z[c(nv, np)])
-      z
-    }
-    previous <- value <- NULL
-    evaluate <- function(p) {
-      if (!identical(previous, p)) { value <<- mfrm_testlet_evaluate(input, expand(p), rule); previous <<- p }
-      value
-    }
-    fit <- stats::optim(start[free], function(p) -evaluate(p)$loglik,
-      function(p) -evaluate(p)$gradient[free], method = "L-BFGS-B",
-      lower = c(rep(-20, nv - 1), 0, 0)[free],
-      upper = c(rep(20, nv - 1), variance_max, person_variance_max)[free],
-      control = list(maxit = maxit, factr = 10, pgtol = 1e-7))
-    fit$parameters <- expand(fit$par); fit$fixed_variance <- fixed_v
-    fit$fixed_person_variance <- fixed_p
-    fit
+  optimize <- function(s, fixed_v, fixed_p) {
+    mfrm_testlet_optimize_stage(work_input, rule, s, nv, np, maxit,
+      variance_max, person_variance_max, fixed_v, fixed_p)
   }
   local_runs <- function(fixed_p) {
     if (!is.null(fixed)) return(list(known = optimize(start, fixed, fixed_p)))
@@ -480,7 +569,7 @@ mfrm_testlet_fit <- function(input, order, maxit, fixed, variance_max,
     runs$larger_person <- optimize(larger, fixed, NULL)
   }
   best <- runs[[mfrm_testlet_select_run(runs)]]; par <- best$parameters
-  low <- mfrm_testlet_evaluate(input, par, rule); higher <- mfrm_testlet_evaluate(input, par, high)
+  low <- mfrm_testlet_evaluate(work_input, par, rule); higher <- mfrm_testlet_evaluate(work_input, par, high)
   boundary <- is.null(fixed) && par[nv] == 0
   person_boundary <- is.null(fixed_person) && par[np] == 0
   free <- c(seq_len(nv - 1L), if (is.null(fixed) && !boundary) nv,
@@ -501,8 +590,8 @@ mfrm_testlet_fit <- function(input, order, maxit, fixed, variance_max,
   if (ready) for (j in seq_along(free)) {
     h <- 1e-4 * (1 + abs(par[free[j]])); if (free[j] >= nv) h <- min(h, par[free[j]] / 4)
     step <- numeric(np); step[free[j]] <- h
-    H[, j] <- -(mfrm_testlet_evaluate(input, par + step, high)$gradient[free] -
-      mfrm_testlet_evaluate(input, par - step, high)$gradient[free]) / (2 * h)
+    H[, j] <- -(mfrm_testlet_evaluate(work_input, par + step, high)$gradient[free] -
+      mfrm_testlet_evaluate(work_input, par - step, high)$gradient[free]) / (2 * h)
   }
   H <- (H + t(H)) / 2
   eigenvalues <- if (all(is.finite(H))) eigen(H, symmetric = TRUE, only.values = TRUE)$values else NA_real_

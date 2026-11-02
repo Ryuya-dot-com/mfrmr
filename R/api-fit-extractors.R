@@ -91,6 +91,15 @@
 #' analysis, not omitted input records or an effective sample size under
 #' dependence. Use `nobs(fit, type = "ratings")` to count retained ratings.
 #'
+#' For CML, adding extreme-score Persons can increase BIC's penalty even when
+#' the conditional likelihood is unchanged. Report both total and informative
+#' Person counts. A sensitivity calculation using the latter is
+#' `-2 * as.numeric(ll) + attr(ll, "df") * log(attr(ll, "informative_persons"))`,
+#' where `ll <- logLik(fit)` and the informative count is positive. Label this
+#' as an alternative penalty convention, not the package's BIC or a validated
+#' model-selection rule; neither count resolves dependence or sparse-design
+#' asymptotics. Keep the same retained data and conditioning basis in comparisons.
+#'
 #' @return `coef()` returns a named numeric vector; `vcov()` a matrix in the
 #'   matching default coordinates. MML covariance retains `checks`,
 #'   `numerical_checks`, `information_review` and `cautions` attributes when
@@ -158,8 +167,11 @@ coef.mfrm_fit <- function(object, type = c("free", "locations", "steps", "slopes
 }
 
 #' @rdname mfrm_fit_extractors
-#' @export
-coef.mfrm_cml_fit <- coef.mfrm_fit
+#' @name coef.mfrm_cml_fit
+#' @aliases coef.mfrm_cml_fit
+#' @usage \method{coef}{mfrm_cml_fit}(object, type = c("free", "locations", "steps", "slopes", "persons"), ...)
+#' @rawNamespace S3method(coef,mfrm_cml_fit,coef.mfrm_fit)
+NULL
 
 #' @rdname mfrm_fit_extractors
 #' @export
@@ -307,12 +319,18 @@ nobs.mfrm_fit <- function(object, type = c("likelihood", "persons", "ratings"), 
 }
 
 #' @rdname mfrm_fit_extractors
-#' @export
-nobs.mfrm_cml_fit <- nobs.mfrm_fit
+#' @name nobs.mfrm_cml_fit
+#' @aliases nobs.mfrm_cml_fit
+#' @usage \method{nobs}{mfrm_cml_fit}(object, type = c("likelihood", "persons", "ratings"), ...)
+#' @rawNamespace S3method(nobs,mfrm_cml_fit,nobs.mfrm_fit)
+NULL
 
 #' @rdname mfrm_fit_extractors
-#' @export
-nobs.mfrm_comparison_fit <- nobs.mfrm_fit
+#' @name nobs.mfrm_comparison_fit
+#' @aliases nobs.mfrm_comparison_fit
+#' @usage \method{nobs}{mfrm_comparison_fit}(object, type = c("likelihood", "persons", "ratings"), ...)
+#' @rawNamespace S3method(nobs,mfrm_comparison_fit,nobs.mfrm_fit)
+NULL
 
 #' @rdname mfrm_fit_extractors
 #' @export
@@ -367,9 +385,15 @@ BIC.mfrm_fit <- function(object, ...) {
 }
 
 #' @rdname mfrm_fit_extractors
-#' @export
-AIC.mfrm_cml_fit <- AIC.mfrm_fit
+#' @name AIC.mfrm_cml_fit
+#' @aliases AIC.mfrm_cml_fit
+#' @usage \method{AIC}{mfrm_cml_fit}(object, ..., k = 2)
+#' @rawNamespace S3method(AIC,mfrm_cml_fit,AIC.mfrm_fit)
+NULL
 
 #' @rdname mfrm_fit_extractors
-#' @export
-BIC.mfrm_cml_fit <- BIC.mfrm_fit
+#' @name BIC.mfrm_cml_fit
+#' @aliases BIC.mfrm_cml_fit
+#' @usage \method{BIC}{mfrm_cml_fit}(object, ...)
+#' @rawNamespace S3method(BIC,mfrm_cml_fit,BIC.mfrm_fit)
+NULL

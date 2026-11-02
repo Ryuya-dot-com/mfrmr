@@ -61,6 +61,9 @@ without a stored constraint specification is \code{"not_recorded"}.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("specifications_report", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -70,6 +73,7 @@ out <- specifications_report(fit, title = "Toy run")
 summary(out)
 p_spec <- plot(out, draw = FALSE)
 p_spec$data$plot
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=data_quality_report]{data_quality_report()}}, \code{\link[=estimation_iteration_report]{estimation_iteration_report()}},

@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-reporting-checklist.R
 \name{reporting_checklist}
 \alias{reporting_checklist}
+\alias{summary.mfrm_reporting_checklist}
 \title{Build an auto-filled MFRM reporting checklist}
 \usage{
 reporting_checklist(
@@ -11,6 +12,8 @@ reporting_checklist(
   hierarchical_structure = NULL,
   include_references = TRUE
 )
+
+\method{summary}{mfrm_reporting_checklist}(object, top_n = 10, ...)
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
@@ -31,10 +34,31 @@ material within that scope, not a complete design assessment.}
 
 \item{include_references}{If \code{TRUE}, include a compact reference table in the
 returned bundle.}
+
+\item{object}{Output from \code{\link[=reporting_checklist]{reporting_checklist()}}.}
+
+\item{top_n}{Maximum number of draft-action rows shown in the compact action
+table.}
+
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 A named list with checklist tables. Class:
 \code{mfrm_reporting_checklist}.
+
+For \code{summary()}: An object of class \code{summary.mfrm_reporting_checklist} with:
+\itemize{
+\item \code{overview}: run-level counts of available and draft-ready items
+\item \code{section_summary}: section-level checklist coverage
+\item \code{software_scope}: external-software relationship summary
+\item \code{facets_positioning}: report-ready FACETS relationship wording
+\item \code{visual_scope}: available plots and data for custom rendering, including
+the main \code{InterpretationCheck} caveat for each type of plot
+\item \code{priority_summary}: counts by priority/severity
+\item \code{action_items}: highest-priority rows that still need draft work
+\item \code{settings}: checklist settings rendered as a compact table
+\item \code{notes}: interpretation notes
+}
 }
 \description{
 Build an auto-filled MFRM reporting checklist
@@ -63,6 +87,8 @@ wording, and ConQuest scope wording.
 
 The output is designed for manuscript preparation, reproducibility records, and
 reproducible reporting workflows.
+
+\code{summary()} method: Summarize a reporting-checklist bundle for manuscript work
 }
 \section{What this checklist means}{
 
@@ -175,6 +201,9 @@ analyses; they cannot establish availability for this fit's checklist.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("reporting_checklist", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 
 # Saved synthetic MML/RSM analysis of example_operational.
@@ -195,8 +224,21 @@ subset(checklist$checklist, !DraftReady,
 # DraftReady is TRUE/FALSE; TRUE means draft material is available with caveats
 # Choose follow-up analyses for your question, not merely to make every row TRUE
 }
+# Long-running workflow; run explicitly when needed.
+# example("summary.mfrm_reporting_checklist", run.dontrun = TRUE)
+\dontrun{
+toy <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                method = "MML", quad_points = 7, maxit = 30)
+diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
+chk <- reporting_checklist(fit, diagnostics = diag)
+summary(chk)
+}
+}
 \seealso{
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
 \code{\link[=specifications_report]{specifications_report()}}, \code{\link[=data_quality_report]{data_quality_report()}},
 \code{\link[=build_misfit_casebook]{build_misfit_casebook()}}, \code{\link[=build_linking_review]{build_linking_review()}}
+
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \link{summary.mfrm_apa_outputs}
 }

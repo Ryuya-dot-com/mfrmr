@@ -11,12 +11,8 @@
   invisible(TRUE)
 }
 
-.mfrmr_gg_theme <- function() {
-  ggplot2::theme_minimal(base_size = 11) +
-    ggplot2::theme(
-      panel.grid.minor = ggplot2::element_blank(),
-      plot.title.position = "plot"
-    )
+.mfrmr_gg_theme <- function(preset = NULL, base_size = NULL) {
+  .mfrmr_gg_theme_styled(preset = preset, base_size = base_size)
 }
 
 .mfrmr_gg_labs <- function(p, payload, x = NULL, y = NULL, fallback = NULL) {
@@ -216,6 +212,7 @@
 .mfrmr_gg_matrix <- function(mat, payload, flag_matrix = NULL,
                              show_values = FALSE, value_digits = 2L,
                              flag_color = "black") {
+  style <- resolve_plot_preset(payload$preset %||% .mfrm_default_plot_preset())
   residual <- identical(payload$plot_name, "local_dependence_heatmap")
   halo <- identical(payload$plot_name, "halo_network")
   long <- as.data.frame(as.table(mat), stringsAsFactors = FALSE)
@@ -231,13 +228,13 @@
   ) +
     ggplot2::geom_tile(colour = "white", linewidth = 0.25) +
     ggplot2::scale_fill_gradient2(
-      low = if (halo) payload$palette[["non_halo"]] %||% "steelblue" else "steelblue",
-      mid = "white", high = if (halo) payload$palette[["halo"]] %||% "firebrick" else "firebrick",
-      na.value = "grey90", limits = if (residual || halo) c(-1, 1) else NULL,
+      low = if (halo) payload$palette[["non_halo"]] %||% style$accent_primary else style$accent_primary,
+      mid = "white", high = if (halo) payload$palette[["halo"]] %||% style$fail else style$fail,
+      na.value = style$missing, limits = if (residual || halo) c(-1, 1) else NULL,
       name = if (halo) "Retained correlation" else if (residual) "Residual correlation" else ggplot2::waiver()
     ) +
     ggplot2::coord_equal() +
-    .mfrmr_gg_theme() +
+    .mfrmr_gg_theme_styled(style$name) +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
       panel.grid.major = ggplot2::element_blank()
@@ -334,13 +331,14 @@
   index <- round((df$Value - limits[1]) / diff(limits) * (length(colors) - 1)) + 1L
   rgb <- grDevices::col2rgb(colors[pmax(1L, pmin(length(colors), index))]) / 255
   df$TextColour <- ifelse(colSums(rgb * c(.299, .587, .114)) < .5, "white", "black")
+  style <- resolve_plot_preset(payload$preset %||% payload$settings$preset %||% .mfrm_default_plot_preset())
   p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Column, y = .data$Row, fill = .data$Value)) +
     ggplot2::geom_tile(colour = "white", linewidth = .25) +
     ggplot2::geom_text(ggplot2::aes(label = .data$Label, colour = .data$TextColour), size = 3) +
     ggplot2::scale_colour_identity() +
     ggplot2::scale_fill_gradientn(colours = colors, limits = limits,
-      na.value = "grey90", name = if (correlation) "Correlation" else "Exact agreement") +
-    ggplot2::coord_equal() + .mfrmr_gg_theme() +
+      na.value = style$missing, name = if (correlation) "Correlation" else "Exact agreement") +
+    ggplot2::coord_equal() + .mfrmr_gg_theme_styled(style$name) +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
       panel.grid.major = ggplot2::element_blank())
   facet <- payload$settings$rater_facet %||% "Rater"
@@ -401,6 +399,15 @@
   loc$Estimate <- suppressWarnings(as.numeric(loc$Estimate))
   loc$X <- suppressWarnings(as.numeric(loc$X))
   loc <- loc[is.finite(loc$Estimate) & is.finite(loc$X), , drop = FALSE]
+  if (nrow(loc) == 0L) {
+    return(.mfrmr_empty_ggplot("No finite locations are available.", payload = payload, preset = payload$preset))
+  }
+  loc$PlotY <- if ("DisplayEstimate" %in% names(loc)) {
+    de <- suppressWarnings(as.numeric(loc$DisplayEstimate))
+    ifelse(is.finite(de), de, loc$Estimate)
+  } else {
+    loc$Estimate
+  }
   location_colors <- resolve_palette(payload[["palette"]],
     .plot_series_colors(c("facet_level", "step_threshold"), payload$preset %||% "standard"))
   names(location_colors) <- c("Facet level", "Step threshold")
@@ -551,8 +558,10 @@
       )
     }
   }
-  if (all(c("CI_Lower", "CI_Upper") %in% names(loc))) {
-    ci <- loc[is.finite(loc$CI_Lower) & is.finite(loc$CI_Upper), , drop = FALSE]
+  if (isTRUE(payload$show_ci %||% TRUE) && all(c("CI_Lower", "CI_Upper") %in% names(loc))) {
+    not_boundary <- !(loc$BoundarySeparated %in% TRUE) &
+      !(as.character(loc$CIDisplayStatus %||% "") == "boundary_endpoint_marker")
+    ci <- loc[not_boundary & is.finite(loc$CI_Lower) & is.finite(loc$CI_Upper), , drop = FALSE]
     if (nrow(ci) > 0L) {
       p <- p + ggplot2::geom_segment(
         data = ci,
@@ -569,7 +578,7 @@
     ggplot2::geom_point(
       data = loc,
       ggplot2::aes(
-        x = .data$X, y = .data$Estimate,
+        x = .data$X, y = .data$PlotY,
         colour = .data$PlotType, shape = .data$PlotType
       ),
       size = 2.1, alpha = 0.9
@@ -581,9 +590,10 @@
       labels = c("Persons", truncate_axis_label(groups, width = 16L)),
       limits = c(-0.95, max(1, length(groups)) + 0.75)
     ) +
-    .mfrmr_gg_theme() +
+    ggplot2::coord_cartesian(ylim = y_limits) +
+    .mfrmr_gg_theme(payload$preset) +
     ggplot2::theme(
-      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      axis.text.x = ggplot2::element_text(angle = payload$label_angle %||% 45, hjust = 1),
       panel.grid.major.x = ggplot2::element_blank(),
       legend.title = ggplot2::element_blank()
     )
@@ -780,7 +790,8 @@
     )
   }
   p <- .mfrmr_gg_add_references(p, payload$reference_lines)
-  if (identical(payload$panel, "facet") && "Panel" %in% names(tbl)) {
+  is_faceted <- identical(payload$panel, "facet") && "Panel" %in% names(tbl)
+  if (is_faceted) {
     p <- p + ggplot2::facet_wrap(stats::as.formula("~ Panel"), scales = "free_y")
   }
   x_label <- if (identical(payload$fit_scale, "mnsq")) {
@@ -788,7 +799,18 @@
   } else {
     paste0(payload$fit_stat, " ZSTD (", payload$zstd_method, " df)")
   }
-  .mfrmr_gg_labs(p, payload, x = x_label, y = "Measure (logits)", fallback = "Fit pathway")
+  p <- .mfrmr_gg_labs(p, payload, x = x_label, y = "Measure (logits)", fallback = "Fit pathway")
+  if (!is_faceted) {
+    p <- .mfrmr_attach_marginal_histograms(
+      p,
+      x = tbl$FitValue,
+      y = tbl$Measure,
+      marginal = payload$marginal %||% "auto",
+      preset = payload$preset %||% "standard",
+      single_panel = TRUE
+    )
+  }
+  p
 }
 
 .mfrmr_gg_bubble <- function(payload) {
@@ -831,7 +853,15 @@
     ggplot2::scale_size_identity() +
     ggplot2::scale_colour_manual(values = colours, breaks = facets) + .mfrmr_gg_theme()
   p <- .mfrmr_gg_add_references(p, payload$reference_lines)
-  .mfrmr_gg_labs(p, payload, x = xlab, y = ylab, fallback = "Bubble chart")
+  p <- .mfrmr_gg_labs(p, payload, x = xlab, y = ylab, fallback = "Bubble chart")
+  .mfrmr_attach_marginal_histograms(
+    p,
+    x = tbl$.x,
+    y = tbl$.y,
+    marginal = payload$marginal %||% "auto",
+    preset = payload$preset %||% "standard",
+    single_panel = TRUE
+  )
 }
 
 .mfrmr_gg_ccc <- function(payload,
@@ -1182,20 +1212,30 @@
   style <- resolve_plot_preset(payload$preset %||% "standard")
   view <- payload$plot %||% x$name
   if (identical(view, "heatmap")) {
+    if (!is.matrix(payload$matrix) || length(payload$matrix) == 0L) {
+      p <- .mfrmr_empty_ggplot("Insufficient data for heatmap.", payload = payload, preset = style$name)
+      attr(p, "mfrmr_plot_data") <- x
+      return(p)
+    }
     df <- as.data.frame(as.table(payload$matrix), stringsAsFactors = FALSE)
     names(df) <- c("Element", "Wave", "Drift")
     df$Element <- factor(df$Element, levels = rev(rownames(payload$matrix)))
     extent <- if (any(is.finite(df$Drift))) max(abs(df$Drift), na.rm = TRUE) else 1
     if (extent == 0) extent <- 1
-    colours <- payload$legend$value
+    colours <- payload$legend$value %||% c(style$accent_primary, style$warn)
     p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Wave, y = .data$Element,
       fill = .data$Drift)) + ggplot2::geom_tile() +
       ggplot2::scale_fill_gradient2(low = colours[1L], mid = "white",
-        high = colours[2L], limits = c(-extent, extent), na.value = "grey90",
-        name = "Drift (logits)") + .mfrmr_gg_theme()
+        high = colours[2L], limits = c(-extent, extent), na.value = style$missing,
+        name = "Drift (logits)") + .mfrmr_gg_theme_styled(style$name)
     p <- .mfrmr_gg_labs(p, payload, x = "Wave", y = "Facet level")
   } else if (identical(view, "chain")) {
-    df <- as.data.frame(payload$table)
+    df <- as.data.frame(payload$table %||% data.frame())
+    if (!nrow(df)) {
+      p <- .mfrmr_empty_ggplot("No chain cumulative offsets available.", payload = payload, preset = style$name)
+      attr(p, "mfrmr_plot_data") <- x
+      return(p)
+    }
     df$Position <- seq_len(nrow(df))
     df$NextOffset <- c(tail(df$Cumulative_Offset, -1L), NA_real_)
     edges <- is.finite(df$Cumulative_Offset) & is.finite(df$NextOffset)
@@ -1211,7 +1251,12 @@
   } else {
     forest <- identical(x$name, "anchor_drift_forest")
     common <- identical(x$name, "equating_chain_common_anchors")
-    df <- as.data.frame(if (forest || common) payload$data else payload$table)
+    df <- as.data.frame((if (forest || common) payload$data else payload$table) %||% data.frame())
+    if (!nrow(df)) {
+      p <- .mfrmr_empty_ggplot("No drift data to plot.", payload = payload, preset = style$name)
+      attr(p, "mfrmr_plot_data") <- x
+      return(p)
+    }
     if (!forest && !common) df <- df[order(-abs(df$Drift), na.last = TRUE), , drop = FALSE]
     df$Position <- seq_len(nrow(df))
     df$Value <- if (forest) df$Estimate else if (common) df$N_Common else df$Drift
@@ -1247,6 +1292,9 @@
   value <- component$value
   if (is.matrix(value)) return(.mfrmr_gg_matrix(value, payload))
   df <- as.data.frame(value, stringsAsFactors = FALSE)
+  if (nrow(df) == 0L) {
+    return(.mfrmr_empty_ggplot("No rows are available in the selected table.", payload = payload, preset = payload$preset))
+  }
   if (all(c("Pair", "Effect") %in% names(df))) {
     return(.mfrmr_gg_effect_summary(df, payload))
   }
@@ -1258,7 +1306,7 @@
         x = .data$Theta, y = .data$Value,
         colour = .data$Series, group = .data$Series
       )
-    ) + ggplot2::geom_line() + .mfrmr_gg_theme()
+    ) + ggplot2::geom_line(na.rm = TRUE) + .mfrmr_gg_theme(payload$preset)
     return(.mfrmr_gg_labs(p, payload, x = "Theta / logit", y = "Value"))
   }
   numeric_cols <- names(df)[vapply(df, is.numeric, logical(1))]
@@ -1269,16 +1317,39 @@
       Label = as.character(df[[label_cols[1]]])
     )
     dat <- dat[is.finite(dat$Value) & nzchar(dat$Label), , drop = FALSE]
+    if (nrow(dat) == 0L) {
+      return(.mfrmr_empty_ggplot("No finite values are available.", payload = payload, preset = payload$preset))
+    }
     dat$Label <- factor(dat$Label, levels = rev(unique(dat$Label)))
     p <- ggplot2::ggplot(dat, ggplot2::aes(x = .data$Value, y = .data$Label)) +
-      ggplot2::geom_col(fill = "#2B6CB0") + .mfrmr_gg_theme()
+      ggplot2::geom_col(fill = "#2B6CB0") + .mfrmr_gg_theme(payload$preset)
     return(.mfrmr_gg_labs(p, payload, x = numeric_cols[1], y = NULL))
   }
   if (length(numeric_cols) >= 2L) {
-    dat <- data.frame(X = df[[numeric_cols[1]]], Y = df[[numeric_cols[2]]])
+    dat <- data.frame(
+      X = suppressWarnings(as.numeric(df[[numeric_cols[1]]])),
+      Y = suppressWarnings(as.numeric(df[[numeric_cols[2]]]))
+    )
+    dat <- dat[is.finite(dat$X) & is.finite(dat$Y), , drop = FALSE]
+    if (nrow(dat) == 0L) {
+      return(.mfrmr_empty_ggplot("No finite values are available.", payload = payload, preset = payload$preset))
+    }
     p <- ggplot2::ggplot(dat, ggplot2::aes(x = .data$X, y = .data$Y)) +
-      ggplot2::geom_point() + .mfrmr_gg_theme()
+      ggplot2::geom_point(na.rm = TRUE) + .mfrmr_gg_theme(payload$preset)
     return(.mfrmr_gg_labs(p, payload, x = numeric_cols[1], y = numeric_cols[2]))
+  }
+  if (length(numeric_cols) == 1L) {
+    dat <- data.frame(
+      Index = seq_len(nrow(df)),
+      Value = suppressWarnings(as.numeric(df[[numeric_cols[1]]]))
+    )
+    dat <- dat[is.finite(dat$Value), , drop = FALSE]
+    if (nrow(dat) == 0L) {
+      return(.mfrmr_empty_ggplot("No finite values are available.", payload = payload, preset = payload$preset))
+    }
+    p <- ggplot2::ggplot(dat, ggplot2::aes(x = .data$Index, y = .data$Value)) +
+      ggplot2::geom_point(na.rm = TRUE) + .mfrmr_gg_theme(payload$preset)
+    return(.mfrmr_gg_labs(p, payload, x = "Row", y = numeric_cols[1]))
   }
   stop("The selected component is not suitable for automatic ggplot conversion.", call. = FALSE)
 }
@@ -1352,6 +1423,7 @@
 
 .mfrmr_gg_simulation_scan <- function(payload) {
   .require_mfrmr_ggplot2()
+  style <- resolve_plot_preset(payload$preset %||% "standard")
   df <- as.data.frame(payload$data %||% data.frame(), stringsAsFactors = FALSE)
   x_var <- as.character(payload$x_var %||% "")
   if (!nzchar(x_var) || !x_var %in% names(df) || !"y" %in% names(df)) {
@@ -1361,28 +1433,40 @@
   df$.mfrmr_y <- suppressWarnings(as.numeric(df$y))
   df$.mfrmr_group <- if ("group" %in% names(df)) as.character(df$group) else "All designs"
   df <- df[is.finite(df$.mfrmr_x) & is.finite(df$.mfrmr_y), , drop = FALSE]
-  p <- ggplot2::ggplot(
-    df,
-    ggplot2::aes(
-      x = .data$.mfrmr_x, y = .data$.mfrmr_y,
-      colour = .data$.mfrmr_group, group = .data$.mfrmr_group
-    )
-  ) +
-    ggplot2::geom_line(linewidth = 0.75) +
-    ggplot2::geom_point(size = 2) +
-    .mfrmr_gg_theme() +
-    ggplot2::theme(legend.position = "bottom")
   payload$title <- payload$title %||% if (identical(payload$plot, "signal_detection")) {
     "Signal-detection simulation"
   } else {
     "Design simulation"
   }
   payload$subtitle <- payload$subtitle %||% payload$interpretation_note %||% NULL
+  ylab <- payload$display_metric %||% payload$metric_col %||% payload$metric %||% "Value"
+  if (!nrow(df)) {
+    p <- .mfrmr_empty_ggplot("Selected metric has no finite values available.", payload = payload, preset = style$name)
+    return(.mfrmr_gg_labs(p, payload, x = payload$x_label %||% x_var, y = ylab))
+  }
+  grps <- unique(df$.mfrmr_group)
+  df$.mfrmr_group_factor <- factor(df$.mfrmr_group, levels = grps)
+  cols_s <- stats::setNames(rep(style$series, length.out = length(grps)), grps)
+  p <- ggplot2::ggplot(
+    df,
+    ggplot2::aes(
+      x = .data$.mfrmr_x, y = .data$.mfrmr_y,
+      colour = .data$.mfrmr_group_factor, group = .data$.mfrmr_group_factor
+    )
+  ) +
+    ggplot2::geom_line(linewidth = 0.8) +
+    ggplot2::geom_point(size = 2.4) +
+    ggplot2::scale_colour_manual(values = cols_s, name = payload$group_label %||% NULL) +
+    .mfrmr_gg_theme_styled(style$name) +
+    ggplot2::theme(legend.position = "bottom")
+  if (length(grps) <= 1L && identical(grps[1L], "All designs")) {
+    p <- p + ggplot2::guides(colour = "none")
+  }
   .mfrmr_gg_labs(
     p,
     payload,
     x = payload$x_label %||% x_var,
-    y = payload$display_metric %||% payload$metric_col %||% payload$metric %||% "Value"
+    y = ylab
   )
 }
 
@@ -1560,7 +1644,7 @@
   updated <- mfrm_extended_estimate_plot(payload$table, labels, name, title, xlab, note,
     FALSE, payload$settings, show_title = payload$display$show_title %||% FALSE,
     show_notes = payload$display$show_notes %||% FALSE)
-  .mfrmr_gg_extended_estimates(updated$data)
+  updated
 }
 
 #' Convert draw-free mfrmr plot data to ggplot2
@@ -1621,8 +1705,9 @@
 #' `assumption = "normal"`.
 #' For multivariate D-study plots, an explicit `component = "series"` keeps
 #' this dedicated conversion; use [plot_data()] for other tables.
-#' Difference-interval plots from [mfrm_multivariate_d_compare()] use their
-#' base `plot()` method or [plot_data()]; automatic conversion is not supported.
+#' Difference-interval plots from [mfrm_multivariate_d_compare()] return
+#' `ggplot` objects via both `plot()` and `as_ggplot()`, with underlying tables
+#' accessible through [plot_data()].
 #' Severity profiles preserve their saved normal bounds,
 #' ordered levels, guide bands, fixed points, unavailable states and precision
 #' notes with the default or `component = "data"`. The word "profile" does not
@@ -1748,7 +1833,7 @@
 #'   `ggplot2::labs(title = NULL)`.
 #'
 #' @section Interactive views:
-#' The [visual gallery](https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html)
+#' The [visual gallery](https://ryuya-dot-com.github.io/mfrmr/dev/articles/visual-gallery.html)
 #' shows how to pass a supported ggplot to `plotly::ggplotly()` for browser-based
 #' hovering, zooming and legend filtering. Plotly is an optional downstream
 #' renderer. Keep the original mfrmr plot and its [plot_data()] notes alongside
@@ -1781,6 +1866,42 @@ as_ggplot <- function(x, type = NULL, component = NULL, ...) {
 #' @rdname as_ggplot
 #' @export
 as_ggplot.default <- function(x, type = NULL, component = NULL, ...) {
+  if (inherits(x, "ggplot")) {
+    saved <- attr(x, "mfrmr_plot_data", exact = TRUE)
+    if (is.null(type) && is.null(component) && length(list(...)) == 0L) {
+      return(x)
+    }
+    if (!inherits(saved, "mfrm_plot_data")) {
+      stop("`x` is a plain `ggplot` without saved `mfrmr_plot_data`.", call. = FALSE)
+    }
+    if (saved$name %in% c("gpcm_slope_intervals", "gpcm_bootstrap_test", "gpcm_curve_intervals")) {
+      if (!is.null(type) || !is.null(component)) {
+        stop("Use plot_data() to select a GPCM inference table.", call. = FALSE)
+      }
+      rlang::check_dots_empty()
+      return(x)
+    }
+    if (saved$name %in% c("design_evaluation", "signal_detection") && is.list(saved$data)) {
+      return(as_ggplot.mfrm_design_evaluation_plot_data(
+        saved$data, type = type, component = component, ...
+      ))
+    }
+    return(as_ggplot.mfrm_plot_data(saved, type = type, component = component, ...))
+  }
+  if (is.list(x) && !inherits(x, "mfrm_plot_data") &&
+      as.character(x$plot %||% "")[1L] %in% c("design_evaluation", "signal_detection")) {
+    if (!is.null(type)) {
+      stop("`type` is not used when converting a saved simulation plot payload.", call. = FALSE)
+    }
+    if (length(list(...)) > 0L) {
+      stop("Unused arguments when converting a saved simulation plot payload.", call. = FALSE)
+    }
+    if (!is.null(component)) {
+      .require_mfrmr_ggplot2()
+      return(.mfrmr_gg_tabular(.mfrmr_gg_component(x, component), x))
+    }
+    return(.mfrmr_gg_simulation_scan(x))
+  }
   dots <- list(...)
   conversion_names <- c("slope_aes", "facet_by", "show_overlay")
   dot_names <- names(dots) %||% rep("", length(dots))
@@ -1798,14 +1919,32 @@ as_ggplot.default <- function(x, type = NULL, component = NULL, ...) {
 #' @rdname as_ggplot
 #' @export
 as_ggplot.mfrm_design_evaluation <- function(x, type = NULL, component = NULL, ...) {
-  payload <- plot(x, draw = FALSE, ...)
-  .mfrmr_gg_simulation_scan(payload)
+  out <- plot(x, draw = FALSE, ...)
+  if (inherits(out, "ggplot")) {
+    if (is.null(type) && is.null(component)) return(out)
+    saved <- attr(out, "mfrmr_plot_data", exact = TRUE)
+    payload <- if (inherits(saved, "mfrm_plot_data")) saved$data else list()
+    return(as_ggplot.mfrm_design_evaluation_plot_data(
+      payload, type = type, component = component
+    ))
+  }
+  if (!is.null(component)) {
+    .require_mfrmr_ggplot2()
+    return(.mfrmr_gg_tabular(.mfrmr_gg_component(out, component), out))
+  }
+  .mfrmr_gg_simulation_scan(out)
 }
 
 #' @rdname as_ggplot
 #' @export
 as_ggplot.mfrm_design_evaluation_plot_data <- function(x, type = NULL,
                                                        component = NULL, ...) {
+  if (!is.null(type)) {
+    stop("`type` is not used when converting a saved simulation plot payload.", call. = FALSE)
+  }
+  if (length(list(...)) > 0L) {
+    stop("Unused arguments when converting a saved simulation plot payload.", call. = FALSE)
+  }
   payload <- as.list(x)
   if (!is.null(component)) {
     .require_mfrmr_ggplot2()
@@ -1815,39 +1954,52 @@ as_ggplot.mfrm_design_evaluation_plot_data <- function(x, type = NULL,
 }
 
 #' @rdname as_ggplot
-#' @export
-as_ggplot.mfrm_signal_detection <- function(x, type = NULL, component = NULL, ...) {
-  payload <- plot(x, draw = FALSE, ...)
-  .mfrmr_gg_simulation_scan(payload)
-}
+#' @name as_ggplot.mfrm_signal_detection
+#' @aliases as_ggplot.mfrm_signal_detection
+#' @usage \method{as_ggplot}{mfrm_signal_detection}(x, type = NULL, component = NULL, ...)
+#' @rawNamespace S3method(as_ggplot,mfrm_signal_detection,as_ggplot.mfrm_design_evaluation)
+NULL
 
 #' @rdname as_ggplot
-#' @export
-as_ggplot.mfrm_signal_detection_plot_data <- function(x, type = NULL,
-                                                      component = NULL, ...) {
-  payload <- as.list(x)
-  if (!is.null(component)) {
-    .require_mfrmr_ggplot2()
-    return(.mfrmr_gg_tabular(.mfrmr_gg_component(payload, component), payload))
-  }
-  .mfrmr_gg_simulation_scan(payload)
-}
+#' @name as_ggplot.mfrm_signal_detection_plot_data
+#' @aliases as_ggplot.mfrm_signal_detection_plot_data
+#' @usage \method{as_ggplot}{mfrm_signal_detection_plot_data}(x, type = NULL, component = NULL, ...)
+#' @rawNamespace S3method(as_ggplot,mfrm_signal_detection_plot_data,as_ggplot.mfrm_design_evaluation_plot_data)
+NULL
 
 #' @rdname as_ggplot
 #' @export
 as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
-  if (identical(x$name, "network_ergm") ||
-      (identical(x$name, "rater_network") && any(x$data$metric %in% c("SWS", "PUS")))) {
-    stop("Automatic network-fit conversion is unavailable; use plot() or plot_data() to retain the selected metric, intervals and unavailable states in custom graphics.", call. = FALSE)
+  if (!is.null(type)) stop("A saved plot already selects a view. Recreate it from the fit or result to select another view.", call. = FALSE)
+  if (x$name %in% c("design_evaluation", "signal_detection") && is.list(x$data)) {
+    p_sim <- as_ggplot.mfrm_design_evaluation_plot_data(x$data, type = NULL, component = component, ...)
+    if (is.null(component)) attr(p_sim, "mfrmr_plot_data") <- x
+    return(p_sim)
   }
-  if (x$name %in% c("subset_connectivity", "rater_network", "halo_network") &&
-      identical(x$data$plot, "network")) {
-    stop("Automatic network conversion is unavailable; use plot() with layout/graphical controls, or plot_data() for node, edge and coordinate tables.", call. = FALSE)
+  if (identical(x$name, "network_ergm")) {
+    rlang::check_dots_empty()
+    .require_mfrmr_ggplot2()
+    if (!is.null(component)) return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
+    return(.mfrmr_gg_network_ergm(x))
+  }
+  if (identical(x$name, "rater_network")) {
+    rlang::check_dots_empty()
+    .require_mfrmr_ggplot2()
+    if (!is.null(component)) return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
+    return(.mfrmr_gg_rater_network(x))
+  }
+  if (identical(x$name, "subset_connectivity")) {
+    rlang::check_dots_empty()
+    .require_mfrmr_ggplot2()
+    if (!is.null(component)) return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
+    return(.mfrmr_gg_subset_connectivity(x))
   }
   if (identical(x$name, "residual_network")) {
-    stop("Use plot() on the saved residual network for network/dendrogram views; as_ggplot() supports its type = 'matrix' view only.", call. = FALSE)
+    rlang::check_dots_empty()
+    .require_mfrmr_ggplot2()
+    if (!is.null(component)) return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
+    return(.mfrmr_gg_residual_network(x))
   }
-  if (!is.null(type)) stop("A saved plot already selects a view. Recreate it from the fit or result to select another view.", call. = FALSE)
   if (x$name %in% c("anchor_drift", "anchor_drift_forest", "equating_chain_common_anchors")) {
     rlang::check_dots_empty()
     selected <- if (x$name != "anchor_drift") "data" else
@@ -1864,28 +2016,59 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     .require_mfrmr_ggplot2()
     return(.mfrmr_gg_shrinkage(x))
   }
-  if (x$name %in% c("table13_bias", "halo_network")) {
+  if (identical(x$name, "table13_bias")) {
     rlang::check_dots_empty()
-    allowed <- if (x$name == "table13_bias") c(scatter = "scatter_data", ranked = "ranked_table") else
-      c(edge_distribution = "table", halo_summary = "table", matrix = "matrix")
+    allowed <- c(
+      scatter = "scatter_data",
+      ranked = "ranked_table",
+      heatmap = "heatmap_matrix",
+      abs_t_hist = "scatter_data",
+      facet_profile = "facet_profile"
+    )
+    plot_view <- as.character(x$data$plot %||% "scatter")[1L]
+    if (!is.null(component) && plot_view %in% names(allowed) &&
+        !identical(component, unname(allowed[plot_view]))) {
+      stop("Use the selected rater-effect view, or plot_data() for other components.", call. = FALSE)
+    }
+    .require_mfrmr_ggplot2()
+    return(.mfrmr_gg_bias_all(x))
+  }
+  if (identical(x$name, "halo_network")) {
+    rlang::check_dots_empty()
+    .require_mfrmr_ggplot2()
+    if (identical(x$data$plot, "network")) {
+      if (!is.null(component) && !component %in% c("edges", "coordinates")) {
+        stop("Use the selected rater-effect view, or plot_data() for other components.", call. = FALSE)
+      }
+      return(.mfrmr_gg_network_graph(x))
+    }
+    allowed <- c(edge_distribution = "table", halo_summary = "table", matrix = "matrix")
     if (!x$data$plot %in% names(allowed)) stop(
       "Automatic ggplot conversion of this rater-effect view is unavailable. Use plot() on the saved result, or plot_data() for custom graphics.", call. = FALSE)
     if (!is.null(component) && !identical(component, unname(allowed[x$data$plot]))) stop(
       "Use the selected rater-effect view, or plot_data() for other components.", call. = FALSE)
-    .require_mfrmr_ggplot2()
-    return(if (x$name == "table13_bias") .mfrmr_gg_bias(x) else .mfrmr_gg_halo(x))
+    return(.mfrmr_gg_halo(x))
   }
   if (x$name %in% c("rating_scale", "category_structure", "category_curves", "threshold_ladder")) {
     rlang::check_dots_empty()
-    supported <- (x$name %in% c("rating_scale", "category_structure") && identical(x$data$plot, "counts")) ||
-      (x$name == "rating_scale" && identical(x$data$plot, "thresholds"))
-    if (!supported) stop(
-      "Automatic ggplot conversion of this category view is unavailable. Use plot() on the original fit/result for base graphics, or plot_data() for explicitly grouped custom graphics.", call. = FALSE)
-    expected <- if (x$data$plot == "counts") "category_table" else "threshold_table"
-    if (!is.null(component) && !identical(component, expected)) stop(
-      "Use the selected category view, or plot_data() for other components.", call. = FALSE)
     .require_mfrmr_ggplot2()
-    return(.mfrmr_gg_categories(x))
+    basic_supported <- (x$name %in% c("rating_scale", "category_structure") && identical(x$data$plot, "counts")) ||
+      (x$name == "rating_scale" && identical(x$data$plot, "thresholds"))
+    if (basic_supported) {
+      expected <- if (x$data$plot == "counts") "category_table" else "threshold_table"
+      if (!is.null(component) && !identical(component, expected)) stop(
+        "Use the selected category view, or plot_data() for other components.", call. = FALSE)
+      return(.mfrmr_gg_categories(x))
+    }
+    if (!is.null(component)) {
+      expected_ext <- if (identical(x$name, "threshold_ladder")) "data" else
+        if (identical(x$name, "category_structure")) "boundary_table" else
+          c("probability", "expected", "information")
+      if (!component %in% expected_ext) {
+        stop("Use the selected category view, or plot_data() for other components.", call. = FALSE)
+      }
+    }
+    return(.mfrmr_gg_category_extended(x))
   }
   if (x$name %in% c("interrater", "rater_agreement_heatmap")) {
     rlang::check_dots_empty()
@@ -1903,7 +2086,27 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     return(.mfrmr_gg_severity(x))
   }
   if (identical(x$name, "residual_qq")) {
-    stop("Automatic ggplot conversion of residual Q-Q plots is unavailable. Use plot(fit, type = \"residual_qq\") or plot_data() to specify both quantile axes explicitly.", call. = FALSE)
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "data")) stop(
+      "Use component = 'data' for the residual Q-Q view, or plot_data() for other components.", call. = FALSE)
+    .require_mfrmr_ggplot2()
+    return(.mfrmr_gg_residual_qq(x))
+  }
+  if (identical(x$name, "category_probability_surface")) {
+    rlang::check_dots_empty()
+    .require_mfrmr_ggplot2()
+    if (!is.null(component) && !component %in% c("surface", "probabilities")) {
+      stop("Use component = 'surface' for the probability surface, or plot_data() for other components.", call. = FALSE)
+    }
+    return(.mfrmr_gg_ccc_surface(x))
+  }
+  if (identical(x$name, "dif_scatter")) {
+    rlang::check_dots_empty()
+    .require_mfrmr_ggplot2()
+    if (!is.null(component) && !identical(component, "data")) {
+      stop("Use component = 'data' for the DIF/DFF scatter view, or plot_data() for other components.", call. = FALSE)
+    }
+    return(.mfrmr_gg_dif_scatter(x))
   }
   if (identical(x$name, "residual_pca")) {
     rlang::check_dots_empty()
@@ -1932,6 +2135,11 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     rlang::check_dots_empty()
     if (!is.null(component)) stop("Use plot_data() to select posterior tables; as_ggplot() preserves the selected interval view.", call. = FALSE)
     return(.mfrm_gg_posterior_intervals(x))
+  }
+  if (identical(x$name, "posterior_scores")) {
+    rlang::check_dots_empty()
+    if (!is.null(component)) stop("Use plot_data() to select posterior scoring tables; as_ggplot() preserves the selected score view.", call. = FALSE)
+    return(.mfrm_gg_posterior_scores(x))
   }
   if (identical(x$name, "dstudy_intervals")) {
     rlang::check_dots_empty()
@@ -1967,10 +2175,20 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     return(.mfrmr_gg_pooled(x))
   }
   if (identical(x$name, "screening_performance")) {
-    stop("Use plot() for screening performance, or plot_data() for custom graphics; automatic ggplot conversion is not available.", call. = FALSE)
+    rlang::check_dots_empty()
+    .require_mfrmr_ggplot2()
+    if (!is.null(component) && !identical(component, "data")) {
+      stop("Use component = 'data' for screening performance, or plot_data() for other components.", call. = FALSE)
+    }
+    return(.mfrmr_gg_screening_performance(x))
   }
   if (identical(x$name, "multivariate_d_comparison")) {
-    stop("Use plot() for D-study difference intervals, or plot_data() for custom graphics; automatic ggplot conversion is not available.", call. = FALSE)
+    rlang::check_dots_empty()
+    .require_mfrmr_ggplot2()
+    if (!is.null(component)) {
+      return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
+    }
+    return(.mfrmr_gg_multivariate_d_comparison(x))
   }
   if (x$name %in% c("cluster_silhouette", "cluster_profile")) {
     rlang::check_dots_empty()
@@ -1981,8 +2199,12 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     return(.mfrmr_gg_cluster_summary(x))
   }
   if (identical(x$name, "d_study")) {
-    stop("Automatic ggplot conversion is not available for mfrm_d_study plots. ",
-      "Use plot(x) to preserve the selected design comparisons, or plot_data() for custom graphics.", call. = FALSE)
+    rlang::check_dots_empty()
+    .require_mfrmr_ggplot2()
+    if (!is.null(component)) {
+      return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
+    }
+    return(.mfrmr_gg_d_study(x))
   }
   .require_mfrmr_ggplot2()
   payload <- x$data %||% list()
@@ -1992,6 +2214,12 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     if (!is.null(component) && !identical(component, "table"))
       stop("Use component = 'table' for criterion outcomes; use plot_data() for the other tables.", call. = FALSE)
     tab <- payload$table
+    if (!is.data.frame(tab) || !nrow(tab) || !is.data.frame(payload$designs) || !nrow(payload$designs)) {
+      p <- .mfrmr_empty_ggplot("No evaluated designs to plot.")
+      attr(p, "mfrmr_plot_data") <- x
+      attr(p, "mfrmr_notes") <- payload$notes
+      return(p)
+    }
     tab$Design <- factor(tab$DesignRow, levels = payload$designs$DesignRow,
       labels = paste0(payload$designs$DesignRow, ifelse(payload$designs$Selected, " *", "")))
     tab$Check <- factor(tab$Check, levels = rev(unique(tab$Check)))
@@ -2067,11 +2295,14 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$X, y = .data$Y))
     ci <- df[is.finite(df$Lower) & is.finite(df$Upper), , drop = FALSE]
     if (payload$plot == "difference") {
-      p <- p + ggplot2::geom_segment(ggplot2::aes(x = 0, xend = .data$X, yend = .data$Y), colour = "grey65") +
+      p <- p + ggplot2::geom_segment(ggplot2::aes(x = 0, xend = .data$X, yend = .data$Y), colour = "grey65", na.rm = TRUE) +
         ggplot2::geom_vline(xintercept = 0, linetype = "dashed", colour = "grey50") +
         ggplot2::scale_y_continuous(breaks = df$Y, labels = df$Label)
     } else if (payload$plot == "scatter") {
-      limits <- range(df$X, df$Y, ci$Lower, ci$Upper, finite = TRUE)
+      fin_vals <- c(df$X, df$Y, ci$Lower, ci$Upper)
+      fin_vals <- fin_vals[is.finite(fin_vals)]
+      limits <- if (length(fin_vals)) range(fin_vals) else c(0, 1)
+      if (diff(limits) == 0) limits <- limits + c(-0.5, 0.5)
       p <- p + ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey50") +
         ggplot2::coord_equal(xlim = limits, ylim = limits)
     }
@@ -2080,10 +2311,10 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
         ggplot2::geom_segment(data = ci, ggplot2::aes(y = .data$Lower, yend = .data$Upper, xend = .data$X, colour = .data$Facet))
       } else ggplot2::geom_segment(data = ci, ggplot2::aes(x = .data$Lower, xend = .data$Upper, yend = .data$Y, colour = .data$Facet))
     }
-    p <- p + ggplot2::geom_point(ggplot2::aes(colour = .data$Facet, shape = .data$Facet)) +
+    p <- p + ggplot2::geom_point(ggplot2::aes(colour = .data$Facet, shape = .data$Facet), na.rm = TRUE) +
       ggplot2::scale_colour_manual(values = stats::setNames(payload$encoding$Color, payload$encoding$Facet)) +
       ggplot2::scale_shape_manual(values = stats::setNames(payload$encoding$Shape, payload$encoding$Facet)) +
-      .mfrmr_gg_theme()
+      .mfrmr_gg_theme(payload$preset)
     if (nrow(payload$encoding) == 1L || payload$plot == "difference") p <- p + ggplot2::theme(legend.position = "none")
     # Long reference/uncertainty explanations remain available outside the figure.
     payload$subtitle <- if (!is.null(payload$ci_note)) {
@@ -2093,22 +2324,44 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     if (identical(payload$interpretation_status, "review_only")) {
       payload$subtitle <- paste(c("REVIEW ONLY", payload$subtitle), collapse = " - ")
     }
-    return(.mfrmr_gg_labs(p, payload, x = payload$xlab, y = payload$ylab))
+    p <- .mfrmr_gg_labs(p, payload, x = payload$xlab, y = payload$ylab)
+    if (identical(payload$plot, "scatter")) {
+      p <- .mfrmr_attach_marginal_histograms(
+        p,
+        x = df$X,
+        y = df$Y,
+        marginal = payload$marginal %||% "auto",
+        preset = payload$preset %||% "standard",
+        single_panel = TRUE
+      )
+    }
+    attr(p, "mfrmr_plot_data") <- x
+    return(p)
   }
   if (is.null(component) && identical(x$name, "paired_model_comparison")) {
-    return(.mfrmr_gg_comparison(payload))
+    p <- .mfrmr_gg_comparison(payload)
+    attr(p, "mfrmr_plot_data") <- x
+    return(p)
   }
   if (is.null(component) && identical(x$name, "wright_map")) {
-    return(.mfrmr_gg_wright(payload))
+    p <- .mfrmr_gg_wright(payload)
+    attr(p, "mfrmr_plot_data") <- x
+    return(p)
   }
   if (is.null(component) && identical(x$name, "pathway_map")) {
-    return(.mfrmr_gg_expected_pathway(payload))
+    p <- .mfrmr_gg_expected_pathway(payload)
+    attr(p, "mfrmr_plot_data") <- x
+    return(p)
   }
   if (is.null(component) && identical(x$name, "fit_pathway")) {
-    return(.mfrmr_gg_fit_pathway(payload))
+    p <- .mfrmr_gg_fit_pathway(payload)
+    attr(p, "mfrmr_plot_data") <- x
+    return(p)
   }
   if (is.null(component) && identical(x$name, "bubble")) {
-    return(.mfrmr_gg_bubble(payload))
+    p <- .mfrmr_gg_bubble(payload)
+    attr(p, "mfrmr_plot_data") <- x
+    return(p)
   }
   calibration_score_type <- sub(
     "^calibration_score_", "", as.character(x$name %||% "")
@@ -2116,7 +2369,9 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   if (calibration_score_type %in% c("interval", "precision", "edge_mass")) {
     if (!is.null(component) && !identical(component, "data")) stop(
       "Use component = 'data' for the selected portable-score view, or plot_data() for other components.", call. = FALSE)
-    return(.mfrmr_gg_calibration_score(payload, calibration_score_type))
+    p <- .mfrmr_gg_calibration_score(payload, calibration_score_type)
+    attr(p, "mfrmr_plot_data") <- x
+    return(p)
   }
   if (is.null(component) && x$name %in% c(
     "category_characteristic_curves", "category_characteristic_curves_overlay"
@@ -2130,26 +2385,38 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
       as.character(dots$facet_by %||% "auto"),
       c("auto", "none", "curve_group")
     )
-    return(.mfrmr_gg_ccc(
+    p <- .mfrmr_gg_ccc(
       payload,
       slope_aes = slope_aes,
       facet_by = facet_by,
       show_overlay = isTRUE(dots$show_overlay %||% TRUE)
-    ))
+    )
+    attr(p, "mfrmr_plot_data") <- x
+    return(p)
   }
   if (is.null(component) && identical(x$name, "dif_summary") && is.data.frame(payload$data)) {
-    return(.mfrmr_gg_effect_summary(payload$data, payload))
+    p <- .mfrmr_gg_effect_summary(payload$data, payload)
+    attr(p, "mfrmr_plot_data") <- x
+    return(p)
   }
   if (is.null(component) && identical(x$name, "dif_heatmap") && is.matrix(payload$matrix)) {
     settings <- payload$settings %||% list()
-    return(.mfrmr_gg_matrix(
+    p <- .mfrmr_gg_matrix(
       payload$matrix,
       payload,
       flag_matrix = payload$flag_matrix,
       show_values = isTRUE(settings$show_values),
       value_digits = settings$value_digits %||% 2L,
       flag_color = settings$flag_color %||% "black"
-    ))
+    )
+    attr(p, "mfrmr_plot_data") <- x
+    return(p)
   }
-  .mfrmr_gg_tabular(.mfrmr_gg_component(payload, component), payload)
+  if (is.null(component)) {
+    spec_p <- .mfrmr_gg_specialized_views(x)
+    if (!is.null(spec_p)) return(spec_p)
+  }
+  p <- .mfrmr_gg_tabular(.mfrmr_gg_component(payload, component), payload)
+  if (is.null(component)) attr(p, "mfrmr_plot_data") <- x
+  p
 }

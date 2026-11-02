@@ -1,3 +1,60 @@
+test_that("threshold plots retain fitted coordinates, gaps and saved display controls", {
+  fit <- readRDS(test_path("fixtures", "ordinary-score-integration.rds"))$fits[[1L]]
+  p <- plot(fit, type = "thresholds", draw = FALSE)
+  layer <- function(p, geom) {
+    i <- which(vapply(p$layers, function(x) inherits(x$geom, geom), logical(1)))
+    expect_length(i, 1L)
+    p$layers[[i]]$data
+  }
+  points <- layer(p, "GeomPoint")
+  expect_identical(points$Estimate, fit$steps$Estimate)
+  expect_identical(as.character(points$CurveGroup), as.character(fit$steps$StepFacet))
+  point_id <- which(vapply(p$layers, function(x) inherits(x$geom, "GeomPoint"), logical(1)))
+  expect_identical(ggplot2::ggplot_build(p)$data[[point_id]]$y, fit$steps$Estimate)
+
+  # Independently specified gaps: do not connect missing or nonadjacent steps,
+  # or turn an entirely unavailable owner into a zero-valued point.
+  payload <- attr(p, "mfrmr_plot_data")
+  payload$data$data <- data.frame(
+    Group = rep(c("A", "B", "C", "D"), c(4L, 2L, 2L, 2L)),
+    Step = paste0("Step_", c(1:4, 1L, 3L, 1:2, 1:2)),
+    StepIndex = c(1:4, 1L, 3L, 1:2, 1:2),
+    Threshold = c(-1, .5, NA, -.5, 2, 1, 2, 1, NA, NA)
+  )
+  g <- as_ggplot(payload)
+  segments <- layer(g, "GeomSegment")
+  expect_equal(segments[c("GroupPos", "Y0", "Y1", "Disordered")],
+    data.frame(GroupPos = c(1L, 3L), Y0 = c(-1, 2), Y1 = c(.5, 1),
+               Disordered = c(FALSE, TRUE)))
+  expect_identical(layer(g, "GeomPoint")$Estimate, c(-1, .5, -.5, 2, 1, 2, 1))
+  expect_identical(plot_data(g, "data"), payload$data$data)
+  expect_no_warning(ggplot2::ggplot_build(g))
+
+  # A real public call must save the flag for later redraws, including RDS reuse.
+  fit$steps$Estimate[1:2] <- rev(fit$steps$Estimate[1:2])
+  highlighted <- plot(fit, type = "thresholds", draw = FALSE)
+  plain <- plot(fit, type = "thresholds", highlight_disorder = FALSE, draw = FALSE)
+  expect_true(any(layer(highlighted, "GeomSegment")$Status == "Disordered crossing"))
+  expect_true(tail(layer(highlighted, "GeomSegment")$Disordered, 1L))
+  expect_identical(layer(plain, "GeomSegment"), layer(highlighted, "GeomSegment"))
+  colours <- plain$scales$get_scales("colour")$palette(2L)
+  expect_identical(unname(colours[1L]), unname(colours[2L]))
+  expect_identical(plain$scales$get_scales("colour")$guide, "none")
+  expect_identical(plot_data(plain, "data"), plot_data(highlighted, "data"))
+  saved <- tempfile(fileext = ".rds")
+  on.exit(unlink(saved), add = TRUE)
+  saveRDS(attr(plain, "mfrmr_plot_data"), saved)
+  restored <- as_ggplot(readRDS(saved))
+  expect_identical(layer(restored, "GeomSegment"), layer(plain, "GeomSegment"))
+  # Older payloads did not save this flag; they retain the default highlighting.
+  old <- attr(highlighted, "mfrmr_plot_data")
+  old$data$highlight_disorder <- NULL
+  expect_identical(layer(as_ggplot(old), "GeomSegment"), layer(highlighted, "GeomSegment"))
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_warning(print(restored))
+})
+
 test_that("CRAN smoke covers the primary MML review and export route", {
   dat <- load_mfrmr_data("example_operational")
   roster_env <- new.env(parent = emptyenv())
@@ -108,20 +165,20 @@ test_that("CRAN smoke covers the primary MML review and export route", {
     include_person = TRUE,
     draw = FALSE
   )
-  expect_s3_class(native, "mfrm_plot_data")
-  expect_type(facets, "list")
-  expect_identical(facets$renderer, "facets")
-  expect_s3_class(pathway, "mfrm_plot_data")
+  expect_s3_class(native, "ggplot")
+  expect_s3_class(facets, "ggplot")
+  expect_identical(plot_data(facets, "renderer"), "facets")
+  expect_s3_class(pathway, "ggplot")
   expect_identical(
-    native$data$interpretation_status,
+    plot_data(native, "interpretation_status"),
     "ready_for_diagnostic_interpretation"
   )
   expect_identical(
-    facets$interpretation_status,
+    plot_data(facets, "interpretation_status"),
     "ready_for_diagnostic_interpretation"
   )
   expect_identical(
-    pathway$data$interpretation_status,
+    plot_data(pathway, "interpretation_status"),
     "ready_for_diagnostic_interpretation"
   )
 
@@ -202,3 +259,61 @@ test_that("the canonical PCM first-use route separates coordinates from freedom"
   expect_identical(nrow(fit$slopes), 0L)
   expect_null(sizes$log_slopes)
 })
+
+test_that("public adaptive fits use one objective for likelihood, gradient, covariance and EAP", {
+  # GPCM exercises free slopes and category-specific steps in the live Hessian route.
+  models <- if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) c("RSM", "PCM", "GPCM") else "GPCM"
+  for (model in models) {
+    fixture <- adaptive_api_fixture(model)
+    fit <- fixture$fit
+    config <- fit$config
+    order <- config$estimation_control$quad_points
+    expect_equal(order, if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) 31L else 15L)
+    sizes <- mfrmr:::build_param_sizes(config)
+    idx <- mfrmr:::build_indices(fit$prep, config$step_facet, config$slope_facet,
+                                 config$interaction_specs)
+    evaluate <- mfrmr:::mfrmr_make_adaptive_mml_evaluator(idx, config, sizes, order)
+    expected <- evaluate(fit$opt$par)
+    expect_identical(fit$summary$MMLIntegration, "adaptive")
+    displayed <- paste(capture.output(print(summary(fit))), collapse = "\n")
+    displayed <- gsub("[[:space:]]+", " ", displayed)
+    expect_match(displayed, paste0("Integration: adaptive Gauss-Hermite, q=", order), fixed = TRUE)
+    expect_match(fit$summary$IntegrationEvaluationId, paste0("aghq_normal_v1:q=", order), fixed = TRUE)
+    expect_lt(abs(fit$summary$LogLik + expected$value), 1e-8)
+    expect_lt(abs(fit$summary$TerminalGradientSupNorm - max(abs(expected$gradient))), 1e-8)
+    # GPCM covers the general live Hessian route in ordinary checks.
+    # The complete suite also verifies the RSM and PCM special cases.
+    if (model == "GPCM" || isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) {
+      covariance <- mfrmr:::compute_mml_parameter_covariance(fit)
+      hessian <- stats::optimHess(fit$opt$par, function(x) evaluate(x)$value,
+                                 function(x) evaluate(x)$gradient)
+      expect_lt(max(abs(covariance$hessian - hessian)), 1e-7)
+    }
+    review <- mfrmr:::mfrmr_adaptive_quadrature_review(
+      idx, config, mfrmr:::expand_params(fit$opt$par, sizes, config),
+      mfrmr:::gauss_hermite_normal(order), fit$prep$levels$Person, order
+    )
+    person <- fit$facets$person
+    expect_equal(nrow(person), nrow(review))
+    index <- match(person$Person, review$Person)
+    expect_false(anyNA(index))
+    expect_lt(max(abs(person$Estimate - review$AdaptiveEAP[index])), 1e-9)
+    expected_categories <- mfrmr:::compute_mml_expected_category_diagnostics(fit)
+    expect_lt(abs(sum(expected_categories$posterior_bundle$person_bundle$log_marginal) -
+                    fit$summary$LogLik), 1e-8)
+    if (model == "GPCM") {
+      boundary <- config$boundary_audit$gpcm_slope_boundary
+      expect_identical(boundary$state, "not_evaluated_adaptive_quadrature")
+      expect_false(boundary$fixed_quadrature_certificate)
+      audit <- config$estimability_audit
+      expect_identical(audit$mml_observed_pattern_score$status, "not_evaluated_adaptive_quadrature")
+      expect_identical(audit$mml_all_pattern_information$status, "not_evaluated_adaptive_quadrature")
+      expect_identical(audit$nonlinear_local_estimability$state, "not_evaluated")
+      expect_identical(audit$nonlinear_local_estimability$reason_codes,
+                       "adaptive_quadrature_probability_map_not_validated")
+      expect_identical(audit$nonlinear_local_estimability$probability_model_scope,
+                       "implemented_adaptive_quadrature_objective")
+    }
+  }
+})
+

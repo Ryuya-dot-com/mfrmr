@@ -56,6 +56,9 @@ All non-person facets are stacked underneath in the same schema.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("as.data.frame.mfrm_fit", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 
 # Saved synthetic MML/RSM analysis of example_operational.
@@ -68,6 +71,7 @@ estimates <- as.data.frame(fit)
 head(subset(estimates, Facet == "Person")) # First six persons
 subset(estimates, Facet == "Rater")       # All raters
 subset(estimates, Facet == "Criterion")   # All criteria
+}
 }
 \seealso{
 \code{\link{fit_mfrm}}, \code{\link{export_mfrm_tables}}

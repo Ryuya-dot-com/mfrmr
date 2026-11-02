@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-advanced.R
 \name{build_linking_review}
 \alias{build_linking_review}
+\alias{summary.mfrm_linking_review}
 \title{Build a linking-review synthesis object}
 \usage{
 build_linking_review(
@@ -10,6 +11,8 @@ build_linking_review(
   chain = NULL,
   top_n = 10
 )
+
+\method{summary}{mfrm_linking_review}(object, digits = 3, top_n = 10, ...)
 }
 \arguments{
 \item{anchor_review}{Optional output from \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.}
@@ -18,11 +21,21 @@ build_linking_review(
 
 \item{chain}{Optional output from \code{\link[=build_equating_chain]{build_equating_chain()}}.}
 
-\item{top_n}{Maximum number of linking-risk rows to highlight in summary
-outputs. The full object keeps the full risk tables.}
+\item{top_n}{For \code{build_linking_review()}: Maximum number of linking-risk rows to highlight in summary
+outputs. The full object keeps the full risk tables.
+
+For \code{summary()}: Number of top linking-risk rows to keep in the compact summary.}
+
+\item{object}{Output from \code{\link[=build_linking_review]{build_linking_review()}}.}
+
+\item{digits}{Number of digits for printed numeric values.}
+
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 An object of class \code{mfrm_linking_review}.
+
+For \code{summary()}: An object of class \code{summary.mfrm_linking_review}.
 }
 \description{
 Build a linking-review synthesis object
@@ -45,6 +58,8 @@ proofs of scale equivalence or score comparability.
 It also does not verify source-fit readiness, cross-wave element identity,
 invariance, or the external assumptions behind group anchors; these must be
 established before promoting the synthesized review.
+
+\code{summary()} method: Summarize a linking-review object
 }
 \section{Recommended input route}{
 
@@ -104,4 +119,6 @@ review$group_view_index
 \seealso{
 \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, \code{\link[=detect_anchor_drift]{detect_anchor_drift()}},
 \code{\link[=build_equating_chain]{build_equating_chain()}}, \link[=plot.mfrm_anchor_drift]{plot(x)}, \link{mfrmr_linking_and_dff}
+
+\code{\link[=build_linking_review]{build_linking_review()}}
 }

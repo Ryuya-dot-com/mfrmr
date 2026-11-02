@@ -128,6 +128,9 @@ This is a separate conditional association analysis, not a new
 different targets; their agreement does not certify robustness or fairness.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("mantel_haenszel_table", run.dontrun = TRUE)
+\dontrun{
 # One binary target per Person; both groups share two declared strata.
 d <- data.frame(Person = paste0("P", 1:16), Item = "A",
   Group = rep(c("Reference", "Focal"), each = 8),
@@ -137,6 +140,7 @@ mh <- mantel_haenszel_table(d, "Person", "Item", "Score", "Group",
                            "Matching", c("Reference", "Focal"))
 mh$table
 mh$strata
+}
 }
 \references{
 Holland, P. W., & Thayer, D. T. (1986). \emph{Differential item functioning and

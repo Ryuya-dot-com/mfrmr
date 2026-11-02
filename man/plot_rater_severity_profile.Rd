@@ -35,10 +35,10 @@ returned annotations. These distances are not equivalence bounds.}
 
 \item{preset}{Visual preset.}
 
-\item{draw}{If \code{TRUE}, draw with base graphics.}
+\item{draw}{If \code{TRUE}, print the \code{ggplot} object.}
 }
 \value{
-An \code{mfrm_plot_data} object. Its \code{data$data} table contains
+Invisibly, a \code{ggplot} object. Its \code{plot_data(p, "data")} table contains
 columns \code{Level}, \code{Estimate}, \code{SE}, \code{CI_Lower}, \code{CI_Upper}, and \code{Band},
 where \code{Band} contains numerical absolute-location ranges, not judgments
 about severity or quality. The ranges remain in the table when hidden.
@@ -46,7 +46,7 @@ Other columns include \code{Fixed}, \code{IntervalStatus}, \code{SEColumn}, \cod
 \code{PrecisionTier}, \code{CIUse}, \code{CIEligible}, \code{SupportsFormalInference} and
 the normal interval method/level. Source precision labels are retained;
 missing precision metadata cannot qualify an interval for inference.
-The enclosing \code{data} list retains the facet, confidence level and plot
+The full \code{plot_data(p)} list retains the facet, confidence level and plot
 annotations and diagnostics identity check (\code{source_status}); keep these
 with the table when reporting the results. Fit readiness and interpretation
 notes are returned. Titles and notes are not automatically drawn.
@@ -62,7 +62,7 @@ and \code{1.0} logit from zero; they are display aids, not calibration rules.
 Zero is the sum-to-zero reference for the default centered facet; describe
 any different constraints or anchors used in the fit. With the default
 negative facet orientation, higher estimates reduce expected coded scores.
-This means stricter scoring when higher scores represent better performance;
+This means more severe scoring when higher scores represent better performance;
 check the rubric direction before using that substantive interpretation.
 The axis names the selected facet's location rather than assuming that
 lower coded scores are less favorable. Returned notes state its fitted sign.
@@ -92,44 +92,22 @@ Regenerate the plot from the saved fit and matching diagnostics to obtain
 the neutral display; this does not require a new fit.
 }
 
+\section{Session plot defaults}{
+
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
+}
+
 \section{Migration in 0.2.4}{
 
 This renderer is internal. Use the corresponding \code{plot()} route in
 \link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
-\section{Session plot defaults}{
-
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
-}
-
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot_rater_severity_profile", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 
 # Saved synthetic MML/RSM analysis of example_operational.
@@ -142,9 +120,10 @@ diagnostics <- example_fit$diagnostics
 
 # Compare signed severity estimates and their intervals
 severity <- plot(fit, type = "rater_severity", diagnostics = diagnostics, show_bands = FALSE)
-severity$data$data[, c("Level", "Estimate", "SE", "CI_Lower", "CI_Upper")]
-# Higher estimates mean stricter ratings with this example's default orientation
+plot_data(severity, "data")[, c("Level", "Estimate", "SE", "CI_Lower", "CI_Upper")]
+# Higher estimates mean more severe ratings with this example's default orientation
 # The optional magnitude bands are omitted from this first comparison
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}},

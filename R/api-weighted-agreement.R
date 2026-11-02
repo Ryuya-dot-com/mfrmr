@@ -65,6 +65,9 @@
 #' @seealso [gwet_ac2_table()], [krippendorff_alpha_table()],
 #'   [pairwise_icc_table()], [score_comparison_table()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("pairwise_kappa_table", run.dontrun = TRUE)
+#' \dontrun{
 #' data("mfrmr_example_agreement", package = "mfrmr")
 #' ratings <- mfrmr_example_agreement
 #' head(ratings) # One rater's score for one Person-Task response.
@@ -74,6 +77,7 @@
 #' pairs$cases # Included marks the shared nonmissing ratings for each pair.
 #' # R2 gives every response one category more than R1: equal rankings do not
 #' # imply agreement. Do not treat two Tasks by the same Person as one response.
+#' }
 #' @export
 pairwise_kappa_table <- function(data, rater, unit, score, categories,
                                  weights = c("quadratic", "linear", "unweighted")) {
@@ -186,6 +190,9 @@ pairwise_kappa_table <- function(data, rater, unit, score, categories,
 #' @seealso [pairwise_kappa_table()], [krippendorff_alpha_table()],
 #'   [pairwise_icc_table()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("gwet_ac2_table", run.dontrun = TRUE)
+#' \dontrun{
 #' data("mfrmr_example_agreement", package = "mfrmr")
 #' ratings <- mfrmr_example_agreement
 #' ac <- gwet_ac2_table(ratings, rater = "Rater",
@@ -193,6 +200,7 @@ pairwise_kappa_table <- function(data, rater, unit, score, categories,
 #' ac$table
 #' ac$unit_summary # Number of observed ratings and pairability for each response.
 #' ac$notes # Read the panel coefficient together with its assumptions.
+#' }
 #' @export
 gwet_ac2_table <- function(data, rater, unit, score, categories,
                             weights = c("quadratic", "linear", "unweighted")) {

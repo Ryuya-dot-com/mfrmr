@@ -4,6 +4,7 @@
 \alias{score_mfrm_random_rater}
 \alias{summary.mfrm_random_rater_scores}
 \alias{print.mfrm_random_rater_scores}
+\alias{plot.mfrm_random_rater_scores}
 \title{Score Persons while integrating shared random raters}
 \usage{
 score_mfrm_random_rater(
@@ -18,6 +19,23 @@ score_mfrm_random_rater(
 \method{summary}{mfrm_random_rater_scores}(object, ...)
 
 \method{print}{mfrm_random_rater_scores}(x, ...)
+
+\method{plot}{mfrm_random_rater_scores}(
+  x,
+  draw = TRUE,
+  style = c("interval", "precision", "distribution"),
+  sort = c("input", "estimate", "uncertainty"),
+  palette = c("accessible", "mono"),
+  title = NULL,
+  caption = NULL,
+  show_title = FALSE,
+  show_notes = FALSE,
+  show_labels = TRUE,
+  reference = 0,
+  text_scale = 1,
+  point_size = 2.5,
+  ...
+)
 }
 \arguments{
 \item{object}{A numerically ready \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} result.}
@@ -39,9 +57,43 @@ fit's order. Scores are checked at \code{2 * quad_points + 1} points.}
 \item{missing}{\code{"fail"} or \code{"omit"}. Source replay uses the fit's policy;
 omission in a supplied roster must be requested explicitly.}
 
+\item{x}{For \code{score_mfrm_random_rater()}: A scoring result.
+
+For \code{plot()}: A result from \code{\link[=score_mfrm_random_rater]{score_mfrm_random_rater()}}.}
+
 \item{...}{Unused.}
 
-\item{x}{A scoring result.}
+\item{draw}{\code{FALSE} returns plot data without opening a device.}
+
+\item{style}{\code{"interval"} keeps every labeled row; \code{"precision"} plots
+estimates against interval width (upper minus lower bound); \code{"distribution"}
+shows the empirical cumulative distribution of finite point estimates,
+excluding prior-only and unavailable scores. No density is reconstructed.}
+
+\item{sort}{Row order for interval plots: input order, increasing estimate,
+or increasing interval width. Missing values come last; ties retain input
+order. Sorting is descriptive, not a test of differences.}
+
+\item{palette}{\code{"accessible"} uses blue and dark orange with filled/open
+symbols; \code{"mono"} uses dark grey with the same symbol distinctions.}
+
+\item{title, caption}{\code{NULL} uses the default text; a string replaces it;
+\code{""} removes it. Interpretation notes remain in the saved plot data.}
+
+\item{show_title, show_notes}{Show the title and caption, respectively.
+\code{FALSE} hides text without deleting its metadata.}
+
+\item{show_labels}{Show IDs on interval and precision plots. Distribution
+plots summarize estimates and do not label individual IDs. For crowded
+precision plots use \code{FALSE} and consult the retained table.}
+
+\item{reference}{Vertical reference line in logits; \code{NULL} omits it.
+This is an orientation aid, not a quality threshold.}
+
+\item{text_scale}{Positive multiplier for text size.}
+
+\item{point_size}{Positive point size in ggplot millimetres; base graphics
+use the corresponding relative size (2.5 is the default).}
 }
 \value{
 An \code{mfrm_random_rater_scores} object with \code{table}, complete scoring
@@ -50,6 +102,9 @@ Save it with \code{saveRDS()}. Its summary and plots need no live optimizer.
 Keep \code{table$Status} and \code{table$Reason} with exported scores: \code{prior_only}
 describes the assumed population without observed responses for that Person;
 \code{unavailable} withholds the estimate, SD and bounds with a recorded cause.
+
+For \code{plot()}: Invisibly, a \code{ggplot} object; use \code{\link[=plot_data]{plot_data()}} to
+extract the underlying table and settings.
 }
 \description{
 Compute conditional Person scores using the complete joint scoring roster,
@@ -107,6 +162,14 @@ the requested Person's row and reason. No missing scores are imputed.
 Older saved fits keep their original known N(0,1) ability population.
 If an older fit omitted scores without saving the original roster, supply
 that roster explicitly to retain its unobserved Persons and row accounting.
+
+\code{plot()} method: Plot Person scores from a shared-rater model
+
+For \code{plot()}: In the default interval view, all requested Persons remain labeled. Open circles indicate
+prior-only results; unavailable scores have no point or interval.
+Intervals are conditional on calibration and use joint rater Laplace
+integration. They are not tests of Person differences. \code{\link[=as_ggplot]{as_ggplot()}}
+preserves these meanings without rerunning scoring.
 }
 \section{Numerical evidence}{
 
@@ -122,7 +185,7 @@ endpoints, allowing for Monte Carlo and numerical error.
 These are bounded numerical comparisons, not universal accuracy bounds or
 performance cutoffs. They do not establish repeated-sampling 95 percent
 coverage when calibration is estimated, qualify the calibration likelihood,
-or test Person differences. See \code{vignette("mfrmr-random-raters")} for the
+or test Person differences. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html}{online random-rater guide} for the
 reference-precision limitations and interpretation.
 }
 
@@ -139,4 +202,7 @@ mfrm_results(fit, scores = scores, compute = "never")
 }
 \seealso{
 \code{\link[=predict.mfrm_random_rater]{predict.mfrm_random_rater()}}, \code{\link[=plot.mfrm_random_rater_scores]{plot.mfrm_random_rater_scores()}}
+
+\code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}} for view selection, accessible output
+and the meaning of the empirical distribution.
 }

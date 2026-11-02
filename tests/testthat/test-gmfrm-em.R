@@ -1,6 +1,11 @@
-gmfrm_test_problem <- function(max_score = 2L) {
+gmfrm_test_data <- function(max_score = 2L) {
   d <- expand.grid(Person = paste0("p", 1:4), Task = paste0("t", 1:3), Rater = paste0("r", 1:3))
   d$Score <- rep(0:max_score, length.out = nrow(d))
+  d
+}
+
+gmfrm_test_problem <- function(max_score = 2L) {
+  d <- gmfrm_test_data(max_score)
   list(data = d, problem = mfrm_gmfrm_problem(d, max_score, gauss_hermite_normal(9L)))
 }
 
@@ -59,13 +64,16 @@ test_that("common product parameters retain owners and reject non-product crossi
 })
 
 test_that("common MML likelihood and scores agree with the EM marginal calculation", {
-  for (k in c(1L, 2L, 4L)) for (sparse in c(FALSE, TRUE)) {
-    d <- gmfrm_test_problem(k)$data
+  for (k in c(1L, 2L, 4L)) for (sparse in if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) c(FALSE, TRUE) else k != 2L) {
+    d <- gmfrm_test_data(k)
     if (sparse) d <- d[!(d$Task == "t3" & d$Rater == "r2"), ]
     # Existing factor ordering and input order must not relabel the coordinates.
     d$Task <- factor(d$Task, levels = c("t3", "t1", "t2"))
     d <- d[nrow(d):1, ]
-    quad <- gauss_hermite_normal(31L)
+    # This is an algebraic evaluator/gradient comparison, not a grid-accuracy
+    # claim. All category counts and sparse designs remain in the CRAN run.
+    order <- if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) 31L else 9L
+    quad <- gauss_hermite_normal(order)
     p <- mfrm_gmfrm_problem(d, k, quad)
     setup <- p$common
     x <- unname(p$start + seq(-.13, .17, length.out = length(p$start)))
@@ -131,7 +139,7 @@ test_that("normal population scale changes preserve the identified two-slope lik
   p <- gmfrm_test_problem()$problem
   x <- p$start + seq(-.2, .3, length.out = length(p$start))
   u <- p$unpack(x)
-  d <- gmfrm_test_problem()$data
+  d <- gmfrm_test_data()
   for (sd in c(.5, 1, 2)) for (mu in c(-.6, .4)) {
     # Original theta = mu + sd*z. Standardize to z while preserving task GM1.
     # All free rater slopes absorb sd; task/rater locations and steps change units.
@@ -168,7 +176,7 @@ test_that("normal population scale changes preserve the identified two-slope lik
 })
 
 test_that("declared column names preserve the two-slope model and its original identities", {
-  fixture <- gmfrm_test_problem()
+  fixture <- list(data = gmfrm_test_data())
   fixture$data <- fixture$data[fixture$data$Task != "t3", ]
   reference <- mfrm_gmfrm_problem(fixture$data, 2L, gauss_hermite_normal(9L))
   x <- reference$start + seq(-.2, .3, length.out = length(reference$start))
@@ -226,7 +234,7 @@ test_that("declared column names preserve the two-slope model and its original i
 })
 
 test_that("facet roles follow the declared order rather than domain labels", {
-  d <- gmfrm_test_problem()$data
+  d <- gmfrm_test_data()
   p <- mfrm_gmfrm_problem(d, 2L, gauss_hermite_normal(9L), slope_facets = c("Rater", "Task"))
   x <- p$start + seq(-.2, .3, length.out = length(p$start))
   u <- p$unpack(x)
@@ -246,7 +254,7 @@ test_that("facet roles follow the declared order rather than domain labels", {
 })
 
 test_that("adaptive integration differentiates both slope families", {
-  d <- gmfrm_test_problem()$data
+  d <- gmfrm_test_data()
   p <- mfrm_gmfrm_problem(d, 2L, gauss_hermite_normal(61L))
   setup <- p$common
   setup$config$estimation_control <- list(mml_integration = "adaptive", quad_points = 31L)
@@ -273,7 +281,7 @@ test_that("adaptive integration differentiates both slope families", {
 })
 
 test_that("crossing indices reject relabelled levels and implicit two-family settings", {
-  d <- gmfrm_test_problem()$data
+  d <- gmfrm_test_data()
   prep <- prepare_mfrm_data(d, "Person", c("Task", "Rater"), "Score")
   owners <- c("Task", "Rater")
   expect_error(build_indices(prep, "Rater", owners), "crossing specification")
@@ -286,7 +294,7 @@ test_that("crossing indices reject relabelled levels and implicit two-family set
   expect_error(build_indices(reversed, "Rater", owners, gpcm_spec = spec), "level ordering")
   expect_error(fit_mfrm(d, person = "Person", facets = owners, score = "Score",
     model = "GPCM", step_facet = "Rater", slope_facet = owners),
-    "Two slope families require")
+    "declared non-Person facet")
 })
 
 test_that("optimizer coordinates distinguish slope owners and their constraints", {
@@ -350,7 +358,7 @@ test_that("component and product slope targets retain cross-owner covariance", {
 })
 
 test_that("component tables and readiness distinguish shared labels across owners", {
-  d <- gmfrm_test_problem()$data
+  d <- gmfrm_test_data()
   d$Task <- paste0("level:", as.integer(d$Task))
   d$Rater <- paste0("level:", as.integer(d$Rater))
   p <- mfrm_gmfrm_problem(d, 2L, gauss_hermite_normal(9L))
@@ -593,12 +601,12 @@ test_that("two-slope score sensitivity and information match probability derivat
 })
 
 test_that("unsupported inputs and disconnected task-rater blocks are explicit", {
-  d <- gmfrm_test_problem()$data
+  d <- gmfrm_test_data()
   quad <- gauss_hermite_normal(9L)
   expect_error(mfrm_gmfrm_problem(rbind(d, d[1, ]), 2L, quad), "Repeated")
   d$Score[1] <- NA
   expect_error(mfrm_gmfrm_problem(d, 2L, quad), "missing")
-  d <- gmfrm_test_problem()$data
+  d <- gmfrm_test_data()
   d <- d[as.integer(d$Task) == as.integer(d$Rater), ]
   expect_error(mfrm_gmfrm_problem(d, 2L, quad), "crossings")
 })
@@ -617,6 +625,8 @@ test_that("EM traces ascent and does not claim success at the iteration limit", 
 })
 
 test_that("saved two-owner results replay in a fresh process without fitting", {
+  # Extended local/CI regression; see CONTRIBUTING.md.
+  skip_on_cran()
   skip_if_not_installed("callr")
   fixture <- gmfrm_test_problem()
   # Scrambled rows/levels make positional relabelling detectable on replay.
@@ -716,7 +726,7 @@ test_that("prediction and estimation share probabilities without merging slope o
 })
 
 test_that("known but unobserved crossings retain their extrapolation identity", {
-  d <- gmfrm_test_problem()$data
+  d <- gmfrm_test_data()
   d <- d[!(d$Task == "t3" & d$Rater == "r3"), ]
   p <- mfrm_gmfrm_problem(d, 2L, gauss_hermite_normal(9L))
   par <- p$start + seq(-.25, .3, length.out = length(p$start))
@@ -760,7 +770,7 @@ test_that("shared log probabilities and information remain stable in response ta
 })
 
 test_that("shared response derivatives retain both slope families and joint covariance", {
-  d <- gmfrm_test_problem()$data
+  d <- gmfrm_test_data()
   d <- d[!(d$Task == "t3" & d$Rater == "r3"), ]
   names(d)[match(c("Task", "Rater"), names(d))] <- c("観点 名", "Judge-ID")
   p <- mfrm_gmfrm_problem(d, 2L, gauss_hermite_normal(9L),

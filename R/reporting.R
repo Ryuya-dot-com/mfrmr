@@ -2326,45 +2326,9 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   contract
 }
 
-build_apa_report_text <- function(res, diagnostics, bias_results = NULL, context = list(), whexact = FALSE) {
-  build_apa_reporting_contract(
-    res = res,
-    diagnostics = diagnostics,
-    bias_results = bias_results,
-    context = context,
-    whexact = whexact
-  )$report_text
-}
 
-build_apa_table_figure_note_map <- function(res, diagnostics, bias_results = NULL, context = list(), whexact = FALSE) {
-  build_apa_reporting_contract(
-    res = res,
-    diagnostics = diagnostics,
-    bias_results = bias_results,
-    context = context,
-    whexact = whexact
-  )$note_map
-}
 
-build_apa_table_figure_notes <- function(res, diagnostics, bias_results = NULL, context = list(), whexact = FALSE) {
-  build_apa_reporting_contract(
-    res = res,
-    diagnostics = diagnostics,
-    bias_results = bias_results,
-    context = context,
-    whexact = whexact
-  )$note_text
-}
 
-build_apa_table_figure_captions <- function(res, diagnostics, bias_results = NULL, context = list()) {
-  build_apa_reporting_contract(
-    res = res,
-    diagnostics = diagnostics,
-    bias_results = bias_results,
-    context = context,
-    whexact = FALSE
-  )$caption_text
-}
 
 build_visual_warning_map <- function(res,
                                      diagnostics,

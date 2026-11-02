@@ -2,7 +2,6 @@
 #'
 #' Regenerate persons, shared raters and scores on the observed assignment,
 #' refit the same RSM, and retain prediction errors for every planned replicate.
-#'
 #' @param object A numerically ready [fit_mfrm_random_rater()] result with
 #'   positive information, positive population SD and finite positive rater
 #'   prediction SEs. Estimated zero-variance sources are not supported.
@@ -11,15 +10,20 @@
 #'   not for stable tail quantiles.
 #' @param seed Required nonnegative integer simulation seed. The caller's random
 #'   number state is restored. Per-replicate seeds and RNG kind are retained.
-#' @param level Pointwise nominal coverage; default 0.95.
+#' @param level For `mfrm_random_rater_intervals()`: Pointwise nominal coverage; default 0.95.
+#'
+#' For `plot()`: Nominal pointwise coverage; defaults to the saved level.
 #' @param parm Rater IDs for `confint()`; `NULL` returns all fitted raters.
-#' @param method `"studentized"` (default) uses generated-minus-estimated rater
+#' @param method For `mfrm_random_rater_intervals()`: `"studentized"` (default) uses generated-minus-estimated rater
 #'   effects divided by each refit's calibration-adjusted `PredictionSE`.
 #'   `"error"` uses unscaled prediction errors as a comparison. Changing method
 #'   or level through `confint()` reuses saved draws without new fitting.
-#' @param x A bootstrap result.
-#' @param ... Unused.
 #'
+#' For `plot()`: `"studentized"` or `"error"`; see [mfrm_random_rater_intervals()].
+#' @param x For `mfrm_random_rater_intervals()`: A bootstrap result.
+#'
+#' For `plot()`: A result from [mfrm_random_rater_intervals()].
+#' @param ... Unused.
 #' @details Every generated dataset draws one ability per person and one
 #'   severity per rater, shared across their observed rows. Generating fixed
 #'   facets, steps and both population SDs are the source estimates. Each
@@ -53,7 +57,6 @@
 #'   Omitted scores stay omitted; this conditions on analyzed rows and does not
 #'   simulate a missingness mechanism or impute assigned scores. Rater contrasts,
 #'   familywise intervals and simultaneous rater classification are not provided.
-#'
 #' @section Review unresolved refits:
 #' Inspect `$trials` before interpreting the intervals. `FitReady` combines
 #' numerical and information checks; it does not certify interval coverage.
@@ -80,7 +83,6 @@
 #' If the unresolved fraction remains above the nominal tail probability,
 #' a larger run still has unbounded limits. Inspect causes in `$trials` before
 #' committing to more refits; do not discard unresolved draws.
-#'
 #' @return An `mfrm_random_rater_intervals` object containing the source rater
 #'   table, `intervals`, aligned error/studentized matrices, generated effects,
 #'   refitted estimates/SEs, per-trial checks, warnings/errors, seeds, model
@@ -92,8 +94,7 @@
 #'   in linear mixed models. *Annals of Statistics*, 36, 1221--1245.
 #'   \doi{10.1214/07-AOS512}.
 #' @seealso [fit_mfrm_random_rater()], [plot.mfrm_random_rater_intervals()]
-#' @examples
-#' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+#' @examples example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
 #' fit <- example$random_rater$fit
 #' intervals <- example$random_rater$intervals
 #' # To regenerate (requires RTMB >= 2.0 and repeated model fitting):
@@ -105,6 +106,7 @@
 #' # Changing the level reuses the same draws, with no further fitting:
 #' confint(intervals, level = .90)
 #' @export
+#' @order 1
 mfrm_random_rater_intervals <- function(object, nsim = 499L, seed, level = .95) {
   if (!inherits(object, "mfrm_random_rater") || !isTRUE(object$checks$NumericalReady) ||
       !isTRUE(object$checks$InformationPositive)) stop("Supply a shared-rater fit with resolved numerical and information checks.", call. = FALSE)

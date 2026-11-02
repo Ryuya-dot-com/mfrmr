@@ -114,6 +114,9 @@ references are in \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_m
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("summary.mfrm_multivariate_d_study", run.dontrun = TRUE)
+\dontrun{
 # Published synthetic data, not empirical speech-contest records.
 ratings <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 g <- mfrm_g_study(ratings, c("V", "W"), rater = NULL)
@@ -128,6 +131,7 @@ subset(s$table, Metric == "Phi",
 # Reuse an interval for a curve, with no interval calculation.
 p <- plot(d, metric = "Phi", intervals = s$intervals$Phi, draw = FALSE)
 plot_data(p, "notes")
+}
 }
 \seealso{
 \code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}},

@@ -128,6 +128,9 @@ See \link{mfrmr_compatibility_layer} for migration instructions.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("unexpected_response_table", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 # Saved synthetic MML/RSM analysis of example_operational.
 # For your own data, fit a model first; see ?fit_mfrm.
@@ -141,6 +144,7 @@ unexpected$summary # Counts and percentages for all flagged observations
 unexpected$table   # Only the five highest-ranked cases
 plot(unexpected)
 # The rule is exploratory: inspect the scoring context before changing a rating
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=fair_average_table]{fair_average_table()}},

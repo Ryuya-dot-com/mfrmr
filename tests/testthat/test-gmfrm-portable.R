@@ -5,8 +5,8 @@ gmfrm_portable_fixture <- local({
       x <- gmfrm_scoring_fixture()
       draft <- extract_mfrm_calibration(x$fit, scoring_quad_points = 121L,
         calibration_id = "gmfrm-portable", created_at_utc = "2026-10-01T00:00:00Z")
-      validated <- validate_mfrm_calibration(draft, validated_at_utc = "2026-10-01T00:01:00Z")
-      frozen <- freeze_mfrm_calibration(validated, frozen_at_utc = "2026-10-01T00:02:00Z")
+      validated <- update(object = draft,  at_utc = "2026-10-01T00:01:00Z", status = "validated")
+      frozen <- update(object = validated,  at_utc = "2026-10-01T00:02:00Z", status = "frozen")
       cached <<- c(x, list(draft = draft, validated = validated, frozen = frozen))
     }
     cached
@@ -37,7 +37,8 @@ test_that("two-family portable scoring agrees with the fitted route and literal 
   expect_identical(portable$settings$engine_identity, "artifact_coordinates_v6")
   expect_identical(portable$settings$semantic_components$product_structure$observed_contexts, c$model$observed_contexts)
   expect_s3_class(summary(portable), "summary.mfrm_calibration_score")
-  expect_s3_class(plot(portable, draw = FALSE), "mfrm_plot_data")
+  expect_s3_class(plot(portable, draw = FALSE), "ggplot")
+  expect_s3_class(attr(plot(portable, draw = FALSE), "mfrmr_plot_data"), "mfrm_plot_data")
   expect_match(plot_data(plot(portable, draw = FALSE))$caption, "Experimental two-family")
   expect_match(paste(capture.output(print(summary(portable))), collapse = " "), "Experimental two-family")
 })
@@ -75,7 +76,7 @@ test_that("two-family artifacts reject structural corruption even after identity
   expect_gt(nrow(review_mfrm_calibration(bad)), 0L)
   expect_error(score_mfrm_calibration(x$draft, x$data), "LIFECYCLE_NOT_FROZEN")
   expect_error(score_mfrm_calibration(x$validated, x$data), "LIFECYCLE_NOT_FROZEN")
-  retired <- retire_mfrm_calibration(x$frozen, "retired-gmfrm")
+  retired <- update(object = x$frozen, record_id = "retired-gmfrm", status = "retired")
   expect_error(score_mfrm_calibration(retired, x$data), "LIFECYCLE_NOT_FROZEN")
   expect_error(extract_mfrm_calibration(x$coarse), "SOURCE_READINESS_INELIGIBLE")
 })
@@ -96,7 +97,7 @@ test_that("portable two-family input policies and integration refusals remain ex
   expect_equal(nrow(empty$estimates), 0L)
   expect_s3_class(summary(empty), "summary.mfrm_calibration_score")
   expect_error(score_mfrm_calibration(x$frozen, missing), "SCORING_SCORE_INVALID")
-  low <- freeze_mfrm_calibration(validate_mfrm_calibration(extract_mfrm_calibration(x$fit, scoring_quad_points = 2L)))
+  low <- update(object = update(object = extract_mfrm_calibration(x$fit, scoring_quad_points = 2L), status = "validated"), status = "frozen")
   expect_error(score_mfrm_calibration(low, d), "SCORING_INTEGRATION_FAILED")
   stale <- scored; stale$settings$source_scoring_evidence <- NULL
   expect_error(summary(stale), "inconsistent prior or numerical-check records")

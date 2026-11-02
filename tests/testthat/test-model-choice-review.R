@@ -71,7 +71,7 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
     gpcm_role$FormalInference,
     if (isTRUE(gpcm_fit$summary$InferenceReady)) "Yes" else "No"
   )
-  capability <- gpcm_capability_matrix()
+  capability <- mfrmr_output_guide("gpcm_capabilities")
   gpcm_route <- review$downstream_routes[
     review$downstream_routes$Model == "GPCM", , drop = FALSE
   ]

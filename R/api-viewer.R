@@ -130,16 +130,7 @@ mfrm_results_viewer_tab_statuses <- function(x) {
 }
 
 mfrm_results_viewer_response_time_boundary <- function() {
-  data.frame(
-    Area = c("Source", "Use", "Do not use as", "Next route"),
-    Detail = c(
-      "Response-time metadata supplied outside the fitted MFRM likelihood.",
-      "Descriptive QC for rapid/slow timing patterns by event, person, facet, or score.",
-      "A fitted speed parameter, joint speed-accuracy model, modified logit estimate, or automatic exclusion rule.",
-      "Use response_time_review(), plot(..., draw = FALSE), and plot_data_components() for reusable timing QC tables."
-    ),
-    stringsAsFactors = FALSE
-  )
+  .mfrmr_table_mfrm_results_viewer_response_time_boundary_data
 }
 
 mfrm_results_viewer_payload <- function(x, top_n = 100L) {
@@ -508,15 +499,13 @@ mfrm_results_shiny_app <- function(x, top_n = 100L) {
 
     output$qc_plot <- shiny::renderPlot({
       if (!inherits(x$diagnostics, "mfrm_diagnostics")) {
-        graphics::plot.new()
-        graphics::text(0.5, 0.5, "QC plot requires diagnostics in the mfrm_results object.")
+        print(.mfrmr_empty_ggplot("QC plot requires diagnostics in the mfrm_results object.", preset = "publication"))
         return(invisible(NULL))
       }
       tryCatch(
         plot_qc_dashboard(x$fit, diagnostics = x$diagnostics, preset = "publication"),
         error = function(e) {
-          graphics::plot.new()
-          graphics::text(0.5, 0.5, conditionMessage(e))
+          print(.mfrmr_empty_ggplot(conditionMessage(e), preset = "publication"))
         }
       )
     })
@@ -525,23 +514,20 @@ mfrm_results_shiny_app <- function(x, top_n = 100L) {
       tryCatch(
         plot(x$fit, type = "pathway", preset = "publication"),
         error = function(e) {
-          graphics::plot.new()
-          graphics::text(0.5, 0.5, conditionMessage(e))
+          print(.mfrmr_empty_ggplot(conditionMessage(e), preset = "publication"))
         }
       )
     })
 
     output$response_time_plot <- shiny::renderPlot({
       if (!isTRUE(has_response_time_plot)) {
-        graphics::plot.new()
-        graphics::text(0.5, 0.5, "Response-time plot requires include = \"response_time\" with timing metadata.")
+        print(.mfrmr_empty_ggplot("Response-time plot requires include = \"response_time\" with timing metadata.", preset = "publication"))
         return(invisible(NULL))
       }
       tryCatch(
         plot(x, type = "response_time", preset = "publication"),
         error = function(e) {
-          graphics::plot.new()
-          graphics::text(0.5, 0.5, conditionMessage(e))
+          print(.mfrmr_empty_ggplot(conditionMessage(e), preset = "publication"))
         }
       )
     })
@@ -625,8 +611,7 @@ mfrm_results_shiny_app <- function(x, top_n = 100L) {
         tryCatch(
           plot(x, type = type),
           error = function(e) {
-            graphics::plot.new()
-            graphics::text(0.5, 0.5, conditionMessage(e))
+            print(.mfrmr_empty_ggplot(conditionMessage(e), preset = "publication"))
           }
         )
       })

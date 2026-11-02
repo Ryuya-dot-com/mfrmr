@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-facet-equivalence.R
 \name{analyze_facet_equivalence}
 \alias{analyze_facet_equivalence}
+\alias{plot.mfrm_facet_equivalence}
 \title{Analyze practical equivalence within a facet}
 \usage{
 analyze_facet_equivalence(
@@ -12,6 +13,8 @@ analyze_facet_equivalence(
   ci_level = 0.95,
   conf_level = NULL
 )
+
+\method{plot}{mfrm_facet_equivalence}(x, ...)
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}. Requires an inference-ready MML fit
@@ -36,9 +39,19 @@ the equivalence results.}
 
 \item{conf_level}{Deprecated alias for \code{ci_level}; when supplied it takes
 precedence and emits a lifecycle deprecation warning.}
+
+\item{x}{A result from \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}}.}
+
+\item{...}{Use \code{type = "forest"} (default) for deviations and intervals or
+\code{type = "rope"} for normal confidence-distribution mass. Other controls
+are described in \code{\link[=plot_facet_equivalence]{plot_facet_equivalence()}}.}
 }
 \value{
 A named list with class \code{mfrm_facet_equivalence}.
+
+For \code{plot()}: Invisibly, a \code{ggplot} object carrying the equivalence
+plot payload and inference restrictions accessible via \code{\link[=plot_data]{plot_data()}}.
+Grand-mean proximity does not establish pairwise equivalence.
 }
 \description{
 Analyze practical equivalence within a facet
@@ -74,6 +87,13 @@ probability or a separate equivalence decision.
 The former BIC/Bayes-factor heuristic is unavailable: a Wald statistic is
 not a fitted likelihood comparison. For compatibility, \code{BF01} is \code{NA} and
 \code{BF01Label} states why no value is supplied.
+
+\code{plot()} method: Plot a saved facet-equivalence analysis
+
+For \code{plot()}: When an interval cannot be represented at the requested numeric precision,
+the forest retains its estimate as a grey point without a whisker. Inspect
+\code{plot_data(p)$data$DeviationCIReason} and \code{plot_data(p)$note} for the reason.
+This does not change the pairwise TOST decision stored in the analysis.
 }
 \section{What this analysis means}{
 
@@ -179,6 +199,8 @@ Biopharmaceutics, 15}(6), 657-680.
 }
 \seealso{
 \code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "facet_equivalence")}
+
+\link{mfrmr_plot_migration}
 }
 \concept{confidence intervals}
 \concept{facet equivalence}

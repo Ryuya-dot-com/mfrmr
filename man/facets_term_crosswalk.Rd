@@ -3,23 +3,21 @@
 \name{facets_term_crosswalk}
 \alias{facets_term_crosswalk}
 \title{FACETS-to-mfrmr term crosswalk}
-\usage{
-facets_term_crosswalk()
-}
 \value{
 A data.frame with \code{FACETSTerm}, \code{mfrmrTerm}, \code{mfrmrRoute},
 \code{Relationship}, and \code{Boundary} columns.
 }
 \description{
-\code{facets_term_crosswalk()} maps common FACETS report and specification terms
+\code{facets_guide('terms')} maps common FACETS report and specification terms
 to their closest \code{mfrmr} objects or routes. The relationship column makes
 explicit whether a row is a substantive counterpart, a presentation
 convention, or only a migration aid.
 }
 \examples{
-facets_term_crosswalk()
+facets_guide('terms')
 }
 \seealso{
-\code{\link[=facets_positioning_guide]{facets_positioning_guide()}}, \code{\link[=facets_feature_coverage]{facets_feature_coverage()}},
-\code{\link[=facets_visual_contract]{facets_visual_contract()}}
+\code{\link[=facets_guide]{facets_guide()}}, \code{\link[=facets_guide]{facets_guide()}},
+\code{\link[=facets_guide]{facets_guide()}}
 }
+\keyword{internal}

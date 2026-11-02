@@ -174,9 +174,20 @@ print.mfrm_person_scores <- function(x, ...) {
 #' @rdname score_mfrm_persons
 #' @export
 plot.mfrm_person_scores <- function(x, ...) {
-  out <- plot.mfrm_testlet_scores(x, ...)
-  out$name <- "person_scores"
-  invisible(out)
+  dots <- list(...)
+  draw <- if ("draw" %in% names(dots)) dots$draw else TRUE
+  if (!is.logical(draw) || length(draw) != 1L || is.na(draw)) {
+    stop("`draw` must be TRUE or FALSE.", call. = FALSE)
+  }
+  dots$draw <- FALSE
+  p <- do.call(plot.mfrm_testlet_scores, c(list(x = x), dots))
+  pd <- attr(p, "mfrmr_plot_data")
+  if (inherits(pd, "mfrm_plot_data")) {
+    pd$name <- "person_scores"
+    attr(p, "mfrmr_plot_data") <- pd
+  }
+  if (isTRUE(draw)) .mfrm_draw_ggplot_clean(p)
+  invisible(p)
 }
 
 mfrm_validate_person_scores <- function(fit, scores) {

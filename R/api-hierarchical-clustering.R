@@ -5,10 +5,6 @@
 #'
 #' @param x For clustering, a table reviewed with [mfrm_features()]. For plotting,
 #'   an `mfrm_hierarchical_clusters` result.
-#' @inheritParams mfrm_cluster
-#' @param linkage `"average"` (default, UPGMA) or `"complete"`. Average linkage
-#'   uses the mean dissimilarity over all cross-group pairs; complete linkage
-#'   uses their maximum. Neither is selected automatically from the data.
 #' @param type `"dendrogram"` (default), `"silhouette"`, or `"profile"`.
 #' @inheritParams plot.mfrm_clusters
 #' @param labels Whether to display entity IDs on dendrograms and silhouettes.
@@ -21,13 +17,19 @@
 #'   `settings` including the linkage. Hierarchical clustering does not select
 #'   medoids; `medoids` is `NULL` and membership has no `Medoid` column.
 #'   `summary()` returns the size/silhouette table. `plot()` invisibly returns
-#'   `mfrm_plot_data`; dendrogram data include the tree, leaf order, memberships,
+#'   a `ggplot` object; [plot_data()] extracts the tree, leaf order, memberships,
 #'   group count, and excluded IDs.
 #' @inheritSection mfrm_cluster Reading clustering metrics
 #' @details
+#' Call `mfrm_cluster(x, k, method = "hierarchical", linkage = "average")`.
+#' The `k`, `weights` and `missing` controls follow [mfrm_cluster()].
+#' `linkage` is `"average"` (default, UPGMA) or `"complete"`. Average linkage
+#' uses the mean dissimilarity over all cross-group pairs; complete linkage
+#' uses their maximum. Neither is selected automatically from the data.
+#'
 #' Uses [stats::hclust()] followed by [stats::cutree()] at the requested `k`.
 #' Feature types, scaling, weights, missingness handling, silhouette definition,
-#' and the 5,000-included-entity limit follow [mfrm_cluster_pam()]. No distance
+#' and the 5,000-included-entity limit follow [mfrm_cluster()]. No distance
 #' transformation or automatic sampling is performed. This limit is not a
 #' memory or speed guarantee.
 #'
@@ -64,12 +66,12 @@
 #' linkage on the same data. For multiple imputations, use
 #' `mfrm_cluster_imputed(..., method = "hierarchical", linkage = "average")`.
 #' Each completion retains its own tree; no pooled tree or branch support is
-#' estimated. See `vignette("mfrmr-external-features", package = "mfrmr")`.
+#' estimated. See [online feature-analysis guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html).
 #' @references Murtagh, F. and Legendre, P. (2014). Ward's Hierarchical
 #'   Agglomerative Clustering Method: Which Algorithms Implement Ward's
 #'   Criterion? Journal of Classification, 31, 274--295.
 #'   \doi{10.1007/s00357-014-9161-z}.
-#' @seealso [mfrm_cluster_pam()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
+#' @seealso [mfrm_cluster()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
 #' @examples
 #' if (requireNamespace("cluster", quietly = TRUE)) {
 #'   # Fictional rater backgrounds; R7 has unrecorded experience.
@@ -77,19 +79,22 @@
 #'     ExperienceYears = c(1, 2, 3, 12, 13, 14, NA),
 #'     Specialty = factor(c(rep("Language", 3), rep("Science", 4))))
 #'   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
-#'   hierarchy <- mfrm_cluster_hierarchical(features, k = 2, missing = "omit")
+#'   hierarchy <- mfrm_cluster(method = "hierarchical", features, k = 2, missing = "omit")
 #'   plot(hierarchy)
 #'   plot(hierarchy, type = "silhouette")
 #'   plot(hierarchy, type = "profile", feature = "ExperienceYears")
 #'   comparison <- mfrm_cluster_compare(list(
-#'     PAM = mfrm_cluster_pam(features, k = 2, missing = "omit"),
+#'     PAM = mfrm_cluster(method = "pam", features, k = 2, missing = "omit"),
 #'     Average = hierarchy,
-#'     Complete = mfrm_cluster_hierarchical(features, k = 2,
+#'     Complete = mfrm_cluster(method = "hierarchical", features, k = 2,
 #'       linkage = "complete", missing = "omit")))
 #'   comparison$analysis_summary
 #'   summary(comparison)
 #' }
-#' @export
+#' @description For new code use `mfrm_cluster(..., method = "hierarchical")`.
+#'   The former method-specific entry is no longer exported. This guide retains
+#'   its statistical details and saved-result plotting methods.
+#' @usage NULL
 mfrm_cluster_hierarchical <- function(x, k, weights = NULL,
                                       missing = c("error", "omit"),
                                       linkage = c("average", "complete")) {
@@ -98,7 +103,9 @@ mfrm_cluster_hierarchical <- function(x, k, weights = NULL,
 }
 
 #' @rdname mfrm_cluster_hierarchical
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @export
 plot.mfrm_hierarchical_clusters <- function(x, type = c("dendrogram", "silhouette", "profile"),
                                             feature = NULL, labels = NULL, draw = TRUE,
@@ -125,23 +132,7 @@ plot.mfrm_hierarchical_clusters <- function(x, type = c("dendrogram", "silhouett
     k = x$settings$k, excluded_ids = excluded, labels = show_labels,
     title = title, subtitle = subtitle, preset = style$name,
     caption = sprintf("Boxes: %d groups | Heights do not measure branch support", x$settings$k)))
-  if (!draw) return(invisible(out))
-  apply_plot_preset(style)
-  old <- graphics::par(mar = c(5, 5, 5, 2), xpd = FALSE)
-  on.exit(graphics::par(old), add = TRUE)
-  graphics::plot(tree, labels = if (show_labels) tree$labels else FALSE,
-    hang = -1, main = "", sub = "", xlab = "", ylab = "Gower dissimilarity", axes = FALSE,
-    cex = style$axis_cex)
-  graphics::axis(2, at = pretty(c(0, tree$height)))
-  # Keep outer boxes inside hclust's fixed plotting window, also for small trees.
-  ends <- cumsum(rle(out$data$table$Cluster)$lengths)
-  usr <- graphics::par("usr")
-  padding <- 0.01 * diff(usr[1:2])
-  cut_height <- mean(tree$height[length(tree$order) - x$settings$k + 0:1])
-  graphics::rect(pmax(c(0, utils::head(ends, -1)) + 0.66, usr[1] + padding),
-    usr[3] + 0.005 * diff(usr[3:4]), pmin(ends + 0.33, usr[2] - padding),
-    cut_height, border = style$accent_primary)
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 # Lay out the saved binary merges; no distances or groups are re-estimated.

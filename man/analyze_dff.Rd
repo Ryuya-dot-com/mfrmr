@@ -17,8 +17,6 @@ analyze_dff(
   p_adjust = "holm",
   comparison_review = NULL
 )
-
-analyze_dif(...)
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
@@ -67,8 +65,6 @@ facet and score coding must match this request. If \code{focal} is supplied it
 must equal the review's first group. The prospective interaction states
 are retained separately; they do not classify the residual/refit contrasts
 as identified, change estimates, or permit an otherwise refused fit.}
-
-\item{...}{Passed directly to \code{\link[=analyze_dff]{analyze_dff()}}.}
 }
 \value{
 An object of class \code{mfrm_dff} (with compatibility class \code{mfrm_dif}) with:
@@ -88,8 +84,8 @@ Compares observed-minus-expected scores between groups, or describes linked
 subgroup facet estimates after refitting. Residual differences do not isolate
 differential functioning and are returned without tests or classifications.
 
-\code{analyze_dif()} is retained for compatibility with earlier package versions.
-In many-facet workflows, prefer \code{\link[=analyze_dff]{analyze_dff()}} as the primary entry point.
+The former \code{analyze_dif()} name is no longer exported. Use \code{\link[=analyze_dff]{analyze_dff()}};
+the calculation and saved result class are unchanged.
 }
 \details{
 \strong{Differential facet functioning (DFF)} occurs when the

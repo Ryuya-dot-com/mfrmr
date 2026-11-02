@@ -196,8 +196,11 @@ print.mfrm_extended_comparison <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot matched facet effects or posterior predictions across MFRMs
+#' @rdname compare_mfrm
+#' @details `plot()` method: Plot matched facet effects or posterior predictions across MFRMs
 #' @param x A descriptive extended-model result from [compare_mfrm()].
+#'
+#' Also for `compare_mfrm()`: An extended-model comparison returned by `compare_mfrm()`.
 #' @param style `"paired"` plots comparison against reference with an equality
 #'   line. `"difference"` plots comparison minus reference against their mean.
 #' @param facet Panels to display; `NULL` includes all. For effects and group
@@ -218,8 +221,10 @@ print.mfrm_extended_comparison <- function(x, ...) {
 #' @param show_labels Show matched IDs beside the points. Defaults to `TRUE`
 #'   for effects and group indices, `FALSE` for rating-level moments and
 #'   probabilities. Consult the retained table when labels are hidden.
-#' @param ... Unused.
-#' @details Points are centered at the unweighted mean within each complete
+#' @param marginal Marginal histogram display on single-panel scatterplots:
+#'   `"auto"` (default; displayed when at least 8 finite pairs are plotted on
+#'   a single panel), `"histogram"`, or `"none"`.
+#' @details For `plot()`: Points are centered at the unweighted mean within each complete
 #'   matched facet. These displays compare fitted summaries, including
 #'   shrinkage, rather than testing differences or choosing a better model.
 #'   The equality/zero line is a descriptive reference. No difference intervals
@@ -232,18 +237,21 @@ print.mfrm_extended_comparison <- function(x, ...) {
 #'   group; posterior conditioning retains all observed source ratings.
 #'   Smaller residual indices do not establish better prediction or model
 #'   adequacy. There are no ordinary fit cutoffs, tests or automatic ranking.
-#' @return Invisibly, an `mfrm_plot_data` object with source effects, checks,
-#'   interpretation notes and a text alternative. [as_ggplot()] supports further
-#'   styling without estimation. Both renderers respect the display controls.
+#' @return For `plot()`: Invisibly, a `ggplot` object carrying the underlying
+#'   `mfrm_plot_data` payload (accessible via [plot_data()]) with source effects,
+#'   checks, interpretation notes, marginal histogram bins, and a text alternative.
+#'   [as_ggplot()] supports saved payloads without estimation.
 #' @export
 plot.mfrm_extended_comparison <- function(x, style = c("paired", "difference"),
     facet = NULL, draw = TRUE, palette = c("accessible", "mono"), title = NULL,
     caption = NULL, show_title = FALSE, show_notes = FALSE,
     show_labels = metric %in% c("effects", "infit", "outfit"),
     text_scale = 1, point_size = 2.5,
-    metric = c("effects", "expected_score", "variance", "infit", "outfit", "probability", "person"), category = NULL, ...) {
+    metric = c("effects", "expected_score", "variance", "infit", "outfit", "probability", "person"),
+    category = NULL, marginal = c("auto", "histogram", "none"), ...) {
   rlang::check_dots_empty(); style <- match.arg(style); palette <- match.arg(palette)
   metric <- match.arg(metric)
+  marginal <- .mfrmr_resolve_marginal_arg(marginal)
   for (key in c("draw", "show_title", "show_notes", "show_labels")) {
     value <- get(key)
     if (!is.logical(value) || length(value) != 1L || is.na(value)) stop("`", key, "` must be TRUE or FALSE.", call. = FALSE)
@@ -286,46 +294,35 @@ plot.mfrm_extended_comparison <- function(x, style = c("paired", "difference"),
     if (metric == "probability") c(0, 1) else expand_range(c(tab$X, tab$Y))
   } else expand_range(tab$X)
   ylim <- if (style == "paired") xlim else expand_range(tab$Y, zero = TRUE)
+  hist_info <- .mfrmr_compute_marginal_bins(
+    x = tab$X,
+    y = tab$Y,
+    marginal = marginal,
+    single_panel = length(facet) == 1L
+  )
   payload <- list(effects = x$effects, table = tab, models = x$models, checks = x$checks,
     notes = data.frame(Type = "Interpretation", Text = x$notes$Note),
     response_events = x$responses$events,
     xlim = xlim, ylim = ylim,
+    marginal_histograms = hist_info,
     title = title %||% if (metric == "effects") "Facet effects across models" else paste("Across models:", unit), caption = caption %||% note,
     xlab = if (style == "paired") paste0(x$labels[1], " (", unit, ")") else paste0("Mean across models (", unit, ")"),
     ylab = if (style == "paired") paste0(x$labels[2], " (", unit, ")") else paste0("Comparison - reference (", unit, ")"),
     alt_text = paste("Matched", if (metric == "effects") "facet effects:" else if(metric=="person") "conditional Person summaries:" else "posterior predictive summaries:", paste(facet, collapse = ", "), paste0("(", style, " view)."), note,
       if (metric == "effects") "Fixed facet estimates and conditional random-rater modes are different fitted summaries." else if(metric=="person") x$persons$note else x$responses$note),
     display = list(style = style, palette = palette, facet = facet, metric = metric,
+      marginal = marginal,
       show_title = show_title, show_notes = show_notes, show_labels = show_labels,
       text_scale = text_scale, point_size = point_size))
   out <- new_mfrm_plot_data("extended_model_comparison", payload)
-  if (draw) {
-    cols <- min(3, ceiling(sqrt(length(facet)))); rows <- ceiling(length(facet)/cols)
-    old <- graphics::par(mfrow = c(rows, cols), mar = c(5, 5, 3, 1),
-      oma = c(if (show_notes) 4 else 0, 0, if (show_title) 3 else 0, 0), cex = text_scale)
-    on.exit(graphics::par(old), add = TRUE)
-    colour <- if (palette == "mono") "#222222" else "#0072B2"
-    for (f in facet) {
-      d <- tab[tab$Facet == f & is.finite(tab$X) & is.finite(tab$Y), , drop = FALSE]
-      graphics::plot(NA_real_, NA_real_, xlim = xlim, ylim = ylim,
-        asp = if (style == "paired") 1 else NA_real_, xlab = paste(strwrap(payload$xlab, 32), collapse = "\n"),
-        ylab = paste(strwrap(payload$ylab, 32), collapse = "\n"), main = f, bty = "n")
-      if (style == "paired") graphics::abline(a = 0, b = 1, col = "grey45", lty = 2) else graphics::abline(h = 0, col = "grey45", lty = 2)
-      if (nrow(d)) {
-        graphics::points(d$X, d$Y, pch = 16, col = colour, cex = point_size/2.5)
-        if (show_labels) graphics::text(d$X, d$Y, d$Level, pos = 3, cex = .75)
-      } else graphics::text(mean(xlim), mean(ylim), "No available summaries")
-    }
-    if (show_title) graphics::mtext(payload$title, side = 3, outer = TRUE, line = 1)
-    if (show_notes) graphics::mtext(paste(strwrap(payload$caption, 85), collapse = "\n"), side = 1, outer = TRUE, line = 1, cex = .7)
-  }
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 .mfrmr_gg_extended_comparison <- function(payload) {
   opt <- payload$display; tab <- payload$table
   points <- tab[is.finite(tab$X) & is.finite(tab$Y), , drop = FALSE]
   colour <- if (opt$palette == "mono") "#222222" else "#0072B2"
+  single_panel <- nlevels(tab$Facet) == 1L
   p <- ggplot2::ggplot(tab, ggplot2::aes(.data$X, .data$Y))
   if (opt$style == "paired") {
     p <- p + ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey45") +
@@ -333,17 +330,31 @@ plot.mfrm_extended_comparison <- function(x, style = c("paired", "difference"),
   } else p <- p + ggplot2::geom_hline(yintercept = 0, linetype = "dashed", colour = "grey45") +
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = .18)) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = .18))
-  p <- p + ggplot2::geom_point(data = points, colour = colour, size = opt$point_size)
+  p <- p + ggplot2::geom_point(data = points, colour = colour, size = opt$point_size, alpha = 0.85)
   if (opt$show_labels) p <- p + ggplot2::geom_text(data = points, ggplot2::aes(label = .data$Level),
-    vjust = -1, size = 3 * opt$text_scale)
+    vjust = -1, size = 3 * opt$text_scale, check_overlap = TRUE)
   absent <- setdiff(levels(tab$Facet), as.character(points$Facet))
   if (length(absent)) p <- p + ggplot2::geom_text(data = data.frame(Facet = factor(absent, levels = levels(tab$Facet)),
     X = mean(payload$xlim %||% c(-.1, .1)), Y = mean(payload$ylim %||% c(-.1, .1))),
     label = "No available summaries")
-  p <- p + ggplot2::facet_wrap(~ Facet, ncol = min(3, ceiling(sqrt(nlevels(tab$Facet))))) + .mfrmr_gg_theme() +
+  if (!single_panel) {
+    p <- p + ggplot2::facet_wrap(~ Facet, ncol = min(3, ceiling(sqrt(nlevels(tab$Facet)))))
+  }
+  p <- p + .mfrmr_gg_theme(if (identical(opt$palette, "mono")) "monochrome" else "standard") +
     ggplot2::theme(text = ggplot2::element_text(size = 11 * opt$text_scale),
       panel.spacing = ggplot2::unit(1.5, "lines"))
   p <- .mfrmr_gg_labs(p, payload, x = payload$xlab, y = payload$ylab) + ggplot2::labs(alt = payload$alt_text)
+  if (single_panel) {
+    p <- .mfrmr_attach_marginal_histograms(
+      p,
+      x = points$X,
+      y = points$Y,
+      marginal = opt$marginal %||% "auto",
+      preset = if (identical(opt$palette, "mono")) "monochrome" else "standard",
+      single_panel = TRUE,
+      hist_info = payload$marginal_histograms
+    )
+  }
   attr(p, "mfrmr_alt_text") <- payload$alt_text
   p
 }

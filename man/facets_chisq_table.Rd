@@ -82,6 +82,9 @@ distributional shape. Full covariance is not propagated.}
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("facets_chisq_table", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -90,6 +93,7 @@ chi <- facets_chisq_table(fit)
 summary(chi)
 p_chi <- plot(chi, draw = FALSE)
 p_chi$data$plot
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")}

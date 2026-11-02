@@ -84,6 +84,9 @@
 #' @seealso [mfrm_d_study()], [confint.mfrm_multivariate_d_study()],
 #'   [plot.mfrm_multivariate_d_study()], [plot.mfrm_dstudy_intervals()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("summary.mfrm_multivariate_d_study", run.dontrun = TRUE)
+#' \dontrun{
 #' # Published synthetic data, not empirical speech-contest records.
 #' ratings <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 #' g <- mfrm_g_study(ratings, c("V", "W"), rater = NULL)
@@ -98,6 +101,7 @@
 #' # Reuse an interval for a curve, with no interval calculation.
 #' p <- plot(d, metric = "Phi", intervals = s$intervals$Phi, draw = FALSE)
 #' plot_data(p, "notes")
+#' }
 #' @export
 summary.mfrm_multivariate_d_study <- function(object, intervals = FALSE,
     parm = c("G", "Phi", "RelativeSEM", "AbsoluteSEM"), ...) {

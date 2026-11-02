@@ -14,7 +14,7 @@ category steps; JML requires the same facet for both roles. \code{\link[=confint
 with \code{parm = "slopes"}
 supplies approximate relative-slope intervals for eligible MML fits; model
 ranking and matched PCM/GPCM tests use separate checks in \code{\link[=compare_mfrm]{compare_mfrm()}}.
-\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} explains the supported uses.
+\code{mfrmr_output_guide("gpcm_capabilities")} (see \link{mfrmr_gpcm_scope}) explains the supported uses.
 An experimental two-family \code{GPCM} route also provides estimation and
 conditional scoring, with explicit uncertainty limitations.
 Native RSM/PCM conditional maximum likelihood (\code{CML}) conditions on Person
@@ -60,13 +60,38 @@ follow its \code{NextAction}. The default summary does not compute diagnostics.
 For your own data, first inspect the design and score categories with
 \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}.
 }
+\section{Core five-step workflow}{
+
+Across the package's three pillars (measurement models, G-theory assessment
+planning, and rater feedback / decisions), most analyses follow five entry
+points (\code{mfrmr_output_guide("core_workflow")}):
+\enumerate{
+\item \strong{Inspect data and anchors}: \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} (and
+\code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} when linking across waves or subsets).
+\item \strong{Fit the measurement model}: \code{\link[=fit_mfrm]{fit_mfrm()}}, passing either the 16 core
+arguments directly or a reusable \code{spec = list(...)} plus optional
+numerical \code{control = list(...)} (see \link{fit_mfrm_technical_details} for all
+33 \code{spec} and 21 \code{control} keys). The same \code{spec} list can be shared
+unchanged across \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}},
+\code{\link[=fit_mfrm]{fit_mfrm()}}, and \code{\link[=export_mfrm_model]{export_mfrm_model()}}.
+\item \strong{Diagnose model fit and rater effects}: \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} (use
+\code{diagnostic_mode = "both"} for final RSM/PCM MML runs).
+\item \strong{Plan future designs under G-theory}: \code{\link[=mfrm_g_study]{mfrm_g_study()}} and
+\code{\link[=mfrm_d_study]{mfrm_d_study()}} on observed ratings (separate from latent-logit MFRM
+separation).
+\item \strong{Report and visualize}: \code{\link[=mfrm_results]{mfrm_results()}}, \code{\link[=mfrm_report]{mfrm_report()}}, and \code{plot()}
+(all 62 \code{plot()} methods render and return \code{ggplot2} objects directly;
+extract underlying tables and cautions via \code{\link[=plot_data]{plot_data()}}).
+}
+}
+
 \section{Optional packages}{
 
-The basic example below uses packages installed with mfrmr. Its base-R
-plots do not need ggplot2. Additional packages support particular features;
-you do not need to install all suggested packages to get started.
+The basic example below uses packages installed with mfrmr, including
+\code{ggplot2} for all \code{plot()} methods and \code{\link[=as_ggplot]{as_ggplot()}}. Additional suggested
+packages support particular specialist features; you do not need to install
+all suggested packages to get started.
 \itemize{
-\item \code{\link[=as_ggplot]{as_ggplot()}} needs ggplot2 for ggplot2 rendering.
 \item \code{\link[=as_kable]{as_kable()}} needs knitr and \code{\link[=as_flextable]{as_flextable()}} needs flextable for their
 respective table formats.
 \item \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} needs RTMB version 2.0 or later for shared
@@ -74,11 +99,13 @@ random-rater estimation.
 \item Corrected JML in \code{\link[=fit_mfrm]{fit_mfrm()}}, requested with \code{jml_correction_order},
 needs nleqslv to solve the adjusted equations.
 \item \code{\link[=ordinal_logistic_table]{ordinal_logistic_table()}} needs ordinal for ordinal-logistic DIF.
+\item \code{export_mfrm_model(..., format = "stan", run_cmdstan = TRUE)} needs
+cmdstanr and a configured CmdStan installation for live MCMC sampling.
 }
 
 These are common examples; other optional analyses name their dependencies
 in their own help. A missing-package message identifies what to install.
-For example, use \code{install.packages("ggplot2")} if you want \code{\link[=as_ggplot]{as_ggplot()}}.
+For example, use \code{install.packages("flextable")} if you want \code{\link[=as_flextable]{as_flextable()}}.
 
 A saved \code{\link[=mfrm_results]{mfrm_results()}} bundle can be reopened with \code{\link[base:readRDS]{base::readRDS()}} and
 passed to \code{\link[=mfrm_report]{mfrm_report()}} without refitting or installing optional estimation
@@ -95,13 +122,16 @@ reusing older saved analyses.
 Native response models use the logistic metric (L-metric), with scaling
 constant \eqn{D = 1}; no extra 1.7 normal-ogive approximation factor is used.
 This is distinct from choosing a normal ability distribution. See the
-"Logistic metric (D = 1)" section of \code{\link[=fit_mfrm]{fit_mfrm()}} for logit interpretation
-with fixed or varying slopes and comparison with other software.
+"Logistic metric (D = 1)" section of \link{fit_mfrm_technical_details} (linked
+from \code{\link[=fit_mfrm]{fit_mfrm()}}) for logit interpretation with fixed or varying slopes and
+comparison with other software.
 }
 
 \section{Where to go next}{
 
 \itemize{
+\item \link{fit_mfrm_technical_details} for full equations, identification rules,
+numerical controls, and return-object provenance of \code{\link[=fit_mfrm]{fit_mfrm()}}.
 \item \link{mfrmr_methods_reference} for the question-to-calculation map, plain-language
 explanations and links to the methodological literature.
 \item \link{mfrmr_workflow_methods} and \code{vignette("mfrmr-workflow", package = "mfrmr")}
@@ -113,7 +143,7 @@ analysis workflow. If vignettes are not installed, start with
 \item \link{mfrmr_linking_and_dff} for linking and differential facet functioning.
 \item \code{\link[=classification_table]{classification_table()}} for fixed-plan future classification accuracy,
 consistency and conditional precision under ordinary RSM/PCM calibration.
-\item \link{gpcm_capability_matrix} for the \code{GPCM} extension.
+\item \link{mfrmr_gpcm_scope} for the \code{GPCM} extension.
 \item \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}} for the broader purpose-to-function map.
 }
 
@@ -125,7 +155,7 @@ A printable reference card is available at
 
 A saved, versioned calibration artifact can be created from an eligible
 one-scale \code{RSM} or \code{PCM} MML fit under the fixed standard-normal scoring
-basis. Use \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}} before extraction, then follow
+basis. Use \code{mfrmr_output_guide("calibration_capabilities")} before extraction, then follow
 \link{mfrm_calibration_workflow} to review, validate, freeze, save, load, and
 score the artifact. Review the returned batch with
 \link{mfrm_calibration_score_methods} before using its estimates. One-family GPCM
@@ -156,7 +186,7 @@ After the basic route above:
 for ordered-response \code{RSM} / \code{PCM} models with a one-dimensional
 conditional-normal population model and explicit one-row-per-person
 covariates expanded through \code{stats::model.matrix()}
-\item \code{GPCM} support is summarized by \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
+\item \code{GPCM} support is summarized by \code{mfrmr_output_guide("gpcm_capabilities")} (\link{mfrmr_gpcm_scope})
 \item \code{GPCM} supports the core fit/summary/scoring/information
 path, direct Wright/pathway/CCC plots, residual-PCA follow-up, and the
 residual-based diagnostics tables/plots as exploratory tools
@@ -215,12 +245,12 @@ are explicitly wanted at the console
 Function families:
 \itemize{
 \item Model fitting: \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}
-\item Legacy-compatible workflow wrapper: \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=mfrmRFacets]{mfrmRFacets()}}
+\item Legacy-compatible workflow wrapper: \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}
 \item Diagnostics: \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{summary(diag)},
 \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \link[=plot.mfrm_fit]{plot(x, type = "residual_pca")}
 \item Bias and interaction: \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=estimate_all_bias]{estimate_all_bias()}},
 \code{summary(bias)}, \code{\link[=bias_interaction_report]{bias_interaction_report()}}, \link[=plot.mfrm_fit]{plot(x, type = "bias")}
-\item Differential functioning: \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}},
+\item Differential functioning: \code{\link[=analyze_dff]{analyze_dff()}},
 \code{\link[=mantel_haenszel_table]{mantel_haenszel_table()}} for separately matched binary responses,
 \code{\link[=ordinal_logistic_table]{ordinal_logistic_table()}} for matched cumulative-logit comparisons,
 \code{\link[=dif_interaction_table]{dif_interaction_table()}}, \link[=plot.mfrm_dif]{plot(x, type = "heatmap")}, \code{\link[=dif_report]{dif_report()}}
@@ -254,7 +284,7 @@ table, plot, checklist, and summary-appendix routes
 \item Dashboards: \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}, \link[=plot.mfrm_fit]{plot(x, type = "facet_dashboard")}
 \item Export / reproducibility: \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}},
 \code{\link[=build_conquest_overlap_bundle]{build_conquest_overlap_bundle()}}, \code{normalize_conquest_overlap_exports()},
-\code{\link[=normalize_conquest_overlap_files]{normalize_conquest_overlap_files()}},
+file input through \code{normalize_conquest_overlap_tables(input = "files")},
 \code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}},
 \code{\link[=review_conquest_overlap]{review_conquest_overlap()}},
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} for the diagnostics-compatible Rasch-family route;
@@ -368,7 +398,7 @@ linking review plus role-based design evaluation, population
 forecasting, diagnostic-screening, and signal-detection helpers are
 available, while full score-side FACETS review, posterior-predictive
 checks, and \code{MCMC} estimation are not available for \code{GPCM}. Use
-\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} as the formal boundary statement.
+\code{mfrmr_output_guide("gpcm_capabilities")} (\link{mfrmr_gpcm_scope}) as the formal boundary statement.
 }
 }
 
@@ -427,9 +457,10 @@ scale with geometric mean 1. This makes
 \code{GPCM} a slope-aware sensitivity/extension route, not a replacement for the
 equal-weighting \code{RSM}/\code{PCM} interpretation.
 A separate provisional two-family MML route fits the multiplicative
-Uto--Ueno equation with explicit fixed-N(0,1) identification, exactly two
-facets and second-owner steps. The first family's slopes have geometric mean
-one and the second family's slopes are free. Fixed-grid EM and adaptive
+Uto--Ueno equation with explicit fixed-N(0,1) identification and allows
+additional fixed additive facets. Step ownership and the noncentered
+location facet are explicit. The named reference family's slopes have
+geometric mean one and the other family's slopes are free. Fixed-grid EM and adaptive
 direct MML supply summaries and conditional fitted curves without intervals.
 Both support separately checked experimental component log-Wald and
 location/contrast intervals and descriptive posterior residuals; component
@@ -439,7 +470,8 @@ calibration workflow supply experimental conditional new-Person EAP and
 posterior intervals, excluding calibration uncertainty. Coverage and
 population transport remain unqualified. The one-family diagnostic and
 inference routes below do not apply to it. See the
-Two slope families section of \code{\link[=fit_mfrm]{fit_mfrm()}}. Unit slopes reduce to the
+"Two slope families" section of \link{fit_mfrm_technical_details} (linked from
+\code{\link[=fit_mfrm]{fit_mfrm()}}). Unit slopes reduce to the
 equal-discrimination PCM kernel.
 Under default one-family MML, an intercept-only person distribution
 \eqn{N(\beta_0,\sigma^2)} is estimated. The geometric-mean-one slopes are
@@ -558,7 +590,7 @@ an omnibus accept / reject test, and it complements rather than
 replaces separation / reliability and inter-rater agreement
 summaries. The full derivation, with notation and pairwise
 local-dependence events, lives in
-\code{vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")}.
+\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-mml-and-marginal-fit.html}{online MML and marginal-fit guide}.
 }
 
 \section{Statistical background}{
@@ -625,7 +657,7 @@ evaluate the same formulas at unshrunken JMLE estimates, so MnSq and
 ZSTD values are not numerically interchangeable across the two residual
 bases, most visibly for extreme-scoring persons. Use \code{method = "JML"}
 when an external FACETS fit comparison requires a JMLE-style residual
-basis, and see \code{\link[=facets_fit_df_guide]{facets_fit_df_guide()}} for the separate
+basis, and see \code{\link[=facets_guide]{facets_guide()}} for the separate
 standardization-side df/ZSTD conventions.
 
 \strong{PTMEA (Point-Measure Correlation)}

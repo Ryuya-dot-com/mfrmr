@@ -61,14 +61,17 @@ test_that("adaptive review honors transformed priors and zero observation weight
 })
 
 test_that("public fit and artifact scoring share an optional unrounded review", {
+  # Extended local/CI regression; see CONTRIBUTING.md.
+  skip_on_cran()
   data <- load_mfrmr_data("example_operational")
+  scoring_data <- data
   for (model in c("RSM", "PCM")) {
     fit <- fit_mfrm(data, "Person", c("Rater", "Criterion"), "Score", model = model,
                     step_facet = if (model == "PCM") "Criterion" else NULL)
     # This comparison needs a scoring grid that passes the batch accuracy check.
     # Calibration stays fixed; coarse-grid refusals have separate regressions.
-    ordinary <- predict_mfrm_units(fit, data, scoring_quad_points = 121L)
-    reviewed <- predict_mfrm_units(fit, data, scoring_quad_points = 121L,
+    ordinary <- predict_mfrm_units(fit, scoring_data, scoring_quad_points = 121L)
+    reviewed <- predict_mfrm_units(fit, scoring_data, scoring_quad_points = 121L,
       adaptive_quad_points = c(121L, 241L))
     expect_identical(ordinary$estimates, reviewed$estimates)
     expect_identical(ordinary$settings$source_scoring_ready, reviewed$settings$source_scoring_ready)
@@ -77,11 +80,11 @@ test_that("public fit and artifact scoring share an optional unrounded review", 
                    match(ordinary$estimates$Person, reviewed$quadrature_review$Person)],
                  unname(ordinary$estimates$Estimate), tolerance = 1e-12)
     draft <- mfrmr:::mfrmr_extract_calibration_draft(fit, scoring_quad_points = 121L)
-    calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
+    calibration <- update(object = update(object = draft, status = "validated"), status = "frozen")
     before <- calibration
-    scored <- score_mfrm_calibration(calibration, data, adaptive_quad_points = c(121L, 241L))
+    scored <- score_mfrm_calibration(calibration, scoring_data, adaptive_quad_points = c(121L, 241L))
     expect_identical(calibration, before)
-    expect_identical(scored$estimates, score_mfrm_calibration(calibration, data)$estimates)
+    expect_identical(scored$estimates, score_mfrm_calibration(calibration, scoring_data)$estimates)
     numerical <- vapply(reviewed$quadrature_review, is.numeric, TRUE)
     expect_identical(scored$quadrature_review[!numerical], reviewed$quadrature_review[!numerical])
     expect_identical(is.na(scored$quadrature_review), is.na(reviewed$quadrature_review))
@@ -156,7 +159,8 @@ test_that("moving-node gradients differentiate the whole adaptive objective", {
                                  config$interaction_specs)
     par <- mfrmr:::build_initial_param_vector(config, sizes)
     par <- par + 0.15 * sin(seq_along(par))
-    for (order in c(1L, 3L, 15L)) {
+    orders <- if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) c(1L, 3L, 15L) else 3L
+    for (order in orders) {
       evaluate <- mfrmr:::mfrmr_make_adaptive_mml_evaluator(idx, config, sizes, order)
       objective <- function(x) {
         review <- mfrmr:::mfrmr_adaptive_quadrature_review(

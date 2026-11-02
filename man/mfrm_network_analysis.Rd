@@ -118,16 +118,20 @@ rows are available here; review original missing assignments before fitting.
 No prefit result supplies an identification audit or model-readiness decision.
 \code{settings$is_disjoint} describes the source graph, even when subset filters
 omit components; compare source/retained subset counts. Filters do not establish
-linking. See \code{vignette("mfrmr-networks-and-reporting")} for a panel example.
+linking. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} for a panel example.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("mfrm_network_analysis", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("example_operational")
 if (requireNamespace("igraph", quietly = TRUE)) {
   net <- mfrm_network_analysis(data = ratings, person = "Person",
     facets = "Rater", score = "Score")
   net$summary
   plot(net, type = "network", draw = FALSE)
+}
 }
 }
 \seealso{

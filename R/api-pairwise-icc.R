@@ -77,6 +77,9 @@
 #' @seealso [interrater_agreement_table()], [compute_facet_icc()],
 #'   [krippendorff_alpha_table()], [score_comparison_table()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("pairwise_icc_table", run.dontrun = TRUE)
+#' \dontrun{
 #' data("mfrmr_example_agreement", package = "mfrmr")
 #' ratings <- mfrmr_example_agreement
 #' absolute <- pairwise_icc_table(ratings, rater = "Rater",
@@ -87,6 +90,7 @@
 #' consistent$table
 #' # R1/R2 have perfect consistency, but R2's one-category offset reduces agreement.
 #' # These ICCs treat 0--3 as numeric scores; justify equal score intervals.
+#' }
 #' @export
 pairwise_icc_table <- function(data, rater, unit, score,
                                model = c("mixed", "random"),

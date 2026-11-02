@@ -80,6 +80,9 @@ and variance calculation that represent the actual design.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("compute_facet_design_effect", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 if (requireNamespace("lme4", quietly = TRUE)) {
   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
@@ -89,6 +92,7 @@ if (requireNamespace("lme4", quietly = TRUE)) {
                                       icc_table = icc)
   print(deff)
   # Review clustering influence; EffectiveN is a descriptive row count.
+}
 }
 }
 \references{

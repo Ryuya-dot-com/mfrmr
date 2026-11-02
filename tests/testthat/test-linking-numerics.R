@@ -176,16 +176,17 @@ test_that("ggplot linking views use their named statistic and preserve saved res
   original <- serialize(drift, NULL)
   for (view in c("drift", "heatmap", "forest")) {
     p <- plot(drift, type = view, draw = FALSE)
+    expect_s3_class(p, "ggplot")
     g <- as_ggplot(p)
-    expect_identical(attr(g, "mfrmr_plot_data"), p)
+    expect_identical(attr(g, "mfrmr_plot_data"), attr(p, "mfrmr_plot_data"))
     if (view == "heatmap") {
-      expect_equal(g$data$Drift, as.vector(p$data$matrix))
+      expect_equal(g$data$Drift, as.vector(plot_data(p, "matrix")))
       expect_equal(toupper(g$scales$get_scales("fill")$palette(c(0, 1))),
-        toupper(p$data$legend$value))
+        toupper(plot_data(p, "legend")$value))
     } else if (view == "forest") {
-      expect_equal(g$data$Value, p$data$data$Estimate)
-      expect_equal(g$data$CI_Lower, p$data$data$CI_Lower)
-      expect_equal(g$data$CI_Upper, p$data$data$CI_Upper)
+      expect_equal(g$data$Value, plot_data(p, "data")$Estimate)
+      expect_equal(g$data$CI_Lower, plot_data(p, "data")$CI_Lower)
+      expect_equal(g$data$CI_Upper, plot_data(p, "data")$CI_Upper)
     } else {
       expect_equal(sort(g$data$Value), sort(drift$drift_table$Drift))
       expect_false(identical(g$data$Value, rep(0, 3)))
@@ -201,9 +202,10 @@ test_that("ggplot linking views use their named statistic and preserve saved res
   expect_equal(as_ggplot(p)$data$Value, 2)
   # Do not bridge an unavailable intermediate wave.
   p <- plot(chain, type = "chain", draw = FALSE)
-  p$data$table <- data.frame(Wave = c("A", "B", "C", "D"),
+  pd <- attr(p, "mfrmr_plot_data")
+  pd$data$table <- data.frame(Wave = c("A", "B", "C", "D"),
     Cumulative_Offset = c(0, NA_real_, .5, .8))
-  g <- as_ggplot(p)
+  g <- as_ggplot(pd)
   expect_equal(nrow(g$layers[[1]]$data), 1L)
   expect_equal(g$layers[[1]]$data$Position, 3L)
   expect_true(is.na(g$data$Cumulative_Offset[2]))

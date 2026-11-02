@@ -64,6 +64,18 @@ mfrm_validate_facet_names <- function(facets) {
   invisible(NULL)
 }
 
+validate_mfrm_single_person_support <- function(n_person, allow_single_person = FALSE) {
+  if (n_person < 2L && !isTRUE(allow_single_person)) {
+    stop(
+      "This fitting route requires at least two persons (got ", n_person, "). ",
+      "One-Person calibration is supported only for full RSM/PCM JML, CML or fixed-population MML. ",
+      "The selected route retains a software support limit, not a general mathematical impossibility claim.",
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
 prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
                               rating_min = NULL, rating_max = NULL,
                               weight_col = NULL, keep_original = FALSE,
@@ -713,14 +725,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   # Single-Person support is admitted by the caller; it is not a universal
   # identification theorem. Unreviewed fitting routes retain their input limit.
   n_person <- length(levels(df$Person))
-  if (n_person < 2L && !isTRUE(allow_single_person)) {
-    stop(
-      "This fitting route requires at least two persons (got ", n_person, "). ",
-      "One-Person calibration is supported only for full RSM/PCM JML, CML or fixed-population MML. ",
-      "The selected route retains a software support limit, not a general mathematical impossibility claim.",
-      call. = FALSE
-    )
-  }
+  validate_mfrm_single_person_support(n_person, allow_single_person = allow_single_person)
   # A count alone is not an invalid-input condition. Interval outputs also
   # carry this caution, separately from their numerical eligibility checks.
   if (n_person == 1L) add_preparation_note(
@@ -908,43 +913,9 @@ with_preserved_rng_seed <- function(seed, expr) {
   force(expr)
 }
 
-format_tab_template <- function(df) {
-  char_df <- df |> mutate(across(everything(), ~ replace_na(as.character(.x), "")))
-  widths <- vapply(seq_along(char_df), function(i) {
-    max(nchar(c(names(char_df)[i], char_df[[i]])), na.rm = TRUE)
-  }, integer(1))
-  format_row <- function(row_vec) {
-    padded <- mapply(function(value, width) {
-      value <- ifelse(is.na(value), "", value)
-      stringr::str_pad(value, width = width, side = "right")
-    }, row_vec, widths, SIMPLIFY = TRUE)
-    paste(padded, collapse = "\t")
-  }
-  header <- format_row(names(char_df))
-  rows <- apply(char_df, 1, format_row)
-  paste(c(header, rows), collapse = "\n")
-}
-
-template_tab_source_demo <- sample_mfrm_data(seed = 20240131) |>
-  slice_head(n = 24)
-template_tab_source_toy <- sample_mfrm_data(seed = 20240131) |>
-  slice_head(n = 8)
-template_tab_text <- format_tab_template(template_tab_source_demo)
-template_tab_text_toy <- format_tab_template(template_tab_source_toy)
-template_header_text <- format_tab_template(template_tab_source_demo[0, ])
-download_sample_data <- sample_mfrm_data(seed = 20240131)
-
 guess_col <- function(cols, patterns, fallback = 1) {
   if (length(cols) == 0) return(character(0))
   hit <- which(stringr::str_detect(tolower(cols), paste(patterns, collapse = "|")))
   if (length(hit) > 0) return(cols[hit[1]])
   cols[min(fallback, length(cols))]
-}
-
-truncate_label <- function(x, width = 28) {
-  stringr::str_trunc(as.character(x), width = width)
-}
-
-facet_report_id <- function(facet) {
-  paste0("facet_report_", stringr::str_replace_all(as.character(facet), "[^A-Za-z0-9]", "_"))
 }

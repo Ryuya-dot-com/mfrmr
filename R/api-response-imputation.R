@@ -7,7 +7,8 @@
 #' imputations; it does not choose or fit an imputation model.
 #' Start with `review_mfrm_imputations()`, then use [fit_mfrm_imputed()] and
 #' [pool_mfrm_imputed()] for eligible fixed-facet analyses. The older name
-#' `mfrm_response_imputations()` is retained with its original `impute` argument.
+#' The former `mfrm_response_imputations()` name has been removed; use
+#' `review_mfrm_imputations()` with `impute_ids` for the selected event IDs.
 #'
 #' @param data Original long-format rating roster, including missing scores.
 #' @param completed A list of at least two completed data frames, or a `mids`
@@ -21,8 +22,6 @@
 #'   scores on assigned ratings. Observed scores cannot be selected.
 #'   These are values from the `event_id` column, not a column name or a logical
 #'   switch. For example, `c("E2", "E7")` selects those two rating events.
-#' @param impute Compatibility name for `impute_ids`, used only by
-#'   `mfrm_response_imputations()`. Supply one selection, not both argument names.
 #' @param categories The full intended contiguous integer category vector,
 #'   for example `0:4`. It is preserved across all completed analyses.
 #' @param assigned Optional name of a complete logical column: `TRUE` denotes
@@ -71,7 +70,7 @@
 #' For a wide-format or multilevel imputation model, reshape each completion
 #' back to the original long roster using event identities and supply the
 #' resulting list with the saved model. Do not average completed scores.
-#' See `vignette("mfrmr-response-imputation", package = "mfrmr")` for a
+#' See [online response-imputation guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-response-imputation.html) for a
 #' joint RSM example with supplied posterior predictive completions, shared
 #' Person draws, sampling diagnostics, direct observed-score inference and a
 #' separate lower-score sensitivity analysis. The accompanying R/Stan script
@@ -242,15 +241,13 @@ review_mfrm_imputations <- function(data, completed, person, facets, score,
 }
 
 #' @rdname mfrm_response_imputations
-#' @export
-mfrm_response_imputations <- function(data, completed, person, facets, score,
-                                     event_id, impute, categories,
-                                     assigned = NULL, imputation_model = NULL,
-                                     missing = c("error", "omit")) {
-  review_mfrm_imputations(data, completed, person, facets, score, event_id,
-    impute_ids = impute, categories = categories, assigned = assigned,
-    imputation_model = imputation_model, missing = match.arg(missing))
-}
+#' @description Use [review_mfrm_imputations()] to review supplied completions,
+#'   with `impute_ids` naming the selected event IDs. The former
+#'   `mfrm_response_imputations()` name is no longer exported. Neither route
+#'   fits an imputation model or generates completed ratings.
+#' @usage NULL
+#' @name mfrm_response_imputations
+NULL
 
 response_imputation_scores <- function(x, categories) {
   if (!(is.numeric(x) || is.character(x) || is.factor(x)) || is.complex(x)) {
@@ -266,7 +263,7 @@ response_imputation_scores <- function(x, categories) {
 
 #' @rdname mfrm_response_imputations
 #' @param x,object An object returned by [review_mfrm_imputations()] or its
-#'   compatibility wrapper [mfrm_response_imputations()].
+#'   entry point [review_mfrm_imputations()].
 #' @param ... Unused for print and summary methods.
 #' @export
 print.mfrm_response_imputations <- function(x, ...) {

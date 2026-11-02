@@ -587,136 +587,6 @@ apply_empirical_bayes_shrinkage <- function(fit,
   tbl
 }
 
-#' @keywords internal
-#' @noRd
-.draw_shrinkage_plot <- function(data_list, style, title,
-                                  show_ci = FALSE,
-                                  ci_level = 0.95) {
-  tbl <- data_list$table
-  if (nrow(tbl) == 0L) {
-    graphics::plot.new()
-    graphics::text(0.5, 0.5,
-                   "No shrinkage applied.\nFit with facet_shrinkage = 'empirical_bayes'.")
-    return(invisible(NULL))
-  }
-
-  # Order: group by facet, then by magnitude of shrinkage (largest at
-  # bottom so the visual attention falls on most-shrunken levels).
-  tbl <- tbl[order(tbl$Facet, -abs(tbl$ShrinkageFactor)), , drop = FALSE]
-  tbl$Row <- seq_len(nrow(tbl))
-  labels <- paste0(tbl$Facet, " / ", tbl$Level)
-
-  # x-range with margin for error bars.
-  x_vals <- c(tbl$Estimate, tbl$ShrunkEstimate)
-  se_vals <- c(tbl$SE, tbl$ShrunkSE)
-  x_vals <- x_vals[is.finite(x_vals)]
-  if (isTRUE(show_ci) && any(is.finite(se_vals))) {
-    ci_level <- .validate_shrinkage_ci_level(ci_level)
-    z_ci <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
-    x_vals <- c(x_vals, tbl$Estimate - z_ci * tbl$SE,
-                tbl$Estimate + z_ci * tbl$SE,
-                tbl$ShrunkEstimate - z_ci * tbl$ShrunkSE,
-                tbl$ShrunkEstimate + z_ci * tbl$ShrunkSE)
-    x_vals <- x_vals[is.finite(x_vals)]
-  }
-  if (length(x_vals) == 0L) x_vals <- c(-1, 1)
-  xr <- range(x_vals, na.rm = TRUE)
-  if (diff(xr) == 0) xr <- xr + c(-0.5, 0.5)
-  xlim <- xr + c(-0.1, 0.1) * diff(xr)
-
-  old_par <- graphics::par()["mar"]
-  on.exit(graphics::par(old_par), add = TRUE)
-  graphics::par(mar = c(4, max(7, min(14, max(nchar(labels)) * 0.5)), 3, 1))
-  graphics::plot(
-    x = tbl$Estimate,
-    y = tbl$Row,
-    xlim = xlim,
-    ylim = c(nrow(tbl) + 0.5, 0.5),
-    yaxt = "n",
-    xlab = "logit",
-    ylab = "",
-    pch = 16,
-    col = style$accent_primary,
-    main = "",
-    cex = 1.1
-  )
-  graphics::abline(v = 0, lty = 2, col = style$neutral)
-  graphics::axis(2, at = seq_len(nrow(tbl)), labels = labels,
-                 las = 1, cex.axis = 0.8)
-
-  # Arrows from original to shrunk (shrinkage direction).
-  for (i in seq_len(nrow(tbl))) {
-    if (is.finite(tbl$Estimate[i]) && is.finite(tbl$ShrunkEstimate[i]) &&
-        abs(tbl$Estimate[i] - tbl$ShrunkEstimate[i]) > 1e-6) {
-      graphics::arrows(
-        x0 = tbl$Estimate[i], y0 = i,
-        x1 = tbl$ShrunkEstimate[i], y1 = i,
-        length = 0.06, angle = 20,
-        col = style$neutral, lwd = 1
-      )
-    }
-  }
-
-  # Shrunk estimate on top (open circles) so both are visible.
-  graphics::points(
-    x = tbl$ShrunkEstimate, y = tbl$Row,
-    pch = 21, bg = "white",
-    col = style$accent_tertiary, cex = 1.1
-  )
-
-  # Optional CI error bars for both.
-  if (isTRUE(show_ci)) {
-    ci_level <- .validate_shrinkage_ci_level(ci_level)
-    z_ci <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
-    for (i in seq_len(nrow(tbl))) {
-      if (is.finite(tbl$Estimate[i]) && is.finite(tbl$SE[i]) && tbl$SE[i] >= 0) {
-        graphics::segments(
-          x0 = tbl$Estimate[i] - z_ci * tbl$SE[i], y0 = i - 0.12,
-          x1 = tbl$Estimate[i] + z_ci * tbl$SE[i], y1 = i - 0.12,
-          col = style$accent_primary
-        )
-      }
-      if (is.finite(tbl$ShrunkEstimate[i]) && is.finite(tbl$ShrunkSE[i]) && tbl$ShrunkSE[i] >= 0) {
-        graphics::segments(
-          x0 = tbl$ShrunkEstimate[i] - z_ci * tbl$ShrunkSE[i], y0 = i + 0.12,
-          x1 = tbl$ShrunkEstimate[i] + z_ci * tbl$ShrunkSE[i], y1 = i + 0.12,
-          col = style$accent_tertiary
-        )
-      }
-    }
-  }
-
-
-  # Horizontal band separators between facets.
-  facet_boundaries <- cumsum(table(tbl$Facet)[unique(tbl$Facet)])
-  for (b in utils::head(facet_boundaries, -1L)) {
-    graphics::abline(h = b + 0.5, lty = 3, col = style$grid)
-  }
-
-  legend_labels <- c("Original", "Shrunk", "Shrinkage direction")
-  legend_pch <- c(16, 21, NA)
-  legend_lty <- c(NA, NA, 1)
-  legend_col <- c(style$accent_primary, style$accent_tertiary, style$neutral)
-  legend_bg <- c(NA, "white", NA)
-  if (isTRUE(show_ci)) {
-    legend_labels <- c(legend_labels, sprintf("%g%% plug-in band", round(100 * ci_level)))
-    legend_pch <- c(legend_pch, NA)
-    legend_lty <- c(legend_lty, 1)
-    legend_col <- c(legend_col, style$accent_primary)
-    legend_bg <- c(legend_bg, NA)
-  }
-  graphics::legend(
-    "topright",
-    legend = legend_labels,
-    pch = legend_pch,
-    lty = legend_lty,
-    col = legend_col,
-    pt.bg = legend_bg,
-    bg = "white",
-    cex = 0.85
-  )
-  invisible(NULL)
-}
 
 #' Extract the shrinkage report from a fitted mfrm_fit
 #'
@@ -730,11 +600,15 @@ apply_empirical_bayes_shrinkage <- function(fit,
 #'   `"Person"`) or `NULL` when shrinkage has not been applied.
 #' @seealso [apply_empirical_bayes_shrinkage()], [fit_mfrm()].
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("shrinkage_report", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 300,
 #'                 facet_shrinkage = "empirical_bayes")
 #' shrinkage_report(fit)
+#' }
 #' @export
 shrinkage_report <- function(fit) {
   if (!inherits(fit, "mfrm_fit")) {

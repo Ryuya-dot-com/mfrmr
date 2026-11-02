@@ -92,6 +92,9 @@ from the component variance shares in \code{\link[=compute_facet_icc]{compute_fa
 reliability and the fitted expected agreement in \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("pairwise_icc_table", run.dontrun = TRUE)
+\dontrun{
 data("mfrmr_example_agreement", package = "mfrmr")
 ratings <- mfrmr_example_agreement
 absolute <- pairwise_icc_table(ratings, rater = "Rater",
@@ -102,6 +105,7 @@ absolute$table
 consistent$table
 # R1/R2 have perfect consistency, but R2's one-category offset reduces agreement.
 # These ICCs treat 0--3 as numeric scores; justify equal score intervals.
+}
 }
 \references{
 Koo, T. K., & Li, M. Y. (2016). A guideline of selecting and reporting

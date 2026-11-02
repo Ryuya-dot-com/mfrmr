@@ -96,6 +96,9 @@
 #' theory. *Journal of Multivariate Analysis, 1*, 257--275.
 #' \doi{10.1016/0047-259X(71)90001-7}.
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("vcov.mfrm_multivariate_gstudy", run.dontrun = TRUE)
+#' \dontrun{
 #' data("mfrmr_example_gtheory_crossed", package = "mfrmr")
 #' ratings <- mfrmr_example_gtheory_crossed
 #' # Complete balanced ratings: compute both targets directly.
@@ -121,6 +124,7 @@
 #' # To repeat the full incomplete-data calculation:
 #' # source(system.file("examples", "gstudy-sampling.R", package = "mfrmr"))
 #' # incomplete <- gstudy_sampling_example()
+#' }
 #' @export
 vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL,
                                          assumption, ...) {

@@ -49,11 +49,11 @@ test_that("natural charts preserve interior likelihood, score and native targets
   for (K in c(1L, 3L)) {
     problem <- natural_problem(K); x <- problem$common
     par <- .2 * sin(seq_along(problem$start))
-    native <- mfrm_gmfrm_segmented_evaluator(x$idx, x$config, x$sizes)
+    native <- .mfrmr_research$mfrm_gmfrm_segmented_evaluator(x$idx, x$config, x$sizes)
     for (chart in c("rater_intercepts", "common_scale")) {
-      ev <- mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, chart)
-      map <- mfrm_gmfrm_coordinates(x$config, x$sizes, chart)
-      old <- mfrm_gmfrm_coordinate_evaluator(native, map)$evaluate(map$to_chart(par))
+      ev <- .mfrmr_research$mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, chart)
+      map <- .mfrmr_research$mfrm_gmfrm_coordinates(x$config, x$sizes, chart)
+      old <- .mfrmr_research$mfrm_gmfrm_coordinate_evaluator(native, map)$evaluate(map$to_chart(par))
       z <- ev$from_native(par); result <- ev$evaluate(z)
       pulled <- result$gradient
       pulled[ev$natural] <- pulled[ev$natural] * z[ev$natural] * if (chart == "common_scale") 2 else 1
@@ -77,7 +77,7 @@ test_that("boundary scores agree with independent one-sided and central derivati
     problem <- natural_problem(K); x <- problem$common
     par <- .2 * sin(seq_along(problem$start))
     for (chart in c("rater_intercepts", "common_scale")) {
-      ev <- mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, chart)
+      ev <- .mfrmr_research$mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, chart)
       base <- ev$from_native(par)
       for (zeros in unique(list(ev$natural[1L], ev$natural))) {
         z <- replace(base, zeros, 0); result <- ev$evaluate(z)
@@ -118,7 +118,7 @@ test_that("boundary scores agree with independent one-sided and central derivati
 test_that("variance boundary score includes cross-response terms within Person", {
   problem <- natural_problem(1L); x <- problem$common
   idx <- x$idx; idx$score_k[] <- 0
-  ev <- mfrm_gmfrm_natural_evaluator(idx, x$config, x$sizes, "common_scale")
+  ev <- .mfrmr_research$mfrm_gmfrm_natural_evaluator(idx, x$config, x$sizes, "common_scale")
   z <- numeric(length(problem$start)); result <- ev$evaluate(z)
   m <- lengths(split(idx$score_k, idx$person))
   expect_equal(result$value, sum(m) * log(2))
@@ -130,7 +130,7 @@ test_that("variance boundary score includes cross-response terms within Person",
 test_that("natural input and arithmetic refusals cannot return a stale cached value", {
   problem <- natural_problem(); x <- problem$common
   for (chart in c("rater_intercepts", "common_scale")) {
-    ev <- mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, chart)
+    ev <- .mfrmr_research$mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, chart)
     z <- ev$from_native(problem$start); good <- ev$evaluate(z)
     expect_identical(ev$evaluate(z), good)
     expect_error(ev$value(z + 1i), "finite real")
@@ -143,19 +143,19 @@ test_that("natural input and arithmetic refusals cannot return a stale cached va
     expect_equal(ev$lower[ev$natural], rep(0, length(ev$natural)))
   }
   # The product's low part survives cancellation against the rounded intercept.
-  product <- mfrm_segmented_two_product(1 + 2^-27, 1 - 2^-27)
+  product <- .mfrmr_research$mfrm_segmented_two_product(1 + 2^-27, 1 - 2^-27)
   expect_equal(product$hi, 1, tolerance = 0)
   expect_equal(product$lo, -2^-54, tolerance = 0)
-  logits <- mfrm_segmented_affine_logits(1 + 2^-27, 0, c(0, -1), 1 - 2^-27)
+  logits <- .mfrmr_research$mfrm_segmented_affine_logits(1 + 2^-27, 0, c(0, -1), 1 - 2^-27)
   expect_equal(unname(logits[1, 2] - logits[1, 1]), -2^-54, tolerance = 0)
-  expect_error(mfrm_segmented_two_product(1e300, 1e20), "arithmetic range")
+  expect_error(.mfrmr_research$mfrm_segmented_two_product(1e300, 1e20), "arithmetic range")
 })
 
 test_that("variance-score identities agree across their overlap and select before integration", {
   for (K in c(1L, 3L)) {
     problem <- natural_problem(K); x <- problem$common
     evaluators <- lapply(c("auto", "heat", "prior"), function(form)
-      mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, "common_scale", form))
+      .mfrmr_research$mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes, "common_scale", form))
     z <- evaluators[[1]]$from_native(.2 * sin(seq_along(problem$start)))
     component <- evaluators[[1]]$natural
     for (v in c(.001, .05, .5, 10)) {
@@ -182,6 +182,6 @@ test_that("variance-score identities agree across their overlap and select befor
     z[component] <- 10
     expect_equal(evaluators[[1]]$evaluate(z)$variance_score["heat"], c(heat = 0L))
   }
-  expect_error(mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes,
+  expect_error(.mfrmr_research$mfrm_gmfrm_natural_evaluator(x$idx, x$config, x$sizes,
     "rater_intercepts", "prior"), "only to the common-scale")
 })

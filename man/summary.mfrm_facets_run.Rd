@@ -50,6 +50,9 @@ information-criterion contract status.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("summary.mfrm_facets_run", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:8], , drop = FALSE]
 out <- run_mfrm_facets(
@@ -62,6 +65,7 @@ out <- run_mfrm_facets(
 s <- summary(out)
 s$overview[, c("Model", "Method", "Converged")]
 s$mapping
+}
 }
 \seealso{
 \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \link{mfrmr_workflow_methods},

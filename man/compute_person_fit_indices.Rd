@@ -2,9 +2,12 @@
 % Please edit documentation in R/api-person-fit.R
 \name{compute_person_fit_indices}
 \alias{compute_person_fit_indices}
+\alias{summary.mfrm_person_fit_indices}
 \title{Person fit indices: lz and Snijders-corrected lz*}
 \usage{
 compute_person_fit_indices(diagnostics, fit = NULL)
+
+\method{summary}{mfrm_person_fit_indices}(object, digits = 3, top_n = 10, include_person = FALSE, ...)
 }
 \arguments{
 \item{diagnostics}{Output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
@@ -14,6 +17,18 @@ whether the person estimates are JML/fixed-effect estimates for which
 the Snijders (2001) correction is computed. MML/EAP person scores
 return \code{NA} for \code{lz_star} with an explanatory status. Supplied fit and
 diagnostics must identify the same analysis.}
+
+\item{object}{Output from \code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}}.}
+
+\item{digits}{Number of digits used when printing numeric columns.}
+
+\item{top_n}{Number of review rows retained in \code{top_review}.}
+
+\item{include_person}{If \code{TRUE}, print person identifiers in the review
+preview. The default retains the rows in the returned object but suppresses
+identifiers from console output.}
+
+\item{...}{Unused.}
 }
 \value{
 A data frame of class \code{mfrm_person_fit_indices} with one row per
@@ -87,12 +102,34 @@ not directly comparable across mfrmr releases; treat the values
 returned here as the polytomous statistic and re-evaluate any
 historical \verb{|lz| > 1.96} flagging that was based on the earlier
 approximation.
+
+For \code{summary()}: An object of class \code{summary.mfrm_person_fit_indices} with:
+\itemize{
+\item \code{overview}
+\item \code{status_summary}
+\item \code{report_index_summary}
+\item \code{lz_star_status_summary}
+\item \code{top_review}
+\item \code{caveats}
+\item \code{thresholds}
+\item \code{reporting_map}
+\item \code{notes}
+}
 }
 \description{
 Computes person-level fit statistics for an MFRM bundle, extending
 the Infit / Outfit / ZSTD columns that \code{diagnose_mfrm()$measures}
 already exposes with the standardized log-likelihood \code{lz} and, when
 justified by the person-estimation method, Snijders' \verb{lz*}.
+}
+\details{
+\code{summary()} method: Summarize person-fit indices
+
+\code{summary()} method: \code{summary()} for \code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}} output gives a compact,
+report-ready reading order: first the number of persons and flags, then
+status counts, then the highest-priority review rows. The summary keeps
+\code{lz_star} availability visible so users do not silently treat uncorrected
+\code{lz} as Snijders-corrected output.
 }
 \section{References}{
 

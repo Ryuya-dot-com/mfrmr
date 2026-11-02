@@ -81,6 +81,9 @@ before reuse; the fitter does not silently recenter supplied anchors.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("make_anchor_table", run.dontrun = TRUE)
+\dontrun{
 ratings <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   ratings, "Person", c("Rater", "Criterion"), "Score",
@@ -90,6 +93,7 @@ fit <- fit_mfrm(
 # Select a facet deliberately; matching labels alone do not prove invariance.
 anchors_tbl <- make_anchor_table(fit, facets = "Rater")
 anchors_tbl
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}

@@ -24,7 +24,7 @@ procedure_problem <- function(fixed = integer()) {
 }
 
 test_that("one procedure performs real search, finish, checks and full-information selection", {
-  x <- procedure_problem(); a <- do.call(mfrm_gmfrm_procedure,x)
+  x <- procedure_problem(); a <- do.call(.mfrmr_research$mfrm_gmfrm_procedure,x)
   expect_identical(a$status,"local_candidate_selected")
   expect_named(a$attempts,c("first","second"))
   expect_equal(a$candidate$native_parameters,c(.2,-.3,log(2)),tolerance=1e-9)
@@ -45,7 +45,7 @@ test_that("one procedure performs real search, finish, checks and full-informati
 })
 
 test_that("original constrained nuisance information stays conditional throughout the procedure", {
-  x <- procedure_problem(1L); a <- do.call(mfrm_gmfrm_procedure,x)
+  x <- procedure_problem(1L); a <- do.call(.mfrmr_research$mfrm_gmfrm_procedure,x)
   expect_identical(a$status,"local_candidate_selected")
   H <- matrix(c(4,1,.5,1,3,.4,.5,.4,2),3)
   answer <- c(.7,c(-.3,log(2))-drop(solve(H[2:3,2:3],H[2:3,1]*.5)))
@@ -55,7 +55,7 @@ test_that("original constrained nuisance information stays conditional throughou
     expect_identical(attempt$candidate$selected$parameters[1],.7)
     expect_identical(attempt$candidate$information$free,2:3)
   }
-  target <- mfrm_gmfrm_candidate_target(a$candidate,x$natural,c(0,1,-1))
+  target <- .mfrmr_research$mfrm_gmfrm_candidate_target(a$candidate,x$natural,c(0,1,-1))
   expect_true(target$defined); expect_true(is.na(target$local_variance))
 })
 
@@ -67,7 +67,7 @@ test_that("boundary results bypass native inverse and Hessian and retain referen
     expect_null(p)
     list(reference=list(nll=x$natural$evaluate(z)$value))
   }
-  a <- do.call(mfrm_gmfrm_procedure,x)
+  a <- do.call(.mfrmr_research$mfrm_gmfrm_procedure,x)
   expect_identical(a$status,"no_qualified_candidate")
   expect_true(all(is.finite(a$reference_nll)))
   for(attempt in a$attempts) {
@@ -76,7 +76,7 @@ test_that("boundary results bypass native inverse and Hessian and retain referen
     expect_false("finish" %in% names(attempt$stages))
   }
   x$reference <- function(...) stop("Independent integral refused")
-  b <- do.call(mfrm_gmfrm_procedure,x)
+  b <- do.call(.mfrmr_research$mfrm_gmfrm_procedure,x)
   expect_true(all(is.na(b$reference_nll)))
   expect_identical(b$status,"no_qualified_candidate")
   expect_identical(b$attempts$first$failed_stages,"reference")
@@ -90,7 +90,7 @@ test_that("failure before any finite endpoint does not disappear from the prescr
     if(z[1]>5) { warning("initial diagnostic"); stop("initial integral refused") }
     original(z)
   }
-  a <- do.call(mfrm_gmfrm_procedure,x)
+  a <- do.call(.mfrmr_research$mfrm_gmfrm_procedure,x)
   expect_identical(a$status,"incomplete_start_execution")
   expect_named(a$attempts,c("first","second"))
   expect_null(a$candidate); expect_null(a$selection)
@@ -102,8 +102,8 @@ test_that("failure before any finite endpoint does not disappear from the prescr
 
 test_that("failed finish and contradictory chart or reference cannot expose information", {
   x <- procedure_problem()
-  testthat::local_mocked_bindings(mfrm_gmfrm_finish_interior=function(...) stop("finish refused"))
-  a <- do.call(mfrm_gmfrm_procedure,x)
+  local_research_bindings(mfrm_gmfrm_finish_interior=function(...) stop("finish refused"))
+  a <- do.call(.mfrmr_research$mfrm_gmfrm_procedure,x)
   expect_identical(a$status,"no_qualified_candidate")
   expect_identical(a$attempts$first$failed_stages,"finish")
   expect_null(a$attempts$first$candidate$information)
@@ -120,13 +120,13 @@ test_that("reference criteria are computed from its values rather than trusting 
       if(field=="error") a$score_error$rule[1] <- .1
       a
     }
-    a <- do.call(mfrm_gmfrm_procedure,x)
+    a <- do.call(.mfrmr_research$mfrm_gmfrm_procedure,x)
     expect_identical(a$status,"no_qualified_candidate")
     expect_null(a$attempts$first$candidate$information)
     expect_false(a$attempts$first$stages$reference$value$passed)
   }
   x <- procedure_problem(); x$reference <- function(...) stop("reference refused")
-  a <- do.call(mfrm_gmfrm_procedure,x)
+  a <- do.call(.mfrmr_research$mfrm_gmfrm_procedure,x)
   expect_identical(a$attempts$first$failed_stages,"reference")
   expect_identical(a$attempts$first$candidate$status,"reference_unresolved")
 })
@@ -134,11 +134,11 @@ test_that("reference criteria are computed from its values rather than trusting 
 test_that("incompatible fixed coordinates and differing nulls are rejected before fitting", {
   x <- procedure_problem(3L)
   x$natural$evaluate <- function(...) stop("should not fit")
-  expect_error(do.call(mfrm_gmfrm_procedure,x),"transformed constraint")
+  expect_error(do.call(.mfrmr_research$mfrm_gmfrm_procedure,x),"transformed constraint")
   x <- procedure_problem(1L); x$starts$second[1] <- .8
-  expect_error(do.call(mfrm_gmfrm_procedure,x),"same original constraint")
+  expect_error(do.call(.mfrmr_research$mfrm_gmfrm_procedure,x),"same original constraint")
   x <- procedure_problem(); names(x$starts) <- c("first","first")
-  expect_error(do.call(mfrm_gmfrm_procedure,x),"Invalid private")
+  expect_error(do.call(.mfrmr_research$mfrm_gmfrm_procedure,x),"Invalid private")
 })
 
 test_that("generic inverse and Jacobian use actual model targets across ladders and charts", {
@@ -148,8 +148,8 @@ test_that("generic inverse and Jacobian use actual model targets across ladders 
     problem <- mfrm_gmfrm_problem(d,K,gauss_hermite_normal(15L),c("Item","Judge"),"Examinee","Rating")
     x <- problem$common; par <- .1*sin(seq_along(problem$start))
     for(chart in c("rater_intercepts","common_scale")) {
-      ev <- mfrm_gmfrm_natural_evaluator(x$idx,x$config,x$sizes,chart)
-      z <- ev$from_native(par); map <- mfrm_gmfrm_procedure_map(z,ev)
+      ev <- .mfrmr_research$mfrm_gmfrm_natural_evaluator(x$idx,x$config,x$sizes,chart)
+      z <- ev$from_native(par); map <- .mfrmr_research$mfrm_gmfrm_procedure_map(z,ev)
       expect_equal(map$parameters,par,tolerance=1e-12)
       numerical <- vapply(seq_along(par),function(j) {
         delta <- par*0; delta[j] <- 1e-6

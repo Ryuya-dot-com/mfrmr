@@ -48,10 +48,10 @@ test_that("interior charts preserve response likelihood, scores and native targe
     problem <- mfrm_gmfrm_problem(d, K, gauss_hermite_normal(15L),
       c("Item name", "Judge name"), "Candidate", "Rating")
     x <- problem$common; par <- .2 * sin(seq_along(problem$start))
-    native <- mfrm_gmfrm_segmented_evaluator(x$idx, x$config, x$sizes)
+    native <- .mfrmr_research$mfrm_gmfrm_segmented_evaluator(x$idx, x$config, x$sizes)
     original <- native$evaluate(par)
     for (chart in c("rater_intercepts", "common_scale")) {
-      map <- mfrm_gmfrm_coordinates(x$config, x$sizes, chart)
+      map <- .mfrmr_research$mfrm_gmfrm_coordinates(x$config, x$sizes, chart)
       z <- map$to_chart(par); decoded <- map$decode(z)
       expect_equal(decoded$parameters, par, tolerance = 1e-14)
       h <- 1e-5
@@ -60,7 +60,7 @@ test_that("interior charts preserve response likelihood, scores and native targe
         (map$decode(z + v)$parameters - map$decode(z - v)$parameters) / (2*h)
       }, numeric(length(z)))
       expect_lt(max(abs(J - decoded$jacobian)), 1e-9)
-      ev <- mfrm_gmfrm_coordinate_evaluator(native, map)
+      ev <- .mfrmr_research$mfrm_gmfrm_coordinate_evaluator(native, map)
       result <- ev$evaluate(z)
       literal <- function(z) coordinate_literal_nll(z, chart, problem$specification)
       expect_lt(abs(result$value - literal(z)), 1e-9)
@@ -87,7 +87,7 @@ test_that("interior charts preserve response likelihood, scores and native targe
       path <- tempfile(fileext = ".rds"); on.exit(unlink(path), add = TRUE)
       saveRDS(list(z = z, config = x$config, sizes = x$sizes), path)
       restored <- readRDS(path)
-      expect_equal(mfrm_gmfrm_coordinates(restored$config, restored$sizes, chart)$decode(restored$z), decoded)
+      expect_equal(.mfrmr_research$mfrm_gmfrm_coordinates(restored$config, restored$sizes, chart)$decode(restored$z), decoded)
       expect_error(map$decode(NULL), "finite real vector")
       expect_error(map$decode(replace(z, 1, NA)), "finite real vector")
       expect_error(map$decode(z + 1i), "finite real vector")
@@ -98,7 +98,7 @@ test_that("interior charts preserve response likelihood, scores and native targe
       expect_equal(ev$value(z), result$value, tolerance = 0)
     }
     cfg <- x$config; cfg$facet_specs[[1]]$anchors[1] <- 0
-    expect_error(mfrm_gmfrm_coordinates(cfg, x$sizes), "unanchored")
+    expect_error(.mfrmr_research$mfrm_gmfrm_coordinates(cfg, x$sizes), "unanchored")
   }
 })
 
@@ -106,13 +106,13 @@ test_that("transformed integration errors cannot inherit a native pass", {
   d <- expand.grid(Person = c("p1", "p2", "p3"), Task = c("t1", "t2"), Rater = c("r1", "r2"))
   d$Score <- rep(0:2, length.out = nrow(d))
   x <- mfrm_gmfrm_problem(d, 2, gauss_hermite_normal(15L))$common
-  map <- mfrm_gmfrm_coordinates(x$config, x$sizes, "rater_intercepts")
+  map <- .mfrmr_research$mfrm_gmfrm_coordinates(x$config, x$sizes, "rater_intercepts")
   z <- numeric(map$dimension); z[length(z)] <- log(1e-8)
   fake <- list(evaluate = function(par) list(value = 2, gradient = rep(0, length(par)),
     integration = c(NLLRuleDifference = 0, ScoreRuleDifference = 1e-10,
       TailNLLBound = 0, TailScoreBound = 1e-12),
     score_error = list(rule = rep(1e-10, length(par)), tail = rep(1e-12, length(par)))))
-  ev <- mfrm_gmfrm_coordinate_evaluator(fake, map)
+  ev <- .mfrmr_research$mfrm_gmfrm_coordinate_evaluator(fake, map)
   err <- tryCatch(ev$evaluate(z), error = identity)
   expect_s3_class(err, "mfrmr_adaptive_quadrature_numeric_error")
   expect_gt(err$integration["ScoreRuleDifference"], 1e-6)
@@ -124,5 +124,5 @@ test_that("transformed integration errors cannot inherit a native pass", {
   expect_equal(answer$score_error$rule, drop(crossprod(abs(map$decode(z)$jacobian),
     rep(1e-10, length(z)))))
   fake$evaluate <- function(par) list(value = 2, gradient = rep(0, length(par)))
-  expect_error(mfrm_gmfrm_coordinate_evaluator(fake, map)$value(z), "componentwise")
+  expect_error(.mfrmr_research$mfrm_gmfrm_coordinate_evaluator(fake, map)$value(z), "componentwise")
 })

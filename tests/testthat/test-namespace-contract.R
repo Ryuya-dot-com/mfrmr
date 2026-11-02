@@ -8,20 +8,21 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
   exports <- sub("^export\\((.*)\\)$", "\\1", grep("^export\\(", ns_lines, value = TRUE))
   expect_false(any(c(
     "evaluate_mfrm_recovery", "build_peer_review_design_review",
-    "gpcm_score_side_contract", "gpcm_runtime_guard_coverage"
+    "gpcm_score_side_contract", "gpcm_runtime_guard_coverage",
+    "anchor_review", "precision_review",
+    "import_mirt_fit", "import_tam_fit", "import_erm_fit",
+    "read_facets_fit_table", "mfrmr_interval_guide",
+    "visual_reporting_template", "gpcm_capability_matrix",
+    "mfrm_calibration_capabilities"
   ) %in% exports))
   expected_exports <- c(
     "mfrm_residual_network",
     "fit_rater_network",
     "mfrm_features",
     "mfrm_cluster",
-    "mfrm_cluster_pam",
     "mfrm_pca",
-    "mfrm_cluster_kmeans",
-    "mfrm_cluster_hierarchical",
     "mfrm_cluster_imputed",
     "mfrm_cluster_compare",
-    "mfrm_response_imputations",
     "review_mfrm_imputations",
     "fit_mfrm_imputed",
     "pool_mfrm_imputed",
@@ -37,10 +38,8 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "analyze_dff",
     "mantel_haenszel_table",
     "ordinal_logistic_table",
-    "analyze_dif",
     "analyze_facet_equivalence",
     "analyze_residual_pca",
-    "anchor_review",
     "anchor_to_baseline",
     "assess_mfrm_recovery",
     "apa_table",
@@ -90,35 +89,30 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "facet_quality_dashboard",
     "facet_statistics_report",
     "facets_chisq_table",
-    "facets_feature_coverage",
+    "facets_guide",
     "facets_output_file_bundle",
     "facets_output_contract_review",
     "fair_average_table",
     "fit_mfrm",
-    "gpcm_capability_matrix",
     "interaction_effect_table",
     "interrater_agreement_table",
     "list_mfrmr_data",
     "load_mfrmr_data",
     "make_anchor_table",
     "measurable_summary_table",
-    "mfrmRFacets",
     "mfrm_d_study",
     "mfrm_network_analysis",
     "mfrm_results",
     "mfrm_results_interactive",
     "rater_network_analysis",
     "rater_halo_network_analysis",
-    "mfrmr_interval_guide",
     "mfrmr_output_guide",
     "mfrm_threshold_profiles",
     "normalize_conquest_overlap_exports",
-    "normalize_conquest_overlap_files",
     "normalize_conquest_overlap_tables",
     "predict_mfrm_population",
     "predict_mfrm_units",
     "sample_mfrm_plausible_values",
-    "precision_review",
     "precision_review_report",
     "rating_scale_table",
     "recommend_mfrm_design",
@@ -134,7 +128,6 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "subset_connectivity_report",
     "unexpected_after_bias_table",
     "unexpected_response_table",
-    "visual_reporting_template",
     "write_mfrm_residual_file",
     "write_mfrm_subset_file",
     # Hierarchical review exports added in 0.1.6.
@@ -162,9 +155,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "mfrm_g_study",
 
     "mfrm_multivariate_d_compare",
-    "import_mirt_fit",
-    "import_tam_fit",
-    "import_erm_fit"
+    "import_irt_fit"
   )
   # Retain the baseline except the explicitly retired 0.2.4 drawing helpers.
   expected_exports <- c(expected_exports, "score_mfrm_random_rater", "score_mfrm_persons")
@@ -180,10 +171,18 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
   s3 <- grep("^S3method\\(", ns_lines, value = TRUE)
   expected_s3 <- c(
     "S3method(confint,mfrm_facet_intervals)",
+    "S3method(as.data.frame,mfrm_posterior_summary)",
     "S3method(confint,mfrm_posterior_summary)",
     "S3method(plot,mfrm_posterior_summary)",
     "S3method(print,mfrm_posterior_summary)",
     "S3method(summary,mfrm_posterior_summary)",
+    "S3method(predict,mfrm_posterior_summary)",
+    "S3method(as.data.frame,mfrm_posterior_scores)",
+    "S3method(confint,mfrm_posterior_scores)",
+    "S3method(plot,mfrm_posterior_scores)",
+    "S3method(print,mfrm_posterior_scores)",
+    "S3method(summary,mfrm_posterior_scores)",
+    "S3method(print,summary.mfrm_posterior_scores)",
     "S3method(coef,mfrm_network_ergm)",
     "S3method(confint,mfrm_network_ergm)",
     "S3method(vcov,mfrm_network_ergm)",
@@ -547,6 +546,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(print,mfrm_calibration)",
     "S3method(print,summary.mfrm_calibration)",
     "S3method(summary,mfrm_calibration)",
+    "S3method(update,mfrm_calibration)",
     "S3method(plot,mfrm_calibration_score)",
     "S3method(print,mfrm_calibration_score)",
     "S3method(print,summary.mfrm_calibration_score)",
@@ -568,7 +568,12 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(summary,mfrm_fair_intervals)",
     "S3method(vcov,mfrm_facet_intervals)"
   )
-  expect_setequal(s3, expected_s3)
+  # A registered generic/class key may share an existing implementation.
+  s3_keys <- vapply(parse(text = s3), function(entry) {
+    paste0("S3method(", deparse(entry[[2L]]), ",",
+           deparse(entry[[3L]]), ")")
+  }, character(1))
+  expect_setequal(s3_keys, expected_s3)
 })
 
 

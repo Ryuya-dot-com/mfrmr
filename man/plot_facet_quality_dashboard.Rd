@@ -69,7 +69,7 @@ For new code, prefer \code{title}; do not supply both arguments.}
 
 \item{label_angle}{Label angle hint for the \code{"flags"} plot.}
 
-\item{draw}{If \code{TRUE}, draw with base graphics.}
+\item{draw}{If \code{TRUE}, print the \code{ggplot} object.}
 
 \item{...}{Reserved for generic compatibility.}
 
@@ -81,7 +81,8 @@ is an error, even if equal or \code{NULL}. Positional legacy arguments retain
 their order; use the exact name \code{title}.}
 }
 \value{
-A plotting-data object of class \code{mfrm_plot_data}.
+Invisibly, a \code{ggplot} object. Use \code{\link[=plot_data]{plot_data()}} to retrieve its
+reusable plotting data and notes.
 }
 \description{
 Plot a facet-quality dashboard
@@ -100,13 +101,17 @@ This renderer is internal. Use the corresponding \code{plot()} route in
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot_facet_quality_dashboard", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 fit <- example_fit$fit
 diag <- example_fit$diagnostics
 p <- plot(fit, type = "facet_dashboard", diagnostics = diag, draw = FALSE)
-p$data$plot
+plot_data(p, "plot")
+}
 }
 \seealso{
 \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}, \code{\link[=summary.mfrm_facet_dashboard]{summary.mfrm_facet_dashboard()}}

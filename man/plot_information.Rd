@@ -18,18 +18,19 @@ plot_information(
 \item{type}{\code{"tif"} for the overall precision curve (default), \code{"iif"} for
 facet-level contribution curves, \code{"se"} / \code{"sem"} / \code{"csem"} for the
 conditional standard error of measurement implied by that curve, or
-\code{"both"} for precision with conditional SEM on a secondary axis.}
+\code{"both"} for precision and conditional SEM in separate panels.}
 
 \item{facet}{For \code{type = "iif"}, which facet to plot. If \code{NULL},
 the first facet is used.}
 
 \item{draw}{If \code{TRUE} (default), draw the plot. If \code{FALSE}, return
-reusable \code{mfrm_plot_data} invisibly.}
+the \code{ggplot} object invisibly without printing.}
 
 \item{...}{Additional graphical parameters.}
 }
 \value{
-Invisibly, an \code{mfrm_plot_data} object.
+Invisibly, a \code{ggplot} object. Use \code{\link[=plot_data]{plot_data()}} to retrieve its
+reusable plotting data and notes.
 }
 \description{
 Visualize the design-weighted precision curve and optionally
@@ -74,8 +75,8 @@ realized design may be poorly targeted.
 
 \section{Returned data when draw = FALSE}{
 
-\code{draw = FALSE} returns an \code{mfrm_plot_data} object. The underlying plotting
-data are stored in \verb{$data$plot}. For \code{type = "tif"}, \code{"se"}, or \code{"both"},
+\code{draw = FALSE} returns a \code{ggplot} object without printing. Read its plotting
+data with \code{plot_data(p, "plot")}. For \code{type = "tif"}, \code{"se"}, or \code{"both"},
 those rows come from \code{x$tif}. For \code{type = "iif"}, the returned rows come
 from \code{x$iif} filtered to the requested facet. The plot data also include
 \code{plot_long}, \code{information_long}, \code{conditional_sem}, \code{summary}, and

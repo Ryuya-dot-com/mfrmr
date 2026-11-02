@@ -73,7 +73,8 @@ test_that("design recommendations retain failed runs in convergence denominators
   expect_equal(s$overview$Replications, 30)
   expect_equal(s$overview$ConvergedRuns, 11)
   p <- plot(x, facet = "Rater", metric = "convergencerate", draw = FALSE)
-  expect_equal(p$data$y, c(.1, 1))
+  expect_s3_class(p, "ggplot")
+  expect_equal(plot_data(p, "data")$y, c(.1, 1))
   expect_identical(recommend_mfrm_design(x)$recommended$design_id, "D2")
   expect_identical(recommend_mfrm_design(s)$recommended$design_id, "D2")
 
@@ -104,11 +105,13 @@ test_that("recommendations do not rebuild unrelated planning appendices", {
 test_that("design decisions preserve full precision through summaries and saved results", {
   boundaries <- c(Separation = 1.9999996, Reliability = .7999996,
                   SeverityRMSE = .5000004, MisfitRate = .1000004)
-  for (metric in names(boundaries)) {
+  metrics <- if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) names(boundaries) else c("Reliability", "SeverityRMSE")
+  for (metric in metrics) {
     x <- design_evaluation_denominator_fixture()
     x$results[[metric]][x$results$design_id == "D2"] <- boundaries[[metric]]
     expect_equal(nrow(recommend_mfrm_design(x)$recommended), 0L, info = metric)
-    for (digits in c(0L, 3L, 10L)) {
+    precisions <- if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) c(0L, 3L, 10L) else 0L
+    for (digits in precisions) {
       s <- summary(x, digits = digits)
       column <- paste0("Mean", metric)
       expect_equal(s$design_summary[[column]][s$design_summary$design_id == "D2"],
@@ -321,6 +324,8 @@ test_that("missing connectivity records cannot pass the default screen", {
 })
 
 test_that("assignment topology reaches recommendations independently of fit metrics", {
+  # Detailed propagation remains in the extended local/CI suite.
+  skip_on_cran()
   captured <- NULL
   # Hold fit quality constant to isolate the public design/recommendation path.
   testthat::local_mocked_bindings(

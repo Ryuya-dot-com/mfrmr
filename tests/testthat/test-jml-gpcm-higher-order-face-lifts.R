@@ -1,26 +1,26 @@
 test_that("ordered owner-rate hierarchy counts and generators are exact", {
   expected <- c(1, 3, 13, 75, 541, 4683, 47293)
   observed <- vapply(seq_along(expected), function(elements) {
-    mfrmr:::mfrmr_jml_gpcm_higher_order_lift_partition_count(elements)
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_lift_partition_count(elements)
   }, numeric(1))
   expect_identical(observed, expected)
   expect_identical(
-    mfrmr:::mfrmr_jml_gpcm_higher_order_lift_partition_count(3, 1),
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_lift_partition_count(3, 1),
     1
   )
   expect_identical(
-    mfrmr:::mfrmr_jml_gpcm_higher_order_lift_partition_count(3, 2),
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_lift_partition_count(3, 2),
     7
   )
   expect_identical(
-    mfrmr:::mfrmr_jml_gpcm_higher_order_lift_partition_count(0),
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_lift_partition_count(0),
     0
   )
 
-  one_stage <- mfrmr:::mfrmr_jml_gpcm_higher_order_lift_surjections(3, 1)
+  one_stage <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_lift_surjections(3, 1)
   expect_length(one_stage, 1L)
   expect_identical(one_stage[[1]], rep(1L, 3))
-  two_stage <- mfrmr:::mfrmr_jml_gpcm_higher_order_lift_surjections(3, 2)
+  two_stage <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_lift_surjections(3, 2)
   expect_length(two_stage, 6L)
   expect_true(all(vapply(two_stage, function(value) {
     identical(sort(unique(value)), 1:2)
@@ -31,7 +31,7 @@ test_that("ordered owner-rate hierarchy counts and generators are exact", {
     character(1),
     collapse = ","
   ))), 6L)
-  three_stage <- mfrmr:::mfrmr_jml_gpcm_higher_order_lift_surjections(3, 3)
+  three_stage <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_lift_surjections(3, 3)
   expect_length(three_stage, 6L)
   expect_true(all(vapply(three_stage, function(value) {
     identical(sort(value), 1:3)
@@ -45,7 +45,7 @@ test_that("ordered owner-rate hierarchy counts and generators are exact", {
 test_that("finite and outer-excluded P2j sources short-circuit safely", {
   skip_if_not_installed("lpSolve")
 
-  finite <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_p2i_fixture(
+  finite <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_p2i_fixture(
     c(2, 1, 4, 1)
   )
   expect_identical(
@@ -97,7 +97,7 @@ test_that("finite and outer-excluded P2j sources short-circuit safely", {
     "general_boundary_likelihood_envelope_over_rate_hierarchies"
   )
 
-  outside <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_p2i_fixture(
+  outside <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_p2i_fixture(
     c(1, 2, 2, 1)
   )
   expect_identical(
@@ -112,12 +112,12 @@ test_that("finite and outer-excluded P2j sources short-circuit safely", {
   expect_identical(outside$hierarchy_count, 0L)
 
   one_owner_design <- rbind(c(1, 0), c(0, 1), c(1, 1))
-  one_owner_source <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  one_owner_source <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     one_owner_design,
     rep(1, 3),
     c(1, 2, 4)
   )
-  one_owner <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(
+  one_owner <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(
     one_owner_source
   )
   expect_identical(
@@ -130,7 +130,7 @@ test_that("finite and outer-excluded P2j sources short-circuit safely", {
 test_that("higher-order chart recovers both minimal P2i missing axes", {
   skip_if_not_installed("lpSolve")
 
-  owner_1 <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_p2i_fixture(
+  owner_1 <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_p2i_fixture(
     c(log(2), log(4), 0, 0)
   )
   expect_identical(
@@ -166,7 +166,7 @@ test_that("higher-order chart recovers both minimal P2i missing axes", {
     1e-12
   )
 
-  owner_2 <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_p2i_fixture(
+  owner_2 <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_p2i_fixture(
     c(0, 0, 1, 2)
   )
   expect_identical(
@@ -184,10 +184,10 @@ test_that("a hierarchy certificate gives a finite product-one path", {
   skip_if_not_installed("lpSolve")
 
   target <- c(log(2), log(4), 0, 0)
-  result <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_p2i_fixture(target)
+  result <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_p2i_fixture(target)
   indices <- c(0, 1, 3, 8, 20)
   paths <- lapply(indices, function(index) {
-    mfrmr:::mfrmr_jml_gpcm_higher_order_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_path_at(
       result,
       "rates_1_0",
       index
@@ -217,7 +217,7 @@ test_that("a hierarchy certificate gives a finite product-one path", {
     path$maximum_absolute_raw_equation_residual <= 1e-14
   }, logical(1))))
   expect_true(all(vapply(paths, function(path) {
-    mfrmr:::mfrmr_jml_gpcm_binary_closure_image_state(
+    .mfrmr_research$mfrmr_jml_gpcm_binary_closure_image_state(
       path$contrasts
     )$finite_response_image
   }, logical(1))))
@@ -237,7 +237,7 @@ test_that("higher stages resolve first-order-open rank-one faces", {
   skip_if_not_installed("lpSolve")
 
   design <- matrix(1, nrow = 3, ncol = 1)
-  source <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  source <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     1:3,
     c(1, 0, 0)
@@ -246,7 +246,7 @@ test_that("higher stages resolve first-order-open rank-one faces", {
     source$state,
     "reachable_missing_boundary_face_certified"
   )
-  result <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(source)
+  result <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(source)
   expect_identical(
     result$state,
     "missing_boundary_hierarchy_lift_certified"
@@ -284,7 +284,7 @@ test_that("higher stages resolve first-order-open rank-one faces", {
 
   indices <- c(0, 1, 3, 8, 15)
   paths <- lapply(indices, function(index) {
-    mfrmr:::mfrmr_jml_gpcm_higher_order_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_path_at(
       result,
       "rates_2_0_1",
       index
@@ -314,7 +314,7 @@ test_that("all higher hierarchies exclude the P2j outer-only counterexample", {
   skip_if_not_installed("lpSolve")
 
   design <- matrix(1, nrow = 3, ncol = 1)
-  source <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  source <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     1:3,
     c(1, -2, 0)
@@ -326,7 +326,7 @@ test_that("all higher hierarchies exclude the P2j outer-only counterexample", {
   expect_true(source$nonnegative_simplex_face_witness_exists)
   expect_true(source$response_image_closure_membership_open)
 
-  result <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(source)
+  result <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(source)
   expect_identical(
     result$state,
     "outside_closure_all_rate_hierarchies_excluded"
@@ -353,7 +353,7 @@ test_that("all higher hierarchies exclude the P2j outer-only counterexample", {
 test_that("small positive hierarchy margins remain open until certified", {
   skip_if_not_installed("lpSolve")
 
-  source <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  source <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     matrix(1, nrow = 3, ncol = 1),
     1:3,
     c(1, 1e6, 0)
@@ -361,7 +361,7 @@ test_that("small positive hierarchy margins remain open until certified", {
   expect_true(source$response_image_face_chart_classified)
   expect_true(source$reachable_missing_finite_boundary_certified)
 
-  guarded <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(
+  guarded <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(
     source,
     certificate_tolerance = 1e-05
   )
@@ -388,7 +388,7 @@ test_that("small positive hierarchy margins remain open until certified", {
     1e-05
   )
 
-  resolved <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(
+  resolved <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(
     source,
     certificate_tolerance = 1e-08
   )
@@ -407,20 +407,20 @@ test_that("hierarchy classification is invariant to response-row order", {
   design <- matrix(1, nrow = 3, ncol = 1)
   owner <- 1:3
   target <- c(1, 0, 0)
-  source <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  source <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design,
     owner,
     target
   )
-  result <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(source)
+  result <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(source)
 
   permutation <- c(3, 1, 2)
-  permuted_source <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  permuted_source <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     design[permutation, , drop = FALSE],
     owner[permutation],
     target[permutation]
   )
-  permuted <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(
+  permuted <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(
     permuted_source
   )
   expect_identical(permuted$state, result$state)
@@ -442,7 +442,7 @@ test_that("hierarchy classification is invariant to response-row order", {
 test_that("higher-order source, workload, solver, and path controls fail closed", {
   skip_if_not_installed("lpSolve")
 
-  source <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  source <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     matrix(1, nrow = 3, ncol = 1),
     1:3,
     c(1, 0, 0)
@@ -457,7 +457,7 @@ test_that("higher-order source, workload, solver, and path controls fail closed"
   )
   for (controls in control_cases) {
     result <- do.call(
-      mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts,
+      .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts,
       c(list(source), controls)
     )
     expect_identical(result$state, "not_evaluated_control")
@@ -473,13 +473,13 @@ test_that("higher-order source, workload, solver, and path controls fail closed"
     within(source, zero_affine_offset_certified <- FALSE)
   )
   for (invalid in invalid_sources) {
-    result <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(invalid)
+    result <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(invalid)
     expect_identical(result$state, "not_evaluated_source")
     expect_false(result$evaluated)
     expect_false(result$higher_order_face_lifts_classified)
   }
 
-  near_source <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  near_source <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     adjacent_design = rbind(
       c(1, 0, -1),
       c(0, 1, -1),
@@ -492,18 +492,18 @@ test_that("higher-order source, workload, solver, and path controls fail closed"
   )
   expect_false(near_source$response_image_face_chart_classified)
   expect_identical(
-    mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(near_source)$state,
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(near_source)$state,
     "not_evaluated_source"
   )
 
-  stage_cap <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(
+  stage_cap <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(
     source,
     max_stages = 1
   )
   expect_identical(stage_cap$state, "not_evaluated_stage_cap")
   expect_false(stage_cap$evaluated)
 
-  hierarchy_cap <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(
+  hierarchy_cap <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(
     source,
     max_hierarchies = 6
   )
@@ -514,7 +514,7 @@ test_that("higher-order source, workload, solver, and path controls fail closed"
   expect_false(hierarchy_cap$evaluated)
   expect_identical(hierarchy_cap$expected_hierarchy_count, 7)
 
-  equation_cap <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(
+  equation_cap <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(
     source,
     max_equations = 1
   )
@@ -522,7 +522,7 @@ test_that("higher-order source, workload, solver, and path controls fail closed"
   expect_true(equation_cap$evaluated)
   expect_false(equation_cap$higher_order_face_lifts_classified)
 
-  nonzero_cap <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(
+  nonzero_cap <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(
     source,
     max_lp_nonzeros = 1
   )
@@ -530,7 +530,7 @@ test_that("higher-order source, workload, solver, and path controls fail closed"
   expect_true(nonzero_cap$evaluated)
   expect_false(nonzero_cap$higher_order_face_lifts_classified)
 
-  valid <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(source)
+  valid <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(source)
   invalid_path_sources <- list(
     1,
     within(valid, contract_version <- "legacy"),
@@ -538,7 +538,7 @@ test_that("higher-order source, workload, solver, and path controls fail closed"
   )
   invalid_ids <- c("rates_2_0_1", "rates_2_0_1", "unknown")
   for (position in seq_along(invalid_path_sources)) {
-    path <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_path_at(
+    path <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_path_at(
       invalid_path_sources[[position]],
       invalid_ids[position],
       1
@@ -547,21 +547,21 @@ test_that("higher-order source, workload, solver, and path controls fail closed"
     expect_identical(path$state, "not_evaluated_higher_order_path")
   }
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_higher_order_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_path_at(
       valid,
       "rates_2_0_1",
       -1
     )$valid
   )
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_higher_order_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_path_at(
       valid,
       "rates_2_0_1",
       101
     )$valid
   )
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_higher_order_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_path_at(
       valid,
       "rates_2_0_1",
       10,
@@ -569,26 +569,26 @@ test_that("higher-order source, workload, solver, and path controls fail closed"
     )$valid
   )
 
-  finite <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_p2i_fixture(
+  finite <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_p2i_fixture(
     c(2, 1, 4, 1)
   )
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_higher_order_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_path_at(
       finite,
       "rates_0_0",
       1
     )$valid
   )
-  excluded_source <- mfrmr:::mfrmr_jml_gpcm_response_image_face_chart(
+  excluded_source <- .mfrmr_research$mfrmr_jml_gpcm_response_image_face_chart(
     matrix(1, nrow = 3, ncol = 1),
     1:3,
     c(1, -2, 0)
   )
-  excluded <- mfrmr:::mfrmr_jml_gpcm_higher_order_face_lifts(
+  excluded <- .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_lifts(
     excluded_source
   )
   expect_false(
-    mfrmr:::mfrmr_jml_gpcm_higher_order_face_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_higher_order_face_path_at(
       excluded,
       "rates_1_1_0",
       1

@@ -83,6 +83,9 @@ CML comparison fits add conditional-information SEs and pointwise
 unidentified rows remain missing. The ordinary full-fit route above remains unchanged.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("interaction_effect_table", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy, person = "Person", facets = c("Rater", "Criterion"),
@@ -91,6 +94,7 @@ fit <- fit_mfrm(
   quad_points = 7, maxit = 30
 )
 head(interaction_effect_table(fit))
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}},

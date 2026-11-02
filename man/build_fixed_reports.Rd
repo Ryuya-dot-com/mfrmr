@@ -126,6 +126,9 @@ artifact is specifically required for a compatibility handoff.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("build_fixed_reports", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
@@ -146,6 +149,7 @@ if (interactive()) {
     palette = c(pos = "#1b9e77", neg = "#d95f02"),
     label_angle = 45
   )
+}
 }
 }
 \seealso{

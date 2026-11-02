@@ -72,7 +72,7 @@ schema/metric contract encoded in the contract file.
 This helper is unavailable for \code{GPCM} fits because the FACETS
 output contract includes score-side rows whose measure-to-score and
 uncertainty semantics are supported for the Rasch-family route, not
-for free-discrimination \code{GPCM}. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} before
+for free-discrimination \code{GPCM}. Use \code{mfrmr_output_guide("gpcm_capabilities")} before
 routing a \code{GPCM} fit into score-side compatibility-output helpers.
 
 Coverage interpretation in \code{overall}:

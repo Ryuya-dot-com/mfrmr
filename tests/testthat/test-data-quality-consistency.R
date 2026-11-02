@@ -141,7 +141,8 @@ test_that("quality flags and overview summarize the same QC evidence", {
   }
 
   p_flags <- plot(dq, type = "quality_flags", draw = FALSE)
-  plot_tbl <- as.data.frame(p_flags$data$table, stringsAsFactors = FALSE)
+  expect_s3_class(p_flags, "ggplot")
+  plot_tbl <- as.data.frame(plot_data(p_flags, "table"), stringsAsFactors = FALSE)
   manual_plot <- flags |>
     dplyr::group_by(.data$Area) |>
     dplyr::summarise(
@@ -155,8 +156,8 @@ test_that("quality flags and overview summarize the same QC evidence", {
     as.data.frame(stringsAsFactors = FALSE)
   row.names(manual_plot) <- NULL
   expect_equal(plot_tbl, manual_plot)
-  expect_equal(p_flags$data$quality_flags, dq$quality_flags)
-  expect_equal(p_flags$data$quality_overview, dq$quality_overview)
+  expect_equal(plot_data(p_flags, "quality_flags"), dq$quality_flags)
+  expect_equal(plot_data(p_flags, "quality_overview"), dq$quality_overview)
 })
 
 test_that("facet category usage plot data follows category-usage summary ordering", {
@@ -190,12 +191,14 @@ test_that("facet category usage plot data follows category-usage summary orderin
     dplyr::slice_head(n = 4) |>
     as.data.frame(stringsAsFactors = FALSE)
   plot_obj <- plot(dq, type = "facet_category_usage", top_n = 4, draw = FALSE)
+  expect_s3_class(plot_obj, "ggplot")
+  plot_obj_tbl <- plot_data(plot_obj, "table")
 
-  expect_equal(plot_obj$data$table, expected)
-  expect_equal(plot_obj$data$top_n, 4L)
-  expect_true(any(plot_obj$data$table$Facet == "Rater" &
-                    plot_obj$data$table$Level == "R1" &
-                    plot_obj$data$table$IntermediateZeroCategories > 0))
+  expect_equal(plot_obj_tbl, expected)
+  expect_equal(plot_data(plot_obj, "top_n"), 4L)
+  expect_true(any(plot_obj_tbl$Facet == "Rater" &
+                    plot_obj_tbl$Level == "R1" &
+                    plot_obj_tbl$IntermediateZeroCategories > 0))
 })
 
 test_that("facet response-pattern flags and plot data preserve restricted scoring evidence", {
@@ -226,8 +229,9 @@ test_that("facet response-pattern flags and plot data preserve restricted scorin
     dplyr::slice_head(n = 5) |>
     as.data.frame(stringsAsFactors = FALSE)
   plot_obj <- plot(dq, type = "facet_response_patterns", top_n = 5, draw = FALSE)
-  expect_equal(plot_obj$data$table, expected)
-  expect_true(plot_obj$data$table$PatternStatus[1] %in% "high")
+  expect_s3_class(plot_obj, "ggplot")
+  expect_equal(plot_data(plot_obj, "table"), expected)
+  expect_true(plot_data(plot_obj, "table")$PatternStatus[1] %in% "high")
 })
 
 test_that("score-map plot data exposes original-label gaps hidden by recoding", {
@@ -245,7 +249,8 @@ test_that("score-map plot data exposes original-label gaps hidden by recoding", 
   expect_true(any(flags$Flag == "Original score sequence had gaps before recoding"))
 
   plot_obj <- plot(dq, type = "score_map", draw = FALSE)
-  plot_tbl <- as.data.frame(plot_obj$data$table, stringsAsFactors = FALSE)
+  expect_s3_class(plot_obj, "ggplot")
+  plot_tbl <- as.data.frame(plot_data(plot_obj, "table"), stringsAsFactors = FALSE)
   expected <- score_map[, c("OriginalScore", "InternalScore"), drop = FALSE]
   expected$OriginalNumeric <- suppressWarnings(as.numeric(expected$OriginalScore))
   expected$InternalNumeric <- suppressWarnings(as.numeric(expected$InternalScore))

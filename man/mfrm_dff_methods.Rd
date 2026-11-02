@@ -34,8 +34,8 @@
 \description{
 \code{summary()} returns the contrast, cell, summary, and configuration tables
 without refitting. A summary from \code{\link[=analyze_dff]{analyze_dff()}} keeps its DFF label when
-printed; a summary from \code{\link[=analyze_dif]{analyze_dif()}} keeps its DIF label.
+printed; a saved \code{mfrm_dif} summary keeps its DIF label.
 }
 \seealso{
-\code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}
+\code{\link[=analyze_dff]{analyze_dff()}}
 }

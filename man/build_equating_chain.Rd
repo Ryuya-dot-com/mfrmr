@@ -47,8 +47,6 @@ and disables magnitude flagging.}
 
 \item{x}{An \code{mfrm_equating_chain} object.}
 
-\item{...}{Ignored.}
-
 \item{y}{Unused (S3 plot signature requirement).}
 
 \item{type}{One of \code{"graph"} (bipartite wave x link-specific common-element
@@ -60,13 +58,15 @@ offsets), \code{"links"} (recorded wave comparisons), or \code{"anchor_removal"}
 
 \item{preset}{Visual preset.}
 
-\item{draw}{If \code{TRUE}, draw the plot with base graphics.}
+\item{draw}{If \code{TRUE}, print the \code{ggplot} object to the active device.}
 
 \item{show_title}{Logical; display the main title.}
 
 \item{show_notes}{Logical; display graph/topology interpretation footers.
 Returned notes and ordinary R warnings are unaffected. Axes, legends and
 data labels remain visible; other chain views have no interpretation footer.}
+
+\item{...}{Ignored.}
 
 \item{object}{An \code{mfrm_equating_chain} object (for \code{summary}).}
 }
@@ -79,6 +79,9 @@ Object of class \code{mfrm_equating_chain} with components:
 \item{common_by_facet}{Tibble of retained common-element counts by facet.}
 \item{config}{List of analysis configuration.}
 }
+
+Invisibly, a \code{ggplot} object carrying its saved plot payload for
+\code{\link[=plot_data]{plot_data()}}.
 }
 \description{
 Links a series of calibration waves by computing mean offsets between
@@ -311,33 +314,8 @@ figure titles and footers are omitted.
 
 \section{Session plot defaults}{
 
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
 }
 
 \examples{

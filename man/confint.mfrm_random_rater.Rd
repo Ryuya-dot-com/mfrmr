@@ -83,7 +83,7 @@ or minus \code{qnorm((1 + level)/2) * PredictionSE}. It targets realized,
 uncentered rater effects relative to the population mean. First-order
 calibration uncertainty does not ensure nominal coverage. In particular,
 few-rater coverage remains unresolved; see
-\code{vignette("mfrmr-random-raters")}. Requesting this approximation does not
+\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html}{online random-rater guide}. Requesting this approximation does not
 make it qualified for classification or exclusion of raters. It is not a
 profile interval, a bootstrap or an interval for a difference of raters.
 }

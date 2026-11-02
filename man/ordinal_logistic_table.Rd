@@ -129,6 +129,9 @@ agreement with \code{\link[=analyze_dff]{analyze_dff()}} or \code{\link[=mantel_
 establish robustness, and disagreement does not by itself establish DIF.
 }
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("ordinal_logistic_table", run.dontrun = TRUE)
+\dontrun{
 if (requireNamespace("ordinal", quietly = TRUE)) {
   d <- expand.grid(Match = c(-1, 0, 1), Group = c("R", "F"),
                    Score = 0:2, Replicate = 1:5)
@@ -138,6 +141,7 @@ if (requireNamespace("ordinal", quietly = TRUE)) {
                                "Match", c("R", "F"), 0:2)
   ol$table
   ol$proportional_odds
+}
 }
 }
 \references{

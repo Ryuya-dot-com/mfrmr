@@ -1,5 +1,5 @@
 test_that("minimal binary GPCM finite image and closure have exact strata", {
-  classify <- mfrmr:::mfrmr_jml_gpcm_binary_closure_image_state
+  classify <- .mfrmr_research$mfrmr_jml_gpcm_binary_closure_image_state
 
   positive <- classify(c(2, 1, 4, 1))
   expect_true(positive$valid)
@@ -55,7 +55,7 @@ test_that("minimal binary GPCM finite image and closure have exact strata", {
   expect_false(invalid$valid)
   expect_identical(invalid$state, "invalid_contrast_vector")
 
-  strata <- mfrmr:::mfrmr_jml_gpcm_binary_closure_strata()
+  strata <- .mfrmr_research$mfrmr_jml_gpcm_binary_closure_strata()
   expect_identical(nrow(strata), 5L)
   expect_identical(strata$Dimension, c(4L, 4L, 2L, 3L, 3L))
   expect_identical(
@@ -76,7 +76,7 @@ test_that("finite image points have exact inverse parameter representatives", {
   )
   for (point in points) {
     representative <-
-      mfrmr:::mfrmr_jml_gpcm_binary_closure_representative(point)
+      .mfrmr_research$mfrmr_jml_gpcm_binary_closure_representative(point)
     expect_true(representative$available)
     expect_equal(prod(representative$alpha), 1, tolerance = 1e-15)
     expect_equal(
@@ -92,7 +92,7 @@ test_that("finite image points have exact inverse parameter representatives", {
     )
   }
 
-  missing <- mfrmr:::mfrmr_jml_gpcm_binary_closure_representative(
+  missing <- .mfrmr_research$mfrmr_jml_gpcm_binary_closure_representative(
     c(1, 2, 0, 0)
   )
   expect_false(missing$available)
@@ -101,7 +101,7 @@ test_that("finite image points have exact inverse parameter representatives", {
 
 test_that("positive outcome masses give nonseparated boundary nonattainment", {
   result <-
-    mfrmr:::mfrmr_jml_gpcm_binary_closure_nonattainment_fixture()
+    .mfrmr_research$mfrmr_jml_gpcm_binary_closure_nonattainment_fixture()
   expected <- c(log(2), log(4), 0, 0)
 
   expect_identical(
@@ -196,10 +196,10 @@ test_that("positive outcome masses give nonseparated boundary nonattainment", {
 
 test_that("finite boundary paths converge to the nonattained supremum", {
   result <-
-    mfrmr:::mfrmr_jml_gpcm_binary_closure_nonattainment_fixture()
+    .mfrmr_research$mfrmr_jml_gpcm_binary_closure_nonattainment_fixture()
   indices <- c(0, 1, 3, 8)
   paths <- lapply(indices, function(index) {
-    mfrmr:::mfrmr_jml_gpcm_binary_closure_path_at(
+    .mfrmr_research$mfrmr_jml_gpcm_binary_closure_path_at(
       result, "owner_1_dominant", index
     )
   })
@@ -214,7 +214,7 @@ test_that("finite boundary paths converge to the nonattained supremum", {
   }, logical(1))))
   expect_true(all(vapply(paths, function(path) {
     state <-
-      mfrmr:::mfrmr_jml_gpcm_binary_closure_image_state(path$contrasts)
+      .mfrmr_research$mfrmr_jml_gpcm_binary_closure_image_state(path$contrasts)
     isTRUE(state$finite_response_image)
   }, logical(1))))
   expect_true(all(vapply(paths, function(path) {
@@ -241,7 +241,7 @@ test_that("finite boundary paths converge to the nonattained supremum", {
 })
 
 test_that("same-sign independent logits give finite global JMLEs", {
-  positive <- mfrmr:::mfrmr_jml_gpcm_binary_closure_envelope(
+  positive <- .mfrmr_research$mfrmr_jml_gpcm_binary_closure_envelope(
     success_mass = c(4, 2, 4, 2),
     failure_mass = rep(1, 4)
   )
@@ -265,7 +265,7 @@ test_that("same-sign independent logits give finite global JMLEs", {
     tolerance = 1e-14
   )
 
-  negative <- mfrmr:::mfrmr_jml_gpcm_binary_closure_envelope(
+  negative <- .mfrmr_research$mfrmr_jml_gpcm_binary_closure_envelope(
     success_mass = c(2, 4, 2, 4),
     failure_mass = rep(1, 4)
   )
@@ -283,7 +283,7 @@ test_that("same-sign independent logits give finite global JMLEs", {
 })
 
 test_that("equal logits have a finite maximum and an escaping equivalent fibre", {
-  result <- mfrmr:::mfrmr_jml_gpcm_binary_closure_envelope(
+  result <- .mfrmr_research$mfrmr_jml_gpcm_binary_closure_envelope(
     success_mass = rep(2, 4),
     failure_mass = rep(1, 4)
   )
@@ -303,7 +303,7 @@ test_that("equal logits have a finite maximum and an escaping equivalent fibre",
   expect_true(all(result$boundary_axis_candidates$GlobalClosureMaximizer))
   expect_true(result$finite_global_representative$available)
 
-  path <- mfrmr:::mfrmr_jml_gpcm_binary_closure_path_at(
+  path <- .mfrmr_research$mfrmr_jml_gpcm_binary_closure_path_at(
     result, "owner_2_dominant", 8
   )
   expect_true(path$valid)
@@ -315,7 +315,7 @@ test_that("equal logits have a finite maximum and an escaping equivalent fibre",
 })
 
 test_that("opposite independent differences select missing closure axes", {
-  result <- mfrmr:::mfrmr_jml_gpcm_binary_closure_envelope(
+  result <- .mfrmr_research$mfrmr_jml_gpcm_binary_closure_envelope(
     success_mass = c(2, 4, 4, 2),
     failure_mass = rep(1, 4)
   )
@@ -369,7 +369,7 @@ binary_closure_fit_fixture <- function() {
 test_that("current exact GPCM fit reconstructs the P2i nonattainment envelope", {
   skip_if_not_installed("lpSolve")
   fit <- binary_closure_fit_fixture()
-  wrapper <- mfrmr:::mfrmr_jml_gpcm_fit_binary_closure_envelope(fit)
+  wrapper <- .mfrmr_research$mfrmr_jml_gpcm_fit_binary_closure_envelope(fit)
 
   expect_identical(
     wrapper$state,
@@ -432,33 +432,33 @@ test_that("current-fit P2i wrapper keeps nonmatching routes fail closed", {
   skip_if_not_installed("lpSolve")
   fit <- binary_closure_fit_fixture()
 
-  invalid <- mfrmr:::mfrmr_jml_gpcm_fit_binary_closure_envelope(1)
+  invalid <- .mfrmr_research$mfrmr_jml_gpcm_fit_binary_closure_envelope(1)
   expect_identical(invalid$state, "not_evaluated_fit")
   expect_false(invalid$evaluated)
 
   pcm <- fit
   pcm$config$model <- "PCM"
-  result <- mfrmr:::mfrmr_jml_gpcm_fit_binary_closure_envelope(pcm)
+  result <- .mfrmr_research$mfrmr_jml_gpcm_fit_binary_closure_envelope(pcm)
   expect_identical(result$state, "not_applicable_model")
   expect_false(result$evaluated)
 
   mml <- fit
   mml$config$method <- "MML"
-  result <- mfrmr:::mfrmr_jml_gpcm_fit_binary_closure_envelope(mml)
+  result <- .mfrmr_research$mfrmr_jml_gpcm_fit_binary_closure_envelope(mml)
   expect_identical(result$state, "not_applicable_estimator")
   expect_false(result$evaluated)
 
   unsupported <- fit
   unsupported$prep$facet_names <- c("Owner", "SecondFacet")
   result <-
-    mfrmr:::mfrmr_jml_gpcm_fit_binary_closure_envelope(unsupported)
+    .mfrmr_research$mfrmr_jml_gpcm_fit_binary_closure_envelope(unsupported)
   expect_false(result$finite_jmle_existence_certified)
   expect_false(result$finite_jmle_nonexistence_certified)
 
   legacy <-
-    mfrmr:::mfrmr_jml_gpcm_response_quotient_binary_counterexample()
+    .mfrmr_research$mfrmr_jml_gpcm_response_quotient_binary_counterexample()
   legacy$contract_version <- "legacy"
-  result <- mfrmr:::mfrmr_jml_gpcm_fit_binary_closure_envelope(
+  result <- .mfrmr_research$mfrmr_jml_gpcm_fit_binary_closure_envelope(
     fit, source_response_quotient = legacy
   )
   expect_identical(result$state, "not_evaluated_response_envelope")
@@ -471,11 +471,11 @@ test_that("current-fit P2i wrapper keeps nonmatching routes fail closed", {
 
 test_that("binary closure envelope declarations fail closed", {
   valid <-
-    mfrmr:::mfrmr_jml_gpcm_response_quotient_binary_counterexample()
+    .mfrmr_research$mfrmr_jml_gpcm_response_quotient_binary_counterexample()
   legacy <- valid
   legacy$contract_version <- "legacy"
 
-  result <- mfrmr:::mfrmr_jml_gpcm_binary_closure_envelope(
+  result <- .mfrmr_research$mfrmr_jml_gpcm_binary_closure_envelope(
     rep(1, 4), rep(1, 4), source_response_quotient = legacy
   )
   expect_identical(result$state, "not_evaluated_source")
@@ -497,7 +497,7 @@ test_that("binary closure envelope declarations fail closed", {
   )
   for (arguments in cases) {
     result <- do.call(
-      mfrmr:::mfrmr_jml_gpcm_binary_closure_envelope,
+      .mfrmr_research$mfrmr_jml_gpcm_binary_closure_envelope,
       arguments
     )
     expect_identical(result$state, "not_evaluated_response_mass")
@@ -507,26 +507,26 @@ test_that("binary closure envelope declarations fail closed", {
     expect_false(result$finite_jmle_nonexistence_certified)
   }
 
-  result <- mfrmr:::mfrmr_jml_gpcm_binary_closure_envelope(
+  result <- .mfrmr_research$mfrmr_jml_gpcm_binary_closure_envelope(
     rep(1, 4), rep(1, 4), max_total_mass = 0
   )
   expect_identical(result$state, "not_evaluated_control")
   expect_false(result$evaluated)
 
   classified <-
-    mfrmr:::mfrmr_jml_gpcm_binary_closure_nonattainment_fixture()
+    .mfrmr_research$mfrmr_jml_gpcm_binary_closure_nonattainment_fixture()
   invalid_contract <- classified
   invalid_contract$contract_version <- "legacy"
-  expect_false(mfrmr:::mfrmr_jml_gpcm_binary_closure_path_at(
+  expect_false(.mfrmr_research$mfrmr_jml_gpcm_binary_closure_path_at(
     invalid_contract, "owner_1_dominant", 1
   )$valid)
-  expect_false(mfrmr:::mfrmr_jml_gpcm_binary_closure_path_at(
+  expect_false(.mfrmr_research$mfrmr_jml_gpcm_binary_closure_path_at(
     classified, "unknown", 1
   )$valid)
-  expect_false(mfrmr:::mfrmr_jml_gpcm_binary_closure_path_at(
+  expect_false(.mfrmr_research$mfrmr_jml_gpcm_binary_closure_path_at(
     classified, "owner_1_dominant", -1
   )$valid)
-  expect_false(mfrmr:::mfrmr_jml_gpcm_binary_closure_path_at(
+  expect_false(.mfrmr_research$mfrmr_jml_gpcm_binary_closure_path_at(
     classified, "owner_1_dominant", 301
   )$valid)
 })

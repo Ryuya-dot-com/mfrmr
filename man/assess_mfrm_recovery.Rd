@@ -81,8 +81,8 @@ its status.}
 \item{metric}{Metric used when \code{type = "metrics"}. Supported values are
 \code{"rmse"}, \code{"bias"}, \code{"coverage"}, \code{"se_available"}, and \code{"mcse_rmse"}.}
 
-\item{draw}{If \code{TRUE}, draw with base graphics. If \code{FALSE}, return an
-\code{mfrm_plot_data} object with reusable plot tables and metadata.}
+\item{draw}{If \code{TRUE}, print the \code{ggplot} object. If \code{FALSE}, return the
+\code{ggplot} object invisibly without drawing (tables and notes via \code{\link[=plot_data]{plot_data()}}).}
 }
 \value{
 An object of class \code{mfrm_recovery_assessment} with:

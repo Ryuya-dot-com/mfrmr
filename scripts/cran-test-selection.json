@@ -1,0 +1,577 @@
+[
+  {
+    "file": "test-model-export-affine.R",
+    "scope": "whole file",
+    "reason": "Affine export combinations; base model export stays on CRAN."
+  },
+  {
+    "file": "test-model-export-summary.R",
+    "scope": "whole file",
+    "reason": "Export summary variants; the live smoke test exports tables and bundles."
+  },
+  {
+    "file": "test-decision-probabilities.R",
+    "scope": "whole file",
+    "reason": "Decision probability combinations; classification and scoring remain."
+  },
+  {
+    "file": "test-facets-manual-consistency.R",
+    "scope": "whole file",
+    "reason": "Detailed external FACETS report reproduction; JML and facet results remain."
+  },
+  {
+    "file": "test-extended-example-replay.R",
+    "scope": "whole file",
+    "reason": "Detailed optional example replay; executable help examples remain."
+  },
+  {
+    "file": "test-simulation-example-replay.R",
+    "scope": "whole file",
+    "reason": "Extended simulation workflows; simulation-dependent live fits remain."
+  },
+  {
+    "file": "test-dstudy-summary.R",
+    "scope": "whole file",
+    "reason": "D-study presentation combinations; delta-method numerical tests remain."
+  },
+  {
+    "file": "test-gmfrm-portable.R",
+    "scope": "whole file",
+    "reason": "Two-family portable artifact combinations; public workflow and kernel tests remain."
+  },
+  {
+    "file": "test-planning-report-connections.R",
+    "scope": "whole file",
+    "reason": "Planning appendix combinations; design decision boundary tests remain."
+  },
+  {
+    "file": "test-report-modules.R",
+    "scope": "whole file",
+    "reason": "Report module combinations; primary study report and public smoke remain."
+  },
+  {
+    "file": "test-adaptive-quadrature-review.R",
+    "scope": "public fit and artifact scoring share an optional unrounded review",
+    "reason": "Multiple full calibration/sensitivity refits and artifact replay; adaptive numerical review, live GPCM fit and public calibration remain."
+  },
+  {
+    "file": "test-interaction-em.R",
+    "scope": "hybrid interactions preserve joint intervals and downstream reports",
+    "reason": "Repeated direct/hybrid 61-node interval/report comparison; independent weighted RSM/PCM EM likelihoods, ascent and checkpoints remain."
+  },
+  {
+    "file": "test-cml-comparisons.R",
+    "scope": "retained incomplete school examples and reversed origins give reproducible CML inference",
+    "reason": "Additional school-example refits; independent enumerated RSM/PCM contrasts and sign direction remain."
+  },
+  {
+    "file": "test-gmfrm-em.R",
+    "scope": "saved two-owner results replay in a fresh process without fitting",
+    "reason": "Fresh-process replay combinations; public replay, numeric product-slope kernels and encoding tests remain."
+  },
+  {
+    "file": "test-gmfrm-public-workflow.R",
+    "scope": "public conditional curves match the product equation and retain unavailable intervals",
+    "reason": "Detailed curve/plot/report combinations; independent two-family probabilities, response derivatives and public dispatch remain."
+  },
+  {
+    "file": "test-comparison-review.R",
+    "scope": "DFF tables, plots and reports retain a separately bound prospective review",
+    "reason": "Table/plot/report propagation; prospective identification and ambiguous target checks remain."
+  },
+  {
+    "file": "test-gpcm-inference-extensions.R",
+    "scope": "verified weak-information cautions reach intervals, curves and reports",
+    "reason": "Propagation through every presentation route; numerical covariance, failed readiness, bootstrap diagnostics and inference-budget checks remain."
+  },
+  {
+    "file": "test-cran-smoke.R",
+    "scope": "stratified loop",
+    "reason": "GPCM live adaptive fit/Hessian; RSM/PCM also checked by moving-node gradients and ordinary live fits."
+  },
+  {
+    "file": "test-anchored-gpcm.R",
+    "scope": "stratified loop",
+    "reason": "Separate/group anchors for live covariance; all three anchor kinds retain scoring, refit and rejection checks."
+  },
+  {
+    "file": "test-adaptive-quadrature-review.R",
+    "scope": "stratified loop",
+    "reason": "All RSM/PCM/GPCM gradients at order 3; orders 1 and 15 in full mode."
+  },
+  {
+    "file": "test-cml-comparisons.R",
+    "scope": "stratified loop",
+    "reason": "All three RSM/PCM step owners with balanced sign directions; six-way product in full mode."
+  },
+  {
+    "file": "test-design-evaluation-denominators.R",
+    "scope": "stratified loop",
+    "reason": "Lower and upper decision boundaries at coarse display precision; all metrics/precisions in full mode."
+  },
+  {
+    "file": "test-gmfrm-em.R",
+    "scope": "stratified loop",
+    "reason": "Binary and four-category sparse cases plus dense three-category case; full category-by-sparsity grid in full mode."
+  },
+  {
+    "file": "test-gpcm-inference-extensions.R",
+    "scope": "stratified loop",
+    "reason": "Model/no multiplicity and sandwich/Bonferroni extreme tails; all scales and curve kinds retained."
+  },
+  {
+    "file": "test-anchor-migration.R",
+    "scope": "manifests and methods text retain the fitted centering convention",
+    "reason": "Repeated diagnostic/report generation; legacy centering, constraints and saved export replay remain."
+  },
+  {
+    "file": "test-marginal-fit-availability.R",
+    "scope": "marginal coverage reaches summaries, reports, exports and saved-result guards",
+    "reason": "Repeated propagation through presentation consumers; independent pairwise integration and unavailable-cell boundaries remain."
+  },
+  {
+    "file": "test-design-evaluation-denominators.R",
+    "scope": "assignment topology reaches recommendations independently of fit metrics",
+    "reason": "Detailed assignment-topology combinations; failed denominators, precision, workload and connectivity screens remain."
+  },
+  {
+    "file": "test-cran-smoke.R",
+    "scope": "quadrature",
+    "reason": "15-node live adaptive GPCM likelihood/gradient/Hessian/EAP representative; full mode retains all models at 31 nodes. All tolerances unchanged."
+  },
+  {
+    "file": "test-gpcm-inference-extensions.R",
+    "scope": "tail fixture",
+    "reason": "Extreme-tail inversion uses the same live eligible population-GPCM fit as other CRAN intervals; full mode retains the separate saved fixture."
+  },
+  {
+    "file": "test-anchored-gpcm.R",
+    "scope": "information reuse",
+    "reason": "Reuse fresh joint information only for identical anchor fits/options/functions; every anchor scoring case is retained. Full mode recomputes."
+  },
+  {
+    "file": "test-parameter-map-invariants.R",
+    "scope": "name-by-population grid",
+    "reason": "All four ambiguous names and all three models retained across fixed/free population representatives; full Cartesian product in extended mode."
+  },
+  {
+    "file": "test-jml-public-workflow.R",
+    "scope": "presentation combinations",
+    "reason": "Retain live corrected-JML estimates/covariance, one plot and all scope/error checks; full mode renders every plot, HTML and export/replay."
+  },
+  {
+    "file": "test-testlet.R",
+    "scope": "independent tensor rule",
+    "reason": "Seven nodes for the matched finite-rule identity on CRAN; the full suite retains 13 nodes. Live fitting/scoring keep their original 61-node settings."
+  },
+  {
+    "file": "test-gmfrm-em.R",
+    "scope": "common likelihood rule",
+    "reason": "Nine nodes for the matched finite-rule likelihood and gradient on CRAN; the full suite retains 31 nodes. This is not an integration-accuracy guarantee."
+  },
+  {
+    "file": "test-api-migration.R",
+    "scope": "whole file",
+    "reason": "Detailed compatibility combinations; namespace contract and live public smoke remain."
+  },
+  {
+    "file": "test-conditional-scoring.R",
+    "scope": "whole file",
+    "reason": "Detailed population scoring qualification and draw/export combinations; calibration-public-api, classification and source-posterior-numerics remain."
+  },
+  {
+    "file": "test-mml-starts.R",
+    "scope": "whole file",
+    "reason": "Optimizer restart combinations; live default/adaptive fits and optimizer-curvature remain."
+  },
+  {
+    "file": "test-parameter-map-invariants.R",
+    "scope": "whole file",
+    "reason": "Broad name-by-model coordinate grid; compiled kernels, live PCM/GPCM and likelihood contracts remain."
+  },
+  {
+    "file": "test-anchor-centering.R",
+    "scope": "whole file",
+    "reason": "Repeated centering combinations; anchor migration and independent likelihood/linking contracts remain."
+  },
+  {
+    "file": "test-anchored-calibration.R",
+    "scope": "whole file",
+    "reason": "Portable anchored calibration combinations; public calibration and anchor-migration contracts remain."
+  },
+  {
+    "file": "test-anchored-gpcm.R",
+    "scope": "whole file",
+    "reason": "Live anchored-GPCM covariance and scoring combinations; calibration-public-api, GPCM likelihood/inference and anchor migration remain."
+  },
+  {
+    "file": "test-cml-comparisons.R",
+    "scope": "whole file",
+    "reason": "Detailed pairwise CML sign/owner combinations; independent enumeration and live CML remain."
+  },
+  {
+    "file": "test-comparison-review.R",
+    "scope": "whole file",
+    "reason": "Detailed prospective comparison/report propagation; likelihood-ratio and inference eligibility contracts remain."
+  },
+  {
+    "file": "test-design-evaluation-denominators.R",
+    "scope": "whole file",
+    "reason": "Detailed design recommendations and failure-denominator combinations; numerical G/D and planning example replay remain."
+  },
+  {
+    "file": "test-response-imputation.R",
+    "scope": "whole file",
+    "reason": "Detailed response/imputation audit combinations; live input preparation, feature-clustering and posterior checks remain."
+  },
+  {
+    "file": "test-missing-codes-integration.R",
+    "scope": "whole file",
+    "reason": "Repeated missing-code propagation; preparation-invariants preserves independent sentinel/category checks."
+  },
+  {
+    "file": "test-study-report.R",
+    "scope": "whole file",
+    "reason": "Repeated report assembly and presentation combinations; live smoke export and posterior report/plot checks remain."
+  },
+  {
+    "file": "test-network-inference.R",
+    "scope": "whole file",
+    "reason": "Detailed network interval/bootstrap combinations; residual-network and prefit-network remain."
+  },
+  {
+    "file": "test-testlet.R",
+    "scope": "fitting and continuous scoring agree with retained independent reference values",
+    "reason": "Retained unchanged in NOT_CRAN=true; short live model fitting, numerical kernels and public method contracts remain in the ordinary selection."
+  },
+  {
+    "file": "test-random-rater.R",
+    "scope": "an estimated zero variance does not manufacture certainty",
+    "reason": "Retained unchanged in NOT_CRAN=true; short live model fitting, numerical kernels and public method contracts remain in the ordinary selection."
+  },
+  {
+    "file": "test-random-rater.R",
+    "scope": "a false-convergence zero submodel receives a verified curvature restart",
+    "reason": "Retained unchanged in NOT_CRAN=true; short live model fitting, numerical kernels and public method contracts remain in the ordinary selection."
+  },
+  {
+    "file": "test-jml-public-workflow.R",
+    "scope": "unresolved corrected roots remain reportable without optimizer placeholders",
+    "reason": "Retained unchanged in NOT_CRAN=true; short live model fitting, numerical kernels and public method contracts remain in the ordinary selection."
+  },
+  {
+    "file": "test-jml-public-workflow.R",
+    "scope": "covariance failure cannot erase corrected public point estimates",
+    "reason": "Retained unchanged in NOT_CRAN=true; short live model fitting, numerical kernels and public method contracts remain in the ordinary selection."
+  },
+  {
+    "file": "test-model-export-spec.R",
+    "scope": "whole file",
+    "reason": "Direct data/spec Stan and brms model export and CmdStanR JSON; base model-export remains in the ordinary selection."
+  },
+  {
+    "file": "test-numerical-kernel-equivalence.R",
+    "scope": "whole file",
+    "reason": "Detailed C++ vs pure-R single-evaluation kernel parity grid; mml-cpp11-backend and likelihood-numerics remain in the ordinary selection."
+  },
+  {
+    "file": "test-optional-examples.R",
+    "scope": "whole file",
+    "reason": "Full supplementary help-example execution; primary examples and posterior help replay remain in ordinary checks."
+  },
+  {
+    "file": "test-anchor-equating.R",
+    "scope": "whole file",
+    "reason": "Detailed multi-wave anchor equating and chain synthesis; anchor-migration and linking-numerics remain."
+  },
+  {
+    "file": "test-anchor-population-replay.R",
+    "scope": "whole file",
+    "reason": "Saved anchored population prediction replay; calibration-public-api and source-posterior-numerics remain."
+  },
+  {
+    "file": "test-as-kable.R",
+    "scope": "whole file",
+    "reason": "Detailed knitr::kable and flextable formatting for apa_table; primary smoke export remains."
+  },
+  {
+    "file": "test-automated-scoring.R",
+    "scope": "whole file",
+    "reason": "Human-machine scoring agreement and MFRM attachment combinations; krippendorff-alpha remains."
+  },
+  {
+    "file": "test-cluster-comparison.R",
+    "scope": "whole file",
+    "reason": "Cross-partition cluster agreement and alignment combinations; feature-clustering remains."
+  },
+  {
+    "file": "test-conquest-contract-repairs.R",
+    "scope": "whole file",
+    "reason": "Detailed ConQuest export normalization and overlap review contracts; model-export and api-consolidation remain."
+  },
+  {
+    "file": "test-core-workflow.R",
+    "scope": "whole file",
+    "reason": "Comprehensive end-to-end diagnostic, table, and bundle combinations; cran-smoke and facets-results remain."
+  },
+  {
+    "file": "test-data-quality-consistency.R",
+    "scope": "whole file",
+    "reason": "Detailed data-quality report consistency across inputs; preparation-invariants remains."
+  },
+  {
+    "file": "test-diagnostic-screening-validation.R",
+    "scope": "whole file",
+    "reason": "Simulation-based diagnostic screening validation; classification and bias-numerics remain."
+  },
+  {
+    "file": "test-facets-output-contract-review.R",
+    "scope": "whole file",
+    "reason": "Detailed FACETS output contract and reference-case review; facets-results remains."
+  },
+  {
+    "file": "test-fair-jeffreys-delta.R",
+    "scope": "whole file",
+    "reason": "Exact binomial counterexample and Jeffreys Jacobian/tilted-refit checks; jml-public-workflow remains."
+  },
+  {
+    "file": "test-mfrm-results.R",
+    "scope": "whole file",
+    "reason": "Comprehensive mfrm_results, mfrm_report, export, and viewer contracts; cran-smoke and bundle-summary-privacy remain."
+  },
+  {
+    "file": "test-misfit-casebook.R",
+    "scope": "whole file",
+    "reason": "Detailed misfit casebook assembly and filtering; facets-results and marginal-fit-availability remain."
+  },
+  {
+    "file": "test-misfit-thresholds.R",
+    "scope": "whole file",
+    "reason": "Misfit threshold profile selection and guard checks; api-consolidation remains."
+  },
+  {
+    "file": "test-model-choice-review.R",
+    "scope": "whole file",
+    "reason": "Detailed model-choice review and GPCM capability routing; gpcm-ic-eligibility and gpcm-lrt remain."
+  },
+  {
+    "file": "test-pairwise-icc.R",
+    "scope": "whole file",
+    "reason": "Pairwise intraclass correlation vs linear-model ANOVA and rescaling; icc-input remains."
+  },
+  {
+    "file": "test-peer-review-simulation.R",
+    "scope": "whole file",
+    "reason": "Peer-review design simulation and topology review; prefit-network remains."
+  },
+  {
+    "file": "test-plot-dispatch.R",
+    "scope": "whole file",
+    "reason": "Full consolidated plot() and as_ggplot() route dispatch across saved objects; cran-smoke and api-consolidation remain."
+  },
+  {
+    "file": "test-population-intervals.R",
+    "scope": "whole file",
+    "reason": "Detailed conditional-normal population interval checks; gpcm-uncertainty-readiness remains."
+  },
+  {
+    "file": "test-q3-and-person-fit.R",
+    "scope": "whole file",
+    "reason": "Detailed Yen Q3 and person-fit index checks; residual-network and facets-results remain."
+  },
+  {
+    "file": "test-random-rater-intervals.R",
+    "scope": "whole file",
+    "reason": "Detailed shared random-rater interval and bootstrap checks; random-rater and random-rater-profile remain."
+  },
+  {
+    "file": "test-random-rater-scoring.R",
+    "scope": "whole file",
+    "reason": "Detailed shared random-rater empirical Bayes scoring checks; random-rater remains."
+  },
+  {
+    "file": "test-rater-accuracy.R",
+    "scope": "whole file",
+    "reason": "Rater accuracy Rasch/MML/JML checks vs glm and continuous integration; likelihood-numerics remains."
+  },
+  {
+    "file": "test-rater-centrality.R",
+    "scope": "whole file",
+    "reason": "Rater centrality indices vs adjacent-logit and pairwise step-variance identities; facets-results remains."
+  },
+  {
+    "file": "test-recovery-simulation.R",
+    "scope": "whole file",
+    "reason": "Parameter recovery simulation workflows; likelihood-numerics and calibration-public-api remain."
+  },
+  {
+    "file": "test-recovery-summary-inference.R",
+    "scope": "whole file",
+    "reason": "Recovery summary and coverage accounting contracts; classification remains."
+  },
+  {
+    "file": "test-reference-benchmark.R",
+    "scope": "whole file",
+    "reason": "Detailed reference-case benchmark comparisons; facets-results and cml remain."
+  },
+  {
+    "file": "test-report-functions.R",
+    "scope": "whole file",
+    "reason": "Comprehensive report, iteration, residual-file, and subset-file builders; cran-smoke remains."
+  },
+  {
+    "file": "test-resampling-units.R",
+    "scope": "whole file",
+    "reason": "Cluster and stratified bootstrap unit preservation and top-up accounting; preparation-invariants remains."
+  },
+  {
+    "file": "test-resampling-validation.R",
+    "scope": "whole file",
+    "reason": "Resampling specification validation and summary methods; preparation-invariants remains."
+  },
+  {
+    "file": "test-response-time-review.R",
+    "scope": "whole file",
+    "reason": "Descriptive response-time review tables and plots; cran-smoke remains."
+  },
+  {
+    "file": "test-rsm-pcm-nesting.R",
+    "scope": "whole file",
+    "reason": "RSM/PCM interaction nesting rank and LRT eligibility checks; gpcm-lrt and interaction-em remain."
+  },
+  {
+    "file": "test-score-comparison.R",
+    "scope": "whole file",
+    "reason": "Generic paired score-comparison tables and QWK checks; krippendorff-alpha remains."
+  },
+  {
+    "file": "test-scoring-prior.R",
+    "scope": "whole file",
+    "reason": "Explicit scoring_prior reference checks for unit prediction and plausible values; source-posterior-numerics remains."
+  },
+  {
+    "file": "test-screening-performance.R",
+    "scope": "whole file",
+    "reason": "Signal-detection and screening denominator accounting; bias-numerics and mantel-haenszel remain."
+  },
+  {
+    "file": "test-screening-sensitivity.R",
+    "scope": "whole file",
+    "reason": "Fit-threshold sensitivity profiles across MnSq and ZSTD; facets-results remains."
+  },
+  {
+    "file": "test-separation-interpretation.R",
+    "scope": "whole file",
+    "reason": "Separation and reliability wording consistency across tables and APA text; facets-results remains."
+  },
+  {
+    "file": "test-shrinkage.R",
+    "scope": "whole file",
+    "reason": "Empirical Bayes shrinkage reports, checklists, nesting, and small-sample review; random-rater remains."
+  },
+  {
+    "file": "test-shrinkage-numerics.R",
+    "scope": "whole file",
+    "reason": "Shrinkage numerical quadrature parity and extreme-overflow guards; gauss-hermite-weights remains."
+  },
+  {
+    "file": "test-single-person-calibration.R",
+    "scope": "whole file",
+    "reason": "Single-Person MML/CML/JML calibration vs exact integration/enumeration and recession guards; cml remains."
+  },
+  {
+    "file": "test-testlet-integration.R",
+    "scope": "whole file",
+    "reason": "Testlet scoring and plot/ggplot integration checks; testlet remains."
+  },
+  {
+    "file": "test-testlet-population.R",
+    "scope": "whole file",
+    "reason": "Testlet free/fixed/zero variance calibration vs 2D numerical integration; testlet remains."
+  },
+  {
+    "file": "test-testlet-selection.R",
+    "scope": "whole file",
+    "reason": "Testlet multi-start tie and non-finite selection rules; testlet remains."
+  },
+  {
+    "file": "test-unexpected-prevalence.R",
+    "scope": "whole file",
+    "reason": "Unexpected-response prevalence invariance to top_n display limits; bias-numerics remains."
+  },
+  {
+    "file": "test-weighted-agreement.R",
+    "scope": "whole file",
+    "reason": "Weighted kappa and Gwet AC2 checks vs closed-form pair enumeration; krippendorff-alpha remains."
+  },
+  {
+    "file": "test-weighting-audit.R",
+    "scope": "whole file",
+    "reason": "Weighting review contracts across RSM/PCM and GPCM MML/JML; gpcm-ic-eligibility remains."
+  },
+  {
+    "file": "test-wright-facets-style.R",
+    "scope": "whole file",
+    "reason": "Native and FACETS-style Wright map highlight, top_n, CI, and boundary separation; cran-smoke remains."
+  },
+  {
+    "file": "test-zero-count-score-support.R",
+    "scope": "whole file",
+    "reason": "Category readiness rejection for unobserved internal score categories; preparation-invariants remains."
+  },
+  {
+    "file": "test-ggplot-unification-v1.R",
+    "scope": "whole file",
+    "reason": "Comprehensive ggplot2 unification, DFF scatterplot, marginal histogram FacetMarginalHist, theme, and saved plot-data compatibility checks; cran-smoke and api-consolidation remain."
+  },
+  {
+    "file": "test-posterior-contrasts-live.R",
+    "scope": "whole file",
+    "reason": "Optional live CmdStanR end-to-end sampling and contrast replay; posterior-summary and posterior-contrasts remain on CRAN."
+  },
+  {
+    "file": "test-posterior-scoring-live.R",
+    "scope": "whole file",
+    "reason": "Optional live CmdStanR end-to-end execution (run_cmdstan = TRUE) and new-Person posterior scoring replay; posterior-scoring remains on CRAN."
+  },
+  {
+    "file": "test-posterior-scoring.R",
+    "scope": "bundled 120-draw posterior-draws-example matches stats::integrate + uniroot across all 5 profiles",
+    "reason": "Exhaustive 120-draw adaptive stats::integrate x uniroot sweep retained in NOT_CRAN=true; CRAN retains full 120-draw C++/pure-R parity, total-variance invariants, and live joint-draw + plug-in stats::integrate oracle checks."
+  },
+  {
+    "file": "test-posterior-scoring.R",
+    "scope": "stats::integrate oracle holds across ordinary RSM, ordinary PCM, and fixed-population 1-family GPCM",
+    "reason": "Multi-model adaptive stats::integrate x uniroot sweep retained in NOT_CRAN=true; CRAN retains Stan 1-family GPCM joint-draw and brms/Stan summary plug-in stats::integrate oracle checks."
+  },
+  {
+    "file": "test-posterior-scoring.R",
+    "scope": "high-slope multi-item narrow-posterior GPCM matches adaptive stats::integrate oracle to < 1e-10",
+    "reason": "16-item narrow-posterior 3,500-integral adaptive stats::integrate sweep retained in NOT_CRAN=true; CRAN retains the 16-item narrow-posterior C++/pure-R (< 1e-12) and 63-vs-31 grid convergence (< 1e-9) checks."
+  },
+  {
+    "file": "test-fit-mfrm-ux-u0.R",
+    "scope": "flat and structured calls agree across extended estimation engines",
+    "reason": "Repeated flat/spec+control fits for corrected JML, GPCM MML and CML run in full mode with unchanged inputs and tolerances. CRAN retains live engine-specific numerical tests, ordinary MML/JML argument equivalence, Jeffreys/comparison-only equivalence, invalid-key guards and the exact owner-total limit refusal."
+  },
+  {
+    "file": "test-api-consolidation.R",
+    "scope": "as_ggplot honors design_evaluation components and draw-free simulation lists",
+    "reason": "CRAN checks every plot-dispatch assertion using bundled simulation-design and simulation-signal-detection results. Full mode regenerates the original two-condition, two-replication simulations; simulation-example-replay retains bundled-result regeneration checks."
+  },
+  {
+    "file": "test-fit-mfrm-ux-u0.R",
+    "scope": "Jeffreys flat and structured arguments",
+    "reason": "Both public calls prepare and validate their inputs. On CRAN, only an exactly identical prepared fit, gradient tolerance, package options and evaluator bindings reuse the first fully checked Jeffreys solution; NOT_CRAN=true refits both calls. All numerical checks and tolerances remain."
+  },
+  {
+    "file": "test-gmfrm-roles.R",
+    "scope": "extended roles retain joint information, posterior scoring and portable identity",
+    "reason": "Independent Hessian and scoring/portable combinations run in the full suite; live three-facet fitting, independent response/gradient checks and reporting remain on CRAN."
+  },
+  {
+    "file": "test-gmfrm-roles.R",
+    "scope": "a saved extended fit produces rater feedback in a fresh installed session",
+    "reason": "Fresh-process installed-package regression runs in the full suite; in-session live fitting, saved-result equivalence and rater-report value/role checks remain on CRAN."
+  }
+]

@@ -28,10 +28,10 @@ residual mean.}
 
 \item{preset}{Visual preset.}
 
-\item{draw}{If \code{TRUE}, draw with base graphics.}
+\item{draw}{If \code{TRUE}, print the \code{ggplot} object.}
 }
 \value{
-An \code{mfrm_plot_data} whose \code{data} slot bundles the residual
+Invisibly, a \code{ggplot} object. \code{plot_data(p)} bundles the residual
 \code{matrix} (rows = Person, columns = facet level) and the long-form
 \code{obs} table.
 }
@@ -42,55 +42,34 @@ from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} as a heatmap. Complements
 the residual structure directly: large positive cells show
 under-prediction, negative cells over-prediction.
 }
+\section{Session plot defaults}{
+
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
+}
+
 \section{Migration in 0.2.4}{
 
 This renderer is internal. Use the corresponding \code{plot()} route in
 \link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
-\section{Session plot defaults}{
-
-Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
-for plotting functions that expose the common \code{preset} argument. The
-supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
-\code{"monochrome"}. Precedence is an explicit call argument, then the session
-option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
-a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
-earlier package-default behavior; it does not read the session option.
-Invalid session values cause an error only when that option is needed.
-
-The category-curve, data-quality, fit-review, connectivity and network
-routes of \code{plot()} for report bundles use the same option through \code{...}.
-Plots without a common \code{preset} argument, including extended-model plots
-with their own \code{palette} controls, keep their own settings. This option
-selects a preset, not a universal theme or a guarantee that all renderers
-implement every appearance control identically.
-
-New plot payloads retain the resolved preset for supported saved-data
-rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
-appearance, even after the session option changes. A call that creates a
-new plot from a fit or statistical result uses the current default.
-For a reproducible script, supply \code{preset} explicitly or set the option in
-that script. Saving only the fitted model does not save a session option.
-No global ggplot theme is changed.
-
-Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
-\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
-appearance, not estimates, confidence levels or diagnostic thresholds.
-}
-
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("plot_residual_matrix", run.dontrun = TRUE)
+\dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 fit <- example_fit$fit
 p <- plot(fit, type = "residual_matrix", top_n_persons = 12, draw = FALSE)
-dim(p$data$matrix)
+dim(plot_data(p, "matrix"))
 # Look for: |residual| > 2 or > 3 crosses conventional two- or
 #   three-standard-deviation review bands; these are heuristic screens,
 #   not calibrated 5\% or 1\% tests (Wright & Linacre 1994). Repeated
 #   high-magnitude cells at one facet level warrant pattern review but
 #   do not by themselves establish scoring drift.
+}
 }
 \seealso{
 \link[=plot.mfrm_fit]{plot(x, type = "guttman")}, \link[=plot.mfrm_fit]{plot(x, type = "unexpected")},

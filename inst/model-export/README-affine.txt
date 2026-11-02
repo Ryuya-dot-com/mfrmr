@@ -62,7 +62,9 @@ value_role distinguishes estimated parameters, fixed anchors and values
 determined by constraints. Fixed values have no estimated SD or interval
 (NA); zero calibration uncertainty is not inferred. Internal coordinates
 remain available for diagnostic review. posterior-summary.rds retains all
-tables and interpretation notes.
+tables and interpretation notes, and posterior-draws.rds stores the matching
+base-R chain-by-iteration parameter draws bound by checksum for shared-calibration
+contrasts and arbitrary credible levels in read_mfrm_posterior().
 
 The screen checks at least four chains, R-hat < 1.01, bulk/tail ESS >= 100
 per chain, zero divergences/tree-depth hits and E-BFMI >= 0.3. These are

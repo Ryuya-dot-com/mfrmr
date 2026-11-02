@@ -355,6 +355,9 @@ predict_mfrm_population <- function(fit = NULL,
 #' - `notes`: interpretation notes
 #' @seealso [predict_mfrm_population()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("summary.mfrm_population_prediction", run.dontrun = TRUE)
+#' \dontrun{
 #' # One saved replication illustrates output structure, not precise rates.
 #' # Regeneration recipe: examples/simulation-results.R in the package.
 #' saved <- readRDS(system.file("examples", "simulation-population.rds",
@@ -364,6 +367,7 @@ predict_mfrm_population <- function(fit = NULL,
 #' s <- summary(pred)
 #' s$overview
 #' s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
+#' }
 #' @method summary mfrm_population_prediction
 #' @export
 summary.mfrm_population_prediction <- function(object, digits = 3, ...) {
@@ -1161,10 +1165,12 @@ prediction_gmfrm_source_identity <- function(fit, legacy = FALSE) {
 
 prediction_gmfrm_calibration <- function(fit, params) {
   list(slope_facets = fit$config$slope_facet, step_facet = fit$config$step_facet,
-    scale_reference = "fixed_standard_normal", levels = fit$prep$levels[fit$config$slope_facet],
+    scale_reference = "fixed_standard_normal", levels = fit$prep$levels[fit$config$facet_names],
+    role_version = 2L, slope_reference = fit$config$slope_facet[1L],
+    noncenter_facet = fit$config$noncenter_facet,
     score_map = fit$prep$score_map, locations = fit$facets$others,
     steps = fit$steps, slope_components = params$slope_components,
-    observed_contexts = unique(fit$prep$data[fit$config$slope_facet]))
+    observed_contexts = unique(fit$prep$data[fit$config$facet_names]))
 }
 
 prediction_gmfrm_scoring_readiness <- function(fit) {
@@ -1589,6 +1595,17 @@ prediction_validate_population_output <- function(x) {
     prediction_validate_interval_record(x)
     calibration <- x$settings$two_family_calibration
     owners <- calibration$slope_facets
+    facets <- names(calibration$levels)
+    roles_valid <- if (is.null(calibration$role_version)) {
+      identical(calibration$step_facet, owners[2L]) && identical(facets, owners)
+    } else {
+      identical(calibration$role_version, 2L) &&
+        identical(calibration$slope_reference, owners[1L]) &&
+        length(calibration$noncenter_facet) == 1L && calibration$noncenter_facet %in% facets &&
+        length(calibration$step_facet) == 1L && calibration$step_facet %in% facets &&
+        all(owners %in% facets) && !anyDuplicated(facets) &&
+        identical(names(calibration$observed_contexts), facets)
+    }
     valid <- identical(x$settings$source_scoring_policy_basis, "two_family_conditional_eap_v1") &&
       x$settings$source_scoring_status %in% c("conditional", "review_only") &&
       identical(isTRUE(x$settings$source_scoring_ready),
@@ -1600,8 +1617,7 @@ prediction_validate_population_output <- function(x) {
       is.null(x$settings$scoring_prior) &&
       identical(calibration$scale_reference, "fixed_standard_normal") &&
       is.character(owners) && length(owners) == 2L && !anyNA(owners) && !anyDuplicated(owners) &&
-      identical(calibration$step_facet, owners[2L]) &&
-      identical(names(calibration$levels), owners) &&
+      roles_valid &&
       identical(names(calibration$slope_components), owners) &&
       all(vapply(calibration$slope_components, function(tab)
         is.data.frame(tab) && is.numeric(tab$Slope) && length(tab$Slope) > 1L &&
@@ -1840,7 +1856,7 @@ prediction_validate_population_output <- function(x) {
 #' @section Experimental two-family scoring:
 #' Two-family GPCM MML supports new Persons with known non-Person facet levels,
 #' unit weights and the retained fixed N(0,1) prior. Both slope components,
-#' facet locations and the second owner's category steps remain fixed. New
+#' all facet locations and the declared step owner's category steps remain fixed. New
 #' combinations of known levels are allowed under the fitted product model;
 #' this does not validate those combinations empirically. Repeated Person-facet
 #' combinations are rejected. Missing responses are omitted with a warning and
@@ -2154,6 +2170,10 @@ prediction_validate_population_output <- function(x) {
 #'   scoring_quad_points = 121, cut_scores = cuts)
 #' summary(pred_units)$estimates[, c("Person", "Estimate", "Lower", "Upper")]
 #' pred_units$decisions
+#'
+#' # Optional prior-sensitivity comparison performs another scoring calculation.
+#' # example("predict_mfrm_units", run.dontrun = TRUE)
+#' \dontrun{
 #' apa_table(pred_units, which = "decisions")
 #' # Compare assumptions on the same response rows, without refitting.
 #' alternative <- predict_mfrm_units(
@@ -2176,12 +2196,14 @@ prediction_validate_population_output <- function(x) {
 #' saveRDS(pred_units, saved)
 #' apa_table(readRDS(saved), which = "decisions")
 #' unlink(saved)
+#' }
 #' @section Saved-result reuse:
 #' Fit-level export and replay helpers check that supplied scores describe the
 #' same calibration, fitted population coding and scoring status. Recreate
 #' older scores from the saved fit and original scoring inputs/settings; the
 #' calibration does not need refitting. See [mfrmr_compatibility_layer].
 #' @export
+#' @order 1
 predict_mfrm_units <- function(fit,
                                new_data,
                                person = NULL,
@@ -2317,7 +2339,7 @@ predict_mfrm_units <- function(fit,
   if (product) {
     if (any(prepared$prep$data$Weight != 1))
       stop("Two-family scoring requires unit observation weights.", call. = FALSE)
-    if (anyDuplicated(prepared$prep$data[c("Person", fit$config$slope_facet)]))
+    if (anyDuplicated(prepared$prep$data[c("Person", fit$config$facet_names)]))
       stop("Repeated person-facet combinations require a separate observation model.", call. = FALSE)
     # Assemble from the fitted components, including previously unobserved
     # combinations of known levels. Never index the fitted crossings by batch order.
@@ -2530,14 +2552,13 @@ predict_mfrm_units <- function(fit,
   out
 }
 
-#' Summarize posterior unit scoring output
-#'
+#' @rdname predict_mfrm_units
+#' @details `summary()` method: Summarize posterior unit scoring output
 #' @param object Output from [predict_mfrm_units()].
 #' @param digits Number of digits used in numeric summaries. Decision
 #'   probabilities, cut boundaries and scoring priors are not rounded.
 #' @param ... Reserved for generic compatibility.
-#'
-#' @return An object of class `summary.mfrm_unit_prediction` with:
+#' @return For `summary()`: An object of class `summary.mfrm_unit_prediction` with:
 #' - `estimates`: posterior summaries by person
 #' - `decisions`: unrounded conditional probabilities, when requested
 #' - `row_review`: row-preparation review
@@ -2712,6 +2733,9 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #' - `notes`: interpretation notes
 #' @seealso [predict_mfrm_units()], [summary.mfrm_plausible_values]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("sample_mfrm_plausible_values", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' keep_people <- unique(toy$Person)[1:18]
 #' toy_fit <- fit_mfrm(
@@ -2729,12 +2753,14 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #' )
 #' pv <- sample_mfrm_plausible_values(toy_fit, new_units, n_draws = 3, seed = 1)
 #' summary(pv)$draw_summary
+#' }
 #' @section Saved-result reuse:
 #' Fit-level export and replay helpers check the source calibration and scoring
 #' status of supplied draws. Recreate older results from the saved fit and
 #' original scoring inputs/settings, including the seed. This repeats drawing
 #' values without refitting the calibration. See [mfrmr_compatibility_layer].
 #' @export
+#' @order 1
 sample_mfrm_plausible_values <- function(fit,
                                          new_data,
                                          person = NULL,
@@ -2804,13 +2830,12 @@ sample_mfrm_plausible_values <- function(fit,
   )
 }
 
-#' Summarize approximate plausible values from posterior scoring
-#'
+#' @rdname sample_mfrm_plausible_values
+#' @details `summary()` method: Summarize approximate plausible values from posterior scoring
 #' @param object Output from [sample_mfrm_plausible_values()].
 #' @param digits Number of digits used in numeric summaries.
 #' @param ... Reserved for generic compatibility.
-#'
-#' @return An object of class `summary.mfrm_plausible_values` with:
+#' @return For `summary()`: An object of class `summary.mfrm_plausible_values` with:
 #' - `draw_summary`: empirical summaries of the sampled values by person
 #' - `estimates`: companion posterior EAP summaries
 #' - `row_review`: row-preparation review
@@ -2819,7 +2844,9 @@ sample_mfrm_plausible_values <- function(fit,
 #' - `settings`: scoring settings
 #' - `notes`: interpretation notes
 #' @seealso [sample_mfrm_plausible_values()]
-#' @examples
+#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("summary.mfrm_plausible_values", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' keep_people <- unique(toy$Person)[1:18]
 #' toy_fit <- fit_mfrm(
@@ -2837,6 +2864,7 @@ sample_mfrm_plausible_values <- function(fit,
 #' )
 #' pv <- sample_mfrm_plausible_values(toy_fit, new_units, n_draws = 3, seed = 1)
 #' summary(pv)
+#' }
 #' @method summary mfrm_plausible_values
 #' @export
 summary.mfrm_plausible_values <- function(object, digits = 3, ...) {

@@ -106,7 +106,7 @@ For new scripts, prefer \code{\link[=category_curves_report]{category_curves_rep
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} for file handoff. Use
 \code{facets_output_file_bundle()} for its native graph/observation-row contract.
 Its score file is not the element-level FACETS Scorefile format; use
-\code{\link[=read_facets_fit_table]{read_facets_fit_table()}} to import actual FACETS element output.
+\code{\link[=read_facets_results]{read_facets_results()}} to import actual FACETS element output.
 }
 
 \section{GPCM boundary}{
@@ -126,8 +126,8 @@ columns are on the expected-score scale.
 The scorefile also carries explicit score-side caveat columns. It is not a
 FACETS score-side equivalence file, does not export FACETS-equivalent
 score-side standard errors, and does not establish an operational
-score-scale decision. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} with \code{view = "scores"} and
-\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the current scope.
+score-scale decision. Use \code{mfrmr_output_guide("gpcm_capabilities", view = "scores")} and
+\code{mfrmr_output_guide("gpcm_capabilities")} (\link{mfrmr_gpcm_scope}) for the current scope.
 }
 
 \section{Typical workflow}{

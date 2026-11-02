@@ -97,39 +97,5 @@
       "Plans assume future complete common ratings; equal rating counts need not mean equal cost. This plot does not select optimal counts or weights."),
     title = "Error sources under planned measurement conditions",
     x_label = "Contribution to error variance (squared score units)"))
-  if (draw) .mfrm_mvds_draw_errors(out$data, style)
-  invisible(out)
-}
-
-.mfrm_mvds_draw_errors <- function(p, style) {
-  old <- graphics::par()[c("mfrow", "mar", "oma", "cex", "mex", "fig", "mfg")]
-  on.exit(graphics::par(old), add = TRUE)
-  apply_plot_preset(style)
-  labels <- unique(p$table$SourceLabel)
-  graphics::par(mfrow = c(ceiling(nrow(p$panels)/p$ncol), p$ncol),
-    mar = c(4.3, 4, 2.5, 1), oma = c(2+length(p$legend$label), 0, 0, 0))
-  margin <- graphics::par("mar")
-  margin[2] <- max(4, max(graphics::strwidth(labels, units = "inches", cex = .8))/
-    (graphics::par("csi")*graphics::par("mex"))+2)
-  graphics::par(mar = margin)
-  limits <- range(c(0, p$table$Contribution))
-  if (diff(limits) == 0) limits <- limits + c(-1, 1)*.04
-  offsets <- if (nrow(p$legend) == 1L) 0 else seq(-.24, .24, length.out = nrow(p$legend))
-  for (j in p$panels$Panel) {
-    z <- p$table[p$table$Panel == j, ]
-    sources <- unique(z$SourceLabel)
-    y <- match(z$SourceLabel, rev(sources))
-    group <- match(z$Plan, p$legend$label)
-    y <- y + offsets[group]
-    plot(limits, c(.5, length(sources)+.5), type = "n",
-      xlab = p$x_label, ylab = "", yaxt = "n", main = p$panels$Label[j])
-    axis(2, at = seq_along(sources), labels = rev(sources), las = 1, cex.axis = .8)
-    abline(v = 0, col = style$grid)
-    segments(0, y, z$Contribution, y, col = p$legend$value[group])
-    points(z$Contribution, y, col = p$legend$value[group], pch = p$point_shapes[group])
-  }
-  graphics::par(oma = rep(0, 4), fig = c(0, 1, 0, 1), mar = rep(0, 4), new = TRUE)
-  plot.new()
-  legend("bottom", legend = p$legend$label, col = p$legend$value,
-    pch = p$point_shapes, bty = "n", cex = .8, xpd = NA)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }

@@ -87,7 +87,7 @@ test_that("unsupported forecasting and imputation do not change fixed-SD estimat
   data$Event <- paste0("E", seq_len(nrow(data)))
   completed <- data
   data$Score[1] <- NA
-  imputed <- mfrm_response_imputations(data, list(completed, completed),
+  imputed <- review_mfrm_imputations(data, list(completed, completed),
     "Person", c("Rater", "Criterion"), "Score", "Event", "E1", 1:4,
     imputation_model = list(method = "preservation test only"))
   expect_error(fit_mfrm_imputed(imputed, population_sd = .8), "supported shared fitting")

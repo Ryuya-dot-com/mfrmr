@@ -945,16 +945,14 @@ analyze_dff <- function(fit,
   out
 }
 
-#' Backward-compatible alias for [analyze_dff()]
+#' Migration from the former analyze_dif() name
 #'
-#' `analyze_dif()` is retained for compatibility with earlier package versions.
-#' In many-facet workflows, prefer [analyze_dff()] as the primary entry point.
-#' @param ... Passed directly to [analyze_dff()].
+#' The former `analyze_dif()` name is no longer exported. Use [analyze_dff()];
+#' the calculation and saved result class are unchanged.
 #' @rdname analyze_dff
-#' @export
-analyze_dif <- function(...) {
-  analyze_dff(...)
-}
+#' @usage NULL
+#' @name analyze_dif
+NULL
 
 .validate_dff_count_arg <- function(x, arg) {
   if (!is.numeric(x) || length(x) != 1L || is.na(x) ||
@@ -1686,13 +1684,13 @@ analyze_dif <- function(...) {
 #'
 #' `summary()` returns the contrast, cell, summary, and configuration tables
 #' without refitting. A summary from [analyze_dff()] keeps its DFF label when
-#' printed; a summary from [analyze_dif()] keeps its DIF label.
+#' printed; a saved `mfrm_dif` summary keeps its DIF label.
 #'
 #' @param object,x An `mfrm_dff` or `mfrm_dif` result, or its summary.
 #' @param ... Reserved for generic compatibility.
 #' @return `summary()` returns a structured differential-functioning summary.
 #'   `print()` returns its input invisibly.
-#' @seealso [analyze_dff()], [analyze_dif()]
+#' @seealso [analyze_dff()]
 #' @name mfrm_dff_methods
 NULL
 
@@ -1933,9 +1931,12 @@ print.mfrm_dff <- function(x, ...) {
 #' - `gpcm_boundary`: for `GPCM` fits, a capability-boundary table.
 #' - `config`: list of analysis parameters.
 #'
-#' @seealso [analyze_dff()], [analyze_dif()], [plot(x, type = "heatmap")][plot.mfrm_dif], [dif_report()],
+#' @seealso [analyze_dff()], [plot(x, type = "heatmap")][plot.mfrm_dif], [dif_report()],
 #'   [estimate_bias()]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("dif_interaction_table", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -1945,7 +1946,9 @@ print.mfrm_dff <- function(x, ...) {
 #'                              group = "Group", data = toy, min_obs = 2)
 #' int$summary
 #' head(int$table[, c("Level", "GroupValue", "ObsExpAvg", "flag_bias")])
+#' }
 #' @export
+#' @order 1
 dif_interaction_table <- function(fit, diagnostics, facet, group, data = NULL,
                                   min_obs = 10, p_adjust = "holm",
                                   abs_t_warn = 2, abs_bias_warn = 0.5) {
@@ -2108,11 +2111,8 @@ print.summary.mfrm_dif_interaction <- function(x, ...) {
   invisible(x)
 }
 
-#' @export
-print.mfrm_dif_interaction <- function(x, ...) {
-  print(summary(x))
-  invisible(x)
-}
+#' @rawNamespace S3method(print,mfrm_dif_interaction,print.mfrm_comparison)
+NULL
 
 # ============================================================================
 # B3. Differential Functioning Heatmap
@@ -2125,7 +2125,7 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #' values, and cell color indicates the selected metric.
 #'
 #' @param x Output from [dif_interaction_table()], [analyze_dff()], or
-#'   [analyze_dif()]. When an `mfrm_dff`/`mfrm_dif` object is passed,
+#'   [analyze_dff()]. When an `mfrm_dff`/`mfrm_dif` object is passed,
 #'   the `cell_table` element
 #'   is used (requires `method = "residual"`).
 #' @param metric Which metric to plot: `"obs_exp"` for observed-minus-expected
@@ -2139,12 +2139,12 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #'   point for cell labels.
 #' @param flag_threshold Optional non-negative absolute-value threshold. When
 #'   supplied, cells with `abs(value) >= flag_threshold` are recorded in
-#'   `$data$flag_matrix` and outlined on the drawn heatmap.
+#'   `plot_data(p, "flag_matrix")` and outlined on the drawn heatmap.
 #' @param scale_limit Optional positive scalar for a symmetric color scale
 #'   from `-scale_limit` to `+scale_limit`. Use this to make several heatmaps
 #'   visually comparable.
 #' @param flag_color Border color for cells meeting `flag_threshold`.
-#' @param ... Additional graphical parameters passed to [graphics::image()].
+#' @param ... Reserved for compatibility; use the named appearance controls above.
 #'
 #' @section Interpreting output:
 #' - Warm colors (red) indicate positive Obs-Exp values (the model
@@ -2162,12 +2162,12 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #' 2. Plot with `plot(..., type = "heatmap")`.
 #' 3. Identify extreme cells or contrasts for follow-up.
 #'
-#' @return Invisibly, an `mfrm_plot_data` object whose `data` slot bundles
-#'   the row x column metric matrix (`$matrix`), the source long table
-#'   (`$pairs`), and the metric label. Earlier 0.1.x releases returned the
-#'   bare matrix; consume `$data$matrix` to keep code forward-compatible.
+#' @return Invisibly, a `ggplot` object. Use `plot_data(p, "matrix")` for
+#'   the row x column metric matrix, `plot_data(p, "pairs")` for the source long
+#'   table, and `plot_data(p, "metric")` for the metric label. Earlier 0.1.x
+#'   releases returned the bare matrix; use [plot_data()] with current plots.
 #'
-#' @seealso [dif_interaction_table()], [analyze_dff()], [analyze_dif()], [dif_report()]
+#' @seealso [dif_interaction_table()], [analyze_dff()], [dif_report()]
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
@@ -2265,72 +2265,6 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
   }
   flag_matrix[is.na(flag_matrix)] <- FALSE
 
-  if (draw) {
-    # Color scale: blue-white-red
-    n_colors <- 64
-    max_abs <- scale_limit %||% max(c(0, abs(mat[is.finite(mat)])))
-    if (!is.finite(max_abs) || max_abs == 0) max_abs <- 1
-    breaks <- seq(-max_abs, max_abs, length.out = n_colors + 1)
-    blue_white_red <- grDevices::colorRampPalette(
-      c("steelblue", "white", "firebrick")
-    )(n_colors)
-    mat_draw <- pmax(pmin(mat, max_abs), -max_abs)
-
-    old_par <- graphics::par(mar = c(6, 8, 4, 2), no.readonly = TRUE)
-    on.exit(graphics::par(old_par), add = TRUE)
-
-    metric_label <- switch(metric,
-      obs_exp = "Obs - Exp Average",
-      t       = "Scaled residual",
-      contrast = "Group contrast"
-    )
-    label <- NULL
-    if (!is.null(x$config$functioning_label)) {
-      label <- x$config$functioning_label
-    } else if (inherits(x, "mfrm_dif_interaction")) {
-      label <- "DFF"
-    }
-
-    graphics::image(
-      x = seq_len(ncol(mat)),
-      y = seq_len(nrow(mat)),
-      z = t(mat_draw),
-      col = blue_white_red,
-      breaks = breaks,
-      axes = FALSE,
-      xlab = "", ylab = "",
-      main = "",
-      ...
-    )
-    graphics::axis(1, at = seq_len(ncol(mat)), labels = cols,
-                   las = 2, cex.axis = 0.8)
-    graphics::axis(2, at = seq_len(nrow(mat)), labels = rows,
-                   las = 1, cex.axis = 0.8)
-    graphics::box()
-
-    if (!is.null(flag_threshold) && any(flag_matrix, na.rm = TRUE)) {
-      flagged <- which(flag_matrix, arr.ind = TRUE)
-      for (ii in seq_len(nrow(flagged))) {
-        ri <- flagged[ii, 1]
-        ci <- flagged[ii, 2]
-        graphics::rect(ci - 0.5, ri - 0.5, ci + 0.5, ri + 0.5,
-                       border = flag_color, lwd = 1.2)
-      }
-    }
-
-    if (isTRUE(show_values)) {
-      for (ri in seq_len(nrow(mat))) {
-        for (ci in seq_len(ncol(mat))) {
-          val <- mat[ri, ci]
-          if (is.finite(val)) {
-            graphics::text(ci, ri, formatC(val, format = "f",
-                                           digits = value_digits), cex = 0.6)
-          }
-        }
-      }
-    }
-  }
-
   metric_label <- switch(metric,
     obs_exp = "Obs - Exp Average",
     t       = "Scaled residual",
@@ -2382,7 +2316,7 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
     data.frame(Type = guide$Item, Text = paste(guide$Meaning, guide$ReportingNote)))
   if (!is.null(x$comparison_review)) out$data$notes <- rbind(out$data$notes,
     data.frame(Type = "Comparison review", Text = "A separate prospective interaction review is retained in comparison_review; its states do not classify the displayed residual/refit effects."))
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 # ============================================================================
@@ -2595,6 +2529,12 @@ information_build_step_structure <- function(fit, model) {
 #' expected score at theta. In `mfrmr`, these cell-level variances are then
 #' aggregated with weights taken from the realized observation counts in
 #' `fit$prep$data`.
+#' The sum includes observations from all Persons. With calibration fixed,
+#' duplicating those exposures doubles the total curve without improving any
+#' individual's rating plan. It is not per-Person test information; its
+#' reciprocal square root is not a Person's EAP posterior SD. A per-Person
+#' test information function requires an explicit task/criterion/rater roster
+#' and conditional independence of the contributing ratings.
 #'
 #' The resulting total curve is therefore a design-weighted precision screen
 #' rather than a pure textbook test-information function for an abstract fixed
@@ -2735,6 +2675,9 @@ information_build_step_structure <- function(fit, model) {
 #'
 #' @seealso [fit_mfrm()], [plot(x)][plot.mfrm_information]
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("compute_information", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "MML", model = "RSM",
@@ -2742,7 +2685,9 @@ information_build_step_structure <- function(fit, model) {
 #' info <- compute_information(fit)
 #' head(info$tif)
 #' info$tif$Theta[which.max(info$tif$Information)]
+#' }
 #' @export
+#' @order 1
 compute_information <- function(fit,
                                 theta_range = c(-6, 6),
                                 theta_points = 201L) {
@@ -2955,11 +2900,11 @@ compute_information <- function(fit,
 #' @param type `"tif"` for the overall precision curve (default), `"iif"` for
 #'   facet-level contribution curves, `"se"` / `"sem"` / `"csem"` for the
 #'   conditional standard error of measurement implied by that curve, or
-#'   `"both"` for precision with conditional SEM on a secondary axis.
+#'   `"both"` for precision and conditional SEM in separate panels.
 #' @param facet For `type = "iif"`, which facet to plot. If `NULL`,
 #'   the first facet is used.
 #' @param draw If `TRUE` (default), draw the plot. If `FALSE`, return
-#'   reusable `mfrm_plot_data` invisibly.
+#'   the `ggplot` object invisibly without printing.
 #' @param ... Additional graphical parameters.
 #'
 #' @section Plot types:
@@ -2988,8 +2933,8 @@ compute_information <- function(fit,
 #'   realized design may be poorly targeted.
 #'
 #' @section Returned data when draw = FALSE:
-#' `draw = FALSE` returns an `mfrm_plot_data` object. The underlying plotting
-#' data are stored in `$data$plot`. For `type = "tif"`, `"se"`, or `"both"`,
+#' `draw = FALSE` returns a `ggplot` object without printing. Read its plotting
+#' data with `plot_data(p, "plot")`. For `type = "tif"`, `"se"`, or `"both"`,
 #' those rows come from `x$tif`. For `type = "iif"`, the returned rows come
 #' from `x$iif` filtered to the requested facet. The plot data also include
 #' `plot_long`, `information_long`, `conditional_sem`, `summary`, and
@@ -3004,7 +2949,8 @@ compute_information <- function(fit,
 #' 4. Use `draw = FALSE` when you want reusable plot data for custom graphics
 #'    or reporting helpers.
 #'
-#' @return Invisibly, an `mfrm_plot_data` object.
+#' @return Invisibly, a `ggplot` object. Use [plot_data()] to retrieve its
+#'   reusable plotting data and notes.
 #'
 #' @seealso [compute_information()], [fit_mfrm()]
 #' @keywords internal
@@ -3142,40 +3088,10 @@ plot_information <- function(x,
 
   if (type == "tif" || type == "both") {
     plot_data <- x$tif
-    if (draw) {
-      if (type == "both") {
-        par_old <- graphics::par(mar = c(5, 4, 4, 4) + 0.1)
-        on.exit(graphics::par(par_old), add = TRUE)
-      }
-      plot(plot_data$Theta, plot_data$Information,
-           type = "l", lwd = 2, col = "steelblue",
-           xlab = expression(theta), ylab = "Information (precision)",
-           main = "", ...)
-      graphics::grid()
-      if (type == "both") {
-        graphics::par(new = TRUE)
-        plot(plot_data$Theta, plot_data$SE,
-             type = "l", lwd = 2, col = "coral", lty = 2,
-             axes = FALSE, xlab = "", ylab = "")
-        graphics::axis(4, col = "coral", col.axis = "coral")
-        graphics::mtext("Conditional SEM", side = 4, line = 2.5, col = "coral")
-        graphics::legend("topright",
-                         legend = c("Information (precision)", "Conditional SEM"),
-                         col = c("steelblue", "coral"),
-                         lty = c(1, 2), lwd = 2, bty = "n")
-      }
-    }
-    invisible(payload(plot_data))
+    .mfrm_finalize_ggplot(payload(plot_data), draw = draw)
   } else if (type == "se") {
     plot_data <- x$tif
-    if (draw) {
-      plot(plot_data$Theta, plot_data$SE,
-           type = "l", lwd = 2, col = "coral",
-           xlab = expression(theta), ylab = "Conditional SEM",
-           main = "", ...)
-      graphics::grid()
-    }
-    invisible(payload(plot_data))
+    .mfrm_finalize_ggplot(payload(plot_data), draw = draw)
   } else {
     # Facet-level contribution curves
     iif <- x$iif
@@ -3186,26 +3102,14 @@ plot_information <- function(x,
     if (nrow(plot_data) == 0) {
       stop("No information data for facet '", facet, "'.", call. = FALSE)
     }
-    if (draw) {
-      levels_u <- unique(plot_data$Level)
-      n_lev <- length(levels_u)
-      cols <- grDevices::rainbow(n_lev, s = 0.7, v = 0.8)
-      yr <- range(plot_data$Information, na.rm = TRUE)
-      plot(NA, xlim = range(plot_data$Theta), ylim = yr,
-           xlab = expression(theta), ylab = "Information contribution",
-           main = "", ...)
-      for (k in seq_along(levels_u)) {
-        sub <- plot_data |> filter(.data$Level == levels_u[k])
-        graphics::lines(sub$Theta, sub$Information, col = cols[k], lwd = 1.5)
-      }
-      graphics::legend("topright", legend = levels_u, col = cols,
-                       lty = 1, lwd = 1.5, bty = "n", cex = 0.8)
-      graphics::grid()
-    }
-    invisible(payload(plot_data,
-      title_override = paste("Facet-level precision contributions:", facet),
-      subtitle_override = "Contribution curves for the selected facet"
-    ))
+    .mfrm_finalize_ggplot(
+      payload(
+        plot_data,
+        title_override = paste("Facet-level precision contributions:", facet),
+        subtitle_override = "Contribution curves for the selected facet"
+      ),
+      draw = draw
+    )
   }
 }
 
@@ -3293,7 +3197,7 @@ plot_information <- function(x,
 #' step/midpoint `DrawValue`; the current renderer draws threshold lines at the
 #' exact value and prints fitted logits in step labels.
 #' These tables support custom ggplot2/plotly rendering without parsing the
-#' base plot.
+#' figure.
 #' Use `show_ci = FALSE` for the closest FACETS-style presentation. A
 #' FACETS-style ruler drawn with `show_ci = TRUE` is intentionally labelled as
 #' a hybrid because its uncertainty intervals are supplied by `mfrmr`.
@@ -3329,7 +3233,8 @@ plot_information <- function(x,
 #' [mfrmr_visual_diagnostics] and
 #' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
 #'
-#' @return Invisibly, a list with `persons`, `facets`, `thresholds`, and the
+#' @return Invisibly, a `ggplot` object. [plot_data()] returns `persons`,
+#'   `facets`, `thresholds`, and the
 #'   underlying Wright-map tables used for the plot. Native output includes a
 #'   `retention` table and `retention_note` documenting compact-display
 #'   omissions. All renderers include fit-readiness and interpretation-status
@@ -3340,17 +3245,23 @@ plot_information <- function(x,
 #' @concept visual diagnostics
 #' @concept Wright maps
 #' @examples
+#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # example("plot_wright_unified", run.dontrun = TRUE)
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", model = "RSM", maxit = 30)
-#' map_data <- plot(fit, type = "wright", view = "unified", draw = FALSE)
-#' names(map_data)
+#' map_plot <- plot(fit, type = "wright", view = "unified", draw = FALSE)
+#' names(plot_data(map_plot))
 #' facets_map <- plot(fit, type = "wright", view = "unified", renderer = "facets", category_labels = c(
 #'     `1` = "Beginning", `2` = "Developing", `3` = "Secure", `4` = "Advanced"
 #'   ), draw = FALSE)
-#' facets_map$facets_style$settings
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' plot_data(facets_map)$facets_style$settings
+#' }
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @keywords internal
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
@@ -3476,29 +3387,9 @@ plot_wright_unified <- function(fit,
     plot_data$subtitle <- paste0("REVIEW ONLY - ", plot_data$subtitle)
     warning(plot_readiness$detail, call. = FALSE)
   }
-  if (!draw) return(invisible(plot_data))
-
-  apply_plot_preset(style)
-  draw_wright_map(
-    plot_data,
-    title = plot_data$title,
-    palette = resolve_palette(
-      palette = palette,
-      defaults = c(
-        facet_level = style$accent_tertiary,
-        step_threshold = style$accent_secondary,
-        person_hist = style$fill_muted,
-        grid = style$grid,
-        range = style$accent_primary,
-        iqr = style$foreground
-      )
-    ),
-    label_angle = label_angle,
-    show_ci = show_ci,
-    ci_level = ci_level
-  )
-
-  invisible(plot_data)
+  plot_data$palette <- palette
+  out <- new_mfrm_plot_data("wright_map", plot_data)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 # ============================================================================
@@ -3962,11 +3853,11 @@ anchor_to_baseline <- function(new_data, baseline_fit,
 
 #' @rdname anchor_to_baseline
 #' @param x An `mfrm_anchored_fit` object.
-#' @export
-print.mfrm_anchored_fit <- function(x, ...) {
-  print(summary(x))
-  invisible(x)
-}
+#' @name print.mfrm_anchored_fit
+#' @aliases print.mfrm_anchored_fit
+#' @usage \method{print}{mfrm_anchored_fit}(x, ...)
+#' @rawNamespace S3method(print,mfrm_anchored_fit,print.mfrm_comparison)
+NULL
 
 #' @rdname anchor_to_baseline
 #' @param object An `mfrm_anchored_fit` object (for `summary`).
@@ -4180,6 +4071,7 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' head(drift$drift_table[, c("Facet", "Level", "Wave", "Drift", "Flag")])
 #' drift$common_elements
 #' }
+#' @order 1
 detect_anchor_drift <- function(fits,
                                 facets = NULL,
                                 drift_threshold = 0.5,
@@ -4431,13 +4323,20 @@ detect_anchor_drift <- function(fits,
 }
 
 #' @rdname detect_anchor_drift
-#' @param x An `mfrm_anchor_drift` object.
-#' @param ... Ignored.
-#' @export
-print.mfrm_anchor_drift <- function(x, ...) {
-  print(summary(x))
-  invisible(x)
-}
+#' @param x For `print.mfrm_anchor_drift()`: An `mfrm_anchor_drift` object.
+#'
+#' For `plot()`: A saved result from [detect_anchor_drift()].
+#' @param ... For `print.mfrm_anchor_drift()`: Ignored.
+#'
+#' For `plot()`: `facet` optionally selects facets; `ci_level = 0.95` controls
+#'   forest whiskers only; `preset` selects `"standard"`, `"publication"`,
+#'   `"compact"`, or `"monochrome"`; `draw = FALSE` returns data without drawing.
+#'   Additional base-graphics arguments depend on the selected view.
+#' @name print.mfrm_anchor_drift
+#' @aliases print.mfrm_anchor_drift
+#' @usage \method{print}{mfrm_anchor_drift}(x, ...)
+#' @rawNamespace S3method(print,mfrm_anchor_drift,print.mfrm_comparison)
+NULL
 
 #' @rdname detect_anchor_drift
 #' @param object An `mfrm_anchor_drift` object (for `summary`).
@@ -4955,11 +4854,11 @@ build_equating_chain <- function(fits,
 #' @rdname build_equating_chain
 #' @param x An `mfrm_equating_chain` object.
 #' @param ... Ignored.
-#' @export
-print.mfrm_equating_chain <- function(x, ...) {
-  print(summary(x))
-  invisible(x)
-}
+#' @name print.mfrm_equating_chain
+#' @aliases print.mfrm_equating_chain
+#' @usage \method{print}{mfrm_equating_chain}(x, ...)
+#' @rawNamespace S3method(print,mfrm_equating_chain,print.mfrm_comparison)
+NULL
 
 #' @rdname build_equating_chain
 #' @param y Unused (S3 plot signature requirement).
@@ -4970,12 +4869,16 @@ print.mfrm_equating_chain <- function(x, ...) {
 #'   (newly disconnected wave pairs after deleting each common element), or
 #'   `"offset_sensitivity"` (conditional rescreened linking-offset changes).
 #' @param preset Visual preset.
-#' @param draw If `TRUE`, draw the plot with base graphics.
+#' @param draw If `TRUE`, print the `ggplot` object to the active device.
 #' @param show_title Logical; display the main title.
 #' @param show_notes Logical; display graph/topology interpretation footers.
 #'   Returned notes and ordinary R warnings are unaffected. Axes, legends and
 #'   data labels remain visible; other chain views have no interpretation footer.
-#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @return Invisibly, a `ggplot` object carrying its saved plot payload for
+#'   [plot_data()].
+#' @section Session plot defaults:
+#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
+#' precedence, and appearance when saving or reusing a plot.
 #' @export
 plot.mfrm_equating_chain <- function(x, y = NULL,
                                      type = c("common_anchors", "graph", "chain", "links", "anchor_removal", "offset_sensitivity"),
@@ -4994,7 +4897,6 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
   type <- match.arg(type)
   style <- resolve_plot_preset(preset)
   if (identical(type, "chain")) {
-    if (isTRUE(draw)) apply_plot_preset(style)
     return(.plot_equating_chain(x, draw = draw, style = style,
       show_title = show_title, show_notes = show_notes, ...))
   }
@@ -5010,8 +4912,7 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
       legend = new_plot_legend(key$Label, rep("availability", 3), rep("shape", 3), key$Shape),
       preset = style$name
     ))
-    if (isTRUE(draw)) .draw_equating_offset_sensitivity(out, style)
-    return(invisible(out))
+    return(.mfrm_finalize_ggplot(out, draw = draw))
   }
   if (type %in% c("links", "anchor_removal")) {
     removal <- identical(type, "anchor_removal")
@@ -5036,8 +4937,7 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
         if (removal) key$Shape else key$Linetype),
       preset = style$name
     ))
-    if (isTRUE(draw)) .draw_equating_topology(out, style, removal = removal)
-    return(invisible(out))
+    return(.mfrm_finalize_ggplot(out, draw = draw))
   }
   if (identical(type, "graph")) {
     graph_data <- .equating_graph_data(x)
@@ -5059,8 +4959,7 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
       legend = new_plot_legend(key$Label, rep("screening", 4), rep("linetype", 4), key$Linetype),
       preset = style$name
     ))
-    if (isTRUE(draw)) .draw_equating_graph(out, style)
-    return(invisible(out))
+    return(.mfrm_finalize_ggplot(out, draw = draw))
   }
   # type == "common_anchors": bar chart of pairwise common anchor counts.
   links <- as.data.frame(x$links %||% data.frame(), stringsAsFactors = FALSE)
@@ -5088,21 +4987,7 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
     )
   )
   out$data$notes <- .mfrm_plot_notes(out$data)
-  if (isTRUE(draw)) {
-    apply_plot_preset(style)
-    old_par <- graphics::par()["mar"]
-    on.exit(graphics::par(old_par), add = TRUE)
-    graphics::par(mar = c(8, 5, 3, 1))
-    graphics::barplot(
-      height = links$N_Common,
-      names.arg = links$Pair,
-      las = 2,
-      col = style$accent_primary,
-      main = .mfrm_plot_display_title(out$data),
-      ylab = "N common"
-    )
-  }
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }
 
 #' @rdname build_equating_chain
@@ -5554,15 +5439,14 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 }
 
 #' Build a linking-review synthesis object
-#'
 #' @param anchor_review Optional output from [review_mfrm_anchors()].
 #' @param drift Optional output from [detect_anchor_drift()].
 #' @param chain Optional output from [build_equating_chain()].
-#' @param top_n Maximum number of linking-risk rows to highlight in summary
+#' @param top_n For `build_linking_review()`: Maximum number of linking-risk rows to highlight in summary
 #'   outputs. The full object keeps the full risk tables.
 #'
-#' @details
-#' `build_linking_review()` does not recompute anchor, drift, or chain
+#' For `summary()`: Number of top linking-risk rows to keep in the compact summary.
+#' @details `build_linking_review()` does not recompute anchor, drift, or chain
 #' statistics. It is a synthesis layer that organizes package-native evidence
 #' into one operational review surface with:
 #'
@@ -5578,13 +5462,11 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' It also does not verify source-fit readiness, cross-wave element identity,
 #' invariance, or the external assumptions behind group anchors; these must be
 #' established before promoting the synthesized review.
-#'
 #' @section Recommended input route:
 #' Use existing package-native outputs in this order:
 #' 1. [review_mfrm_anchors()] for pre-fit anchor adequacy.
 #' 2. [detect_anchor_drift()] for direct wave-to-reference drift screening.
 #' 3. [build_equating_chain()] for adjacent screened-link review across waves.
-#'
 #' @section Interpreting output:
 #' - `overview`: which evidence sources were supplied and the current review status.
 #' - `top_linking_risks`: primary operational triage table.
@@ -5592,19 +5474,16 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' - `plot_map`: which plotting function to use for each result.
 #' - `reporting_map`: what is covered here versus which manuscript-oriented
 #'   helper should be used separately.
-#'
 #' @section GPCM boundary:
 #' This helper summarizes the documented `RSM` / `PCM` linking workflow.
 #' When supplied drift/chain sources resolve to `GPCM`, it retains an explicitly
 #' exploratory review and marks that scope as `supported_with_caveat`.
 #' This does not establish score interchangeability, invariance or a common
 #' scale across administrations.
-#'
 #' @return An object of class `mfrm_linking_review`.
 #' @seealso [review_mfrm_anchors()], [detect_anchor_drift()],
 #'   [build_equating_chain()], [plot(x)][plot.mfrm_anchor_drift], [mfrmr_linking_and_dff]
-#' @examples
-#' # Long-running workflow; run explicitly when needed.
+#' @examples # Long-running workflow; run explicitly when needed.
 #' # example("build_linking_review", run.dontrun = TRUE)
 #' \dontrun{
 #' # Deliberately linked teaching waves: common labels below represent the
@@ -5627,6 +5506,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' review$group_view_index
 #' }
 #' @export
+#' @order 1
 build_linking_review <- function(anchor_review = NULL,
                                  drift = NULL,
                                  chain = NULL,
@@ -5845,20 +5725,15 @@ build_linking_review <- function(anchor_review = NULL,
   as_mfrm_bundle(out, "mfrm_linking_review")
 }
 
-#' @export
-print.mfrm_linking_review <- function(x, ...) {
-  print(summary(x), ...)
-  invisible(x)
-}
+#' @rawNamespace S3method(print,mfrm_linking_review,print.mfrm_bundle)
+NULL
 
-#' Summarize a linking-review object
-#'
+#' @rdname build_linking_review
+#' @details `summary()` method: Summarize a linking-review object
 #' @param object Output from [build_linking_review()].
 #' @param digits Number of digits for printed numeric values.
-#' @param top_n Number of top linking-risk rows to keep in the compact summary.
 #' @param ... Reserved for generic compatibility.
-#'
-#' @return An object of class `summary.mfrm_linking_review`.
+#' @return For `summary()`: An object of class `summary.mfrm_linking_review`.
 #' @seealso [build_linking_review()]
 #' @export
 summary.mfrm_linking_review <- function(object, digits = 3, top_n = 10, ...) {
@@ -5928,16 +5803,6 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 
 # --- build_misfit_casebook ---------------------------------------------------
 
-.validate_misfit_casebook_input <- function(x, arg, classes) {
-  if (is.null(x)) return(NULL)
-  if (!inherits(x, classes)) {
-    stop(
-      "`", arg, "` must be one of: ", paste(classes, collapse = ", "), ".",
-      call. = FALSE
-    )
-  }
-  x
-}
 
 .misfit_casebook_support_status <- function(model) {
   model <- as.character(model %||% NA_character_)[1]
@@ -6183,13 +6048,6 @@ print.summary.mfrm_linking_review <- function(x, ...) {
   )
 }
 
-.misfit_casebook_group_view_index_empty <- function() {
-  tibble::tibble(
-    View = character(),
-    Rows = integer(),
-    Description = character()
-  )
-}
 
 .normalize_misfit_casebook_id <- function(x, arg) {
   if (is.null(x)) {
@@ -6466,7 +6324,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
     index_tbl <- dplyr::bind_rows(index_tbl, facet_index)
   }
 
-  .misfit_casebook_group_view_index_empty() |>
+  .linking_review_group_view_index_empty() |>
     dplyr::slice(0) |>
     dplyr::bind_rows(index_tbl)
 }
@@ -6778,7 +6636,6 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 }
 
 #' Build a case-level misfit review bundle
-#'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()].
 #'   Must match this fitted analysis; see [mfrmr_compatibility_layer] for
@@ -6790,10 +6647,10 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #'   outputs when supplied.
 #' @param wave_id Optional scalar identifier for the current wave or occasion.
 #'   It is stored in row-level provenance and summary outputs when supplied.
-#' @param top_n Maximum number of rows to keep in compact summary outputs.
+#' @param top_n For `build_misfit_casebook()`: Maximum number of rows to keep in compact summary outputs.
 #'
-#' @details
-#' `build_misfit_casebook()` is a synthesis layer over package-native screening
+#' For `summary()`: Number of top case rows to keep in the compact summary.
+#' @details `build_misfit_casebook()` is a synthesis layer over package-native screening
 #' outputs. It does not invent a new misfit statistic. Instead, it organizes
 #' existing evidence families into one case-level review surface:
 #'
@@ -6812,24 +6669,20 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #' `by_source_family`, and `by_wave` to support operational triage. The
 #' `source_support` component records which evidence families are currently
 #' supported, caveated, or deferred under the active model.
-#'
 #' @section Recommended input route:
 #' 1. Fit with [fit_mfrm()].
 #' 2. Build diagnostics with [diagnose_mfrm()].
 #' 3. Optionally build [unexpected_response_table()] and [displacement_table()]
 #'    yourself when you want custom thresholds before synthesizing the casebook.
-#'
 #' @section GPCM boundary:
 #' For `GPCM`, the helper is available with caveat. The casebook inherits
 #' exploratory screening semantics from the underlying residual and strict
 #' marginal sources; it should not be read as a formal inferential case test.
-#'
 #' @return An object of class `mfrm_misfit_casebook`.
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()],
 #'   [displacement_table()], [plot(x, type = "unexpected")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit],
 #'   [plot(x, type = "marginal_fit")][plot.mfrm_fit], [plot(x, type = "marginal_pairwise")][plot.mfrm_fit]
-#' @examples
-#' # Long-running workflow; run explicitly when needed.
+#' @examples # Long-running workflow; run explicitly when needed.
 #' # example("build_misfit_casebook", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -6848,6 +6701,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #' [mfrmr_compatibility_layer] to recreate them from the saved fit and matching
 #' diagnostics without refitting the model.
 #' @export
+#' @order 1
 build_misfit_casebook <- function(fit,
                                   diagnostics = NULL,
                                   unexpected = NULL,
@@ -6858,9 +6712,9 @@ build_misfit_casebook <- function(fit,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
-  diagnostics <- .validate_misfit_casebook_input(diagnostics, "diagnostics", "mfrm_diagnostics")
-  unexpected <- .validate_misfit_casebook_input(unexpected, "unexpected", "mfrm_unexpected")
-  displacement <- .validate_misfit_casebook_input(displacement, "displacement", "mfrm_displacement")
+  diagnostics <- .validate_linking_review_input(diagnostics, "diagnostics", "mfrm_diagnostics")
+  unexpected <- .validate_linking_review_input(unexpected, "unexpected", "mfrm_unexpected")
+  displacement <- .validate_linking_review_input(displacement, "displacement", "mfrm_displacement")
   administration_id <- .normalize_misfit_casebook_id(administration_id, "administration_id")
   wave_id <- .normalize_misfit_casebook_id(wave_id, "wave_id")
   top_n <- max(1L, as.integer(top_n %||% 25L))
@@ -7100,20 +6954,15 @@ build_misfit_casebook <- function(fit,
   as_mfrm_bundle(out, "mfrm_misfit_casebook")
 }
 
-#' @export
-print.mfrm_misfit_casebook <- function(x, ...) {
-  print(summary(x), ...)
-  invisible(x)
-}
+#' @rawNamespace S3method(print,mfrm_misfit_casebook,print.mfrm_bundle)
+NULL
 
-#' Summarize a misfit-casebook object
-#'
+#' @rdname build_misfit_casebook
+#' @details `summary()` method: Summarize a misfit-casebook object
 #' @param object Output from [build_misfit_casebook()].
 #' @param digits Number of digits for printed numeric values.
-#' @param top_n Number of top case rows to keep in the compact summary.
 #' @param ... Reserved for generic compatibility.
-#'
-#' @return An object of class `summary.mfrm_misfit_casebook`.
+#' @return For `summary()`: An object of class `summary.mfrm_misfit_casebook`.
 #' @seealso [build_misfit_casebook()]
 #' @export
 summary.mfrm_misfit_casebook <- function(object, digits = 3, top_n = 10, ...) {
@@ -7470,19 +7319,18 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 }
 
 #' Build a weighting-policy review between Rasch-family and GPCM fits
-#'
 #' @param rasch_fit Output from [fit_mfrm()] using `model = "RSM"` or `"PCM"`.
 #' @param gpcm_fit Output from [fit_mfrm()] using `model = "GPCM"`.
 #' @param theta_range Numeric vector of length 2 passed to [compute_information()]
 #'   for the information-redistribution comparison.
 #' @param theta_points Integer number of theta grid points passed to
 #'   [compute_information()].
-#' @param top_n Maximum number of rows to keep in compact summary outputs.
+#' @param top_n For `build_weighting_review()`: Maximum number of rows to keep in compact summary outputs.
+#'
+#' For `summary()`: Number of top rows to retain in compact summary tables.
 #' @param nested Request the PCM/GPCM equal-slope likelihood-ratio test. Default
 #'   `FALSE`. Requires matched MML fits and the checks in [compare_mfrm()].
-#'
-#' @details
-#' `build_weighting_review()` is an operational model-choice review helper. It
+#' @details `build_weighting_review()` is an operational model-choice review helper. It
 #' is designed for the common question:
 #'
 #' - what changes when a Rasch-family equal-weighting model is replaced with a
@@ -7514,14 +7362,12 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' parameters. FACETS may serve as a direct comparator for the PCM/JML side
 #' only; its post-fit discrimination statistic is not a jointly estimated
 #' free-slope GPCM counterpart.
-#'
 #' @section Recommended input route:
 #' 1. Fit an equal-weighting reference model with `model = "RSM"` or `"PCM"`.
 #' 2. Fit a `GPCM` on the same prepared response data.
 #' 3. Run `build_weighting_review(rasch_fit, gpcm_fit)`.
 #' 4. Read `summary(review)` before deciding whether the discrimination-based
 #'    reweighting is substantively acceptable.
-#'
 #' @section What the returned tables mean:
 #' - `model_comparison`: same-data model-comparison bundle from [compare_mfrm()].
 #'   AIC/Person-BIC/SABIC ranking is available only when `ICComparable` is true.
@@ -7535,17 +7381,14 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #'   between the Rasch-family fit and `GPCM`.
 #' - `top_reweighted_levels`: compact triage table for the strongest
 #'   slope-facet-level redistribution signals.
-#'
 #' @section GPCM boundary:
 #' This helper is available only for the current `GPCM` branch. It
 #' requires `slope_facet == step_facet` even though MML fitting permits separate owners, and
 #' should be read as an operational weighting-policy review, not as a formal
 #' validity adjudication.
-#'
 #' @return An object of class `mfrm_weighting_review`.
-#' @seealso [compare_mfrm()], [compute_information()], [gpcm_capability_matrix()]
-#' @examples
-#' # Long-running workflow; run explicitly when needed.
+#' @seealso [compare_mfrm()], [compute_information()], [mfrmr_gpcm_scope]
+#' @examples # Long-running workflow; run explicitly when needed.
 #' # example("build_weighting_review", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -7575,6 +7418,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' }
 #' @name build_weighting_review
 #' @export
+#' @order 1
 build_weighting_review <- function(rasch_fit,
                                    gpcm_fit,
                                    theta_range = c(-6, 6),
@@ -7907,20 +7751,15 @@ validate_model_review_convergence <- function(x) {
   invisible(TRUE)
 }
 
-#' @export
-print.mfrm_weighting_review <- function(x, ...) {
-  print(summary(x), ...)
-  invisible(x)
-}
+#' @rawNamespace S3method(print,mfrm_weighting_review,print.mfrm_bundle)
+NULL
 
-#' Summarize a weighting-review object
-#'
+#' @rdname build_weighting_review
+#' @details `summary()` method: Summarize a weighting-review object
 #' @param object Output from [build_weighting_review()].
 #' @param digits Number of digits for printed numeric values.
-#' @param top_n Number of top rows to retain in compact summary tables.
 #' @param ... Reserved for generic compatibility.
-#'
-#' @return An object of class `summary.mfrm_weighting_review`, including the
+#' @return For `summary()`: An object of class `summary.mfrm_weighting_review`, including the
 #'   evidence-tier `comparison_contract` table and any computed `lrt`.
 #' @seealso [build_weighting_review()]
 #' @export
@@ -8098,7 +7937,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
       BiasScreening = status_for("residual_bias_screening"),
       SummaryAppendix = status_for("summary_appendix"),
       PrimaryHelpers = paste(
-        "gpcm_capability_matrix(); build_apa_outputs();",
+        "mfrmr_output_guide(\"gpcm_capabilities\"); build_apa_outputs();",
         "facets_output_file_bundle(include = \"score\"); build_linking_review();",
         "simulate_mfrm_recovery(); fair_average_table(); estimate_bias();",
         "export_summary_appendix()"
@@ -8227,7 +8066,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
     base <- dplyr::bind_rows(
       tibble::tibble(
         Question = "What is the exact GPCM support boundary?",
-        PrimaryHelper = "gpcm_capability_matrix()",
+        PrimaryHelper = "mfrmr_output_guide(\"gpcm_capabilities\")",
         Interpretation = "Treat supported_with_caveat rows as review outputs and blocked/deferred rows as out of scope."
       ),
       base
@@ -8253,8 +8092,9 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 }
 
 #' Build a model-choice review across RSM, PCM, and GPCM fits
+#' @param ... For `build_model_choice_review()`: Two or more fitted `mfrm_fit` objects from [fit_mfrm()].
 #'
-#' @param ... Two or more fitted `mfrm_fit` objects from [fit_mfrm()].
+#' For `summary()`: Reserved for generic compatibility.
 #' @param labels Optional labels for the supplied fits. If omitted, names from
 #'   `...` are used when available; otherwise labels are generated from
 #'   model/method combinations.
@@ -8264,9 +8104,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' @param theta_range,theta_points,top_n Passed to [build_weighting_review()] when
 #'   `run_weighting_review = TRUE`.
 #' @param warn_constraints Passed to [compare_mfrm()].
-#'
-#' @details
-#' `build_model_choice_review()` is a user-facing synthesis helper. It does not
+#' @details `build_model_choice_review()` is a user-facing synthesis helper. It does not
 #' estimate new models. It bundles:
 #'
 #' - [compare_mfrm()] for verified AIC/Person-BIC/SABIC/log-likelihood
@@ -8280,7 +8118,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #'   recovery, fair averages, bias screening, and summary-appendix handoff;
 #' - report wording templates that avoid treating better `GPCM` fit as
 #'   an automatic operational-scoring decision;
-#' - [gpcm_capability_matrix()] when `GPCM` is present;
+#' - `mfrmr_output_guide("gpcm_capabilities")` when `GPCM` is present;
 #' - optionally, [build_weighting_review()] for the first Rasch-family reference
 #'   versus `GPCM` pair.
 #'
@@ -8293,12 +8131,10 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' outside the documented boundary.
 #' Model-choice ranking also requires the current selectable IC contract:
 #' q<31 fits retain raw criteria but produce a screening/review-only bundle.
-#'
 #' @return An object of class `mfrm_model_choice_review`.
 #' @seealso [compare_mfrm()], [build_weighting_review()],
-#'   [gpcm_capability_matrix()], [compute_information()]
-#' @examples
-#' toy <- load_mfrmr_data("example_core")
+#'   [mfrmr_gpcm_scope], [compute_information()]
+#' @examples toy <- load_mfrmr_data("example_core")
 #' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                     method = "MML", model = "RSM", quad_points = 31)
 #' fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -8307,6 +8143,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' review <- build_model_choice_review(RSM = fit_rsm, PCM = fit_pcm)
 #' summary(review)
 #' @export
+#' @order 1
 build_model_choice_review <- function(...,
                                       labels = NULL,
                                       run_weighting_review = NULL,
@@ -8470,19 +8307,14 @@ build_model_choice_review <- function(...,
   as_mfrm_bundle(out, "mfrm_model_choice_review")
 }
 
-#' @export
-print.mfrm_model_choice_review <- function(x, ...) {
-  print(summary(x), ...)
-  invisible(x)
-}
+#' @rawNamespace S3method(print,mfrm_model_choice_review,print.mfrm_bundle)
+NULL
 
-#' Summarize a model-choice review
-#'
+#' @rdname build_model_choice_review
+#' @details `summary()` method: Summarize a model-choice review
 #' @param object Output from [build_model_choice_review()].
 #' @param digits Number of digits for printed numeric values.
-#' @param ... Reserved for generic compatibility.
-#'
-#' @return An object of class `summary.mfrm_model_choice_review`.
+#' @return For `summary()`: An object of class `summary.mfrm_model_choice_review`.
 #' @seealso [build_model_choice_review()]
 #' @export
 summary.mfrm_model_choice_review <- function(object, digits = 3, ...) {

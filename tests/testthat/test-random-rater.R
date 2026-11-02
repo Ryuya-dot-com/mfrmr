@@ -212,6 +212,8 @@ test_that("positive random-rater variance profiles attain the likelihood cutoff"
 })
 
 test_that("an estimated zero variance does not manufacture certainty", {
+  # Extended numerical/reference case; shorter live routes remain on CRAN.
+  skip_on_cran()
   skip_if_not_installed("RTMB", "2.0")
   d <- expand.grid(Person = 1:12, Rater = 1:4, Criterion = 1:3)
   d$Score <- (d$Person + d$Criterion) %% 3
@@ -244,6 +246,8 @@ test_that("an estimated zero variance does not manufacture certainty", {
 })
 
 test_that("a false-convergence zero submodel receives a verified curvature restart", {
+  # Extended numerical/reference case; shorter live routes remain on CRAN.
+  skip_on_cran()
   skip_if_not_installed("RTMB", "2.0")
   d <- shared_rater_example(240, 6, 0, 9236206)
   fit <- fit_mfrm_random_rater(d, "Person", "Rater", "Score", "Criterion", 0:2, quad_points = 61, person_sd = 1)

@@ -27,7 +27,7 @@ Reviewed against the 0.2.4 development routes on October 24, 2026. Use
 `facets_feature_coverage()` for route limits and
 `help("mfrmr_methods_reference")` for calculation assumptions and literature.
 These routes are not automatically available for two-family GPCM or corrected
-JML merely because they share `mfrm_fit`. Consult `gpcm_capability_matrix()`.
+JML merely because they share `mfrm_fit`. Consult `mfrmr_output_guide("gpcm_capabilities")`.
 Plotting uses `plot()` on fits or analysis results; see `mfrmr_plot_migration`.
 
 ## Corrected calculations and remaining differences
@@ -245,8 +245,8 @@ establish agreement at a cutoff or inferential calibration.
 - Output-file emulation (`GRAPH=` / `SCORE=` style): `facets_output_file_bundle()`
 - Standalone residual and subset handoff files:
   `write_mfrm_residual_file()` and `write_mfrm_subset_file()`
-- FACETS fit/score-file import: `read_facets_fit_table()` /
-  `import_facets_fit_table()` for delimited and fixed-field score-file extracts
+- FACETS fit/score-file/graph-file import: `read_facets_results()` for
+  delimited, fixed-field score-file, and graph-file extracts
 - Fair-average measurement summaries: `fair_average_table()`, `plot(fit, type = "fair_average")`.
   The column contract now identifies this as Table 7, retaining only the
   legacy object key `t12`. FACETS Table 12 is the
@@ -442,7 +442,7 @@ the appropriate route for each surface. External-only areas include:
 - Winsteps control/data-file export; use Winsteps externally when that format
   is required.
 - Arbitrary FACETS command-file and raw-report parsing; provide supported
-  delimited or fixed-field fit extracts to `read_facets_fit_table()` instead.
+  delimited, fixed-field, or graph-file extracts to `read_facets_results()` instead.
 
 ## Anchoring Rules Encoded
 - Direct anchors (`Facet`, `Level`, `Anchor`) are fixed.

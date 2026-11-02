@@ -205,12 +205,6 @@ q3_statistic <- function(fit,
   yen_threshold <- as.numeric(yen_threshold)
   marais_threshold <- as.numeric(marais_threshold)
   relative_offset <- as.numeric(relative_offset)
-  if (is.null(diagnostics)) {
-    diagnostics <- suppressMessages(
-      diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "legacy")
-    )
-  }
-
   # Reuse the heatmap helper's plot data; it already implements the
   # standardized-residual pivot and pairwise Pearson correlation.
   h <- plot_local_dependence_heatmap(
@@ -221,7 +215,7 @@ q3_statistic <- function(fit,
     draw = FALSE
   )
 
-  pairs_df <- as.data.frame(h$data$pairs %||% data.frame(),
+  pairs_df <- as.data.frame(plot_data(h)$pairs %||% data.frame(),
                              stringsAsFactors = FALSE)
   pairs_df$Q3 <- suppressWarnings(as.numeric(pairs_df$ResidualCor))
   pairs_df$AbsQ3 <- abs(pairs_df$Q3)

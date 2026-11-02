@@ -3,20 +3,33 @@
 \name{review_peer_design}
 \alias{review_peer_design}
 \alias{build_peer_review_design_review}
+\alias{summary.mfrm_peer_review_design_review}
 \title{Review a peer-assessment assignment design}
 \usage{
 review_peer_design(peer_review_design, top_n = 10)
+
+\method{summary}{mfrm_peer_review_design_review}(object, digits = 3, top_n = 10, ...)
 }
 \arguments{
 \item{peer_review_design}{A generated data frame carrying the
 \code{mfrm_peer_review_design} attribute, the attribute itself, or its
 \code{overview} data frame.}
 
-\item{top_n}{Number of reviewer-load, submission-load, common-link, and
-reciprocal-pair rows to keep in compact summary tables.}
+\item{top_n}{For \code{review_peer_design()}: Number of reviewer-load, submission-load, common-link, and
+reciprocal-pair rows to keep in compact summary tables.
+
+For \code{summary()}: Number of rows to keep in compact follow-up tables.}
+
+\item{object}{Output from \code{\link[=review_peer_design]{review_peer_design()}}.}
+
+\item{digits}{Number of digits for printed numeric values.}
+
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 A bundle of class \code{mfrm_peer_review_design_review}.
+
+For \code{summary()}: An object of class \code{summary.mfrm_peer_review_design_review}.
 }
 \description{
 Review existing assignment metadata for self-review, reviewer/submission
@@ -36,6 +49,8 @@ Peer-review use of MFRM follows studies that model peer/self/teacher rater
 severity and leniency. Common-link anchor interpretation follows sparse
 rater-mediated design work; the review status is therefore descriptive and
 conservative rather than a literature-derived universal adequacy cutoff.
+
+\code{summary()} method: Summarize a peer-review design review
 }
 \section{References}{
 
@@ -67,4 +82,6 @@ summary(review)$overview
 \seealso{
 \code{\link[=build_peer_review_sim_spec]{build_peer_review_sim_spec()}}, \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}},
 \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}}, \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}
+
+\code{\link[=review_peer_design]{review_peer_design()}}
 }

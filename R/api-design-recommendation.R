@@ -1,4 +1,122 @@
 # Saved planning results: describe the decision without rerunning simulations.
+.mfrm_plan_review <- function(x, costs, limits, targets) {
+  metrics <- c("G", "Phi", "RelativeSEM", "AbsoluteSEM")
+  tab <- x$comparisons
+  grid <- x$design_grid
+  n <- nrow(grid)
+  ref <- x$reference
+  required <- c("Reference", "Scenario", "Metric", "ReferenceValue", "Value",
+    "Difference", "SE", "Lower", "Upper", "Status")
+  if (!is.data.frame(grid) || ncol(grid) != 2L || n < 2L ||
+      !all(vapply(grid, function(v) is.numeric(v) && !is.complex(v) && is.null(dim(v)), logical(1))) ||
+      any(!is.finite(as.matrix(grid)) | as.matrix(grid) < 1 | as.matrix(grid) != floor(as.matrix(grid))) ||
+      length(ref) != 1L || !is.numeric(ref) || is.complex(ref) || !is.null(dim(ref)) ||
+      !is.finite(ref) || !ref %in% seq_len(n) ||
+      !is.data.frame(tab) || !all(required %in% names(tab)))
+    stop("The saved comparison must retain its reference, crossed design grid and paired results.", call. = FALSE)
+  candidates <- setdiff(seq_len(n), ref)
+  expected <- as.vector(outer(candidates, metrics, paste, sep = "/"))
+  keys <- paste(tab$Scenario, tab$Metric, sep = "/")
+  if (!is.numeric(tab$Scenario) || is.complex(tab$Scenario) || !is.null(dim(tab$Scenario)) ||
+      anyDuplicated(keys) || !setequal(keys, expected) ||
+      anyNA(tab$Reference) || any(tab$Reference != ref) ||
+      !all(vapply(tab[c("ReferenceValue", "Value", "Difference", "SE", "Lower", "Upper")],
+        is.numeric, logical(1))) ||
+      !isTRUE(all.equal(tab$Difference, tab$Value - tab$ReferenceValue, tolerance = 0)))
+    stop("The saved comparison needs each candidate/metric once with consistent paired differences.", call. = FALSE)
+
+  named_bounds <- function(value, allowed, name) {
+    if (is.null(value)) return(numeric())
+    if (!is.numeric(value) || is.complex(value) || !is.null(dim(value)) ||
+        is.null(names(value)) || anyNA(names(value)) || anyDuplicated(names(value)) ||
+        any(!names(value) %in% allowed) || any(!is.finite(value) | value < 0))
+      stop("`", name, "` must be a uniquely named vector of finite nonnegative bounds for ",
+        paste(allowed, collapse = ", "), ".", call. = FALSE)
+    value
+  }
+  if (is.null(costs)) costs <- data.frame(Scenario = seq_len(n))
+  if (!is.data.frame(costs) || anyNA(names(costs)) || anyDuplicated(names(costs)) ||
+      any(!nzchar(trimws(names(costs)))) || !"Scenario" %in% names(costs) ||
+      !is.numeric(costs$Scenario) || is.complex(costs$Scenario) || !is.null(dim(costs$Scenario)) ||
+      anyNA(costs$Scenario) || anyDuplicated(costs$Scenario) ||
+      !setequal(costs$Scenario, seq_len(n)))
+    stop("`costs` must have unique column names and each Scenario exactly once, including the reference.", call. = FALSE)
+  cost_names <- setdiff(names(costs), "Scenario")
+  valid_cost <- function(v) is.numeric(v) && !is.complex(v) && is.null(dim(v)) &&
+    !any(is.nan(v) | (!is.na(v) & (!is.finite(v) | v < 0)))
+  if (!all(vapply(costs[cost_names], valid_cost, logical(1))))
+    stop("Cost columns must contain finite nonnegative numbers or NA for unknown costs.", call. = FALSE)
+  costs <- as.data.frame(costs[match(seq_len(n), costs$Scenario), , drop = FALSE])
+  rownames(costs) <- NULL
+  limits <- named_bounds(limits, cost_names, "limits")
+  targets <- named_bounds(targets, metrics, "targets")
+  if (any(targets[intersect(names(targets), c("G", "Phi"))] > 1))
+    stop("G and Phi point targets must be between zero and one.", call. = FALSE)
+
+  plans <- data.frame(Scenario = seq_len(n), IsReference = seq_len(n) == ref,
+    RatingsPerPerson = apply(grid, 1L, function(v) prod(as.double(v))))
+  for (metric in metrics) {
+    rows <- tab[tab$Metric == metric, , drop = FALSE]
+    if (length(unique(rows$ReferenceValue)) != 1L)
+      stop("Reference values must agree across the saved comparisons.", call. = FALSE)
+    plans[[metric]] <- rows$Value[match(seq_len(n), rows$Scenario)]
+    plans[[metric]][ref] <- rows$ReferenceValue[1L]
+  }
+  checks <- data.frame(Scenario = integer(), Type = character(), Criterion = character(),
+    Value = numeric(), Relation = character(), Threshold = numeric(), Status = character())
+  for (type in c("resource", "point_target")) {
+    values <- if (type == "resource") costs else plans
+    bounds <- if (type == "resource") limits else targets
+    for (name in names(bounds)) {
+      value <- values[[name]]
+      lower <- type == "point_target" && name %in% c("G", "Phi")
+      pass <- if (lower) value >= bounds[[name]] else value <= bounds[[name]]
+      checks <- rbind(checks, data.frame(Scenario = seq_len(n), Type = type,
+        Criterion = name, Value = value, Relation = if (lower) ">=" else "<=",
+        Threshold = bounds[[name]], Status = ifelse(!is.finite(value), "unavailable",
+          ifelse(pass, "pass", "fail"))))
+    }
+  }
+  aggregate_status <- function(type, passed, failed) vapply(seq_len(n), function(i) {
+    status <- checks$Status[checks$Scenario == i & checks$Type == type]
+    if (!length(status)) "not_requested" else if (any(status == "fail")) failed else
+      if (any(status == "unavailable")) "unavailable" else passed
+  }, character(1))
+  plans$Feasibility <- aggregate_status("resource", "feasible", "infeasible")
+  plans$TargetStatus <- aggregate_status("point_target", "pass", "fail")
+  component_psd <- x$component_diagnostics$PositiveSemidefinite
+  review <- !length(component_psd) || !all(component_psd %in% TRUE) ||
+    !isTRUE(x$sampling_covariance_psd)
+  plans$ReviewRequired <- review
+
+  differences <- tab
+  ok <- tab$Status %in% "Available" & is.finite(tab$Difference) &
+    is.finite(tab$Lower) & is.finite(tab$Upper) & tab$Lower <= tab$Upper
+  larger <- tab$Metric %in% c("G", "Phi")
+  direction <- rep("unavailable", nrow(tab))
+  direction[ok] <- "inconclusive"
+  direction[ok & ((larger & tab$Lower > 0) | (!larger & tab$Upper < 0))] <- "improved"
+  direction[ok & ((larger & tab$Upper < 0) | (!larger & tab$Lower > 0))] <- "worse"
+  same <- vapply(tab$Scenario, function(i) all(grid[i, ] == grid[ref, ]), logical(1))
+  direction[ok & same & tab$Difference == 0 & tab$Lower == 0 & tab$Upper == 0] <- "identical_plan"
+  differences$Direction <- direction
+  differences$Feasibility <- plans$Feasibility[match(tab$Scenario, plans$Scenario)]
+  differences$TargetStatus <- plans$TargetStatus[match(tab$Scenario, plans$Scenario)]
+  differences$ReviewRequired <- review
+  notes <- c(
+    "Observed-score G/Phi and measurement SEM under the stored G-study; not latent-ability or Bayesian future-plan predictions. State the score definition and sampled universe.",
+    "RatingsPerPerson is the product of future crossed facet counts, not total ratings in a cohort. Costs and resource units are user supplied; source Person counts do not define a future cohort.",
+    "Feasibility concerns requested limits only. Point-target pass/fail is not a confidence statement about population target attainment; no targets or limits are imposed by default.",
+    "Direction uses the saved paired difference interval. Inconclusive does not mean equivalent. Identical plans share a zero difference by construction, not an empirical equivalence finding.",
+    "Intervals are approximate and pointwise for prespecified plans and fixed score weights. Searching for a winner can introduce selection bias; no best-plan or selection-adjusted guarantee is provided.",
+    "All plans, costs, unavailable results and component diagnostics are retained. ReviewRequired flags non-PSD or missing covariance diagnostics; available intervals do not establish model fit or finite-sample coverage.")
+  x$planning <- list(plans = plans, costs = costs, checks = checks, differences = differences,
+    basis = data.frame(Target = "Observed-score mean", Kind = x$kind, Score = x$score,
+      FutureDesign = "Complete crossed random facets", ComponentTreatment = "raw",
+      Uncertainty = x$method, Level = x$level, Reference = ref), notes = notes)
+  x
+}
+
 .mfrm_design_target <- function(facets) {
   data.frame(Facet = facets,
     Target = ifelse(facets == "Person", "Person differentiation", "Facet calibration"),
@@ -8,12 +126,10 @@
     stringsAsFactors = FALSE)
 }
 
-#' Review a simulation-based design recommendation
-#'
-#' @param object,x Output from [recommend_mfrm_design()].
-#' @param ... Unused; extra arguments are rejected.
-#' @details
-#' Recommendations screen the saved simulation aggregates under the requested
+#' @rdname recommend_mfrm_design
+#' @details `summary()` method: Review a simulation-based design recommendation
+#' @param object A simulation-based result from [recommend_mfrm_design()].
+#' @details For `summary()`: Recommendations screen the saved simulation aggregates under the requested
 #' criteria. The default targets non-Person facet calibration. For Person
 #' differentiation, request `facets = "Person"` when recommending the design.
 #' Neither target establishes classification accuracy, inter-rater agreement,
@@ -28,14 +144,12 @@
 #' `not_recorded`. No confidence intervals or selection-adjusted uncertainty
 #' are calculated. Retain the simulation's generating assumptions and replication
 #' evidence with the recommendation.
-#'
-#' @return `summary()` returns a `summary.mfrm_design_recommendation` list
+#' @return For `summary()`: `summary()` returns a `summary.mfrm_design_recommendation` list
 #' containing `target`, `thresholds`, `checks`, `design_table`, `facet_table`,
 #' `recommended`, and `notes`. Print methods return their input invisibly.
 #' @seealso [recommend_mfrm_design()], [plot.mfrm_design_recommendation()],
 #'   [mfrm_report()], [export_summary_appendix()]
-#' @examples
-#' # Saved synthetic simulation; one replication illustrates structure only.
+#' @examples # Saved synthetic simulation; one replication illustrates structure only.
 #' saved <- readRDS(system.file("examples", "simulation-design.rds",
 #'   package = "mfrmr", mustWork = TRUE))
 #' rec <- recommend_mfrm_design(saved$result, facets = "Person")
@@ -104,7 +218,7 @@ summary.mfrm_design_recommendation <- function(object, ...) {
     class = "summary.mfrm_design_recommendation")
 }
 
-#' @rdname summary.mfrm_design_recommendation
+#' @rdname recommend_mfrm_design
 #' @export
 print.summary.mfrm_design_recommendation <- function(x, ...) {
   rlang::check_dots_empty()
@@ -117,22 +231,22 @@ print.summary.mfrm_design_recommendation <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname summary.mfrm_design_recommendation
-#' @export
-print.mfrm_design_recommendation <- function(x, ...) {
-  print(summary(x), ...)
-  invisible(x)
-}
+#' @rdname recommend_mfrm_design
+#' @name print.mfrm_design_recommendation
+#' @aliases print.mfrm_design_recommendation
+#' @usage \method{print}{mfrm_design_recommendation}(x, ...)
+#' @rawNamespace S3method(print,mfrm_design_recommendation,print.mfrm_bundle)
+NULL
 
-#' Plot criteria behind a design recommendation
-#'
-#' @param x Output from [recommend_mfrm_design()].
+#' @rdname recommend_mfrm_design
+#' @details `plot()` method: Plot criteria behind a design recommendation
 #' @param draw Logical; draw the criterion-status matrix. Use `FALSE` to
 #'   retrieve every criterion and source table without drawing.
 #' @param ... Unused; extra arguments are rejected.
-#' @return An invisible `mfrm_plot_data` with `table` (long criterion outcomes),
+#' @return For `plot()`: An invisible `ggplot` object whose underlying payload
+#'   (accessible via [plot_data()]) retains `table` (long criterion outcomes),
 #'   `designs`, `targets`, `thresholds` and interpretation notes.
-#' @details Columns are ranked candidates, labelled by `DesignRow`; an asterisk
+#' @details For `plot()`: Columns are ranked candidates, labelled by `DesignRow`; an asterisk
 #'   marks the selected candidate. Rows combine the facet and criterion.
 #'   Grey means unavailable and white means not requested, neither a passing
 #'   result. Selection follows the stored ordering, not a new utility function.
@@ -141,8 +255,7 @@ print.mfrm_design_recommendation <- function(x, ...) {
 #'   value_cols = c("MinReliability", "MaxRatings"))`. These aggregate metrics
 #'   are not replication-level distributions for a raincloud plot.
 #' @seealso [summary.mfrm_design_recommendation()], [as_ggplot()], [plot_data()]
-#' @examples
-#' saved <- readRDS(system.file("examples", "simulation-design.rds",
+#' @examples saved <- readRDS(system.file("examples", "simulation-design.rds",
 #'   package = "mfrmr", mustWork = TRUE))
 #' rec <- recommend_mfrm_design(saved$result, facets = "Person")
 #' plot(rec)
@@ -154,24 +267,11 @@ plot.mfrm_design_recommendation <- function(x, draw = TRUE, ...) {
   tab <- s$checks
   tab$Check <- paste(ifelse(tab$Facet == "All requested facets", "Design", tab$Facet),
     tab$Criterion, sep = ": ")
+  if (isTRUE(draw) && !nrow(s$design_table)) {
+    stop("No evaluated designs to plot.", call. = FALSE)
+  }
   out <- new_mfrm_plot_data("design_recommendation", list(table = tab,
     designs = s$design_table, targets = s$target, thresholds = s$thresholds,
     notes = data.frame(Type = "interpretation", Text = s$notes)))
-  if (!isTRUE(draw)) return(out)
-  levels <- c("pass", "fail", "unavailable", "not_requested")
-  colors <- c("#2A9D8F", "#D55E00", "#999999", "#FFFFFF")
-  criteria <- rev(unique(tab$Check))
-  n <- nrow(s$design_table)
-  if (!n) stop("No evaluated designs to plot.", call. = FALSE)
-  left <- max(graphics::strwidth(criteria, units = "inches", cex = .7)) + .3
-  old <- graphics::par(mai = c(.8, left, .15, .15))
-  on.exit(graphics::par(old), add = TRUE)
-  graphics::plot(NA_real_, NA_real_, xlim = c(.5, n + .5),
-    ylim = c(.5, length(criteria) + 2.5), xlab = "Ranked design row (* selected)", ylab = "", axes = FALSE)
-  graphics::axis(1, seq_len(n), labels = paste0(seq_len(n), ifelse(s$design_table$Selected, " *", "")))
-  graphics::axis(2, seq_along(criteria), labels = criteria, las = 1, cex.axis = .7)
-  graphics::points(tab$DesignRow, match(tab$Check, criteria), pch = 22, cex = 1.5,
-    bg = colors[match(tab$Status, levels)], col = "#444444")
-  graphics::legend("topright", legend = levels, pch = 22, pt.bg = colors, bty = "n", cex = .7, ncol = 2)
-  invisible(out)
+  .mfrm_finalize_ggplot(out, draw = draw)
 }

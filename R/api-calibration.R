@@ -1,77 +1,6 @@
-#' Portable fixed-calibration capabilities
-#'
-#' Returns the model and estimator combinations supported by the portable
-#' calibration workflow. This matrix concerns saved calibration artifacts;
-#' it does not replace the wider fitted-object capabilities of [fit_mfrm()] or
-#' [predict_mfrm_units()].
-#' For JML fits, fitted-object scoring is post-hoc EAP with a standard-normal
-#' reference prior by default, or an explicit `scoring_prior`. It is not
-#' ML/WLE scoring or a population distribution estimated by JML. Portable
-#' extraction supports RSM/PCM and shared-owner GPCM JML within their distinct
-#' source-check scopes. No artifact stores training Person estimates.
-#'
-#' @return A data frame with one row per model, estimator, and scoring-basis
-#'   combination. `PortableCalibration` is either `"available"` or
-#'   `"unavailable"`; the listed scope and source checks still apply.
-#' @export
-#'
-#' @examples
-#' mfrm_calibration_capabilities()
+#' @noRd
 mfrm_calibration_capabilities <- function() {
-  data.frame(
-    Model = c(
-      "RSM", "PCM", "RSM/PCM", "GPCM", "RSM/PCM", "GPCM", "GPCM", "GPCM (two families)"
-    ),
-    Estimator = c("MML", "MML", "MML", "MML", "JML", "JML", "Corrected JML", "MML"),
-    ScoringBasis = c(
-      "fixed standard normal", "fixed standard normal",
-      "estimated population or latent regression",
-      "frozen estimated intercept-only normal", "post-hoc standard normal reference",
-      "post-hoc standard normal reference", "post-hoc standard normal reference", "fixed standard normal"
-    ),
-    PortableCalibration = c(
-      "available", "available", "unavailable", "available", "available", "available", "available", "available"
-    ),
-    AnchorSupport = c(
-      "stored direct and group facet anchors",
-      "stored direct and group facet anchors",
-      "not available for portable calibration", "not supported",
-      "not supported", "not supported", "not supported", "not supported"
-    ),
-    InteractionSupport = c(
-      "stored two-way facet interactions",
-      "stored two-way facet interactions",
-      "not available for portable calibration", "not supported",
-      "not supported", "not supported", "not supported", "not supported"
-    ),
-    ExistingAlternative = c(
-      "portable artifact or fitted-object scoring",
-      "portable artifact or fitted-object scoring",
-      "use fitted-object scoring with the fitted population model",
-      "conditional portable artifact or fitted-object GPCM scoring",
-      "portable artifact or fitted-object post-hoc EAP; not ML/WLE",
-      "conditional portable artifact or fitted-object post-hoc EAP; not ML/WLE",
-      "experimental corrected calibration with post-hoc EAP; not corrected Person ML/WLE",
-      "experimental two-family conditional artifact or fitted-object EAP"
-    ),
-    Limitation = c(
-      paste(
-        "one observed score scale, one latent dimension, known facet levels,",
-        "and an explicit same-data quadrature review"
-      ),
-      paste(
-        "one observed score scale, one latent dimension, known facet levels,",
-        "and an explicit same-data quadrature review"
-      ),
-      "population coding and conditional parameters are not stored in the artifact",
-      "passing conditional source checks; known levels, unit weights, no anchors, interactions or latent regression",
-      "finite identified RSM/PCM JML source; unit weights, no anchors or interactions; reference prior is not estimated by JML",
-      "shared owners, unit weights, no anchors/interactions; passing local JML checks; incomplete global audits remain recorded",
-      "shared owners; explicit correction order; passing adjusted-equation/root checks; residual calibration bias may remain; no calibration uncertainty propagated",
-      "two ordered slope owners, second-owner steps, fixed N(0,1), known levels, unit weights and passing source/batch checks; no prior override or repeated-event extension; calibration uncertainty and population transport are not qualified"
-    ),
-    stringsAsFactors = FALSE
-  )
+  .mfrmr_table_mfrm_calibration_capabilities_data
 }
 
 mfrmr_public_calibration_extraction_error <- function(error) {
@@ -222,8 +151,10 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #' RSM/PCM and shared-owner GPCM JML support portable post-hoc EAP with a
 #' standard-normal reference prior; explicit corrected GPCM JML preserves its
 #' correction order and uses adjusted-equation checks, as described below.
-#' [validate_mfrm_calibration()] and [freeze_mfrm_calibration()] are separate,
-#' fail-closed transitions. Only a frozen artifact can be passed to
+#' `update(calibration, status = "validated")` and
+#' `update(calibration, status = "frozen")` are separate, fail-closed transitions.
+#' They return a new object without overwriting the input or a saved file.
+#' Only a frozen artifact can be passed to
 #' [score_mfrm_calibration()].
 #'
 #' The portable workflow supports one observed score scale, one latent
@@ -241,27 +172,30 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #' slopes remain free. Both fitting engines retain their fixed or adaptive
 #' scoring algorithm. Source identity/convergence and finer-integration checks
 #' must pass; review-only sources cannot be exported for frozen scoring.
+#' Extended additive/step/location roles use format 7, with explicit named
+#' slope reference and noncentered location facet; format 6 keeps its original
+#' meaning. All other location facets and each declared step set are centered.
 #' No separate `quadrature_review` is accepted for this route. The file contains
 #' component slopes and observed facet combinations, without training responses,
 #' Person estimates or an executable fit. Known levels may form new combinations;
-#' `row_dispositions$ObservedContext` identifies whether each pair occurred in
+#' `row_dispositions$ObservedContext` identifies whether each full facet context occurred in
 #' calibration. New combinations are model-based, not empirically validated.
 #' Prior overrides and `event_id` extensions are unsupported; repeated Person-
 #' facet cells are rejected. Facet names must not collide with scoring/disposition
 #' columns (`Person`, `Score`, `Weight`, `InputRow`, `EventId`, `Disposition`,
 #' `ReasonCode`, `CalibrationId`, `ObservedContext`).
 #'
-#' For format 6, use the same extract, validate, freeze, save, load and score
+#' For formats 6 and 7, use the same extract, validate, freeze, save, load and score
 #' functions as below. Each new batch must pass its own integration checks;
 #' validation and freezing do not establish sampling coverage, global
 #' identification, boundary absence or population transport. Posterior
-#' intervals exclude calibration uncertainty. Older readers refuse format 6;
-#' existing formats 1--5 keep their original interpretation.
+#' intervals exclude calibration uncertainty. Readers without format 7 support
+#' refuse it explicitly; existing formats 1--6 keep their original interpretation.
 #' RSM/PCM JML uses file format 3, with unit weights, no anchors or interactions,
 #' a finite identified source and a post-hoc N(0,1) reference prior. This prior
 #' is not estimated by JML. Estimated-population RSM/PCM and latent regression
 #' use fitted-object routes; other structures follow their documented capabilities.
-#' See [mfrm_calibration_capabilities()].
+#' See `mfrmr_output_guide("calibration_capabilities")`.
 #'
 #' @section Anchors, centering and score uncertainty:
 #' New exports distinguish whole-facet centering, legacy remainder centering
@@ -449,11 +383,16 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #'   the exact highest-grid fit stored in this object. The package checks this
 #'   procedural evidence but leaves acceptable numerical movement to the user.
 #' @param calibration An `mfrm_calibration` object.
-#' @param validated_at_utc,frozen_at_utc Optional RFC3339 UTC timestamps for
-#'   reproducible lifecycle records. Omit them to use the current time.
+#' @param object An `mfrm_calibration` object for `update()`.
+#' @param status Required target state for `update()`: `"validated"`, `"frozen"`,
+#'   `"superseded"`, or `"retired"`. Only documented lifecycle transitions are
+#'   allowed; changing the entry point does not allow thawing or editing a
+#'   frozen calibration.
+#' @param at_utc Optional RFC3339 UTC timestamp for the requested transition.
+#'   Omit it to use the current time.
+#' @param ... Additional arguments to `update()` are rejected.
 #' @param record_id A nonempty identifier for a terminal superseded or retired
 #'   record. It must differ from the frozen parent identifier.
-#' @param superseded_at_utc,retired_at_utc Optional RFC3339 UTC timestamps.
 #' @param file A path ending in `.rds`.
 #' @param overwrite Whether an existing persistence target may be replaced.
 #' @param new_data A data frame of response rows for new Persons.
@@ -485,8 +424,8 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #'   receives numerical scoring checks and does not modify the frozen artifact.
 #'   Legacy artifacts with discrete grid-endpoint intervals require re-extraction
 #'   before using this option. The prior is common to all scored persons;
-#'   covariate-dependent overrides are not supported. Two-family GPCM format 6
-#'   requires `scoring_prior = NULL` and retains the fixed N(0,1) prior.
+#'   covariate-dependent overrides are not supported. Two-family GPCM formats 6 and 7
+#'   require `scoring_prior = NULL` and retains the fixed N(0,1) prior.
 #' @param cut_scores Optional named, strictly increasing finite ability cuts
 #'   for `score_mfrm_calibration()`. Ordinary RSM/PCM with unit weights and
 #'   continuous posterior intervals only. Returns a `decisions` table of
@@ -496,9 +435,8 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #'   CEFR alignment. See [predict_mfrm_units()] for interpretation and reporting.
 #'
 #' @inheritSection predict_mfrm_units Conditional ability decisions
-#' @return `extract_mfrm_calibration()`, `validate_mfrm_calibration()`,
-#'   `freeze_mfrm_calibration()`, `supersede_mfrm_calibration()`,
-#'   `retire_mfrm_calibration()`, and `load_mfrm_calibration()` return an
+#' @return `extract_mfrm_calibration()`, `update()`, and
+#'   `load_mfrm_calibration()` return an
 #'   `mfrm_calibration`. `review_mfrm_calibration()` returns a data frame of
 #'   structured refusals, with zero rows for an acceptable object.
 #'   `save_mfrm_calibration()` invisibly returns the normalized path.
@@ -516,6 +454,7 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #'   [apa_table()] and [export_summary_appendix()] for saved-score tables.
 #'
 #' @name mfrm_calibration_workflow
+#' @aliases validate_mfrm_calibration freeze_mfrm_calibration supersede_mfrm_calibration retire_mfrm_calibration
 NULL
 
 #' @rdname mfrm_calibration_workflow
@@ -552,29 +491,20 @@ review_mfrm_calibration <- function(calibration) {
 }
 
 #' @rdname mfrm_calibration_workflow
+#' @importFrom stats update
 #' @export
-validate_mfrm_calibration <- function(calibration, validated_at_utc = NULL) {
-  mfrmr_validate_calibration_draft(calibration, validated_at_utc)
-}
-
-#' @rdname mfrm_calibration_workflow
-#' @export
-freeze_mfrm_calibration <- function(calibration, frozen_at_utc = NULL) {
-  mfrmr_freeze_calibration(calibration, frozen_at_utc)
-}
-
-#' @rdname mfrm_calibration_workflow
-#' @export
-supersede_mfrm_calibration <- function(calibration, record_id,
-                                       superseded_at_utc = NULL) {
-  mfrmr_supersede_calibration(calibration, record_id, superseded_at_utc)
-}
-
-#' @rdname mfrm_calibration_workflow
-#' @export
-retire_mfrm_calibration <- function(calibration, record_id,
-                                    retired_at_utc = NULL) {
-  mfrmr_retire_calibration(calibration, record_id, retired_at_utc)
+update.mfrm_calibration <- function(object, status, record_id = NULL,
+                                     at_utc = NULL, ...) {
+  if (length(list(...))) stop("Unused arguments to update.mfrm_calibration().", call. = FALSE)
+  status <- match.arg(status, c("validated", "frozen", "superseded", "retired"))
+  if (status %in% c("validated", "frozen") && !is.null(record_id)) {
+    stop("`record_id` is only used for superseded or retired calibrations.", call. = FALSE)
+  }
+  switch(status,
+    validated = mfrmr_validate_calibration_draft(object, at_utc),
+    frozen = mfrmr_freeze_calibration(object, at_utc),
+    superseded = mfrmr_supersede_calibration(object, record_id, at_utc),
+    retired = mfrmr_retire_calibration(object, record_id, at_utc))
 }
 
 #' @rdname mfrm_calibration_workflow

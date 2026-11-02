@@ -34,3 +34,20 @@ test_that("as_kable leaves note-free pipe tables as native kable vectors", {
   expect_gt(length(rendered), 1L)
   expect_false(any(grepl("Note.", as.character(rendered), fixed = TRUE)))
 })
+
+test_that("as_flextable formats apa_table captions and notes when flextable is installed", {
+  skip_if_not_installed("flextable")
+
+  tbl <- structure(
+    list(
+      table = data.frame(Term = c("A", "B"), Estimate = c(-0.1, 0.2)),
+      caption = "Toy flextable caption",
+      note = "Toy flextable note"
+    ),
+    class = "apa_table"
+  )
+
+  ft <- as_flextable(tbl)
+  expect_s3_class(ft, "flextable")
+  expect_equal(nrow(ft$body$dataset), 2L)
+})

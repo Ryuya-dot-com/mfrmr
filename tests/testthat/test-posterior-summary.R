@@ -97,10 +97,11 @@ test_that("posterior plots preserve units, fixed values and exact interval endpo
   x <- posterior_example()
   for (quantity in c("location", "ability", "step_offset", "slope", "log_slope")) {
     p <- plot(x, quantity = quantity, draw = FALSE)
+    expect_s3_class(p, "ggplot")
     tab <- plot_data(p, "table")
     expect_identical(tab[names(x$parameters)], x$parameters[x$parameters$quantity == quantity, ])
-    expect_null(p$data$title)
-    expect_identical(p$data$notes, x$notes)
+    expect_null(plot_data(p)$title)
+    expect_identical(plot_data(p)$notes, x$notes)
     expect_true(all(tab$Display[tab$value_role == "fixed_anchor"] == "Fixed value"))
   }
   expect_error(plot(x, facet = "unknown", draw = FALSE), "facet")
@@ -110,9 +111,10 @@ test_that("posterior plots preserve units, fixed values and exact interval endpo
   p <- plot(x, draw = FALSE)
   skip_if_not_installed("ggplot2")
   gg <- as_ggplot(p)
-  expect_identical(attr(gg, "mfrmr_plot_data"), p)
+  expect_identical(attr(gg, "mfrmr_plot_data"), attr(p, "mfrmr_plot_data"))
   built <- ggplot2::ggplot_build(gg)
-  finite <- p$data$table[is.finite(p$data$table$lower), ]
+  p_tab <- plot_data(p, "table")
+  finite <- p_tab[is.finite(p_tab$lower), ]
   expect_equal(built$data[[1]]$x, finite$lower)
   expect_equal(built$data[[1]]$xend, finite$upper)
   expect_true(all(built$data[[1]]$linetype == "dashed"))

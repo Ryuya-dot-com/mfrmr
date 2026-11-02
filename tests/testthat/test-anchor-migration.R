@@ -57,6 +57,8 @@ test_that('legacy anchored results export reopens without recomputing or relabel
 })
 
 test_that('manifests and methods text retain the fitted centering convention', {
+  # Detailed propagation remains in the extended local/CI suite.
+  skip_on_cran()
   old <- readRDS(test_path('fixtures','legacy-anchored-fit.rds'))
   current <- readRDS(test_path('fixtures','anchored-facet-information.rds'))$RSM$fit
   local_mocked_bindings(fit_mfrm=function(...) stop('Do not refit reports'),.package='mfrmr')
@@ -66,7 +68,7 @@ test_that('manifests and methods text retain the fitted centering convention', {
     diagnostics <- diagnose_mfrm(fit,residual_pca='none')
     manifest <- build_mfrm_manifest(fit,diagnostics=diagnostics)
     expect_identical(manifest$model_settings$Value[manifest$model_settings$Setting=='centering_scope'],expected)
-    text <- gsub('[[:space:]]+',' ',build_apa_report_text(fit,diagnostics))
+    text <- gsub('[[:space:]]+',' ',build_apa_reporting_contract(fit,diagnostics)$report_text)
     expect_match(text,if(expected=='remainder') 'Legacy centering' else
       'including anchors and group totals',fixed=TRUE)
     recipe <- build_mfrm_replay_script(fit,diagnostics=diagnostics)

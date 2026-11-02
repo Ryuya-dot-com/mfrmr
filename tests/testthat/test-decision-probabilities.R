@@ -7,8 +7,7 @@ decision_fixture <- local({
       fit <- fit_mfrm(d,"Person",c("Rater","Criterion"),"Score",quad_points=61,maxit=300)
       pcm <- readRDS(test_path("fixtures","ordinary-score-integration.rds"))
       jml <- pcm$fits[["PCM-JML"]]
-      calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(
-        extract_mfrm_calibration(jml,scoring_quad_points=121)))
+      calibration <- update(object = update(object = extract_mfrm_calibration(jml,scoring_quad_points=121), status = "validated"), status = "frozen")
       saved <<- list(rsm=fit,data=d,pcm=pcm,calibration=calibration)
     }
     saved

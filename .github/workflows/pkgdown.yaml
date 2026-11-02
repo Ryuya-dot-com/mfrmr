@@ -28,6 +28,13 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
+          extra-repositories: https://stan-dev.r-universe.dev
+
+      - name: Check public source boundaries
+        run: Rscript scripts/check-publication-boundary.R
+
+      - name: Check interactive curve calculations
+        run: Rscript scripts/check-curve-explorer.R
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:

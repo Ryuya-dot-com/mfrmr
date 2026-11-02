@@ -68,9 +68,9 @@ explicitly only when that constraint system is intended; see \code{\link[=fit_mf
 \item{...}{For \code{anchor_to_baseline()}, additional arguments passed to
 \code{\link[=fit_mfrm]{fit_mfrm()}}. Ignored by the S3 print and summary methods on this page.}
 
-\item{x}{An \code{mfrm_anchored_fit} object.}
-
 \item{object}{An \code{mfrm_anchored_fit} object (for \code{summary}).}
+
+\item{x}{An \code{mfrm_anchored_fit} object.}
 }
 \value{
 Object of class \code{mfrm_anchored_fit} with components:

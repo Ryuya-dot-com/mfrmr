@@ -984,7 +984,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
         prescreen_out$target_lp_calls
     )
     list(
-      contract_version = mfrmr_boundary_contract_version(),
+      contract_version = mfrmr_readiness_contract_version(),
       method = method,
       model = model,
       scope = if (joint_scope) {

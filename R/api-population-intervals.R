@@ -136,7 +136,7 @@
 #' [predict_mfrm_units()] has separate source and scoring checks; its conditional
 #' posterior intervals hold the fitted calibration and population parameters
 #' fixed. Availability here does not authorize an otherwise refused scoring
-#' result. See [mfrmr_interval_guide()] for the different uncertainty targets.
+#' result. See `mfrmr_output_guide("intervals")` for the different uncertainty targets.
 #' @return An \code{mfrm_population_intervals} object with the interval table,
 #'   working-coordinate covariance, full parameter covariance, numerical checks,
 #'   source identity and unchanged source fit. With `contrasts`, also contains
@@ -168,6 +168,7 @@
 #' apa_table(results$population_intervals$population)
 #' }
 #' @export
+#' @order 1
 mfrm_population_intervals <- function(object, level = .95, contrasts = NULL,
                                       anchor_covariance = NULL, independent_anchors = FALSE) {
   if (inherits(object, "mfrm_facet_intervals") && !is.null(object$anchor_uncertainty)) {
@@ -325,8 +326,12 @@ mfrm_population_intervals_impl <- function(object, level, contrasts, covariance 
 }
 
 #' @rdname mfrm_population_intervals
-#' @param x An interval result.
-#' @param ... Unused.
+#' @param x For `print.mfrm_population_intervals()`: An interval result.
+#'
+#' For `plot()`: A saved result from [mfrm_population_intervals()].
+#' @param ... For `print.mfrm_population_intervals()`: Unused.
+#'
+#' For `plot()`: Unused; unsupported arguments are rejected.
 #' @export
 print.mfrm_population_intervals <- function(x, ...) {
   cat("Conditional-normal population intervals\n")
@@ -336,13 +341,19 @@ print.mfrm_population_intervals <- function(x, ...) {
 }
 
 #' @rdname mfrm_population_intervals
-#' @export
-summary.mfrm_population_intervals <- function(object, ...) object$table
+#' @name summary.mfrm_population_intervals
+#' @aliases summary.mfrm_population_intervals
+#' @usage \method{summary}{mfrm_population_intervals}(object, ...)
+#' @rawNamespace S3method(summary,mfrm_population_intervals,summary.mfrm_pooled)
+NULL
 
 #' @rdname mfrm_population_intervals
 #' @importFrom stats vcov
-#' @export
-vcov.mfrm_population_intervals <- function(object, ...) object$covariance
+#' @name vcov.mfrm_population_intervals
+#' @aliases vcov.mfrm_population_intervals
+#' @usage \method{vcov}{mfrm_population_intervals}(object, ...)
+#' @rawNamespace S3method(vcov,mfrm_population_intervals,vcov.mfrm_facet_intervals)
+NULL
 
 mfrm_population_interval_tables <- function(x) {
   tab <- x$table; tab$ConfidenceLevel <- x$settings$level

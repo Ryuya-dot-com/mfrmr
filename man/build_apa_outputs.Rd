@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-reports.R
 \name{build_apa_outputs}
 \alias{build_apa_outputs}
+\alias{summary.mfrm_apa_outputs}
 \title{Build APA text outputs from model results}
 \usage{
 build_apa_outputs(
@@ -11,6 +12,8 @@ build_apa_outputs(
   context = list(),
   whexact = FALSE
 )
+
+\method{summary}{mfrm_apa_outputs}(object, top_n = 3, preview_chars = 160, ...)
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
@@ -22,6 +25,14 @@ build_apa_outputs(
 \item{context}{Optional named list for report context.}
 
 \item{whexact}{Use exact ZSTD transformation.}
+
+\item{object}{Output from \code{\link[=build_apa_outputs]{build_apa_outputs()}}.}
+
+\item{top_n}{Maximum non-empty lines shown in each component preview.}
+
+\item{preview_chars}{Maximum characters shown in each preview cell.}
+
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 An object of class \code{mfrm_apa_outputs} with:
@@ -37,6 +48,8 @@ fit readiness and \code{contract$precision$supports_formal_inference} support it
 \item \code{section_map}: package-native section table for manuscript assembly
 \item \code{contract}: structured APA reporting contract used for downstream checks
 }
+
+For \code{summary()}: An object of class \code{summary.mfrm_apa_outputs}.
 }
 \description{
 Build APA text outputs from model results
@@ -87,6 +100,14 @@ Missing expected values remain explicit, including the stored number of
 opportunities without valid probabilities. An absent summary does not
 establish agreement. See \code{\link[=interrater_agreement_table]{interrater_agreement_table()}} for the matching,
 repeated-rating and denominator conventions.
+
+\code{summary()} method: Summarize APA report-output bundles
+
+For \code{summary()}: This summary is a diagnostics layer for APA text products, not a replacement
+for the full narrative.
+
+It reports component completeness, line/character volume, and a compact
+preview for quick QA before manuscript insertion.
 }
 \section{Interpreting output}{
 
@@ -110,6 +131,23 @@ are omitted from the narrative rather than producing placeholder text.
 Reporting reuses stored residual PCA results and does not compute omitted
 overall or facet-specific analyses. Request the intended scope with
 \code{diagnose_mfrm(..., residual_pca = "overall")}, \code{"facet"}, or \code{"both"} first.
+
+
+For \code{summary()}:
+\itemize{
+\item \code{overview}: total coverage across standard text components.
+\item \code{decision}: the source-fit decision shown before draft-completeness checks;
+text completeness cannot promote a review or blocked fit.
+\item \code{components}: per-component density and mention checks
+(including residual-PCA mentions).
+\item \code{sections}: package-native section coverage table.
+\item \code{content_checks}: contract-based alignment checks for APA drafting readiness.
+\item \code{overview$DraftContractPass}: the primary contract-completeness flag for
+draft text components.
+\item \code{overview$ReadyForAPA}: a backward-compatible alias of that contract flag,
+not a certification of inferential adequacy.
+\item \code{preview}: first non-empty lines for fast visual review.
+}
 }
 
 \section{Typical workflow}{
@@ -122,6 +160,15 @@ reporting runs, prefer an \code{MML} fit and
 \item Check \code{summary(apa)} for completeness.
 \item Insert \code{apa$report_text} and note/caption fields into manuscript drafts
 after checking the listed cautions.
+}
+
+
+For \code{summary()}:
+\enumerate{
+\item Build outputs via \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
+\item Run \code{summary(apa)} to screen for empty/short components.
+\item Use \code{apa$report_text}, \code{apa$table_figure_notes},
+and \code{apa$table_figure_captions} as draft components for final-text review.
 }
 }
 
@@ -154,6 +201,9 @@ diagnostics without refitting the model.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("build_apa_outputs", run.dontrun = TRUE)
+\dontrun{
 library(mfrmr)
 
 # Saved synthetic MML/RSM analysis of example_operational.
@@ -182,7 +232,21 @@ apa_review$content_checks
 cat(apa$report_text)
 # Adapt the text to the study question, design, and evidence before using it
 }
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("summary.mfrm_apa_outputs", run.dontrun = TRUE)
+\dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+apa <- build_apa_outputs(fit, diag)
+summary(apa)
+}
+}
 \seealso{
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=estimate_bias]{estimate_bias()}},
 \code{\link[=reporting_checklist]{reporting_checklist()}}, \link{mfrmr_reporting_and_apa}
+
+\code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[base:summary]{base::summary()}}
 }

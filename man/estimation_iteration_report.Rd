@@ -63,6 +63,9 @@ the replay.
 }
 
 \examples{
+# Supplementary workflow: run explicitly to keep routine checks brief.
+# example("estimation_iteration_report", run.dontrun = TRUE)
+\dontrun{
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -72,6 +75,7 @@ out <- estimation_iteration_report(fit, max_iter = 5)
 summary(out)
 p_iter <- plot(out, draw = FALSE)
 p_iter$data$plot
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=specifications_report]{specifications_report()}}, \code{\link[=data_quality_report]{data_quality_report()}},
