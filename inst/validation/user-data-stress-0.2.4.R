@@ -36,7 +36,8 @@ run_user_data_stress <- function(output_dir, seeds = 20260913:20260915, only = N
     stopifnot(nrow(dx$obs)==f$prep$n_obs, sum(dx$obs$Weight)==f$summary$N,
               nrow(f$facets$person)==f$summary$Persons)
     p <- plot(f,diagnostics=dx,show_ci=TRUE,draw=FALSE)
-    stopifnot(inherits(p,'mfrm_plot_data'),nrow(p$data$locations)>0)
+    locations <- plot_data(p, 'locations')
+    stopifnot(inherits(p,'ggplot'),is.data.frame(locations),nrow(locations)>0)
     apa <- build_apa_outputs(f,dx)
     stopifnot(!apa$contract$availability$has_pca_overall,!apa$contract$availability$has_pca_by_facet)
     if(!isTRUE(f$summary$InferenceReady)) stopifnot(identical(apa$decision$FormalInference,'No'))
