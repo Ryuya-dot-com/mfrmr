@@ -1347,81 +1347,159 @@ preserve those records.
 
 ## 9. mfrmr and other software
 
-### How does MFRM relate to ordinal regression and SEM?
+### How does MFRM relate to ordinal regression and SEM? {#mfrm-sem-ordinal}
 
-All three can connect an unobserved person ability to ordered ratings,
-but they need not assign the same probabilities to those ratings.
-**Unidimensional** means one person-ability dimension: it does not limit
-the number of rater, task or other facet effects.
+All three can connect an unobserved person ability to ordered ratings, but
+they need not assign the same probabilities to those ratings.
+**Unidimensional** means one person-ability dimension: it does not limit the
+number of rater, task or other facet effects.
 
 | Starting point | What the model relates to ability | A typical use |
-|----|----|----|
+| --- | --- | --- |
 | RSM / PCM MFRM | Odds of **one category versus its neighbour**, such as 2 versus 1 | Estimate ability, rater severity and task difficulty on a common measurement scale |
 | `ordinal::clmm(link = "logit")` | Odds of scoring **at or below a cutpoint versus above it**, such as 0 or 1 versus 2 | Explain ratings with predictors and account for repeated ratings through random effects |
 | Ordinal CFA in `lavaan` | Thresholds on a continuous, normally distributed latent response; this gives **cumulative probit** probabilities | Examine a measurement structure and its relationships with other latent variables |
 
-These uses overlap. The response equation, facet structure and
-inferential goal should guide the choice; a package name alone does not
-define the model.
+These uses overlap. The response equation, facet structure and inferential
+goal should guide the choice; a package name alone does not define the model.
 
-![Three panels of category probabilities for scores 0, 1 and 2. All
-categories have probability one third at predictor zero in each panel.
-Moving away from zero gives different curves for adjacent logit,
-cumulative logit and cumulative probit. The horizontal units are
-specific to each model.](model-comparison/model-families.svg)
+<figure>
+<img src="model-comparison/model-families.svg" width="720" style="max-width:100%;height:auto" alt="Three panels, one for each score: 0, 1 and 2. Each panel overlays RSM/PCM in blue solid lines, ordinal cumulative logit in orange dashed lines, and lavaan cumulative probit in green long-dashed lines. The models agree at probability one third at predictor zero; their curves differ elsewhere. Horizontal units are model-specific.">
+<figcaption><em>Compare the three models within each score category.</em>
+Colour and line type identify the model, and each panel shows one category.
+The black point marks the common probability of 1/3 at predictor zero.
+These are equations evaluated at chosen parameters, not fits to data.
+Horizontal units are model-specific: curve steepness here is not evidence of
+greater discrimination, precision or better fit.</figcaption>
+</figure>
 
-*Same probabilities at the centre, different response curves.* The black
-point marks the common probability of 1/3 at predictor zero. These are
-equations evaluated at chosen parameters, not fits to data. Horizontal
-units are model-specific: curve steepness here is not evidence of
-greater discrimination, precision or better fit.
+<details class="mfrmr-code">
+<summary>Show R code to reproduce this figure</summary>
 
-For a **binary** response, adjacent and cumulative logistic formulations
-can describe the same model after aligning signs, constraints and
-random-effect distributions. With **three or more categories**, RSM/PCM
-and a cumulative logit model generally define different response
-families. Changing the link from logit to probit also changes the
-response function and its scale. The [FACETS model
-equation](https://www.winsteps.com/facetman/theory.htm), [`clmm`
-documentation](https://search.r-project.org/CRAN/refmans/ordinal/html/clmm.html)
-and [lavaan categorical-data
-tutorial](https://lavaan.ugent.be/tutorial/cat.html) describe the
-respective formulations and estimation options.
+Copy the complete code below into R. It requires `ggplot2` and `svglite`,
+calculates the probabilities directly, checks the defining equations and
+saves `model-families.svg` in your working directory. No fitted objects or
+external data are required. This is also the code used to generate the figure
+shown above.
 
-Equations, scale choices and why estimates need not agree
 
-For person \\p\\, rater \\r\\ and task \\t\\, write
-\\\eta=\theta_p-\rho_r-\delta_t\\, where larger \\\rho_r\\ means greater
-rater severity. The adjacent-category equation is
+``` r
+library(ggplot2)
 
-\\\log\frac{P(Y=k)}{P(Y=k-1)}=\eta-\tau\_{g,k}.\\
+eta <- seq(-3, 3, length.out = 301L)
+adjacent <- exp(outer(eta, 0:2) - pmax(0, 2 * eta))
+adjacent <- adjacent / rowSums(adjacent)
+cumulative <- function(cdf, cuts) {
+  lower <- cdf(cuts[1L] - eta)
+  upper <- cdf(cuts[2L] - eta)
+  cbind(lower, upper - lower, 1 - upper)
+}
+logit <- cumulative(plogis, qlogis(c(1 / 3, 2 / 3)))
+probit <- cumulative(pnorm, qnorm(c(1 / 3, 2 / 3)))
+probabilities <- list(
+  "RSM / PCM: adjacent logit" = adjacent,
+  "Ordinal mixed model: cumulative logit" = logit,
+  "Ordinal CFA: cumulative probit" = probit
+)
 
-RSM shares the step ladder; PCM permits group-specific ladders. The
-first panel uses one ladder with both steps zero, so its category
-weights are \\1,e^\eta,e^{2\eta}\\. Adjacent steps need not be ordered
-for the resulting probabilities to be valid; they are not cumulative
-cutpoints.
+# Verify the displayed probabilities and the defining link equations.
+center <- which.min(abs(eta))
+for (p in probabilities) {
+  stopifnot(all(is.finite(p)), all(p >= 0), all(p <= 1),
+    max(abs(rowSums(p) - 1)) < 1e-14,
+    max(abs(p[center, ] - 1 / 3)) < 1e-14,
+    all(diff(drop(p %*% (0:2))) > 0))
+}
+stopifnot(
+  max(abs(log(adjacent[, 2] / adjacent[, 1]) - eta)) < 1e-13,
+  max(abs(log(adjacent[, 3] / adjacent[, 2]) - eta)) < 1e-13,
+  max(abs(qlogis(logit[, 1]) - (qlogis(1 / 3) - eta))) < 1e-12,
+  max(abs(qlogis(rowSums(logit[, 1:2])) - (qlogis(2 / 3) - eta))) < 1e-12,
+  max(abs(qnorm(probit[, 1]) - (qnorm(1 / 3) - eta))) < 1e-12,
+  max(abs(qnorm(rowSums(probit[, 1:2])) - (qnorm(2 / 3) - eta))) < 1e-12
+)
+curves <- do.call(rbind, lapply(names(probabilities), function(model) {
+  data.frame(Predictor = rep(eta, 3L),
+    Probability = as.vector(probabilities[[model]]),
+    Category = factor(rep(0:2, each = length(eta)),
+      labels = paste("Score", 0:2)), Model = model)
+}))
+curves$Model <- factor(curves$Model, levels = names(probabilities))
+
+figure <- ggplot(curves, aes(Predictor, Probability,
+    colour = Model, linetype = Model)) +
+  geom_vline(xintercept = 0, colour = "grey70", linetype = "dotted") +
+  geom_line(linewidth = 0.95) +
+  geom_point(data = curves[curves$Predictor == 0 & curves$Model == names(probabilities)[1L], ],
+    colour = "#222222", size = 2.4, show.legend = FALSE) +
+  facet_wrap(~Category, ncol = 1) +
+  scale_colour_manual(values = c("#0072B2", "#B35A00", "#007E68"),
+    labels = c("RSM / PCM", "ordinal (logit)", "lavaan (probit)")) +
+  scale_linetype_manual(values = c("solid", "dashed", "longdash"),
+    labels = c("RSM / PCM", "ordinal (logit)", "lavaan (probit)")) +
+  scale_x_continuous(breaks = -3:3, expand = expansion(mult = 0.015)) +
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 1 / 3, 2 / 3, 1),
+    labels = c("0", "1/3", "2/3", "1")) +
+  labs(x = "Predictor (within-model units)", y = "Category probability") +
+  theme_minimal(base_size = 16, base_family = "sans") +
+  theme(legend.position = "top", legend.justification = "left",
+    legend.text = element_text(size = 12),
+    legend.title = element_blank(),
+    strip.text = element_text(face = "bold", hjust = 0),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.spacing = grid::unit(1.2, "lines"),
+    plot.margin = margin(8, 12, 8, 8))
+
+# Save in the working directory, then display the same figure.
+ggsave("model-families.svg", figure, device = svglite::svglite,
+  width = 7.2, height = 8.3, bg = "white")
+figure
+```
+
+</details>
+
+For a **binary** response, adjacent and cumulative logistic formulations can
+describe the same model after aligning signs, constraints and random-effect
+distributions. With **three or more categories**, RSM/PCM and a cumulative
+logit model generally define different response families. Changing the link
+from logit to probit also changes the response function and its scale.
+The [FACETS model equation](https://www.winsteps.com/facetman/theory.htm),
+[`clmm` documentation](https://search.r-project.org/CRAN/refmans/ordinal/html/clmm.html)
+and [lavaan categorical-data tutorial](https://lavaan.ugent.be/tutorial/cat.html)
+describe the respective formulations and estimation options.
+
+<details class="mfrmr-code">
+<summary>Equations, scale choices and why estimates need not agree</summary>
+
+For person $p$, rater $r$ and task $t$, write
+$\eta=\theta_p-\rho_r-\delta_t$, where larger $\rho_r$ means greater rater
+severity. The adjacent-category equation is
+
+$$\log\frac{P(Y=k)}{P(Y=k-1)}=\eta-\tau_{g,k}.$$
+
+RSM shares the step ladder; PCM permits group-specific ladders. The RSM/PCM
+curves use one ladder with both steps zero, so its category weights are
+$1,e^\eta,e^{2\eta}$. Adjacent steps need not be ordered for the resulting
+probabilities to be valid; they are not cumulative cutpoints.
 
 A cumulative model instead specifies
 
-\\P(Y\leq k\mid\eta)=F(\alpha_k-\eta),\\
+$$P(Y\leq k\mid\eta)=F(\alpha_k-\eta),$$
 
-with ordered cutpoints \\\alpha_k\\. The second panel uses logistic
-\\F\\ and
-\\\alpha=(\operatorname{logit}(1/3),\operatorname{logit}(2/3))\\; the
-third uses standard-normal \\F\\ and
-\\\alpha=(\Phi^{-1}(1/3),\Phi^{-1}(2/3))\\. Category probabilities are
-differences of successive cumulative probabilities. Matching the centre
-does not equate the latent scales.
+with ordered cutpoints $\alpha_k$. The `ordinal` curves use logistic $F$ and
+$\alpha=(\operatorname{logit}(1/3),\operatorname{logit}(2/3))$; the `lavaan` curves
+use standard-normal $F$ and $\alpha=(\Phi^{-1}(1/3),\Phi^{-1}(2/3))$.
+Category probabilities are differences of successive cumulative
+probabilities. Matching the centre does not equate the latent scales.
 
 In ordinal CFA, a common formulation is
-\\Y_j^\*=\nu_j+\lambda_j\theta+\epsilon_j\\ with normally distributed
-residuals and thresholds on \\Y_j^\*\\. The illustration fixes the
-loading and residual SD to one and the intercept to zero. In general,
-the probit slope is \\\lambda_j/\operatorname{SD}(\epsilon_j)\\ under
-the chosen factor scale; a reported factor loading is not automatically
-a logistic discrimination. [Kamata and Bauer
-(2008)](https://dbauer.web.unc.edu/wp-content/uploads/sites/7494/2014/08/kamata-bauer-2008.pdf)
+$Y_j^*=\nu_j+\lambda_j\theta+\epsilon_j$ with normally distributed
+residuals and thresholds on $Y_j^*$. The illustration fixes the loading and
+residual SD to one and the intercept to zero. In general, the probit slope is
+$\lambda_j/\operatorname{SD}(\epsilon_j)$ under the chosen factor scale;
+a reported factor loading is not automatically a logistic discrimination.
+[Kamata and Bauer (2008)](https://dbauer.web.unc.edu/wp-content/uploads/sites/7494/2014/08/kamata-bauer-2008.pdf)
 explain the factor-analysis/IRT connection and the required scaling.
 
 Three further choices matter when comparing fitted results:
@@ -1430,23 +1508,23 @@ Three further choices matter when comparing fitted results:
   parameter and treating raters as a sample from a distribution answer
   different questions and imply different pooling. One person dimension
   does not preclude additional random effects.
-- **Estimation:** JML estimates person parameters jointly; MML
-  integrates over a person distribution. Standard `lavaan` analyses with
-  `ordered` outcomes use WLSMV by default, based on a DWLS fit, rather
-  than the same full response-pattern likelihood. Corresponding response
-  equations do not ensure identical estimates or SEs.
-- **Person scores:** EAP posterior means and the conditional modes
-  returned by `ordinal::ranef()` are different summaries. Their
-  uncertainty also depends on how calibration-parameter uncertainty is
-  treated.
+- **Estimation:** JML estimates person parameters jointly; MML integrates
+  over a person distribution. Standard `lavaan` analyses with `ordered`
+  outcomes use WLSMV by default, based on a DWLS fit, rather than the same
+  full response-pattern likelihood. Corresponding response equations do
+  not ensure identical estimates or SEs.
+- **Person scores:** EAP posterior means and the conditional modes returned
+  by `ordinal::ranef()` are different summaries. Their uncertainty also
+  depends on how calibration-parameter uncertainty is treated.
 
-[Van den Noortgate, De Boeck and Meulders
-(2003)](https://ppw.kuleuven.be/okp/_pdf/Noortgate2003CMLMI.pdf) show
-how Rasch models connect to logistic mixed models. That connection does
-not make a polytomous PCM a cumulative-link model. The
-[figure-generation
-script](https://github.com/Ryuya-dot-com/mfrmr/blob/main/scripts/build-model-family-figure.R)
-contains the chosen constants and numerical checks; no data are fitted.
+[Van den Noortgate, De Boeck and Meulders (2003)](https://ppw.kuleuven.be/okp/_pdf/Noortgate2003CMLMI.pdf)
+show how Rasch models connect to logistic mixed models. That connection
+does not make a polytomous PCM a cumulative-link model.
+The [figure-generation script](https://github.com/Ryuya-dot-com/mfrmr/blob/main/scripts/build-model-family-figure.R)
+runs the same R code shown above; no data are fitted.
+
+</details>
+
 
 ### Other many-facet measurement workflows
 
