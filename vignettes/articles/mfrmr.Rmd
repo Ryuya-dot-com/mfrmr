@@ -1017,15 +1017,192 @@ number of rater, task or other facet effects.
 
 | Starting point | What the model relates to ability | A typical use |
 | --- | --- | --- |
-| RSM / PCM MFRM | Odds of **one category versus its neighbour**, such as 2 versus 1 | Estimate ability, rater severity and task difficulty on a common measurement scale |
+| `mfrmr` (RSM shown) | Odds of **one category versus its neighbour**, such as 2 versus 1 | Estimate ability, rater severity and task difficulty on a common measurement scale |
 | `ordinal::clmm(link = "logit")` | Odds of scoring **at or below a cutpoint versus above it**, such as 0 or 1 versus 2 | Explain ratings with predictors and account for repeated ratings through random effects |
 | Ordinal CFA in `lavaan` | Thresholds on a continuous, normally distributed latent response; this gives **cumulative probit** probabilities | Examine a measurement structure and its relationships with other latent variables |
 
 These uses overlap. The response equation, facet structure and inferential
 goal should guide the choice; a package name alone does not define the model.
 
+**Fit the models, not just their curves.** The example below uses the same
+768 ratings from 48 persons, four raters and four criteria in all three
+packages. It fits RSM, PCM and a criterion-slope GPCM in `mfrmr`, cumulative
+logit/probit models in `ordinal`, and an explicitly constrained
+cumulative-probit measurement model in `lavaan`. The small bundled data
+illustrate specification and execution, not a recommended sample size or a
+comparison of inferential performance.
+
+<details class="mfrmr-code">
+<summary>Show R code: fit mfrmr, ordinal and lavaan to the same ratings</summary>
+
+Run this complete block with `mfrmr`, `ordinal` and `lavaan` installed.
+The `lavaan` example requires one observation per person/rater/criterion cell
+and uses the fully crossed bundled data. It does not average ratings or
+regard repeated ratings as independent persons.
+
+```{r model-family-fitting-code, eval = FALSE}
+library(mfrmr)
+
+# One row per rating: 48 persons x 4 raters x 4 criteria, scores 1--4.
+ratings <- load_mfrmr_data("example_core")
+for (v in c("Person", "Rater", "Criterion")) ratings[[v]] <- factor(ratings[[v]])
+ratings$Rating <- ordered(ratings$Score, levels = 1:4)
+persons <- data.frame(Person = levels(ratings$Person))
+stopifnot(!anyDuplicated(ratings[c("Person", "Rater", "Criterion")]),
+  all(with(ratings, table(Person, Rater, Criterion)) == 1L))
+
+# 1. mfrmr: adjacent-category models with fixed rater/criterion effects.
+# ~1 estimates the mean and variance of the normal person distribution.
+fit_native <- function(model, ...) {
+  fit_mfrm(ratings, person = "Person", facets = c("Rater", "Criterion"),
+    score = "Score", rating_min = 1, rating_max = 4,
+    model = model, method = "MML", category_policy = "preserve",
+    population_formula = ~1, person_data = persons, person_id = "Person",
+    quad_points = 61, ...)
+}
+mfrmr_fits <- list(
+  RSM = fit_native("RSM"),
+  PCM = fit_native("PCM", step_facet = "Criterion"),
+  GPCM = fit_native("GPCM", step_facet = "Criterion", slope_facet = "Criterion")
+)
+# This table records likelihoods; it is not a recommendation to choose GPCM.
+sapply(mfrmr_fits, function(x) as.numeric(logLik(x)))
+summary(mfrmr_fits$GPCM)
+
+# 2. ordinal: cumulative models with the same additive facet structure.
+# Positive fixed coefficients mean higher ratings (lower severity/difficulty).
+# The Person random intercept has mean 0 and an estimated variance.
+ordinal_logit <- ordinal::clmm(
+  Rating ~ Rater + Criterion + (1 | Person), data = ratings,
+  link = "logit", nAGQ = 15, Hess = TRUE,
+  contrasts = list(Rater = "contr.treatment", Criterion = "contr.treatment")
+)
+ordinal_probit <- ordinal::clmm(
+  Rating ~ Rater + Criterion + (1 | Person), data = ratings,
+  link = "probit", nAGQ = 15, Hess = TRUE,
+  contrasts = list(Rater = "contr.treatment", Criterion = "contr.treatment")
+)
+summary(ordinal_logit)
+
+# 3. lavaan: the corresponding cumulative-probit measurement structure.
+# Reshape to one row per person; keep every rater-by-criterion response.
+cells <- unique(ratings[c("Rater", "Criterion")])
+cells <- cells[order(cells$Rater, cells$Criterion), ]
+r <- as.integer(cells$Rater)
+j <- as.integer(cells$Criterion)
+cells$Indicator <- paste0("y", r, "_", j)
+ratings$Indicator <- cells$Indicator[match(
+  paste(ratings$Rater, ratings$Criterion), paste(cells$Rater, cells$Criterion))]
+wide <- reshape(ratings[c("Person", "Indicator", "Score")],
+  idvar = "Person", timevar = "Indicator", direction = "wide")
+names(wide) <- sub("^Score\\.", "", names(wide))
+items <- cells$Indicator
+intercepts <- paste0("i", r, "_", j)
+
+# Unit loadings and unit residual variances fix the probit response scale.
+# Shared cutpoints + additive intercepts reproduce the fixed-facet structure.
+# Rater 1 / Criterion 1 is the reference cell; ability has mean 0.
+syntax <- c(
+  paste("Ability =~", paste(paste0("1*", items), collapse = " + ")),
+  "Ability ~~ variance*Ability", "Ability ~ 0*1",
+  paste(items, "~~", paste0("1*", items)),
+  paste(items, "| cut1*t1 + cut2*t2 + cut3*t3"),
+  paste(items, "~", paste0(ifelse(r == 1 & j == 1, "0", intercepts), "*1"))
+)
+for (i in which(r > 1 & j > 1)) {
+  syntax <- c(syntax, paste0(intercepts[i], " == i", r[i], "_1 + i1_", j[i]))
+}
+syntax <- paste(syntax, collapse = "\n")
+cat(syntax) # Inspect the actual constraints before fitting.
+lavaan_probit <- lavaan::cfa(syntax, data = wide, ordered = items,
+  estimator = "WLSMV", parameterization = "theta")
+stopifnot(lavaan::lavInspect(lavaan_probit, "converged"))
+lavaan::parameterEstimates(lavaan_probit)
+
+# This fits the same cumulative-probit response structure as ordinal_probit,
+# using WLSMV rather than marginal ML. Estimates and SEs need not coincide.
+# It is not an adjacent-logit RSM, PCM or GPCM.
+sapply(c("mfrmr", "ordinal", "lavaan"), function(p) as.character(packageVersion(p)))
+sessionInfo()
+```
+
+`ordinal_logit` is a cumulative-logit alternative, not a PCM fit.
+`lavaan_probit` shares the response structure of `ordinal_probit`: common
+cutpoints, fixed additive rater/criterion effects, and one normally
+distributed person ability. Fixing **both the loadings and residual
+variances to one** is essential here. An ordinary one-factor CFA with free
+loadings and unrestricted indicator thresholds would be a different model.
+WLSMV and marginal ML also use different estimation criteria, so this is
+not a test that their estimates or SEs are equal. For example, the fitted
+person variances are approximately 0.763 (WLSMV) and 0.671 (marginal ML)
+in this small dataset.
+
+These calls were checked with `mfrmr` 0.2.4 and its 0.2.4.9000 development
+interface, `ordinal` 2026.7.26 and `lavaan` 0.7.3. Retain the printed package versions and `sessionInfo()` with results.
+
+</details>
+
+<details class="mfrmr-code">
+<summary>Show R code: the binary case where ordinal can fit the same logistic MFRM</summary>
+
+With two categories, adjacent and cumulative logits can define the same
+response model. This example aligns the normal person distribution and fixed
+facet effects. The two marginal log likelihoods differ by about
+$6.2\times10^{-6}$ in this run, reflecting numerical estimation/integration
+rather than different response families. `lavaan`'s standard binary CFA uses
+a probit response and is not this logistic model.
+
+```{r model-family-binary-code, eval = FALSE}
+# Run the data setup above first. Dichotomization is used only to demonstrate
+# the binary special case; it discards information from the original ratings.
+binary <- ratings
+binary$Score01 <- as.integer(binary$Score >= 3)
+binary$Rating01 <- ordered(binary$Score01, levels = 0:1)
+binary_mfrmr <- fit_mfrm(binary, person = "Person",
+  facets = c("Rater", "Criterion"), score = "Score01",
+  rating_min = 0, rating_max = 1, model = "RSM", method = "MML",
+  category_policy = "preserve", population_formula = ~1,
+  person_data = persons, person_id = "Person", quad_points = 61)
+binary_ordinal <- ordinal::clmm(
+  Rating01 ~ Rater + Criterion + (1 | Person), data = binary,
+  link = "logit", nAGQ = 15, Hess = TRUE,
+  contrasts = list(Rater = "contr.treatment", Criterion = "contr.treatment"))
+c(mfrmr = as.numeric(logLik(binary_mfrmr)),
+  ordinal = as.numeric(logLik(binary_ordinal)))
+# Compare likelihoods rather than raw locations: mfrmr centres facets,
+# while this ordinal fit uses reference levels and a zero-mean random effect.
+# Person EAP means and random-effect conditional modes are also different.
+```
+
+</details>
+
+**What about GPCM?** In the code above, `slope_facet = "Criterion"` lets
+`mfrmr` estimate relative criterion discriminations. Its positive slope
+multiplies ability, facet locations and the step together. A second slope
+facet, where supported, changes that multiplier; it does not change the
+adjacent-category link. See the [GPCM model scope](mfrmr-gpcm-scope.html).
+
+| Package | Can its standard API fit this polytomous GPCM? | Why related options are different |
+| --- | --- | --- |
+| `mfrmr` | Yes, within the documented slope/step-facet scope | `model = "GPCM"` specifies adjacent-category probabilities |
+| `ordinal` | No | `clm()` scale/nominal terms and `clmm()` random effects retain a cumulative link |
+| `lavaan` | No | Free loadings give varying probit slopes in an ordinal CFA/graded-response formulation; parameter constraints do not turn its response function into adjacent logits |
+
+Thus, freeing loadings is **not** a GPCM implementation. This distinction is
+consistent with [Bürkner (2021), Table 3](https://www.jstatsoft.org/article/view/v100i05),
+which separates partial-credit and graded-response support, and with the
+current [`ordinal` scale/link specification](https://search.r-project.org/CRAN/refmans/ordinal/html/clm.html)
+and [lavaan categorical-data specification](https://lavaan.ugent.be/tutorial/cat.html).
+A custom likelihood in another framework would require a separate
+implementation and verification; the following curves do not supply one.
+
+The figure uses **`mfrmr (RSM)`**, **`ordinal (logit)`** and
+**`lavaan (probit)`** to identify the package and the response model being
+illustrated. It is an equation illustration; the fitted-data example above
+also includes PCM and GPCM.
+
 <figure>
-<img src="model-comparison/model-families.svg" width="720" style="max-width:100%;height:auto" alt="Three panels, one for each score: 0, 1 and 2. Each panel overlays RSM/PCM in blue solid lines, ordinal cumulative logit in orange dashed lines, and lavaan cumulative probit in green long-dashed lines. The models agree at probability one third at predictor zero; their curves differ elsewhere. Horizontal units are model-specific.">
+<img src="model-comparison/model-families.svg" width="720" style="max-width:100%;height:auto" alt="Three panels, one for each score: 0, 1 and 2. Each panel overlays mfrmr (RSM) in blue solid lines, ordinal cumulative logit in orange dashed lines, and lavaan cumulative probit in green long-dashed lines. The models agree at probability one third at predictor zero; their curves differ elsewhere. Horizontal units are model-specific.">
 <figcaption><em>Compare the three models within each score category.</em>
 Colour and line type identify the model, and each panel shows one category.
 The black point marks the common probability of 1/3 at predictor zero.
@@ -1057,7 +1234,7 @@ cumulative <- function(cdf, cuts) {
 logit <- cumulative(plogis, qlogis(c(1 / 3, 2 / 3)))
 probit <- cumulative(pnorm, qnorm(c(1 / 3, 2 / 3)))
 probabilities <- list(
-  "RSM / PCM: adjacent logit" = adjacent,
+  "mfrmr (RSM): adjacent logit" = adjacent,
   "Ordinal mixed model: cumulative logit" = logit,
   "Ordinal CFA: cumulative probit" = probit
 )
@@ -1094,9 +1271,9 @@ figure <- ggplot(curves, aes(Predictor, Probability,
     colour = "#222222", size = 2.4, show.legend = FALSE) +
   facet_wrap(~Category, ncol = 1) +
   scale_colour_manual(values = c("#0072B2", "#B35A00", "#007E68"),
-    labels = c("RSM / PCM", "ordinal (logit)", "lavaan (probit)")) +
+    labels = c("mfrmr (RSM)", "ordinal (logit)", "lavaan (probit)")) +
   scale_linetype_manual(values = c("solid", "dashed", "longdash"),
-    labels = c("RSM / PCM", "ordinal (logit)", "lavaan (probit)")) +
+    labels = c("mfrmr (RSM)", "ordinal (logit)", "lavaan (probit)")) +
   scale_x_continuous(breaks = -3:3, expand = expansion(mult = 0.015)) +
   scale_y_continuous(limits = c(0, 1), breaks = c(0, 1 / 3, 2 / 3, 1),
     labels = c("0", "1/3", "2/3", "1")) +
@@ -1138,7 +1315,7 @@ severity. The adjacent-category equation is
 
 $$\log\frac{P(Y=k)}{P(Y=k-1)}=\eta-\tau_{g,k}.$$
 
-RSM shares the step ladder; PCM permits group-specific ladders. The RSM/PCM
+RSM shares the step ladder; PCM permits group-specific ladders. The illustrative `mfrmr` RSM
 curves use one ladder with both steps zero, so its category weights are
 $1,e^\eta,e^{2\eta}$. Adjacent steps need not be ordered for the resulting
 probabilities to be valid; they are not cumulative cutpoints.
