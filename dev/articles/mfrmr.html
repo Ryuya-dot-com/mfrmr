@@ -92,7 +92,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Get started: a visual tour of mfrmr</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/641867dc508c2e43439d4bde76dafcf332e63607/vignettes/articles/mfrmr.Rmd" class="external-link"><code>vignettes/articles/mfrmr.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/aa8e9a74902c1f9b2dc349e7e9c5ce0042d1e514/vignettes/articles/mfrmr.Rmd" class="external-link"><code>vignettes/articles/mfrmr.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr.Rmd</code></div>
     </div>
 
@@ -157,6 +157,7 @@ adjust</a>, <a href="#look-at-data">check the data</a>, then <a href="#wright-ma
 <strong>Precision and planning:</strong> <a href="#precision">reliability and information</a>, then <a href="#g-and-d-studies">G-Study / D-Study</a>.</li>
 <li>
 <strong>Rater feedback and reporting:</strong> <a href="#rater-feedback">review raters</a>, then <a href="#report-in-apa-style">prepare a report</a>.</li>
+<li><strong>Coming from regression or SEM:</strong> <a href="#mfrm-sem-ordinal">compare the model families</a>.</li>
 </ul>
 <div class="section level2">
 <h2 id="why-adjust">1. Why adjust for raters?<a class="anchor" aria-label="anchor" href="#why-adjust"></a>
@@ -2238,6 +2239,148 @@ numbers. A screenshot alone does not preserve those records.</p>
 <div class="section level2">
 <h2 id="other-software">9. mfrmr and other software<a class="anchor" aria-label="anchor" href="#other-software"></a>
 </h2>
+<div class="section level3">
+<h3 id="mfrm-sem-ordinal">How does MFRM relate to ordinal regression and
+SEM?<a class="anchor" aria-label="anchor" href="#mfrm-sem-ordinal"></a></h3>
+<p>All three can connect an unobserved person ability to ordered
+ratings, but they need not assign the same probabilities to those
+ratings. <strong>Unidimensional</strong> means one person-ability
+dimension: it does not limit the number of rater, task or other facet
+effects.</p>
+<table class="table">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Starting point</th>
+<th>What the model relates to ability</th>
+<th>A typical use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RSM / PCM MFRM</td>
+<td>Odds of <strong>one category versus its neighbour</strong>, such as
+2 versus 1</td>
+<td>Estimate ability, rater severity and task difficulty on a common
+measurement scale</td>
+</tr>
+<tr>
+<td><code>ordinal::clmm(link = "logit")</code></td>
+<td>Odds of scoring <strong>at or below a cutpoint versus above
+it</strong>, such as 0 or 1 versus 2</td>
+<td>Explain ratings with predictors and account for repeated ratings
+through random effects</td>
+</tr>
+<tr>
+<td>Ordinal CFA in <code>lavaan</code></td>
+<td>Thresholds on a continuous, normally distributed latent response;
+this gives <strong>cumulative probit</strong> probabilities</td>
+<td>Examine a measurement structure and its relationships with other
+latent variables</td>
+</tr>
+</tbody>
+</table>
+<p>These uses overlap. The response equation, facet structure and
+inferential goal should guide the choice; a package name alone does not
+define the model.</p>
+<figure>
+<img src="model-comparison/model-families.svg" width="720" style="max-width:100%;height:auto" alt="Three panels of category probabilities for scores 0, 1 and 2. All categories have probability one third at predictor zero in each panel. Moving away from zero gives different curves for adjacent logit, cumulative logit and cumulative probit. The horizontal units are specific to each model.">
+<figcaption>
+<em>Same probabilities at the centre, different response curves.</em>
+The black point marks the common probability of 1/3 at predictor zero.
+These are equations evaluated at chosen parameters, not fits to data.
+Horizontal units are model-specific: curve steepness here is not
+evidence of greater discrimination, precision or better fit.
+</figcaption>
+</figure>
+<p>For a <strong>binary</strong> response, adjacent and cumulative
+logistic formulations can describe the same model after aligning signs,
+constraints and random-effect distributions. With <strong>three or more
+categories</strong>, RSM/PCM and a cumulative logit model generally
+define different response families. Changing the link from logit to
+probit also changes the response function and its scale. The <a
+href="https://www.winsteps.com/facetman/theory.htm">FACETS model
+equation</a>, <a
+href="https://search.r-project.org/CRAN/refmans/ordinal/html/clmm.html"><code>clmm</code>
+documentation</a> and <a
+href="https://lavaan.ugent.be/tutorial/cat.html">lavaan categorical-data
+tutorial</a> describe the respective formulations and estimation
+options.</p>
+<details class="mfrmr-code">
+<summary>
+Equations, scale choices and why estimates need not agree
+</summary>
+<p>For person <span class="math inline">\(p\)</span>, rater <span
+class="math inline">\(r\)</span> and task <span
+class="math inline">\(t\)</span>, write <span
+class="math inline">\(\eta=\theta_p-\rho_r-\delta_t\)</span>, where
+larger <span class="math inline">\(\rho_r\)</span> means greater rater
+severity. The adjacent-category equation is</p>
+<p><span
+class="math display">\[\log\frac{P(Y=k)}{P(Y=k-1)}=\eta-\tau_{g,k}.\]</span></p>
+<p>RSM shares the step ladder; PCM permits group-specific ladders. The
+first panel uses one ladder with both steps zero, so its category
+weights are <span class="math inline">\(1,e^\eta,e^{2\eta}\)</span>.
+Adjacent steps need not be ordered for the resulting probabilities to be
+valid; they are not cumulative cutpoints.</p>
+<p>A cumulative model instead specifies</p>
+<p><span class="math display">\[P(Y\leq
+k\mid\eta)=F(\alpha_k-\eta),\]</span></p>
+<p>with ordered cutpoints <span class="math inline">\(\alpha_k\)</span>.
+The second panel uses logistic <span class="math inline">\(F\)</span>
+and <span
+class="math inline">\(\alpha=(\operatorname{logit}(1/3),\operatorname{logit}(2/3))\)</span>;
+the third uses standard-normal <span class="math inline">\(F\)</span>
+and <span
+class="math inline">\(\alpha=(\Phi^{-1}(1/3),\Phi^{-1}(2/3))\)</span>.
+Category probabilities are differences of successive cumulative
+probabilities. Matching the centre does not equate the latent
+scales.</p>
+<p>In ordinal CFA, a common formulation is <span
+class="math inline">\(Y_j^*=\nu_j+\lambda_j\theta+\epsilon_j\)</span>
+with normally distributed residuals and thresholds on <span
+class="math inline">\(Y_j^*\)</span>. The illustration fixes the loading
+and residual SD to one and the intercept to zero. In general, the probit
+slope is <span
+class="math inline">\(\lambda_j/\operatorname{SD}(\epsilon_j)\)</span>
+under the chosen factor scale; a reported factor loading is not
+automatically a logistic discrimination. <a
+href="https://dbauer.web.unc.edu/wp-content/uploads/sites/7494/2014/08/kamata-bauer-2008.pdf">Kamata
+and Bauer (2008)</a> explain the factor-analysis/IRT connection and the
+required scaling.</p>
+<p>Three further choices matter when comparing fitted results:</p>
+<ul>
+<li><strong>Fixed or random facets:</strong> estimating each rater
+severity as a fixed parameter and treating raters as a sample from a
+distribution answer different questions and imply different pooling. One
+person dimension does not preclude additional random effects.</li>
+<li><strong>Estimation:</strong> JML estimates person parameters
+jointly; MML integrates over a person distribution. Standard
+<code>lavaan</code> analyses with <code>ordered</code> outcomes use
+WLSMV by default, based on a DWLS fit, rather than the same full
+response-pattern likelihood. Corresponding response equations do not
+ensure identical estimates or SEs.</li>
+<li><strong>Person scores:</strong> EAP posterior means and the
+conditional modes returned by <code>ordinal::ranef()</code> are
+different summaries. Their uncertainty also depends on how
+calibration-parameter uncertainty is treated.</li>
+</ul>
+<p><a href="https://ppw.kuleuven.be/okp/_pdf/Noortgate2003CMLMI.pdf">Van
+den Noortgate, De Boeck and Meulders (2003)</a> show how Rasch models
+connect to logistic mixed models. That connection does not make a
+polytomous PCM a cumulative-link model. The <a
+href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/scripts/build-model-family-figure.R">figure-generation
+script</a> contains the chosen constants and numerical checks; no data
+are fitted.</p>
+</details>
+
+</div>
+<div class="section level3">
+<h3 id="other-measurement-workflows">Other many-facet measurement workflows<a class="anchor" aria-label="anchor" href="#other-measurement-workflows"></a></h3>
 <p>FACETS, ACER ConQuest and the R package TAM are established tools for
 many-facet and Rasch-family measurement. Each fits a distinct
 workflow:</p>
@@ -2347,6 +2490,7 @@ Show ggplot2 code for the FACETS coverage bar
 <a href="https://www.acer.org/au/conquest" class="external-link">ACER ConQuest</a>, and <a href="https://cran.r-project.org/package=TAM" class="external-link">TAM on CRAN</a>.</p>
 <p>More: <a href="../articles/mfrmr-facets-migration.html">migrating
 from FACETS</a>.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="where-to-go-next">Where to go next<a class="anchor" aria-label="anchor" href="#where-to-go-next"></a>
