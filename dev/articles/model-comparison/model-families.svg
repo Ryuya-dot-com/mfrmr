@@ -133,11 +133,11 @@
 <text x='279.09' y='586.26' text-anchor='middle' style='font-size: 16.00px; font-family: "Arial";' textLength='207.34px' lengthAdjust='spacingAndGlyphs'>Predictor (within-model units)</text>
 <text transform='translate(19.43,316.76) rotate(-90)' text-anchor='middle' style='font-size: 16.00px; font-family: "Arial";' textLength='142.42px' lengthAdjust='spacingAndGlyphs'>Category probability</text>
 <line x1='61.43' y1='24.58' x2='75.26' y2='24.58' style='stroke-width: 2.03; stroke: #0072B2; stroke-linecap: butt;' />
-<line x1='157.98' y1='24.58' x2='171.80' y2='24.58' style='stroke-width: 2.03; stroke: #B35A00; stroke-dasharray: 10.81,10.81; stroke-linecap: butt;' />
-<line x1='260.58' y1='24.58' x2='274.40' y2='24.58' style='stroke-width: 2.03; stroke: #007E68; stroke-dasharray: 18.92,8.11; stroke-linecap: butt;' />
-<text x='84.95' y='28.88' style='font-size: 12.00px; font-family: "Arial";' textLength='63.33px' lengthAdjust='spacingAndGlyphs'>RSM / PCM</text>
-<text x='181.50' y='28.88' style='font-size: 12.00px; font-family: "Arial";' textLength='69.38px' lengthAdjust='spacingAndGlyphs'>ordinal (logit)</text>
-<text x='284.10' y='28.88' style='font-size: 12.00px; font-family: "Arial";' textLength='76.70px' lengthAdjust='spacingAndGlyphs'>lavaan (probit)</text>
+<line x1='163.98' y1='24.58' x2='177.80' y2='24.58' style='stroke-width: 2.03; stroke: #B35A00; stroke-dasharray: 10.81,10.81; stroke-linecap: butt;' />
+<line x1='266.58' y1='24.58' x2='280.40' y2='24.58' style='stroke-width: 2.03; stroke: #007E68; stroke-dasharray: 18.92,8.11; stroke-linecap: butt;' />
+<text x='84.95' y='28.88' style='font-size: 12.00px; font-family: "Arial";' textLength='69.33px' lengthAdjust='spacingAndGlyphs'>mfrmr (RSM)</text>
+<text x='187.50' y='28.88' style='font-size: 12.00px; font-family: "Arial";' textLength='69.38px' lengthAdjust='spacingAndGlyphs'>ordinal (logit)</text>
+<text x='290.10' y='28.88' style='font-size: 12.00px; font-family: "Arial";' textLength='76.70px' lengthAdjust='spacingAndGlyphs'>lavaan (probit)</text>
 </g>
 </g>
 </svg>

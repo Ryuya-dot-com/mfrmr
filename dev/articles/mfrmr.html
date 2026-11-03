@@ -92,7 +92,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Get started: a visual tour of mfrmr</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f00c5b1e0fdb48642345a6be0985d3708004499c/vignettes/articles/mfrmr.Rmd" class="external-link"><code>vignettes/articles/mfrmr.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/83fe4a34120e13603b9ce179b680aa49f150f143/vignettes/articles/mfrmr.Rmd" class="external-link"><code>vignettes/articles/mfrmr.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr.Rmd</code></div>
     </div>
 
@@ -2262,7 +2262,7 @@ effects.</p>
 </thead>
 <tbody>
 <tr>
-<td>RSM / PCM MFRM</td>
+<td><code>mfrmr</code> (RSM shown)</td>
 <td>Odds of <strong>one category versus its neighbour</strong>, such as
 2 versus 1</td>
 <td>Estimate ability, rater severity and task difficulty on a common
@@ -2287,8 +2287,215 @@ latent variables</td>
 <p>These uses overlap. The response equation, facet structure and
 inferential goal should guide the choice; a package name alone does not
 define the model.</p>
+<p><strong>Fit the models, not just their curves.</strong> The example
+below uses the same 768 ratings from 48 persons, four raters and four
+criteria in all three packages. It fits RSM, PCM and a criterion-slope
+GPCM in <code>mfrmr</code>, cumulative logit/probit models in
+<code>ordinal</code>, and an explicitly constrained cumulative-probit
+measurement model in <code>lavaan</code>. The small bundled data
+illustrate specification and execution, not a recommended sample size or
+a comparison of inferential performance.</p>
+<details class="mfrmr-code">
+<summary>
+Show R code: fit mfrmr, ordinal and lavaan to the same ratings
+</summary>
+<p>Run this complete block with <code>mfrmr</code>, <code>ordinal</code>
+and <code>lavaan</code> installed. The <code>lavaan</code> example
+requires one observation per person/rater/criterion cell and uses the
+fully crossed bundled data. It does not average ratings or regard
+repeated ratings as independent persons.</p>
+<div class="sourceCode" id="modelcode-cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="modelcode-cb1-1"><a href="#modelcode-cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mfrmr)</span>
+<span id="modelcode-cb1-2"><a href="#modelcode-cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="modelcode-cb1-3"><a href="#modelcode-cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># One row per rating: 48 persons x 4 raters x 4 criteria, scores 1--4.</span></span>
+<span id="modelcode-cb1-4"><a href="#modelcode-cb1-4" aria-hidden="true" tabindex="-1"></a>ratings <span class="ot">&lt;-</span> <span class="fu">load_mfrmr_data</span>(<span class="st">&quot;example_core&quot;</span>)</span>
+<span id="modelcode-cb1-5"><a href="#modelcode-cb1-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (v <span class="cf">in</span> <span class="fu">c</span>(<span class="st">&quot;Person&quot;</span>, <span class="st">&quot;Rater&quot;</span>, <span class="st">&quot;Criterion&quot;</span>)) ratings[[v]] <span class="ot">&lt;-</span> <span class="fu">factor</span>(ratings[[v]])</span>
+<span id="modelcode-cb1-6"><a href="#modelcode-cb1-6" aria-hidden="true" tabindex="-1"></a>ratings<span class="sc">$</span>Rating <span class="ot">&lt;-</span> <span class="fu">ordered</span>(ratings<span class="sc">$</span>Score, <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>)</span>
+<span id="modelcode-cb1-7"><a href="#modelcode-cb1-7" aria-hidden="true" tabindex="-1"></a>persons <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Person =</span> <span class="fu">levels</span>(ratings<span class="sc">$</span>Person))</span>
+<span id="modelcode-cb1-8"><a href="#modelcode-cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="sc">!</span><span class="fu">anyDuplicated</span>(ratings[<span class="fu">c</span>(<span class="st">&quot;Person&quot;</span>, <span class="st">&quot;Rater&quot;</span>, <span class="st">&quot;Criterion&quot;</span>)]),</span>
+<span id="modelcode-cb1-9"><a href="#modelcode-cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">all</span>(<span class="fu">with</span>(ratings, <span class="fu">table</span>(Person, Rater, Criterion)) <span class="sc">==</span> <span class="dv">1</span><span class="dt">L</span>))</span>
+<span id="modelcode-cb1-10"><a href="#modelcode-cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="modelcode-cb1-11"><a href="#modelcode-cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. mfrmr: adjacent-category models with fixed rater/criterion effects.</span></span>
+<span id="modelcode-cb1-12"><a href="#modelcode-cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># ~1 estimates the mean and variance of the normal person distribution.</span></span>
+<span id="modelcode-cb1-13"><a href="#modelcode-cb1-13" aria-hidden="true" tabindex="-1"></a>fit_native <span class="ot">&lt;-</span> <span class="cf">function</span>(model, ...) {</span>
+<span id="modelcode-cb1-14"><a href="#modelcode-cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_mfrm</span>(ratings, <span class="at">person =</span> <span class="st">&quot;Person&quot;</span>, <span class="at">facets =</span> <span class="fu">c</span>(<span class="st">&quot;Rater&quot;</span>, <span class="st">&quot;Criterion&quot;</span>),</span>
+<span id="modelcode-cb1-15"><a href="#modelcode-cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">score =</span> <span class="st">&quot;Score&quot;</span>, <span class="at">rating_min =</span> <span class="dv">1</span>, <span class="at">rating_max =</span> <span class="dv">4</span>,</span>
+<span id="modelcode-cb1-16"><a href="#modelcode-cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">model =</span> model, <span class="at">method =</span> <span class="st">&quot;MML&quot;</span>, <span class="at">category_policy =</span> <span class="st">&quot;preserve&quot;</span>,</span>
+<span id="modelcode-cb1-17"><a href="#modelcode-cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">population_formula =</span> <span class="sc">~</span><span class="dv">1</span>, <span class="at">person_data =</span> persons, <span class="at">person_id =</span> <span class="st">&quot;Person&quot;</span>,</span>
+<span id="modelcode-cb1-18"><a href="#modelcode-cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">quad_points =</span> <span class="dv">61</span>, ...)</span>
+<span id="modelcode-cb1-19"><a href="#modelcode-cb1-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="modelcode-cb1-20"><a href="#modelcode-cb1-20" aria-hidden="true" tabindex="-1"></a>mfrmr_fits <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="modelcode-cb1-21"><a href="#modelcode-cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">RSM =</span> <span class="fu">fit_native</span>(<span class="st">&quot;RSM&quot;</span>),</span>
+<span id="modelcode-cb1-22"><a href="#modelcode-cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">PCM =</span> <span class="fu">fit_native</span>(<span class="st">&quot;PCM&quot;</span>, <span class="at">step_facet =</span> <span class="st">&quot;Criterion&quot;</span>),</span>
+<span id="modelcode-cb1-23"><a href="#modelcode-cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">GPCM =</span> <span class="fu">fit_native</span>(<span class="st">&quot;GPCM&quot;</span>, <span class="at">step_facet =</span> <span class="st">&quot;Criterion&quot;</span>, <span class="at">slope_facet =</span> <span class="st">&quot;Criterion&quot;</span>)</span>
+<span id="modelcode-cb1-24"><a href="#modelcode-cb1-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="modelcode-cb1-25"><a href="#modelcode-cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co"># This table records likelihoods; it is not a recommendation to choose GPCM.</span></span>
+<span id="modelcode-cb1-26"><a href="#modelcode-cb1-26" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(mfrmr_fits, <span class="cf">function</span>(x) <span class="fu">as.numeric</span>(<span class="fu">logLik</span>(x)))</span>
+<span id="modelcode-cb1-27"><a href="#modelcode-cb1-27" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mfrmr_fits<span class="sc">$</span>GPCM)</span>
+<span id="modelcode-cb1-28"><a href="#modelcode-cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="modelcode-cb1-29"><a href="#modelcode-cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. ordinal: cumulative models with the same additive facet structure.</span></span>
+<span id="modelcode-cb1-30"><a href="#modelcode-cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Positive fixed coefficients mean higher ratings (lower severity/difficulty).</span></span>
+<span id="modelcode-cb1-31"><a href="#modelcode-cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co"># The Person random intercept has mean 0 and an estimated variance.</span></span>
+<span id="modelcode-cb1-32"><a href="#modelcode-cb1-32" aria-hidden="true" tabindex="-1"></a>ordinal_logit <span class="ot">&lt;-</span> ordinal<span class="sc">::</span><span class="fu">clmm</span>(</span>
+<span id="modelcode-cb1-33"><a href="#modelcode-cb1-33" aria-hidden="true" tabindex="-1"></a>  Rating <span class="sc">~</span> Rater <span class="sc">+</span> Criterion <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> Person), <span class="at">data =</span> ratings,</span>
+<span id="modelcode-cb1-34"><a href="#modelcode-cb1-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">link =</span> <span class="st">&quot;logit&quot;</span>, <span class="at">nAGQ =</span> <span class="dv">15</span>, <span class="at">Hess =</span> <span class="cn">TRUE</span>,</span>
+<span id="modelcode-cb1-35"><a href="#modelcode-cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">contrasts =</span> <span class="fu">list</span>(<span class="at">Rater =</span> <span class="st">&quot;contr.treatment&quot;</span>, <span class="at">Criterion =</span> <span class="st">&quot;contr.treatment&quot;</span>)</span>
+<span id="modelcode-cb1-36"><a href="#modelcode-cb1-36" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="modelcode-cb1-37"><a href="#modelcode-cb1-37" aria-hidden="true" tabindex="-1"></a>ordinal_probit <span class="ot">&lt;-</span> ordinal<span class="sc">::</span><span class="fu">clmm</span>(</span>
+<span id="modelcode-cb1-38"><a href="#modelcode-cb1-38" aria-hidden="true" tabindex="-1"></a>  Rating <span class="sc">~</span> Rater <span class="sc">+</span> Criterion <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> Person), <span class="at">data =</span> ratings,</span>
+<span id="modelcode-cb1-39"><a href="#modelcode-cb1-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">link =</span> <span class="st">&quot;probit&quot;</span>, <span class="at">nAGQ =</span> <span class="dv">15</span>, <span class="at">Hess =</span> <span class="cn">TRUE</span>,</span>
+<span id="modelcode-cb1-40"><a href="#modelcode-cb1-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">contrasts =</span> <span class="fu">list</span>(<span class="at">Rater =</span> <span class="st">&quot;contr.treatment&quot;</span>, <span class="at">Criterion =</span> <span class="st">&quot;contr.treatment&quot;</span>)</span>
+<span id="modelcode-cb1-41"><a href="#modelcode-cb1-41" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="modelcode-cb1-42"><a href="#modelcode-cb1-42" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ordinal_logit)</span>
+<span id="modelcode-cb1-43"><a href="#modelcode-cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="modelcode-cb1-44"><a href="#modelcode-cb1-44" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. lavaan: the corresponding cumulative-probit measurement structure.</span></span>
+<span id="modelcode-cb1-45"><a href="#modelcode-cb1-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Reshape to one row per person; keep every rater-by-criterion response.</span></span>
+<span id="modelcode-cb1-46"><a href="#modelcode-cb1-46" aria-hidden="true" tabindex="-1"></a>cells <span class="ot">&lt;-</span> <span class="fu">unique</span>(ratings[<span class="fu">c</span>(<span class="st">&quot;Rater&quot;</span>, <span class="st">&quot;Criterion&quot;</span>)])</span>
+<span id="modelcode-cb1-47"><a href="#modelcode-cb1-47" aria-hidden="true" tabindex="-1"></a>cells <span class="ot">&lt;-</span> cells[<span class="fu">order</span>(cells<span class="sc">$</span>Rater, cells<span class="sc">$</span>Criterion), ]</span>
+<span id="modelcode-cb1-48"><a href="#modelcode-cb1-48" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(cells<span class="sc">$</span>Rater)</span>
+<span id="modelcode-cb1-49"><a href="#modelcode-cb1-49" aria-hidden="true" tabindex="-1"></a>j <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(cells<span class="sc">$</span>Criterion)</span>
+<span id="modelcode-cb1-50"><a href="#modelcode-cb1-50" aria-hidden="true" tabindex="-1"></a>cells<span class="sc">$</span>Indicator <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;y&quot;</span>, r, <span class="st">&quot;_&quot;</span>, j)</span>
+<span id="modelcode-cb1-51"><a href="#modelcode-cb1-51" aria-hidden="true" tabindex="-1"></a>ratings<span class="sc">$</span>Indicator <span class="ot">&lt;-</span> cells<span class="sc">$</span>Indicator[<span class="fu">match</span>(</span>
+<span id="modelcode-cb1-52"><a href="#modelcode-cb1-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste</span>(ratings<span class="sc">$</span>Rater, ratings<span class="sc">$</span>Criterion), <span class="fu">paste</span>(cells<span class="sc">$</span>Rater, cells<span class="sc">$</span>Criterion))]</span>
+<span id="modelcode-cb1-53"><a href="#modelcode-cb1-53" aria-hidden="true" tabindex="-1"></a>wide <span class="ot">&lt;-</span> <span class="fu">reshape</span>(ratings[<span class="fu">c</span>(<span class="st">&quot;Person&quot;</span>, <span class="st">&quot;Indicator&quot;</span>, <span class="st">&quot;Score&quot;</span>)],</span>
+<span id="modelcode-cb1-54"><a href="#modelcode-cb1-54" aria-hidden="true" tabindex="-1"></a>  <span class="at">idvar =</span> <span class="st">&quot;Person&quot;</span>, <span class="at">timevar =</span> <span class="st">&quot;Indicator&quot;</span>, <span class="at">direction =</span> <span class="st">&quot;wide&quot;</span>)</span>
+<span id="modelcode-cb1-55"><a href="#modelcode-cb1-55" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(wide) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">&quot;^Score</span><span class="sc">\\</span><span class="st">.&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="fu">names</span>(wide))</span>
+<span id="modelcode-cb1-56"><a href="#modelcode-cb1-56" aria-hidden="true" tabindex="-1"></a>items <span class="ot">&lt;-</span> cells<span class="sc">$</span>Indicator</span>
+<span id="modelcode-cb1-57"><a href="#modelcode-cb1-57" aria-hidden="true" tabindex="-1"></a>intercepts <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;i&quot;</span>, r, <span class="st">&quot;_&quot;</span>, j)</span>
+<span id="modelcode-cb1-58"><a href="#modelcode-cb1-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="modelcode-cb1-59"><a href="#modelcode-cb1-59" aria-hidden="true" tabindex="-1"></a><span class="co"># Unit loadings and unit residual variances fix the probit response scale.</span></span>
+<span id="modelcode-cb1-60"><a href="#modelcode-cb1-60" aria-hidden="true" tabindex="-1"></a><span class="co"># Shared cutpoints + additive intercepts reproduce the fixed-facet structure.</span></span>
+<span id="modelcode-cb1-61"><a href="#modelcode-cb1-61" aria-hidden="true" tabindex="-1"></a><span class="co"># Rater 1 / Criterion 1 is the reference cell; ability has mean 0.</span></span>
+<span id="modelcode-cb1-62"><a href="#modelcode-cb1-62" aria-hidden="true" tabindex="-1"></a>syntax <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="modelcode-cb1-63"><a href="#modelcode-cb1-63" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste</span>(<span class="st">&quot;Ability =~&quot;</span>, <span class="fu">paste</span>(<span class="fu">paste0</span>(<span class="st">&quot;1*&quot;</span>, items), <span class="at">collapse =</span> <span class="st">&quot; + &quot;</span>)),</span>
+<span id="modelcode-cb1-64"><a href="#modelcode-cb1-64" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Ability ~~ variance*Ability&quot;</span>, <span class="st">&quot;Ability ~ 0*1&quot;</span>,</span>
+<span id="modelcode-cb1-65"><a href="#modelcode-cb1-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste</span>(items, <span class="st">&quot;~~&quot;</span>, <span class="fu">paste0</span>(<span class="st">&quot;1*&quot;</span>, items)),</span>
+<span id="modelcode-cb1-66"><a href="#modelcode-cb1-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste</span>(items, <span class="st">&quot;| cut1*t1 + cut2*t2 + cut3*t3&quot;</span>),</span>
+<span id="modelcode-cb1-67"><a href="#modelcode-cb1-67" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste</span>(items, <span class="st">&quot;~&quot;</span>, <span class="fu">paste0</span>(<span class="fu">ifelse</span>(r <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> j <span class="sc">==</span> <span class="dv">1</span>, <span class="st">&quot;0&quot;</span>, intercepts), <span class="st">&quot;*1&quot;</span>))</span>
+<span id="modelcode-cb1-68"><a href="#modelcode-cb1-68" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="modelcode-cb1-69"><a href="#modelcode-cb1-69" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">which</span>(r <span class="sc">&gt;</span> <span class="dv">1</span> <span class="sc">&amp;</span> j <span class="sc">&gt;</span> <span class="dv">1</span>)) {</span>
+<span id="modelcode-cb1-70"><a href="#modelcode-cb1-70" aria-hidden="true" tabindex="-1"></a>  syntax <span class="ot">&lt;-</span> <span class="fu">c</span>(syntax, <span class="fu">paste0</span>(intercepts[i], <span class="st">&quot; == i&quot;</span>, r[i], <span class="st">&quot;_1 + i1_&quot;</span>, j[i]))</span>
+<span id="modelcode-cb1-71"><a href="#modelcode-cb1-71" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="modelcode-cb1-72"><a href="#modelcode-cb1-72" aria-hidden="true" tabindex="-1"></a>syntax <span class="ot">&lt;-</span> <span class="fu">paste</span>(syntax, <span class="at">collapse =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="modelcode-cb1-73"><a href="#modelcode-cb1-73" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(syntax) <span class="co"># Inspect the actual constraints before fitting.</span></span>
+<span id="modelcode-cb1-74"><a href="#modelcode-cb1-74" aria-hidden="true" tabindex="-1"></a>lavaan_probit <span class="ot">&lt;-</span> lavaan<span class="sc">::</span><span class="fu">cfa</span>(syntax, <span class="at">data =</span> wide, <span class="at">ordered =</span> items,</span>
+<span id="modelcode-cb1-75"><a href="#modelcode-cb1-75" aria-hidden="true" tabindex="-1"></a>  <span class="at">estimator =</span> <span class="st">&quot;WLSMV&quot;</span>, <span class="at">parameterization =</span> <span class="st">&quot;theta&quot;</span>)</span>
+<span id="modelcode-cb1-76"><a href="#modelcode-cb1-76" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(lavaan<span class="sc">::</span><span class="fu">lavInspect</span>(lavaan_probit, <span class="st">&quot;converged&quot;</span>))</span>
+<span id="modelcode-cb1-77"><a href="#modelcode-cb1-77" aria-hidden="true" tabindex="-1"></a>lavaan<span class="sc">::</span><span class="fu">parameterEstimates</span>(lavaan_probit)</span>
+<span id="modelcode-cb1-78"><a href="#modelcode-cb1-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="modelcode-cb1-79"><a href="#modelcode-cb1-79" aria-hidden="true" tabindex="-1"></a><span class="co"># This fits the same cumulative-probit response structure as ordinal_probit,</span></span>
+<span id="modelcode-cb1-80"><a href="#modelcode-cb1-80" aria-hidden="true" tabindex="-1"></a><span class="co"># using WLSMV rather than marginal ML. Estimates and SEs need not coincide.</span></span>
+<span id="modelcode-cb1-81"><a href="#modelcode-cb1-81" aria-hidden="true" tabindex="-1"></a><span class="co"># It is not an adjacent-logit RSM, PCM or GPCM.</span></span>
+<span id="modelcode-cb1-82"><a href="#modelcode-cb1-82" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(<span class="fu">c</span>(<span class="st">&quot;mfrmr&quot;</span>, <span class="st">&quot;ordinal&quot;</span>, <span class="st">&quot;lavaan&quot;</span>), <span class="cf">function</span>(p) <span class="fu">as.character</span>(<span class="fu">packageVersion</span>(p)))</span>
+<span id="modelcode-cb1-83"><a href="#modelcode-cb1-83" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<p><code>ordinal_logit</code> is a cumulative-logit alternative, not a
+PCM fit. <code>lavaan_probit</code> shares the response structure of
+<code>ordinal_probit</code>: common cutpoints, fixed additive
+rater/criterion effects, and one normally distributed person ability.
+Fixing <strong>both the loadings and residual variances to one</strong>
+is essential here. An ordinary one-factor CFA with free loadings and
+unrestricted indicator thresholds would be a different model. WLSMV and
+marginal ML also use different estimation criteria, so this is not a
+test that their estimates or SEs are equal. For example, the fitted
+person variances are approximately 0.763 (WLSMV) and 0.671 (marginal ML)
+in this small dataset.</p>
+<p>These calls were checked with <code>mfrmr</code> 0.2.4 and its
+0.2.4.9000 development interface, <code>ordinal</code> 2026.7.26 and
+<code>lavaan</code> 0.7.3. Retain the printed package versions and
+<code>sessionInfo()</code> with results.</p>
+</details>
+<details class="mfrmr-code">
+<summary>
+Show R code: the binary case where ordinal can fit the same logistic
+MFRM
+</summary>
+<p>With two categories, adjacent and cumulative logits can define the
+same response model. This example aligns the normal person distribution
+and fixed facet effects. The two marginal log likelihoods differ by
+about <span class="math inline">\(6.2\times10^{-6}\)</span> in this run,
+reflecting numerical estimation/integration rather than different
+response families. <code>lavaan</code>’s standard binary CFA uses a
+probit response and is not this logistic model.</p>
+<div class="sourceCode" id="modelcode-cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="modelcode-cb2-1"><a href="#modelcode-cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the data setup above first. Dichotomization is used only to demonstrate</span></span>
+<span id="modelcode-cb2-2"><a href="#modelcode-cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># the binary special case; it discards information from the original ratings.</span></span>
+<span id="modelcode-cb2-3"><a href="#modelcode-cb2-3" aria-hidden="true" tabindex="-1"></a>binary <span class="ot">&lt;-</span> ratings</span>
+<span id="modelcode-cb2-4"><a href="#modelcode-cb2-4" aria-hidden="true" tabindex="-1"></a>binary<span class="sc">$</span>Score01 <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(binary<span class="sc">$</span>Score <span class="sc">&gt;=</span> <span class="dv">3</span>)</span>
+<span id="modelcode-cb2-5"><a href="#modelcode-cb2-5" aria-hidden="true" tabindex="-1"></a>binary<span class="sc">$</span>Rating01 <span class="ot">&lt;-</span> <span class="fu">ordered</span>(binary<span class="sc">$</span>Score01, <span class="at">levels =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>)</span>
+<span id="modelcode-cb2-6"><a href="#modelcode-cb2-6" aria-hidden="true" tabindex="-1"></a>binary_mfrmr <span class="ot">&lt;-</span> <span class="fu">fit_mfrm</span>(binary, <span class="at">person =</span> <span class="st">&quot;Person&quot;</span>,</span>
+<span id="modelcode-cb2-7"><a href="#modelcode-cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">facets =</span> <span class="fu">c</span>(<span class="st">&quot;Rater&quot;</span>, <span class="st">&quot;Criterion&quot;</span>), <span class="at">score =</span> <span class="st">&quot;Score01&quot;</span>,</span>
+<span id="modelcode-cb2-8"><a href="#modelcode-cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">rating_min =</span> <span class="dv">0</span>, <span class="at">rating_max =</span> <span class="dv">1</span>, <span class="at">model =</span> <span class="st">&quot;RSM&quot;</span>, <span class="at">method =</span> <span class="st">&quot;MML&quot;</span>,</span>
+<span id="modelcode-cb2-9"><a href="#modelcode-cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">category_policy =</span> <span class="st">&quot;preserve&quot;</span>, <span class="at">population_formula =</span> <span class="sc">~</span><span class="dv">1</span>,</span>
+<span id="modelcode-cb2-10"><a href="#modelcode-cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">person_data =</span> persons, <span class="at">person_id =</span> <span class="st">&quot;Person&quot;</span>, <span class="at">quad_points =</span> <span class="dv">61</span>)</span>
+<span id="modelcode-cb2-11"><a href="#modelcode-cb2-11" aria-hidden="true" tabindex="-1"></a>binary_ordinal <span class="ot">&lt;-</span> ordinal<span class="sc">::</span><span class="fu">clmm</span>(</span>
+<span id="modelcode-cb2-12"><a href="#modelcode-cb2-12" aria-hidden="true" tabindex="-1"></a>  Rating01 <span class="sc">~</span> Rater <span class="sc">+</span> Criterion <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> Person), <span class="at">data =</span> binary,</span>
+<span id="modelcode-cb2-13"><a href="#modelcode-cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">link =</span> <span class="st">&quot;logit&quot;</span>, <span class="at">nAGQ =</span> <span class="dv">15</span>, <span class="at">Hess =</span> <span class="cn">TRUE</span>,</span>
+<span id="modelcode-cb2-14"><a href="#modelcode-cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">contrasts =</span> <span class="fu">list</span>(<span class="at">Rater =</span> <span class="st">&quot;contr.treatment&quot;</span>, <span class="at">Criterion =</span> <span class="st">&quot;contr.treatment&quot;</span>))</span>
+<span id="modelcode-cb2-15"><a href="#modelcode-cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">mfrmr =</span> <span class="fu">as.numeric</span>(<span class="fu">logLik</span>(binary_mfrmr)),</span>
+<span id="modelcode-cb2-16"><a href="#modelcode-cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">ordinal =</span> <span class="fu">as.numeric</span>(<span class="fu">logLik</span>(binary_ordinal)))</span>
+<span id="modelcode-cb2-17"><a href="#modelcode-cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare likelihoods rather than raw locations: mfrmr centres facets,</span></span>
+<span id="modelcode-cb2-18"><a href="#modelcode-cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co"># while this ordinal fit uses reference levels and a zero-mean random effect.</span></span>
+<span id="modelcode-cb2-19"><a href="#modelcode-cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Person EAP means and random-effect conditional modes are also different.</span></span></code></pre></div>
+</details>
+<p><strong>What about GPCM?</strong> In the code above,
+<code>slope_facet = "Criterion"</code> lets <code>mfrmr</code> estimate
+relative criterion discriminations. Its positive slope multiplies
+ability, facet locations and the step together. A second slope facet,
+where supported, changes that multiplier; it does not change the
+adjacent-category link. See the <a href="mfrmr-gpcm-scope.html">GPCM
+model scope</a>.</p>
+<table class="table">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Package</th>
+<th>Can its standard API fit this polytomous GPCM?</th>
+<th>Why related options are different</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mfrmr</code></td>
+<td>Yes, within the documented slope/step-facet scope</td>
+<td><code>model = "GPCM"</code> specifies adjacent-category
+probabilities</td>
+</tr>
+<tr>
+<td><code>ordinal</code></td>
+<td>No</td>
+<td><code>clm()</code> scale/nominal terms and <code>clmm()</code>
+random effects retain a cumulative link</td>
+</tr>
+<tr>
+<td><code>lavaan</code></td>
+<td>No</td>
+<td>Free loadings give varying probit slopes in an ordinal
+CFA/graded-response formulation; parameter constraints do not turn its
+response function into adjacent logits</td>
+</tr>
+</tbody>
+</table>
+<p>Thus, freeing loadings is <strong>not</strong> a GPCM implementation.
+This distinction is consistent with <a
+href="https://www.jstatsoft.org/article/view/v100i05">Bürkner (2021),
+Table 3</a>, which separates partial-credit and graded-response support,
+and with the current <a
+href="https://search.r-project.org/CRAN/refmans/ordinal/html/clm.html"><code>ordinal</code>
+scale/link specification</a> and <a
+href="https://lavaan.ugent.be/tutorial/cat.html">lavaan categorical-data
+specification</a>. A custom likelihood in another framework would
+require a separate implementation and verification; the following curves
+do not supply one.</p>
+<p>The figure uses <strong><code>mfrmr (RSM)</code></strong>,
+<strong><code>ordinal (logit)</code></strong> and
+<strong><code>lavaan (probit)</code></strong> to identify the package
+and the response model being illustrated. It is an equation
+illustration; the fitted-data example above also includes PCM and
+GPCM.</p>
 <figure>
-<img src="model-comparison/model-families.svg" width="720" style="max-width:100%;height:auto" alt="Three panels, one for each score: 0, 1 and 2. Each panel overlays RSM/PCM in blue solid lines, ordinal cumulative logit in orange dashed lines, and lavaan cumulative probit in green long-dashed lines. The models agree at probability one third at predictor zero; their curves differ elsewhere. Horizontal units are model-specific.">
+<img src="model-comparison/model-families.svg" width="720" style="max-width:100%;height:auto" alt="Three panels, one for each score: 0, 1 and 2. Each panel overlays mfrmr (RSM) in blue solid lines, ordinal cumulative logit in orange dashed lines, and lavaan cumulative probit in green long-dashed lines. The models agree at probability one third at predictor zero; their curves differ elsewhere. Horizontal units are model-specific.">
 <figcaption>
 <em>Compare the three models within each score category.</em> Colour and
 line type identify the model, and each panel shows one category. The
@@ -2307,77 +2514,77 @@ and <code>svglite</code>, calculates the probabilities directly, checks
 the defining equations and saves <code>model-families.svg</code> in your
 working directory. No fitted objects or external data are required. This
 is also the code used to generate the figure shown above.</p>
-<div class="sourceCode" id="modelcode-cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="modelcode-cb1-1"><a href="#modelcode-cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="modelcode-cb1-2"><a href="#modelcode-cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="modelcode-cb1-3"><a href="#modelcode-cb1-3" aria-hidden="true" tabindex="-1"></a>eta <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>, <span class="at">length.out =</span> <span class="dv">301</span><span class="dt">L</span>)</span>
-<span id="modelcode-cb1-4"><a href="#modelcode-cb1-4" aria-hidden="true" tabindex="-1"></a>adjacent <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">outer</span>(eta, <span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>) <span class="sc">-</span> <span class="fu">pmax</span>(<span class="dv">0</span>, <span class="dv">2</span> <span class="sc">*</span> eta))</span>
-<span id="modelcode-cb1-5"><a href="#modelcode-cb1-5" aria-hidden="true" tabindex="-1"></a>adjacent <span class="ot">&lt;-</span> adjacent <span class="sc">/</span> <span class="fu">rowSums</span>(adjacent)</span>
-<span id="modelcode-cb1-6"><a href="#modelcode-cb1-6" aria-hidden="true" tabindex="-1"></a>cumulative <span class="ot">&lt;-</span> <span class="cf">function</span>(cdf, cuts) {</span>
-<span id="modelcode-cb1-7"><a href="#modelcode-cb1-7" aria-hidden="true" tabindex="-1"></a>  lower <span class="ot">&lt;-</span> <span class="fu">cdf</span>(cuts[<span class="dv">1</span><span class="dt">L</span>] <span class="sc">-</span> eta)</span>
-<span id="modelcode-cb1-8"><a href="#modelcode-cb1-8" aria-hidden="true" tabindex="-1"></a>  upper <span class="ot">&lt;-</span> <span class="fu">cdf</span>(cuts[<span class="dv">2</span><span class="dt">L</span>] <span class="sc">-</span> eta)</span>
-<span id="modelcode-cb1-9"><a href="#modelcode-cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(lower, upper <span class="sc">-</span> lower, <span class="dv">1</span> <span class="sc">-</span> upper)</span>
-<span id="modelcode-cb1-10"><a href="#modelcode-cb1-10" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="modelcode-cb1-11"><a href="#modelcode-cb1-11" aria-hidden="true" tabindex="-1"></a>logit <span class="ot">&lt;-</span> <span class="fu">cumulative</span>(plogis, <span class="fu">qlogis</span>(<span class="fu">c</span>(<span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>, <span class="dv">2</span> <span class="sc">/</span> <span class="dv">3</span>)))</span>
-<span id="modelcode-cb1-12"><a href="#modelcode-cb1-12" aria-hidden="true" tabindex="-1"></a>probit <span class="ot">&lt;-</span> <span class="fu">cumulative</span>(pnorm, <span class="fu">qnorm</span>(<span class="fu">c</span>(<span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>, <span class="dv">2</span> <span class="sc">/</span> <span class="dv">3</span>)))</span>
-<span id="modelcode-cb1-13"><a href="#modelcode-cb1-13" aria-hidden="true" tabindex="-1"></a>probabilities <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="modelcode-cb1-14"><a href="#modelcode-cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;RSM / PCM: adjacent logit&quot;</span> <span class="ot">=</span> adjacent,</span>
-<span id="modelcode-cb1-15"><a href="#modelcode-cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Ordinal mixed model: cumulative logit&quot;</span> <span class="ot">=</span> logit,</span>
-<span id="modelcode-cb1-16"><a href="#modelcode-cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Ordinal CFA: cumulative probit&quot;</span> <span class="ot">=</span> probit</span>
-<span id="modelcode-cb1-17"><a href="#modelcode-cb1-17" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="modelcode-cb1-18"><a href="#modelcode-cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="modelcode-cb1-19"><a href="#modelcode-cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify the displayed probabilities and the defining link equations.</span></span>
-<span id="modelcode-cb1-20"><a href="#modelcode-cb1-20" aria-hidden="true" tabindex="-1"></a>center <span class="ot">&lt;-</span> <span class="fu">which.min</span>(<span class="fu">abs</span>(eta))</span>
-<span id="modelcode-cb1-21"><a href="#modelcode-cb1-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (p <span class="cf">in</span> probabilities) {</span>
-<span id="modelcode-cb1-22"><a href="#modelcode-cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">all</span>(<span class="fu">is.finite</span>(p)), <span class="fu">all</span>(p <span class="sc">&gt;=</span> <span class="dv">0</span>), <span class="fu">all</span>(p <span class="sc">&lt;=</span> <span class="dv">1</span>),</span>
-<span id="modelcode-cb1-23"><a href="#modelcode-cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">rowSums</span>(p) <span class="sc">-</span> <span class="dv">1</span>)) <span class="sc">&lt;</span> <span class="fl">1e-14</span>,</span>
-<span id="modelcode-cb1-24"><a href="#modelcode-cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">max</span>(<span class="fu">abs</span>(p[center, ] <span class="sc">-</span> <span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>)) <span class="sc">&lt;</span> <span class="fl">1e-14</span>,</span>
-<span id="modelcode-cb1-25"><a href="#modelcode-cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">all</span>(<span class="fu">diff</span>(<span class="fu">drop</span>(p <span class="sc">%*%</span> (<span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>))) <span class="sc">&gt;</span> <span class="dv">0</span>))</span>
-<span id="modelcode-cb1-26"><a href="#modelcode-cb1-26" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="modelcode-cb1-27"><a href="#modelcode-cb1-27" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
-<span id="modelcode-cb1-28"><a href="#modelcode-cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">log</span>(adjacent[, <span class="dv">2</span>] <span class="sc">/</span> adjacent[, <span class="dv">1</span>]) <span class="sc">-</span> eta)) <span class="sc">&lt;</span> <span class="fl">1e-13</span>,</span>
-<span id="modelcode-cb1-29"><a href="#modelcode-cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">log</span>(adjacent[, <span class="dv">3</span>] <span class="sc">/</span> adjacent[, <span class="dv">2</span>]) <span class="sc">-</span> eta)) <span class="sc">&lt;</span> <span class="fl">1e-13</span>,</span>
-<span id="modelcode-cb1-30"><a href="#modelcode-cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">qlogis</span>(logit[, <span class="dv">1</span>]) <span class="sc">-</span> (<span class="fu">qlogis</span>(<span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>) <span class="sc">-</span> eta))) <span class="sc">&lt;</span> <span class="fl">1e-12</span>,</span>
-<span id="modelcode-cb1-31"><a href="#modelcode-cb1-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">qlogis</span>(<span class="fu">rowSums</span>(logit[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])) <span class="sc">-</span> (<span class="fu">qlogis</span>(<span class="dv">2</span> <span class="sc">/</span> <span class="dv">3</span>) <span class="sc">-</span> eta))) <span class="sc">&lt;</span> <span class="fl">1e-12</span>,</span>
-<span id="modelcode-cb1-32"><a href="#modelcode-cb1-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">qnorm</span>(probit[, <span class="dv">1</span>]) <span class="sc">-</span> (<span class="fu">qnorm</span>(<span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>) <span class="sc">-</span> eta))) <span class="sc">&lt;</span> <span class="fl">1e-12</span>,</span>
-<span id="modelcode-cb1-33"><a href="#modelcode-cb1-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">qnorm</span>(<span class="fu">rowSums</span>(probit[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])) <span class="sc">-</span> (<span class="fu">qnorm</span>(<span class="dv">2</span> <span class="sc">/</span> <span class="dv">3</span>) <span class="sc">-</span> eta))) <span class="sc">&lt;</span> <span class="fl">1e-12</span></span>
-<span id="modelcode-cb1-34"><a href="#modelcode-cb1-34" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="modelcode-cb1-35"><a href="#modelcode-cb1-35" aria-hidden="true" tabindex="-1"></a>curves <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">names</span>(probabilities), <span class="cf">function</span>(model) {</span>
-<span id="modelcode-cb1-36"><a href="#modelcode-cb1-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">Predictor =</span> <span class="fu">rep</span>(eta, <span class="dv">3</span><span class="dt">L</span>),</span>
-<span id="modelcode-cb1-37"><a href="#modelcode-cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">Probability =</span> <span class="fu">as.vector</span>(probabilities[[model]]),</span>
-<span id="modelcode-cb1-38"><a href="#modelcode-cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">Category =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">each =</span> <span class="fu">length</span>(eta)),</span>
-<span id="modelcode-cb1-39"><a href="#modelcode-cb1-39" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">paste</span>(<span class="st">&quot;Score&quot;</span>, <span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>)), <span class="at">Model =</span> model)</span>
-<span id="modelcode-cb1-40"><a href="#modelcode-cb1-40" aria-hidden="true" tabindex="-1"></a>}))</span>
-<span id="modelcode-cb1-41"><a href="#modelcode-cb1-41" aria-hidden="true" tabindex="-1"></a>curves<span class="sc">$</span>Model <span class="ot">&lt;-</span> <span class="fu">factor</span>(curves<span class="sc">$</span>Model, <span class="at">levels =</span> <span class="fu">names</span>(probabilities))</span>
-<span id="modelcode-cb1-42"><a href="#modelcode-cb1-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="modelcode-cb1-43"><a href="#modelcode-cb1-43" aria-hidden="true" tabindex="-1"></a>figure <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(curves, <span class="fu">aes</span>(Predictor, Probability,</span>
-<span id="modelcode-cb1-44"><a href="#modelcode-cb1-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> Model, <span class="at">linetype =</span> Model)) <span class="sc">+</span></span>
-<span id="modelcode-cb1-45"><a href="#modelcode-cb1-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour =</span> <span class="st">&quot;grey70&quot;</span>, <span class="at">linetype =</span> <span class="st">&quot;dotted&quot;</span>) <span class="sc">+</span></span>
-<span id="modelcode-cb1-46"><a href="#modelcode-cb1-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.95</span>) <span class="sc">+</span></span>
-<span id="modelcode-cb1-47"><a href="#modelcode-cb1-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> curves[curves<span class="sc">$</span>Predictor <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> curves<span class="sc">$</span>Model <span class="sc">==</span> <span class="fu">names</span>(probabilities)[<span class="dv">1</span><span class="dt">L</span>], ],</span>
-<span id="modelcode-cb1-48"><a href="#modelcode-cb1-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="st">&quot;#222222&quot;</span>, <span class="at">size =</span> <span class="fl">2.4</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
-<span id="modelcode-cb1-49"><a href="#modelcode-cb1-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>Category, <span class="at">ncol =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="modelcode-cb1-50"><a href="#modelcode-cb1-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;#0072B2&quot;</span>, <span class="st">&quot;#B35A00&quot;</span>, <span class="st">&quot;#007E68&quot;</span>),</span>
-<span id="modelcode-cb1-51"><a href="#modelcode-cb1-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;RSM / PCM&quot;</span>, <span class="st">&quot;ordinal (logit)&quot;</span>, <span class="st">&quot;lavaan (probit)&quot;</span>)) <span class="sc">+</span></span>
-<span id="modelcode-cb1-52"><a href="#modelcode-cb1-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_linetype_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;solid&quot;</span>, <span class="st">&quot;dashed&quot;</span>, <span class="st">&quot;longdash&quot;</span>),</span>
-<span id="modelcode-cb1-53"><a href="#modelcode-cb1-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;RSM / PCM&quot;</span>, <span class="st">&quot;ordinal (logit)&quot;</span>, <span class="st">&quot;lavaan (probit)&quot;</span>)) <span class="sc">+</span></span>
-<span id="modelcode-cb1-54"><a href="#modelcode-cb1-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="sc">-</span><span class="dv">3</span><span class="sc">:</span><span class="dv">3</span>, <span class="at">expand =</span> <span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fl">0.015</span>)) <span class="sc">+</span></span>
-<span id="modelcode-cb1-55"><a href="#modelcode-cb1-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>, <span class="dv">2</span> <span class="sc">/</span> <span class="dv">3</span>, <span class="dv">1</span>),</span>
-<span id="modelcode-cb1-56"><a href="#modelcode-cb1-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span>, <span class="st">&quot;1/3&quot;</span>, <span class="st">&quot;2/3&quot;</span>, <span class="st">&quot;1&quot;</span>)) <span class="sc">+</span></span>
-<span id="modelcode-cb1-57"><a href="#modelcode-cb1-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Predictor (within-model units)&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Category probability&quot;</span>) <span class="sc">+</span></span>
-<span id="modelcode-cb1-58"><a href="#modelcode-cb1-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">16</span>, <span class="at">base_family =</span> <span class="st">&quot;sans&quot;</span>) <span class="sc">+</span></span>
-<span id="modelcode-cb1-59"><a href="#modelcode-cb1-59" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;top&quot;</span>, <span class="at">legend.justification =</span> <span class="st">&quot;left&quot;</span>,</span>
-<span id="modelcode-cb1-60"><a href="#modelcode-cb1-60" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
-<span id="modelcode-cb1-61"><a href="#modelcode-cb1-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.title =</span> <span class="fu">element_blank</span>(),</span>
-<span id="modelcode-cb1-62"><a href="#modelcode-cb1-62" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="at">hjust =</span> <span class="dv">0</span>),</span>
-<span id="modelcode-cb1-63"><a href="#modelcode-cb1-63" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
-<span id="modelcode-cb1-64"><a href="#modelcode-cb1-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.major.x =</span> <span class="fu">element_blank</span>(),</span>
-<span id="modelcode-cb1-65"><a href="#modelcode-cb1-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.spacing =</span> grid<span class="sc">::</span><span class="fu">unit</span>(<span class="fl">1.2</span>, <span class="st">&quot;lines&quot;</span>),</span>
-<span id="modelcode-cb1-66"><a href="#modelcode-cb1-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.margin =</span> <span class="fu">margin</span>(<span class="dv">8</span>, <span class="dv">12</span>, <span class="dv">8</span>, <span class="dv">8</span>))</span>
-<span id="modelcode-cb1-67"><a href="#modelcode-cb1-67" aria-hidden="true" tabindex="-1"></a></span>
-<span id="modelcode-cb1-68"><a href="#modelcode-cb1-68" aria-hidden="true" tabindex="-1"></a><span class="co"># Save in the working directory, then display the same figure.</span></span>
-<span id="modelcode-cb1-69"><a href="#modelcode-cb1-69" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="st">&quot;model-families.svg&quot;</span>, figure, <span class="at">device =</span> svglite<span class="sc">::</span>svglite,</span>
-<span id="modelcode-cb1-70"><a href="#modelcode-cb1-70" aria-hidden="true" tabindex="-1"></a>  <span class="at">width =</span> <span class="fl">7.2</span>, <span class="at">height =</span> <span class="fl">8.3</span>, <span class="at">bg =</span> <span class="st">&quot;white&quot;</span>)</span>
-<span id="modelcode-cb1-71"><a href="#modelcode-cb1-71" aria-hidden="true" tabindex="-1"></a>figure</span></code></pre></div>
+<div class="sourceCode" id="modelcode-cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="modelcode-cb3-1"><a href="#modelcode-cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="modelcode-cb3-2"><a href="#modelcode-cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="modelcode-cb3-3"><a href="#modelcode-cb3-3" aria-hidden="true" tabindex="-1"></a>eta <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>, <span class="at">length.out =</span> <span class="dv">301</span><span class="dt">L</span>)</span>
+<span id="modelcode-cb3-4"><a href="#modelcode-cb3-4" aria-hidden="true" tabindex="-1"></a>adjacent <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">outer</span>(eta, <span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>) <span class="sc">-</span> <span class="fu">pmax</span>(<span class="dv">0</span>, <span class="dv">2</span> <span class="sc">*</span> eta))</span>
+<span id="modelcode-cb3-5"><a href="#modelcode-cb3-5" aria-hidden="true" tabindex="-1"></a>adjacent <span class="ot">&lt;-</span> adjacent <span class="sc">/</span> <span class="fu">rowSums</span>(adjacent)</span>
+<span id="modelcode-cb3-6"><a href="#modelcode-cb3-6" aria-hidden="true" tabindex="-1"></a>cumulative <span class="ot">&lt;-</span> <span class="cf">function</span>(cdf, cuts) {</span>
+<span id="modelcode-cb3-7"><a href="#modelcode-cb3-7" aria-hidden="true" tabindex="-1"></a>  lower <span class="ot">&lt;-</span> <span class="fu">cdf</span>(cuts[<span class="dv">1</span><span class="dt">L</span>] <span class="sc">-</span> eta)</span>
+<span id="modelcode-cb3-8"><a href="#modelcode-cb3-8" aria-hidden="true" tabindex="-1"></a>  upper <span class="ot">&lt;-</span> <span class="fu">cdf</span>(cuts[<span class="dv">2</span><span class="dt">L</span>] <span class="sc">-</span> eta)</span>
+<span id="modelcode-cb3-9"><a href="#modelcode-cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(lower, upper <span class="sc">-</span> lower, <span class="dv">1</span> <span class="sc">-</span> upper)</span>
+<span id="modelcode-cb3-10"><a href="#modelcode-cb3-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="modelcode-cb3-11"><a href="#modelcode-cb3-11" aria-hidden="true" tabindex="-1"></a>logit <span class="ot">&lt;-</span> <span class="fu">cumulative</span>(plogis, <span class="fu">qlogis</span>(<span class="fu">c</span>(<span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>, <span class="dv">2</span> <span class="sc">/</span> <span class="dv">3</span>)))</span>
+<span id="modelcode-cb3-12"><a href="#modelcode-cb3-12" aria-hidden="true" tabindex="-1"></a>probit <span class="ot">&lt;-</span> <span class="fu">cumulative</span>(pnorm, <span class="fu">qnorm</span>(<span class="fu">c</span>(<span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>, <span class="dv">2</span> <span class="sc">/</span> <span class="dv">3</span>)))</span>
+<span id="modelcode-cb3-13"><a href="#modelcode-cb3-13" aria-hidden="true" tabindex="-1"></a>probabilities <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="modelcode-cb3-14"><a href="#modelcode-cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;mfrmr (RSM): adjacent logit&quot;</span> <span class="ot">=</span> adjacent,</span>
+<span id="modelcode-cb3-15"><a href="#modelcode-cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Ordinal mixed model: cumulative logit&quot;</span> <span class="ot">=</span> logit,</span>
+<span id="modelcode-cb3-16"><a href="#modelcode-cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Ordinal CFA: cumulative probit&quot;</span> <span class="ot">=</span> probit</span>
+<span id="modelcode-cb3-17"><a href="#modelcode-cb3-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="modelcode-cb3-18"><a href="#modelcode-cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="modelcode-cb3-19"><a href="#modelcode-cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify the displayed probabilities and the defining link equations.</span></span>
+<span id="modelcode-cb3-20"><a href="#modelcode-cb3-20" aria-hidden="true" tabindex="-1"></a>center <span class="ot">&lt;-</span> <span class="fu">which.min</span>(<span class="fu">abs</span>(eta))</span>
+<span id="modelcode-cb3-21"><a href="#modelcode-cb3-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (p <span class="cf">in</span> probabilities) {</span>
+<span id="modelcode-cb3-22"><a href="#modelcode-cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">all</span>(<span class="fu">is.finite</span>(p)), <span class="fu">all</span>(p <span class="sc">&gt;=</span> <span class="dv">0</span>), <span class="fu">all</span>(p <span class="sc">&lt;=</span> <span class="dv">1</span>),</span>
+<span id="modelcode-cb3-23"><a href="#modelcode-cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">rowSums</span>(p) <span class="sc">-</span> <span class="dv">1</span>)) <span class="sc">&lt;</span> <span class="fl">1e-14</span>,</span>
+<span id="modelcode-cb3-24"><a href="#modelcode-cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">max</span>(<span class="fu">abs</span>(p[center, ] <span class="sc">-</span> <span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>)) <span class="sc">&lt;</span> <span class="fl">1e-14</span>,</span>
+<span id="modelcode-cb3-25"><a href="#modelcode-cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">all</span>(<span class="fu">diff</span>(<span class="fu">drop</span>(p <span class="sc">%*%</span> (<span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>))) <span class="sc">&gt;</span> <span class="dv">0</span>))</span>
+<span id="modelcode-cb3-26"><a href="#modelcode-cb3-26" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="modelcode-cb3-27"><a href="#modelcode-cb3-27" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="modelcode-cb3-28"><a href="#modelcode-cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">log</span>(adjacent[, <span class="dv">2</span>] <span class="sc">/</span> adjacent[, <span class="dv">1</span>]) <span class="sc">-</span> eta)) <span class="sc">&lt;</span> <span class="fl">1e-13</span>,</span>
+<span id="modelcode-cb3-29"><a href="#modelcode-cb3-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">log</span>(adjacent[, <span class="dv">3</span>] <span class="sc">/</span> adjacent[, <span class="dv">2</span>]) <span class="sc">-</span> eta)) <span class="sc">&lt;</span> <span class="fl">1e-13</span>,</span>
+<span id="modelcode-cb3-30"><a href="#modelcode-cb3-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">qlogis</span>(logit[, <span class="dv">1</span>]) <span class="sc">-</span> (<span class="fu">qlogis</span>(<span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>) <span class="sc">-</span> eta))) <span class="sc">&lt;</span> <span class="fl">1e-12</span>,</span>
+<span id="modelcode-cb3-31"><a href="#modelcode-cb3-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">qlogis</span>(<span class="fu">rowSums</span>(logit[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])) <span class="sc">-</span> (<span class="fu">qlogis</span>(<span class="dv">2</span> <span class="sc">/</span> <span class="dv">3</span>) <span class="sc">-</span> eta))) <span class="sc">&lt;</span> <span class="fl">1e-12</span>,</span>
+<span id="modelcode-cb3-32"><a href="#modelcode-cb3-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">qnorm</span>(probit[, <span class="dv">1</span>]) <span class="sc">-</span> (<span class="fu">qnorm</span>(<span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>) <span class="sc">-</span> eta))) <span class="sc">&lt;</span> <span class="fl">1e-12</span>,</span>
+<span id="modelcode-cb3-33"><a href="#modelcode-cb3-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">qnorm</span>(<span class="fu">rowSums</span>(probit[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])) <span class="sc">-</span> (<span class="fu">qnorm</span>(<span class="dv">2</span> <span class="sc">/</span> <span class="dv">3</span>) <span class="sc">-</span> eta))) <span class="sc">&lt;</span> <span class="fl">1e-12</span></span>
+<span id="modelcode-cb3-34"><a href="#modelcode-cb3-34" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="modelcode-cb3-35"><a href="#modelcode-cb3-35" aria-hidden="true" tabindex="-1"></a>curves <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">names</span>(probabilities), <span class="cf">function</span>(model) {</span>
+<span id="modelcode-cb3-36"><a href="#modelcode-cb3-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">Predictor =</span> <span class="fu">rep</span>(eta, <span class="dv">3</span><span class="dt">L</span>),</span>
+<span id="modelcode-cb3-37"><a href="#modelcode-cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">Probability =</span> <span class="fu">as.vector</span>(probabilities[[model]]),</span>
+<span id="modelcode-cb3-38"><a href="#modelcode-cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">Category =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">each =</span> <span class="fu">length</span>(eta)),</span>
+<span id="modelcode-cb3-39"><a href="#modelcode-cb3-39" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">paste</span>(<span class="st">&quot;Score&quot;</span>, <span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>)), <span class="at">Model =</span> model)</span>
+<span id="modelcode-cb3-40"><a href="#modelcode-cb3-40" aria-hidden="true" tabindex="-1"></a>}))</span>
+<span id="modelcode-cb3-41"><a href="#modelcode-cb3-41" aria-hidden="true" tabindex="-1"></a>curves<span class="sc">$</span>Model <span class="ot">&lt;-</span> <span class="fu">factor</span>(curves<span class="sc">$</span>Model, <span class="at">levels =</span> <span class="fu">names</span>(probabilities))</span>
+<span id="modelcode-cb3-42"><a href="#modelcode-cb3-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="modelcode-cb3-43"><a href="#modelcode-cb3-43" aria-hidden="true" tabindex="-1"></a>figure <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(curves, <span class="fu">aes</span>(Predictor, Probability,</span>
+<span id="modelcode-cb3-44"><a href="#modelcode-cb3-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> Model, <span class="at">linetype =</span> Model)) <span class="sc">+</span></span>
+<span id="modelcode-cb3-45"><a href="#modelcode-cb3-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour =</span> <span class="st">&quot;grey70&quot;</span>, <span class="at">linetype =</span> <span class="st">&quot;dotted&quot;</span>) <span class="sc">+</span></span>
+<span id="modelcode-cb3-46"><a href="#modelcode-cb3-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.95</span>) <span class="sc">+</span></span>
+<span id="modelcode-cb3-47"><a href="#modelcode-cb3-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> curves[curves<span class="sc">$</span>Predictor <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> curves<span class="sc">$</span>Model <span class="sc">==</span> <span class="fu">names</span>(probabilities)[<span class="dv">1</span><span class="dt">L</span>], ],</span>
+<span id="modelcode-cb3-48"><a href="#modelcode-cb3-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="st">&quot;#222222&quot;</span>, <span class="at">size =</span> <span class="fl">2.4</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="modelcode-cb3-49"><a href="#modelcode-cb3-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>Category, <span class="at">ncol =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="modelcode-cb3-50"><a href="#modelcode-cb3-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;#0072B2&quot;</span>, <span class="st">&quot;#B35A00&quot;</span>, <span class="st">&quot;#007E68&quot;</span>),</span>
+<span id="modelcode-cb3-51"><a href="#modelcode-cb3-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;mfrmr (RSM)&quot;</span>, <span class="st">&quot;ordinal (logit)&quot;</span>, <span class="st">&quot;lavaan (probit)&quot;</span>)) <span class="sc">+</span></span>
+<span id="modelcode-cb3-52"><a href="#modelcode-cb3-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_linetype_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;solid&quot;</span>, <span class="st">&quot;dashed&quot;</span>, <span class="st">&quot;longdash&quot;</span>),</span>
+<span id="modelcode-cb3-53"><a href="#modelcode-cb3-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;mfrmr (RSM)&quot;</span>, <span class="st">&quot;ordinal (logit)&quot;</span>, <span class="st">&quot;lavaan (probit)&quot;</span>)) <span class="sc">+</span></span>
+<span id="modelcode-cb3-54"><a href="#modelcode-cb3-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="sc">-</span><span class="dv">3</span><span class="sc">:</span><span class="dv">3</span>, <span class="at">expand =</span> <span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fl">0.015</span>)) <span class="sc">+</span></span>
+<span id="modelcode-cb3-55"><a href="#modelcode-cb3-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>, <span class="dv">2</span> <span class="sc">/</span> <span class="dv">3</span>, <span class="dv">1</span>),</span>
+<span id="modelcode-cb3-56"><a href="#modelcode-cb3-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span>, <span class="st">&quot;1/3&quot;</span>, <span class="st">&quot;2/3&quot;</span>, <span class="st">&quot;1&quot;</span>)) <span class="sc">+</span></span>
+<span id="modelcode-cb3-57"><a href="#modelcode-cb3-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Predictor (within-model units)&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Category probability&quot;</span>) <span class="sc">+</span></span>
+<span id="modelcode-cb3-58"><a href="#modelcode-cb3-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">16</span>, <span class="at">base_family =</span> <span class="st">&quot;sans&quot;</span>) <span class="sc">+</span></span>
+<span id="modelcode-cb3-59"><a href="#modelcode-cb3-59" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;top&quot;</span>, <span class="at">legend.justification =</span> <span class="st">&quot;left&quot;</span>,</span>
+<span id="modelcode-cb3-60"><a href="#modelcode-cb3-60" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
+<span id="modelcode-cb3-61"><a href="#modelcode-cb3-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.title =</span> <span class="fu">element_blank</span>(),</span>
+<span id="modelcode-cb3-62"><a href="#modelcode-cb3-62" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="at">hjust =</span> <span class="dv">0</span>),</span>
+<span id="modelcode-cb3-63"><a href="#modelcode-cb3-63" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="modelcode-cb3-64"><a href="#modelcode-cb3-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.major.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="modelcode-cb3-65"><a href="#modelcode-cb3-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.spacing =</span> grid<span class="sc">::</span><span class="fu">unit</span>(<span class="fl">1.2</span>, <span class="st">&quot;lines&quot;</span>),</span>
+<span id="modelcode-cb3-66"><a href="#modelcode-cb3-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.margin =</span> <span class="fu">margin</span>(<span class="dv">8</span>, <span class="dv">12</span>, <span class="dv">8</span>, <span class="dv">8</span>))</span>
+<span id="modelcode-cb3-67"><a href="#modelcode-cb3-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="modelcode-cb3-68"><a href="#modelcode-cb3-68" aria-hidden="true" tabindex="-1"></a><span class="co"># Save in the working directory, then display the same figure.</span></span>
+<span id="modelcode-cb3-69"><a href="#modelcode-cb3-69" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="st">&quot;model-families.svg&quot;</span>, figure, <span class="at">device =</span> svglite<span class="sc">::</span>svglite,</span>
+<span id="modelcode-cb3-70"><a href="#modelcode-cb3-70" aria-hidden="true" tabindex="-1"></a>  <span class="at">width =</span> <span class="fl">7.2</span>, <span class="at">height =</span> <span class="fl">8.3</span>, <span class="at">bg =</span> <span class="st">&quot;white&quot;</span>)</span>
+<span id="modelcode-cb3-71"><a href="#modelcode-cb3-71" aria-hidden="true" tabindex="-1"></a>figure</span></code></pre></div>
 </details>
 <p>For a <strong>binary</strong> response, adjacent and cumulative
 logistic formulations can describe the same model after aligning signs,
@@ -2405,10 +2612,11 @@ severity. The adjacent-category equation is</p>
 <p><span
 class="math display">\[\log\frac{P(Y=k)}{P(Y=k-1)}=\eta-\tau_{g,k}.\]</span></p>
 <p>RSM shares the step ladder; PCM permits group-specific ladders. The
-RSM/PCM curves use one ladder with both steps zero, so its category
-weights are <span class="math inline">\(1,e^\eta,e^{2\eta}\)</span>.
-Adjacent steps need not be ordered for the resulting probabilities to be
-valid; they are not cumulative cutpoints.</p>
+illustrative <code>mfrmr</code> RSM curves use one ladder with both
+steps zero, so its category weights are <span
+class="math inline">\(1,e^\eta,e^{2\eta}\)</span>. Adjacent steps need
+not be ordered for the resulting probabilities to be valid; they are not
+cumulative cutpoints.</p>
 <p>A cumulative model instead specifies</p>
 <p><span class="math display">\[P(Y\leq
 k\mid\eta)=F(\alpha_k-\eta),\]</span></p>
