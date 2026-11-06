@@ -1,7 +1,9 @@
-pandoc: 3.8.3
+pandoc: 3.7.0.2
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
+  articles/application-double-scoring: application-double-scoring.html
+  articles/application-plausible-values: application-plausible-values.html
   articles/mfrmr-external-features: mfrmr-external-features.html
   articles/mfrmr-facet-intervals: mfrmr-facet-intervals.html
   articles/mfrmr-facets-migration: mfrmr-facets-migration.html
@@ -23,7 +25,7 @@ articles:
   mfrmr-workflow: mfrmr-workflow.html
   articles/mfrmr: mfrmr.html
   articles/visual-gallery: visual-gallery.html
-last_built: 2026-11-02T04:58Z
+last_built: 2026-11-06T07:52Z
 urls:
   reference: https://ryuya-dot-com.github.io/mfrmr/reference
   article: https://ryuya-dot-com.github.io/mfrmr/articles
