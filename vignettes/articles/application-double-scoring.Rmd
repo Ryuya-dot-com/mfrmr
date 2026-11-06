@@ -1,0 +1,141 @@
+---
+title: "Double scoring: agreement before rater inference"
+description: "Use paired scores to find disagreements, then decide whether the available design supports a rater model."
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Double scoring: agreement before rater inference}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+A team has an original score and a second score for each selected answer.
+Its first question is **where the two scores disagree**. That question can be
+answered before fitting a measurement model. Estimating which individual rater
+is more severe needs additional information about who scored each answer.
+
+IEA scoring-reliability files are one possible application. The
+[TIMSS 2019 international database guide, Chapter 2](https://timss2019.org/international-database/downloads/TIMSS-2019-User-Guide-for-the-International-Database-2nd-Ed.pdf)
+describes original scores, second scores and agreement codes. This example uses
+**invented observations only**, with score-code families described in that guide.
+It contains no IEA records, released items or copied result tables. It uses base
+R; mfrmr is useful later if the study question and rating design support a model.
+
+## Keep score agreement and code agreement distinct
+
+In this coding scheme, `10` and `11` both award one point but describe different
+response codes. Codes in `70:79` award zero points. An omitted answer (`99`),
+an answer not reached (`96`) and a structurally absent observation (`NA`) remain
+distinct in the input. For **this descriptive comparison**, a pair enters the
+denominator only when both observations map to valid scores. This is not an
+achievement-scoring rule or a reproduction of an official IEA summary.
+
+<details>
+<summary>Show R code: make the small example and map scores</summary>
+
+```{r paired-input, results='hide'}
+paired <- data.frame(
+  Answer = paste0("answer", 1:12),
+  Item = rep(c("item_a", "item_b"), each = 6),
+  OriginalCode = c(10, 10, 70, 20, 99, NA, 70, 10, 20, 96, 10, 70),
+  SecondCode   = c(10, 11, 10, 20, 10, 70, 79, 70, 20, 10, 99, 70)
+)
+stopifnot(!anyDuplicated(paired[c("Answer", "Item")]))
+
+# This mapping is for the stated coding scheme, not every IEA study/cycle.
+score_codes <- c(70:79, 10:19, 20:29)
+score_points <- rep(0:2, each = 10)
+observed_codes <- c(paired$OriginalCode, paired$SecondCode)
+stopifnot(all(is.na(observed_codes) |
+              observed_codes %in% c(score_codes, 96, 99)))
+paired$OriginalScore <- score_points[match(paired$OriginalCode, score_codes)]
+paired$SecondScore <- score_points[match(paired$SecondCode, score_codes)]
+paired$ValidPair <- !is.na(paired$OriginalScore) & !is.na(paired$SecondScore)
+```
+
+</details>
+
+```{r paired-table, echo=FALSE}
+knitr::kable(paired, caption = "Invented paired observations; raw codes are retained.")
+```
+
+## Report the denominator alongside agreement
+
+<details>
+<summary>Show R code: summarize each item</summary>
+
+```{r agreement, results='hide'}
+agreement <- do.call(rbind, lapply(split(paired, paired$Item), function(x) {
+  valid <- x[x$ValidPair, , drop = FALSE]
+  n <- nrow(valid)
+  code_equal <- sum(valid$OriginalCode == valid$SecondCode)
+  score_equal <- sum(valid$OriginalScore == valid$SecondScore)
+  data.frame(
+    Item = x$Item[1], Pairs = nrow(x), ValidPairs = n,
+    ExcludedPairs = nrow(x) - n,
+    CodeAgreement = if (n > 0) code_equal / n else NA_real_,
+    ScoreAgreement = if (n > 0) score_equal / n else NA_real_,
+    SecondHigher = sum(valid$SecondScore > valid$OriginalScore),
+    SecondLower = sum(valid$SecondScore < valid$OriginalScore)
+  )
+}))
+rownames(agreement) <- NULL
+```
+
+</details>
+
+```{r agreement-table, echo=FALSE}
+knitr::kable(agreement, digits = 2)
+```
+
+Both items have four valid pairs out of six. Three of the four pairs agree in
+points, while two agree in the full response code. One disagreement increases
+the second score in item A; one decreases it in item B. Inspect those answers
+and the scoring instructions before attributing the differences to a rater.
+
+The original score is a comparison, not an independently established correct
+answer. High agreement can coexist with shared scoring errors. When combining
+items, an unweighted mean of item agreement and agreement pooled over all pairs
+answer different questions if the denominators differ.
+
+## Decide whether a rater model answers the next question
+
+| Question | Information needed |
+| --- | --- |
+| Which answers or score categories need review? | Paired scores, their raw codes and explicit missingness/denominators. The table above is sufficient for a descriptive starting point. |
+| Is original scoring systematically different from second scoring? | A defined scoring-role contrast, assignment information and treatment of the shared answer being scored twice. Roles are not individual identities. |
+| Which individual rater has higher severity? | Actual rater IDs, enough linked assignments, supported categories and an identifiable measurement specification. |
+| What would happen with a different number of raters? | A justified generalization universe and an appropriate G-Study design; paired agreement alone does not identify that projection. |
+
+The inspected TIMSS 2019 Grade 4 public schema and Japanese ASR file do not
+contain individual scorer IDs. `IDGRADER` identifies the grade, not the grader.
+Labelling every original score as one person and every second score as another
+would therefore change the meaning of the data. The files may still inform
+agreement analysis and realistic exposure patterns.
+
+For a design with actual rater identities, continue with the
+[rating agreement guide](mfrmr-rating-agreement.html) and
+[model-choice guide](mfrmr-model-choice.html). Different maximum item scores and
+dependence between repeated scores require their own model decisions. No model
+fit or rater-severity result is claimed for the invented table above.
+
+## Apply the idea to an external file
+
+Obtain data and the matching codebook from the
+[official TIMSS 2019 database](https://timss2019.org/international-database/).
+Check the [IEA usage terms](https://timssandpirls.bc.edu/Copyright/index.html)
+before use or sharing. Keep downloaded data outside a published repository.
+Prepare the same paired-score columns locally, retaining the original codes,
+item-specific score ranges, IDs and reasons for exclusion. Confirm the coding
+scheme for that study and cycle before adapting the mapping above.
+
+To reproduce an official statistic, also match its item selection, handling of
+omissions, weighting and aggregation. The
+[TIMSS 2019 within-country reliability appendix](https://timssandpirls.bc.edu/timss2019/methods/pdf/T19_MP_Ch10-AppA-within-country-scoring-reliability.pdf)
+is a reference for the reporting definition. Survey inference from a
+double-scored subset additionally needs its sampling/selection justification.
+An analysis of official plausible values is a separate task; it need not be
+added to this agreement workflow.

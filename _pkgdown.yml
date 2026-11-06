@@ -15,10 +15,17 @@ articles:
     contents:
       - articles/mfrmr
       - articles/visual-gallery
-  - title: "Analysis guides"
-    navbar: "Analysis guides"
+  - title: "Core guides"
+    navbar: "Core guides"
     contents:
       - starts_with("mfrmr-")
+  - title: "Applications"
+    desc: "Optional examples with a specific analysis question. Choose the one you need."
+    navbar: "Applications"
+    contents:
+      - starts_with("articles/application-")
+  - title: "Specialist guides"
+    contents:
       - starts_with("articles/mfrmr-")
 
 redirects:
