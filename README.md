@@ -168,6 +168,7 @@ use the development website's **Get started** entry or
 
 | Task | Documentation for your installed version |
 | --- | --- |
+| Understand which functions connect | [Input → fit → diagnostics → results → report](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html#how-functions-connect), with a separate G/D-study route |
 | Use your own CSV | `vignette("mfrmr-workflow", package = "mfrmr")` |
 | Plan the number of raters or tasks | `vignette("mfrmr-gtheory", package = "mfrmr")` |
 | Interpret facet intervals | `help("mfrm_facet_intervals")` |

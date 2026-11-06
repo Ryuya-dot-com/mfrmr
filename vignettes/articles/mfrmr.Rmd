@@ -142,6 +142,8 @@ reproduce these calls, and consult `?mfrmr_api_migration_030` when updating.
 
 Choose a path; you do not need to read every section:
 
+- **Find how functions connect:** [follow the objects through the analysis](#how-functions-connect).
+
 - **First analysis:** [why adjust](#why-adjust), [check the data](#look-at-data),
   then [read the Wright map](#wright-map-scale).
 - **Precision and planning:** [reliability and information](#precision),
@@ -149,6 +151,115 @@ Choose a path; you do not need to read every section:
 - **Rater feedback and reporting:** [review raters](#rater-feedback),
   then [prepare a report](#report-in-apa-style).
 - **Coming from regression or SEM:** [compare the model families](#mfrm-sem-ordinal).
+
+## How the functions connect {#how-functions-connect}
+
+**Keep the result of each step and pass it to the next function.** The names
+`ratings`, `fit`, `diagnostics`, `results` and `report` below are names you choose
+for R objects. The function names describe operations on those objects.
+
+Start with one row per observed rating. Use
+[`describe_mfrm_data()`](../reference/describe_mfrm_data.html) to review the
+columns and design; pass the **rating data**, not that review object, to the
+estimator. This is the ordinary RSM/PCM MML/JML route:
+
+<style>
+.mfrmr-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.25rem;list-style:none;padding:0;margin:1rem 0}
+.mfrmr-flow li{position:relative;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.5rem;padding:.8rem;line-height:1.5}
+.mfrmr-flow li+li:before{content:"→";position:absolute;left:-1.15rem;top:45%;color:var(--bs-body-color,#212529)}
+.mfrmr-flow strong,.mfrmr-flow a,.mfrmr-flow small{display:block}
+.mfrmr-flow code{white-space:normal;overflow-wrap:anywhere}
+@media(max-width:700px){.mfrmr-flow{grid-template-columns:1fr;gap:1.6rem}.mfrmr-flow li+li:before{content:"↓";left:50%;top:-1.55rem}}
+</style>
+
+<ol class="mfrmr-flow" aria-label="Ordinary measurement workflow">
+<li><strong>1. Estimate</strong><a href="../reference/fit_mfrm.html"><code>fit_mfrm()</code></a>Input: <code>ratings</code><br>Keep: <code>fit</code><small>Estimated model and calibration.</small></li>
+<li><strong>2. Check</strong><a href="../reference/diagnose_mfrm.html"><code>diagnose_mfrm()</code></a>Input: <code>fit</code><br>Keep: <code>diagnostics</code><small>Fit, residual and precision review.</small></li>
+<li><strong>3. Collect</strong><a href="../reference/mfrm_results.html"><code>mfrm_results()</code></a>Input: <code>fit</code> + <code>diagnostics</code><br>Keep: <code>results</code><small>Selected evidence with its status.</small></li>
+<li><strong>4. Report</strong><a href="../reference/mfrm_report.html"><code>mfrm_report()</code></a>Input: <code>results</code><br>Keep: <code>report</code><small>Tables, cautions and next actions.</small></li>
+</ol>
+
+Use `summary(fit)` or `summary(results)` to inspect their tables, and
+`plot(fit)` or `plot(results)` for their supported visualizations. Read
+`report$first_screen` for the report's next actions. **`summary(fit)` does not
+replace `fit`, compute the default diagnostics, or create `results`.** Use
+`overview <- summary(fit)` to keep its tables, and keep `fit` for later analysis.
+The [Reference index](../reference/index.html#primary-workflow) follows these
+same stages; the remaining groups are optional routes for particular questions.
+
+<details class="mfrmr-code">
+<summary>Run the measurement route: input → fit → diagnostics → results → report</summary>
+
+```{r connected-measurement-route, eval = FALSE}
+library(mfrmr)
+ratings <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  ratings, person = "Person", facets = c("Rater", "Criterion"), score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
+  method = "MML", model = "RSM", population_formula = NULL
+)
+overview <- summary(fit)  # A compact view; keep fit for the next steps.
+overview$decision
+
+diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+results <- mfrm_results(fit, diagnostics = diagnostics, compute = "never")
+summary(results)$decision
+plot(results)
+
+report <- mfrm_report(results, style = "qc")
+report$first_screen[, c("Area", "Status", "NextAction")]
+
+# Save the full results, not just the printed summary or the plot.
+result_file <- tempfile(fileext = ".rds")  # Choose a permanent path for real work.
+saveRDS(results, result_file)
+restored <- readRDS(result_file)
+reopened_report <- mfrm_report(restored, style = "qc")
+```
+
+This teaching fit fixes the Person population to N(0,1); see
+[model choice](mfrmr-model-choice.html) before applying that assumption to your
+data. `compute = "never"` prevents new diagnostic calculations while reusing
+the supplied matching diagnostics. It is not a switch disabling every
+calculation. The report's status describes the available evidence; it does not
+certify the model or establish general finite-sample coverage.
+
+</details>
+
+### Branch when the question changes
+
+| Your next question | Reuse this input | Function and result to keep | Where that result goes |
+| --- | --- | --- | --- |
+| What needs review for one rater? | `results` | `mfrm_report(results, style = "rater", facet = "Rater", rater = "R01")` → a rater report | Read its evidence and limitations together. Use an actual rater ID from your fit; see [feedback](#rater-feedback). |
+| Does a specified rater–criterion combination differ from the additive model? | The same `fit` and `diagnostics` | `estimate_bias()` → `bias` | `summary(bias)`, `plot(bias)`, `mfrm_report(bias)`; see [bias and linking](mfrmr-linking-and-dff.html). This is a follow-up screen, not a fairness verdict. |
+| How many raters or tasks should a future score use? | Observed score data and a declared sampling design | `mfrm_g_study()` → `g`; `mfrm_d_study(g, ...)` → `d` | `summary(d)`, `plot(d)`, `mfrm_report(d)`; see [G-Study / D-Study](#g-and-d-studies). This route starts from scores, not from the MFRM location estimates. |
+| How do new Persons score on an existing scale? | `fit` and compatible new response rows | `score_mfrm_persons()` → a scoring result | Inspect and save that result with its scoring basis; see [portable calibration](mfrmr-portable-calibration.html) and the [PV example](application-plausible-values.html). |
+| How do I keep files for an ordinary measurement analysis? | `results` | `export_mfrm_results()` → a file list | Keep the RDS for reloading and review the exported tables/figures; see [the saving tutorial](mfrmr-workflow.html#display-a-table-and-save-the-analysis). |
+
+The G-Study and D-Study are a **separate observed-score analysis**. They can
+inform the same assessment decision, but their G/Phi coefficients are not
+transformations of MFRM reliability. For the crossed-design example below, the
+connection is `score data → g → d → report`; an MFRM fit is not required.
+
+### Three connections that are not automatic
+
+- **A new variable is not automatically added to an old result.** Computing
+  `bias <- estimate_bias(...)` does not change `results` or a saved report.
+  Report that supported object directly, or use a documented attachment
+  argument for the particular result type. The `include` presets select
+  sections; they do not search your R workspace for objects.
+- **Use matching results.** Diagnostics and attachable intervals/scores must
+  belong to the source fit and supported analysis. Do not attach an old
+  diagnostic object after changing the data, model or calibration. Save
+  separate analyses separately when their targets differ.
+- **The route depends on the estimator.** CML fits use structural summaries
+  and eligible facet intervals, without Person scoring or `mfrm_results()`.
+  Two-family GPCM, testlet/random-rater and saved Bayesian results have their
+  own supported routes. Follow [model choice](mfrmr-model-choice.html),
+  [GPCM scope](mfrmr-gpcm-scope.html) or the relevant function's help rather than
+  substituting every model into the diagram above.
+
+Continue below to see what each result means. You can stop at the branch that
+answers your question; unused optional analyses are not missing requirements.
 
 ## 1. Why adjust for raters? {#why-adjust}
 

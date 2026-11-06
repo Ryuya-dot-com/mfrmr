@@ -111,25 +111,45 @@ redirects:
 
 reference:
   - title: "Primary workflow"
-    desc: "Start here for routine fit, first-screen results, reports, and exports."
+    desc: >
+      Follow [how the functions connect](../articles/mfrmr.html#how-functions-connect).
+      Keep the input and result objects at each step. The measurement route below
+      is for ordinary RSM/PCM MML/JML; G-theory planning starts separately from
+      observed scores. Other models use their documented output routes.
+  - subtitle: "Step 1: Prepare rating data"
+    desc: "Input: one row per rating. describe_mfrm_data() returns a design review; pass the rating data itself to fit_mfrm()."
     contents:
       - load_mfrmr_data
+      - describe_mfrm_data
+  - subtitle: "Step 2: Fit and inspect the model"
+    desc: "Keep fit <- fit_mfrm(...). summary(fit) shows tables; it does not replace fit or compute the default diagnostics."
+    contents:
+      - fit_mfrm
+  - subtitle: "Step 3: Diagnose and collect evidence"
+    desc: "Keep diagnostics <- diagnose_mfrm(fit), then pass both fit and matching diagnostics to mfrm_results()."
+    contents:
+      - diagnose_mfrm
+      - mfrm_results
+  - subtitle: "Step 4: Report and save"
+    desc: "Pass collected results to mfrm_report() or export_mfrm_results(). G/D-study and other supported result objects enter mfrm_report() directly."
+    contents:
+      - mfrm_report
+      - export_mfrm_results
+  - subtitle: "Extract estimates and uncertainty"
+    desc: "Use these with fit when you need individual estimates, covariance, fitted responses or supported intervals. They complement the compact summary."
+    contents:
+      - mfrm_fit_extractors
+      - mfrm_fit_responses
+      - confint.mfrm_fit
+  - subtitle: "Data examples and further guidance"
+    contents:
       - list_mfrmr_data
       - mfrmr_example_data
       - mfrmr_example_operational_design
       - mfrmr_gtheory_data
       - mfrmr_agreement_data
-      - describe_mfrm_data
-      - fit_mfrm
       - fit_mfrm_technical_details
       - summary.mfrm_jeffreys_fit
-      - mfrm_fit_extractors
-      - mfrm_fit_responses
-      - confint.mfrm_fit
-      - diagnose_mfrm
-      - mfrm_results
-      - mfrm_report
-      - export_mfrm_results
       - mfrmr_output_guide
       - mfrmr_workflow_methods
       - mfrmr_methods_reference

@@ -39,6 +39,11 @@ knitr::opts_chunk$set(
 Start with the intended score and decision, then choose a branch. These are
 connected workflows, not a checklist requiring every analysis.
 
+For a visual map of which object each function accepts and returns, see
+[how the functions connect](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html#how-functions-connect).
+The map distinguishes `fit`, `diagnostics`, collected `results` and a `report`,
+with a separate observed-score route for G-Study / D-Study.
+
 | Your situation | Connected route | What to carry into the report |
 | --- | --- | --- |
 | Define what was rated and whether the design links the groups | `describe_mfrm_data()` → model/design review → `subset_connectivity_report()` or `build_mfrm_network_review()` after fitting | Rubric endpoints, rating unit, assigned/missing rows, shared observations and identification checks. A connected graph alone does not establish a common scale. |
