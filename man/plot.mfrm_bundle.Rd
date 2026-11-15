@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-methods.R
 \name{plot.mfrm_bundle}
 \alias{plot.mfrm_bundle}
-\title{Plot report/table bundles with ggplot2}
+\title{Plot report/table bundles with base R defaults}
 \usage{
 \method{plot}{mfrm_bundle}(x, y = NULL, type = NULL, ...)
 }
@@ -16,11 +16,10 @@
 \item{...}{Additional arguments forwarded to class-specific plotters.}
 }
 \value{
-A \code{ggplot} object (invisibly), carrying the underlying \code{mfrm_plot_data}
-payload accessible via \code{\link[=plot_data]{plot_data()}}.
+A plotting-data object of class \code{mfrm_plot_data}.
 }
 \description{
-Plot report/table bundles with ggplot2
+Plot report/table bundles with base R defaults
 }
 \details{
 \code{plot()} dispatches by bundle class:
@@ -34,7 +33,7 @@ Plot report/table bundles with ggplot2
 \item \code{mfrm_bias_count} -> bias-count plots (cell counts / low-count rates)
 \item \code{mfrm_fixed_reports} -> pairwise-contrast diagnostics
 \item \code{mfrm_visual_summaries} -> warning/summary message count plots
-\item \code{mfrm_category_structure} -> category count and boundary plots
+\item \code{mfrm_category_structure} -> default base-R category plots
 \item \code{mfrm_category_curves} -> overview (default), ogive, CCC / category
 probability / conditional probability, cumulative, total-information, and
 category-specific-information plots
@@ -68,7 +67,7 @@ plots (\code{formats}, \code{artifact_groups}, \code{selection_tables},
 }
 
 If a class is outside these families, use dedicated plotting helpers
-or custom \code{ggplot2} graphics on component tables.
+or custom base R graphics on component tables.
 
 For \code{mfrm_category_curves}, pass \code{preset = "monochrome"} for
 grayscale/line-type output. Cumulative \code{.5} boundary lines are shown
@@ -78,16 +77,16 @@ only for interpretable in-range boundaries by default; use
 suppress those vertical boundary lines. Use
 \code{plot_data(x, component = "plot_long")} on a category-curve bundle when
 you want one ggplot2/plotly-friendly table across all curve families.
-Keep curve families and groups separate in custom figures. All category-curve,
-category-structure, rating-scale, and network bundle views render natively
-via \code{ggplot2}. Step displays use point estimates and do not turn stored step
-SEs into crossing, gap or curve intervals.
+Keep curve families and groups separate in custom figures. Automatic
+\code{\link[=as_ggplot]{as_ggplot()}} conversion supports rating-scale counts/thresholds and
+category-structure counts; it is unavailable for category-curve bundles and
+category-structure boundary views. Step displays use point estimates and
+do not turn stored step SEs into crossing, gap or curve intervals.
 }
 \section{Interpreting output}{
 
-The returned object is a \code{ggplot} object whose underlying plot payload and
-notes remain accessible via \code{\link[=plot_data]{plot_data()}} and \code{\link[=plot_data_components]{plot_data_components()}}; set
-\code{draw = TRUE} for immediate display.
+The returned object is plotting data (\code{mfrm_plot_data}) that captures
+the selected route and reusable data; set \code{draw = TRUE} for immediate base graphics.
 }
 
 \section{Typical workflow}{
@@ -95,7 +94,7 @@ notes remain accessible via \code{\link[=plot_data]{plot_data()}} and \code{\lin
 \enumerate{
 \item Create bundle output (e.g., \code{unexpected_response_table()}).
 \item Inspect routing with \code{summary(bundle)} if needed.
-\item Call \code{p <- plot(bundle, type = ..., draw = FALSE)} and inspect \code{plot_data(p)} when needed.
+\item Call \code{plot(bundle, type = ..., draw = FALSE)} to obtain reusable plot data.
 }
 }
 
@@ -121,7 +120,7 @@ Constructor filters such as \code{min_weight} change calculated metrics;
 \code{display_min_weight} does not. Returned \code{source_edges} retain the calculated
 graph, \code{edges} the displayed graph, and \code{coordinates} the actual positions.
 Titles are metadata by default; add a title explicitly via \code{graphical}.
-See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} for bipartite assignment,
+See \href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html}{mfrmr-networks-and-reporting} for bipartite assignment,
 directional disagreement and rater-by-criterion examples inspired by Lamprianou.
 With \code{\link[=rater_network_analysis]{rater_network_analysis()}} and \code{weight_metric = "DirectionalMagnitude"},
 \verb{type = "fit", metric = "SWS"} (or \code{"PUS"}) shows the published network

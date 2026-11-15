@@ -71,7 +71,7 @@ exposing the iteration table, convergence summary, and orientation review in
 one bundle.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("bias_iteration_report", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.

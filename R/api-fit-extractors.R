@@ -7,7 +7,8 @@
 #'   results use their documented summaries and model-specific methods.
 #' @param type For `coef()`, `"free"` (default) returns the independent fitted
 #'   coordinates; `"locations"`, `"steps"`, `"slopes"` or `"persons"` returns
-#'   the corresponding saved primary estimates. For `nobs()`, `"likelihood"`
+#'   the corresponding saved `Estimate` column (see the GPCM distinction below).
+#'   For `nobs()`, `"likelihood"`
 #'   (default) counts Persons for MML/CML and retained response rows for JML;
 #'   `"persons"` and `"ratings"` request those counts explicitly.
 #' @param k Penalty per free parameter for single-fit `AIC()`; default 2.
@@ -37,7 +38,17 @@
 #' Person estimates. Free-coordinate extraction refuses corrected or penalized
 #' JML and any fit whose primary estimates are nonfinite: finite optimizer
 #' proxies must not replace primary boundary values. Explicit component
-#' extraction preserves the saved infinite or missing primary estimates.
+#' extraction preserves infinite or missing values in the selected column.
+#'
+#' **GPCM slope columns.** `coef(fit, type = "slopes")` returns the saved
+#' `fit$slopes$Estimate`, which retains working values for compatibility; it
+#' does not select `PrimaryEstimate` or attach status columns. Read
+#' `fit$slopes` before reporting: `PrimaryEstimate` is the target's primary
+#' value under `ParameterStatus` and `PrimaryEstimateBasis`, whereas
+#' `OptimizerEstimate` records the numerical value even when no primary
+#' estimate is available. The distinction matters at boundaries and for
+#' limiting fits. Neither a finite working value nor an available primary
+#' value establishes interval eligibility. See [fit_mfrm_technical_details].
 #'
 #' **Covariance.** MML `vcov()` reuses the same qualified full joint covariance
 #' as [mfrm_facet_intervals()], including its model/design restrictions and
@@ -50,7 +61,7 @@
 #' one dense `NA` matrix exceeds `mfrmr.max_information_bytes`, `vcov()` errors
 #' with that reason; use the smaller target-level [mfrm_facet_intervals()] result.
 #' Other MML routes retain their separate qualification checks and error rules.
-#' RSM/PCM singleton-category fits can pass the interval-specific information
+#' RSM/PCM fits with singleton counts or empty local cells can pass the interval-specific information
 #' review while retaining `InferenceReady = FALSE`; returned `cautions` and
 #' checks explain the small-sample limitation. No count label alone certifies
 #' or invalidates this covariance.
@@ -90,15 +101,6 @@
 #' not rating rows or the sum of rating weights. Counts describe the retained
 #' analysis, not omitted input records or an effective sample size under
 #' dependence. Use `nobs(fit, type = "ratings")` to count retained ratings.
-#'
-#' For CML, adding extreme-score Persons can increase BIC's penalty even when
-#' the conditional likelihood is unchanged. Report both total and informative
-#' Person counts. A sensitivity calculation using the latter is
-#' `-2 * as.numeric(ll) + attr(ll, "df") * log(attr(ll, "informative_persons"))`,
-#' where `ll <- logLik(fit)` and the informative count is positive. Label this
-#' as an alternative penalty convention, not the package's BIC or a validated
-#' model-selection rule; neither count resolves dependence or sparse-design
-#' asymptotics. Keep the same retained data and conditioning basis in comparisons.
 #'
 #' @return `coef()` returns a named numeric vector; `vcov()` a matrix in the
 #'   matching default coordinates. MML covariance retains `checks`,

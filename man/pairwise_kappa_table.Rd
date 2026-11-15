@@ -77,7 +77,7 @@ matrix requires space quadratic in the number of declared categories;
 these are categorical-score interfaces, not continuous-score ICCs.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("pairwise_kappa_table", run.dontrun = TRUE)
 \dontrun{
 data("mfrmr_example_agreement", package = "mfrmr")

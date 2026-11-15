@@ -256,12 +256,15 @@ mfrm_native_location_inference <- function(fit, covariance = NULL) {
       as.character(readiness$BoundaryState[1]) %in% c("finite", "not_applicable", "not_evaluated") &&
       !any(slope_boundary$certificates$Certified %in% TRUE) &&
       !identical(slope_boundary$state, "certified_monotone_boundary_path"),
-      "A recorded identification failure or boundary certificate prevents native location intervals.")) return(refuse())
+      if (identical(as.character(readiness$BoundaryState[1]), "nonfinite_maximum"))
+        paste("The full model has no finite maximum. Retained finite coordinates are optimizer values,",
+          "not a finite maximum-likelihood solution; ordinary intervals are unavailable.") else
+        "A recorded identification failure or boundary certificate prevents native location intervals.")) return(refuse())
   category <- audit_mfrm_category_support(fit$prep, cfg, build_param_sizes(cfg))
   singleton <- cfg$model %in% c("RSM", "PCM") &&
     identical(category$readiness$CategoryState, "weak_information")
   if (!record("Category support", identical(category$readiness$CategoryState, "adequate") || singleton,
-      "Category support must be adequate or pass the RSM/PCM singleton review; unsupported coordinates remain unavailable.")) return(refuse())
+      "Category support must be adequate or pass the RSM/PCM fitted-step support review for sparse local cells; unsupported coordinates remain unavailable.")) return(refuse())
   info <- if (is.null(covariance)) compute_mml_parameter_covariance(fit) else covariance(fit)
   out$information <- info
   valid <- function(x) identical(x$status, "ok") && !isTRUE(x$regularized) &&

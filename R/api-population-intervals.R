@@ -4,8 +4,9 @@
 #' an estimated RSM/PCM MML population model. Coefficient intervals use a normal
 #' approximation; residual
 #' variance intervals exponentiate a normal interval for log residual variance.
-#' These experimental intervals have unqualified repeated-sample coverage.
-#' Method qualification is incomplete even when numerical checks pass.
+#' For these experimental intervals, nominal repeated-sample coverage has not
+#' been established across the supported designs. Passing numerical checks
+#' does not establish this statistical property.
 #' Saved cautions are also retained as an `interpretation_notes` table in
 #' [mfrm_results()], reports and table exports.
 #'
@@ -125,7 +126,7 @@
 #'   interval qualified for a zero-variance boundary.
 #'
 #' Coverage evidence is specific to the target, design and complete estimation
-#' procedure. In the retained RSM checks, mean-at-\eqn{X=1} and log-variance
+#' procedure. In limited RSM simulations, mean-at-\eqn{X=1} and log-variance
 #' intervals at 20 Persons remain inconclusive under the prespecified practical
 #' criteria. The independent 240-Person slope/mean-difference confirmation
 #' supports those targets in its tested design; it does not establish a minimum
@@ -136,7 +137,7 @@
 #' [predict_mfrm_units()] has separate source and scoring checks; its conditional
 #' posterior intervals hold the fitted calibration and population parameters
 #' fixed. Availability here does not authorize an otherwise refused scoring
-#' result. See `mfrmr_output_guide("intervals")` for the different uncertainty targets.
+#' result. See [mfrmr_interval_guide()] for the different uncertainty targets.
 #' @return An \code{mfrm_population_intervals} object with the interval table,
 #'   working-coordinate covariance, full parameter covariance, numerical checks,
 #'   source identity and unchanged source fit. With `contrasts`, also contains

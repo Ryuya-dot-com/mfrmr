@@ -97,21 +97,15 @@ output used for agreement statistics.}
 Analyze rater agreement, disagreement, and severity-direction networks
 }
 \details{
-This function implements a package-native rater-effect network view
-complementary to MFRM output. It follows the pairwise-network logic used in
-Lamprianou's rater-effect network work: nodes are raters, edges summarize
-pairwise relationships among raters in shared scoring contexts, and directed
-disagreement edges can be interpreted as relative leniency/severity
-indicators. These network summaries are descriptive diagnostics, not Rasch
-logit estimates and not formal fit statistics. They describe score
-relationships conditional on observed shared contexts; they do not test the
-assignment graph's connectedness or establish a common measurement scale.
+Nodes are raters; edges summarize agreement or directional disagreement in
+shared observed scoring contexts. These descriptive score relationships are
+not Rasch logit estimates or formal fit statistics. They do not establish
+assignment connectedness or a common scale; use \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}
+to inspect assignments.
 
-\code{Degree}, \code{Strength}, \code{Betweenness}, and \code{Closeness} are graph-theoretic
-quantities computed after \code{min_pair_n}, \code{min_weight}, and (for directed
-networks) \code{score_diff_tolerance} are applied. They are not rating-scale
-central tendency or restriction-of-range measures. Use
-\code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}} for assignment/co-observation connectedness.
+\code{Degree}, \code{Strength}, \code{Betweenness} and \code{Closeness} describe the graph after
+\code{min_pair_n}, \code{min_weight} and, for directed networks, \code{score_diff_tolerance}
+filtering. They are not rating-scale central tendency or range restriction.
 
 For \code{mode = "severity_direction"}, outgoing strength means the rater more
 often assigned higher scores than comparison raters; incoming strength means
@@ -177,7 +171,7 @@ rubric overlap; \code{\link[=rater_halo_network_analysis]{rater_halo_network_ana
 bootstrap contrasts instead of an independent-edge test.
 Use \code{\link[=mfrm_residual_network]{mfrm_residual_network()}} for residual associations and
 \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} for prefit assignment links. See
-\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} for complementary views, paired
+\href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html}{mfrmr-networks-and-reporting} for complementary views, paired
 overlap, direction and interpretation. \code{\link[=plot.mfrm_bundle]{plot.mfrm_bundle()}} documents custom
 layouts and display-only filters, which do not change the computed network.
 }

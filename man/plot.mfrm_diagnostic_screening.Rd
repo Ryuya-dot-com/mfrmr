@@ -38,10 +38,11 @@ labels. Public design aliases are accepted.}
 \item{...}{Reserved for generic compatibility.}
 }
 \value{
-Invisibly, a \code{ggplot} object carrying reusable metadata, a long-form
+An \code{mfrm_plot_data} object with reusable metadata, a long-form
 \code{plot_long} table, and interpretation handoff tables (\code{overview},
 \code{reading_order}, \code{next_actions}, \code{reporting_notes}, and
-\code{figure_recipes}) accessible via \code{\link[=plot_data]{plot_data()}}.
+\code{figure_recipes}). When \code{draw = TRUE}, the object is returned invisibly
+after drawing.
 }
 \description{
 Builds an integrated visual summary from
@@ -51,7 +52,7 @@ optional report-index review rates so simulation results can be inspected in
 one operating-characteristic surface.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_diagnostic_screening", run.dontrun = TRUE)
 \dontrun{
 # One saved replication illustrates output structure, not precise rates.

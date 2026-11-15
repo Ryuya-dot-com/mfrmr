@@ -62,7 +62,7 @@ and the stored fit-readiness decision for every supplied model;
 recovery, fair averages, bias screening, and summary-appendix handoff;
 \item report wording templates that avoid treating better \code{GPCM} fit as
 an automatic operational-scoring decision;
-\item \code{mfrmr_output_guide("gpcm_capabilities")} when \code{GPCM} is present;
+\item \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when \code{GPCM} is present;
 \item optionally, \code{\link[=build_weighting_review]{build_weighting_review()}} for the first Rasch-family reference
 versus \code{GPCM} pair.
 }
@@ -91,7 +91,7 @@ summary(review)
 }
 \seealso{
 \code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=build_weighting_review]{build_weighting_review()}},
-\link{mfrmr_gpcm_scope}, \code{\link[=compute_information]{compute_information()}}
+\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}, \code{\link[=compute_information]{compute_information()}}
 
 \code{\link[=build_model_choice_review]{build_model_choice_review()}}
 }

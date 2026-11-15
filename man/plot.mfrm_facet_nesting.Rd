@@ -4,31 +4,25 @@
 \alias{plot.mfrm_facet_nesting}
 \title{Plot the pairwise nesting index matrix}
 \usage{
-\method{plot}{mfrm_facet_nesting}(
-  x,
-  preset = c("standard", "publication", "compact", "monochrome"),
-  draw = TRUE,
-  ...
-)
+\method{plot}{mfrm_facet_nesting}(x, preset = c("standard", "publication", "compact", "monochrome"), ...)
 }
 \arguments{
 \item{x}{An \code{mfrm_facet_nesting} object.}
 
 \item{preset}{Plot preset.}
 
-\item{draw}{Logical; print the \code{ggplot} figure when \code{TRUE}.}
-
 \item{...}{Reserved.}
 }
 \value{
-Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts the rendered
-nesting matrix and pairwise summary table.
+Invisibly, the matrix rendered.
 }
 \description{
 Renders the directed nesting index
 \eqn{1 - H(B \mid A)/H(B)} as a heatmap between facet pairs,
-highlighting fully nested relationships close to 1. Colour scale
-runs from 0 (crossed, white / cold) to 1 (fully nested, dark).
+with larger values indicating less conditional uncertainty about B given A.
+Exactly 1 means B is determined by A when H(B) is positive; near 1 is
+not exact nesting. Zero means empirical independence, not necessarily a
+completely crossed design. Undefined zero-entropy cases remain unavailable.
 }
 \section{Session plot defaults}{
 

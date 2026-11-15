@@ -1,44 +1,23 @@
-#' Technical Reference for fit_mfrm() Specifications, Controls, and Estimators
+#' Technical reference for fit_mfrm() arguments and estimators
 #'
 #' @description
-#' Complete parameter-level mathematical rules, identification constraints,
-#' numerical integration and optimizer-polish contracts, boundary and accuracy
-#' provenance fields, and specialist estimator workflows (`MML`, ordinary
-#' `JML`, profile-score-adjusted `JML`, Jeffreys-penalized `JML`, conditional
-#' maximum likelihood `CML`, two-family `GPCM`, and `fit_scope = "comparisons"`)
-#' for [fit_mfrm()].
+#' Reference for [fit_mfrm()] arguments, model equations, identification,
+#' numerical approximations and the conditions for interpreting each output.
+#' Read the section for your selected model or estimator; [fit_mfrm()] gives
+#' the first analysis, and [mfrmr_methods_reference] links methods to literature.
 #'
-#' Use [fit_mfrm()] for the concise entry-point signature, reusable
-#' `spec = list(...)` and `control = list(...)` overview tables, and starter
-#' workflow examples. Every specification key below can be passed in
-#' `spec = list(...)` (shared across [describe_mfrm_data()],
-#' [review_mfrm_anchors()], [fit_mfrm()], and [export_mfrm_model()]) or as a
-#' named argument to [fit_mfrm()]; every control key below can be passed in
-#' `control = list(...)` or as a backward-compatible named argument in `...`.
-#'
-#' @details
-#' Data must be in **long format** (one row per observed rating event).
-#' Exact duplicate Person-by-facet combinations are retained, warned once, and
-#' propagated as a Data review state by default. Repeated cell keys alone do
-#' not establish dependence. With `repeated_ratings = "independent"`, the
-#' analyst declares distinct rating events that are independent conditional
-#' on Person ability and the model's effects. Keep event IDs in the source
-#' data for audit. Event IDs alone do not demonstrate independence; correlated
-#' re-ratings require a suitable dependence model. Adding an estimated occasion
-#' facet changes the response model and is appropriate only when intended.
-#' Repeated ratings do not increase the number of independent Persons.
-#'
-#' @section Specification entries (`spec = list(...)`):
-#' The 34 measurement-model, data-scale, and identification keys accepted in
-#' `spec = list(...)` (and shared with [describe_mfrm_data()],
-#' [review_mfrm_anchors()], and [export_mfrm_model()] within each function's
-#' documented scope):
+#' @section Argument definitions:
 #' \describe{
+#' \item{\code{data}}{
+#' A data.frame in long format with one row per observed rating
+#'   event. Grouped or rowwise tibbles are analyzed as one table; dplyr grouping
+#'   metadata is ignored. The named model columns define the design.
+#' }
 #' \item{\code{person}}{
-#'   Column name for the person (character scalar).
+#' Column name for the person (character scalar).
 #' }
 #' \item{\code{facets}}{
-#'   Character vector of facet column names. Facets cannot be named
+#' Character vector of facet column names. Facets cannot be named
 #'   `Person`, `Score`, `Weight`, `score_k`, `theta`, `steps`, `interactions`,
 #'   `log_slopes`, `beta` or `log_sigma2`, which are reserved data/parameter
 #'   names. Rename such facet columns before analysis. Similar names such as
@@ -47,69 +26,58 @@
 #'   `score = "Score"` and `weight = "Weight"`.
 #' }
 #' \item{\code{score}}{
-#'   Column name for the observed ordered category score. Values
-#'   must be coercible to real integer category codes within R's integer range.
-#'   Shared preparation rounds values within `1e-6` of an integer to the
-#'   nearest category, recording normalization in `fit$prep$preparation_notes`;
-#'   other fractional values are rejected. Corrected JML and two-family GPCM
-#'   require exact integer inputs; normalize roundoff explicitly before those
-#'   specialized fits. Binary `0/1` or `1/2` responses are supported as the ordered
-#'   two-category special case. When `keep_original = FALSE`, unused
-#'   intermediate categories are collapsed to a contiguous internal scale and
-#'   the mapping is recorded in `fit$prep$score_map`. If `rating_min` /
-#'   `rating_max` are supplied and the observed scores are a contiguous
-#'   subset of that range (for example a 1-5 scale with only 2-5 observed),
-#'   the supplied full range is retained so zero-count boundary categories
-#'   remain visible in the data-support review. A zero-count boundary category
-#'   is retained as review evidence. With `keep_original = TRUE`, however, an
-#'   unobserved internal category in a polytomous fitted ladder creates an
-#'   unsupported adjacent-step contrast and fitting stops before optimization
-#'   with a structured category-support error.
-#'   The explicit Jeffreys route below retains empty categories under a
-#'   different estimating equation; it does not certify ordinary finite MLEs.
-#' }
-#' \item{\code{weight}}{
-#'   Optional weight column name. Numeric weights retain their
-#'   supplied precision; character/factor weights are parsed from their labels.
-#'   Retained weights must have a finite sum and are not automatically rescaled.
+#' Column containing ordered integer category codes within R's integer range;
+#' binary 0/1 or 1/2 scores are supported. Shared preparation rounds values
+#' within `1e-6` of an integer and records this in `fit$prep$preparation_notes`;
+#' other fractional values are rejected. Corrected JML and two-family GPCM
+#' require exact integers: normalize roundoff before those fits.
+#' `category_policy`/`keep_original` govern gaps and the saved score map.
+#' Declaring `rating_min`/`rating_max` retains empty boundary categories when
+#' the observed scores form a contiguous subset of that range.
+#'
+#' Empty endpoints can imply a nonfinite MML maximum when free locations/steps
+#' provide an improving path, including GPCM with positive slopes held fixed.
+#' Centering does not remove paths compensated by another free location or
+#' estimated population mean. Such fits retain optimizer coordinates with
+#' `BoundaryState = "nonfinite_maximum"`; finite EAPs do not establish finite
+#' structural MLEs. An unused retained internal category instead stops ordinary
+#' fitting with a structured category-support error. The separate Jeffreys
+#' estimator retains empty categories under a different estimating equation.
 #' }
 #' \item{\code{rating_min}}{
-#'   Optional minimum category value. Supply this with
+#' Optional minimum category value. Supply this with
 #'   `rating_max` when the intended score scale includes unobserved boundary
 #'   categories.
 #' }
 #' \item{\code{rating_max}}{
-#'   Optional maximum category value. Supply this with
+#' Optional maximum category value. Supply this with
 #'   `rating_min` when the intended score scale includes unobserved boundary
 #'   categories.
 #' }
+#' \item{\code{weight}}{
+#' Optional weight column name. Numeric weights retain their
+#'   supplied precision; character/factor weights are parsed from their labels.
+#'   Retained weights must have a finite sum and are not automatically rescaled.
+#' }
 #' \item{\code{category_policy}}{
-#'   Optional explicit category choice: `"collapse"`
-#'   maps gaps in the observed categories to consecutive scores;
-#'   `"preserve"` keeps the intended ladder, declared with `rating_min` and
-#'   `rating_max`. This changes the fitted category steps, not just labels.
-#'   `NULL` (default) uses `keep_original`, whose default is `FALSE`
-#'   (`"collapse"`). Supplying both choices is allowed only when they agree.
-#'   Preservation does not estimate unsupported steps: fitting stops if a
-#'   retained internal category has no observations. Use the same policy in
-#'   [describe_mfrm_data()] and [review_mfrm_anchors()].
+#' `"collapse"` maps observed gaps to consecutive categories;
+#' `"preserve"` retains the intended ladder declared by `rating_min`/`rating_max`.
+#' `NULL` uses `keep_original` (default `FALSE`, hence collapse). Supplying both
+#' options requires agreement. This changes fitted steps, not just labels;
+#' the mapping is saved in `fit$prep$score_map`. Preservation stops ordinary
+#' fitting if an internal category is absent from its fitted ladder: shared in
+#' RSM, owned by `step_facet` in PCM. Absence for one rater alone is insufficient.
+#' Use the same policy in [describe_mfrm_data()] and [review_mfrm_anchors()].
 #' }
 #' \item{\code{keep_original}}{
-#'   Logical. `FALSE` (the current default) collapses
-#'   non-consecutive observed categories to a contiguous internal scale and
-#'   records the mapping in `fit$prep$score_map` (the downstream Count = 0
-#'   rows are consequently absent). `TRUE` preserves the declared scale so
-#'   unused intermediate categories remain visible in
-#'   [rating_scale_table()] and APA outputs, which is recommended for
-#'   preserving the rubric. This changes which category steps are fitted, not
-#'   just their displayed labels. Fitting stops if a retained internal category
-#'   has no observations; reviewing or revising that ladder is a substantive
-#'   decision, not a formatting option.
-#'   Retained for compatibility; `category_policy = "preserve"` or
-#'   `"collapse"` makes the choice explicit in new code.
+#' Compatibility spelling for category handling: `FALSE` (default)
+#' means collapse; `TRUE` means preserve. Prefer explicit `category_policy`
+#' in new code. Collapsed unused categories have no Count = 0 output rows;
+#' preservation keeps the rubric but cannot estimate unsupported internal steps.
+#' See `category_policy` for the fitted-ladder restrictions.
 #' }
 #' \item{\code{missing_codes}}{
-#'   Optional pre-processing step that converts sentinel
+#' Optional pre-processing step that converts sentinel
 #'   missing-code values to `NA` before any downstream logic. One of:
 #'   \itemize{
 #'     \item `NULL` (default): no recoding; strictly backward-compatible.
@@ -125,30 +93,17 @@
 #'   surfaced by [build_mfrm_manifest()]. Equivalent to calling
 #'   [recode_missing_codes()] manually before the fit.
 #' }
-#' \item{\code{repeated_ratings}}{
-#'   Treatment of repeated Person-by-facet cells.
-#'   `"review"` (default) retains the duplicate-cell warning and ordinary
-#'   MML/JML input-review state. Use `"independent"` only to declare that the
-#'   rows are distinct, conditionally independent rating events under the
-#'   specified model. Every row and its weight are retained; this argument
-#'   does not aggregate scores, add a facet, change the likelihood or establish
-#'   independence from the data. Other input, numerical and inference checks
-#'   still apply. The declaration is saved in preparation notes, configuration
-#'   and replay settings. Corrected JML already requires conditionally
-#'   independent repeated ratings; the argument records that assumption
-#'   explicitly there. It is not supported by the two-family GPCM route.
-#' }
 #' \item{\code{model}}{
-#'   `"RSM"` (default), `"PCM"`, or `"GPCM"`.
+#' `"RSM"` (default), `"PCM"`, or `"GPCM"`.
 #' }
 #' \item{\code{method}}{
-#'   `"MML"` (default), `"JML"`, or `"CML"`. `"JMLE"` is accepted as a
+#' `"MML"` (default), `"JML"`, or `"CML"`. `"JMLE"` is accepted as a
 #'   backward-compatible alias for the same joint-maximum-likelihood path.
 #'   Native CML supports RSM/PCM with preserved categories and unit weights;
 #'   see "Conditional maximum likelihood" for its distinct result class.
 #' }
 #' \item{\code{step_facet}}{
-#'   Facet whose levels receive separate step parameters in
+#' Facet whose levels receive separate step parameters in
 #'   `PCM` and `GPCM`. Supply exactly one facet name for a final analysis. If it
 #'   is omitted for `PCM`, mfrmr uses a unique item-like facet name (for
 #'   example, `Item`, `Task`, or `Criterion`) when available; otherwise it
@@ -158,7 +113,7 @@
 #'   set of rating-scale thresholds.
 #' }
 #' \item{\code{slope_facet}}{
-#'   Slope facet for the `GPCM` branch. mfrmr
+#' Slope facet for the `GPCM` branch. mfrmr
 #'   estimates one positive slope for every level of this designated facet.
 #'   Thus `slope_facet = "Criterion"` gives criterion-specific slopes, whereas
 #'   `slope_facet = "Rater"` gives rater-specific slopes. For one slope family,
@@ -171,7 +126,7 @@
 #'   across the selected facet's levels rather than unrelated absolute weights.
 #' }
 #' \item{\code{gpcm_mml_identification}}{
-#'   Scale-identification convention for
+#' Scale-identification convention for
 #'   `model = "GPCM"` with `method = "MML"`. `"free_population"` (the
 #'   default) estimates an intercept-only person distribution
 #'   \eqn{N(\beta_0,\sigma^2)} when `population_formula` is omitted, while
@@ -191,52 +146,55 @@
 #'   geometric-mean-one slope constraint is required to identify its freely
 #'   estimated person coordinates.
 #' }
+#' \item{\code{facet_interactions}}{
+#' Optional confirmatory two-way interaction terms
+#'   between non-person facets, supplied as explicit character terms such as
+#'   `"Rater:Criterion"` or as a list of length-two character vectors. These
+#'   interactions are estimated simultaneously as fixed effects in `RSM` and
+#'   `PCM` fits. Person-involving interactions, higher-order interactions, and
+#'   random-effect interaction terms are outside the current scope.
+#' }
+#' \item{\code{min_obs_per_interaction}}{
+#' Minimum weighted observations recommended for
+#'   each interaction cell. Cells below this value are flagged in
+#'   `interaction_effect_table()` and handled according to `interaction_policy`.
+#' }
+#' \item{\code{interaction_policy}}{
+#' How to handle sparse interaction cells:
+#'   `"warn"` (default), `"error"`, or `"silent"`.
+#' }
 #' \item{\code{anchors}}{
-#'   Optional table with `Facet`, `Level`, and `Anchor` columns.
+#' Optional table with `Facet`, `Level`, and `Anchor` columns.
 #'   Each retained row fixes a location in internal logit coordinates; it is
 #'   not merely a declaration that an element is common. Person anchors require
 #'   JML; MML rejects them. See **Anchors and scale constraints** below.
 #' }
 #' \item{\code{group_anchors}}{
-#'   Optional group-mean constraint table with facet, level,
+#' Optional group-mean constraint table with facet, level,
 #'   group, and target-value columns. Its use requires a defensible external
 #'   assumption about the group target; it does not create observed overlap.
 #'   Use columns `Facet`, `Level`, `Group`, and `GroupValue`. Person group
 #'   constraints require JML.
 #' }
-#' \item{\code{anchor_policy}}{
-#'   How to handle anchor-review issues: `"warn"` (default),
-#'   `"error"`, or `"silent"`.
-#' }
-#' \item{\code{min_common_anchors}}{
-#'   Minimum directly anchored levels per non-Person
-#'   facet used in the package's local count recommendation. This does not
-#'   verify cross-run element identity, invariance, or empirical connectedness.
-#' }
-#' \item{\code{min_obs_per_element}}{
-#'   Minimum weighted observations per facet level used
-#'   in anchor-review recommendations.
-#' }
-#' \item{\code{min_obs_per_category}}{
-#'   Minimum weighted observations per score category
-#'   used in anchor-review recommendations.
-#' }
-#' \item{\code{slope_reference}}{
-#'   For two-family GPCM MML only, name one member of `slope_facet` whose
-#'   component slopes have geometric mean one. NULL retains the first supplied
-#'   slope facet. Internally this reference is stored first; the other family
-#'   remains free on the fixed N(0,1) ability scale. This does not choose the
-#'   step owner or noncentered location facet.
-#' }
 #' \item{\code{noncenter_facet}}{
-#'   One facet to leave non-centered (default `"Person"`).
+#' One facet to leave non-centered (default `"Person"`).
 #'   Other facets use the convention selected by `centering_scope`.
 #'   To estimate a cohort mean while leaving an anchored RSM/PCM facet
 #'   uncentered, also set `population_formula = ~ 1` and `population_sd`;
 #'   see **Anchor origin and cohort means**.
 #' }
+#' \item{\code{population_sd}}{
+#' Optional positive residual population SD, fixed during
+#'   estimation. `NULL` preserves the existing behavior: an active population
+#'   model estimates its residual variance; RSM/PCM without a population
+#'   formula uses N(0,1).
+#'   A numeric value requires `population_formula`, full direct RSM/PCM MML,
+#'   and no interactions. It does not activate a population model implicitly.
+#'   Supplied SD and anchor values are treated as fixed, without source-error
+#'   propagation. GPCM and other estimation engines do not support this option.
+#' }
 #' \item{\code{centering_scope}}{
-#'   `"facet"` (default) centers each declared facet across
+#' `"facet"` (default) centers each declared facet across
 #'   all its levels, including direct anchors and group totals. `"remainder"`
 #'   reproduces the earlier convention that centers only levels outside direct
 #'   and group constraints. For ordinary additive RSM/PCM JML,
@@ -247,217 +205,228 @@
 #'   Unsupported specialized routes reject an explicit setting.
 #'   See **Anchors and scale constraints**.
 #' }
-#' \item{\code{positive_facets}}{
-#'   Facets with positive orientation.
+#' \item{\code{fit_scope}}{
+#' `"full"` (default) fits the ordinary model and retains its
+#'   identification guards. `"comparisons"` explicitly fits only the targets in
+#'   `comparison_review`; see **Comparison-only estimation**.
+#' }
+#' \item{\code{comparison_review}}{
+#' For `fit_scope = "comparisons"`, the result of
+#'   [describe_mfrm_data()] with `comparisons`, or its `$comparison_review`.
+#'   Pass the review's `fit_arguments` and the same original ratings.
 #' }
 #' \item{\code{dummy_facets}}{
-#'   Facets to fix at zero.
+#' Facets to fix at zero.
 #' }
-#' \item{\code{facet_interactions}}{
-#'   Optional confirmatory two-way interaction terms
-#'   between non-person facets, supplied as explicit character terms such as
-#'   `"Rater:Criterion"` or as a list of length-two character vectors. These
-#'   interactions are estimated simultaneously as fixed effects in `RSM` and
-#'   `PCM` fits. Person-involving interactions, higher-order interactions, and
-#'   random-effect interaction terms are outside the current scope.
+#' \item{\code{repeated_ratings}}{
+#' Treatment of repeated Person-by-facet cells.
+#'   `"review"` (default) retains the duplicate-cell warning and ordinary
+#'   MML/JML input-review state. Use `"independent"` only to declare that the
+#'   rows are distinct, conditionally independent rating events under the
+#'   specified model. Every row and its weight are retained; this argument
+#'   does not aggregate scores, add a facet, change the likelihood or establish
+#'   independence from the data. Other input, numerical and inference checks
+#'   still apply. The declaration is saved in preparation notes, configuration
+#'   and replay settings. Corrected JML already requires conditionally
+#'   independent repeated ratings; the argument records that assumption
+#'   explicitly there. It is not supported by the two-family GPCM route.
 #' }
-#' \item{\code{min_obs_per_interaction}}{
-#'   Minimum weighted observations recommended for
-#'   each interaction cell. Cells below this value are flagged in
-#'   `interaction_effect_table()` and handled according to `interaction_policy`.
+#' \item{\code{positive_facets}}{
+#' Facets with positive orientation.
 #' }
-#' \item{\code{interaction_policy}}{
-#'   How to handle sparse interaction cells:
-#'   `"warn"` (default), `"error"`, or `"silent"`.
+#' \item{\code{anchor_policy}}{
+#' How to handle anchor-review issues: `"warn"` (default),
+#'   `"error"`, or `"silent"`.
 #' }
-#' \item{\code{population_formula}}{
-#'   Optional one-sided formula for a person-level
-#'   latent-regression population model, for example `~ grade + ses`. Latent
-#'   regression is implemented only for
-#'   `method = "MML"` with a unidimensional conditional-normal population
-#'   model. With `NULL`, RSM/PCM MML uses a fixed \eqn{N(0,1)} basis;
-#'   default GPCM MML instead estimates an intercept-only normal population.
-#'   Version 0.2.4 does not accept arbitrary fixed normal means or standard
-#'   deviations: portable RSM/PCM calibration and its anchors are defined on
-#'   the standard-normal basis, and a silent change of basis would change the
-#'   meaning of those stored values.
-#'   A formula-compatible `terms` object returned in
-#'   `attr(simulated_data, "mfrm_population_data")$population_formula` is also
-#'   accepted, preserving the simulation template's transformation basis,
-#'   factor levels and contrasts when refitting generated data.
+#' \item{\code{min_common_anchors}}{
+#' Minimum directly anchored levels per non-Person
+#'   facet used in the package's local count recommendation. This does not
+#'   verify cross-run element identity, invariance, or empirical connectedness.
 #' }
-#' \item{\code{person_data}}{
-#'   Optional one-row-per-person data.frame holding background
-#'   variables for `population_formula`. Numeric, logical, factor, ordered
-#'   factor, and character predictors are expanded through `stats::model.matrix()`;
-#'   categorical xlevels and contrasts are stored for replay and scoring.
-#'   Prediction-aware transformations such as `scale()`, `poly()` and
-#'   `splines::ns()` retain their training basis when scoring new persons.
-#'   Required when `population_formula` is supplied.
+#' \item{\code{min_obs_per_element}}{
+#' Minimum weighted observations per facet level used
+#'   in anchor-review recommendations.
 #' }
-#' \item{\code{person_id}}{
-#'   Optional person-ID column in `person_data`. Defaults to
-#'   `person` when that column exists in `person_data`.
+#' \item{\code{min_obs_per_category}}{
+#' Minimum weighted observations per score category
+#'   used in anchor-review recommendations.
 #' }
-#' \item{\code{population_policy}}{
-#'   How missing background data are handled for a
-#'   latent-regression fit. `"error"` (default) requires complete person-level
-#'   covariates; `"omit"` fits the model on the complete-case subset and records
-#'   omitted persons / omitted response rows in the returned `population`
-#'   metadata while retaining the observed-person-aligned pre-omit table for
-#'   replay/export provenance.
-#' }
-#' \item{\code{population_sd}}{
-#'   Optional positive residual population SD, fixed during
-#'   estimation. `NULL` preserves the existing behavior: an active population
-#'   model estimates its residual variance; RSM/PCM without a population
-#'   formula uses N(0,1).
-#'   A numeric value requires `population_formula`, full direct RSM/PCM MML,
-#'   and no interactions. It does not activate a population model implicitly.
-#'   Supplied SD and anchor values are treated as fixed, without source-error
-#'   propagation. GPCM and other estimation engines do not support this option.
-#' }
-#' }
-#'
-#' @section Estimation and numerical control entries (`control = list(...)`):
-#' The 21 quadrature, optimizer, JML-adjustment, post-fit shrinkage, and
-#' subfit-scope keys accepted in `control = list(...)` (or via named
-#' backward-compatible `...` arguments in [fit_mfrm()]):
-#' \describe{
 #' \item{\code{quad_points}}{
-#'   Integer number of Gauss-Hermite quadrature points
-#'   used for MML integration over the person distribution. The default is
-#'   `31`. Useful accuracy/runtime settings are:
-#'   \tabular{ll}{
-#'     `7`  \tab lightweight screening run; information-criterion deltas,
-#'                 weights, preferences, and LRT are disabled. Helpers such as
-#'                 [predict_mfrm_population()] and
-#'                 [reference_case_benchmark()] use this value. \cr
-#'     `15` \tab intermediate review run when runtime matters; automatic
-#'                 model ranking remains disabled. \cr
-#'     `31` \tab package default and a starting grid, not evidence by itself
-#'                 that numerical integration is adequate. \cr
-#'     `61+` \tab user-selected denser grids for same-data sensitivity review;
-#'                 no single order is adequate for every response pattern.
-#'   }
-#'   Quadrature adequacy depends on the fitted distribution and score support.
-#'   Orders whose weights cannot all be represented as positive finite doubles
-#'   produce an error; increasing the order indefinitely is not supported.
-#'   Use [mml_quadrature_sensitivity()] to compare the same model and data on
-#'   user-selected grids before portable calibration and whenever numerical
-#'   movement could affect a consequential result. The helper reports
-#'   continuous differences without choosing a cutoff. Raw AIC/BIC/SABIC
-#'   remain visible below 31 points for diagnosis, but [compare_mfrm()] fails
-#'   closed rather than turning a screening/review grid into automatic
-#'   selection.
+#' Gauss-Hermite order for MML, default `31`. Values 7 and 15
+#' are screening/review settings; automatic model comparison requires at least
+#' 31. See **Information-criterion contract** for the tiers and retained criteria.
+#' No order guarantees adequacy; use [mml_quadrature_sensitivity()] on the same
+#' model/data before portable calibration or consequential interpretation.
+#' The helper reports differences without selecting a cutoff. Orders whose
+#' weights cannot all be represented as positive finite doubles are rejected.
 #' }
-#' \item{\code{mml_engine}}{
-#'   MML optimization engine for `method = "MML"`:
-#'   `"direct"` (default) uses the selected direct optimizer on the marginal
-#'   log-likelihood,
-#'   `"em"` uses an EM loop for `RSM` / `PCM` with `population = NULL`, including
-#'   model-estimated `facet_interactions`, or the explicitly scoped two-family
-#'   GPCM route described below. `"hybrid"` uses EM as a warm start before the
-#'   direct optimizer. Ordinary EM/hybrid requires fixed quadrature. Numerical
-#'   M steps implement generalized EM, checking both the auxiliary and marginal
-#'   log likelihood for non-decrease beyond roundoff before accepting an update;
-#'   failed checks stop without replacing a valid checkpoint. This is not a
-#'   block ECM algorithm or a guarantee of global convergence or faster fitting.
-#'   Use `mml_starts` to review specified starts and keep integration sensitivity
-#'   separate. For a raw EM fit with a large terminal gradient, use `"hybrid"`
-#'   or `"direct"` and review the resulting readiness. Unsupported
-#'   one-family combinations fall back to `"direct"` and record that fallback in
-#'   `fit$summary`. Direct, hybrid, and EM engines all require the common
-#'   terminal-gradient check for the Numerical component of fit readiness; EM
-#'   relative log-likelihood convergence alone does not establish numerical
-#'   readiness. `InferenceReady` is `TRUE` only when every stored fit-readiness
-#'   component passes.
+#' \item{\code{maxit}}{
+#' Optimizer iteration ceiling, default `400`, not a convergence
+#' criterion. It applies separately to outer two-family EM, its adaptive EM
+#' seed, every direct optimizer stage/start, and each corrected-JML root stage.
+#' Reaching the ceiling does not qualify a fit; convergence and terminal-gradient
+#' checks still apply. See **Choosing maxit without result-driven tuning**.
+#' }
+#' \item{\code{reltol}}{
+#' Initial optimizer tolerance, default `1e-9`: passed to BFGS,
+#' mapped to recorded `factr`/`pgtol` for L-BFGS-B. Two-family fixed EM instead
+#' uses `em_score_tol`. Adaptive two-family direct fits retain the stricter of
+#' the ordinary total-gradient tolerance and `N * 1e-6` (N fitted Persons);
+#' older fits retain their recorded convention. Curvature, derivatives and
+#' integration require separate checks.
+#'
+#' With `reltol <= 1e-9`, optimizer code zero plus a failed terminal-gradient
+#' review triggers bounded warm-start polishing. The best non-worsening stage
+#' under the saved selection rule is retained. Additional supported repairs are:
+#' - Additive RSM/PCM JML without shrinkage: up to three exact-information sparse
+#'   Newton steps, each reducing the gradient without resolved likelihood loss,
+#'   passing the linear-solve check and moving no coordinate by more than one
+#'   logit. Extreme Persons, nonpositive information and failed proposals retain
+#'   their diagnostic state (`jml_information_polish`, `InformationSteps`,
+#'   `InformationSolveResidual`).
+#' - Fixed-grid RSM/PCM/GPCM MML (including estimated populations), or adaptive
+#'   fixed-population GPCM MML: one curvature restart when at most 64 parameters
+#'   are free. Curvature must be positive definite and well conditioned; the
+#'   gradient must decrease without objective loss beyond roundoff.
+#' - Fixed-grid GPCM MML with at most 64 free parameters: negative curvature
+#'   after code zero permits up to three rescaled BFGS restarts, each with the
+#'   requested `maxit`. A replacement must pass convergence/gradient checks,
+#'   have no detected negative curvature and not worsen the objective beyond
+#'   roundoff; failed recovery retains a numerical warning.
+#' - Fixed-population, fixed-grid RSM/PCM interactions: one centered-objective
+#'   L-BFGS-B polish can remove a large constant from relative stopping. This
+#'   leaves derivatives, original-scale stored likelihoods and precision rules
+#'   unchanged; resolved likelihood loss is never accepted.
+#'
+#' Requested/selected controls are in `fit$summary`; histories, failures,
+#' `SmallestCurvature`, `CurvatureScale` and `CurvatureReviewError` are in
+#' `fit$opt$optimizer_polish`. Repairs do not change the model or inferential
+#' information matrix, correct JML bias, prove a global optimum or qualify
+#' quadrature/coverage.
+#' }
+#' \item{\code{gpcm_mml_start}}{
+#' Initial values for two-family adaptive direct MML,
+#'   including its `mml_integration="auto"` refinement stages.
+#'   `NULL` (default) selects `"neutral_em"`: optimize from both the neutral vector
+#'   and a same-data fixed-grid EM vector, and select the lowest finite adaptive
+#'   negative log likelihood, retaining its convergence status. `"neutral"`
+#'   retains the earlier neutral-only initialization. Numerical optimizer repairs
+#'   still apply; exact historical reproduction requires the original source.
+#'   An EM vector is only a start;
+#'   its fixed-grid likelihood is never compared with an adaptive likelihood.
+#'   The seed uses the requested quadrature order, `maxit` outer iterations,
+#'   100 M-step iterations and per-Person score tolerance `1e-6`. A finite seed
+#'   need not have converged. Each direct start uses the requested optimizer,
+#'   `reltol` and its existing polishing sequence. All starts, errors, warnings,
+#'   stage histories, seed trace and elapsed costs are stored in
+#'   `fit$opt$mml_initialization`; results and reports include its comparison table.
+#'   This comparison does not prove a global optimum or interval validity.
+#'   Alternatively, supply a plain named list of at least two finite native
+#'   free-parameter vectors. For example, reuse `p <- previous_fit$opt$par`
+#'   from the same model coding with `list(previous = p, neutral = 0 * p)`.
+#'   The order is first-owner free locations, second-owner locations,
+#'   second-owner free steps (within each level), first-owner free log slopes,
+#'   and second-owner log slopes, using the fitted level order. Vector lengths
+#'   must match; optional parameter names must exactly match the model's native
+#'   names. Reported positive slopes or expanded constrained parameters cannot
+#'   be supplied in place of native coordinates. Explicit starts replace the
+#'   default start roster and do not run an EM initialization. Their values are
+#'   reevaluated and optimized under the requested adaptive objective; no
+#'   likelihood, convergence flag, covariance or scoring eligibility is imported
+#'   from a previous calculation. The roster and vectors remain in the saved
+#'   initialization record and replay inputs, including quadrature refits.
+#' }
+#' \item{\code{em_score_tol}}{
+#' Stopping tolerance for the two-family GPCM MML-EM route
+#'   only. `NULL` selects `1e-6` for that route. Stops when the largest absolute
+#'   derivative of the negative marginal log likelihood, divided by the number
+#'   of Persons, is at most this value. It does not control interval eligibility.
+#'   The ascent-checked BFGS M step allows 100 iterations with `reltol = 1e-12`;
+#'   both the marginal likelihood and EM auxiliary objective must not decrease
+#'   beyond numerical roundoff. If BFGS stops before the requested score
+#'   accuracy, usable positive curvature can refine the auxiliary objective
+#'   with the same E-step counts. The ascent checks still apply. Dense
+#'   curvature refinement is limited to 1--64 free parameters; otherwise
+#'   the ordinary M-step proposal is retained. The saved `fit$opt$em_trace`
+#'   records refinement attempts and failures;
+#'   `mstep_score` is the proposal's auxiliary-objective score before any
+#'   step halving. Other model routes require `NULL`.
+#' }
+#' \item{\code{optimizer}}{
+#' Direct-optimization method. `"auto"` (default) uses the
+#'   BFGS M step for the two-family EM route. For other routes it uses the
+#'   limited-memory `"L-BFGS-B"` method for MML and for larger JML parameter
+#'   vectors (at least 200 free parameters), while retaining BFGS for smaller
+#'   JML fits. Use `"BFGS"` or `"L-BFGS-B"` to request one method explicitly.
+#'   The method actually used is recorded in `fit$summary$OptimizerMethod`.
+#'   For L-BFGS-B, inspect `OptimizerFactr` and `OptimizerPgtol` rather than
+#'   interpreting `EffectiveReltol` as a native [stats::optim()] control.
 #' }
 #' \item{\code{mml_integration}}{
-#'   Numerical integration for MML: `"fixed"` (default)
-#'   uses a common Gauss-Hermite grid relative to each person's normal prior;
-#'   `"adaptive"` centers and scales the grid at each person's posterior mode
-#'   on every objective evaluation. Adaptive fitting uses the gradient of the
-#'   moving-node objective, including changes in its center and width. It
-#'   requires `method = "MML"`, `mml_engine = "direct"`, and no checkpoint.
-#'   The choice also controls the fitted likelihood, Hessian, posterior person
-#'   summaries, fitted-object scoring, and supported portable calibration.
-#'   For these two modes `quad_points` remains the order; neither guarantees
-#'   adequate accuracy at a particular order. Compare orders before reporting.
-#'   During adaptive optimization, trial values that cause numerical overflow
-#'   are rejected so the search can shorten its step. Starting values must still
-#'   be evaluable, and final estimates must pass the usual convergence checks;
-#'   rejecting a trial does not establish a parameter boundary or impose a
-#'   discrimination upper limit.
-#'   Adaptive fits with nonlinear coordinates have no completed probability-
-#'   map identification audit; GPCM also lacks an adaptive slope-boundary audit.
-#'   Their overall `InferenceReady` flag remains false. Supported native-location
-#'   and RSM/PCM population intervals have separate source and numerical checks;
-#'   see the MML integration workflow section below and [mfrm_facet_intervals()].
-#'   Available intervals retain their asymptotic assumptions and coverage cautions.
-#'   ConQuest exports currently require fixed integration.
-#'   `"auto"` first fits the fixed grid at `quad_points`, then checks every
-#'   Person's log marginal likelihood, EAP and posterior SD against two adaptive
-#'   orders. It also checks the change in the full marginal gradient and its
-#'   absolute maximum at the retained and finer rules. If any criterion fails,
-#'   it warm-starts adaptive refits at the orders in `mml_accuracy_control`.
-#'   This fixed-to-adaptive sequence applies to ordinary full direct MML
-#'   (RSM, PCM or one-slope-family GPCM), with no checkpoint. Population regression, anchors and interactions retain
-#'   their existing model restrictions. On success the resolved fixed/adaptive
-#'   rule and order control all subsequent fit calculations; inspect
-#'   `fit$config$mml_accuracy` for controls, stage history and final Person
-#'   checks. These checks concern the fitted response patterns; scoring new
-#'   patterns reuses the resolved rule and needs its own integration review.
-#'   The initial fixed rule is retained if its checks pass. Requested
-#'   settings are preserved for replay; explicit sensitivity refits use the
-#'   resolved rule at each requested order. If optimization fails or all
-#'   refinement orders are exhausted, an error of class
-#'   `mfrmr_mml_accuracy_error` carries `history`, `control` and the last
-#'   parameter vector instead of returning a fit.
-#'   In current errors (`provenance_version = 2`), `last_candidate` holds the
-#'   last returned optimizer vector, its parameter-block names and sizes, its
-#'   matching `config`, and its stage diagnostics. These are free optimization
-#'   coordinates, not a table of facet estimates or a precision-qualified fit.
-#'   `last_attempt` records the final attempted stage and failure phase; it may
-#'   describe a later failed optimization. `last_integration` and
-#'   `last_quad_points` now describe `last_parameters`, not that later attempt.
-#'   If no optimizer returned, `last_candidate` is NULL, `parameter_source` is
-#'   `"initial_values"`, and the integration aliases are NA. Initial values are
-#'   retained separately as `initial_parameters`. Earlier saved errors lack
-#'   this provenance version; their integration aliases can describe the failed
-#'   attempt rather than the retained vector. Inspect their stage history.
-#'   Capture the condition with `tryCatch(fit_mfrm(...),
-#'   mfrmr_mml_accuracy_error = function(e) e)` and inspect both records.
-#'   Saving the condition preserves the values and reasons without converting
-#'   unsuccessful accuracy checks into a successful model fit.
+#' MML rule: `"fixed"` (default) uses a common Gauss-Hermite grid
+#' relative to each Person's normal prior; `"adaptive"` recomputes posterior-mode
+#' centers/widths on every objective evaluation and differentiates the moving-node
+#' objective. Adaptive fitting requires direct MML without checkpoints. The
+#' resolved rule/order governs likelihood, Hessian, posterior summaries and
+#' supported scoring/calibration. Overflowing adaptive trials are rejected;
+#' starting values must be evaluable and final estimates must pass convergence.
+#' Rejection is not a parameter-boundary finding or a discrimination upper bound.
+#' See **MML integration workflow** for output-specific support: nonlinear
+#' adaptive fits lack a completed probability-map identification audit, and
+#' GPCM lacks an adaptive slope-boundary audit. Their overall `InferenceReady`
+#' remains false; supported target-specific intervals have separate checks.
 #'
-#'   For two-family GPCM, `"auto"` instead preserves the requested engine:
-#'   `mml_engine="em"` uses fixed integration and `mml_engine="direct"`
-#'   uses adaptive integration at every stage. Each refit retains the existing
-#'   neutral EM start or the specified adaptive `gpcm_mml_start` policy;
-#'   no cross-order warm start or engine switch is introduced. The default
-#'   hard ceiling is 241 points, including the `2*q-1` reference checks.
-#'   Person log marginal likelihood, EAP and posterior SD differences must
-#'   pass, together with the existing two-family local-information and
-#'   stationarity checks described in [confint.mfrm_fit()]. This conservative
-#'   automatic route therefore requires more than delivery of a point estimate.
-#'   A sole quadrature-sensitivity failure or inaccurate Person moments causes
-#'   refinement; another failed information, convergence or model check stops
-#'   with its own reason. It does not automatically diagnose a boundary.
-#'   In two-family errors, `last_candidate$accuracy` retains available checks
-#'   and Person comparisons. If fitting failed before a candidate was returned,
-#'   `parameter_source="unavailable"` and `last_parameters=NULL`; there is no
-#'   single initial vector to report for a multi-start policy. No two-family
-#'   global optimum or interval-coverage guarantee follows from auto success.
-#'   The latest successful automatic fit can reuse its complete qualification
-#'   for subsequent two-family intervals in the same R session, provided the
-#'   entire fit, information-memory budget and numerical backend are unchanged.
-#'   Source and result retention is bounded by that budget. Warning-producing
-#'   or refused qualification is not reused.
-#'   This transient cache is not saved in the fit; a new session recomputes.
+#' For ordinary full direct RSM/PCM or one-family GPCM, `"auto"` first fits the
+#' fixed rule and checks Person log marginal likelihoods, EAPs, posterior SDs
+#' and full gradients against finer adaptive rules. Failed criteria trigger
+#' warm-started adaptive refits; a passing initial fixed fit is retained.
+#' `mml_accuracy_control` specifies orders and tolerances. Population, anchor
+#' and interaction restrictions remain; checkpoints are excluded. Inspect
+#' `fit$config$mml_accuracy` for controls, history and Person checks. Requested
+#' settings survive replay; explicit sensitivity fits use the resolved rule.
+#' New response patterns still need their own scoring integration review.
+#'
+#' Failure raises `mfrmr_mml_accuracy_error`, not a fit. Capture it with
+#' `tryCatch(fit_mfrm(...), mfrmr_mml_accuracy_error = function(e) e)`:
+#' - `history`/`control` retain attempted stages and reasons.
+#' - In `provenance_version = 2`, `last_candidate` contains the last returned
+#'   free optimizer vector, block names/sizes, matching `config` and diagnostics.
+#'   `last_parameters`, `last_integration` and `last_quad_points` describe this
+#'   vector, not a later failed `last_attempt` and its failure phase.
+#' - If no optimizer returned, `last_candidate = NULL`,
+#'   `parameter_source = "initial_values"`, and integration aliases are NA;
+#'   `initial_parameters` remains separate. Older errors may associate those
+#'   aliases with the failed attempt; inspect their histories.
+#' Saving the condition preserves unsuccessful results without qualifying them
+#' as estimates or precision evidence.
+#'
+#' For two-family GPCM, `"auto"` instead preserves the requested engine:
+#' `mml_engine="em"` uses fixed integration and `mml_engine="direct"`
+#' uses adaptive integration at every stage. Each refit retains the existing
+#' neutral EM start or the specified adaptive `gpcm_mml_start` policy;
+#' no cross-order warm start or engine switch is introduced. The default
+#' hard ceiling is 241 points, including the `2*q-1` reference checks.
+#' Person log marginal likelihood, EAP and posterior SD differences must
+#' pass, together with the existing two-family local-information and
+#' stationarity checks described in [confint.mfrm_fit()]. This conservative
+#' automatic route therefore requires more than delivery of a point estimate.
+#' A sole quadrature-sensitivity failure or inaccurate Person moments causes
+#' refinement; another failed information, convergence or model check stops
+#' with its own reason. It does not automatically diagnose a boundary.
+#' In two-family errors, `last_candidate$accuracy` retains available checks
+#' and Person comparisons. If fitting failed before a candidate was returned,
+#' `parameter_source="unavailable"` and `last_parameters=NULL`; there is no
+#' single initial vector to report for a multi-start policy. No two-family
+#' global optimum or interval-coverage guarantee follows from auto success.
+#' The latest successful automatic fit can reuse its complete qualification
+#' for subsequent two-family intervals in the same R session, provided the
+#' entire fit, information-memory budget and numerical backend are unchanged.
+#' Source and result retention is bounded by that budget. Warning-producing
+#' or refused qualification is not reused.
+#' This transient cache is not saved in the fit; a new session recomputes.
 #' }
 #' \item{\code{mml_accuracy_control}}{
-#'   Named list used only with
+#' Named list used only with
 #'   `mml_integration = "auto"`. To specify only a ceiling, use
 #'   `list(max_points=121)`. It bounds every quadrature rule used by automatic
 #'   fitting and its acceptance checks, including reference rules; it does not
@@ -505,8 +474,19 @@
 #'   saved histories use `"nonintegration_refusal"` for the same stopping rule;
 #'   neither label establishes a boundary or whether more points would help.
 #' }
+#' \item{\code{progress}}{
+#' Logical; `TRUE` displays a progress indicator with elapsed
+#'   time. Two-family GPCM reports EM iterations, adaptive starts, quadrature
+#'   stages and precision checks; direct optimization reports objective
+#'   evaluations. Other routes may provide only a coarse phase display.
+#'   Iteration/stage limits are budgets, not percent completion or a remaining-
+#'   time forecast: convergence and required refinement are not known in advance.
+#'   Display follows `cli` console settings and is cleared on return, error or
+#'   interruption. The default is silent; it does not change numerical controls
+#'   or become part of saved calibration/replay settings.
+#' }
 #' \item{\code{mml_starts}}{
-#'   Optional starting-value review for ordinary full RSM/PCM
+#' Optional starting-value review for ordinary full RSM/PCM
 #'   or single-family GPCM MML. `NULL` keeps the usual single start. A numeric
 #'   vector such as `c(0, 0.5, -0.5)` adds each nonzero offset times the
 #'   alternating vector `(1, -1, 1, ...)` to the default free coordinates.
@@ -532,57 +512,95 @@
 #'   accept numeric offsets; named starts require an explicit subgroup fit
 #'   because linking changes the free-coordinate basis.
 #' }
-#' \item{\code{gpcm_mml_start}}{
-#'   Initial values for two-family adaptive direct MML,
-#'   including its `mml_integration="auto"` refinement stages.
-#'   `NULL` (default) selects `"neutral_em"`: optimize from both the neutral vector
-#'   and a same-data fixed-grid EM vector, and select the lowest finite adaptive
-#'   negative log likelihood, retaining its convergence status. `"neutral"`
-#'   retains the earlier neutral-only initialization. Numerical optimizer repairs
-#'   still apply; exact historical reproduction requires the original source.
-#'   An EM vector is only a start;
-#'   its fixed-grid likelihood is never compared with an adaptive likelihood.
-#'   The seed uses the requested quadrature order, `maxit` outer iterations,
-#'   100 M-step iterations and per-Person score tolerance `1e-6`. A finite seed
-#'   need not have converged. Each direct start uses the requested optimizer,
-#'   `reltol` and its existing polishing sequence. All starts, errors, warnings,
-#'   stage histories, seed trace and elapsed costs are stored in
-#'   `fit$opt$mml_initialization`; results and reports include its comparison table.
-#'   This comparison does not prove a global optimum or interval validity.
-#'   Alternatively, supply a plain named list of at least two finite native
-#'   free-parameter vectors. For example, reuse `p <- previous_fit$opt$par`
-#'   from the same model coding with `list(previous = p, neutral = 0 * p)`.
-#'   The order is free locations in `fit$config$facet_names` order, free steps
-#'   within the declared step-owner levels, reference-family free log slopes,
-#'   and other-family log slopes. Only `noncenter_facet` has all location
-#'   coordinates free. Use the saved parameter names and level order; vector lengths
-#'   must match; optional parameter names must exactly match the model's native
-#'   names. Reported positive slopes or expanded constrained parameters cannot
-#'   be supplied in place of native coordinates. Explicit starts replace the
-#'   default start roster and do not run an EM initialization. Their values are
-#'   reevaluated and optimized under the requested adaptive objective; no
-#'   likelihood, convergence flag, covariance or scoring eligibility is imported
-#'   from a previous calculation. The roster and vectors remain in the saved
-#'   initialization record and replay inputs, including quadrature refits.
+#' \item{\code{mml_engine}}{
+#' `"direct"` (default) optimizes the marginal log likelihood;
+#' `"em"` supports fixed-grid RSM/PCM with `population_formula = NULL`, including
+#' facet interactions, and the scoped two-family GPCM route. `"hybrid"` uses
+#' EM then direct optimization. Ordinary EM/hybrid requires fixed quadrature;
+#' unsupported one-family combinations fall back to direct with a saved reason.
+#'
+#' Generalized-EM M steps check both auxiliary and marginal log likelihood for
+#' non-decrease beyond roundoff; failure stops without replacing a valid
+#' checkpoint. This is not block ECM or a speed/global-convergence guarantee.
+#' Every engine requires the common terminal-gradient check; relative EM
+#' likelihood convergence alone is insufficient. Consider hybrid/direct for a
+#' large terminal EM gradient. `InferenceReady` requires all stored readiness
+#' components; starting-value and integration reviews remain separate.
 #' }
-#' \item{\code{em_score_tol}}{
-#'   Stopping tolerance for the two-family GPCM MML-EM route
-#'   only. `NULL` selects `1e-6` for that route. Stops when the largest absolute
-#'   derivative of the negative marginal log likelihood, divided by the number
-#'   of Persons, is at most this value. It does not control interval eligibility.
-#'   The ascent-checked BFGS M step allows 100 iterations with `reltol = 1e-12`;
-#'   both the marginal likelihood and EM auxiliary objective must not decrease
-#'   beyond numerical roundoff. If BFGS stops before the requested score
-#'   accuracy, usable positive curvature can refine the auxiliary objective
-#'   with the same E-step counts. The ascent checks still apply. Dense
-#'   curvature refinement is limited to 1--64 free parameters; otherwise
-#'   the ordinary M-step proposal is retained. The saved `fit$opt$em_trace`
-#'   records refinement attempts and failures;
-#'   `mstep_score` is the proposal's auxiliary-objective score before any
-#'   step halving. Other model routes require `NULL`.
+#' \item{\code{population_formula}}{
+#' Optional one-sided formula for a person-level
+#'   latent-regression population model, for example `~ grade + ses`. Latent
+#'   regression is implemented only for
+#'   `method = "MML"` with a unidimensional conditional-normal population
+#'   model. With `NULL`, RSM/PCM MML uses a fixed \eqn{N(0,1)} basis;
+#'   default GPCM MML instead estimates an intercept-only normal population.
+#'   To fix the residual SD in supported RSM/PCM direct MML, use
+#'   `population_sd` together with an explicit population formula. Changing
+#'   the population model can change the calibration; it is not a display
+#'   rescaling. Check the supported population scope before exporting a
+#'   portable calibration.
+#'   A formula-compatible `terms` object returned in
+#'   `attr(simulated_data, "mfrm_population_data")$population_formula` is also
+#'   accepted, preserving the simulation template's transformation basis,
+#'   factor levels and contrasts when refitting generated data.
+#' }
+#' \item{\code{person_data}}{
+#' Optional one-row-per-person data.frame holding background
+#'   variables for `population_formula`. Numeric, logical, factor, ordered
+#'   factor, and character predictors are expanded through `stats::model.matrix()`;
+#'   categorical xlevels and contrasts are stored for replay and scoring.
+#'   Prediction-aware transformations such as `scale()`, `poly()` and
+#'   `splines::ns()` retain their training basis when scoring new persons.
+#'   Required when `population_formula` is supplied.
+#' }
+#' \item{\code{person_id}}{
+#' Optional person-ID column in `person_data`. Defaults to
+#'   `person` when that column exists in `person_data`.
+#' }
+#' \item{\code{population_policy}}{
+#' How missing background data are handled for a
+#'   latent-regression fit. `"error"` (default) requires complete person-level
+#'   covariates; `"omit"` fits the model on the complete-case subset and records
+#'   omitted persons / omitted response rows in the returned `population`
+#'   metadata while retaining the observed-person-aligned pre-omit table for
+#'   replay/export provenance.
+#' }
+#' \item{\code{facet_shrinkage}}{
+#' Character. `"none"` (default) keeps the unshrunk
+#'   fixed-effects estimates. `"empirical_bayes"` applies a post-hoc
+#'   zero-centered normal-model adjustment to each non-person facet
+#'   (Efron & Morris, 1973); `fit$facets$others` gains `ShrunkEstimate`,
+#'   `ShrunkSE`, and `ShrinkageFactor` columns, and
+#'   `fit$shrinkage_report` records the per-facet prior variance and
+#'   sum of retained weights (not model degrees of freedom). This descriptive
+#'   approximation has no general James-Stein risk guarantee; see
+#'   [apply_empirical_bayes_shrinkage()]. `"laplace"` is retained as a compatibility
+#'   alias for `"empirical_bayes"`; it does not fit a penalized likelihood.
+#' }
+#' \item{\code{facet_prior_sd}}{
+#' Optional numeric scalar. When supplied, the
+#'   shrinkage prior variance is fixed at `facet_prior_sd^2` instead
+#'   of being estimated by method of moments. Useful for eliciting a
+#'   prior from domain knowledge or a previous fit.
+#' }
+#' \item{\code{shrink_person}}{
+#' Logical. When `TRUE` and `facet_shrinkage` is
+#'   active, the same descriptive adjustment is applied to ordinary-JML
+#'   Person estimates with available sampling SEs. Default `FALSE`.
+#'   MML EAP/posterior SDs cannot be used as observations/sampling SEs
+#'   for a second normal-model update; use `FALSE` with other estimators.
+#' }
+#' \item{\code{attach_diagnostics}}{
+#' Logical, default `FALSE`. If `TRUE`, run [diagnose_mfrm()]
+#' once with `residual_pca = "none"` and merge `SE`, `Infit`, `Outfit`,
+#' `InfitZSTD`, `OutfitZSTD` and `PtMeaCorr` from its measures onto Person and
+#' non-Person facet tables. Existing Person SEs, typically MML posterior SDs,
+#' are preserved; diagnostic SEs fill only empty entries. This adds diagnostic
+#' computation and sets `fit$config$attached_diagnostics = TRUE`; `FALSE`
+#' retains the minimal `Facet`/`Level`/`Estimate` layout.
 #' }
 #' \item{\code{checkpoint}}{
-#'   Optional `list(file = ..., every_iter = ...)`.
+#' Optional `list(file = ..., every_iter = ...)`.
 #'   When supplied, the MML EM engine writes its state to `file`
 #'   every `every_iter` outer EM iterations using checked same-directory
 #'   replacement. If the file already exists when the fit starts, the engine
@@ -595,110 +613,24 @@
 #'   `mml_engine = "hybrid"`) honours the checkpoint; the direct
 #'   `optim()` engine ignores it. Use this to make long MML EM
 #'   fits crash-resilient on shared compute environments.
-#' }
-#' \item{\code{maxit}}{
-#'   Computational ceiling on optimizer iterations. The default is
-#'   `400`; for two-family EM this counts outer EM iterations.
-#'   Two-family adaptive initialization also allows this many EM seed iterations;
-#'   it then applies separately to every direct optimizer stage at each start.
-#'   For corrected JML it applies separately to each recorded root-solving stage.
-#'   This is not a convergence criterion or a model-selection control:
-#'   a fit that reaches the ceiling remains non-ready until the common
-#'   convergence and terminal-gradient checks pass. Smaller values used in
-#'   brief examples are for demonstration only and should not be copied into a
-#'   substantive analysis without an explicit computational protocol.
-#' }
-#' \item{\code{reltol}}{
-#'   Portable tolerance setting for the initial optimizer stage.
-#'   For two-family fixed-grid EM, omit this argument and use `em_score_tol`.
-#'   Adaptive two-family direct MML uses `reltol` and the direct optimizer's
-#'   gradient check. New two-family adaptive fits cap the ordinary total-gradient
-#'   review tolerance at `N * 1e-6`, where N is the number of fitted Persons;
-#'   a stricter ordinary tolerance is retained. This aligns optimizer finishing
-#'   with the subsequent per-Person score check. The rule is recorded in the
-#'   fitted controls; older saved fits retain their recorded review convention.
-#'   Curvature, derivative and integration checks remain separate.
-#'   The default is `1e-9`. For BFGS this is passed as `reltol`; for L-BFGS-B
-#'   it is mapped to `factr` and `pgtol`, whose actual values are recorded in
-#'   the fit. When this setting is at least as strict as the public default
-#'   (`reltol <= 1e-9`), optimizer code zero followed by a failed common
-#'   terminal-gradient review triggers a bounded warm-started polish ladder.
-#'   The best non-worsening stage under the recorded selection rule is
-#'   retained. Requested and selected-stage settings remain in `fit$summary`,
-#'   and the complete stage history remains in `fit$opt$optimizer_polish`.
-#'   Ordinary additive RSM/PCM JML without shrinkage can finish a remaining
-#'   stall with at most three sparse Newton steps from the exact likelihood
-#'   information. Each step must reduce the gradient without likelihood loss
-#'   beyond roundoff, pass its linear-solve check and move no coordinate by more
-#'   than one logit. Extreme Persons, nonpositive information and failed
-#'   proposals retain their diagnostic state. The final stage is labelled
-#'   `jml_information_polish`, with method `Newton`, `InformationSteps` and
-#'   `InformationSolveResidual`. This does not correct JML bias or qualify
-#'   interval coverage; the original terminal-gradient criterion still applies.
-#'   If ordinary polishing still stalls, fixed-grid RSM/PCM/GPCM MML fits
-#'   (including estimated population parameters) or adaptive GPCM MML fits
-#'   with a fixed population can use one local curvature step to restart the
-#'   selected optimizer, provided there are at most 64 free parameters. The step requires
-#'   positive-definite, well-conditioned curvature, a smaller gradient and
-#'   an objective that does not worsen beyond floating-point roundoff.
-#'   The original convergence and terminal-gradient criteria still apply;
-#'   failed proposals retain their reasons in the stage history.
-#'   Fixed-grid GPCM MML fits with at most 64 free parameters also check
-#'   numerical curvature after optimizer code zero. Negative curvature can
-#'   trigger up to three BFGS restarts in rescaled search coordinates, even
-#'   when the raw gradient is small. Each restart uses the requested `maxit`
-#'   ceiling. A replacement must pass the original gradient/convergence checks,
-#'   have no detected negative curvature and not worsen the objective beyond
-#'   roundoff. Failed recovery retains the estimate with a numerical warning.
-#'   For fixed-population, fixed-grid RSM/PCM interaction fits, a remaining
-#'   gradient stall also permits one L-BFGS-B polish after subtracting a
-#'   constant from the objective (`centered_objective_polish`). This removes
-#'   the large likelihood constant from relative stopping, without changing
-#'   derivatives or precision requirements. Stored likelihoods retain their
-#'   original scale; a resolved likelihood loss is never accepted.
-#'   This changes only the search coordinates, not the model or information
-#'   matrix used for inference. It does not establish a global optimum,
-#'   adequate quadrature, or valid confidence intervals. Inspect the
-#'   `SmallestCurvature`, `CurvatureScale` and `CurvatureReviewError` fields
-#'   in the stage history alongside the objective and terminal gradient.
-#' }
-#' \item{\code{optimizer}}{
-#'   Direct-optimization method. `"auto"` (default) uses the
-#'   BFGS M step for the two-family EM route. For other routes it uses the
-#'   limited-memory `"L-BFGS-B"` method for MML and for larger JML parameter
-#'   vectors (at least 200 free parameters), while retaining BFGS for smaller
-#'   JML fits. Use `"BFGS"` or `"L-BFGS-B"` to request one method explicitly.
-#'   The method actually used is recorded in `fit$summary$OptimizerMethod`.
-#'   For L-BFGS-B, inspect `OptimizerFactr` and `OptimizerPgtol` rather than
-#'   interpreting `EffectiveReltol` as a native [stats::optim()] control.
-#' }
-#' \item{\code{progress}}{
-#'   Logical; `TRUE` displays a progress indicator with elapsed
-#'   time. Two-family GPCM reports EM iterations, adaptive starts, quadrature
-#'   stages and precision checks; direct optimization reports objective
-#'   evaluations. Other routes may provide only a coarse phase display.
-#'   Iteration/stage limits are budgets, not percent completion or a remaining-
-#'   time forecast: convergence and required refinement are not known in advance.
-#'   Display follows `cli` console settings and is cleared on return, error or
-#'   interruption. The default is silent; it does not change numerical controls
-#'   or become part of saved calibration/replay settings.
+#'
 #' }
 #' \item{\code{jml_penalty}}{
-#'   `"none"` (default) preserves the ordinary estimator.
+#' `"none"` (default) preserves the ordinary estimator.
 #'   Explicit `"jeffreys"` with additive RSM/PCM `method = "JML"` selects
 #'   canonical information-penalized joint estimation. It returns a separate
 #'   `mfrm_jeffreys_fit` with point estimates and numerical checks, without
 #'   ordinary SEs or FACETS diagnostics. See **Jeffreys-penalized JML**.
 #' }
 #' \item{\code{jml_correction_order}}{
-#'   `NULL` (default) leaves the usual estimator
+#' `NULL` (default) leaves the usual estimator
 #'   unchanged. A positive integer explicitly selects an experimental
 #'   profile-score adjustment for shared-owner `model = "GPCM", method = "JML"`.
 #'   There is no automatic choice of order. See **Corrected JML** for the
 #'   input restrictions, uncertainty meaning and connected outputs.
 #' }
 #' \item{\code{jml_correction_sampling}}{
-#'   Sampling assumption for corrected JML's
+#' Sampling assumption for corrected JML's
 #'   Person covariance: `"fixed_rosters"` (default) centers contributions
 #'   within each observed assignment pattern; `"random_rosters"` centers
 #'   globally when assignment patterns are sampled. This changes covariance,
@@ -707,91 +639,40 @@
 #'   variation in their ability composition; neither estimates the variance
 #'   from reassessing the same Persons at fixed abilities. Omit this argument
 #'   when no correction is requested.
-#' }
-#' \item{\code{facet_shrinkage}}{
-#'   Character. `"none"` (default) keeps the unshrunk
-#'   fixed-effects estimates. `"empirical_bayes"` applies a post-hoc
-#'   zero-centered normal-model adjustment to each non-person facet
-#'   (Efron & Morris, 1973); `fit$facets$others` gains `ShrunkEstimate`,
-#'   `ShrunkSE`, and `ShrinkageFactor` columns, and
-#'   `fit$shrinkage_report` records the per-facet prior variance and
-#'   sum of retained weights (not model degrees of freedom). This descriptive
-#'   approximation has no general James-Stein risk guarantee; see
-#'   [apply_empirical_bayes_shrinkage()]. `"laplace"` is retained as a compatibility
-#'   alias for `"empirical_bayes"`; it does not fit a penalized likelihood.
-#' }
-#' \item{\code{facet_prior_sd}}{
-#'   Optional numeric scalar. When supplied, the
-#'   shrinkage prior variance is fixed at `facet_prior_sd^2` instead
-#'   of being estimated by method of moments. Useful for eliciting a
-#'   prior from domain knowledge or a previous fit.
-#' }
-#' \item{\code{shrink_person}}{
-#'   Logical. When `TRUE` and `facet_shrinkage` is
-#'   active, the same descriptive adjustment is applied to ordinary-JML
-#'   Person estimates with available sampling SEs. Default `FALSE`.
-#'   MML EAP/posterior SDs cannot be used as observations/sampling SEs
-#'   for a second normal-model update; use `FALSE` with other estimators.
-#' }
-#' \item{\code{attach_diagnostics}}{
-#'   Logical. When `TRUE`, [diagnose_mfrm()] is
-#'   run once after the fit with `residual_pca = "none"`, and the
-#'   per-level `SE`, `Infit`, `Outfit`, `InfitZSTD`, `OutfitZSTD`, and
-#'   `PtMeaCorr` columns from `diagnostics$measures` are merged onto
-#'   `fit$facets$others` (non-person facets) and `fit$facets$person`
-#'   (Person rows). This is convenient when downstream code expects a
-#'   FACETS Table 7 style facet table with fit statistics in one place,
-#'   and lets `summary(fit)` show per-person fit columns alongside the
-#'   measure. For person rows, an existing posterior `SE` (typical for
-#'   `method = "MML"`) is preserved and the diagnostic `SE` is only
-#'   attached when the existing column is empty. Adds diagnostic
-#'   runtime (typically +1-2 s on moderate designs) and sets
-#'   `fit$config$attached_diagnostics = TRUE`. Default `FALSE`
-#'   preserves the minimal `Facet` / `Level` / `Estimate` layout.
-#' }
-#' \item{\code{fit_scope}}{
-#'   `"full"` (default) fits the ordinary model and retains its
-#'   identification guards. `"comparisons"` explicitly fits only the targets in
-#'   `comparison_review`; see **Comparison-only estimation**.
-#' }
-#' \item{\code{comparison_review}}{
-#'   For `fit_scope = "comparisons"`, the result of
-#'   [describe_mfrm_data()] with `comparisons`, or its `$comparison_review`.
-#'   Pass the review's `fit_arguments` and the same original ratings.
+#'
 #' }
 #' }
 #'
 #' @section Choose a model and its population:
-#' The model/population table and starter examples are in [fit_mfrm()], under
-#' "Choose a model and its population". Changing only `model` need not retain
-#' the population assumptions. Use the specification entries above for exact
-#' settings, and "Model", "GPCM model and inference" and "Two slope families"
-#' below for the corresponding equations and identification constraints.
+#' For the `Rater` and `Criterion` columns in the [fit_mfrm()] example, the model choices
+#' are below. A slope family gives one discrimination per level of its owner;
+#' "two families" does not mean two ability dimensions or just two slopes.
+#' No Q matrix is required or accepted by this unidimensional API.
 #'
-#' @section Choose an estimator and the result you need:
-#' Start with the question-to-estimator overview in [fit_mfrm()] or
-#' `vignette("mfrmr-model-choice", package = "mfrmr")`. For inference conditions,
-#' read the selected estimator's section below: "MML inference conditions",
-#' "Estimator choice and the JML incidental-parameter caveat", "Corrected JML",
-#' "Jeffreys-penalized JML" or "Conditional maximum likelihood". These sections
-#' distinguish point estimation, available uncertainty and unsupported outputs.
+#' | Model | Step owner | Slope owner | MML population |
+#' | --- | --- | --- | --- |
+#' | `RSM` | Shared | Fixed at one | Fixed N(0,1) |
+#' | `PCM` | `Criterion` | Fixed at one | Fixed N(0,1) |
+#' | One-family `GPCM` | `Criterion` | `Criterion` | Estimated mean and SD |
+#' | Two-family `GPCM` | `Rater` | `Criterion`, then `Rater` | Explicit fixed N(0,1) |
 #'
-#' @section Choose the arguments by their purpose:
-#' - **Identify the ratings:** `data` is the rating table; `person`, `facets`
-#'   and `score` are quoted column names, not the values in those columns.
-#' - **Declare the rubric:** set `rating_min`, `rating_max` and
-#'   `category_policy` consistently with [describe_mfrm_data()]. The default
-#'   can collapse gaps; preservation can reveal an unsupported category step.
-#' - **Choose the statistical model:** `model`, `step_facet`, `slope_facet`,
-#'   anchors and population arguments determine what is estimated. Ordinary
-#'   RSM/PCM MML with `population_formula = NULL` fixes N(0,1); the default
-#'   GPCM MML instead estimates the normal population mean and variance.
-#' - **Control computation:** `quad_points`, `maxit`, `reltol`, `optimizer`
-#'   and `mml_engine` govern numerical fitting. Increasing them does not change
-#'   the model's support or automatically justify statistical inference.
-#' - **Choose follow-up output:** `attach_diagnostics = TRUE` computes and
-#'   attaches diagnostics; the default leaves that separate. `summary(fit)`
-#'   explains the result's status; [diagnose_mfrm()] reviews response fit.
+#' Supply these owner names through `step_facet` and `slope_facet`; for two
+#' families use `slope_facet = c("Criterion", "Rater")`. The first three rows
+#' show their default MML populations. Two-family settings must be chosen
+#' explicitly; see "Two slope families" below. One-family slopes are relative.
+#'
+#' Changing only `model` therefore need not hold the population assumptions
+#' constant. For RSM/PCM, estimating its mean and SD requires
+#' `population_formula = ~ 1` and `person_data = unique(ratings["Person"])`.
+#' This is a model choice, not a universal recommendation. Fixing both the
+#' population SD and the one-family GPCM slope geometric mean to one is a
+#' narrower model, not just an alternative reporting scale.
+#'
+#' See "Two slope families" for its required zero-based scores, ordered
+#' owners and narrower output scope. Changing only `slope_facet` is insufficient;
+#' [gpcm_capability_matrix()] identifies supported outputs; the
+#' [GPCM guide](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html)
+#' gives a worked example.
 #'
 #' @section Corrected JML:
 #' When each Person has few ratings, ordinary JML can retain structural bias
@@ -878,42 +759,19 @@
 #' The default MML and uncorrected JML workflows are unchanged.
 #'
 #' @section Two slope families:
-#' A Task by Criterion by Rater model may use
-#' `spec = list(person = "Person", facets = c("Task", "Criterion", "Rater"),
-#' score = "Score", model = "GPCM", method = "MML",
-#' slope_facet = c("Task", "Rater"), slope_reference = "Task",
-#' step_facet = "Criterion", noncenter_facet = "Rater",
-#' gpcm_mml_identification = "fixed_standard_normal")` with
-#' `control = list(mml_engine = "em")`. Pass this specification with your
-#' long-format data to `fit_mfrm()`. Inspect `summary(fit)` for owner roles and
-#' convergence; interval and scoring checks remain separate and experimental.
-#' Neither the number of facets nor successful convergence establishes a
-#' minimum sample size or finite-sample interval coverage.
-#'
 #' To estimate, for example, criterion and assessor discrimination together,
-#' use `slope_facet = c("Criterion", "Assessor")`. The first supplied family
-#' is the default geometric-mean-one reference; `spec$slope_reference` can
-#' select either family by name. The other family's slopes remain free.
-#' Choose `step_facet` and `noncenter_facet` independently among the declared
-#' non-Person facets. All other facet locations and each step set sum to zero.
+#' use `slope_facet = c("Criterion", "Assessor")`. The order declares roles:
+#' the first facet has centered locations and slopes with geometric mean one;
+#' the second has free locations/slopes and owns the centered category steps.
 #' The product of their slopes multiplies the complete adjacent-category
 #' predictor. There is still one ability dimension. Column names and data
 #' column order do not select these roles.
 #'
-#' This route allows additional fixed additive facets and requires `model = "GPCM"`,
+#' This route requires exactly those two non-Person facets, `model = "GPCM"`,
 #' `method = "MML"`, `gpcm_mml_identification = "fixed_standard_normal"`,
 #' either fixed integration with `mml_engine = "em"` or
 #' `mml_integration = "adaptive"` with `mml_engine = "direct"`,
-#' and explicit `step_facet` and `noncenter_facet` names. Keeping both at the
-#' second supplied slope facet and omitting `slope_reference` preserves the
-#' original two-facet specification. Additional facets do not add ability
-#' dimensions. Every query/scoring row must identify all modeled facets;
-#' repeated rows are defined by Person and the complete facet combination.
-#' Stan export from an existing fit preserves these named roles and connects
-#' to saved posterior contrasts, intervals, plots and reports. Its log-slope
-#' prior depends on the source geometric-mean-one reference. Two-family direct
-#' data/spec export, brms, new-Person posterior scoring and simulation remain
-#' unsupported; see [export_mfrm_model()].
+#' and both `step_facet` and `noncenter_facet` set to the second slope facet.
 #' These options must be chosen explicitly; the one-family defaults are not
 #' silently replaced. Use observed, unweighted integer scores on a scale from
 #' zero to `rating_max`, without missing IDs, duplicate person-facet rows or
@@ -979,7 +837,7 @@
 #' `mfrm_results(fit, scores = scores)` without rescoring.
 #' Numerical agreement of the fitting implementation is not a
 #' general identification, convergence or coverage guarantee. See
-#' [online GPCM scope guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html) for a complete example and interpretation.
+#' [mfrmr-gpcm-scope](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html) for a complete example and interpretation.
 #'
 #' @section GPCM model and inference:
 #' One selected facet supplies level-specific positive discriminations. With
@@ -999,7 +857,19 @@
 #' for an equal-slope PCM/GPCM test after verifying matching population and
 #' constraint settings. Fitted-object scoring and information have their own
 #' scope and do not imply a portable GPCM calibration artifact. Consult
-#' `mfrmr_output_guide("gpcm_capabilities")` ([mfrmr_gpcm_scope]) for each operation before using its output.
+#' [gpcm_capability_matrix()] for each operation before using its output.
+#'
+#' @details
+#' Data must be in **long format** (one row per observed rating event).
+#' Exact duplicate Person-by-facet combinations are retained, warned once, and
+#' propagated as a Data review state by default. Repeated cell keys alone do
+#' not establish dependence. With `repeated_ratings = "independent"`, the
+#' analyst declares distinct rating events that are independent conditional
+#' on Person ability and the model's effects. Keep event IDs in the source
+#' data for audit. Event IDs alone do not demonstrate independence; correlated
+#' re-ratings require a suitable dependence model. Adding an estimated occasion
+#' facet changes the response model and is appropriate only when intended.
+#' Repeated ratings do not increase the number of independent Persons.
 #'
 #' @section Model:
 #' `fit_mfrm()` estimates many-facet ordered-response models. The `RSM` and
@@ -1072,7 +942,8 @@
 #' geometric-mean-one constraint is required to resolve the ability/slope
 #' scale because person coordinates are estimated jointly.
 #'
-#' The model name does not imply finite parameter bounds. The JML branch
+#' The model name does not imply finite parameter bounds. The ordinary,
+#' unpenalized JML branch
 #' maximizes the identified joint log-likelihood
 #' without a statistical penalty or finite bounds on person, location, step, or
 #' slope coordinates. Numerical line-search rejection of non-representable
@@ -1094,117 +965,67 @@
 #' Gauss-Hermite quadrature and EAP estimates are computed post-hoc.
 #' With `method = "JML"`, all parameters are estimated jointly as fixed
 #' effects. `"JMLE"` remains an accepted compatibility alias, but package
-#' output now uses `"JML"` as the public label. See the "Estimation methods"
-#' section of [mfrmr-package] for details.
+#' output now uses `"JML"` as the public label. See "Models and estimation" in
+#' [mfrmr-package] for an overview; the estimator-specific sections on this
+#' page give the fitting and inference conditions.
 #'
 #' @section Logistic metric (D = 1):
-#' Native `RSM`, `PCM` and `GPCM` models, including two-family GMFRM, use the
-#' logistic metric (L-metric), with scaling constant \eqn{D = 1}. No additional
-#' normal-ogive approximation factor such as 1.7 or 1.702 multiplies the
-#' adjacent-category predictor. This response-scale convention is separate
-#' from the ability distribution: fixing a population to \eqn{N(0,1)} does
-#' not change the link to a normal-ogive model or introduce a 1.7 multiplier.
+#' Native RSM/PCM/GPCM, including two-family models, use the logistic
+#' metric with \eqn{D=1}; no 1.7/1.702 multiplier is applied. A normal ability
+#' population does not change this link. One ability unit changes adjacent log
+#' odds by 1 in RSM/PCM, by the owner slope in one-family GPCM, and by the slope
+#' product in two-family GPCM, holding other effects fixed.
 #'
-#' In `RSM`/`PCM`, increasing ability by one unit, holding everything else
-#' fixed, increases each adjacent-category log odds by one (one logit).
-#' In one-family `GPCM`, the change is \eqn{\alpha_g} logits; in two-family
-#' GMFRM it is the product of the two component slopes. Thus a one-unit
-#' change in ability is not universally a one-logit change when slopes vary.
-#'
-#' Before comparing or importing parameter values from other software,
-#' reconcile its scaling constant, slope placement and identification
-#' constraints with this model. Changing only the multiplier while retaining
-#' all parameter values changes response probabilities. An equivalent
-#' reparameterization must also transform any affected population parameters,
-#' anchors and, for Bayesian estimation, priors. See [export_mfrm_model()]
-#' for the same L-metric in the supported Stan/brms exports.
-#'
+#' Software comparisons must match scaling, slope placement and constraints.
+#' An equivalent reparameterization also transforms affected population
+#' parameters, anchors and Bayesian priors; changing only the multiplier changes
+#' probabilities. [export_mfrm_model()] uses the same metric.
 #' @section Weighting policy:
-#' `mfrmr` treats `RSM` / `PCM` as the equal-weighting reference route for
-#' operational many-facet measurement. In that Rasch-family branch,
-#' discrimination is fixed, so the scoring model does not differentially
-#' reweight item-facet combinations through estimated slopes.
-#'
-#' `GPCM` is supported as an alternative when users explicitly accept
-#' discrimination-based reweighting. This often improves model fit, but the
-#' package does not treat better fit alone as a sufficient reason to replace an
-#' equal-weighting Rasch-family model.
-#'
-#' The `weight` argument is separate from that modeling choice. It supplies an
-#' observation-weight column; it does not create a free-form facet-weighting
-#' scheme and does not change the fixed-discrimination contract of `RSM` /
-#' `PCM`.
-#'
+#' RSM/PCM is the equal-discrimination reference; GPCM allows
+#' discrimination-based reweighting. Better fit alone does not justify that score
+#' interpretation. Observation `weight` is separate: it powers a row's likelihood
+#' contribution as specified under **Input requirements**, without introducing
+#' free facet weights or changing RSM/PCM discrimination.
 #' @section Input requirements:
-#' Minimum required columns are:
-#' - person identifier (`person`)
-#' - one or more facet identifiers (`facets`)
-#' - observed score (`score`)
+#' Supply person and facet identifiers and an ordered-category score for each
+#' rating row. Binary scores (for example `0/1` or `1/2`) are supported.
+#' Category order enters the likelihood; nominal multinomial, Poisson,
+#' negative-binomial and grouped binomial-trial responses are not supported.
+#' Integer counts supplied as `score` are interpreted as category codes.
+#' Non-numeric score labels are dropped with a warning after coercion;
+#' fractional numeric scores outside the documented rounding tolerance are
+#' rejected rather than truncated.
 #'
-#' Scores are treated as ordered categories. Although the fitted category
-#' probabilities form a multinomial probability vector, category order is part
-#' of the likelihood: unordered nominal/multinomial-logit responses are not
-#' supported. Poisson, negative-binomial, and grouped binomial-trial counts are
-#' also not response families in `fit_mfrm()`. Integer counts supplied as
-#' `score` are interpreted only as ordered category codes.
-#' Non-numeric score labels are dropped with a warning after coercion, whereas
-#' fractional numeric scores outside the rounding tolerance described above
-#' are rejected with an error instead of being silently truncated.
+#' A positive `weight` powers a row's conditional likelihood contribution.
+#' Under MML this differs from replicating a whole Person pattern after
+#' marginalization. It neither makes the score a count outcome nor models
+#' dependence. Non-positive finite weights are excluded during preparation.
+#' Non-unit weights, even if normalized to mean one, exclude ordinary
+#' inference, facet equivalence and the common MML information-criterion panel.
+#' Point estimates and computed curvature/posterior precision remain available
+#' for review, without a sampling-SE or coverage claim. Omitted and explicitly
+#' all-unit weights follow the same eligibility rules. Earlier saved fits need
+#' refitting or a current readiness audit; old inference flags are not reused.
 #'
-#' A positive numeric `weight` may encode a replication/likelihood weight for
-#' an ordered-rating row when weighting that conditional contribution is the
-#' intended estimand. It is not a general collapsed-person frequency-table
-#' interface: under MML, powering responses inside one Person's conditional
-#' pattern is not the same as replicating a complete Person pattern after
-#' marginalization. A weight also does not turn the score into a count outcome
-#' or model dependence among repeated ratings. Non-positive finite weights are
-#' excluded during preparation, and non-unit observation-weight fits are not
-#' eligible for ordinary inference, facet equivalence, or the common MML
-#' information-criterion panel under the current package contract. Normalizing
-#' weights to mean one does not remove this restriction. Point estimates and
-#' computed curvature/posterior precision remain available for diagnostic
-#' review; they do not establish sampling SEs or confidence coverage for the
-#' weighted objective. Omitted weights and explicitly all-unit weights use
-#' the same eligibility rules. Earlier saved fits require refitting or a
-#' current readiness audit; their old inference flags are not carried forward.
+#' The model assumes conditional independence given Person and facet parameters
+#' (Linacre, 1989). Repeated cell identifiers neither establish nor refute it;
+#' `repeated_ratings = "independent"` records a justified analyst declaration.
+#' The `strict_pairwise_local_dependence` screen from
+#' `diagnose_mfrm(fit, diagnostic_mode = "both")` explores residual dependence
+#' beyond the additive predictor; it does not verify the assumption.
 #'
-#' The fitted many-facet ordered-response model assumes conditional
-#' independence of observations given the person and facet parameters
-#' (Linacre, 1989). Repeated ratings of the same
-#' person-criterion combination by the same rater violate this assumption.
-#' When such structures may be present, follow fitting with
-#' `diagnose_mfrm(fit, diagnostic_mode = "both")`; its
-#' `strict_pairwise_local_dependence` screen is an exploratory check for
-#' residual dependence beyond what the additive linear predictor absorbs.
+#' Declare the full `rating_min`/`rating_max` when the intended rubric extends
+#' beyond the observed scores; otherwise the observed range is used. An absent
+#' boundary category is recorded for boundary review; a retained absent internal
+#' category prevents ordinary finite-step fitting. The `score` and
+#' `category_policy` definitions specify recoding, score maps and exceptions.
 #'
-#' Binary responses are therefore supported as ordered two-category scores
-#' (for example `0/1` or `1/2`) under the same ordered-response interface.
-#' If your observed categories do not start at 0, set `rating_min`/`rating_max`
-#' explicitly to avoid unintended recoding assumptions. For example, if the
-#' intended instrument is a 1-5 scale but the current sample only uses 2-5,
-#' set `rating_min = 1, rating_max = 5` to retain the zero-count category 1
-#' in the data-support review. That boundary absence is a review condition for
-#' the separate element-boundary contract, not by itself an unsupported free
-#' step contrast. By contrast, retaining an unobserved internal category in a
-#' polytomous fitted ladder creates an adjacent-step recession direction, so
-#' [fit_mfrm()] stops before optimization rather than reporting finite step
-#' estimates for that ladder.
-#' If these bounds are omitted, the observed score range is used and the
-#' provenance is stored in `fit$prep` and `summary(fit)$settings_overview`.
-#' Set `options(mfrmr.show_inferred_rating_range = TRUE)` when you want an
-#' interactive reminder whenever a bound is inferred.
-#' Data-preparation events such as row drops, ID trimming, duplicate
-#' person-by-facet cells, and single-level facets are stored in
-#' `fit$prep$row_retention` and `fit$prep$preparation_notes`. Routine
-#' row-drop/trim/single-level messages are quiet by default; set
-#' `options(mfrmr.show_preparation_messages = TRUE)` to show them during
-#' interactive checks.
-#'
-#' When `keep_original = FALSE`, observed gaps such as `1, 3, 5` are recoded
-#' internally to a contiguous scale (`1, 2, 3`) and the mapping is stored in
-#' `fit$prep$score_map`. To retain zero-count intermediate categories as part
-#' of the original scale, set `keep_original = TRUE` in addition to supplying
-#' the full `rating_min` / `rating_max` range.
+#' Inspect `fit$prep$row_retention`, `fit$prep$preparation_notes` and
+#' `summary(fit)$settings_overview` for row exclusions, ID trimming, duplicate
+#' cells, single-level facets and inferred bounds. Routine preparation messages
+#' are quiet by default. Set `options(mfrmr.show_preparation_messages = TRUE)`
+#' to display them, or `options(mfrmr.show_inferred_rating_range = TRUE)` for
+#' an interactive reminder when a rating bound is inferred.
 #'
 #' @section Facet effects and rating counts:
 #' In MML, person ability is integrated out under a `N(0, 1)` distribution (or under
@@ -1339,59 +1160,33 @@
 #' when responses are missing or unequal across Persons. Matching the label
 #' "JML" alone does not establish matching estimates or uncertainty.
 #'
-#' Practical recommendation:
-#'
-#' - For manuscript or operational reporting, choose the estimator from the
-#'   inferential target and assumptions, and report the choice. MML integrates
-#'   person measures under a specified population model and provides marginal
-#'   observed-information SEs; consistency of its structural estimates is
-#'   conditional on an adequate response model, population distribution, and
-#'   regularity conditions.
-#' - JML remains useful for a JMLE-oriented FACETS comparison, descriptive or
-#'   exploratory work, and designs with substantial information per person.
-#'   Report its incidental-parameter limitation and the exploratory basis of
-#'   this package's JML structural SEs rather than treating estimator choice as
-#'   a universal reporting rule.
-#' - Native RSM/PCM CML conditions out Person parameters, requiring no ability
-#'   population distribution. It supplies structural-parameter intervals under
-#'   conditional-likelihood regularity; see "Conditional maximum likelihood".
-#'   General GPCM inference uses MML. JML remains a point-estimation/FACETS
-#'   comparison route, not a fixed-exposure truth-centered Wald procedure.
-#'   Third-party CML fits can still be imported with [import_irt_fit()].
+#' Select an estimator by its target and assumptions; [fit_mfrm()] gives the
+#' overview, and the MML/CML sections below state their inference conditions.
+#' Third-party CML fits can be imported with [import_erm_fit()].
 #'
 #' @section MML integration workflow:
-#' Choose integration together with the result you need. The default remains
-#' `mml_integration = "fixed"`, `quad_points = 31`; this order does not certify
-#' accuracy. [mml_quadrature_sensitivity()] compares refits at specified orders.
-#' Review changes in estimates and uncertainty before reporting a fixed-grid fit.
+#' Choose the rule with the required output. Default fixed order 31 is
+#' a starting point; [mml_quadrature_sensitivity()] compares requested refits.
+#' Automatic fitting stores its resolved rule in
+#' `fit$config$estimation_control$mml_integration` and checks/history in
+#' `fit$config$mml_accuracy`. Its algorithm and failure records are defined under
+#' `mml_integration` and `mml_accuracy_control` above.
 #'
-#' For ordinary full direct RSM/PCM or one-family GPCM fitting, `"auto"` checks
-#' the fitted response patterns and refines integration when needed. Read
-#' `fit$config$mml_accuracy` and the resolved rule in
-#' `fit$config$estimation_control$mml_integration`. Downstream support depends
-#' on this resolved rule, which can be adaptive even when the initial rule was
-#' fixed. Check the intended output's model and integration scope before fitting:
-#' - Ordinary fixed-N(0,1) RSM/PCM model and sandwich facet intervals require
-#'   fixed integration, as do joint cell intervals requested with `interaction`
-#'   and independent anchor-source propagation. See [mfrm_facet_intervals()].
-#' - Native-location intervals for estimated-normal RSM/PCM and one-family
-#'   GPCM accept fixed or adaptive direct MML within their stated scope.
-#'   RSM/PCM population-coefficient and residual-variance intervals use the same
-#'   qualification; see [mfrm_population_intervals()]. GPCM latent-regression
-#'   location intervals are unavailable.
-#' - Automatic integration does not support EM/hybrid engines, checkpoints,
-#'   comparison-only fitting or two slope families. ConQuest overlap export
-#'   currently requires a resolved fixed rule.
+#' - Ordinary fixed-N(0,1) RSM/PCM model/sandwich facet intervals, joint interaction
+#'   cell intervals and independent anchor-source propagation require fixed
+#'   integration; see [mfrm_facet_intervals()].
+#' - Supported estimated-normal RSM/PCM and one-family GPCM native-location
+#'   intervals allow fixed/adaptive direct MML. RSM/PCM population intervals use
+#'   the same qualification; GPCM latent-regression location intervals remain
+#'   unavailable. See [mfrm_population_intervals()].
+#' - ConQuest overlap export requires a resolved fixed rule. Ordinary automatic
+#'   integration excludes comparison-only fitting and checkpoints; two-family
+#'   automatic fitting retains its separately specified engine.
 #'
-#' Overall fit readiness, interval eligibility and coverage are different
-#' statements. A supported target-specific interval can have `CIEligible = TRUE`
-#' while its unchanged source fit has `InferenceReady = FALSE`. Inspect the
-#' interval's `Status`, `checks`, `numerical_checks` and cautions. Eligibility
-#' means the procedure's checks passed; it does not establish global
-#' identification, nominal finite-sample coverage or availability of other
-#' inference procedures. Automatic likelihood/gradient/posterior checks also
-#' do not replace the interval's full-information and finer-order review.
-#'
+#' A target-specific `CIEligible = TRUE` can coexist with source
+#' `InferenceReady = FALSE`. Read interval status, numerical checks and cautions:
+#' likelihood/gradient/posterior accuracy does not replace full-information review
+#' or establish identification, finite-sample coverage or support for other targets.
 #' @section MML inference conditions:
 #' There is no ten-response-row minimum. Full RSM/PCM JML, native CML and
 #' fixed-population MML can accept one Person when their model-specific checks
@@ -1401,8 +1196,9 @@
 #' explicitly declared repeated ratings are not evidence that independence holds.
 #' The returned preparation note, interval cautions and summary explain the
 #' single-Person limitation. Any available model-information interval remains
-#' an unqualified normal approximation; one Person supplies neither independent-
-#' Person sandwich uncertainty nor empirical between-Person variation.
+#' a normal approximation without established finite-sample coverage; one Person
+#' supplies neither independent-Person sandwich uncertainty nor empirical
+#' between-Person variation.
 #' Estimated-population MML, GPCM, corrected JML and comparison-only fitting
 #' retain their at-least-two-Person software scope. Data and anchor review can
 #' inspect one Person. The calibration interface still requires two observed
@@ -1410,7 +1206,7 @@
 #' precision. Scoring one Person against saved calibration is a separate task;
 #' see [score_mfrm_calibration()]. Small supported datasets can
 #' return point estimates and asymptotic uncertainty when the model-specific
-#' checks pass. A singleton category count alone need not prevent RSM/PCM
+#' checks pass. Singleton counts or empty local category cells alone need not prevent RSM/PCM
 #' model-information intervals: [mfrm_facet_intervals()] performs a separate
 #' joint-information and quadrature review and retains the small-sample caution.
 #'
@@ -1553,7 +1349,7 @@
 #'   caveated sensitivity evidence. Full FACETS-style score-side contract
 #'   review, posterior predictive checks, and MCMC estimation are not available
 #'   for `GPCM`. Use
-#'   `mfrmr_output_guide("gpcm_capabilities")` ([mfrmr_gpcm_scope]) as the formal boundary statement for the
+#'   [gpcm_capability_matrix()] as the formal boundary statement for the
 #'   current `GPCM` scope.
 #'
 #' Latent-regression status:
@@ -1583,46 +1379,21 @@
 #'   table internally during scoring.
 #'
 #' @section Latent-regression workflow:
-#' For an initial latent-regression run, keep the setup explicit:
-#' 1. Put response data in `data`, with one row per rating event.
-#' 2. Put background variables in `person_data`, with exactly one row per
-#'    person. The ID column must match `person`, or be supplied through
-#'    `person_id`.
-#' 3. Use `method = "MML"` and a one-sided formula such as
-#'    `population_formula = ~ Grade + Group`.
-#' 4. Numeric/logical and factor/character predictors are expanded with
-#'    `stats::model.matrix()`. After fitting, inspect
-#'    `summary(fit)$population_coding` to see the fitted levels, contrasts, and
-#'    encoded design columns that will be reused for scoring/replay.
-#' 5. Start with `population_policy = "error"` while preparing data. Use
-#'    `"omit"` only when complete-case removal is intended, and then inspect
-#'    `summary(fit)$population_overview` and `summary(fit)$caveats` before
-#'    reporting results.
-#' 6. Report `summary(fit)$population_coefficients` as coefficients of the
-#'    conditional-normal latent population model, not as a post hoc regression
-#'    on EAP or MLE scores.
+#' Set MML, a one-sided `population_formula` and matching `person_data`;
+#' their definitions above specify coding and missingness. Inspect
+#' `summary(fit)$population_coding`, `$population_overview` and `$caveats`.
+#' `$population_coefficients` estimates the conditional-normal latent model,
+#' not regression on EAP/MLE scores. With covariates, `sigma2` is residual variance;
+#' marginal variance also depends on their distribution.
 #'
-#' With covariates, the estimated `sigma2` is the residual variance of ability
-#' conditional on those covariates, not the marginal population variance.
-#' Marginal variance also depends on the distribution of the covariates.
-#' Standardization and polynomial/spline bases learned during fitting are
-#' reused for new persons; changing the scoring cohort does not redefine them.
-#' For custom transformations, supply a prediction-aware R transformation or
-#' precompute predictors with fixed training constants. Older saved fits can
-#' reconstruct transformed terms only from retained person data that reproduce
-#' the training design; otherwise scoring requests a new calibration fit.
-#'
-#' For an intercept-only model, `population_formula = ~ 1` estimates a single
-#' population mean and variance by default. In supported RSM/PCM direct MML,
-#' `population_sd = 1` instead fixes the SD and estimates only the mean.
-#' Training still requires a one-row-per-person
-#' ID table in `person_data`. Adjusting these two moments retains a normal
-#' population shape; it does not learn skewness or establish that the training
-#' population represents the people who will receive scores. New-Person
-#' intervals condition on the estimated calibration and population parameters
-#' and exclude uncertainty from estimating them. Current population-model
-#' scoring remains a review workflow; see [predict_mfrm_units()].
-#'
+#' Scoring reuses training transformation bases. Custom transformations must
+#' support prediction or use predictors precomputed with fixed training constants.
+#' Old fits can reconstruct terms only when retained Person data reproduce the
+#' training design; otherwise refitting is needed. An intercept-only formula
+#' estimates mean/variance by default; supported RSM/PCM with `population_sd`
+#' fixes the SD and still needs an ID table. These normal models do not establish
+#' representativeness. New-Person intervals condition on calibration/population
+#' estimates; [predict_mfrm_units()] describes that review workflow.
 #' @section Latent-regression standard-error caveat:
 #' `summary(fit)$population_coefficients` reports point estimates of
 #' \eqn{\hat{\boldsymbol{\beta}}}; `population_overview` reports the estimated
@@ -1850,45 +1621,6 @@
 #' by themselves establish global structural identification, weak-information
 #' status, or readiness.
 #'
-#' For unanchored additive RSM/PCM MML with an estimated normal population
-#' variance and unit weights, inspect
-#' `fit$data_review$estimability$normal_population_identification` (also retained
-#' in `summary(fit)$data_review`). This separate analytic sufficient-condition
-#' audit uses the adjacent-logit design for Persons with at least two ratings.
-#' Full column rank at every recorded tolerance gives
-#' `state = "sufficient_conditions_met"`. A full-rank repeated-Person subset
-#' suffices even when other Persons have single ratings; those observations
-#' remain in the fit. Failure of this subset condition is `"inconclusive"`,
-#' not a proof of nonidentification. Anchors, interactions, fixed population
-#' variance, nonunit weights and unresolved repeated-cell dependence are
-#' outside this audit. Older saved fits have no new certificate unless refitted.
-#'
-#' This result is conditional on independent Persons, conditionally independent
-#' ratings, a correctly specified normal population with strictly positive finite
-#' variance, finite structural parameters, and fixed or noninformatively assigned
-#' rosters conditional on the covariates. These assumptions are stated, not tested
-#' by the design rank. The criterion concerns possible model categories, including
-#' categories absent from the observed sample.
-#'
-#' To see the sufficient direction, ratios of equal-total response-pattern
-#' probabilities identify all threshold differences within each repeated roster.
-#' Holding those differences fixed leaves one common location shift per Person.
-#' The total-score probabilities for scores 0, 1 and 2 identify the normal
-#' location and variance: the difference of two distinct normal densities has
-#' at most two sign changes and cannot be orthogonal to all three corresponding
-#' exponential functions under the positive response-normalizing weight.
-#' Full rank of the joint location/step/population design then removes the
-#' remaining common shifts. This argument uses fixed unit slopes and the normal
-#' family; it does not identify an unrestricted mixing distribution.
-#'
-#' The certificate does not evaluate a retained solution's boundary status,
-#' existence or global optimality, numerical accuracy, weak information or
-#' interval coverage. It neither changes `FormalInference` nor replaces the
-#' separate local-score, boundary and integration checks. In particular, it
-#' does not qualify inference at zero residual variance. A numerical local-score
-#' audit can still be unevaluated because of its execution limits even when
-#' this conditional analytic sufficient condition is met.
-#'
 #' `fit$data_review$estimability$nonlinear_local_estimability` interprets only
 #' the first-order local rank that these maps support. For JML GPCM, full
 #' column rank of the complete conditional adjacent-logit Jacobian is a
@@ -1904,90 +1636,24 @@
 #' unclassified.
 #'
 #' @section Choosing maxit without result-driven tuning:
-#' Treat `maxit` as a predeclared computational budget, not as a value to tune
-#' until preferred estimates appear.
+#' Prespecify the model and numerical controls, including an iteration
+#' ceiling sequence. Increase a reached ceiling with other choices held fixed;
+#' do not select runs by desired estimates or significance. More iterations
+#' cannot repair identification or JML incidental-parameter bias.
 #'
-#' 1. Choose the model, estimation method, optimizer, tolerance, quadrature
-#'    rule, and initial `maxit` before examining coefficient or fit results.
-#'    The default `maxit = 400` is the package starting point for an analysis.
-#' 2. Inspect `FitReadiness` and `InferenceReady`, together with the eligibility
-#'    and reasons for the specific calculation. RSM/PCM model intervals can
-#'    pass their own singleton-category and information checks while the fit
-#'    retains its category review; see [mfrm_facet_intervals()]. This exception
-#'    does not waive numerical convergence. Also inspect purpose-specific Design,
-#'    Stability, Diagnostics, and Reporting workflow rows. Optimizer code zero
-#'    alone is insufficient. A missing, nonfinite or incomplete terminal gradient
-#'    produces `ConvergenceReason = "code_zero_unavailable_gradient"` and review
-#'    status, even when the optimizer reports code zero. Resolve the numerical
-#'    evaluation before using the fit for inference; more iterations alone do
-#'    not establish a valid gradient.
-#' 3. If `ConvergenceStatus == "iteration_limit"`, keep that fit review-only.
-#'    Refit the same data, model, method, anchors, optimizer, tolerance, and
-#'    quadrature rule with the next ceiling in a prespecified sequence, such as
-#'    400, 800, then 1600. Do not choose among runs by coefficient size,
-#'    statistical significance, fit statistics, or agreement with an expected
-#'    answer.
-#' 4. The first run in that sequence that satisfies the numerical-readiness
-#'    criteria becomes
-#'    eligible for interpretation. If separately ready runs differ materially,
-#'    treat the difference as numerical instability and review the model,
-#'    identification, data support, and optimizer rather than selecting the
-#'    preferred result.
-#' 5. Report the requested `maxit`, actual iteration/evaluation counts,
-#'    convergence status and reason, optimizer, terminal gradient, and any
-#'    polishing stages. These are retained in `fit$summary` and
-#'    `fit$opt$optimizer_polish`.
-#'
-#' This rule applies to both JML and MML. JML can require a larger computation
-#' budget because it estimates one fixed effect per person; increasing `maxit`
-#' does not make JML equivalent to MML and must not be used to switch the
-#' estimand after seeing results.
-#'
+#' Optimizer code zero is insufficient. An absent/nonfinite/incomplete terminal
+#' gradient gives `ConvergenceReason = "code_zero_unavailable_gradient"`.
+#' Inspect `FitReadiness`, `InferenceReady` and target-specific reasons. A separate
+#' interval check may qualify a reviewed category configuration, but never waives
+#' convergence. Material differences between numerically ready runs require
+#' stability review. Report iteration/evaluation counts, controls, terminal
+#' gradient and polish history; numerical readiness alone is not inference.
 #' @section Performance tips:
-#' When JML is the prespecified estimand, it is often faster than MML but may
-#' require a larger `maxit` on larger datasets. Do not switch from MML to JML
-#' only to shorten runtime: integrating over a population distribution and
-#' treating person parameters as fixed effects are different analysis choices.
-#'
-#' For MML runs, `quad_points` is the main accuracy/speed trade-off.
-#' The `@param quad_points` tier table is the authoritative reference;
-#' in short:
-#' - `quad_points = 7` is a lightweight screening setting; do not use its IC
-#'   values for automatic model selection.
-#' - `quad_points = 15` is an intermediate review option when runtime matters;
-#'   automatic IC ranking remains disabled.
-#' - `quad_points = 31` is the package default and a starting point, not a
-#'   guarantee that integration error is negligible.
-#' - `quad_points = 61` (or higher) supplies candidate denser grids at
-#'   additional computational cost; no fixed order is sufficient for every
-#'   response pattern.
-#' - Use [mml_quadrature_sensitivity()] to inspect same-data movement without
-#'   an automatic stable/unstable decision.
-#' - `mml_engine = "direct"` remains the most stable general-purpose path.
-#' - `mml_engine = "em"` or `"hybrid"` currently target `RSM` / `PCM` fits
-#'   without a latent-regression population model.
-#' - Benchmark your own workload before using `mml_engine = "em"` or
-#'   `"hybrid"` for final reporting; `direct` remains the documented default
-#'   when you have not compared engines for your data.
-#' - When a direct code-zero stage stops ahead of the terminal-gradient check,
-#'   bounded polishing is automatic. Inspect `fit$opt$optimizer_polish$Stages`
-#'   rather than repeatedly lowering `reltol` without reviewing the retained
-#'   objective, gradient, and parameter changes.
-#'
-#' Downstream diagnostics can also be staged:
-#' - use `diagnose_mfrm(fit, residual_pca = "none")` for a quick first pass
-#' - add residual PCA only when you need exploratory residual-structure evidence
-#'
-#' Downstream diagnostics report `ModelSE` / `RealSE` columns and related
-#' reliability indices. For `MML`, non-person facet `ModelSE` values are based
-#' on the observed information of the marginal log-likelihood and person rows
-#' use posterior SDs from EAP scoring. For `JML`, these quantities remain
-#' exploratory approximations and should not be treated as equally formal.
-#'
-#' For `GPCM`, residual-based mean-square fit screens are also
-#' best treated as exploratory diagnostics rather than strict Rasch-style
-#' invariance tests, because the discrimination parameter is free.
-#'
+#' Use the controls above for the intended estimand; switching MML to
+#' JML changes the statistical model's treatment of Persons. Inspect recorded
+#' polishing before tightening tolerances. For supported ordinary diagnostics,
+#' `diagnose_mfrm(fit, residual_pca = "none")` defers exploratory PCA. Neither
+#' engine choice nor a fixed grid guarantees faster or accurate estimation.
 #' @section Interpreting output:
 #' Start with `summary(fit)` and the estimator selected above. For ordinary
 #' MML/JML results, read its `$decision` before interpreting the Person and
@@ -1996,19 +1662,9 @@
 #' A reported estimate, numerical convergence and an eligible confidence
 #' interval are different claims. Read the associated checks and limitations.
 #'
-#' @section Typical workflow:
-#' 1. Fit the prespecified model and inspect `summary(fit)`.
-#' 2. For ordinary MML/JML RSM/PCM, collect `res <- mfrm_results(fit)` and
-#'    inspect `summary(res)$triage` and `$next_actions`. Pass already computed
-#'    diagnostics through `diagnostics = diagnostics` to reuse them.
-#' 3. Choose `plot(res, ...)`, [mfrm_report()], [export_mfrm_results()] or
-#'    `saveRDS(res, file)` according to the output you need. See
-#'    [mfrmr_reports_and_tables] for the complete example.
-#' 4. For CML, use [mfrm_facet_intervals()] and its own summary, plot,
-#'    [apa_table()] and RDS saving. For GPCM or extended models, use
-#'    `mfrmr_output_guide("gpcm_capabilities")` and [mfrm_results()] to select supported
-#'    outputs. Shared function names do not make ordinary diagnostics or
-#'    scoring available for every estimator or result class.
+#' For reporting and saving, follow [mfrmr_reports_and_tables] and the
+#' model-specific [mfrm_results()] scope. Shared function names do not make
+#' ordinary diagnostics or scoring available for every estimator.
 #'
 #' @section Information-criterion contract:
 #' For an eligible fixed-facet `MML` fit, let `D = -2 * LogLik`, let `k` be
@@ -2239,8 +1895,9 @@
 #' `FormalInferenceEligible = TRUE`, `SE`, and pointwise 95 percent `Lower`/`Upper`
 #' limits. If only information fails, identified finite numerical points instead
 #' have `EstimateStatus = "conditional_point"`, `FormalInferenceEligible = FALSE`,
-#' missing SE/bounds and an `EstimateReason` explaining the failure. Unidentified,
-#' boundary or unqualified-stationarity targets do not acquire point estimates.
+#' missing SE/bounds and an `EstimateReason` explaining the failure. Targets that
+#' are unidentified, on a boundary, or fail stationarity checks do not acquire
+#' point estimates.
 #' `$covariance` retains available joint covariance; unidentified or
 #' failed covariance entries remain `NA`. The result also retains
 #' `person_totals`. These are asymptotic intervals under the CML assumptions above,
@@ -2338,8 +1995,9 @@
 #'   The identification convention pins the geometric mean of finite optimizer
 #'   slopes at 1.
 #' - `readiness`: the versioned fit record, five component rows, and current
-#'   parameter-level rows. The current parameter slice includes GPCM slopes;
-#'   other non-Person parameter classes remain scheduled for later propagation.
+#'   parameter-level rows for GPCM slopes. This component does not provide
+#'   parameter-level status rows for other non-Person effects; inspect their
+#'   estimate and interval tables for availability and reasons.
 #' - `interactions`: model-estimated facet interaction effects and metadata
 #'   when `facet_interactions` is supplied
 #' - `population`: population-model metadata. Ordinary RSM/PCM and JML fits
@@ -2366,10 +2024,6 @@
 #'   evaluation-cache counters. For direct fitting, its core fields originate
 #'   from [stats::optim()]; EM additionally records engine-specific diagnostics.
 #'
-#'
-#' @seealso [fit_mfrm()], [describe_mfrm_data()], [review_mfrm_anchors()],
-#'   [export_mfrm_model()], [diagnose_mfrm()], [mfrm_results()],
-#'   [mfrmr_gpcm_scope], [mfrmr_workflow_methods], [mfrmr_methods_reference]
-#' @concept estimation technical reference
+#' @seealso [fit_mfrm()], [mfrmr_methods_reference]
 #' @name fit_mfrm_technical_details
 NULL

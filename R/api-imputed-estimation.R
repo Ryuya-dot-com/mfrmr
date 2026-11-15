@@ -53,22 +53,10 @@ fit_mfrm_imputed <- function(x, model = c("RSM", "PCM"), step_facet = NULL, ...)
     "person_data", "person_id", "population_policy", "population_sd", "facet_shrinkage",
     "facet_prior_sd", "shrink_person", "checkpoint", "gpcm_mml_identification",
     "slope_facet", "mml_integration", "attach_diagnostics")
-  allowed <- setdiff(.mfrm_fit_canonical_names(), c(blocked, "model", "step_facet"))
+  allowed <- setdiff(names(formals(fit_mfrm)), c(blocked, "model", "step_facet"))
   if (length(dots) && (is.null(names(dots)) || anyNA(names(dots)) ||
-      any(!nzchar(names(dots))) || anyDuplicated(names(dots)))) {
-    stop("Use named, supported shared fitting controls; the workflow fixes data, scale and MML identification.", call. = FALSE)
-  }
-  if ("spec" %in% names(dots) || "control" %in% names(dots)) {
-    spec_in <- if ("spec" %in% names(dots)) .mfrm_validate_spec_list(dots$spec, "fit_mfrm_imputed()") else list()
-    ctrl_in <- if ("control" %in% names(dots)) .mfrm_validate_control_list(dots$control, "fit_mfrm_imputed()") else list()
-    rest_dots <- dots[setdiff(names(dots), c("spec", "control"))]
-    merged_nms <- c(names(spec_in), names(ctrl_in), names(rest_dots))
-    if (anyDuplicated(merged_nms)) {
-      stop("Use named, supported shared fitting controls; the workflow fixes data, scale and MML identification.", call. = FALSE)
-    }
-    dots <- c(spec_in, ctrl_in, rest_dots)
-  }
-  if (length(dots) && any(!names(dots) %in% allowed)) {
+      any(!nzchar(names(dots))) || anyDuplicated(names(dots)) ||
+      any(!names(dots) %in% allowed))) {
     stop("Use named, supported shared fitting controls; the workflow fixes data, scale and MML identification.", call. = FALSE)
   }
   arguments <- c(list(person = s$person, facets = s$facets, score = s$score,
@@ -185,7 +173,7 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #' They are not robust intervals, simultaneous rater decisions or general
 #' coverage guarantees. Do not pool EAPs, posterior SDs, fit statistics, cluster
 #' labels or likelihood-ratio tests with this function. See the executable
-#' assigned-score example in [online response-imputation guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-response-imputation.html).
+#' assigned-score example in [mfrmr-response-imputation](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-response-imputation.html).
 #' It compares joint RSM predictive completions with direct observed-score
 #' inference. Proper calibration priors in the imputer and MML estimates in
 #' the completed-data analyses do not give exactly identical Bayesian moments:

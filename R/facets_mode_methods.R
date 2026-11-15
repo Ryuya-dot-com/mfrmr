@@ -39,7 +39,7 @@ round_numeric_frame <- function(df, digits = 3L) {
 #'   `summary()`
 #'
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("summary.mfrm_facets_run", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -145,8 +145,7 @@ NULL
 #' 1. Run [run_mfrm_facets()].
 #' 2. Start with `plot(out, type = "fit", draw = FALSE)`.
 #' 3. Continue with `plot(out, type = "qc", draw = FALSE)` for diagnostics.
-#' @return For `plot()`: A `ggplot` object (or `mfrm_plot_bundle` of `ggplot`
-#'   objects when `type = "fit"` delegates to `type = "bundle"`).
+#' @return For `plot()`: A plotting object from the delegated plot route.
 #' @seealso [run_mfrm_facets()], [plot.mfrm_fit()], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics], [mfrmr_workflow_methods]
 #' @examples # Long-running workflow; run explicitly when needed.
@@ -162,9 +161,9 @@ NULL
 #'   maxit = 30
 #' )
 #' p_fit <- plot(out, type = "fit", draw = FALSE)
-#' plot_data(p_fit$wright_map)$plot
+#' plot_data(p_fit$wright_map, "locations")
 #' p_qc <- plot(out, type = "qc", draw = FALSE)
-#' plot_data(p_qc)$plot
+#' p_qc$data$plot
 #'
 #' }
 #' @export

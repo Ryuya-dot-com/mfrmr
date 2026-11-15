@@ -104,7 +104,7 @@
 #'   and availability criterion. Six-rater Monte Carlo uncertainty also
 #'   prevented a conclusive material-undercoverage decision in this study.
 #'   An earlier known-ability-SD pilot found 84.2% six-rater coverage. See
-#'   [online random-rater guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html) for designs and Monte Carlo intervals.
+#'   [mfrmr-random-raters](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.html) for designs and Monte Carlo intervals.
 #'   These studies do not establish a safe minimum rater count. Numerical
 #'   checks do not certify statistical validity or shared-rater Laplace accuracy.
 #'
@@ -123,7 +123,7 @@
 #' likelihood solution, an absolute likelihood normalization, the entire SD
 #' profile, variance boundaries or repeated-sampling interval coverage. Person
 #' quadrature checks remain distinct from this comparison. See
-#' [online random-rater guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html) for the reference-precision limits and scope.
+#' [mfrmr-random-raters](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.html) for the reference-precision limits and scope.
 #' @section Model assumptions and related research:
 #' A shared rater effect represents differences in usual severity across
 #' raters, not inconsistency within a rater or differential severity toward a
@@ -149,7 +149,7 @@
 #' whereas [fit_mfrm_testlet()] uses a distinct effect for each Person/block
 #' pair, even when the block is named Rater. These sharing structures lead
 #' to different marginal likelihoods and prediction targets; the two routes
-#' cannot currently be combined. See [mfrmr_gpcm_scope] for the
+#' cannot currently be combined. See [gpcm_capability_matrix()] for the
 #' relationship to fixed slope families and local independence.
 #'
 #' @section Comparison with fixed-rater MFRM:
@@ -194,7 +194,7 @@
 #'   [mfrm_response_diagnostics()] for descriptive posterior predictive residuals,
 #'   [confint.mfrm_random_rater()], [mfrm_random_rater_intervals()], [mfrm_results()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("fit_mfrm_random_rater", run.dontrun = TRUE)
 #' \dontrun{
 #' # Inspecting this saved synthetic fit does not require RTMB.
@@ -206,8 +206,7 @@
 #' #   facets = "Criterion", score_levels = 1:4, quad_points = 121)
 #' summary(fit)
 #' plot(fit)
-#' recipe <- system.file("examples", "extended-models.R", package = "mfrmr")
-#' # Run source(recipe) separately to regenerate the saved fits.
+#' system.file("examples", "extended-models.R", package = "mfrmr")
 #' }
 #' @export
 #' @order 1

@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-results.R
 \name{mfrm_results}
 \alias{mfrm_results}
-\title{Build comprehensive first-screen MFRM results}
+\title{Collect fitted estimates, diagnostics and reporting tables}
 \usage{
 mfrm_results(
   fit,
@@ -154,29 +154,43 @@ Depending on \code{output}, an \code{mfrm_results} object, a
 \code{mfrm_results_html} object.
 }
 \description{
-Build comprehensive first-screen MFRM results
+Combine a fitted model and its matching diagnostics into a reusable
+\code{mfrm_results} object for \code{\link[=mfrm_report]{mfrm_report()}}, \code{plot()} and
+\code{\link[=export_mfrm_results]{export_mfrm_results()}}. With \code{res <- mfrm_results(fit)}, requested diagnostics
+are computed if needed; pass \code{diagnostics = diagnostics} to reuse them.
+Start with \code{summary(res)$decision} and \code{summary(res)$status}. Unsupported sections remain
+marked unavailable. A \code{summary(fit)} object is not this reporting input.
 }
 \details{
-\code{mfrm_results()} is a high-level result object. It does not introduce a new
-estimator or a new validity rule. It fits only when \code{fit} is a data frame,
-computes diagnostics automatically when needed, and collects output from
-functions such as \code{\link[=diagnose_mfrm]{diagnose_mfrm()}},
-\code{\link[=fit_measures_table]{fit_measures_table()}}, \code{\link[=precision_review_report]{precision_review_report()}}, and
-\code{\link[=reporting_checklist]{reporting_checklist()}}. Sections that are unsupported for a particular fit
-are retained in the \code{status} table as \code{not_available} rather than stopping
-the whole results workflow. The additive \code{readiness} table keeps Numerical,
-Data, Design, Stability, Diagnostics, Reporting, and Plot interpretation
-states separate. Plot routes can therefore remain available for diagnosis
-while \code{InterpretationStatus} marks them as review-only. The returned object
-also carries
-\code{next_actions} and \code{input$reproducible_code} so users can move from the
-comprehensive first screen to explicit reporting or replay code.
-The examples call this object \code{res} to distinguish it from
-\code{results <- summary(fit)} in the quick start. Use \code{mfrm_report(res)} and
-\code{export_mfrm_results(res)} for reporting and export; those functions need
-the comprehensive results object. If diagnostics were already computed,
-pass them with \code{diagnostics = diagnostics} to reuse them.
+This function collects existing analyses; it does not create a new estimator
+or upgrade inferential support. It fits a model only for the restricted
+data-frame input described below. Prefer an explicit \code{\link[=fit_mfrm]{fit_mfrm()}} call in
+research scripts so that the data roles and model assumptions are recorded.
+
+\code{status} retains unsupported sections as \code{not_available}. \code{readiness} separates
+Numerical, Data, Design, Stability, Diagnostics, Reporting and plot-interpretation
+states. A plot may be available for diagnosis while its \code{InterpretationStatus}
+is review-only. \code{next_actions} and \code{input$reproducible_code} retain follow-up
+and replay instructions.
 }
+\section{What to inspect first}{
+
+Read \code{summary(res)$decision}, \verb{$triage} and \verb{$next_actions} before
+the detailed tables. \code{decision} combines source readiness with saved diagnostic
+precision: missing precision remains unreviewed, and a positive precision
+assessment cannot override fit restrictions. Summarizing computes no new
+diagnostics and does not establish coverage.\tabular{ll}{
+   Field \tab Read it for \cr
+   \code{overview} \tab Input mode, model/method and table/plot counts \cr
+   \code{readiness} \tab Separate analysis and plot-interpretation checks \cr
+   \code{fit_readiness}, \code{fit_readiness_components}, \code{fit_readiness_parameters} \tab Exact source-fit records, distinct from workflow readiness \cr
+   \code{triage} \tab Signals ordered unavailable/review/info/ok \cr
+   \code{status} \tab Available, skipped and unsupported sections \cr
+   \code{plot_map} \tab Supported routes and their interpretation status \cr
+   \code{next_actions}, \code{reproducible_code} \tab Follow-up calls and first-screen replay \cr
+}
+}
+
 \section{Include presets}{
 
 \itemize{
@@ -214,28 +228,6 @@ also supply \code{response_time_data = original_data} because fitted objects kee
 only the measurement columns needed for estimation.
 }
 
-\section{What to inspect first}{
-
-Start with \code{summary(res)}. The most useful fields are:
-\itemize{
-\item \code{overview}: input mode, model, method, table count, and plot-route count
-\item \code{decision}: plain-language interpretation, formal-inference, reason, and
-next-action text derived from source-fit readiness and the saved diagnostic
-precision profile. Missing precision remains unreviewed; a positive
-precision assessment cannot override source-fit restrictions. Reading this
-summary does not compute new diagnostics or establish sampling coverage.
-\item \code{readiness}: separate analysis and plot-interpretation checks
-\item \code{fit_readiness}, \code{fit_readiness_components}, and
-\code{fit_readiness_parameters}: the exact source-fit readiness record retained
-separately from the workflow-level \code{readiness} table
-\item \code{triage}: first-screen signals ordered by unavailable/review/info/ok
-\item \code{status}: which sections were available, skipped, or unsupported
-\item \code{plot_map}: supported plot routes, availability, and interpretation status
-\item \code{next_actions}: recommended follow-up calls
-\item \code{reproducible_code}: replay script for the first-screen route
-}
-}
-
 \section{Data-frame input}{
 
 Direct data-frame input is intentionally narrow. It accepts unambiguous
@@ -250,49 +242,27 @@ method, anchors, and missing-data rules are recorded. Use
 
 \section{Visualization and HTML}{
 
-For ordinary models, \code{plot(res)} routes to the primary native Wright map when the fitted object
-contains compatible person and facet locations. This default retains
-available mfrmr facet uncertainty. Use \code{plot(res, type = "fit")} when the
-explicit three-plot Wright/pathway/category bundle is wanted. The compact
-native default discloses any omitted facet locations in its subtitle and
-\code{data$retention}; use \code{plot(res, top_n = Inf)} for a complete final map.
-Other routes include \code{plot(res, type = "wright")}, \code{"pathway"},
-\code{"fit_pathway"}, \code{"qc"}, \code{"category"}, \code{"anchors"}, \code{"response_time"},
-and \code{"tables"}. The Wright map is the required first fitted-scale figure;
-\code{"fit_pathway"} is a follow-up with Infit or Outfit on the horizontal axis
-and measure on the vertical axis. \code{output = "html"} writes a
-lightweight temporary HTML file;
-use \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}} when you want an optional local Shiny reader
-for an already-created \code{mfrm_results} object. Use
-\code{\link[=export_mfrm_results]{export_mfrm_results()}} for a compact analysis archive of the comprehensive
-results object, or \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} when a fit-centered durable
-analysis archive is needed. Neither route deidentifies its contents.
+For compatible ordinary fits, \code{plot(res)} draws a Wright map;
+\code{type = "fit"} requests the Wright/pathway/category bundle. Select other views
+from \code{summary(res)$plot_map}; \code{fit_pathway} places Infit/Outfit against measure.
+After \code{p <- plot(res, draw = FALSE)}, inspect \code{plot_data(p)$retention} and notes
+for omissions; \code{top_n = Inf} requests every level. Ordinary maps retain their
+own facet-uncertainty definitions.
+
+\code{output = "html"} creates a temporary report. \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}} is an
+optional local Shiny reader for an existing result. For durable archives,
+use \code{\link[=export_mfrm_results]{export_mfrm_results()}} on the result or \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} on the fit;
+neither deidentifies the contents.
 }
 
-\section{Typical workflow}{
+\section{Reporting and saving}{
 
-\enumerate{
-\item Fit explicitly with \code{\link[=fit_mfrm]{fit_mfrm()}} in scripts and manuscripts.
-\item Call \code{res <- mfrm_results(fit)}.
-\item Read \code{summary(res, view = "brief")} and its \code{readiness} table, then create
-the required
-\code{plot(res, type = "wright", show_ci = TRUE, top_n = Inf)} figure.
-\item Read \code{summary(res)$triage}, \code{summary(res)$status},
-\code{summary(res)$plot_map}, and \code{summary(res)$next_actions}.
-\item Call \code{report <- mfrm_report(res)} when a report-ready surface is needed.
-\item Use \code{export_mfrm_results(res, preset = "starter")} to write the Wright
-map, CSV, report, RDS, replay, and
-manifest files for controlled review. Treat the folder as potentially
-identifying unless it has been separately transformed and reviewed under
-the applicable data-handling policy.
-\item Use \code{plot(res, type = "fit_pathway", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")}
-or
-\code{plot(res, type = "qc")} for focused visual follow-up.
-\item Optionally inspect the same result with \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}} in an
-interactive session.
-\item Use \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} or the helper named in
-\code{summary(res)$next_actions} for report-specific follow-up.
-}
+Pass \code{res} to \code{\link[=mfrm_report]{mfrm_report()}} or \code{\link[=export_mfrm_results]{export_mfrm_results()}}. The latter's
+\code{preset = "starter"} writes CSV, report, RDS, replay and manifest files
+plus model-appropriate figures.
+These archives can identify participants; the export does not deidentify them.
+For focused follow-up, choose a supported route from \code{summary(res)$plot_map}
+or \code{summary(res)$next_actions}. See \link{mfrmr_visual_diagnostics} for plotting controls.
 }
 
 \section{Reproduce attached inference}{
@@ -308,40 +278,33 @@ alongside the ordinary maps, whose uncertainty and fit meanings are separate.
 
 \section{Saved RSM/PCM fixed-facet intervals}{
 
-For supported MML fits, use \code{intervals = list(raters = ci)} with output from
-\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}. Native CML and comparison-only fits are not inputs
-to this collector. For CML, use \code{summary(fit)} and save the interval result
-separately with \code{saveRDS(ci, file)}; \code{summary(ci)}, \code{plot(ci)} and
-\code{\link[=apa_table]{apa_table()}} reuse that result without an ordinary report bundle.
-The fit must match the saved data, parameters, constraints, population and
-integration settings. Named results give \code{facet_} plot routes, for example
-\code{plot(res, type = "facet_raters")}; a single result gives \code{facet_inference}.
-Include \code{"plots"} to enable those routes. \code{\link[=as_ggplot]{as_ggplot()}} supports customization.
-Tables, reports and exports preserve the selected method, confidence level,
-contrasts, cluster mapping and fixed/unavailable targets. Export replay
-reloads saved results without refitting or changing the selected intervals.
-These are pointwise fixed-facet intervals, not simultaneous rater decisions
-or uncertainty for replacement raters. Ordinary map and fit displays keep
-their own meanings and are not recalculated with the attached covariance.
+Attach \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} output to a supported MML fit as
+\code{intervals = list(raters = ci)}. Data, parameters, constraints, population and
+integration must match. With \code{"plots"} included, the name creates
+\code{plot(res, type = "facet_raters")}; a single unnamed result uses
+\code{facet_inference}. \code{\link[=as_ggplot]{as_ggplot()}} supports customization.
+
+Tables/reports/exports preserve methods, levels, contrasts, cluster mappings
+and fixed/unavailable targets. These pointwise intervals concern fixed facets,
+not simultaneous decisions or replacement raters; ordinary maps do not adopt
+their covariance. CML and comparison-only fits remain outside this collector:
+use their summaries and save/plot/format the interval object directly.
 }
 
 \section{Corrected JML results}{
 
-For an explicit correction fitted by \code{\link[=fit_mfrm]{fit_mfrm()}}, this helper collects
-saved estimates, numerical status and the RootSE interpretation without
-computing ordinary diagnostics. Unavailable requested sections are labelled
-in \code{status}. \code{plot()} offers \code{"slopes"}, \code{"locations"} and \code{"steps"}, with
-point or cumulative-distribution displays and \code{\link[=as_ggplot]{as_ggplot()}} conversion.
-\code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}} retain the estimator, correction
-order, unavailable inference and covariance-failure reasons. Saved replay
-reloads the result without refitting. Attach saved \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}}
-output through \code{response_diagnostics} to include conditional probabilities,
-expected scores and descriptive Infit/Outfit. The source and probability
-definition are checked; collection never recomputes probabilities. Use
-\code{plot(res, type = "response_diagnostics")} for paired or scatter views,
-retaining available Infit when Outfit is undefined. Ordinary diagnostic, comparison,
-prediction and interval attachments and individual rater sheets are
-unavailable; a numerical solution is not a rater-quality judgment.
+An explicit corrected-JML fit contributes saved estimates, numerical
+status and RootSE interpretation. Unsupported sections remain in \code{status};
+no ordinary diagnostics are computed. Plots offer slopes, locations and steps
+as points/CDFs, with \code{\link[=as_ggplot]{as_ggplot()}} conversion. Reports/exports retain correction
+order, unavailable inference and covariance-failure reasons.
+
+Attach saved \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} through \code{response_diagnostics} for
+conditional probabilities, expected scores and descriptive Infit/Outfit.
+Source and probability definitions are checked without recomputation.
+\code{plot(res, type = "response_diagnostics")} retains available Infit when Outfit
+is undefined. Ordinary diagnostics, comparison/prediction/interval attachments
+and individual rater sheets are unsupported; a root is not a rater-quality judgment.
 }
 
 \section{Provisional two-family results}{
@@ -386,9 +349,10 @@ interval meanings, source/batch checks, omissions and review labels in reports,
 CSV exports and saved replay. Native scoring records omitted row counts but
 does not enumerate a not-scored Person roster; portable scoring retains it.
 This attachment adds tables and reports; it does not add a score plot route.
-The intervals exclude calibration uncertainty; coverage and population
-transport remain unqualified. \code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} provides the
-separately checked portable route without retaining training responses.
+The intervals exclude calibration uncertainty. Their coverage and
+applicability to a different population have not been established.
+\code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} provides the separately checked portable route
+without retaining training responses.
 Ordinary diagnostics, Wright/Pathway maps and model comparison are unavailable.
 The starter export uses the available saved curves instead of requesting
 an unsupported Wright map.
@@ -396,39 +360,26 @@ an unsupported Wright map.
 
 \section{Saved one-family GPCM Person scores}{
 
-First compute \code{scores <- predict_mfrm_units(fit, new_ratings)} under the
-intended scoring prior, then attach them with
-\code{res <- mfrm_results(fit, scores = scores, include = "fit", compute = "never")}.
-This accepts the existing ordinary MML/JML scoring routes and their recorded
-review restrictions; it does not extend scoring to new designs or estimators.
-Collection checks the fitted calibration, data, population coding and
-numerical state, plus the saved prior, interval and integration records.
-It does not refit, rescore or repeat source numerical checks. Older scores
-without compatible fitted-analysis identity or check records must be
-recreated from the saved fit before attachment; no model refit is needed.
+Compute \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} under the intended prior, then pass
+\code{scores = scores} to \code{mfrm_results()} (for example with \code{include = "fit"},
+\code{compute = "never"}). Existing MML/JML scope is unchanged. Collection checks
+calibration, data, population coding, numerical state and saved prior/interval/
+integration records without refitting, rescoring or repeating source checks.
+Recreate older scores lacking these records from the saved fit before attachment.
 
-\code{res$tables$person_scores} retains EAP (\code{Estimate}), posterior \code{SD}, continuous
-equal-tail posterior bounds (\code{Lower}, \code{Upper}), level and numerical status.
-Posterior SD is neither the SD of EAPs across Persons nor the population SD
-or a calibration-parameter SE. These bounds differ from the diagnostic
-EAP +/- normal-multiplier times posterior-SD bands elsewhere in the report.
-Neither route includes calibration/population estimation uncertainty or
-establishes frequentist coverage for fixed abilities.
+\code{person_scores} retains EAP (\code{Estimate}), posterior \code{SD}, continuous equal-tail
+\code{Lower}/\code{Upper}, level and numerical status. These bounds differ from diagnostic
+normal-multiplier bands. Posterior SD is neither across-Person EAP variation,
+population SD nor a calibration SE; both interval routes exclude calibration/
+population estimation uncertainty and do not establish fixed-ability coverage.
+JML-derived EAPs are post-hoc scores, not the original JML Person estimates.
 
-\code{scoring_priors} retains each Person's fitted and scoring priors, including
-explicit prior overrides and covariate-dependent means. The scalar
-\code{PriorMean}/\code{PriorSD} in \code{scoring_settings} are NA when they differ by Person;
-use \code{scoring_priors} instead. \code{scoring_integration}, \code{scoring_row_review} and
-any \code{scoring_population_review} retain checks and omissions. Native scoring
-does not enumerate a complete not-scored Person roster: \code{NotScored} is NA.
-Review-only scores stay review-only even when calibration-parameter
-inference has a different readiness state. JML-derived EAP scores are
-post hoc posterior summaries, not the original JML Person estimates.
-
-\code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}} retain all attached tables and
-complete saved scoring objects. Replay reloads them without recomputing.
-This adds no score plot route; ordinary diagnostic maps keep their existing
-targets and are not replaced by the attached scores.
+\code{scoring_priors} records individual priors/overrides; scalar \code{PriorMean}/\code{PriorSD}
+in \code{scoring_settings} are NA when they vary by Person. \code{scoring_integration},
+\code{scoring_row_review} and optional \code{scoring_population_review} preserve checks
+and omissions. Native scoring has no complete not-scored roster (\code{NotScored = NA}).
+Review-only scores remain so. Reports, exports and saved replay retain all
+tables/objects; attachment adds no score plot and does not replace diagnostic maps.
 }
 
 \section{Saved GPCM inference}{

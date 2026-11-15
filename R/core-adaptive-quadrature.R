@@ -39,7 +39,9 @@ mfrmr_adaptive_quadrature_basis <- function(idx, config, params, quad, base_eta,
   }
   persons <- sort(unique(idx$person))
   groups <- split(seq_along(idx$person), factor(idx$person, levels = persons))
-  if (length(persons) > 0L && mfrm_use_cpp11_backend(config)) {
+  if (length(persons) > 0L && isTRUE(getOption("mfrmr.use_cpp11_backend", TRUE)) &&
+      mfrm_cpp11_backend_available() &&
+      identical(config$model %in% c("RSM", "PCM", "GPCM"), TRUE)) {
     group_starts <- c(0L, cumsum(lengths(groups)))
     group_rows <- as.integer(unlist(groups, use.names = FALSE))
     model_code <- mfrm_model_code(config$model)
@@ -75,17 +77,20 @@ mfrmr_adaptive_quadrature_basis <- function(idx, config, params, quad, base_eta,
       init_nodes = init_nodes,
       init_log_weights = init_log_weights
     )
-    if (res$error_code != 0L) {
+    if (res$error_code != 0L && res$error_code != 5L) {
       if (res$error_code == 3L) {
         stop(res$error_message, call. = FALSE)
       }
       stop(new_adaptive_quadrature_numeric_error(res$error_message))
     }
-    dimnames(res$nodes) <- dimnames(basis$nodes)
-    dimnames(res$log_weights) <- dimnames(basis$log_weights)
-    basis$nodes <- res$nodes
-    basis$log_weights <- res$log_weights
-    return(basis)
+    if (res$error_code == 0L) {
+      dimnames(res$nodes) <- dimnames(basis$nodes)
+      dimnames(res$log_weights) <- dimnames(basis$log_weights)
+      basis$nodes <- res$nodes
+      basis$log_weights <- res$log_weights
+      return(basis)
+    }
+    # An unbracketed or unfinished native mode search uses the original R path.
   }
   for (i in seq_along(groups)) {
     person <- persons[i]
@@ -443,7 +448,9 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points,
     mu <- if (isTRUE(basis$transformed)) basis$mu else rep(0, config$n_person)
     sigma <- if (isTRUE(basis$transformed)) basis$sigma else 1
 
-    if (mfrm_use_cpp11_backend(config)) {
+    if (isTRUE(getOption("mfrmr.use_cpp11_backend", TRUE)) &&
+        mfrm_cpp11_backend_available() &&
+        identical(config$model %in% c("RSM", "PCM", "GPCM"), TRUE)) {
       model_code <- mfrm_model_code(config$model)
       step_cum_rsm <- if (model_code == 0L) c(0, cumsum(params$steps)) else numeric(0)
       step_cum_mat <- if (model_code == 0L) matrix(0, 0L, 0L) else mfrm_step_cum_matrix(params$steps_mat)
@@ -495,25 +502,28 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points,
         log_sigma2_col0 = log_sigma2_col0,
         include_person_summaries = isTRUE(include_person_summaries)
       )
-      if (res$error_code != 0L) {
+      if (res$error_code != 0L && res$error_code != 5L) {
         if (res$error_code == 3L) {
           stop(res$error_message, call. = FALSE)
         }
         stop(new_adaptive_quadrature_numeric_error(res$error_message))
       }
-      if (!is.finite(res$value) || any(!is.finite(res$gradient))) {
-        stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive MML objective or gradient."))
-      }
-      out <- list(value = res$value, gradient = res$gradient)
-      if (include_person_summaries) {
-        person_summaries <- res$pat_summaries[summary_pat_map, , drop = FALSE]
-        colnames(person_summaries) <- c("LogMarginal", "EAP", "PosteriorSD")
-        if (any(!is.finite(person_summaries))) {
-          stop(new_adaptive_quadrature_numeric_error("Non-finite posterior moments."))
+      if (res$error_code == 0L) {
+        if (!is.finite(res$value) || any(!is.finite(res$gradient))) {
+          stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive MML objective or gradient."))
         }
-        out$per_person <- data.frame(PersonIndex = patterns$person_ids, person_summaries)
+        out <- list(value = res$value, gradient = res$gradient)
+        if (include_person_summaries) {
+          person_summaries <- res$pat_summaries[summary_pat_map, , drop = FALSE]
+          colnames(person_summaries) <- c("LogMarginal", "EAP", "PosteriorSD")
+          if (any(!is.finite(person_summaries))) {
+            stop(new_adaptive_quadrature_numeric_error("Non-finite posterior moments."))
+          }
+          out$per_person <- data.frame(PersonIndex = patterns$person_ids, person_summaries)
+        }
+        return(out)
       }
-      return(out)
+      # Keep the independent R calculation when native mode search is unfinished.
     }
 
     value <- 0

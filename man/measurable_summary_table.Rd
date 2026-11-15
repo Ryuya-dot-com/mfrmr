@@ -37,12 +37,22 @@ subset (connected-component) information.
 }
 \section{Interpreting output}{
 
-\itemize{
-\item \code{summary}: overall measurable design status.
-\item \code{facet_coverage}: spread/precision by facet.
-\item \code{category_stats}: category usage and fit context.
-\item \code{subsets}: connectivity diagnostics (fragmented subsets reduce comparability).
-}
+\code{summary} describes the retained analysis; it is not a sample-size adequacy
+decision. \code{LargestSubsetPct} concerns rating rows, not independent Persons
+or the proportion of planned assignments completed. A connected design
+alone does not establish parameter precision or identify every model term.
+
+\code{facet_coverage} summarizes the supplied diagnostic rows. \code{MeanSE} is the
+unweighted mean of available element SEs, not the SE of the facet mean or
+the RMS error used for separation reliability. For MML Persons these SEs
+are posterior SDs. Means omit missing values separately for each column;
+they can describe different subsets of levels. An all-missing mean is
+\code{NaN}, not zero error. Inspect \code{diagnostics$measures} for missing values and
+their reasons before comparing facets; see \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
+
+\code{category_stats} describes observed category usage and plug-in expectations.
+It does not certify category adequacy. See \code{\link[=rating_scale_table]{rating_scale_table()}} for the
+meaning of expected counts, residual summaries and step offsets.
 }
 
 \section{Typical workflow}{
@@ -65,35 +75,42 @@ For a plot-selection guide and a longer walkthrough, see
 
 The \code{summary} data.frame (one row) contains:
 \describe{
-\item{Observations, TotalWeight}{Total observations and summed weight.}
-\item{Persons, Facets, Categories}{Design dimensions.}
+\item{Observations, TotalWeight}{Retained rating-row count and summed
+response weight, respectively. Neither is an independent-Person count.}
+\item{Persons, Facets, Categories}{Retained Persons, non-Person facets
+and declared score categories (including unused categories).}
 \item{ConnectedSubsets}{Number of connected subsets.}
-\item{LargestSubsetObs, LargestSubsetPct}{Largest subset coverage.}
+\item{LargestSubsetObs, LargestSubsetPct}{Rows in the largest connected
+subset and \code{100 * LargestSubsetObs / Observations}.}
 }
 
 The \code{facet_coverage} data.frame contains:
 \describe{
 \item{Facet}{Facet name.}
-\item{Levels}{Number of estimated levels.}
-\item{MeanSE}{Mean standard error across levels.}
-\item{MeanInfit, MeanOutfit}{Mean fit statistics across levels.}
-\item{MinEstimate, MaxEstimate}{Measure range for this facet.}
+\item{Levels}{Number of diagnostic rows, including levels with missing SEs.}
+\item{MeanSE}{Arithmetic mean of available element SEs; see interpretation above.}
+\item{MeanInfit, MeanOutfit}{Unweighted means of available level-specific
+mean squares, not pooled response-level Infit/Outfit.}
+\item{MinEstimate, MaxEstimate}{Native-scale measure range, omitting
+missing values but retaining infinite estimates.}
 }
 
 The \code{category_stats} data.frame contains:
 \describe{
 \item{Category}{Score category value.}
-\item{Count, Percent}{Observed count and percentage.}
+\item{Count, Percent}{Sum of response weights for the category and its
+percentage of total weight; raw counts with unit weights.}
 \item{Infit, Outfit}{Descriptive category residual mean squares.}
 \item{InfitZSTD, OutfitZSTD}{Unavailable (NA); conditioning on the observed
 category does not preserve a universal unit-residual reference.}
-\item{ExpectedCount, DiffCount, LowCount}{Expected-observed comparison
-and low-count flag.}
+\item{ExpectedCount, DiffCount, LowCount}{Plug-in expected weighted count,
+observed minus expected count, and \code{Count < 10} review flag. This cutoff
+is not a universal minimum independent sample size.}
 }
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("measurable_summary_table", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.

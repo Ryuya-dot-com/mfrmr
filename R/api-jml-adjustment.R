@@ -9,6 +9,11 @@ mfrm_jml_point_label <- function(status) switch(status,
   multiple_roots="Different local solutions were found; none selected",
   "No supported local solution was found")
 
+mfrm_jml_covariance_reason <- function(result) {
+  if (!isTRUE(result$point$available)) return(mfrm_jml_point_label(result$point$status))
+  result$covariance$reason
+}
+
 stop_if_jml_adjustment <- function(fit, helper) {
   if (mfrm_has_jml_adjustment(fit)) stop("`", helper,
     "` is not available for corrected JML. Use summary(), plot(), mfrm_results() and mfrm_report() for its saved estimates and uncertainty interpretation.", call. = FALSE)
@@ -54,6 +59,7 @@ mfrm_fit_adjusted_jml <- function(args, supplied) {
     "score_k", args$step_facet, prep$rating_max-prep$rating_min)
   result <- mfrm_jml_adjustment_fit(problem, args$jml_correction_order,
     maxit=args$maxit, sampling=args$jml_correction_sampling)
+  result$covariance$reason <- mfrm_jml_covariance_reason(result)
   # Failed fits retain the whole attempted calculation and labelled missing estimates.
   display <- result
   if (!isTRUE(result$point$available)) {
@@ -106,6 +112,9 @@ mfrm_jml_summary <- function(fit, digits=3, include_person=FALSE) {
     stop("`include_person` must be TRUE or FALSE.",call.=FALSE)
   z <- fit$jml_adjustment
   state <- mfrm_jml_point_label(z$point$status)
+  # Older saved fits may have no covariance reason when the point failed.
+  covariance_reason <- mfrm_jml_covariance_reason(z)
+  fit$summary$CovarianceReason <- covariance_reason
   decision <- data.frame(Interpretation=state, FormalInference="Not established",
     Why="Numerical solution and statistical bias are separate questions.",
     NextAction="Inspect the estimates, correction order and uncertainty basis before interpretation.")
@@ -122,7 +131,7 @@ mfrm_jml_summary <- function(fit, digits=3, include_person=FALSE) {
         "New independent Persons and their assignment patterns from the same joint population",
       AbilityDistribution="Unspecified and allowed to differ between assignment patterns",
       SamePersonReassessment="Not estimated: holding each Person's ability fixed defines a different variance",
-      Target=z$estimator$target, Reason=z$covariance$reason),
+      Target=z$estimator$target, Reason=covariance_reason),
     interpretation_notes=data.frame(Note=mfrm_jml_note()))
   if (include_person) tables$persons <- fit$facets$person
   structure(list(jml_adjustment=TRUE, overview=fit$summary, decision=decision,
@@ -154,12 +163,17 @@ mfrm_jml_results <- function(fit, include, response_diagnostics=NULL) {
       "This output is not available for corrected JML; nothing was computed.")))
   if (!isTRUE(fit$jml_adjustment$covariance$available)) {
     status$Status[status$Section=="precision"] <- "not_available"
-    status$Detail[status$Section=="precision"] <- fit$jml_adjustment$covariance$reason
+    status$Detail[status$Section=="precision"] <- s$tables$uncertainty$Reason
   }
   plot_map <- data.frame(Type=c("slopes","locations","steps"),
     Available=isTRUE(fit$jml_adjustment$point$available) & "plots" %in% include,
     RequiredArtifact=FALSE, Route=paste0('plot(res, type = "',c("slopes","locations","steps"),'")'),
     Detail="Point estimates without confidence intervals; no rater-quality cutoffs.")
+  if (!isTRUE(fit$jml_adjustment$point$available)) {
+    status$Status[status$Section=="plots"] <- "not_available"
+    status$Detail[status$Section=="plots"] <- s$decision$Interpretation
+    plot_map$Detail <- s$decision$Interpretation
+  }
   tables <- s$tables; components <- list(fit=fit)
   if (!is.null(response_diagnostics)) {
     mfrm_validate_response_diagnostics(fit,response_diagnostics)
@@ -179,7 +193,7 @@ mfrm_jml_results <- function(fit, include, response_diagnostics=NULL) {
 }
 
 mfrm_jml_results_summary <- function(x, digits, top_n, view) {
-  structure(list(model_family="Corrected JML",overview=x$fit$summary, decision=x$decision, status=x$status,
+  structure(list(model_family="Corrected JML",overview=x$tables$overview, decision=x$decision, status=x$status,
     component_index=data.frame(Component=names(x$components),
       Class=vapply(x$components,mfrm_results_component_class,character(1))),
     table_index=utils::head(x$table_index,top_n),plot_map=x$plot_map,

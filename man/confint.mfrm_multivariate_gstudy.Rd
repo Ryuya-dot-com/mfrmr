@@ -108,60 +108,42 @@ Explicit residual contrasts provide residual-only intervals from retained
 used ratings, including incomplete sources, without likelihood fitting.
 }
 \details{
-For a source-by-target choice table, see \emph{Choose the G-theory target and
-uncertainty} in \link{mfrmr_methods_reference}. Component intervals, G/Phi
-intervals, measurement SEM and paired plan differences have distinct targets.
+Variance-component SEs use squared score units; covariance-component SEs use
+products of the two score units. D-study measurement SEMs use score units.
+For coefficient or plan-difference intervals, use the
+target map in \link{mfrmr_methods_reference}.
 
-A component estimates how much scores vary because of persons, conditions,
-or their interactions. Its SE describes sampling uncertainty in that
-estimate. Both the component and its SE have squared score units. This SE
-is different from a D-study's measurement SEM, which is in score units.
+Balanced defaults use Ting et al.'s (1990) modified large-sample (MLS)
+intervals for signed combinations of independent ANOVA mean squares
+(Hess and Iyer, 2002, pp. 2--3). Residual uses a single mean square's
+chi-square interval; other intervals are approximate, asymmetric and
+pointwise, not simultaneous. Normal effects, balance and prespecified
+weights are required; ordinal coding or data-selected weights do not justify
+the method. At very low \code{level}, squared chi-square corrections can lose
+direction: narrow or well-calibrated limits are not guaranteed.
 
-Default balanced intervals use the modified large-sample (MLS) method of Ting et al. (1990)
-for signed linear combinations of independent ANOVA mean squares, as
-detailed by Hess and Iyer (2002, pp. 2--3). The residual component, which
-is a single mean square, has the usual chi-square interval. Other
-component intervals are approximate, asymmetric and pointwise, not
-simultaneous. Normal effects, a balanced design and prespecified score
-weights matter: the method is not robust to arbitrary score distributions
-or weights chosen after inspecting the data. A numeric ordinal score
-does not by itself justify the normal model.
-At very low requested confidence levels, squared chi-square corrections
-can lose their usual direction; a small \code{level} does not guarantee narrow
-or well-calibrated MLS limits.
+Negative estimates remain unchanged. \code{RawLower}/\code{RawUpper} are unrestricted
+MLS endpoints; \code{Lower}/\code{Upper} intersect them with nonnegative variance space.
+An interval wholly below zero becomes \code{NA} with
+\code{Status = "Empty nonnegative interval"}, not a zero-width interval.
+Other MLS statuses distinguish:
+\itemize{
+\item \code{"Includes zero"}: nonempty with zero; \code{"Available"}: strictly positive.
+\item \code{"Degenerate mean squares"}: all contributing mean squares zero, SE zero
+and bounds unavailable; this does not establish precision.
+\item \code{"Numerical interval failure"}: unreliable width, retaining estimate/SE.
+\item \code{"Variance interval below numeric resolution"} (or component-scale status):
+positive endpoints numerically coincide, so bounds are missing. Overflow
+and underflow also withhold bounds. Retained raw endpoints are diagnostic,
+not evidence of zero uncertainty, even when equal.
+}
 
-Negative component estimates are retained. \code{RawLower} and \code{RawUpper} are
-the unrestricted MLS endpoints. \code{Lower} and \code{Upper} intersect that interval
-with the nonnegative variance parameter space. A negative lower endpoint
-therefore becomes zero, but the point estimate is not changed. If the
-entire raw interval is below zero, the intersection is empty: both bounds
-are \code{NA} with \code{Status = "Empty nonnegative interval"}, while the raw
-endpoints remain visible. It is not replaced by an interval of zero width.
-Inspect the design, assumptions and raw estimates in that case.
-
-For MLS, \code{Status = "Includes zero"} denotes a nonempty interval containing zero;
-\code{"Available"} denotes a strictly positive interval. If all mean squares
-contributing to a component are zero, its estimated SE is zero but bounds
-are unavailable (\code{"Degenerate mean squares"}); this is not evidence of
-precise population knowledge. \code{"Numerical interval failure"} retains the
-estimate and SE when the MLS width cannot be evaluated reliably.
-A positive interval whose endpoints coincide after rounding instead has
-\code{Status = "Variance interval below numeric resolution"} (or the corresponding
-component-scale status), with missing \code{Lower}/\code{Upper}. This can occur at an
-extremely small requested confidence level. Positive endpoints that overflow
-or underflow also remain unavailable. Raw endpoints are retained for diagnosis;
-equal raw endpoints in such a row do not establish zero uncertainty.
-
-This method estimates variances of the selected score, including all
-covariances needed for a fixed composite. The separate two-score covariance
-calculation is described below. Neither supplies G/Phi or plan-difference
-intervals. Explicit REML profiles and residual contrasts accept incomplete
-sources, with the different scopes described below.
-\code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} provides a separate
-approximation for certain paired plan differences. Use
-\code{plot(g, intervals = TRUE, assumption = "normal")} to calculate and show
-these component intervals directly, with \code{score} or \code{weights} selecting
-the desired score. Its returned data retain the complete interval tables.
+Fixed-composite variances include their cross-score covariances; intervals
+for covariance elements use the separate two-score methods below. REML and
+residual contrasts accept incomplete sources within their stated scopes.
+None supplies G/Phi or plan-difference intervals. For component plots use
+\code{plot(g, intervals = TRUE, assumption = "normal")}, selecting \code{score} or
+\code{weights}; returned data retain full interval tables.
 }
 \section{Residual contrasts}{
 

@@ -5,6 +5,14 @@
 \alias{plot.mfrm_hierarchical_clusters}
 \title{Hierarchical grouping of external features}
 \usage{
+mfrm_cluster_hierarchical(
+  x,
+  k,
+  weights = NULL,
+  missing = c("error", "omit"),
+  linkage = c("average", "complete")
+)
+
 \method{plot}{mfrm_hierarchical_clusters}(
   x,
   type = c("dendrogram", "silhouette", "profile"),
@@ -18,6 +26,22 @@
 \arguments{
 \item{x}{For clustering, a table reviewed with \code{\link[=mfrm_features]{mfrm_features()}}. For plotting,
 an \code{mfrm_hierarchical_clusters} result.}
+
+\item{k}{Number of groups, an integer from 2 to one less than the number of
+included entities, and no greater than their number of distinct profiles.
+The number is chosen by the user, not optimized automatically.}
+
+\item{weights}{Optional named, strictly positive finite numeric vector with
+one weight per selected feature. Defaults to equal weights. Names, not
+vector order, identify features. Remove a feature to exclude it.}
+
+\item{missing}{Either \code{"error"} (default) or \code{"omit"}. The latter excludes
+incomplete entities explicitly, retaining their IDs, reasons, and missing
+group membership in the result. No values are imputed.}
+
+\item{linkage}{\code{"average"} (default, UPGMA) or \code{"complete"}. Average linkage
+uses the mean dissimilarity over all cross-group pairs; complete linkage
+uses their maximum. Neither is selected automatically from the data.}
 
 \item{type}{\code{"dendrogram"} (default), \code{"silhouette"}, or \code{"profile"}.}
 
@@ -44,27 +68,17 @@ Cluster, Silhouette), \code{cluster_summary}, \code{profiles}, \code{feature_dat
 \code{settings} including the linkage. Hierarchical clustering does not select
 medoids; \code{medoids} is \code{NULL} and membership has no \code{Medoid} column.
 \code{summary()} returns the size/silhouette table. \code{plot()} invisibly returns
-a \code{ggplot} object; \code{\link[=plot_data]{plot_data()}} extracts the tree, leaf order, memberships,
+\code{mfrm_plot_data}; dendrogram data include the tree, leaf order, memberships,
 group count, and excluded IDs.
 }
 \description{
-For new code use \code{mfrm_cluster(..., method = "hierarchical")}.
-The former method-specific entry is no longer exported. This guide retains
-its statistical details and saved-result plotting methods.
-}
-\details{
 Build an agglomerative hierarchy from weighted Gower dissimilarities, cut
 it into a chosen number of groups, and inspect the retained dendrogram.
-
-Call \code{mfrm_cluster(x, k, method = "hierarchical", linkage = "average")}.
-The \code{k}, \code{weights} and \code{missing} controls follow \code{\link[=mfrm_cluster]{mfrm_cluster()}}.
-\code{linkage} is \code{"average"} (default, UPGMA) or \code{"complete"}. Average linkage
-uses the mean dissimilarity over all cross-group pairs; complete linkage
-uses their maximum. Neither is selected automatically from the data.
-
+}
+\details{
 Uses \code{\link[stats:hclust]{stats::hclust()}} followed by \code{\link[stats:cutree]{stats::cutree()}} at the requested \code{k}.
 Feature types, scaling, weights, missingness handling, silhouette definition,
-and the 5,000-included-entity limit follow \code{\link[=mfrm_cluster]{mfrm_cluster()}}. No distance
+and the 5,000-included-entity limit follow \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}. No distance
 transformation or automatic sampling is performed. This limit is not a
 memory or speed guarantee.
 
@@ -101,37 +115,19 @@ Use \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}} to compare this 
 linkage on the same data. For multiple imputations, use
 \code{mfrm_cluster_imputed(..., method = "hierarchical", linkage = "average")}.
 Each completion retains its own tree; no pooled tree or branch support is
-estimated. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html}{online feature-analysis guide}.
+estimated. See \href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.html}{mfrmr-external-features}.
 }
+\section{Reading clustering metrics}{
+
+The silhouette, Gower distance and original-unit profile definitions in
+\code{\link[=mfrm_cluster]{mfrm_cluster()}} apply. Hierarchical clustering has no PAM medoid; its
+merge heights summarize the selected linkage, not a group centroid.
+}
+
 \section{Session plot defaults}{
 
 See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
 precedence, and appearance when saving or reusing a plot.
-}
-
-\section{Reading clustering metrics}{
-
-For entity i, a(i) is its mean dissimilarity to other members of its own
-group; b(i) is the smallest mean dissimilarity to any other group.
-Silhouette = (b - a) / max(a, b), between -1 and 1. Values near 1 indicate
-compact, separated placement in this fitted geometry; near zero indicates
-a boundary; negative values indicate closer average proximity to another
-group. A singleton receives 0 by convention; zero does not establish overlap.
-A zero denominator also receives 0. Overall means weight entities equally;
-cluster means use that cluster's included entities. Excluded IDs have NA.
-A silhouette is neither a membership probability nor evidence of stability.
-
-Gower distance is unitless in \verb{[0, 1]} here: numeric absolute differences
-divided by included-sample ranges, nominal/binary mismatches, and ordinal
-rank differences are combined using the specified feature weights.
-The PAM medoid is an actual included entity minimizing within-group total
-dissimilarity; it is not a feature-wise mean. Profile Mean/Median/SD retain
-original units; categorical Proportion uses included group size as denominator.
-A large group or a high silhouette is not a better-performing group.
-Compare partitions under a fixed feature/distance definition; changing the
-sample, weights or scaling changes what these numbers measure.
-See \code{\link[cluster:silhouette]{cluster::silhouette()}} and Rousseeuw (1987),
-\doi{10.1016/0377-0427(87)90125-7}, for the silhouette definition.
 }
 
 \examples{
@@ -141,14 +137,14 @@ if (requireNamespace("cluster", quietly = TRUE)) {
     ExperienceYears = c(1, 2, 3, 12, 13, 14, NA),
     Specialty = factor(c(rep("Language", 3), rep("Science", 4))))
   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
-  hierarchy <- mfrm_cluster(method = "hierarchical", features, k = 2, missing = "omit")
+  hierarchy <- mfrm_cluster_hierarchical(features, k = 2, missing = "omit")
   plot(hierarchy)
   plot(hierarchy, type = "silhouette")
   plot(hierarchy, type = "profile", feature = "ExperienceYears")
   comparison <- mfrm_cluster_compare(list(
-    PAM = mfrm_cluster(method = "pam", features, k = 2, missing = "omit"),
+    PAM = mfrm_cluster_pam(features, k = 2, missing = "omit"),
     Average = hierarchy,
-    Complete = mfrm_cluster(method = "hierarchical", features, k = 2,
+    Complete = mfrm_cluster_hierarchical(features, k = 2,
       linkage = "complete", missing = "omit")))
   comparison$analysis_summary
   summary(comparison)
@@ -161,5 +157,5 @@ Criterion? Journal of Classification, 31, 274--295.
 \doi{10.1007/s00357-014-9161-z}.
 }
 \seealso{
-\code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
+\code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
 }

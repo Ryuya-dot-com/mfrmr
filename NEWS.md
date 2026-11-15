@@ -1,233 +1,132 @@
-# mfrmr 0.3.0 (development)
+# mfrmr 0.2.5
 
-## Migration from 0.2.4
+- Correct unavailable-plot status and missing uncertainty reasons when
+  corrected JML finds no supported point solution. Valid points remain
+  available when only RootSE is unavailable. Recreate results and reports
+  from a saved fit to update the status; refitting is unnecessary.
 
-- `fit_mfrm()` groups advanced model choices in `spec` and numerical settings
-  in `control`. Existing flat calls and `do.call(fit_mfrm, ...)` remain
-  supported when arguments use their complete names. Only the first four
-  positional arguments (`data`, `person`, `facets`, `score`) retain their old
-  positions; name later arguments. Abbreviations routed through `...`, such
-  as `quad_point`, must become `quad_points` or
-  `control = list(quad_points = ...)`. See `?mfrmr_api_migration_030`.
-  A named `spec` can be reused across `describe_mfrm_data()`,
-  `review_mfrm_anchors()`, `fit_mfrm()` and `export_mfrm_model()` within their
-  respective supported scopes; a valid native specification need not be
-  exportable. Detailed equations, identification rules and return-object
-  provenance are in `?fit_mfrm_technical_details`.
+- Speed up two-family GPCM EM fitting by omitting unused reporting tables
+  during likelihood evaluations. Numerical controls and returned results
+  are unchanged.
 
-Because this development series removes 28 overlapping public entry points in
-favor of arguments and standard S3 methods, the next release is versioned as
-`0.3.0`. Update scripts using the former names before upgrading:
+- Update imputed-feature validation tests for the logical-class restoration
+  in `mice` 3.20.0. Clustering behavior and input validation are unchanged.
 
-- Use `mfrm_cluster(x, k, method = "pam")`, choosing `"pam"`,
-  `"hierarchical"`, or `"kmeans"` as the method.
-  The default remains PAM; method-specific geometry, settings and result
-  classes are unchanged. The three method-specific names are no longer exported.
-- Use `update(calibration, status = "validated")`, choosing `"validated"`,
-  `"frozen"`, `"superseded"`, or `"retired"` as the target state.
-  The four former transition functions are no longer exported. Validation
-  requirements, permitted transitions and immutable frozen records are retained.
-- Use `normalize_conquest_overlap_tables(..., input = "files")` for extracted
-  table files; `input = "tables"` keeps the existing data-frame route. The
-  former `normalize_conquest_overlap_files()` is no longer exported.
-- Use `mml_quadrature_sensitivity()` for supported MML families and
-  `read_facets_results()` for FACETS Scorefiles and fit tables (pass the
-  returned `mfrm_facets_results` object or file path directly to
-  `facets_fit_review()`). The former `gpcm_mml_quadrature_sensitivity()`,
-  `import_facets_fit_table()`, and `read_facets_fit_table()` names are no
-  longer exported.
-- Use `import_irt_fit(fit, model = ..., source = "auto")` to import supported
-  `mirt`, `TAM`, and `eRm` fits; `import_mirt_fit()`, `import_tam_fit()`, and
-  `import_erm_fit()` are no longer exported separately.
-- Use `mfrmr_output_guide()` with `scope = "intervals"`, `"visual_templates"`,
-  `"gpcm_capabilities"`, or `"calibration_capabilities"` for the static route
-  and capability matrices formerly exported as `mfrmr_interval_guide()`,
-  `visual_reporting_template()`, `gpcm_capability_matrix()`, and
-  `mfrm_calibration_capabilities()`.
-- Read `fit$config$anchor_review` (or call `review_mfrm_anchors()`) and
-  `diagnostics$precision_review` (or call `precision_review_report()`) directly;
-  the `anchor_review()` and `precision_review()` wrapper accessors are no longer
-  exported.
-- Use `analyze_dff()` for the former `analyze_dif()` alias, and
-  `review_mfrm_imputations(..., impute_ids = ids)` for the former
-  `mfrm_response_imputations(..., impute = ids)` alias. These aliases are no
-  longer exported; the latter reviews supplied completions and does not impute.
+- Correct optional `as_ggplot()` conversion of information curves to show
+  only the selected information or conditional SEM series. Combined views
+  use separate vertical scales. Base graphics and computed values are
+  unchanged; regenerate converted plots from the saved plot data or fit.
 
-See `help("mfrmr_api_migration_030")` for exact replacements. Existing saved
-result classes (including legacy `mfrm_design_evaluation_plot_data` and
-`mfrm_signal_detection_plot_data` objects) retain their `summary()`, `plot()`,
-and `as_ggplot()` methods. These interface changes do not change the underlying
-statistical targets or inference eligibility.
+- Clarify uncertainty and draft-completeness messages in existing reports
+  and help. Estimates, availability decisions and saved field names are
+  unchanged. Decision text is consistent in tables, print and HTML, including
+  redisplayed older saved decisions.
 
-## New capabilities and fixes
+- Wright-map group densities now reject conflicting Person group labels and
+  invalid group inputs, and respect the main map's Person exclusions. Optional
+  ggplot conversion separates group names from location and reference-line
+  legend keys. Regenerate affected plots from the saved fit and original group
+  specification; refitting is unnecessary. Existing density bandwidths and
+  plot return structures are unchanged.
 
-- Experimental two-family GPCM MML now accepts two slope facets among
-  additional fixed additive facets. In `spec`, `slope_reference` names the
-  geometric-mean-one family, independently of `step_facet` and
-  `noncenter_facet`. The original full-predictor response equation, fixed
-  N(0,1) population and experimental inference limits remain unchanged.
-  The supported path connects fitting, checked intervals, curves, response
-  diagnostics, reports and conditional new-Person scoring. Extended portable
-  calibrations use format 7; original two-facet format 6 artifacts and legacy
-  fits retain their meaning. Stan export from an existing fit now preserves
-  extended roles through posterior reload, contrasts, intervals, plots and
-  reports. Log-slope priors remain tied to the source slope reference;
-  changing that reference with fresh priors changes the Bayesian model.
-  Two-family simulation, JML, direct data/spec export, brms and new-Person
-  posterior scoring remain unsupported. This extension is included in the
-  planned `0.3.0` release.
-  Numerical convergence does not establish a unique finite optimum or
-  adequate estimation precision for every rating design.
-- Unanchored two-family Stan bundles omit per-rating `eta` and
-  `effective_slopes` from saved output. These are deterministic work vectors;
-  parameter draws, `log_lik`, `y_rep`, diagnostics and posterior replay remain
-  available. Previously saved bundles retain their replay path.
-- Reloaded two-family fits now load the sparse-matrix arithmetic methods before
-  producing a rater report in a fresh R session. Location constraints in
-  reports and experimental intervals follow `noncenter_facet`, independently
-  of which facet owns slopes or category steps.
+This maintenance update preserves the 0.2.4 public interface and saved-result
+formats. It does not include the planned 0.3.0 interface changes.
 
-- Estimated-normal-population RSM/PCM fits now record a conditional analytic
-  identification check in
-  `fit$data_review$estimability$normal_population_identification`. It uses
-  the constrained design of Persons with repeated ratings and states its
-  assumptions and unsupported cases explicitly. This separates identification
-  evidence from numerical audit limits without changing interval eligibility
-  or formal-inference restrictions; see `?fit_mfrm_technical_details`.
+- Correct MML boundary reporting for unpenalized RSM/PCM and GPCM fits with provable
+  improving likelihood paths from extreme free facet levels or unused endpoint categories,
+  including centered facets with a free compensating location or population mean.
+  Finite Person EAPs no longer label these full models as having a finite maximum.
+  Saved-fit summaries explain retained optimizer coordinates, and ordinary
+  structural intervals are withheld on boundary evidence. Likelihood calculations
+  and category recoding defaults are unchanged.
+  Boundary optimizer values are not used for fitted curves or rater-estimate sheets.
 
-- Plotting help and supplementary examples now describe the `ggplot` return
-  value consistently and use `plot_data()` to retrieve tables and notes.
-- Threshold ladders now draw the stored step thresholds instead of an empty
-  display. Missing steps remain unconnected, and `highlight_disorder = FALSE`
-  is preserved when saving and redrawing a plot.
+- Label empty exact-F confidence sets explicitly in D-study interval plots,
+  distinguishing them from numerical unavailability and an estimate of zero.
+  Estimates and interval calculations are unchanged.
 
-- Information plots now draw only the requested information or conditional
-  SEM series. `type = "both"` uses separate panels and vertical scales;
-  numerical values and the complete `plot_data()` payload are unchanged.
-  The visual tour explains how these exposure-weighted curves differ from
-  per-Person information, separation reliability, agreement and G/Phi.
+- Clarify the inputs, returned objects and first tables to read for model
+  summaries, diagnostics, result collection, reports and bias screening.
+  Consolidate repeated explanations while retaining uncertainty and
+  availability conditions. Explain estimate direction, posterior SD versus
+  structural SE, fit-adjusted reliability and GPCM working versus primary
+  values. Clarify one-step displacement, diagnostic averaging, cumulative-logit
+  coefficient direction and observed-score covariance units. Numerical
+  calculations are unchanged.
 
-- Five core tutorials remain available through `browseVignettes("mfrmr")`:
-  workflow, model choice, G theory, visual diagnostics and reporting.
-  Specialized tutorials are provided on the documentation website for the
-  corresponding version; their source and worked calculations are retained.
-  Help pages and output guides link to these articles directly instead of
-  suggesting unavailable local `vignette()` calls. The workflow help explains
-  how to distinguish published website documentation from development help.
+- Shorten the `fit_mfrm()` entry help around inputs, results and a first
+  analysis. Detailed argument definitions, equations and estimator-specific
+  conditions remain available in the installed `fit_mfrm_technical_details`
+  reference. Fitting behavior and defaults are unchanged.
 
-- `recommend_mfrm_design()` now accepts a saved paired D-study comparison
-  with scenario-keyed costs, resource limits and G/Phi/SEM point targets.
-  `summary(result, planning = TRUE)` separates feasibility, point attainment
-  and paired interval direction, retaining every plan and unavailable value.
-  Reports, plots and appendix exports keep the review and its assumptions.
-  The observed-score two-crossed-facet scope is unchanged; no winner or
-  selection-adjusted guarantee is supplied. Simulation recommendations retain
-  their existing behavior and do not use these new planning arguments.
+- Simplify package and reference help around analysis questions, inputs and
+  results. Keep worked procedures in existing tutorials and calculation/uncertainty
+  specifications in specialist help. Consolidate data review, screening, plotting,
+  intervals, reporting and saved-analysis guidance, preserving model conditions.
+  Remove development-stage language from comparison guidance; clarify CML scope,
+  diagnostic screening, conditional uncertainty and displacement calculations.
+  Repair PCA and workflow plot-data examples.
 
-- Posterior scoring now checks predictive category probabilities and
-  calibration variation in expected scores at both quadrature orders,
-  including Persons with no observed ratings. Predictive rows carry their
-  own `IntegrationMaxDiff`, `Status`, and `Reason`; inaccurate predictions
-  are withheld while valid ability summaries remain available. Increasing
-  `quad_points` can resolve a failed predictive check.
-- The introductory RSM example explicitly estimates population mean and SD
-  and reports the current inference restriction for that route. Help explains
-  the substantive location/spread constraints in the unchanged fixed N(0,1)
-  defaults, CML BIC's sensitivity to extreme-score Person counts, and the
-  distinction between numerical readiness and finite-sample validity.
-- Optional CmdStanR execution and test dependencies (`cmdstanr`, `jsonlite`,
-  `posterior`) are declared, including the CmdStanR repository. A required
-  release verification command records actual live Stan execution and rejects
-  skipped tests; see `CONTRIBUTING.md`.
+- Reject diagnostics from a differently sized fitted dataset with the intended
+  mismatch message, without unrelated factor-comparison warnings.
 
+- Speed up continuous Person intervals in fitted-object and portable-calibration
+  scoring by reusing integrated probability masses to bracket the endpoints.
+  Integration tolerances, tail checks and scoring qualification are unchanged.
 
-- `export_mfrm_model(..., format = "stan")` now accepts optional
-  `run_cmdstan = TRUE` and `cmdstan_args = list(...)` when `cmdstanr` and a
-  configured CmdStan toolchain are available, compiling and sampling via
-  `inst/model-export/run-stan.R`, saving `fit.rds`, `predictive-draws.rds`,
-  `posterior-summary.rds`, and `posterior-draws.rds`, and returning the
-  validated `mfrm_posterior_summary` on `$posterior` (failing closed before
-  writing files when `cmdstanr` or CmdStan is absent). In addition,
-  `predict(object, newdata, ...)` (`predict.mfrm_posterior_summary()`) scores
-  out-of-sample Persons for calibrated ordinary RSM/PCM and one-family GPCM
-  bundles (fixed standard-normal populations; also estimated intercept-only
-  normal populations for one-family GPCM in Stan), separating
-  calibrated-posterior marginalization (`conditioning = "posterior"`, with
-  law-of-total-variance `WithinSD`, `BetweenSD`, `SD`, and
-  `CalibrationVarShare`) from fixed posterior-mean plug-in scoring
-  (`conditioning = "plugin_mean"`), latent ability intervals from future rating
-  posterior predictive distributions (`type = c("ability", "predictive",
-  "both")`), and optional cut-score classification probabilities (`cut_scores`),
-  with downstream `summary()`, `confint()`, `as.data.frame()`, `plot()`,
-  `mfrm_report()`, `apa_table()`, and `export_summary_appendix()` support.
+- Speed up `score_mfrm_persons()` for ordinary RSM fits by reusing the native
+  response-likelihood calculation. Continuous integration, interval checks,
+  cut-score probabilities and calibration-conditional uncertainty are retained.
 
-- Exported Bayesian summaries (`summarize.R`) now save a checksum-bound
-  chain-by-iteration draw array (`posterior-draws.rds`) alongside
-  `posterior-summary.rds` without requiring the `posterior` package during
-  replay. `read_mfrm_posterior(path, draws = c("auto", "require", "none"))`
-  validates free-to-constrained affine/Helmert basis identities and connects
-  saved joint draws to shared-calibration facet, step-transition, and slope
-  contrasts, arbitrary equal-tailed credible levels, empirical draw views, and
-  reports across `summary(x, contrasts = ..., level = ...)`, `confint()`,
-  `as.data.frame()`, `plot(..., quantity = "contrast", view = c("intervals",
-  "draws"))`, `mfrm_report()`, `apa_table(..., which = "contrasts")`, and
-  `export_summary_appendix()`, while keeping lightweight summary-only
-  `posterior-summary.rds` workflows unchanged. Operations requiring joint draws fail explicitly
-  when those draws are absent.
+- Refresh the bundled example diagnostics with the affected-response counts
+  used by the ZSTD safeguards, retaining their fitted models.
 
-- All `plot()` S3 methods now render with `ggplot2` (`ggplot2 (>= 3.4.0)` in
-  `Imports`) under a unified scientific theme (`preset = "standard"`,
-  `"publication"`, `"compact"`, or `"monochrome"`) and invisibly return a
-  `ggplot` object (`draw = FALSE` builds the `ggplot` without opening a
-  graphics device). Extract underlying tables, matrices, and figure cautions
-  with `plot_data(p)` and `plot_data_components(p)` instead of `p$data$...`;
-  `plot_data()` and `as_ggplot()` preserve backward compatibility with saved
-  `0.2.x` `mfrm_plot_data`, `mfrm_design_evaluation_plot_data`, and
-  `mfrm_signal_detection_plot_data` RDS objects. Two-continuous-variable
-  scatterplots—including the new `plot(dif, type = "scatter")` route after
-  `analyze_dff()`, paired and extended model comparisons, fit pathway, fair
-  average, bias, PCA scores, displacement, person-fit, and recovery
-  scatterplots—support aligned X/Y marginal histograms via
-  `marginal = c("auto", "histogram", "none")` computed strictly over the finite
-  plotted pairs (`"auto"` enables histograms for single-panel views with at
-  least eight finite pairs while keeping `unavailable` / fixed-anchor exclusions
-  explicit).
+- Consolidate plotting documentation around public `plot()` methods and the
+  migration guide. Internal renderer topics no longer appear in installed help;
+  view controls, interpretation and available result tables remain documented.
+- Use reproducible saved synthetic fits in centrality and Person-scoring examples
+  so readers can focus on the reported quantities without recalibrating models.
 
-- `export_mfrm_model()` now accepts long-format rating `data` and a model
-  specification list `spec` directly, without running native MML optimization,
-  Hessian evaluation or EAP scoring first. Ordinary RSM/PCM require a fixed
-  standard-normal ability population in both Stan and brms. One-family GPCM
-  additionally supports an estimated intercept-only normal population in Stan;
-  its fixed-standard-normal specification supports Stan and brms. Supported
-  fixed non-Person anchors and group means are retained. Population regression
-  and non-Person facet interactions remain outside the export scope. Existing `mfrm_fit`
-  export remains unchanged, and `write_json = TRUE` (`format = "stan"`) adds
-  CmdStanR-compatible `model-data.json` alongside `model-data.rds` and CSV
-  label/category maps without requiring `cmdstanr` or `jsonlite`.
-
-- Compiled C++ (`cpp11`) evaluation kernels now accelerate fixed-grid and
-  adaptive Gauss-Hermite MML estimation and information/covariance routines,
-  2D Gauss-Hermite quadrature in `fit_mfrm_testlet()`, conditional JML, CML
-  elementary symmetric functions, and marginal fit expectations, while sparse
-  co-rating aggregation removes $O(R^2)$ table expansion in
-  `describe_mfrm_data()` and `diagnose_mfrm()`. Estimands, quadrature rules,
-  convergence criteria, CML existence checks, GPCM profile-likelihood curvature
-  checks, and pure-R reference evaluation
-  (`options(mfrmr.use_cpp11_backend = FALSE)`) are unchanged.
-
-- FACETS terminology, coverage, visual and fit-df guides now use
-  `facets_guide(topic = ...)`. Their explanations and return structures are
-  retained. The legacy `mfrmRFacets()` name is replaced by `run_mfrm_facets()`;
-  use the same arguments. See `?mfrmr_api_migration_030` for script migration.
-
-- Reports now recognize the historical `JMLE` label as the same estimator as
-  `JML` when matching a saved fit to freshly computed diagnostics. Estimates
-  are unchanged, and diagnostics from a different fitted analysis still fail.
-
+- Withhold standardized Infit/Outfit (ZSTD) when a diagnostic scope contains
+  finite JML optimizer proxies for infinite primary Person estimates, or when
+  the selected standardization has fewer than one degree of freedom. Such
+  values could otherwise become spuriously large and positive. Mean squares,
+  row counts and point estimates retain their existing definitions; affected
+  summaries explain the missing ZSTD. Recompute diagnostics from saved fits
+  without refitting before reusing affected older reports.
+- Make numerical regression comparisons portable across BLAS implementations.
+  Recomputed scores and covariance matrices use explicit floating-point
+  tolerances; rank, estimability and diagnostic states retain exact checks.
+  This comparison-only correction does not round estimates or change numerical
+  acceptance thresholds.
+- Speed up fixed-grid MML fitting and information calculations for RSM and PCM
+  by sharing native likelihood and gradient calculations. Model definitions,
+  integration settings, convergence checks and interval qualification are unchanged.
+- Speed up adaptive Gauss-Hermite likelihood, gradient and posterior calculations
+  for the existing RSM, PCM and GPCM models. The original R calculation remains
+  available and is used when the native posterior-mode search cannot bracket a
+  root or converge. Integration settings and inference qualification are unchanged.
+- Correct RSM/PCM model-information interval availability when a local rater
+  does not use every category but all categories are supported in their fitted
+  step scopes. The existing identification, convergence, positive joint
+  information and quadrature checks still apply. Empty fitted-step categories
+  remain unsupported; sparse local data still require caution about bias and
+  coverage. Point estimates and the source fit's category-review state do not
+  change. This correction does not extend GPCM interval eligibility.
+- Restore two-family GPCM reporting after reloading a saved fit in a fresh R
+  session by loading Matrix's sparse-matrix methods before multiplication.
+  Estimates, saved-object formats and experimental inference limits are unchanged.
+- Keep the workflow, model-choice, G-theory, visual-diagnostics, reporting and
+  facet-interval guides available offline. Specialized tutorials are available
+  on the package website, with links from the installed help and guides.
+- Link plotting help to the shared offline guide for session defaults and saved-plot
+  appearance, instead of repeating that guidance on each page.
+- Correct installation instructions that described the published 0.2.4 release
+  as an unreleased candidate.
 
 # mfrmr 0.2.4
 
-**Published on CRAN: 2026-10-30.** This release connects rating analysis, assessment
+**Published on CRAN on 2026-10-30.** This release connects rating analysis, assessment
 planning and reporting. You can move from a fitted model or rating plan to
 figures, tables and an editable report while keeping its assumptions visible.
 

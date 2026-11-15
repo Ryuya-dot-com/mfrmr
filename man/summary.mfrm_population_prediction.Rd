@@ -37,7 +37,7 @@ a forecast-uncertainty result
 Summarize a population-level design forecast
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("summary.mfrm_population_prediction", run.dontrun = TRUE)
 \dontrun{
 # One saved replication illustrates output structure, not precise rates.

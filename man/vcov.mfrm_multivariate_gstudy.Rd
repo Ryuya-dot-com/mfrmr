@@ -106,7 +106,7 @@ a useful SE in a small sample or correct normal-reference coverage.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("vcov.mfrm_multivariate_gstudy", run.dontrun = TRUE)
 \dontrun{
 data("mfrmr_example_gtheory_crossed", package = "mfrmr")

@@ -1,7 +1,7 @@
 #' FACETS Positioning Guide
 #'
 #' @description
-#' `facets_guide('positioning')` gives user-facing wording for the relationship
+#' `facets_positioning_guide()` gives user-facing wording for the relationship
 #' between `mfrmr` and FACETS. Use it when a report, migration note, or
 #' methods appendix must make clear that `mfrmr` is not a FACETS numerical
 #' clone.
@@ -20,7 +20,7 @@
 #'   families, mixed families, multiple independent scales,
 #'   general threshold anchoring, and importing FACETS or third-party frozen
 #'   calibrations are not part of the current public estimator; native portable
-#'   calibration is available within the scope of `mfrmr_output_guide("calibration_capabilities")`,
+#'   calibration is available within the scope of [mfrm_calibration_capabilities()],
 #'   and posterior scoring from an existing fitted object remains separate;
 #' - extension surface: native R tables, plot data, GPCM diagnostics,
 #'   network views, and G/D-study helpers are package extensions, not promises
@@ -32,57 +32,57 @@
 #' - `RecommendedWording`
 #' - `PrimaryRoute`
 #'
-#' @seealso [facets_guide()], [mfrmr_output_guide()],
-#'   [read_facets_results()], [facets_fit_review()]
+#' @seealso [facets_feature_coverage()], [mfrmr_output_guide()],
+#'   [read_facets_fit_table()], [facets_fit_review()]
 #' @examples
-#' facets_guide('positioning')
-#' @name facets_positioning_guide
-#' @keywords internal
-#' @usage NULL
-NULL
+#' facets_positioning_guide()
+#' @export
+facets_positioning_guide <- function() {
+  .mfrmr_table_facets_positioning_guide_data
+}
 
 #' FACETS-to-mfrmr term crosswalk
 #'
 #' @description
-#' `facets_guide('terms')` maps common FACETS report and specification terms
+#' `facets_term_crosswalk()` maps common FACETS report and specification terms
 #' to their closest `mfrmr` objects or routes. The relationship column makes
 #' explicit whether a row is a substantive counterpart, a presentation
 #' convention, or only a migration aid.
 #'
 #' @return A data.frame with `FACETSTerm`, `mfrmrTerm`, `mfrmrRoute`,
 #'   `Relationship`, and `Boundary` columns.
-#' @seealso [facets_guide()], [facets_guide()],
-#'   [facets_guide()]
+#' @seealso [facets_positioning_guide()], [facets_feature_coverage()],
+#'   [facets_visual_contract()]
 #' @examples
-#' facets_guide('terms')
-#' @name facets_term_crosswalk
-#' @keywords internal
-#' @usage NULL
-NULL
+#' facets_term_crosswalk()
+#' @export
+facets_term_crosswalk <- function() {
+  .mfrmr_table_facets_term_crosswalk_data
+}
 
 #' FACETS-facing visual contract
 #'
 #' @description
-#' `facets_guide('visuals')` identifies the closest package route for common
+#' `facets_visual_contract()` identifies the closest package route for common
 #' FACETS visual surfaces and states what can and cannot be claimed from that
 #' visual correspondence. It distinguishes the FACETS-style asterisk ruler
 #' from the native uncertainty-aware Wright map.
 #'
 #' @return A data.frame with visual surface, status, first route, editable data
 #'   route, and claim-boundary columns.
-#' @seealso [plot(x, type = "wright", view = "unified")][plot.mfrm_fit], [plot_data()], [facets_guide()],
-#'   [facets_guide()]
+#' @seealso [plot(x, type = "wright", view = "unified")][plot.mfrm_fit], [plot_data()], [facets_term_crosswalk()],
+#'   [facets_feature_coverage()]
 #' @examples
-#' facets_guide('visuals')
-#' @name facets_visual_contract
-#' @keywords internal
-#' @usage NULL
-NULL
+#' facets_visual_contract()
+#' @export
+facets_visual_contract <- function() {
+  .mfrmr_table_facets_visual_contract_data
+}
 
 #' FACETS Feature Coverage Matrix
 #'
 #' @description
-#' `facets_guide('coverage')` summarizes how `mfrmr` maps
+#' `facets_feature_coverage()` summarizes how `mfrmr` maps
 #' the main FACETS output-table, output-file, and graph-menu surface to package
 #' functions. It is a surface-coverage guide, not a statement that estimands,
 #' conditioning, extreme-score handling, degrees of freedom, or numerical
@@ -144,28 +144,12 @@ NULL
 #' multivariate component designs. The older [mfrm_generalizability()] /
 #' [mfrm_d_study()] pair has a different main-effects decomposition. Neither
 #' route reproduces the FACETS interface to the external `gtheory` package.
-#' For balanced ANOVA, [confint.mfrm_multivariate_gstudy()] adds component
-#' SEs/intervals for a score or fixed composite under normal random effects;
-#' two-score covariance intervals have explicit generalized and conservative
-#' choices with signed bounds. Explicit `reml_profile` variance and covariance intervals
-#' also accept MINQUE(0), with a separate REML center and no sampling SE;
-#' two-score covariance profiles fit a joint normal model and retain signed bounds.
-#' [vcov.mfrm_multivariate_gstudy()] separately supplies component sampling
-#' covariance/SEs for balanced ANOVA and identifiable MINQUE sources using
-#' normal product moments; these describe the original estimator, not REML.
-#' Individual G/Phi intervals from balanced two-crossed-facet sources default
-#' to approximate MLS null inversion. Undefined MLS widths are conservatively
-#' retained and flagged; numerical availability does not guarantee coverage.
-#' G/Phi and SEM have an explicit experimental `reml_profile` option for balanced or
-#' identifiable incomplete sources; the separate REML fit retains original
-#' ANOVA/MINQUE points and does not guarantee finite-sample or boundary coverage.
-#' With `reference`, it maps one shared profile interval for one-facet plans
-#' or nested plans with a common future child count, including incomplete sources.
-#' Balanced crossed G also accepts explicit experimental `score` intervals,
-#' retaining empty-set and numerical diagnostics; Phi is not supplied by this route.
-#' [mfrm_multivariate_d_compare()]
-#' supplies a separate, limited normal-theory paired-plan calculation. See
-#' `vignette("mfrmr-gtheory", package = "mfrmr")` for a runnable workflow.
+#' Component and plan intervals have design-specific assumptions and methods;
+#' see [confint.mfrm_multivariate_gstudy()], [vcov.mfrm_multivariate_gstudy()],
+#' [confint.mfrm_multivariate_d_study()] and [mfrm_multivariate_d_compare()].
+#' These distinguish sampling SEs, measurement SEM, approximate intervals and
+#' conservative enclosures; computable bounds do not guarantee coverage.
+#' `vignette("mfrmr-gtheory", package = "mfrmr")` gives a worked example.
 #'
 #' @return A data.frame with columns:
 #' - `FACETSArea`
@@ -186,20 +170,16 @@ NULL
 #' Winsteps.com. See the guide's output-table index for the documented
 #' FACETS files, plots, and graphs.
 #'
-#' @seealso [facets_guide()], [mfrmr_output_guide()],
-#'   [read_facets_results()], [facets_fit_review()],
-#'   [mfrmr_gpcm_scope]
+#' @seealso [facets_positioning_guide()], [mfrmr_output_guide()],
+#'   [facets_fit_df_guide()], [read_facets_fit_table()], [facets_fit_review()],
+#'   [gpcm_capability_matrix()]
 #' @examples
-#' facets_guide('coverage')
-#' facets_guide('coverage', "partial")
-#' facets_guide('coverage', "supported_with_caveat")
-#' facets_guide('coverage', "not_implemented")
-#' @name facets_feature_coverage
-#' @keywords internal
-#' @usage NULL
-NULL
-
-.facets_feature_coverage <- function(status = c("all", "implemented",
+#' facets_feature_coverage()
+#' facets_feature_coverage("partial")
+#' facets_feature_coverage("supported_with_caveat")
+#' facets_feature_coverage("not_implemented")
+#' @export
+facets_feature_coverage <- function(status = c("all", "implemented",
                                                "supported_with_caveat",
                                                "partial", "not_implemented",
                                                "not_targeted")) {
@@ -380,7 +360,7 @@ NULL
         "Standalone observation-level residual CSV/TSV output, residual tables, and residual visualizations are available.",
         "Uses package-native residual columns rather than exact FACETS fixed-field residual syntax.", package_native_alternative),
     row("Output file", "Score output file", "scorefile.htm",
-        "facets_output_file_bundle(include = \"score\"); read_facets_results(); facets_fit_review(); plot()",
+        "facets_output_file_bundle(include = \"score\"); read_facets_fit_table(); read_facets_results(); plot()",
         "partial",
         "Native observation-level score export and separate FACETS element-level import, including standalone source-measure and fit plots.",
         "Export and import have different units/formats. Fixed imports require validated ASCII all-field headings; use named delimited columns for other layouts or non-ASCII labels. Imported results are descriptive, without external-calibration scoring or inferred joint uncertainty. GPCM score-side equivalence is outside scope.", package_native_alternative),
@@ -432,14 +412,14 @@ NULL
         "Exact full report emulation is outside the package scope.", external_program_alternative),
     row("Specification/workflow", "Raw FACETS report-text import",
         "outputtableindex.htm",
-        "read_facets_results() for delimited/fixed-field score extracts", "partial",
+        "read_facets_fit_table() for delimited/fixed-field score extracts", "partial",
         "Fit/score table import is supported.",
         "General raw FACETS report parsing is not implemented.", external_format_alternative),
     row("Current scope boundary",
         "FACETS or third-party frozen-calibration import",
         "current mfrmr public contract",
-        "no external import; native route: mfrmr_output_guide(\"calibration_capabilities\"); load_mfrm_calibration(); score_mfrm_calibration()", "not_implemented",
-        "Native mfrmr portable artifacts support fixed-standard-normal RSM/PCM MML, qualified estimated-normal GPCM MML and qualified reference-prior RSM/PCM or shared-owner GPCM JML; consult mfrmr_output_guide(\"calibration_capabilities\") for scope and source checks.",
+        "no external import; native route: mfrm_calibration_capabilities(); load_mfrm_calibration(); score_mfrm_calibration()", "not_implemented",
+        "Native mfrmr portable artifacts support fixed-standard-normal RSM/PCM MML, qualified estimated-normal GPCM MML and qualified reference-prior RSM/PCM or shared-owner GPCM JML; consult mfrm_calibration_capabilities() for scope and source checks.",
         "No current route converts a FACETS or another program's calibration file into an mfrmr portable artifact; native artifact scoring does not establish transportability or external-program equivalence.",
         "Use the native mfrmr calibration workflow for eligible fits; use a separately validated external workflow when third-party calibration import is required."),
     row("Current scope boundary",
@@ -490,7 +470,7 @@ NULL
         "not available for unrestricted GPCM", "not_implemented",
         "JML requires slope_facet to equal step_facet; MML permits separate owners with one slope family.",
         "GPCM support does not establish an unrestricted free-discrimination model family.",
-        "Use mfrmr_output_guide(\"gpcm_capabilities\") and the documented GPCM route; retain unrestricted GPCM for a later release."),
+        "Use gpcm_capability_matrix() and the documented GPCM route; retain unrestricted GPCM for a later release."),
     row("Current scope boundary",
         "FACETS free-slope polytomous GPCM comparison",
         "t7menu.htm",

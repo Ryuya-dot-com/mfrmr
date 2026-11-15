@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-shrinkage.R
 \name{shrinkage_report}
 \alias{shrinkage_report}
-\title{Extract the shrinkage report from a fitted mfrm_fit}
+\title{Inspect shrinkage by facet}
 \usage{
 shrinkage_report(fit)
 }
@@ -14,13 +14,30 @@ A data.frame with one row per facet (and optionally
 \code{"Person"}) or \code{NULL} when shrinkage has not been applied.
 }
 \description{
-Lightweight accessor that returns the per-facet empirical-Bayes
-shrinkage table stored on a fit when \code{facet_shrinkage != "none"}.
-Returns \code{NULL} (with a message) when no shrinkage has been applied
-so callers can probe without error.
+Summarize how much an optional empirical-Bayes adjustment moves facet
+estimates toward zero. The report is available after
+\code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}} or
+\code{fit_mfrm(..., facet_shrinkage = "empirical_bayes")}.
+}
+\details{
+\code{MeanShrinkage} averages available shrinkage fractions: 0 leaves an
+estimate unchanged; 1 pools it at zero. \code{EffectiveDF} sums retained weights
+conditional on the prior variance; it is not a test or AIC degrees of freedom.
+
+\code{NLevels} counts all levels; \code{NLevelsUsed} counts finite estimate/positive-SE
+pairs. \code{Tau2} is the selected prior variance in squared parameter units;
+\code{PriorSource} identifies empirical moments or a supplied prior.
+\code{MeanSE2} averages squared input SEs. Below three eligible levels no
+adjustment is applied, \code{Tau2} is unavailable and shrinkage is zero for
+eligible levels; inspect \code{Note}.
+
+\code{SupportsFormalInference} is false. Full pooling's zero plug-in SE does
+not establish perfect precision. \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}}
+defines the calculation and omitted uncertainty; original MFRM estimates
+remain unchanged.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("shrinkage_report", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_core")

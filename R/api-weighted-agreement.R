@@ -65,7 +65,7 @@
 #' @seealso [gwet_ac2_table()], [krippendorff_alpha_table()],
 #'   [pairwise_icc_table()], [score_comparison_table()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("pairwise_kappa_table", run.dontrun = TRUE)
 #' \dontrun{
 #' data("mfrmr_example_agreement", package = "mfrmr")
@@ -190,7 +190,7 @@ pairwise_kappa_table <- function(data, rater, unit, score, categories,
 #' @seealso [pairwise_kappa_table()], [krippendorff_alpha_table()],
 #'   [pairwise_icc_table()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("gwet_ac2_table", run.dontrun = TRUE)
 #' \dontrun{
 #' data("mfrmr_example_agreement", package = "mfrmr")

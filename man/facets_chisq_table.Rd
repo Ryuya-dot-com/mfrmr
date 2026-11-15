@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{facets_chisq_table}
 \alias{facets_chisq_table}
-\title{Build facet variability diagnostics with fixed/random reference tests}
+\title{Review facet variability with chi-square reference screens}
 \usage{
 facets_chisq_table(
   fit,
@@ -19,9 +19,9 @@ facets_chisq_table(
 Must match this fitted analysis; see \link{mfrmr_compatibility_layer} for
 migration of saved diagnostics.}
 
-\item{fixed_p_max}{Warning cutoff for fixed-effect chi-square p-values.}
+\item{fixed_p_max}{Cutoff for the fixed-effect reference tail area.}
 
-\item{random_p_max}{Warning cutoff for random-effect chi-square p-values.}
+\item{random_p_max}{Cutoff for the random-spread reference tail area.}
 
 \item{top_n}{Optional maximum number of facet rows to keep.}
 }
@@ -34,7 +34,7 @@ A named list with:
 }
 }
 \description{
-Build facet variability diagnostics with fixed/random reference tests
+Review facet variability with chi-square reference screens
 }
 \details{
 This helper summarizes facet-level variability with fixed and random
@@ -69,20 +69,22 @@ The \code{table} data.frame contains:
 \item{Facet}{Facet name.}
 \item{Levels}{Number of estimated levels in this facet.}
 \item{MeanMeasure, SD}{Mean and standard deviation of level measures.}
-\item{FixedChiSq, FixedDF, FixedProb}{Fixed-effect chi-square test
-(null hypothesis: all levels equal). Significant result means the
-facet elements differ more than measurement error alone.}
+\item{FixedChiSq, FixedDF, FixedProb}{Sum of squared deviations from
+the inverse-SE-squared weighted mean, weighted by inverse SE squared,
+with a chi-square reference using eligible-level count minus one.
+Cross-level covariance is omitted; this is a heterogeneity screen,
+not a generally calibrated joint test of equal facet locations.}
 \item{RandomChiSq, RandomDF, RandomProb, RandomVar}{FACETS-form random
 spread index and reference tail area. It does not establish normality
 or random sampling: with equal SEs and positive adjusted variance the
 statistic is identically eligible-level count minus one, regardless of
 distributional shape. Full covariance is not propagated.}
-\item{FixedFlag, RandomFlag}{Logical flags for significance.}
+\item{FixedFlag, RandomFlag}{Logical flags for the requested reference-tail cutoffs.}
 }
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("facets_chisq_table", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.

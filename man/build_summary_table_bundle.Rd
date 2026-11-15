@@ -133,92 +133,69 @@ An object of class \code{mfrm_summary_table_bundle} with:
 
 For \code{summary()}: An object of class \code{summary.mfrm_summary_table_bundle}.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object carrying its saved plot
-payload accessible via \code{\link[=plot_data]{plot_data()}}.
+For \code{plot()}: A plotting-data object of class \code{mfrm_plot_data}.
 }
 \description{
 Build a manuscript-oriented table bundle from \code{summary()} outputs
 }
 \details{
-This helper turns the package's compact summary objects into a reproducible
-table bundle for manuscript drafting, appendix handoff, or downstream
-formatting. It does not replace \code{\link[=apa_table]{apa_table()}}; instead, it provides a
-consistent bridge from \code{summary()} to named \code{data.frame} components that can
-later be rendered with \code{\link[=apa_table]{apa_table()}} or exported directly.
-
-The public entry point validates \code{x} and the summary-object contract up
-front, so malformed summaries fail with a package-level message instead of
-falling through to opaque downstream errors.
-
-The function first normalizes \code{x} through the corresponding \code{summary()}
-method when needed, then records a \code{table_index} describing every available
-table and returns the selected tables in \code{tables}. Optional appendix presets
-can be applied at bundle-construction time when you want a conservative
-manuscript-facing subset before plotting or export.
+Collect named data frames for manuscript tables or appendices. Raw objects
+pass through their \code{summary()} method; existing summaries are validated and
+used directly. Compact summaries can be limited by \code{top_n}; the complete
+evidence routes below are exceptions. Select tables with \code{which} or
+\code{appendix_preset}, then use \code{\link[=apa_table]{apa_table()}} for formatting or
+\code{\link[=export_summary_appendix]{export_summary_appendix()}} for CSV/HTML output.
 
 \code{summary()} method: Summarize a summary-table bundle for manuscript QC
 
-For \code{summary()}: This summary is designed to answer a manuscript-facing question: which
-reporting tables are available, how large are they, which roles do they
-serve, and which of them contain numeric content suitable for quick plotting
-or appendix export.
+For \code{summary()}: Review returned-table coverage, dimensions, roles
+and numeric content before plotting or export.
 
 \code{plot()} method: Plot a summary-table bundle for manuscript QC
 
-For \code{plot()}: This helper keeps summary-bundle plotting conservative. It either visualizes
-the bundle's own bundle-level indexes (\code{"table_rows"}, \code{"role_tables"},
-\code{"appendix_roles"}, \code{"appendix_sections"}, \code{"appendix_presets"}) or routes a
-selected table through \code{\link[=apa_table]{apa_table()}} and \code{\link[=plot.apa_table]{plot.apa_table()}} for numeric QC.
+For \code{plot()}: Table-count views describe reporting coverage, not
+study sample sizes. \verb{selection_*} views use appendix selections already
+retained in the bundle; \code{"selection_handoff_role_sections"} groups them by
+reporting role and appendix section. Numeric views pass the selected table
+through \code{\link[=apa_table]{apa_table()}} and \code{\link[=plot.apa_table]{plot.apa_table()}} for exploratory checks. See
+\code{type} for each view and \code{selection_value} for counts versus fractions.
 }
 \section{Supported inputs}{
 
+The following outputs and their summaries are supported:
 \itemize{
-\item \code{\link[=mfrm_g_study]{mfrm_g_study()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}},
-\code{\link[=mfrm_residual_network]{mfrm_residual_network()}} or their \code{\link[=mfrm_report]{mfrm_report()}} objects; supply saved
-intervals to \code{mfrm_report()} first. These routes retain all evidence tables,
-including signed estimates, settings and unavailable states, without \code{top_n}
-truncation.
-\item \code{\link[=fit_mfrm]{fit_mfrm()}} or \code{summary(fit)}
-\item \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} or \code{summary(diag)}
-\item \code{\link[=precision_review_report]{precision_review_report()}} or \code{summary(precision_review)}
-\item \code{\link[=fit_measures_table]{fit_measures_table()}} or \code{summary(fit_measures)}
-\item \code{\link[=facets_fit_review]{facets_fit_review()}} or \code{summary(facets_fit_review)}
-\item \code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}} or \code{summary(person_fit)}
-\item \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} or \code{summary(ds)}
-\item \code{\link[=reporting_checklist]{reporting_checklist()}} or \code{summary(chk)}
-\item \code{\link[=build_apa_outputs]{build_apa_outputs()}} or \code{summary(apa)}
-\item \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} or \code{summary(sim_eval)}
-\item \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}} or \code{summary(sig_eval)}
-\item \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} or \code{summary(rec)}
-\item \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} or \code{summary(rec_assessment)}
-\item a compatible precomputed recovery-evidence summary
-\item \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} or \code{summary(pred)}
-\item the \code{structural_design_review} component of a design or prediction summary
-\item \code{\link[=run_mfrm_facets]{run_mfrm_facets()}} or \code{summary(out)}
-\item \code{\link[=estimate_bias]{estimate_bias()}} or \code{summary(bias)}
-\item \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} or \code{summary(review)}
-\item \code{\link[=build_linking_review]{build_linking_review()}} or \code{summary(review)}
-\item \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} or \code{summary(casebook)}
-\item \code{\link[=build_model_choice_review]{build_model_choice_review()}} or \code{summary(review)}
-\item \code{\link[=build_weighting_review]{build_weighting_review()}} or \code{summary(review)}
-\item \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{summary(pred_units)}
-\item \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} or \code{summary(scores)}; includes all review
-dispositions and unrounded conditional decisions when requested
-\item \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} or \code{summary(pv)}
-}
+\item Model/data review: \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}},
+\code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=precision_review_report]{precision_review_report()}}, \code{\link[=fit_measures_table]{fit_measures_table()}},
+\code{\link[=facets_fit_review]{facets_fit_review()}} and \code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}}.
+\item Reporting/review: \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
+\code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}},
+\code{\link[=build_linking_review]{build_linking_review()}}, \code{\link[=build_misfit_casebook]{build_misfit_casebook()}},
+\code{\link[=build_model_choice_review]{build_model_choice_review()}} and \code{\link[=build_weighting_review]{build_weighting_review()}}.
+\item Simulation/design: \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}},
+\code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}}, \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}}, or a compatible
+precomputed recovery-evidence summary. A design or prediction summary's
+\code{structural_design_review} component is also supported.
+\item Scoring/prediction: \code{\link[=predict_mfrm_population]{predict_mfrm_population()}}, \code{\link[=predict_mfrm_units]{predict_mfrm_units()}},
+\code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} and \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}}; the last
+retains all requested review dispositions and unrounded conditional decisions.
 }
 
-\section{Interpreting output}{
+\code{\link[=mfrm_g_study]{mfrm_g_study()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}},
+\code{\link[=mfrm_residual_network]{mfrm_residual_network()}} and their \code{\link[=mfrm_report]{mfrm_report()}} objects retain complete
+evidence tables, including signed estimates, settings and unavailable states,
+without \code{top_n} truncation. Supply saved intervals to \code{mfrm_report()} first.
+}
 
+\section{Reading the tables}{
+
+Read \code{table_index} for names, dimensions, roles and descriptions, then select
+data frames from \code{tables}. \code{overview} records source metadata and table counts;
+\code{plot_index} identifies numeric tables and supported views. \code{appendix_preset}
+records the selection (\code{"none"} if unused), and \code{notes} explains omitted empty
+tables or source caveats. For recovery studies, follow \code{tables$reading_order}
+when present, reading diagnostic and condition notes before detailed tables
+such as \code{condition_review}.
 \itemize{
-\item \code{overview}: one-row metadata about the source summary and table counts.
-\item \code{table_index}: table names, dimensions, roles, and manuscript-oriented
-descriptions.
-\item \code{plot_index}: which returned tables contain numeric content and which
-bundle-level plot types can use them directly.
-\item \code{tables}: named \code{data.frame} objects ready for formatting or export.
-\item \code{appendix_preset}: active appendix subset mode (\code{"none"} when not used).
-\item \code{notes}: short guidance about omitted empty tables or source-level caveats.
 \item fit-level caveats use the \code{analysis_caveats} role; pre-fit data
 score-support caveats use the \code{score_category_caveats} role. Both roles are
 classified as diagnostics and stay in \code{recommended} appendix subsets.
@@ -245,7 +222,9 @@ documented with the coefficient table.
 tied to their same-basis limits, equal-weighting, sensitivity, and
 reporting-boundary roles.
 }
+}
 
+\section{Interpreting output}{
 
 For \code{summary()}:
 \itemize{
@@ -264,82 +243,22 @@ appendix-export presets derived from table roles.
 the same conservative appendix routing used by the bundle catalog.
 \item \code{appendix_section_summary}: counts of returned tables by manuscript-facing
 appendix section.
-\item \code{selection_handoff_table_summary}: workflow-only table-level appendix
-handoff crosswalk when present in the bundle.
-\item \code{selection_handoff_preset_summary}: workflow-only appendix handoff overview
-aggregated at the preset level when present in the bundle.
-\item \code{selection_handoff_bundle_summary}: workflow-only appendix handoff
-overview aggregated at the bundle-by-section level when present in the
-bundle.
-\item \code{selection_handoff_role_summary}: workflow-only appendix handoff overview
-aggregated at the reporting-role level when present in the bundle.
-\item \code{selection_handoff_role_section_summary}: workflow-only appendix handoff
-overview aggregated at the reporting-role by appendix-section level when
-present in the bundle.
+\item When workflow appendix tables are present, \code{selection_handoff_table_summary},
+\code{selection_handoff_preset_summary}, \code{selection_handoff_bundle_summary},
+\code{selection_handoff_role_summary} and \code{selection_handoff_role_section_summary}
+describe export selections by table, preset, bundle-by-section, reporting role
+and role-by-section, respectively.
 \item \code{selection_summary}, \code{selection_table_summary},
 \code{selection_table_preset_summary}, \code{selection_role_summary},
-\code{selection_section_summary}, and \code{selection_catalog}: preset-filtered
-appendix selection surfaces when workflow-only handoff tables are embedded
-in the bundle.
+\code{selection_section_summary} and \code{selection_catalog} describe the
+preset-filtered selections from those workflow tables.
 \item \code{reporting_map}: where to go next for plotting, APA formatting, and export.
 \item \code{notes}: carried forward source-level caveats from the originating summary.
-}
-
-
-For \code{plot()}:
-\itemize{
-\item \code{"table_rows"}: compares returned table sizes to show where reporting mass sits.
-\item \code{"role_tables"}: shows how many returned tables belong to each reporting role.
-\item \code{"appendix_roles"}: shows how returned tables contribute to conservative
-appendix routing by reporting role.
-\item \code{"appendix_sections"}: shows how returned tables are distributed across
-methods/results/diagnostics/reporting sections.
-\item \code{"appendix_presets"}: shows how many tables the current bundle contributes
-to the conservative appendix presets.
-\item \code{"selection_handoff_presets"}: shows plot-ready appendix handoff counts by
-preset for workflow-only appendix routing surfaces in the bundle.
-\item \code{"selection_tables"} / \code{"selection_handoff"} /
-\code{"selection_handoff_bundles"} /
-\code{"selection_handoff_roles"} / \code{"selection_handoff_role_sections"} /
-\code{"selection_bundles"} /
-\code{"selection_roles"} / \code{"selection_sections"}: show workflow-only appendix
-selection surfaces already materialized inside the bundle.
-\item \code{"numeric_profile"} / \code{"first_numeric"}: reuse the same numeric QC logic as
-\code{\link[=plot.apa_table]{plot.apa_table()}} but start from a summary-table bundle.
-}
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Build a compact object with \code{summary(...)}.
-\item Convert it with \code{build_summary_table_bundle(...)}.
-\item Use \code{bundle$tables[[...]]} directly, or hand a selected table to
-\code{\link[=apa_table]{apa_table()}} for formatted manuscript output.
-\item If you want a manuscript appendix subset up front, use a preset such as
-\code{appendix_preset = "recommended"}, \code{"compact"}, or \code{"diagnostics"}.
-\item For recovery-assessment or recovery-validation summaries, inspect
-\code{bundle$tables$reading_order} first when it is available.
-\item For recovery-assessment or recovery-validation summaries with retained
-diagnostics, read \code{diagnostic_reporting_notes} before the raw
-\code{diagnostic_review} or \code{diagnostic_oc_summary}. Read
-\code{condition_reporting_notes} before \code{condition_review} or
-\code{condition_summary} when \code{GPCM} generator stress is part of the
-plan.
-}
-
-
-For \code{summary()}:
-\enumerate{
-\item Build \code{bundle <- build_summary_table_bundle(summary(...))}.
-\item Run \code{summary(bundle)} to see reporting coverage.
-\item Use \code{plot(bundle, type = "table_rows")} or
-\code{plot(bundle, type = "numeric_profile", which = ...)} for quick QC.
 }
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("build_summary_table_bundle", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
@@ -351,7 +270,7 @@ bundle$table_index
 summary(bundle)$role_summary
 
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("summary.mfrm_summary_table_bundle", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
@@ -361,7 +280,7 @@ fit <- example_fit$fit
 bundle <- build_summary_table_bundle(fit)
 summary(bundle)
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_summary_table_bundle", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
@@ -374,7 +293,7 @@ plot(bundle, type = "numeric_profile", which = "facet_overview", draw = FALSE)
 }
 }
 \seealso{
-\code{\link[base:summary]{base::summary()}}, \code{\link[=apa_table]{apa_table()}}, \code{\link[=reporting_checklist]{reporting_checklist()}},
+\code{\link[=summary]{summary()}}, \code{\link[=apa_table]{apa_table()}}, \code{\link[=reporting_checklist]{reporting_checklist()}},
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=build_model_choice_review]{build_model_choice_review()}},
 \code{\link[=build_weighting_review]{build_weighting_review()}}
 

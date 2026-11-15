@@ -37,51 +37,33 @@ A data.frame with \code{Facet}, \code{Level}, and \code{Anchor}.
 Build a candidate direct-anchor table from fitted estimates
 }
 \details{
-This function performs a mechanical conversion from fitted estimates to the
-\code{Facet}/\code{Level}/\code{Anchor} schema accepted by \code{fit_mfrm()}. The returned rows
-are candidate direct constraints, not an approved anchor set.
-\code{Anchor} uses the internal, untransformed location metric. The table does
-not include category thresholds, GPCM slopes, model settings or source SEs;
-it is not a complete saved calibration. See \code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} for that
-separate workflow. Fixing an estimated value does not propagate its source
-uncertainty into the new fit.
+Convert fitted estimates to candidate direct constraints in the
+\code{Facet}/\code{Level}/\code{Anchor} schema. \code{Anchor} is the internal, untransformed location;
+fixing it in a new fit does not propagate source uncertainty. Thresholds,
+GPCM slopes, model settings and source SEs are excluded; use
+\code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} for a complete saved calibration.
 
-By default, the function refuses export when the source fit is not
-inference-ready under the current readiness contract. Set
-\code{readiness_policy = "review"} only to inspect candidate values; this does not
-make them eligible for reuse. The function cannot verify cross-run element
-identity or invariance. Before reuse, document why selected elements retain
-the same meaning, check the observed design's connectedness, and run
-\code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} on the receiving data. That review checks schema and
-receiving-data support; it does not validate the source fit or the
-substantive invariance assumption.
+Export is refused unless the source fit is inference-ready under the current
+contract. \code{readiness_policy = "review"} allows inspection, not approval for
+reuse. Check cross-run element identity, substantive invariance and observed
+connectedness separately, then use \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} on the receiving
+data. That review checks constraints and data support, not source-fit quality
+or invariance.
 
 Keep \code{digits = NULL} for recalibration. Rounding individual anchors can
 break their joint sum or group-mean constraint, even at six decimal places.
 Explicitly rounded values are different constraints and must be reviewed
 before reuse; the fitter does not silently recenter supplied anchors.
 }
-\section{Interpreting output}{
+\section{Using the candidates}{
 
-\itemize{
-\item \code{Facet}: facet name to be anchored in later runs.
-\item \code{Level}: specific element/level name inside that facet.
-\item \code{Anchor}: fixed logit value (rounded only when \code{digits} is supplied).
-}
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Fit and diagnose a defensible reference run with \code{\link[=fit_mfrm]{fit_mfrm()}}.
-\item Confirm source readiness, element identity, and the intended link.
-\item Export candidates with \code{make_anchor_table(fit)} and review them.
-\item Pass selected rows back into \code{fit_mfrm(..., anchors = ...)}.
-}
+\code{Facet} names the facet, \code{Level} its element, and \code{Anchor} the fixed value
+(rounded only when \code{digits} is supplied). After reviewing the reference fit
+and receiving data, pass selected rows to \code{fit_mfrm(..., anchors = ...)}.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("make_anchor_table", run.dontrun = TRUE)
 \dontrun{
 ratings <- load_mfrmr_data("example_operational")

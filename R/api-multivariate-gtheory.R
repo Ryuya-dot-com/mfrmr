@@ -49,158 +49,107 @@
 #'   parent: R1 within Task 1 differs from R1 within Task 2. `NULL` (default)
 #'   specifies crossed facets. See "Nested measurement facets" below.
 #'
-#' @details Every retained cell must have every selected score. Duplicate
-#'   cells are not supported. The same identifier (parent/child pair for a
-#'   nested child) must denote the same condition across persons and scores.
-#'   Equal level counts alone cannot establish that identity or random sampling
-#'   from the intended universe.
+#' @details
+#' Each retained Person/facet cell must contain every selected score, without
+#' duplicate cells. Identifiers (parent/child pairs for nested facets) must denote
+#' the same conditions across persons and scores; equal counts do not establish
+#' shared identity or random sampling. Choose facets from the intended universe:
+#' raters, content-sampling tasks or exchangeable occasions. Occasion labels do
+#' not model growth, practice or serial correlation. Score columns are fixed
+#' components. Three or more facets, fixed measurement facets, nesting within
+#' Persons and partial sharing across scores are unsupported.
 #'
-#'   In 0.2.4, `mfrm_g_study()` replaces the longer public name
-#'   `mfrm_multivariate_gstudy()` for both one and several scores. The arguments,
-#'   default estimator and result class are unchanged. Use [mfrm_d_study()]
-#'   for future plans. Existing saved G-study objects remain usable without
-#'   re-estimation; update constructor calls in old scripts. See
-#'   [mfrmr_compatibility_layer] for migration from both former names.
+#' `mfrm_g_study()` replaces `mfrm_multivariate_gstudy()` for one or several
+#' scores without changing arguments, defaults or result class. Saved objects
+#' need no re-estimation; update constructor calls. See [mfrmr_compatibility_layer].
 #'
-#'   Choose facets from the intended use of scores: common raters for judging
-#'   performances, common tasks for sampling content, or common occasions for
-#'   repeat assessments. All selected facets are random and, unless `nesting`
-#'   is supplied, fully crossed; `method = "minque0"` permits incomplete observations
-#'   of that model. Naming a column Occasion does not model growth, practice,
-#'   trends, or serial correlation. Its levels must be defensibly treated as
-#'   exchangeable conditions under the stated random-effects assumptions.
-#'   Score columns are fixed components of the assessment, not another random
-#'   facet. Three or more facets, fixed measurement facets, nesting within
-#'   persons, and partial sharing across score components are not supported.
+#' **Estimation.** ANOVA requires complete balanced observations; MINQUE(0)
+#' allows incomplete/unequal observations of the same random-effects model.
+#' MINQUE assumes a score-specific common mean and independent zero-mean random
+#' effects with a common covariance matrix per component. With intercept-removal
+#' matrix `H` and shared-level kernels `K_s`, it solves
+#' `S_st = tr(H K_s H K_t)` against `Q_s = Y' H K_s H Y` for each score pair.
+#' Group counts avoid observation-square matrices and full Cartesian grids.
+#' Balanced results agree with ANOVA. There is no likelihood optimization,
+#' covariate-dependent mean or iterative working-covariance estimation.
 #'
-#'   MINQUE(0) models a common mean for each score and independent, zero-mean
-#'   random effects with a common covariance matrix for each component. With
-#'   intercept-removal matrix `H` and shared-level covariance kernels `K_s`, it
-#'   solves `S_st = tr(H K_s H K_t)` against `Q_s = Y' H K_s H Y` for every
-#'   score pair. Group-count calculations avoid an observation-by-observation
-#'   matrix or a full Cartesian grid. On balanced data it agrees with ANOVA.
-#'   It does not optimize a likelihood, fit covariate-dependent means, or
-#'   iteratively estimate working covariance weights.
+#' The diagonally scaled moment system must have every eigenvalue above
+#' `sqrt(.Machine$double.eps)` times its maximum; otherwise estimation stops.
+#' `estimation` retains rank, scaled eigenvalues, condition number and replication
+#' counts. These diagnose component separation, not sampling precision or fit.
+#' Graph connectedness is insufficient: four tasks with two ratings each and
+#' eight tasks rated once have equal workload, but only the former repeats
+#' ratings within Person/Task cells. Without that replication, Person:Task and
+#' Residual cannot be separated in the seven-component model. Other overlaps
+#' are needed for the remaining components; uneven workloads can affect precision.
+#' [vcov.mfrm_multivariate_gstudy()] supplies normal-model sampling covariance
+#' and SEs, including incomplete sources, with separate negative/nonidentifiable
+#' sampling-variance diagnostics; it does not supply normal-reference intervals.
 #'
-#'   The diagonally scaled moment system must have all eigenvalues above
-#'   `sqrt(.Machine$double.eps)` times its largest eigenvalue. Otherwise the
-#'   function stops because the components cannot be separated reliably by
-#'   these equations. `estimation` retains the rank, scaled eigenvalues,
-#'   condition number, and per-component replication counts. These are design
-#'   and numerical diagnostics, not precision estimates or model-fit tests.
-#'   Graph connectedness alone does not establish component identifiability.
-#'   For example, four tasks scored by two distinct raters per performance
-#'   and eight tasks scored once have the same per-person workload. Only the
-#'   former provides repeated ratings within a Person/Task cell; with one
-#'   rating per cell, Person-by-Task and residual variation cannot be separated
-#'   in the seven-component model. Other overlaps are still needed for the
-#'   remaining components. Uneven workloads across raters can also affect
-#'   precision even when the moment system has full rank.
-#'   [vcov.mfrm_multivariate_gstudy()] supplies normal-model sampling
-#'   covariance and SEs for the original component estimates, including
-#'   incomplete sources. Inspect its separate negative/nonidentifiable
-#'   sampling-variance diagnostics; it does not provide normal-reference intervals.
+#' Conditioning on assignments must preserve the random-effect means/covariances.
+#' Outcome-dependent assignments or omissions can violate this; a MAR label does
+#' not correct selection or omitted covariates. Compare planned and recorded
+#' ratings with [describe_mfrm_data()] and `expected_design`.
+#' `design$observed_fraction` divides by the cross-product of retained levels
+#' (crossed), or Persons times observed parent/child pairs (nested). It is not
+#' assignment completion and cannot reveal wholly unobserved Persons or facets.
 #'
-#'   Conditioning on the observed assignments must preserve the stated
-#'   random-effect means and covariances. Outcome-dependent assignment or
-#'   missingness may violate this assumption; calling missingness MAR does
-#'   not correct omitted covariates or selection. Review planned assignments
-#'   separately from recorded scores, for example with [describe_mfrm_data()]
-#'   and its `expected_design` argument. `design$observed_fraction` uses the
-#'   cross-product of retained observed levels for crossed facets, or persons
-#'   times the number of observed parent/child pairs for nested facets. It is not an assignment
-#'   completion rate and cannot reveal entirely unobserved persons or facets.
+#' **Components and units.** Two crossed facets give `Person`, `Rater`, `Task`,
+#' `Person:Rater`, `Person:Task`, `Rater:Task` and `Residual`; with one row per
+#' cell, Residual combines three-way interaction and within-cell error. One
+#' facet gives Person, that facet and Residual (Person-by-facet plus within-cell
+#' error). `facets` labels replace Rater/Task. Omitting a facet neither removes
+#' its effects nor supports generalization to new conditions; scores are not
+#' averaged automatically. ANOVA uses mean products for multiple scores.
 #'
-#'   With crossed rater and task facets, the seven components are `Person`, `Rater`, `Task`, `Person:Rater`,
-#'   `Person:Task`, `Rater:Task`, and `Residual`. With one observation per cell,
-#'   `Residual` combines the three-way interaction and within-cell error;
-#'   they cannot be separated. With one facet, the three components are
-#'   `Person`, the facet, and `Residual`; the last combines Person-by-facet
-#'   interaction and within-cell error. Labels supplied in `facets` replace
-#'   Rater/Task in these component names. Omitting a facet does not remove its
-#'   effects from scores or support generalization to new conditions of that facet. No
-#'   scores are averaged automatically. Each component is a matrix whose
-#'   diagonal contains variances and whose off-diagonal contains covariances between
-#'   scores. For ANOVA, mean products replace the mean squares used for a
-#'   single score.
+#' Each component's diagonal contains variances in squared score units;
+#' off-diagonals are covariances in products of score units, not correlations or
+#' variance percentages. Positive Rater covariance means rater-associated score
+#' deviations move together, not rater agreement or correlated Person abilities.
+#' Numeric treatment of ordinal categories does not estimate latent/MFRM reliability.
 #'
-#'   Raw component estimates, including negative variances and indefinite
-#'   matrices, are retained without clipping or nearest-PSD repair. The
-#'   `component_diagnostics` assess eigenvalues after scaling by the observed
-#'   score SDs, using a relative numerical tolerance. This is a numerical
-#'   admissibility check, not a significance test or precision assessment.
-#'   Rank-deficient components are reported. [mfrm_d_study()]
-#'   retains raw projected variances and evaluates each score/composite and
-#'   metric separately. A non-PSD component does not automatically withhold
-#'   coefficients: for example, Rater-by-Task does not enter relative error.
-#'   D-study tables and plots flag non-PSD components even when a requested
-#'   projection can be calculated. Inspect these diagnostics before using it.
-#'   Non-PSD estimates can arise from sampling variation even under a correctly
-#'   specified model, particularly when a true component is small or zero.
-#'   They do not by themselves prove bad data, informative missingness, or
-#'   model misspecification. Automatic clipping or deleting a component would
-#'   change the estimation procedure and is not performed.
-#'   Distinguish `estimation$rank`, the number of separable components, from
-#'   `component_diagnostics$Rank`, the rank of each between-score covariance
-#'   matrix. A true zero covariance component can have matrix rank zero
-#'   while the design still separates that component from the others.
+#' **Admissibility.** Negative variances and indefinite matrices remain raw,
+#' without clipping or nearest-PSD repair. `component_diagnostics` scales by
+#' observed score SDs before checking eigenvalues. `MinimumScaledEigenvalue` is
+#' dimensionless, not a raw component or confidence limit; `PositiveSemidefinite`
+#' compares it with `-Tolerance`, not with the signs of all covariance entries.
+#' These are numerical checks, not significance or precision tests. Non-PSD
+#' estimates can arise through sampling variation, especially near zero, and
+#' do not alone prove bad data, informative missingness or misspecification.
 #'
-#'   The model concerns numeric observed scores. Treating ordered categories
-#'   as numeric does not estimate latent ordinal or MFRM reliability. The
-#'   The FACETS G-theory web example gives different coefficients for
-#'   main-effects and interaction models (about 0.72930 versus 0.55144 in its
-#'   nested example). Match the specified decomposition before comparing.
-#'   Its Rater and Task:Rater terms share the same nested incidence and their
-#'   summed variance corresponds to Rater(Task) here. A matching coefficient
-#'   does not identify those redundant terms separately.
-#'   GENOVA 3.1 and urGENOVA 2.1 balanced nested examples agree with the
-#'   corresponding ANOVA variance components; mGENOVA 2.1 also checks
-#'   multivariate components and D-study coefficients. urGENOVA uses
-#'   Henderson's Method 1 for unbalanced designs, whereas this function offers
-#'   MINQUE0 there; equal results are not required for different estimators.
-#'   urGENOVA has no D-study output. These comparisons do not establish
-#'   unbalanced interval coverage or general interchangeability. The
-#'   mGENOVA Appendix E example checks balanced numerical calculations;
-#'   MINQUE(0) additionally agrees with direct covariance-kernel calculations
-#'   for incomplete designs. These checks do not establish population recovery
-#'   for arbitrary sparse assignments or missingness mechanisms. This function
-#'   returns point estimates, not sampling intervals.
+#' [mfrm_d_study()] evaluates each score/composite and metric separately, retaining
+#' non-PSD flags even when the projection is calculable; Rater:Task, for example,
+#' does not enter relative error. Distinguish `estimation$rank` (separable
+#' components) from `component_diagnostics$Rank` (rank within a between-score
+#' matrix): an identifiable zero component may have matrix rank zero.
 #'
+#' **External comparisons.** Match decomposition and estimator. FACETS' nested
+#' G-theory example gives about 0.72930 for main effects versus 0.55144 with
+#' interactions; its redundant Rater and Task:Rater incidences sum to Rater(Task)
+#' here, without identifying them separately. GENOVA 3.1/urGENOVA 2.1 balanced
+#' nested examples match ANOVA components; mGENOVA 2.1 also checks multivariate
+#' components and D-study coefficients (Appendix E). Unbalanced urGENOVA uses
+#' Henderson's Method 1 rather than MINQUE(0), and has no D-study output.
+#' Incomplete MINQUE(0) also matches direct covariance-kernel calculations.
+#' These numerical checks do not establish arbitrary sparse-design recovery,
+#' missingness robustness, interval coverage or general interchangeability.
 #' @section Component uncertainty versus measurement error:
-#'   For a balanced ANOVA result, [confint.mfrm_multivariate_gstudy()] adds
-#'   sampling SEs and pointwise intervals for variance components of one score
-#'   or a prespecified weighted composite, under an explicit normal-effects
-#'   assumption. `plot(g, intervals = TRUE, assumption = "normal")` adds
-#'   these intervals to a component plot; its returned data retain SEs,
-#'   raw endpoints and reasons for unavailable intervals.
-#'   For balanced or identifiable incomplete sources, explicit
-#'   `method = "reml_profile"` supplies approximate variance or two-score covariance intervals
-#'   from a separate normal REML model. Original estimates remain unchanged,
-#'   with the REML estimate in `IntervalCenter`. It does not supply a component
-#'   sampling SE, and numerical availability is not a coverage guarantee.
-#'   For between-score covariance, pass exactly two score names to `confint()`
-#'   and explicitly select `method = "gci"` or `"regression_region"` for balanced ANOVA,
-#'   or experimental `"reml_profile"` for the joint normal model.
-#'   These retain signed bounds and distinguish approximate generalized coverage
-#'   from conservative normal-model enclosures. `plot(g, type = "covariance",
-#'   score = c("V", "W"), intervals = TRUE, method = "gci",
-#'   assumption = "normal")` shows their intervals across sources.
-#'   Explicit `method = "residual_contrast"` also accepts retained ANOVA/MINQUE
-#'   ratings, but supplies only Residual intervals: exact normal-model
-#'   chi-square for variance, or a conservative covariance enclosure. It
-#'   removes all nonresidual incidence columns, requires residual degrees of
-#'   freedom, retains original points and reports a separate `IntervalCenter`.
-#'   It does not supply the original component estimator's SE or intervals
-#'   for G/Phi or other sources. See [confint.mfrm_multivariate_gstudy()].
-#'   `score_scale` contains observed score SDs used for
-#'   numerical diagnostics; these are not component SEs. Neither matrix rank
-#'   nor a nonnegative estimate establishes that a component is precisely known.
-#'   A D-study's SEM instead describes projected measurement error in score
-#'   units. The separate [mfrm_multivariate_d_compare()] provides approximate
-#'   intervals for **plan differences** in its supported two-facet crossed
-#'   scope; these are not component intervals or marginal intervals for each
-#'   plan's coefficient. See [mfrmr_methods_reference] for the target map.
+#' Use [confint.mfrm_multivariate_gstudy()] for component sampling SEs and
+#' intervals under explicit normal-effects assumptions. Its method descriptions
+#' distinguish balanced ANOVA, incomplete-source profiles, residual-only methods
+#' and signed between-score covariance intervals. Separate REML/residual-contrast
+#' centers do not replace the original estimates; numerical availability does
+#' not establish coverage. For balanced variance components, start with
+#' `plot(g, intervals = TRUE, assumption = "normal")`; select two scores and an
+#' explicit covariance method for covariance intervals. Returned plot data
+#' retain the interval table and unavailable reasons.
 #'
+#' `score_scale` contains observed SDs for numerical scaling, not component SEs.
+#' A D-study SEM describes measurement error in score units; component sampling
+#' SEs describe uncertainty in estimated variances/covariances. Neither
+#' nonnegativity nor matrix rank establishes precision. G/Phi and plan-difference
+#' intervals are separate targets; see [confint.mfrm_multivariate_d_study()],
+#' [mfrm_multivariate_d_compare()] and the target map in [mfrmr_methods_reference].
 #' @section Fixed tasks as score components:
 #'   To plan ratings of the same fixed interview, presentation and discussion,
 #'   put the three task scores in separate columns and use `task = NULL`.
@@ -255,29 +204,17 @@
 #'   rules; nesting within persons and score-specific child identities do not.
 #'
 #' @section Reviewing incomplete designs:
-#'   Begin with the planned roster and `data_usage` to distinguish unassigned
-#'   cells from missing assigned ratings. Then inspect `estimation` for
-#'   component separation and replication, `component_diagnostics` for
-#'   covariance admissibility, and the D-study metric-specific status columns
-#'   (`GStatus`, `PhiStatus`, `RelativeSEMStatus`, `AbsoluteSEMStatus`) before
-#'   reading the corresponding result. None of these checks estimates sampling
-#'   precision or identifies the missingness mechanism. No fixed percentage of observed cells,
-#'   condition-number cutoff, or passed matrix check establishes adequate
-#'   precision. D-studies project future complete balanced designs. The separate
-#'   [mfrm_multivariate_d_compare()] offers approximate normal-theory intervals
-#'   for prespecified differences in two-facet crossed designs; nested-design
-#'   intervals are not currently available.
+#' Read the planned roster and `data_usage` first, then `estimation` for component
+#' separation/replication, `component_diagnostics` for covariance admissibility,
+#' and each D-study metric's status (`GStatus`, `PhiStatus`, `RelativeSEMStatus`,
+#' `AbsoluteSEMStatus`). No observed-cell percentage, condition number or passed
+#' matrix check establishes precision or identifies the missingness mechanism.
 #'
-#'   For the same rating workload, changing rater overlap or concentrating
-#'   assignments can change estimation precision. Omitting ratings selected
-#'   by their scores can introduce bias even when every requested coefficient
-#'   is calculable. Neither a returned coefficient nor agreement with another
-#'   program determines whether these assumptions suit the user's assessment.
-#'   Observed pool sizes concern estimation in the G-study; they differ from
-#'   the per-person counts in a future D-study scenario. Review which tasks
-#'   and raters are shared and whether recorded ratings represent the intended
-#'   population and conditions before interpreting a projected improvement.
-#'
+#' The same workload can give different precision under different rater overlap
+#' or concentration. Score-dependent omissions can bias calculable coefficients.
+#' Review who shares tasks/raters and whether observed ratings represent the
+#' intended universe. Source pool sizes describe estimation; D-study counts
+#' describe a future complete balanced plan, not the observed sparse roster.
 #' @return An `mfrm_multivariate_gstudy` list with `components` (three, five, or seven
 #'   named covariance matrices), ANOVA `mean_products` and `degrees_of_freedom`
 #'   (`NULL` for MINQUE), `estimation` (MINQUE moment matrices and diagnostics,
@@ -716,237 +653,127 @@ mfrm_g_study <- function(data, scores, person = "Person",
 #'   two supported crossed or nested random facets. Original G-study estimates
 #'   remain unchanged. These options do not supply adjusted-estimator intervals.
 #'
-#' @details Start with a concrete comparison, such as six versus twelve tasks
-#'   for every examinee. Each row of `design_grid` is one scenario. With both
-#'   facets, `data.frame(Raters = c(2, 4), Tasks = c(3, 3))` compares two versus
-#'   four raters at three tasks; `expand.grid(Raters = c(2, 4),
-#'   Tasks = c(3, 6))` requests all four combinations. These counts apply to
-#'   every person and score, not to the total number of observed ratings.
-#'   For `facets = c(Rater = "Assessor", Occasion = "Session")`, use
-#'   `expand.grid(Rater = c(1, 2), Occasion = c(2, 4))`. The same workflow
-#'   applies to any supported one- or two-facet model; extra columns cannot
-#'   introduce conditions absent from the G-study.
+#' @details
+#' Each `design_grid` row is a future plan: `data.frame(Raters = c(2, 4),
+#' Tasks = c(3, 3))` compares two/four raters at three tasks, while
+#' `expand.grid(Raters = c(2, 4), Tasks = c(3, 6))` requests four combinations.
+#' Counts apply to every Person/score, not the total rating pool. With `facets`,
+#' use its labels; extra grid columns cannot introduce a new facet.
 #'
-#'   This is the primary D-study entry for one or several scores. It replaces
-#'   the public `mfrm_multivariate_d_study()` name without changing its result
-#'   class, component estimates, projections or uncertainty methods. For either
-#'   source model, `summary(d)` returns its full-precision coefficient table.
-#'   Optional interval summaries remain specific to the interaction-component
-#'   route. Main-effects projections do not acquire those interval methods.
+#' Read `summary(d)` with `plot(d)`:
+#' - `G` describes relative ordering, not the probability of selecting a winner
+#'   or intervals for Person ranks. High G can coexist with uncertain close ranks.
+#' - `Phi` concerns absolute scores, counting facet main-effect shifts as error;
+#'   it is not pass/fail accuracy.
+#' - `RelativeSEM`/`AbsoluteSEM` express measurement error in mean-score or
+#'   composite units, not confidence intervals for G/Phi.
 #'
-#'   Read `summary(d)` together with `plot(d)`:
-#'   * `G` concerns consistency of relative ordering, such as ranking examinees.
-#'     It is not the probability of identifying the best person or the winner
-#'     of a competition. Close leading scores can remain hard to distinguish
-#'     even when G is high; this function provides no Person-rank intervals.
-#'   * `Phi` concerns absolute score levels and also counts shifts from easier
-#'     tasks or more lenient raters as error. It is not pass/fail accuracy.
-#'   * `RelativeSEM` and `AbsoluteSEM` express these errors in the units of the
-#'     mean score or composite. Smaller SEMs mean less error. They are not
-#'     confidence intervals for G or Phi.
+#' Compare a specified score/composite and metric over feasible plans. Higher
+#' G/Phi and lower SEM favor dependability under the model, without a universal
+#' acceptable threshold. `data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3))`
+#' keeps twelve ratings per Person, not constant task burden or cost. A point
+#' ranking does not establish a reliable or practically important difference;
+#' unavailable candidates leave the overall planning question unresolved.
 #'
-#'   Larger G/Phi and smaller SEM indicate greater dependability under the
-#'   model. There is no universally acceptable coefficient: consider the use
-#'   of scores, consequences of error, and workload before choosing a design.
-#'   Compare a chosen score/composite and metric across feasible plans. For
-#'   example, `data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3))` holds the
-#'   number of ratings per person at twelve. It does not hold examinee task
-#'   burden or total cost constant. The largest projected coefficient is a
-#'   point-estimate ranking, not evidence that one plan is reliably better.
-#'   Consider the size of the projected difference and which differences
-#'   would matter for the assessment. Small rank changes need not imply large
-#'   practical losses. If a metric is unavailable for any candidate, comparing
-#'   only the remaining values does not resolve the full planning question.
-#'   `plot(d, type = "sem")` shows the SEMs. Plots select a sole composite
-#'   by default, or the first score when there are no composites. With several
-#'   composites, specify one with `plot(d, composite = "Equal")`; use
-#'   `plot(d, score = "V")` to inspect an original score named V. The title
-#'   metadata identifies the plotted score and any composite weights; it is
-#'   returned with the plot, with titles and notes omitted from the figure
-#'   by default.
-#'   Check `GStatus`, `PhiStatus`, `RelativeSEMStatus`, and `AbsoluteSEMStatus`:
-#'   each explains the corresponding metric's availability. `NA` means
-#'   unavailable, not zero dependability. `ComponentPSD` separately flags
-#'   covariance components needing review. See [plot.mfrm_multivariate_d_study()] for
-#'   interpreting curves and unavailable estimates.
+#' Inspect the four metric-specific status columns: `NA` means unavailable, not
+#' zero dependability. `ComponentPSD` separately flags components for review.
+#' Use `plot(d, type = "sem")` for SEMs and `score`/`composite` to select results;
+#' defaults, curve interpretation and title/weight metadata are documented in
+#' [plot.mfrm_multivariate_d_study()]. Titles and notes are omitted from figures
+#' by default but retained with the returned plot.
 #'
-#'   For a balanced one-facet ANOVA source, [confint.mfrm_multivariate_d_study()]
-#'   returns exact F intervals for G and generalized confidence intervals for
-#'   Phi (`parm = "Phi"`) under independent normal random effects, using the
-#'   source study's degrees of freedom at each requested future count. Phi
-#'   includes Monte Carlo endpoint diagnostics and is not an exact-coverage
-#'   method. Add `reference = 1` for intervals on changes from the first plan:
-#'   G maps the F set; Phi maps the generalized set and retains approximate
-#'   coverage. Both include interior extrema; Phi differences retain joint
-#'   numerical endpoint bands. These methods also apply to balanced nested
-#'   plans when future child counts per parent equal the source count, using
-#'   the parent count in the one-facet reduction. Complete balanced crossed
-#'   two-facet sources default to approximate MLS null inversion for individual
-#'   G/Phi intervals. Undefined MLS widths are conservatively retained and
-#'   flagged by `FormulaComplete`; original estimates and numerical failures
-#'   remain explicit. Small-source intervals may span almost all of `[0,1]`.
-#'   These sources and general balanced nested plans also have explicitly selected
-#'   experimental `method = "approximate_f"` and `"mean_square_region"`
-#'   options for G/Phi; a vector requests both and `plot()` compares them.
-#'   The confidence-interval help explains their assumptions, limitations and
-#'   unavailable results. Use [mfrm_multivariate_d_compare()]
-#'   separately for its supported paired-plan differences.
-#'   For balanced or identifiable incomplete sources, explicit
-#'   `method = "reml_profile"` fits approximate G/Phi or SEM intervals from the used
-#'   ratings under normal effects. It retains original ANOVA/MINQUE estimates
-#'   and reports the separate REML estimates as `IntervalCenter`. Numerical
-#'   diagnostics and experimental finite-sample/boundary qualifications remain
-#'   explicit; it is not a default. With `reference`, it supplies shared-profile
-#'   interval images for one-facet or common-child nested plans, and direct
-#'   difference profiles for other crossed/nested comparisons. The latter need
-#'   optional nloptr and retain experimental calibration, especially at zero.
-#'   SEM uses a direct error-variance profile followed by square roots; the
-#'   numerical interval surrounds the REML center without enumerating remote
-#'   disconnected accepted regions. Checked boundary populations showed
-#'   below-nominal inclusion despite high numerical availability.
-#'   Select `parm = "RelativeSEM"` or `"AbsoluteSEM"` for intervals on SEM
-#'   itself from supported balanced crossed/nested sources. A single contributing
-#'   mean square uses chi-square limits; otherwise MLS limits for the combined
-#'   error variance are transformed by the square root. MLS coverage is
-#'   approximate. One-facet SEM differences also accept `reference = 1`;
-#'   nested MLS comparisons require a common future child count across plans.
-#'   For one-facet RelativeSEM, explicit `method = "residual_contrast"` also
-#'   accepts retained ANOVA/MINQUE ratings, including incomplete MINQUE sources.
-#'   It transforms one residual
-#'   chi-square interval and retains original points, a separate projected
-#'   `IntervalCenter`, unavailable states and shared uncertainty across plans.
-#'   Normal independent residuals and noninformative omissions are required;
-#'   this does not supply AbsoluteSEM, G/Phi or multifacet intervals.
-#'   Explicit `method = "mean_square_region"` supplies conservative individual
-#'   SEM intervals and G/Phi/SEM difference enclosures for general balanced
-#'   crossed/nested two-facet plans. The enclosure retains common source
-#'   uncertainty but can be much wider than the tight difference image.
-#'   `plot(d, type = "sem", metric = "AbsoluteSEM", intervals = TRUE,
-#'   assumption = "normal")` adds the corresponding ribbon without refitting.
+#' **Sampling uncertainty.** [confint.mfrm_multivariate_d_study()] distinguishes
+#' normal-model exact F, generalized, approximate and conservative procedures
+#' by source design and target. Future counts do not increase source information.
+#' For example, `confint(d, parm = "Phi", assumption = "normal")` asserts the
+#' normal-effects assumptions; `reference = 1` requests supported differences
+#' sharing the same source uncertainty. Incomplete sources require an explicit
+#' supported method; numerical success does not establish coverage. Do not
+#' subtract separate interval endpoints as if plans were independent.
+#' `plot(d, metric = "Phi", intervals = ci)` displays a matching saved result.
+#' [mfrm_multivariate_d_compare()] is a separate paired-difference approximation.
 #'
+#' This entry replaces `mfrm_multivariate_d_study()` without changing result
+#' class or calculations. Both source routes return full-precision coefficients
+#' through `summary(d)`; main-effects projections do not acquire the
+#' interaction-component route's interval methods. See [mfrmr_compatibility_layer].
 #' @section Calculation and interpretation limits:
-#'   For crossed covariance component matrices `P`, `R`, `T`, `PR`, `PT`, `RT`,
-#'   and `E`, universe-score covariance is `P`. Relative-error covariance is
-#'   `PR/n_r + PT/n_t + E/(n_r*n_t)`. Absolute-error covariance adds
-#'   `R/n_r + T/n_t + RT/(n_r*n_t)`. The G-study number of persons does not
-#'   divide individual-score universe variance. Holding a count constant does
-#'   not turn its random facet into a fixed facet.
-#'   Composite weights define linear score combinations. They do not implement
-#'   score-dependent panel trimming or an entire competition scoring rule.
-#'   For a Person-by-Task G-study, `E` combines Person-by-Task interaction and
-#'   within-cell error: relative-error covariance is `E/n_t`, absolute-error
-#'   covariance is `(T + E)/n_t`, and universe-score covariance remains `P`.
-#'   The same formulas apply to a Person-by-Rater design or to facets selected
-#'   by `facets`, with names replaced in the declared order. For a single
-#'   facet F and its planned count n, relative error is `E/n` and absolute
-#'   error is `(F + E)/n`. A D-study cannot introduce an absent facet.
-#'   For fixed tasks represented by score columns in a Person-by-Rater model,
-#'   vary only `Raters`. The task set remains fixed, and each planned rater
-#'   scores all tasks. See "Fixed tasks as score components" in
-#'   [mfrm_g_study()] for the target and allocation requirements.
+#' Universe-score covariance is `P`. For crossed components `P`, `R`, `T`,
+#' `PR`, `PT`, `RT`, `E`, relative error is `PR/n_r + PT/n_t + E/(n_r*n_t)`;
+#' absolute error adds `R/n_r + T/n_t + RT/(n_r*n_t)`. For one facet F and
+#' future count n, errors are `E/n` and `(F + E)/n`; E combines Person-by-facet
+#' interaction and within-cell error. The source Person count does not divide
+#' individual-score universe variance. Holding a random facet's count constant
+#' does not make it fixed. For fixed tasks represented as score columns, vary
+#' only Raters and have each rater score every task; see [mfrm_g_study()].
 #'
-#'   For raters nested within tasks, use the five components `P`, `T`,
-#'   `R(T)`, `PT`, and `E`, where `E` includes the Person-by-Rater-within-Task
-#'   interaction. With `n_r` raters per task and `n_t` tasks, relative error is
-#'   `PT/n_t + E/(n_r*n_t)`; absolute error adds `T/n_t + R(T)/(n_r*n_t)`.
-#'   Universe covariance remains `P`. Other nested facet labels follow the
-#'   same rules. All persons receive the same tasks and their nested raters;
-#'   two raters per task at six tasks means twelve distinct raters, not two
-#'   raters each judging six tasks. Future unequal child counts, changes of
-#'   nesting are not supported. Nested G/Phi defaults and their differences
-#'   require unchanged source child counts. Nested MLS SEM differences need
-#'   a common future child count across plans, which may differ from the source.
-#'   General nested coefficient intervals require explicit experimental methods;
-#'   general difference enclosures use `method = "mean_square_region"`.
-#'   Individual nested SEM intervals allow both counts to change.
-#'   See `confint()` above for the derivations and limitations.
+#' With Rater nested within Task, components are `P`, `T`, `R(T)`, `PT`, `E`;
+#' E includes Person-by-Rater-within-Task interaction. For `n_r` raters per task
+#' and `n_t` tasks, relative error is `PT/n_t + E/(n_r*n_t)` and absolute error
+#' adds `T/n_t + R(T)/(n_r*n_t)`; universe covariance stays P. Two raters at each
+#' of six tasks means twelve distinct raters, not two shared across tasks.
+#' Other declared facet labels follow the same formulas. Future plans preserve
+#' nesting, equal child counts and common conditions across Persons/scores.
+#' Intervals have additional count restrictions in
+#' [confint.mfrm_multivariate_d_study()]. Incomplete source pool sizes are not
+#' per-Person replication: projections concern complete future designs, not the
+#' reliability of the observed sparse roster or heterogeneous assignments.
 #'
-#'   For incomplete source data, counts of distinct observed levels are not
-#'   per-person replication counts. This function projects a future complete
-#'   design; it does not estimate the reliability of the observed sparse
-#'   roster, heterogeneous person-specific assignments, or averages of them.
+#' Each score uses covariance diagonals; a composite uses `w' Sigma w` for
+#' universe, relative-error and absolute-error matrices. Thus cross-score
+#' covariance affects dependability. `G = UniverseVariance / (UniverseVariance +
+#' RelativeErrorVariance)`; Phi substitutes absolute error. SEMs are the square
+#' roots of error variances, in mean-score/composite units. Scaling all weights
+#' by a nonzero constant scales SEM by its absolute value but leaves G/Phi
+#' unchanged. Weights are substantive choices, not optimized here; different
+#' weights can change the construct. Compare SEMs only on comparable scales,
+#' and use signed differences only where score subtraction is meaningful.
+#' Linear composites do not implement score-dependent panel trimming or a
+#' complete competition rule. Target and observed-score weights are identical
+#' (mGENOVA's equal WWTS/AWTS case); unequal weights, profile reliability and
+#' cut-score accuracy are unsupported.
 #'
-#'   Each score uses diagonal entries; a composite uses `w' Sigma w` for each
-#'   of the three covariance matrices. Thus between-score covariance affects
-#'   composite dependability. `G = UniverseVariance / (UniverseVariance +
-#'   RelativeErrorVariance)` and `Phi` uses absolute error instead. SEMs are
-#'   square roots of the corresponding error variances, in the units of the
-#'   score or specified composite of mean scores. Multiplying all weights by
-#'   a nonzero constant multiplies SEMs by its absolute value but leaves G/Phi
-#'   unchanged. Weights express a substantive choice; this function neither
-#'   chooses them nor identifies an optimal design. Interpret a difference
-#'   only when subtraction is meaningful on the supplied score scales.
-#'   Comparing several composites holds the estimated components and planned
-#'   designs constant, but different weights may change the construct being
-#'   assessed. A higher coefficient alone does not justify that change.
-#'   Compare SEMs across composites only when their scales are comparable.
+#' **Negative components.** The default `"raw"` preserves estimates. mGENOVA
+#' instead zeros negative D-study variances unless `NEGATIVE` is selected
+#' (manual pp. 15, 21); this neither zeros all negative covariances nor guarantees
+#' PSD matrices. GENOVA 3.1/jGENOVA's `NEGATIVE` controls printing, whereas
+#' `ALGORITHM` zeros negative variances and default `EMS` also recalculates
+#' components using zero replacements. Consequently matched G-study estimates
+#' can yield different default D-studies: one negative-interaction example gives
+#' Phi 0.73096 (raw), 0.72727 (ALGORITHM) and 0.73532 (EMS).
 #'
-#'   The same weights define the universe-score composite and its observed
-#'   mean-score estimate (the equal WWTS/AWTS case in mGENOVA). Different
-#'   target and estimation weights, profile reliability, and accuracy at a
-#'   cut score are not provided. Unlike mGENOVA's default D-study procedure,
-#'   negative variance estimates are not replaced with zero by default. mGENOVA replaces
-#'   negative variance components with zero for the D-study unless its
-#'   `NEGATIVE` option is selected (manual, pages 15 and 21). That rule concerns
-#'   variances, not all negative covariances, and does not guarantee PSD
-#'   component matrices.
-#'   Do not transfer that option's meaning to GENOVA 3.1 or jGENOVA: their
-#'   `NEGATIVE` option controls printing of negative estimates. Their D-studies zero negative
-#'   variances with either `ALGORITHM` or its default `EMS` convention; `EMS`
-#'   also recalculates other components using the zero replacements. Matching
-#'   a raw G-study estimate therefore need not give matching default D-studies.
-#'   A matched negative-interaction example gives Phi = 0.73096 with the raw
-#'   components retained here, 0.72727 in GENOVA 3.1 `ALGORITHM`, and 0.73532
-#'   with its default `EMS`. This is a component-treatment difference, not a
-#'   coefficient-formula discrepancy. Select `negative_components` explicitly
-#'   to reproduce either GENOVA D-study convention in supported univariate
-#'   designs. EMS recalculation uses the source counts, before division by the
-#'   future-plan counts. It is not REML or a positive-semidefinite matrix repair.
-#'   Multivariate and MINQUE sources require `"raw"`; negative cross-score
-#'   covariance is not a negative variance. GENOVA's `NEGATIVE` printing option
-#'   is separate from this component-treatment choice.
+#' Choose `negative_components` explicitly for supported univariate balanced
+#' ANOVA designs. EMS uses source-design counts before future-count division;
+#' it is not REML or PSD matrix repair. Multivariate/MINQUE sources require
+#' `"raw"`; negative cross-score covariances are not negative variances.
+#' `gstudy` retains raw components, `effective_components` those projected,
+#' and `effective_component_diagnostics` their diagnostics. `ComponentTreatment`
+#' records the choice; `ComponentPSD` still describes the raw G-study. Save
+#' the whole result to preserve both.
 #'
-#'   `gstudy` retains raw estimates and diagnostics. `effective_components`
-#'   contains the matrices actually used in projections; their diagnostics are
-#'   in `effective_component_diagnostics`. `ComponentTreatment` identifies the
-#'   choice in coefficient tables. `ComponentPSD` still describes the original
-#'   G-study, so zero replacement does not erase evidence of problematic raw
-#'   components. Save the complete result to preserve both sets.
-#'   For GENOVA-adjusted results, `confint()` retains population-parameter
-#'   intervals based on the original source study alongside adjusted points.
-#'   `IntervalEstimate` records the original projection; bounds are not
-#'   recentered on the adjusted `Estimate`. Any `IntervalSE` and other sampling
-#'   diagnostics retain the original interval-method basis. Summary and plot
-#'   methods accept intervals with the same recorded treatment. Supported
-#'   population plan differences use `confint(d, reference = ...)`; the separate
-#'   delta-estimator comparison API still requires raw components. These
-#'   intervals do not characterize the adjusted estimator's sampling law.
-#'   See [confint.mfrm_multivariate_d_study()] for assumptions and distinctions.
+#' For adjusted results, `confint()` retains original-source population intervals
+#' and `IntervalEstimate` alongside the adjusted `Estimate`; bounds are not
+#' recentered. `IntervalSE` and other sampling diagnostics keep the interval
+#' method's original basis, not the adjusted estimator's sampling distribution.
+#' Summary/plot intervals must match the treatment. Population plan differences
+#' use `confint(d, reference = ...)`; the separate delta-estimator comparison
+#' still requires raw components. See [confint.mfrm_multivariate_d_study()].
 #'
-#'   Original covariance matrices and the selected projected variances remain available. G
-#'   requires nonnegative universe and relative-error variances and a positive
-#'   sum; Phi uses absolute-error variance instead. Each SEM requires only its
-#'   corresponding nonnegative error variance. A failed requirement makes
-#'   only that metric `NA`. Zero universe variance yields a coefficient of
-#'   zero when its error variance is positive; a zero total variance leaves
-#'   the coefficient undefined. Under `"raw"`, no estimates are clipped or replaced.
+#' **Availability.** G/Phi require nonnegative universe and respective error
+#' variances with a positive sum; each SEM needs only its nonnegative error
+#' variance. Failure withholds only that metric. Zero universe variance gives
+#' G/Phi zero when error is positive, while zero total variance is undefined.
+#' `Status` summarizes `"Available"`, `"Partially available"` or `"Unavailable"`;
+#' metric-specific columns explain why. No raw estimates are clipped.
 #'
-#'   `Status` summarizes a row as `"Available"`, `"Partially available"`, or
-#'   `"Unavailable"`; the four metric-specific status columns give the reasons.
-#'   `ComponentPSD` is TRUE only when all G-study component matrices pass
-#'   their numerical PSD check. A FALSE value flags components for review
-#'   without suppressing otherwise calculable projections. Print and plot
-#'   methods display a note for non-PSD components. Calculability does not
-#'   validate the joint covariance model or establish precise estimation;
-#'   inspect `component_diagnostics` before interpreting estimates. Raw estimates
-#'   can yield `Phi > G` when projected absolute error is less than relative
-#'   error. Under the stated model, the extra absolute-error contributions
-#'   are nonnegative; such a reversal calls for review of the estimated
-#'   components, not a conclusion that absolute decisions are more dependable.
-#'   Passing the matrix checks does not establish model fit. Outputs are
-#'   point projections conditional on the estimated components, without
-#'   confidence intervals, missing-data correction, or MFRM latent inference.
-#'
+#' `ComponentPSD` is true only when every source component passes its numerical
+#' PSD check. False flags review without suppressing calculable projections;
+#' print/plot methods retain a note. Calculability or passed PSD checks establish
+#' neither covariance-model fit nor precision. Raw estimates may give `Phi > G`
+#' when absolute error is smaller; the model's extra absolute-error contributions
+#' are nonnegative, so this reversal calls for component review. Results are
+#' point projections, without automatic intervals, missing-data correction or
+#' MFRM latent inference.
 #' @return An `mfrm_multivariate_d_study` list containing `coefficients`
 #'   (scenario, counts of included facets, score/composite identity,
 #'   universe/relative/absolute variances under the selected treatment,

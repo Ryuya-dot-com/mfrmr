@@ -64,57 +64,23 @@ the main \code{InterpretationCheck} caveat for each type of plot
 Build an auto-filled MFRM reporting checklist
 }
 \details{
-This helper builds a package-native reporting checklist. It does not try to
-judge substantive reporting quality; instead, it
-checks whether the fitted object and related diagnostics contain the evidence
-typically reported in MFRM write-ups.
+Identify reporting material already available in the fit and diagnostics,
+and items needing evidence or explanation. The seven sections cover Method,
+Global fit, Facet-level statistics, Element-level statistics, Rating scale
+diagnostics, Bias/interaction analysis and Visual displays. Active latent
+regression adds \verb{Population Model}: coefficients, categorical model-matrix
+coding, complete-case omissions, posterior-basis wording and ConQuest scope.
 
-Checklist items are grouped into seven core sections:
-\itemize{
-\item Method section
-\item Global fit
-\item Facet-level statistics
-\item Element-level statistics
-\item Rating scale diagnostics
-\item Bias/interaction analysis
-\item Visual displays
-}
-
-When a fit uses the latent-regression population-model branch, the checklist
-also adds a \verb{Population Model} section covering coefficient reporting,
-categorical model-matrix coding, complete-case omissions, posterior-basis
-wording, and ConQuest scope wording.
-
-The output is designed for manuscript preparation, reproducibility records, and
-reproducible reporting workflows.
+This is a completeness guide, not a publication pass/fail decision or an
+assessment of substantive reporting quality. Missing bias rows may simply
+mean no \code{bias_results} were supplied. Study questions, recruitment, training,
+assignments, missingness reasons, ethics and interpretation require the
+author's record. The "Manuscript coverage map" in
+\code{vignette("mfrmr-reporting-and-apa", package = "mfrmr")} pairs numerical
+evidence with information to supply manually.
 
 \code{summary()} method: Summarize a reporting-checklist bundle for manuscript work
 }
-\section{What this checklist means}{
-
-\code{reporting_checklist()} is a manuscript-preparation guide. It tells you
-which reporting elements are already present in the current analysis
-objects and which still need to be generated or documented. The primary
-draft-status column is \code{DraftReady}; \code{ReadyForAPA} is retained as a
-backward-compatible alias.
-}
-
-\section{What this checklist does not justify}{
-
-\itemize{
-\item It is not a single run-level pass/fail decision for publication.
-\item \code{DraftReady = TRUE} / \code{ReadyForAPA = TRUE} does not certify formal
-inferential adequacy.
-\item Missing bias rows may simply mean \code{bias_results} were not supplied.
-\item Study questions, recruitment, rater training, the assignment process,
-missingness reasons, ethics, and substantive interpretation require the
-author's study record. Available output does not verify those facts.
-The "Manuscript coverage map" in
-\code{vignette("mfrmr-reporting-and-apa", package = "mfrmr")} pairs reporting
-topics with numerical evidence and information to supply manually.
-}
-}
-
 \section{Interpreting output}{
 
 \itemize{
@@ -146,46 +112,19 @@ use \code{citation("mfrmr")} for the installed software's citation.
 }
 }
 
-\section{Recommended next step}{
+\section{Using the checklist}{
 
-Review the rows with \code{Available = FALSE} or \code{DraftReady = FALSE}, then add
-the missing diagnostics, bias results, or narrative context before calling
-\code{\link[=build_apa_outputs]{build_apa_outputs()}} for draft text generation. For \code{RSM} / \code{PCM}
-reporting runs where the MML population assumptions are defensible, the
-most complete package-native route is an \code{MML} fit plus
-\code{diagnose_mfrm(..., diagnostic_mode = "both")} so the checklist can see the
-legacy and strict marginal screens together. A JML route remains available
-when its estimand and incidental-parameter limitations better match the
-analysis purpose.
-}
+Start with \code{section_summary} and unavailable/incomplete \code{checklist} rows;
+\code{summary(chk)$action_items} prioritizes remaining draft work. Select follow-up
+analyses for the reporting question: not every optional diagnostic is needed.
+Choose the estimator for its assumptions and target, not checklist coverage;
+supported MML fits can add marginal screens with \code{diagnostic_mode = "both"}.
+Supply the chosen diagnostics and study context to \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
 
-\section{How this differs from operational review}{
-
-\code{reporting_checklist()} is the manuscript/reporting branch of the package.
-Use it when the question is "what is still missing from the report?" rather
-than "which observations or links need follow-up?" For operational review:
-\itemize{
-\item Use \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} after \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} when you need ranked
-misfit cases and grouping views for local follow-up.
-\item Use \code{\link[=build_linking_review]{build_linking_review()}} after anchor/drift/chain helpers when you
-need operational linking triage rather than manuscript-oriented reporting
-tables.
-}
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}}. For \code{RSM} / \code{PCM} reporting runs, prefer
-\code{method = "MML"}.
-\item Compute diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. For \code{RSM} / \code{PCM}, prefer
-\code{diagnostic_mode = "both"}.
-\item Run \code{reporting_checklist()} to see which reporting elements are already
-available from the current analysis objects.
-\item If the issue is operational rather than manuscript-facing, branch to
-\code{\link[=build_misfit_casebook]{build_misfit_casebook()}} or \code{\link[=build_linking_review]{build_linking_review()}} instead of treating
-\code{reporting_checklist()} as the single review hub.
-}
+For observations needing follow-up, use \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} after
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. For anchor/linking triage, use \code{\link[=build_linking_review]{build_linking_review()}}
+after the anchor, drift or chain helpers. These address the analysis itself;
+the checklist addresses what is missing from its report.
 }
 
 \section{Saved-result reuse}{
@@ -201,7 +140,7 @@ analyses; they cannot establish availability for this fit's checklist.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("reporting_checklist", run.dontrun = TRUE)
 \dontrun{
 library(mfrmr)

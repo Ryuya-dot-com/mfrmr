@@ -2,13 +2,14 @@
 % Please edit documentation in R/help_compatibility_layer.R
 \name{mfrmr_compatibility_layer}
 \alias{mfrmr_compatibility_layer}
-\title{mfrmr Compatibility Layer Map}
+\title{Updating saved analyses and compatibility workflows}
 \description{
-Guide to the legacy-compatible wrappers and text/file exports in \code{mfrmr}.
-Use this page when you need continuity with older compatibility-oriented workflows,
-fixed-width reports, or graph/score file style outputs.
+Use this reference when updating saved analyses, earlier scripts or
+compatibility-oriented exports. The saved-analysis section identifies
+which calculations to repeat; later sections describe specific corrections
+and legacy wrappers. For a new analysis, use \link{mfrmr_workflow_methods}.
 
-This compatibility layer currently applies mainly to diagnostics-based
+The legacy wrappers and FACETS-style exports apply mainly to diagnostics-based
 \code{RSM} / \code{PCM} workflows. Supported \code{GPCM} fits also provide graph and
 package-native scorefile exports through \code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}},
 with explicit score-side limitations. Check each helper's model scope.
@@ -20,66 +21,174 @@ supports table/data-frame/CSV handoff for SPSS-oriented reporting workflows,
 but it does not generate SPSS syntax, write native SPSS system files, execute
 SPSS estimators, or claim SPSS numerical equivalence.
 }
-\section{When to use this layer}{
+\section{Updating saved analyses for 0.2.4}{
 
+Keep the original objects, data and analysis settings. Installing an update
+does not recalculate saved tables, figures or reports. For analyses based
+on a native MFRM fit, start by printing \code{summary(fit)} under the updated
+package and reading its interpretation
+decision. If the saved native fit lacks the current estimation checks,
+refit from the original data with the same intended model, category coding,
+anchors, weights and numerical settings. Running \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} alone
+cannot establish checks missing from that fit. If the original data or
+settings are unavailable, retain the old result as historical output;
+its previous approval is not evidence for current inferential use.
+Observed-score G/D studies and external-feature groups instead use their
+own source objects; they do not require an MFRM fit.
+
+Update the affected result at the earliest step below, then rebuild its
+dependent summaries, plots and exports. For an MFRM-based analysis, this
+assumes a fit with current estimation checks. A request to recompute
+diagnostics or scoring does not itself
+require a new calibration fit.
 \itemize{
-\item You are reproducing an older workflow that expects one-shot wrappers.
-\item You need fixed-width text blocks for console, logs, or archival handoff.
-\item You need graphfile or scorefile style outputs for downstream legacy tools.
-\item You are checking column coverage and metric consistency against a
-FACETS-style output contract.
-}
+\item \strong{Display wording only:} reprint a saved fit summary. This updates labels
+and removes the duplicate inference decision; it does not recalculate
+stored diagnostics or establish missing precision evidence.
+\item \strong{Wright-map groups:} regenerate \code{plot(fit, type = "wright", ...)} from
+the saved fit and original group specification, including \code{group_data}
+if supplied. This corrects group membership and exclusions without refitting.
+Reloading an old plot alone retains its previously calculated densities.
+\item \strong{Diagnostics and QC:} recreate \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} results with the original
+diagnostic settings before rebuilding reliability, precision, category,
+marginal-fit, person-fit, unexpected-response, fair-score and reporting
+results. Rerun separately requested \code{\link[=q3_statistic]{q3_statistic()}},
+\code{\link[=analyze_residual_pca]{analyze_residual_pca()}} and \code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}} calculations
+with their original options. In \code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, request
+\code{separation_facets} only for facets whose levels need to be distinguished;
+it is no longer a default rater-quality requirement. Missing results remain
+unavailable and cannot be treated as passes.
+\item \strong{Model comparisons:} rerun \code{\link[=compare_mfrm]{compare_mfrm()}} on the existing eligible fits,
+retaining the original comparison settings, then rebuild dependent
+\code{\link[=build_model_choice_review]{build_model_choice_review()}} and \code{\link[=build_weighting_review]{build_weighting_review()}} results.
+The corrected RSM/PCM nesting review requires every RSM interaction to be
+retained in the PCM. More category-step parameters do not establish
+nesting. An affected pair can retain an eligible information-criterion
+comparison while losing its invalid chi-square test. This correction
+does not require refitting; printing an old comparison leaves its stored
+decision unchanged.
+\item \strong{Group comparisons and equivalence:} recreate residual \code{\link[=analyze_dff]{analyze_dff()}}
+/ \code{\link[=analyze_dif]{analyze_dif()}} and \code{\link[=dif_interaction_table]{dif_interaction_table()}} results from the existing
+fit and original group data. They now describe residual differences without
+tests or confidence intervals. Recompute \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}}
+from an eligible MML fit with matching current diagnostics and the original
+practical bound; old equivalence bundles cannot supply the required joint
+covariance.
+\item \strong{ICC and design effects:} rerun \code{\link[=compute_facet_icc]{compute_facet_icc()}} or
+\code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}} from the original data and settings.
+Numeric score labels now retain their values. Missing scores or grouping
+values require an explicit \code{missing = "omit"} choice; malformed scores
+must be corrected. Inspect \code{attr(icc, "data_usage")}, then recreate
+\code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}} using the new ICC result. Older ICC
+tables lack the row accounting needed to calculate matching sample sizes.
+Recalculation also removes the fixed variance cutoff tied to score units
+and preserves small positive variances without decimal rounding. Constant
+retained scores have unavailable variance components and ICCs. Design
+effects remain per-facet approximations; their equivalent row counts do
+not estimate the precision of a complete crossed or unbalanced design.
+The former \code{ci_method = "profile"} transformed separate component bounds
+and did not calculate a profile-likelihood interval for the ICC ratio.
+Choose \code{"boot"} explicitly for parametric percentile intervals, then read
+\code{ICC_CI_Status} and \code{attr(icc, "icc_ci")}. Failed or nonconverged refits
+and fit warnings withhold intervals. Saved bootstrap results also require
+rerunning to obtain complete failure accounting and identify
+constant-response refits, which withhold intervals; reprinting is insufficient.
+\item \strong{Observed-score design coefficients and shrinkage:} rerun
+\code{\link[=mfrm_generalizability]{mfrm_generalizability()}} with its original data and settings, then
+\code{\link[=mfrm_d_study]{mfrm_d_study()}} with the planned counts and residual-scaling choice.
+This re-estimates the separate observed-score mixed model, not the MFRM.
+Reapply \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}} with the original prior settings
+and explicit Person choice to refresh shrinkage reports, descriptive bands,
+and replay settings. Reapplication replaces the previous adjustment;
+switching Person shrinkage off removes its old adjustment columns.
+Regenerate replay scripts to retain the post-fit adjustment step.
+\item \strong{Multivariate G/D studies:} to apply metric-specific G/Phi/SEM
+availability rules, rerun \code{\link[=mfrm_d_study]{mfrm_d_study()}} from the saved
+G-study with the original planned counts and score weights. Changing only
+future counts or weights also reuses that G-study. Recreate dependent
+plan comparisons, plots and exports after recalculation; replotting alone
+preserves stored numbers. Refit \code{\link[=mfrm_g_study]{mfrm_g_study()}} when changing
+the source data or G-study model, replacing an object with missing or
+incompatible design metadata, or correcting an earlier G-study affected
+by the single-score MINQUE(0) or period-containing interaction-ID bugs. In
+particular, a crossed result cannot be converted to a nested model by
+editing its labels; refit with an explicit \code{nesting} specification.
+Retain the G-study object and its data to calculate new prespecified
+plan comparisons with \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}. A coefficient
+table alone does not contain the information needed for those intervals.
+\item \strong{External-feature groups:} saved clustering results retain their
+memberships and fitted hierarchy. Replot them to update labels; use
+\code{\link[=plot_data]{plot_data()}} for their stored values. \code{\link[=as_ggplot]{as_ggplot()}} supports silhouette,
+profile, dendrogram and co-membership views. A change to features, weights, group
+counts or method requires a new clustering call, followed by
+\code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}} on the updated results. For imputation
+comparisons, reuse the original \code{mice} object to preserve pairing across
+completed datasets; do not generate unrelated completions for each setting.
+\item \strong{Fitted-object Person scores:} re-summarize the original prediction object
+to recover stored interval settings and updated explanations. To replace
+older grid-endpoint intervals with continuous posterior intervals, rerun
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} using the existing fit, scoring data and settings.
+Reprinting cannot change an already calculated interval. Rerun scoring
+when older estimated-population results lack numerical prior information
+or are refused because they claimed unrestricted scoring; these fits
+require explicit \code{readiness_policy = "review"}.
+\item \strong{Plausible values:} use \code{summary(original_plausible_values)} on the saved
+draw object to obtain empirical quantiles at its requested interval level.
+No new draws are needed for this correction. A saved derived summary alone
+cannot recover the original draws. If estimated-population restrictions
+require regeneration, repeat the original scoring/draw call with the same
+data, settings and seed, and \code{readiness_policy = "review"}.
+\item \strong{Portable calibration:} \code{\link[=load_mfrm_calibration]{load_mfrm_calibration()}} preserves a valid
+artifact's recorded scoring algorithm; older grid-based intervals remain
+grid-based. To adopt continuous intervals, create a new calibration using
+the reviewed source fits and \link{mfrm_calibration_workflow}, then score again.
+Retain the old artifact for reproducibility. Re-summarizing older score
+results recovers recorded algorithm/level labels without changing values.
+\item \strong{External fits:} rerun \code{\link[=import_erm_fit]{import_erm_fit()}}, \code{\link[=import_tam_fit]{import_tam_fit()}} or
+\code{\link[=import_mirt_fit]{import_mirt_fit()}} on the saved source-package fit and rebuild displays;
+source-model re-estimation is unnecessary. Use \code{compute_fit = TRUE} when
+imported measurement diagnostics are needed. Unsupported source models
+remain unsupported, and imports do not become native fits.
+\item \strong{Agreement, networks and timing:} rebuild \code{\link[=interrater_agreement_table]{interrater_agreement_table()}},
+\code{\link[=rater_network_analysis]{rater_network_analysis()}} and \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}} from the
+existing native fit, matching diagnostics and original settings. Refresh
+design reviews with \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}} to record whether the
+graph covers all observed subsets. Recreate \code{\link[=response_time_review]{response_time_review()}} from
+the original timed-event data and settings. No MFRM refit is required.
+Unavailable comparisons remain unassessed; a missing or excluded graph
+edge does not establish absence of a rater effect. Halo Welch-test columns
+are retained as missing values. Timing rates use valid times and describe
+cutoff rules, not calibrated rapid-guessing or low-effort classifications.
+\item \strong{Simulation and design summaries:} re-summarize saved evaluation objects
+to retain attempted-run denominators and unavailable residual-DIF rates.
+Rebuilding design summaries also restores unrounded metrics for threshold
+decisions; rounded saved summaries alone cannot recover that precision.
+Missing workload or connectivity records cannot be reconstructed by
+summary formatting. If those records are required for a recommendation,
+repeat the original evaluation with its recorded design, settings and seeds.
 }
 
-\section{When not to use this layer}{
-
-\itemize{
-\item For standard estimation, use \code{\link[=fit_mfrm]{fit_mfrm()}} plus \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
-\item For report bundles, use \link{mfrmr_reports_and_tables}.
-\item For manuscript text, use \code{\link[=build_apa_outputs]{build_apa_outputs()}} and \code{\link[=reporting_checklist]{reporting_checklist()}}.
-\item For visual follow-up, use \link{mfrmr_visual_diagnostics}.
-}
+After any required recalculation, regenerate dependent \code{\link[=mfrm_results]{mfrm_results()}},
+reports and exports with matching source objects. A newly created PDF, HTML
+file or CSV can still contain outdated calculations if built from an old
+derived object. Consult the affected function's help for its interpretation
+limits; updating an object does not broaden those limits.
 }
 
-\section{Compatibility map}{
+\section{Compatibility outputs}{
 
-\describe{
-\item{\code{\link[=facets_guide]{facets_guide()}}}{User-facing wording for the package's
-relationship to FACETS. Use before describing compatibility outputs in a
-report or migration note.}
-\item{\code{\link[=run_mfrm_facets]{run_mfrm_facets()}}}{One-shot legacy-compatible wrapper that fits,
-diagnoses, and returns key tables in one object.}
-\item{\code{\link[=build_fixed_reports]{build_fixed_reports()}}}{Fixed-width interaction and pairwise text
-blocks. Best when a text-only compatibility artifact is required.}
-\item{\code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}}}{Graphfile/scorefile style CSV and
-fixed-width exports for legacy pipelines.}
-\item{\code{\link[=write_mfrm_residual_file]{write_mfrm_residual_file()}}}{Package-native observation-level
-residual CSV/TSV export for reviewer, spreadsheet, or external QC handoff.}
-\item{\code{\link[=write_mfrm_subset_file]{write_mfrm_subset_file()}}}{Package-native connected-subset summary
-and node-membership CSV/TSV export for linking review handoff.}
-\item{\code{\link[=facets_output_contract_review]{facets_output_contract_review()}}}{Column and metric review against
-the FACETS-style output-contract specification. Use only when an explicit
-output-contract review is part of the task; it checks the package output contract
-and does not imply external FACETS equivalence.}
-}
-}
+Use this layer when a downstream consumer requires a legacy layout.
+\code{\link[=run_mfrm_facets]{run_mfrm_facets()}} provides a one-shot fit/diagnostic wrapper;
+\code{\link[=build_fixed_reports]{build_fixed_reports()}} writes fixed-width blocks; \code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}}
+provides graphfile/scorefile-style outputs. Dedicated residual and subset
+handoffs use \code{\link[=write_mfrm_residual_file]{write_mfrm_residual_file()}} and \code{\link[=write_mfrm_subset_file]{write_mfrm_subset_file()}}.
+\code{\link[=facets_output_contract_review]{facets_output_contract_review()}} checks the stated output contract, not
+numerical equivalence to external FACETS.
 
-\section{Preferred replacements}{
-
-\itemize{
-\item Instead of \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, prefer:
-\code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=reporting_checklist]{reporting_checklist()}}.
-\item Instead of \code{\link[=build_fixed_reports]{build_fixed_reports()}}, prefer:
-\code{\link[=bias_interaction_report]{bias_interaction_report()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
-\item Instead of \code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}}, prefer:
-\code{\link[=category_curves_report]{category_curves_report()}} or \code{\link[=category_structure_report]{category_structure_report()}} plus
-\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}.
-\item For residual or subset handoff, prefer \code{\link[=write_mfrm_residual_file]{write_mfrm_residual_file()}} and
-\code{\link[=write_mfrm_subset_file]{write_mfrm_subset_file()}} over reusing graph/score compatibility exports.
-\item Instead of \code{\link[=facets_output_contract_review]{facets_output_contract_review()}} for routine QA, prefer:
-\code{\link[=reference_case_review]{reference_case_review()}} for package-native completeness review or
-\code{\link[=reference_case_benchmark]{reference_case_benchmark()}} for packaged benchmark cases.
-}
+For new analyses, start with \code{\link[=fit_mfrm]{fit_mfrm()}} and the applicable diagnostics,
+then \link{mfrmr_reports_and_tables} for report/export selection. Use
+\code{\link[=compatibility_alias_table]{compatibility_alias_table()}} to check former names and replacements, and
+\code{reporting_checklist(fit)$software_scope} for FACETS/ConQuest/SPSS wording.
 }
 
 \section{Multiple-imputation review and intervals in 0.2.4}{
@@ -140,8 +249,8 @@ as callable aliases. Their help aliases lead to the new topics.\tabular{lll}{
    Former call \tab Current call \tab What it does \cr
    \code{evaluate_mfrm_recovery(...)} \tab \code{simulate_mfrm_recovery(...)} \tab Generate data repeatedly, refit, and summarize parameter recovery. \cr
    \code{build_peer_review_design_review(x)} \tab \code{review_peer_design(x)} \tab Read existing peer-assessment assignment metadata; no assignment generation or model fitting. \cr
-   \code{gpcm_score_side_contract(status)} \tab \code{mfrmr_output_guide("gpcm_capabilities", status, view = "scores")} \tab Read score availability, limitations and alternatives. \cr
-   \code{gpcm_runtime_guard_coverage()} \tab \code{mfrmr_output_guide("gpcm_capabilities", view = "unavailable")} \tab Read blocked/deferred workflows and alternatives. \cr
+   \code{gpcm_score_side_contract(status)} \tab \code{gpcm_capability_matrix(status, view = "scores")} \tab Read score availability, limitations and alternatives. \cr
+   \code{gpcm_runtime_guard_coverage()} \tab \code{gpcm_capability_matrix(view = "unavailable")} \tab Read blocked/deferred workflows and alternatives. \cr
 }
 
 
@@ -191,7 +300,7 @@ it. The corrected calculation preserves the statistical method, matching
 and multiplicity settings; no MFRM fitting is involved. Regenerate CSV
 exports from the new result.
 \itemize{
-\item Start FACETS-facing reports with \code{\link[=facets_guide]{facets_guide()}} when readers
+\item Start FACETS-facing reports with \code{\link[=facets_positioning_guide]{facets_positioning_guide()}} when readers
 might otherwise assume FACETS numerical reproduction.
 \item Keep compatibility wrappers only where a downstream consumer truly needs
 the old layout or fixed-width format.
@@ -245,75 +354,39 @@ Dispatch does not change an estimator or add interval support to that approximat
 
 \section{Standard R extraction in 0.2.4}{
 
-Native fits now have documented \link[=mfrm_fit_extractors]{coefficient, covariance, likelihood and count methods}. Previously, \code{coef(fit)} could fall
-through to \code{NULL}, and ordinary MML fits lacked \code{vcov()} and \code{logLik()}.
-Use \code{coef(fit)} for free coordinates matched to \code{vcov(fit)}, or
-\code{coef(fit, type = "locations")} for labelled saved facet locations.
-These vectors answer different questions; do not combine a component
-vector with the free-coordinate covariance without its constraint map.
-Existing \code{summary(fit)} tables remain the route to estimates with status
-and interpretation. CML's existing covariance and likelihood values retain
-their meanings; the new \code{coef()} uses the same conditional coordinates.
+\link{mfrm_fit_extractors} documents the native \code{coef()}, \code{vcov()}, \code{logLik()} and
+\code{nobs()} methods. \code{coef(fit)} gives free coordinates matched to covariance;
+\code{type = "locations"} gives labelled facet locations, which need their constraint
+map before combination with that covariance. \code{confint(fit)} now defaults to
+pointwise intervals for those free coefficients in supported MML/CML fits.
+JML structural-truth intervals remain unsupported.
 
-\code{confint(fit)} now returns pointwise intervals for those default coefficients
-for supported native MML/CML fits. Use names or integer positions in \code{parm}
-to select coefficients. The matrix carries estimates, SEs, availability
-reasons and checks in its attributes; comparison-only CML retains missing
-rows for unidentified targets. JML structural-truth intervals remain
-unsupported. CML uses saved conditional information; MML applies the same
-covariance qualification as \code{vcov()}.
+\strong{GPCM scripts requesting slope inference must now specify
+\code{confint(fit, parm = "slopes", ...)}.} This includes slope contrasts,
+standardization, sandwich/profile options and slope-plot attachments. The
+default free log-slope coefficient matrix is a different target. Existing
+slope-interval objects need no recalculation solely for this syntax change.
+See \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} for diagnostics and target-specific availability.
 
-\strong{Breaking change for GPCM:} replace \code{confint(fit, ...)} with
-\code{confint(fit, parm = "slopes", ...)} when requesting slope intervals,
-ratios/differences, standardization, sandwich or profile inference, or
-preparing slope plots/report attachments. The default coefficient matrix
-uses free log-slope coordinates and is a different target. Supplying slope
-options without \code{parm = "slopes"} is rejected. Existing saved slope-interval
-objects remain reusable; no refit or recomputation is needed merely to
-change the call syntax. Bootstrap-result and extended-model methods retain
-their own defaults. See \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}.
+\code{nobs(fit)} counts Persons for MML/CML and ratings for JML; request
+\code{type = "ratings"} for rating rows throughout. Multiple-model AIC/BIC calls
+now direct users to \code{\link[=compare_mfrm]{compare_mfrm()}}. Unsupported/legacy likelihood metadata
+require the documented summaries rather than inference from absent fields.
 
-\code{nobs(fit)} counts Persons for MML/CML and retained ratings for JML.
-Use \code{nobs(fit, type = "ratings")} for a response-row count in every method.
-\code{logLik(fit)} retains the likelihood basis and information-criterion reason;
-unqualified ordinary results give \code{df = NA}, so AIC/BIC remain unavailable.
-Multiple-model \code{AIC()}/\code{BIC()} calls now direct users to \code{\link[=compare_mfrm]{compare_mfrm()}}
-rather than allowing conditional and marginal likelihoods to be mixed.
-Current native saved fits can use these methods after reloading; source
-objects are not rewritten. Legacy likelihood metadata, corrected/penalized
-objectives and unsupported model classes require their documented summaries.
+\link{mfrm_fit_responses} documents \code{fitted()}, \code{residuals()} and source-rating
+\code{predict()}, which previously could fall through to \code{NULL}. Supplied-response
+ability scoring still uses \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}};
+\code{predict(fit, newdata = ...)} is unsupported. Returned rows align with
+\code{fit$prep$data}, not the unfiltered input. Old fits without omission identities
+cannot recover original \code{InputRow} positions merely by being reopened.
 
-Native ordinary fits also support \link[=mfrm_fit_responses]{fitted rating and residual methods}.
-Previously \code{fitted(fit)} and \code{residuals(fit)} could silently return \code{NULL}.
-They now return retained-row vectors; \code{fitted(fit, type = "prob")} returns
-category probabilities. \code{predict(fit)} has the same source-rating target.
-\code{predict(fit, newdata = ...)} is explicitly unsupported; retain
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} for ability scoring
-from supplied responses. These targets must not be interchanged.
-
-MML probabilities are evaluated at the saved EAP, not averaged over its
-posterior distribution. JML uses primary estimates, including limiting
-probabilities for extreme Persons. Zero-variance Pearson residuals are
-missing with a reason. Legacy \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} helpers retain finite JML
-optimizer proxies and their small-variance cutoff, so values can differ at
-these limits. Diagnostic observation/score/residual tables now include
-\code{PrimaryPersonMeasure}, \code{PersonMeasureBasis}, \code{ConditionalVariance},
-\code{PearsonAvailable} and row-specific reasons. Overall/element mean squares
-are unavailable when any contributing standardized residual, variance or
-weight is unavailable; \code{FitAvailableRows}, \code{FitUnavailableRows} and
-\code{FitReason} expose that coverage. Older diagnostics could effectively count
-missing residuals as zero misfit. Regenerate them and their exports from the
-saved fit, without refitting. MML response calculations now match Persons
-by identifier even when the saved Person table is reordered.
-
-Read the \code{diagnostics}, \code{settings}, \code{score_map} and
-\code{source_readiness} attributes; values alone do not establish fit or inference
-readiness. Outputs align with \code{fit$prep$data}, not an unfiltered input table.
-Existing saved fits can be reused without refitting. When old objects lack
-omitted-row identities, their original \code{InputRow} positions remain \code{NA};
-retained-row order is still available. CML and comparison-only results
-now explicitly refuse this unsupported Person plug-in target instead of
-letting \code{fitted()}/\code{residuals()} fall through to \code{NULL}.
+Regenerate older diagnostics and exports from the saved fit to obtain the
+corrected missing-residual coverage and identifier matching; no calibration
+refit is needed for these corrections. Inspect \code{FitAvailableRows},
+\code{FitUnavailableRows}, \code{FitReason} and response-table status fields. Native
+response methods and legacy diagnostics can differ at extreme/low-variance
+limits; \link{mfrm_fit_responses} specifies their respective estimate bases.
+CML does not supply this Person plug-in response target.
 }
 
 \section{Input normalization corrections in 0.2.4}{
@@ -444,51 +517,31 @@ Laplace approximation or calibration-adjusted interval coverage.
 
 \section{Updating saved diagnostics in 0.2.4}{
 
-When a report, plot, bias screen or export accepts both \code{fit} and
-\code{diagnostics}, the diagnostic object must describe that same fitted analysis.
-Matching person/facet labels or location estimates alone is insufficient:
-thresholds, population specification, integration settings and retained
-observations must also agree. A mismatched pair now raises an error instead
-of combining results or silently substituting newly computed diagnostics.
+Recreate \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and \code{\link[=estimate_bias]{estimate_bias()}} from the original saved fit
+with the original diagnostic options, then rebuild reports. Corrected bundles
+record \code{calculation_version = 2}; corrections concern PTMEA, ZSTD, displacement,
+chi-square df, PCM fair scores, bias tests and unexpected-response screening.
+The main calibration does not need refitting for these changes.
 
-Corrected diagnostic and bias bundles carry \code{calculation_version = 2}.
-Earlier bundles must be recreated from the saved fit, including
-\code{\link[=estimate_bias]{estimate_bias()}} and derived reports. Corrections affect PTMEA, ZSTD,
-displacement, chi-square df, PCM fair scores, bias expectations and summary
-tests, and unexpected-response screening. The diagnostic default is now
-\code{fit_df_method = "facets"}. Fit-measure tables and ZSTD fit-pathway plots
-use this default too; request the explicit engine option for historical df.
-\code{whexact = TRUE} now means FACETS WHEXACT=NO;
-use \code{"legacy_linear"} for its former calculation. Reproducing the former
-engine convention also requires \code{fit_df_method = "engine"}. The former
-unexpected-response rule is explicit \verb{abs_z_min = 2, rule = "either"}.
-Pairwise reports now use modified Rasch-Welch df rounded down by default;
-\code{df_method = "classical"} retains the former continuous reference. Recreate
-those reports to obtain \code{CalculationVersion = 3}.
-Recompute rather than inserting a version field into an old object. These
-are diagnostic changes and do not require a main calibration refit.
-
-Older native diagnostics that lack a saved calibration identity are also
-refused when paired with a fit. For native models supported by
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, regenerate diagnostics from the original saved fit;
-the model does not need to be refitted. Reuse the diagnostic options from
-your original analysis, such as \code{diagnostic_mode} and \code{residual_pca}.
-For example, if the original options were \code{"legacy"} and \code{"none"}:
-\preformatted{
-fit <- readRDS("fit.rds")
-diagnostics <- diagnose_mfrm(
-  fit, diagnostic_mode = "legacy", residual_pca = "none"
-)
-saveRDS(diagnostics, "diagnostics-0.2.4.rds")
-report <- facet_quality_dashboard(fit, diagnostics = diagnostics)
+To reproduce older conventions, use the explicit controls:
+\itemize{
+\item \code{fit_df_method = "engine"} instead of the current \code{"facets"} default;
+\item \code{whexact = "legacy_linear"} for the former calculation; current \code{TRUE}
+means FACETS WHEXACT=NO and historical engine reproduction also needs
+\code{fit_df_method = "engine"};
+\item \verb{abs_z_min = 2, rule = "either"} for the former unexpected-response rule;
+\item pairwise \code{df_method = "classical"} for continuous Rasch-Welch df. The current
+modified, rounded-down calculation produces \code{CalculationVersion = 3}.
 }
-Function signatures and result-table columns are unchanged by this identity
-check. Helpers that explicitly accept diagnostics alone, such as
-\code{fit_measures_table(diagnostics)}, still support that input; it does not
-establish a match to another fit. Imported diagnostics must be the bundle
-stored in the matching imported fit. These checks do not expand the model
-families supported by ordinary diagnostics; for example, native CML retains
-its separate interval/reporting workflow in \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}.
+
+Consumers combining a fit and diagnostics, bias/screening results or predictions
+require matching calculation/identity metadata. Labels or location estimates
+alone do not establish a match: retained observations, thresholds, population
+and integration settings matter. Recreate older results lacking that metadata;
+do not insert version/identity fields by hand. Imported diagnostics must be
+those stored in the matching imported fit. Standalone methods keep their own
+input requirements and do not establish a match to a separate fit. This check
+does not expand supported model families; CML has its separate interval route.
 }
 
 \section{Updating saved shrinkage results in 0.2.4}{
@@ -509,95 +562,48 @@ Non-Person facet adjustment remains available within its existing scope.
 
 \section{Updating saved screening results in 0.2.4}{
 
-Recompute \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} and \code{\link[=build_equating_chain]{build_equating_chain()}} from saved
-fitted waves to apply stable offset/SE calculations and explicit unavailable
-states. No model refit is required. Singleton or uncomputable residual
-spreads now remain missing, and summaries distinguish unavailable flags
-from zero flagged elements. The result records fallback and actual offset
-contributors; chains also record unavailable cumulative sums. Earlier
-saved tables are not repaired by loading them. Rebuild chains before
-requesting offset sensitivity if the saved offsets no longer match the
-current arithmetic. Regenerate plots and exports: \code{\link[=as_ggplot]{as_ggplot()}} now uses
-the selected drift, wave estimate, cumulative offset or common-element
-count instead of the first numeric column.
-
-Rerun \code{\link[=analyze_dff]{analyze_dff()}} with \code{method = "refit"} from the saved baseline fit
-and original data to repair earlier subgroup results. This reruns subgroup
-estimation: failed/skipped groups no longer borrow baseline estimates, absent
-target levels remain visible, and sparsity/precision screens use retained
-target-cell counts and shared-Person checks. Current summary, report and
-plotting methods reject earlier refit objects; do not add the version field
-by hand. Regenerate exported tables and figures. Location-direction labels
-now describe parameter differences rather than asserting that entire
-subgroup response curves are harder or easier.
-
-Recompute older \code{\link[=estimate_bias]{estimate_bias()}} / \code{\link[=estimate_all_bias]{estimate_all_bias()}} results from the
-saved fit and matching diagnostics to obtain boundary and complete-cell
-information/fit checks. Search-boundary estimates remain points, with
-unavailable SEs and screening tail areas. Small positive response variances
-contribute to information; missing residuals no longer produce partial-cell
-Infit/Outfit. Facet labels containing \code{||} now identify distinct cells
-correctly. The summary reports missing screening counts and retains
-unavailable cells in Bonferroni/Holm family sizes. These changes require
-re-screening, not refitting the calibration; an old saved table is not
-recalculated by plotting or printing it.
-
-Results from \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=estimate_all_bias]{estimate_all_bias()}},
-\code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=unexpected_after_bias_table]{unexpected_after_bias_table()}} and
-\code{\link[=displacement_table]{displacement_table()}} now carry a \code{fit_identity} field. When a consumer
-combines a supplied result with a fit, it checks that they describe the same
-analysis. This includes reports, dashboards, QC, export/replay helpers and
-\code{\link[=build_misfit_casebook]{build_misfit_casebook()}}. Every retained member and the primary result of a
-bias collection must match. Matching facet labels alone is insufficient.
-
-Older results without this metadata, and manually assembled bias tables,
-cannot establish that match. Recreate the result from its saved fit and
-matching diagnostics; do not add an identity field to an old table by hand.
-Use the original facets, estimation limits, filtering rules and thresholds.
-For example, if the original bias screen used these options:
-\preformatted{
-bias <- estimate_bias(fit, diagnostics,
-  facet_a = "Rater", facet_b = "Criterion",
-  max_abs = 10, omit_extreme = TRUE, max_iter = 2, tol = 1e-3)
-saveRDS(bias, "bias-0.2.4.rds")
-report <- build_apa_outputs(fit, diagnostics, bias_results = bias)
+\itemize{
+\item Recompute \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} and \code{\link[=build_equating_chain]{build_equating_chain()}} from saved
+fitted waves, then regenerate plots/exports. This corrects offset/SE
+arithmetic, singleton spread and unavailable counts without model refitting.
+Rebuild chains before offset sensitivity if old offsets no longer match;
+the plot now uses the selected measure rather than the first numeric column.
+\item Rerun \code{\link[=analyze_dff]{analyze_dff()}} with \code{method = "refit"} using the original baseline
+and data. This \strong{does rerun subgroup estimation}. Earlier results could
+borrow baseline estimates for failed/skipped groups and omit absent targets.
+Current methods reject those old objects. Recreate them to obtain retained
+cell counts, shared-Person checks and parameter-difference direction labels.
+\item Recompute \code{\link[=estimate_bias]{estimate_bias()}} / \code{\link[=estimate_all_bias]{estimate_all_bias()}} with the original
+facets, limits, filtering and thresholds from the saved fit and matching
+diagnostics. This corrects boundary/information checks, incomplete-cell
+Infit/Outfit, \code{||} labels and unavailable screening/multiplicity counts.
+Boundary points remain estimates with unavailable SEs/tail areas. Re-screening
+does not refit the calibration; printing an old table does not recalculate it.
+\item Bias collections, unexpected-response and displacement results require a
+matching \code{fit_identity} when attached to fit-level reports, QC, exports or
+casebooks. Every retained collection member must match. Recreate old or
+manually assembled results rather than adding metadata. Identity checks
+prevent mixing analyses; they do not qualify formal inference.
 }
-The same calls and table columns remain available; the added metadata is
-stored alongside the tables. Recomputing the screen does not refit the model.
-Standalone summary/plot methods keep their existing input requirements and
-do not establish a relationship to a separately supplied fit. These identity
-checks prevent accidental mixing; they do not validate manually edited
-numbers or make a screening result eligible for formal inference.
 }
 
 \section{Updating saved predictions in 0.2.4}{
 
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} and \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} now retain a
-\code{fit_identity} field. Fit-level manifests, replay scripts and archive exports
-require that identity to match the supplied calibration, fitted population
-coding and source scoring status. Recreate older outputs from the saved fit
-and original scoring inputs, retaining the original column mappings,
-\code{person_data}, prior, integration settings, omission policy and seed.
-This repeats scoring or drawing plausible values, not estimation of the
-calibration model. Standalone summary/plot methods retain their existing
-input rules; a standalone table does not establish a match to another fit.
+Older \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} and \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} outputs need
+recreation before fit-level manifests, replay scripts or archives can check
+their \code{fit_identity}. Reuse the saved calibration and original responses,
+column mappings, \code{person_data}, prior, integration, omission policy and seed.
+This repeats scoring/draws, not calibration estimation.
 
-\code{\link[=predict_mfrm_population]{predict_mfrm_population()}} is a simulation-based design forecast. A result
-created with \code{fit = fit} must match that source fit when attached to an
-archive. Recreating an older fit-derived forecast repeats its simulations
-and replication fits; the original calibration fit can be reused.
-A result created with \code{sim_spec = spec} remains an explicitly supplied
-scenario and can accompany a different fit. Its notes and the manifest's
-\code{population_prediction_source} setting distinguish this from a forecast
-derived from the attached fit. Do not change the source label of an old
-result to bypass the check.
-
-Generated replay scripts continue to use the saved simulation specification.
-They reproduce those forecasting assumptions rather than deriving new ones
-from the replayed calibration, which could change the forecast. The recreated
-forecast is therefore labelled as a supplied-specification scenario.
-Identity checks do not change scoring uncertainty, eligibility or the
-interpretation of plausible values and Monte Carlo forecast uncertainty.
+For \code{\link[=predict_mfrm_population]{predict_mfrm_population()}}, a forecast created with \code{fit = fit} must match
+the archived fit. Recreating it repeats simulations and replication fits,
+while retaining the original calibration. An explicit \code{sim_spec = spec}
+scenario may accompany another fit; \code{population_prediction_source} and notes
+identify that distinction. Do not relabel an old result to bypass the check.
+Replay scripts use the saved simulation specification rather than re-derive
+it from the replayed calibration, so recreated forecasts are labelled as
+supplied-specification scenarios. These checks do not alter the uncertainty
+definitions or eligibility of scoring, plausible values or forecasts.
 }
 
 \section{Updating saved structural reviews in 0.2.4}{
@@ -658,31 +664,11 @@ helper names; user-facing helper names use review/check terminology.
 }
 }
 
-\section{Typical workflow}{
-
-\itemize{
-\item Legacy handoff:
-\code{\link[=run_mfrm_facets]{run_mfrm_facets()}} -> \code{\link[=build_fixed_reports]{build_fixed_reports()}} ->
-\code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}} plus \code{\link[=write_mfrm_residual_file]{write_mfrm_residual_file()}} /
-\code{\link[=write_mfrm_subset_file]{write_mfrm_subset_file()}} only when those standalone files are needed.
-\item Mixed workflow:
-\code{RSM} / \code{PCM}:
-\code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}} ->
-compatibility export only if required.
-\code{GPCM}:
-\code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=reporting_checklist]{reporting_checklist()}} ->
-\code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}} only when a graph/score handoff is needed,
-retaining its package-native GPCM caveats.
-\item FACETS output-contract review:
-\code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=facets_output_contract_review]{facets_output_contract_review()}}.
-}
-}
-
 \section{Companion guides}{
 
 \itemize{
 \item For FACETS coverage and boundary wording, see
-\code{\link[=facets_guide]{facets_guide()}} with topic = "positioning" or "coverage".
+\code{\link[=facets_positioning_guide]{facets_positioning_guide()}} and \code{\link[=facets_feature_coverage]{facets_feature_coverage()}}.
 \item For standard reports/tables, see \link{mfrmr_reports_and_tables}.
 \item For manuscript-draft reporting, see \link{mfrmr_reporting_and_apa}.
 \item For visual diagnostics, see \link{mfrmr_visual_diagnostics}.

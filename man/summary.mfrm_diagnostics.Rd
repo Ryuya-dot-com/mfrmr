@@ -44,8 +44,8 @@ fit and retained separately from diagnostic-screening status
 \item \code{diagnostic_basis}: guide to legacy versus strict diagnostic targets
 \item \code{fit_standardization}: guide to the df convention used for fit ZSTD
 \item \code{overall_fit}: global fit block
-\item \code{precision_profile}: design-weighted precision summary across the
-information curve at decile theta points
+\item \code{precision_profile}: active precision tier and recommended use of the
+available uncertainty calculations
 \item \code{precision_review}: separation / reliability / strata review for the
 sample- and population-basis modes (paired with \code{precision_profile})
 \item \code{reliability}: facet-level separation/reliability summary
@@ -83,44 +83,34 @@ which companion outputs should be consulted
 Summarize an \code{mfrm_diagnostics} object in a user-friendly format
 }
 \details{
-This method returns a compact diagnostics summary designed for quick review:
-\itemize{
-\item design overview (observations, persons, facets, categories, subsets)
-\item diagnostic-basis guide for legacy versus strict fit paths
-\item global fit statistics
-\item approximate reliability/separation by facet
-\item top facet/person fit rows by absolute ZSTD
-\item counts of flagged diagnostics (unexpected, displacement, interactions)
+Read \code{decision} and \code{key_warnings}, then use the tables below to locate
+results needing investigation. The summary reuses diagnostics; it does not
+refit or promote a restricted source fit to inferential use.
 }
-}
-\section{Interpreting output}{
+\section{Interpreting results}{
 
 \itemize{
-\item \code{overview}: analysis scale, subset count, and residual-PCA mode.
-\item \code{fit_readiness}: the source fit's versioned readiness row. Diagnostics do
-not promote a blocked or review-only fit to inferential use.
-\item \code{diagnostic_basis}: plain-language map of which fit path was computed and
-what each path means statistically.
-\item \code{overall_fit}: global fit indices.
-\item \code{reliability}: facet separation/reliability block, including model and
-real bounds when available.
-\item \code{top_fit}: highest \verb{|ZSTD|} elements for immediate inspection.
-\item \code{flags}: compact counts for key warning domains.
-\item \code{fit_screening}: available classifications and unclassified elements for
-each mean-square/ZSTD rule. A known threshold crossing remains flagged
-even if the other statistic is missing. Recreate older summaries and
-reports from existing diagnostics; no MFRM refit is required.
-}
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Run diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, using \code{diagnostic_mode = "both"}
-for \code{RSM} / \code{PCM} when you want legacy continuity plus strict marginal screening.
-\item Review \code{summary(diag)} for major warnings and inspect \code{diagnostic_basis}
-before comparing legacy and strict outputs.
-\item Follow up with dedicated tables/plots for flagged domains.
+\item \code{Infit}/\code{Outfit} have model-reference value 1. Values above 1 describe
+excess residual variation; values below 1 describe greater predictability.
+\code{InfitZSTD}/\code{OutfitZSTD} standardize those mean squares; they are not
+effect sizes or calibrated tests after fitting and repeated screening.
+\code{top_fit} ranks only rows with both ZSTD values available. Its absence of
+a level does not establish acceptable fit; inspect \code{object$fit} and
+\code{FitReason} for unavailable standardizations.
+\item \code{Reliability}/\code{Separation} describe how spread out facet measures are
+relative to their estimated error. \code{RealReliability}/\code{RealSeparation}
+use fit-inflated SEs, not lower confidence limits. High rater separation
+can indicate severity differences, not agreement. Read \code{ReliabilityBasis},
+\code{ReliabilityUse} and the computation details in \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
+\item \code{fit_screening} distinguishes classified from unclassified elements.
+A known cutoff crossing remains flagged if another statistic is missing;
+missing evidence is not a pass. Flags guide review, not automatic deletion.
+\item \code{diagnostic_basis} distinguishes EAP plug-in response residuals from
+posterior-integrated category-count screens. They answer different fit
+questions; neither label alone authorizes a hypothesis test.
+\item In \code{overview}, \code{Observations} counts retained rating rows and \code{Persons}
+counts respondents. Repeated ratings of one Person do not create
+additional independent Persons.
 }
 }
 

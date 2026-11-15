@@ -317,7 +317,8 @@ zstd_from_mnsq_facets <- function(mnsq, df, whexact = FALSE, cap = 9) {
   out <- rep(NA_real_, n)
   m <- mnsq[seq_len(n)]
   d <- df[seq_len(n)]
-  ok <- is.finite(m) & is.finite(d) & (m >= 0) & (d > 0)
+  # As in the engine route, tiny df can reverse the Wilson-Hilferty sign.
+  ok <- is.finite(m) & is.finite(d) & (m >= 0) & (d >= 1)
 
   method <- mfrm_zstd_method(whexact)
   if (method == "legacy_linear") {

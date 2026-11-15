@@ -127,8 +127,6 @@
 #'   `print()` returns the same comparison invisibly without recomputation.
 #'   `summary()` returns the comparison table. `Status` describes interval
 #'   availability; point differences can remain available without an interval.
-#'   After [recommend_mfrm_design()] attaches costs and targets,
-#'   `summary(x, planning = TRUE)` returns the saved planning tables and notes.
 #' @references Brennan, R. L. (2001). *Generalizability theory*. Springer.
 #' \doi{10.1007/978-1-4757-3456-0}. G/D targets and sampling variability.
 #'
@@ -145,7 +143,7 @@
 #' *The American Statistician, 46*(1), 27--29.
 #' \doi{10.1080/00031305.1992.10475842}. Taylor/moment approximation framework.
 #' @seealso [mfrm_d_study()], [plot.mfrm_multivariate_d_comparison()]
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' @examples # Optional workflow; run the example explicitly as shown below.
 #' # example("mfrm_multivariate_d_compare", run.dontrun = TRUE)
 #' \dontrun{
 #' # Existing fictional ratings: one row per Person-Rater-Task, two scores.
@@ -323,23 +321,13 @@ mfrm_multivariate_d_compare <- function(x, reference = 1L, score = NULL,
 
 #' @rdname mfrm_multivariate_d_compare
 #' @param object A result from `mfrm_multivariate_d_compare()`.
-#' @param planning For `summary()`: `FALSE` returns the unchanged comparison
-#'   table. `TRUE` returns the planning review attached by
-#'   [recommend_mfrm_design()], without calculation.
 #' @param ... For `summary.mfrm_multivariate_d_comparison()`: Further table-printing arguments for `print()`; unused arguments
 #'   to `summary()` are rejected.
 #'
 #' For `plot()`: Reserved; additional arguments are rejected.
 #' @export
-summary.mfrm_multivariate_d_comparison <- function(object, ..., planning = FALSE) {
+summary.mfrm_multivariate_d_comparison <- function(object, ...) {
   rlang::check_dots_empty()
-  if (!is.logical(planning) || length(planning) != 1L || is.na(planning))
-    stop("`planning` must be TRUE or FALSE.", call. = FALSE)
-  if (planning) {
-    if (is.null(object$planning))
-      stop("Attach costs and targets with recommend_mfrm_design() first.", call. = FALSE)
-    return(object$planning)
-  }
   object$comparisons
 }
 
@@ -363,13 +351,6 @@ print.mfrm_multivariate_d_comparison <- function(x, digits = NULL, row.names = F
   cat("An interval containing zero does not establish equivalence.\n")
   if (any(!x$component_diagnostics$PositiveSemidefinite) || !x$sampling_covariance_psd) {
     cat("Non-PSD covariance estimates: inspect component and sampling-covariance diagnostics.\n")
-  }
-  if (!is.null(x$planning)) {
-    cat("\nResource feasibility and point targets (all plans retained):\n")
-    print(x$planning$plans, digits = digits, row.names = row.names, ...)
-    print(x$planning$costs, digits = digits, row.names = row.names, ...)
-    print(x$planning$differences[c("Scenario", "Metric", "Direction")], row.names = row.names)
-    cat(paste(x$planning$notes, collapse = "\n"), "\n")
   }
   invisible(x)
 }

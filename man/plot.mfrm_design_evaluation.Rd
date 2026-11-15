@@ -38,11 +38,12 @@ alias rules as \code{x_var} apply.}
 \item{...}{Reserved for generic compatibility.}
 }
 \value{
-Invisibly, a \code{ggplot} object whose reusable payload (accessible via
-\code{\link[=plot_data]{plot_data()}}) includes resolved canonical variables (\code{x_var}, \code{group_var})
-together with public labels (\code{x_label}, \code{group_label}),
-\code{design_variable_aliases}, and \code{design_descriptor}, plus \code{planning_scope},
-\code{planning_constraints}, and \code{planning_schema}.
+If \code{draw = TRUE}, invisibly returns a plotting-data list. If
+\code{draw = FALSE}, returns that list directly. The returned list includes
+resolved canonical variables (\code{x_var}, \code{group_var}) together with public
+labels (\code{x_label}, \code{group_label}), \code{design_variable_aliases}, and
+\code{design_descriptor}, plus \code{planning_scope}, \code{planning_constraints}, and
+\code{planning_schema}.
 }
 \description{
 Plot a design-simulation study
@@ -63,7 +64,7 @@ missingness and rater-pair linkage separately from recovery metrics
 }
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_design_evaluation", run.dontrun = TRUE)
 \dontrun{
 # One saved replication illustrates output structure, not precise rates.
@@ -73,8 +74,7 @@ saved <- readRDS(system.file("examples", "simulation-design.rds",
 # Inspect saved$generation_warnings and the result's run/status tables.
 sim_eval <- saved$result
 p <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
-pd <- plot_data(p)
-c(pd$facet, pd$x_var)
+c(p$facet, p$x_var)
 }
 }
 \seealso{

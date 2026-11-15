@@ -168,62 +168,29 @@ latent-regression scoring
 Score future or partially observed units under the fitted scoring basis
 }
 \details{
-\code{predict_mfrm_units()} is the \strong{individual-unit companion} to
-\code{\link[=predict_mfrm_population]{predict_mfrm_population()}}. It uses the fitted calibration and, when
-available, the fitted one-dimensional population model to score new or
-partially observed persons via Expected A Posteriori (EAP) summaries on a
-quadrature grid.
+Scores supplied response rows under a fixed calibration, using posterior
+EAP and SD on a quadrature grid. All non-Person facet levels must be known.
+Person IDs identify the scoring rows; overlap with training IDs does not
+identify the same latent units or update their fitted estimates. For
+population forecasts use \code{\link[=predict_mfrm_population]{predict_mfrm_population()}}.
 
-With the default \code{scoring_prior = NULL}, when the original fit uses ordinary
-\code{method = "MML"}, the posterior
-summaries use that fitted MML calibration and a standard normal scoring
-prior, unless a population model was fitted. When the original fit
-uses the latent-regression MML branch, the scoring prior is the fitted
-conditional normal population model \eqn{\theta \mid x \sim
-N(x^\top\hat\beta, \hat\sigma^2)}, so the returned summaries are
-population-model-aware posterior EAP estimates. When the original fit uses
-\code{method = "JML"}, \code{mfrmr} applies the fitted facet/step parameters with a
-standard normal reference prior on the quadrature grid, so the returned
-person scores remain fitted-object EAP summaries rather than direct JML
-estimates from the fitting step.
-
-When the fitted population model is intercept-only (\code{population_formula = ~ 1}), \code{predict_mfrm_units()} still uses the fitted population-model basis,
-but it can reconstruct the minimal scored-person table internally because no
-background covariates are needed beyond the person IDs in \code{new_data}.
-
-The current \code{GPCM} branch is included in this scoring layer,
-so fitted \code{GPCM} objects can be used for the same fitted-object
-posterior summaries. This does not imply that every downstream diagnostic or
-reporting helper has already been generalized to \code{GPCM}.
-
-This is appropriate for questions such as:
+With \code{scoring_prior = NULL}, the normal prior depends on the fitted model:
 \itemize{
-\item what posterior location/uncertainty do these partially observed new
-respondents have under the existing calibration?
-\item how uncertain are those scores, given the observed response pattern?
+\item Ordinary RSM/PCM MML without a population formula retains N(0,1).
+One-family GPCM retains its estimated population SD.
+\item Latent-regression MML retains \eqn{\theta \mid x \sim
+  N(x^\top\hat\beta, \hat\sigma^2)}. An intercept-only formula (\code{~1})
+needs only Person IDs; its minimal person-data table is reconstructed.
+\item JML adds a standard-normal reference prior for post hoc EAP scoring;
+this population was not estimated by JML. Scores do not reproduce the
+training Person JML estimates or provide new-Person ML/WLE estimates.
 }
 
-All non-person facet levels in \code{new_data} must already exist in the fitted
-calibration. The function does \strong{not} recalibrate the model, update facet
-estimates, or treat overlapping person IDs as the same latent units from the
-training data. Person IDs in \code{new_data} are treated as labels for the rows
-being scored.
-
-When \code{n_draws > 0}, the returned \code{draws} component contains discrete
-quadrature-grid posterior draws that can be used as approximate plausible
-values under the fitted scoring basis. They should be interpreted as
-posterior uncertainty summaries, not as deterministic future truth values.
-
-For \code{JML} fits, this scoring stage is intentionally post hoc: \code{mfrmr} uses
-the fitted facet and step parameters from the joint-likelihood fit, then
-adds a standard normal reference prior by default (or the explicit
-\code{scoring_prior}) only for the scoring layer so that
-new or partially observed units can be summarized on a quadrature grid.
-This is a practical fitted-object EAP procedure, not a claim that the
-original \code{JML} fit itself estimated a population model. It does not reproduce
-the training Person joint maximum-likelihood estimates or provide ML/WLE
-scoring for new Persons. Posterior uncertainty conditions on the fitted
-calibration; it does not include calibration-parameter uncertainty.
+An explicit \code{scoring_prior} changes the scoring assumption, not calibration.
+Optional \code{draws} are discrete-grid posterior draws (approximate plausible
+values), not future true abilities. All uncertainty is conditional on the
+retained calibration and scoring prior. GPCM scoring support does not imply
+support in every diagnostic or reporting helper.
 
 \code{summary()} method: Summarize posterior unit scoring output
 }
@@ -231,7 +198,7 @@ calibration; it does not include calibration-parameter uncertainty.
 
 Two-family GPCM MML supports new Persons with known non-Person facet levels,
 unit weights and the retained fixed N(0,1) prior. Both slope components,
-all facet locations and the declared step owner's category steps remain fixed. New
+facet locations and the second owner's category steps remain fixed. New
 combinations of known levels are allowed under the fitted product model;
 this does not validate those combinations empirically. Repeated Person-facet
 combinations are rejected. Missing responses are omitted with a warning and
@@ -324,115 +291,66 @@ intervals, and no portable GPCM calibration artifact is created here.
 
 \section{Scoring a later cohort}{
 
-By default the scoring prior is retained from the fitted model; this function does not
-estimate a new cohort's population mean or spread from \code{new_data}. For
-example, a calibration from an advanced class may not supply a suitable
-prior for a beginning class, even when both classes use the same rubric.
-With only a few ratings, scores can depend substantially on that prior.
-The number of ratings alone is not an information measure: their calibrated
-difficulties, discriminations and observed categories also matter.
-Inspect extreme response patterns separately; increasing the rating count
-does not guarantee less prior sensitivity for every person.
+The retained prior is not re-estimated from \code{new_data}. A different cohort's
+mean, spread or shape may make it unsuitable. Sensitivity depends on rating
+information (difficulties, discriminations and categories), not count alone;
+inspect sparse and extreme response patterns. A narrower prior can narrow
+intervals without adding rating evidence. More quadrature points assess
+numerical accuracy under that prior, not its suitability or coverage.
 
-A narrower prior can yield narrower posterior intervals without any new
-rating evidence. This is greater certainty under a stronger assumption,
-not evidence that the assessment became more informative. Changing the
-prior while fixing calibration is a sensitivity analysis; estimating the
-calibration again changes a different part of the analysis. Neither action
-alone establishes coverage for a new cohort.
+For sensitivity analysis, score identical rows with externally justified
+alternatives, for example \code{scoring_prior = list(mean = 0.5, sd = 1.5)};
+these numbers are illustrative. Choosing the prior that gives a preferred
+classification does not validate it. A prior change cannot repair poor
+calibration; re-estimating calibration addresses a different uncertainty.
 
-Use \code{scoring_prior = list(mean = 0.5, sd = 1.5)}, for example, to inspect
-another normal-prior assumption while retaining the calibration. Choose
-plausible values for your setting; these example numbers are not a default
-recommendation. Compare the same response rows under both priors. The
-supplied prior is labelled as an analyst assumption, even if its numbers
-equal the retained prior. It does not repair a poorly estimated calibration.
-
-\code{PriorMean}/\code{PriorSD} describe the prior actually used for scoring;
-\code{RetainedPriorMean}/\code{RetainedPriorSD} describe the original scoring prior.
-\code{PriorSource} distinguishes \code{"retained"} from \code{"user_supplied"}.
-\code{RetainedPrior} distinguishes an estimated normal population from the
-standard normal reference (including post hoc JML scoring). These unrounded
-columns accompany estimates, posterior draws and their summaries.
-\code{settings$prior_comparison} records both priors by person, and
-\code{settings$retained_posterior_basis} records the original basis. Do not edit
-\code{fit$population}: its consistency with the retained calibration is checked
-independently of \code{scoring_prior}. Saving a prediction with \code{saveRDS()} stores
-a result; it does not create a portable GPCM calibration for future scoring.
+\code{PriorMean}/\code{PriorSD} record the actual prior, and
+\code{RetainedPriorMean}/\code{RetainedPriorSD} the original. \code{PriorSource} is
+\code{"retained"} or \code{"user_supplied"}, even when supplied values equal the original.
+\code{RetainedPrior} distinguishes an estimated population from a standard-normal
+reference, including post hoc JML. Estimates, draws and summaries retain these
+unrounded fields; \code{settings$prior_comparison} records both priors by Person
+and \code{settings$retained_posterior_basis} the original basis. Do not edit
+\code{fit$population}: calibration consistency is checked independently.
+Saving predictions with \code{\link[=saveRDS]{saveRDS()}} saves results, not a portable calibration.
 }
 
 \section{Interpreting output}{
 
 \itemize{
-\item \code{estimates} contains posterior EAP summaries for each person in
-\code{new_data}.
-\item \code{Lower} and \code{Upper} are continuous equal-tail posterior interval bounds at
-the requested \code{interval_level}, computed by numerical CDF inversion.
-EAP, SD, and optional draws still use the selected quadrature rule.
-These intervals condition on the fitted calibration and scoring prior,
-including any estimated population coefficients and variance. They exclude
-uncertainty from estimating calibration or population parameters; they are
-not confidence intervals at each fixed true Person ability.
-Their interpretation also depends on the scoring prior: a new population
-with a different ability mean, spread or shape can have different coverage.
-More quadrature points check numerical approximation under the same prior;
-they do not establish that this prior matches the new population.
-\item \code{SD} is posterior uncertainty under the fitted scoring basis used for
-scoring.
-\item Estimate tables retain \code{IntervalLevel} without rounding, the prior form,
-per-Person \code{PriorMean} and \code{PriorSD}, calibration method, interval method
-and uncertainty interpretation. \code{WeightedLikelihood} indicates whether
-any response contribution for that Person was raised to a non-unit weight.
-Such weights do not by themselves establish equivalent independent ratings
-or frequentist coverage. Draw tables retain their discrete-grid basis and
-the same prior and calibration interpretation.
-\item \code{draws}, when requested, contains approximate plausible values on the
-fitted quadrature grid.
-\item \code{population_review}, when present, records whether scored persons were
-omitted because their background data were incomplete for a
-latent-regression fit.
-\item \code{quadrature_review}, when requested, retains unrounded per-Person
-fixed/adaptive log-marginal, EAP and posterior-SD differences, changes
-between adaptive orders, and computation status/reasons. \code{summary()} also
-supplies a compact \code{quadrature_overview}. A \code{computed} status does not
-certify accuracy; inspect the differences and any unavailable rows.
+\item \code{estimates} contains Person EAPs and posterior \code{SD}. \code{Lower}/\code{Upper} are
+continuous equal-tail bounds obtained by numerical CDF inversion, while
+EAP, SD and optional \code{draws} use the quadrature grid. Intervals condition on
+calibration and prior parameters, including estimated population parameters;
+their estimation uncertainty is excluded. These are not frequentist
+confidence intervals for each fixed true ability.
+\item Tables retain unrounded \code{IntervalLevel}, prior form and Person-specific
+mean/SD, calibration and interval methods, and uncertainty interpretation.
+\code{WeightedLikelihood} marks non-unit powers of response contributions;
+weights do not establish equivalent independent ratings or coverage.
+Draw tables retain their discrete-grid basis and prior/calibration settings.
+\item \code{population_review} records Persons omitted for incomplete latent-regression
+background data.
+\item \code{quadrature_review} retains unrounded Person-level fixed/adaptive
+log-marginal, EAP and SD differences, adaptive-order changes and status/reasons;
+\code{summary()} adds \code{quadrature_overview}. \code{computed} means execution finished;
+inspect differences and unavailable rows before judging accuracy.
 }
 
-Re-summarize older results to recover recorded interval settings and readable
-notes without changing numerical scores. Prior means/SDs for older
-estimated-population results may be unavailable because those parameters
-were not retained in the result. Re-score with the existing fitted model
-to retain them; no calibration refit is needed. An unrecorded interval
-algorithm is labelled unavailable, not assumed to use continuous quantiles.
-}
-
-\section{What this does not justify}{
-
-This helper does not update the original calibration, estimate new non-person
-facet levels, or produce deterministic future person true values. It scores
-new response patterns under the fitted calibration and, when applicable, the
-fitted one-dimensional population model.
+Re-summarizing old results recovers recorded interval settings without
+changing scores. Missing prior parameters require re-scoring with the saved
+fit, not refitting. An unrecorded interval algorithm remains unavailable;
+continuous quantiles are not assumed.
 }
 
 \section{References}{
 
-The posterior summaries follow the usual quadrature-based EAP scoring
-framework used in item response modeling under calibrated parameters
-(Bock & Mislevy, 1982, pp. 432-433; Bock & Aitkin, 1981).
-When \code{fit} uses the latent-regression
-branch, \code{mfrmr} scores under the fitted conditional normal population model
-in the general plausible-values spirit discussed by Mislevy (1991). Optional
-posterior draws are exposed as quadrature-grid plausible-value-style
-summaries for practical many-facet scoring rather than as a claim of full
-ConQuest numerical equivalence. When the source fit is \code{JML}, the same
-literature supports
-the quadrature-based scoring layer, but the standard normal prior is a
-package-level reference prior introduced for post hoc scoring rather than an
-estimated population distribution.
-The local JML objective, gradient and curvature cutoffs are package
-numerical criteria, not literature-derived guarantees of calibration
-accuracy or interval coverage. The scoring literature does not establish
-the completeness of the source boundary audit.
+Quadrature EAP follows Bock and Mislevy (1982, pp. 432-433) and Bock and
+Aitkin (1981); latent-regression scoring and plausible-value-style draws
+relate to Mislevy (1991), without claiming ConQuest numerical equivalence.
+The post hoc JML reference prior and local objective/gradient/curvature
+cutoffs are package choices. These sources do not establish calibration
+accuracy, interval coverage or completeness of the source boundary audit.
 \itemize{
 \item Bock, R. D., & Mislevy, R. J. (1982). \emph{Adaptive EAP estimation of ability
 in a microcomputer environment}. Applied Psychological Measurement,
@@ -464,60 +382,44 @@ order and estimator remain recorded in the score table and saved settings.
 
 \section{Conditional ability decisions}{
 
-Supply \code{cut_scores} on the calibration's ability scale to obtain
-\code{decisions}, with one row per Person and requested event. \code{Type = "above_cut"}
-gives \eqn{P(\theta > c \mid y, \widehat\psi)}; \code{Type = "ability_band"}
-gives the probability between successive cuts, including the two outer
-bands. \verb{Lower < ability <= Upper} defines every row. \code{Label} uses the
-supplied cut names (or \code{Cut1}, ...) and \code{Band1}, ... in increasing order.
-These events overlap: only the ability-band probabilities sum to one.
+\code{cut_scores} uses the calibration ability scale. \code{decisions} has one row
+per Person and event: \code{above_cut} is \eqn{P(\theta > c \mid y,\widehat\psi)};
+\code{ability_band} covers successive cuts and the two outer bands. Boundaries
+are \verb{Lower < ability <= Upper}. \code{Label} uses supplied cut names or \code{Cut1},
+... and ordered \code{Band1}, ... . Only bands sum to one; the other events overlap.
 
-\code{PriorMean} and \code{PriorSD} record the actual Person-specific normal prior;
-\code{Status} and \code{Reason} retain scoring availability. \code{available_conditional}
-means the applicable numerical checks passed, not that the model or the
-cut's substantive meaning has been validated. \code{review_only} requires
-inspection before interpretation. Source-roster scoring may return
-\code{prior_only} for missing-only Persons; portable scoring instead retains
-them as \code{unavailable} with \code{NA} probabilities. Fitted-object scoring omits
-Persons with no retained rows; inspect its row and population reviews.
-A Person absent from the input is never invented.
+\code{PriorMean}/\code{PriorSD} record the actual normal prior. \code{Status} and \code{Reason}
+distinguish passed numerical checks (\code{available_conditional}), required
+inspection (\code{review_only}) and unavailable scores; passing checks does not
+validate the model or cuts. Missing-only Persons are \code{prior_only} in source
+scoring and \code{unavailable} with \code{NA} probabilities in portable scoring.
+Fitted-object scoring omits Persons without retained rows: inspect row and
+population reviews. Persons absent from input are not added.
 
-Probabilities integrate the continuous posterior, rather than counting
-\code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} draws or applying a normal approximation
-to EAP/SD. They condition on point calibration, population/prior parameters
-and supplied cuts, as recorded in \code{Uncertainty}. They do not propagate
-estimation error, compare two Persons or predict passing a future test.
-CEFR labels require externally justified cuts on this same scale.
-Very small tails have absolute, not relative, numerical accuracy; a
-returned zero or one is not a claim of impossibility or certainty.
+Probabilities integrate the continuous posterior, not posterior draw counts
+or an EAP/SD normal approximation. \code{Uncertainty} records conditioning on point
+calibration, prior/population parameters and cuts; their estimation error is
+excluded. These are neither Person comparisons nor future-test pass
+probabilities. CEFR alignment requires externally justified cuts on this scale.
+Small tails have absolute, not relative, accuracy: zero/one does not establish
+impossibility/certainty. Check prior sensitivity as described under
+"Scoring a later cohort". Larger calibration samples can improve parameter
+precision without correcting a mismatched scoring prior. Population-averaged
+accuracy does not establish accuracy near each cut, in every subgroup or
+for each Person.
 
-Review the scoring population as well as the calibration. An estimated
-normal prior is treated as known during scoring; its sampling uncertainty
-can matter especially with a small calibration cohort. A larger calibration
-cohort can improve parameter precision without correcting a prior that
-mismatches a new population's mean, spread or shape. Passing numerical checks
-does not establish that probabilities are accurate for that new population.
-A fixed reference prior is not a universal remedy: justify it for the target
-population on the calibration scale. If a prior override is supported,
-comparing externally justified alternatives is a sensitivity analysis, not
-evidence that the alternative giving the preferred classification is valid.
-Population-averaged accuracy also does not guarantee accuracy near each cut,
-within every subgroup or for each individual Person.
+Eligible routes are ordinary RSM MML \code{\link[=score_mfrm_persons]{score_mfrm_persons()}}, ordinary RSM/PCM
+MML/JML \code{predict_mfrm_units()}, and continuous-posterior RSM/PCM
+\code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}}. Their source/population restrictions still apply.
+Unit weights are required; GPCM, shared-rater and testlet cuts are unsupported.
+JML uses a separate scoring prior, not an estimated population. \code{NULL}
+leaves existing output unchanged.
 
-Use \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} for eligible ordinary RSM MML source Persons,
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for ordinary RSM/PCM MML or JML fitted-object scoring, and
-\code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} for eligible continuous-posterior RSM/PCM
-artifacts. Each route retains its existing source and population
-restrictions. Unit weights are required; GPCM, shared-rater and testlet
-cut probabilities are not supported. JML uses a separate scoring prior,
-not a population estimated by JML. \code{NULL} leaves the existing output unchanged.
-
-\code{summary(x)$decisions} and \code{\link[=apa_table]{apa_table()}} with \code{which = "decisions"} reuse
-saved probabilities without rounding them. Fitted-object and portable
-score batches also support \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} and
-\code{\link[=export_summary_appendix]{export_summary_appendix()}}. Save the complete result with \code{\link[=saveRDS]{saveRDS()}}
-to retain cuts, priors and review states for later reporting. Existing
-score plots display EAPs and intervals, not these event probabilities.
+\code{summary(x)$decisions} and \code{\link[=apa_table]{apa_table()}} (\code{which = "decisions"}) reuse saved,
+unrounded probabilities. Fitted-object and portable batches also support
+\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} and \code{\link[=export_summary_appendix]{export_summary_appendix()}}. Save the
+whole result with \code{\link[=saveRDS]{saveRDS()}} to retain cuts, priors and review states.
+Existing score plots show EAPs and intervals, not event probabilities.
 }
 
 \section{Saved-result reuse}{

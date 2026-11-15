@@ -13,10 +13,19 @@ mml_quadrature_sensitivity(
   theta_points = 161L,
   adaptive_quad_points = NULL
 )
+
+gpcm_mml_quadrature_sensitivity(
+  fit,
+  data,
+  quad_points = c(31L, 41L),
+  theta_range = c(-4, 4),
+  theta_points = 161L,
+  adaptive_quad_points = NULL
+)
 }
 \arguments{
 \item{fit}{An RSM, PCM, or GPCM MML \code{mfrm_fit} returned by
-\code{\link[=fit_mfrm]{fit_mfrm()}}. \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} accepts only GPCM fits.}
+\code{\link[=fit_mfrm]{fit_mfrm()}}. \code{\link[=gpcm_mml_quadrature_sensitivity]{gpcm_mml_quadrature_sensitivity()}} accepts only GPCM fits.}
 
 \item{data}{The original response data.frame used to create \code{fit}. Prepared
 response rows are compared semantically after refitting; row order may
@@ -73,9 +82,6 @@ Refit one ordered-response MML model to the same supplied response data at
 two or more Gauss--Hermite quadrature counts. The original fit is reused at
 its own quadrature count; all other fits reuse its stored model,
 identification, anchor, interaction, optimizer, and population settings.
-
-Use \code{mml_quadrature_sensitivity()} for all supported model
-families. The former GPCM-only name is no longer exported.
 }
 \details{
 This is an explicit refit diagnostic: neither \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}} nor
@@ -132,8 +138,9 @@ The effective slope is the product of both facet slopes; moving the
 integration grid retains the original N(0,1) density and its Jacobian.
 This does not provide adaptive EM, update estimates or repair their intervals.
 
-More quadrature points improve the numerical approximation, not the amount
-of observed information. In a sparse design, a small group of candidates
+More quadrature points refine the integration rule, not the amount of
+observed information. Accuracy need not improve monotonically; compare
+the resulting estimates and numerical diagnostics. In a sparse design, a small group of candidates
 rated many times may need a finer grid than candidates with few ratings.
 Inspect interval availability and measured changes; no fixed point count
 is guaranteed to be adequate for every design. See the GPCM scope vignette

@@ -113,9 +113,10 @@ one per facet pair. Plot via \code{plot(x, type = "crosstab", pair = "FacetA__Fa
 \item \code{design_effect}: per-facet design-effect approximations and descriptive
 equivalent row counts; not precision estimates for the full design.
 \item \code{connectivity}: number of bipartite components linking
-Person x facet levels. A single component is required for a
-common measurement scale; multiple components indicate a
-disconnected design.
+Person x facet levels. Multiple components indicate no observed
+links between those parts of the design. Their comparison may rely on
+external anchors or population assumptions. A single component alone
+does not establish identification of the full many-facet model.
 }
 }
 
@@ -151,7 +152,7 @@ See \link{mfrmr_compatibility_layer}.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("analyze_hierarchical_structure", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_core")

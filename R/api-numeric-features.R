@@ -6,10 +6,8 @@
 #' fewer variables; the default retains all nonzero components. PCA does not
 #' estimate rater quality, ability or groups. Identifiers and omitted rows are
 #' retained.
-#' @param x For `mfrm_pca()`: A table reviewed with [mfrm_features()]. For `mfrm_cluster(..., method = "kmeans")`,
-#'   a result from `mfrm_pca()` is also accepted.
-#'
-#' For `plot()`: A result from [mfrm_pca()].
+#' @param x For `mfrm_pca()`: A table reviewed with [mfrm_features()].
+#'   For `plot()`: A result from [mfrm_pca()].
 #' @param components For `mfrm_pca()`: Number of leading principal components to retain. `NULL`
 #'   retains the numerical rank, using `sqrt(.Machine$double.eps)` relative to
 #'   the largest singular value. A requested count cannot exceed that rank.
@@ -43,10 +41,10 @@
 #'   not correlations in the original units.
 #'
 #'   Use the same fitted PCA to review scores, loadings and groups. Passing its
-#'   result to `mfrm_cluster(..., method = "kmeans")` uses the retained scores without further
+#'   result to [mfrm_cluster_kmeans()] uses the retained scores without further
 #'   standardization or whitening. PCA is not a required step for k-means.
 #'   Group comparison and imputation sensitivity retain their descriptive scope.
-#' @seealso [k-means details][mfrm_cluster_kmeans], [mfrm_cluster_compare()], [plot.mfrm_pca()],
+#' @seealso [mfrm_cluster_kmeans()], [mfrm_cluster_compare()], [plot.mfrm_pca()],
 #'   [stats::prcomp()]
 #' @examples raters <- data.frame(Rater = paste0("R", 1:8),
 #'   ExperienceYears = c(1, 2, 3, 4, 10, 12, 13, 15),
@@ -56,7 +54,7 @@
 #' pca <- mfrm_pca(features, components = 2)
 #' summary(pca)
 #' pca$loadings
-#' groups <- mfrm_cluster(method = "kmeans", pca, k = 2, seed = 17, silhouette = FALSE)
+#' groups <- mfrm_cluster_kmeans(pca, k = 2, seed = 17, silhouette = FALSE)
 #' plot(pca, type = "scores", groups = groups)
 #' plot(groups, type = "profile", feature = "ExperienceYears")
 #' @export
@@ -120,6 +118,8 @@ summary.mfrm_pca <- function(object, ...) object$variance
 #' features or retained principal components supplied by you. The groups are
 #' descriptive; they do not measure ability or rater quality.
 #'
+#' @param x A reviewed numeric [mfrm_features()] table or an [mfrm_pca()]
+#'   result. PCA input reuses its saved transformation and retained components.
 #' @inheritParams mfrm_pca
 #' @inheritParams mfrm_cluster
 #' @param nstart Number of random starts; default 25.
@@ -151,7 +151,7 @@ summary.mfrm_pca <- function(object, ...) object$variance
 #'   No component whitening is performed. The centers of a truncated PCA are
 #'   coordinates in that subspace; `profiles` describe the original attributes.
 #'   Categorical codes must not be converted to numeric solely to pass this
-#'   interface. Use [mfrm_cluster()] for Gower/PAM mixed-feature groups.
+#'   interface. Use [mfrm_cluster_pam()] for Gower/PAM mixed-feature groups.
 #'
 #'   Compare fitted partitions using [mfrm_cluster_compare()]. Silhouettes
 #'   calculated in different geometries are not directly comparable evidence
@@ -167,8 +167,8 @@ summary.mfrm_pca <- function(object, ...) object$variance
 #' of the transformed coordinates (SD-scaled/weighted features or retained PCs),
 #' not necessarily original feature units. Compare them only for the same rows
 #' and geometry. For silhouette a(i), b(i), range, singleton conventions and
-#' profile denominators, see the metric section of [mfrm_cluster()].
-#' @seealso [mfrm_pca()], [mfrm_cluster()], [mfrm_cluster_imputed()],
+#' profile denominators, see the metric section of [mfrm_cluster_pam()].
+#' @seealso [mfrm_pca()], [mfrm_cluster_pam()], [mfrm_cluster_imputed()],
 #'   [mfrm_cluster_compare()], [plot.mfrm_clusters()], [stats::kmeans()]
 #' @examples
 #' raters <- data.frame(Rater = paste0("R", 1:8),
@@ -176,16 +176,13 @@ summary.mfrm_pca <- function(object, ...) object$variance
 #'   WorkshopHours = c(4, 12, 8, 20, 12, 28, 16, 32),
 #'   AnnualRatings = c(80, 120, 90, 160, 280, 350, 300, 400))
 #' features <- mfrm_features(raters, "Rater", names(raters)[-1])
-#' direct <- mfrm_cluster(method = "kmeans", features, 2, seed = 17, silhouette = FALSE)
-#' reduced <- mfrm_cluster(method = "kmeans", mfrm_pca(features, components = 2), 2,
+#' direct <- mfrm_cluster_kmeans(features, 2, seed = 17, silhouette = FALSE)
+#' reduced <- mfrm_cluster_kmeans(mfrm_pca(features, components = 2), 2,
 #'   seed = 17, silhouette = FALSE)
 #' summary(mfrm_cluster_compare(list(Features = direct, TwoPCs = reduced)))
 #' direct$centers
 #' direct$profiles$numeric
-#' @description For new code use `mfrm_cluster(..., method = "kmeans")`.
-#'   The former method-specific entry is no longer exported. This guide retains
-#'   the method's settings, geometry and interpretation.
-#' @usage NULL
+#' @export
 mfrm_cluster_kmeans <- function(x, k, weights = NULL,
                                 missing = c("error", "omit"), scale = TRUE,
                                 nstart = 25, iter.max = 100, seed = 1,

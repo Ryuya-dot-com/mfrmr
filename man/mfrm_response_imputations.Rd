@@ -21,6 +21,20 @@ review_mfrm_imputations(
   missing = c("error", "omit")
 )
 
+mfrm_response_imputations(
+  data,
+  completed,
+  person,
+  facets,
+  score,
+  event_id,
+  impute,
+  categories,
+  assigned = NULL,
+  imputation_model = NULL,
+  missing = c("error", "omit")
+)
+
 \method{print}{mfrm_response_imputations}(x, ...)
 
 \method{summary}{mfrm_response_imputations}(object, ...)
@@ -61,8 +75,11 @@ object is retained automatically; omit this argument.}
 in the roster and every completion, with missing scores, and are excluded
 from each analysis. This choice is not a correction for nonresponse.}
 
+\item{impute}{Compatibility name for \code{impute_ids}, used only by
+\code{mfrm_response_imputations()}. Supply one selection, not both argument names.}
+
 \item{x, object}{An object returned by \code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}} or its
-entry point \code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}}.}
+compatibility wrapper \code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}}.}
 
 \item{...}{Unused for print and summary methods.}
 }
@@ -81,13 +98,7 @@ No person-by-facet grid is constructed. This function validates supplied
 imputations; it does not choose or fit an imputation model.
 Start with \code{review_mfrm_imputations()}, then use \code{\link[=fit_mfrm_imputed]{fit_mfrm_imputed()}} and
 \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}} for eligible fixed-facet analyses. The older name
-The former \code{mfrm_response_imputations()} name has been removed; use
-\code{review_mfrm_imputations()} with \code{impute_ids} for the selected event IDs.
-
-Use \code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}} to review supplied completions,
-with \code{impute_ids} naming the selected event IDs. The former
-\code{mfrm_response_imputations()} name is no longer exported. Neither route
-fits an imputation model or generates completed ratings.
+\code{mfrm_response_imputations()} is retained with its original \code{impute} argument.
 }
 \details{
 The score must contain numeric integer category labels (numeric
@@ -117,7 +128,7 @@ checks does not establish MAR, model adequacy or interval coverage.
 For a wide-format or multilevel imputation model, reshape each completion
 back to the original long roster using event identities and supply the
 resulting list with the saved model. Do not average completed scores.
-See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-response-imputation.html}{online response-imputation guide} for a
+See \href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-response-imputation.html}{mfrmr-response-imputation} for a
 joint RSM example with supplied posterior predictive completions, shared
 Person draws, sampling diagnostics, direct observed-score inference and a
 separate lower-score sensitivity analysis. The accompanying R/Stan script

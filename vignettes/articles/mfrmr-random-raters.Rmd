@@ -10,9 +10,7 @@ vignette: >
 ```{r setup, include=FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 rtmb_available <- !is_cran_check && requireNamespace("RTMB", quietly = TRUE) && packageVersion("RTMB") >= "2.0"
-knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",collapse = TRUE, comment = "#>", dev.args = list(bg = "white"),
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", dev.args = list(bg = "white"),
                      eval = !is_cran_check && rtmb_available)
 library(mfrmr)
 ```
@@ -198,12 +196,12 @@ profile and conditional Person intervals have the separate meanings below.
 
 ## Give feedback about the observed raters
 
-```{r severity, fig.width=7, fig.height=5, fig.alt="Conditional-mode severity estimates for four observed raters relative to the assumed population mean. Positive values indicate more severe ratings. The default shows points without interval bounds or quality classifications."}
+```{r severity, fig.width=7, fig.height=5, fig.alt="Conditional-mode severity estimates for four observed raters relative to the assumed population mean. Positive values indicate stricter ratings. The default shows points without interval bounds or quality classifications."}
 random_fit$raters
 plot(random_fit)
 ```
 
-Positive severity means more severe ratings relative to the assumed rater
+Positive severity means stricter ratings relative to the assumed rater
 population mean. Points are conditional modes, with shrinkage toward that
 mean. `ConditionalSD` describes uncertainty holding calibration fixed.
 `PredictionSE` additionally incorporates first-order calibration uncertainty.

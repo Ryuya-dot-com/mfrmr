@@ -109,34 +109,24 @@ Original cell columns, including facet levels, observed counts, signed
 preserved. \code{settings}, \code{fit_identity} and \code{notes} retain provenance and
 interpretation. Print methods return their input invisibly.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object carrying its saved
-plot payload for \code{\link[=plot_data]{plot_data()}}. For the overview, \code{\link[=plot_data]{plot_data()}} provides
-\code{table} (all combined cells, including unavailable rows), \code{overview},
-\code{errors}, \code{optimization_failures}, \code{fit_identity}, \code{settings}, axis labels
-and notes. \code{\link[=as_ggplot]{as_ggplot()}} returns the overview \code{ggplot}. A selected pair
-returns the ordinary bias \code{ggplot} with \code{collection_pair} and
-\code{fit_identity} provenance added to \code{\link[=plot_data]{plot_data()}}.
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object. For the overview,
+\code{\link[=plot_data]{plot_data()}} provides \code{table} (all combined cells, including unavailable
+rows), \code{overview}, \code{errors}, \code{optimization_failures}, \code{fit_identity},
+\code{settings}, axis labels and notes. \code{\link[=as_ggplot]{as_ggplot()}} reproduces the overview.
+A selected pair returns the ordinary bias plot with \code{collection_pair}
+and \code{fit_identity} provenance added.
 }
 \description{
 Estimate bias across multiple facet pairs
 }
 \details{
-This function orchestrates repeated calls to \code{\link[=estimate_bias]{estimate_bias()}} across
-multiple facet pairs and returns a consolidated bundle.
-
-\strong{Bias/interaction} in MFRM refers to a systematic departure from
-the additive model for a specific combination of facet elements
-(e.g., a particular rater is unexpectedly severe on a particular
-criterion).  See \code{\link[=estimate_bias]{estimate_bias()}} for the mathematical formulation.
-
-When \code{pairs = NULL}, the function builds all 2-way combinations of
-modelled facets automatically.  For a model with facets Rater,
-Criterion, and Task, this yields Rater\eqn{\times}Criterion,
-Rater\eqn{\times}Task, and Criterion\eqn{\times}Task.
-With \code{include_person = TRUE}, Person\eqn{\times}facet pairs are prepended in
-the fit's facet order. They are conditional plug-in likelihood screens, not
-jointly fitted Person\eqn{\times}facet terms. A single warning records this
-boundary for the batch.
+Calls \code{\link[=estimate_bias]{estimate_bias()}} for each requested interaction, retaining its
+fixed-baseline target and screening limitations. Default pairs for Rater,
+Criterion and Task are Rater\eqn{\times}Criterion, Rater\eqn{\times}Task and
+Criterion\eqn{\times}Task. \code{include_person = TRUE} prepends
+Person\eqn{\times}facet pairs in fitted facet order. These are conditional
+screens, not jointly fitted Person\eqn{\times}facet terms; one batch warning
+records that distinction.
 
 The \code{summary} table aggregates results across pairs:
 \itemize{
@@ -155,15 +145,13 @@ conditional screening statistic
 these conditional plug-in interaction statistics are screening evidence
 }
 
-Per-pair failures (e.g., insufficient data for a sparse pair) are
-captured in \code{errors} rather than stopping the entire batch.
-There is no collection-wide multiplicity correction. Cells and pairs reuse
-the same observations and fitted calibration. Adjusting their screening tail
-areas would not establish formal family-wise error or false-discovery control.
-A screen-positive result is a prompt for review, not proof of unfairness;
-no screen-positive cells does not establish absence of interaction.
-Search-boundary points remain visible, with missing screening statistics
-and the \code{ScreenStatus}/\code{ScreenReason} returned by \code{\link[=estimate_bias]{estimate_bias()}}.
+Pair failures do not stop the batch; \code{summary$Error} retains them even when
+the optional \code{errors} table is not kept. There is no collection-wide
+multiplicity correction: pairs reuse observations/calibration, and adjusted
+plug-in tails would not establish family-wise error or false-discovery control.
+Boundary points retain missing statistics with \code{ScreenStatus}/\code{ScreenReason}.
+A screen-positive cell warrants review but does not prove unfairness. An absence
+of positive screens does not establish absence of interaction.
 
 \code{summary()} method: Summarize all retained bias screens
 
@@ -219,25 +207,20 @@ The returned object is a bundle-like list with class
 }
 }
 
-\section{Typical workflow}{
+\section{Reviewing and reporting the collection}{
 
-\enumerate{
-\item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} and diagnose with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. For
-\code{RSM} / \code{PCM} reporting runs, prefer \code{method = "MML"} plus
-\code{diagnostic_mode = "both"} in the diagnostics call.
-\item Run \code{estimate_all_bias()} to compute the requested multi-pair interactions.
-\item Inspect \code{summary(bias_all)$overview} for availability and magnitude, then
-\code{summary(bias_all)$cells} for all retained cells and their observed counts.
-Use \code{\link[=plot.mfrm_bias_collection]{plot.mfrm_bias_collection()}} for the overview or a named pair.
-\item Use \code{report <- mfrm_report(bias_all)} to retain the full search, failed
-pairs and all cells in one report; \code{\link[=export_summary_appendix]{export_summary_appendix()}} saves its
-tables. Supply \code{study_context} to state rubric endpoints and score direction.
-The \code{by_pair} list also feeds \code{\link[=reporting_checklist]{reporting_checklist()}} or \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.
-\item For a substantively justified joint interaction model, use
-\code{facet_interactions} in \code{\link[=fit_mfrm]{fit_mfrm()}} and \code{\link[=compare_mfrm]{compare_mfrm()}} on compatible
-fits. Selecting terms from these screens makes same-data comparisons
-exploratory; it does not create a prespecified confirmatory test.
-}
+Fit and diagnose under the intended assumptions; for supported MML,
+\code{diagnostic_mode = "both"} also retains marginal fit. After \code{estimate_all_bias()},
+read \code{summary(bias_all)$overview} for availability/magnitude and \verb{$cells} for
+all retained cells/counts. \code{\link[=plot.mfrm_bias_collection]{plot.mfrm_bias_collection()}} shows the overview
+or a selected pair.
+
+\code{mfrm_report(bias_all)} and \code{\link[=export_summary_appendix]{export_summary_appendix()}} retain the full search,
+failures and cells; \code{study_context} records rubric endpoints/direction.
+\code{by_pair} also feeds \code{\link[=reporting_checklist]{reporting_checklist()}} or \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.
+Joint interactions instead require \code{fit_mfrm(facet_interactions = ...)} and
+compatible \code{\link[=compare_mfrm]{compare_mfrm()}} fits. Terms selected from these same-data screens
+remain exploratory, not prespecified confirmatory tests.
 }
 
 \section{Saved-result reuse}{

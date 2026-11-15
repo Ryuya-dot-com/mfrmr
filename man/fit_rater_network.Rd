@@ -30,13 +30,7 @@ fit_rater_network(
 
 \method{confint}{mfrm_network_ergm}(object, parm = NULL, level = 0.95, ...)
 
-\method{plot}{mfrm_network_ergm}(
-  x,
-  type = c("coefficients", "gof"),
-  draw = TRUE,
-  preset = c("standard", "publication", "compact", "monochrome"),
-  ...
-)
+\method{plot}{mfrm_network_ergm}(x, type = c("coefficients", "gof"), draw = TRUE, ...)
 }
 \arguments{
 \item{x}{For \code{fit_rater_network()}: A rater or halo network result. All eligible pair metrics are used,
@@ -83,10 +77,7 @@ arguments passed to base \code{\link[graphics:plot]{graphics::plot()}}.}
 
 \item{type}{\code{"coefficients"} or \code{"gof"} (requires saved GOF).}
 
-\item{draw}{Whether to print the \code{ggplot} figure; \code{FALSE} returns the \code{ggplot}
-object without drawing.}
-
-\item{preset}{Visual preset; see \link{mfrmr_visual_diagnostics}.}
+\item{draw}{Whether to draw; \code{FALSE} returns plot data only.}
 }
 \value{
 An \code{mfrm_network_ergm} object with the backend \code{fit}, binary \code{network},
@@ -98,8 +89,8 @@ approximate pointwise normal intervals without refitting. \code{plot()} uses
 the originally stored 95\% intervals or saved simulation GOF.
 Use \code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_summary_appendix]{export_summary_appendix()}} for stored reporting.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts
-coefficient rows or GOF summaries and long-form simulation draws.
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object containing coefficient rows or
+GOF summaries and long-form simulation draws. Use \code{\link[=plot_data]{plot_data()}} to export.
 }
 \description{
 Model network configurations and rater covariates after examining shared
@@ -142,7 +133,8 @@ Changing \code{level} does not change the fitted object or its stored plot.
 \code{plot()} method: Plot ERGM model checks or coefficient intervals
 
 For \code{plot()}: Coefficient intervals are approximate pointwise normal intervals.
-They are not evidence of MCMC convergence.
+They are not evidence of MCMC convergence. The GOF plot delegates to ergm;
+its graphical options remain available through \code{...}.
 }
 \examples{
 # Optional integration example (loads additional modelling or rendering packages).

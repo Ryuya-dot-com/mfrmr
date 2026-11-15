@@ -25,16 +25,13 @@ mfrm_pca(
   components = NULL,
   groups = NULL,
   labels = NULL,
-  marginal = c("auto", "histogram", "none"),
   draw = TRUE,
   preset = "standard",
   ...
 )
 }
 \arguments{
-\item{x}{For \code{mfrm_pca()}: A table reviewed with \code{\link[=mfrm_features]{mfrm_features()}}. For \code{mfrm_cluster(..., method = "kmeans")},
-a result from \code{mfrm_pca()} is also accepted.
-
+\item{x}{For \code{mfrm_pca()}: A table reviewed with \code{\link[=mfrm_features]{mfrm_features()}}.
 For \code{plot()}: A result from \code{\link[=mfrm_pca]{mfrm_pca()}}.}
 
 \item{components}{For \code{mfrm_pca()}: Number of leading principal components to retain. \code{NULL}
@@ -65,19 +62,16 @@ For \code{plot()}: Reserved for future use; additional arguments are rejected.}
 
 \item{type}{\code{"scree"} (default), \code{"scores"}, or \code{"loadings"}.}
 
-\item{groups}{Optional \code{\link[=mfrm_cluster]{mfrm_cluster()}} result used to color a scores plot. Its IDs,
+\item{groups}{Optional \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}}, \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}} or
+\code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} result used to color a scores plot. Its IDs,
 included entities and shared PCA features must match. Labels only annotate
 the view; they do not refit PCA or imply separation on every component.
 Groups use both colour and point shape, including monochrome output.
 Shapes repeat after six groups; inspect the ID-aligned table for crowded views.}
 
-\item{labels}{Whether to display entity IDs on silhouettes or heatmaps.
-The default displays them for at most 50 entities. No entities are sampled
-when labels are hidden. Profile plots always label groups and levels.}
-
-\item{marginal}{Marginal histogram display for \code{type = "scores"}:
-\code{"auto"} (default; displayed when at least 8 finite score pairs are plotted),
-\code{"histogram"}, or \code{"none"}.}
+\item{labels}{Show entity IDs in scores plots; \code{NULL} labels at most
+50 included entities. Loading plots label features and scree plots label
+components. Hiding entity labels does not omit observations.}
 
 \item{draw}{Draw the plot when \code{TRUE}; \code{FALSE} only returns plotted values.}
 
@@ -90,8 +84,7 @@ An \code{mfrm_pca} object with ID-aligned \code{scores} (omitted rows are \code{
 and retained status), \code{transformation} (centers, divisors and weight factors),
 original \code{feature_data} and \code{settings}. \code{summary()} returns \code{variance}.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object carrying the underlying
-\code{mfrm_plot_data} payload (accessible via \code{\link[=plot_data]{plot_data()}}) with the exact plotted table,
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object with the exact plotted table,
 selected components, group colour/shape encoding, excluded IDs and axis meanings. Scree data retain the
 full variance table, including components not used for clustering.
 \code{\link[=plot_data]{plot_data()}} extracts these values. \code{\link[=as_ggplot]{as_ggplot()}} converts all three views
@@ -130,7 +123,7 @@ Loadings are eigenvector coefficients in the transformed feature space,
 not correlations in the original units.
 
 Use the same fitted PCA to review scores, loadings and groups. Passing its
-result to \code{mfrm_cluster(..., method = "kmeans")} uses the retained scores without further
+result to \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}} uses the retained scores without further
 standardization or whitening. PCA is not a required step for k-means.
 Group comparison and imputation sensitivity retain their descriptive scope.
 
@@ -160,10 +153,10 @@ features <- mfrm_features(raters, "Rater", names(raters)[-1])
 pca <- mfrm_pca(features, components = 2)
 summary(pca)
 pca$loadings
-groups <- mfrm_cluster(method = "kmeans", pca, k = 2, seed = 17, silhouette = FALSE)
+groups <- mfrm_cluster_kmeans(pca, k = 2, seed = 17, silhouette = FALSE)
 plot(pca, type = "scores", groups = groups)
 plot(groups, type = "profile", feature = "ExperienceYears")
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_pca", run.dontrun = TRUE)
 \dontrun{
 attributes <- data.frame(ID = letters[1:6],
@@ -177,8 +170,8 @@ plot_data(plot(result, type = "scores", draw = FALSE))$table
 }
 }
 \seealso{
-\link[=mfrm_cluster_kmeans]{k-means details}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}, \code{\link[=plot.mfrm_pca]{plot.mfrm_pca()}},
+\code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}, \code{\link[=plot.mfrm_pca]{plot.mfrm_pca()}},
 \code{\link[stats:prcomp]{stats::prcomp()}}
 
-\code{\link[=mfrm_pca]{mfrm_pca()}}, \link[=mfrm_cluster_kmeans]{k-means details}
+\code{\link[=mfrm_pca]{mfrm_pca()}}, \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}}
 }

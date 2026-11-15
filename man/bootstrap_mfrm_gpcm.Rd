@@ -123,9 +123,9 @@ share the numerical information review but retain their other checks.
 
 \code{checks} separates \code{BootstrapEligible} from \code{WaldEligible} and retains
 \code{BootstrapCaution}. Accepted singleton or weak-information cases produce an aggregate warning;
-cautions also follow \code{confint()}, its printed output, default plot subtitle,
+cautions also follow \code{confint()}, its printed output, returned plot notes,
 APA tables and reports. A custom subtitle (including NULL) overrides the
-plot text, not the saved diagnostics. \code{source_checks} records the source
+plot metadata, not the saved diagnostics. \code{source_checks} records the source
 decision. Use \code{apa_table(result, which = "checks")} to inspect refits.
 \code{InformationRefinementVerified}, \code{InformationRelativeChange},
 \code{InformationInverseResidual} and \code{InformationScaledGradient} record a

@@ -74,7 +74,8 @@ assignments. Missing categories alone cannot establish structural absence.
 Typical checks:
 \itemize{
 \item sparse category usage (\code{Count}, \code{ExpectedCount})
-\item category fit (\code{Infit}, \code{Outfit}, \code{ZStd})
+\item descriptive category residual mean squares (\code{Infit}, \code{Outfit});
+category ZSTD is unavailable and is not a category-selection criterion
 \item threshold ordering within each \code{StepFacet}
 (\code{threshold_table$Estimate}, \code{GapFromPrev})
 }
@@ -93,7 +94,7 @@ least one threshold set. In PCM fits, inspect \code{threshold_table} by
 
 Then inspect:
 \itemize{
-\item \code{category_table} for global category-level misfit/sparsity.
+\item \code{category_table} for global category-level residual patterns and sparsity.
 \item \code{threshold_table} for adjacent-step gaps and ordering within each
 \code{StepFacet}.
 }

@@ -27,7 +27,7 @@ columns. Person \code{RootSE} is missing; extreme Person flags are
 \code{"low"} / \code{"high"} / \code{"none"}. The \code{estimation_note}
 attribute explains the local-root uncertainty and remaining bias. Ordinary
 diagnostic attachments do not apply to this estimator; see the Corrected
-JML section of \code{\link{fit_mfrm}}.
+JML section of \link{fit_mfrm_technical_details}.
 }
 \description{
 Returns all facet-level estimates (person and others) in a single
@@ -36,27 +36,38 @@ transform them before writing the result outside a controlled analysis
 environment.
 }
 \details{
-This method returns four columns (\code{Facet}, \code{Level},
-\code{Estimate}, \code{Extreme}) so that the result is easy to
-inspect, join, or write to disk.
+\code{Facet} and \code{Level} jointly identify a row; \code{Facet = "Person"} identifies
+ability estimates. Use both keys when joining diagnostics: the same level
+label can occur in different facets. This compact table omits uncertainty
+and estimate-use restrictions; retain the source fit and read \code{summary(fit)}.
 }
-\section{Interpreting output}{
+\section{Interpreting estimates}{
 
-Person estimates are returned with \code{Facet = "Person"}.
-All non-person facets are stacked underneath in the same schema.
-}
+\code{Estimate} is on the fitted latent scale, not the raw rating scale. With
+default orientation, larger Person values indicate higher ability, larger
+Rater values greater severity, and larger task/criterion values greater
+difficulty. Non-Person facets in \code{positive_facets} have the opposite score
+direction. Interpret values relative to the fitted centering/anchors;
+zero is a scale reference, not absence of ability or severity.
 
-\section{Typical workflow}{
+In an additive RSM/PCM with default signs, a Rater difference of 0.5 lowers
+adjacent-category odds by a factor \code{exp(-0.5)} for the same Person and other
+facet levels. It does not subtract 0.5 raw-score points. GPCM slopes and
+fitted interactions modify that comparison; use \code{\link[=predict.mfrm_fit]{predict.mfrm_fit()}} for
+response-scale predictions at specified facet combinations.
 
-\enumerate{
-\item Fit a model with \code{\link{fit_mfrm}()}.
-\item Convert with \code{as.data.frame(fit)} for a compact long-format export.
-\item Join additional diagnostics later if you need SE or fit statistics.
-}
+Person \code{Estimate} is an EAP under MML, conditional on fitted calibration
+and the specified population model; under ordinary JML it is the fitted
+Person parameter. EAP shrinkage affects the spread of these estimates, so
+their empirical SD is not the fitted population SD. \code{Extreme} describes
+observed all-minimum/all-maximum scores, not a statistical outlier test.
+An extreme score need not give an infinite MML EAP. For uncertainty use
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and, for supported structural contrasts,
+\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}; a missing interval does not erase an available point.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("as.data.frame.mfrm_fit", run.dontrun = TRUE)
 \dontrun{
 library(mfrmr)

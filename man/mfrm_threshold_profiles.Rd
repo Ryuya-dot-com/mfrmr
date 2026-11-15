@@ -3,7 +3,7 @@
 \name{mfrm_threshold_profiles}
 \alias{mfrm_threshold_profiles}
 \alias{summary.mfrm_threshold_profiles}
-\title{List literature-based warning threshold profiles}
+\title{List literature-informed and package-defined screening profiles}
 \usage{
 mfrm_threshold_profiles()
 
@@ -23,7 +23,7 @@ An object of class \code{mfrm_threshold_profiles} with
 For \code{summary()}: An object of class \code{summary.mfrm_threshold_profiles}.
 }
 \description{
-List literature-based warning threshold profiles
+List literature-informed and package-defined screening profiles
 }
 \details{
 Use this function to inspect available profile presets before calling
@@ -54,8 +54,9 @@ For \code{summary()}:
 \item \code{pca_reference}: literature bands used for PCA narrative labeling.
 }
 
-Larger \code{Span} in \code{threshold_ranges} indicates settings that most change
-warning behavior between strict and lenient modes.
+\code{Span} describes the numeric range of each threshold across presets.
+Thresholds use different units and rules, so spans cannot rank their
+effects on flags; compare actual outputs under the selected presets.
 }
 
 \section{Typical workflow}{
@@ -79,7 +80,7 @@ For \code{summary()}:
 profiles <- mfrm_threshold_profiles()
 s_profiles <- summary(profiles)
 s_profiles$overview
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("summary.mfrm_threshold_profiles", run.dontrun = TRUE)
 \dontrun{
 profiles <- mfrm_threshold_profiles()

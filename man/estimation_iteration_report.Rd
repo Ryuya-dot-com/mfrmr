@@ -63,7 +63,7 @@ the replay.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("estimation_iteration_report", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_operational")

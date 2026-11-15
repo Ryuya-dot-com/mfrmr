@@ -105,13 +105,9 @@ through \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} as a s
 }
 \section{When to use this}{
 
-Use \code{build_mfrm_replay_script()} when you want a package-native recipe that
-another analyst can rerun later. Compared with related helpers:
-\itemize{
-\item \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}} records settings but does not run anything.
-\item \code{build_mfrm_replay_script()} produces executable R code.
-\item \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} can optionally write the replay script to disk.
-}
+Use this recipe to refit from \code{data_file} with the installed package.
+For reopening saved results or writing an analysis folder, see
+"Choose a save or export route" in \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}.
 }
 
 \section{Interpreting output}{
@@ -136,10 +132,6 @@ person-level background data are retained. Stored diagnostic settings are
 replayed as well; older diagnostic objects may not retain interaction
 selection or PCA limits, so rerun \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} before exporting them
 when those settings matter.
-
-If \code{ScriptMode} is \code{"facets"}, the script replays the higher-level
-\code{\link[=run_mfrm_facets]{run_mfrm_facets()}} workflow. If it is \code{"fit"}, the script uses
-\code{\link[=fit_mfrm]{fit_mfrm()}} directly.
 }
 
 \section{Mode guide}{
@@ -167,17 +159,14 @@ you.
 
 \section{Saved-result reuse}{
 
-Supplied screening results must describe this fitted analysis. Results from
-another fit or older results without identity metadata are refused. See
-\link{mfrmr_compatibility_layer} to recreate them from the saved fit and matching
-diagnostics without refitting the model.
-Supplied unit scores, plausible values and fit-derived forecasts must also
-match this calibration. A forecast created with \code{sim_spec} remains a separate
-scenario; its source is recorded without asserting a match to the fit.
+Supplied screening results must match this analysis; older ones without
+identity metadata are refused. See "Saved-result reuse" in
+\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} for calibration checks, separate scenario forecasts and
+recreating compatible results without refitting.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("build_mfrm_replay_script", run.dontrun = TRUE)
 \dontrun{
 library(mfrmr)

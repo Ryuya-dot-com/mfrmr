@@ -1,5 +1,9 @@
 #' Build an explicit simulation specification for MFRM design studies
 #'
+#' @description Define the response model, latent distributions and rating
+#' assignment for [simulate_mfrm_data()]. This creates a reusable specification;
+#' it does not draw responses or fit a model.
+#'
 #' @param n_person Number of persons/respondents to generate.
 #' @param n_rater Number of rater facet levels to generate.
 #' @param n_criterion Number of criterion/item facet levels to generate.
@@ -116,12 +120,8 @@
 #'   `group_levels` must include all template labels and does not rebalance them.
 #'
 #' @details
-#' `build_mfrm_sim_spec()` creates an explicit, portable simulation
-#' specification that can be passed to [simulate_mfrm_data()]. The goal is to
-#' make the data-generating mechanism inspectable and reusable rather than
-#' relying only on ad hoc scalar arguments.
+#' The specification records:
 #'
-#' The resulting object records:
 #' - design counts (`n_person`, `n_rater`, `n_criterion`, `raters_per_person`)
 #' - latent spread assumptions (`theta_sd`, `rater_sd`, `criterion_sd`)
 #' - optional empirical latent support values for semi-parametric simulation
@@ -154,43 +154,27 @@
 #'   design representation used by the planning helpers
 #' - optional signal tables for DIF and interaction bias
 #'
-#' The current generator targets the package's standard person x rater x
-#' criterion workflow, but the public output names for those two facet roles
-#' can now be customized with `facet_names`. This naming layer improves public
-#' ergonomics; it does not provide a fully arbitrary-facet
-#' simulator. Internally, helper objects keep canonical role mappings so that
-#' planning functions can treat the first non-person facet as rater-like and
-#' the second as criterion-like. When threshold values are provided by
-#' `StepFacet`, the supported step facets are the generated levels of the
-#' chosen public rater-like or criterion-like column. For convenience,
-#' step-facet-specific thresholds can be supplied as a named list or as a
-#' numeric matrix whose row names are `StepFacet` labels.
-#' When `model = "GPCM"`, the same public facet naming rules apply to the
-#' slope table; the current bounded branch keeps `slope_facet` equal to
-#' `step_facet`.
-#' The `slope_regime` field summarizes the centered log-slope spread so
-#' recovery simulations can be read against the intended generator stress
-#' level. Its labels (`unit_slopes`, `near_flat`, `moderate`, and
-#' `high_dispersion`) are package validation labels; they are not model-fit
-#' decisions and should not be interpreted as literature-derived adequacy
-#' thresholds. The GPCM data-generating form follows Muraki (1992,
-#' doi:10.1177/014662169201600206), while information-function interpretation
-#' follows Muraki (1993, doi:10.1177/014662169301700403). The explicit
-#' simulation-specification metadata is intended to support ADEMP-style
-#' simulation reporting as described by Morris, White, and Crowther (2019,
-#' doi:10.1002/sim.8086).
+#' @section Model and planning scope:
+#' `facet_names` renames the two non-Person roles: the first is rater-like and
+#' the second criterion-like. Internal role mappings support planning under
+#' these public names; they do not enable arbitrary-facet simulation.
+#' `StepFacet` identifies generated levels of either role. Named lists or numeric
+#' matrices with `StepFacet` row names can specify level-specific thresholds.
+#' GPCM slope tables use the same names and require `slope_facet == step_facet`.
 #'
-#' The `assignment = "sparse_linked"` branch follows sparse
-#' rater-mediated assessment work in treating incomplete rater assignment as
-#' planned missingness rather than incidental nonresponse. Its `link_persons`
-#' and `link_raters_per_person` controls emulate a common linking set so users
-#' can inspect rater-pair common-person counts before using the generated data
-#' in recovery or design studies. This is a design generator and diagnostic
-#' metadata layer; it does not impose a universal minimum-linking cutoff.
-#' Sparse-design motivation follows Wind, Jones, and Grajeda (2023,
-#' doi:10.1177/01466216231182148), Wind and Jones (2018,
-#' doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
-#' (2023).
+#' `slope_regime` describes centered log-slope spread (`unit_slopes`, `near_flat`,
+#' `moderate`, `high_dispersion`) for recovery comparisons. These are package
+#' validation labels, not fit decisions or literature-derived adequacy thresholds.
+#' The GPCM form follows Muraki (1992, doi:10.1177/014662169201600206), and
+#' information-function interpretation follows Muraki (1993,
+#' doi:10.1177/014662169301700403). The metadata support ADEMP-style reporting
+#' (Morris, White, and Crowther, 2019, doi:10.1002/sim.8086).
+#'
+#' For response generation, assignment options and repeated-rating assumptions,
+#' see "Data-generating model" and "Assignment and dependence" in
+#' [simulate_mfrm_data()]. In particular, sparse linking is planned missingness;
+#' `link_persons` and `link_raters_per_person` control the linking set, without
+#' establishing a universal minimum overlap.
 #'
 #' If `population_formula` is supplied, the simulation specification carries a
 #' person-level latent-regression generator. This affects only the
@@ -200,14 +184,10 @@
 #' \eqn{\theta_n = x_n^\top \beta + \varepsilon_n} with
 #' \eqn{\varepsilon_n \sim N(0, \sigma^2)}.
 #'
-#' @section Interpreting output:
-#' This object does not contain simulated data. It is a data-generating
-#' specification that tells [simulate_mfrm_data()] how to generate them.
-#'
 #' @return An object of class `mfrm_sim_spec`.
 #' @seealso [extract_mfrm_sim_spec()], [simulate_mfrm_data()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("build_mfrm_sim_spec", run.dontrun = TRUE)
 #' \dontrun{
 #' spec <- build_mfrm_sim_spec(
@@ -427,9 +407,8 @@ build_mfrm_sim_spec <- function(n_person = 50,
 
 #' Print an mfrmr simulation specification
 #'
-#' Shows the model, design size, assignment, and latent-distribution settings
-#' needed to understand the specification without printing its complete
-#' machine-readable planning metadata.
+#' @details The `print()` method shows the model, design size, assignment
+#' and latent-distribution settings without printing all stored metadata.
 #'
 #' @param x An `mfrm_sim_spec` object.
 #' @param ... Reserved for generic compatibility.
@@ -835,8 +814,10 @@ build_peer_review_sim_spec <- function(n_submission = 50,
 #' The same fit-derived specification can feed caveated role-based design
 #' evaluation, population forecasting, and fit-based report/export bundles.
 #' Diagnostic and signal-detection design screening is available with explicit
-#' caveats. Full FACETS score-side contract review, posterior predictive checks,
-#' and MCMC estimation are not available for `GPCM`.
+#' caveats. This simulation-specification helper does not perform full FACETS
+#' score-side review, Bayesian posterior predictive checks or MCMC estimation.
+#' For supported Bayesian specifications, see [export_mfrm_model()]; its
+#' scope is separate from this generator.
 #'
 #' If you want to carry person-level group labels into a fit-derived observed
 #' response skeleton, provide the original `source_data` together with

@@ -1,12 +1,11 @@
 #' GPCM workflow and score availability
 #'
 #' @description
-#' Read `mfrmr_output_guide("gpcm_capabilities")` (`view = "workflows"`,
-#' `"scores"`, or `"unavailable"`) to check which `GPCM` workflows can be used
-#' in `mfrmr`, the limits that apply to each workflow, and the recommended
-#' alternative when a route is not available.
+#' Check which `GPCM` workflows can be used in `mfrmr`, the limits that
+#' apply to each workflow, and the recommended alternative when a route is not
+#' available.
 #'
-#' The matrix is intended for route selection before or after fitting and is
+#' The table is intended for route selection before or after fitting and is
 #' limited to workflow availability, interpretive constraints, and the route
 #' to use next.
 #' Except for the multiple-slope and EM rows, the table describes one facet
@@ -34,9 +33,17 @@
 #' for JML estimation and boundary
 #' conventions and [predict_mfrm_units()] for conditional scoring.
 #'
+#' @param status Which rows to return. For `view = "workflows"` or
+#'   `"unavailable"`, use `"all"` (default), `"supported"`,
+#'   `"supported_with_caveat"`, `"blocked"`, or `"deferred"`.
+#'   For `view = "scores"`, use `"all"`, `"available_with_caveat"`,
+#'   `"supporting_route"`, or `"unavailable"`.
+#' @param view The table to read: `"workflows"` (default) gives the general
+#'   map; `"scores"` describes package-native versus FACETS-style score
+#'   quantities; `"unavailable"` lists blocked/deferred routes and alternatives.
+#'
 #' @details
-#' In `mfrmr_output_guide("gpcm_capabilities")`, `Status` has the following
-#' user-facing meanings:
+#' `Status` has the following user-facing meanings:
 #'
 #' - `supported`: the helper is available within the stated boundary;
 #' - `supported_with_caveat`: the helper runs, but its interpretation is
@@ -48,18 +55,20 @@
 #' deferred row, use `RecommendedRoute` to choose a supported analysis or a
 #' Rasch-family alternative.
 #'
-#' In the score view (`view = "scores"`), `available_with_caveat` denotes an available quantity
+#' In the score view, `available_with_caveat` denotes an available quantity
 #' within its `Limitation`, `supporting_route` denotes related evidence or a
 #' reference model rather than a replacement for that quantity, and
 #' `unavailable` denotes a quantity not supplied. Package-native GPCM scores
 #' and uncertainty are not FACETS score-side equivalents. These statuses are
 #' kept separate from the general workflow statuses to preserve their meaning.
 #'
-#' Use `mfrmr_output_guide("gpcm_capabilities")` as the single public entry for
-#' all three GPCM views (`view = "workflows"`, `view = "scores"`, and
-#' `view = "unavailable"`). Each view retains its column schema and status
-#' meanings. These tables describe supported routes; they do not inspect a
-#' particular fit or certify its inferential eligibility.
+#' In 0.2.4, this is the single public entry for all three tables. Replace
+#' `gpcm_score_side_contract(status)` with
+#' `gpcm_capability_matrix(status, view = "scores")`, and
+#' `gpcm_runtime_guard_coverage()` with
+#' `gpcm_capability_matrix(view = "unavailable")`. Each view retains its former
+#' column schema and status meanings. These tables describe supported routes;
+#' they do not inspect a particular fit or certify its inferential eligibility.
 #'
 #' @section Connected outputs and unavailable extensions:
 #' For the current one-slope-family model, use `summary(fit)` to review the
@@ -81,18 +90,10 @@
 #' be standardized by the same fit's population SD using the full delta method;
 #' individual standardized-location intervals are not supplied.
 #'
-#' Portable calibration has its own row and `mfrmr_output_guide("calibration_capabilities")`
+#' Portable calibration has its own row and [mfrm_calibration_capabilities()]
 #' gives estimator-specific source restrictions. Two slope families are available
-#' provisionally through [fit_mfrm()] with fixed-standard-normal MML, two
-#' slope facets among the declared additive facets, no anchors and unit weights.
-#' Step ownership, noncentered location and the named slope reference are
-#' separate roles. Extended roles use native output, portable format 7 and
-#' Stan export from an existing fit via [export_mfrm_model()]. Posterior draws
-#' support contrasts, intervals, plots and reports; new-Person posterior scoring
-#' and direct data/spec export remain unsupported for two-family models.
-#' Log-slope priors depend on the source fit's geometric-mean-one reference;
-#' changing that reference with fresh independent priors changes the Bayesian model.
-#' Choose fixed-grid EM or adaptive
+#' provisionally through [fit_mfrm()] with fixed-standard-normal MML, exactly
+#' two facets, no anchors and unit weights. Choose fixed-grid EM or adaptive
 #' direct MML explicitly; see [fit_mfrm()]. Use `summary(fit)`, then
 #' inspect adaptive initialization in `fit$opt$mml_initialization`: the default
 #' compares neutral and EM-derived starts with the same adaptive likelihood,
@@ -135,8 +136,8 @@
 #' It uses the constrained location block of the inverse full marginal information;
 #' failed numerical checks retain point estimates with missing intervals.
 #' Attach the result as `intervals = list(locations = ci)` for saved reports and
-#' plots. Coverage is unqualified; location differences are not uniform rating
-#' differences when slopes or steps vary. Ordinary fit diagnostics, step/curve
+#' plots. Nominal coverage has not been established across designs; location
+#' differences are not uniform rating differences when slopes or steps vary. Ordinary fit diagnostics, step/curve
 #' intervals and model ranking
 #' remain unavailable. Shared-owner corrected
 #' JML has an explicit experimental point-estimation and reporting route through
@@ -148,54 +149,30 @@
 #' define one slope family.
 #'
 #' @section Model, estimation and algorithm:
-#' RSM, PCM and GPCM describe response probabilities, not a particular fitting
-#' algorithm. MML integrates over an ability distribution; JML estimates the
-#' training persons' abilities jointly with the other parameters. EM and direct
-#' optimization are numerical ways to fit an MML model. RSM/PCM can therefore
-#' also use MML--EM. In this package, MML defaults to direct optimization;
-#' RSM/PCM EM and hybrid support additive, fixed-population models with fixed
-#' integration (`population = NULL`). One-family GPCM EM/hybrid requests fall back to direct
-#' and record the engine in `fit$summary`.
+#' RSM/PCM/GPCM specify response probabilities; MML/JML specify
+#' estimation; EM/direct optimization specify algorithms. MML defaults to direct.
+#' Supported RSM/PCM EM/hybrid uses fixed integration and population; one-family
+#' GPCM EM/hybrid falls back to direct with a recorded reason.
 #'
-#' The provisional two-slope-family GMFRM route uses fixed-standard-normal MML
-#' with fixed-grid generalized EM (`mml_engine = "em"`) or adaptive direct
-#' optimization (`mml_engine = "direct", mml_integration = "adaptive"`).
-#' `mml_integration = "auto"` preserves the selected engine and increases
-#' integration points up to `mml_accuracy_control = list(max_points = ...)`,
-#' including reference rules, while retaining the numerical and information
-#' checks. Fixed integration remains the package default; two-family direct
-#' fitting requires explicit adaptive or automatic integration. Adaptive EM
-#' and two-family hybrid fitting are unavailable. EM is not a defining property
-#' of GMFRM. See the GPCM
-#' scope vignette for the distinction between the model, estimation method
-#' and algorithm, with links to Muraki, TAM and sirt.
-#'
+#' Two-family GPCM requires fixed-standard-normal MML with fixed-grid EM or
+#' adaptive direct fitting. Automatic integration retains the selected engine;
+#' adaptive EM and two-family hybrid are unavailable. See `mml_engine`,
+#' `mml_integration` and `mml_accuracy_control` in [fit_mfrm_technical_details]
+#' for exact restrictions, defaults, checks and failure handling.
 #' @section Applications of two slope families:
-#' In a speaking assessment, task difficulty and assessor severity describe
-#' shifts in ratings, whereas task and assessor slopes describe how responses
-#' change with ability. Their product is the effective slope for a rating.
-#' For example, 0.8 times 1.2 gives 0.96; it is a log-odds multiplier, not an
-#' accuracy percentage or a score weight. The same roles can use piece/judge
-#' or station/examiner labels, provided the single-ability assumption is
-#' appropriate. Two slope families do not create two latent abilities or a
-#' separate free slope for every task-by-assessor pair.
+#' Task difficulty and assessor severity shift ratings; their component
+#' slopes multiply to determine response sensitivity. For example, 0.8 times
+#' 1.2 gives an effective slope of 0.96, not an accuracy percentage. Two slope
+#' families still describe one ability, not an independent slope for every pair.
+#' Large assessor slopes do not establish competence, and small task slopes do
+#' not justify removing content. Review curves, uncertainty, overlap and external
+#' evidence for the intended use.
 #'
-#' Potential uses include task review and assessor feedback. A high assessor
-#' slope is not a competence threshold, and a low task slope is not a rule for
-#' deleting content. Read category and information curves over the relevant
-#' ability range, inspect uncertainty and assignment overlap, and bring in
-#' reference ratings or substantive evidence for accuracy claims. The vignette
-#' explains these uses and a provisional two-family fitting example. It does
-#' not yet provide a two-family model comparison or qualified feedback decision.
-#' It also shows how to import the empirical writing table
-#' `sirt::data.ratings1` from that separately installed package, preserve its
-#' categories, and review unequal assignment. The example distinguishes new
-#' fitted response curves from evidence of predictive accuracy. The original
-#' fixed-grid fits had integration-sensitive curves and incomplete residual
-#' summaries. A subsequent adaptive fit resolved the retained numerical example;
-#' that agreement does not validate model fit or feedback decisions. All score
-#' datasets bundled with mfrmr are synthetic.
-#'
+#' The [GPCM article](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html) gives synthetic examples and an empirical
+#' `sirt::data.ratings1` writing example, including unequal assignments and
+#' integration-sensitive curves. Bundled mfrmr score datasets are synthetic.
+#' Those examples do not establish predictive accuracy, two-family comparison
+#' eligibility or a qualified feedback decision.
 #' @section Rankings and consequential decisions:
 #' An official competition result, highest latent ability and a future winner
 #' are different targets. The scope vignette reviews actual figure-skating
@@ -212,38 +189,22 @@
 #' ability. Do not interpret sensitivity to a judge's marks as proof of bias.
 #'
 #' @section Local independence, testlets and random effects:
-#' Two fixed slope families change response sensitivity; they do not by
-#' themselves remove dependence between ratings from the same performance.
-#' A testlet effect is itself a random effect, defined by its sharing unit.
-#' A testlet model assumes independence conditional on ability and its local
-#' effect, with dependence remaining after the effect is integrated out.
-#' One substantive ability can therefore coexist with additional latent
-#' dependence variables.
-#'
-#' [fit_mfrm_testlet()] supplies a Person-local RSM block effect; reusing a
-#' block label for another Person creates a different effect.
-#' [fit_mfrm_random_rater()] instead supplies a rater severity effect shared
-#' across persons. These separate RSM routes neither add effects to GPCM nor
-#' jointly estimate shared-rater and testlet effects. Random discrimination is
-#' also different from estimating two fixed slope families.
-#' The GPCM scope vignette explains effect-sharing units, observed versus new
-#' block/rater prediction and the distinction from multivariate G-theory.
-#' A testlet variance does not diagnose halo or enforce equal task weights.
-#'
+#' Two fixed slope families do not remove residual dependence.
+#' [fit_mfrm_testlet()] supplies a Person-local RSM block effect;
+#' [fit_mfrm_random_rater()] supplies an RSM severity effect shared across Persons.
+#' These separate routes neither extend GPCM nor jointly fit both effects.
+#' Testlet independence is conditional on ability and the local effect, with
+#' dependence after integrating it out. Random discrimination is another model;
+#' neither a testlet variance nor a slope diagnoses halo. The GPCM article
+#' explains sharing units, new-block/rater prediction and the distinction from
+#' multivariate G-theory.
 #' @section Interpreting the former bounded GPCM label:
-#' Use GPCM as the model name and state the structure and output restrictions
-#' explicitly. The older label described limited implementation scope, not a
-#' distinct unidimensional response model. Positive log-parameterized relative
-#' slopes retain their geometric-mean-one identification; there is no extra
-#' user-facing finite slope box. Rejection of numerical overflow/underflow is
-#' not clipping to a valid estimate. Separate owners, MML inference/comparison
-#' and portable calibration are available within their respective scopes;
-#' two-family fitting provides provisional estimates and conditional curves,
-#' with separately checked experimental component-slope intervals. JML slope
-#' intervals remain unavailable.
-#' A data-specific boundary or unbounded interval is a separate statistical
-#' issue, and retirement of the label does not certify interval coverage.
-#'
+#' The former label referred to implementation scope, not a distinct
+#' response model or a finite slope box. Report GPCM with its owner, estimator
+#' and output restrictions. Log-parameterized positive slopes retain their
+#' identification constraints; numerical overflow/underflow is rejected, not
+#' clipped to a valid estimate. Statistical boundaries and unbounded intervals
+#' remain separate issues, and dropping the old label establishes no coverage.
 #' @section Estimates, intervals and comparisons:
 #' For free slopes, these are different questions:
 #' - **What did the numerical fit return?** `fit$slopes$OptimizerEstimate`
@@ -274,134 +235,86 @@
 #' not establish its structural assumptions.
 #'
 #' @section Different requirements for intervals and model comparison:
-#' These decisions are separate, and do not follow from unidimensionality:
-#' - **Slope intervals:** [confint.mfrm_fit()] with `parm = "slopes"` uses the inverse joint observed
-#'   information, including estimated population parameters, and the sum-zero
-#'   log-slope transformation. It checks likelihood consistency, convergence,
-#'   positive unregularized information, unit weights and a grid of at least
-#'   31 points. The exponentiated log-Wald limits are pointwise model-based
-#'   approximations for geometric-mean-one relative slopes by default.
-#'   Explicit options add population-SD-standardized slopes, named ratios or
-#'   differences, Bonferroni adjustment and independent-cluster sandwich
-#'   covariance. An experimental `method = "profile"` with one named `slope`
-#'   reoptimizes all nuisance parameters, including the normal population, and
-#'   retains endpoint failures and a saved likelihood plot. Its initial scope
-#'   excludes anchors, interactions, covariates and standardized targets.
-#'   Profile coverage and superiority over Wald have not been established.
-#'   Small samples and misspecification can still affect coverage.
-#'   Failed checks retain missing limits and a reason. [bootstrap_mfrm_gpcm()]
-#'   provides fitted-model bootstrap intervals or a matched PCM/GPCM test;
-#'   [mfrm_curve_intervals()] propagates calibration uncertainty to curves.
-#'   Probability-curve intervals showed undercoverage in a saved-fit study of
-#'   small incomplete designs, including finite-grid Bonferroni families.
-#'   Numerical availability and multiplicity adjustment do not certify nominal
-#'   coverage; bootstrap coverage requires separate evidence too.
-#'   Saved results support [apa_table()], [plot_data()] and [as_ggplot()];
-#'   attach selected intervals to [mfrm_results()] for reports and exports.
-#'   Their targets remain separate from Wright/Pathway location and fit displays.
-#' - **Information criteria:** AIC/BIC compare maximized likelihoods on the same
-#'   response data, with appropriate free-parameter counts and numerical
-#'   accuracy. They do not require a slope confidence interval or nested
-#'   models. The GPCM MML solution check reevaluates the retained likelihood,
-#'   terminal gradient and positive unregularized local information without
-#'   refitting. It uses the existing numerical-gradient tolerance (at most
-#'   \eqn{10^{-4}}) and information-inversion eigenvalue tolerance. The existing
-#'   joint information calculation is shared with slope intervals and governed
-#'   by `options(mfrmr.max_information_bytes = 256 * 1024^2)` rather than an
-#'   80-coordinate cutoff. The budget estimates dense matrix workspace, not
-#'   total process memory. An unavailable check gives a reason, not permission
-#'   to rank. Local checks do
-#'   not prove global optimality or integration accuracy; inspect different
-#'   starts and [mml_quadrature_sensitivity()] when the decision is close.
-#' - **PCM/GPCM likelihood-ratio test:** with the same population model, step
-#'   structure and other constraints, setting all relative slopes to one gives
-#'   PCM. One is an interior positive slope value, not a variance-zero boundary.
-#'   With \eqn{G} slope levels and no other differing free parameters, the null
-#'   imposes \eqn{G-1} independent log-slope restrictions. A chi-square reference
-#'   additionally requires identified, regular solutions and adequate sample
-#'   information. [compare_mfrm()] with `nested = TRUE` checks the matched
-#'   model settings, G-1 free dimensions and regular local MML solutions before
-#'   reporting an asymptotic chi-square p-value. Default PCM and GPCM calls can
-#'   use different population models: supply `population_formula = ~1` and the
-#'   same person data to both fits to compare estimated-normal models.
-#'   Small or sparse samples can give inaccurate asymptotic p-values; examine
-#'   starting-value and quadrature sensitivity and report the test's assumptions.
+#' | Target | Required interpretation and reference |
+#' | --- | --- |
+#' | Relative-slope intervals | [confint.mfrm_fit()] with `parm = "slopes"`: joint information and the constrained log-slope transformation, with estimator-specific checks |
+#' | Other uncertainty targets | Explicit standardized slopes, contrasts, sandwich/profile or bootstrap methods have their own scopes; [mfrm_curve_intervals()] addresses curves |
+#' | Information-criterion ranking | [compare_mfrm()]: compatible likelihoods, free-parameter counts, qualified solutions and integration; nesting and a slope interval are not prerequisites |
+#' | PCM/GPCM likelihood-ratio test | Matched response/step/population models and constraints, identified regular solutions and adequate information; request `nested = TRUE` |
 #'
-#' The official \href{https://stat.ethz.ch/R-manual/R-devel/library/stats/html/AIC.html}{R AIC documentation}
-#' describes likelihood comparability. The \href{https://philchalmers.github.io/mirt/reference/mirt.html}{mirt model documentation}
-#' documents GPCM and information-matrix SEs, and its
-#' \href{https://philchalmers.github.io/mirt/reference/anova-method.html}{model-comparison documentation}
-#' describes likelihood-ratio and information-criterion comparisons. These are
-#' examples of supported statistical methods, not validation of mfrmr's
-#' many-facet implementation.
+#' For the last row, setting G relative slopes to one imposes G-1 independent
+#' log-slope restrictions; one is an interior slope value. Default PCM/GPCM
+#' calls can use different populations. To compare estimated-normal models,
+#' use `population_formula = ~ 1` and matching Person data in both. Small/sparse
+#' designs can invalidate the asymptotic approximation even when local checks
+#' pass. Check starting values and [mml_quadrature_sensitivity()] for consequential
+#' comparisons; more iterations alone do not establish nesting or identification.
 #'
+#' Interval availability is not coverage. Profile superiority over Wald and
+#' general bootstrap coverage are not established here. Probability-curve
+#' intervals showed undercoverage in a saved-fit study of small incomplete
+#' designs, including finite-grid Bonferroni families; multiplicity adjustment
+#' does not repair that evidence. Keep numerical failures and method caveats
+#' with [mfrm_results()] attachments. Wright/Pathway location and fit displays
+#' remain distinct targets.
+#'
+#' The official [R AIC documentation](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/AIC.html)
+#' states likelihood-comparison conditions. It is not validation of mfrmr's
+#' implementation; calculation-specific checks and restrictions are in the linked APIs.
 #' @section Comparing models with ConQuest and TAM:
-#' Match the response formula before comparing estimates. In mfrmr, the
-#' selected positive slope multiplies ability, facet locations and the category
-#' step together. A slope multiplying ability alone, with separately additive
-#' rater severity, generally specifies a different many-facet model.
+#' Match the response formula, coding and constraints first. mfrmr's
+#' slope multiplies ability, facet locations and category steps together;
+#' multiplying ability alone generally defines a different many-facet model.
+#' Software support for GPCM therefore does not establish equivalent calibration.
+#' The [GPCM article](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html) gives TAM/ConQuest design examples, official
+#' sources and the scope of saved numerical comparisons.
 #'
-#' TAM's `tam.mml.mfr()` does not estimate slopes itself, but its documented
-#' Example 14, Model 14c combines a facet intercept design with grouped slopes
-#' in `tam.mml.2pl(irtmodel = "GPCM.design")`. ConQuest estimates GPCM scores
-#' with `scoresfree`; its default slopes belong to combinations of facets
-#' (generalized items), with further grouping available through a scoring
-#' design. Neither construction automatically reproduces mfrmr's single
-#' slope family and complete-predictor multiplication. See the
-#' \href{https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html}{TAM fitting documentation}
-#' and \href{https://www.acer.org/files/Note_8--The_ConQuest_4_Model.pdf}{ConQuest Note 8}.
-#'
-#' A matched item-only, positive-slope GPCM with an estimated normal population
-#' can be expressed on either scale. mfrmr fixes the geometric mean of relative
-#' slopes \eqn{\alpha_i} to one and estimates the population SD \eqn{\sigma}
-#' conditional on any population covariates. On the unit-variance scale the
-#' slopes become \eqn{a_i=\sigma\alpha_i}.
-#' Locations, steps and any population regression also need transformation.
-#' This equivalence does not include imposing both unit variance and
-#' geometric-mean-one slopes: together they impose an additional restriction.
-#'
-#' Transformed intervals require the joint parameter covariance. Multiplying
-#' relative-slope interval endpoints by an estimated population SD omits its
-#' uncertainty and covariance with the slopes. Use [confint.mfrm_fit()] with
-#' `parm = "slopes", scale = "standardized"` for the full transformation; with covariates the SD
-#' is the residual population SD. TAM's documented `tam.se()` omits
-#' parameter covariances; ConQuest distinguishes the covariance of parameter
-#' estimates from the latent-population covariance. Neither marginal SEs nor
-#' a latent-population covariance matrix replace the required joint matrix.
-#' Numerical replication requires matching data, model and identification.
-#' IC selection can compare different, nonnested models on compatible
-#' likelihoods; verify each model's free-parameter count and integration
-#' accuracy. A likelihood-ratio test additionally requires a nested null.
-#' Consult [online GPCM scope guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html) for examples, sources and the scope
-#' of existing numerical comparisons. These do not supply a general GPCM
-#' import or comparison API.
-#'
+#' In the matched item-only positive-slope model, unit-variance slopes are
+#' \eqn{a_i=\sigma\alpha_i} when mfrmr estimates population SD \eqn{\sigma}
+#' with geometric-mean-one relative slopes \eqn{\alpha_i}. Locations, steps and
+#' population coefficients also require transformation. Fixing both SD and the
+#' slope geometric mean to one imposes an additional restriction. For intervals,
+#' use `confint(fit, parm = "slopes", scale = "standardized")` and the joint
+#' covariance; multiplying endpoints by estimated SD ignores its uncertainty.
+#' With covariates this is residual SD. Marginal SEs or a latent-population
+#' covariance cannot replace the parameter covariance. These comparisons do not
+#' provide a general GPCM import API.
 #' @section Conditional Person uncertainty:
 #' Person posterior SDs and intervals, where returned, condition on the fitted
 #' calibration; they are not slope intervals or calibration-aware confidence
 #' intervals. An unstable calibration also limits their interpretation.
 #'
+#' @return For `view = "workflows"`, a data.frame of class
+#' `mfrmr_gpcm_capabilities` with one row per workflow family and columns:
+#' - `Area`
+#' - `Helpers`
+#' - `Status`
+#' - `Boundary`
+#' - `RecommendedRoute`
+#'
+#' For `view = "scores"`, an ordinary data.frame with `Capability`, `Status`,
+#' `Limitation` and `Alternative`. For `view = "unavailable"`, an ordinary
+#' data.frame with `Area`, `Helper`, `Status`, `Boundary` and `RecommendedRoute`.
+#'
 #' @section Typical workflow:
-#' 1. Call `mfrmr_output_guide("gpcm_capabilities")` before using `GPCM` in a new workflow.
+#' 1. Call `gpcm_capability_matrix()` before using `GPCM` in a new workflow.
 #' 2. For `supported_with_caveat`, read `Boundary` before interpreting output.
 #' 3. For `blocked` or `deferred`, follow `RecommendedRoute` instead.
 #'
-#' @seealso [mfrmr_output_guide()], [fit_mfrm()], [diagnose_mfrm()], [compute_information()],
+#' @seealso [fit_mfrm()], [diagnose_mfrm()], [compute_information()],
 #'   [predict_mfrm_units()], [sample_mfrm_plausible_values()],
 #'   [reporting_checklist()], [mfrmr_workflow_methods], [mfrmr-package]
 #' @examples
-#' mfrmr_output_guide("gpcm_capabilities")
-#' mfrmr_output_guide("gpcm_capabilities", "supported")
-#' mfrmr_output_guide("gpcm_capabilities", "blocked")
-#' mfrmr_output_guide("gpcm_capabilities", view = "scores")
-#' mfrmr_output_guide("gpcm_capabilities", "unavailable", view = "scores")
-#' mfrmr_output_guide("gpcm_capabilities", view = "unavailable")
+#' gpcm_capability_matrix()
+#' gpcm_capability_matrix("supported")
+#' gpcm_capability_matrix("blocked")
+#' gpcm_capability_matrix(view = "scores")
+#' gpcm_capability_matrix("unavailable", view = "scores")
+#' gpcm_capability_matrix(view = "unavailable")
+#' @aliases gpcm_score_side_contract gpcm_runtime_guard_coverage
 #' @concept GPCM boundaries
 #' @concept route selection
-#' @name mfrmr_gpcm_scope
-NULL
-
-#' @noRd
+#' @export
 gpcm_capability_matrix <- function(status = "all", view = c("workflows", "scores", "unavailable")) {
   view <- match.arg(view)
   if (view == "scores") return(.gpcm_score_capabilities(status))
@@ -453,7 +366,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
   }
   cat(
     "\nFilter by status, for example ",
-    "mfrmr_output_guide(\"gpcm_capabilities\", \"supported_with_caveat\").\n",
+    "gpcm_capability_matrix(\"supported_with_caveat\").\n",
     "Read Boundary and RecommendedRoute before interpreting a caveated or ",
     "unavailable route.\n",
     sep = ""

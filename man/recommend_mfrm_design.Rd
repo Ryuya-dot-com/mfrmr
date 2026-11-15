@@ -7,7 +7,7 @@
 \alias{print.summary.mfrm_design_recommendation}
 \alias{print.mfrm_design_recommendation}
 \alias{plot.mfrm_design_recommendation}
-\title{Review assessment plans against declared planning criteria}
+\title{Recommend a design condition from simulation results}
 \usage{
 recommend_mfrm_design(
   x,
@@ -20,10 +20,7 @@ recommend_mfrm_design(
   prefer = c("n_person", "raters_per_person", "n_rater", "n_criterion"),
   max_ratings = NULL,
   max_ratings_per_rater = NULL,
-  require_connected = TRUE,
-  costs = NULL,
-  limits = NULL,
-  targets = NULL
+  require_connected = TRUE
 )
 
 \method{summary}{mfrm_design_recommendation}(object, ...)
@@ -35,12 +32,9 @@ recommend_mfrm_design(
 \method{plot}{mfrm_design_recommendation}(x, draw = TRUE, ...)
 }
 \arguments{
-\item{x}{For \code{recommend_mfrm_design()}: Output from \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}},
-\code{\link[=summary.mfrm_design_evaluation]{summary.mfrm_design_evaluation()}}, or \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}.
-The last input reviews observed-score D-study plans with their saved paired
-uncertainty; it does not use the simulation-screening defaults.
+\item{x}{For \code{recommend_mfrm_design()}: Output from \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} or \code{\link[=summary.mfrm_design_evaluation]{summary.mfrm_design_evaluation()}}.
 
-For \code{plot()}: A simulation-based result from \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}.}
+For \code{plot()}: Output from \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}.}
 
 \item{facets}{Non-empty vector of facets that must satisfy the planning
 thresholds. By default, use the stored non-person facet names; for older
@@ -75,23 +69,7 @@ assignment graphs to be connected in every recorded replication
 performance metrics are selected through \code{facets}. Set \code{FALSE} only to
 explicitly omit this structural screen; the recorded status is retained.}
 
-\item{costs}{For a saved D-study comparison only: an optional data frame
-with \code{Scenario} (each row number of \code{x$design_grid} exactly once, including
-the reference) and numeric nonnegative resource columns, such as
-\code{TotalRatings} or \code{RaterHours}. Rows may be reordered. \code{NA} means unknown,
-never zero. Name each column to identify its unit; the function does not
-infer costs or a future number of Persons from the source sample size.}
-
-\item{limits}{For a D-study comparison: a named numeric vector of finite
-nonnegative upper bounds for columns in \code{costs}. Unspecified columns are
-descriptive only. \code{NULL} requests no feasibility screen.}
-
-\item{targets}{For a D-study comparison: a named numeric vector of point
-targets, with minimum \code{G}/\code{Phi} in \verb{[0,1]} and maximum \code{RelativeSEM}/
-\code{AbsoluteSEM} in the selected score units. \code{NULL} requests no target
-screen. There is no default target or interval-based attainment claim.}
-
-\item{object}{A simulation-based result from \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}.}
+\item{object}{Output from \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}.}
 
 \item{...}{Unused; extra arguments are rejected.}
 
@@ -99,7 +77,7 @@ screen. There is no default target or interval-based attainment claim.}
 retrieve every criterion and source table without drawing.}
 }
 \value{
-For simulation inputs, a list of class \code{mfrm_design_recommendation} with:
+A list of class \code{mfrm_design_recommendation} with:
 \itemize{
 \item \code{facet_table}: facet-level threshold checks, including design-variable
 alias columns when applicable
@@ -113,31 +91,25 @@ separate \code{LinkReviewStatus} / \code{LinkReviewReason} explain structural ch
 \item \code{thresholds}: thresholds used in the recommendation
 \item \code{design_variable_aliases}: accepted public aliases for design variables
 \item \code{design_descriptor}: role-based design-variable metadata
-\item \code{planning_scope}: explicit record of the current planning contract
+\item \code{planning_scope}: supported facets and planning assumptions
 \item \code{planning_constraints}: explicit record of mutable/locked design variables
 \item \code{planning_schema}: structured planning metadata
 \item \code{caveats}: fixed-effects and connectivity interpretations and suggested
 post-fit reviews
 }
 
-For a saved D-study comparison, the same \code{mfrm_multivariate_d_comparison}
-object with a \code{planning} list as described above. Numeric comparisons and
-their joint covariance are unchanged; \code{summary(result)} still returns the
-original comparison table. No unique recommended row is selected.
-
 For \code{summary()}: \code{summary()} returns a \code{summary.mfrm_design_recommendation} list
 containing \code{target}, \code{thresholds}, \code{checks}, \code{design_table}, \code{facet_table},
 \code{recommended}, and \code{notes}. Print methods return their input invisibly.
 
-For \code{plot()}: An invisible \code{ggplot} object whose underlying payload
-(accessible via \code{\link[=plot_data]{plot_data()}}) retains \code{table} (long criterion outcomes),
+For \code{plot()}: An invisible \code{mfrm_plot_data} with \code{table} (long criterion outcomes),
 \code{designs}, \code{targets}, \code{thresholds} and interpretation notes.
 }
 \description{
-Review assessment plans against declared planning criteria
+Recommend a design condition from simulation results
 }
 \details{
-For simulation inputs, this helper screens designs under user-chosen planning criteria.
+This helper screens simulated designs under user-chosen planning criteria.
 The default targets non-Person facet calibration: high separation reliability
 means that facet-level differences can be distinguished, not that raters
 agree. Use \code{facets = "Person"} to target Person differentiation instead.
@@ -235,43 +207,6 @@ For custom ggplot/raincloud graphics, use \code{plot_data(x, "table")} or obtain
 full design metrics with \code{plot_data(x, "designs", format = "long", value_cols = c("MinReliability", "MaxRatings"))}. These aggregate metrics
 are not replication-level distributions for a raincloud plot.
 }
-\section{Observed-score plans with paired uncertainty}{
-
-Pass a saved \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} result to connect finite
-prespecified plans, costs, limits and point targets without refitting or
-calculating new intervals. Its two-crossed-random-facet, raw-component and
-normal-effects scope is unchanged. All plans, including the reference,
-infeasible plans and unavailable values, remain present in original order.
-Explicit simulation-only arguments (such as \code{min_reliability} or \code{prefer})
-are rejected for this route. Separation reliability and observed-score
-G/Phi are different targets.
-
-The returned comparison retains its class and original numeric results.
-\code{summary(result, planning = TRUE)} returns \code{plans}, \code{costs}, \code{checks},
-\code{differences}, \code{basis} and \code{notes}. \code{plans$Feasibility} concerns only requested
-resource limits; \code{plans$TargetStatus} concerns point estimates only.
-\code{differences$Direction} is \code{improved} or \code{worse} only when the saved paired
-interval excludes zero in the corresponding direction (larger G/Phi or
-smaller SEM). It is \code{inconclusive} when zero is included, \code{identical_plan}
-for the same facet counts, and \code{unavailable} without a usable interval.
-These labels do not establish equivalence or a practically important effect.
-
-\code{ReviewRequired} retains non-PSD component/sampling-covariance concerns;
-calculable points and bounds are not removed or repaired. Passing point
-targets does not establish population target attainment. The function does
-not select a winner, optimize costs, combine incompatible objectives, or
-adjust for searching among plans. Pointwise intervals cannot support a
-post-selection guarantee. Use \code{\link[=mfrm_report]{mfrm_report()}} with \code{study_context} to record
-the intended score, sampled universe, resource units and decision criteria.
-\code{plot(result)} and \code{plot(result, view = "differences")} retain planning
-tables and cautions through \code{\link[=plot_data]{plot_data()}}. Save the complete object with
-\code{saveRDS()}; a single CSV loses source, weights and assumptions.
-
-This route concerns observed-score means under a common G-study. It is
-not a latent-ability or Bayesian future-plan prediction. The posterior
-scoring API does not yet provide a paired future-plan comparison.
-}
-
 \section{Typical workflow}{
 
 \enumerate{
@@ -292,20 +227,6 @@ rec <- recommend_mfrm_design(
   sim_eval, max_ratings = 48, max_ratings_per_rater = 24
 )
 rec$recommended
-
-# Observed-score planning: declared tasks/raters, paired differences and costs
-data("mfrmr_example_gtheory_crossed", package = "mfrmr")
-g <- mfrm_g_study(mfrmr_example_gtheory_crossed, c("Content", "Organization"))
-d <- mfrm_d_study(g, data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3)),
-  weights = c(Content = .5, Organization = .5))
-comparison <- mfrm_multivariate_d_compare(d, assumption = "normal")
-# Illustrative operational hours for the same future cohort, supplied by the user
-costs <- data.frame(Scenario = 1:3, RaterHours = c(40, 44, 48),
-  TaskHours = c(12, 8, 6))
-review <- recommend_mfrm_design(comparison, costs = costs,
-  limits = c(RaterHours = 46), targets = c(G = .58, Phi = .39))
-summary(review, planning = TRUE)$plans
-summary(review, planning = TRUE)$differences
 # Saved synthetic simulation; one replication illustrates structure only.
 saved <- readRDS(system.file("examples", "simulation-design.rds",
   package = "mfrmr", mustWork = TRUE))
@@ -320,8 +241,7 @@ plot(rec)
 head(plot_data(rec, "table"))
 }
 \seealso{
-\code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \link{summary.mfrm_design_evaluation}, \link{plot.mfrm_design_evaluation},
-\code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}
+\code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \link{summary.mfrm_design_evaluation}, \link{plot.mfrm_design_evaluation}
 
 \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}, \code{\link[=plot.mfrm_design_recommendation]{plot.mfrm_design_recommendation()}},
 \code{\link[=mfrm_report]{mfrm_report()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}}

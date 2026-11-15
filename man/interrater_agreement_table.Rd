@@ -176,7 +176,7 @@ rater facet, reported separately from agreement.}
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("interrater_agreement_table", run.dontrun = TRUE)
 \dontrun{
 library(mfrmr)

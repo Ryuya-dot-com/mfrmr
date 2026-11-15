@@ -10,8 +10,6 @@ vignette: >
 ```{r, include = FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
@@ -44,8 +42,8 @@ Before treating a legacy workflow as covered, inspect the public coverage
 boundary:
 
 ```r
-facets_guide('coverage')
-facets_guide('coverage', "not_implemented")
+facets_feature_coverage()
+facets_feature_coverage("not_implemented")
 ```
 
 This matrix describes the availability of package-native output surfaces.
@@ -148,10 +146,10 @@ display_names <- data.frame(Facet = "Person", ElementID = c("1", "2"),
   DisplayLabel = c("受検者 甲", "受検者 乙"))
 labelled <- plot(facets_result, facets = "Person",
   label_map = display_names, draw = FALSE)
-plot_data(labelled, "plot_data")[, c("ElementID", "Label", "DisplayLabel")]
+labelled$data$plot_data[, c("ElementID", "Label", "DisplayLabel")]
 ```
 
-The original result and its labels remain unchanged; `plot_data(labelled, "label_map")`
+The original result and its labels remain unchanged; `labelled$data$label_map`
 retains the supplied correspondence. Unknown or repeated keys are errors.
 Repeated display names are distinguished by element key. Only measure plots
 draw element labels; other element plots keep the names in their returned data.
@@ -471,7 +469,7 @@ describes its separate adjustment and bias arguments.
 Executed TAM 4.3-25 comparisons support close ordinary-JML agreement for
 matched complete/sparse RSM/PCM designs and supported partial Person anchors.
 They do not establish general coverage, every FACETS anchoring convention,
-or a new JML import route: `import_irt_fit()` for `TAM` remains MML-only. Retain
+or a new JML import route: `import_tam_fit()` remains MML-only. Retain
 unavailable uncertainty instead of substituting WLE SEs or conditional
 information for it.
 
@@ -490,8 +488,7 @@ anchored TAM execution.
 ## A one-shot legacy-compatible call
 
 If the goal is to translate a FACETS-style script with minimal R-side
-plumbing, use `run_mfrm_facets()`. In older scripts, replace the former
-`mfrmRFacets()` name with this call and keep the same arguments:
+plumbing, use `run_mfrm_facets()` (alias `mfrmRFacets()`):
 
 ```{r facets-mode}
 library(mfrmr)
@@ -910,7 +907,7 @@ When that comparison involves an `MML` fit, remember that mfrmr evaluates
 residual-based fit statistics at shrunken EAP person measures while FACETS
 uses JMLE estimates, so MnSq differences can reflect the residual basis
 rather than a fit-computation difference; refit with `method = "JML"`
-before attributing such gaps. See `facets_guide('fit_df')` for this
+before attributing such gaps. See `facets_fit_df_guide()` for this
 boundary and for the separate df/ZSTD standardization conventions.
 
 If you already have a FACETS fit table on disk, read it first and then run
@@ -918,7 +915,7 @@ the fit review. This does not run FACETS; it consumes an exported or otherwise
 harmonized table.
 
 ```r
-facets_fit <- read_facets_results(
+facets_fit <- read_facets_fit_table(
   "score.2.txt",
   facet_map = c("1" = "Person", "2" = "Rater", "3" = "Criterion")
 )
@@ -960,7 +957,7 @@ files <- facets_output_file_bundle(
 
 For RSM and PCM the score-side helpers are available. Under `GPCM`
 the score-side bundle is intentionally restricted; see
-`?mfrmr_gpcm_scope` (`mfrmr_output_guide("gpcm_capabilities")`) and the `mfrmr-gpcm-scope` vignette for the
+`?gpcm_capability_matrix` and the `mfrmr-gpcm-scope` vignette for the
 documented limitation.
 
 ## Recommended next steps

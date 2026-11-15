@@ -101,7 +101,7 @@ Duplicate Person-target cells, including missing-score duplicates, are
 rejected. Multiple targets may use the same Persons; dependence across
 targets does not invalidate Holm adjustment of valid individual p-values.
 
-The inferential model requires independent Persons within each target and
+The binary MH inferential model requires independent Persons within each target and
 a common conditional odds ratio across its strata. Small cells alone do
 not invalidate the exact conditional calculation, but exact inference does
 not establish these assumptions. The separate stratum odds ratios help
@@ -128,7 +128,7 @@ This is a separate conditional association analysis, not a new
 different targets; their agreement does not certify robustness or fairness.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("mantel_haenszel_table", run.dontrun = TRUE)
 \dontrun{
 # One binary target per Person; both groups share two declared strata.

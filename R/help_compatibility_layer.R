@@ -1,11 +1,12 @@
-#' mfrmr Compatibility Layer Map
+#' Updating saved analyses and compatibility workflows
 #'
 #' @description
-#' Guide to the legacy-compatible wrappers and text/file exports in `mfrmr`.
-#' Use this page when you need continuity with older compatibility-oriented workflows,
-#' fixed-width reports, or graph/score file style outputs.
+#' Use this reference when updating saved analyses, earlier scripts or
+#' compatibility-oriented exports. The saved-analysis section identifies
+#' which calculations to repeat; later sections describe specific corrections
+#' and legacy wrappers. For a new analysis, use [mfrmr_workflow_methods].
 #'
-#' This compatibility layer currently applies mainly to diagnostics-based
+#' The legacy wrappers and FACETS-style exports apply mainly to diagnostics-based
 #' `RSM` / `PCM` workflows. Supported `GPCM` fits also provide graph and
 #' package-native scorefile exports through [facets_output_file_bundle()],
 #' with explicit score-side limitations. Check each helper's model scope.
@@ -17,54 +18,170 @@
 #' but it does not generate SPSS syntax, write native SPSS system files, execute
 #' SPSS estimators, or claim SPSS numerical equivalence.
 #'
-#' @section When to use this layer:
-#' - You are reproducing an older workflow that expects one-shot wrappers.
-#' - You need fixed-width text blocks for console, logs, or archival handoff.
-#' - You need graphfile or scorefile style outputs for downstream legacy tools.
-#' - You are checking column coverage and metric consistency against a
-#'   FACETS-style output contract.
+#' @section Updating saved analyses for 0.2.4:
+#' Keep the original objects, data and analysis settings. Installing an update
+#' does not recalculate saved tables, figures or reports. For analyses based
+#' on a native MFRM fit, start by printing `summary(fit)` under the updated
+#' package and reading its interpretation
+#' decision. If the saved native fit lacks the current estimation checks,
+#' refit from the original data with the same intended model, category coding,
+#' anchors, weights and numerical settings. Running [diagnose_mfrm()] alone
+#' cannot establish checks missing from that fit. If the original data or
+#' settings are unavailable, retain the old result as historical output;
+#' its previous approval is not evidence for current inferential use.
+#' Observed-score G/D studies and external-feature groups instead use their
+#' own source objects; they do not require an MFRM fit.
 #'
-#' @section When not to use this layer:
-#' - For standard estimation, use [fit_mfrm()] plus [diagnose_mfrm()].
-#' - For report bundles, use [mfrmr_reports_and_tables].
-#' - For manuscript text, use [build_apa_outputs()] and [reporting_checklist()].
-#' - For visual follow-up, use [mfrmr_visual_diagnostics].
+#' Update the affected result at the earliest step below, then rebuild its
+#' dependent summaries, plots and exports. For an MFRM-based analysis, this
+#' assumes a fit with current estimation checks. A request to recompute
+#' diagnostics or scoring does not itself
+#' require a new calibration fit.
 #'
-#' @section Compatibility map:
-#' \describe{
-#'   \item{[facets_guide()]}{User-facing wording for the package's
-#'   relationship to FACETS. Use before describing compatibility outputs in a
-#'   report or migration note.}
-#'   \item{[run_mfrm_facets()]}{One-shot legacy-compatible wrapper that fits,
-#'   diagnoses, and returns key tables in one object.}
-#'   \item{[build_fixed_reports()]}{Fixed-width interaction and pairwise text
-#'   blocks. Best when a text-only compatibility artifact is required.}
-#'   \item{[facets_output_file_bundle()]}{Graphfile/scorefile style CSV and
-#'   fixed-width exports for legacy pipelines.}
-#'   \item{[write_mfrm_residual_file()]}{Package-native observation-level
-#'   residual CSV/TSV export for reviewer, spreadsheet, or external QC handoff.}
-#'   \item{[write_mfrm_subset_file()]}{Package-native connected-subset summary
-#'   and node-membership CSV/TSV export for linking review handoff.}
-#'   \item{[facets_output_contract_review()]}{Column and metric review against
-#'   the FACETS-style output-contract specification. Use only when an explicit
-#'   output-contract review is part of the task; it checks the package output contract
-#'   and does not imply external FACETS equivalence.}
-#' }
+#' - **Display wording only:** reprint a saved fit summary. This updates labels
+#'   and removes the duplicate inference decision; it does not recalculate
+#'   stored diagnostics or establish missing precision evidence.
+#' - **Wright-map groups:** regenerate `plot(fit, type = "wright", ...)` from
+#'   the saved fit and original group specification, including `group_data`
+#'   if supplied. This corrects group membership and exclusions without refitting.
+#'   Reloading an old plot alone retains its previously calculated densities.
+#' - **Diagnostics and QC:** recreate [diagnose_mfrm()] results with the original
+#'   diagnostic settings before rebuilding reliability, precision, category,
+#'   marginal-fit, person-fit, unexpected-response, fair-score and reporting
+#'   results. Rerun separately requested [q3_statistic()],
+#'   [analyze_residual_pca()] and [compute_person_fit_indices()] calculations
+#'   with their original options. In [run_qc_pipeline()], request
+#'   `separation_facets` only for facets whose levels need to be distinguished;
+#'   it is no longer a default rater-quality requirement. Missing results remain
+#'   unavailable and cannot be treated as passes.
+#' - **Model comparisons:** rerun [compare_mfrm()] on the existing eligible fits,
+#'   retaining the original comparison settings, then rebuild dependent
+#'   [build_model_choice_review()] and [build_weighting_review()] results.
+#'   The corrected RSM/PCM nesting review requires every RSM interaction to be
+#'   retained in the PCM. More category-step parameters do not establish
+#'   nesting. An affected pair can retain an eligible information-criterion
+#'   comparison while losing its invalid chi-square test. This correction
+#'   does not require refitting; printing an old comparison leaves its stored
+#'   decision unchanged.
+#' - **Group comparisons and equivalence:** recreate residual [analyze_dff()]
+#'   / [analyze_dif()] and [dif_interaction_table()] results from the existing
+#'   fit and original group data. They now describe residual differences without
+#'   tests or confidence intervals. Recompute [analyze_facet_equivalence()]
+#'   from an eligible MML fit with matching current diagnostics and the original
+#'   practical bound; old equivalence bundles cannot supply the required joint
+#'   covariance.
+#' - **ICC and design effects:** rerun [compute_facet_icc()] or
+#'   [analyze_hierarchical_structure()] from the original data and settings.
+#'   Numeric score labels now retain their values. Missing scores or grouping
+#'   values require an explicit `missing = "omit"` choice; malformed scores
+#'   must be corrected. Inspect `attr(icc, "data_usage")`, then recreate
+#'   [compute_facet_design_effect()] using the new ICC result. Older ICC
+#'   tables lack the row accounting needed to calculate matching sample sizes.
+#'   Recalculation also removes the fixed variance cutoff tied to score units
+#'   and preserves small positive variances without decimal rounding. Constant
+#'   retained scores have unavailable variance components and ICCs. Design
+#'   effects remain per-facet approximations; their equivalent row counts do
+#'   not estimate the precision of a complete crossed or unbalanced design.
+#'   The former `ci_method = "profile"` transformed separate component bounds
+#'   and did not calculate a profile-likelihood interval for the ICC ratio.
+#'   Choose `"boot"` explicitly for parametric percentile intervals, then read
+#'   `ICC_CI_Status` and `attr(icc, "icc_ci")`. Failed or nonconverged refits
+#'   and fit warnings withhold intervals. Saved bootstrap results also require
+#'   rerunning to obtain complete failure accounting and identify
+#'   constant-response refits, which withhold intervals; reprinting is insufficient.
+#' - **Observed-score design coefficients and shrinkage:** rerun
+#'   [mfrm_generalizability()] with its original data and settings, then
+#'   [mfrm_d_study()] with the planned counts and residual-scaling choice.
+#'   This re-estimates the separate observed-score mixed model, not the MFRM.
+#'   Reapply [apply_empirical_bayes_shrinkage()] with the original prior settings
+#'   and explicit Person choice to refresh shrinkage reports, descriptive bands,
+#'   and replay settings. Reapplication replaces the previous adjustment;
+#'   switching Person shrinkage off removes its old adjustment columns.
+#'   Regenerate replay scripts to retain the post-fit adjustment step.
+#' - **Multivariate G/D studies:** to apply metric-specific G/Phi/SEM
+#'   availability rules, rerun [mfrm_d_study()] from the saved
+#'   G-study with the original planned counts and score weights. Changing only
+#'   future counts or weights also reuses that G-study. Recreate dependent
+#'   plan comparisons, plots and exports after recalculation; replotting alone
+#'   preserves stored numbers. Refit [mfrm_g_study()] when changing
+#'   the source data or G-study model, replacing an object with missing or
+#'   incompatible design metadata, or correcting an earlier G-study affected
+#'   by the single-score MINQUE(0) or period-containing interaction-ID bugs. In
+#'   particular, a crossed result cannot be converted to a nested model by
+#'   editing its labels; refit with an explicit `nesting` specification.
+#'   Retain the G-study object and its data to calculate new prespecified
+#'   plan comparisons with [mfrm_multivariate_d_compare()]. A coefficient
+#'   table alone does not contain the information needed for those intervals.
+#' - **External-feature groups:** saved clustering results retain their
+#'   memberships and fitted hierarchy. Replot them to update labels; use
+#'   [plot_data()] for their stored values. [as_ggplot()] supports silhouette,
+#'   profile, dendrogram and co-membership views. A change to features, weights, group
+#'   counts or method requires a new clustering call, followed by
+#'   [mfrm_cluster_compare()] on the updated results. For imputation
+#'   comparisons, reuse the original `mice` object to preserve pairing across
+#'   completed datasets; do not generate unrelated completions for each setting.
+#' - **Fitted-object Person scores:** re-summarize the original prediction object
+#'   to recover stored interval settings and updated explanations. To replace
+#'   older grid-endpoint intervals with continuous posterior intervals, rerun
+#'   [predict_mfrm_units()] using the existing fit, scoring data and settings.
+#'   Reprinting cannot change an already calculated interval. Rerun scoring
+#'   when older estimated-population results lack numerical prior information
+#'   or are refused because they claimed unrestricted scoring; these fits
+#'   require explicit `readiness_policy = "review"`.
+#' - **Plausible values:** use `summary(original_plausible_values)` on the saved
+#'   draw object to obtain empirical quantiles at its requested interval level.
+#'   No new draws are needed for this correction. A saved derived summary alone
+#'   cannot recover the original draws. If estimated-population restrictions
+#'   require regeneration, repeat the original scoring/draw call with the same
+#'   data, settings and seed, and `readiness_policy = "review"`.
+#' - **Portable calibration:** [load_mfrm_calibration()] preserves a valid
+#'   artifact's recorded scoring algorithm; older grid-based intervals remain
+#'   grid-based. To adopt continuous intervals, create a new calibration using
+#'   the reviewed source fits and [mfrm_calibration_workflow], then score again.
+#'   Retain the old artifact for reproducibility. Re-summarizing older score
+#'   results recovers recorded algorithm/level labels without changing values.
+#' - **External fits:** rerun [import_erm_fit()], [import_tam_fit()] or
+#'   [import_mirt_fit()] on the saved source-package fit and rebuild displays;
+#'   source-model re-estimation is unnecessary. Use `compute_fit = TRUE` when
+#'   imported measurement diagnostics are needed. Unsupported source models
+#'   remain unsupported, and imports do not become native fits.
+#' - **Agreement, networks and timing:** rebuild [interrater_agreement_table()],
+#'   [rater_network_analysis()] and [rater_halo_network_analysis()] from the
+#'   existing native fit, matching diagnostics and original settings. Refresh
+#'   design reviews with [build_mfrm_network_review()] to record whether the
+#'   graph covers all observed subsets. Recreate [response_time_review()] from
+#'   the original timed-event data and settings. No MFRM refit is required.
+#'   Unavailable comparisons remain unassessed; a missing or excluded graph
+#'   edge does not establish absence of a rater effect. Halo Welch-test columns
+#'   are retained as missing values. Timing rates use valid times and describe
+#'   cutoff rules, not calibrated rapid-guessing or low-effort classifications.
+#' - **Simulation and design summaries:** re-summarize saved evaluation objects
+#'   to retain attempted-run denominators and unavailable residual-DIF rates.
+#'   Rebuilding design summaries also restores unrounded metrics for threshold
+#'   decisions; rounded saved summaries alone cannot recover that precision.
+#'   Missing workload or connectivity records cannot be reconstructed by
+#'   summary formatting. If those records are required for a recommendation,
+#'   repeat the original evaluation with its recorded design, settings and seeds.
 #'
-#' @section Preferred replacements:
-#' - Instead of [run_mfrm_facets()], prefer:
-#'   [fit_mfrm()] -> [diagnose_mfrm()] -> [reporting_checklist()].
-#' - Instead of [build_fixed_reports()], prefer:
-#'   [bias_interaction_report()] -> [build_apa_outputs()].
-#' - Instead of [facets_output_file_bundle()], prefer:
-#'   [category_curves_report()] or [category_structure_report()] plus
-#'   [export_mfrm_bundle()].
-#' - For residual or subset handoff, prefer [write_mfrm_residual_file()] and
-#'   [write_mfrm_subset_file()] over reusing graph/score compatibility exports.
-#' - Instead of [facets_output_contract_review()] for routine QA, prefer:
-#'   [reference_case_review()] for package-native completeness review or
-#'   [reference_case_benchmark()] for packaged benchmark cases.
+#' After any required recalculation, regenerate dependent [mfrm_results()],
+#' reports and exports with matching source objects. A newly created PDF, HTML
+#' file or CSV can still contain outdated calculations if built from an old
+#' derived object. Consult the affected function's help for its interpretation
+#' limits; updating an object does not broaden those limits.
 #'
+#' @section Compatibility outputs:
+#' Use this layer when a downstream consumer requires a legacy layout.
+#' [run_mfrm_facets()] provides a one-shot fit/diagnostic wrapper;
+#' [build_fixed_reports()] writes fixed-width blocks; [facets_output_file_bundle()]
+#' provides graphfile/scorefile-style outputs. Dedicated residual and subset
+#' handoffs use [write_mfrm_residual_file()] and [write_mfrm_subset_file()].
+#' [facets_output_contract_review()] checks the stated output contract, not
+#' numerical equivalence to external FACETS.
+#'
+#' For new analyses, start with [fit_mfrm()] and the applicable diagnostics,
+#' then [mfrmr_reports_and_tables] for report/export selection. Use
+#' [compatibility_alias_table()] to check former names and replacements, and
+#' `reporting_checklist(fit)$software_scope` for FACETS/ConQuest/SPSS wording.
 #' @section Multiple-imputation review and intervals in 0.2.4:
 #' Re-run [pool_mfrm_imputed()] on saved, valid [fit_mfrm_imputed()] analyses
 #' to obtain `IntervalReason` and saved inference notes, then recreate plots
@@ -118,8 +235,8 @@
 #' | --- | --- | --- |
 #' | `evaluate_mfrm_recovery(...)` | `simulate_mfrm_recovery(...)` | Generate data repeatedly, refit, and summarize parameter recovery. |
 #' | `build_peer_review_design_review(x)` | `review_peer_design(x)` | Read existing peer-assessment assignment metadata; no assignment generation or model fitting. |
-#' | `gpcm_score_side_contract(status)` | `mfrmr_output_guide("gpcm_capabilities", status, view = "scores")` | Read score availability, limitations and alternatives. |
-#' | `gpcm_runtime_guard_coverage()` | `mfrmr_output_guide("gpcm_capabilities", view = "unavailable")` | Read blocked/deferred workflows and alternatives. |
+#' | `gpcm_score_side_contract(status)` | `gpcm_capability_matrix(status, view = "scores")` | Read score availability, limitations and alternatives. |
+#' | `gpcm_runtime_guard_coverage()` | `gpcm_capability_matrix(view = "unavailable")` | Read blocked/deferred workflows and alternatives. |
 #'
 #' `assess_mfrm_recovery(x, ...)` keeps its name: it applies review thresholds
 #' to an existing simulation result without generating data or refitting.
@@ -163,7 +280,7 @@
 #' and multiplicity settings; no MFRM fitting is involved. Regenerate CSV
 #' exports from the new result.
 #'
-#' - Start FACETS-facing reports with [facets_guide()] when readers
+#' - Start FACETS-facing reports with [facets_positioning_guide()] when readers
 #'   might otherwise assume FACETS numerical reproduction.
 #' - Keep compatibility wrappers only where a downstream consumer truly needs
 #'   the old layout or fixed-width format.
@@ -212,77 +329,39 @@
 #' Dispatch does not change an estimator or add interval support to that approximation.
 #'
 #' @section Standard R extraction in 0.2.4:
-#' Native fits now have documented [coefficient, covariance, likelihood and
-#' count methods][mfrm_fit_extractors]. Previously, `coef(fit)` could fall
-#' through to `NULL`, and ordinary MML fits lacked `vcov()` and `logLik()`.
-#' Use `coef(fit)` for free coordinates matched to `vcov(fit)`, or
-#' `coef(fit, type = "locations")` for labelled saved facet locations.
-#' These vectors answer different questions; do not combine a component
-#' vector with the free-coordinate covariance without its constraint map.
-#' Existing `summary(fit)` tables remain the route to estimates with status
-#' and interpretation. CML's existing covariance and likelihood values retain
-#' their meanings; the new `coef()` uses the same conditional coordinates.
+#' [mfrm_fit_extractors] documents the native `coef()`, `vcov()`, `logLik()` and
+#' `nobs()` methods. `coef(fit)` gives free coordinates matched to covariance;
+#' `type = "locations"` gives labelled facet locations, which need their constraint
+#' map before combination with that covariance. `confint(fit)` now defaults to
+#' pointwise intervals for those free coefficients in supported MML/CML fits.
+#' JML structural-truth intervals remain unsupported.
 #'
-#' `confint(fit)` now returns pointwise intervals for those default coefficients
-#' for supported native MML/CML fits. Use names or integer positions in `parm`
-#' to select coefficients. The matrix carries estimates, SEs, availability
-#' reasons and checks in its attributes; comparison-only CML retains missing
-#' rows for unidentified targets. JML structural-truth intervals remain
-#' unsupported. CML uses saved conditional information; MML applies the same
-#' covariance qualification as `vcov()`.
+#' **GPCM scripts requesting slope inference must now specify
+#' `confint(fit, parm = "slopes", ...)`.** This includes slope contrasts,
+#' standardization, sandwich/profile options and slope-plot attachments. The
+#' default free log-slope coefficient matrix is a different target. Existing
+#' slope-interval objects need no recalculation solely for this syntax change.
+#' See [confint.mfrm_fit()] for diagnostics and target-specific availability.
 #'
-#' **Breaking change for GPCM:** replace `confint(fit, ...)` with
-#' `confint(fit, parm = "slopes", ...)` when requesting slope intervals,
-#' ratios/differences, standardization, sandwich or profile inference, or
-#' preparing slope plots/report attachments. The default coefficient matrix
-#' uses free log-slope coordinates and is a different target. Supplying slope
-#' options without `parm = "slopes"` is rejected. Existing saved slope-interval
-#' objects remain reusable; no refit or recomputation is needed merely to
-#' change the call syntax. Bootstrap-result and extended-model methods retain
-#' their own defaults. See [confint.mfrm_fit()].
+#' `nobs(fit)` counts Persons for MML/CML and ratings for JML; request
+#' `type = "ratings"` for rating rows throughout. Multiple-model AIC/BIC calls
+#' now direct users to [compare_mfrm()]. Unsupported/legacy likelihood metadata
+#' require the documented summaries rather than inference from absent fields.
 #'
-#' `nobs(fit)` counts Persons for MML/CML and retained ratings for JML.
-#' Use `nobs(fit, type = "ratings")` for a response-row count in every method.
-#' `logLik(fit)` retains the likelihood basis and information-criterion reason;
-#' unqualified ordinary results give `df = NA`, so AIC/BIC remain unavailable.
-#' Multiple-model `AIC()`/`BIC()` calls now direct users to [compare_mfrm()]
-#' rather than allowing conditional and marginal likelihoods to be mixed.
-#' Current native saved fits can use these methods after reloading; source
-#' objects are not rewritten. Legacy likelihood metadata, corrected/penalized
-#' objectives and unsupported model classes require their documented summaries.
+#' [mfrm_fit_responses] documents `fitted()`, `residuals()` and source-rating
+#' `predict()`, which previously could fall through to `NULL`. Supplied-response
+#' ability scoring still uses [predict_mfrm_units()] or [score_mfrm_calibration()];
+#' `predict(fit, newdata = ...)` is unsupported. Returned rows align with
+#' `fit$prep$data`, not the unfiltered input. Old fits without omission identities
+#' cannot recover original `InputRow` positions merely by being reopened.
 #'
-#' Native ordinary fits also support [fitted rating and residual methods][mfrm_fit_responses].
-#' Previously `fitted(fit)` and `residuals(fit)` could silently return `NULL`.
-#' They now return retained-row vectors; `fitted(fit, type = "prob")` returns
-#' category probabilities. `predict(fit)` has the same source-rating target.
-#' `predict(fit, newdata = ...)` is explicitly unsupported; retain
-#' [predict_mfrm_units()] or [score_mfrm_calibration()] for ability scoring
-#' from supplied responses. These targets must not be interchanged.
-#'
-#' MML probabilities are evaluated at the saved EAP, not averaged over its
-#' posterior distribution. JML uses primary estimates, including limiting
-#' probabilities for extreme Persons. Zero-variance Pearson residuals are
-#' missing with a reason. Legacy [diagnose_mfrm()] helpers retain finite JML
-#' optimizer proxies and their small-variance cutoff, so values can differ at
-#' these limits. Diagnostic observation/score/residual tables now include
-#' `PrimaryPersonMeasure`, `PersonMeasureBasis`, `ConditionalVariance`,
-#' `PearsonAvailable` and row-specific reasons. Overall/element mean squares
-#' are unavailable when any contributing standardized residual, variance or
-#' weight is unavailable; `FitAvailableRows`, `FitUnavailableRows` and
-#' `FitReason` expose that coverage. Older diagnostics could effectively count
-#' missing residuals as zero misfit. Regenerate them and their exports from the
-#' saved fit, without refitting. MML response calculations now match Persons
-#' by identifier even when the saved Person table is reordered.
-#'
-#' Read the `diagnostics`, `settings`, `score_map` and
-#' `source_readiness` attributes; values alone do not establish fit or inference
-#' readiness. Outputs align with `fit$prep$data`, not an unfiltered input table.
-#' Existing saved fits can be reused without refitting. When old objects lack
-#' omitted-row identities, their original `InputRow` positions remain `NA`;
-#' retained-row order is still available. CML and comparison-only results
-#' now explicitly refuse this unsupported Person plug-in target instead of
-#' letting `fitted()`/`residuals()` fall through to `NULL`.
-#'
+#' Regenerate older diagnostics and exports from the saved fit to obtain the
+#' corrected missing-residual coverage and identifier matching; no calibration
+#' refit is needed for these corrections. Inspect `FitAvailableRows`,
+#' `FitUnavailableRows`, `FitReason` and response-table status fields. Native
+#' response methods and legacy diagnostics can differ at extreme/low-variance
+#' limits; [mfrm_fit_responses] specifies their respective estimate bases.
+#' CML does not supply this Person plug-in response target.
 #' @section Input normalization corrections in 0.2.4:
 #' The shared preparation used by [fit_mfrm()], [describe_mfrm_data()] and
 #' anchor review now rounds scores within `1e-6` of an integer to that integer.
@@ -404,52 +483,29 @@
 #' Laplace approximation or calibration-adjusted interval coverage.
 #'
 #' @section Updating saved diagnostics in 0.2.4:
-#' When a report, plot, bias screen or export accepts both `fit` and
-#' `diagnostics`, the diagnostic object must describe that same fitted analysis.
-#' Matching person/facet labels or location estimates alone is insufficient:
-#' thresholds, population specification, integration settings and retained
-#' observations must also agree. A mismatched pair now raises an error instead
-#' of combining results or silently substituting newly computed diagnostics.
+#' Recreate [diagnose_mfrm()] and [estimate_bias()] from the original saved fit
+#' with the original diagnostic options, then rebuild reports. Corrected bundles
+#' record `calculation_version = 2`; corrections concern PTMEA, ZSTD, displacement,
+#' chi-square df, PCM fair scores, bias tests and unexpected-response screening.
+#' The main calibration does not need refitting for these changes.
 #'
-#' Corrected diagnostic and bias bundles carry `calculation_version = 2`.
-#' Earlier bundles must be recreated from the saved fit, including
-#' [estimate_bias()] and derived reports. Corrections affect PTMEA, ZSTD,
-#' displacement, chi-square df, PCM fair scores, bias expectations and summary
-#' tests, and unexpected-response screening. The diagnostic default is now
-#' `fit_df_method = "facets"`. Fit-measure tables and ZSTD fit-pathway plots
-#' use this default too; request the explicit engine option for historical df.
-#' `whexact = TRUE` now means FACETS WHEXACT=NO;
-#' use `"legacy_linear"` for its former calculation. Reproducing the former
-#' engine convention also requires `fit_df_method = "engine"`. The former
-#' unexpected-response rule is explicit `abs_z_min = 2, rule = "either"`.
-#' Pairwise reports now use modified Rasch-Welch df rounded down by default;
-#' `df_method = "classical"` retains the former continuous reference. Recreate
-#' those reports to obtain `CalculationVersion = 3`.
-#' Recompute rather than inserting a version field into an old object. These
-#' are diagnostic changes and do not require a main calibration refit.
+#' To reproduce older conventions, use the explicit controls:
+#' - `fit_df_method = "engine"` instead of the current `"facets"` default;
+#' - `whexact = "legacy_linear"` for the former calculation; current `TRUE`
+#'   means FACETS WHEXACT=NO and historical engine reproduction also needs
+#'   `fit_df_method = "engine"`;
+#' - `abs_z_min = 2, rule = "either"` for the former unexpected-response rule;
+#' - pairwise `df_method = "classical"` for continuous Rasch-Welch df. The current
+#'   modified, rounded-down calculation produces `CalculationVersion = 3`.
 #'
-#' Older native diagnostics that lack a saved calibration identity are also
-#' refused when paired with a fit. For native models supported by
-#' [diagnose_mfrm()], regenerate diagnostics from the original saved fit;
-#' the model does not need to be refitted. Reuse the diagnostic options from
-#' your original analysis, such as `diagnostic_mode` and `residual_pca`.
-#' For example, if the original options were `"legacy"` and `"none"`:
-#' \preformatted{
-#' fit <- readRDS("fit.rds")
-#' diagnostics <- diagnose_mfrm(
-#'   fit, diagnostic_mode = "legacy", residual_pca = "none"
-#' )
-#' saveRDS(diagnostics, "diagnostics-0.2.4.rds")
-#' report <- facet_quality_dashboard(fit, diagnostics = diagnostics)
-#' }
-#' Function signatures and result-table columns are unchanged by this identity
-#' check. Helpers that explicitly accept diagnostics alone, such as
-#' `fit_measures_table(diagnostics)`, still support that input; it does not
-#' establish a match to another fit. Imported diagnostics must be the bundle
-#' stored in the matching imported fit. These checks do not expand the model
-#' families supported by ordinary diagnostics; for example, native CML retains
-#' its separate interval/reporting workflow in [mfrm_facet_intervals()].
-#'
+#' Consumers combining a fit and diagnostics, bias/screening results or predictions
+#' require matching calculation/identity metadata. Labels or location estimates
+#' alone do not establish a match: retained observations, thresholds, population
+#' and integration settings matter. Recreate older results lacking that metadata;
+#' do not insert version/identity fields by hand. Imported diagnostics must be
+#' those stored in the matching imported fit. Standalone methods keep their own
+#' input requirements and do not establish a match to a separate fit. This check
+#' does not expand supported model families; CML has its separate interval route.
 #' @section Updating saved shrinkage results in 0.2.4:
 #' Reapply [apply_empirical_bayes_shrinkage()] to the saved fit using the
 #' original prior settings, then regenerate plots and exports. No MFRM refit
@@ -465,94 +521,43 @@
 #' Non-Person facet adjustment remains available within its existing scope.
 #'
 #' @section Updating saved screening results in 0.2.4:
-#' Recompute [detect_anchor_drift()] and [build_equating_chain()] from saved
-#' fitted waves to apply stable offset/SE calculations and explicit unavailable
-#' states. No model refit is required. Singleton or uncomputable residual
-#' spreads now remain missing, and summaries distinguish unavailable flags
-#' from zero flagged elements. The result records fallback and actual offset
-#' contributors; chains also record unavailable cumulative sums. Earlier
-#' saved tables are not repaired by loading them. Rebuild chains before
-#' requesting offset sensitivity if the saved offsets no longer match the
-#' current arithmetic. Regenerate plots and exports: [as_ggplot()] now uses
-#' the selected drift, wave estimate, cumulative offset or common-element
-#' count instead of the first numeric column.
-#'
-#' Rerun [analyze_dff()] with `method = "refit"` from the saved baseline fit
-#' and original data to repair earlier subgroup results. This reruns subgroup
-#' estimation: failed/skipped groups no longer borrow baseline estimates, absent
-#' target levels remain visible, and sparsity/precision screens use retained
-#' target-cell counts and shared-Person checks. Current summary, report and
-#' plotting methods reject earlier refit objects; do not add the version field
-#' by hand. Regenerate exported tables and figures. Location-direction labels
-#' now describe parameter differences rather than asserting that entire
-#' subgroup response curves are harder or easier.
-#'
-#' Recompute older [estimate_bias()] / [estimate_all_bias()] results from the
-#' saved fit and matching diagnostics to obtain boundary and complete-cell
-#' information/fit checks. Search-boundary estimates remain points, with
-#' unavailable SEs and screening tail areas. Small positive response variances
-#' contribute to information; missing residuals no longer produce partial-cell
-#' Infit/Outfit. Facet labels containing `||` now identify distinct cells
-#' correctly. The summary reports missing screening counts and retains
-#' unavailable cells in Bonferroni/Holm family sizes. These changes require
-#' re-screening, not refitting the calibration; an old saved table is not
-#' recalculated by plotting or printing it.
-#'
-#' Results from [estimate_bias()], [estimate_all_bias()],
-#' [unexpected_response_table()], [unexpected_after_bias_table()] and
-#' [displacement_table()] now carry a `fit_identity` field. When a consumer
-#' combines a supplied result with a fit, it checks that they describe the same
-#' analysis. This includes reports, dashboards, QC, export/replay helpers and
-#' [build_misfit_casebook()]. Every retained member and the primary result of a
-#' bias collection must match. Matching facet labels alone is insufficient.
-#'
-#' Older results without this metadata, and manually assembled bias tables,
-#' cannot establish that match. Recreate the result from its saved fit and
-#' matching diagnostics; do not add an identity field to an old table by hand.
-#' Use the original facets, estimation limits, filtering rules and thresholds.
-#' For example, if the original bias screen used these options:
-#' \preformatted{
-#' bias <- estimate_bias(fit, diagnostics,
-#'   facet_a = "Rater", facet_b = "Criterion",
-#'   max_abs = 10, omit_extreme = TRUE, max_iter = 2, tol = 1e-3)
-#' saveRDS(bias, "bias-0.2.4.rds")
-#' report <- build_apa_outputs(fit, diagnostics, bias_results = bias)
-#' }
-#' The same calls and table columns remain available; the added metadata is
-#' stored alongside the tables. Recomputing the screen does not refit the model.
-#' Standalone summary/plot methods keep their existing input requirements and
-#' do not establish a relationship to a separately supplied fit. These identity
-#' checks prevent accidental mixing; they do not validate manually edited
-#' numbers or make a screening result eligible for formal inference.
-#'
+#' - Recompute [detect_anchor_drift()] and [build_equating_chain()] from saved
+#'   fitted waves, then regenerate plots/exports. This corrects offset/SE
+#'   arithmetic, singleton spread and unavailable counts without model refitting.
+#'   Rebuild chains before offset sensitivity if old offsets no longer match;
+#'   the plot now uses the selected measure rather than the first numeric column.
+#' - Rerun [analyze_dff()] with `method = "refit"` using the original baseline
+#'   and data. This **does rerun subgroup estimation**. Earlier results could
+#'   borrow baseline estimates for failed/skipped groups and omit absent targets.
+#'   Current methods reject those old objects. Recreate them to obtain retained
+#'   cell counts, shared-Person checks and parameter-difference direction labels.
+#' - Recompute [estimate_bias()] / [estimate_all_bias()] with the original
+#'   facets, limits, filtering and thresholds from the saved fit and matching
+#'   diagnostics. This corrects boundary/information checks, incomplete-cell
+#'   Infit/Outfit, `||` labels and unavailable screening/multiplicity counts.
+#'   Boundary points remain estimates with unavailable SEs/tail areas. Re-screening
+#'   does not refit the calibration; printing an old table does not recalculate it.
+#' - Bias collections, unexpected-response and displacement results require a
+#'   matching `fit_identity` when attached to fit-level reports, QC, exports or
+#'   casebooks. Every retained collection member must match. Recreate old or
+#'   manually assembled results rather than adding metadata. Identity checks
+#'   prevent mixing analyses; they do not qualify formal inference.
 #' @section Updating saved predictions in 0.2.4:
-#' [predict_mfrm_units()] and [sample_mfrm_plausible_values()] now retain a
-#' `fit_identity` field. Fit-level manifests, replay scripts and archive exports
-#' require that identity to match the supplied calibration, fitted population
-#' coding and source scoring status. Recreate older outputs from the saved fit
-#' and original scoring inputs, retaining the original column mappings,
-#' `person_data`, prior, integration settings, omission policy and seed.
-#' This repeats scoring or drawing plausible values, not estimation of the
-#' calibration model. Standalone summary/plot methods retain their existing
-#' input rules; a standalone table does not establish a match to another fit.
+#' Older [predict_mfrm_units()] and [sample_mfrm_plausible_values()] outputs need
+#' recreation before fit-level manifests, replay scripts or archives can check
+#' their `fit_identity`. Reuse the saved calibration and original responses,
+#' column mappings, `person_data`, prior, integration, omission policy and seed.
+#' This repeats scoring/draws, not calibration estimation.
 #'
-#' [predict_mfrm_population()] is a simulation-based design forecast. A result
-#' created with `fit = fit` must match that source fit when attached to an
-#' archive. Recreating an older fit-derived forecast repeats its simulations
-#' and replication fits; the original calibration fit can be reused.
-#' A result created with `sim_spec = spec` remains an explicitly supplied
-#' scenario and can accompany a different fit. Its notes and the manifest's
-#' `population_prediction_source` setting distinguish this from a forecast
-#' derived from the attached fit. Do not change the source label of an old
-#' result to bypass the check.
-#'
-#' Generated replay scripts continue to use the saved simulation specification.
-#' They reproduce those forecasting assumptions rather than deriving new ones
-#' from the replayed calibration, which could change the forecast. The recreated
-#' forecast is therefore labelled as a supplied-specification scenario.
-#' Identity checks do not change scoring uncertainty, eligibility or the
-#' interpretation of plausible values and Monte Carlo forecast uncertainty.
-#'
+#' For [predict_mfrm_population()], a forecast created with `fit = fit` must match
+#' the archived fit. Recreating it repeats simulations and replication fits,
+#' while retaining the original calibration. An explicit `sim_spec = spec`
+#' scenario may accompany another fit; `population_prediction_source` and notes
+#' identify that distinction. Do not relabel an old result to bypass the check.
+#' Replay scripts use the saved simulation specification rather than re-derive
+#' it from the replayed calibration, so recreated forecasts are labelled as
+#' supplied-specification scenarios. These checks do not alter the uncertainty
+#' definitions or eligibility of scoring, plausible values or forecasts.
 #' @section Updating saved structural reviews in 0.2.4:
 #' [analyze_hierarchical_structure()] now saves `data_identity` metadata.
 #' [reporting_checklist()] checks the reviewed column roles and retained rows,
@@ -603,25 +608,9 @@
 #'   manifest or model-comparison traceability fields. They are not callable
 #'   helper names; user-facing helper names use review/check terminology.
 #'
-#' @section Typical workflow:
-#' - Legacy handoff:
-#'   [run_mfrm_facets()] -> [build_fixed_reports()] ->
-#'   [facets_output_file_bundle()] plus [write_mfrm_residual_file()] /
-#'   [write_mfrm_subset_file()] only when those standalone files are needed.
-#' - Mixed workflow:
-#'   `RSM` / `PCM`:
-#'   [fit_mfrm()] -> [diagnose_mfrm()] -> [build_apa_outputs()] ->
-#'   compatibility export only if required.
-#'   `GPCM`:
-#'   [fit_mfrm()] -> [diagnose_mfrm()] -> [reporting_checklist()] ->
-#'   [facets_output_file_bundle()] only when a graph/score handoff is needed,
-#'   retaining its package-native GPCM caveats.
-#' - FACETS output-contract review:
-#'   [fit_mfrm()] -> [diagnose_mfrm()] -> [facets_output_contract_review()].
-#'
 #' @section Companion guides:
 #' - For FACETS coverage and boundary wording, see
-#'   [facets_guide()] with topic = "positioning" or "coverage".
+#'   [facets_positioning_guide()] and [facets_feature_coverage()].
 #' - For standard reports/tables, see [mfrmr_reports_and_tables].
 #' - For manuscript-draft reporting, see [mfrmr_reporting_and_apa].
 #' - For visual diagnostics, see [mfrmr_visual_diagnostics].
@@ -661,23 +650,23 @@
 #' @name mfrmr_compatibility_layer
 NULL
 
-#' List compatibility aliases, migration status and preferred names
+#' List retained compatibility aliases and preferred names
 #'
 #' @param scope Which alias surface to return: `"all"`, `"functions"`,
 #'   `"arguments"`, `"fields"`, `"columns"`, or `"plot_metrics"`.
 #'
 #' @details
-#' This helper records compatibility names used in older scripts and downstream
-#' handoffs, including aliases removed from exports. It answers two questions:
+#' This helper is a compact public registry of the compatibility aliases that
+#' `mfrmr` intentionally keeps visible for older scripts and downstream
+#' handoffs. It is meant to answer two questions quickly:
 #' 1. Which old names are still accepted?
 #' 2. Which package-native names should new code use instead?
 #'
-#' `Lifecycle = "retained_alias"` means the alias is still accepted;
-#' `"removed_export"` means scripts must use the replacement. Private helpers
-#' that were never public are excluded. See [mfrmr_api_migration_030] for the
-#' complete 0.3.0 development migration, including merged operations.
+#' Non-exported soft-deprecated helpers are deliberately excluded here. This table
+#' is only for retained user-facing aliases that remain part of the public
+#' surface.
 #'
-#' @return A data.frame with one row per compatibility name and columns:
+#' @return A data.frame with one row per retained alias and columns:
 #' - `Alias`
 #' - `PreferredName`
 #' - `Surface`
@@ -718,7 +707,37 @@ compatibility_alias_table <- function(scope = c("all", "functions", "arguments",
   out[out$Surface %in% scope_map[[scope]], , drop = FALSE]
 }
 
-#' @noRd
+#' Extract canonical review components
+#'
+#' @param x A fitted `mfrm_fit`, diagnostics object, summary object, or
+#'   compatible list containing the requested review component.
+#' @param required Logical. If `TRUE`, error when no compatible review component
+#'   is found. If `FALSE`, return `NULL` instead.
+#'
+#' @details
+#' `anchor_review()` returns the fitted object's `config$anchor_review`
+#' component. `precision_review()` returns the diagnostics
+#' `precision_review` table. These helpers intentionally do not search older
+#' field names.
+#'
+#' @return
+#' `anchor_review()` returns an `mfrm_anchor_review`-like object when available.
+#' `precision_review()` returns the precision-review table when available.
+#' If `required = FALSE` and no component is available, both helpers return
+#' `NULL`.
+#'
+#' @examples
+#' fit_like <- list(config = list(
+#'   anchor_review = structure(list(issue_counts = data.frame()),
+#'                             class = "mfrm_anchor_review")
+#' ))
+#' anchor_review(fit_like)
+#' diag_like <- list(
+#'   precision_review = data.frame(Check = "SE", Status = "ok", Detail = "Model-based")
+#' )
+#' precision_review(diag_like)
+#' @name review_accessors
+#' @export
 anchor_review <- function(x, required = TRUE) {
   required <- isTRUE(required)
 
@@ -742,7 +761,8 @@ anchor_review <- function(x, required = TRUE) {
   out
 }
 
-#' @noRd
+#' @rdname review_accessors
+#' @export
 precision_review <- function(x, required = TRUE) {
   required <- isTRUE(required)
 

@@ -51,8 +51,9 @@ Subsets are connected components in the observation design graph. The graph
 links \code{Person} and all modeled facet levels that co-occur in an observation.
 A single co-observation graph component does not prove common-scale
 identification; shared other facets can conceal confounded panels. Consult
-the fitted estimability audit. Multiple graph subsets require external
-anchoring or a deliberate separate-calibration design justifies it.
+the fitted estimability audit. Disconnected graphs need an explicit
+linking justification, such as defensible anchors or population assumptions,
+or separate calibrations. The graph alone does not assess those assumptions.
 }
 \examples{
 # Saved synthetic JML/RSM analysis of example_core.

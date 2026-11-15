@@ -18,7 +18,7 @@
 \method{plot}{mfrm_imputed_clusters}(x, ids = NULL, labels = NULL, draw = TRUE, preset = "standard", ...)
 }
 \arguments{
-\item{x}{An object returned by \code{\link[=mfrm_cluster]{mfrm_cluster()}} or
+\item{x}{An object returned by \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}} or
 \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, as appropriate.}
 
 \item{type}{For a single partition, \code{"silhouette"} or \code{"profile"}.}
@@ -44,9 +44,10 @@ entity IDs in the desired display order. Selection affects only the view,
 not clustering or the denominator. By default all IDs appear in input order.}
 }
 \value{
-Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts the plotted
+Invisibly, an \code{mfrm_plot_data} object. Its \code{data} contains the plotted
 table or matrix, title, subtitle, legend, and excluded IDs. Heatmaps also
-retain the displayed IDs and the number of imputations. Profile plots also retain
+retain the displayed IDs and the number of imputations. Use \code{\link[=plot_data]{plot_data()}}
+to extract this payload for custom graphics. Profile plots also retain
 \code{observations}: original-unit entity values and group/exclusion status,
 suitable for custom distribution plots; see \code{\link[=plot_data]{plot_data()}}.
 \code{\link[=as_ggplot]{as_ggplot()}} converts imputation co-membership heatmaps using the saved
@@ -89,7 +90,7 @@ These fractions describe sensitivity to imputations under fixed settings,
 not membership probabilities, sampling stability, or a consensus partition.
 Rows and columns follow input order or explicit \code{ids}; no hierarchical
 clustering is performed. PAM is nonhierarchical and these plots do not
-provide a dendrogram. Use \code{mfrm_cluster(..., method = "hierarchical")} for a separate
+provide a dendrogram. Use \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} for a separate
 hierarchical analysis and its dendrogram.
 }
 \section{Session plot defaults}{
@@ -103,14 +104,14 @@ precedence, and appearance when saving or reusing a plot.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_clusters", run.dontrun = TRUE)
 \dontrun{
 if (requireNamespace("cluster", quietly = TRUE)) {
   raters <- data.frame(Rater = paste0("R", 1:6),
     ExperienceYears = c(1, 2, 3, 12, 13, 14),
     Specialty = factor(rep(c("Language", "Science"), each = 3)))
-  groups <- mfrm_cluster(method = "pam", mfrm_features(raters, "Rater",
+  groups <- mfrm_cluster_pam(mfrm_features(raters, "Rater",
     c("ExperienceYears", "Specialty")), k = 2)
   plot(groups)
   plot(groups, type = "profile", feature = "ExperienceYears")
@@ -121,5 +122,5 @@ if (requireNamespace("cluster", quietly = TRUE)) {
 }
 }
 \seealso{
-\code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
+\code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
 }

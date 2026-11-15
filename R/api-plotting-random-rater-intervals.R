@@ -5,8 +5,8 @@
 #'   output. Bootstrap comparisons retain the interval view.
 #' @param comparison Show ordinary normal intervals from the same source fit.
 #' @param draw `FALSE` returns plotted data without opening a device.
-#' @return For `plot()`: Invisibly, a `ggplot` object. [plot_data()] extracts
-#'   exact bounds, availability, settings and the source estimates.
+#' @return For `plot()`: Invisibly, an `mfrm_plot_data` object with exact bounds, availability,
+#'   settings and the source estimates. Use [plot_data()] for custom graphics.
 #' @details For `plot()`: Arrows identify unbounded bootstrap endpoints. Their displayed ends
 #'   are plot limits, not finite interval limits. Ordinary intervals never
 #'   replace an unbounded bootstrap interval. These are pointwise prediction

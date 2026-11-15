@@ -115,7 +115,7 @@ unknown; the count is unavailable when no response can be evaluated.}
 \item{EvaluatedObservations, UnavailableObservations}{Responses whose
 rule outcome is determined or unavailable.}
 \item{AbsZThreshold, ProbThreshold}{Applied cutoff values.}
-\item{Rule}{"either" or "both".}
+\item{Rule}{"residual", "either", or "both".}
 }
 }
 
@@ -128,7 +128,7 @@ See \link{mfrmr_compatibility_layer} for migration instructions.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("unexpected_response_table", run.dontrun = TRUE)
 \dontrun{
 library(mfrmr)

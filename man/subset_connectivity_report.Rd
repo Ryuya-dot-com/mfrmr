@@ -89,11 +89,11 @@ rows are available here; review original missing assignments before fitting.
 No prefit result supplies an identification audit or model-readiness decision.
 \code{settings$is_disjoint} describes the source graph, even when subset filters
 omit components; compare source/retained subset counts. Filters do not establish
-linking. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} for a panel example.
+linking. See \href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html}{mfrmr-networks-and-reporting} for a panel example.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("subset_connectivity_report", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.

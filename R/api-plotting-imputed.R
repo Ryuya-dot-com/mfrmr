@@ -7,9 +7,9 @@
 #' @param title,subtitle Optional text; `NULL` omits it. The default subtitle
 #'   retains a notice when complete-data information is weak. Full cautions
 #'   remain in the returned plot data even with custom or omitted text.
-#' @return For `plot()`: Invisibly, a `ggplot` object; [plot_data()] extracts the
-#'   plotted `table`, exact contrast coefficients and inference settings.
-#'   The plot uses the saved pointwise MI interval
+#' @return For `plot()`: Invisibly, an `mfrm_plot_data` object containing the plotted `table`,
+#'   exact contrast coefficients and inference settings. Use [plot_data()] for
+#'   custom graphics. [as_ggplot()] uses the saved pointwise MI interval
 #'   endpoints; it does not substitute normal intervals from the standard errors.
 #'   Default and `component = "table"` retain the complete interval view.
 #'   Target order, contrasts, degrees of freedom, confidence level and
@@ -54,7 +54,23 @@ plot.mfrm_pooled <- function(x, draw = TRUE, preset = "standard",
     cautions = x$cautions, notes = x$notes, information_review = x$information_review,
     subtitle = subtitle, xlab = "Estimate (logits)", preset = style$name,
     caption = "Open diamonds: fixed targets without intervals; crosses: unavailable intervals; arrows in ggplot: infinite endpoints, not finite bounds."))
-  .mfrm_finalize_ggplot(out, draw = draw)
+  if (!draw) return(invisible(out))
+  apply_plot_preset(style)
+  old <- graphics::par(mar = c(4.5, 10, 1.5, 2))
+  on.exit(graphics::par(old), add = TRUE)
+  y <- rev(seq_len(nrow(tab)))
+  limits <- range(c(0, tab$Estimate, tab$Lower, tab$Upper), finite = TRUE)
+  if (diff(limits) == 0) limits <- limits + c(-0.1, 0.1)
+  fixed <- tab$Status == "fixed"
+  plot(tab$Estimate, y, xlim = limits, ylim = c(0.5, nrow(tab) + 0.5),
+    pch = ifelse(fixed, 5, ifelse(is.na(tab$Lower) | is.na(tab$Upper), 4, 16)),
+    col = style$accent_primary, yaxt = "n",
+    xlab = "Estimate (logits)", ylab = "", main = "")
+  abline(v = 0, col = style$grid, lty = 2)
+  segments(tab$Lower[!fixed], y[!fixed], tab$Upper[!fixed], y[!fixed],
+    col = style$accent_primary, lwd = 2)
+  axis(2, at = y, labels = tab$Target, las = 1)
+  invisible(out)
 }
 
 .mfrmr_gg_pooled <- function(x) {

@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-reports.R
 \name{data_quality_report}
 \alias{data_quality_report}
-\title{Build a data quality summary report (preferred alias)}
+\title{Review data preparation and category support in a fitted model}
 \usage{
 data_quality_report(
   fit,
@@ -44,7 +44,9 @@ A named list with data-quality report components. Class:
 \code{mfrm_data_quality}.
 }
 \description{
-Build a data quality summary report (preferred alias)
+Summarize the rows and category support retained by \code{\link[=fit_mfrm]{fit_mfrm()}}. Optional
+raw data allow comparison with the fitted design. For checks before fitting,
+use \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}.
 }
 \details{
 \code{summary(out)} is supported through \code{summary()}.
@@ -104,12 +106,15 @@ becoming a distinct response model.
 \section{Typical workflow}{
 
 \enumerate{
-\item Run \code{data_quality_report(...)} with raw data.
+\item Before fitting, review raw ratings with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}. After
+fitting, use \code{out <- data_quality_report(fit)}; pass \code{data} and its
+column names when an additional raw-data comparison is needed.
 \item Check \code{summary(out)} and \code{plot(out, type = "dashboard")}, then inspect
 \code{quality_flags}, score-support, score-map, facet-response-pattern, and missing/unknown element
 sections as needed.
-\item Resolve missing values, score-support gaps, and sparse categories before
-final estimation/reporting.
+\item Investigate flagged rows and category support before reporting. Revise
+data or the rubric only with substantive justification, then refit if
+those analysis inputs change.
 }
 }
 

@@ -48,8 +48,7 @@ test_that("corrected JML retains its estimator through public output and saved e
   if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) {
     for(type in c("slopes","locations","steps")) {
       p <- plot(res,type=type,draw=FALSE)
-      expect_s3_class(p,"ggplot")
-      expect_s3_class(attr(p,"mfrmr_plot_data"),"mfrm_plot_data")
+      expect_s3_class(p,"mfrm_plot_data")
       if(requireNamespace("ggplot2",quietly=TRUE)) {
         g <- as_ggplot(p)
         expect_s3_class(g,"ggplot")
@@ -57,9 +56,9 @@ test_that("corrected JML retains its estimator through public output and saved e
       }
     }
     distribution <- plot(fit,style="distribution",draw=FALSE)
-    expect_s3_class(distribution,"ggplot")
-    expect_false(grepl("prior",plot_data(distribution,"caption"),ignore.case=TRUE))
-    expect_gt(plot_data(distribution,"display")$limits[1],0)
+    expect_s3_class(distribution,"mfrm_plot_data")
+    expect_false(grepl("prior",distribution$data$caption,ignore.case=TRUE))
+    expect_gt(distribution$data$display$limits[1],0)
     report <- mfrm_report(res)
     expect_s3_class(report,"mfrm_report")
     expect_match(report$markdown,"No confidence intervals")
@@ -80,8 +79,7 @@ test_that("corrected JML retains its estimator through public output and saved e
     replay <- exported$written_files$Path[exported$written_files$Component=="replay_code"]
     withr::with_dir(path,sys.source(replay,envir=new.env(parent=globalenv())))
   } else {
-    expect_s3_class(plot(res,type="slopes",draw=FALSE),"ggplot")
-    expect_s3_class(attr(plot(res,type="slopes",draw=FALSE),"mfrmr_plot_data"),"mfrm_plot_data")
+    expect_s3_class(plot(res,type="slopes",draw=FALSE),"mfrm_plot_data")
   }
   # Ordinary inference/diagnostics must never be attached to these roots.
   expect_error(confint(fit),"corrected JML")
@@ -131,7 +129,29 @@ test_that("unresolved corrected roots remain reportable without optimizer placeh
   expect_true(all(is.na(fit$facets$person$Estimate)))
   expect_true(length(fit$jml_adjustment$attempts)>=2L)
   expect_false(fit$summary$Converged)
-  expect_false(any(mfrm_results(fit)$plot_map$Available))
+  res <- mfrm_results(fit)
+  expect_false(any(res$plot_map$Available))
+  expect_true(all(res$status$Status[res$status$Section %in% c("plots","precision")] == "not_available"))
+  expect_true(all(nzchar(res$status$Detail[res$status$Section %in% c("plots","precision")])))
+  expect_match(fit$summary$CovarianceReason,"No supported local solution")
+  expect_identical(summary(res)$overview$CovarianceReason,
+    summary(fit)$tables$uncertainty$Reason)
+  # Replay a saved pre-fix fit without changing its numerical record.
+  legacy <- fit
+  legacy$summary$CovarianceReason <- legacy$jml_adjustment$covariance$reason <- ""
+  legacy_bytes <- serialize(legacy,NULL)
+  legacy_res <- mfrm_results(legacy)
+  expect_identical(legacy_res$status,res$status)
+  expect_identical(summary(legacy_res)$overview$CovarianceReason,
+    summary(fit)$tables$uncertainty$Reason)
+  expect_identical(serialize(legacy,NULL),legacy_bytes)
+  for (state in c("no_local_root","multiple_roots")) {
+    legacy$jml_adjustment$point$status <- state
+    review <- summary(legacy)
+    expect_identical(review$tables$uncertainty$Reason,review$decision$Interpretation)
+    expect_identical(mfrm_results(legacy)$plot_map$Detail,
+      rep(review$decision$Interpretation,3L))
+  }
   expect_match(mfrm_report(mfrm_results(fit))$markdown,"No supported local solution")
   expect_error(plot(fit,draw=FALSE),"No unambiguous")
 })
@@ -153,5 +173,5 @@ test_that("covariance failure cannot erase corrected public point estimates", {
   expect_true(all(res$plot_map$Available))
   expect_identical(res$status$Status[res$status$Section=="precision"],"not_available")
   expect_match(mfrm_report(res)$markdown,"Controlled covariance failure")
-  expect_s3_class(plot(res,draw=FALSE),"ggplot")
+  expect_s3_class(plot(res,draw=FALSE),"mfrm_plot_data")
 })

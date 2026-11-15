@@ -31,10 +31,10 @@ future plan, with at most \code{ncol} columns.}
 \item{...}{Reserved; additional arguments are rejected.}
 }
 \value{
-Invisibly, a \code{ggplot} object; \code{\link[=plot_data]{plot_data()}} retains the exact \code{table},
+Invisibly, an \code{mfrm_plot_data} object retaining the exact \code{table},
 \code{unavailable} rows, source \code{intervals}, \code{design_grid}, \code{weights} and \code{notes}.
-\code{\link[=as_ggplot]{as_ggplot()}} remains idempotent on the returned object.
-No title or explanatory footnote is drawn.
+Use \code{\link[=plot_data]{plot_data()}} to inspect them and \code{\link[=as_ggplot]{as_ggplot()}} on the returned object
+for an editable plot. No title or explanatory footnote is drawn.
 }
 \description{
 Compare future plans on one shared coefficient or SEM axis. Each plan has adjacent
@@ -76,7 +76,7 @@ and \code{IntervalBasis} in the source table distinguish them. Drawing the two
 together does not make the original sampling SE an adjusted-estimator SE.
 Unresolved numerical candidates are retained in the source object but
 are not drawn as accepted confidence bounds.
-For score and MLS intervals, an empty confidence set is labeled
+For exact-F, score and MLS intervals, an empty confidence set is labeled
 \code{"Empty set"}; it is distinct from an estimated coefficient of zero.
 MLS rows with \code{FormulaComplete = FALSE} retain candidate values where
 a squared width is undefined. Their conservative bounds are drawn, while
@@ -89,7 +89,7 @@ precedence, and appearance when saving or reusing a plot.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_dstudy_intervals", run.dontrun = TRUE)
 \dontrun{
 tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))

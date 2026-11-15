@@ -10,8 +10,6 @@ vignette: >
 ```{r, include = FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
@@ -235,44 +233,6 @@ means. In a joint model, do not assign conflicting Person-level year
 covariates to a common recording rated in several years. Its rating occasion
 is not a different underlying performance.
 
-For joint RSM/PCM MML, a cohort predictor belongs to the performance's
-original cohort, even when that recording is rated again later. The estimated
-cohort difference and panel difference then rely on common criterion/step
-parameters and the specified conditional-normal population. The current
-alternative with a directly anchored, uncentered Rater facet supports only
-an intercept-only population with an explicitly fixed SD. It cannot be
-substituted for this cohort-regression model. Retaining the default whole-facet
-zero sum while fixing the old panel would also constrain the new panel's mean.
-
-Distinguish ability-population SD from the SE of an estimated cohort difference,
-the spread of rater severities, and the observed score SD. With a cohort
-predictor, native RSM/PCM MML estimates different conditional means but one
-shared residual variance. Setting `population_sd` instead supplies a known
-common SD; it does not estimate separate annual variances. In a simulation,
-changing the generating SD while estimating that common variance tests a
-different question from fixing the fitted SD at a supplied value. Generating
-different annual SDs tests a violation of the shared-variance assumption.
-When planning common recordings, also distinguish the population's SD from
-the realized ability spread of the selected recording subset.
-Increasing the recording count can improve precision without resolving a
-misspecified population model. Assess the variance assumption separately
-from whether a reported interval is narrow or numerically available.
-
-A multiple-group population model can estimate annual residual variances
-separately while retaining common calibration parameters; see the
-[TAM reference manual](https://cran.r-universe.dev/TAM/doc/manual.html)
-(`tam.mml`, Details, multiple-group model). Separate annual fits without a
-shared scale are not equivalent to this joint model. The additional variance
-parameter also needs information: in a small cohort, its estimate can approach
-zero. At that boundary, an ordinary interior-point Wald interval is not
-justified. For annual or panel contrasts, interval calculations must account
-for covariance with the estimated calibration and population parameters.
-An external model's point estimates or quick SEs alone do not establish the
-coverage of those contrast intervals. This multiple-group extension is not a
-native RSM/PCM option in the current development version.
-Compare bias and RMSE as well as interval width, availability and coverage;
-an improvement in one does not establish an improvement in the others.
-
 ### Read the existing helper results for their stated purpose
 
 | Output | What it shows | What it does not establish |
@@ -294,23 +254,6 @@ example with additional recordings not used to teach the reference scores.
 If the contest is rated live but the calibration uses video, paired live/video
 ratings of some performances can help assess whether the estimated severity
 transfers. Repeated ratings can be dependent even when their IDs are correct.
-
-Common recordings do not always separate presentation mode from a panel change.
-Consider this particular assignment, where the old ratings were made live:
-
-| Rating occasion | New cohort (`C`) | New panel (`B`) | Video (`V`) |
-| --- | --- | --- | --- |
-| Old panel, old live performance | 0 | 0 | 0 |
-| New panel, recording of that old performance | 0 | 1 | 1 |
-| New panel, new live performance | 1 | 1 | 0 |
-
-Here `B = C + V` in every row. A common new-panel severity shift, a cohort
-mean difference and a video effect cannot all be estimated freely. More
-recordings with the same assignment do not remove this alias. Assuming the
-video effect is zero identifies a more restricted model; it does not test
-that assumption. Additional live/video crossing for the same performances
-and judges can break the design alias, but repeated-rating dependence,
-order effects and the resulting precision still require assessment.
 
 Annual-difference uncertainty needs the covariance between the relevant
 estimates, or propagation of reference-calibration uncertainty where applicable.
@@ -444,7 +387,7 @@ results bundle without reconstructing the model.
 
 If only a frozen calibration survives, retain its original scoring meaning.
 Generic old identification labels are insufficient to infer its centering
-convention. See [Portable calibration and fresh-session scoring](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-portable-calibration.html)
+convention. See [mfrmr-portable-calibration](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-portable-calibration.html)
 for re-extraction and validation; changing a label is not recalibration.
 Earlier MML fits containing Person anchors require special review because
 those values were ignored. Current fitting rejects them; choosing
@@ -685,11 +628,8 @@ matched example has no excluded rows; this does not establish independence.
 Response exclusions and unavailable *comparisons* are different stages.
 
 For a grid of the same pairwise differences, use
-`plot(dff_resid, type = "heatmap", metric = "contrast")`. To compare two
-subgroups directly on a two-dimensional coordinate plane (with aligned X/Y
-marginal histograms when at least eight finite comparable levels exist and an
-identity reference line), use `plot(dff_resid, type = "scatter")`. The default
-heatmap instead shows each group's mean observed-minus-expected score. That cell mean
+`plot(dff_resid, type = "heatmap", metric = "contrast")`. The default heatmap
+instead shows each group's mean observed-minus-expected score. That cell mean
 can appear even below `min_obs`; read its saved `pairs$sparse` and counts.
 The scaled-residual (`metric = "t"`) and pairwise-contrast routes withhold
 values below this threshold. Missing cells/contrasts stay missing, not zero.
@@ -1623,7 +1563,7 @@ Interpretation:
 - Keep this route separate from residual screening with `estimate_bias()`.
 - Match observations, score coding, constraints, population specification and
   integration settings. Both example fits use 31 points; that is the minimum
-  comparison gate, not proof of sufficient integration accuracy. Check stability
+  comparison requirement, not proof of sufficient integration accuracy. Check stability
   of likelihood differences and conclusions with a finer common grid when needed.
 - AIC, BIC and SABIC compare eligible candidate models; BIC uses the number of
   Persons, not rating rows. Ranking and nested-LRT eligibility are separate.

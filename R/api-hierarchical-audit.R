@@ -127,8 +127,12 @@
 #' - `"Partially nested"`: 0.50 <= index < 0.95.
 #' - `"Crossed"`: index < 0.50.
 #'
-#' The direction column records which facet is nested in which, or
-#' `"crossed"` when neither direction is above 0.95.
+#' These are package screening bands, not tests of exact nesting or full
+#' crossing. `Direction` is `"isomorphic"` when both indices are at least
+#' 0.95, names a nesting direction when only that index is at least 0.95,
+#' and is `"crossed"` when both are below 0.95. Thus the direction can say
+#' `"crossed"` even when a classification is `"Partially nested"`.
+#' Zero-entropy cases have `Direction = "insufficient_data"`.
 #'
 #' @section Missing values and weights:
 #' Each pair uses rows observed on both columns and having positive weight.
@@ -142,18 +146,18 @@
 #' the observed pattern represents the missing ratings.
 #'
 #' @section Interpreting output:
-#' A `Direction` value of `"Rater nested in Region"` means that every
-#' rater appears in exactly one region (or very close to it). For
-#' additive fixed-effects MFRM, this is a concern: the severity of a
-#' rater is confounded with region-level variance that the model cannot
-#' partition. Consider reporting the nesting direction explicitly and,
-#' when relevant, refitting without the nested facet or moving to a
-#' hierarchical estimation tool (e.g. `lme4::lmer`, `brms`, `TAM`) to
-#' separate the variance components.
+#' Exact nesting of Rater within Region confounds unrestricted additive
+#' rater and region effects. A near-nesting label instead signals limited
+#' overlap; inspect the actual cross-tabulation and model design. The index
+#' alone establishes neither rank deficiency nor identification.
 #'
-#' `Direction = "crossed"` is the most common reading when both nesting
-#' indices are below 0.5; the two facets largely co-occur at multiple
-#' combinations, which is the setting Linacre (1989) assumed.
+#' A hierarchical model can separate within- and between-group variation
+#' under additional distributional assumptions and adequate replication;
+#' switching software does not supply missing design information. Dropping
+#' a facet also changes the model and interpretation. Report the observed
+#' design and justify the chosen parameterization. A `"crossed"` label
+#' does not establish that every combination was observed or that the full
+#' many-facet design is connected.
 #'
 #' @section Typical workflow:
 #' 1. Call `detect_facet_nesting(data, facets)` before fitting.
@@ -613,18 +617,22 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' The `Interpretation` column uses **two scales** so the same numeric
 #' ICC reads correctly for each facet role:
 #'
-#' - For the `person` facet, higher ICC = better. Koo & Li (2016, p. 161)
-#'   bands are applied: `< 0.5` Poor, `[0.5, 0.75]` Moderate,
-#'   `(0.75, 0.9]` Good, `> 0.9` Excellent. The strict `>` boundary at
-#'   0.9 follows Koo & Li's wording "values greater than 0.90 indicate
-#'   excellent reliability" (so an ICC of exactly 0.9 reads as Good).
-#' - For non-person facets (Rater, Criterion, Task, Region, ...) the
-#'   same numeric value is a **variance share**: how much of the total
-#'   observed score variance sits at that facet. The bands used here
-#'   are different (`Trivial share` < 0.05, `Small share` < 0.15,
-#'   `Moderate share` < 0.30, `Large share` >= 0.30), and a large
-#'   rater share is generally *bad* news (raters disagree about
-#'   averages), not good news.
+#' - For `person`, the stored labels apply the Koo & Li (2016) bands to
+#'   the point estimate: `< 0.5` Poor, `[0.5, 0.75]` Moderate,
+#'   `(0.75, 0.9]` Good and `> 0.9` Excellent. These are descriptive labels,
+#'   not universal acceptance rules. The share depends on Person heterogeneity
+#'   as well as other sources of variation. It is not automatically the
+#'   reliability of a composite, a mean over ratings or a different design.
+#' - Other facets use package-defined variance-share bands: `Trivial share`
+#'   < 0.05, `Small share` < 0.15, `Moderate share` < 0.30 and
+#'   `Large share` >= 0.30. These cutoffs are not supplied by Koo & Li.
+#'   A larger rater component describes systematic differences in score
+#'   levels; its practical importance depends on the design and decision.
+#'   Criterion or task variation is not inherently undesirable.
+#'
+#' This is a Gaussian random-intercept model of numeric scores, not an
+#' ordinal response model or an automatic selection among standard ICC forms.
+#' State the fitted formula, score coding, target and uncertainty when reporting.
 #'
 #' The `InterpretationScale` column explicitly records which scale
 #' applies to each row, so downstream reporting does not confuse the
@@ -712,7 +720,7 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' Software, 67*(1), 1-48.
 #'
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("compute_facet_icc", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -721,11 +729,11 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #'                            score = "Score", person = "Person")
 #'   print(icc)
 #'   # Look for:
-#'   # - Person ICC reads as Koo & Li (2016) reliability: < 0.5 poor,
-#'   #   0.5-0.75 moderate, 0.75-0.9 good, > 0.9 excellent.
+#'   # - Person labels apply Koo & Li bands descriptively to the point.
+#'   #   Check the model, Person heterogeneity and interval before interpreting.
 #'   # - Rater / Criterion ICC reads as variance share, NOT reliability;
 #'   #   small values indicate limited systematic facet differences, and
-#'   #   shares > 0.10 hint at meaningful systematic facet differences.
+#'   #   practical importance is not determined by a universal share cutoff.
 #'   # - `Interpretation` summarises the variance-share band the helper
 #'   #   has assigned to each row.
 #' }
@@ -1138,7 +1146,7 @@ compute_facet_icc <- function(data, facets, score,
 #' 183-193. \url{https://www150.statcan.gc.ca/n1/pub/12-001-x/2004002/article/7751-eng.pdf}
 #'
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("compute_facet_design_effect", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -1312,9 +1320,10 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #' - `design_effect`: per-facet design-effect approximations and descriptive
 #'   equivalent row counts; not precision estimates for the full design.
 #' - `connectivity`: number of bipartite components linking
-#'   Person x facet levels. A single component is required for a
-#'   common measurement scale; multiple components indicate a
-#'   disconnected design.
+#'   Person x facet levels. Multiple components indicate no observed
+#'   links between those parts of the design. Their comparison may rely on
+#'   external anchors or population assumptions. A single component alone
+#'   does not establish identification of the full many-facet model.
 #'
 #' @section Typical workflow:
 #' 1. Optional: fit the MFRM with `fit_mfrm()`.
@@ -1387,7 +1396,7 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #' research. *Journal of Chiropractic Medicine, 15*(2), 155-163.
 #'
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("analyze_hierarchical_structure", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -1617,10 +1626,9 @@ summary.mfrm_facet_nesting <- function(object, ...) {
 #' @param top_n Optional integer; trim the y-axis to the `top_n`
 #'   smallest level counts per facet. `NULL` (default) keeps all.
 #' @param preset One of `"standard"`, `"publication"`, `"compact"`, `"monochrome"`.
-#' @param draw Logical; print the `ggplot` figure when `TRUE`.
 #' @param ... Reserved.
-#' @return For `plot()`: Invisibly, a `ggplot` object. [plot_data()] extracts the
-#'   plotted table, thresholds, and interpretation `notes`.
+#' @return For `plot()`: Invisibly, the data.frame used for the plot, with the review's
+#'   interpretation limits in its `notes` attribute.
 #' @seealso [facet_small_sample_review()].
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
@@ -1631,59 +1639,84 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
                                                      "publication",
                                                      "compact",
                                                      "monochrome"),
-                                          draw = TRUE,
                                           ...) {
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   style <- resolve_plot_preset(preset)
-  tbl <- as.data.frame(x$table %||% data.frame(), stringsAsFactors = FALSE)
-  thr <- x$thresholds %||% list(sparse = 10, marginal = 30, standard = 50)
-  if (!is.null(tbl) && nrow(tbl) > 0L) {
-    band_colors <- c(
-      sparse   = "#D73027",
-      marginal = "#FDAE61",
-      standard = "#66BD63",
-      strong   = "#1A9850"
-    )
-    tbl$BarColor <- band_colors[tbl$SampleCategory]
-    tbl$BarColor[is.na(tbl$BarColor)] <- style$neutral
-    if (!is.null(top_n) && is.finite(top_n) && top_n > 0) {
-      tbl <- tbl |>
-        dplyr::group_by(Facet) |>
-        dplyr::slice_min(order_by = .data$N, n = as.integer(top_n),
-                         with_ties = FALSE) |>
-        dplyr::ungroup() |>
-        as.data.frame(stringsAsFactors = FALSE)
-    }
-    tbl <- tbl[order(tbl$Facet, tbl$N), , drop = FALSE]
-  }
+  tbl <- as.data.frame(x$table, stringsAsFactors = FALSE)
   attr(tbl, "notes") <- x$notes
-  out <- new_mfrm_plot_data(
-    "facet_sample_review",
-    list(
-      table = tbl,
-      data = tbl,
-      thresholds = thr,
-      notes = x$notes,
-      title = "Facet sample-size review",
-      preset = style$name
-    )
+  if (is.null(tbl) || nrow(tbl) == 0L) {
+    plot.new()
+    text(0.5, 0.5, "Review table empty.")
+    return(invisible(tbl))
+  }
+  band_colors <- c(
+    sparse   = "#D73027",
+    marginal = "#FDAE61",
+    standard = "#66BD63",
+    strong   = "#1A9850"
   )
-  .mfrm_finalize_ggplot(out, draw = draw)
+  tbl$BarColor <- band_colors[tbl$SampleCategory]
+  tbl$BarColor[is.na(tbl$BarColor)] <- style$neutral
+  if (!is.null(top_n) && is.finite(top_n) && top_n > 0) {
+    tbl <- tbl |>
+      dplyr::group_by(Facet) |>
+      dplyr::slice_min(order_by = .data$N, n = as.integer(top_n),
+                       with_ties = FALSE) |>
+      dplyr::ungroup() |>
+      as.data.frame(stringsAsFactors = FALSE)
+  }
+  tbl <- tbl[order(tbl$Facet, tbl$N), , drop = FALSE]
+  labels <- paste0(tbl$Facet, " / ", tbl$Level)
+
+  thr <- x$thresholds %||% list(sparse = 10, marginal = 30, standard = 50)
+  xmax <- max(c(tbl$N, as.numeric(thr$standard), 1), na.rm = TRUE) * 1.1
+
+  old_par <- graphics::par()["mar"]
+  on.exit(graphics::par(old_par), add = TRUE)
+  graphics::par(mar = c(4, max(8, min(18, max(nchar(labels)) * 0.55)), 3, 1))
+  barplot(
+    height = tbl$N,
+    names.arg = labels,
+    horiz = TRUE,
+    las = 1,
+    xlim = c(0, xmax),
+    col = tbl$BarColor,
+    border = NA,
+    xlab = "Retained rating rows per level",
+    main = "",
+    cex.names = 0.8
+  )
+  abline(
+    v = c(as.numeric(thr$sparse),
+          as.numeric(thr$marginal),
+          as.numeric(thr$standard)),
+    lty = 2, col = style$neutral
+  )
+  legend(
+    "bottomright", bty = "n", cex = 0.8,
+    legend = c(sprintf("< %s sparse", thr$sparse),
+               sprintf("< %s marginal", thr$marginal),
+               sprintf("< %s standard", thr$standard),
+               "strong"),
+    fill = unname(band_colors)
+  )
+  attr(tbl, "notes") <- x$notes
+  invisible(tbl)
 }
 
 #' Plot the pairwise nesting index matrix
 #'
 #' Renders the directed nesting index
 #' \eqn{1 - H(B \mid A)/H(B)} as a heatmap between facet pairs,
-#' highlighting fully nested relationships close to 1. Colour scale
-#' runs from 0 (crossed, white / cold) to 1 (fully nested, dark).
+#' with larger values indicating less conditional uncertainty about B given A.
+#' Exactly 1 means B is determined by A when H(B) is positive; near 1 is
+#' not exact nesting. Zero means empirical independence, not necessarily a
+#' completely crossed design. Undefined zero-entropy cases remain unavailable.
 #'
 #' @param x An `mfrm_facet_nesting` object.
 #' @param preset Plot preset.
-#' @param draw Logical; print the `ggplot` figure when `TRUE`.
 #' @param ... Reserved.
-#' @return Invisibly, a `ggplot` object. [plot_data()] extracts the rendered
-#'   nesting matrix and pairwise summary table.
+#' @return Invisibly, the matrix rendered.
 #' @seealso [detect_facet_nesting()],
 #'   [analyze_hierarchical_structure()].
 #' @section Session plot defaults:
@@ -1695,36 +1728,50 @@ plot.mfrm_facet_nesting <- function(x,
                                                "publication",
                                                "compact",
                                                "monochrome"),
-                                    draw = TRUE,
                                     ...) {
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   style <- resolve_plot_preset(preset)
-  pair <- as.data.frame(x$pairwise_table %||% data.frame(), stringsAsFactors = FALSE)
-  m <- NULL
-  if (!is.null(pair) && nrow(pair) > 0L) {
-    facets <- x$facets
-    n <- length(facets)
-    m <- matrix(NA_real_, nrow = n, ncol = n,
-                dimnames = list(facets, facets))
-    for (i in seq_len(nrow(pair))) {
-      a <- pair$FacetA[i]; b <- pair$FacetB[i]
-      # nesting index A in B at m[a, b]
-      m[a, b] <- pair$NestingIndex_AinB[i]
-      m[b, a] <- pair$NestingIndex_BinA[i]
-    }
-    diag(m) <- 1
+  pair <- as.data.frame(x$pairwise_table, stringsAsFactors = FALSE)
+  if (is.null(pair) || nrow(pair) == 0L) {
+    plot.new()
+    text(0.5, 0.5, "At least two facets required.")
+    return(invisible(NULL))
   }
-  out <- new_mfrm_plot_data(
-    "facet_nesting",
-    list(
-      matrix = m,
-      pairwise_table = pair,
-      facets = x$facets,
-      title = "Pairwise facet nesting index",
-      preset = style$name
-    )
+  facets <- x$facets
+  n <- length(facets)
+  m <- matrix(NA_real_, nrow = n, ncol = n,
+              dimnames = list(facets, facets))
+  for (i in seq_len(nrow(pair))) {
+    a <- pair$FacetA[i]; b <- pair$FacetB[i]
+    # nesting index A in B at m[a, b]
+    m[a, b] <- pair$NestingIndex_AinB[i]
+    m[b, a] <- pair$NestingIndex_BinA[i]
+  }
+  diag(m) <- 1
+
+  cols <- grDevices::hcl.colors(20, palette = "Blues 3", rev = TRUE)
+  old_par <- graphics::par()["mar"]
+  on.exit(graphics::par(old_par), add = TRUE)
+  graphics::par(mar = c(5, 5, 3, 2))
+  image(
+    x = seq_len(n), y = seq_len(n),
+    z = m,
+    col = cols,
+    zlim = c(0, 1),
+    xaxt = "n", yaxt = "n",
+    xlab = "Nested in (column facet)",
+    ylab = "Nested facet (row)",
+    main = ""
   )
-  .mfrm_finalize_ggplot(out, draw = draw)
+  axis(1, at = seq_len(n), labels = facets, las = 2, cex.axis = 0.8)
+  axis(2, at = seq_len(n), labels = facets, las = 1, cex.axis = 0.8)
+  for (i in seq_len(n)) for (j in seq_len(n)) {
+    if (is.finite(m[i, j])) {
+      text(j, i, sprintf("%.2f", m[i, j]), cex = 0.75,
+                     col = if (m[i, j] > 0.6) "white" else "black")
+    }
+  }
+  invisible(m)
 }
 
 #' @export
@@ -1897,13 +1944,10 @@ summary.mfrm_hierarchical_structure <- function(object, ...) {
 
 #' @export
 plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
-                                             pair = NULL,
-                                             preset = c("standard", "publication", "compact", "monochrome"),
-                                             draw = TRUE,
-                                             ...) {
+                                             pair = NULL, ...) {
   type <- match.arg(type)
-  if (missing(preset)) preset <- .mfrm_default_plot_preset()
-  style <- resolve_plot_preset(preset)
+  # A saved return value can be plotted again with a different view.
+  attr(x, "mfrmr_notes") <- NULL
   if (type == "crosstab") {
     if (length(x$crosstabs) == 0L) {
       stop("No cross-tabulations available.", call. = FALSE)
@@ -1925,58 +1969,71 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
     rnames <- as.character(mat$LevelA)
     mat_num <- as.matrix(mat[, -1L, drop = FALSE])
     rownames(mat_num) <- rnames
-    out <- new_mfrm_plot_data(
-      "hierarchical_structure",
-      list(
-        plot = "crosstab",
-        matrix = mat_num,
-        table = tbl,
-        pair = pair_name,
-        xlab = tbl$FacetA[1L],
-        ylab = tbl$FacetB[1L],
-        title = paste("Facet cross-tabulation:", pair_name),
-        preset = style$name
-      )
+    image(
+      x = seq_len(nrow(mat_num)),
+      y = seq_len(ncol(mat_num)),
+      z = mat_num,
+      xaxt = "n", yaxt = "n",
+      xlab = tbl$FacetA[1L],
+      ylab = tbl$FacetB[1L],
+      main = "",
+      col = grDevices::hcl.colors(20, palette = "YlGnBu", rev = TRUE)
     )
-    return(.mfrm_finalize_ggplot(out, draw = draw))
-  }
-
-  if (is.null(x$icc) || nrow(x$icc) == 0L) {
-    stop("No ICC table available; re-run with compute_icc = TRUE and lme4 installed.",
-         call. = FALSE)
-  }
-  icc_tbl <- x$icc
-  .check_icc_intervals(icc_tbl)
-  has_ci <- all(c("ICC_CI_Lower", "ICC_CI_Upper") %in% names(icc_tbl)) &&
-    any(is.finite(icc_tbl$ICC_CI_Lower) & is.finite(icc_tbl$ICC_CI_Upper))
-  ci_level <- if (has_ci && "ICC_CI_Level" %in% names(icc_tbl)) {
-    suppressWarnings(as.numeric(icc_tbl$ICC_CI_Level[1L]))
-  } else NA_real_
-  main_txt <- "Facet ICC (variance component share)"
-  if (has_ci && is.finite(ci_level)) {
-    main_txt <- sprintf("%s\n%g%% parametric bootstrap CI",
-                        main_txt, 100 * ci_level)
-  }
-  missing_ci <- !is.finite(icc_tbl$ICC_CI_Lower) | !is.finite(icc_tbl$ICC_CI_Upper)
-  if ("ICC_CI_Method" %in% names(icc_tbl) && any(missing_ci & icc_tbl$ICC_CI_Method == "boot", na.rm = TRUE)) {
-    main_txt <- paste0(main_txt, "\nIntervals unavailable: ",
-                       paste(unique(icc_tbl$ICC_CI_Status[missing_ci]), collapse = "; "))
-  }
-  notes_df <- data.frame(
-    Type = "description", Text = main_txt, stringsAsFactors = FALSE
-  )
-  out <- new_mfrm_plot_data(
-    "hierarchical_structure",
-    list(
-      plot = "icc",
-      table = icc_tbl,
-      has_ci = has_ci,
-      ci_level = ci_level,
-      notes = notes_df,
-      title = "Facet ICC (variance component share)",
-      subtitle = main_txt,
-      preset = style$name
+    axis(1L, at = seq_len(nrow(mat_num)),
+                   labels = rownames(mat_num), las = 2L, cex.axis = 0.7)
+    axis(2L, at = seq_len(ncol(mat_num)),
+                   labels = colnames(mat_num), las = 2L, cex.axis = 0.7)
+  } else if (type == "icc") {
+    if (is.null(x$icc) || nrow(x$icc) == 0L) {
+      stop("No ICC table available; re-run with compute_icc = TRUE and lme4 installed.",
+           call. = FALSE)
+    }
+    icc_tbl <- x$icc
+    .check_icc_intervals(icc_tbl)
+    has_ci <- all(c("ICC_CI_Lower", "ICC_CI_Upper") %in% names(icc_tbl)) &&
+      any(is.finite(icc_tbl$ICC_CI_Lower) & is.finite(icc_tbl$ICC_CI_Upper))
+    ci_level <- if (has_ci && "ICC_CI_Level" %in% names(icc_tbl)) {
+      suppressWarnings(as.numeric(icc_tbl$ICC_CI_Level[1L]))
+    } else NA_real_
+    y_max <- max(
+      1,
+      max(c(icc_tbl$ICC, icc_tbl$ICC_CI_Upper), na.rm = TRUE) * 1.1
     )
-  )
-  .mfrm_finalize_ggplot(out, draw = draw)
+    main_txt <- "Facet ICC (variance component share)"
+    if (has_ci && is.finite(ci_level)) {
+      main_txt <- sprintf("%s\n%g%% parametric bootstrap CI",
+                          main_txt, 100 * ci_level)
+    }
+    missing_ci <- !is.finite(icc_tbl$ICC_CI_Lower) | !is.finite(icc_tbl$ICC_CI_Upper)
+    if (any(missing_ci & icc_tbl$ICC_CI_Method == "boot", na.rm = TRUE)) {
+      main_txt <- paste0(main_txt, "\nIntervals unavailable: ",
+                         paste(unique(icc_tbl$ICC_CI_Status[missing_ci]), collapse = "; "))
+    }
+    attr(x, "mfrmr_notes") <- data.frame(
+      Type = "description", Text = main_txt, stringsAsFactors = FALSE)
+    mids <- barplot(
+      height = icc_tbl$ICC,
+      names.arg = icc_tbl$Facet,
+      main = "",
+      ylab = "ICC",
+      ylim = c(0, y_max)
+    )
+    if (has_ci) {
+      valid <- is.finite(icc_tbl$ICC_CI_Lower) & is.finite(icc_tbl$ICC_CI_Upper)
+      nonzero <- valid & icc_tbl$ICC_CI_Upper > icc_tbl$ICC_CI_Lower
+      if (any(nonzero)) {
+        arrows(
+          x0 = mids[nonzero], y0 = icc_tbl$ICC_CI_Lower[nonzero],
+          x1 = mids[nonzero], y1 = icc_tbl$ICC_CI_Upper[nonzero],
+          angle = 90, code = 3, length = 0.05, col = "black", lwd = 1.5
+        )
+      }
+      flat <- valid & icc_tbl$ICC_CI_Upper == icc_tbl$ICC_CI_Lower
+      if (any(flat)) {
+        segments(mids[flat] - 0.05, icc_tbl$ICC_CI_Lower[flat],
+                           mids[flat] + 0.05, icc_tbl$ICC_CI_Upper[flat], lwd = 1.5)
+      }
+    }
+  }
+  invisible(x)
 }

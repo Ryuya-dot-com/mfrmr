@@ -110,8 +110,8 @@ settings and analysis data. \code{confint()} returns a two-column matrix with
 availability, method and Monte Carlo resolution attributes. No native
 pointers are stored; save with \code{saveRDS()}.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts
-exact bounds, availability, settings and the source estimates.
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object with exact bounds, availability,
+settings and the source estimates. Use \code{\link[=plot_data]{plot_data()}} for custom graphics.
 }
 \description{
 Regenerate persons, shared raters and scores on the observed assignment,

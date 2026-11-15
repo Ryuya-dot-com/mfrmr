@@ -8,9 +8,9 @@
 \usage{
 review_mfrm_anchors(
   data,
-  person = NULL,
-  facets = NULL,
-  score = NULL,
+  person,
+  facets,
+  score,
   anchors = NULL,
   group_anchors = NULL,
   weight = NULL,
@@ -25,8 +25,7 @@ review_mfrm_anchors(
   dummy_facets = NULL,
   category_policy = NULL,
   repeated_ratings = c("review", "independent"),
-  centering_scope = c("facet", "remainder", "anchor_origin"),
-  spec = NULL
+  centering_scope = c("facet", "remainder", "anchor_origin")
 )
 
 \method{summary}{mfrm_anchor_review}(object, digits = 3, top_n = 10, ...)
@@ -87,19 +86,20 @@ used in recommendations (default \code{10}).}
 
 \item{dummy_facets}{Facets to fix at zero.}
 
-\item{category_policy}{Optional explicit category choice: \code{"collapse"}
-or \code{"preserve"} (\code{NULL} uses \code{keep_original}).}
+\item{category_policy}{\code{"collapse"} maps category gaps to consecutive scores;
+\code{"preserve"} retains the ladder declared by \code{rating_min} and \code{rating_max}.
+This changes the fitted steps. \code{NULL} uses \code{keep_original} (default: collapse).
+A preserved, unobserved internal category prevents ordinary fitting.
+Use the same policy in data and anchor review.}
 
-\item{repeated_ratings}{Treatment of repeated Person-by-facet cells:
-\code{"review"} (default) or \code{"independent"}.}
+\item{repeated_ratings}{\code{"review"} retains repeated-cell warnings; \code{"independent"}
+declares distinct conditionally independent events without changing the
+likelihood. It does not demonstrate independence. Unsupported for two-family GPCM.}
 
-\item{centering_scope}{Facet-centering convention: \code{"facet"} (default),
-\code{"remainder"}, or \code{"anchor_origin"} (see \link{fit_mfrm_technical_details}).}
-
-\item{spec}{Optional named \code{list} of shared model-specification settings
-(the same 33-key \code{spec} accepted by \code{\link[=describe_mfrm_data]{describe_mfrm_data()}},
-\code{\link[=fit_mfrm]{fit_mfrm()}}, and \code{\link[=export_mfrm_model]{export_mfrm_model()}}). Explicit top-level arguments
-override matching entries in \code{spec}.}
+\item{centering_scope}{\code{"facet"} centers all levels, including anchors;
+\code{"remainder"} centers levels outside direct/group constraints.
+\code{"anchor_origin"} lets anchors replace centering for additive RSM/PCM JML.
+Supported combinations are given in \link{fit_mfrm_technical_details}.}
 
 \item{object}{Output from \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.}
 
@@ -122,7 +122,7 @@ or \code{"level_observations"}.}
 
 \item{label_angle}{X-axis label angle for bar plots.}
 
-\item{draw}{If \code{TRUE}, print the \code{ggplot} figure on the active graphics device.}
+\item{draw}{If \code{TRUE}, draw using base graphics.}
 }
 \value{
 A list of class \code{mfrm_anchor_review} with:
@@ -143,31 +143,23 @@ describing how the facet's origin is set
 
 For \code{summary()}: An object of class \code{summary.mfrm_anchor_review}.
 
-For \code{plot()}: A \code{ggplot} object (invisibly), with underlying plot
-tables accessible via \code{\link[=plot_data]{plot_data()}}.
+For \code{plot()}: A plotting-data object of class \code{mfrm_plot_data}.
 }
 \description{
 Review and normalize anchor/group-anchor tables
 }
 \details{
-This helper reviews computational constraints. A \emph{direct anchor} fixes an
-individual parameter to a supplied value. A \emph{group anchor} constrains the
-mean of declared elements to a supplied target. A \emph{common-element link} is
-different: it is observed overlap among administrations or subsets. Direct
-or group constraints can transfer coordinates from a defensible reference,
-but they do not manufacture empirical overlap.
+Check candidate direct/group constraints against the receiving data before
+estimation, using the preprocessing and key-resolution rules of \code{\link[=fit_mfrm]{fit_mfrm()}}.
+Such constraints can transfer coordinates from a defensible reference; they
+do not create the observed overlap required for a common-element link.
+The review does not verify source-fit readiness or invariant cross-run meaning
+of element labels.
 
-This function applies the same preprocessing and key-resolution rules
-as \code{fit_mfrm()}, but returns a review object so constraints can be
-checked \emph{before} estimation. Running the review first helps avoid
-estimation failures caused by misspecified or data-incompatible
-anchors. It does not inspect source-fit readiness or establish that labels
-denote the same invariant elements across runs. Those substantive checks
-remain the caller's responsibility.
-This review has no estimation-method argument. A clean table can still
-request an unsupported model combination: in particular, \code{fit_mfrm()}
-rejects Person direct/group anchors with MML. See the scale-constraint
-section of \code{\link[=fit_mfrm]{fit_mfrm()}} before using partial anchors.
+There is no estimation-method argument: even a clean review can request an
+unsupported model combination. In particular, MML rejects Person direct/group
+anchors. See the scale-constraint section of \link{fit_mfrm_technical_details}
+before using partial anchors.
 
 \strong{Anchor types:}
 \itemize{
@@ -197,74 +189,33 @@ universal adequacy thresholds and not tests of connectedness or invariance.
 
 \code{summary()} method: Summarize an anchor-review object
 
-For \code{summary()}: This summary provides a compact pre-estimation review of anchor and
-group-anchor specifications.
+For \code{summary()}: Compact constraint coverage, support counts and
+recommendations; follow "Reviewing constraints before fitting" for reading order.
 
 \code{plot()} method: Plot an anchor-review object
 
-For \code{plot()}: \code{ggplot2} visualization helper for anchor-review outputs.
+For \code{plot()}: Start with \code{"issue_counts"} for counts by issue class.
+\code{"facet_constraints"} shows anchored, grouped and free levels;
+\code{"level_observations"} shows observation support. Interpret these alongside
+the constraint definitions and screening limits above, before fitting.
 }
-\section{Interpreting output}{
+\section{Reviewing constraints before fitting}{
 
-\itemize{
-\item \code{issue_counts}/\code{issues}: concrete data or specification problems.
-\item \code{facet_summary}: constraint coverage by facet. \code{FreeLevels} counts levels
-outside direct and group constraints, not free parameters. A group member
-may still vary, whereas centering removes a degree of freedom outside groups.
-\item \code{design_checks}: observation counts against the requested screening values.
-\item \code{recommendations}: action items before estimation.
-}
+Start with \code{summary(review)$issue_counts}, inspect the full \code{issues} and
+\code{recommendations}, and resolve their stated problems before fitting.
+\code{facet_summary} describes constraint coverage: \code{FreeLevels} counts levels
+outside direct and group constraints, not free parameters. Group members
+can vary, while centering removes a degree of freedom outside groups.
+\code{design_checks} records support checks; the summary's
+\code{level_observation_summary} and \code{category_counts} show support relative to
+the requested screening counts.
 
-
-For \code{summary()}:
-
-Recommended order:
-\itemize{
-\item \code{issue_counts}: primary triage table (non-zero issues first).
-\item \code{facet_summary}: anchored/grouped/free-level balance by facet.
-\item \code{level_observation_summary} and \code{category_counts}: sparse-cell diagnostics.
-\item \code{recommendations}: concrete remediation suggestions.
-}
-
-If \code{issue_counts} is non-empty, treat anchor constraints as provisional and
-resolve issues before final estimation.
-
-
-For \code{plot()}:
-\itemize{
-\item \code{"issue_counts"}: volume of each issue class.
-\item \code{"facet_constraints"}: anchored/grouped/free mix by facet.
-\item \code{"level_observations"}: observation support across levels.
-}
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Build candidate anchors (e.g., with \code{\link[=make_anchor_table]{make_anchor_table()}}).
-\item Run \code{review_mfrm_anchors(...)}.
-\item Resolve issues, then fit with \code{\link[=fit_mfrm]{fit_mfrm()}}.
-}
-
-
-For \code{summary()}:
-\enumerate{
-\item Run \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} with intended anchors/group anchors.
-\item Review \code{summary(review)} and recommendations.
-\item Revise anchor tables, then call \code{\link[=fit_mfrm]{fit_mfrm()}}.
-}
-
-
-For \code{plot()}:
-\enumerate{
-\item Run \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.
-\item Start with \code{plot(review, type = "issue_counts")}.
-\item Inspect constraint and support plots before fitting.
-}
+Build candidates with \code{\link[=make_anchor_table]{make_anchor_table()}} when appropriate, revise them
+after review, then pass the intended constraints to \code{\link[=fit_mfrm]{fit_mfrm()}}.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("review_mfrm_anchors", run.dontrun = TRUE)
 \dontrun{
 ratings <- load_mfrmr_data("example_operational")
@@ -291,14 +242,14 @@ problem <- review_mfrm_anchors(
 problem$issues$duplicate_anchors
 # Normalization retains the last value; it does not decide which is correct.
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("summary.mfrm_anchor_review", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_core")
 review <- review_mfrm_anchors(toy, "Person", c("Rater", "Criterion"), "Score")
 summary(review)
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_anchor_review", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_core")
@@ -312,5 +263,5 @@ p <- plot(review, draw = FALSE)
 
 \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}
 
-\code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, \code{\link[=make_anchor_table]{make_anchor_table()}}, \code{\link[=plot_data]{plot_data()}}
+\code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, \code{\link[=make_anchor_table]{make_anchor_table()}}
 }

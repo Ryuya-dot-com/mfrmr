@@ -58,7 +58,8 @@ results use their documented summaries and model-specific methods.}
 
 \item{type}{For \code{coef()}, \code{"free"} (default) returns the independent fitted
 coordinates; \code{"locations"}, \code{"steps"}, \code{"slopes"} or \code{"persons"} returns
-the corresponding saved primary estimates. For \code{nobs()}, \code{"likelihood"}
+the corresponding saved \code{Estimate} column (see the GPCM distinction below).
+For \code{nobs()}, \code{"likelihood"}
 (default) counts Persons for MML/CML and retained response rows for JML;
 \code{"persons"} and \code{"ratings"} request those counts explicitly.}
 
@@ -103,7 +104,17 @@ structural standard errors and do not occur in \code{vcov(fit)}. CML has no
 Person estimates. Free-coordinate extraction refuses corrected or penalized
 JML and any fit whose primary estimates are nonfinite: finite optimizer
 proxies must not replace primary boundary values. Explicit component
-extraction preserves the saved infinite or missing primary estimates.
+extraction preserves infinite or missing values in the selected column.
+
+\strong{GPCM slope columns.} \code{coef(fit, type = "slopes")} returns the saved
+\code{fit$slopes$Estimate}, which retains working values for compatibility; it
+does not select \code{PrimaryEstimate} or attach status columns. Read
+\code{fit$slopes} before reporting: \code{PrimaryEstimate} is the target's primary
+value under \code{ParameterStatus} and \code{PrimaryEstimateBasis}, whereas
+\code{OptimizerEstimate} records the numerical value even when no primary
+estimate is available. The distinction matters at boundaries and for
+limiting fits. Neither a finite working value nor an available primary
+value establishes interval eligibility. See \link{fit_mfrm_technical_details}.
 
 \strong{Covariance.} MML \code{vcov()} reuses the same qualified full joint covariance
 as \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}, including its model/design restrictions and
@@ -116,7 +127,7 @@ while bounds are missing. No regularized inverse is substituted. If even
 one dense \code{NA} matrix exceeds \code{mfrmr.max_information_bytes}, \code{vcov()} errors
 with that reason; use the smaller target-level \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} result.
 Other MML routes retain their separate qualification checks and error rules.
-RSM/PCM singleton-category fits can pass the interval-specific information
+RSM/PCM fits with singleton counts or empty local cells can pass the interval-specific information
 review while retaining \code{InferenceReady = FALSE}; returned \code{cautions} and
 checks explain the small-sample limitation. No count label alone certifies
 or invalidates this covariance.
@@ -156,15 +167,6 @@ and marginal likelihoods must not be compared. For MML, BIC uses Persons,
 not rating rows or the sum of rating weights. Counts describe the retained
 analysis, not omitted input records or an effective sample size under
 dependence. Use \code{nobs(fit, type = "ratings")} to count retained ratings.
-
-For CML, adding extreme-score Persons can increase BIC's penalty even when
-the conditional likelihood is unchanged. Report both total and informative
-Person counts. A sensitivity calculation using the latter is
-\code{-2 * as.numeric(ll) + attr(ll, "df") * log(attr(ll, "informative_persons"))},
-where \code{ll <- logLik(fit)} and the informative count is positive. Label this
-as an alternative penalty convention, not the package's BIC or a validated
-model-selection rule; neither count resolves dependence or sparse-design
-asymptotics. Keep the same retained data and conditioning basis in comparisons.
 }
 \examples{
 ratings <- load_mfrmr_data("example_core")

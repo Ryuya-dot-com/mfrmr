@@ -84,7 +84,7 @@
 #' @seealso [mfrm_d_study()], [confint.mfrm_multivariate_d_study()],
 #'   [plot.mfrm_multivariate_d_study()], [plot.mfrm_dstudy_intervals()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("summary.mfrm_multivariate_d_study", run.dontrun = TRUE)
 #' \dontrun{
 #' # Published synthetic data, not empirical speech-contest records.

@@ -29,14 +29,15 @@ information. Default \code{201}.}
 \item{type}{\code{"tif"} for the overall precision curve (default), \code{"iif"} for
 facet-level contribution curves, \code{"se"} / \code{"sem"} / \code{"csem"} for the
 conditional standard error of measurement implied by that curve, or
-\code{"both"} for precision and conditional SEM in separate panels.}
+\code{"both"} for precision with conditional SEM on a secondary axis.}
 
 \item{facet}{For \code{type = "iif"}, which facet to plot. If \code{NULL},
 the first facet is used.}
 
-\item{draw}{If \code{TRUE}, print the plot. Otherwise return it without drawing.}
+\item{draw}{If \code{TRUE} (default), draw the plot. If \code{FALSE}, return
+reusable \code{mfrm_plot_data} invisibly.}
 
-\item{...}{Additional arguments for the selected view.}
+\item{...}{Additional base-graphics arguments for the selected view.}
 }
 \value{
 An object of class \code{mfrm_information} (named list) with:
@@ -50,8 +51,7 @@ contribution value retained under that column name for compatibility.
 }
 
 For \code{plot()}:
-Invisibly, a \code{ggplot} object carrying the underlying plot data
-(inspect via \code{plot_data()}).
+Invisibly, an \code{mfrm_plot_data} object.
 }
 \description{
 Calculates design-weighted score-variance curves across the latent
@@ -67,13 +67,10 @@ is:
 where \eqn{P_k} is the category probability and \eqn{E(\theta)} is the
 expected score at theta. In \code{mfrmr}, these cell-level variances are then
 aggregated with weights taken from the realized observation counts in
-\code{fit$prep$data}.
-The sum includes observations from all Persons. With calibration fixed,
-duplicating those exposures doubles the total curve without improving any
-individual's rating plan. It is not per-Person test information; its
-reciprocal square root is not a Person's EAP posterior SD. A per-Person
-test information function requires an explicit task/criterion/rater roster
-and conditional independence of the contributing ratings.
+\code{fit$prep$data}. The sum pools exposures from all Persons, not one
+Person's rating plan. Duplicating exposures doubles the curve at fixed
+calibration without improving an individual's measurement. Its reciprocal
+square root is not a Person's posterior SD.
 
 The resulting total curve is therefore a design-weighted precision screen
 rather than a pure textbook test-information function for an abstract fixed
@@ -100,15 +97,21 @@ assessment design provides more or less precision across ability.
 \section{What \code{tif} and \code{iif} mean here}{
 
 In \code{mfrmr}, this helper supports ordered-category \code{RSM}, \code{PCM}, and the
-current \code{GPCM} fit. The total curve (\verb{$tif}) is the sum of
-design-weighted cell contributions across all non-person facet levels in the
-fitted model. The facet-level contribution curves (\verb{$iif}) keep those
+one-family \code{GPCM} fit. The total curve (\verb{$tif}) sums each observed
+design cell once, weighted by its exposure. Within each facet, level
+contributions sum to that total; summing contributions across facets would
+count the same responses repeatedly. The facet-level contribution curves (\verb{$iif}) keep those
 weighted contributions separated, so you can see which observed rater
 levels, criteria, or other facet levels are driving precision at different
 parts of the scale. For \code{PCM}, step-facet-specific thresholds are respected
 when each observed design cell is evaluated. For \code{GPCM}, those
 same cell-level variances are additionally scaled by the squared
 discrimination associated with the realized \code{slope_facet} level.
+
+The calculation uses additive facet locations; fitted interaction effects
+are not included. With interactions, this is an additive reference profile,
+not information under the full fitted predictor. Two-family GPCM is refused.
+Calibration uncertainty is not propagated.
 }
 
 \section{What this quantity does not justify}{
@@ -120,22 +123,6 @@ fixed item set.
 precision independent of the realized observation pattern.
 \item It does not currently extend beyond the ordered-category \code{RSM} / \code{PCM} /
 \code{GPCM} family implemented by \code{\link[=fit_mfrm]{fit_mfrm()}}.
-}
-}
-
-\section{When to use this}{
-
-Use \code{compute_information()} when you want a design-weighted precision screen
-for an \code{RSM}, \code{PCM}, or \code{GPCM} fit along the latent
-continuum. In practice:
-\itemize{
-\item start with the total precision curve for overall targeting across the
-realized observation pattern
-\item inspect facet-level contribution curves when you want to see which raters,
-criteria, or other facet levels account for more of that design-weighted
-precision
-\item widen \code{theta_range} if you expect extreme measures and want to inspect the
-tails explicitly
 }
 }
 
@@ -193,30 +180,6 @@ Category variance is computed from squared deviations about its mean to
 retain small positive information near an endpoint category. This avoids
 cancellation in raw second moments; it does not eliminate floating-point
 underflow or account for calibration uncertainty.
-\itemize{
-\item \verb{$tif}: design-weighted precision curve data with theta, Information, and SE.
-\item \verb{$iif}: design-weighted facet-level contribution curves for the fitted
-non-person facets.
-\item Higher information implies more precise measurement at that theta.
-\item SE is inversely related to information.
-\item Peaks in the total curve show the trait region where the realized
-calibration is most informative.
-\item Facet-level curves help explain \emph{which observed facet levels} contribute
-to those peaks; they are not standalone item-information curves and should
-be read as design contributions.
-}
-
-
-\itemize{
-\item The total curve peaks where the realized design is most precise.
-\item Conditional SEM is derived as \code{1 / sqrt(precision)}; lower is better.
-\item Facet-level curves show which facet levels contribute most to that
-realized precision at each theta.
-\item For \code{GPCM}, those contributions include the squared
-discrimination scaling implied by the fitted \code{slope_facet}.
-\item If the precision peak sits far from the bulk of person measures, the
-realized design may be poorly targeted.
-}
 }
 
 \section{How to read the main columns}{
@@ -232,7 +195,7 @@ curve in \verb{$iif}.
 
 \section{Recommended next step}{
 
-Compare the precision peak with person/facet locations from a Wright map or
+Compare curve shape with the Person ability distribution in a Wright map or
 related diagnostics. If you need to decide how strongly SE/CI language can
 be used in reporting, follow with \code{\link[=precision_review_report]{precision_review_report()}}.
 }
@@ -246,25 +209,6 @@ be used in reporting, follow with \code{\link[=precision_review_report]{precisio
 \item If needed, inspect facet contributions with
 \code{plot(info, type = "iif", facet = "Rater")}.
 }
-
-
-\enumerate{
-\item Compute information with \code{\link[=compute_information]{compute_information()}}.
-\item Plot with \code{plot(info)} for the total precision curve.
-\item Use \code{plot(info, type = "iif", facet = "Rater")} for
-facet-level contributions.
-\item Use \code{draw = FALSE} when you want reusable plot data for custom graphics
-or reporting helpers.
-}
-}
-
-\section{Returned data when draw = FALSE}{
-
-\code{draw = FALSE} returns the reusable \code{ggplot} without printing it.
-\code{plot_data(p)} exposes the underlying \code{plot}, \code{information_long},
-\code{conditional_sem}, \code{summary} and \code{settings} payloads.
-The overall curve comes from \code{x$tif}; facet contributions come from
-\code{x$iif} filtered to the selected facet.
 }
 
 \section{Plot types}{
@@ -278,20 +222,19 @@ supported \code{RSM}, \code{PCM}, or \code{GPCM} fit.
 }
 }
 
-\section{Which type should I use?}{
+\section{Returned data when draw = FALSE}{
 
-\itemize{
-\item Use \code{"tif"} for a quick overall read on precision.
-\item Use \code{"sem"} or \code{"csem"} when standard-error language is easier to
-communicate than precision.
-\item Use \code{"both"} when you want both views in one figure.
-\item Use \code{"iif"} when you want to see which facet levels are shaping the total
-precision curve.
-}
+\code{draw = FALSE} returns an \code{mfrm_plot_data} object. The underlying plotting
+data are stored in \verb{$data$plot}. For \code{type = "tif"}, \code{"se"}, or \code{"both"},
+those rows come from \code{x$tif}. For \code{type = "iif"}, the returned rows come
+from \code{x$iif} filtered to the requested facet. The plot data also include
+\code{plot_long}, \code{information_long}, \code{conditional_sem}, \code{summary}, and
+\code{settings} so ggplot2, plotly, Quarto, and table workflows can reuse the
+information and conditional-SEM series without parsing the drawn figure.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("compute_information", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_operational")
@@ -302,7 +245,7 @@ info <- compute_information(fit)
 head(info$tif)
 info$tif$Theta[which.max(info$tif$Information)]
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_information", run.dontrun = TRUE)
 \dontrun{
 ratings <- load_mfrmr_data("example_operational")
@@ -310,10 +253,10 @@ fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
                  method = "MML", model = "RSM",
                  quad_points = 7, maxit = 30)
 info <- compute_information(fit)
-  tif_data <- plot(info, type = "tif", draw = FALSE)
-  head(plot_data(tif_data, "plot"))
-  iif_data <- plot(info, type = "iif", facet = "Rater", draw = FALSE)
-  head(plot_data(iif_data, "plot"))
+tif_data <- plot(info, type = "tif", draw = FALSE)
+head(tif_data$data$plot)
+iif_data <- plot(info, type = "iif", facet = "Rater", draw = FALSE)
+head(iif_data$data$plot)
 }
 }
 \seealso{

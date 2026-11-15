@@ -16,76 +16,40 @@ are rejected.}
 \value{
 A named list with:
 \itemize{
-\item \code{profile}: one-row precision overview
-\item \code{checks}: package-native precision review checks
-\item \code{fit_separation_basis}: source-grounded fit/separation reporting boundary
-\item \code{approximation_notes}: detailed method notes
-\item \code{settings}: resolved model and method labels
+\item \code{profile}: one-row precision tier, SE/CI/reliability basis, availability
+flags, and recommended interpretation.
+\item \code{checks}: review results with \code{Status} and explanatory details.
+\item \code{fit_separation_basis}: sources and interpretation limits for mean-square
+fit, ZSTD, separation, and package QC thresholds.
+\item \code{approximation_notes}: method notes from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
+\item \code{settings}: resolved model and method labels.
 }
 }
 \description{
-Build a precision review report
+Review the sources and availability of SEs and precision summaries for a
+fitted model.
 }
 \details{
-This helper summarizes how \code{mfrmr} derived SE, CI, and reliability values
-for the current run. It also includes a source-grounded fit/separation
-basis table so users can keep mean-square fit, ZSTD standardization,
-Rasch/FACETS-style separation, and package QC thresholds in distinct
-reporting categories.
+Read \code{profile} for uncertainty sources and \code{checks} for availability and
+SE/reliability ordering. \code{PrecisionTier} is \code{model_based} for MML without
+recorded fallback/regularized SEs, \code{hybrid} when these occur, and
+\code{exploratory} for other estimators. The tier alone does not establish
+convergence or valid intervals; fallback/regularized SEs are diagnostic only.
+
+\code{profile$SupportsFormalInference} also requires the fit's inferential
+checks. This run-level flag does not authorize every target or descriptive
+reliability: inspect each result's eligibility/reason and the calculation
+limits in \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. An unavailable interval does not invalidate a
+separately supported point estimate.
+
+\code{HasSamplePopulationCoverage} checks all four sample/population by
+model/fit-adjusted table combinations for each represented facet. It does
+not check interval coverage, finite values or representation of every model
+facet. Ordering checks likewise concern available comparable values.
+
+Recreate older reports lacking the regularization distinction with
+\code{precision_review_report(fit)}; no model refit is needed.
 }
-\section{What this review means}{
-
-\code{precision_review_report()} is a structured prerequisite review for precision claims.
-It tells you how the package derived uncertainty summaries for the current
-run and how cautiously those summaries should be written up.
-}
-
-\section{What this review does not justify}{
-
-\itemize{
-\item It does not, by itself, validate the measurement model or substantive
-conclusions.
-\item A favorable precision tier does not override convergence, fit, linking,
-or design problems elsewhere in the analysis.
-\item Fit and separation rows in this report are reporting/validation
-boundaries, not standalone success criteria.
-}
-}
-
-\section{Interpreting output}{
-
-\itemize{
-\item \code{profile}: one-row overview of the active precision tier and recommended use.
-\item \code{checks}: package-native review checks for SE ordering, reliability ordering,
-coverage of sample/population summaries, and SE source labels.
-\item \code{fit_separation_basis}: source-grounded boundary table for fit and
-separation reporting.
-\item \code{approximation_notes}: method notes copied from \code{diagnose_mfrm()}.
-}
-}
-
-\section{Recommended next step}{
-
-Use the \code{profile$PrecisionTier} and \code{checks} table to decide whether SE, CI,
-and reliability language can be phrased as model-based, should be qualified
-as hybrid, or should remain exploratory in the final report.
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Run \code{diagnose_mfrm()} for the fitted model.
-\item Build \code{precision_review_report(fit, diagnostics = diag)}.
-\item Use \code{summary()} to see whether the run supports model-based reporting
-language or should remain in exploratory/screening mode.
-}
-
-Regularized or fallback SEs remain diagnostic only. Numerical convergence
-does not establish inferential support. Older reports without the recorded
-regularization distinction must be recreated with \code{precision_review_report(fit)};
-the existing fit can be reused without refitting.
-}
-
 \examples{
 library(mfrmr)
 

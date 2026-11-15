@@ -68,8 +68,7 @@ For \code{plot()}: A result from \code{\link[=mfrm_residual_network]{mfrm_residu
 
 \item{preset}{Visual preset; see \link{mfrmr_visual_diagnostics}.}
 
-\item{draw}{Whether to print the \code{ggplot} figure; \code{FALSE} returns the \code{ggplot}
-object without drawing.}
+\item{draw}{Whether to draw with base graphics.}
 }
 \value{
 An \code{mfrm_residual_network} with \code{nodes}, all \code{pairs}, displayed
@@ -80,10 +79,10 @@ membership), source model metadata and interpretation \code{notes}.
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} connect the result to reporting.
 Complete RDS archives include person identifiers: review sharing permissions.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts the
-selected view, saved matrix, nodes, pairs, edges, clustering, settings and
-interpretation notes. Plotting does not recompute residuals or clustering.
-Save the analysis object to redraw every view.
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} containing the selected view, saved
+matrix, nodes, pairs, edges, clustering, settings and interpretation notes.
+Plotting does not recompute residuals or clustering. Save the analysis
+object to redraw every view. The matrix supports \code{\link[=as_ggplot]{as_ggplot()}}.
 }
 \description{
 After reviewing a fitted measurement model, locate facet levels whose
@@ -151,33 +150,16 @@ preprocessing, measurement fitting and clustering within independent or
 appropriately resampled data; resampling saved residuals alone omits
 calibration uncertainty. The appropriate resampling unit follows the rating
 design, including dependencies across persons, tasks and raters.
-}
 
-\section{Where random forests belong}{
-
-Wesolowski (2019) first used k-means on differential-rater-functioning
-indices to construct rater types, then random forests to predict those
-labels. That study motivates a supervised follow-up, not random forests as
-the clustering algorithm implemented here. Its features and targets differ
-from these residual correlations. In this supervised use, a forest combines
-predictions from bootstrap samples and random candidate feature subsets;
-it requires a declared prediction target and out-of-sample assessment.
-
-A classifier predicting exploratory groups can reproduce the grouping rule
-without establishing external validity. Fit feature transformations,
-measurement models and cluster discovery within training data, keep a
-separate test set and define how new units receive reference labels. Split
-at the intended generalization unit (for example new raters, persons or
-tasks); row-wise splitting of repeated ratings can leak information.
-Out-of-bag error alone does not validate labels constructed on all data.
-Report class balance, confusion matrices, discrimination/calibration where
-appropriate and independent substantive outcomes. Feature importance is
-predictive, not causal. This function does not fit a random forest; use
-established ML packages for a separately designed prediction study.
+Wesolowski (2019) used a different workflow: k-means on differential-rater
+indices, followed by random forests to predict the resulting groups. This
+function implements neither that classifier nor its features. Predicting
+exploratory group labels would require a separate target and independent
+validation; it does not validate the groups themselves.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("mfrm_residual_network", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
@@ -204,6 +186,6 @@ approach for estimating the number of dimensions in psychological research.
 \emph{PLOS ONE, 12}, e0174035. \doi{10.1371/journal.pone.0174035}.
 }
 \seealso{
-\link[=mfrm_cluster_kmeans]{k-means details}, \link[=mfrm_cluster_hierarchical]{hierarchical clustering details},
+\code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}}, \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}},
 \link{mfrmr_visual_diagnostics}
 }

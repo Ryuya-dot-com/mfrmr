@@ -11,9 +11,7 @@ vignette: >
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 available <- !is_cran_check && requireNamespace("mice", quietly = TRUE) &&
   requireNamespace("cluster", quietly = TRUE)
-knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",collapse = TRUE, comment = "#>", eval = !is_cran_check && available)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = !is_cran_check && available)
 ```
 
 An assessment team wants to describe its raters' backgrounds before planning
@@ -119,7 +117,7 @@ features$feature_summary
 table(features$row_summary$Complete)
 ```
 
-`mfrm_cluster(method = "pam", features, k = 3)` would stop on the remaining missing values.
+`mfrm_cluster_pam(features, k = 3)` would stop on the remaining missing values.
 Explicit `missing = "omit"` is available, but selects complete raters and
 changes the population being described. It does not correct missing-data bias.
 
@@ -427,13 +425,13 @@ ggplot2::ggsave("experience-raincloud.pdf", raincloud, width = 7, height = 4.5)
 For a selected wide plot table, `plot_data(..., format = "long", value_cols = ...)`
 gathers explicitly chosen quantities; other columns remain identifiers or metadata.
 Matrices retain row/column indices and labels, including missing cells.
-The [network/reporting lesson](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html) shows how to
+The [network/reporting lesson](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html) shows how to
 export node, edge and coordinate tables without adopting a fixed figure style.
 
 ## Compare PAM with a hierarchy
 
 A hierarchy asks which groups merge as dissimilarity increases. Fit it
-separately from PAM: `mfrm_cluster(x, k, method = "hierarchical")` uses average linkage
+separately from PAM: `mfrm_cluster_hierarchical()` uses average linkage
 (the mean of all cross-group Gower dissimilarities) or complete linkage
 (their maximum). The same feature types, weights, and missingness rules apply.
 Choose the group count explicitly; a tree does not automatically identify it.
@@ -548,9 +546,9 @@ tasks <- data.frame(
   TimeLimitMinutes = sample(c(10, 20, 30), 12, replace = TRUE),
   WordLimit = sample(c(100, 200, 400), 12, replace = TRUE),
   ResponseFormat = factor(rep(c("Summary", "Argument", "Explanation"), 4)))
-person_groups <- mfrm_cluster(method = "pam", mfrm_features(persons, "Person",
+person_groups <- mfrm_cluster_pam(mfrm_features(persons, "Person",
   c("LanguageStudyYears", "PreparationHours", "InstructionMode")), k = 3)
-task_groups <- mfrm_cluster(method = "pam", mfrm_features(tasks, "Task",
+task_groups <- mfrm_cluster_pam(mfrm_features(tasks, "Task",
   c("TimeLimitMinutes", "WordLimit", "ResponseFormat")), k = 3)
 ```
 
@@ -655,9 +653,8 @@ observations connect. MCAR means that missingness does not depend on the
 observed or missing values. MAR allows dependence on observed values, but
 not on missing values after conditioning on the observed information. MNAR
 allows additional dependence on the missing values. Planned allocation
-does not automatically imply MCAR: assignment may depend on prior ability
-estimates, recorded background variables, or information absent from the
-analysis. A missingness rate
+does not automatically imply MCAR: assignment may depend on recorded
+proficiency or on information absent from the analysis. A missingness rate
 or diagnostic test alone cannot establish MAR. See
 [Rubin (1976), *Inference and Missing Data*](https://doi.org/10.1093/biomet/63.3.581)
 for the conditions for ignoring a missingness process in inference.
@@ -710,7 +707,7 @@ plot is a projection, not a test for the existence of clusters.
 Ordinary PCA and k-means should not receive arbitrary numeric codes for
 nominal categories such as specialty. Keep Gower/PAM or average/complete
 linkage for mixed features. For selected numeric attributes, `mfrm_pca()` and
-`mfrm_cluster(x, k, method = "kmeans")` use R's
+`mfrm_cluster_kmeans()` use R's
 [`prcomp()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/prcomp.html)
 and [`kmeans()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/kmeans.html).
 They center features and, by default, divide by sample standard deviations.
@@ -772,10 +769,10 @@ to change as imputed values change. It compares partitions; it does not average
 PCA scores, loadings or arbitrary group numbers, and it does not Rubin-pool
 inference. These functions impute no rating scores.
 
-For an already complete numeric table, use `mfrm_cluster(method = "kmeans", review, k=3)`
+For an already complete numeric table, use `mfrm_cluster_kmeans(review, k=3)`
 directly. To inspect and retain a specific reduction, fit
 `pca <- mfrm_pca(review, components=2)` and then
-`mfrm_cluster(method = "kmeans", pca, k=3)`. Passing a PCA object uses its scores exactly,
+`mfrm_cluster_kmeans(pca, k=3)`. Passing a PCA object uses its scores exactly,
 without further standardization, range scaling or whitening. Save that PCA
 and its grouping together. `plot()` and `mfrm_cluster_compare()` reuse saved
 results; changing features, component counts, weights or seeds requires the
@@ -842,7 +839,7 @@ keep the RDS for its analyses, transformations, omitted IDs and assumptions.
 These feature results use their own
 `summary()`, `plot()` and `plot_data()` methods. They are separate from
 `mfrm_results()` and from the pooled response-score intervals described in
-[Missing scores on assigned ratings](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-response-imputation.html). Saved feature files retain identifiers
+[mfrmr-response-imputation](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-response-imputation.html). Saved feature files retain identifiers
 and original attributes, so review what they contain before sharing them.
 
 ## Plan for the size of the analysis

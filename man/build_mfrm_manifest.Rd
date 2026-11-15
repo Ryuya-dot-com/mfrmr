@@ -53,16 +53,10 @@ anchoring information, and which downstream outputs are currently available.
 }
 \section{When to use this}{
 
-Use \code{build_mfrm_manifest()} when you want a compact, machine-readable record
-of how an analysis was run. Compared with related helpers:
-\itemize{
-\item \code{\link[=export_mfrm_tables]{export_mfrm_tables()}} writes analysis tables only.
-\item \code{build_mfrm_manifest()} records settings and available outputs.
-\item \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}} creates an executable R script.
-\item \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} writes a project-folder reproducibility bundle;
-review every included artifact for person-level or sensitive data before
-sharing it.
-}
+Use this machine-readable record to document settings and available outputs.
+See "Choose a save or export route" in \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} for saving
+results, writing files or generating a refitting script. Review exported
+artifacts for person-level or sensitive data before sharing.
 }
 
 \section{Output}{
@@ -96,10 +90,11 @@ claim byte-for-byte identity across platforms or serialization formats
 
 \section{Interpreting output}{
 
-The \code{summary} table is the direct place to confirm that you are looking at
-the intended analysis. The \code{model_settings}, \code{source_columns}, and
-\code{estimation_control} tables are designed for reproducibility records and
-method write-up.
+Read \code{summary} to identify the analysis, then \code{available_outputs} for existing
+diagnostics/bias/PCA/predictions and \code{anchors} for fixed constraints.
+\code{model_settings}, \code{source_columns} and \code{estimation_control} support the
+methods write-up.
+
 \code{Converged} records the optimizer return-code decision; \code{InferenceReady}
 records whether the fit passes the additional numerical checks required for
 inference. They need not agree; passing these checks does not establish model
@@ -113,23 +108,13 @@ person-level data requirements used by the fitted population model. When categor
 background variables are expanded through \code{stats::model.matrix()},
 \code{population_xlevel_variables} and \code{population_contrast_variables} identify
 the variables whose fitted coding must be preserved for replay/scoring.
-The \code{available_outputs} table is especially useful before building bundles,
-because it tells you whether residual PCA, anchors, bias results, or
-prediction-side artifacts are already available. A practical reading order is
-\code{summary} first, \code{available_outputs} second, and \code{anchors} last when
-reproducibility depends on fixed constraints.
 }
 
 \section{Typical workflow}{
 
-\enumerate{
-\item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}} or \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}.
-\item Compute diagnostics once with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} if you want explicit
-control over residual PCA.
-\item Build a manifest and inspect \code{summary} plus \code{available_outputs}.
-\item If you need files on disk, pass the same objects to
-\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}.
-}
+Build from a fit and reuse its diagnostics. To control residual PCA,
+call \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} first. \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} writes the manifest
+and selected analysis files to disk.
 
 For \code{GPCM} fits, the manifest is available with an explicit
 \code{gpcm_boundary} table. It records supported direct diagnostics/reporting
@@ -139,17 +124,14 @@ routing design forecasting through its separate caveated capability row.
 
 \section{Saved-result reuse}{
 
-Supplied screening results must describe this fitted analysis. Results from
-another fit or older results without identity metadata are refused. See
-\link{mfrmr_compatibility_layer} to recreate them from the saved fit and matching
-diagnostics without refitting the model.
-Supplied unit scores, plausible values and fit-derived forecasts must also
-match this calibration. A forecast created with \code{sim_spec} remains a separate
-scenario; its source is recorded without asserting a match to the fit.
+Supplied screening results must match this analysis; older ones without
+identity metadata are refused. See "Saved-result reuse" in
+\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} for calibration checks, separate scenario forecasts and
+recreating compatible results without refitting.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("build_mfrm_manifest", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.

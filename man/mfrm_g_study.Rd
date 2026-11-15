@@ -107,156 +107,108 @@ raters, tasks, or occasions. Use balanced ANOVA for a complete design or
 explicitly select MINQUE(0) for incomplete or unequal observed designs. Conditions
 have common identities across persons and scores. This is not an MFRM fit.
 
-Every retained cell must have every selected score. Duplicate
-cells are not supported. The same identifier (parent/child pair for a
-nested child) must denote the same condition across persons and scores.
-Equal level counts alone cannot establish that identity or random sampling
-from the intended universe.
+Each retained Person/facet cell must contain every selected score, without
+duplicate cells. Identifiers (parent/child pairs for nested facets) must denote
+the same conditions across persons and scores; equal counts do not establish
+shared identity or random sampling. Choose facets from the intended universe:
+raters, content-sampling tasks or exchangeable occasions. Occasion labels do
+not model growth, practice or serial correlation. Score columns are fixed
+components. Three or more facets, fixed measurement facets, nesting within
+Persons and partial sharing across scores are unsupported.
 
-In 0.2.4, \code{mfrm_g_study()} replaces the longer public name
-\code{mfrm_multivariate_gstudy()} for both one and several scores. The arguments,
-default estimator and result class are unchanged. Use \code{\link[=mfrm_d_study]{mfrm_d_study()}}
-for future plans. Existing saved G-study objects remain usable without
-re-estimation; update constructor calls in old scripts. See
-\link{mfrmr_compatibility_layer} for migration from both former names.
+\code{mfrm_g_study()} replaces \code{mfrm_multivariate_gstudy()} for one or several
+scores without changing arguments, defaults or result class. Saved objects
+need no re-estimation; update constructor calls. See \link{mfrmr_compatibility_layer}.
 
-Choose facets from the intended use of scores: common raters for judging
-performances, common tasks for sampling content, or common occasions for
-repeat assessments. All selected facets are random and, unless \code{nesting}
-is supplied, fully crossed; \code{method = "minque0"} permits incomplete observations
-of that model. Naming a column Occasion does not model growth, practice,
-trends, or serial correlation. Its levels must be defensibly treated as
-exchangeable conditions under the stated random-effects assumptions.
-Score columns are fixed components of the assessment, not another random
-facet. Three or more facets, fixed measurement facets, nesting within
-persons, and partial sharing across score components are not supported.
+\strong{Estimation.} ANOVA requires complete balanced observations; MINQUE(0)
+allows incomplete/unequal observations of the same random-effects model.
+MINQUE assumes a score-specific common mean and independent zero-mean random
+effects with a common covariance matrix per component. With intercept-removal
+matrix \code{H} and shared-level kernels \code{K_s}, it solves
+\verb{S_st = tr(H K_s H K_t)} against \verb{Q_s = Y' H K_s H Y} for each score pair.
+Group counts avoid observation-square matrices and full Cartesian grids.
+Balanced results agree with ANOVA. There is no likelihood optimization,
+covariate-dependent mean or iterative working-covariance estimation.
 
-MINQUE(0) models a common mean for each score and independent, zero-mean
-random effects with a common covariance matrix for each component. With
-intercept-removal matrix \code{H} and shared-level covariance kernels \code{K_s}, it
-solves \verb{S_st = tr(H K_s H K_t)} against \verb{Q_s = Y' H K_s H Y} for every
-score pair. Group-count calculations avoid an observation-by-observation
-matrix or a full Cartesian grid. On balanced data it agrees with ANOVA.
-It does not optimize a likelihood, fit covariate-dependent means, or
-iteratively estimate working covariance weights.
+The diagonally scaled moment system must have every eigenvalue above
+\code{sqrt(.Machine$double.eps)} times its maximum; otherwise estimation stops.
+\code{estimation} retains rank, scaled eigenvalues, condition number and replication
+counts. These diagnose component separation, not sampling precision or fit.
+Graph connectedness is insufficient: four tasks with two ratings each and
+eight tasks rated once have equal workload, but only the former repeats
+ratings within Person/Task cells. Without that replication, Person:Task and
+Residual cannot be separated in the seven-component model. Other overlaps
+are needed for the remaining components; uneven workloads can affect precision.
+\code{\link[=vcov.mfrm_multivariate_gstudy]{vcov.mfrm_multivariate_gstudy()}} supplies normal-model sampling covariance
+and SEs, including incomplete sources, with separate negative/nonidentifiable
+sampling-variance diagnostics; it does not supply normal-reference intervals.
 
-The diagonally scaled moment system must have all eigenvalues above
-\code{sqrt(.Machine$double.eps)} times its largest eigenvalue. Otherwise the
-function stops because the components cannot be separated reliably by
-these equations. \code{estimation} retains the rank, scaled eigenvalues,
-condition number, and per-component replication counts. These are design
-and numerical diagnostics, not precision estimates or model-fit tests.
-Graph connectedness alone does not establish component identifiability.
-For example, four tasks scored by two distinct raters per performance
-and eight tasks scored once have the same per-person workload. Only the
-former provides repeated ratings within a Person/Task cell; with one
-rating per cell, Person-by-Task and residual variation cannot be separated
-in the seven-component model. Other overlaps are still needed for the
-remaining components. Uneven workloads across raters can also affect
-precision even when the moment system has full rank.
-\code{\link[=vcov.mfrm_multivariate_gstudy]{vcov.mfrm_multivariate_gstudy()}} supplies normal-model sampling
-covariance and SEs for the original component estimates, including
-incomplete sources. Inspect its separate negative/nonidentifiable
-sampling-variance diagnostics; it does not provide normal-reference intervals.
+Conditioning on assignments must preserve the random-effect means/covariances.
+Outcome-dependent assignments or omissions can violate this; a MAR label does
+not correct selection or omitted covariates. Compare planned and recorded
+ratings with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} and \code{expected_design}.
+\code{design$observed_fraction} divides by the cross-product of retained levels
+(crossed), or Persons times observed parent/child pairs (nested). It is not
+assignment completion and cannot reveal wholly unobserved Persons or facets.
 
-Conditioning on the observed assignments must preserve the stated
-random-effect means and covariances. Outcome-dependent assignment or
-missingness may violate this assumption; calling missingness MAR does
-not correct omitted covariates or selection. Review planned assignments
-separately from recorded scores, for example with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}
-and its \code{expected_design} argument. \code{design$observed_fraction} uses the
-cross-product of retained observed levels for crossed facets, or persons
-times the number of observed parent/child pairs for nested facets. It is not an assignment
-completion rate and cannot reveal entirely unobserved persons or facets.
+\strong{Components and units.} Two crossed facets give \code{Person}, \code{Rater}, \code{Task},
+\code{Person:Rater}, \code{Person:Task}, \code{Rater:Task} and \code{Residual}; with one row per
+cell, Residual combines three-way interaction and within-cell error. One
+facet gives Person, that facet and Residual (Person-by-facet plus within-cell
+error). \code{facets} labels replace Rater/Task. Omitting a facet neither removes
+its effects nor supports generalization to new conditions; scores are not
+averaged automatically. ANOVA uses mean products for multiple scores.
 
-With crossed rater and task facets, the seven components are \code{Person}, \code{Rater}, \code{Task}, \code{Person:Rater},
-\code{Person:Task}, \code{Rater:Task}, and \code{Residual}. With one observation per cell,
-\code{Residual} combines the three-way interaction and within-cell error;
-they cannot be separated. With one facet, the three components are
-\code{Person}, the facet, and \code{Residual}; the last combines Person-by-facet
-interaction and within-cell error. Labels supplied in \code{facets} replace
-Rater/Task in these component names. Omitting a facet does not remove its
-effects from scores or support generalization to new conditions of that facet. No
-scores are averaged automatically. Each component is a matrix whose
-diagonal contains variances and whose off-diagonal contains covariances between
-scores. For ANOVA, mean products replace the mean squares used for a
-single score.
+Each component's diagonal contains variances in squared score units;
+off-diagonals are covariances in products of score units, not correlations or
+variance percentages. Positive Rater covariance means rater-associated score
+deviations move together, not rater agreement or correlated Person abilities.
+Numeric treatment of ordinal categories does not estimate latent/MFRM reliability.
 
-Raw component estimates, including negative variances and indefinite
-matrices, are retained without clipping or nearest-PSD repair. The
-\code{component_diagnostics} assess eigenvalues after scaling by the observed
-score SDs, using a relative numerical tolerance. This is a numerical
-admissibility check, not a significance test or precision assessment.
-Rank-deficient components are reported. \code{\link[=mfrm_d_study]{mfrm_d_study()}}
-retains raw projected variances and evaluates each score/composite and
-metric separately. A non-PSD component does not automatically withhold
-coefficients: for example, Rater-by-Task does not enter relative error.
-D-study tables and plots flag non-PSD components even when a requested
-projection can be calculated. Inspect these diagnostics before using it.
-Non-PSD estimates can arise from sampling variation even under a correctly
-specified model, particularly when a true component is small or zero.
-They do not by themselves prove bad data, informative missingness, or
-model misspecification. Automatic clipping or deleting a component would
-change the estimation procedure and is not performed.
-Distinguish \code{estimation$rank}, the number of separable components, from
-\code{component_diagnostics$Rank}, the rank of each between-score covariance
-matrix. A true zero covariance component can have matrix rank zero
-while the design still separates that component from the others.
+\strong{Admissibility.} Negative variances and indefinite matrices remain raw,
+without clipping or nearest-PSD repair. \code{component_diagnostics} scales by
+observed score SDs before checking eigenvalues. \code{MinimumScaledEigenvalue} is
+dimensionless, not a raw component or confidence limit; \code{PositiveSemidefinite}
+compares it with \code{-Tolerance}, not with the signs of all covariance entries.
+These are numerical checks, not significance or precision tests. Non-PSD
+estimates can arise through sampling variation, especially near zero, and
+do not alone prove bad data, informative missingness or misspecification.
 
-The model concerns numeric observed scores. Treating ordered categories
-as numeric does not estimate latent ordinal or MFRM reliability. The
-The FACETS G-theory web example gives different coefficients for
-main-effects and interaction models (about 0.72930 versus 0.55144 in its
-nested example). Match the specified decomposition before comparing.
-Its Rater and Task:Rater terms share the same nested incidence and their
-summed variance corresponds to Rater(Task) here. A matching coefficient
-does not identify those redundant terms separately.
-GENOVA 3.1 and urGENOVA 2.1 balanced nested examples agree with the
-corresponding ANOVA variance components; mGENOVA 2.1 also checks
-multivariate components and D-study coefficients. urGENOVA uses
-Henderson's Method 1 for unbalanced designs, whereas this function offers
-MINQUE0 there; equal results are not required for different estimators.
-urGENOVA has no D-study output. These comparisons do not establish
-unbalanced interval coverage or general interchangeability. The
-mGENOVA Appendix E example checks balanced numerical calculations;
-MINQUE(0) additionally agrees with direct covariance-kernel calculations
-for incomplete designs. These checks do not establish population recovery
-for arbitrary sparse assignments or missingness mechanisms. This function
-returns point estimates, not sampling intervals.
+\code{\link[=mfrm_d_study]{mfrm_d_study()}} evaluates each score/composite and metric separately, retaining
+non-PSD flags even when the projection is calculable; Rater:Task, for example,
+does not enter relative error. Distinguish \code{estimation$rank} (separable
+components) from \code{component_diagnostics$Rank} (rank within a between-score
+matrix): an identifiable zero component may have matrix rank zero.
+
+\strong{External comparisons.} Match decomposition and estimator. FACETS' nested
+G-theory example gives about 0.72930 for main effects versus 0.55144 with
+interactions; its redundant Rater and Task:Rater incidences sum to Rater(Task)
+here, without identifying them separately. GENOVA 3.1/urGENOVA 2.1 balanced
+nested examples match ANOVA components; mGENOVA 2.1 also checks multivariate
+components and D-study coefficients (Appendix E). Unbalanced urGENOVA uses
+Henderson's Method 1 rather than MINQUE(0), and has no D-study output.
+Incomplete MINQUE(0) also matches direct covariance-kernel calculations.
+These numerical checks do not establish arbitrary sparse-design recovery,
+missingness robustness, interval coverage or general interchangeability.
 }
 \section{Component uncertainty versus measurement error}{
 
-For a balanced ANOVA result, \code{\link[=confint.mfrm_multivariate_gstudy]{confint.mfrm_multivariate_gstudy()}} adds
-sampling SEs and pointwise intervals for variance components of one score
-or a prespecified weighted composite, under an explicit normal-effects
-assumption. \code{plot(g, intervals = TRUE, assumption = "normal")} adds
-these intervals to a component plot; its returned data retain SEs,
-raw endpoints and reasons for unavailable intervals.
-For balanced or identifiable incomplete sources, explicit
-\code{method = "reml_profile"} supplies approximate variance or two-score covariance intervals
-from a separate normal REML model. Original estimates remain unchanged,
-with the REML estimate in \code{IntervalCenter}. It does not supply a component
-sampling SE, and numerical availability is not a coverage guarantee.
-For between-score covariance, pass exactly two score names to \code{confint()}
-and explicitly select \code{method = "gci"} or \code{"regression_region"} for balanced ANOVA,
-or experimental \code{"reml_profile"} for the joint normal model.
-These retain signed bounds and distinguish approximate generalized coverage
-from conservative normal-model enclosures. \code{plot(g, type = "covariance", score = c("V", "W"), intervals = TRUE, method = "gci", assumption = "normal")} shows their intervals across sources.
-Explicit \code{method = "residual_contrast"} also accepts retained ANOVA/MINQUE
-ratings, but supplies only Residual intervals: exact normal-model
-chi-square for variance, or a conservative covariance enclosure. It
-removes all nonresidual incidence columns, requires residual degrees of
-freedom, retains original points and reports a separate \code{IntervalCenter}.
-It does not supply the original component estimator's SE or intervals
-for G/Phi or other sources. See \code{\link[=confint.mfrm_multivariate_gstudy]{confint.mfrm_multivariate_gstudy()}}.
-\code{score_scale} contains observed score SDs used for
-numerical diagnostics; these are not component SEs. Neither matrix rank
-nor a nonnegative estimate establishes that a component is precisely known.
-A D-study's SEM instead describes projected measurement error in score
-units. The separate \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} provides approximate
-intervals for \strong{plan differences} in its supported two-facet crossed
-scope; these are not component intervals or marginal intervals for each
-plan's coefficient. See \link{mfrmr_methods_reference} for the target map.
+Use \code{\link[=confint.mfrm_multivariate_gstudy]{confint.mfrm_multivariate_gstudy()}} for component sampling SEs and
+intervals under explicit normal-effects assumptions. Its method descriptions
+distinguish balanced ANOVA, incomplete-source profiles, residual-only methods
+and signed between-score covariance intervals. Separate REML/residual-contrast
+centers do not replace the original estimates; numerical availability does
+not establish coverage. For balanced variance components, start with
+\code{plot(g, intervals = TRUE, assumption = "normal")}; select two scores and an
+explicit covariance method for covariance intervals. Returned plot data
+retain the interval table and unavailable reasons.
+
+\code{score_scale} contains observed SDs for numerical scaling, not component SEs.
+A D-study SEM describes measurement error in score units; component sampling
+SEs describe uncertainty in estimated variances/covariances. Neither
+nonnegativity nor matrix rank establishes precision. G/Phi and plan-difference
+intervals are separate targets; see \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}},
+\code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} and the target map in \link{mfrmr_methods_reference}.
 }
 
 \section{Fixed tasks as score components}{
@@ -318,28 +270,17 @@ rules; nesting within persons and score-specific child identities do not.
 
 \section{Reviewing incomplete designs}{
 
-Begin with the planned roster and \code{data_usage} to distinguish unassigned
-cells from missing assigned ratings. Then inspect \code{estimation} for
-component separation and replication, \code{component_diagnostics} for
-covariance admissibility, and the D-study metric-specific status columns
-(\code{GStatus}, \code{PhiStatus}, \code{RelativeSEMStatus}, \code{AbsoluteSEMStatus}) before
-reading the corresponding result. None of these checks estimates sampling
-precision or identifies the missingness mechanism. No fixed percentage of observed cells,
-condition-number cutoff, or passed matrix check establishes adequate
-precision. D-studies project future complete balanced designs. The separate
-\code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} offers approximate normal-theory intervals
-for prespecified differences in two-facet crossed designs; nested-design
-intervals are not currently available.
+Read the planned roster and \code{data_usage} first, then \code{estimation} for component
+separation/replication, \code{component_diagnostics} for covariance admissibility,
+and each D-study metric's status (\code{GStatus}, \code{PhiStatus}, \code{RelativeSEMStatus},
+\code{AbsoluteSEMStatus}). No observed-cell percentage, condition number or passed
+matrix check establishes precision or identifies the missingness mechanism.
 
-For the same rating workload, changing rater overlap or concentrating
-assignments can change estimation precision. Omitting ratings selected
-by their scores can introduce bias even when every requested coefficient
-is calculable. Neither a returned coefficient nor agreement with another
-program determines whether these assumptions suit the user's assessment.
-Observed pool sizes concern estimation in the G-study; they differ from
-the per-person counts in a future D-study scenario. Review which tasks
-and raters are shared and whether recorded ratings represent the intended
-population and conditions before interpreting a projected improvement.
+The same workload can give different precision under different rater overlap
+or concentration. Score-dependent omissions can bias calculable coefficients.
+Review who shares tasks/raters and whether observed ratings represent the
+intended universe. Source pool sizes describe estimation; D-study counts
+describe a future complete balanced plan, not the observed sparse roster.
 }
 
 \examples{

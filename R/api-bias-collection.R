@@ -26,22 +26,13 @@
 #' @param tol Passed to [estimate_bias()].
 #'
 #' @details
-#' This function orchestrates repeated calls to [estimate_bias()] across
-#' multiple facet pairs and returns a consolidated bundle.
-#'
-#' **Bias/interaction** in MFRM refers to a systematic departure from
-#' the additive model for a specific combination of facet elements
-#' (e.g., a particular rater is unexpectedly severe on a particular
-#' criterion).  See [estimate_bias()] for the mathematical formulation.
-#'
-#' When `pairs = NULL`, the function builds all 2-way combinations of
-#' modelled facets automatically.  For a model with facets Rater,
-#' Criterion, and Task, this yields Rater\eqn{\times}Criterion,
-#' Rater\eqn{\times}Task, and Criterion\eqn{\times}Task.
-#' With `include_person = TRUE`, Person\eqn{\times}facet pairs are prepended in
-#' the fit's facet order. They are conditional plug-in likelihood screens, not
-#' jointly fitted Person\eqn{\times}facet terms. A single warning records this
-#' boundary for the batch.
+#' Calls [estimate_bias()] for each requested interaction, retaining its
+#' fixed-baseline target and screening limitations. Default pairs for Rater,
+#' Criterion and Task are Rater\eqn{\times}Criterion, Rater\eqn{\times}Task and
+#' Criterion\eqn{\times}Task. `include_person = TRUE` prepends
+#' Person\eqn{\times}facet pairs in fitted facet order. These are conditional
+#' screens, not jointly fitted Person\eqn{\times}facet terms; one batch warning
+#' records that distinction.
 #'
 #' The `summary` table aggregates results across pairs:
 #' - `Rows`: number of interaction cells estimated
@@ -58,15 +49,13 @@
 #' - `FormalInferenceEligible` / `PrimaryReportingEligible`: always `FALSE`;
 #'   these conditional plug-in interaction statistics are screening evidence
 #'
-#' Per-pair failures (e.g., insufficient data for a sparse pair) are
-#' captured in `errors` rather than stopping the entire batch.
-#' There is no collection-wide multiplicity correction. Cells and pairs reuse
-#' the same observations and fitted calibration. Adjusting their screening tail
-#' areas would not establish formal family-wise error or false-discovery control.
-#' A screen-positive result is a prompt for review, not proof of unfairness;
-#' no screen-positive cells does not establish absence of interaction.
-#' Search-boundary points remain visible, with missing screening statistics
-#' and the `ScreenStatus`/`ScreenReason` returned by [estimate_bias()].
+#' Pair failures do not stop the batch; `summary$Error` retains them even when
+#' the optional `errors` table is not kept. There is no collection-wide
+#' multiplicity correction: pairs reuse observations/calibration, and adjusted
+#' plug-in tails would not establish family-wise error or false-discovery control.
+#' Boundary points retain missing statistics with `ScreenStatus`/`ScreenReason`.
+#' A screen-positive cell warrants review but does not prove unfairness. An absence
+#' of positive screens does not establish absence of interaction.
 #'
 #' @section Output:
 #' The returned object is a bundle-like list with class
@@ -77,22 +66,19 @@
 #' - `settings`: resolved execution settings
 #' - `primary`: first successful bias bundle, useful for downstream helpers
 #'
-#' @section Typical workflow:
-#' 1. Fit with [fit_mfrm()] and diagnose with [diagnose_mfrm()]. For
-#'    `RSM` / `PCM` reporting runs, prefer `method = "MML"` plus
-#'    `diagnostic_mode = "both"` in the diagnostics call.
-#' 2. Run `estimate_all_bias()` to compute the requested multi-pair interactions.
-#' 3. Inspect `summary(bias_all)$overview` for availability and magnitude, then
-#'    `summary(bias_all)$cells` for all retained cells and their observed counts.
-#'    Use [plot.mfrm_bias_collection()] for the overview or a named pair.
-#' 4. Use `report <- mfrm_report(bias_all)` to retain the full search, failed
-#'    pairs and all cells in one report; [export_summary_appendix()] saves its
-#'    tables. Supply `study_context` to state rubric endpoints and score direction.
-#'    The `by_pair` list also feeds [reporting_checklist()] or [facet_quality_dashboard()].
-#' 5. For a substantively justified joint interaction model, use
-#'    `facet_interactions` in [fit_mfrm()] and [compare_mfrm()] on compatible
-#'    fits. Selecting terms from these screens makes same-data comparisons
-#'    exploratory; it does not create a prespecified confirmatory test.
+#' @section Reviewing and reporting the collection:
+#' Fit and diagnose under the intended assumptions; for supported MML,
+#' `diagnostic_mode = "both"` also retains marginal fit. After `estimate_all_bias()`,
+#' read `summary(bias_all)$overview` for availability/magnitude and `$cells` for
+#' all retained cells/counts. [plot.mfrm_bias_collection()] shows the overview
+#' or a selected pair.
+#'
+#' `mfrm_report(bias_all)` and [export_summary_appendix()] retain the full search,
+#' failures and cells; `study_context` records rubric endpoints/direction.
+#' `by_pair` also feeds [reporting_checklist()] or [facet_quality_dashboard()].
+#' Joint interactions instead require `fit_mfrm(facet_interactions = ...)` and
+#' compatible [compare_mfrm()] fits. Terms selected from these same-data screens
+#' remain exploratory, not prespecified confirmatory tests.
 #'
 #' @return A named list with class `mfrm_bias_collection`.
 #' @seealso [estimate_bias()], [mfrm_report()], [compare_mfrm()],

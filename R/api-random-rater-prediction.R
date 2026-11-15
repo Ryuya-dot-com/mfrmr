@@ -121,10 +121,10 @@ predict.mfrm_random_rater <- function(object, newdata, ability,
 #'   first-order approximation from `confint(x, parm = "raters")`; nominal
 #'   coverage is not established. Required for the interval-width precision
 #'   view and sorting by interval width (`sort = "uncertainty"`).
-#' @return For `plot()`: Invisibly, a `ggplot` object. [plot_data()] extracts
-#'   the rater table, display metadata, and settings.
+#' @return For `plot()`: Invisibly, an `mfrm_plot_data` object with the rater table and settings.
+#'   Use [plot_data()] for custom graphics.
 #' @details For `plot()`: Points are conditional modes of severity relative to the rater
-#'   population mean zero; positive values mean more severe ratings. No individual
+#'   population mean zero; positive values mean stricter ratings. No individual
 #'   rater intervals are supplied automatically, including for earlier saved
 #'   fits. Explicit normal whiskers are approximate 95% prediction intervals,
 #'   not qualified rater classifications. At an estimated zero variance or with

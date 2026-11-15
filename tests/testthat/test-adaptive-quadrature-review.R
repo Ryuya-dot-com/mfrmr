@@ -80,7 +80,7 @@ test_that("public fit and artifact scoring share an optional unrounded review", 
                    match(ordinary$estimates$Person, reviewed$quadrature_review$Person)],
                  unname(ordinary$estimates$Estimate), tolerance = 1e-12)
     draft <- mfrmr:::mfrmr_extract_calibration_draft(fit, scoring_quad_points = 121L)
-    calibration <- update(object = update(object = draft, status = "validated"), status = "frozen")
+    calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
     before <- calibration
     scored <- score_mfrm_calibration(calibration, scoring_data, adaptive_quad_points = c(121L, 241L))
     expect_identical(calibration, before)

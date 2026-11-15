@@ -64,18 +64,6 @@ mfrm_validate_facet_names <- function(facets) {
   invisible(NULL)
 }
 
-validate_mfrm_single_person_support <- function(n_person, allow_single_person = FALSE) {
-  if (n_person < 2L && !isTRUE(allow_single_person)) {
-    stop(
-      "This fitting route requires at least two persons (got ", n_person, "). ",
-      "One-Person calibration is supported only for full RSM/PCM JML, CML or fixed-population MML. ",
-      "The selected route retains a software support limit, not a general mathematical impossibility claim.",
-      call. = FALSE
-    )
-  }
-  invisible(NULL)
-}
-
 prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
                               rating_min = NULL, rating_max = NULL,
                               weight_col = NULL, keep_original = FALSE,
@@ -725,7 +713,14 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   # Single-Person support is admitted by the caller; it is not a universal
   # identification theorem. Unreviewed fitting routes retain their input limit.
   n_person <- length(levels(df$Person))
-  validate_mfrm_single_person_support(n_person, allow_single_person = allow_single_person)
+  if (n_person < 2L && !isTRUE(allow_single_person)) {
+    stop(
+      "This fitting route requires at least two persons (got ", n_person, "). ",
+      "One-Person calibration is supported only for full RSM/PCM JML, CML or fixed-population MML. ",
+      "The selected route retains a software support limit, not a general mathematical impossibility claim.",
+      call. = FALSE
+    )
+  }
   # A count alone is not an invalid-input condition. Interval outputs also
   # carry this caution, separately from their numerical eligibility checks.
   if (n_person == 1L) add_preparation_note(

@@ -7,14 +7,9 @@
 \alias{summary.mfrm_clusters}
 \title{Group mixed external features using Gower distances and PAM}
 \usage{
-mfrm_cluster(
-  x,
-  k,
-  weights = NULL,
-  missing = c("error", "omit"),
-  method = c("pam", "hierarchical", "kmeans"),
-  ...
-)
+mfrm_cluster_pam(x, k, weights = NULL, missing = c("error", "omit"))
+
+mfrm_cluster(x, k, weights = NULL, missing = c("error", "omit"))
 
 \method{print}{mfrm_clusters}(x, ...)
 
@@ -35,14 +30,9 @@ vector order, identify features. Remove a feature to exclude it.}
 incomplete entities explicitly, retaining their IDs, reasons, and missing
 group membership in the result. No values are imputed.}
 
-\item{method}{Clustering method: \code{"pam"}, \code{"hierarchical"}, or \code{"kmeans"}.
-PAM and hierarchical clustering use Gower distances. K-means uses numeric
-features or an existing \code{\link[=mfrm_pca]{mfrm_pca()}} result. See the method guides
-\link[=mfrm_cluster_hierarchical]{hierarchical clustering details} and \link[=mfrm_cluster_kmeans]{k-means details} for their limits.}
-
 \item{...}{Reserved for method compatibility.}
 
-\item{object}{An object returned by \code{\link[=mfrm_cluster]{mfrm_cluster()}}.}
+\item{object}{An object returned by \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}.}
 }
 \value{
 An \code{mfrm_clusters} object containing \code{membership} (ID, Cluster,
@@ -58,12 +48,8 @@ zero by convention; it is not evidence of group separation.
 \description{
 Partition an entity-level feature table using Gower dissimilarities and
 partitioning around medoids (PAM) from the optional \code{cluster} package.
-Use \code{mfrm_cluster()} and select \code{method = "pam"} (the default),
-\code{"hierarchical"}, or \code{"kmeans"}. Each method retains its own geometry,
-settings and result class; the method is never selected from the data.
-
-The former \code{mfrm_cluster_pam()} entry is no longer exported;
-use \code{mfrm_cluster(..., method = "pam")}. Its calculation is unchanged.
+Use \code{mfrm_cluster_pam()} for this method. \code{mfrm_cluster()} is retained as
+an identical compatibility alias; it does not select an algorithm for you.
 }
 \details{
 Numeric differences are divided by the feature range among included
@@ -91,7 +77,7 @@ to 5,000 included entities. It does not silently sample larger inputs.
 This input limit does not guarantee low memory use or acceptable run time.
 
 For feature selection, missingness review, and multiple-imputation examples,
-see \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html}{online feature-analysis guide}.
+see \href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.html}{mfrmr-external-features}.
 }
 \section{Reading clustering metrics}{
 
@@ -119,7 +105,7 @@ See \code{\link[cluster:silhouette]{cluster::silhouette()}} and Rousseeuw (1987)
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("mfrm_cluster", run.dontrun = TRUE)
 \dontrun{
 if (requireNamespace("cluster", quietly = TRUE)) {
@@ -129,7 +115,7 @@ if (requireNamespace("cluster", quietly = TRUE)) {
     Specialty = rep(c("Language", "Science"), each = 3))
   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
   # The default stops on missing features. Here omission is explicit.
-  groups <- mfrm_cluster(method = "pam", features, k = 2,
+  groups <- mfrm_cluster_pam(features, k = 2,
     weights = c(ExperienceYears = 2, Specialty = 1), missing = "omit")
   groups$membership  # R2 remains present with unavailable membership.
   summary(groups)
@@ -140,5 +126,5 @@ if (requireNamespace("cluster", quietly = TRUE)) {
 }
 \seealso{
 \code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
-\link[=mfrm_cluster_hierarchical]{hierarchical clustering details}, \code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}}, \code{\link[cluster:daisy]{cluster::daisy()}}, \code{\link[cluster:pam]{cluster::pam()}}
+\code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}, \code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}}, \code{\link[cluster:daisy]{cluster::daisy()}}, \code{\link[cluster:pam]{cluster::pam()}}
 }

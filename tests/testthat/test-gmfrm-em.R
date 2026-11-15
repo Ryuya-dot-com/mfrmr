@@ -63,6 +63,27 @@ test_that("common product parameters retain owners and reject non-product crossi
   expect_error(expand_gpcm_log_slopes(1, setup$config$gpcm_spec), "free coordinate")
 })
 
+test_that("iterative product expansion omits only reporting tables", {
+  p <- gmfrm_test_problem()$problem
+  x <- p$start + seq(-.2, .3, length.out = length(p$start))
+  full <- expand_params(x, p$common$sizes, p$common$config)
+  lean <- expand_params(x, p$common$sizes, p$common$config,
+    include_slope_components = FALSE)
+  expect_identical(lean, full[setdiff(names(full), "slope_components")])
+  expect_identical(p$unpack(x)$slopes$Task,
+    setNames(full$slope_components$Task$Slope, p$levels$Task))
+  # Omitting tables must retain component overflow and underflow guards.
+  for (value in c(-1000, 1000)) {
+    bad <- x
+    bad[grepl("^log_slope:Rater", names(bad))] <- value
+    original <- tryCatch(expand_params(bad, p$common$sizes, p$common$config), error = identity)
+    fast <- tryCatch(expand_params(bad, p$common$sizes, p$common$config,
+      include_slope_components = FALSE), error = identity)
+    expect_s3_class(fast, "mfrmr_gpcm_slope_numeric_boundary_error")
+    expect_identical(fast, original)
+  }
+})
+
 test_that("common MML likelihood and scores agree with the EM marginal calculation", {
   for (k in c(1L, 2L, 4L)) for (sparse in if (isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) c(FALSE, TRUE) else k != 2L) {
     d <- gmfrm_test_data(k)
@@ -294,7 +315,7 @@ test_that("crossing indices reject relabelled levels and implicit two-family set
   expect_error(build_indices(reversed, "Rater", owners, gpcm_spec = spec), "level ordering")
   expect_error(fit_mfrm(d, person = "Person", facets = owners, score = "Score",
     model = "GPCM", step_facet = "Rater", slope_facet = owners),
-    "declared non-Person facet")
+    "Two slope families require")
 })
 
 test_that("optimizer coordinates distinguish slope owners and their constraints", {

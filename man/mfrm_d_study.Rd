@@ -111,236 +111,128 @@ an estimated G-study does not refit. Supplying an MFRM first estimates the
 separate main-effects G-study described below.
 }
 \details{
-Start with a concrete comparison, such as six versus twelve tasks
-for every examinee. Each row of \code{design_grid} is one scenario. With both
-facets, \code{data.frame(Raters = c(2, 4), Tasks = c(3, 3))} compares two versus
-four raters at three tasks; \code{expand.grid(Raters = c(2, 4), Tasks = c(3, 6))} requests all four combinations. These counts apply to
-every person and score, not to the total number of observed ratings.
-For \code{facets = c(Rater = "Assessor", Occasion = "Session")}, use
-\code{expand.grid(Rater = c(1, 2), Occasion = c(2, 4))}. The same workflow
-applies to any supported one- or two-facet model; extra columns cannot
-introduce conditions absent from the G-study.
+Each \code{design_grid} row is a future plan: \code{data.frame(Raters = c(2, 4), Tasks = c(3, 3))} compares two/four raters at three tasks, while
+\code{expand.grid(Raters = c(2, 4), Tasks = c(3, 6))} requests four combinations.
+Counts apply to every Person/score, not the total rating pool. With \code{facets},
+use its labels; extra grid columns cannot introduce a new facet.
 
-This is the primary D-study entry for one or several scores. It replaces
-the public \code{mfrm_multivariate_d_study()} name without changing its result
-class, component estimates, projections or uncertainty methods. For either
-source model, \code{summary(d)} returns its full-precision coefficient table.
-Optional interval summaries remain specific to the interaction-component
-route. Main-effects projections do not acquire those interval methods.
-
-Read \code{summary(d)} together with \code{plot(d)}:
+Read \code{summary(d)} with \code{plot(d)}:
 \itemize{
-\item \code{G} concerns consistency of relative ordering, such as ranking examinees.
-It is not the probability of identifying the best person or the winner
-of a competition. Close leading scores can remain hard to distinguish
-even when G is high; this function provides no Person-rank intervals.
-\item \code{Phi} concerns absolute score levels and also counts shifts from easier
-tasks or more lenient raters as error. It is not pass/fail accuracy.
-\item \code{RelativeSEM} and \code{AbsoluteSEM} express these errors in the units of the
-mean score or composite. Smaller SEMs mean less error. They are not
-confidence intervals for G or Phi.
+\item \code{G} describes relative ordering, not the probability of selecting a winner
+or intervals for Person ranks. High G can coexist with uncertain close ranks.
+\item \code{Phi} concerns absolute scores, counting facet main-effect shifts as error;
+it is not pass/fail accuracy.
+\item \code{RelativeSEM}/\code{AbsoluteSEM} express measurement error in mean-score or
+composite units, not confidence intervals for G/Phi.
 }
 
-Larger G/Phi and smaller SEM indicate greater dependability under the
-model. There is no universally acceptable coefficient: consider the use
-of scores, consequences of error, and workload before choosing a design.
-Compare a chosen score/composite and metric across feasible plans. For
-example, \code{data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3))} holds the
-number of ratings per person at twelve. It does not hold examinee task
-burden or total cost constant. The largest projected coefficient is a
-point-estimate ranking, not evidence that one plan is reliably better.
-Consider the size of the projected difference and which differences
-would matter for the assessment. Small rank changes need not imply large
-practical losses. If a metric is unavailable for any candidate, comparing
-only the remaining values does not resolve the full planning question.
-\code{plot(d, type = "sem")} shows the SEMs. Plots select a sole composite
-by default, or the first score when there are no composites. With several
-composites, specify one with \code{plot(d, composite = "Equal")}; use
-\code{plot(d, score = "V")} to inspect an original score named V. The title
-metadata identifies the plotted score and any composite weights; it is
-returned with the plot, with titles and notes omitted from the figure
-by default.
-Check \code{GStatus}, \code{PhiStatus}, \code{RelativeSEMStatus}, and \code{AbsoluteSEMStatus}:
-each explains the corresponding metric's availability. \code{NA} means
-unavailable, not zero dependability. \code{ComponentPSD} separately flags
-covariance components needing review. See \code{\link[=plot.mfrm_multivariate_d_study]{plot.mfrm_multivariate_d_study()}} for
-interpreting curves and unavailable estimates.
+Compare a specified score/composite and metric over feasible plans. Higher
+G/Phi and lower SEM favor dependability under the model, without a universal
+acceptable threshold. \code{data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3))}
+keeps twelve ratings per Person, not constant task burden or cost. A point
+ranking does not establish a reliable or practically important difference;
+unavailable candidates leave the overall planning question unresolved.
 
-For a balanced one-facet ANOVA source, \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}}
-returns exact F intervals for G and generalized confidence intervals for
-Phi (\code{parm = "Phi"}) under independent normal random effects, using the
-source study's degrees of freedom at each requested future count. Phi
-includes Monte Carlo endpoint diagnostics and is not an exact-coverage
-method. Add \code{reference = 1} for intervals on changes from the first plan:
-G maps the F set; Phi maps the generalized set and retains approximate
-coverage. Both include interior extrema; Phi differences retain joint
-numerical endpoint bands. These methods also apply to balanced nested
-plans when future child counts per parent equal the source count, using
-the parent count in the one-facet reduction. Complete balanced crossed
-two-facet sources default to approximate MLS null inversion for individual
-G/Phi intervals. Undefined MLS widths are conservatively retained and
-flagged by \code{FormulaComplete}; original estimates and numerical failures
-remain explicit. Small-source intervals may span almost all of \verb{[0,1]}.
-These sources and general balanced nested plans also have explicitly selected
-experimental \code{method = "approximate_f"} and \code{"mean_square_region"}
-options for G/Phi; a vector requests both and \code{plot()} compares them.
-The confidence-interval help explains their assumptions, limitations and
-unavailable results. Use \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}
-separately for its supported paired-plan differences.
-For balanced or identifiable incomplete sources, explicit
-\code{method = "reml_profile"} fits approximate G/Phi or SEM intervals from the used
-ratings under normal effects. It retains original ANOVA/MINQUE estimates
-and reports the separate REML estimates as \code{IntervalCenter}. Numerical
-diagnostics and experimental finite-sample/boundary qualifications remain
-explicit; it is not a default. With \code{reference}, it supplies shared-profile
-interval images for one-facet or common-child nested plans, and direct
-difference profiles for other crossed/nested comparisons. The latter need
-optional nloptr and retain experimental calibration, especially at zero.
-SEM uses a direct error-variance profile followed by square roots; the
-numerical interval surrounds the REML center without enumerating remote
-disconnected accepted regions. Checked boundary populations showed
-below-nominal inclusion despite high numerical availability.
-Select \code{parm = "RelativeSEM"} or \code{"AbsoluteSEM"} for intervals on SEM
-itself from supported balanced crossed/nested sources. A single contributing
-mean square uses chi-square limits; otherwise MLS limits for the combined
-error variance are transformed by the square root. MLS coverage is
-approximate. One-facet SEM differences also accept \code{reference = 1};
-nested MLS comparisons require a common future child count across plans.
-For one-facet RelativeSEM, explicit \code{method = "residual_contrast"} also
-accepts retained ANOVA/MINQUE ratings, including incomplete MINQUE sources.
-It transforms one residual
-chi-square interval and retains original points, a separate projected
-\code{IntervalCenter}, unavailable states and shared uncertainty across plans.
-Normal independent residuals and noninformative omissions are required;
-this does not supply AbsoluteSEM, G/Phi or multifacet intervals.
-Explicit \code{method = "mean_square_region"} supplies conservative individual
-SEM intervals and G/Phi/SEM difference enclosures for general balanced
-crossed/nested two-facet plans. The enclosure retains common source
-uncertainty but can be much wider than the tight difference image.
-\code{plot(d, type = "sem", metric = "AbsoluteSEM", intervals = TRUE, assumption = "normal")} adds the corresponding ribbon without refitting.
+Inspect the four metric-specific status columns: \code{NA} means unavailable, not
+zero dependability. \code{ComponentPSD} separately flags components for review.
+Use \code{plot(d, type = "sem")} for SEMs and \code{score}/\code{composite} to select results;
+defaults, curve interpretation and title/weight metadata are documented in
+\code{\link[=plot.mfrm_multivariate_d_study]{plot.mfrm_multivariate_d_study()}}. Titles and notes are omitted from figures
+by default but retained with the returned plot.
+
+\strong{Sampling uncertainty.} \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}} distinguishes
+normal-model exact F, generalized, approximate and conservative procedures
+by source design and target. Future counts do not increase source information.
+For example, \code{confint(d, parm = "Phi", assumption = "normal")} asserts the
+normal-effects assumptions; \code{reference = 1} requests supported differences
+sharing the same source uncertainty. Incomplete sources require an explicit
+supported method; numerical success does not establish coverage. Do not
+subtract separate interval endpoints as if plans were independent.
+\code{plot(d, metric = "Phi", intervals = ci)} displays a matching saved result.
+\code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} is a separate paired-difference approximation.
+
+This entry replaces \code{mfrm_multivariate_d_study()} without changing result
+class or calculations. Both source routes return full-precision coefficients
+through \code{summary(d)}; main-effects projections do not acquire the
+interaction-component route's interval methods. See \link{mfrmr_compatibility_layer}.
 }
 \section{Calculation and interpretation limits}{
 
-For crossed covariance component matrices \code{P}, \code{R}, \code{T}, \code{PR}, \code{PT}, \code{RT},
-and \code{E}, universe-score covariance is \code{P}. Relative-error covariance is
-\code{PR/n_r + PT/n_t + E/(n_r*n_t)}. Absolute-error covariance adds
-\code{R/n_r + T/n_t + RT/(n_r*n_t)}. The G-study number of persons does not
-divide individual-score universe variance. Holding a count constant does
-not turn its random facet into a fixed facet.
-Composite weights define linear score combinations. They do not implement
-score-dependent panel trimming or an entire competition scoring rule.
-For a Person-by-Task G-study, \code{E} combines Person-by-Task interaction and
-within-cell error: relative-error covariance is \code{E/n_t}, absolute-error
-covariance is \code{(T + E)/n_t}, and universe-score covariance remains \code{P}.
-The same formulas apply to a Person-by-Rater design or to facets selected
-by \code{facets}, with names replaced in the declared order. For a single
-facet F and its planned count n, relative error is \code{E/n} and absolute
-error is \code{(F + E)/n}. A D-study cannot introduce an absent facet.
-For fixed tasks represented by score columns in a Person-by-Rater model,
-vary only \code{Raters}. The task set remains fixed, and each planned rater
-scores all tasks. See "Fixed tasks as score components" in
-\code{\link[=mfrm_g_study]{mfrm_g_study()}} for the target and allocation requirements.
+Universe-score covariance is \code{P}. For crossed components \code{P}, \code{R}, \code{T},
+\code{PR}, \code{PT}, \code{RT}, \code{E}, relative error is \code{PR/n_r + PT/n_t + E/(n_r*n_t)};
+absolute error adds \code{R/n_r + T/n_t + RT/(n_r*n_t)}. For one facet F and
+future count n, errors are \code{E/n} and \code{(F + E)/n}; E combines Person-by-facet
+interaction and within-cell error. The source Person count does not divide
+individual-score universe variance. Holding a random facet's count constant
+does not make it fixed. For fixed tasks represented as score columns, vary
+only Raters and have each rater score every task; see \code{\link[=mfrm_g_study]{mfrm_g_study()}}.
 
-For raters nested within tasks, use the five components \code{P}, \code{T},
-\code{R(T)}, \code{PT}, and \code{E}, where \code{E} includes the Person-by-Rater-within-Task
-interaction. With \code{n_r} raters per task and \code{n_t} tasks, relative error is
-\code{PT/n_t + E/(n_r*n_t)}; absolute error adds \code{T/n_t + R(T)/(n_r*n_t)}.
-Universe covariance remains \code{P}. Other nested facet labels follow the
-same rules. All persons receive the same tasks and their nested raters;
-two raters per task at six tasks means twelve distinct raters, not two
-raters each judging six tasks. Future unequal child counts, changes of
-nesting are not supported. Nested G/Phi defaults and their differences
-require unchanged source child counts. Nested MLS SEM differences need
-a common future child count across plans, which may differ from the source.
-General nested coefficient intervals require explicit experimental methods;
-general difference enclosures use \code{method = "mean_square_region"}.
-Individual nested SEM intervals allow both counts to change.
-See \code{confint()} above for the derivations and limitations.
+With Rater nested within Task, components are \code{P}, \code{T}, \code{R(T)}, \code{PT}, \code{E};
+E includes Person-by-Rater-within-Task interaction. For \code{n_r} raters per task
+and \code{n_t} tasks, relative error is \code{PT/n_t + E/(n_r*n_t)} and absolute error
+adds \code{T/n_t + R(T)/(n_r*n_t)}; universe covariance stays P. Two raters at each
+of six tasks means twelve distinct raters, not two shared across tasks.
+Other declared facet labels follow the same formulas. Future plans preserve
+nesting, equal child counts and common conditions across Persons/scores.
+Intervals have additional count restrictions in
+\code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}}. Incomplete source pool sizes are not
+per-Person replication: projections concern complete future designs, not the
+reliability of the observed sparse roster or heterogeneous assignments.
 
-For incomplete source data, counts of distinct observed levels are not
-per-person replication counts. This function projects a future complete
-design; it does not estimate the reliability of the observed sparse
-roster, heterogeneous person-specific assignments, or averages of them.
+Each score uses covariance diagonals; a composite uses \verb{w' Sigma w} for
+universe, relative-error and absolute-error matrices. Thus cross-score
+covariance affects dependability. \code{G = UniverseVariance / (UniverseVariance + RelativeErrorVariance)}; Phi substitutes absolute error. SEMs are the square
+roots of error variances, in mean-score/composite units. Scaling all weights
+by a nonzero constant scales SEM by its absolute value but leaves G/Phi
+unchanged. Weights are substantive choices, not optimized here; different
+weights can change the construct. Compare SEMs only on comparable scales,
+and use signed differences only where score subtraction is meaningful.
+Linear composites do not implement score-dependent panel trimming or a
+complete competition rule. Target and observed-score weights are identical
+(mGENOVA's equal WWTS/AWTS case); unequal weights, profile reliability and
+cut-score accuracy are unsupported.
 
-Each score uses diagonal entries; a composite uses \verb{w' Sigma w} for each
-of the three covariance matrices. Thus between-score covariance affects
-composite dependability. \code{G = UniverseVariance / (UniverseVariance + RelativeErrorVariance)} and \code{Phi} uses absolute error instead. SEMs are
-square roots of the corresponding error variances, in the units of the
-score or specified composite of mean scores. Multiplying all weights by
-a nonzero constant multiplies SEMs by its absolute value but leaves G/Phi
-unchanged. Weights express a substantive choice; this function neither
-chooses them nor identifies an optimal design. Interpret a difference
-only when subtraction is meaningful on the supplied score scales.
-Comparing several composites holds the estimated components and planned
-designs constant, but different weights may change the construct being
-assessed. A higher coefficient alone does not justify that change.
-Compare SEMs across composites only when their scales are comparable.
+\strong{Negative components.} The default \code{"raw"} preserves estimates. mGENOVA
+instead zeros negative D-study variances unless \code{NEGATIVE} is selected
+(manual pp. 15, 21); this neither zeros all negative covariances nor guarantees
+PSD matrices. GENOVA 3.1/jGENOVA's \code{NEGATIVE} controls printing, whereas
+\code{ALGORITHM} zeros negative variances and default \code{EMS} also recalculates
+components using zero replacements. Consequently matched G-study estimates
+can yield different default D-studies: one negative-interaction example gives
+Phi 0.73096 (raw), 0.72727 (ALGORITHM) and 0.73532 (EMS).
 
-The same weights define the universe-score composite and its observed
-mean-score estimate (the equal WWTS/AWTS case in mGENOVA). Different
-target and estimation weights, profile reliability, and accuracy at a
-cut score are not provided. Unlike mGENOVA's default D-study procedure,
-negative variance estimates are not replaced with zero by default. mGENOVA replaces
-negative variance components with zero for the D-study unless its
-\code{NEGATIVE} option is selected (manual, pages 15 and 21). That rule concerns
-variances, not all negative covariances, and does not guarantee PSD
-component matrices.
-Do not transfer that option's meaning to GENOVA 3.1 or jGENOVA: their
-\code{NEGATIVE} option controls printing of negative estimates. Their D-studies zero negative
-variances with either \code{ALGORITHM} or its default \code{EMS} convention; \code{EMS}
-also recalculates other components using the zero replacements. Matching
-a raw G-study estimate therefore need not give matching default D-studies.
-A matched negative-interaction example gives Phi = 0.73096 with the raw
-components retained here, 0.72727 in GENOVA 3.1 \code{ALGORITHM}, and 0.73532
-with its default \code{EMS}. This is a component-treatment difference, not a
-coefficient-formula discrepancy. Select \code{negative_components} explicitly
-to reproduce either GENOVA D-study convention in supported univariate
-designs. EMS recalculation uses the source counts, before division by the
-future-plan counts. It is not REML or a positive-semidefinite matrix repair.
-Multivariate and MINQUE sources require \code{"raw"}; negative cross-score
-covariance is not a negative variance. GENOVA's \code{NEGATIVE} printing option
-is separate from this component-treatment choice.
+Choose \code{negative_components} explicitly for supported univariate balanced
+ANOVA designs. EMS uses source-design counts before future-count division;
+it is not REML or PSD matrix repair. Multivariate/MINQUE sources require
+\code{"raw"}; negative cross-score covariances are not negative variances.
+\code{gstudy} retains raw components, \code{effective_components} those projected,
+and \code{effective_component_diagnostics} their diagnostics. \code{ComponentTreatment}
+records the choice; \code{ComponentPSD} still describes the raw G-study. Save
+the whole result to preserve both.
 
-\code{gstudy} retains raw estimates and diagnostics. \code{effective_components}
-contains the matrices actually used in projections; their diagnostics are
-in \code{effective_component_diagnostics}. \code{ComponentTreatment} identifies the
-choice in coefficient tables. \code{ComponentPSD} still describes the original
-G-study, so zero replacement does not erase evidence of problematic raw
-components. Save the complete result to preserve both sets.
-For GENOVA-adjusted results, \code{confint()} retains population-parameter
-intervals based on the original source study alongside adjusted points.
-\code{IntervalEstimate} records the original projection; bounds are not
-recentered on the adjusted \code{Estimate}. Any \code{IntervalSE} and other sampling
-diagnostics retain the original interval-method basis. Summary and plot
-methods accept intervals with the same recorded treatment. Supported
-population plan differences use \code{confint(d, reference = ...)}; the separate
-delta-estimator comparison API still requires raw components. These
-intervals do not characterize the adjusted estimator's sampling law.
-See \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}} for assumptions and distinctions.
+For adjusted results, \code{confint()} retains original-source population intervals
+and \code{IntervalEstimate} alongside the adjusted \code{Estimate}; bounds are not
+recentered. \code{IntervalSE} and other sampling diagnostics keep the interval
+method's original basis, not the adjusted estimator's sampling distribution.
+Summary/plot intervals must match the treatment. Population plan differences
+use \code{confint(d, reference = ...)}; the separate delta-estimator comparison
+still requires raw components. See \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}}.
 
-Original covariance matrices and the selected projected variances remain available. G
-requires nonnegative universe and relative-error variances and a positive
-sum; Phi uses absolute-error variance instead. Each SEM requires only its
-corresponding nonnegative error variance. A failed requirement makes
-only that metric \code{NA}. Zero universe variance yields a coefficient of
-zero when its error variance is positive; a zero total variance leaves
-the coefficient undefined. Under \code{"raw"}, no estimates are clipped or replaced.
+\strong{Availability.} G/Phi require nonnegative universe and respective error
+variances with a positive sum; each SEM needs only its nonnegative error
+variance. Failure withholds only that metric. Zero universe variance gives
+G/Phi zero when error is positive, while zero total variance is undefined.
+\code{Status} summarizes \code{"Available"}, \code{"Partially available"} or \code{"Unavailable"};
+metric-specific columns explain why. No raw estimates are clipped.
 
-\code{Status} summarizes a row as \code{"Available"}, \code{"Partially available"}, or
-\code{"Unavailable"}; the four metric-specific status columns give the reasons.
-\code{ComponentPSD} is TRUE only when all G-study component matrices pass
-their numerical PSD check. A FALSE value flags components for review
-without suppressing otherwise calculable projections. Print and plot
-methods display a note for non-PSD components. Calculability does not
-validate the joint covariance model or establish precise estimation;
-inspect \code{component_diagnostics} before interpreting estimates. Raw estimates
-can yield \code{Phi > G} when projected absolute error is less than relative
-error. Under the stated model, the extra absolute-error contributions
-are nonnegative; such a reversal calls for review of the estimated
-components, not a conclusion that absolute decisions are more dependable.
-Passing the matrix checks does not establish model fit. Outputs are
-point projections conditional on the estimated components, without
-confidence intervals, missing-data correction, or MFRM latent inference.
+\code{ComponentPSD} is true only when every source component passes its numerical
+PSD check. False flags review without suppressing calculable projections;
+print/plot methods retain a note. Calculability or passed PSD checks establish
+neither covariance-model fit nor precision. Raw estimates may give \code{Phi > G}
+when absolute error is smaller; the model's extra absolute-error contributions
+are nonnegative, so this reversal calls for component review. Results are
+point projections, without automatic intervals, missing-data correction or
+MFRM latent inference.
 }
 
 \examples{

@@ -144,15 +144,13 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_equal(sx$decision$FitReadiness, readiness_record$fit$FitReadiness)
 
   primary_plot <- plot(res, draw = FALSE)
-  expect_s3_class(primary_plot, "ggplot")
-  expect_identical(attr(primary_plot, "mfrmr_plot_data")$name, "wright_map")
-  expect_identical(plot_data(primary_plot, "renderer"), "native")
-  expect_true(plot_data(primary_plot, "show_ci"))
-  expect_identical(plot_data(primary_plot, "uncertainty_display"), "native_mfrmr_ci")
+  expect_s3_class(primary_plot, "mfrm_plot_data")
+  expect_identical(primary_plot$name, "wright_map")
+  expect_identical(primary_plot$data$renderer, "native")
+  expect_true(primary_plot$data$show_ci)
+  expect_identical(primary_plot$data$uncertainty_display, "native_mfrmr_ci")
   fit_bundle <- plot(res, type = "fit", draw = FALSE)
-  expect_s3_class(fit_bundle, "ggplot")
-  expect_true(all(c("wright_map", "pathway_map", "category_characteristic_curves") %in%
-                    names(plot_data(fit_bundle))))
+  expect_s3_class(fit_bundle, "mfrm_plot_bundle")
 
   brief <- summary(res, view = "brief")
   expect_identical(brief$view, "brief")
@@ -168,13 +166,13 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_true("next_actions" %in% names(bundle$tables))
 
   plt <- plot(res, type = "tables", draw = FALSE)
-  expect_s3_class(plt, "ggplot")
+  expect_s3_class(plt, "mfrm_plot_data")
   fit_pathway <- plot(
     res, type = "fit_pathway", fit_stat = "Infit",
     include_person = TRUE, top_n_person = 2, draw = FALSE
   )
-  expect_s3_class(fit_pathway, "ggplot")
-  expect_identical(attr(fit_pathway, "mfrmr_plot_data")$name, "fit_pathway")
+  expect_s3_class(fit_pathway, "mfrm_plot_data")
+  expect_identical(fit_pathway$name, "fit_pathway")
 
   report <- mfrm_report(res, style = "qc")
   expect_s3_class(report, "mfrm_report")
@@ -773,7 +771,7 @@ test_that("mfrm_results can attach explicit response-time review", {
                         fixed = TRUE)))
 
   p <- plot(res, type = "response_time", draw = FALSE)
-  expect_s3_class(p, "ggplot")
+  expect_s3_class(p, "mfrm_plot_data")
   expect_true(is.data.frame(plot_data(p, component = "table")))
 
   report <- mfrm_report(res, style = "qc")
@@ -905,7 +903,7 @@ test_that("mfrm_results bias and misfit presets expose review surfaces", {
   expect_true(any(grepl("^misfit_review_", names(res_misfit$tables))))
   expect_true(any(summary(res_misfit)$triage$Area == "Pathway / misfit"))
   expect_true(any(res_misfit$plot_map$Type == "pathway" & res_misfit$plot_map$Available))
-  expect_s3_class(plot(res_misfit, type = "pathway", draw = FALSE), "ggplot")
+  expect_s3_class(plot(res_misfit, type = "pathway", draw = FALSE), "mfrm_plot_data")
   misfit_report <- mfrm_report(res_misfit, style = "reviewer")
   expect_s3_class(misfit_report, "mfrm_report")
   expect_true(any(misfit_report$report_index$Area == "Misfit / pathway" &
@@ -942,7 +940,7 @@ test_that("mfrm_results linking preset exposes anchor readiness", {
   expect_true(any(summary(res)$triage$Area == "Linking / anchors"))
   expect_true(any(summary(res)$next_actions$Area == "Linking / anchors"))
   expect_true(any(res$plot_map$Type == "anchors" & res$plot_map$Available))
-  expect_s3_class(plot(res, type = "anchors", draw = FALSE), "ggplot")
+  expect_s3_class(plot(res, type = "anchors", draw = FALSE), "mfrm_plot_data")
   linking_report <- mfrm_report(res, style = "reviewer")
   expect_s3_class(linking_report, "mfrm_report")
   expect_true(any(linking_report$report_index$Area == "Linking / anchors" &

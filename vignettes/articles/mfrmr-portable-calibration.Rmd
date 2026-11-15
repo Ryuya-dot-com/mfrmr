@@ -10,8 +10,6 @@ vignette: >
 ```{r, include = FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
@@ -60,7 +58,7 @@ shared-owner GPCM JML uses file format 5 with fresh adjusted-equation checks,
 an explicit correction order and a separate post-hoc normal reference prior.
 Its finite EAPs are not corrected Person maxima; calibration uncertainty and
 residual bias are not included in posterior intervals. See the corrected-JML
-example in [GPCM scope and current limitations](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html).
+example in [mfrmr-gpcm-scope](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html).
 Estimated-population
 RSM/PCM and latent regression remain fitted-object-only routes.
 
@@ -68,10 +66,7 @@ Experimental two-family GPCM MML uses file format 6 with the same public
 lifecycle below. It retains two ordered slope owners, second-owner steps,
 the original category coding and fixed N(0,1) prior. The first owner's locations
 and log slopes are centered; the second owner's locations and slopes remain
-free. Extended roles use format 7 with the named slope reference and
-noncentered location facet; all other location facets and each declared step
-set are centered. Format 6 retains its original meaning. Source
-identity/convergence and finer-integration checks must pass before
+free. Source identity/convergence and finer-integration checks must pass before
 extraction; review-only sources cannot be frozen. Each scoring batch must pass
 its own EAP/SD integration checks. Both fixed-grid EM and adaptive direct MML
 retain their scoring integration method.
@@ -83,9 +78,8 @@ Unit weights are required, with no prior override or repeated-event extension.
 Facet names must not collide with the reserved scoring/disposition columns
 listed in `?mfrm_calibration_workflow`. Validation and freezing do not qualify
 sampling coverage, global identification or population transport, and intervals
-exclude calibration uncertainty. Readers must support the artifact's format;
-adding format 7 does not change the interpretation of formats 1--6. See the
-two-family example in the GPCM scope article.
+exclude calibration uncertainty. Older readers refuse format 6; formats 1--5
+retain their interpretation. See the two-family example in the GPCM scope vignette.
 
 For a JML source, EAP holds the calibration fixed and adds a standard-normal
 reference prior by default, or uses an explicit `scoring_prior`. JML did not
@@ -137,7 +131,7 @@ not add fields to it.
 ```{r capabilities}
 library(mfrmr)
 
-mfrmr_output_guide("calibration_capabilities")[, c(
+mfrm_calibration_capabilities()[, c(
   "Model", "Estimator", "ScoringBasis", "PortableCalibration"
 )]
 ```
@@ -186,8 +180,8 @@ draft <- extract_mfrm_calibration(
 )
 review_mfrm_calibration(draft)
 
-validated <- update(status = "validated", draft)
-frozen <- update(status = "frozen", validated)
+validated <- validate_mfrm_calibration(draft)
+frozen <- freeze_mfrm_calibration(validated)
 frozen
 
 artifact_file <- tempfile(fileext = ".rds")
@@ -245,9 +239,8 @@ plot(
 unlink(artifact_file)
 ```
 
-Both `plot(scores, ...)` and `as_ggplot(scores, ...)` return `ggplot` objects
-that distinguish scored and review states by shape as well as colour. The
-complete score and review tables remain in the
+The base and optional ggplot2 renderers distinguish scored and review states
+by shape as well as colour. The complete score and review tables remain in the
 summary object even though its console printout shows only a compact preview.
 `as_ggplot(plot(scores, draw = FALSE))` and an explicit `component = "data"`
 preserve the same selected display and saved endpoints. Use `plot_data()` for
@@ -259,8 +252,8 @@ The colour and shape still identify review points.
 The interval figure is the first score-batch review. Orange triangles identify
 Persons whose `Disposition` is `scored_review`; inspect their `ReasonCodes`
 before using the estimate. A Person with no valid response has no score
-coordinate and therefore appears in `summary(scores)$review` and in
-`plot_data(p, "unplotted_dispositions")`, not as an artificial point.
+coordinate and therefore appears in `summary(scores)$review` and in the
+draw-free plot payload's `unplotted_dispositions`, not as an artificial point.
 
 Two focused follow-up views use the same score object without consulting the
 source fit:
@@ -271,8 +264,8 @@ plot(scores, type = "precision", preset = "publication")
 
 # Posterior mass on the outer quadrature nodes versus the recorded threshold.
 edge_review <- plot(scores, type = "edge_mass", draw = FALSE)
-plot_data(edge_review, "selection_summary")
-plot_data(edge_review, "unplotted_dispositions")
+edge_review$data$selection_summary
+edge_review$data$unplotted_dispositions
 ```
 
 These displays review a returned score batch. They do not establish source-fit
@@ -489,7 +482,7 @@ draft <- extract_mfrm_calibration(
   source_fit_id = "training-cohort", scoring_quad_points = 141
 )
 review_mfrm_calibration(draft)
-calibration <- update(status = "frozen", update(status = "validated", draft))
+calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
 save_mfrm_calibration(calibration, "gpcm-calibration.rds")
 ```
 
@@ -666,7 +659,7 @@ jml_fit <- fit_mfrm(jml_data, "Person", c("Rater", "Criterion"), "Score",
   model = "PCM", method = "JML", step_facet = "Criterion",
   maxit = 500, reltol = 1e-10)
 jml_draft <- extract_mfrm_calibration(jml_fit, scoring_quad_points = 141)
-jml_calibration <- update(status = "frozen", update(status = "validated", jml_draft))
+jml_calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(jml_draft))
 save_mfrm_calibration(jml_calibration, "jml-calibration.rds")
 
 # In a new session, supply your later cohort's ratings instead of these example rows.
@@ -708,7 +701,7 @@ and step owners remain MML-only.
 gpcm_jml_fit <- fit_mfrm(jml_data, "Person", c("Rater", "Criterion"), "Score",
   model = "GPCM", method = "JML", step_facet = "Criterion", slope_facet = "Criterion",
   maxit = 600, reltol = 1e-11)
-gpcm_jml_calibration <- update(status = "frozen", update(status = "validated", 
+gpcm_jml_calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(
   extract_mfrm_calibration(gpcm_jml_fit, scoring_quad_points = 141)))
 save_mfrm_calibration(gpcm_jml_calibration, "gpcm-jml-calibration.rds")
 gpcm_jml_scores <- score_mfrm_calibration(

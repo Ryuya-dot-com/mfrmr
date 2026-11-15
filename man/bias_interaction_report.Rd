@@ -90,15 +90,18 @@ graphics. Export the bundle's data frames with \code{\link[utils:write.csv]{util
 }
 \section{Interpreting output}{
 
-Focus on ranked rows where multiple screening criteria converge:
+Review magnitude, direction, exposure and uncertainty together:
 \itemize{
 \item large absolute t statistic
 \item large absolute bias size
 \item small screening tail area
 }
 
+The t statistic and tail area are derived from the same conditional cell
+estimate. Agreement among these flags is not independent corroboration.
+
 The bundle is optimized for downstream \code{summary()} and
-\link[=plot.mfrm_fit]{plot(x, type = "bias")} views.
+\link[=plot.mfrm_bundle]{plot(out, type = "scatter")} views.
 }
 
 \section{Typical workflow}{
@@ -106,12 +109,12 @@ The bundle is optimized for downstream \code{summary()} and
 \enumerate{
 \item Run \code{\link[=estimate_bias]{estimate_bias()}} (or provide \code{mfrm_fit} here).
 \item Build \code{bias_interaction_report(...)}.
-\item Review \code{summary(out)} and visualize with \link[=plot.mfrm_fit]{plot(x, type = "bias")}.
+\item Review \code{summary(out)} and visualize with \link[=plot.mfrm_bundle]{plot(out, type = "scatter")}.
 }
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("bias_interaction_report", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.
@@ -127,5 +130,5 @@ p_bi$data$plot
 }
 }
 \seealso{
-\code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}, \link[=plot.mfrm_fit]{plot(x, type = "bias")}
+\code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}, \link[=plot.mfrm_bundle]{plot(out, type = "scatter")}
 }

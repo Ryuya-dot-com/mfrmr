@@ -17,6 +17,8 @@ analyze_dff(
   p_adjust = "holm",
   comparison_review = NULL
 )
+
+analyze_dif(...)
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
@@ -25,8 +27,8 @@ analyze_dff(
 it must match \code{fit}; see \link{mfrmr_compatibility_layer} for saved-diagnostic
 migration. The residual method does not use this argument.}
 
-\item{facet}{Character scalar naming the facet whose elements are tested
-for differential functioning (for example, \code{"Criterion"} or \code{"Rater"}).}
+\item{facet}{Character scalar naming the facet whose elements are compared
+across groups (for example, \code{"Criterion"} or \code{"Rater"}).}
 
 \item{group}{Character scalar naming the column in the data that
 defines the grouping variable (e.g., \code{"Gender"}, \code{"Site"}).}
@@ -65,6 +67,8 @@ facet and score coding must match this request. If \code{focal} is supplied it
 must equal the review's first group. The prospective interaction states
 are retained separately; they do not classify the residual/refit contrasts
 as identified, change estimates, or permit an otherwise refused fit.}
+
+\item{...}{Passed directly to \code{\link[=analyze_dff]{analyze_dff()}}.}
 }
 \value{
 An object of class \code{mfrm_dff} (with compatibility class \code{mfrm_dif}) with:
@@ -84,19 +88,14 @@ Compares observed-minus-expected scores between groups, or describes linked
 subgroup facet estimates after refitting. Residual differences do not isolate
 differential functioning and are returned without tests or classifications.
 
-The former \code{analyze_dif()} name is no longer exported. Use \code{\link[=analyze_dff]{analyze_dff()}};
-the calculation and saved result class are unchanged.
+\code{analyze_dif()} is retained for compatibility with earlier package versions.
+In many-facet workflows, prefer \code{\link[=analyze_dff]{analyze_dff()}} as the primary entry point.
 }
 \details{
-\strong{Differential facet functioning (DFF)} occurs when the
-difficulty or severity of a facet element differs across subgroups
-of the population, after controlling for overall ability.  In an
-MFRM context this generalises classical DIF (which applies to
-items) to any facet: raters, criteria, tasks, etc.
-
-Differential functioning is a threat to measurement fairness: if Criterion 1 is harder
-for Group A than Group B at the same ability level, the measurement
-scale is no longer group-invariant.
+Differential facet functioning (DFF) concerns group differences in facet
+difficulty/severity at the same ability, extending item DIF to raters,
+criteria or tasks. It threatens group invariance; the screens below do not
+isolate DFF automatically.
 
 Differences between group ability distributions are not themselves DFF.
 Residual screens inherit the fitted model's ability and population
@@ -233,15 +232,11 @@ not recalibrate the model on the subset.
 
 \section{Choosing a method}{
 
-Use \code{method = "residual"} to describe group differences in model residuals
-without fitting subgroup models. This does not test differential functioning.
-Use \code{method = "refit"} when you specifically want group-specific parameter
-estimates and can tolerate extra computation. Agreement between methods is
-not guaranteed by a universal per-group sample-size threshold: stability and
-detection depend jointly on effect size, category support, response-pattern
-overlap, linking strength, slope heterogeneity, and estimator behavior.
-\code{min_obs} is only a cell-computability/sparsity guard; it is not evidence of
-power, parameter stability, or sample-size adequacy.
+\code{"residual"} describes residual group differences without subgroup fitting;
+\code{"refit"} estimates linked group-specific parameters. Neither is qualified by
+a universal sample-size threshold. Stability/detection depend on effect size,
+category support, response overlap, linking, slopes and estimation. \code{min_obs}
+is a cell sparsity/computability guard, not evidence of power or adequacy.
 }
 
 \section{Comparing with MH or ordinal logistic DIF}{
@@ -267,70 +262,47 @@ a DFF conclusion. See the linking-and-DFF vignette for the comparison scope
 and primary references.
 }
 
-\section{Interpreting output}{
+\section{Reading results}{
 
-\itemize{
-\item \verb{$dif_table}: one row per facet-level x group-pair with contrast,
-a residual mean difference or linked subgroup difference. Residual rows have
-no SE, test or binary classification. Includes \code{Method}, \code{N_Group1},
-\code{N_Group2}, \code{EffectMetric}, \code{ClassificationSystem}, \code{ContrastBasis},
-\code{SEBasis}, \code{StatisticLabel}, \code{ProbabilityMetric}, \code{DFBasis},
-\code{ReportingUse}, \code{PrimaryReportingEligible}, and \code{sparse} columns.
-\item \verb{$cell_table}: (residual method only) per-cell detail with N, NPersons,
-ObsScore, ExpScore, ObsExpAvg, StdResidual and an interpretation note.
-\item \verb{$cases}: (residual method only) requested-row matching and exclusion audit,
-also retained by \code{summary()}.
-\item \verb{$summary}: available/unavailable residual comparisons or linked-
-screening, insufficient-linking, fixed-target and unavailable rows
-(\code{method = "refit"}).
-\item \verb{$group_fits}: (refit method only) list of per-group facet estimates and
-subgroup linking diagnostics, with \code{EstimateStatus} / \code{EstimateReason}
-and cell, subgroup and input counts.
-\item \verb{$gpcm_boundary}: for \code{GPCM} fits, a capability-boundary table
-marking the DFF/DIF output as caveated screening evidence.
-\item \verb{$comparison_review}: when supplied, the separate prospective interaction
-question, weights, counts, assumptions and identification states. Preserved
-by \code{summary()}, \code{\link[=dif_report]{dif_report()}} and both DFF plot views. Its model can differ
-from the fitted screening model; read its \code{fit_arguments} and \code{notes}.
-}
-}
+Start with \verb{$dif_table} and \verb{$summary}. Rows compare a facet level across a
+group pair: residual rows describe mean residual differences without SEs,
+tests or binary flags; refit rows report linked differences with the
+qualifications above. Inspect \code{Method}, counts, \code{EffectMetric},
+\code{ClassificationSystem}, \code{ContrastBasis}, \code{SEBasis}, \code{StatisticLabel},
+\code{ProbabilityMetric}, \code{DFBasis}, \code{ReportingUse}, \code{PrimaryReportingEligible}
+and \code{sparse}, retaining unavailable, insufficient-linking and fixed-target rows.
 
-\section{GPCM boundary}{
+Residual \verb{$cell_table} gives N/NPersons, observed/expected scores, mean
+residual and scaling; \verb{$cases} audits matching/exclusions and persists in
+\code{summary()}. Refit \verb{$group_fits} retains estimates, linking diagnostics,
+\code{EstimateStatus}/\code{EstimateReason} and cell/subgroup/input counts.
+\verb{$gpcm_boundary} records slope-aware screening limits: refit linking/precision
+checks do not make these fairness tests.
 
-For \code{GPCM}, DFF/DIF rows are available as slope-aware screening
-evidence over the fitted expected-score and residual scale. Keep
-residual-method contrasts and interaction cells in screening language.
-Refit contrasts require explicit subgroup linking and precision support for
-conditional screening, but remain in screening language.
+Optional \verb{$comparison_review} retains a separate prospective interaction
+question, weights, counts and identification assumptions, also in summaries,
+\code{\link[=dif_report]{dif_report()}} and both plots. Its model may differ from the screening fit;
+read its \code{fit_arguments}/\code{notes} rather than treating it as qualification of
+the residual/refit contrasts.
 }
 
 \section{Saved results}{
 
-Residual results, summaries and reports saved by earlier versions must be
-recomputed with this function using the fitted model and original data.
-This does not require refitting the model. Previously exported tables and
-figures should also be regenerated.
-Refit results created before the subgroup availability/cell-count checks
-must instead be recomputed with \code{method = "refit"}. This reruns the subgroup
-fits from the saved baseline fit and original data. Reading an old result
-cannot repair borrowed estimates, dropped target levels or incorrect counts;
-summary, report and plotting methods reject these earlier refit objects.
+Recompute old residual results from the saved fit/original data and regenerate
+exports; no model refit is needed. Old refit results predating subgroup
+availability/count safeguards require \code{method = "refit"}, rerunning subgroup
+fits. Loading cannot repair borrowed estimates, missing levels or counts;
+summary/report/plot methods reject those old refit objects.
 }
 
-\section{Typical workflow}{
+\section{Using the result}{
 
-\enumerate{
-\item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}. For \code{RSM} / \code{PCM} fairness review, prefer
-\code{method = "MML"}.
-\item Run \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and, for \code{RSM} / \code{PCM}, prefer
-\code{diagnostic_mode = "both"} so legacy and strict marginal screens remain
-visible together.
-\item Run \code{analyze_dff(fit, diagnostics, facet = "Criterion", group = "Gender", data = my_data)}.
-\item Inspect \verb{$dif_table} for contrasts and their reporting status, and
-\verb{$summary} for method-specific counts. Residual rows have no flags.
-\item Use \code{\link[=dif_interaction_table]{dif_interaction_table()}} when you need cell-level diagnostics.
-\item Use \link[=plot.mfrm_dif]{plot(x, type = "heatmap")} or \code{\link[=dif_report]{dif_report()}} for communication.
-}
+After reviewing the baseline model, call
+\code{analyze_dff(fit, facet = "Criterion", group = "Gender", data = my_data)}
+for residual descriptions; \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} is unnecessary for this route.
+Refits require matching diagnostics, \code{method = "refit"} and linking review.
+Read the tables/statuses above, \code{\link[=dif_interaction_table]{dif_interaction_table()}} for cell diagnostics,
+and \link[=plot.mfrm_dif]{plot(x, type = "heatmap")} or \code{\link[=dif_report]{dif_report()}} for reporting.
 }
 
 \examples{
@@ -361,10 +333,9 @@ plot(sc, type = "design_matrix", draw = FALSE)
 if ("ScaleLinkStatus" \%in\% names(dff_refit$dif_table)) {
   unique(dff_refit$dif_table$ScaleLinkStatus)
 }
-# Look for: "linked" in `ScaleLinkStatus` confirms the focal and
-#   reference groups share enough common elements for a comparable
-#   contrast; "demoted_*" rows lose linking under the refit branch
-#   and should be read as exploratory.
+# "linked" records that the implemented linking checks passed.
+# It does not establish anchor invariance or valid inferential uncertainty.
+# Review all comparison reasons, including any "demoted_*" status.
 }
 }
 \seealso{

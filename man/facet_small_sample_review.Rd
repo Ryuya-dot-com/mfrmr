@@ -15,7 +15,6 @@ facet_small_sample_review(
   x,
   top_n = NULL,
   preset = c("standard", "publication", "compact", "monochrome"),
-  draw = TRUE,
   ...
 )
 }
@@ -39,8 +38,6 @@ smallest level counts per facet. \code{NULL} (default) keeps all.}
 
 \item{preset}{One of \code{"standard"}, \code{"publication"}, \code{"compact"}, \code{"monochrome"}.}
 
-\item{draw}{Logical; print the \code{ggplot} figure when \code{TRUE}.}
-
 \item{...}{Reserved.}
 }
 \value{
@@ -55,8 +52,8 @@ A list of class \code{mfrm_facet_sample_review} with:
 \code{print()} and \code{summary()}.
 }
 
-For \code{plot()}: Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts the
-plotted table, thresholds, and interpretation \code{notes}.
+For \code{plot()}: Invisibly, the data.frame used for the plot, with the review's
+interpretation limits in its \code{notes} attribute.
 }
 \description{
 Reports per-level observation counts, SE, and fit statistics for every

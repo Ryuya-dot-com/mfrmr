@@ -41,55 +41,26 @@ For \code{summary()}: An object of class \code{summary.mfrm_linking_review}.
 Build a linking-review synthesis object
 }
 \details{
-\code{build_linking_review()} does not recompute anchor, drift, or chain
-statistics. It is a synthesis layer that organizes package-native evidence
-into one operational review surface with:
-\itemize{
-\item a front-door status block,
-\item ranked linking risks,
-\item explicit next actions,
-\item plot routing metadata,
-\item a reporting/export handoff map.
-}
+Combine saved anchor, drift and chain results without recalculation. Choose
+the inputs for the question: \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} checks receiving-data
+constraints, \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} compares waves with a reference, and
+\code{\link[=build_equating_chain]{build_equating_chain()}} follows adjacent links. These are complementary
+sources, not a required sequence.
 
-The helper keeps the current conservative interpretation policy:
-anchor drift and screened links are operational review tools, not automatic
-proofs of scale equivalence or score comparability.
-It also does not verify source-fit readiness, cross-wave element identity,
-invariance, or the external assumptions behind group anchors; these must be
-established before promoting the synthesized review.
+The combined review does not verify source-fit readiness, cross-wave identity,
+invariance or group-anchor assumptions, and cannot establish scale equivalence
+or score comparability. Its documented scope is RSM/PCM; GPCM drift/chain
+inputs remain exploratory with scope \code{supported_with_caveat}.
 
 \code{summary()} method: Summarize a linking-review object
 }
-\section{Recommended input route}{
+\section{Using the review}{
 
-Use existing package-native outputs in this order:
-\enumerate{
-\item \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} for pre-fit anchor adequacy.
-\item \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} for direct wave-to-reference drift screening.
-\item \code{\link[=build_equating_chain]{build_equating_chain()}} for adjacent screened-link review across waves.
-}
-}
-
-\section{Interpreting output}{
-
-\itemize{
-\item \code{overview}: which evidence sources were supplied and the current review status.
-\item \code{top_linking_risks}: primary operational triage table.
-\item \code{group_view_index}: stable wave/link/facet/source-family grouping routes.
-\item \code{plot_map}: which plotting function to use for each result.
-\item \code{reporting_map}: what is covered here versus which manuscript-oriented
-helper should be used separately.
-}
-}
-
-\section{GPCM boundary}{
-
-This helper summarizes the documented \code{RSM} / \code{PCM} linking workflow.
-When supplied drift/chain sources resolve to \code{GPCM}, it retains an explicitly
-exploratory review and marks that scope as \code{supported_with_caveat}.
-This does not establish score interchangeability, invariance or a common
-scale across administrations.
+Read \code{overview} for supplied sources and status, then \code{top_linking_risks} for
+ranked follow-up. \code{group_view_index} groups by wave, link, facet or source
+family. \code{plot_map} routes to the source plots; \code{reporting_map} identifies
+coverage and separate manuscript-reporting helpers. Retain the original
+results when inspecting risks or deciding next actions.
 }
 
 \examples{

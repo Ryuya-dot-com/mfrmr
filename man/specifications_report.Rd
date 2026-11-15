@@ -61,7 +61,7 @@ without a stored constraint specification is \code{"not_recorded"}.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("specifications_report", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_operational")

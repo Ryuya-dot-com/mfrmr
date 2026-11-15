@@ -10,8 +10,6 @@ vignette: >
 ```{r, include = FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
   collapse = TRUE,
   comment = "#>",
   eval = !is_cran_check
@@ -21,7 +19,7 @@ knitr::opts_chunk$set(
 This vignette explains how `mfrmr` fits ordinary RSM/PCM and one-family GPCM
 models by `MML`, and how to interpret their marginal diagnostic screens.
 The two-family GPCM route has separate engines and response diagnostics, noted
-below and in [GPCM scope and current limitations](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html).
+below and in [mfrmr-gpcm-scope](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html).
 
 ## Why the MML calculations are shared
 
@@ -87,12 +85,12 @@ summaries from the fitted posterior, but their engine support differs:
 | --- | --- | --- |
 | Ordinary RSM/PCM | Direct optimization with fixed or adaptive quadrature; EM/hybrid for the supported fixed-integration, fixed-population additive models | Adaptive integration uses direct optimization without checkpoints |
 | One-family GPCM | Direct optimization with fixed or adaptive quadrature | EM/hybrid requests fall back to direct; inspect the recorded engine |
-| Experimental two-family GPCM | Fixed-grid `mml_engine = "em"` or adaptive `mml_engine = "direct"`, with fixed N(0,1) | Two slope owners among declared fixed additive facets; explicit step/location/reference roles; adaptive EM and hybrid are unavailable |
+| Experimental two-family GPCM | Explicit `mml_engine = "em"`, with fixed or adaptive integration and fixed N(0,1) | Direct/hybrid are unavailable; there are exactly two non-Person facets |
 
 The model, marginal-likelihood estimand and numerical algorithm are separate
 choices. Numerical convergence does not qualify interval coverage or resolve
 all nonlinear identification/boundary questions. Consult
-`mfrmr_output_guide("gpcm_capabilities")` for output-specific restrictions. The ordinary
+`gpcm_capability_matrix()` for output-specific restrictions. The ordinary
 `diagnose_mfrm()` screens below do not apply to two-family GPCM; use its
 `mfrm_response_diagnostics()` route, which has no calibrated fit cutoffs.
 
@@ -362,7 +360,7 @@ diagnostic/signal-detection design screening are available only as caveated
 `GPCM` surfaces with explicit boundary output. Full FACETS-style
 score-side contract review, posterior predictive checks, and MCMC estimation
 are not available for `GPCM`. See
-`mfrmr_output_guide("gpcm_capabilities")` for the status and recommended alternative for each
+`gpcm_capability_matrix()` for the status and recommended alternative for each
 helper group. These permissions do not extend to the experimental two-family
 route described above.
 
@@ -387,7 +385,7 @@ relative-slope intervals. MML IC ranking uses separate checks
 of the retained likelihood, gradient and positive unregularized information,
 alongside the common comparison requirements. Score-side and reporting helpers
 that rely on Rasch-family semantics also retain their documented limits. See
-[GPCM scope and current limitations](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html) for the output-specific distinctions.
+[mfrmr-gpcm-scope](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html) for the output-specific distinctions.
 
 ## Equal weighting as a model-choice principle
 

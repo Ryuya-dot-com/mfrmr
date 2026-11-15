@@ -13,11 +13,8 @@
 #'   `"mono"` retains distinct symbols in black. No red/green warning scale.
 #' @param show_labels Show group labels. Unavailable groups keep their labels
 #'   in the paired view; both views retain all rows in [plot_data()].
-#' @param marginal Marginal histogram display for `style = "scatter"`:
-#'   `"auto"` (default; shown when at least 8 finite pairs exist), `"histogram"`,
-#'   or `"none"`.
-#' @return For `plot()`: Invisibly, a `ggplot` object; [plot_data()] extracts
-#'   selected measures, display settings, notes and alternative text.
+#' @return For `plot()`: Invisibly, `mfrm_plot_data` with selected measures, display settings,
+#'   notes and alternative text. [as_ggplot()] converts either view.
 #' @details For `plot()`: The response probabilities integrate the latent effects conditional
 #'   on the same observed responses and fixed calibration. These are descriptive
 #'   summaries, not ordinary plug-in Infit/Outfit. Neither an expectation of
@@ -34,10 +31,9 @@
 plot.mfrm_response_diagnostics <- function(x, facet = NULL, style = c("paired", "scatter"),
     draw = TRUE, palette = c("accessible", "mono"), title = NULL, caption = NULL,
     show_title = FALSE, show_notes = FALSE, show_labels = TRUE, text_scale = 1,
-    point_size = 2.5, marginal = c("auto", "histogram", "none"), ...) {
+    point_size = 2.5, ...) {
   rlang::check_dots_empty()
   style <- match.arg(style); palette <- match.arg(palette)
-  marginal <- match.arg(marginal)
   for (key in c("draw", "show_title", "show_notes", "show_labels")) if (!is.logical(get(key)) || length(get(key)) != 1L || is.na(get(key))) stop("Display switches must be TRUE or FALSE.", call. = FALSE)
   for (key in c("title", "caption")) if (!is.null(get(key)) && (!is.character(get(key)) || length(get(key)) != 1L || is.na(get(key)))) stop("Titles/captions must be NULL or one string.", call. = FALSE)
   for (key in c("text_scale", "point_size")) if (!is.numeric(get(key)) || length(get(key)) != 1L || !is.finite(get(key)) || get(key) <= 0) stop("Text and point sizes must be positive finite numbers.", call. = FALSE)
@@ -62,12 +58,43 @@ plot.mfrm_response_diagnostics <- function(x, facet = NULL, style = c("paired", 
     notes = data.frame(Note = c(note, count, x$settings$integration, x$settings$limitation)),
     display = list(style = style, palette = palette, show_title = show_title,
       show_notes = show_notes, show_labels = show_labels, text_scale = text_scale,
-      point_size = point_size, limits = limits, marginal = marginal))
+      point_size = point_size, limits = limits))
   out <- new_mfrm_plot_data("response_diagnostics", payload)
-  p <- .mfrm_finalize_ggplot(out, draw = FALSE)
-  attr(p, "mfrmr_alt_text") <- payload$alt_text
-  if (isTRUE(draw)) .mfrm_draw_ggplot_clean(p)
-  invisible(p)
+  if (draw) mfrm_draw_response_diagnostics(payload)
+  invisible(out)
+}
+
+mfrm_draw_response_diagnostics <- function(payload) {
+  opt <- payload$display; tab <- payload$table
+  colour <- if (opt$palette == "mono") c("#222222", "#222222") else c("#0072B2", "#9C4700")
+  old <- graphics::par(mar = c(if (opt$show_notes) 8 else 4,
+    if (opt$style == "paired" && opt$show_labels) 8 else 4, if (opt$show_title) 4 else 2, 2), cex = opt$text_scale)
+  on.exit(graphics::par(old), add = TRUE)
+  main <- if (opt$show_title) payload$title else ""
+  if (opt$style == "paired") {
+    pos <- rev(seq_len(nrow(tab)))
+    plot(NA_real_, xlim = opt$limits, ylim = c(.5, nrow(tab) + .5),
+      xlab = "Descriptive mean square", ylab = "", yaxt = "n", main = main)
+    if (opt$show_labels) axis(2, at = pos, labels = tab$Level, las = 1)
+    segments(tab$Infit, pos, tab$Outfit, pos, col = "grey65")
+    points(tab$Infit, pos, pch = 16, col = colour[1], cex = opt$point_size / 2.5)
+    points(tab$Outfit, pos, pch = 17, col = colour[2], cex = opt$point_size / 2.5)
+    legend("topright", c("Infit", "Outfit"), pch = c(16, 17), col = colour, bty = "n", cex = .8)
+  } else {
+    plot(tab$Infit, tab$Outfit, xlim = opt$limits, ylim = opt$limits,
+      xlab = "Descriptive Infit", ylab = "Descriptive Outfit", main = main,
+      pch = 16, col = colour[1], cex = opt$point_size / 2.5)
+    if (opt$show_labels) text(tab$Infit, tab$Outfit, labels = tab$Level, pos = 3, cex = .8)
+  }
+  shown <- if (opt$style=="paired") is.finite(tab$Infit) | is.finite(tab$Outfit) else
+    is.finite(tab$Infit) & is.finite(tab$Outfit)
+  if (!any(shown)) text(mean(opt$limits),
+    if (opt$style == "paired") (nrow(tab) + 1) / 2 else mean(opt$limits), "No available summaries")
+  if (opt$show_notes) {
+    lines <- unlist(lapply(strsplit(payload$caption, "\n", fixed = TRUE)[[1L]], strwrap, width = 100))
+    for (i in seq_along(lines)) mtext(lines[i], side = 1, line = 4 + (i - 1) * .85, adj = 0, cex = .7)
+  }
+  invisible(payload)
 }
 
 .mfrmr_gg_response_diagnostics <- function(payload) {
@@ -96,19 +123,9 @@ plot.mfrm_response_diagnostics <- function(x, facet = NULL, style = c("paired", 
   if (!any(shown)) p <- p + ggplot2::annotate("text", x = mean(opt$limits),
     y = if (opt$style == "paired") (nrow(tab) + 1) / 2 else mean(opt$limits), label = "No available summaries")
   p <- p + ggplot2::scale_x_continuous(limits = opt$limits) +
-    .mfrmr_gg_theme_styled(if (opt$palette == "mono") "monochrome" else "standard", base_size = 11 * opt$text_scale) +
-    ggplot2::theme(legend.position = "bottom")
+    ggplot2::theme_minimal(base_size = 11 * opt$text_scale) + ggplot2::theme(legend.position = "bottom")
   p <- .mfrmr_gg_labs(p, payload, x = if (opt$style == "paired") "Descriptive mean square" else "Descriptive Infit",
     y = if (opt$style == "paired") NULL else "Descriptive Outfit") + ggplot2::labs(alt = payload$alt_text)
-  if (opt$style != "paired") {
-    p <- .mfrmr_attach_marginal_histograms(
-      p,
-      x = used$Infit,
-      y = used$Outfit,
-      marginal = opt$marginal %||% "auto",
-      preset = if (opt$palette == "mono") "monochrome" else "standard"
-    )
-  }
   attr(p, "mfrmr_alt_text") <- payload$alt_text
   p
 }

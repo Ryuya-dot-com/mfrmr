@@ -31,13 +31,12 @@
 #' counts, optimizer status and subject-matter explanations; selecting a pair
 #' after this overview does not make its subsequent analysis confirmatory.
 #' Titles and interpretation notes are returned outside the figure.
-#' @return For `plot()`: Invisibly, a `ggplot` object carrying its saved
-#'   plot payload for [plot_data()]. For the overview, [plot_data()] provides
-#'   `table` (all combined cells, including unavailable rows), `overview`,
-#'   `errors`, `optimization_failures`, `fit_identity`, `settings`, axis labels
-#'   and notes. [as_ggplot()] returns the overview `ggplot`. A selected pair
-#'   returns the ordinary bias `ggplot` with `collection_pair` and
-#'   `fit_identity` provenance added to [plot_data()].
+#' @return For `plot()`: Invisibly, an `mfrm_plot_data` object. For the overview,
+#'   [plot_data()] provides `table` (all combined cells, including unavailable
+#'   rows), `overview`, `errors`, `optimization_failures`, `fit_identity`,
+#'   `settings`, axis labels and notes. [as_ggplot()] reproduces the overview.
+#'   A selected pair returns the ordinary bias plot with `collection_pair`
+#'   and `fit_identity` provenance added.
 #' @seealso [estimate_all_bias()], [summary.mfrm_bias_collection()],
 #'   [plot.mfrm_bias()]
 #' @examples # Long-running workflow; run explicitly when needed.
@@ -78,15 +77,8 @@ plot.mfrm_bias_collection <- function(x, pair = NULL,
     if (!is.null(x$fit_identity)) mfrm_validate_result_identity(x$by_pair[[pair]],
       x$fit_identity, paste0("by_pair[[", pair, "]]"), "estimate_bias()", "plot.mfrm_bias_collection()")
     out <- plot(x$by_pair[[pair]], type = type, draw = draw, preset = preset, ...)
-    saved <- attr(out, "mfrmr_plot_data", exact = TRUE)
-    if (inherits(saved, "mfrm_plot_data")) {
-      saved$data$collection_pair <- pair
-      saved$data$fit_identity <- x$fit_identity
-      attr(out, "mfrmr_plot_data") <- saved
-    } else if (is.list(out) && is.list(out$data)) {
-      out$data$collection_pair <- pair
-      out$data$fit_identity <- x$fit_identity
-    }
+    out$data$collection_pair <- pair
+    out$data$fit_identity <- x$fit_identity
     return(invisible(out))
   }
   if (type != "overview") stop("Select `pair` for an individual bias view.", call. = FALSE)
@@ -124,25 +116,36 @@ plot.mfrm_bias_collection <- function(x, pair = NULL,
     notes = data.frame(Type = "interpretation", Text = c(review$notes,
       "Filled circles: screening statistic available; open circles: point only. Vertical spreading is for visibility.",
       "n is the range of observed row counts per cell, not independent Person counts. No intervals or multiplicity correction are drawn."))))
-  .mfrm_finalize_ggplot(
-    out,
-    draw = draw,
-    builder = function(obj) .mfrmr_gg_bias_collection(obj$data)
-  )
+  if (!draw) return(invisible(out))
+  apply_plot_preset(style)
+  old <- graphics::par(c("mar", "mex"))
+  on.exit(graphics::par(old), add = TRUE)
+  label_width <- max(c(0, graphics::strwidth(labels, units = "inches", cex = .8)))
+  if (label_width + .2 + 1.25 >= graphics::par("fin")[1])
+    stop("Pair labels need a wider graphics device; use `draw = FALSE` to inspect the table.", call. = FALSE)
+  graphics::par(mex = .8)
+  left <- label_width / (graphics::par("csi") * graphics::par("mex")) + 1.2
+  graphics::par(mar = c(4.5, max(4, left), 1, 1))
+  plot(NA_real_, NA_real_, xlim = limits,
+    ylim = c(.5, max(1, nrow(overview)) + .5), yaxt = "n",
+    xlab = out$data$xlab, ylab = "")
+  abline(v = 0, col = style$neutral, lty = 2)
+  axis(2, at = rev(seq_len(nrow(overview))), labels = labels,
+    las = 1, tick = FALSE, cex.axis = .8)
+  points(table[["Bias Size"]][shown], table$PlotY[shown],
+    pch = ifelse(table$ScreenAvailable[shown], 16, 1), cex = .9, col = style$axis)
+  invisible(out)
 }
 
 .mfrmr_gg_bias_collection <- function(payload) {
   style <- resolve_plot_preset(payload$preset)
   tab <- payload$table
   tab <- tab[tab$PointAvailable, , drop = FALSE]
-  p <- ggplot2::ggplot(tab, ggplot2::aes(x = .data[["Bias Size"]], y = .data$PlotY)) +
+  ggplot2::ggplot(tab, ggplot2::aes(x = .data[["Bias Size"]], y = .data$PlotY)) +
     ggplot2::geom_vline(xintercept = 0, linetype = 2, colour = style$neutral) +
     ggplot2::geom_point(shape = ifelse(tab$ScreenAvailable, 16, 1), size = 2, colour = style$axis) +
     ggplot2::scale_x_continuous(limits = payload$xlim) +
     ggplot2::scale_y_continuous(breaks = rev(seq_len(nrow(payload$overview))),
       labels = payload$pair_labels, limits = c(.5, max(1, nrow(payload$overview)) + .5)) +
     ggplot2::labs(x = payload$xlab, y = NULL) + .mfrmr_gg_theme()
-  attr(p, "mfrmr_plot_data") <- new_mfrm_plot_data("bias_collection", payload)
-  attr(p, "mfrmr_notes") <- .mfrm_plot_annotation_notes(payload)
-  p
 }

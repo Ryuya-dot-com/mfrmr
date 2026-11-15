@@ -29,7 +29,7 @@
 #'   Unequal block sizes do not imply equal block weights. The influence of an
 #'   additional response depends on its block and the fitted model; integrating
 #'   local effects is not a general correction for assignment or content bias.
-#'   See [online testlet-applications guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlet-applications.html) for a complete-roster
+#'   See [mfrmr-testlet-applications](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlet-applications.html) for a complete-roster
 #'   comparison of one-point changes in five- versus two-criterion tasks.
 #'
 #'   EAP, posterior SD and intervals use continuous ability integration. Interval
@@ -53,7 +53,7 @@
 #'   sparse, unequal-block condition with 120 Persons. The original numerical
 #'   failures and their repair remain separately documented. Accounting for
 #'   dependence improved coverage relative to ordinary RSM, but did not consistently improve EAP
-#'   mean squared error. See [online testlet guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlets.html) for the comparison,
+#'   mean squared error. See [mfrmr-testlets](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlets.html) for the comparison,
 #'   Monte Carlo uncertainty and numerical-selection correction.
 #'   These intervals neither correct calibration-estimation uncertainty nor
 #'   guarantee 95% coverage for each fixed ability. Person contrasts and
@@ -72,7 +72,7 @@
 #' @param persons Distinct Person IDs to return, or `NULL` for all. This
 #'   selects outputs while retaining the complete supplied scoring roster.
 #' @seealso [fit_mfrm_testlet()], [plot.mfrm_testlet_scores()], [mfrm_results()]
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' @examples # Optional workflow; run the example explicitly as shown below.
 #' # example("predict.mfrm_testlet", run.dontrun = TRUE)
 #' \dontrun{
 #' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
@@ -256,14 +256,14 @@ print.mfrm_testlet_scores <- function(x, ...) {
 #' @param intervals `"none"` (default) shows points only; `"normal"`
 #'   explicitly requests observed-information normal-approximation bounds.
 #'   Interval-width views or sorting require this explicit selection.
-#' @return For `plot()`: Invisibly, a `ggplot` object; use [plot_data()].
+#' @return For `plot()`: Invisibly, an `mfrm_plot_data` object; use [plot_data()].
 #' @details For `plot()`: Requested whiskers are observed-information normal approximations
 #'   for calibration parameters; finite-sample coverage is not established. Missing
 #'   intervals remain missing; points do not classify rater quality.
 #'   [plot_data()] and [plot_data_components()] provide the same table without
 #'   drawing. [as_ggplot()] preserves the interval meaning and missing whiskers.
 #' @seealso [mfrmr_workflow_methods], [mfrmr_output_guide()],
-#'   [plot.mfrm_testlet_scores()]
+#'   [mfrmr_interval_guide()], [plot.mfrm_testlet_scores()]
 #' @export
 plot.mfrm_testlet <- function(x, facet = x$input$columns$facets[1], draw = TRUE,
     style = c("interval", "precision", "distribution"),
@@ -334,15 +334,15 @@ plot.mfrm_testlet <- function(x, facet = x$input$columns$facets[1], draw = TRUE,
 #'   Rendering does not fit, score or resample. Use the same controls through
 #'   `plot(results, type = "scores", style = "precision")`.
 #' @param draw `FALSE` returns plot data without opening a device.
-#' @return For `plot()`: Invisibly, a `ggplot` object; [plot_data()] retains all
-#'   requested Persons, their statuses, interval endpoints and settings.
+#' @return For `plot()`: Invisibly, an `mfrm_plot_data` object retaining all requested Persons,
+#'   their statuses, interval endpoints and settings; use [plot_data()].
 #' @details For `plot()`: In the default interval view, empty rows remain labeled. Open circles mark prior-only results;
 #'   filled points are response-based conditional scores. The intervals exclude
 #'   calibration-estimation uncertainty and are not tests of Person differences.
 #'   [as_ggplot()] preserves all labeled rows, prior-only symbols and the
 #'   conditional-interval note. [plot_data()] retains statuses and reasons for
 #'   custom graphics or table export; conversion does not rerun scoring.
-#' @seealso [plot.mfrm_testlet()], [plot_data_components()], [mfrmr_output_guide()]
+#' @seealso [plot.mfrm_testlet()], [plot_data_components()], [mfrmr_interval_guide()]
 #' @export
 plot.mfrm_testlet_scores <- function(x, draw = TRUE,
     style = c("interval", "precision", "distribution"),

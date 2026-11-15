@@ -290,7 +290,7 @@ are \code{NA}, while \code{KnownTargetRows} and \code{KnownTargetReps} remain vi
 For non-Person facets, coverage concerns each level minus its facet mean.
 With \eqn{P = I - 11^T/m}, its covariance is \eqn{P V P^T}; the original
 marginal SE cannot be reused after alignment. The runner obtains model-based
-95\\% intervals from \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} for eligible MML fits, including
+95 percent intervals from \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} for eligible MML fits, including
 its numerical/source checks. A complete matched facet roster is required.
 The row table retains \code{CoverageEstimate}, \code{CoverageTruth}, \code{SE}, \code{Lower95},
 \code{Upper95}, \code{CIEligible} and \code{CIReason}. \code{RawSE} separately preserves the

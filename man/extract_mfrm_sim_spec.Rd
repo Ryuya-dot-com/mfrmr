@@ -95,8 +95,10 @@ specification stores both a threshold table and a parallel slope table.
 The same fit-derived specification can feed caveated role-based design
 evaluation, population forecasting, and fit-based report/export bundles.
 Diagnostic and signal-detection design screening is available with explicit
-caveats. Full FACETS score-side contract review, posterior predictive checks,
-and MCMC estimation are not available for \code{GPCM}.
+caveats. This simulation-specification helper does not perform full FACETS
+score-side review, Bayesian posterior predictive checks or MCMC estimation.
+For supported Bayesian specifications, see \code{\link[=export_mfrm_model]{export_mfrm_model()}}; its
+scope is separate from this generator.
 
 If you want to carry person-level group labels into a fit-derived observed
 response skeleton, provide the original \code{source_data} together with

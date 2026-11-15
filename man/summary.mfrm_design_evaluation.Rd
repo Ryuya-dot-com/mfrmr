@@ -77,7 +77,7 @@ not establish connectedness when records are missing. Sparse-design
 summaries also use all run records, including failures.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("summary.mfrm_design_evaluation", run.dontrun = TRUE)
 \dontrun{
 # One saved replication illustrates output structure, not precise rates.

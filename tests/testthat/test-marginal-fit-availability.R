@@ -204,12 +204,10 @@ test_that("marginal coverage reaches summaries, reports, exports and saved-resul
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off(), add = TRUE)
   p <- plot_marginal_fit(diag, draw = TRUE)
-  expect_s3_class(p, "ggplot")
-  pd <- plot_data(p)
-  expect_equal(pd$retention$Available, 0)
-  expect_equal(pd$retention$Unavailable, pd$retention$Candidates)
-  expect_true(all(is.na(pd$table$StdResidual)))
-  expect_match(pd$subtitle, "unavailable")
+  expect_equal(p$data$retention$Available, 0)
+  expect_equal(p$data$retention$Unavailable, p$data$retention$Candidates)
+  expect_true(all(is.na(p$data$table$StdResidual)))
+  expect_match(p$data$subtitle, "unavailable")
   expect_no_error(plot_marginal_pairwise(diag, draw = TRUE))
   mismatch <- fit
   mismatch$facets$others$Estimate[1] <- mismatch$facets$others$Estimate[1] + 1
@@ -230,10 +228,8 @@ test_that("marginal plots rank the full requested facet and metric", {
   diag$marginal_fit$top_cells <- diag$marginal_fit$top_cells[0, ]
   diag$marginal_fit$pairwise$top_pairs <- diag$marginal_fit$pairwise$top_pairs[0, ]
   p <- plot_marginal_fit(diag, plot_type = "prop_diff", facet = "Rater", top_n = 100, draw = FALSE)
-  expect_s3_class(p, "ggplot")
-  expect_true(all(plot_data(p, "table")$Facet == "Rater"))
-  expect_equal(nrow(plot_data(p, "table")), sum(diag$marginal_fit$facet_level$cell_stats$Facet == "Rater"))
+  expect_true(all(p$data$table$Facet == "Rater"))
+  expect_equal(nrow(p$data$table), sum(diag$marginal_fit$facet_level$cell_stats$Facet == "Rater"))
   pair <- plot_marginal_pairwise(diag, metric = "adjacent", facet = "Rater", top_n = 100, draw = FALSE)
-  expect_s3_class(pair, "ggplot")
-  expect_equal(nrow(plot_data(pair, "table")), sum(diag$marginal_fit$pairwise$pair_stats$Facet == "Rater"))
+  expect_equal(nrow(pair$data$table), sum(diag$marginal_fit$pairwise$pair_stats$Facet == "Rater"))
 })

@@ -4,17 +4,17 @@
 #' Review explained variation, original-feature coefficients or entity scores
 #' from a saved PCA without refitting it.
 #' @param type `"scree"` (default), `"scores"`, or `"loadings"`.
-#' @param groups Optional [mfrm_cluster()] result used to color a scores plot. Its IDs,
+#' @param groups Optional [mfrm_cluster_kmeans()], [mfrm_cluster_pam()] or
+#'   [mfrm_cluster_hierarchical()] result used to color a scores plot. Its IDs,
 #'   included entities and shared PCA features must match. Labels only annotate
 #'   the view; they do not refit PCA or imply separation on every component.
 #'   Groups use both colour and point shape, including monochrome output.
 #'   Shapes repeat after six groups; inspect the ID-aligned table for crowded views.
-#' @param marginal Marginal histogram display for `type = "scores"`:
-#'   `"auto"` (default; displayed when at least 8 finite score pairs are plotted),
-#'   `"histogram"`, or `"none"`.
 #' @inheritParams plot.mfrm_clusters
-#' @return For `plot()`: Invisibly, a `ggplot` object carrying the underlying
-#'   `mfrm_plot_data` payload (accessible via [plot_data()]) with the exact plotted table,
+#' @param labels Show entity IDs in scores plots; `NULL` labels at most
+#'   50 included entities. Loading plots label features and scree plots label
+#'   components. Hiding entity labels does not omit observations.
+#' @return For `plot()`: Invisibly, an `mfrm_plot_data` object with the exact plotted table,
 #'   selected components, group colour/shape encoding, excluded IDs and axis meanings. Scree data retain the
 #'   full variance table, including components not used for clustering.
 #'   [plot_data()] extracts these values. [as_ggplot()] converts all three views
@@ -31,8 +31,8 @@
 #'   they are not original-unit correlations. A two-component scores view omits
 #'   other directions, so apparent overlap or separation is only a projection.
 #'   No confidence region, group validity or rater-quality judgment is implied.
-#' @seealso [mfrm_pca()], [k-means details][mfrm_cluster_kmeans]
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' @seealso [mfrm_pca()], [mfrm_cluster_kmeans()]
+#' @examples # Optional workflow; run the example explicitly as shown below.
 #' # example("plot.mfrm_pca", run.dontrun = TRUE)
 #' \dontrun{
 #' attributes <- data.frame(ID = letters[1:6],
@@ -50,12 +50,10 @@
 #' @export
 plot.mfrm_pca <- function(x, type = c("scree", "scores", "loadings"),
                           components = NULL, groups = NULL, labels = NULL,
-                          marginal = c("auto", "histogram", "none"),
                           draw = TRUE, preset = "standard", ...) {
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
   type <- match.arg(type)
-  marginal <- .mfrmr_resolve_marginal_arg(marginal)
   check_cluster_plot_flags(draw, labels)
   style <- resolve_plot_preset(preset)
   if (type != "scores" && !is.null(groups)) stop("`groups` is only used for scores plots.", call. = FALSE)
@@ -121,9 +119,36 @@ plot.mfrm_pca <- function(x, type = c("scree", "scores", "loadings"),
     weights = x$settings$weights, scale = x$settings$scale,
     excluded_ids = excluded, title = title,
     subtitle = subtitle, xlab = xlab, ylab = ylab, labels = show_labels,
-    marginal = marginal,
     preset = style$name))
-  .mfrm_finalize_ggplot(out, draw = draw)
+  if (!draw) return(invisible(out))
+  apply_plot_preset(style)
+  old <- graphics::par(mar = c(6, if (type == "loadings") 10 else 5, 5, 2))
+  on.exit(graphics::par(old), add = TRUE)
+  if (type == "scree") {
+    plot(seq_len(nrow(tab)), 100 * tab$Proportion, type = "l",
+      col = style$foreground, xlab = xlab, ylab = ylab, main = "", xaxt = "n")
+    axis(1, at = seq_len(nrow(tab)))
+    points(seq_len(nrow(tab)), 100 * tab$Proportion,
+      pch = ifelse(tab$Retained, 16, 1),
+      col = ifelse(tab$Retained, style$accent_primary, "grey65"))
+    if (any(!tab$Retained)) legend("topright",
+      legend = c("Retained", "Not retained"), pch = c(16, 1),
+      col = c(style$accent_primary, "grey65"), bty = "n")
+  } else if (type == "loadings") {
+    plot(tab$Loading, seq_len(nrow(tab)), xlim = c(-1, 1), yaxt = "n",
+      pch = 16, col = style$accent_primary, xlab = xlab, ylab = ylab, main = "")
+    abline(v = 0, col = style$grid)
+    axis(2, at = seq_len(nrow(tab)), labels = tab$Feature, las = 1)
+  } else {
+    color <- if (nrow(encoding)) encoding$Colour[match(tab$Cluster, encoding$Cluster)] else style$accent_primary
+    shape <- if (nrow(encoding)) encoding$Shape[match(tab$Cluster, encoding$Cluster)] else 16
+    plot(tab[[axes[1]]], tab[[axes[2]]], pch = shape, col = color,
+      xlab = xlab, ylab = ylab, main = "", asp = 1)
+    if (show_labels) text(tab[[axes[1]]], tab[[axes[2]]], labels = tab$ID, pos = 3, cex = 0.7)
+    if (nrow(encoding)) legend("topright", legend = paste("Group", encoding$Cluster),
+      col = encoding$Colour, pch = encoding$Shape, bty = "n")
+  }
+  invisible(out)
 }
 
 # Use the saved PCA axes and group encoding, never generic numeric-column order.
@@ -192,18 +217,8 @@ plot.mfrm_pca <- function(x, type = c("scree", "scores", "loadings"),
       if (grouped) "Saved groups use both colour and shape; shapes repeat after six groups." else "No groups are assigned in this view.",
       "Only included entities are plotted. This projection is not latent ability, rater quality or evidence of group validity.")
   }
-  p <- .mfrmr_gg_labs(p + .mfrmr_gg_theme(style$name), d, x = d$xlab, y = d$ylab) +
+  p <- .mfrmr_gg_labs(p + .mfrmr_gg_theme(), d, x = d$xlab, y = d$ylab) +
     ggplot2::labs(alt = alt)
-  if (identical(type, "scores")) {
-    p <- .mfrmr_attach_marginal_histograms(
-      p,
-      x = tab[[axes[1]]],
-      y = tab[[axes[2]]],
-      marginal = d$marginal %||% "auto",
-      preset = style$name,
-      single_panel = TRUE
-    )
-  }
   attr(p, "mfrmr_plot_data") <- x
   p
 }

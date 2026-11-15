@@ -23,14 +23,14 @@
 #' @details Numeric `NA` and `NaN` are missing. Infinite numeric values and blank
 #'   categorical labels are refused; replace missing markers with `NA` explicitly.
 #'   Constant and entirely missing features remain available for review but
-#'   cannot be used by [mfrm_cluster()]. IDs and unselected columns do not enter
+#'   cannot be used by [mfrm_cluster_pam()]. IDs and unselected columns do not enter
 #'   distances. These functions are intended for external attributes such as
 #'   training, experience, or specialization. They do not propagate uncertainty
 #'   from estimated ability, severity, or fit statistics.
-#'   See [online feature-analysis guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html) for a complete rater-attribute
+#'   See [mfrmr-external-features](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.html) for a complete rater-attribute
 #'   example including missingness review and multiple imputation.
-#' @seealso [mfrm_cluster()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
-#'   [mfrm_pca()], [k-means details][mfrm_cluster_kmeans]
+#' @seealso [mfrm_cluster_pam()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
+#'   [mfrm_pca()], [mfrm_cluster_kmeans()]
 #' @examples
 #' # Fictional rater attributes; experience is measured in completed years.
 #' raters <- data.frame(
@@ -158,9 +158,8 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'
 #' Partition an entity-level feature table using Gower dissimilarities and
 #' partitioning around medoids (PAM) from the optional `cluster` package.
-#' Use `mfrm_cluster()` and select `method = "pam"` (the default),
-#' `"hierarchical"`, or `"kmeans"`. Each method retains its own geometry,
-#' settings and result class; the method is never selected from the data.
+#' Use `mfrm_cluster_pam()` for this method. `mfrm_cluster()` is retained as
+#' an identical compatibility alias; it does not select an algorithm for you.
 #'
 #' @param x An object returned by [mfrm_features()].
 #' @param k Number of groups, an integer from 2 to one less than the number of
@@ -172,14 +171,6 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #' @param missing Either `"error"` (default) or `"omit"`. The latter excludes
 #'   incomplete entities explicitly, retaining their IDs, reasons, and missing
 #'   group membership in the result. No values are imputed.
-#' @param method Clustering method: `"pam"`, `"hierarchical"`, or `"kmeans"`.
-#'   PAM and hierarchical clustering use Gower distances. K-means uses numeric
-#'   features or an existing [mfrm_pca()] result. See the method guides
-#'   [hierarchical clustering details][mfrm_cluster_hierarchical] and [k-means details][mfrm_cluster_kmeans] for their limits.
-#' @param ... Named controls for the selected method: `linkage` for hierarchical
-#'   clustering; `scale`, `nstart`, `iter.max`, `seed` and `silhouette` for k-means.
-#'   Inapplicable controls are rejected. For PCA input set weights, scaling and
-#'   missingness at the PCA stage; do not respecify them here.
 #' @return An `mfrm_clusters` object containing `membership` (ID, Cluster,
 #'   Medoid, Silhouette), `cluster_summary`, numeric and categorical `profiles`,
 #'   `medoids`, the reviewed `feature_data`, and `settings`. Silhouette values
@@ -214,7 +205,7 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'   This input limit does not guarantee low memory use or acceptable run time.
 #'
 #'   For feature selection, missingness review, and multiple-imputation examples,
-#'   see [online feature-analysis guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html).
+#'   see [mfrmr-external-features](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.html).
 #' @section Reading clustering metrics:
 #' For entity i, a(i) is its mean dissimilarity to other members of its own
 #' group; b(i) is the smallest mean dissimilarity to any other group.
@@ -238,9 +229,9 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #' See [cluster::silhouette()] and Rousseeuw (1987),
 #' \doi{10.1016/0377-0427(87)90125-7}, for the silhouette definition.
 #' @seealso [mfrm_features()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
-#'   [hierarchical clustering details][mfrm_cluster_hierarchical], [plot.mfrm_clusters()], [cluster::daisy()], [cluster::pam()]
+#'   [mfrm_cluster_hierarchical()], [plot.mfrm_clusters()], [cluster::daisy()], [cluster::pam()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("mfrm_cluster", run.dontrun = TRUE)
 #' \dontrun{
 #' if (requireNamespace("cluster", quietly = TRUE)) {
@@ -250,7 +241,7 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'     Specialty = rep(c("Language", "Science"), each = 3))
 #'   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
 #'   # The default stops on missing features. Here omission is explicit.
-#'   groups <- mfrm_cluster(method = "pam", features, k = 2,
+#'   groups <- mfrm_cluster_pam(features, k = 2,
 #'     weights = c(ExperienceYears = 2, Specialty = 1), missing = "omit")
 #'   groups$membership  # R2 remains present with unavailable membership.
 #'   summary(groups)
@@ -261,24 +252,13 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #' @name mfrm_cluster
 #' @rdname mfrm_cluster
 #' @export
-mfrm_cluster <- function(x, k, weights = NULL, missing = c("error", "omit"),
-                          method = c("pam", "hierarchical", "kmeans"), ...) {
-  method <- match.arg(method)
-  implementation <- switch(method, pam = mfrm_cluster_pam,
-    hierarchical = mfrm_cluster_hierarchical, kmeans = mfrm_cluster_kmeans)
-  args <- list(x = x, k = k)
-  if (!missing(weights)) args$weights <- weights
-  if (!missing(missing)) args$missing <- missing
-  do.call(implementation, c(args, list(...)))
-}
-
-#' @rdname mfrm_cluster
-#' @description The former `mfrm_cluster_pam()` entry is no longer exported;
-#'   use `mfrm_cluster(..., method = "pam")`. Its calculation is unchanged.
-#' @usage NULL
 mfrm_cluster_pam <- function(x, k, weights = NULL, missing = c("error", "omit")) {
   cluster_external_features(x, k, weights, match.arg(missing))
 }
+
+#' @rdname mfrm_cluster
+#' @export
+mfrm_cluster <- mfrm_cluster_pam
 
 cluster_external_features <- function(x, k, weights, missing, linkage = NULL) {
   if (!inherits(x, "mfrm_features")) {
@@ -400,7 +380,7 @@ cluster_feature_profiles <- function(values, labels) {
 }
 
 #' @rdname mfrm_cluster
-#' @param object An object returned by [mfrm_cluster()].
+#' @param object An object returned by [mfrm_cluster_pam()].
 #' @param ... Reserved for method compatibility.
 #' @export
 print.mfrm_clusters <- function(x, ...) {
@@ -436,7 +416,7 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   If all selected features are already complete, supply the empty
 #'   `x$missing` table. This retains one partition per imputation so the result
 #'   can be compared with other feature selections from the same model.
-#' @param k,weights As in [mfrm_cluster()]. The same choices apply to every
+#' @param k,weights As in [mfrm_cluster_pam()]. The same choices apply to every
 #'   imputation.
 #' @param missing Either `"error"` (default) or `"omit"`, applied to missing
 #'   features remaining after imputation. Explicit omission retains excluded
@@ -444,13 +424,13 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #' @param method `"pam"` (default), `"hierarchical"`, or `"kmeans"`. The same method is used
 #'   for every completion. Hierarchical analyses retain separate trees.
 #' @param linkage For `method = "hierarchical"`, `"average"` (the default when
-#'   `NULL`) or `"complete"`; see [hierarchical clustering details][mfrm_cluster_hierarchical]. Must be `NULL`
+#'   `NULL`) or `"complete"`; see [mfrm_cluster_hierarchical()]. Must be `NULL`
 #'   for PAM and k-means, which have no linkage.
 #' @param components For k-means, `NULL` uses numeric features directly. An integer
 #'   fits PCA separately in each completion and uses that many leading components.
 #'   No whitening, pooled PCA basis or component-sign matching is performed.
 #' @param scale,nstart,iter.max,seed,silhouette For `method = "kmeans"`, as in
-#'   [k-means details][mfrm_cluster_kmeans]. These arguments must not be supplied for other methods.
+#'   [mfrm_cluster_kmeans()]. These arguments must not be supplied for other methods.
 #'   The same seed and settings are used for every completion; sensitivity still
 #'   includes possible changes in local optima. Review alternative seeds separately.
 #' @return An `mfrm_imputed_clusters` object containing `analyses` (one
@@ -508,9 +488,9 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   The short example below illustrates the interface using `mice::nhanes2`.
 #'   For a complete example with fictional rater attributes, explicit missingness
 #'   reasons, imputation diagnostics, and comparisons of group counts and weights,
-#'   see [online feature-analysis guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html).
-#' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_compare()],
-#'   [hierarchical clustering details][mfrm_cluster_hierarchical], [plot.mfrm_clusters()],
+#'   see [mfrmr-external-features](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.html).
+#' @seealso [mfrm_features()], [mfrm_cluster_pam()], [mfrm_cluster_compare()],
+#'   [mfrm_cluster_hierarchical()], [plot.mfrm_clusters()],
 #'   [mice::mice()], [mice::complete()]
 #' @examples
 #' # Optional integration example (loads additional modelling or rendering packages).

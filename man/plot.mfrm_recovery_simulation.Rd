@@ -13,8 +13,6 @@
   parameter_type = NULL,
   facet = NULL,
   comparison = c("aligned", "unaligned"),
-  marginal = c("auto", "histogram", "none"),
-  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE,
   ...
 )
@@ -43,21 +41,14 @@ are \code{"rmse"}, \code{"bias"}, \code{"mae"}, \code{"correlation"}, \code{"cov
 uses \code{EstimateAligned} / \code{ErrorAligned}; \code{"unaligned"} uses \code{Estimate} /
 \code{ErrorRaw} on the same comparison scale.}
 
-\item{marginal}{Marginal histogram display for \code{type = "scatter"}: \code{"auto"}
-(default; shown when at least 8 finite pairs are plotted), \code{"histogram"},
-or \code{"none"}.}
-
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or
-\code{"monochrome"}).}
-
-\item{draw}{If \code{TRUE}, print the \code{ggplot} object. If \code{FALSE}, return the
-\code{ggplot} object invisibly without drawing.}
+\item{draw}{If \code{TRUE}, draw with base graphics. If \code{FALSE}, return an
+\code{mfrm_plot_data} object with reusable plot tables and metadata.}
 
 \item{...}{Reserved for generic compatibility.}
 }
 \value{
-Invisibly, a \code{ggplot} object carrying reusable plot tables and
-metadata accessible via \code{\link[=plot_data]{plot_data()}}.
+An \code{mfrm_plot_data} object. When \code{draw = TRUE}, the object is returned
+invisibly after drawing.
 }
 \description{
 Plot parameter-recovery simulation results
@@ -68,16 +59,16 @@ the row-level \code{x$recovery} table or the ADEMP metadata; they make the main
 recovery estimands easier to inspect during model-development and design
 checks. Coverage is displayed only for groups with valid centered structural
 intervals, conditional on availability. Summary/coverage routes refresh
-aggregates from saved rows; their \code{availability_table} component preserves all
+aggregates from saved rows; their \code{data$availability_table} preserves all
 selected groups, including those omitted from drawing. Inspect counts,
-availability rates, MCSEs and \code{CIReasons} via \code{\link[=plot_data]{plot_data()}} and in \code{summary(x)}.
+availability rates, MCSEs and \code{CIReasons} there and in \code{summary(x)}.
 A wholly unavailable coverage plot gives an informative error; it does not
 draw missing coverage as zero. See \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} for the target
 and the treatment of legacy saved intervals. A zero mean-aligned bias is an
 identification identity, not evidence of unbiased estimation.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_recovery_simulation", run.dontrun = TRUE)
 \dontrun{
 # One saved replication illustrates output structure, not precise rates.
@@ -90,5 +81,5 @@ plot(rec, type = "summary", metric = "rmse", draw = FALSE)
 }
 }
 \seealso{
-\code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}}, \code{\link[base:summary]{base::summary()}}
+\code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}}, \code{\link[=summary]{summary()}}
 }

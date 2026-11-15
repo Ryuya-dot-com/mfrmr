@@ -108,8 +108,8 @@ Keep \code{table$Status} and \code{table$Reason} with exported scores: \code{pri
 describes the assumed population without observed responses for that Person;
 \code{unavailable} withholds the estimate, SD and bounds with a recorded cause.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object; \code{\link[=plot_data]{plot_data()}} retains all
-requested Persons, their statuses, interval endpoints and settings.
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object retaining all requested Persons,
+their statuses, interval endpoints and settings; use \code{\link[=plot_data]{plot_data()}}.
 }
 \description{
 Recompute Person scores from all supplied rows, integrating local effects
@@ -129,7 +129,7 @@ within a Person or testlet. No fixed effects are re-estimated.
 Unequal block sizes do not imply equal block weights. The influence of an
 additional response depends on its block and the fitted model; integrating
 local effects is not a general correction for assignment or content bias.
-See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlet-applications.html}{online testlet-applications guide} for a complete-roster
+See \href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlet-applications.html}{mfrmr-testlet-applications} for a complete-roster
 comparison of one-point changes in five- versus two-criterion tasks.
 
 EAP, posterior SD and intervals use continuous ability integration. Interval
@@ -153,7 +153,7 @@ coverage was 93.3\% in one
 sparse, unequal-block condition with 120 Persons. The original numerical
 failures and their repair remain separately documented. Accounting for
 dependence improved coverage relative to ordinary RSM, but did not consistently improve EAP
-mean squared error. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlets.html}{online testlet guide} for the comparison,
+mean squared error. See \href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlets.html}{mfrmr-testlets} for the comparison,
 Monte Carlo uncertainty and numerical-selection correction.
 These intervals neither correct calibration-estimation uncertainty nor
 guarantee 95\% coverage for each fixed ability. Person contrasts and
@@ -199,7 +199,7 @@ Rendering does not fit, score or resample. Use the same controls through
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("predict.mfrm_testlet", run.dontrun = TRUE)
 \dontrun{
 example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
@@ -216,5 +216,5 @@ plot(scores)
 \seealso{
 \code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}}, \code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}}, \code{\link[=mfrm_results]{mfrm_results()}}
 
-\code{\link[=plot.mfrm_testlet]{plot.mfrm_testlet()}}, \code{\link[=plot_data_components]{plot_data_components()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}}
+\code{\link[=plot.mfrm_testlet]{plot.mfrm_testlet()}}, \code{\link[=plot_data_components]{plot_data_components()}}, \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}}
 }

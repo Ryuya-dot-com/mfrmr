@@ -41,7 +41,12 @@
 #'   fixed ability. Missing-only Persons remain `prior_only`; zero ability
 #'   variance and failed integration return `unavailable`, not zero-width
 #'   intervals. No missing scores are imputed.
-#' @inheritSection predict_mfrm_units Conditional ability decisions
+#' @section Conditional ability decisions:
+#' Ordinary RSM scoring with unit weights supports `cut_scores`. Missing-only
+#' Persons retain `prior_only`: probabilities describe the assumed population,
+#' without response evidence. Keep `Status` and `Reason` with exported results.
+#' For event definitions, prior sensitivity and reporting, see
+#' "Conditional ability decisions" in [predict_mfrm_units()].
 #' @return Ordinary fits return `mfrm_person_scores` with `table`,
 #'   `scoring_data`, data usage, settings and source metadata. Extensions retain
 #'   their existing scoring classes. If `cut_scores` is supplied, `decisions`
@@ -61,9 +66,11 @@
 #'   rows under a fitted calibration; [plot.mfrm_testlet_scores()],
 #'   [mfrm_response_diagnostics()]
 #' @examples
-#' ratings <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score")
-#' scores <- score_mfrm_persons(fit, persons = unique(ratings$Person)[1:4],
+#' # Saved ordinary RSM/MML calibration of the synthetic example_core ratings.
+#' # For your data, start with fit_mfrm(); consumer-fits.R gives the full recipe.
+#' saved <- readRDS(system.file("examples", "consumer-fits.rds", package = "mfrmr"))
+#' fit <- saved$mml
+#' scores <- score_mfrm_persons(fit, persons = as.character(unique(fit$prep$data$Person))[1:4],
 #'   cut_scores = c(Basic = -0.5, Advanced = 0.8))
 #' scores$table
 #' scores$decisions
@@ -86,6 +93,8 @@ score_mfrm_persons <- function(fit, persons = NULL, level = .95, quad_points = N
   persons <- persons %||% ids
   if (!is.character(persons) || !length(persons) || anyNA(persons) || anyDuplicated(persons) || !all(persons %in% ids)) stop("Choose distinct Person IDs in the source roster.", call. = FALSE)
   probabilities <- matrix(NA_real_, length(persons), 2L*length(cut_scores)+1L)
+  step_cum <- c(0, cumsum(input$steps))
+  use_cpp <- mfrm_use_cpp11_backend(fit$config)
   table <- lapply(persons, function(id) {
     rows <- which(input$person == id); reason <- ""
     value <- setNames(rep(NA_real_, 4), c("Estimate", "ConditionalSD", "Lower", "Upper"))
@@ -102,11 +111,17 @@ score_mfrm_persons <- function(fit, persons = NULL, level = .95, quad_points = N
         (unname(cut_scores)-input$mean)/input$sd, 1)
     } else {
       answer <- tryCatch(withCallingHandlers({
+        score_k <- as.integer(input$y[rows])
+        base_eta <- -input$offset[rows]
+        person_int <- rep.int(1L, length(rows))
         loglikelihood <- function(z) {
           theta <- input$mean + input$sd * z
+          if (use_cpp) return(colSums(mfrm_cpp_rsm_logprob_bundle(
+            score_k, person_int, base_eta, matrix(theta, nrow=1L),
+            step_cum, NULL, FALSE)$log_prob_mat))
           loglik <- vapply(rows, function(i) {
             lw <- outer(theta - input$offset[i], 0:length(input$steps)) -
-              matrix(c(0,cumsum(input$steps)),length(z),length(input$steps)+1L,byrow=TRUE)
+              matrix(step_cum,length(z),length(input$steps)+1L,byrow=TRUE)
             lw <- lw - row_max_fast(lw)
             lw[, input$y[i]+1L] - mfrm_testlet_logsum_rows(lw)
           }, numeric(length(z)))
@@ -174,20 +189,9 @@ print.mfrm_person_scores <- function(x, ...) {
 #' @rdname score_mfrm_persons
 #' @export
 plot.mfrm_person_scores <- function(x, ...) {
-  dots <- list(...)
-  draw <- if ("draw" %in% names(dots)) dots$draw else TRUE
-  if (!is.logical(draw) || length(draw) != 1L || is.na(draw)) {
-    stop("`draw` must be TRUE or FALSE.", call. = FALSE)
-  }
-  dots$draw <- FALSE
-  p <- do.call(plot.mfrm_testlet_scores, c(list(x = x), dots))
-  pd <- attr(p, "mfrmr_plot_data")
-  if (inherits(pd, "mfrm_plot_data")) {
-    pd$name <- "person_scores"
-    attr(p, "mfrmr_plot_data") <- pd
-  }
-  if (isTRUE(draw)) .mfrm_draw_ggplot_clean(p)
-  invisible(p)
+  out <- plot.mfrm_testlet_scores(x, ...)
+  out$name <- "person_scores"
+  invisible(out)
 }
 
 mfrm_validate_person_scores <- function(fit, scores) {

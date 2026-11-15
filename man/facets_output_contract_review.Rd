@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-reports.R
 \name{facets_output_contract_review}
 \alias{facets_output_contract_review}
-\title{Build a FACETS output-contract review}
+\title{Review coverage of FACETS-style output fields}
 \usage{
 facets_output_contract_review(
   fit,
@@ -50,11 +50,11 @@ An object of class \code{mfrm_facets_contract_review} with:
 }
 }
 \description{
-Build a FACETS output-contract review
+Review coverage of FACETS-style output fields
 }
 \details{
 This function checks produced report components against a FACETS-style
-output-contract specification (\code{inst/references/facets_column_contract.csv}) and
+output-contract specification (available through \code{system.file("references", "facets_column_contract.csv", package = "mfrmr")}) and
 returns:
 \itemize{
 \item column-level coverage per contract row
@@ -72,7 +72,7 @@ schema/metric contract encoded in the contract file.
 This helper is unavailable for \code{GPCM} fits because the FACETS
 output contract includes score-side rows whose measure-to-score and
 uncertainty semantics are supported for the Rasch-family route, not
-for free-discrimination \code{GPCM}. Use \code{mfrmr_output_guide("gpcm_capabilities")} before
+for free-discrimination \code{GPCM}. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} before
 routing a \code{GPCM} fit into score-side compatibility-output helpers.
 
 Coverage interpretation in \code{overall}:

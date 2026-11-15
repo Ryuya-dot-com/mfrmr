@@ -12,9 +12,9 @@ as_flextable(x, ...)
 \item{...}{Passed to methods.}
 }
 \value{
-A \code{flextable} object (concrete return type from the
-underlying method, e.g. \verb{[as_flextable.apa_table()]} returns a
-\code{flextable} ready for \code{flextable::save_as_docx()}).
+The object returned by the selected method. For
+\code{\link[=as_flextable.apa_table]{as_flextable.apa_table()}}, a \code{flextable} ready for
+\code{flextable::save_as_docx()}, or \code{NULL} if \code{flextable} is unavailable.
 }
 \description{
 Generic for converting objects to a \code{flextable}

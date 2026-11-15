@@ -77,7 +77,7 @@
 #' @seealso [interrater_agreement_table()], [compute_facet_icc()],
 #'   [krippendorff_alpha_table()], [score_comparison_table()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("pairwise_icc_table", run.dontrun = TRUE)
 #' \dontrun{
 #' data("mfrmr_example_agreement", package = "mfrmr")

@@ -111,7 +111,7 @@
 #' 1. Fit and review an MML model with [fit_mfrm()].
 #' 2. Prespecify the practical bound and run `analyze_facet_equivalence()`.
 #' 3. Read `summary` and `pairwise`.
-#' 4. Use [plot(x, type = "facet_equivalence")][plot.mfrm_fit] for descriptive grand-mean proximity.
+#' 4. Use [plot(eq, type = "forest")][plot.mfrm_facet_equivalence] for descriptive grand-mean proximity.
 #'
 #' @section Output:
 #' A bundle with `summary`, `chi_square`, `pairwise`, `rope`, `forest`, and
@@ -119,7 +119,7 @@
 #' must be recomputed before using `summary()`, `print()`, or plotting.
 #'
 #' @return A named list with class `mfrm_facet_equivalence`.
-#' @seealso [facets_chisq_table()], [fair_average_table()], [plot(x, type = "facet_equivalence")][plot.mfrm_fit]
+#' @seealso [facets_chisq_table()], [fair_average_table()], [plot(eq, type = "forest")][plot.mfrm_facet_equivalence]
 #' @concept confidence intervals
 #' @concept facet equivalence
 #' @concept reporting workflow
@@ -137,6 +137,7 @@
 #' head(eq$pairwise[, c("ElementA", "ElementB", "Equivalent")])
 #' @export
 #' @order 1
+#' @concept visual diagnostics
 analyze_facet_equivalence <- function(fit,
                                       diagnostics = NULL,
                                       facet = NULL,
@@ -452,7 +453,7 @@ validate_facet_equivalence_bundle <- function(x) {
 #' @param type Plot type: `"forest"` (default) or `"rope"`.
 #' @param draw If `TRUE` (default), draw the plot. If `FALSE`, return the
 #'   prepared plotting data.
-#' @param ... Reserved for compatibility; use the named plot controls.
+#' @param ... Additional graphical arguments passed to base plotting functions.
 #'
 #' @details
 #' Fit inputs use the same eligibility checks as [analyze_facet_equivalence()].
@@ -476,25 +477,24 @@ validate_facet_equivalence_bundle <- function(x) {
 #' 2. Use `type = "forest"` to inspect deviations and their uncertainty.
 #' 3. Use `type = "rope"` for a descriptive proximity view.
 #'
-#' @return Invisibly, a `ggplot` object. Use [plot_data()] for the plotting
-#'   data and inference/covariance basis. `draw = FALSE` returns the plot without printing.
+#' @return Invisibly returns the plotting data and inference/covariance basis.
+#'   With `draw = FALSE`, returns the data without drawing.
 #' @seealso [analyze_facet_equivalence()]
 #' @concept confidence intervals
 #' @concept facet equivalence
 #' @concept visual diagnostics
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_facet_equivalence", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 31, maxit = 150)
 #' eq <- analyze_facet_equivalence(fit, facet = "Rater")
-#' p <- plot(eq, type = "facet_equivalence", view = "forest", draw = FALSE)
-#' pdat <- plot_data(p)
+#' pdat <- plot(eq, type = "facet_equivalence", view = "forest", draw = FALSE)
 #' c(pdat$facet, pdat$type)
 #' }
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -525,43 +525,105 @@ plot_facet_equivalence <- function(x,
     stop("No equivalence rows are available for plotting.", call. = FALSE)
   }
 
-  out <- new_mfrm_plot_data(
-    "facet_equivalence",
-    list(
-      data = forest_df,
-      facet = as.character(settings$facet %||% summary_tbl$Facet[1] %||% ""),
-      grand_mean = suppressWarnings(as.numeric(summary_tbl$GrandMean[1] %||% NA_real_)),
-      equivalence_bound = suppressWarnings(as.numeric(settings$equivalence_bound %||% summary_tbl$EquivalenceBound[1] %||% NA_real_)),
-      type = type,
-      title = paste0(as.character(settings$facet), ": deviation from facet mean"),
-      note = paste(c("Mean-deviation intervals do not establish pairwise equivalence.",
-        x$notes, x$cautions), collapse = " "),
-      notes = data.frame(
-        Type = "Interpretation",
-        Text = c("Mean-deviation intervals do not establish pairwise equivalence.", x$notes, x$cautions),
-        stringsAsFactors = FALSE
-      ),
-      cautions = x$cautions,
-      information_review = x$information_review,
-      inference_ready = TRUE,
-      covariance_basis = settings$covariance_basis
-    )
+  out <- list(
+    data = forest_df,
+    facet = as.character(settings$facet %||% summary_tbl$Facet[1] %||% ""),
+    grand_mean = suppressWarnings(as.numeric(summary_tbl$GrandMean[1] %||% NA_real_)),
+    equivalence_bound = suppressWarnings(as.numeric(settings$equivalence_bound %||% summary_tbl$EquivalenceBound[1] %||% NA_real_)),
+    type = type,
+    title = paste0(as.character(settings$facet), ": deviation from facet mean"),
+    note = paste(c("Mean-deviation intervals do not establish pairwise equivalence.",
+      x$notes, x$cautions), collapse = " "),
+    cautions = x$cautions,
+    information_review = x$information_review,
+    inference_ready = TRUE,
+    covariance_basis = settings$covariance_basis
   )
-  .mfrm_finalize_ggplot(out, draw = draw)
+  if (!isTRUE(draw)) {
+    return(out)
+  }
+
+  dots <- list(...)
+
+  if (identical(type, "forest")) {
+    ord <- order(forest_df$Deviation, decreasing = FALSE, na.last = TRUE)
+    forest_df <- forest_df[ord, , drop = FALSE]
+    ypos <- seq_len(nrow(forest_df))
+    cols <- ifelse(
+      forest_df$ROPEStatus == "inside",
+      "#2E8B57",
+      ifelse(forest_df$ROPEStatus == "outside", "#C0392B",
+        ifelse(forest_df$ROPEStatus == "unavailable", "grey50", "#D68910"))
+    )
+    xlim <- range(c(forest_df$Deviation, forest_df$DeviationCI_Lower, forest_df$DeviationCI_Upper,
+                    -out$equivalence_bound, out$equivalence_bound), finite = TRUE)
+    do.call(graphics::plot, c(list(
+      x = forest_df$Deviation,
+      y = ypos,
+      xlim = xlim,
+      yaxt = "n",
+      ylab = "",
+      xlab = "Deviation from facet mean (logits)",
+      main = "",
+      pch = 19,
+      col = cols
+    ), dots))
+    graphics::axis(2, at = ypos, labels = forest_df$Element, las = 2)
+    graphics::rect(
+      xleft = -out$equivalence_bound,
+      ybottom = 0.5,
+      xright = out$equivalence_bound,
+      ytop = nrow(forest_df) + 0.5,
+      border = NA,
+      col = grDevices::adjustcolor("#2E8B57", alpha.f = 0.12)
+    )
+    graphics::abline(v = 0, lty = 2, col = "gray40")
+    graphics::segments(forest_df$DeviationCI_Lower, ypos, forest_df$DeviationCI_Upper, ypos, col = cols, lwd = 2)
+    graphics::points(forest_df$Deviation, ypos, pch = 19, col = cols)
+  } else {
+    ord <- order(forest_df$ROPEPct, decreasing = TRUE, na.last = TRUE)
+    forest_df <- forest_df[ord, , drop = FALSE]
+    cols <- "#4477AA"
+    mids <- graphics::barplot(
+      height = forest_df$ROPEPct,
+      names.arg = forest_df$Element,
+      las = 2,
+      ylim = c(0, 100),
+      col = cols,
+      ylab = "Normal reference mass within bound (%)",
+      main = "",
+      ...
+    )
+    out$bar_midpoints <- mids
+  }
+
+  invisible(out)
 }
 
 #' @rdname analyze_facet_equivalence
+#' @section Plot types:
+#' - `"forest"` shows each level's deviation from the equally weighted facet
+#'   mean, with covariance-aware deviation intervals and the practical region
+#'   around zero. The raw marginal measure intervals remain in the data table.
+#' - `"rope"` shows the normal confidence-distribution mass within that region.
+#'
+#' @section Interpreting output:
+#' Both plots describe grand-mean proximity. Colors in the forest plot indicate
+#' whether the deviation interval is inside, outside, or overlaps the practical
+#' region. Neither plot establishes pairwise equivalence or a Bayesian
+#' probability. Read the pairwise TOST results for pair-specific conclusions.
+#'
 #' @details `plot()` method: Plot a saved facet-equivalence analysis
 #' @param x A result from [analyze_facet_equivalence()].
 #' @param ... Use `type = "forest"` (default) for deviations and intervals or
-#'   `type = "rope"` for normal confidence-distribution mass. Other controls
-#'   are described in [plot_facet_equivalence()].
+#'   `type = "rope"` for normal confidence-distribution mass. `draw = FALSE`
+#'   returns the data without drawing (default: `TRUE`).
+#'   Additional graphical arguments are passed to the base display.
 #' @details For `plot()`: When an interval cannot be represented at the requested numeric precision,
 #' the forest retains its estimate as a grey point without a whisker. Inspect
-#' `plot_data(p)$data$DeviationCIReason` and `plot_data(p)$note` for the reason.
+#' `data$DeviationCIReason` and `note` in the returned payload for the reason.
 #' This does not change the pairwise TOST decision stored in the analysis.
-#' @return For `plot()`: Invisibly, a `ggplot` object carrying the equivalence
-#'   plot payload and inference restrictions accessible via [plot_data()].
+#' @return For `plot()`: The existing equivalence plot payload and inference restrictions.
 #'   Grand-mean proximity does not establish pairwise equivalence.
 #' @seealso [mfrmr_plot_migration]
 #' @export

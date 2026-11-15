@@ -182,101 +182,75 @@ used
 Evaluate MFRM design conditions by repeated simulation
 }
 \details{
-This helper runs a compact Monte Carlo design study for common rater-by-item
-many-facet settings.
+For each candidate design, generate ratings with \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, fit
+with \code{\link[=fit_mfrm]{fit_mfrm()}}, and retain \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} diagnostics and facet recovery.
+This is a parametric scenario study, not analytic extrapolation from one
+observed design or a predictive distribution for a future administration.
+Choose generating conditions that reflect the intended assessment.
+}
+\section{Saving and resuming simulations}{
 
-For each design condition, the function:
-\enumerate{
-\item generates synthetic data with \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}
-\item fits the requested MFRM with \code{\link[=fit_mfrm]{fit_mfrm()}}
-\item computes diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
-\item stores recovery and precision summaries by facet
+Use the same \code{file} and analysis arguments to reuse or resume a matching run.
+Changing \code{reps} creates a different study, not an extension. Failures are
+saved attempts, not redrawn until successful. Serial execution checkpoints
+after each trial; future execution after each design row, so an interrupted
+row may repeat. An unfinished optimizer cannot resume.
+
+See "Saving and resuming simulations" in \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} for the
+shared identity/environment checks, trial seeds, completed versus checkpoint
+files, safe replacement and writer-lock handling. Seeds alone do not guarantee
+identical results across software or platforms.
 }
 
-Severity recovery compares relative locations after aligning group means
-within each trial. PCM/GPCM generating step means are absorbed into the
-owning facet truth before comparison, consistently with the fitted
-identification. \code{MeanSeverityRMSE} is the mean of available trial RMSEs,
-with MCSE across trials; it differs from a pooled-row RMSE. \code{SeverityBias}
-averages to zero by construction and cannot demonstrate unbiased individual
-estimates. \code{RecoveryAvailableReps} counts finite trial recovery metrics;
-review it alongside all-trial convergence and failures.
+\section{Generator and analysis settings}{
 
-Older PCM/GPCM results without this truth-coordinate review retain their
-historical tables. New summaries and recommendations withhold their recovery
-metrics with \code{RecoveryBasis = "legacy_step_location_truth_unverified"}.
-Re-summarizing cannot reconstruct the missing trial-level truth/estimates;
-rerun in a new file for corrected recovery, preserving the old evidence.
-Other saved diagnostics remain available. Numerical agreement and successful
-examples do not establish finite-sample performance or population forecasting.
+\code{sim_spec} supplies the generator, not the analysis settings. See
+"Model and planning scope" in \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} and "Assignment and
+dependence" in \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} for role, sparse-linking and population
+assignment rules. A stored population generator supplies simulated background
+data to each MML population refit. Sparse-design columns describe assignments,
+not model fit or universal adequacy thresholds.
 
-The result is intended for planning questions such as:
-\itemize{
-\item how many raters are needed for stable rater separation?
-\item how does \code{raters_per_person} affect severity recovery?
-\item when do category counts become too sparse for comfortable interpretation?
+Explicitly set \code{fit_method}, \code{model}, \code{step_facet}, \code{maxit} and \code{quad_points}.
+Defaults (\code{JML}, 25 iterations; seven quadrature points for \code{MML}) are small
+exploratory settings, not accuracy recommendations. Anchors, interactions,
+adaptive integration and optimizer controls are not inherited from a source
+fit. When required, generate with \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} and run the intended
+\code{\link[=fit_mfrm]{fit_mfrm()}} call in each replication.
+
+GPCM evaluation remains a person x rater-like x criterion-like planner.
+It does not validate diagnostic/signal-detection rules or arbitrary-facet
+planning. Use \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} for slope-recovery assessment.
 }
 
-This is a \strong{parametric simulation study}. It does not take one observed
-design (for example, 4 raters x 30 persons x 3 criteria) and analytically
-extrapolate what would happen under a different design (for example,
-2 raters x 40 persons x 5 criteria). Instead, you specify a design grid and
-data-generating assumptions (latent spread, facet spread, thresholds, noise,
-and scoring structure), and the function repeatedly generates synthetic data
-under those assumptions.
+\section{Recovery targets and saved results}{
 
-When you want the simulated conditions to resemble an existing study, use
-substantive knowledge or estimates from that study to choose
-\code{theta_sd}, \code{rater_sd}, \code{criterion_sd}, \code{score_levels}, and related
-settings before running the design evaluation.
+Severity errors use facet-wise mean alignment within each trial. PCM/GPCM
+generating step means enter the owning facet truth to match identification;
+see \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} for the comparison coordinates.
+\code{MeanSeverityRMSE} averages available trial RMSEs, with MCSE across trials;
+it is not a pooled-row RMSE. \code{SeverityBias} averages to zero by construction
+and cannot establish unbiased individual estimates. \code{RecoveryAvailableReps}
+counts trials with finite recovery metrics; read it alongside all-trial
+convergence and failures.
 
-When \code{sim_spec} is supplied, the function uses it as the explicit
-data-generating mechanism. This is the recommended route when you want a
-design study to stay close to a previously fitted run while still varying the
-candidate sample sizes or rater-assignment counts.
-The specification supplies the generator, not the analysis settings:
-explicitly match \code{fit_method}, \code{model}, \code{step_facet}, \code{maxit}, and
-\code{quad_points} to the intended analysis. The defaults (\code{JML}, 25 iterations;
-seven quadrature points if \code{MML} is selected) are small exploratory settings,
-not an accuracy recommendation. This helper does not automatically inherit
-anchors, interactions, adaptive integration, or optimizer controls from a
-source fit. If those are essential to the analysis, generate data with
-\code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} and use the intended \code{\link[=fit_mfrm]{fit_mfrm()}} call in each replicate.
-
-Sparse linked simulation specifications and direct
-\code{assignment = "sparse_linked"} calls are carried into the design-evaluation
-output. The resulting sparse-design columns report planned-missingness and
-rater-link diagnostics (for example design density and rater-pair common
-persons). They are design diagnostics, not fit statistics or universal
-adequacy thresholds.
-
-If that specification also stores a latent-regression population generator,
-each replication carries forward the simulated one-row-per-person background
-data and refits the MML population-model branch. This remains a scenario
-study under explicit assumptions; it is not a closed-form predictive
-distribution for one future administration.
-
-\code{GPCM} design evaluation is available with caveats. It repeatedly
-generates data from the supplied or fit-derived slope-aware specification,
-refits \code{GPCM}, and summarizes facet-level operating characteristics.
-The route remains a role-based person x rater-like x criterion-like planner:
-it does not validate diagnostic-screening or signal-detection rules, does
-not provide a fully arbitrary-facet planner, and does not replace
-\code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} for slope-recovery adequacy review.
-
-Recovery metrics are reported only when the generator and fitted model target
-the same facet-parameter contract. In practice this means the same
-\code{model}, and for \code{PCM}, the same \code{step_facet}. When these do not align,
-recovery fields are set to \code{NA} and the output records the reason. Even when
-these contract checks pass, the recovery summaries still assume compatible
-orientation and anchoring conventions across the generator and fitted model.
+Recovery requires matching generator/fitted \code{model} and, for PCM,
+\code{step_facet}; mismatches give \code{NA} with a reason. Compatible orientation and
+anchoring remain necessary even when these checks pass.
+Older PCM/GPCM summaries without verified truth coordinates withhold recovery
+under \code{RecoveryBasis = "legacy_step_location_truth_unverified"}. Historical
+tables and other diagnostics remain. Re-summarizing cannot reconstruct the
+missing trial truth/estimates: preserve the old study and rerun in a new file.
+Numerical agreement or working examples do not establish finite-sample
+performance or population forecasting.
 }
+
 \section{Reported metrics}{
 
 Facet-level simulation results include:
 \itemize{
 \item \code{Separation} (\eqn{G = \mathrm{SD_{adj}} / \mathrm{RMSE}}):
-how many statistically distinct strata the facet resolves.
+adjusted between-element spread relative to measurement error.
 \item \code{Reliability} (\eqn{G^2 / (1 + G^2)}): model-based separation reliability
 for the facet levels in that fit, not Cronbach's alpha, a G-theory
 coefficient, or the accuracy of an individual pass/fail decision.
@@ -321,29 +295,18 @@ remedies. Increasing sample size alone does not resolve every failure.
 Read Monte Carlo errors and available-result counts alongside the means;
 passing thresholds on simulation means is not a guarantee for a future sample.
 
-This is a Monte Carlo design-evaluation helper. It can visualize how
-separation, reliability, strata, RMSE, and fit-screen rates change when
-you vary person, rater, criterion, or assignment counts. For analytic
-generalizability-theory planning, pair observed variance-component review
-from \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} with D-study projections from
-\code{\link[=mfrm_d_study]{mfrm_d_study()}}. The complementary multivariate observed-score route is
-\code{\link[=mfrm_g_study]{mfrm_g_study()}} -> \code{\link[=mfrm_d_study]{mfrm_d_study()}}. See
-\link{mfrmr_workflow_methods} for choosing between simulation and G-theory:
-neither is automatically required by the other, and neither replaces the
-other's estimand. Read \code{IdentificationStatus}, \code{GStatus}, and \code{PhiStatus}
-before using the projected coefficients: boundary or singular mixed-model
-fits are design-identification warnings rather than high-stakes-ready
-reliability evidence.
+For analytic observed-score planning, use \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} or
+\code{\link[=mfrm_g_study]{mfrm_g_study()}} with \code{\link[=mfrm_d_study]{mfrm_d_study()}}. These target generalizability, not
+model-parameter recovery. Read \code{IdentificationStatus}, \code{GStatus} and
+\code{PhiStatus}: boundary/singular fits warn about design identification, not
+high-stakes-ready reliability. Neither approach requires or replaces the other.
 }
 
 \section{References}{
 
-The simulation logic follows the general Monte Carlo / operating-characteristic
-framework described by Morris, White, and Crowther (2019) and the
-ADEMP-oriented planning/reporting guidance summarized for psychology by
-Siepe et al. (2024). In \code{mfrmr}, \code{evaluate_mfrm_design()} is a practical
-many-facet design-planning wrapper rather than a direct reproduction of one
-published simulation study.
+Morris, White, and Crowther (2019) and Siepe et al. (2024) provide the Monte
+Carlo/ADEMP planning and reporting framework. This helper is a many-facet
+application, not a reproduction of one published simulation design.
 \itemize{
 \item Morris, T. P., White, I. R., & Crowther, M. J. (2019).
 \emph{Using simulation studies to evaluate statistical methods}.
@@ -353,44 +316,6 @@ Statistics in Medicine, 38(11), 2074-2102.
 psychology: A standardized template for planning, preregistration, and
 reporting}. Psychological Methods.
 }
-}
-
-\section{Saving and resuming simulations}{
-
-Pass the same \code{file} and analysis arguments on a subsequent call to reuse
-the completed result without generation or fitting, or to resume an
-interrupted run. The identity includes generator inputs/specification,
-fitting controls, requested replications, seed, RNG kind, package R code
-and native library fingerprints, relevant numerical/diagnostic R options,
-R/platform, numerical libraries and
-dependency versions. Changing \code{reps} starts a different study; extension of
-an existing study is not supported. \code{progress} and \code{parallel} do not change
-the identity. Cached results retain the settings of their original run.
-
-Recovery runs and serial design evaluations save after every finished
-trial. Future design evaluations save after a whole design row returns;
-an interrupted row may need to run again. A partially completed optimizer
-is not resumed. Fit failures are completed attempts and are saved too;
-resuming does not redraw failures until they succeed. An unexpected error
-outside the recorded fit/diagnostic failure routes stops the call and leaves
-earlier checkpoints available. These files do not change the interpretation
-or eligibility of the underlying estimates and intervals.
-
-Per-trial seeds are allocated before computation and retained even when
-\code{seed = NULL}; an explicit seed is preferable for reproducing a new run in
-another file. Each trial controls generation, fitting and diagnostics with
-its own seed. A matching environment is required for automatic reuse;
-recorded seeds alone do not guarantee identical floating-point results on
-other systems. Keep the analysis script and software environment as well.
-
-After completion, \code{readRDS(file)} returns the usual result object with an
-additional \code{reproducibility} component containing identity, inputs and
-trial seeds. Before completion the file is an internal checkpoint; resume
-through the same public function. Writes use a temporary file in the same
-directory and checked replacement. A \code{.lock} directory prevents concurrent
-writers. Normal returns/errors release it; after process termination, remove
-a remaining lock only after checking that no writer is active. Unreadable
-files are never silently reused or replaced by \code{"on_change"}.
 }
 
 \examples{

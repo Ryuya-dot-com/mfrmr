@@ -64,9 +64,9 @@
 #'
 #'   `checks` separates `BootstrapEligible` from `WaldEligible` and retains
 #'   `BootstrapCaution`. Accepted singleton or weak-information cases produce an aggregate warning;
-#'   cautions also follow `confint()`, its printed output, default plot subtitle,
+#'   cautions also follow `confint()`, its printed output, returned plot notes,
 #'   APA tables and reports. A custom subtitle (including NULL) overrides the
-#'   plot text, not the saved diagnostics. `source_checks` records the source
+#'   plot metadata, not the saved diagnostics. `source_checks` records the source
 #'   decision. Use `apa_table(result, which = "checks")` to inspect refits.
 #'   `InformationRefinementVerified`, `InformationRelativeChange`,
 #'   `InformationInverseResidual` and `InformationScaledGradient` record a

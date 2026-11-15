@@ -103,8 +103,7 @@ Keep \code{table$Status} and \code{table$Reason} with exported scores: \code{pri
 describes the assumed population without observed responses for that Person;
 \code{unavailable} withholds the estimate, SD and bounds with a recorded cause.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object; use \code{\link[=plot_data]{plot_data()}} to
-extract the underlying table and settings.
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object; use \code{\link[=plot_data]{plot_data()}}.
 }
 \description{
 Compute conditional Person scores using the complete joint scoring roster,
@@ -185,7 +184,7 @@ endpoints, allowing for Monte Carlo and numerical error.
 These are bounded numerical comparisons, not universal accuracy bounds or
 performance cutoffs. They do not establish repeated-sampling 95 percent
 coverage when calibration is estimated, qualify the calibration likelihood,
-or test Person differences. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html}{online random-rater guide} for the
+or test Person differences. See \href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.html}{mfrmr-random-raters} for the
 reference-precision limitations and interpretation.
 }
 

@@ -73,8 +73,7 @@ test_that("design recommendations retain failed runs in convergence denominators
   expect_equal(s$overview$Replications, 30)
   expect_equal(s$overview$ConvergedRuns, 11)
   p <- plot(x, facet = "Rater", metric = "convergencerate", draw = FALSE)
-  expect_s3_class(p, "ggplot")
-  expect_equal(plot_data(p, "data")$y, c(.1, 1))
+  expect_equal(p$data$y, c(.1, 1))
   expect_identical(recommend_mfrm_design(x)$recommended$design_id, "D2")
   expect_identical(recommend_mfrm_design(s)$recommended$design_id, "D2")
 

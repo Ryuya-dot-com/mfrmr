@@ -1,4 +1,4 @@
-make_mml_backend_fixture <- function(model = c("RSM", "PCM", "GPCM")) {
+make_mml_backend_fixture <- function(model = c("RSM", "PCM")) {
   model <- match.arg(model)
   d <- mfrmr:::sample_mfrm_data(seed = 42)
   prep <- mfrmr:::prepare_mfrm_data(
@@ -9,8 +9,8 @@ make_mml_backend_fixture <- function(model = c("RSM", "PCM", "GPCM")) {
   )
   roles <- mfrmr:::resolve_step_and_slope_facets(
     model = model,
-    step_facet = if (model %in% c("PCM", "GPCM")) "Criterion" else NULL,
-    slope_facet = if (identical(model, "GPCM")) "Criterion" else NULL,
+    step_facet = if (identical(model, "PCM")) "Criterion" else NULL,
+    slope_facet = NULL,
     facet_names = prep$facet_names
   )
   signs <- mfrmr:::build_facet_signs(prep$facet_names)
@@ -35,50 +35,70 @@ make_mml_backend_fixture <- function(model = c("RSM", "PCM", "GPCM")) {
     population = NULL
   )
   start <- mfrmr:::build_initial_param_vector(cfg$config, cfg$sizes)
-  if (identical(model, "GPCM") && cfg$sizes$log_slopes > 0L) {
-    sl_idx <- mfrmr:::build_param_slices(cfg$sizes)[["log_slopes"]]
-    start[sl_idx] <- seq(-0.25, 0.25, length.out = length(sl_idx))
-  }
   params <- mfrmr:::expand_params(start, cfg$sizes, cfg$config)
 
   list(
     idx = idx,
     config = cfg$config,
-    sizes = cfg$sizes,
-    start = start,
     quad = mfrmr:::gauss_hermite_normal(5L),
     params = params,
     base_eta = mfrmr:::compute_base_eta(idx, params, cfg$config)
   )
 }
 
+test_that("fixed-grid MML fusion preserves weighted scores and cache call order", {
+  old_opt <- options(mfrmr.use_cpp11_backend = TRUE)
+  on.exit(options(old_opt), add = TRUE)
+  for (model in c("RSM", "PCM")) {
+    f <- make_mml_backend_fixture(model)
+    sizes <- build_param_sizes(f$config)
+    par <- collapse_expanded_params(f$params, f$config)
+    par <- par + .12 * sin(seq_along(par))
+    for (weighted in c(FALSE, TRUE)) {
+      idx <- f$idx
+      if (weighted) idx$weight <- rep(c(.5, 1, 2), length.out = length(idx$score_k))
+      options(mfrmr.use_cpp11_backend = FALSE)
+      reference <- mfrm_loglik_mml(par, idx, f$config, sizes, f$quad)
+      gradient <- mfrm_grad_mml(par, idx, f$config, sizes, f$quad)
+      options(mfrmr.use_cpp11_backend = TRUE)
+      expect_equal(mfrm_loglik_mml(par, idx, f$config, sizes, f$quad), reference,
+        tolerance = 1e-12)
+      got <- mfrm_grad_mml(par, idx, f$config, sizes, f$quad)
+      expect_lte(max(abs(got - gradient) / pmax(1, abs(gradient))), 1e-12)
+      for (reuse in c(FALSE, TRUE)) {
+        ev <- make_mfrm_direct_evaluator("MML",
+          make_param_cache(sizes, f$config, idx, is_mml = TRUE),
+          idx, f$config, sizes, f$quad, reuse_probability_workspace = reuse)
+        expect_equal(ev$value(par), reference, tolerance = 1e-12)
+        expect_equal(ev$gradient(par), gradient, tolerance = 1e-12)
+        expect_identical(ev$value(par), ev$value(par))
+        ev$gradient(par + .01)
+        expect_equal(ev$gradient(par), gradient, tolerance = 1e-12)
+      }
+    }
+  }
+})
+
 test_that("cpp11 backend availability and gating are stable", {
   expect_true(mfrmr:::mfrm_cpp11_backend_available())
   expect_true(mfrmr:::mfrm_use_cpp11_backend(list(model = "RSM")))
   expect_true(mfrmr:::mfrm_use_cpp11_backend(list(model = "PCM")))
-  expect_true(mfrmr:::mfrm_use_cpp11_backend(list(model = "GPCM")))
-  expect_true(mfrmr:::mfrm_use_cpp11_backend(
-    list(model = "GPCM"),
+  expect_false(mfrmr:::mfrm_use_cpp11_backend(list(model = "GPCM")))
+  expect_false(mfrmr:::mfrm_use_cpp11_backend(
+    list(model = "PCM"),
     include_linear_part = TRUE
   ))
-  expect_false(mfrmr:::mfrm_use_cpp11_backend(list(model = "UNKNOWN")))
 
-  old_opt <- options(mfrmr.use_cpp11_backend = FALSE)
+  old_opt <- options(mfrmr.use_cpp11_backend = TRUE)
   on.exit(options(old_opt), add = TRUE)
-  expect_false(mfrmr:::mfrm_use_cpp11_backend(list(model = "RSM")))
-  expect_false(mfrmr:::mfrm_use_cpp11_backend(list(model = "PCM")))
-  expect_false(mfrmr:::mfrm_use_cpp11_backend(list(model = "GPCM")))
-
-  options(mfrmr.use_cpp11_backend = TRUE)
   expect_true(mfrmr:::mfrm_use_cpp11_backend(list(model = "RSM")))
   expect_true(mfrmr:::mfrm_use_cpp11_backend(list(model = "PCM")))
-  expect_true(mfrmr:::mfrm_use_cpp11_backend(list(model = "GPCM")))
 })
 
-test_that("cpp11 MML kernel matches the pure-R reference for RSM, PCM, and GPCM", {
+test_that("cpp11 MML kernel matches the pure-R reference for RSM and PCM", {
   skip_if_not(mfrmr:::mfrm_cpp11_backend_available())
 
-  for (model in c("RSM", "PCM", "GPCM")) {
+  for (model in c("RSM", "PCM")) {
     fixture <- make_mml_backend_fixture(model)
 
     logprob_r <- mfrmr:::mfrm_mml_logprob_bundle_r(
@@ -87,8 +107,7 @@ test_that("cpp11 MML kernel matches the pure-R reference for RSM, PCM, and GPCM"
       quad = fixture$quad,
       params = fixture$params,
       base_eta = fixture$base_eta,
-      include_probs = TRUE,
-      include_linear_part = TRUE
+      include_probs = TRUE
     )
     logprob_cpp <- mfrmr:::mfrm_mml_logprob_bundle_cpp11(
       idx = fixture$idx,
@@ -96,8 +115,7 @@ test_that("cpp11 MML kernel matches the pure-R reference for RSM, PCM, and GPCM"
       quad = fixture$quad,
       params = fixture$params,
       base_eta = fixture$base_eta,
-      include_probs = TRUE,
-      include_linear_part = TRUE
+      include_probs = TRUE
     )
 
     expect_equal(logprob_cpp$log_prob_mat, logprob_r$log_prob_mat, tolerance = 1e-12, info = model)
@@ -111,16 +129,6 @@ test_that("cpp11 MML kernel matches the pure-R reference for RSM, PCM, and GPCM"
         tolerance = 1e-12,
         info = paste(model, q)
       )
-      if (identical(model, "GPCM")) {
-        expect_equal(
-          unname(logprob_cpp$linear_part_list[[q]]),
-          unname(logprob_r$linear_part_list[[q]]),
-          tolerance = 1e-12,
-          info = paste(model, "linear", q)
-        )
-      } else {
-        expect_identical(logprob_cpp$linear_part_list[[q]], logprob_r$linear_part_list[[q]])
-      }
     }
 
     posterior_r <- mfrmr:::mfrm_mml_posterior_bundle(logprob_r)
@@ -166,12 +174,12 @@ test_that("cpp11 MML kernel matches the pure-R reference for RSM, PCM, and GPCM"
   }
 })
 
-test_that("automatic MML bundle dispatch uses cpp11 backend for RSM, PCM, and GPCM", {
+test_that("automatic MML bundle dispatch uses cpp11 backend for RSM and PCM", {
   skip_if_not(mfrmr:::mfrm_cpp11_backend_available())
   old_opt <- options(mfrmr.use_cpp11_backend = TRUE)
   on.exit(options(old_opt), add = TRUE)
 
-  for (model in c("RSM", "PCM", "GPCM")) {
+  for (model in c("RSM", "PCM")) {
     fixture <- make_mml_backend_fixture(model)
     auto_bundle <- mfrmr:::mfrm_mml_logprob_bundle(
       idx = fixture$idx,
@@ -179,8 +187,7 @@ test_that("automatic MML bundle dispatch uses cpp11 backend for RSM, PCM, and GP
       quad = fixture$quad,
       params = fixture$params,
       base_eta = fixture$base_eta,
-      include_probs = TRUE,
-      include_linear_part = TRUE
+      include_probs = TRUE
     )
     cpp_bundle <- mfrmr:::mfrm_mml_logprob_bundle_cpp11(
       idx = fixture$idx,
@@ -188,8 +195,7 @@ test_that("automatic MML bundle dispatch uses cpp11 backend for RSM, PCM, and GP
       quad = fixture$quad,
       params = fixture$params,
       base_eta = fixture$base_eta,
-      include_probs = TRUE,
-      include_linear_part = TRUE
+      include_probs = TRUE
     )
     expect_equal(auto_bundle$log_prob_mat, cpp_bundle$log_prob_mat, tolerance = 1e-12, info = model)
   }
@@ -198,11 +204,9 @@ test_that("automatic MML bundle dispatch uses cpp11 backend for RSM, PCM, and GP
 test_that("shared-grid native probabilities preserve observation-specific results", {
   skip_if_not(mfrmr:::mfrm_cpp11_backend_available())
 
-  for (model in c("RSM", "PCM", "GPCM")) {
+  for (model in c("RSM", "PCM")) {
     kernel <- if (model == "RSM") {
       mfrmr:::mfrm_cpp_rsm_logprob_bundle
-    } else if (model == "GPCM") {
-      mfrmr:::mfrm_cpp_gpcm_logprob_bundle
     } else {
       mfrmr:::mfrm_cpp_pcm_logprob_bundle
     }
@@ -220,10 +224,6 @@ test_that("shared-grid native probabilities preserve observation-specific result
       } else {
         args$step_cum_obs <- matrix(rep(c(0, -0.2, 0.1, 0.4, 0.8), each = n), nrow = n)
         args$step_cum_obs[seq(3L, n, by = 3L), 2L] <- 0.125
-        if (model == "GPCM") {
-          args$slope_obs <- rep(c(0.8, 1.25), length.out = n)
-          args$include_linear_part <- TRUE
-        }
       }
       if (condition == "unique") args$base_eta <- seq(-1, 1, length.out = n)
       if (condition == "person_nodes") args$person_nodes[2L, ] <- c(-1.5, 0.25, 2.5)
@@ -239,19 +239,13 @@ test_that("shared-grid native probabilities preserve observation-specific result
           for (field in c("score_k", "person_int", "base_eta", "weight")) {
             one[[field]] <- one[[field]][i]
           }
-          if (model != "RSM") one$step_cum_obs <- one$step_cum_obs[i, , drop = FALSE]
-          if (model == "GPCM") one$slope_obs <- one$slope_obs[i]
+          if (model == "PCM") one$step_cum_obs <- one$step_cum_obs[i, , drop = FALSE]
           do.call(kernel, one)
         })
         expected <- list(log_prob_mat = do.call(rbind, lapply(singles, `[[`, "log_prob_mat")))
         if (include_probs) {
           expected$prob_list <- lapply(seq_len(ncol(args$person_nodes)), function(q) {
             do.call(rbind, lapply(singles, function(x) x$prob_list[[q]]))
-          })
-        }
-        if (model == "GPCM") {
-          expected$linear_part_list <- lapply(seq_len(ncol(args$person_nodes)), function(q) {
-            do.call(rbind, lapply(singles, function(x) x$linear_part_list[[q]]))
           })
         }
         expect_identical(observed, expected, info = paste(model, condition, include_probs))

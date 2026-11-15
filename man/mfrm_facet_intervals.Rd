@@ -57,22 +57,18 @@ mfrm_facet_intervals(
 )
 }
 \arguments{
-\item{fit}{An inference-ready RSM/PCM MML fit from \code{\link[=fit_mfrm]{fit_mfrm()}}, using a
-fixed standard-normal person distribution, fixed quadrature and unit
-observation weights. A fit whose category review concerns singleton counts
-can additionally use \code{method = "model"} after the separate checks described
-under "Small samples and singleton categories". Experimental two-family GPCM MML also supports
-\code{method = "model"} with fixed-grid EM or direct adaptive integration;
-see "Two-family location targets" below. Direct MML native
-locations additionally support estimated normal RSM/PCM populations,
-including conditional-normal latent regression,
-and one-family GPCM with fixed N(0,1) or an estimated intercept-only normal
-population, using fixed or adaptive integration; see "Native locations"
-below for their scope and separate numerical checks. Native RSM/PCM CML
-results additionally support \verb{method = "model", scale = "native"}, including
-the saved targets from \code{fit_scope = "comparisons"}.
-Matching full RSM/PCM MML interaction fits use the \code{comparison_review}
-extension below; their explicit model and source checks remain separate.}
+\item{fit}{A supported \code{\link[=fit_mfrm]{fit_mfrm()}} result. Ordinary RSM/PCM MML uses
+fixed N(0,1), fixed quadrature and unit weights; singleton-category
+exceptions for \code{method = "model"} have separate checks below.
+Native-location model intervals additionally support direct MML with
+estimated-normal RSM/PCM populations (including latent regression), or
+one-family GPCM with fixed N(0,1) or an estimated intercept-only normal
+population, using fixed or adaptive integration; see "Native locations".
+Experimental two-family GPCM model intervals accept fixed-grid EM or
+direct adaptive integration; see "Two-family location targets".
+Native RSM/PCM CML supports \verb{method = "model", scale = "native"}, including
+saved comparison-only targets. Matching full RSM/PCM MML interaction fits
+use the separate \code{interaction} or \code{comparison_review} routes below.}
 
 \item{facet}{A non-person facet, for example \code{"Rater"}. May be omitted
 when \code{comparison_review} supplies a facet-by-origin interaction target,
@@ -173,89 +169,82 @@ fixed/unavailable symbols. This text is not drawn; use
 \item{show_legend}{Logical; show the method legend (default \code{TRUE}).}
 }
 \value{
-An \code{mfrm_facet_intervals} object with \code{table}, selected target
-\code{covariance}, \code{model_covariance}, free-parameter \code{parameter_covariance},
-\code{model_parameter_covariance}, \code{person_scores}, \code{cluster_scores}, the
-\code{clusters} mapping, exact \code{contrasts}, \code{settings}, and source \code{fit}.
-The model-based SE and interval remain alongside the selected method.
-If ordinary MML joint information is unavailable, free-parameter
-covariances are \code{NULL} and target covariances contain \code{NA} (zero for
-constraint-fixed rows/columns); \code{unavailable_reason} and \code{checks} explain
-the failure. Sandwich scores and their rank are then uncomputed, not zero.
-Score rows are derivatives of a person's marginal log likelihood, not
-observed category scores or ability estimates. Scores are absent for
-\code{method = "model"}.
-When weak information passes numerical refinement, \code{cautions} and
-\code{information_review} retain the warning and checks. \code{InferenceCaution}
-also accompanies the interval table when applicable.
-Each row retains \code{Status}, \code{CIEligible} and a plain-language
-\code{InferenceReview}. \code{CIEligible} concerns the selected interval, not the
-validity of the point estimate or a guarantee of coverage. \code{fixed} means
-the target is fixed by constraints, with no inferential interval.
-\code{insufficient_cluster_rank} withholds sandwich bounds because independent
-cluster scores do not span all free parameters. The point and separate
-\code{ModelSE}/\code{ModelLower}/\code{ModelUpper} are retained; those model bounds are
-not a replacement robust interval. Review the independent sampling units
-and model dimension; do not split dependent clusters to obtain an interval.
-\code{nonpositive_variance} or \code{nonfinite_bounds} denotes an unusable
-target-specific calculation. Missing bounds are not zero uncertainty.
-Two-family results additionally retain \code{checks}, \code{numerical_checks},
-\code{score_rank}, source identity, scale references and interval refusal reasons.
-Their table includes \code{CIEligible}; failed numerical checks leave bounds
-and SEs missing while preserving the fitted point estimates.
-Native-location results retain checks, numerical comparisons, full and
-target covariance, target Jacobian and source identity, without an
-empirical Person-score rank requirement.
-Standardized results also retain \code{NativeEstimate}, the population SD,
-whether it was estimated, and the full transformation Jacobian.
-\code{CIEligible} describes numerical availability; \code{CoverageQualified = FALSE}
-does not claim finite-sample coverage for the transformed interval.
+An \code{mfrm_facet_intervals} object. Its \code{table}, also returned by
+\code{summary()}, gives each target's point, selected interval and interpretation:
+\itemize{
+\item \code{Status}, \code{CIEligible} and \code{InferenceReview} describe the selected
+calculation. Eligibility does not establish point validity or coverage;
+missing bounds are not zero uncertainty. \code{fixed} denotes a
+constraint-fixed target with no inferential interval.
+\item \code{insufficient_cluster_rank} withholds sandwich bounds when cluster scores
+do not span the free parameters. Points and separate
+\code{ModelSE}/\code{ModelLower}/\code{ModelUpper} remain; model bounds are not substitute
+robust intervals. Review sampling units and dimension, without splitting
+dependent clusters to obtain an interval.
+\item \code{nonpositive_variance} and \code{nonfinite_bounds} identify unusable
+target-specific calculations. Weak information that passes numerical
+refinement retains \code{InferenceCaution}, \code{cautions} and \code{information_review}.
+}
 
-For \code{plot()}: Invisibly, a \code{ggplot} object; \code{\link[=plot_data]{plot_data()}} retains the
-\code{table}, contrast coefficients, settings and labels, and \code{\link[=as_ggplot]{as_ggplot()}}
-remains idempotent on the returned object.
+The object also retains selected/model target \code{covariance}/\code{model_covariance},
+free-coordinate \code{parameter_covariance}/\code{model_parameter_covariance},
+\code{person_scores}, \code{cluster_scores}, \code{clusters}, \code{contrasts}, \code{settings} and
+the source \code{fit}. Scores are marginal-log-likelihood derivatives, not
+observed categories or abilities; they are absent for \code{method = "model"}.
+If ordinary MML joint information is unavailable, free-coordinate
+covariances are \code{NULL}, target covariances contain \code{NA} (zero for fixed
+rows/columns), and \code{unavailable_reason}/\code{checks} explain why. Sandwich
+scores and rank are then uncomputed, not zero.
+
+Two-family results retain \code{checks}, \code{numerical_checks}, \code{score_rank}, source
+identity and scale references. Failed numerical checks retain fitted points
+with missing SEs/bounds. Native-location results retain full/target
+covariance, target Jacobian and source/numerical checks without an empirical
+Person-score rank requirement. Standardized results additionally retain
+\code{NativeEstimate}, population SD, whether it was estimated, and the full
+transformation Jacobian. \code{CoverageQualified = FALSE} does not claim
+finite-sample coverage for that transformation.
+
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object retaining the \code{table}, contrast
+coefficients, settings and labels. Use \code{\link[=plot_data]{plot_data()}} for custom graphics;
+\code{\link[=as_ggplot]{as_ggplot()}} returns a customizable ggplot with the same saved values.
 }
 \description{
-Describe uncertainty about a fixed facet estimate, such as rater severity,
-or a specified difference between two raters. Start from a supported fitted
-model; the point estimates stay the same when you change the interval method.
+Quantify uncertainty in fixed facet estimates, such as rater severity, or
+prespecified contrasts. In \code{summary(intervals)}, read \code{Estimate}, \code{Status},
+\code{CIEligible} and \code{InferenceReview} together. Missing bounds do not mean zero
+uncertainty; a retained point still requires the source fit's checks.
+
+Model and sandwich intervals keep the fitted points. Sandwich uncertainty
+uses whole Persons or declared larger independent clusters.
 }
 \details{
-Compare ordinary observed-information intervals with a sandwich covariance
-that treats a person's complete response vector, or an explicitly declared
-larger cluster, as the independent sampling unit. Estimates are not refitted.
-
-For cluster score \code{s_g} and observed negative-log-likelihood
-Hessian \code{H}, the unadjusted sandwich is
+For cluster score \code{s_g} and observed negative-log-likelihood Hessian \code{H},
+the unadjusted sandwich is
 \code{solve(H) \%*\% sum_g(s_g \%*\% t(s_g)) \%*\% solve(H)}.
-Scores aggregate all responses of a person before forming the outer
-products; grouping individual rating rows would be a different and
-incorrect calculation for this marginal likelihood. The full covariance
-is transformed through the fitted constraints and requested contrasts.
-Both methods use normal critical values. No automatic method selection,
-multiplicity adjustment or significance flag is supplied.
+Scores aggregate each Person's complete response vector before outer products;
+treating rating rows as independent is incorrect for this marginal likelihood.
+The full covariance is transformed through constraints and contrasts. Both
+methods use normal critical values, without automatic method selection,
+multiplicity adjustment or significance flags.
 
-The sandwich requires many independent sampling units and appropriate
-regularity. It permits dependence within the declared unit but does not
-establish independence between units. A small number of units can give
-poor intervals even with nonsingular covariance. If their scores do not
-span the free-parameter space, sandwich intervals are unavailable; point
-estimates and the reason remain. For ordinary fixed-population RSM/PCM,
-an ineligible source fit still causes an error. If the source is eligible
-but joint information is unavailable, nonpositive or regularized, finite
-points remain with \code{Status = "information_unavailable"},
-\code{CIEligible = FALSE}, missing model and sandwich uncertainty, and the
-explanation in \code{InferenceReview}. This includes information-workspace
-limits. A sandwich also needs the inverse information; switching methods
-cannot repair its absence. Failed information can limit confidence in
-point accuracy along weak directions. No inverse is regularized for this
-output. Invalid arguments and cluster mappings remain errors.
-Targets fixed by constraints
-have no inferential interval. Known anchors exclude anchor uncertainty.
-An ill-conditioned but numerically verified unregularized inverse can be
-used with a warning. Successful inversion does not establish reliable
-normal intervals. Review interval width, boundary proximity and quadrature
-sensitivity; changing to sandwich covariance does not remove this concern.
+Clusters must be independent, allowing dependence within them. Few clusters
+can give poor coverage even at full rank. Unless scores span all free
+parameters, sandwich bounds are withheld with points, model intervals and
+reasons retained; this does not declare every scalar contrast unidentified.
+An ineligible ordinary fixed-population source, invalid arguments or cluster
+mapping still cause errors.
+
+For an eligible source with unavailable, nonpositive or regularized joint
+information (including workspace refusal), finite points remain with
+\code{Status = "information_unavailable"}, \code{CIEligible = FALSE}, missing model/
+sandwich uncertainty and \code{InferenceReview}. Both methods need inverse
+information, so switching cannot repair it; weak directions can affect points
+too. No inverse is regularized. A verified unregularized but ill-conditioned
+inverse can be used with a warning: review widths, boundaries and quadrature.
+Inversion success is not a normal-interval guarantee. Constraint-fixed targets
+have no conditional inferential interval; anchors are exact unless the separate
+anchor-source uncertainty extension is requested.
 
 \code{plot()} method: Plot fixed-facet interval methods
 
@@ -271,7 +260,7 @@ Weak-information cautions remain in the returned data and appear in the
 default subtitle. Custom or omitted subtitles change display only.
 For experimental two-family GPCM locations, the axis uses fixed-N(0,1)
 ability units and the default subtitle states the location reference and
-unqualified coverage, with a deficient Person-score rank caution when
+the lack of established coverage, with a deficient Person-score rank caution when
 applicable. These are not uniform expected-rating differences.
 Standardized contrast axes use population SD units; returned notes identify
 whether SD uncertainty is estimated or the known SD is one. Reviewed
@@ -422,30 +411,24 @@ population_ci <- mfrm_population_intervals(rater_ci)
 
 \section{Small samples and singleton categories}{
 
-A small sample or a wide interval is not, by itself, a reason to suppress an
-estimate or an otherwise available asymptotic interval. RSM/PCM model
-intervals can retain singleton categories (one observed response in a
-fitted or local category cell) when all declared categories are represented
-in the fitted and local scopes. They require fresh category review, source
-and convergence checks, positive unregularized joint information and a
-finer-quadrature score/covariance comparison. Empty categories, unsupported
-coordinates, known identification failures and failed numerical checks are
-not excused by this route. Failed interval checks retain the point with
-unavailable uncertainty and a reason.
+Small samples or wide intervals alone do not suppress estimates/available
+asymptotic intervals. RSM/PCM model intervals permit singleton or empty local
+cells when every declared category remains represented in its step scope
+(global RSM; step-owning level for PCM). Fresh category/source/convergence,
+positive unregularized information and finer-quadrature score/covariance
+checks are still required. Absent scope-level categories, unsupported
+coordinates, known identification failures and numerical failures are not
+excused. Failed interval checks retain points with missing uncertainty/reasons.
 
-The fit keeps its category-review state and can still have
-\code{InferenceReady = FALSE}. Inspect this interval object's \code{CIEligible},
-\code{checks}, \code{numerical_checks} and \code{InferenceCaution} for the specific calculation.
-This does not qualify other analyses or guarantee small-sample coverage.
-The same model covariance is used by \code{vcov(fit)} and default \code{confint(fit)}.
-Singleton counts do not gain a sandwich or GPCM Wald extension here.
-For supported one-Person RSM/PCM calibration, model-information intervals
-may be available after the same numerical checks. Returned \code{cautions} and
-\code{InferenceCaution} state that calibration relies on one response vector and
-its assumed conditional independence; \code{CoverageQualified} is \code{FALSE}.
-A finite point or information matrix does not establish small-sample
-coverage or between-Person variation. One Person cannot provide sandwich
-uncertainty; its ratings must not be relabeled as independent Persons.
+Read \code{CIEligible}, \code{checks}, \code{numerical_checks} and \code{InferenceCaution} on this
+result; the fit's category review and \code{InferenceReady = FALSE} may persist.
+This covariance also underlies \code{vcov(fit)} and default \code{confint(fit)}, without
+qualifying other analyses, small-sample coverage, sandwich or GPCM extensions.
+Supported one-Person RSM/PCM model intervals use the same checks, with
+\code{CoverageQualified = FALSE} and cautions about reliance on one response vector
+and conditional independence. Finite information does not establish coverage
+or between-Person variation; one Person cannot supply sandwich uncertainty,
+and ratings must not be relabelled as independent Persons.
 }
 
 \section{MML assumptions and numerical approximation}{
@@ -504,7 +487,7 @@ independent Persons and information growing in every free direction of a
 fixed-dimensional identified model. More Persons alone is insufficient;
 extreme totals add no information. Response-dependent assignment, stopping
 or missingness requires justification that the conditional law is preserved.
-See the sufficient regular regime in \code{\link[=fit_mfrm]{fit_mfrm()}}. Neither numerical
+See the sufficient regular regime in \link{fit_mfrm_technical_details}. Neither numerical
 acceptance nor a distribution-free ability treatment ensures small-sample
 coverage. \code{plot(ci)}, \code{summary(ci)} and RDS reuse apply to CML interval objects;
 attaching them to ordinary \code{mfrm_results()} is not supported.
@@ -516,9 +499,9 @@ For \code{fit_scope = "comparisons"}, call \code{mfrm_facet_intervals(fit)} with
 new \code{contrasts} or \code{comparison_review}. The saved estimates, joint target
 covariance and qualifications are reused without optimization or information
 recalculation. \code{level} changes only the pointwise normal critical value.
-Unidentified, boundary or unqualified-stationarity comparisons keep missing
-estimates and intervals. If only information failed, identified numerical
-points remain, with missing uncertainty, their reasons and
+Comparisons that are unidentified, on a boundary, or fail stationarity checks
+keep missing estimates and intervals. If only information failed, identified
+numerical points remain, with missing uncertainty, their reasons and
 \code{CIEligible = FALSE}; no unavailable value is zero-filled.
 \code{parameter_covariance} is the covariance of the fit's identified subspace,
 not of separately identified cell effects. Use \code{summary(ci)}, \code{plot(ci)},
@@ -595,21 +578,16 @@ intervals. This check does not optimize or exclude the entire boundary.
 A numerical refusal preserves the native point and its reason with
 unavailable SE/bounds. Constraint-fixed targets have no inferential interval.
 
-The asymptotic justification requires independent Persons, a correctly
-specified response and population model, an identified interior true
-parameter, a fixed number of structural parameters, nonsingular limiting
-information and sufficiently accurate integration and optimization.
-Information must grow in all target directions as Persons are added;
-connected facet labels alone do not establish this condition.
-These numerical checks do not establish finite-sample coverage, global
-identification or robustness to misspecification. Native locations are
-not divided by the estimated population SD unless \code{scale = "standardized"}
-is requested for a zero-sum contrast (see below). A location
-difference need not produce a uniform rating difference with unequal slopes
-or steps. The calculation does not refit or change the saved fit/readiness.
-Save and attach \code{ci} with \code{mfrm_results(fit, intervals = list(locations = ci), compute = "never")}; select \code{plot(res, type = "facet_locations")} for
-RSM/PCM or \code{"gpcm_locations"} for one-family GPCM. Reports and exports retain
-the native scale, inferential qualifications and unavailable outputs.
+The MML assumptions above apply: information must grow in every target
+direction, not merely connect facet labels. Numerical checks establish neither
+finite-sample coverage, global identification nor robustness. Native locations
+remain in ability units; only requested zero-sum contrasts can use
+\code{scale = "standardized"}. Unequal slopes/steps mean a location difference
+need not imply a uniform rating difference. No refit/readiness change occurs.
+Attach with \code{mfrm_results(fit, intervals = list(locations = ci), compute = "never")};
+use \code{plot(res, type = "facet_locations")} for RSM/PCM or \code{"gpcm_locations"}
+for one-family GPCM. Reports/exports retain scale, qualifications and unavailable
+results; the saving section below gives the general workflow.
 }
 
 \section{Population-SD-standardized contrasts}{
@@ -698,9 +676,9 @@ recalculate information. These results do not extend the separate
 
 \section{Two-family location targets}{
 
-For native two-family GPCM MML, select a modeled non-Person facet.
-Locations sum to zero except in the declared \code{noncenter_facet}, whose
-locations are uncentered on the fixed N(0,1) ability scale. These locations are measured
+For native two-family GPCM MML, select either modeled non-Person facet.
+The first slope owner's locations sum to zero; the second owner's locations
+are uncentered on the fixed N(0,1) ability scale. These locations are measured
 before multiplication by both slope components. Increasing a location
 lowers expected ratings when ability, slopes and other effects stay fixed.
 A contrast between actual raters need not imply a uniform difference in
@@ -747,52 +725,49 @@ use the analyst report for these location and contrast results.
 
 \section{What robustness means here}{
 
-Under model misspecification, the sandwich describes sampling variation
-around the working model's limiting parameter (its pseudo-true target).
-That target need not equal the generating rater severity or criterion
-difficulty. Changing the SE does not correct a biased estimate, informative
-assignment, unmodeled population differences or MNAR nonresponse. Check
-the model and assignment before interpreting a severity contrast.
+Under misspecification, sandwich uncertainty concerns the working model's
+limiting (pseudo-true) target, not necessarily generating severity/difficulty.
+Changing SEs cannot correct bias, informative assignments, population
+differences or MNAR nonresponse. Review these and quadrature sensitivity
+separately; the ordinary sandwich reuses the fitted grid.
 
-These intervals condition on the observed fixed facet levels. They do not
-generalize to replacement raters sampled from a rater population. They
-are not multiway crossed-cluster, G/D-study, variance-boundary, EAP or
-multiple-imputation intervals. Shared random rater/task effects spanning
-the declared clusters violate this one-way independence assumption.
-Numerical success is not a general coverage or rater-diagnosis guarantee.
-Review quadrature sensitivity separately; the helper reuses the fitted grid.
+Intervals condition on observed fixed facet levels, not replacement raters.
+Shared random rater/task effects across clusters violate one-way independence.
+These are not multiway-cluster, G/D-study, variance-boundary, EAP or
+multiple-imputation intervals. Numerical success is not coverage or a
+rater-diagnosis guarantee.
 }
 
 \section{Bounded evaluation}{
 
-Availability is not a coverage guarantee: sandwich intervals can describe
-a working-model target accurately while missing the generating contrast.
-The \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-facet-intervals.html#what-the-bounded-simulation-showed}{online simulation comparison}
-gives the evaluated designs, results and Monte Carlo uncertainty. For a
-worked rater comparison, start at the beginning of that guide. The
-assumptions, small-sample cautions and unavailable states are retained
-in the sections above for offline use.
+For the RSM/PCM route, a 1,600-dataset comparison used 80/320 independent persons, three
+fixed raters and two criteria. In its combined skewed-ability/sparse-design
+scenario, sandwich coverage of generating contrasts ranged from 87.0 to
+95.5 percent despite all intervals being available. Coverage of the
+independently calculated working-model targets ranged from 93.0 to 97.5
+percent. These are ranges across conditions/contrasts, not uncertainty
+bounds or universal operating characteristics. At 200 datasets per
+condition, MCSE near 95 percent is about 1.54 percentage points.
+See \code{vignette("mfrmr-facet-intervals", package = "mfrmr")} for the
+design, interpretation and a complete rater-feedback example.
 }
 
 \section{Save, display and report the selected intervals}{
 
-Use \code{\link[=plot]{plot()}}, \code{\link[=as_ggplot]{as_ggplot()}} and \code{\link[=plot_data]{plot_data()}} to display or extract the
-saved result, and \code{\link[=apa_table]{apa_table()}} for tables. Set \code{title = NULL},
-\code{subtitle = NULL} or \code{caption = NULL} in the plot to omit that text.
-For supported RSM/PCM MML fits, attach one result or a named list to
-\code{\link[=mfrm_results]{mfrm_results()}}, for example
+Use \code{plot(intervals)}, \code{\link[=as_ggplot]{as_ggplot()}}, \code{\link[=plot_data]{plot_data()}} or \code{\link[=apa_table]{apa_table()}} on the
+saved object; plot text can be omitted with \code{title = NULL},
+\code{subtitle = NULL} or \code{caption = NULL}.
+For supported RSM/PCM MML, attach it to the matching source fit with
 \code{mfrm_results(fit, intervals = list(raters = intervals), include = c("fit", "plots"), compute = "never")}.
-The route \code{plot(res, type = "facet_raters")} shows the selected intervals.
-For two-family GPCM, the corresponding plot type is \code{"gpcm_raters"}.
-\code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}} retain the method, level,
-contrast coefficients, cluster mapping and unavailable outcomes.
-The source fit must match; replay reloads the saved results without
-refitting or recomputing covariance. These intervals do not replace
-uncertainty in ordinary Wright maps, fit diagnostics or Person scores.
-For CML, keep the interval object itself: use \code{summary(intervals)},
-\code{plot(intervals)}, \code{apa_table(intervals)} and \code{saveRDS(intervals, file)}.
-Reopen it with \code{readRDS(file)}. Ordinary \code{\link[=mfrm_results]{mfrm_results()}}, \code{\link[=mfrm_report]{mfrm_report()}}
-and \code{\link[=export_mfrm_results]{export_mfrm_results()}} do not accept CML fits or their intervals.
+\code{plot(res, type = "facet_raters")} shows the selected intervals;
+two-family GPCM uses \code{"gpcm_raters"}.
+\code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}} retain method, level, contrasts,
+clusters and unavailable outcomes. Replay reuses saved covariance;
+these intervals do not replace Wright-map, diagnostic or Person uncertainty.
+
+CML instead uses \code{summary(intervals)}, \code{plot(intervals)}, \code{apa_table(intervals)}
+and \code{saveRDS()}/\code{readRDS()} directly. Ordinary results/report/export helpers
+do not accept CML fits or intervals.
 }
 
 \section{Session plot defaults}{
@@ -810,8 +785,10 @@ fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
   model = "RSM", method = "MML", rating_min = 1, rating_max = 4,
   category_policy = "preserve")
 intervals <- mfrm_facet_intervals(fit, "Rater", method = "sandwich")
-summary(intervals)
-plot(intervals)
+summary(intervals)[, c("Target", "Estimate", "SE", "Lower", "Upper",
+  "Status", "CIEligible", "InferenceReview")]
+# Keep all rows: a missing interval does not imply a missing point.
+plot(intervals) # Crosses mark retained estimates with unavailable intervals.
 
 # Compare two selected raters, rather than each rater against the origin.
 # Here choose the first two example labels; prespecify your own comparison.
@@ -822,7 +799,7 @@ contrast[1, 1:2] <- c(1, -1)
 difference <- mfrm_facet_intervals(fit, "Rater", contrasts = contrast)
 summary(difference)[, c("Target", "Estimate", "SE", "Lower", "Upper", "Status")]
 # With the default negative rater sign, a positive contrast means the first
-# rater is more severe. Units are native logits. An interval containing zero
+# rater is stricter. Units are native logits. An interval containing zero
 # leaves the direction uncertain; it does not establish equivalence.
 
 # Estimate the population SD in this same model before standardizing.

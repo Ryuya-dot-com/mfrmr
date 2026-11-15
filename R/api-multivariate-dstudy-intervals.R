@@ -1,16 +1,17 @@
 #' Confidence intervals for dependability and SEM in D-study plans
 #'
-#' Quantify uncertainty in relative G, absolute dependability Phi or measurement SEM for
-#' specified future counts of common tasks, raters or other random facets.
-#' Most methods use a complete balanced ANOVA source. An explicitly selected
-#' experimental REML profile also accepts identifiable incomplete MINQUE sources
-#' for G/Phi and SEM; future plans still describe complete balanced ratings.
-#' For one-facet relative SEM, residual contrasts also accept incomplete sources
-#' without likelihood fitting, under the normal residual model.
-#' For one-facet G, explicit spectral F intervals accept incomplete sources
-#' under independent normal Person effects and residuals.
-#' Explicit delta-method coefficient SEs and normal-reference intervals also
-#' use the original ANOVA/MINQUE estimator for supported crossed/nested sources.
+#' @description
+#' Quantify uncertainty in relative G, absolute dependability Phi or measurement
+#' SEM for prespecified future facet counts. Uncertainty comes from the source
+#' G-study; future counts do not increase its information. Methods differ in
+#' supported source designs, assumptions and approximation; see `method`.
+#'
+#' Read `Estimate`/`PointStatus` separately from `Lower`/`Upper`/`Status`.
+#' A point can be unavailable while an interval exists, or conversely.
+#' Keep those rows and their reasons. For example,
+#' `ci <- confint(d, parm = "Phi", assumption = "normal")` requests absolute
+#' dependability intervals for a supported D-study `d`; it asserts, rather than
+#' tests, the normal-effects assumptions.
 #'
 #' @param object A result from [mfrm_d_study()] based on a
 #'   balanced ANOVA G-study with one or two crossed random measurement facets,
@@ -60,100 +61,75 @@
 #'   `method = "mean_square_region"` for a conservative joint-region enclosure
 #'   for G, Phi or SEM. Approximate-F differences are not supplied.
 #'   At least two plans are required. `NULL` returns individual-plan intervals.
-#' @param method `"auto"` (default) selects `"exact_f"` for one-facet G and
-#'   `"gci"` for one-facet Phi, including the nested reduction below.
-#'   For individual G/Phi with two crossed random facets, it selects `"mls"`,
-#'   an approximate signed-MLS null inversion with conservative completion
-#'   of undefined widths; see "Two-crossed-facet MLS intervals" below.
-#'   To compare other choices, or for nested plans with changed child counts, select
-#'   `"approximate_f"`, `"mean_square_region"`, or a vector containing both
-#'   to compare methods on the same data and target. Neither is an automatic
-#'   default. `"mls"` can also be compared with these methods for crossed G/Phi.
-#'   `"mean_square_region"` requires the optional lpSolve package.
-#'   Balanced two-crossed-facet G also accepts explicit `"score"`, an
-#'   approximate score inversion with extended nuisance parameters. It uses
-#'   stored mean squares, preserves original points and requires no optional
-#'   optimizer package. It can be compared with the other supported G methods.
-#'   It is not a Phi, SEM, nested, incomplete-source or `reference` method.
-#'   For SEM, `"auto"` selects `"mls"`: a single contributing mean square
-#'   uses its chi-square interval; positive sums use Graybill-Wang MLS and
-#'   signed sums use Ting MLS. This is a specified calculation rule, not
-#'   selection based on which interval looks favorable. `Method` records
-#'   the calculation used for each plan.
-#'   Two-facet crossed/nested SEM also accepts `"mean_square_region"`, using
-#'   linear error-variance projections followed by square roots. Select one
-#'   method at a time unless including `"reml_profile"`, or comparing supported
-#'   experimental coefficient methods above. `"reml_profile"` is an explicit G/Phi or SEM choice for
-#'   balanced or incomplete sources. It requires optional lme4 and minqa,
-#'   fits a separate normal REML model, and retains the original point estimate.
-#'   It can be compared with other methods for the same supported target in a vector;
-#'   `reference` uses a shared interval image or a direct difference profile
-#'   as described below. The latter additionally requires nloptr. Its chi-square
-#'   calibration is approximate, especially at component boundaries. It is
-#'   never selected automatically. No fallback follows a failed calculation.
-#'   Explicit `"residual_contrast"` supplies one-facet RelativeSEM intervals
-#'   and differences from retained ANOVA/MINQUE ratings without likelihood
-#'   fitting or simulation. It maps one residual chi-square interval, preserves
-#'   original points and reports the separate projected `IntervalCenter`.
-#'   It can be compared with MLS or REML for this supported target. It is not
-#'   an AbsoluteSEM, G/Phi or multifacet method; see *Residual-contrast SEM*.
-#'   Explicit `"spectral_f"` supplies one-facet G intervals and paired
-#'   differences from retained ANOVA/MINQUE ratings. It removes facet effects
-#'   and inverts an exact normal-model F pivot without likelihood fitting or
-#'   simulation. It preserves original points and can be compared with
-#'   `"exact_f"` (balanced sources) or `"reml_profile"`. It is not an
-#'   automatically selected, Phi, SEM, nested or multifacet method.
-#'   Explicit `"delta"` supplies G/Phi sampling SEs and normal-reference
-#'   intervals from the original component estimator and its full sampling
-#'   covariance. It accepts supported one-facet, crossed and nested sources,
-#'   including incomplete MINQUE, and can be included in a method vector.
-#'   It requires no refitting or simulation. It is not a SEM or `reference`
-#'   method. Defaults are unchanged; see *Delta coefficient SEs and intervals*.
+#' @param method `"auto"` (default) selects `"exact_f"` for one-facet G,
+#'   `"gci"` for one-facet Phi (including the supported nested reduction), and
+#'   approximate signed `"mls"` for individual two-crossed-facet G/Phi.
+#'   For SEM, it selects `"mls"`: one contributing mean square uses its
+#'   chi-square interval, positive sums use Graybill-Wang and signed sums Ting.
+#'   `Method` records the rule; defaults are not selected by favorable results.
+#'
+#'   Explicit alternatives are listed below. Read their named sections for
+#'   source/target restrictions, numerical checks and coverage qualifications:
+#'   - `"approximate_f"`: approximate crossed/nested G/Phi; no plan differences.
+#'   - `"mean_square_region"`: conservative crossed/nested G/Phi or SEM and
+#'     differences, using optional lpSolve.
+#'   - `"score"`: approximate balanced two-crossed-facet G from stored mean
+#'     squares, preserving original points; no optional optimizer package.
+#'     Not Phi, SEM, nested, incomplete-source or `reference` inference.
+#'   - `"reml_profile"`: separate normal REML fits to retained ratings, for
+#'     G/Phi or SEM in supported balanced/incomplete sources. Requires lme4
+#'     and minqa; direct difference profiles also require nloptr. Original
+#'     points are retained; calibration is approximate, especially at boundaries.
+#'   - `"residual_contrast"`: one-facet RelativeSEM and differences from retained
+#'     ANOVA/MINQUE ratings, without fitting or simulation. Original points and
+#'     the separate projected `IntervalCenter` are retained.
+#'   - `"spectral_f"`: one-facet G and differences from retained ANOVA/MINQUE
+#'     ratings, using an exact normal-model F pivot without fitting/simulation.
+#'     Original points are retained; not Phi, SEM, nested or multifacet inference.
+#'   - `"delta"`: individual-plan G/Phi SEs and normal-reference intervals from
+#'     the original ANOVA/MINQUE component estimator and its full sampling
+#'     covariance. Supports specified one-facet/crossed/nested designs, with
+#'     no refitting or simulation; not SEM or `reference` inference.
+#'
+#'   A method vector compares supported alternatives on the same data/target:
+#'   crossed G/Phi allows MLS, approximate F and region methods (plus score
+#'   for G); nested G/Phi allows approximate F and region comparisons.
+#'   Residual contrasts allow MLS/REML comparisons for RelativeSEM;
+#'   spectral F allows exact F (balanced) or REML comparisons for G. REML and
+#'   delta can join other methods within their respective scopes. Other SEM
+#'   choices require one method at a time. No failed calculation triggers a
+#'   fallback or automatic switch to an alternative.
+#'
 #' @param ... Reserved; additional arguments are rejected.
 #'
 #' @details
-#' For a source-by-target choice table, see *Choose the G-theory target and
-#' uncertainty* in [mfrmr_methods_reference]. Incomplete-source calculations
-#' are available through explicit methods; this does not qualify a generally
-#' calibrated automatic default. Read the selected method's assumptions below.
+#' Use the source/target table in [mfrmr_methods_reference] to select a method.
+#' Incomplete-source options require explicit selection; they do not establish
+#' a generally calibrated default. Intervals concern future-plan population
+#' coefficients or SEM, with sampling uncertainty from the source G-study.
 #'
-#' Each interval concerns a population coefficient or SEM of a future plan: uncertainty comes
-#' from the source G-study, not from collecting the proposed future ratings.
-#' GENOVA-adjusted D-studies can use the same population-parameter intervals.
-#' `Estimate` and `PointStatus` describe the adjusted point; `IntervalEstimate`
-#' and `IntervalPointStatus` retain the original source-study projection.
-#' `ComponentTreatment` and `IntervalBasis` distinguish their bases. The
-#' original source mean squares, data, bounds, diagnostics and unavailable
-#' states are preserved; adjusted components never replace the source inputs.
-#' The bounds are not recentered and need not contain the adjusted point.
-#' An existing method-specific `IntervalCenter` remains separate from both.
-#' Where a method supplies a coefficient sampling SE, it is named `IntervalSE`
-#' for adjusted results. `SamplingVariance`, error-variance columns and other
-#' diagnostics also retain their original method basis. None describes the
-#' sampling distribution of the zero-substituted or EMS-recalculated estimator.
-#' In the method descriptions below, references to the original `Estimate`
-#' mean `IntervalEstimate` when component treatment is adjusted.
+#' For GENOVA-adjusted points, `Estimate`/`PointStatus` describe the adjustment;
+#' `IntervalEstimate`/`IntervalPointStatus` retain the original projection.
+#' `ComponentTreatment` and `IntervalBasis` distinguish them. Source data, mean
+#' squares, diagnostics and unavailable states remain unchanged. Bounds are not
+#' recentered and need not contain the adjusted point; a method-specific
+#' `IntervalCenter` remains separate. Coefficient sampling SE, where supplied,
+#' becomes `IntervalSE`; `SamplingVariance`, error variances and other diagnostics
+#' retain the original interval-method basis. In the methods below, original
+#' `Estimate` means `IntervalEstimate` for adjusted results.
 #'
-#' This distinction follows from the common population target: changing a
-#' reported point does not change the confidence-set event based on the source
-#' study. Exact procedures keep their stated normal-model qualifications;
-#' approximate or experimental methods do not become exact through adjustment.
-#' GENOVA's unchanged component SEs cannot be interpreted as an adjusted
-#' estimator's SE. Its truncation is nonsmooth at zero; an adjusted-estimator
-#' delta interval would require additional derivation and boundary validation.
-#' Saved intervals must match the D-study's treatment as well as its source.
-#' Use `confint(d, reference = ...)` for supported population plan differences;
-#' the separate [mfrm_multivariate_d_compare()] delta-estimator API still
-#' requires raw components.
+#' Changing a reported point does not change the population target or source
+#' confidence-set event. Exact/approximate qualifications remain unchanged;
+#' these intervals do not describe the zero-substituted or EMS-recalculated
+#' estimator's sampling law. GENOVA's unchanged SEs are not adjusted-estimator
+#' SEs: nonsmooth truncation at zero would require separate derivation and
+#' boundary validation. Saved intervals must match source and treatment.
+#' `confint(d, reference = ...)` supports population plan differences;
+#' [mfrm_multivariate_d_compare()] still requires raw components.
 #'
-#' For a balanced two-crossed-facet source, start with
-#' `confint(d, parm = "Phi", assumption = "normal")` for absolute dependability,
-#' or `parm = "G"` for relative ordering. Read `Estimate`, `Lower`, `Upper`,
-#' `Status` and `FormulaComplete`. The default is an approximation: a returned
-#' interval is not evidence that the model assumptions hold. Use
-#' `plot(d, metric = "Phi", intervals = TRUE, assumption = "normal")` to add
-#' its ribbon, and `attr(ci, "notes")` to read cautions saved with a result `ci`.
-#'
+#' Read `attr(ci, "notes")`. Display saved intervals with
+#' `plot(d, metric = "Phi", intervals = ci)` and a matching score/composite;
+#' [plot.mfrm_multivariate_d_study()] explains source checks.
 #' @section Two-crossed-facet MLS intervals:
 #' Under the balanced independent normal-effects model, mean squares `M[j]`
 #' are independent `lambda[j] * chi-square(df[j])/df[j]`. Let `theta=A*lambda`
@@ -220,27 +196,22 @@
 #' instead refers to a direct error-variance interval followed by a square root.
 #'
 #' @section Interpreting the target and other defaults:
-#' More future tasks can improve G but do not increase the source degrees of
-#' freedom. A narrow interval is not guaranteed by a large proposed task count.
-#' G concerns relative ordering; these intervals do not give pass/fail accuracy,
-#' or Person-rank intervals. Phi includes the random measurement facet's main
-#' effect in absolute error; use it when absolute score levels matter.
+#' More future ratings do not add source degrees of freedom or guarantee narrow
+#' intervals. G concerns relative ordering, not Person-rank intervals or pass/fail
+#' accuracy; Phi adds random-facet main effects to absolute error.
 #'
-#' The F pivot is exact under the balanced independent normal-effects model,
-#' with positive residual variance. It is not a distribution-robust interval
-#' for arbitrary numeric ordinal scores. It applies to a selected original
-#' score or a fixed linear composite, including prespecified difference scores.
-#' General two-facet plans and incomplete-source MINQUE(0) do not have this
-#' pivot. The nested unchanged-child-count subcase below does reduce to it.
-#' Balanced F/GCI, MLS, score and mean-square-region methods use stored ANOVA
-#' summaries. The score method fits null nuisance expectations to those
-#' summaries. One-facet Phi GCI draws independent chi-square quantities; it
-#' is not an exact frequentist-coverage guarantee. Spectral F and residual
-#' contrasts require retained ratings; delta uses ANOVA summaries or retained
-#' MINQUE assignments and moment inputs. REML profiles require used ratings
-#' and refit a separate model. These input requirements also apply to saved
-#' G-study objects; reopening already computed intervals does not refit them.
+#' The F pivot requires balanced independent normal effects and positive residual
+#' variance, for one score or a prespecified linear composite (including
+#' differences). Numeric ordinal coding does not establish robustness. General
+#' two-facet/incomplete sources lack this pivot; unchanged-child nested plans
+#' have the reduction below.
 #'
+#' F/GCI, MLS, score and region methods use stored ANOVA summaries; score fits
+#' null nuisance expectations, and Phi GCI draws independent chi-squares without
+#' an exact-coverage guarantee. Spectral F/residual contrasts require retained
+#' ratings; delta uses ANOVA summaries or MINQUE assignments/moment inputs.
+#' REML requires ratings and a separate fit. Saved sources need these same
+#' inputs; reopening computed intervals does not refit.
 #' @section Score intervals for two-crossed-facet G:
 #' Explicit `method = "score"` uses the independent normal-theory mean-square
 #' sampling law of a balanced Person-by-two-random-facet source. For proposed
@@ -802,63 +773,28 @@
 #' population range implied by nonnegative components.
 #'
 #' @section Point estimates and intervals at boundaries:
-#' `PointStatus` describes the reported point estimate; `Status` describes
-#' the interval calculation. A negative ANOVA estimate of Person variance
-#' can make the point coefficient unavailable while a confidence interval
-#' still exists. Inspect both statuses; do not remove such an interval merely
-#' because `Estimate` is `NA`. An empty confidence set and a numerical failure
-#' are different outcomes, and neither means zero uncertainty.
-#'
-#' A wide interval is retained: it may reflect limited information about the
-#' sampled persons, raters or tasks, as well as a conservative method. More
-#' numerical draws cannot supply information missing from the rating design.
-#' Clipping negative variance estimates or rejecting simulation draws changes
-#' a statistical procedure and does not by itself establish valid coverage.
+#' `PointStatus` and interval `Status` are separate: a negative Person variance
+#' can withhold a coefficient while its interval exists. Keep both. Empty sets
+#' and numerical failures are distinct, neither meaning zero uncertainty.
+#' Wide intervals can reflect weak source information or conservatism; more
+#' draws cannot improve the rating design. Clipping estimates or rejecting draws
+#' changes the statistical procedure, without establishing coverage.
 #'
 #' @section Choosing a two-facet method:
-#' The approximate-F, mean-square-region, score and REML alternatives remain
-#' explicit choices alongside the default MLS method. Their coverage theory,
-#' precision and finite-sample evidence differ; see the method-specific sections.
-#' `Available` describes whether endpoints were computed; `Validation` and
-#' `NegativeComponent` describe separate limitations. A narrower interval is
-#' not automatically better. Select methods before inspecting which is most
-#' favorable, and retain unavailable rows when comparing performance.
+#' Choose before inspecting favorable results. `Available` means endpoints were
+#' computed; inspect `Validation`, `NegativeComponent` and completeness fields.
+#' Keep unavailable rows. Wong and McGraw (1999, pp. 275--276) derive approximate
+#' F intervals with estimated Satterthwaite df for fully crossed designs and
+#' advise against negative components. mfrmr flags such calculable cases as
+#' experimental; its nested extension is independently derived. Evaluations
+#' found coverage, width and availability limits, especially at boundaries and
+#' changed future counts. Normal-ANOVA region intervals are not attributed to
+#' Wong/McGraw and may span almost all `[0,1]`. Score nuisance extensions differ
+#' from nonnegative REML; neither method was uniformly superior in available checks.
 #'
-#' - Wong and McGraw (1999, pp. 275--276) give approximate F intervals for
-#'   a fully crossed Person-by-two-facet random design. Both G and Phi use
-#'   estimated Satterthwaite degrees of freedom. The authors advise against
-#'   applying the method when variance-component estimates are negative.
-#'   `method = "approximate_f"` implements the crossed-design calculation and
-#'   the independently derived nested version above.
-#'   Calculable intervals with negative components are retained as an
-#'   experimental extension beyond that advice, with the flag set. Small
-#'   normal-model evaluations found limitations in coverage, interval
-#'   width and availability, particularly at zero components and when future
-#'   facet counts change. See the G-theory vignette for conditions and results.
-#' - `method = "mean_square_region"` projects a simultaneous chi-square
-#'   confidence region for the seven crossed or five nested independent expected mean squares onto
-#'   nonnegative variance components. It is a conservative comparison based
-#'   on normal ANOVA distribution theory, not a method attributed to Wong and
-#'   McGraw. It can return almost the whole `[0,1]` range. It requires lpSolve;
-#'   zero mean squares, infeasibility and numerical failures remain explicit.
-#' - `method = "reml_profile"` instead profiles the G/Phi target in a normal
-#'   restricted likelihood, with approximate chi-square calibration. It also
-#'   accepts identifiable incomplete/unequal sources. See the REML section
-#'   above for the separate center, diagnostics and boundary limitations.
-#'
-#' Use `plot(result)` for a forest comparison and `plot_data()` for its notes.
-#' - For balanced crossed G, `method = "score"` uses the extended-nuisance
-#'   score construction above. Its treatment of nuisance component boundaries
-#'   differs from the nonnegative REML profile; neither method is uniformly
-#'   superior in the available finite-sample checks. Phi is unsupported.
-#'
-#' To show one method along a planning curve, use
-#' `plot(d, metric = "Phi", intervals = result)` with matching score/composite
-#' selection; see [plot.mfrm_multivariate_d_study()].
-#' Agreement of methods on one dataset does not establish robustness or
-#' frequentist coverage. The G-theory vignette includes small evaluation
-#' results with their denominators and Monte Carlo uncertainty.
-#'
+#' Use `plot(ci)`/`plot_data()` for comparisons and saved notes. Agreement between
+#' methods on one dataset is not coverage or robustness evidence; the G-theory
+#' vignette reports evaluated conditions, denominators and Monte Carlo uncertainty.
 #' @section Delta coefficient SEs and intervals:
 #' Use `method = "delta"` to quantify uncertainty in the original G/Phi
 #' coefficient without fitting a different estimator. Let \eqn{U} be estimated
@@ -933,38 +869,23 @@
 #' cutoff or robustness to nonnormality or selective omissions.
 #'
 #' @section Other methods and interpretation limits:
-#' Data-level bootstrap intervals are not yet options in this function.
-#' Incomplete-source G/Phi can use explicit `"delta"` or `"reml_profile"`,
-#' with different estimators and approximations. One-facet G also supports
-#' explicit `"spectral_f"` when residual degrees of freedom are positive.
-#' These routes do not supply a general interval for every original MINQUE
-#' component or validate all other incomplete-source targets.
+#' Data-level bootstrap is not supplied. Parameter-distribution simulation or
+#' bootstrap requires a specified estimator, joint covariance/refitting scheme
+#' and boundary/failure handling; results for another estimator/design do not
+#' transfer merely because the target is called G or Phi. Supported incomplete
+#' methods do not establish intervals for every original MINQUE component.
 #'
-#' Parameter-distribution Monte Carlo and data-generating bootstrap methods
-#' require a specified estimator, joint component covariance or refitting
-#' procedure, and handling of boundaries and failed calculations. A result
-#' for another estimator or sampling design cannot be transferred solely
-#' because its coefficient is also named G or Phi.
+#' Fixed tasks scored by every sampled rater differ from random-task
+#' generalization. Represent them as score columns with prespecified weights
+#' in the one-random-facet route ([mfrm_g_study()]); this corresponds to Zhou
+#' et al.'s (2011) crossed fixed-facet G construction. Fixing a random task count
+#' does not fix the facet.
 #'
-#' A fixed set of tasks scored by every sampled rater is a different target
-#' from generalization to new tasks. Representing those tasks as fixed score
-#' columns with prespecified weights can use the supported one-random-facet
-#' route; see [mfrm_g_study()]. This corresponds to the crossed
-#' fixed-facet G construction of Zhou et al. (2011). Merely holding a random
-#' task count constant does not make that facet fixed.
-#'
-#' An unsupported method/design combination does not imply
-#' that the coefficient has no uncertainty or that interval estimation is
-#' mathematically impossible. For supported calculations, inspect `Status`
-#' and the returned notes: a computable approximation can carry limitations,
-#' whereas an undefined ratio, empty confidence set or failed numerical
-#' calculation cannot be repaired by adding a warning. Preserve available
-#' estimates and diagnostics; do not substitute measurement SEM, combine
-#' separate component endpoints, or drop a random facet to obtain an interval.
-#' The paired two-facet intervals from [mfrm_multivariate_d_compare()] concern
-#' differences between plans and have their own approximation limits. They
-#' do not supply an individual-plan coefficient interval.
-#'
+#' Unsupported combinations are not claims of zero uncertainty or mathematical
+#' impossibility. Retain estimates, statuses and notes; do not substitute SEM,
+#' combine separate component endpoints or drop a random facet to manufacture
+#' an interval. [mfrm_multivariate_d_compare()] provides a separate approximation
+#' for paired differences, not individual-plan intervals.
 #' @section Two-facet calculations:
 #' Write the seven ANOVA component estimates as `theta_hat = A * MS`, in
 #' order Person, facet 1, facet 2, Person:1, Person:2, 1:2, residual. For future

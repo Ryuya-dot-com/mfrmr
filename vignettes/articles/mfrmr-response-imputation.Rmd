@@ -9,9 +9,7 @@ vignette: >
 
 ```{r setup, include=FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
-knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",eval = !is_cran_check, collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(eval = !is_cran_check, collapse = TRUE, comment = "#>")
 ```
 
 An assessment team has missing scores from ratings that were assigned. It

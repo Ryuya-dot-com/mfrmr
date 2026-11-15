@@ -2,13 +2,12 @@
 % Please edit documentation in R/api-calibration.R
 \name{mfrm_calibration_workflow}
 \alias{mfrm_calibration_workflow}
+\alias{extract_mfrm_calibration}
+\alias{review_mfrm_calibration}
 \alias{validate_mfrm_calibration}
 \alias{freeze_mfrm_calibration}
 \alias{supersede_mfrm_calibration}
 \alias{retire_mfrm_calibration}
-\alias{extract_mfrm_calibration}
-\alias{review_mfrm_calibration}
-\alias{update.mfrm_calibration}
 \alias{save_mfrm_calibration}
 \alias{load_mfrm_calibration}
 \alias{score_mfrm_calibration}
@@ -25,7 +24,13 @@ extract_mfrm_calibration(
 
 review_mfrm_calibration(calibration)
 
-\method{update}{mfrm_calibration}(object, status, record_id = NULL, at_utc = NULL, ...)
+validate_mfrm_calibration(calibration, validated_at_utc = NULL)
+
+freeze_mfrm_calibration(calibration, frozen_at_utc = NULL)
+
+supersede_mfrm_calibration(calibration, record_id, superseded_at_utc = NULL)
+
+retire_mfrm_calibration(calibration, record_id, retired_at_utc = NULL)
 
 save_mfrm_calibration(calibration, file, overwrite = FALSE)
 
@@ -72,20 +77,13 @@ procedural evidence but leaves acceptable numerical movement to the user.}
 
 \item{calibration}{An \code{mfrm_calibration} object.}
 
-\item{object}{An \code{mfrm_calibration} object for \code{update()}.}
-
-\item{status}{Required target state for \code{update()}: \code{"validated"}, \code{"frozen"},
-\code{"superseded"}, or \code{"retired"}. Only documented lifecycle transitions are
-allowed; changing the entry point does not allow thawing or editing a
-frozen calibration.}
+\item{validated_at_utc, frozen_at_utc}{Optional RFC3339 UTC timestamps for
+reproducible lifecycle records. Omit them to use the current time.}
 
 \item{record_id}{A nonempty identifier for a terminal superseded or retired
 record. It must differ from the frozen parent identifier.}
 
-\item{at_utc}{Optional RFC3339 UTC timestamp for the requested transition.
-Omit it to use the current time.}
-
-\item{...}{Additional arguments to \code{update()} are rejected.}
+\item{superseded_at_utc, retired_at_utc}{Optional RFC3339 UTC timestamps.}
 
 \item{file}{A path ending in \code{.rds}.}
 
@@ -124,8 +122,8 @@ SD and representable positive variance. A supplied prior automatically
 receives numerical scoring checks and does not modify the frozen artifact.
 Legacy artifacts with discrete grid-endpoint intervals require re-extraction
 before using this option. The prior is common to all scored persons;
-covariate-dependent overrides are not supported. Two-family GPCM formats 6 and 7
-require \code{scoring_prior = NULL} and retains the fixed N(0,1) prior.}
+covariate-dependent overrides are not supported. Two-family GPCM format 6
+requires \code{scoring_prior = NULL} and retains the fixed N(0,1) prior.}
 
 \item{cut_scores}{Optional named, strictly increasing finite ability cuts
 for \code{score_mfrm_calibration()}. Ordinary RSM/PCM with unit weights and
@@ -136,8 +134,9 @@ uncertainty. Unscored Persons remain unavailable. Cut names do not establish
 CEFR alignment. See \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for interpretation and reporting.}
 }
 \value{
-\code{extract_mfrm_calibration()}, \code{update()}, and
-\code{load_mfrm_calibration()} return an
+\code{extract_mfrm_calibration()}, \code{validate_mfrm_calibration()},
+\code{freeze_mfrm_calibration()}, \code{supersede_mfrm_calibration()},
+\code{retire_mfrm_calibration()}, and \code{load_mfrm_calibration()} return an
 \code{mfrm_calibration}. \code{review_mfrm_calibration()} returns a data frame of
 structured refusals, with zero rows for an acceptable object.
 \code{save_mfrm_calibration()} invisibly returns the normalized path.
@@ -159,10 +158,8 @@ two-family GPCM MML retains a fixed N(0,1) prior and its own source checks.
 RSM/PCM and shared-owner GPCM JML support portable post-hoc EAP with a
 standard-normal reference prior; explicit corrected GPCM JML preserves its
 correction order and uses adjusted-equation checks, as described below.
-\code{update(calibration, status = "validated")} and
-\code{update(calibration, status = "frozen")} are separate, fail-closed transitions.
-They return a new object without overwriting the input or a saved file.
-Only a frozen artifact can be passed to
+\code{\link[=validate_mfrm_calibration]{validate_mfrm_calibration()}} and \code{\link[=freeze_mfrm_calibration]{freeze_mfrm_calibration()}} are separate,
+fail-closed transitions. Only a frozen artifact can be passed to
 \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}}.
 }
 \details{
@@ -181,30 +178,27 @@ locations and log slopes are centered; the second owner's locations and
 slopes remain free. Both fitting engines retain their fixed or adaptive
 scoring algorithm. Source identity/convergence and finer-integration checks
 must pass; review-only sources cannot be exported for frozen scoring.
-Extended additive/step/location roles use format 7, with explicit named
-slope reference and noncentered location facet; format 6 keeps its original
-meaning. All other location facets and each declared step set are centered.
 No separate \code{quadrature_review} is accepted for this route. The file contains
 component slopes and observed facet combinations, without training responses,
 Person estimates or an executable fit. Known levels may form new combinations;
-\code{row_dispositions$ObservedContext} identifies whether each full facet context occurred in
+\code{row_dispositions$ObservedContext} identifies whether each pair occurred in
 calibration. New combinations are model-based, not empirically validated.
 Prior overrides and \code{event_id} extensions are unsupported; repeated Person-
 facet cells are rejected. Facet names must not collide with scoring/disposition
 columns (\code{Person}, \code{Score}, \code{Weight}, \code{InputRow}, \code{EventId}, \code{Disposition},
 \code{ReasonCode}, \code{CalibrationId}, \code{ObservedContext}).
 
-For formats 6 and 7, use the same extract, validate, freeze, save, load and score
+For format 6, use the same extract, validate, freeze, save, load and score
 functions as below. Each new batch must pass its own integration checks;
 validation and freezing do not establish sampling coverage, global
 identification, boundary absence or population transport. Posterior
-intervals exclude calibration uncertainty. Readers without format 7 support
-refuse it explicitly; existing formats 1--6 keep their original interpretation.
+intervals exclude calibration uncertainty. Older readers refuse format 6;
+existing formats 1--5 keep their original interpretation.
 RSM/PCM JML uses file format 3, with unit weights, no anchors or interactions,
 a finite identified source and a post-hoc N(0,1) reference prior. This prior
 is not estimated by JML. Estimated-population RSM/PCM and latent regression
 use fitted-object routes; other structures follow their documented capabilities.
-See \code{mfrmr_output_guide("calibration_capabilities")}.
+See \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}}.
 
 One-family GPCM MML extraction freshly evaluates the native fit's local likelihood,
 gradient, unregularized information and source-integration stability using
@@ -258,7 +252,7 @@ or Person estimates. It is never labelled an ordinary JML likelihood maximum.
 Its EAP and continuous posterior intervals use a separate normal scoring
 prior; they exclude calibration uncertainty and do not supply corrected
 Person ML/WLE or structural confidence intervals. Older file formats retain
-their original checks. See \code{\link[=fit_mfrm]{fit_mfrm()}} for corrected estimation limits.
+their original checks. See \link{fit_mfrm_technical_details} for corrected estimation limits.
 
 For shared-owner uncorrected GPCM JML, extraction checks the joint likelihood and
 gradient, and positive-definite, unregularized curvature over all free Person
@@ -369,60 +363,11 @@ Neither action means that model refitting is automatically necessary.
 
 \section{Conditional ability decisions}{
 
-Supply \code{cut_scores} on the calibration's ability scale to obtain
-\code{decisions}, with one row per Person and requested event. \code{Type = "above_cut"}
-gives \eqn{P(\theta > c \mid y, \widehat\psi)}; \code{Type = "ability_band"}
-gives the probability between successive cuts, including the two outer
-bands. \verb{Lower < ability <= Upper} defines every row. \code{Label} uses the
-supplied cut names (or \code{Cut1}, ...) and \code{Band1}, ... in increasing order.
-These events overlap: only the ability-band probabilities sum to one.
-
-\code{PriorMean} and \code{PriorSD} record the actual Person-specific normal prior;
-\code{Status} and \code{Reason} retain scoring availability. \code{available_conditional}
-means the applicable numerical checks passed, not that the model or the
-cut's substantive meaning has been validated. \code{review_only} requires
-inspection before interpretation. Source-roster scoring may return
-\code{prior_only} for missing-only Persons; portable scoring instead retains
-them as \code{unavailable} with \code{NA} probabilities. Fitted-object scoring omits
-Persons with no retained rows; inspect its row and population reviews.
-A Person absent from the input is never invented.
-
-Probabilities integrate the continuous posterior, rather than counting
-\code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} draws or applying a normal approximation
-to EAP/SD. They condition on point calibration, population/prior parameters
-and supplied cuts, as recorded in \code{Uncertainty}. They do not propagate
-estimation error, compare two Persons or predict passing a future test.
-CEFR labels require externally justified cuts on this same scale.
-Very small tails have absolute, not relative, numerical accuracy; a
-returned zero or one is not a claim of impossibility or certainty.
-
-Review the scoring population as well as the calibration. An estimated
-normal prior is treated as known during scoring; its sampling uncertainty
-can matter especially with a small calibration cohort. A larger calibration
-cohort can improve parameter precision without correcting a prior that
-mismatches a new population's mean, spread or shape. Passing numerical checks
-does not establish that probabilities are accurate for that new population.
-A fixed reference prior is not a universal remedy: justify it for the target
-population on the calibration scale. If a prior override is supported,
-comparing externally justified alternatives is a sensitivity analysis, not
-evidence that the alternative giving the preferred classification is valid.
-Population-averaged accuracy also does not guarantee accuracy near each cut,
-within every subgroup or for each individual Person.
-
-Use \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} for eligible ordinary RSM MML source Persons,
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for ordinary RSM/PCM MML or JML fitted-object scoring, and
-\code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} for eligible continuous-posterior RSM/PCM
-artifacts. Each route retains its existing source and population
-restrictions. Unit weights are required; GPCM, shared-rater and testlet
-cut probabilities are not supported. JML uses a separate scoring prior,
-not a population estimated by JML. \code{NULL} leaves the existing output unchanged.
-
-\code{summary(x)$decisions} and \code{\link[=apa_table]{apa_table()}} with \code{which = "decisions"} reuse
-saved probabilities without rounding them. Fitted-object and portable
-score batches also support \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} and
-\code{\link[=export_summary_appendix]{export_summary_appendix()}}. Save the complete result with \code{\link[=saveRDS]{saveRDS()}}
-to retain cuts, priors and review states for later reporting. Existing
-score plots display EAPs and intervals, not these event probabilities.
+Eligible continuous-posterior RSM/PCM artifacts with unit weights support
+\code{cut_scores}. Unscored Persons retain \code{unavailable} and \code{NA} probabilities;
+preserve their status/reason when exporting. For event definitions, prior
+sensitivity and reporting, see "Conditional ability decisions" in
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.
 }
 
 \references{

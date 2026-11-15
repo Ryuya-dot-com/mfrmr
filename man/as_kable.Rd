@@ -12,9 +12,10 @@ as_kable(x, ...)
 \item{...}{Passed to methods.}
 }
 \value{
-A \code{knitr::kable} object (concrete return type from the
-underlying method, e.g. \verb{[as_kable.apa_table()]} returns a
-\code{kableExtra} object when the package is installed).
+The object returned by the selected method. For
+\code{\link[=as_kable.apa_table]{as_kable.apa_table()}}, a \code{knitr_kable} table, with an additional
+\code{kableExtra} class for supported HTML output when a note is attached
+through that package; \code{NULL} if \code{knitr} is unavailable.
 }
 \description{
 Generic for converting objects to a \code{knitr::kable}

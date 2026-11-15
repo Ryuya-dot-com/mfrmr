@@ -4,29 +4,24 @@
 # separate experimental checks. The numerical caller supplies a
 # fixed quadrature rule for N(0, 1). Muraki (1992) motivates MML--EM; sirt's
 # rm.facets is an algorithm reference, not the same response model.
-# A named slope reference is normalized to the first internal slope family.
-# Legacy defaults retain second-owner steps and uncentered locations.
+# slope_facets is ordered: the first supplies the GM1 slope reference and
+# centered locations; the second supplies free slopes/locations and steps.
+# Data column order and domain-specific labels do not determine those roles.
 mfrm_gmfrm_problem <- function(data, max_score, quadrature,
                                slope_facets = c("Task", "Rater"),
-                               person = "Person", score = "Score",
-                               facets = slope_facets, step_facet = slope_facets[2L],
-                               noncenter_facet = slope_facets[2L],
-                               slope_reference = slope_facets[1L]) {
+                               person = "Person", score = "Score") {
   if (!is.character(slope_facets) || length(slope_facets) != 2L ||
       !is.character(person) || length(person) != 1L ||
       !is.character(score) || length(score) != 1L) {
     stop("Supply two slope-facet column names and one person and score column name.")
   }
-  roles <- mfrm_gmfrm_roles(facets, slope_facets, step_facet, noncenter_facet, slope_reference)
-  facets <- roles$facets; slope_facets <- roles$slope_facets
-  step_facet <- roles$step_facet; noncenter_facet <- roles$noncenter_facet
-  person <- unname(person); score <- unname(score)
-  required <- c(person, facets, score)
+  slope_facets <- unname(slope_facets); person <- unname(person); score <- unname(score)
+  required <- c(person, slope_facets, score)
   reserved <- c("Person", "Score", "Weight", "score_k", "Theta", "InputRow",
     "SlopeOwner1", "SlopeOwner2", "Slope1", "Slope2", "EffectiveSlope",
     "ObservedContext", "ExpectedScore", "ScoreVariance", "ResponseSensitivity", "Information")
   if (anyNA(required) || any(!nzchar(trimws(required))) || anyDuplicated(required) ||
-      any(facets %in% reserved)) {
+      any(slope_facets %in% reserved)) {
     stop("Model columns must be distinct nonempty names; slope facets cannot use reserved data or response columns.")
   }
   first <- slope_facets[1L]; second <- slope_facets[2L]
@@ -41,7 +36,7 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
       any(data[[score]] < 0 | data[[score]] > max_score)) {
     stop("Scores must be integers between zero and max_score.")
   }
-  if (anyDuplicated(data[c(person, facets)])) {
+  if (anyDuplicated(data[c(person, slope_facets)])) {
     stop("Repeated person-facet combinations require a separate observation model.")
   }
   nodes <- quadrature$nodes
@@ -51,57 +46,50 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
       any(weights <= 0) || abs(sum(weights) - 1) > 1e-10) {
     stop("Supply finite quadrature nodes and positive normalized weights.")
   }
-  levels <- lapply(data[c(person, facets)], function(x) sort(unique(as.character(x))))
+  levels <- lapply(data[c(person, slope_facets)], function(x) sort(unique(as.character(x))))
   ids <- Map(function(x, lev) match(as.character(x), lev), data[names(levels)], levels)
   ni <- length(levels[[first]])
   nr <- length(levels[[second]])
-  ns <- length(levels[[step_facet]])
   np <- length(levels[[person]])
   if (ni < 2L || nr < 2L) stop("This two-slope implementation requires at least two levels per slope facet.")
   contrast <- function(n) rbind(diag(n - 1L), rep(-1, n - 1L))
   ci <- contrast(ni)
   ct <- contrast(max_score)
-  cells <- unique(as.data.frame(unname(ids[facets]), check.names = FALSE))
-  names(cells) <- facets
-  cell <- match(do.call(paste, ids[facets]), do.call(paste, cells))
-  common <- mfrm_gmfrm_common_setup(data, max_score, slope_facets, person, score,
-    facets, step_facet, noncenter_facet, first)
+  cells <- unique(as.data.frame(unname(ids[slope_facets]), check.names = FALSE))
+  names(cells) <- slope_facets
+  cell <- match(paste(ids[[first]], ids[[second]]), paste(cells[[first]], cells[[second]]))
+  common <- mfrm_gmfrm_common_setup(data, max_score, slope_facets, person, score)
   slope_cells <- common$config$gpcm_spec$cells
   common_cell <- match(paste(cells[[first]], cells[[second]]),
                        paste(slope_cells[[first]], slope_cells[[second]]))
   nc <- nrow(cells)
   nq <- length(nodes)
-  Z <- do.call(cbind, lapply(facets, function(f) {
-    n <- length(levels[[f]])
-    basis <- if (f == noncenter_facet) diag(n) else contrast(n)
-    basis[cells[[f]], , drop = FALSE]
-  }))
-  L <- cbind(ci[cells[[first]], , drop = FALSE], diag(nr)[cells[[second]], , drop = FALSE])
-  if (qr(Z)$rank < ncol(Z)) stop("Facet crossings do not identify all additive facet blocks.")
-  nb <- ncol(Z) + ns * (max_score - 1L)
+  # The first facet has centered locations and geometric-mean-one slopes.
+  # The second has free locations/slopes and owns the centered step sets.
+  Z <- cbind(ci[cells[[first]], , drop = FALSE], diag(nr)[cells[[second]], , drop = FALSE])
+  if (qr(Z)$rank < ncol(Z)) stop("Facet crossings do not identify both facet blocks.")
+  nb <- ncol(Z) + nr * (max_score - 1L)
   D <- lapply(0:max_score, function(k) {
-    step <- matrix(0, nc, ns * (max_score - 1L))
+    step <- matrix(0, nc, nr * (max_score - 1L))
     if (k > 0L && max_score > 1L) {
       cum <- colSums(ct[seq_len(k), , drop = FALSE])
-      for (r in seq_len(ns)) {
+      for (r in seq_len(nr)) {
         cols <- (r - 1L) * (max_score - 1L) + seq_len(max_score - 1L)
-        step[cells[[step_facet]] == r, cols] <- rep(cum, each = sum(cells[[step_facet]] == r))
+        step[cells[[second]] == r, cols] <- rep(cum, each = sum(cells[[second]] == r))
       }
     }
     cbind(k * Z, step)
   })
-  parameter_names <- c(unlist(lapply(facets, function(f) {
-    lev <- levels[[f]]
-    if (f != noncenter_facet) lev <- lev[-length(lev)]
-    if (length(lev)) paste0("location:", f, ":", lev) else character()
-  })), if (max_score > 1L) unlist(lapply(levels[[step_facet]], function(r)
-      paste0("step:", step_facet, ":", r, ":", seq_len(max_score - 1L)))),
+  parameter_names <- c(paste0("location:", first, ":", levels[[first]][-ni]),
+    paste0("location:", second, ":", levels[[second]]),
+    if (max_score > 1L) unlist(lapply(levels[[second]], function(r)
+      paste0("step:", second, ":", r, ":", seq_len(max_score - 1L)))),
     paste0("log_slope:", first, ":", levels[[first]][-ni]),
     paste0("log_slope:", second, ":", levels[[second]]))
-  start <- setNames(numeric(nb + ncol(L)), parameter_names)
+  start <- setNames(numeric(nb + ncol(Z)), parameter_names)
   expanded_cell <- rep(seq_len(nc), nq)
   expanded_node <- rep(nodes, each = nc)
-  Zq <- L[expanded_cell, , drop = FALSE]
+  Zq <- Z[expanded_cell, , drop = FALSE]
   Dq <- lapply(D, function(d) d[expanded_cell, , drop = FALSE])
   score_index <- data[[score]] + 1L
   obs_node <- outer(cell, nc * (seq_len(nq) - 1L), "+")
@@ -112,17 +100,19 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
     if (length(par) != length(start) || any(!is.finite(par))) stop("Invalid parameter vector.")
     if (identical(par, cached_par)) return(cached_kernel)
     cached_par <<- NULL; cached_kernel <<- NULL
-    params <- tryCatch(expand_params(par, common$sizes, common$config),
+    # Iterative likelihood evaluations need numeric slopes, not reporting tables.
+    params <- tryCatch(expand_params(par, common$sizes, common$config,
+      include_slope_components = FALSE),
       mfrmr_gpcm_slope_numeric_boundary_error = function(e) NULL)
     if (is.null(params)) return(NULL)
     cell_slope <- params$slopes[common_cell]
-    location <- unname(Reduce(`+`, lapply(facets, function(f) params$facets[[f]][cells[[f]]])))
+    location <- unname(params$facets[[first]][cells[[first]]] + params$facets[[second]][cells[[second]]])
     step_cum <- unname(t(apply(params$steps_mat, 1L, function(s) c(0, cumsum(s)))))
     # This existing conditional GPCM kernel is shared with JML, prediction,
     # and diagnostics. Using it here does not change the MML objective to JML.
     bundle <- mfrm_jml_probability_bundle(
       eta = expanded_node - location[expanded_cell], score_k = rep(0L, nc * nq),
-      model = "GPCM", step_cum = step_cum, criterion_idx = cells[[step_facet]][expanded_cell],
+      model = "GPCM", step_cum = step_cum, criterion_idx = cells[[second]][expanded_cell],
       slopes = cell_slope, slope_idx = expanded_cell, include_log_probs = TRUE)
     slope <- cell_slope[expanded_cell]
     logits <- bundle$linear_part * slope
@@ -180,12 +170,12 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
   unpack <- function(par) {
     if (length(par) != length(start) || any(!is.finite(par))) stop("Invalid parameter vector.")
     params <- expand_params(par, common$sizes, common$config)
-    dimnames(params$steps_mat) <- list(levels[[step_facet]], seq_len(max_score))
-    list(locations = setNames(lapply(facets, function(owner)
-        setNames(params$facets[[owner]], levels[[owner]])), facets),
+    dimnames(params$steps_mat) <- list(levels[[second]], seq_len(max_score))
+    list(locations = setNames(lapply(slope_facets, function(owner)
+        setNames(params$facets[[owner]], levels[[owner]])), slope_facets),
       slopes = setNames(lapply(slope_facets, function(owner)
         setNames(params$slope_components[[owner]]$Slope, levels[[owner]])), slope_facets),
-      steps = params$steps_mat, step_facet = step_facet)
+      steps = params$steps_mat, step_facet = second)
   }
   response <- function(par, newdata) {
     evaluator <- mfrm_gpcm_response_evaluator(common$prep, common$config, newdata)
@@ -198,24 +188,17 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
       EffectiveSlope = slope, ObservedContext = evaluator$contexts$ObservedContext,
       ExpectedScore = drop(bundle$probabilities %*% (0:max_score)), ScoreVariance = variance,
       ResponseSensitivity = slope * variance, Information = slope^2 * variance)
-    for (owner in facets) summary[[owner]] <- as.character(newdata[[owner]])
+    for (owner in slope_facets) summary[[owner]] <- as.character(newdata[[owner]])
     list(summary = summary, probabilities = bundle$probabilities, log_probabilities = bundle$log_probabilities)
-  }
-  specification <- list(data = as.data.frame(data[required]), max_score = max_score,
-    quadrature = list(nodes = nodes, weights = weights),
-    slope_facets = slope_facets, person = person, score = score)
-  # Preserve the exact legacy input record and its saved evidence identities.
-  if (!identical(facets, slope_facets) || !identical(step_facet, second) ||
-      !identical(noncenter_facet, second)) {
-    specification <- c(specification, list(facets = facets, step_facet = step_facet,
-      noncenter_facet = noncenter_facet, slope_reference = first))
   }
   list(start = start, kernel = kernel, complete = complete, marginal = marginal,
     unpack = unpack, response = response, n_person = np, cells = cells, levels = levels,
     nodes = nodes, weights = weights, common = common,
     # Plain inputs reconstruct the same problem after saveRDS(), without
     # retaining closures/caches or silently choosing a new integration rule.
-    specification = specification)
+    specification = list(data = as.data.frame(data[required]), max_score = max_score,
+      quadrature = list(nodes = nodes, weights = weights),
+      slope_facets = slope_facets, person = person, score = score))
 }
 
 # Numerical M steps make this a generalized EM: every accepted step must
@@ -446,7 +429,7 @@ mfrm_gmfrm_assemble_fit <- function(problem, config, opt, controls, transformati
   config$method_input <- "MML"
   config$posterior_basis <- "fixed_standard_normal"
   config$step_facet_source <- "explicit"
-  config$step_facet_note <- paste("Category steps belong to", config$step_facet)
+  config$step_facet_note <- "The second slope facet owns the category steps."
   config$gpcm_mml_identification_requested <- "fixed_standard_normal"
   config$gpcm_estimator_family <- "marginal_maximum_likelihood"
   config$gpcm_slope_action <- "complete_adjacent_predictor"
@@ -485,19 +468,25 @@ mfrm_gmfrm_assemble_fit <- function(problem, config, opt, controls, transformati
 
 # Scoped dispatch from fit_mfrm(); never silently drop a requested model option.
 mfrm_fit_product_slopes <- function(args, supplied) {
-  if (!identical(args$model, "GPCM") || !identical(args$method, "MML"))
-    stop("Two slope families require model = 'GPCM' and method = 'MML'.", call. = FALSE)
-  roles <- mfrm_gmfrm_roles(args$facets, args$slope_facet, args$step_facet,
-    args$noncenter_facet, args$slope_reference %||% args$slope_facet[1L])
-  owners <- roles$slope_facets
+  owners <- unname(args$slope_facet)
+  if (!identical(args$model, "GPCM") || !identical(args$method, "MML") ||
+      length(owners) != 2L || anyDuplicated(owners) ||
+      length(args$facets) != 2L || !setequal(owners, args$facets)) {
+    stop("Two slope families require model = 'GPCM', method = 'MML', and exactly two distinct slope_facet names matching facets.", call. = FALSE)
+  }
   em <- identical(args$mml_engine, "em") && identical(args$mml_integration, "fixed")
   adaptive <- identical(args$mml_engine, "direct") && identical(args$mml_integration, "adaptive")
-  if ((!em && !adaptive) || !identical(args$gpcm_mml_identification, "fixed_standard_normal"))
+  if ((!em && !adaptive) ||
+      !identical(args$gpcm_mml_identification, "fixed_standard_normal") ||
+      !identical(args$step_facet, owners[2]) ||
+      !identical(args$noncenter_facet, owners[2])) {
     stop(paste0("Two slope families require fixed integration with mml_engine = 'em', or adaptive integration with mml_engine = 'direct'; ",
-      "gpcm_mml_identification = 'fixed_standard_normal'. The named reference family has geometric mean one; the other is free on the fixed ability scale."), call. = FALSE)
+      "gpcm_mml_identification = 'fixed_standard_normal', and both step_facet and noncenter_facet equal to the second slope facet ('",
+      owners[2], "'). The first family has geometric mean one; the second is free on the fixed ability scale."), call. = FALSE)
+  }
   allowed <- c("data", "person", "facets", "score", "rating_min", "rating_max",
     "keep_original", "category_policy", "model", "method", "step_facet", "slope_facet",
-    "noncenter_facet", "slope_reference", "quad_points", "maxit", "optimizer", "mml_engine",
+    "noncenter_facet", "quad_points", "maxit", "optimizer", "mml_engine",
     "gpcm_mml_identification", "mml_integration", if (em) "em_score_tol" else c("reltol", "gpcm_mml_start"))
   unsupported <- setdiff(supplied, allowed)
   if (length(unsupported)) {
@@ -531,15 +520,14 @@ mfrm_fit_product_slopes <- function(args, supplied) {
        !identical(sort(unique(as.numeric(score))), as.numeric(seq.int(0, max_score))))) {
     stop("The two-family route does not collapse score categories. Supply the complete observed 0:rating_max scale or category_policy = 'preserve' with the declared rating_max.", call. = FALSE)
   }
-  for (name in c(args$person, args$facets)) {
+  for (name in c(args$person, owners)) {
     values <- as.character(args$data[[name]])
     if (anyNA(values) || any(values != trimws(values))) {
       stop("Two-family model IDs must be observed and have no surrounding whitespace: ", name, ".", call. = FALSE)
     }
   }
   problem <- mfrm_gmfrm_problem(args$data, max_score,
-    gauss_hermite_normal(args$quad_points), owners, args$person, args$score,
-    roles$facets, roles$step_facet, roles$noncenter_facet, roles$slope_reference)
+    gauss_hermite_normal(args$quad_points), owners, args$person, args$score)
   common <- problem$common
   category <- audit_mfrm_category_support(common$prep, common$config, common$sizes)
   if (identical(category$readiness$CategoryState[1], "unsupported_coordinate")) {

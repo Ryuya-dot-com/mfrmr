@@ -98,18 +98,10 @@ A named list with class \code{mfrm_export_bundle}.
 Export a fit-level analysis archive
 }
 \details{
-This function is the one-call fit-level archive and HTML route. It reuses
-\code{mfrmr} functions for estimation and diagnostics.
-When \code{diagnostics = NULL},
-the exporter computes the diagnostics it needs, then writes the requested
-CSV/text/replay artifacts and a lightweight HTML page from the fitted object.
-Use \code{\link[=mfrm_results]{mfrm_results()}} and \code{\link[=mfrm_report]{mfrm_report()}} first when you want to inspect a
-results object before writing files; use \code{export_mfrm_bundle()} when the
-goal is a project-folder bundle from \code{fit}.
-For only the core CSV tables without automatic diagnostics, use
-\code{\link[=export_mfrm_tables]{export_mfrm_tables()}}. For a complete saved R result that reloads without
-refitting, use \code{\link[=export_mfrm_results]{export_mfrm_results()}}. The optional \code{"script"} component
-here is a refitting recipe, not a copy of the fitted R object.
+Write selected CSV/text/script/HTML artifacts from a fitted analysis.
+With \code{diagnostics = NULL}, compute the diagnostics needed for the export.
+To inspect results before writing files, use \code{\link[=mfrm_results]{mfrm_results()}} and
+\code{\link[=mfrm_report]{mfrm_report()}}.
 
 The returned \code{written_files} and optional ZIP include only files written
 by this call. With \code{overwrite = TRUE}, the ZIP is built afresh and checked
@@ -124,21 +116,19 @@ scripts, and HTML can contain identifying or study-sensitive information.
 Review and transform every file under the applicable data-handling policy
 before sharing it.
 }
-\section{Choosing exports}{
+\section{Choose a save or export route}{
 
-The \code{include} argument lets you assemble a bundle for different audiences:
 \itemize{
-\item \code{"core_tables"} for analysts who mainly want CSV output.
-\item \code{"manifest"} for a compact analysis record.
-\item \code{"script"} for reproducibility and reruns. For latent-regression fits,
-this also writes the fit-level replay person-data sidecar when available.
-\item \code{"html"} for a lightweight summary page. This is not a deidentification
-guarantee. When replay sidecars are present, the HTML shows an artifact
-index for them rather than embedding the raw person-level replay table.
-\item \code{"summary_tables"} for manuscript-facing CSV exports of documented
-\code{summary()} surfaces and their compact indexes.
-\item \code{"visual_summaries"} when you want warning maps or residual PCA summaries
-to travel with the bundle.
+\item \strong{Reopen without refitting:} \code{\link[base:saveRDS]{base::saveRDS()}} / \code{\link[base:readRDS]{base::readRDS()}} preserves
+an R object. For an existing \code{\link[=mfrm_results]{mfrm_results()}} bundle,
+\code{\link[=export_mfrm_results]{export_mfrm_results()}} includes the RDS and a reload script by default.
+\item \strong{Write tables or an analysis folder:} \code{\link[=export_mfrm_tables]{export_mfrm_tables()}} writes core
+CSVs without automatic diagnostics. \code{export_mfrm_bundle()} writes the
+selected artifacts below; \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}} records settings and
+available outputs.
+\item \strong{Rerun the analysis:} \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}} generates R code for
+a new fit. The \code{"script"} component here writes that recipe, not the fitted
+R object. Generating the script does not execute it.
 }
 }
 
@@ -154,29 +144,28 @@ Common starting points are:
 
 \section{Written outputs}{
 
-Depending on \code{include}, the exporter can write:
+\code{include} selects these components:
 \itemize{
-\item core CSV tables via \code{\link[=export_mfrm_tables]{export_mfrm_tables()}}
-\item checklist CSVs via \code{\link[=reporting_checklist]{reporting_checklist()}}
-\item facet-dashboard CSVs and interpretation notes via \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}},
-including screening settings in CSV and HTML; HTML tables show every
-level's estimates and unavailable diagnostics, while CSVs retain full detail
-\item APA text files via \code{\link[=build_apa_outputs]{build_apa_outputs()}}
-\item manuscript-summary CSVs via \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}
-\item anchor CSV via \code{\link[=make_anchor_table]{make_anchor_table()}}
-\item manifest CSV/TXT via \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}
-\item exact source-fit readiness CSVs with fit, component, and parameter scope
-\item visual warning/summary artifacts via \code{\link[=build_visual_summaries]{build_visual_summaries()}}
-\item prediction/forecast CSVs via \code{\link[=predict_mfrm_population]{predict_mfrm_population()}},
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, and \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}
-\item a package-native replay script via \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}
-\item replay-source readiness CSVs retained as provenance; the replayed fit
-recomputes its own readiness
-\item for latent-regression fits, a replay-side person-data CSV paired with the
-replay script
-\item a lightweight HTML report that bundles the exported tables/text and, for
-replay sidecars, an artifact summary instead of raw person-level rows
+\item \code{"core_tables"}: CSVs from \code{\link[=export_mfrm_tables]{export_mfrm_tables()}}.
+\item \code{"checklist"}: CSVs from \code{\link[=reporting_checklist]{reporting_checklist()}}.
+\item \code{"dashboard"}: \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}} tables and interpretation notes.
+CSV/HTML retain screening settings; HTML shows every level's estimates and
+unavailable diagnostics, while CSV retains full detail.
+\item \code{"apa"}: text from \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
+\item \code{"summary_tables"}: manuscript CSVs and indexes from \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}.
+\item \code{"anchors"}: CSV from \code{\link[=make_anchor_table]{make_anchor_table()}}.
+\item \code{"manifest"}: CSV/TXT from \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}.
+\item \code{"visual_summaries"}: warnings/residual PCA summaries from \code{\link[=build_visual_summaries]{build_visual_summaries()}}.
+\item \code{"predictions"}: CSVs for supplied \code{\link[=predict_mfrm_population]{predict_mfrm_population()}},
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} results.
+\item \code{"script"}: code from \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}} and, when available,
+the latent-regression replay person-data CSV.
+\item \code{"html"}: exported tables/text and a replay-sidecar artifact index;
+raw person-level replay rows are not embedded. This is not deidentification.
 }
+
+Readiness CSVs preserve the source fit's overall, component and parameter
+checks. Replay-source readiness is provenance: a new fit repeats its checks.
 
 For latent-regression fits, prediction-side artifacts can carry the fitted
 population-model scoring basis when you explicitly supply the corresponding
@@ -198,21 +187,9 @@ remain outside this bundle contract.
 
 \section{Interpreting output}{
 
-The returned object reports both high-level bundle status and the exact files
-written. In practice, \code{bundle$summary} is the direct status check, while
-\code{bundle$written_files} is the file inventory to inspect or hand off to other
-tools.
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Fit a model and compute diagnostics once.
-\item Decide whether the audience needs tables only, or also a manifest,
-replay script, and HTML summary.
-\item Call \code{export_mfrm_bundle()} with a dedicated output directory.
-\item Inspect \code{bundle$written_files} or open the generated HTML file.
-}
+Check \code{bundle$summary} for export status and \code{bundle$written_files} for the
+exact file inventory. Use a dedicated output directory and inspect the
+written files or generated HTML before handing them to other tools.
 }
 
 \section{Saved-result reuse}{
@@ -227,7 +204,7 @@ scenario; its source is recorded without asserting a match to the fit.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("export_mfrm_bundle", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.

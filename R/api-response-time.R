@@ -592,14 +592,14 @@ print.summary.mfrm_response_time_review <- function(x, ...) {
 #' @param facet Optional facet name when `type = "facet"`.
 #' @param top_n Maximum number of person or facet rows to plot.
 #' @param preset Visual preset.
-#' @param draw If `TRUE`, print the `ggplot` object. If `FALSE`, return the
-#'   `ggplot` object invisibly without drawing.
+#' @param draw If `TRUE`, draw with base graphics. If `FALSE`, return only an
+#'   `mfrm_plot_data` object.
 #' @param ... Unused.
 #'
-#' @return Invisibly, a `ggplot` object carrying reusable tables, thresholds,
-#'   overview, and interpretation notes accessible via [plot_data()].
+#' @return Invisibly, an `mfrm_plot_data` object containing the plot table,
+#'   thresholds, overview, and interpretation notes.
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_response_time_review", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -618,7 +618,7 @@ print.summary.mfrm_response_time_review <- function(x, ...) {
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -652,6 +652,61 @@ plot_response_time_review <- function(x,
   )
   subtitle <- "Descriptive screening view; not a joint speed-accuracy model"
 
+  if (isTRUE(draw)) {
+    apply_plot_preset(style)
+    old_par <- graphics::par()["mar"]
+    on.exit(graphics::par(old_par), add = TRUE)
+    if (identical(type, "distribution")) {
+      graphics::hist(
+        tbl$LogTime,
+        breaks = if (length(unique(tbl$LogTime)) < 2L) 1L else "FD",
+        col = style$fill_soft,
+        border = style$axis,
+        main = "",
+        xlab = paste0("log response time (", unit, ")")
+      )
+      graphics::abline(v = log(thresholds$Value), lty = c(2, 3),
+                       col = c(style$warn, style$accent_secondary), lwd = 1.2)
+      graphics::legend(
+        "topright",
+        legend = c("Rapid threshold", "Slow threshold"),
+        lty = c(2, 3),
+        col = c(style$warn, style$accent_secondary),
+        bty = "n", cex = 0.85
+      )
+    } else if (!any(is.finite(tbl$MedianTime))) {
+      graphics::plot.new()
+      graphics::text(0.5, 0.5, "No valid times are available for these groups.")
+    } else if (identical(type, "score")) {
+      y <- tbl$MedianTime
+      x_pos <- seq_len(nrow(tbl))
+      graphics::plot(
+        x_pos, y, type = "b", pch = 19, col = style$accent_primary,
+        xaxt = "n", xlab = "Score", ylab = paste0("Median time (", unit, ")"),
+        main = ""
+      )
+      graphics::axis(1, at = x_pos, labels = tbl$Score)
+      graphics::abline(h = thresholds$Value, lty = c(2, 3),
+                       col = c(style$warn, style$accent_secondary))
+    } else {
+      label_col <- if (identical(type, "person")) "Person" else "Level"
+      labels <- as.character(tbl[[label_col]])
+      y <- seq_len(nrow(tbl))
+      graphics::par(mar = c(5, max(6, min(14, max(nchar(labels)) * 0.55)),
+                            3, 2))
+      graphics::plot(
+        tbl$MedianTime, y,
+        yaxt = "n", pch = 19, col = style$accent_primary,
+        xlab = paste0("Median time (", unit, ")"), ylab = "",
+        main = ""
+      )
+      graphics::axis(2, at = y, labels = labels, las = 1, cex.axis = 0.75)
+      graphics::abline(v = thresholds$Value, lty = c(2, 3),
+                       col = c(style$warn, style$accent_secondary))
+    }
+  }
+
+
   ref_values <- if (identical(type, "distribution")) {
     log(thresholds$Value)
   } else {
@@ -663,7 +718,7 @@ plot_response_time_review <- function(x,
     "Median response time"
   }
 
-  out <- new_mfrm_plot_data(
+  invisible(new_mfrm_plot_data(
     "response_time_review",
     list(
       table = tbl,
@@ -695,17 +750,22 @@ plot_response_time_review <- function(x,
         role = c("rapid_response", "slow_response")
       )
     )
-  )
-  .mfrm_finalize_ggplot(out, draw = draw)
+  ))
 }
 
 #' @rdname response_time_review
 #' @details `plot()` method: Plot a saved response-time review
-#' @inheritParams plot_response_time_review
-#' @param ... For `plot()`: View-specific controls from [plot_response_time_review()].
+#' @param x A `mfrm_response_time_review` object.
+#' @param type Plot type: `"distribution"`, `"person"`, `"facet"`, or
+#'   `"score"`.
+#' @param ... For `plot()`: `facet` selects a facet for `type = "facet"`;
+#'   `top_n = 25` limits person/facet rows; `preset` selects appearance;
+#'   `draw = FALSE` returns plot data without drawing. The returned payload
+#'   retains thresholds, overview and interpretation notes. These descriptive
+#'   views do not fit a joint response-time model.
 #'
 #' For `summary()`: Unused.
-#' @return For `plot()`: Invisibly, a `ggplot` object (reusable tables and notes via [plot_data()]). These are descriptive timing summaries.
+#' @return For `plot()`: The existing response-time plot payload. These are descriptive timing summaries.
 #' @seealso [response_time_review()], [mfrmr_plot_migration]
 #' @export
 plot.mfrm_response_time_review <- function(x,

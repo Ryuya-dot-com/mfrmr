@@ -155,7 +155,7 @@ review$top_reweighted_levels
 }
 }
 \seealso{
-\code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=compute_information]{compute_information()}}, \link{mfrmr_gpcm_scope}
+\code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=compute_information]{compute_information()}}, \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
 
 \code{\link[=build_weighting_review]{build_weighting_review()}}
 }

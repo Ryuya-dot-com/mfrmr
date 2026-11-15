@@ -54,10 +54,17 @@ mfrmr_person_posterior_intervals <- function(idx, config, params, base_eta,
     lower_tail <- function(u) (if (u <= 0) integral(-limit,u) else left + integral(0,u)) / mass
     upper_tail <- function(u) (if (u >= 0) integral(u,limit) else right + integral(u,0)) / mass
     # Solve the upper survival probability directly to avoid 1-alpha cancellation.
-    lower <- stats::uniroot(function(u) lower_tail(u)-alpha, c(-limit,limit),
-      tol=1e-10, check.conv=TRUE)$root
-    upper <- stats::uniroot(function(u) upper_tail(u)-alpha, c(-limit,limit),
-      tol=1e-10, check.conv=TRUE)$root
+    # Reuse the split masses to bracket each quantile on its side of the mode.
+    lower_at_mode <- left / mass - alpha
+    upper_at_mode <- right / mass - alpha
+    lower_bracket <- if (lower_at_mode >= 0) c(-limit,0) else c(0,limit)
+    upper_bracket <- if (upper_at_mode >= 0) c(0,limit) else c(-limit,0)
+    lower_values <- if (lower_at_mode >= 0) c(-alpha,lower_at_mode) else c(lower_at_mode,1-alpha)
+    upper_values <- if (upper_at_mode >= 0) c(upper_at_mode,-alpha) else c(1-alpha,upper_at_mode)
+    lower <- stats::uniroot(function(u) lower_tail(u)-alpha, lower_bracket,
+      f.lower=lower_values[1L], f.upper=lower_values[2L], tol=1e-10, check.conv=TRUE)$root
+    upper <- stats::uniroot(function(u) upper_tail(u)-alpha, upper_bracket,
+      f.lower=upper_values[1L], f.upper=upper_values[2L], tol=1e-10, check.conv=TRUE)$root
     answer <- mu[person] + sigma * (mode + scale * c(Lower=lower,Upper=upper))
     if (!is.null(cut_scores)) {
       cuts <- ((unname(cut_scores)-mu[person])/sigma-mode)/scale

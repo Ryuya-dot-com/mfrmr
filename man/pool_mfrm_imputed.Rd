@@ -83,9 +83,9 @@ numerical resolution loss and intervals outside the numeric range.
 An unavailable interval retains its point estimate and variance.
 \code{notes} records the imputation and inference assumptions for saved reuse.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object; \code{\link[=plot_data]{plot_data()}} extracts the
-plotted \code{table}, exact contrast coefficients and inference settings.
-The plot uses the saved pointwise MI interval
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object containing the plotted \code{table},
+exact contrast coefficients and inference settings. Use \code{\link[=plot_data]{plot_data()}} for
+custom graphics. \code{\link[=as_ggplot]{as_ggplot()}} uses the saved pointwise MI interval
 endpoints; it does not substitute normal intervals from the standard errors.
 Default and \code{component = "table"} retain the complete interval view.
 Target order, contrasts, degrees of freedom, confidence level and
@@ -137,7 +137,7 @@ conditional on adequate proper imputations and complete-data inference.
 They are not robust intervals, simultaneous rater decisions or general
 coverage guarantees. Do not pool EAPs, posterior SDs, fit statistics, cluster
 labels or likelihood-ratio tests with this function. See the executable
-assigned-score example in \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-response-imputation.html}{online response-imputation guide}.
+assigned-score example in \href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-response-imputation.html}{mfrmr-response-imputation}.
 It compares joint RSM predictive completions with direct observed-score
 inference. Proper calibration priors in the imputer and MML estimates in
 the completed-data analyses do not give exactly identical Bayesian moments:

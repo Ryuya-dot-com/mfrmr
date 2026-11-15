@@ -28,7 +28,6 @@ mfrm_response_diagnostics(
   show_labels = TRUE,
   text_scale = 1,
   point_size = 2.5,
-  marginal = c("auto", "histogram", "none"),
   ...
 )
 
@@ -86,10 +85,6 @@ in the paired view; both views retain all rows in \code{\link[=plot_data]{plot_d
 \item{point_size}{Positive point size in ggplot millimetres; base graphics
 use the corresponding relative size (2.5 is the default).}
 
-\item{marginal}{Marginal histogram display for \code{style = "scatter"}:
-\code{"auto"} (default; shown when at least 8 finite pairs exist), \code{"histogram"},
-or \code{"none"}.}
-
 \item{...}{For \code{summary.mfrm_response_diagnostics()}: Unused.
 
 For \code{plot()}: Unused; ordinary-model threshold arguments are not accepted.}
@@ -115,8 +110,8 @@ extended RSM comparisons, using the same selected events and group_by.
 Corrected-JML and two-family GPCM comparisons are not supported by that route.
 Collecting, plotting and exporting saved results never recomputes integrals.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object; \code{\link[=plot_data]{plot_data()}} extracts
-selected measures, display settings, notes and alternative text.
+For \code{plot()}: Invisibly, \code{mfrm_plot_data} with selected measures, display settings,
+notes and alternative text. \code{\link[=as_ggplot]{as_ggplot()}} converts either view.
 }
 \description{
 Compute response means, variances and descriptive Infit/Outfit summaries.
@@ -278,7 +273,7 @@ portable scoring has its own calibration checks and conditional EAP target.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("mfrm_response_diagnostics", run.dontrun = TRUE)
 \dontrun{
 example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))

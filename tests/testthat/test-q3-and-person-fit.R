@@ -372,10 +372,9 @@ test_that("mfrm_d_study projects G and Phi across planned counts", {
   }
 
   p <- plot(ds, draw = FALSE)
-  expect_s3_class(p, "ggplot")
-  expect_s3_class(attr(p, "mfrmr_plot_data"), "mfrm_plot_data")
-  expect_identical(plot_data(p, "plot"), "coefficients")
-  expect_true(all(c("table", "series", "x_var") %in% names(plot_data(p))))
+  expect_s3_class(p, "mfrm_plot_data")
+  expect_identical(p$data$plot, "coefficients")
+  expect_true(all(c("table", "series", "x_var") %in% names(p$data)))
   expect_true(is.list(plot_data(ds)))
 
   ds_grid <- mfrm_d_study(
@@ -390,10 +389,10 @@ test_that("mfrm_d_study projects G and Phi across planned counts", {
     panel_grid = c("Metric", "ResidualScaling"),
     draw = FALSE
   )
-  expect_identical(plot_data(p_panel, "group_var"), "n_Criterion")
-  expect_identical(plot_data(p_panel, "panel_grid"), c("Metric", "ResidualScaling"))
-  expect_true(all(c("MetricFamily", "Series", "Panel") %in% names(plot_data(p_panel, "series"))))
-  expect_true(all(plot_data(p_panel, "series")$MetricFamily == "G-theory"))
+  expect_identical(p_panel$data$group_var, "n_Criterion")
+  expect_identical(p_panel$data$panel_grid, c("Metric", "ResidualScaling"))
+  expect_true(all(c("MetricFamily", "Series", "Panel") %in% names(p_panel$data$series)))
+  expect_true(all(p_panel$data$series$MetricFamily == "G-theory"))
 
   p_heat <- plot(
     ds_grid,
@@ -403,10 +402,10 @@ test_that("mfrm_d_study projects G and Phi across planned counts", {
     metric = "Phi",
     draw = FALSE
   )
-  expect_identical(plot_data(p_heat, "plot"), "heatmap")
-  expect_identical(plot_data(p_heat, "metric"), "Phi")
-  expect_identical(plot_data(p_heat, "panel_by"), "ResidualScaling")
-  expect_s3_class(plot_data(p_heat, "surface"), "data.frame")
+  expect_identical(p_heat$data$plot, "heatmap")
+  expect_identical(p_heat$data$metric, "Phi")
+  expect_identical(p_heat$data$panel_by, "ResidualScaling")
+  expect_s3_class(p_heat$data$surface, "data.frame")
 
   p_error_heat <- plot(
     ds_grid,
@@ -416,7 +415,7 @@ test_that("mfrm_d_study projects G and Phi across planned counts", {
     metric = "AbsoluteErrorVariance",
     draw = FALSE
   )
-  expect_identical(plot_data(p_error_heat, "metric"), "AbsoluteErrorVariance")
+  expect_identical(p_error_heat$data$metric, "AbsoluteErrorVariance")
 
   p_surface <- plot(
     ds_grid,
@@ -427,8 +426,8 @@ test_that("mfrm_d_study projects G and Phi across planned counts", {
     panel_by = "ResidualScaling",
     draw = FALSE
   )
-  expect_identical(plot_data(p_surface, "plot"), "surface3d")
-  expect_identical(plot_data(p_surface, "metric"), "G")
+  expect_identical(p_surface$data$plot, "surface3d")
+  expect_identical(p_surface$data$metric, "G")
 
   default_ds <- mfrm_d_study(gt)
   expect_equal(nrow(default_ds), 1L)

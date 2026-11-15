@@ -2,6 +2,7 @@
 % Please edit documentation in R/facets_mode_api.R, R/facets_mode_methods.R
 \name{run_mfrm_facets}
 \alias{run_mfrm_facets}
+\alias{mfrmRFacets}
 \alias{plot.mfrm_facets_run}
 \title{Run a legacy-compatible estimation workflow wrapper}
 \usage{
@@ -24,6 +25,30 @@ run_mfrm_facets(
   maxit = 400,
   reltol = 1e-09,
   optimizer = c("auto", "BFGS", "L-BFGS-B"),
+  mml_engine = c("direct", "em", "hybrid"),
+  top_n_interactions = 20L,
+  mml_integration = c("fixed", "adaptive"),
+  centering_scope = c("facet", "remainder", "anchor_origin")
+)
+
+mfrmRFacets(
+  data,
+  person = NULL,
+  facets = NULL,
+  score = NULL,
+  weight = NULL,
+  keep_original = FALSE,
+  model = c("RSM", "PCM"),
+  method = c("JML", "JMLE", "MML"),
+  step_facet = NULL,
+  anchors = NULL,
+  group_anchors = NULL,
+  noncenter_facet = "Person",
+  dummy_facets = NULL,
+  positive_facets = NULL,
+  quad_points = 15,
+  maxit = 400,
+  reltol = 1e-09,
   mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L,
   mml_integration = c("fixed", "adaptive"),
@@ -107,11 +132,11 @@ A list with components:
 \item \code{mapping}: resolved column mapping
 }
 
-For \code{plot()}: A \code{ggplot} object (or \code{mfrm_plot_bundle} of \code{ggplot}
-objects when \code{type = "fit"} delegates to \code{type = "bundle"}).
+For \code{plot()}: A plotting object from the delegated plot route.
 }
 \description{
-This workflow uses legacy-compatible defaults (\code{model = "RSM"}, \code{method = "JML"}), while allowing
+This helper mirrors \code{mfrmRFacets.R} behavior as a package API and keeps
+legacy-compatible defaults (\code{model = "RSM"}, \code{method = "JML"}), while allowing
 users to choose compatible estimation options.
 }
 \details{
@@ -134,9 +159,10 @@ result:
 \item \code{method = "JML"} (default): legacy-compatible joint estimation
 route; the default preserves the FACETS-style output continuity
 that existing one-shot scripts expect. For new analysis scripts,
-prefer \code{fit_mfrm(..., method = "MML")} -- MML is the package-wide
-recommended route because person parameters are integrated out
-under an N(0, 1) prior and per-person posterior SEs are available.
+use \code{\link[=fit_mfrm]{fit_mfrm()}} and select the estimator for its assumptions and target.
+MML integrates abilities under a specified population model; JML treats
+them as fixed parameters and has incidental-parameter limitations.
+Availability of posterior SDs alone does not justify choosing MML.
 \item \code{method = "JMLE"}: backward-compatible input alias for the JML route;
 fitted objects and generated outputs use the canonical \code{"JML"} label.
 \item \code{method = "MML"}: marginal maximum likelihood route using
@@ -226,7 +252,7 @@ out$fit$summary[, c("Model", "Method", "MethodUsed")]
 s <- summary(out)
 s$overview[, c("Model", "Method", "Converged")]
 p_fit <- plot(out, type = "fit", draw = FALSE)
-p_fit$wright_map$data$plot
+plot_data(p_fit$wright_map, "locations")
 
 # Optional: MML route
 if (interactive()) {
@@ -255,9 +281,9 @@ out <- run_mfrm_facets(
   maxit = 30
 )
 p_fit <- plot(out, type = "fit", draw = FALSE)
-plot_data(p_fit$wright_map)$plot
+plot_data(p_fit$wright_map, "locations")
 p_qc <- plot(out, type = "qc", draw = FALSE)
-plot_data(p_qc)$plot
+p_qc$data$plot
 
 }
 }

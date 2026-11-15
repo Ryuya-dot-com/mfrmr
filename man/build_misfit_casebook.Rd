@@ -68,8 +68,10 @@ heuristic review band, 0.5-1.5 by default)
 }
 
 The result is an operational review bundle. It is not a formal adjudication
-system, and repeated signals across evidence families should be prioritized
-over any single isolated case row. In addition to raw case rows, the object
+system. Several flags can arise from the same responses and correlated
+statistics; their co-occurrence is not independent corroboration or a
+combined significance test. Interpret magnitude, context and availability
+before prioritizing follow-up. In addition to raw case rows, the object
 includes stable grouping views such as \code{by_person}, \code{by_facet_level},
 \code{by_source_family}, and \code{by_wave} to support operational triage. The
 \code{source_support} component records which evidence families are currently

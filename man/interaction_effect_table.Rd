@@ -73,7 +73,7 @@ visible columns but not the attributes.
 
 For a \code{mfrm_comparison_fit} created with \code{fit_scope = "comparisons"}, omit
 \code{comparison_review}: the table already contains the declared targets and
-their partial-fit checks. Extraction does not fit again. See \code{\link[=fit_mfrm]{fit_mfrm()}}
+their partial-fit checks. Extraction does not fit again. See \link{fit_mfrm_technical_details}
 for its likelihood-preserving parameterization, availability requirements
 and limits. For full RSM/PCM MML fits, \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} with the same
 \code{comparison_review} separately supplies model-information intervals and
@@ -83,7 +83,7 @@ CML comparison fits add conditional-information SEs and pointwise
 unidentified rows remain missing. The ordinary full-fit route above remains unchanged.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("interaction_effect_table", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_operational")

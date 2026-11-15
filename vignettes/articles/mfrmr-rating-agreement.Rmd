@@ -8,9 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",collapse = TRUE, comment = "#>", dev.args = list(bg = "white"))
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", dev.args = list(bg = "white"))
 ```
 
 Two raters can rank responses identically while assigning different scores.
@@ -27,7 +25,7 @@ installed. For importing your own CSV or fitting a model, start with the
 | Do two raters give similar category scores to the same responses? | `pairwise_kappa_table()` | Weighted agreement for each pair on its common complete units. |
 | How much agreement is present across the panel? | `krippendorff_alpha_table()` or `gwet_ac2_table()` | A pooled coefficient under a stated distance/weighting and chance model. Their definitions differ. |
 | Does a score source agree with a chosen reference, track its variation, or shift its mean? | `score_comparison_table()` | QWK, correlation and standardized mean difference on aligned records. A reference is not automatically correct. |
-| Which rater is more severe after accounting for the fitted facets? | `fit_mfrm()`, then individual estimates and diagnostics | Model-adjusted severity. High rater separation reliability means distinguishable severities, not agreement. |
+| Which rater is stricter after accounting for the fitted facets? | `fit_mfrm()`, then individual estimates and diagnostics | Model-adjusted severity. High rater separation reliability means distinguishable severities, not agreement. |
 | Does a rater tend to compress scores toward the middle? | `rater_centrality_table()` | Indirect RSM residual and/or rater-specific PCM threshold descriptions, with their source status. |
 | How accurately do raters match supplied expert benchmark ratings? | `fit_rater_accuracy()` | A separate Rasch model of exact-match indicators; the benchmark and its alignment must be justified. |
 

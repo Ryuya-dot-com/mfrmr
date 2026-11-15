@@ -2,6 +2,8 @@
 # Prediction may combine known levels absent from the estimation design; it
 # does not add such crossings to the fitted slope design or certify inference.
 mfrm_gpcm_response_evaluator <- function(prep, config, newdata) {
+  if (length(mfrmr_mml_additive_boundary_evidence(config)))
+    stop("The full model has no finite maximum along a free location or endpoint path. Optimizer values cannot supply fitted curves. Use a separately supported limiting fit when available.", call. = FALSE)
   facets <- config$facet_names
   required <- c("Theta", facets)
   if ("Theta" %in% facets || !is.data.frame(newdata) || !nrow(newdata) ||

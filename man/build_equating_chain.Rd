@@ -58,7 +58,7 @@ offsets), \code{"links"} (recorded wave comparisons), or \code{"anchor_removal"}
 
 \item{preset}{Visual preset.}
 
-\item{draw}{If \code{TRUE}, print the \code{ggplot} object to the active device.}
+\item{draw}{If \code{TRUE}, draw the plot with base graphics.}
 
 \item{show_title}{Logical; display the main title.}
 
@@ -79,9 +79,6 @@ Object of class \code{mfrm_equating_chain} with components:
 \item{common_by_facet}{Tibble of retained common-element counts by facet.}
 \item{config}{List of analysis configuration.}
 }
-
-Invisibly, a \code{ggplot} object carrying its saved plot payload for
-\code{\link[=plot_data]{plot_data()}}.
 }
 \description{
 Links a series of calibration waves by computing mean offsets between
@@ -138,35 +135,20 @@ in \verb{$element_detail$Flag}.  A high \code{Offset_SD}, many flagged elements,
 thin retained anchor set signals an unstable link that may compromise the
 resulting scale placement.
 }
-\section{Which function should I use?}{
+\section{Reading the chain}{
 
+Supply fits in an ordered named list and read \code{links} before \code{cumulative}:
+weak adjacent links affect later scale placement. \code{\link[=detect_anchor_drift]{detect_anchor_drift()}}
+instead compares every wave directly with one reference;
+\code{\link[=anchor_to_baseline]{anchor_to_baseline()}} fits raw new data against a baseline.
 \itemize{
-\item Use \code{\link[=anchor_to_baseline]{anchor_to_baseline()}} for a single new wave anchored to a known
-baseline.
-\item Use \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} when you want direct comparison against one
-reference wave.
-\item Use \code{build_equating_chain()} when no single wave should dominate and you
-want ordered, adjacent links across the series.
-}
-}
-
-\section{Interpreting output}{
-
-\itemize{
-\item \verb{$links}: one row per adjacent pair with \code{From}, \code{To}, \code{N_Common},
-\code{N_Retained}, \code{Offset_Prelim}, \code{Offset}, \code{Offset_SD}, and
-\code{Max_Residual}. Small \code{Offset_SD}
-relative to the offset indicates a consistent shift across elements.
-\code{LinkSupportAdequate = FALSE} means at least one linking facet retained
-fewer than 5 common elements after screening.
-\item \verb{$cumulative}: one row per wave with its cumulative offset from Wave 1.
-Wave 1 always has offset 0.
-\item \verb{$element_detail}: per-element linking statistics (estimate in each
-wave, difference, residual from mean offset, and flag status).
-Flagged elements may indicate DIF or rater re-training effects.
-\item \verb{$common_by_facet}: retained common-element counts by linking facet for
-each adjacent link.
-\item \verb{$config}: records wave names and analysis parameters.
+\item \code{links} records each \code{From}/\code{To} pair, \code{N_Common}, \code{N_Retained},
+\code{Offset_Prelim}, \code{Offset}, \code{Offset_SD} and \code{Max_Residual}.
+\code{LinkSupportAdequate = FALSE} marks fewer than five retained common elements
+in at least one facet. \code{common_by_facet} gives those facet counts.
+\item \code{cumulative} gives offsets from the first wave, whose offset is zero.
+\item \code{element_detail} retains each element's wave estimates, difference,
+residual and flag; \code{config} records wave names and settings.
 \item \code{OffsetStatus} / \code{OffsetReason} explain unavailable link offsets.
 \code{ScreeningFallback} records use of all finite differences when no row
 passed preliminary screening. \code{N_Contributing} and the element-level
@@ -181,29 +163,30 @@ the flagged count among available elements.
 \item \code{cumulative$Status} / \code{Reason} distinguish unavailable preceding links
 from an unrepresentable cumulative sum. Later offsets do not become zero
 when a link is unavailable.
-\item Read \code{links} before \code{cumulative}: weak adjacent links can make later
-cumulative offsets less trustworthy.
 }
+}
+
+\section{Reviewing flagged links}{
+
+Inspect \code{summary(chain)}, \code{plot(chain, type = "chain")} and
+\code{chain$element_detail}. A flag warrants investigation; changing the linking
+set requires substantive justification and sensitivity review.
 }
 
 \section{Common-element graph}{
 
-\code{plot(chain, type = "graph")} displays waves as squares and common elements
-as circles, including waves without retained connections. Each element node
-belongs to one reviewed link: \verb{[L1]} refers to link 1 in the returned links
-table. The same element can have different screening results in different
-comparisons, so it is repeated per link. Solid lines denote retained,
-unflagged elements; dot-dash denotes retained elements with a drift flag or
-an unavailable flag; dashed denotes excluded elements; dotted denotes
-unknown retention. These distinctions also apply in monochrome.
+\code{plot(chain, type = "graph")} uses squares for waves and circles for common
+elements, including waves without retained connections. Elements are repeated
+per reviewed link because screening can differ: \verb{[L1]} denotes link 1.
+Lines are solid for retained/unflagged elements, dot-dash for retained elements
+with a positive or unavailable flag, dashed for excluded elements, and dotted
+for unknown retention. Monochrome preserves these distinctions.
 
-This is a graph of screened common-element comparisons, not an inventory
-of fixed anchors or an all-pairs assessment. Retention does not guarantee
-positive weight in the offset, invariance, adequate support or precision.
-New chains store positional \code{FromID}/\code{ToID} in \code{links} and \code{LinkID} in
-\code{element_detail}; display names may repeat or contain punctuation. Older
-chains are matched by their complete link labels; ambiguous references
-require rebuilding the chain.
+The graph represents recorded comparisons, not fixed anchors or all wave pairs.
+Retention implies neither positive offset weight nor invariance, support or
+precision. Positional \code{FromID}/\code{ToID} in \code{links} and \code{LinkID} in \code{element_detail}
+allow repeated or punctuated display names. Older chains use complete link
+labels; ambiguous references require rebuilding.
 
 With \code{draw = FALSE}, the plot returns an \code{mfrm_plot_data} object. Its
 \verb{$data$data} contains \code{nodes}, \code{edges}, \code{links}, \code{elements}, \code{n_waves},
@@ -219,21 +202,19 @@ graphics are sufficient; no optional graph package is needed.
 
 \section{Wave links and common-element removal}{
 
-\code{plot(chain, type = "links")} summarizes the recorded wave-to-wave
-comparisons. Numbers count common elements with \code{Retained = TRUE}, including
-flagged retained elements. A dotted comparison has no recorded retained
-element; this is not proof that the original rating design is disconnected.
-Missing retention is counted separately. Dot-dash connections have flagged
-retained elements or inadequate/unknown recorded link support.
+\code{plot(chain, type = "links")} shows recorded comparisons and counts retained
+common elements, including flagged ones. Dotted links have no recorded retained
+element; this does not establish disconnection in the original rating design.
+Missing retention is counted separately. Dot-dash marks flagged retained
+elements or inadequate/unknown link support.
 
-\code{plot(chain, type = "anchor_removal")} removes each facet/level identity,
-one at a time, from all recorded comparisons. Other retention decisions stay
-fixed. The horizontal axis counts newly disconnected unordered wave pairs,
-including indirect paths. Pairs already disconnected at baseline are not
-counted. Losing a direct link need not disconnect its endpoints if another
-path remains. Zero means no new graph disconnection, not negligible impact
-on estimates or adequate linking support. No screening, offsets, estimates,
-SEs or confidence intervals are recomputed by either view.
+\code{plot(chain, type = "anchor_removal")} deletes each facet/level identity from
+all recorded comparisons, holding other retention decisions fixed. The axis
+counts newly disconnected unordered wave pairs, including indirect paths;
+already disconnected pairs are excluded. Losing a direct link need not
+disconnect its endpoints. Zero means no new graph disconnection, not negligible
+statistical influence or adequate support. Neither view recomputes screening,
+offsets, estimates, SEs or intervals.
 
 Both views return \verb{$data$data$nodes}, \code{links}, \code{elements} and \code{summary}.
 The removal view additionally returns \code{removal} (one row per common-element
@@ -296,20 +277,6 @@ SE, confidence interval, cross-fit covariance, or uncertainty propagation
 is supplied. A small conditional change is not evidence of anchor invariance
 or negligible change under a full model refit. Notes remain available when
 figure titles and footers are omitted.
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Fit each administration wave separately: \code{fit_a <- fit_mfrm(...)}.
-\item Combine into an ordered named list:
-\code{fits <- list(Spring23 = fit_s, Fall23 = fit_f, Spring24 = fit_s2)}.
-\item Call \code{chain <- build_equating_chain(fits)}.
-\item Review \code{summary(chain)} for link quality.
-\item Visualize with \code{plot(chain, type = "chain")}.
-\item For problematic links, investigate flagged elements in
-\code{chain$element_detail} and consider removing them from the anchor set.
-}
 }
 
 \section{Session plot defaults}{

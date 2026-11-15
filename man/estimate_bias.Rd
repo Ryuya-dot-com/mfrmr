@@ -5,7 +5,7 @@
 \alias{estimate_bias}
 \alias{summary.mfrm_bias}
 \alias{plot.mfrm_bias}
-\title{Estimate bias and interaction screening terms}
+\title{Screen facet combinations for departures from a fitted model}
 \usage{
 estimate_bias(
   fit,
@@ -119,15 +119,20 @@ For \code{summary()}: An object of class \code{summary.mfrm_bias} with:
 \item \code{notes}: short interpretation notes
 }
 
-For \code{plot()}: Invisibly, a \code{ggplot} object carrying view-specific tables, retained
-screening rules and interpretation notes accessible via \code{\link[=plot_data]{plot_data()}}. Plot agreement across views
+For \code{plot()}: An \code{mfrm_plot_data} object with view-specific tables, retained
+screening rules and interpretation notes. Plot agreement across views
 is not independent evidence of bias.
-Use \code{plot_data(p, "notes")} for the interaction definition,
+Use \code{print(p)} or \code{plot_data(p, "notes")} for the interaction definition,
 score-direction caveat, magnitude-only facet-profile interpretation and
 conditional uncertainty qualifications outside the figure.
 }
 \description{
-Estimate bias and interaction screening terms
+For example, investigate whether a rater scores a particular criterion higher
+or lower than its fitted expectation. Supply a fitted model, matching
+diagnostics and the facet names. The returned \code{mfrm_bias} object contains
+cell-level shifts in \code{bias$table}; \code{summary(bias)$top_rows} identifies cells for
+follow-up. Calibration stays fixed. These are conditional screens, not a
+joint interaction fit or evidence that a rater is unfair.
 }
 \details{
 This helper supports \code{RSM}, \code{PCM}, and one-slope-family \code{GPCM} fits.
@@ -139,12 +144,6 @@ argument of \code{\link[=fit_mfrm]{fit_mfrm()}}. For the supported fixed-populat
 route, \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} with \code{interaction = "FacetA:FacetB"} returns
 joint-information cell intervals. They estimate a different target and
 do not replace or relabel this fixed-baseline screening result.
-
-\strong{Bias (interaction) in an additive MFRM} refers to a systematic departure
-from the main-effects model: a specific rater-criterion (or higher-order)
-combination produces scores that are consistently higher or lower than
-predicted by the main effects alone.  For example, Rater A might be
-unexpectedly severe on Criterion 2 despite being lenient overall.
 
 Mathematically, the bias term \eqn{b_{jc}} for rater \eqn{j} on
 criterion \eqn{c} modifies the linear predictor:
@@ -229,16 +228,13 @@ and does not support formal inference or a cell-level fairness decision.
 The function emits a classed warning when \code{"Person"} is requested.
 }
 
-\code{summary()} method: Summarize an \code{mfrm_bias} object in a user-friendly format
+\code{summary()} collects cell availability, magnitudes and conditional
+screening results from a saved bias analysis.
 
-For \code{summary()}: This method returns a compact interaction-bias summary:
-\itemize{
-\item interaction facets/order and analyzed cell counts
-\item effect-size profile (\verb{|bias|} mean/max, screen-positive cell count)
-\item fixed-effect chi-square block
-\item iteration-end convergence indicators
-\item top rows ranked by absolute t
-}
+For \code{summary()}: Read \code{overview}, the conditional all-zero \code{chi_sq}
+screen and \code{final_iteration}; \code{top_rows} ranks absolute t and retains GPCM
+profile columns when present. These reuse the screening qualifications above,
+not a formal bias test. Use \code{\link[=bias_interaction_report]{bias_interaction_report()}} for detailed review.
 
 \code{plot()} method: Plot saved bias-interaction results
 
@@ -247,54 +243,42 @@ Start with ranked interactions, then use other views to understand the pattern.
 
 For \code{plot()}:
 Visualization front-end for \code{\link[=bias_interaction_report]{bias_interaction_report()}} with multiple views.
-With \code{draw = FALSE}, \code{plot_data(p)} includes \code{plot_long},
+With \code{draw = FALSE}, the returned plot data include \code{plot_long},
 \code{plot_annotations}, \code{flag_summary}, and \code{plot_settings} in addition to the
 view-specific \code{ranked_table}, \code{scatter_data}, \code{facet_profile}, and heatmap
 components. Use these fields when rebuilding the same screening view in
-plotly, Quarto, or a dashboard.
+ggplot2, plotly, Quarto, or a dashboard.
 Saved report thresholds determine flags, reference lines and returned notes;
 recreate \code{\link[=bias_interaction_report]{bias_interaction_report()}} from the saved bias object to change
-them. Scatter views attach aligned marginal histograms when
-\code{marginal = "auto"} (with \eqn{n \ge 8}) or \code{"histogram"}. Conditional bounds and their status
+them. Scatter and ranked views support \code{\link[=as_ggplot]{as_ggplot()}}; the other views require
+their base renderer or custom graphics. Conditional bounds and their status
 remain separate from calibration-inclusive uncertainty.
 }
-\section{What this screening means}{
+\section{Reading the bias screen}{
 
-\code{estimate_bias()} summarizes additional cell departures from the fitted MFRM.
-It is best read as a targeted screening tool for potentially noteworthy
-cells or facet combinations that may merit substantive review.
-}
-
-\section{What this screening does not justify}{
-
+Read \code{summary(bias)} for magnitude/availability, then \code{bias$table} for cells.
+Larger absolute \verb{Bias Size} or \code{t} values prompt substantive review;
+choose meaningful magnitudes in native units and inspect expected-score
+consequences. The default \eqn{|t| \ge 2} is not a validated fairness rule.
+A flag does not establish bias or construct-irrelevant variance. The absence
+of flags does not establish absence of interaction.
 \itemize{
-\item \code{t} and \code{Prob.} are screening metrics, not formal inferential quantities.
-\item A flagged interaction cell is not, by itself, proof of rater bias or
-construct-irrelevant variance.
-\item Non-flagged cells should not be over-read as evidence that interaction
-effects are absent.
+\item \verb{Bias Size}: additional cell shift \eqn{b_{jc}} in native ability units;
+GPCM adjacent log odds change by \eqn{a b_{jc}}.
+\item \code{S.E.}: conditional information SE holding calibration fixed; \code{t}/\code{Prob.}
+are screening metrics, not formal inferential evidence.
+\item \verb{Expctd Score} and \verb{Obs-Exp Average}: baseline expectation and raw-score
+discrepancy. \code{AfterBiasExpectedScore} and \code{AfterBiasObsExpAverage} give the
+adjusted expectation and remaining discrepancy after the shift.
+\item GPCM \verb{LR ChiSq}, \verb{LR Prob.} and \verb{Profile CI Lower}/\verb{Profile CI Upper}:
+fixed-calibration conditional likelihood checks. \verb{Profile CI Status = "limited by search range"} records a search limit, not an LR endpoint.
+They neither propagate calibration uncertainty nor establish fairness.
 }
 }
 
-\section{Interpreting output}{
+\section{Screening reference and availability}{
 
-Use \code{summary} for global magnitude, then inspect \code{table} for cell-level
-interaction effects.
 
-Prioritize rows with:
-\itemize{
-\item larger \verb{|Bias Size|}, assessed against a substantively chosen threshold
-in native ability units and its effect on expected scores, rather than
-a universal small/large-effect rule
-\item larger \verb{|t|} among the screening metrics (the default review rule is
-\eqn{|t| \ge 2}, not a validated fairness decision)
-\item smaller \code{Prob.} among the screening metrics
-}
-
-Use \verb{Bias Size} for the direction of the departure from the baseline model.
-\verb{Expctd Score} and \verb{Obs-Exp Average} use the main-analysis expectations,
-before adding the cell shift. \code{AfterBiasExpectedScore} and
-\code{AfterBiasObsExpAverage} retain the remaining discrepancy after fitting it.
 Cell t reference df uses weighted count minus 1. This matches the executed
 FACETS 4.5.0 equal-count binary example; a manual count-minus-2 description
 is a distinct convention and does not establish version-wide equivalence.
@@ -332,79 +316,14 @@ conditional cell problems. These passes do not refit person or facet
 parameters, and increasing \code{max_iter} does not turn this screen into a
 jointly fitted interaction model.
 
-
-For \code{summary()}:
-\itemize{
-\item \code{overview}: interaction order, analyzed cells, and effect-size profile.
-\item \code{chi_sq}: fixed-effect test block.
-\item \code{final_iteration}: end-of-loop status from the bias routine.
-\item \code{top_rows}: strongest bias contrasts by \verb{|t|}; \code{GPCM}
-summaries also retain the profile-likelihood review columns when present.
-}
-
-
-Start with \code{"scatter"} or \code{"ranked"} for triage, then confirm pattern shape
-using \code{"abs_t_hist"} and \code{"facet_profile"}.
-
-These views reuse the same estimates and flags. Agreement between views
-is not independent corroborating evidence of bias. Review exposure,
-calibration uncertainty and substantive explanations before drawing
-conclusions about a rater.
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Fit and diagnose model.
-\item Run \code{estimate_bias(...)} for target interaction facets.
-\item Review \code{summary(bias)} and \code{bias$table}.
-\item Visualize/report via \link[=plot.mfrm_fit]{plot(x, type = "bias")} and \code{\link[=build_fixed_reports]{build_fixed_reports()}}.
-}
-
-
-For \code{summary()}:
-\enumerate{
-\item Estimate interactions with \code{\link[=estimate_bias]{estimate_bias()}}.
-\item Check \code{summary(bias)} for screen-positive and unstable cells.
-\item Use \code{\link[=bias_interaction_report]{bias_interaction_report()}} or \link[=plot.mfrm_fit]{plot(x, type = "bias")} for details.
-}
-}
-
-\section{Interpreting key output columns}{
-
-In \code{bias$table}, the most-used columns are:
-\itemize{
-\item \verb{Bias Size}: estimated additional cell shift \eqn{b_{jc}} in native
-ability units; in \code{GPCM}, adjacent log odds change by \eqn{a b_{jc}}
-\item \code{t} and \code{Prob.}: screening metrics, not formal inferential quantities
-\item \code{S.E.}: conditional information-based SE of the cell shift, with the
-calibration held fixed
-\item \verb{Obs-Exp Average}: observed-minus-baseline-expected average on the
-raw-score metric
-\item for \code{GPCM}, \verb{LR ChiSq}, \verb{LR Prob.}, and \verb{Profile CI Lower} /
-\verb{Profile CI Upper}: conditional profile-likelihood checks for a single
-additive bias shift, holding the fitted person, facet, step, and slope
-estimates fixed. Calibration uncertainty is not propagated. Check
-\verb{Profile CI Status}: \verb{limited by search range} marks a retained search
-limit, not a computed likelihood-ratio endpoint. These are screening
-approximations, not formal fairness tests.
-}
-
-The \code{chi_sq} element screens whether all interaction cells equal zero,
-using diagonal conditional SEs. It is not a full covariance test.
-Recreate older bias results with current diagnostics and \code{estimate_bias()};
-saved old expected-score and chi-square definitions are not relabeled.
-}
-
-\section{Recommended next step}{
-
-Use \link[=plot.mfrm_fit]{plot(x, type = "bias")} to inspect the flagged cells visually, then
-integrate the result with DFF, linking, or substantive scoring review before
-making formal claims about fairness or invariance.
-Save the \code{mfrm_bias} object for repeat use. \code{\link[=bias_interaction_report]{bias_interaction_report()}} adds
-explicit screening rules without refitting; plotting the saved report keeps
-those rules. \code{\link[=mfrm_results]{mfrm_results()}} has a separate bias-screen collection route;
-saving a standalone bias result does not automatically attach it there.
+The all-zero screen uses diagonal conditional SEs, not full cell covariance.
+For plots use \link[=plot.mfrm_fit]{plot(x, type = "bias")}; \code{\link[=build_fixed_reports]{build_fixed_reports()}}
+and \code{\link[=bias_interaction_report]{bias_interaction_report()}} support reporting without refitting. Integrate
+with DFF, linking and substantive scoring review before fairness claims.
+Saved reports retain their chosen screening rules. A standalone \code{mfrm_bias}
+does not automatically attach to \code{\link[=mfrm_results]{mfrm_results()}}' separate collection route.
+Recreate old bias results with current diagnostics and \code{estimate_bias()};
+old expected-score/chi-square definitions are not relabelled on loading.
 }
 
 \section{References}{
@@ -483,8 +402,15 @@ individual facet levels drive systematic interaction patterns.}
 }
 }
 
+\section{Reading bias plots}{
+
+Use scatter/ranked views to locate cells, then histogram/facet profiles for
+pattern summaries. They reuse the same estimates and flags, not independent
+evidence. Review exposure, calibration uncertainty and substantive explanations.
+}
+
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("estimate_bias", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.
@@ -513,7 +439,7 @@ extreme_bias <- estimate_bias(fit, diag, "Rater", "Criterion", xtreme = .5)
 head(extreme_bias$table[, c("Bias Size", "PrimaryBias", "BiasStatus", "SEBasis")])
 
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("summary.mfrm_bias", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_bias")
@@ -523,7 +449,7 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 1)
 summary(bias)
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_bias", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.
@@ -546,3 +472,6 @@ head(plot_data(p, "ranked_table"))
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=bias_interaction_report]{bias_interaction_report()}}, \link{mfrmr_plot_migration},
 \link{mfrmr_visual_diagnostics}
 }
+\concept{bias screening}
+\concept{confidence intervals}
+\concept{visual diagnostics}

@@ -126,7 +126,9 @@ Use this report to inspect:
 \item where each category has highest probability across theta
 \item where cumulative category probabilities cross .5
 \item whether adjacent categories cross in expected order
-\item whether probability bands look compressed (often sparse categories)
+\item which categories are most probable over only a narrow ability range.
+This is a property of the fitted curves, not an observed-frequency
+check; inspect category counts separately.
 }
 
 Recommended read order:

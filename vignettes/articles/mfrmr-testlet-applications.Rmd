@@ -9,9 +9,7 @@ vignette: >
 
 ```{r setup, include=FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
-knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",eval = !is_cran_check, collapse = TRUE, comment = "#>", cache = FALSE,
+knitr::opts_chunk$set(eval = !is_cran_check, collapse = TRUE, comment = "#>", cache = FALSE,
                      dev.args = list(bg = "white"))
 library(mfrmr)
 ```
@@ -27,7 +25,7 @@ coherence, range and pronunciation. In music they might concern timing,
 intonation and expression; in a clinical assessment, several indicators can
 refer to the same station. These substantive dimensions are not automatically
 interchangeable or manifestations of one ability. Choose the measurement
-purpose and grouping before fitting. The [testlet workflow](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlets.html)
+purpose and grouping before fitting. The [testlet workflow](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlets.html)
 explains membership, calibration, scoring and saved results.
 Its simulation comparison also shows why planning precision and actual scoring
 accuracy must be distinguished: accounting for dependence improved interval

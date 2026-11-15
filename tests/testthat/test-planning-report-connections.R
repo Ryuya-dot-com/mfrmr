@@ -162,3 +162,77 @@ test_that("numerical next actions separate evidence without changing readiness",
   expect_match(q$NextAction[q$Area == "Integration"], "does not promote readiness")
   expect_identical(f, saved$fit)
 })
+
+test_that("decision tables and printing explain new and saved uncertainty codes", {
+  saved <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+  readiness <- mfrmr_get_readiness_record(saved$fit)$fit
+  readiness$FitReadiness <- "ready"
+  readiness$InferenceReady <- TRUE
+  expected <- c("model-based precision", "mixed model-based and fallback precision",
+                "exploratory precision")
+  for (i in seq_along(expected)) {
+    level <- c("model_based", "hybrid", "exploratory")[i]
+    current <- mfrm_fit_decision_summary(readiness,
+      supports_formal_inference = FALSE, precision_tier = level)
+    expect_identical(current$FormalInference, "No")
+    expect_match(current$Why, paste0("(", expected[i], ")"), fixed = TRUE)
+    for (prefix in c("tier", "precision summary")) {
+      old <- current
+      old$Why <- paste0("The precision contract does not support formal inference (",
+                        prefix, ": ", level, ").")
+      old$NextAction <- "The stored readiness contract is not current"
+      before <- old
+      display <- mfrm_display_fit_decision(old)
+      expect_identical(display[1:3], old[1:3])
+      expect_match(display$Why, expected[i], fixed = TRUE)
+      expect_match(display$NextAction, "updated assessment", fixed = TRUE)
+      text <- paste(capture.output(print_fit_decision_section(old)), collapse = "\n")
+      expect_match(text, expected[i], fixed = TRUE)
+      expect_false(grepl("contract|tier:|precision summary:|model_based", text))
+      expect_identical(old, before)
+    }
+  }
+  text <- c("Unrelated explanation", NA_character_, "", "Review (tier: unrecognized).")
+  expect_identical(mfrm_decision_display_text(text),
+    c(text[1:3], "Review (precision assumptions require review)."))
+  expect_identical(mfrm_display_fit_decision(data.frame()), data.frame())
+})
+
+test_that("saved decisions retain status across summaries, report tables and HTML", {
+  saved <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+  apa <- build_apa_outputs(saved$fit, saved$diagnostics)
+  res <- mfrm_results(saved$fit, diagnostics = saved$diagnostics, include = "fit", compute = "never")
+  report <- mfrm_report(res)
+  old <- apa$decision
+  old$FormalInference <- "No"
+  old$Why <- "The precision contract does not support formal inference (tier: hybrid)."
+  old$NextAction <- paste(
+    "The fit-readiness requirements were satisfied, but the precision contract does not support",
+    "formal inference; keep the draft exploratory and review",
+    "`precision_review_report()` before substantive use."
+  )
+  apa$decision <- report$decision <- report$tables$decision <- old
+  report$markdown <- mfrm_report_markdown_table(old)
+  before <- list(apa = apa, report = report, diagnostics = saved$diagnostics)
+  expected <- mfrm_display_fit_decision(old)
+  expect_identical(summary(apa)$decision, expected)
+  expect_identical(summary(report)$decision, expected)
+  expect_identical(mfrm_report_html_tables(report)$decision, expected)
+  expect_identical(mfrm_report_html_tables(report)$report_summary_decision, expected)
+  html <- mfrm_report_html(report)$html
+  expect_match(html, "mixed model-based and fallback precision", fixed = TRUE)
+  expect_false(grepl("precision contract|tier: hybrid|readiness contract", html))
+  for (x in list(summary(apa), summary(report), summary(saved$diagnostics))) {
+    printed <- paste(capture.output(print(x)), collapse = "\n")
+    expect_false(grepl("Precision tier|precision contract|tier: hybrid|readiness contract", printed))
+  }
+  expect_match(paste(capture.output(print(summary(saved$diagnostics))), collapse = "\n"),
+               "Precision basis: Model-based precision", fixed = TRUE)
+  expect_identical(list(apa = apa, report = report, diagnostics = saved$diagnostics), before)
+  path <- tempfile(fileext = ".rds")
+  saveRDS(before, path)
+  reloaded <- readRDS(path)
+  expect_identical(summary(reloaded$apa)$decision, expected)
+  expect_identical(summary(reloaded$report)$decision, expected)
+  expect_identical(reloaded, before)
+})

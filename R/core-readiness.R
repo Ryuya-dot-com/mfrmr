@@ -24,7 +24,7 @@ mfrmr_readiness_contract_states <- function() {
     ),
     BoundaryState = c(
       "finite", "has_exclusions", "not_applicable", "not_evaluated",
-      "legacy_unknown"
+      "legacy_unknown", "nonfinite_maximum"
     ),
     NumericalState = c(
       "ready", "review", "failed", "not_run", "legacy_unknown"
@@ -107,7 +107,7 @@ mfrmr_readiness_derive_fit <- function(InputState, EstimabilityState,
       "population_assumption_linked", "weak_information", "not_evaluated"
     ) ||
     CategoryState %in% c("weak_information", "not_evaluated") ||
-    BoundaryState == "not_evaluated" ||
+    BoundaryState %in% c("not_evaluated", "nonfinite_maximum") ||
     NumericalState == "review"
   if (review) return("review")
 
@@ -618,6 +618,68 @@ mfrmr_readiness_additive_candidate_unpropagated <- function(
          c("unbounded_low", "unbounded_high"))
 }
 
+mfrmr_mml_additive_boundary_evidence <- function(config) {
+  centered_scope <- identical(config$centering_scope, "facet") ||
+    (!is.null(config$gpcm_spec$component_levels) && identical(config$centering_scope, "remainder"))
+  if (!identical(config$method, "MML") || !config$model %in% c("RSM", "PCM", "GPCM") ||
+      !identical(config$facet_shrinkage %||% "none", "none") ||
+      !centered_scope) return(character())
+  audit <- config$category_support_audit
+  local <- audit$local_support
+  categories <- audit$category_table
+  if (!is.data.frame(local) || !is.data.frame(categories)) return(character())
+  # A centered single-level shift needs an offset elsewhere in the predictor.
+  # A free population intercept can supply it without changing the residual SD.
+  unrestricted <- vapply(config$facet_specs, function(spec)
+    spec$n_params > 0L && all(is.na(spec$anchors)) &&
+      all(is.na(spec$groups)), logical(1))
+  common_location <- vapply(names(config$facet_specs), function(facet)
+    unrestricted[[facet]] && !isTRUE(config$facet_specs[[facet]]$centered) &&
+      is.finite(config$facet_signs[[facet]]) && config$facet_signs[[facet]] != 0,
+    logical(1))
+  pop <- config$population_spec
+  intercept <- match("(Intercept)", pop$design_columns)
+  common_mean <- isTRUE(pop$active) && !is.na(intercept) &&
+    is.matrix(pop$design_matrix) && nrow(pop$design_matrix) > 0L &&
+    isTRUE(all(pop$design_matrix[, intercept] == 1))
+  common_shift <- any(common_location) || common_mean
+  free <- lapply(names(config$facet_specs), function(facet) {
+    spec <- config$facet_specs[[facet]]
+    available <- (!isTRUE(spec$centered) ||
+      (unrestricted[[facet]] && common_shift)) && spec$n_params > 0L &&
+      is.finite(config$facet_signs[[facet]]) && config$facet_signs[[facet]] != 0
+    stats::setNames(available & is.na(spec$anchors) & is.na(spec$groups), spec$levels)
+  })
+  names(free) <- names(config$facet_specs)
+  reasons <- character()
+  # Positive GPCM slopes multiply the complete adjacent predictor. Holding
+  # them fixed preserves these location/step paths and their monotonicity.
+  for (i in seq_len(nrow(local))) {
+    facet <- as.character(local$Facet[i]); level <- as.character(local$Level[i])
+    extreme <- local$ObservedPositiveWeightCategories[i] %in%
+      as.character(c(config$rating_min, config$rating_max))
+    if (extreme && isTRUE(free[[facet]][level]))
+      reasons <- c(reasons, "mml_extreme_free_facet_location")
+  }
+  step_free <- vapply(config$step_specs, function(s)
+    s$n_params > 0L && all(is.na(s$anchors)), logical(1))
+  endpoint_zero <- categories$BoundaryCategory & categories$WithinScopeWeightedN <= 0
+  global_zero <- categories$BoundaryCategory & categories$GlobalWeightedN <= 0
+  # A common location shift compensates recentering all free step ladders.
+  if (common_shift && length(step_free) > 0L && all(step_free) && any(global_zero))
+    reasons <- c(reasons, "mml_unobserved_global_endpoint")
+  if (config$model %in% c("PCM", "GPCM")) {
+    owner <- config$step_facet
+    for (level in names(free[[owner]])) {
+      scope <- paste0(owner, "=", level)
+      if (isTRUE(free[[owner]][level]) && isTRUE(step_free[level]) &&
+          any(endpoint_zero & categories$StepScope == scope))
+        reasons <- c(reasons, "mml_unobserved_owner_endpoint")
+    }
+  }
+  unique(reasons)
+}
+
 mfrmr_readiness_boundary_component <- function(config) {
   audit <- config$boundary_audit %||% list()
   person <- as.data.frame(audit$readiness %||% data.frame(),
@@ -648,6 +710,13 @@ mfrmr_readiness_boundary_component <- function(config) {
                                  stringsAsFactors = FALSE)
 
   if (!identical(method, "JML")) {
+    additive <- mfrmr_mml_additive_boundary_evidence(config)
+    if (length(additive)) {
+      return(mfrmr_readiness_component_row("boundary", "nonfinite_maximum", FALSE,
+        c("mml_additive_finite_maximum_absent", additive),
+        "unpenalized_free_location_or_endpoint_path",
+        "mml_additive_support_path_v3"))
+    }
     free_gpcm_slopes <- identical(model, "GPCM") &&
       as.integer(config$gpcm_spec$n_params %||% 0L) > 0L
     return(mfrmr_readiness_component_row(
@@ -898,6 +967,20 @@ mfrmr_get_readiness_record <- function(fit) {
         as.character(stored_fit$ReadinessContractVersion[1]),
         mfrmr_readiness_contract_version()
       )) {
+    # Correct old Person-only boundary labels in a derived record. Retain the
+    # saved optimizer coordinates and never promote their inference status.
+    if (length(mfrmr_mml_additive_boundary_evidence(fit$config)) &&
+        !identical(stored$fit$BoundaryState, "nonfinite_maximum")) {
+      boundary <- mfrmr_readiness_boundary_component(fit$config)
+      stored$components[stored$components$Component == "boundary", ] <- boundary
+      stored$fit$BoundaryState <- "nonfinite_maximum"
+      if (!stored$fit$FitReadiness %in% c("blocked", "legacy_unknown"))
+        stored$fit$FitReadiness <- "review"
+      stored$fit$InferenceReady <- FALSE
+      stored$fit$ReasonCodes <- mfrmr_readiness_merge_codes(stored$components$ReasonCodes)
+      stored$fit$AuditProvenance <- paste0(stored$fit$AuditProvenance,
+        ";mml_additive_support_path_display")
+    }
     return(stored)
   }
 

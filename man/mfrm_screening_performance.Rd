@@ -59,7 +59,7 @@ Also for \code{summary()}: An object returned by \code{mfrm_screening_performanc
 
 \item{condition}{Optional condition labels to include, matched exactly.}
 
-\item{draw}{Logical; \code{FALSE} returns the \code{ggplot} object without opening a device.}
+\item{draw}{Logical; \code{FALSE} returns exact plot data without opening a device.}
 }
 \value{
 An \code{mfrm_screening_performance} object with \code{by_target}, \code{by_family},
@@ -73,8 +73,8 @@ unknown outcome negative or positive. These latter bounds are not confidence
 intervals. A family with no relevant targets has zero planned trials and
 undefined rates. \code{CompleteScreens} counts fully observed families.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object. Use \code{\link[=plot_data]{plot_data()}} to inspect
-underlying tables and notes.
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object. Use \code{\link[=plot_data]{plot_data()}} for custom
+graphics; automatic \code{\link[=as_ggplot]{as_ggplot()}} conversion is unavailable.
 }
 \description{
 In a simulation where the true problem status is known, summarize how often

@@ -3,6 +3,12 @@
 \name{facets_feature_coverage}
 \alias{facets_feature_coverage}
 \title{FACETS Feature Coverage Matrix}
+\usage{
+facets_feature_coverage(
+  status = c("all", "implemented", "supported_with_caveat", "partial", "not_implemented",
+    "not_targeted")
+)
+}
 \arguments{
 \item{status}{Which rows to return. \code{"all"} returns the full matrix.
 Other values filter by the \code{Status} column.}
@@ -25,7 +31,7 @@ A data.frame with columns:
 }
 }
 \description{
-\code{facets_guide('coverage')} summarizes how \code{mfrmr} maps
+\code{facets_feature_coverage()} summarizes how \code{mfrmr} maps
 the main FACETS output-table, output-file, and graph-menu surface to package
 functions. It is a surface-coverage guide, not a statement that estimands,
 conditioning, extreme-score handling, degrees of freedom, or numerical
@@ -87,34 +93,18 @@ For observed-score assessment planning, \code{\link[=mfrm_g_study]{mfrm_g_study(
 multivariate component designs. The older \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} /
 \code{\link[=mfrm_d_study]{mfrm_d_study()}} pair has a different main-effects decomposition. Neither
 route reproduces the FACETS interface to the external \code{gtheory} package.
-For balanced ANOVA, \code{\link[=confint.mfrm_multivariate_gstudy]{confint.mfrm_multivariate_gstudy()}} adds component
-SEs/intervals for a score or fixed composite under normal random effects;
-two-score covariance intervals have explicit generalized and conservative
-choices with signed bounds. Explicit \code{reml_profile} variance and covariance intervals
-also accept MINQUE(0), with a separate REML center and no sampling SE;
-two-score covariance profiles fit a joint normal model and retain signed bounds.
-\code{\link[=vcov.mfrm_multivariate_gstudy]{vcov.mfrm_multivariate_gstudy()}} separately supplies component sampling
-covariance/SEs for balanced ANOVA and identifiable MINQUE sources using
-normal product moments; these describe the original estimator, not REML.
-Individual G/Phi intervals from balanced two-crossed-facet sources default
-to approximate MLS null inversion. Undefined MLS widths are conservatively
-retained and flagged; numerical availability does not guarantee coverage.
-G/Phi and SEM have an explicit experimental \code{reml_profile} option for balanced or
-identifiable incomplete sources; the separate REML fit retains original
-ANOVA/MINQUE points and does not guarantee finite-sample or boundary coverage.
-With \code{reference}, it maps one shared profile interval for one-facet plans
-or nested plans with a common future child count, including incomplete sources.
-Balanced crossed G also accepts explicit experimental \code{score} intervals,
-retaining empty-set and numerical diagnostics; Phi is not supplied by this route.
-\code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}
-supplies a separate, limited normal-theory paired-plan calculation. See
-\code{vignette("mfrmr-gtheory", package = "mfrmr")} for a runnable workflow.
+Component and plan intervals have design-specific assumptions and methods;
+see \code{\link[=confint.mfrm_multivariate_gstudy]{confint.mfrm_multivariate_gstudy()}}, \code{\link[=vcov.mfrm_multivariate_gstudy]{vcov.mfrm_multivariate_gstudy()}},
+\code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}} and \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}.
+These distinguish sampling SEs, measurement SEM, approximate intervals and
+conservative enclosures; computable bounds do not guarantee coverage.
+\code{vignette("mfrmr-gtheory", package = "mfrmr")} gives a worked example.
 }
 \examples{
-facets_guide('coverage')
-facets_guide('coverage', "partial")
-facets_guide('coverage', "supported_with_caveat")
-facets_guide('coverage', "not_implemented")
+facets_feature_coverage()
+facets_feature_coverage("partial")
+facets_feature_coverage("supported_with_caveat")
+facets_feature_coverage("not_implemented")
 }
 \references{
 Linacre, J. M. (2026). \emph{A user's guide to FACETS, version 4.5.0}.
@@ -122,8 +112,7 @@ Winsteps.com. See the guide's output-table index for the documented
 FACETS files, plots, and graphs.
 }
 \seealso{
-\code{\link[=facets_guide]{facets_guide()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
-\code{\link[=read_facets_results]{read_facets_results()}}, \code{\link[=facets_fit_review]{facets_fit_review()}},
-\link{mfrmr_gpcm_scope}
+\code{\link[=facets_positioning_guide]{facets_positioning_guide()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
+\code{\link[=facets_fit_df_guide]{facets_fit_df_guide()}}, \code{\link[=read_facets_fit_table]{read_facets_fit_table()}}, \code{\link[=facets_fit_review]{facets_fit_review()}},
+\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
 }
-\keyword{internal}

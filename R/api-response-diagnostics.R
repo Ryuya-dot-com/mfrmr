@@ -177,7 +177,7 @@
 #' @seealso [plot.mfrm_response_diagnostics()], [mfrm_results()],
 #'   [score_mfrm_random_rater()], [predict.mfrm_testlet()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("mfrm_response_diagnostics", run.dontrun = TRUE)
 #' \dontrun{
 #' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))

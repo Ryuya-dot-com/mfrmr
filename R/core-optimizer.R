@@ -51,20 +51,6 @@ mfrm_grad_mml_complete_data_core <- function(params,
   n <- length(idx$score_k)
   if (n == 0L) return(rep(0, sum(unlist(sizes))))
 
-  if (is.null(logprob_bundle) && mfrm_use_cpp11_backend(config)) {
-    stats <- mfrm_mml_eval_cpp11_stats(
-      idx = idx,
-      config = config,
-      quad = quad,
-      params = params,
-      base_eta = base_eta,
-      step_cum = step_cum,
-      include_grad = TRUE,
-      external_obs_posterior = obs_posterior
-    )
-    return(mfrm_mml_grad_from_stats(stats, params, idx, config))
-  }
-
   score_k <- idx$score_k
   weight <- idx$weight
   if (is.null(logprob_bundle)) {
@@ -311,7 +297,6 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
   probability_bundle <- NULL
   logprob_bundle <- NULL
   posterior_bundle <- NULL
-  jml_stats <- NULL
   mml_stats <- NULL
   shared_evaluations <- 0L
   gradient_builds <- 0L
@@ -332,7 +317,6 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
     probability_bundle <<- NULL
     logprob_bundle <<- NULL
     posterior_bundle <<- NULL
-    jml_stats <<- NULL
     mml_stats <<- NULL
     shared_evaluations <<- shared_evaluations + 1L
 
@@ -345,21 +329,8 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
       return(invisible(NULL))
     }
 
-    use_cpp <- mfrm_use_cpp11_backend(config)
-    want_grad <- isTRUE(reuse_probability_workspace) || isTRUE(need_grad)
-
     if (identical(method, "JML")) {
-      if (use_cpp) {
-        jml_stats <<- mfrm_jml_eval_cpp11_stats(
-          idx = idx,
-          config = config,
-          params = cache$params(),
-          eta = cache$eta(),
-          step_cum = cache$step_cum(),
-          include_grad = want_grad
-        )
-        cached_value <<- jml_stats$value
-      } else if (isTRUE(reuse_probability_workspace)) {
+      if (isTRUE(reuse_probability_workspace)) {
         probability_bundle <<- mfrm_jml_probability_bundle(
           eta = cache$eta(),
           score_k = idx$score_k,
@@ -377,15 +348,12 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
       }
     } else if (length(idx$score_k) == 0L) {
       cached_value <<- 0
-    } else if (use_cpp) {
+    } else if (mfrm_use_fused_mml(config)) {
       mml_stats <<- mfrm_mml_eval_cpp11_stats(
-        idx = idx,
-        config = config,
-        quad = quad,
-        params = cache$params(),
-        base_eta = cache$base_eta(),
+        idx = idx, config = config, quad = quad,
+        params = cache$params(), base_eta = cache$base_eta(),
         step_cum = cache$step_cum(),
-        include_grad = want_grad
+        include_grad = isTRUE(reuse_probability_workspace) || isTRUE(need_grad)
       )
       cached_value <<- mml_stats$value
     } else {
@@ -412,7 +380,7 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
   list(
     value = function(par) {
       same <- identical(par, cached_par)
-      ensure_shared(par, need_grad = FALSE)
+      ensure_shared(par)
       if (same) value_hits <<- value_hits + 1L
       cached_value
     },
@@ -423,28 +391,22 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
         return(cached_gradient)
       }
       cached_gradient <<- if (identical(method, "JML")) {
-        if (!is.null(jml_stats) && !is.null(jml_stats$residual)) {
-          mfrm_jml_grad_from_stats(jml_stats, cache$params(), idx, config)
-        } else {
-          mfrm_grad_jml_cached(
-            cache, idx, config, sizes,
-            probability_bundle = probability_bundle
-          )
-        }
+        mfrm_grad_jml_cached(
+          cache, idx, config, sizes,
+          probability_bundle = probability_bundle
+        )
+      } else if (!is.null(mml_stats$marginal_residual)) {
+        mfrm_mml_grad_from_stats(mml_stats, cache$params(), idx, config)
       } else {
-        if (!is.null(mml_stats) && !is.null(mml_stats$marginal_residual)) {
-          mfrm_mml_grad_from_stats(mml_stats, cache$params(), idx, config)
-        } else {
-          mfrm_grad_mml_cached(
-            cache, idx, config, sizes, quad,
-            logprob_bundle = if (isTRUE(reuse_probability_workspace)) {
-              logprob_bundle
-            } else {
-              NULL
-            },
-            posterior_bundle = posterior_bundle
-          )
-        }
+        mfrm_grad_mml_cached(
+          cache, idx, config, sizes, quad,
+          logprob_bundle = if (isTRUE(reuse_probability_workspace)) {
+            logprob_bundle
+          } else {
+            NULL
+          },
+          posterior_bundle = posterior_bundle
+        )
       }
       gradient_builds <<- gradient_builds + 1L
       cached_gradient
@@ -513,74 +475,50 @@ make_mfrm_em_mstep_evaluator <- function(cache, idx, config, sizes, quad,
   cached_value <- NULL
   cached_gradient <- NULL
   logprob_bundle <- NULL
-  em_stats <- NULL
 
-  ensure_shared <- function(par, need_grad = FALSE) {
+  ensure_shared <- function(par) {
     if (identical(par, cached_par)) return(invisible(NULL))
     cache$ensure(par)
     # See make_mfrm_direct_evaluator(): never retain an optimizer-owned
     # callback buffer as the cache key.
     cached_par <<- par + 0
     cached_gradient <<- NULL
-    logprob_bundle <<- NULL
-    em_stats <<- NULL
-    if (length(idx$score_k) > 0L &&
-        !identical(config$model, "GPCM") &&
-        !isTRUE(config$population_spec$active) &&
-        mfrm_use_cpp11_backend(config)) {
-      em_stats <<- mfrm_mml_eval_cpp11_stats(
-        idx = idx,
-        config = config,
-        quad = quad,
-        params = cache$params(),
-        base_eta = cache$base_eta(),
-        step_cum = cache$step_cum(),
-        include_grad = isTRUE(reuse_probability_workspace) || isTRUE(need_grad),
-        external_obs_posterior = obs_posterior
-      )
-      cached_value <<- em_stats$value
-    } else {
-      logprob_bundle <<- mfrm_mml_logprob_bundle(
-        idx = idx,
-        config = config,
-        quad = quad,
-        params = cache$params(),
-        base_eta = cache$base_eta(),
-        step_cum = cache$step_cum(),
-        include_probs = isTRUE(reuse_probability_workspace)
-      )
-      cached_value <<- -sum(logprob_bundle$log_prob_mat * obs_posterior)
-    }
+    logprob_bundle <<- mfrm_mml_logprob_bundle(
+      idx = idx,
+      config = config,
+      quad = quad,
+      params = cache$params(),
+      base_eta = cache$base_eta(),
+      step_cum = cache$step_cum(),
+      include_probs = isTRUE(reuse_probability_workspace)
+    )
+    cached_value <<- -sum(logprob_bundle$log_prob_mat * obs_posterior)
     invisible(NULL)
   }
 
   list(
     value = function(par) {
-      ensure_shared(par, need_grad = FALSE)
+      ensure_shared(par)
       cached_value
     },
     gradient = function(par) {
-      ensure_shared(par, need_grad = TRUE)
+      ensure_shared(par)
       if (is.null(cached_gradient)) {
-        cached_gradient <<- if (!is.null(em_stats) && !is.null(em_stats$marginal_residual)) {
-          mfrm_mml_grad_from_stats(em_stats, cache$params(), idx, config)
-        } else {
-          mfrm_grad_mml_complete_data_core(
-            params = cache$params(),
-            base_eta = cache$base_eta(),
-            idx = idx,
-            config = config,
-            sizes = sizes,
-            quad = quad,
-            obs_posterior = obs_posterior,
-            step_cum = cache$step_cum(),
-            logprob_bundle = if (isTRUE(reuse_probability_workspace)) {
-              logprob_bundle
-            } else {
-              NULL
-            }
-          )
-        }
+        cached_gradient <<- mfrm_grad_mml_complete_data_core(
+          params = cache$params(),
+          base_eta = cache$base_eta(),
+          idx = idx,
+          config = config,
+          sizes = sizes,
+          quad = quad,
+          obs_posterior = obs_posterior,
+          step_cum = cache$step_cum(),
+          logprob_bundle = if (isTRUE(reuse_probability_workspace)) {
+            logprob_bundle
+          } else {
+            NULL
+          }
+        )
       }
       cached_gradient
     }
@@ -1063,13 +1001,6 @@ run_mfrm_direct_optimization <- function(start,
       if (isTRUE(polish_triggered)) {
         paste0("Limited numerical polishing attempted ", length(stages) - 1L,
                " additional stage(s). ")
-      } else {
-        ""
-      },
-      if (identical(opt$optimizer_diagnostics$ConvergenceStatus, "iteration_limit")) {
-        paste0("High-dimensional or sparse designs (maxit = ", maxit,
-               ", free parameters = ", length(start),
-               ") may require a larger `maxit` (for example maxit = 1000 or 2000). ")
       } else {
         ""
       },

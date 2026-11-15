@@ -120,8 +120,8 @@ and \code{measures}, \code{thresholds} and \code{settings}. Each result table id
 \code{Profile}, \code{Lower}, \code{Upper} and \code{Direction}; the remaining columns have
 the meanings documented by \code{\link[=mfrm_screening_performance]{mfrm_screening_performance()}}.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object carrying exact selected tables, settings,
-notes, and alternative text accessible via \code{\link[=plot_data]{plot_data()}}.
+For \code{plot()}: Invisibly, \code{mfrm_plot_data} with exact selected tables, settings,
+notes and alternative text. \code{\link[=as_ggplot]{as_ggplot()}} supports either style.
 }
 \description{
 See how detection and false-flag rates change when you change fit-screening

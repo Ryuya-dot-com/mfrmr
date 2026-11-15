@@ -9,9 +9,7 @@ vignette: >
 
 ```{r setup, include=FALSE}
 library(mfrmr)
-knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",collapse = TRUE, comment = "#>", fig.width = 8,
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 8,
   fig.height = 5, eval = isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false"))))
 ```
 
@@ -341,9 +339,9 @@ example does not claim to execute every one of them.
 
 `plot_data(picture, "nodes")`, `plot_data(picture, "edges")` and
 `plot_data(picture, "coordinates")` provide editable graph data. `source_edges`
-keeps the calculated graph when the picture is filtered. Both `plot()` and
-`as_ggplot()` render `ggplot` graph views directly, and you can also pass these
-tables to an external graph library if desired. For matrices, use
+keeps the calculated graph when the picture is filtered. Graph views do not
+automatically convert with `as_ggplot()`; use these tables with your chosen
+graph library. For matrices, use
 `plot_data(p, "matrix", format = "long")`; for a wide table, select explicit
 `value_cols` with `format = "long"`. Missing cells and identifiers remain.
 A long table does not make unlike quantities comparable.
@@ -357,7 +355,7 @@ raw <- plot_data(groups, "observations", type = "profile", feature = "Experience
 write.csv(raw, "feature-observations.csv", row.names = FALSE)
 ```
 
-The [feature lesson](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html#custom-distribution-plots)
+The [feature lesson](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.html#custom-distribution-plots)
 shows an editable raincloud plot from the new `observations` component. It
 retains individual values, cluster membership, missingness and inclusion.
 Parameter summaries, SEs and interval bounds are not raw replicates or posterior

@@ -133,26 +133,11 @@
 #' calibration uncertainty. The appropriate resampling unit follows the rating
 #' design, including dependencies across persons, tasks and raters.
 #'
-#' @section Where random forests belong:
-#' Wesolowski (2019) first used k-means on differential-rater-functioning
-#' indices to construct rater types, then random forests to predict those
-#' labels. That study motivates a supervised follow-up, not random forests as
-#' the clustering algorithm implemented here. Its features and targets differ
-#' from these residual correlations. In this supervised use, a forest combines
-#' predictions from bootstrap samples and random candidate feature subsets;
-#' it requires a declared prediction target and out-of-sample assessment.
-#'
-#' A classifier predicting exploratory groups can reproduce the grouping rule
-#' without establishing external validity. Fit feature transformations,
-#' measurement models and cluster discovery within training data, keep a
-#' separate test set and define how new units receive reference labels. Split
-#' at the intended generalization unit (for example new raters, persons or
-#' tasks); row-wise splitting of repeated ratings can leak information.
-#' Out-of-bag error alone does not validate labels constructed on all data.
-#' Report class balance, confusion matrices, discrimination/calibration where
-#' appropriate and independent substantive outcomes. Feature importance is
-#' predictive, not causal. This function does not fit a random forest; use
-#' established ML packages for a separately designed prediction study.
+#' Wesolowski (2019) used a different workflow: k-means on differential-rater
+#' indices, followed by random forests to predict the resulting groups. This
+#' function implements neither that classifier nor its features. Predicting
+#' exploratory group labels would require a separate target and independent
+#' validation; it does not validate the groups themselves.
 #'
 #' @return An `mfrm_residual_network` with `nodes`, all `pairs`, displayed
 #'   `edges`, the correlation `matrix`, aggregated `residuals`, `cell_counts`,
@@ -170,10 +155,10 @@
 #' Golino, H. F., & Epskamp, S. (2017). Exploratory graph analysis: A new
 #' approach for estimating the number of dimensions in psychological research.
 #' *PLOS ONE, 12*, e0174035. \doi{10.1371/journal.pone.0174035}.
-#' @seealso [k-means details][mfrm_cluster_kmeans], [hierarchical clustering details][mfrm_cluster_hierarchical],
+#' @seealso [mfrm_cluster_kmeans()], [mfrm_cluster_hierarchical()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("mfrm_residual_network", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -287,12 +272,11 @@ print.mfrm_residual_network <- function(x, ...) {
 #' printed into the figure.
 #' @param type `"network"`, `"matrix"` or `"dendrogram"`.
 #' @param preset Visual preset; see [mfrmr_visual_diagnostics].
-#' @param draw Whether to print the `ggplot` figure; `FALSE` returns the `ggplot`
-#'   object without drawing.
-#' @return For `plot()`: Invisibly, a `ggplot` object. [plot_data()] extracts the
-#'   selected view, saved matrix, nodes, pairs, edges, clustering, settings and
-#'   interpretation notes. Plotting does not recompute residuals or clustering.
-#'   Save the analysis object to redraw every view.
+#' @param draw Whether to draw with base graphics.
+#' @return For `plot()`: Invisibly, an `mfrm_plot_data` containing the selected view, saved
+#'   matrix, nodes, pairs, edges, clustering, settings and interpretation notes.
+#'   Plotting does not recompute residuals or clustering. Save the analysis
+#'   object to redraw every view. The matrix supports [as_ggplot()].
 #' @export
 plot.mfrm_residual_network <- function(x, type = c("network", "matrix", "dendrogram"),
     preset = c("standard", "publication", "compact", "monochrome"), draw = TRUE, ...) {
@@ -303,10 +287,63 @@ plot.mfrm_residual_network <- function(x, type = c("network", "matrix", "dendrog
     stop("No clustering tree is available: ", x$clustering$reason, call. = FALSE)
   n <- nrow(x$nodes); angle <- 2 * pi * (seq_len(n) - 1L) / n
   layout <- data.frame(Level = x$nodes$Level, X = cos(angle), Y = sin(angle))
-  out <- new_mfrm_plot_data(if (type == "matrix") "local_dependence_heatmap" else "residual_network",
+  if (isTRUE(draw)) {
+    apply_plot_preset(style)
+    old <- graphics::par(c("mar", "xpd")); on.exit(graphics::par(old), add = TRUE)
+    if (type == "dendrogram") {
+      graphics::par(mar = c(4, 2, 1, 10))
+      tree <- stats::dendrapply(stats::as.dendrogram(x$clustering$tree), function(node) {
+        if (stats::is.leaf(node)) {
+          label <- attr(node, "label")
+          attr(node, "label") <- paste0(label, " [", x$clustering$membership[[label]], "]")
+        }
+        node
+      })
+      graphics::plot(tree, horiz = TRUE, main = "", axes = FALSE,
+        nodePar = list(lab.cex = .85, pch = NA),
+        xlab = paste(x$settings$Linkage, "linkage distance"))
+      graphics::axis(1)
+    } else if (type == "matrix") {
+      graphics::par(mar = c(6, 6, 3, 2))
+      graphics::plot(NA, xlim = c(.5, n + .5), ylim = c(.5, n + .5),
+        xlab = "", ylab = "", axes = FALSE, xaxs = "i", yaxs = "i", asp = 1)
+      palette <- grDevices::hcl.colors(101, "RdBu", rev = TRUE)
+      for (i in seq_len(n)) for (j in seq_len(n)) {
+        r <- x$matrix[i, j]
+        col <- if (is.finite(r)) palette[1L + round((r + 1) * 50)] else "grey80"
+        graphics::rect(i - .5, j - .5, i + .5, j + .5, col = col, border = "white")
+        if (n <= 12L && is.finite(r)) graphics::text(i, j, sprintf("%.2f", r),
+          col = if (abs(r) > .65) "white" else "black")
+      }
+      graphics::axis(1, seq_len(n), x$nodes$Level, las = 2)
+      graphics::axis(2, seq_len(n), x$nodes$Level, las = 1)
+      graphics::legend("top", inset = c(0, -.12), legend = c("-1", "0", "+1", "Unavailable"),
+        fill = c(palette[c(1, 51, 101)], "grey80"), horiz = TRUE,
+        cex = .75, bty = "n", xpd = NA)
+    } else {
+      graphics::par(mar = c(1, 1, 2, 1))
+      graphics::plot(layout$X, layout$Y, type = "n", axes = FALSE, xlab = "", ylab = "",
+        xlim = c(-1.5, 1.5), ylim = c(-1.4, 1.4), asp = 1)
+      for (i in seq_len(nrow(x$edges))) {
+        a <- match(x$edges$Level1[i], layout$Level); b <- match(x$edges$Level2[i], layout$Level)
+        r <- x$edges$ResidualCor[i]
+        color <- if (style$name == "monochrome") "grey35" else if (r > 0) "#B2182B" else "#2166AC"
+        graphics::segments(layout$X[a], layout$Y[a], layout$X[b], layout$Y[b],
+          col = color, lty = if (r > 0) 1 else 2, lwd = 1 + 4 * abs(r))
+      }
+      graphics::points(layout$X, layout$Y, pch = 21, bg = "white", cex = 2)
+      for (i in seq_len(n)) graphics::text(layout$X[i] * 1.12, layout$Y[i] * 1.12,
+        layout$Level[i], cex = .85, adj = c(
+          if (layout$X[i] > .7) 0 else if (layout$X[i] < -.7) 1 else .5,
+          if (layout$Y[i] > .7) 0 else if (layout$Y[i] < -.7) 1 else .5))
+      graphics::legend("top", legend = c("Positive", "Negative"), lty = c(1, 2),
+        col = if (style$name == "monochrome") rep("grey35", 2) else c("#B2182B", "#2166AC"),
+        bty = "n", horiz = TRUE)
+    }
+  }
+  invisible(new_mfrm_plot_data(if (type == "matrix") "local_dependence_heatmap" else "residual_network",
     list(type = type, matrix = x$matrix, nodes = x$nodes, pairs = x$pairs,
       edges = x$edges, layout = layout, clustering = x$clustering,
       settings = x$settings, facet = x$settings$Facet, notes = x$notes,
-      title = "Residual association exploration", preset = style$name))
-  .mfrm_finalize_ggplot(out, draw = draw)
+      title = "Residual association exploration", preset = style$name)))
 }

@@ -79,11 +79,23 @@ the reduced model's value from the full model's value. This is not explained
 score variance or McKelvey--Zavoina R-squared; no universal effect-size cutoff
 is applied.
 
+In \code{coefficients}, \code{Parameter} distinguishes thresholds from slopes;
+\code{Estimate} is a logit coefficient, not a severity or an odds ratio. For
+M1--M3, \code{z} is the matching slope in the reference group. Divide it by
+\code{matching$Scale} for a one-unit change in the original matching variable.
+In M3, add the corresponding \code{z:g} interaction for a focal group's slope.
+A positive group coefficient means higher focal-group upper-tail odds at
+\code{matching = Center} (where \code{z = 0}). With an interaction it is not a
+constant group effect. Thresholds are cumulative-logit cutpoints on the
+declared category order, not RSM/PCM step offsets.
+
 \code{contrasts} gives M3's reference/focal upper-tail odds ratio at the lower
 endpoint, midpoint and upper endpoint of the groups' overlapping matching
 ranges. Its log is \code{-(beta_g + beta_z:g * z)}; a value above 1 favors higher
-reference scores. This applies to each category cut under proportional odds.
-These are point estimates, not simultaneous intervals. Fits use all complete
+reference scores. Thus at \code{Center} it is the reciprocal of the
+exponentiated group coefficient. \code{OverlapMid} need not equal \code{Center}:
+one uses the shared range, the other the pooled range. This applies to each
+category cut under proportional odds. These are point estimates, not simultaneous intervals. Fits use all complete
 responses, including those outside that overlap. Range overlap alone does not
 establish comparable distributions or adequate local support. Each group
 must have varying matching values and their ranges must overlap with positive
@@ -129,7 +141,7 @@ agreement with \code{\link[=analyze_dff]{analyze_dff()}} or \code{\link[=mantel_
 establish robustness, and disagreement does not by itself establish DIF.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("ordinal_logistic_table", run.dontrun = TRUE)
 \dontrun{
 if (requireNamespace("ordinal", quietly = TRUE)) {

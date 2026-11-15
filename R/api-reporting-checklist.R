@@ -16,46 +16,20 @@
 #'   returned bundle.
 #'
 #' @details
-#' This helper builds a package-native reporting checklist. It does not try to
-#' judge substantive reporting quality; instead, it
-#' checks whether the fitted object and related diagnostics contain the evidence
-#' typically reported in MFRM write-ups.
+#' Identify reporting material already available in the fit and diagnostics,
+#' and items needing evidence or explanation. The seven sections cover Method,
+#' Global fit, Facet-level statistics, Element-level statistics, Rating scale
+#' diagnostics, Bias/interaction analysis and Visual displays. Active latent
+#' regression adds `Population Model`: coefficients, categorical model-matrix
+#' coding, complete-case omissions, posterior-basis wording and ConQuest scope.
 #'
-#' Checklist items are grouped into seven core sections:
-#' - Method section
-#' - Global fit
-#' - Facet-level statistics
-#' - Element-level statistics
-#' - Rating scale diagnostics
-#' - Bias/interaction analysis
-#' - Visual displays
-#'
-#' When a fit uses the latent-regression population-model branch, the checklist
-#' also adds a `Population Model` section covering coefficient reporting,
-#' categorical model-matrix coding, complete-case omissions, posterior-basis
-#' wording, and ConQuest scope wording.
-#'
-#' The output is designed for manuscript preparation, reproducibility records, and
-#' reproducible reporting workflows.
-#'
-#' @section What this checklist means:
-#' `reporting_checklist()` is a manuscript-preparation guide. It tells you
-#' which reporting elements are already present in the current analysis
-#' objects and which still need to be generated or documented. The primary
-#' draft-status column is `DraftReady`; `ReadyForAPA` is retained as a
-#' backward-compatible alias.
-#'
-#' @section What this checklist does not justify:
-#' - It is not a single run-level pass/fail decision for publication.
-#' - `DraftReady = TRUE` / `ReadyForAPA = TRUE` does not certify formal
-#'   inferential adequacy.
-#' - Missing bias rows may simply mean `bias_results` were not supplied.
-#' - Study questions, recruitment, rater training, the assignment process,
-#'   missingness reasons, ethics, and substantive interpretation require the
-#'   author's study record. Available output does not verify those facts.
-#'   The "Manuscript coverage map" in
-#'   `vignette("mfrmr-reporting-and-apa", package = "mfrmr")` pairs reporting
-#'   topics with numerical evidence and information to supply manually.
+#' This is a completeness guide, not a publication pass/fail decision or an
+#' assessment of substantive reporting quality. Missing bias rows may simply
+#' mean no `bias_results` were supplied. Study questions, recruitment, training,
+#' assignments, missingness reasons, ethics and interpretation require the
+#' author's record. The "Manuscript coverage map" in
+#' `vignette("mfrmr-reporting-and-apa", package = "mfrmr")` pairs numerical
+#' evidence with information to supply manually.
 #'
 #' @section Interpreting output:
 #' - `checklist`: one row per reporting item with `Available = TRUE/FALSE`.
@@ -84,37 +58,18 @@
 #'   not a complete bibliography. Verify full records for the methods used;
 #'   use `citation("mfrmr")` for the installed software's citation.
 #'
-#' @section Recommended next step:
-#' Review the rows with `Available = FALSE` or `DraftReady = FALSE`, then add
-#' the missing diagnostics, bias results, or narrative context before calling
-#' [build_apa_outputs()] for draft text generation. For `RSM` / `PCM`
-#' reporting runs where the MML population assumptions are defensible, the
-#' most complete package-native route is an `MML` fit plus
-#' `diagnose_mfrm(..., diagnostic_mode = "both")` so the checklist can see the
-#' legacy and strict marginal screens together. A JML route remains available
-#' when its estimand and incidental-parameter limitations better match the
-#' analysis purpose.
+#' @section Using the checklist:
+#' Start with `section_summary` and unavailable/incomplete `checklist` rows;
+#' `summary(chk)$action_items` prioritizes remaining draft work. Select follow-up
+#' analyses for the reporting question: not every optional diagnostic is needed.
+#' Choose the estimator for its assumptions and target, not checklist coverage;
+#' supported MML fits can add marginal screens with `diagnostic_mode = "both"`.
+#' Supply the chosen diagnostics and study context to [build_apa_outputs()].
 #'
-#' @section How this differs from operational review:
-#' `reporting_checklist()` is the manuscript/reporting branch of the package.
-#' Use it when the question is "what is still missing from the report?" rather
-#' than "which observations or links need follow-up?" For operational review:
-#' - Use [build_misfit_casebook()] after [diagnose_mfrm()] when you need ranked
-#'   misfit cases and grouping views for local follow-up.
-#' - Use [build_linking_review()] after anchor/drift/chain helpers when you
-#'   need operational linking triage rather than manuscript-oriented reporting
-#'   tables.
-#'
-#' @section Typical workflow:
-#' 1. Fit with [fit_mfrm()]. For `RSM` / `PCM` reporting runs, prefer
-#'    `method = "MML"`.
-#' 2. Compute diagnostics with [diagnose_mfrm()]. For `RSM` / `PCM`, prefer
-#'    `diagnostic_mode = "both"`.
-#' 3. Run `reporting_checklist()` to see which reporting elements are already
-#'    available from the current analysis objects.
-#' 4. If the issue is operational rather than manuscript-facing, branch to
-#'    [build_misfit_casebook()] or [build_linking_review()] instead of treating
-#'    `reporting_checklist()` as the single review hub.
+#' For observations needing follow-up, use [build_misfit_casebook()] after
+#' [diagnose_mfrm()]. For anchor/linking triage, use [build_linking_review()]
+#' after the anchor, drift or chain helpers. These address the analysis itself;
+#' the checklist addresses what is missing from its report.
 #'
 #' @return A named list with checklist tables. Class:
 #'   `mfrm_reporting_checklist`.
@@ -122,7 +77,7 @@
 #'   [specifications_report()], [data_quality_report()],
 #'   [build_misfit_casebook()], [build_linking_review()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("reporting_checklist", run.dontrun = TRUE)
 #' \dontrun{
 #' library(mfrmr)
@@ -876,7 +831,7 @@ reporting_checklist <- function(fit,
         severity = "recommended",
         plot_helper = "plot.mfrm_fit() / plot(x, type = \"wright\", view = \"unified\")",
         draw_free_route = "plot(fit, type = \"wright\", draw = FALSE)",
-        plot_return_class = "ggplot",
+        plot_return_class = "mfrm_plot_data",
         available_action = "Include a Wright map when the manuscript benefits from a shared-scale targeting display."
       ),
       add_item(
@@ -892,7 +847,7 @@ reporting_checklist <- function(fit,
         severity = "recommended",
         plot_helper = "plot(x, type = \"qc\") / plot(x, type = \"facet_dashboard\")",
         draw_free_route = "plot(fit, type = \"qc\", diagnostics = diagnostics, draw = FALSE)",
-        plot_return_class = "ggplot",
+        plot_return_class = "mfrm_plot_data",
         missing_action = "Run diagnose_mfrm() so the QC and facet dashboards can be rendered from the current analysis bundle.",
         available_action = "Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag."
       ),
@@ -909,7 +864,7 @@ reporting_checklist <- function(fit,
         severity = "recommended",
         plot_helper = "plot(x, type = \"residual_pca\")",
         draw_free_route = "plot(analyze_residual_pca(diagnostics, mode = \"overall\"), type = \"residual_pca\", mode = \"overall\", view = \"scree\", draw = FALSE)",
-        plot_return_class = "ggplot",
+        plot_return_class = "mfrm_plot_data",
         missing_action = "Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.",
         available_action = "Use residual PCA plots as exploratory structure follow-up, not as standalone dimensionality proof."
       ),
@@ -929,7 +884,7 @@ reporting_checklist <- function(fit,
         severity = "recommended",
         plot_helper = "plot.mfrm_subset_connectivity()",
         draw_free_route = "plot(subset_connectivity_report(fit, diagnostics = diagnostics), type = \"design_matrix\", draw = FALSE)",
-        plot_return_class = "ggplot",
+        plot_return_class = "mfrm_plot_data",
         missing_action = "Run subset/connectivity diagnostics before showing design-matrix or linkage visuals.",
         available_action = "Use the design-matrix view to support linkage and comparability claims."
       ),
@@ -946,7 +901,7 @@ reporting_checklist <- function(fit,
         severity = "recommended",
         plot_helper = "plot(x, type = \"displacement\") / plot(x, type = \"agreement\")",
         draw_free_route = "plot(displacement_table(fit, diagnostics = diagnostics), type = \"displacement\", draw = FALSE)",
-        plot_return_class = "ggplot",
+        plot_return_class = "mfrm_plot_data",
         missing_action = "Retain fit and residual outputs if you want displacement or inter-rater follow-up figures.",
         available_action = "Use displacement and inter-rater views to localize QC issues after dashboard screening."
       ),
@@ -960,7 +915,7 @@ reporting_checklist <- function(fit,
         ready_for_apa = FALSE,
         plot_helper = "plot(x, type = \"marginal_fit\") / plot(x, type = \"marginal_pairwise\")",
         draw_free_route = "plot(diagnostics, type = \"marginal_fit\", draw = FALSE)",
-        plot_return_class = "ggplot",
+        plot_return_class = "mfrm_plot_data",
         missing_action = "For MML reporting runs, call diagnose_mfrm(..., diagnostic_mode = \"both\") to enable strict marginal follow-up visuals where supported.",
         available_action = "Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics."
       ),
@@ -980,7 +935,7 @@ reporting_checklist <- function(fit,
         ready_for_apa = FALSE,
         plot_helper = "plot(x, type = \"bias\") / plot(x, type = \"heatmap\")",
         draw_free_route = "plot(bias_results[[1]], type = \"bias\", draw = FALSE)",
-        plot_return_class = "ggplot",
+        plot_return_class = "mfrm_plot_data",
         missing_action = "Run bias or DIF screening before discussing interaction-level visuals.",
         available_action = "Use bias/DIF plots as screening follow-up, not as formal hypothesis tests."
       ),
@@ -998,7 +953,7 @@ reporting_checklist <- function(fit,
         ready_for_apa = converged && formal_precision,
         plot_helper = "plot(x)",
         draw_free_route = "plot(compute_information(fit), draw = FALSE)",
-        plot_return_class = "ggplot",
+        plot_return_class = "mfrm_plot_data",
         missing_action = "Resolve convergence before using information or precision curves in reporting.",
         available_action = if (formal_precision) {
           "Use information curves to describe precision across theta when that is the reporting question."
@@ -1015,7 +970,7 @@ reporting_checklist <- function(fit,
         severity = "optional",
         plot_helper = "plot.mfrm_fit() / plot.mfrm_category_curves()",
         draw_free_route = "plot(fit, type = \"ccc\", draw = FALSE)",
-        plot_return_class = "ggplot",
+        plot_return_class = "mfrm_plot_data",
         missing_action = "Add fit or threshold inputs if you want figure-ready diagnostics.",
         available_action = "Use category curves and fit visuals as local descriptive follow-up after QC screening."
       )
@@ -1068,7 +1023,7 @@ reporting_checklist <- function(fit,
     summary = as.data.frame(section_summary, stringsAsFactors = FALSE),
     section_summary = as.data.frame(section_summary, stringsAsFactors = FALSE),
     software_scope = external_software_scope_table(fit),
-    facets_positioning = facets_guide('positioning'),
+    facets_positioning = facets_positioning_guide(),
     visual_scope = visual_scope_table(fit, checklist),
     references = references,
     settings = settings
@@ -1102,7 +1057,7 @@ external_software_scope_table <- function(fit) {
     ),
     PrimaryHelpers = c(
       "fit_mfrm() -> diagnose_mfrm() -> reporting_checklist() -> build_apa_outputs()",
-      "facets_guide('positioning'), facets_guide('coverage'), run_mfrm_facets(), facets_output_file_bundle(), facets_output_contract_review()",
+      "facets_positioning_guide(), facets_feature_coverage(), run_mfrm_facets(), facets_output_file_bundle(), facets_output_contract_review()",
       "build_conquest_overlap_bundle() -> normalize_conquest_overlap_*() -> review_conquest_overlap()",
       "export_mfrm_bundle(), export_summary_appendix(), as.data.frame()"
     ),
@@ -1287,7 +1242,7 @@ summary.mfrm_reporting_checklist <- function(object, top_n = 10, ...) {
   checklist <- as.data.frame(object$checklist %||% data.frame(), stringsAsFactors = FALSE)
   section_summary <- as.data.frame(object$section_summary %||% object$summary %||% data.frame(), stringsAsFactors = FALSE)
   software_scope <- as.data.frame(object$software_scope %||% data.frame(), stringsAsFactors = FALSE)
-  facets_positioning <- as.data.frame(object$facets_positioning %||% facets_guide('positioning'), stringsAsFactors = FALSE)
+  facets_positioning <- as.data.frame(object$facets_positioning %||% facets_positioning_guide(), stringsAsFactors = FALSE)
   visual_scope <- as.data.frame(object$visual_scope %||% data.frame(), stringsAsFactors = FALSE)
 
   overview <- data.frame(

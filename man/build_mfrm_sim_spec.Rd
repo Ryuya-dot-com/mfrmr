@@ -201,17 +201,12 @@ An object of class \code{mfrm_sim_spec}.
 \code{x}, invisibly.
 }
 \description{
-Shows the model, design size, assignment, and latent-distribution settings
-needed to understand the specification without printing its complete
-machine-readable planning metadata.
+Define the response model, latent distributions and rating
+assignment for \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}. This creates a reusable specification;
+it does not draw responses or fit a model.
 }
 \details{
-\code{build_mfrm_sim_spec()} creates an explicit, portable simulation
-specification that can be passed to \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}. The goal is to
-make the data-generating mechanism inspectable and reusable rather than
-relying only on ad hoc scalar arguments.
-
-The resulting object records:
+The specification records:
 \itemize{
 \item design counts (\code{n_person}, \code{n_rater}, \code{n_criterion}, \code{raters_per_person})
 \item latent spread assumptions (\code{theta_sd}, \code{rater_sd}, \code{criterion_sd})
@@ -246,43 +241,31 @@ design representation used by the planning helpers
 \item optional signal tables for DIF and interaction bias
 }
 
-The current generator targets the package's standard person x rater x
-criterion workflow, but the public output names for those two facet roles
-can now be customized with \code{facet_names}. This naming layer improves public
-ergonomics; it does not provide a fully arbitrary-facet
-simulator. Internally, helper objects keep canonical role mappings so that
-planning functions can treat the first non-person facet as rater-like and
-the second as criterion-like. When threshold values are provided by
-\code{StepFacet}, the supported step facets are the generated levels of the
-chosen public rater-like or criterion-like column. For convenience,
-step-facet-specific thresholds can be supplied as a named list or as a
-numeric matrix whose row names are \code{StepFacet} labels.
-When \code{model = "GPCM"}, the same public facet naming rules apply to the
-slope table; the current bounded branch keeps \code{slope_facet} equal to
-\code{step_facet}.
-The \code{slope_regime} field summarizes the centered log-slope spread so
-recovery simulations can be read against the intended generator stress
-level. Its labels (\code{unit_slopes}, \code{near_flat}, \code{moderate}, and
-\code{high_dispersion}) are package validation labels; they are not model-fit
-decisions and should not be interpreted as literature-derived adequacy
-thresholds. The GPCM data-generating form follows Muraki (1992,
-doi:10.1177/014662169201600206), while information-function interpretation
-follows Muraki (1993, doi:10.1177/014662169301700403). The explicit
-simulation-specification metadata is intended to support ADEMP-style
-simulation reporting as described by Morris, White, and Crowther (2019,
-doi:10.1002/sim.8086).
+The \code{print()} method shows the model, design size, assignment
+and latent-distribution settings without printing all stored metadata.
+}
+\section{Model and planning scope}{
 
-The \code{assignment = "sparse_linked"} branch follows sparse
-rater-mediated assessment work in treating incomplete rater assignment as
-planned missingness rather than incidental nonresponse. Its \code{link_persons}
-and \code{link_raters_per_person} controls emulate a common linking set so users
-can inspect rater-pair common-person counts before using the generated data
-in recovery or design studies. This is a design generator and diagnostic
-metadata layer; it does not impose a universal minimum-linking cutoff.
-Sparse-design motivation follows Wind, Jones, and Grajeda (2023,
-doi:10.1177/01466216231182148), Wind and Jones (2018,
-doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
-(2023).
+\code{facet_names} renames the two non-Person roles: the first is rater-like and
+the second criterion-like. Internal role mappings support planning under
+these public names; they do not enable arbitrary-facet simulation.
+\code{StepFacet} identifies generated levels of either role. Named lists or numeric
+matrices with \code{StepFacet} row names can specify level-specific thresholds.
+GPCM slope tables use the same names and require \code{slope_facet == step_facet}.
+
+\code{slope_regime} describes centered log-slope spread (\code{unit_slopes}, \code{near_flat},
+\code{moderate}, \code{high_dispersion}) for recovery comparisons. These are package
+validation labels, not fit decisions or literature-derived adequacy thresholds.
+The GPCM form follows Muraki (1992, doi:10.1177/014662169201600206), and
+information-function interpretation follows Muraki (1993,
+doi:10.1177/014662169301700403). The metadata support ADEMP-style reporting
+(Morris, White, and Crowther, 2019, doi:10.1002/sim.8086).
+
+For response generation, assignment options and repeated-rating assumptions,
+see "Data-generating model" and "Assignment and dependence" in
+\code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}. In particular, sparse linking is planned missingness;
+\code{link_persons} and \code{link_raters_per_person} control the linking set, without
+establishing a universal minimum overlap.
 
 If \code{population_formula} is supplied, the simulation specification carries a
 person-level latent-regression generator. This affects only the
@@ -292,14 +275,9 @@ in the existing many-facet Rasch generator and resamples rows from
 \eqn{\theta_n = x_n^\top \beta + \varepsilon_n} with
 \eqn{\varepsilon_n \sim N(0, \sigma^2)}.
 }
-\section{Interpreting output}{
-
-This object does not contain simulated data. It is a data-generating
-specification that tells \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} how to generate them.
-}
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("build_mfrm_sim_spec", run.dontrun = TRUE)
 \dontrun{
 spec <- build_mfrm_sim_spec(

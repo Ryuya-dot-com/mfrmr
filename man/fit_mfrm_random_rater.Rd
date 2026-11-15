@@ -148,8 +148,8 @@ unrequested bounds, unsupported targets and unresolved checks or variance
 boundaries; see \code{\link[=confint.mfrm_random_rater]{confint.mfrm_random_rater()}}. Retained points require
 the separate fit checks and are not certified by these fields.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts
-the rater table, display metadata, and settings.
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object with the rater table and settings.
+Use \code{\link[=plot_data]{plot_data()}} for custom graphics.
 }
 \description{
 Estimate rater severity when the raters are modeled as draws from a specified
@@ -228,14 +228,14 @@ six raters and 94.0--94.1\% with 24 raters; finite-interval availability was
 and availability criterion. Six-rater Monte Carlo uncertainty also
 prevented a conclusive material-undercoverage decision in this study.
 An earlier known-ability-SD pilot found 84.2\% six-rater coverage. See
-\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html}{online random-rater guide} for designs and Monte Carlo intervals.
+\href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.html}{mfrmr-random-raters} for designs and Monte Carlo intervals.
 These studies do not establish a safe minimum rater count. Numerical
 checks do not certify statistical validity or shared-rater Laplace accuracy.
 
 \code{plot()} method: Plot observed-rater severity under a shared-rater RSM
 
 For \code{plot()}: Points are conditional modes of severity relative to the rater
-population mean zero; positive values mean more severe ratings. No individual
+population mean zero; positive values mean stricter ratings. No individual
 rater intervals are supplied automatically, including for earlier saved
 fits. Explicit normal whiskers are approximate 95\% prediction intervals,
 not qualified rater classifications. At an estimated zero variance or with
@@ -257,7 +257,7 @@ This supports the tested local likelihood changes, not an exact maximum-
 likelihood solution, an absolute likelihood normalization, the entire SD
 profile, variance boundaries or repeated-sampling interval coverage. Person
 quadrature checks remain distinct from this comparison. See
-\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html}{online random-rater guide} for the reference-precision limits and scope.
+\href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.html}{mfrmr-random-raters} for the reference-precision limits and scope.
 }
 
 \section{Model assumptions and related research}{
@@ -288,7 +288,7 @@ This RSM does not estimate GPCM slopes. Its rater effect spans persons,
 whereas \code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} uses a distinct effect for each Person/block
 pair, even when the block is named Rater. These sharing structures lead
 to different marginal likelihoods and prediction targets; the two routes
-cannot currently be combined. See \link{mfrmr_gpcm_scope} for the
+cannot currently be combined. See \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the
 relationship to fixed slope families and local independence.
 }
 
@@ -309,7 +309,7 @@ It does not rank models or calculate intervals for their differences.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("fit_mfrm_random_rater", run.dontrun = TRUE)
 \dontrun{
 # Inspecting this saved synthetic fit does not require RTMB.
@@ -321,8 +321,7 @@ fit <- example$random_rater$fit
 #   facets = "Criterion", score_levels = 1:4, quad_points = 121)
 summary(fit)
 plot(fit)
-recipe <- system.file("examples", "extended-models.R", package = "mfrmr")
-# Run source(recipe) separately to regenerate the saved fits.
+system.file("examples", "extended-models.R", package = "mfrmr")
 }
 }
 \references{

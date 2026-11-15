@@ -157,7 +157,7 @@ test_that("compatibility wrappers forward explicit and default centering", {
   expect_error(run_mfrm_facets(ratings, "Person", c("Rater", "Criterion"), "Score",
     centering_scope = "remainder"), "captured fitting arguments")
   expect_identical(captured$centering_scope, "remainder")
-  expect_error(run_mfrm_facets(ratings, "Person", c("Rater", "Criterion"), "Score"),
+  expect_error(mfrmRFacets(ratings, "Person", c("Rater", "Criterion"), "Score"),
     "captured fitting arguments")
   expect_identical(captured$centering_scope, "facet")
 })

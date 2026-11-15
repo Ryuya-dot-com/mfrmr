@@ -17,7 +17,7 @@ mfrm_multivariate_d_compare(
   level = 0.95
 )
 
-\method{summary}{mfrm_multivariate_d_comparison}(object, ..., planning = FALSE)
+\method{summary}{mfrm_multivariate_d_comparison}(object, ...)
 
 \method{print}{mfrm_multivariate_d_comparison}(x, digits = NULL, row.names = FALSE, ...)
 
@@ -60,10 +60,6 @@ to \code{summary()} are rejected.
 
 For \code{plot()}: Reserved; additional arguments are rejected.}
 
-\item{planning}{For \code{summary()}: \code{FALSE} returns the unchanged comparison
-table. \code{TRUE} returns the planning review attached by
-\code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}, without calculation.}
-
 \item{digits}{Display precision passed to the printed tables; \code{NULL} uses
 R's current setting. Stored estimates are unchanged.}
 
@@ -95,13 +91,13 @@ comparisons without source context remain readable and say it is absent.
 \code{print()} returns the same comparison invisibly without recomputation.
 \code{summary()} returns the comparison table. \code{Status} describes interval
 availability; point differences can remain available without an interval.
-After \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}} attaches costs and targets,
-\code{summary(x, planning = TRUE)} returns the saved planning tables and notes.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts the exact
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object. \code{\link[=plot_data]{plot_data()}} extracts the exact
 comparison \code{table}, point-projection \code{series} (including the reference),
 \code{unavailable} rows for the selected view, \code{interval_unavailable} rows,
 \code{design_grid}, \code{reference}, \code{weights}, title and labels.
+Base graphics are supported; automatic ggplot conversion
+is not provided for this plot.
 }
 \description{
 Estimate how much G, Phi or SEM changes from a reference plan, including
@@ -193,11 +189,6 @@ Original score units apply to SEM differences. \code{\link[=plot_data]{plot_data
 score/composite, its weights and the reference counts. Explanatory notes and
 a suggested title are returned rather than drawn. All plotted plans
 are future complete crossed plans, even when the source design is incomplete.
-With a planning review attached by \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}, plan labels
-identify infeasible or resource-unavailable candidates without dropping
-them. \code{\link[=plot_data]{plot_data()}} also retains \code{planning_plans}, \code{planning_costs},
-\code{planning_checks} and \code{planning_differences}. The figure's intervals are
-still paired differences, not target-attainment or optimality guarantees.
 }
 \section{Calculation and source of the approximation}{
 
@@ -247,7 +238,7 @@ precedence, and appearance when saving or reusing a plot.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("mfrm_multivariate_d_compare", run.dontrun = TRUE)
 \dontrun{
 # Existing fictional ratings: one row per Person-Rater-Task, two scores.

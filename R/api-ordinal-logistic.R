@@ -43,11 +43,23 @@
 #' score variance or McKelvey--Zavoina R-squared; no universal effect-size cutoff
 #' is applied.
 #'
+#' In `coefficients`, `Parameter` distinguishes thresholds from slopes;
+#' `Estimate` is a logit coefficient, not a severity or an odds ratio. For
+#' M1--M3, `z` is the matching slope in the reference group. Divide it by
+#' `matching$Scale` for a one-unit change in the original matching variable.
+#' In M3, add the corresponding `z:g` interaction for a focal group's slope.
+#' A positive group coefficient means higher focal-group upper-tail odds at
+#' `matching = Center` (where `z = 0`). With an interaction it is not a
+#' constant group effect. Thresholds are cumulative-logit cutpoints on the
+#' declared category order, not RSM/PCM step offsets.
+#'
 #' `contrasts` gives M3's reference/focal upper-tail odds ratio at the lower
 #' endpoint, midpoint and upper endpoint of the groups' overlapping matching
 #' ranges. Its log is `-(beta_g + beta_z:g * z)`; a value above 1 favors higher
-#' reference scores. This applies to each category cut under proportional odds.
-#' These are point estimates, not simultaneous intervals. Fits use all complete
+#' reference scores. Thus at `Center` it is the reciprocal of the
+#' exponentiated group coefficient. `OverlapMid` need not equal `Center`:
+#' one uses the shared range, the other the pooled range. This applies to each
+#' category cut under proportional odds. These are point estimates, not simultaneous intervals. Fits use all complete
 #' responses, including those outside that overlap. Range overlap alone does not
 #' establish comparable distributions or adequate local support. Each group
 #' must have varying matching values and their ranges must overlap with positive
@@ -114,7 +126,7 @@
 #' that handbook are not interchangeable.
 #' @seealso [analyze_dff()], [mantel_haenszel_table()], [mfrmr_linking_and_dff]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("ordinal_logistic_table", run.dontrun = TRUE)
 #' \dontrun{
 #' if (requireNamespace("ordinal", quietly = TRUE)) {

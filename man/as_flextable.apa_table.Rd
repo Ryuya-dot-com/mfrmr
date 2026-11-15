@@ -12,15 +12,15 @@
 \item{...}{Reserved for generic compatibility.}
 }
 \value{
-A \code{flextable} object, or a message when \code{flextable} is
-unavailable.
+A \code{flextable} object. If \code{flextable} is unavailable, emits
+a message and returns \code{NULL} invisibly.
 }
 \description{
 Produces a Word / PowerPoint-friendly \code{flextable} with the
 caption and note wired in. Requires \code{flextable} (in Suggests).
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("as_flextable.apa_table", run.dontrun = TRUE)
 \dontrun{
 tbl <- structure(

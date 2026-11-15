@@ -435,14 +435,10 @@ validate_bias_results_input <- function(bias_results,
 #' anchoring information, and which downstream outputs are currently available.
 #'
 #' @section When to use this:
-#' Use `build_mfrm_manifest()` when you want a compact, machine-readable record
-#' of how an analysis was run. Compared with related helpers:
-#' - [export_mfrm_tables()] writes analysis tables only.
-#' - `build_mfrm_manifest()` records settings and available outputs.
-#' - [build_mfrm_replay_script()] creates an executable R script.
-#' - [export_mfrm_bundle()] writes a project-folder reproducibility bundle;
-#'   review every included artifact for person-level or sensitive data before
-#'   sharing it.
+#' Use this machine-readable record to document settings and available outputs.
+#' See "Choose a save or export route" in [export_mfrm_bundle()] for saving
+#' results, writing files or generating a refitting script. Review exported
+#' artifacts for person-level or sensitive data before sharing.
 #'
 #' @section Output:
 #' The returned bundle has class `mfrm_manifest` and includes:
@@ -470,10 +466,11 @@ validate_bias_results_input <- function(bias_results,
 #' - `settings`: manifest build settings
 #'
 #' @section Interpreting output:
-#' The `summary` table is the direct place to confirm that you are looking at
-#' the intended analysis. The `model_settings`, `source_columns`, and
-#' `estimation_control` tables are designed for reproducibility records and
-#' method write-up.
+#' Read `summary` to identify the analysis, then `available_outputs` for existing
+#' diagnostics/bias/PCA/predictions and `anchors` for fixed constraints.
+#' `model_settings`, `source_columns` and `estimation_control` support the
+#' methods write-up.
+#'
 #' `Converged` records the optimizer return-code decision; `InferenceReady`
 #' records whether the fit passes the additional numerical checks required for
 #' inference. They need not agree; passing these checks does not establish model
@@ -487,19 +484,10 @@ validate_bias_results_input <- function(bias_results,
 #' background variables are expanded through `stats::model.matrix()`,
 #' `population_xlevel_variables` and `population_contrast_variables` identify
 #' the variables whose fitted coding must be preserved for replay/scoring.
-#' The `available_outputs` table is especially useful before building bundles,
-#' because it tells you whether residual PCA, anchors, bias results, or
-#' prediction-side artifacts are already available. A practical reading order is
-#' `summary` first, `available_outputs` second, and `anchors` last when
-#' reproducibility depends on fixed constraints.
-#'
 #' @section Typical workflow:
-#' 1. Fit a model with [fit_mfrm()] or [run_mfrm_facets()].
-#' 2. Compute diagnostics once with [diagnose_mfrm()] if you want explicit
-#'    control over residual PCA.
-#' 3. Build a manifest and inspect `summary` plus `available_outputs`.
-#' 4. If you need files on disk, pass the same objects to
-#'    [export_mfrm_bundle()].
+#' Build from a fit and reuse its diagnostics. To control residual PCA,
+#' call [diagnose_mfrm()] first. [export_mfrm_bundle()] writes the manifest
+#' and selected analysis files to disk.
 #'
 #' For `GPCM` fits, the manifest is available with an explicit
 #' `gpcm_boundary` table. It records supported direct diagnostics/reporting
@@ -510,7 +498,7 @@ validate_bias_results_input <- function(bias_results,
 #' @seealso [export_mfrm_bundle()], [build_mfrm_replay_script()],
 #'   [make_anchor_table()], [reporting_checklist()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("build_mfrm_manifest", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -523,13 +511,11 @@ validate_bias_results_input <- function(bias_results,
 #' manifest$available_outputs[, c("Component", "Available")]
 #' }
 #' @section Saved-result reuse:
-#' Supplied screening results must describe this fitted analysis. Results from
-#' another fit or older results without identity metadata are refused. See
-#' [mfrmr_compatibility_layer] to recreate them from the saved fit and matching
-#' diagnostics without refitting the model.
-#' Supplied unit scores, plausible values and fit-derived forecasts must also
-#' match this calibration. A forecast created with `sim_spec` remains a separate
-#' scenario; its source is recorded without asserting a match to the fit.
+#' Supplied screening results must match this analysis; older ones without
+#' identity metadata are refused. See "Saved-result reuse" in
+#' [export_mfrm_bundle()] for calibration checks, separate scenario forecasts and
+#' recreating compatible results without refitting.
+#'
 #' @export
 build_mfrm_manifest <- function(fit,
                                 diagnostics = NULL,
@@ -1202,11 +1188,9 @@ build_mfrm_session_info_table <- function() {
 #' through [predict_mfrm_population()] as a separate caveated helper route.
 #'
 #' @section When to use this:
-#' Use `build_mfrm_replay_script()` when you want a package-native recipe that
-#' another analyst can rerun later. Compared with related helpers:
-#' - [build_mfrm_manifest()] records settings but does not run anything.
-#' - `build_mfrm_replay_script()` produces executable R code.
-#' - [export_mfrm_bundle()] can optionally write the replay script to disk.
+#' Use this recipe to refit from `data_file` with the installed package.
+#' For reopening saved results or writing an analysis folder, see
+#' "Choose a save or export route" in [export_mfrm_bundle()].
 #'
 #' @section Interpreting output:
 #' The returned object contains:
@@ -1228,10 +1212,6 @@ build_mfrm_session_info_table <- function() {
 #' selection or PCA limits, so rerun [diagnose_mfrm()] before exporting them
 #' when those settings matter.
 #'
-#' If `ScriptMode` is `"facets"`, the script replays the higher-level
-#' [run_mfrm_facets()] workflow. If it is `"fit"`, the script uses
-#' [fit_mfrm()] directly.
-#'
 #' @section Mode guide:
 #' - `"auto"` is the safest default and follows the structure of the supplied
 #'   object.
@@ -1250,7 +1230,7 @@ build_mfrm_session_info_table <- function() {
 #' @return A named list with class `mfrm_replay_script`.
 #' @seealso [build_mfrm_manifest()], [export_mfrm_bundle()], [run_mfrm_facets()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("build_mfrm_replay_script", run.dontrun = TRUE)
 #' \dontrun{
 #' library(mfrmr)
@@ -1263,13 +1243,11 @@ build_mfrm_session_info_table <- function() {
 #' cat(substr(replay$script, 1, 120))
 #' }
 #' @section Saved-result reuse:
-#' Supplied screening results must describe this fitted analysis. Results from
-#' another fit or older results without identity metadata are refused. See
-#' [mfrmr_compatibility_layer] to recreate them from the saved fit and matching
-#' diagnostics without refitting the model.
-#' Supplied unit scores, plausible values and fit-derived forecasts must also
-#' match this calibration. A forecast created with `sim_spec` remains a separate
-#' scenario; its source is recorded without asserting a match to the fit.
+#' Supplied screening results must match this analysis; older ones without
+#' identity metadata are refused. See "Saved-result reuse" in
+#' [export_mfrm_bundle()] for calibration checks, separate scenario forecasts and
+#' recreating compatible results without refitting.
+#'
 #' @export
 build_mfrm_replay_script <- function(fit,
                                      diagnostics = NULL,
@@ -2561,7 +2539,7 @@ conquest_overlap_component_sensitivity <- function(component) {
 #' Use `normalize_conquest_overlap_exports()` for the parameter, regression,
 #' covariance, and case-EAP CSV files requested by the generated command. The
 #' additional matrixout history CSV retains the objective trajectory and an
-#' independent estimated-parameter dimension for release verification; it is not
+#' independently reported number of estimated parameters for comparison; it is not
 #' parsed as a free-form report. [normalize_conquest_overlap_files()] and
 #' [normalize_conquest_overlap_tables()] remain available for already-extracted
 #' custom tables. Then use [review_conquest_overlap()] only after the matching
@@ -2641,7 +2619,7 @@ conquest_overlap_component_sensitivity <- function(component) {
 #'   [reference_case_benchmark()], [build_mfrm_replay_script()],
 #'   [export_mfrm_bundle()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("build_conquest_overlap_bundle", run.dontrun = TRUE)
 #' \dontrun{
 #' # Synthetic latent-regression fit; the full regeneration recipe is
@@ -3250,13 +3228,6 @@ max_abs_conquest_overlap_label <- function(x, label) {
 
 #' Normalize extracted ConQuest overlap tables to the `mfrmr` review contract
 #'
-#' @param input `"tables"` for data frames (the default), or `"files"` for
-#'   extracted CSV/TSV/TXT paths supplied through the same three input arguments.
-#'   This does not parse raw ConQuest parameter/report exports; those retain
-#'   their separate bundle-dependent [normalize_conquest_overlap_exports()] route.
-#' @param population_delimiter,item_delimiter,case_delimiter File delimiters
-#'   used only with `input = "files"`: `"auto"`, `"comma"`, `"tab"`,
-#'   `"semicolon"`, or the corresponding literal separator.
 #' @param conquest_population Extracted ConQuest population-parameter table as a
 #'   data.frame.
 #' @param conquest_item_estimates Extracted ConQuest item-estimate table as a
@@ -3349,26 +3320,7 @@ normalize_conquest_overlap_tables <- function(conquest_population,
                                               conquest_item_estimate = "auto",
                                               conquest_case_person = "auto",
                                               conquest_case_estimate = "auto",
-                                              keep_extra_columns = TRUE,
-                                              input = c("tables", "files"),
-                                              population_delimiter = "auto",
-                                              item_delimiter = "auto",
-                                              case_delimiter = "auto") {
-  input <- match.arg(input)
-  if (input == "files") {
-    return(normalize_conquest_overlap_files(
-      population_file = conquest_population, item_file = conquest_item_estimates,
-      case_file = conquest_case_eap, population_delimiter = population_delimiter,
-      item_delimiter = item_delimiter, case_delimiter = case_delimiter,
-      conquest_population_term = conquest_population_term,
-      conquest_population_estimate = conquest_population_estimate,
-      conquest_item_id = conquest_item_id, conquest_item_estimate = conquest_item_estimate,
-      conquest_case_person = conquest_case_person, conquest_case_estimate = conquest_case_estimate,
-      keep_extra_columns = keep_extra_columns))
-  }
-  if (!missing(population_delimiter) || !missing(item_delimiter) || !missing(case_delimiter)) {
-    stop("Delimiter controls require `input = 'files'`.", call. = FALSE)
-  }
+                                              keep_extra_columns = TRUE) {
   conquest_population <- validate_conquest_overlap_input_df(conquest_population, "conquest_population")
   conquest_item_estimates <- validate_conquest_overlap_input_df(conquest_item_estimates, "conquest_item_estimates")
   conquest_case_eap <- validate_conquest_overlap_input_df(conquest_case_eap, "conquest_case_eap")
@@ -3799,7 +3751,7 @@ normalize_conquest_overlap_exports <- function(bundle,
 #'   standardized identifier and estimate columns.
 #'
 #' @details
-#' The file-input route of [normalize_conquest_overlap_tables()] reads these formats.
+#' This helper is a thin file-wrapper around [normalize_conquest_overlap_tables()].
 #' It is intentionally limited to already extracted tabular files and does not
 #' parse raw ConQuest report text.
 #'
@@ -3808,7 +3760,7 @@ normalize_conquest_overlap_exports <- function(bundle,
 #' 1. export a bundle for the documented comparison scope with
 #'    [build_conquest_overlap_bundle()];
 #' 2. extract the relevant ConQuest tables to CSV/TSV/TXT files;
-#' 3. call `normalize_conquest_overlap_tables(..., input = "files")`; 
+#' 3. call `normalize_conquest_overlap_files()` on those files;
 #' 4. pass the result to [review_conquest_overlap()].
 #'
 #' Read `summary(normalized)$normalization_scope` before review to confirm
@@ -3852,10 +3804,10 @@ normalize_conquest_overlap_exports <- function(bundle,
 #'   case_path,
 #'   row.names = FALSE
 #' )
-#' normalized <- normalize_conquest_overlap_tables(input = "files", 
-#'   conquest_population = pop_path,
-#'   conquest_item_estimates = item_path,
-#'   conquest_case_eap = case_path,
+#' normalized <- normalize_conquest_overlap_files(
+#'   population_file = pop_path,
+#'   item_file = item_path,
+#'   case_file = case_path,
 #'   conquest_population_term = "Term",
 #'   conquest_population_estimate = "Est",
 #'   conquest_item_id = "Item",
@@ -3866,10 +3818,7 @@ normalize_conquest_overlap_exports <- function(bundle,
 #' summary(normalized)$normalization_scope
 #' review <- review_conquest_overlap(bundle, normalized)
 #' summary(review)$summary
-#' @description Use `normalize_conquest_overlap_tables(..., input = "files")`.
-#'   The former file-specific entry is no longer exported. This guide retains
-#'   its file format and provenance details.
-#' @usage NULL
+#' @export
 normalize_conquest_overlap_files <- function(population_file,
                                              item_file,
                                              case_file,
@@ -4493,10 +4442,10 @@ review_conquest_overlap <- function(bundle,
 #'   be normalized through [build_summary_table_bundle()].
 #'
 #' @details
-#' This helper is the narrow public bridge from documented `summary()` surfaces
-#' to manuscript appendix artifacts. It accepts the same reporting objects that
-#' [build_summary_table_bundle()] supports, exports their table bundles as CSV,
-#' and optionally assembles a lightweight HTML appendix page.
+#' Export the tables selected by [build_summary_table_bundle()] as CSV and
+#' optional HTML. Pass a supported object, its summary, a prebuilt bundle or
+#' a named list; a fitted model is not required. Presets select from tables
+#' already available in the source, not additional analyses.
 #'
 #' Inspect `written_files` for the actual file paths. An analysis table whose
 #' name conflicts with bundle metadata (for example, `overview`) is retained
@@ -4510,40 +4459,20 @@ review_conquest_overlap <- function(bundle,
 #' ZIP is retained, `summary$ZipWritten` is zero and `notes` explains the
 #' failure. Other files in the destination folder are left in place.
 #'
-#' Fit-level caveats are exported through the `analysis_caveats` role, and
-#' pre-fit score-support caveats are exported through the
-#' `score_category_caveats` role. Both roles are classified as diagnostics, so
-#' they remain available under `"recommended"` and `"diagnostics"` presets when
-#' the source summary contains caveat rows.
+#' @section Retained reporting evidence:
+#' `analysis_caveats` and `score_category_caveats` remain in `"recommended"`
+#' and `"diagnostics"` selections when supplied. Precision-review tables retain
+#' `fit_separation_basis`; fit-measure and FACETS review tables retain df/ZSTD
+#' sensitivity and optional external matching. These distinguish fit, ZSTD,
+#' separation/reliability/strata and review thresholds from recovery criteria;
+#' see [build_summary_table_bundle()] for roles and reading order.
 #'
-#' Precision-review summaries keep `fit_separation_basis` in the exported
-#' precision-review role so fit, ZSTD, separation/reliability/strata, and
-#' package review thresholds can be reported without turning them into
-#' universal recovery criteria.
-#' Fit-measure and FACETS fit-review summaries keep df/ZSTD sensitivity and
-#' optional external FACETS matching tables in the same precision-review section.
-#'
-#' Parameter-recovery studies can be exported by passing
-#' [simulate_mfrm_recovery()] or [assess_mfrm_recovery()] output directly. The
-#' exported bundle keeps the ADEMP-style simulation basis, recovery metrics,
-#' replication status, adequacy checklist, thresholds, and next actions in
-#' separate appendix-ready tables.
-#'
-#' A compatible precomputed recovery-evidence summary can also be exported,
-#' including its case assessments, condition
-#' notes, diagnostic notes, and domain assessments.
-#'
-#' Unlike [export_mfrm_bundle()], this helper does not require a fitted model.
-#' It is intended for the stage where compact reporting summaries already exist
-#' and the task is to hand off appendix-ready tables, catalogs, and reporting
-#' maps.
-#'
-#' @section Typical workflow:
-#' 1. Build `summary(...)` objects from fit, diagnostics, data description,
-#'    reporting checklist, or APA outputs.
-#' 2. Call `export_summary_appendix(...)` on one object or a named list.
-#' 3. Hand off the written CSV/HTML appendix artifacts to manuscript or QA
-#'    workflows.
+#' [simulate_mfrm_recovery()] and [assess_mfrm_recovery()] outputs retain the
+#' ADEMP simulation basis, recovery metrics, replication status, adequacy
+#' checklist, thresholds and next actions as separate tables. Compatible
+#' precomputed recovery summaries retain case and domain assessments plus
+#' condition and diagnostic notes. Review those notes before using the exported
+#' tables in a manuscript.
 #'
 #' @return A named list of class `mfrm_summary_appendix_export` with:
 #' - `summary`
@@ -4566,7 +4495,7 @@ review_conquest_overlap <- function(bundle,
 #' @seealso [build_summary_table_bundle()], [export_mfrm_bundle()],
 #'   [apa_table()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("export_summary_appendix", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -5046,18 +4975,10 @@ export_summary_appendix <- function(x,
 #'   `NULL` falls back to the legacy `your_data.csv` placeholder path.
 #'
 #' @details
-#' This function is the one-call fit-level archive and HTML route. It reuses
-#' `mfrmr` functions for estimation and diagnostics.
-#' When `diagnostics = NULL`,
-#' the exporter computes the diagnostics it needs, then writes the requested
-#' CSV/text/replay artifacts and a lightweight HTML page from the fitted object.
-#' Use [mfrm_results()] and [mfrm_report()] first when you want to inspect a
-#' results object before writing files; use `export_mfrm_bundle()` when the
-#' goal is a project-folder bundle from `fit`.
-#' For only the core CSV tables without automatic diagnostics, use
-#' [export_mfrm_tables()]. For a complete saved R result that reloads without
-#' refitting, use [export_mfrm_results()]. The optional `"script"` component
-#' here is a refitting recipe, not a copy of the fitted R object.
+#' Write selected CSV/text/script/HTML artifacts from a fitted analysis.
+#' With `diagnostics = NULL`, compute the diagnostics needed for the export.
+#' To inspect results before writing files, use [mfrm_results()] and
+#' [mfrm_report()].
 #'
 #' The returned `written_files` and optional ZIP include only files written
 #' by this call. With `overwrite = TRUE`, the ZIP is built afresh and checked
@@ -5072,19 +4993,17 @@ export_summary_appendix <- function(x,
 #' Review and transform every file under the applicable data-handling policy
 #' before sharing it.
 #'
-#' @section Choosing exports:
-#' The `include` argument lets you assemble a bundle for different audiences:
-#' - `"core_tables"` for analysts who mainly want CSV output.
-#' - `"manifest"` for a compact analysis record.
-#' - `"script"` for reproducibility and reruns. For latent-regression fits,
-#'   this also writes the fit-level replay person-data sidecar when available.
-#' - `"html"` for a lightweight summary page. This is not a deidentification
-#'   guarantee. When replay sidecars are present, the HTML shows an artifact
-#'   index for them rather than embedding the raw person-level replay table.
-#' - `"summary_tables"` for manuscript-facing CSV exports of documented
-#'   `summary()` surfaces and their compact indexes.
-#' - `"visual_summaries"` when you want warning maps or residual PCA summaries
-#'   to travel with the bundle.
+#' @section Choose a save or export route:
+#' - **Reopen without refitting:** [base::saveRDS()] / [base::readRDS()] preserves
+#'   an R object. For an existing [mfrm_results()] bundle,
+#'   [export_mfrm_results()] includes the RDS and a reload script by default.
+#' - **Write tables or an analysis folder:** [export_mfrm_tables()] writes core
+#'   CSVs without automatic diagnostics. `export_mfrm_bundle()` writes the
+#'   selected artifacts below; [build_mfrm_manifest()] records settings and
+#'   available outputs.
+#' - **Rerun the analysis:** [build_mfrm_replay_script()] generates R code for
+#'   a new fit. The `"script"` component here writes that recipe, not the fitted
+#'   R object. Generating the script does not execute it.
 #'
 #' @section Recommended presets:
 #' Common starting points are:
@@ -5095,27 +5014,26 @@ export_summary_appendix <- function(x,
 #'   "visual_summaries", "html")`
 #'
 #' @section Written outputs:
-#' Depending on `include`, the exporter can write:
-#' - core CSV tables via [export_mfrm_tables()]
-#' - checklist CSVs via [reporting_checklist()]
-#' - facet-dashboard CSVs and interpretation notes via [facet_quality_dashboard()],
-#'   including screening settings in CSV and HTML; HTML tables show every
-#'   level's estimates and unavailable diagnostics, while CSVs retain full detail
-#' - APA text files via [build_apa_outputs()]
-#' - manuscript-summary CSVs via [build_summary_table_bundle()]
-#' - anchor CSV via [make_anchor_table()]
-#' - manifest CSV/TXT via [build_mfrm_manifest()]
-#' - exact source-fit readiness CSVs with fit, component, and parameter scope
-#' - visual warning/summary artifacts via [build_visual_summaries()]
-#' - prediction/forecast CSVs via [predict_mfrm_population()],
-#'   [predict_mfrm_units()], and [sample_mfrm_plausible_values()]
-#' - a package-native replay script via [build_mfrm_replay_script()]
-#' - replay-source readiness CSVs retained as provenance; the replayed fit
-#'   recomputes its own readiness
-#' - for latent-regression fits, a replay-side person-data CSV paired with the
-#'   replay script
-#' - a lightweight HTML report that bundles the exported tables/text and, for
-#'   replay sidecars, an artifact summary instead of raw person-level rows
+#' `include` selects these components:
+#' - `"core_tables"`: CSVs from [export_mfrm_tables()].
+#' - `"checklist"`: CSVs from [reporting_checklist()].
+#' - `"dashboard"`: [facet_quality_dashboard()] tables and interpretation notes.
+#'   CSV/HTML retain screening settings; HTML shows every level's estimates and
+#'   unavailable diagnostics, while CSV retains full detail.
+#' - `"apa"`: text from [build_apa_outputs()].
+#' - `"summary_tables"`: manuscript CSVs and indexes from [build_summary_table_bundle()].
+#' - `"anchors"`: CSV from [make_anchor_table()].
+#' - `"manifest"`: CSV/TXT from [build_mfrm_manifest()].
+#' - `"visual_summaries"`: warnings/residual PCA summaries from [build_visual_summaries()].
+#' - `"predictions"`: CSVs for supplied [predict_mfrm_population()],
+#'   [predict_mfrm_units()] or [sample_mfrm_plausible_values()] results.
+#' - `"script"`: code from [build_mfrm_replay_script()] and, when available,
+#'   the latent-regression replay person-data CSV.
+#' - `"html"`: exported tables/text and a replay-sidecar artifact index;
+#'   raw person-level replay rows are not embedded. This is not deidentification.
+#'
+#' Readiness CSVs preserve the source fit's overall, component and parameter
+#' checks. Replay-source readiness is provenance: a new fit repeats its checks.
 #'
 #' For latent-regression fits, prediction-side artifacts can carry the fitted
 #' population-model scoring basis when you explicitly supply the corresponding
@@ -5135,17 +5053,9 @@ export_summary_appendix <- function(x,
 #' remain outside this bundle contract.
 #'
 #' @section Interpreting output:
-#' The returned object reports both high-level bundle status and the exact files
-#' written. In practice, `bundle$summary` is the direct status check, while
-#' `bundle$written_files` is the file inventory to inspect or hand off to other
-#' tools.
-#'
-#' @section Typical workflow:
-#' 1. Fit a model and compute diagnostics once.
-#' 2. Decide whether the audience needs tables only, or also a manifest,
-#'    replay script, and HTML summary.
-#' 3. Call `export_mfrm_bundle()` with a dedicated output directory.
-#' 4. Inspect `bundle$written_files` or open the generated HTML file.
+#' Check `bundle$summary` for export status and `bundle$written_files` for the
+#' exact file inventory. Use a dedicated output directory and inspect the
+#' written files or generated HTML before handing them to other tools.
 #'
 #' @return A named list with class `mfrm_export_bundle`.
 #' @seealso [fit_mfrm()], [mfrm_results()], [mfrm_report()],
@@ -5153,7 +5063,7 @@ export_summary_appendix <- function(x,
 #'   [build_mfrm_replay_script()], [export_mfrm_tables()],
 #'   [reporting_checklist()], [export_summary_appendix()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("export_mfrm_bundle", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.

@@ -66,7 +66,7 @@
 #'   uncentered rater effects relative to the population mean. First-order
 #'   calibration uncertainty does not ensure nominal coverage. In particular,
 #'   few-rater coverage remains unresolved; see
-#'   [online random-rater guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html). Requesting this approximation does not
+#'   [mfrmr-random-raters](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.html). Requesting this approximation does not
 #'   make it qualified for classification or exclusion of raters. It is not a
 #'   profile interval, a bootstrap or an interval for a difference of raters.
 #' @references Self, S. G. and Liang, K.-Y. (1987). Asymptotic properties of

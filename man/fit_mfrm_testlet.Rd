@@ -147,7 +147,7 @@ for missing or explicitly requested normal bounds; see
 \code{\link[=confint.mfrm_testlet]{confint.mfrm_testlet()}} for the status meanings. A retained point is not
 certified by interval availability. Inspect \code{checks} before interpreting it.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object; use \code{\link[=plot_data]{plot_data()}}.
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object; use \code{\link[=plot_data]{plot_data()}}.
 }
 \description{
 Account for extra dependence among ratings of the same person, for example
@@ -246,7 +246,7 @@ from a Person/task/assessor rating-occasion block. Select the identifier
 according to the assessment process; only one nonoverlapping membership
 is supported. A nonzero local variance does not by itself establish halo.
 For one rater effect shared across persons, see \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}}.
-The two models cannot currently be combined. See \link{mfrmr_gpcm_scope}
+The two models cannot currently be combined. See \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
 for the relationship to fixed discrimination and local independence.
 }
 
@@ -269,7 +269,7 @@ score or interval changes do not establish which model is better.
 \section{Assessment applications}{
 
 With \code{testlet = "Task"}, the local effect is shared by a Person's ratings
-on that task. \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlet-applications.html}{online testlet-applications guide} provides runnable
+on that task. \href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlet-applications.html}{mfrmr-testlet-applications} provides runnable
 examples of allocating a fixed rating budget across tasks and comparing
 score sensitivity when tasks have unequal numbers of criteria. Its small
 enumeration reports model-conditional posterior precision and marginal EAP
@@ -296,7 +296,7 @@ scores together when changing the population assumption.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("fit_mfrm_testlet", run.dontrun = TRUE)
 \dontrun{
 # Saved fit for the synthetic example_core ratings.
@@ -309,8 +309,7 @@ fit <- example$testlet$fit
 fit$checks
 plot(fit, facet = "Rater")
 # The complete regeneration recipe is included with the package:
-recipe <- system.file("examples", "extended-models.R", package = "mfrmr")
-# Run source(recipe) separately to regenerate the saved fits.
+system.file("examples", "extended-models.R", package = "mfrmr")
 }
 }
 \references{
@@ -327,5 +326,5 @@ a random-effects facet model. \emph{Applied Psychological Measurement}, 29,
 \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} for descriptive posterior predictive residuals.
 
 \link{mfrmr_workflow_methods}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
-\code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}}
+\code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}}, \code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}}
 }

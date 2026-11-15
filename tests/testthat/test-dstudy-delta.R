@@ -149,13 +149,11 @@ test_that("delta limits outside zero and one survive summaries, plots and saved 
   local_mocked_bindings(confint.mfrm_multivariate_d_study = function(...) stop("Unexpected recalculation"))
   expect_identical(summary(saved$d, intervals = saved$ci), s)
   forest <- plot(saved$ci, draw = FALSE)
-  expect_s3_class(forest, "ggplot")
-  expect_lte(plot_data(forest, "xrange")[1], min(ci$Lower))
-  expect_gte(plot_data(forest, "xrange")[2], max(ci$Upper))
+  expect_lte(forest$data$xrange[1], min(ci$Lower))
+  expect_gte(forest$data$xrange[2], max(ci$Upper))
   curve <- plot(saved$d, metric = "G", intervals = saved$ci, draw = FALSE)
-  expect_s3_class(curve, "ggplot")
-  expect_equal(plot_data(curve, "series")$Lower, ci$Lower)
-  limits <- .mfrm_mvds_y_limits(plot_data(curve, "series"), TRUE, numeric())
+  expect_equal(curve$data$series$Lower, ci$Lower)
+  limits <- .mfrm_mvds_y_limits(curve$data$series, TRUE, numeric())
   expect_lte(limits[1], min(ci$Lower)); expect_gte(limits[2], max(ci$Upper))
   if (requireNamespace("ggplot2", quietly = TRUE)) {
     p <- ggplot2::ggplot_build(as_ggplot(curve))
@@ -191,4 +189,26 @@ test_that("delta is explicit, composes with other methods and checks source iden
   bad <- ci; attr(bad, "source_data")$Content[1] <- -999
   expect_error(summary(d, intervals = bad), "source ratings")
   expect_error(plot(d, metric = "Phi", intervals = bad, draw = FALSE), "source ratings")
+})
+
+
+test_that("exact-F plots distinguish empty sets from unavailable numerical intervals", {
+  data <- expand.grid(Person = 1:3, Task = 1:3)
+  data$Score <- as.vector(outer(c(-1, 0, 1), c(-1, 0, 1)))
+  empty <- confint(mfrm_d_study(mfrm_g_study(data, "Score", rater = NULL)),
+    method = "exact_f", assumption = "normal")
+  expect_identical(empty$Status, "Empty parameter-space interval")
+  plotted <- plot_data(plot(empty, draw = FALSE), "table")
+  expect_identical(plotted$StatusLabel, "Empty set")
+  expect_true(is.na(plotted$Estimate) && is.na(plotted$Lower) && is.na(plotted$Upper))
+  expect_identical(plotted$Status, empty$Status)
+
+  data$Score <- data$Person
+  unresolved <- confint(mfrm_d_study(mfrm_g_study(data, "Score", rater = NULL)),
+    method = "exact_f", assumption = "normal")
+  expect_identical(unresolved$Status, "Zero residual mean square")
+  plotted <- plot_data(plot(unresolved, draw = FALSE), "table")
+  expect_identical(plotted$StatusLabel, "CI unavailable")
+  expect_equal(plotted$Estimate, 1)
+  expect_true(is.na(plotted$Lower) && is.na(plotted$Upper))
 })

@@ -116,36 +116,25 @@ means a steeper response curve than the geometric-average slope; it is
 not a measure of rater agreement or a recommended scoring weight.
 }
 \details{
-\strong{Coefficient intervals and migration.} Before this API revision,
-\code{confint(fit)} was a GPCM slope-only interface. Use
-\code{confint(fit, parm = "slopes", ...)} to retain that target, its plotting and
-report attachments. Omitting \code{parm} now selects the same coordinates as
-\code{coef(fit)}, including free step offsets, log slopes and estimated
-population parameters. Log-variance intervals are not SD intervals;
-log-slope intervals are not positive relative-slope intervals. Anchors and
-dependent centered levels are absent from these free coordinates.
-For labelled facet levels or contrasts, use \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}; for
-population targets use \code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}.
+\strong{Coefficient intervals.} Omitting \code{parm} selects the free coordinates of
+\code{coef(fit)}: step offsets, log slopes and estimated population parameters,
+excluding anchors/dependent centered levels. Log variance is not SD and log
+slope is not positive relative slope. For the former slope-only default use
+\code{parm = "slopes"}; labelled locations/contrasts and population targets use
+\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} and \code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}, respectively.
 
-Coefficient intervals use \eqn{\hat b_j \mathbin{\pm}
+Intervals are \eqn{\hat b_j \mathbin{\pm}
 z_{(1+\mathrm{level})/2}\sqrt{V_{jj}}}{b_j +/- z_{(1+level)/2} sqrt(V_jj)}.
-MML reuses the qualified full joint
-covariance from \code{vcov(fit)}, with the same model/design restrictions and
-numerical checks; it can reevaluate information but does not refit. CML
-reuses saved conditional information. Its comparison-only method also
-respects saved target eligibility, retaining unavailable targets and reasons.
-When only CML information fails, finite numerical points remain in the fit;
-the default interval matrix contains missing bounds and its \code{diagnostics}
-records the information failure. The same missing-bound contract applies
-to eligible ordinary fixed-population RSM/PCM MML fits whose information is
-unavailable, provided the \code{NA} covariance matrix fits the information memory
-budget (see \link{mfrm_fit_extractors}). Inspect \code{coef(fit)} and \code{summary(fit)} for
-the retained points and limitations. No interval is inferred from a finite
-point alone.
-Neither route scores Persons, supplies JML structural-truth inference,
-guarantees finite-sample coverage, or includes uncertainty in fixed anchors.
-Saved CML covariance is not a new evaluation of the likelihood or information.
-Inspect \code{attr(ci, "diagnostics")} and the saved checks/cautions before reporting.
+MML uses qualified \code{vcov(fit)} with its model/design and numerical restrictions;
+information may be reevaluated without refitting. CML uses saved information
+and comparison-target eligibility, without reevaluating likelihood/information.
+Information failures retain points with missing bounds and diagnostic reasons;
+ordinary fixed-population RSM/PCM MML needs room for the \code{NA} covariance matrix
+within the information budget (\link{mfrm_fit_extractors}). Inspect \code{coef(fit)},
+\code{summary(fit)} and \code{attr(ci, "diagnostics")} with checks/cautions. Finite points
+alone do not imply intervals. Neither route scores Persons, supplies JML
+structural-truth inference, includes fixed-anchor uncertainty or guarantees
+finite-sample coverage.
 
 All arguments after \code{level}, other than \code{...}, belong to \code{parm = "slopes"}.
 Supplying them without that selection is an error, so a request for a
@@ -162,51 +151,42 @@ information, including estimated population parameters, rather than the
 inverse of the slope information block alone. Each interval is
 \eqn{\exp(\log(a_g) \mathbin{\pm} z SE(\log(a_g)))}.
 
-The current likelihood, gradient and joint information must pass the
-MML solution checks. The fit also needs supported score categories,
-consistent likelihood metadata, unit observation weights, and at least
-31 quadrature points. Regularized, singular, nonconverged or mismatched
-results do not receive intervals. These one-family rules differ from the
-two-family checks below. Positive curvature is a local check,
-not a proof of a global maximum or accurate integration. Use
-\code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} and different starts for consequential results.
-A known deficit in the marginal response-distribution dimension or a
-recorded complete-pattern first-order rank failure prevents regular inference,
-even if numerical differentiation produces a positive Hessian. For example,
-two binary items answered once by every Person have only three independent
-response probabilities, whereas the default one-family GPCM estimates four
-free parameters. More Persons on that same design cannot identify this model.
-Returned points are descriptive and unavailable intervals retain the reason;
-this is not a general minimum sample-size rule. Absence of this deficit is
-only a necessary condition, not proof of identification.
-A positive but ill-conditioned information matrix can be used with a warning
-when two refined numerical Hessians agree, inversion without regularization
-is accurate and a curvature-scaled gradient is small. Failure of any check
-keeps inference unavailable. Passing these numerical checks does not resolve
-weak information in the data: an interval may still be extremely wide or
-unreliable near a boundary. Warnings are saved in the \code{cautions} attribute
-and \code{InferenceReview}, and follow printing, default plot subtitles and reports.
+One-family qualification requires current likelihood/gradient/joint information
+checks, supported categories, consistent metadata, unit weights and at least
+31 quadrature points. Regularized, singular, nonconverged or mismatched results
+are unavailable. Positive curvature is local, not proof of a global maximum
+or accurate integration; review \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} and starts.
 
-Model intervals are asymptotic. Standardized slopes use the full Jacobian
-for \code{log(slope) + log(sigma2)/2}, including cross-covariances. Ratio contrasts
-cancel a common population scale. Difference contrasts use the full joint
-positive-slope covariance. Extra output includes \code{PValue} for zero log contrast
-(ratio one) or difference zero; Bonferroni applies to these p-values too.
-Containment of one for an individual relative slope is not a pairwise test.
-The matched \code{\link[=compare_mfrm]{compare_mfrm()}} LRT tests all relative slopes equal jointly.
+Known marginal response-dimension deficits or complete-pattern first-order
+rank failures block inference even with a numerically positive Hessian.
+Two binary items answered once per Person provide only three independent
+probabilities, versus four default one-family GPCM parameters; more Persons
+cannot identify that design. Points stay descriptive and intervals retain
+reasons. Absence of this deficit is necessary, not sufficient for identification;
+it does not establish a general minimum sample size.
 
-Sandwich inference concerns the working model's limiting parameter; it
-does not correct bias, informative assignment or a wrong population model.
-It needs many independent clusters. Rank-deficient cluster scores withhold
-intervals. Scores aggregate complete Person response vectors, including
-population-parameter derivatives and the fitted quadrature method.
-Small, incomplete correctly specified samples already showed undercoverage
-and extremely wide model intervals; see the GPCM scope vignette. The added
-methods do not imply universal finite-sample coverage. For an explicit
-model-based refit alternative use \code{\link[=bootstrap_mfrm_gpcm]{bootstrap_mfrm_gpcm()}}.
-Relative and standardized slope differences are different targets; their
-interval performance need not be the same. See the GPCM scope vignette
-for these distinctions and the observed limits of approximation.
+Ill-conditioned positive information may be accepted with warnings only when
+refined Hessians agree, unregularized inversion is accurate and the
+curvature-scaled gradient is small. Passing does not remove weak information,
+wide intervals or boundary limitations; \code{cautions}/\code{InferenceReview} persist
+through plots and reports. Two-family checks below are separate.
+
+Standardized slopes use the full Jacobian of \code{log(slope) + log(sigma2)/2},
+including cross-covariances. Ratios cancel a common population scale;
+differences use full positive-slope covariance. \code{PValue} tests zero log
+contrast (ratio one) or difference zero, with requested Bonferroni adjustment.
+An individual interval containing one is not a pairwise test;
+\code{\link[=compare_mfrm]{compare_mfrm()}} tests equality of all relative slopes jointly.
+
+Sandwich scores aggregate complete Person vectors, population derivatives and
+the fitted quadrature. Independent clusters must be numerous enough; deficient
+score rank withholds intervals. Its working-model target need not be the
+generating parameter, and SE changes do not repair bias, assignment or
+population misspecification. Even correctly specified small/incomplete
+samples showed undercoverage and very wide model intervals. The GPCM scope
+vignette documents these limits and distinguishes relative from standardized
+difference targets. \code{\link[=bootstrap_mfrm_gpcm]{bootstrap_mfrm_gpcm()}} provides an explicit model-based
+refit alternative, without a universal coverage guarantee.
 }
 \section{Fixed anchors in a one-family fit}{
 
@@ -453,15 +433,15 @@ reported separately from mathematical unboundedness.
 # example("confint.mfrm_fit", run.dontrun = TRUE)
 \dontrun{
 # Compare intervals for free coefficients and relative discriminations.
-ratings <- load_mfrmr_data("example_core")
 # Reuse the synthetic GPCM fit; estimation uses 61 quadrature points.
 # Full regeneration recipe: examples/measurement-fits.R in the package.
 fit <- readRDS(system.file("examples", "measurement-fits.rds",
   package = "mfrmr", mustWork = TRUE))$gpcm
 # The default matches coef(fit): steps, locations and log slopes.
 coefficients_ci <- confint(fit, level = 0.95)
-head(coefficients_ci)
+head(cbind(Estimate = coef(fit), coefficients_ci))
 attr(coefficients_ci, "diagnostics") # Availability and interpretation
+# Missing bounds do not erase retained points; report the reason too.
 # Explicitly request positive relative slopes for rater comparison:
 intervals <- confint(fit, parm = "slopes", level = 0.95)
 intervals
@@ -496,5 +476,5 @@ An Object-Oriented Implementation of Clustered Covariances in R.
 Journal of Statistical Software, 95(1), 1--36. \doi{10.18637/jss.v095.i01}.
 }
 \seealso{
-\code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}}, \link{mfrmr_gpcm_scope}, \code{\link[=build_weighting_review]{build_weighting_review()}}
+\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}, \code{\link[=build_weighting_review]{build_weighting_review()}}
 }

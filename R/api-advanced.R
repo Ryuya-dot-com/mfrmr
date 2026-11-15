@@ -543,8 +543,8 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' @param diagnostics Output from [diagnose_mfrm()]. With `method = "refit"`,
 #'   it must match `fit`; see [mfrmr_compatibility_layer] for saved-diagnostic
 #'   migration. The residual method does not use this argument.
-#' @param facet Character scalar naming the facet whose elements are tested
-#'   for differential functioning (for example, `"Criterion"` or `"Rater"`).
+#' @param facet Character scalar naming the facet whose elements are compared
+#'   across groups (for example, `"Criterion"` or `"Rater"`).
 #' @param group Character scalar naming the column in the data that
 #'   defines the grouping variable (e.g., `"Gender"`, `"Site"`).
 #' @param data Optional data frame containing at least the group column
@@ -578,15 +578,10 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #'   as identified, change estimates, or permit an otherwise refused fit.
 #'
 #' @details
-#' **Differential facet functioning (DFF)** occurs when the
-#' difficulty or severity of a facet element differs across subgroups
-#' of the population, after controlling for overall ability.  In an
-#' MFRM context this generalises classical DIF (which applies to
-#' items) to any facet: raters, criteria, tasks, etc.
-#'
-#' Differential functioning is a threat to measurement fairness: if Criterion 1 is harder
-#' for Group A than Group B at the same ability level, the measurement
-#' scale is no longer group-invariant.
+#' Differential facet functioning (DFF) concerns group differences in facet
+#' difficulty/severity at the same ability, extending item DIF to raters,
+#' criteria or tasks. It threatens group invariance; the screens below do not
+#' isolate DFF automatically.
 #'
 #' Differences between group ability distributions are not themselves DFF.
 #' Residual screens inherit the fitted model's ability and population
@@ -721,15 +716,11 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' via `p_adjust`; see [stats::p.adjust()] for their assumptions.
 #'
 #' @section Choosing a method:
-#' Use `method = "residual"` to describe group differences in model residuals
-#' without fitting subgroup models. This does not test differential functioning.
-#' Use `method = "refit"` when you specifically want group-specific parameter
-#' estimates and can tolerate extra computation. Agreement between methods is
-#' not guaranteed by a universal per-group sample-size threshold: stability and
-#' detection depend jointly on effect size, category support, response-pattern
-#' overlap, linking strength, slope heterogeneity, and estimator behavior.
-#' `min_obs` is only a cell-computability/sparsity guard; it is not evidence of
-#' power, parameter stability, or sample-size adequacy.
+#' `"residual"` describes residual group differences without subgroup fitting;
+#' `"refit"` estimates linked group-specific parameters. Neither is qualified by
+#' a universal sample-size threshold. Stability/detection depend on effect size,
+#' category support, response overlap, linking, slopes and estimation. `min_obs`
+#' is a cell sparsity/computability guard, not evidence of power or adequacy.
 #'
 #' @section Comparing with MH or ordinal logistic DIF:
 #' [mantel_haenszel_table()] supplies a separate binary conditional comparison
@@ -752,59 +743,42 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' a DFF conclusion. See the linking-and-DFF vignette for the comparison scope
 #' and primary references.
 #'
-#' @section Interpreting output:
-#' - `$dif_table`: one row per facet-level x group-pair with contrast,
-#'   a residual mean difference or linked subgroup difference. Residual rows have
-#'   no SE, test or binary classification. Includes `Method`, `N_Group1`,
-#'   `N_Group2`, `EffectMetric`, `ClassificationSystem`, `ContrastBasis`,
-#'   `SEBasis`, `StatisticLabel`, `ProbabilityMetric`, `DFBasis`,
-#'   `ReportingUse`, `PrimaryReportingEligible`, and `sparse` columns.
-#' - `$cell_table`: (residual method only) per-cell detail with N, NPersons,
-#'   ObsScore, ExpScore, ObsExpAvg, StdResidual and an interpretation note.
-#' - `$cases`: (residual method only) requested-row matching and exclusion audit,
-#'   also retained by `summary()`.
-#' - `$summary`: available/unavailable residual comparisons or linked-
-#'   screening, insufficient-linking, fixed-target and unavailable rows
-#'   (`method = "refit"`).
-#' - `$group_fits`: (refit method only) list of per-group facet estimates and
-#'   subgroup linking diagnostics, with `EstimateStatus` / `EstimateReason`
-#'   and cell, subgroup and input counts.
-#' - `$gpcm_boundary`: for `GPCM` fits, a capability-boundary table
-#'   marking the DFF/DIF output as caveated screening evidence.
-#' - `$comparison_review`: when supplied, the separate prospective interaction
-#'   question, weights, counts, assumptions and identification states. Preserved
-#'   by `summary()`, [dif_report()] and both DFF plot views. Its model can differ
-#'   from the fitted screening model; read its `fit_arguments` and `notes`.
+#' @section Reading results:
+#' Start with `$dif_table` and `$summary`. Rows compare a facet level across a
+#' group pair: residual rows describe mean residual differences without SEs,
+#' tests or binary flags; refit rows report linked differences with the
+#' qualifications above. Inspect `Method`, counts, `EffectMetric`,
+#' `ClassificationSystem`, `ContrastBasis`, `SEBasis`, `StatisticLabel`,
+#' `ProbabilityMetric`, `DFBasis`, `ReportingUse`, `PrimaryReportingEligible`
+#' and `sparse`, retaining unavailable, insufficient-linking and fixed-target rows.
 #'
-#' @section GPCM boundary:
-#' For `GPCM`, DFF/DIF rows are available as slope-aware screening
-#' evidence over the fitted expected-score and residual scale. Keep
-#' residual-method contrasts and interaction cells in screening language.
-#' Refit contrasts require explicit subgroup linking and precision support for
-#' conditional screening, but remain in screening language.
+#' Residual `$cell_table` gives N/NPersons, observed/expected scores, mean
+#' residual and scaling; `$cases` audits matching/exclusions and persists in
+#' `summary()`. Refit `$group_fits` retains estimates, linking diagnostics,
+#' `EstimateStatus`/`EstimateReason` and cell/subgroup/input counts.
+#' `$gpcm_boundary` records slope-aware screening limits: refit linking/precision
+#' checks do not make these fairness tests.
+#'
+#' Optional `$comparison_review` retains a separate prospective interaction
+#' question, weights, counts and identification assumptions, also in summaries,
+#' [dif_report()] and both plots. Its model may differ from the screening fit;
+#' read its `fit_arguments`/`notes` rather than treating it as qualification of
+#' the residual/refit contrasts.
 #'
 #' @section Saved results:
-#' Residual results, summaries and reports saved by earlier versions must be
-#' recomputed with this function using the fitted model and original data.
-#' This does not require refitting the model. Previously exported tables and
-#' figures should also be regenerated.
-#' Refit results created before the subgroup availability/cell-count checks
-#' must instead be recomputed with `method = "refit"`. This reruns the subgroup
-#' fits from the saved baseline fit and original data. Reading an old result
-#' cannot repair borrowed estimates, dropped target levels or incorrect counts;
-#' summary, report and plotting methods reject these earlier refit objects.
+#' Recompute old residual results from the saved fit/original data and regenerate
+#' exports; no model refit is needed. Old refit results predating subgroup
+#' availability/count safeguards require `method = "refit"`, rerunning subgroup
+#' fits. Loading cannot repair borrowed estimates, missing levels or counts;
+#' summary/report/plot methods reject those old refit objects.
 #'
-#' @section Typical workflow:
-#' 1. Fit a model with [fit_mfrm()]. For `RSM` / `PCM` fairness review, prefer
-#'    `method = "MML"`.
-#' 2. Run [diagnose_mfrm()] and, for `RSM` / `PCM`, prefer
-#'    `diagnostic_mode = "both"` so legacy and strict marginal screens remain
-#'    visible together.
-#' 3. Run `analyze_dff(fit, diagnostics, facet = "Criterion", group = "Gender", data = my_data)`.
-#' 4. Inspect `$dif_table` for contrasts and their reporting status, and
-#'    `$summary` for method-specific counts. Residual rows have no flags.
-#' 5. Use [dif_interaction_table()] when you need cell-level diagnostics.
-#' 6. Use [plot(x, type = "heatmap")][plot.mfrm_dif] or [dif_report()] for communication.
+#' @section Using the result:
+#' After reviewing the baseline model, call
+#' `analyze_dff(fit, facet = "Criterion", group = "Gender", data = my_data)`
+#' for residual descriptions; [diagnose_mfrm()] is unnecessary for this route.
+#' Refits require matching diagnostics, `method = "refit"` and linking review.
+#' Read the tables/statuses above, [dif_interaction_table()] for cell diagnostics,
+#' and [plot(x, type = "heatmap")][plot.mfrm_dif] or [dif_report()] for reporting.
 #'
 #' @return
 #' An object of class `mfrm_dff` (with compatibility class `mfrm_dif`) with:
@@ -848,10 +822,9 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' if ("ScaleLinkStatus" %in% names(dff_refit$dif_table)) {
 #'   unique(dff_refit$dif_table$ScaleLinkStatus)
 #' }
-#' # Look for: "linked" in `ScaleLinkStatus` confirms the focal and
-#' #   reference groups share enough common elements for a comparable
-#' #   contrast; "demoted_*" rows lose linking under the refit branch
-#' #   and should be read as exploratory.
+#' # "linked" records that the implemented linking checks passed.
+#' # It does not establish anchor invariance or valid inferential uncertainty.
+#' # Review all comparison reasons, including any "demoted_*" status.
 #' }
 #' @rdname analyze_dff
 #' @export
@@ -945,14 +918,16 @@ analyze_dff <- function(fit,
   out
 }
 
-#' Migration from the former analyze_dif() name
+#' Backward-compatible alias for [analyze_dff()]
 #'
-#' The former `analyze_dif()` name is no longer exported. Use [analyze_dff()];
-#' the calculation and saved result class are unchanged.
+#' `analyze_dif()` is retained for compatibility with earlier package versions.
+#' In many-facet workflows, prefer [analyze_dff()] as the primary entry point.
+#' @param ... Passed directly to [analyze_dff()].
 #' @rdname analyze_dff
-#' @usage NULL
-#' @name analyze_dif
-NULL
+#' @export
+analyze_dif <- function(...) {
+  analyze_dff(...)
+}
 
 .validate_dff_count_arg <- function(x, arg) {
   if (!is.numeric(x) || length(x) != 1L || is.na(x) ||
@@ -1684,13 +1659,13 @@ NULL
 #'
 #' `summary()` returns the contrast, cell, summary, and configuration tables
 #' without refitting. A summary from [analyze_dff()] keeps its DFF label when
-#' printed; a saved `mfrm_dif` summary keeps its DIF label.
+#' printed; a summary from [analyze_dif()] keeps its DIF label.
 #'
 #' @param object,x An `mfrm_dff` or `mfrm_dif` result, or its summary.
 #' @param ... Reserved for generic compatibility.
 #' @return `summary()` returns a structured differential-functioning summary.
 #'   `print()` returns its input invisibly.
-#' @seealso [analyze_dff()]
+#' @seealso [analyze_dff()], [analyze_dif()]
 #' @name mfrm_dff_methods
 NULL
 
@@ -1931,10 +1906,10 @@ print.mfrm_dff <- function(x, ...) {
 #' - `gpcm_boundary`: for `GPCM` fits, a capability-boundary table.
 #' - `config`: list of analysis parameters.
 #'
-#' @seealso [analyze_dff()], [plot(x, type = "heatmap")][plot.mfrm_dif], [dif_report()],
+#' @seealso [analyze_dff()], [analyze_dif()], [plot(x, type = "heatmap")][plot.mfrm_dif], [dif_report()],
 #'   [estimate_bias()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("dif_interaction_table", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_bias")
@@ -2125,7 +2100,7 @@ NULL
 #' values, and cell color indicates the selected metric.
 #'
 #' @param x Output from [dif_interaction_table()], [analyze_dff()], or
-#'   [analyze_dff()]. When an `mfrm_dff`/`mfrm_dif` object is passed,
+#'   [analyze_dif()]. When an `mfrm_dff`/`mfrm_dif` object is passed,
 #'   the `cell_table` element
 #'   is used (requires `method = "residual"`).
 #' @param metric Which metric to plot: `"obs_exp"` for observed-minus-expected
@@ -2139,12 +2114,12 @@ NULL
 #'   point for cell labels.
 #' @param flag_threshold Optional non-negative absolute-value threshold. When
 #'   supplied, cells with `abs(value) >= flag_threshold` are recorded in
-#'   `plot_data(p, "flag_matrix")` and outlined on the drawn heatmap.
+#'   `$data$flag_matrix` and outlined on the drawn heatmap.
 #' @param scale_limit Optional positive scalar for a symmetric color scale
 #'   from `-scale_limit` to `+scale_limit`. Use this to make several heatmaps
 #'   visually comparable.
 #' @param flag_color Border color for cells meeting `flag_threshold`.
-#' @param ... Reserved for compatibility; use the named appearance controls above.
+#' @param ... Additional graphical parameters passed to [graphics::image()].
 #'
 #' @section Interpreting output:
 #' - Warm colors (red) indicate positive Obs-Exp values (the model
@@ -2162,13 +2137,13 @@ NULL
 #' 2. Plot with `plot(..., type = "heatmap")`.
 #' 3. Identify extreme cells or contrasts for follow-up.
 #'
-#' @return Invisibly, a `ggplot` object. Use `plot_data(p, "matrix")` for
-#'   the row x column metric matrix, `plot_data(p, "pairs")` for the source long
-#'   table, and `plot_data(p, "metric")` for the metric label. Earlier 0.1.x
-#'   releases returned the bare matrix; use [plot_data()] with current plots.
+#' @return Invisibly, an `mfrm_plot_data` object whose `data` slot bundles
+#'   the row x column metric matrix (`$matrix`), the source long table
+#'   (`$pairs`), and the metric label. Earlier 0.1.x releases returned the
+#'   bare matrix; consume `$data$matrix` to keep code forward-compatible.
 #'
-#' @seealso [dif_interaction_table()], [analyze_dff()], [dif_report()]
-#' @keywords internal
+#' @seealso [dif_interaction_table()], [analyze_dff()], [analyze_dif()], [dif_report()]
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -2265,6 +2240,72 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
   }
   flag_matrix[is.na(flag_matrix)] <- FALSE
 
+  if (draw) {
+    # Color scale: blue-white-red
+    n_colors <- 64
+    max_abs <- scale_limit %||% max(c(0, abs(mat[is.finite(mat)])))
+    if (!is.finite(max_abs) || max_abs == 0) max_abs <- 1
+    breaks <- seq(-max_abs, max_abs, length.out = n_colors + 1)
+    blue_white_red <- grDevices::colorRampPalette(
+      c("steelblue", "white", "firebrick")
+    )(n_colors)
+    mat_draw <- pmax(pmin(mat, max_abs), -max_abs)
+
+    old_par <- graphics::par(mar = c(6, 8, 4, 2), no.readonly = TRUE)
+    on.exit(graphics::par(old_par), add = TRUE)
+
+    metric_label <- switch(metric,
+      obs_exp = "Obs - Exp Average",
+      t       = "Scaled residual",
+      contrast = "Group contrast"
+    )
+    label <- NULL
+    if (!is.null(x$config$functioning_label)) {
+      label <- x$config$functioning_label
+    } else if (inherits(x, "mfrm_dif_interaction")) {
+      label <- "DFF"
+    }
+
+    graphics::image(
+      x = seq_len(ncol(mat)),
+      y = seq_len(nrow(mat)),
+      z = t(mat_draw),
+      col = blue_white_red,
+      breaks = breaks,
+      axes = FALSE,
+      xlab = "", ylab = "",
+      main = "",
+      ...
+    )
+    graphics::axis(1, at = seq_len(ncol(mat)), labels = cols,
+                   las = 2, cex.axis = 0.8)
+    graphics::axis(2, at = seq_len(nrow(mat)), labels = rows,
+                   las = 1, cex.axis = 0.8)
+    graphics::box()
+
+    if (!is.null(flag_threshold) && any(flag_matrix, na.rm = TRUE)) {
+      flagged <- which(flag_matrix, arr.ind = TRUE)
+      for (ii in seq_len(nrow(flagged))) {
+        ri <- flagged[ii, 1]
+        ci <- flagged[ii, 2]
+        graphics::rect(ci - 0.5, ri - 0.5, ci + 0.5, ri + 0.5,
+                       border = flag_color, lwd = 1.2)
+      }
+    }
+
+    if (isTRUE(show_values)) {
+      for (ri in seq_len(nrow(mat))) {
+        for (ci in seq_len(ncol(mat))) {
+          val <- mat[ri, ci]
+          if (is.finite(val)) {
+            graphics::text(ci, ri, formatC(val, format = "f",
+                                           digits = value_digits), cex = 0.6)
+          }
+        }
+      }
+    }
+  }
+
   metric_label <- switch(metric,
     obs_exp = "Obs - Exp Average",
     t       = "Scaled residual",
@@ -2316,7 +2357,7 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
     data.frame(Type = guide$Item, Text = paste(guide$Meaning, guide$ReportingNote)))
   if (!is.null(x$comparison_review)) out$data$notes <- rbind(out$data$notes,
     data.frame(Type = "Comparison review", Text = "A separate prospective interaction review is retained in comparison_review; its states do not classify the displayed residual/refit effects."))
-  .mfrm_finalize_ggplot(out, draw = draw)
+  invisible(out)
 }
 
 # ============================================================================
@@ -2528,13 +2569,10 @@ information_build_step_structure <- function(fit, model) {
 #' where \eqn{P_k} is the category probability and \eqn{E(\theta)} is the
 #' expected score at theta. In `mfrmr`, these cell-level variances are then
 #' aggregated with weights taken from the realized observation counts in
-#' `fit$prep$data`.
-#' The sum includes observations from all Persons. With calibration fixed,
-#' duplicating those exposures doubles the total curve without improving any
-#' individual's rating plan. It is not per-Person test information; its
-#' reciprocal square root is not a Person's EAP posterior SD. A per-Person
-#' test information function requires an explicit task/criterion/rater roster
-#' and conditional independence of the contributing ratings.
+#' `fit$prep$data`. The sum pools exposures from all Persons, not one
+#' Person's rating plan. Duplicating exposures doubles the curve at fixed
+#' calibration without improving an individual's measurement. Its reciprocal
+#' square root is not a Person's posterior SD.
 #'
 #' The resulting total curve is therefore a design-weighted precision screen
 #' rather than a pure textbook test-information function for an abstract fixed
@@ -2555,15 +2593,21 @@ information_build_step_structure <- function(fit, model) {
 #'
 #' @section What `tif` and `iif` mean here:
 #' In `mfrmr`, this helper supports ordered-category `RSM`, `PCM`, and the
-#' current `GPCM` fit. The total curve (`$tif`) is the sum of
-#' design-weighted cell contributions across all non-person facet levels in the
-#' fitted model. The facet-level contribution curves (`$iif`) keep those
+#' one-family `GPCM` fit. The total curve (`$tif`) sums each observed
+#' design cell once, weighted by its exposure. Within each facet, level
+#' contributions sum to that total; summing contributions across facets would
+#' count the same responses repeatedly. The facet-level contribution curves (`$iif`) keep those
 #' weighted contributions separated, so you can see which observed rater
 #' levels, criteria, or other facet levels are driving precision at different
 #' parts of the scale. For `PCM`, step-facet-specific thresholds are respected
 #' when each observed design cell is evaluated. For `GPCM`, those
 #' same cell-level variances are additionally scaled by the squared
 #' discrimination associated with the realized `slope_facet` level.
+#'
+#' The calculation uses additive facet locations; fitted interaction effects
+#' are not included. With interactions, this is an additive reference profile,
+#' not information under the full fitted predictor. Two-family GPCM is refused.
+#' Calibration uncertainty is not propagated.
 #'
 #' @section What this quantity does not justify:
 #' - It is not a textbook many-facet test-information function for an abstract
@@ -2572,18 +2616,6 @@ information_build_step_structure <- function(fit, model) {
 #'   precision independent of the realized observation pattern.
 #' - It does not currently extend beyond the ordered-category `RSM` / `PCM` /
 #'   `GPCM` family implemented by [fit_mfrm()].
-#'
-#' @section When to use this:
-#' Use `compute_information()` when you want a design-weighted precision screen
-#' for an `RSM`, `PCM`, or `GPCM` fit along the latent
-#' continuum. In practice:
-#' - start with the total precision curve for overall targeting across the
-#'   realized observation pattern
-#' - inspect facet-level contribution curves when you want to see which raters,
-#'   criteria, or other facet levels account for more of that design-weighted
-#'   precision
-#' - widen `theta_range` if you expect extreme measures and want to inspect the
-#'   tails explicitly
 #'
 #' @section Choosing the theta grid:
 #' The defaults (`theta_range = c(-6, 6)`, `theta_points = 201`) work well for
@@ -2634,16 +2666,6 @@ information_build_step_structure <- function(fit, model) {
 #' cancellation in raw second moments; it does not eliminate floating-point
 #' underflow or account for calibration uncertainty.
 #'
-#' - `$tif`: design-weighted precision curve data with theta, Information, and SE.
-#' - `$iif`: design-weighted facet-level contribution curves for the fitted
-#'   non-person facets.
-#' - Higher information implies more precise measurement at that theta.
-#' - SE is inversely related to information.
-#' - Peaks in the total curve show the trait region where the realized
-#'   calibration is most informative.
-#' - Facet-level curves help explain *which observed facet levels* contribute
-#'   to those peaks; they are not standalone item-information curves and should
-#'   be read as design contributions.
 #'
 #' @section How to read the main columns:
 #' - `Theta`: point on the latent continuum where the curve is evaluated.
@@ -2653,7 +2675,7 @@ information_build_step_structure <- function(fit, model) {
 #'   curve in `$iif`.
 #'
 #' @section Recommended next step:
-#' Compare the precision peak with person/facet locations from a Wright map or
+#' Compare curve shape with the Person ability distribution in a Wright map or
 #' related diagnostics. If you need to decide how strongly SE/CI language can
 #' be used in reporting, follow with [precision_review_report()].
 #'
@@ -2675,7 +2697,7 @@ information_build_step_structure <- function(fit, model) {
 #'
 #' @seealso [fit_mfrm()], [plot(x)][plot.mfrm_information]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("compute_information", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_operational")
@@ -2900,11 +2922,11 @@ compute_information <- function(fit,
 #' @param type `"tif"` for the overall precision curve (default), `"iif"` for
 #'   facet-level contribution curves, `"se"` / `"sem"` / `"csem"` for the
 #'   conditional standard error of measurement implied by that curve, or
-#'   `"both"` for precision and conditional SEM in separate panels.
+#'   `"both"` for precision with conditional SEM on a secondary axis.
 #' @param facet For `type = "iif"`, which facet to plot. If `NULL`,
 #'   the first facet is used.
 #' @param draw If `TRUE` (default), draw the plot. If `FALSE`, return
-#'   the `ggplot` object invisibly without printing.
+#'   reusable `mfrm_plot_data` invisibly.
 #' @param ... Additional graphical parameters.
 #'
 #' @section Plot types:
@@ -2933,8 +2955,8 @@ compute_information <- function(fit,
 #'   realized design may be poorly targeted.
 #'
 #' @section Returned data when draw = FALSE:
-#' `draw = FALSE` returns a `ggplot` object without printing. Read its plotting
-#' data with `plot_data(p, "plot")`. For `type = "tif"`, `"se"`, or `"both"`,
+#' `draw = FALSE` returns an `mfrm_plot_data` object. The underlying plotting
+#' data are stored in `$data$plot`. For `type = "tif"`, `"se"`, or `"both"`,
 #' those rows come from `x$tif`. For `type = "iif"`, the returned rows come
 #' from `x$iif` filtered to the requested facet. The plot data also include
 #' `plot_long`, `information_long`, `conditional_sem`, `summary`, and
@@ -2949,11 +2971,10 @@ compute_information <- function(fit,
 #' 4. Use `draw = FALSE` when you want reusable plot data for custom graphics
 #'    or reporting helpers.
 #'
-#' @return Invisibly, a `ggplot` object. Use [plot_data()] to retrieve its
-#'   reusable plotting data and notes.
+#' @return Invisibly, an `mfrm_plot_data` object.
 #'
 #' @seealso [compute_information()], [fit_mfrm()]
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -3088,10 +3109,40 @@ plot_information <- function(x,
 
   if (type == "tif" || type == "both") {
     plot_data <- x$tif
-    .mfrm_finalize_ggplot(payload(plot_data), draw = draw)
+    if (draw) {
+      if (type == "both") {
+        par_old <- graphics::par(mar = c(5, 4, 4, 4) + 0.1)
+        on.exit(graphics::par(par_old), add = TRUE)
+      }
+      plot(plot_data$Theta, plot_data$Information,
+           type = "l", lwd = 2, col = "steelblue",
+           xlab = expression(theta), ylab = "Information (precision)",
+           main = "", ...)
+      graphics::grid()
+      if (type == "both") {
+        graphics::par(new = TRUE)
+        plot(plot_data$Theta, plot_data$SE,
+             type = "l", lwd = 2, col = "coral", lty = 2,
+             axes = FALSE, xlab = "", ylab = "")
+        graphics::axis(4, col = "coral", col.axis = "coral")
+        graphics::mtext("Conditional SEM", side = 4, line = 2.5, col = "coral")
+        graphics::legend("topright",
+                         legend = c("Information (precision)", "Conditional SEM"),
+                         col = c("steelblue", "coral"),
+                         lty = c(1, 2), lwd = 2, bty = "n")
+      }
+    }
+    invisible(payload(plot_data))
   } else if (type == "se") {
     plot_data <- x$tif
-    .mfrm_finalize_ggplot(payload(plot_data), draw = draw)
+    if (draw) {
+      plot(plot_data$Theta, plot_data$SE,
+           type = "l", lwd = 2, col = "coral",
+           xlab = expression(theta), ylab = "Conditional SEM",
+           main = "", ...)
+      graphics::grid()
+    }
+    invisible(payload(plot_data))
   } else {
     # Facet-level contribution curves
     iif <- x$iif
@@ -3102,14 +3153,26 @@ plot_information <- function(x,
     if (nrow(plot_data) == 0) {
       stop("No information data for facet '", facet, "'.", call. = FALSE)
     }
-    .mfrm_finalize_ggplot(
-      payload(
-        plot_data,
-        title_override = paste("Facet-level precision contributions:", facet),
-        subtitle_override = "Contribution curves for the selected facet"
-      ),
-      draw = draw
-    )
+    if (draw) {
+      levels_u <- unique(plot_data$Level)
+      n_lev <- length(levels_u)
+      cols <- grDevices::rainbow(n_lev, s = 0.7, v = 0.8)
+      yr <- range(plot_data$Information, na.rm = TRUE)
+      plot(NA, xlim = range(plot_data$Theta), ylim = yr,
+           xlab = expression(theta), ylab = "Information contribution",
+           main = "", ...)
+      for (k in seq_along(levels_u)) {
+        sub <- plot_data |> filter(.data$Level == levels_u[k])
+        graphics::lines(sub$Theta, sub$Information, col = cols[k], lwd = 1.5)
+      }
+      graphics::legend("topright", legend = levels_u, col = cols,
+                       lty = 1, lwd = 1.5, bty = "n", cex = 0.8)
+      graphics::grid()
+    }
+    invisible(payload(plot_data,
+      title_override = paste("Facet-level precision contributions:", facet),
+      subtitle_override = "Contribution curves for the selected facet"
+    ))
   }
 }
 
@@ -3197,7 +3260,7 @@ plot_information <- function(x,
 #' step/midpoint `DrawValue`; the current renderer draws threshold lines at the
 #' exact value and prints fitted logits in step labels.
 #' These tables support custom ggplot2/plotly rendering without parsing the
-#' figure.
+#' base plot.
 #' Use `show_ci = FALSE` for the closest FACETS-style presentation. A
 #' FACETS-style ruler drawn with `show_ci = TRUE` is intentionally labelled as
 #' a hybrid because its uncertainty intervals are supplied by `mfrmr`.
@@ -3233,8 +3296,7 @@ plot_information <- function(x,
 #' [mfrmr_visual_diagnostics] and
 #' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
 #'
-#' @return Invisibly, a `ggplot` object. [plot_data()] returns `persons`,
-#'   `facets`, `thresholds`, and the
+#' @return Invisibly, a list with `persons`, `facets`, `thresholds`, and the
 #'   underlying Wright-map tables used for the plot. Native output includes a
 #'   `retention` table and `retention_note` documenting compact-display
 #'   omissions. All renderers include fit-readiness and interpretation-status
@@ -3245,24 +3307,24 @@ plot_information <- function(x,
 #' @concept visual diagnostics
 #' @concept Wright maps
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_wright_unified", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", model = "RSM", maxit = 30)
-#' map_plot <- plot(fit, type = "wright", view = "unified", draw = FALSE)
-#' names(plot_data(map_plot))
+#' map_data <- plot(fit, type = "wright", view = "unified", draw = FALSE)
+#' names(map_data)
 #' facets_map <- plot(fit, type = "wright", view = "unified", renderer = "facets", category_labels = c(
 #'     `1` = "Beginning", `2` = "Developing", `3` = "Secure", `4` = "Advanced"
 #'   ), draw = FALSE)
-#' plot_data(facets_map)$facets_style$settings
+#' facets_map$facets_style$settings
 #' }
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -3387,9 +3449,29 @@ plot_wright_unified <- function(fit,
     plot_data$subtitle <- paste0("REVIEW ONLY - ", plot_data$subtitle)
     warning(plot_readiness$detail, call. = FALSE)
   }
-  plot_data$palette <- palette
-  out <- new_mfrm_plot_data("wright_map", plot_data)
-  .mfrm_finalize_ggplot(out, draw = draw)
+  if (!draw) return(invisible(plot_data))
+
+  apply_plot_preset(style)
+  draw_wright_map(
+    plot_data,
+    title = plot_data$title,
+    palette = resolve_palette(
+      palette = palette,
+      defaults = c(
+        facet_level = style$accent_tertiary,
+        step_threshold = style$accent_secondary,
+        person_hist = style$fill_muted,
+        grid = style$grid,
+        range = style$accent_primary,
+        iqr = style$foreground
+      )
+    ),
+    label_angle = label_angle,
+    show_ci = show_ci,
+    ci_level = ci_level
+  )
+
+  invisible(plot_data)
 }
 
 # ============================================================================
@@ -3931,18 +4013,12 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #'   the person identifiers refer to the same persons across fitted waves.
 #'
 #' @details
-#' For each non-reference wave, the function extracts facet-level estimates
-#' using [make_anchor_table()] and computes the element-by-element difference
-#' against the reference wave.  Standard errors are obtained from
-#' [diagnose_mfrm()] applied to each fit.  Only elements common to both the
-#' reference and a comparison wave are included. Before reporting drift, the
-#' function removes the weighted common-element link offset between the two
-#' waves so that `Drift` represents residual instability rather than the
-#' overall shift between calibrations. The function also records how many
-#' common elements survive the screening step within each linking facet and
-#' treats fewer than 5 retained common elements per facet as thin support.
-#' This count is a package screening convention, not a universal adequacy
-#' threshold.
+#' Compare each fitted wave with the reference using common facet-level estimates
+#' from [make_anchor_table()] and SEs from [diagnose_mfrm()]. Removing the
+#' weighted common-element offset yields residual `Drift`, not the overall
+#' calibration shift. Fewer than five retained common elements in any linking
+#' facet is marked as thin support; this is a package screening convention,
+#' not a universal adequacy threshold.
 #'
 #' One `LinkOffset` is pooled across all selected common elements and facets.
 #' If at least one pair has finite positive SEs, only pairs with such SEs
@@ -3998,40 +4074,24 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' subset (e.g., `facets = "Criterion"`) restricts comparison to those facets
 #' only.
 #'
-#' @section Which function should I use?:
-#' - Use [anchor_to_baseline()] when your starting point is raw new data plus a
-#'   single baseline fit.
-#' - Use `detect_anchor_drift()` when you already have multiple fitted waves
-#'   and want a reference-versus-wave comparison.
-#' - Use [build_equating_chain()] when the waves form a sequence and you need
-#'   cumulative linking offsets.
+#' @section Reading the drift review:
+#' Supply a named list of fitted waves, for example `list(Spring = fit_s,
+#' Fall = fit_f)`. Read `summary(drift)` before `drift$drift_table`, then inspect
+#' common-element support and flagged or unavailable rows.
 #'
-#' @section Interpreting output:
-#' - `$drift_table`: one row per element x wave combination, with columns
-#'   `Facet`, `Level`, `Wave`, `Ref_Est`, `Wave_Est`, `LinkOffset`, `Drift`,
-#'   `SE_Ref`, `SE_Wave`, `SE`, `Drift_SE_Ratio`, `LinkSupportAdequate`, and
-#'   `Flag`.  Large drift signals instability after alignment to the
-#'   common-element link.
-#' - `$summary`: aggregated statistics by facet and wave: number of elements,
-#'   mean/max absolute drift, and count of flagged elements.
-#' - `$common_elements`: pairwise common-element counts in tidy table form.
-#'   Small
-#'   overlap weakens the comparison and results should be interpreted
-#'   cautiously.
-#' - `$common_by_facet`: retained common-element counts by linking facet for
-#'   each reference-vs-wave comparison. `LinkSupportAdequate = FALSE` means the
-#'   link rests on fewer than 5 retained common elements in at least one facet.
-#' - `$config`: records the analysis parameters for reproducibility.
-#' - A practical reading order is `summary(drift)` first, then
-#'   `drift$drift_table`, then `drift$common_by_facet` if overlap looks thin.
+#' - `drift_table` contains element-by-wave `Facet`, `Level`, `Wave`, `Ref_Est`,
+#'   `Wave_Est`, `LinkOffset`, `Drift`, `SE_Ref`, `SE_Wave`, `SE`,
+#'   `Drift_SE_Ratio`, `LinkSupportAdequate` and `Flag`.
+#' - `summary` aggregates counts and mean/maximum absolute drift by facet and
+#'   wave. `common_elements` records pairwise overlap; `common_by_facet` counts
+#'   retained elements per linking facet. `LinkSupportAdequate = FALSE` marks
+#'   fewer than five in at least one facet, not a verdict on all linking assumptions.
+#' - `config` records the analysis settings. Review flags and sensitivity to
+#'   anchor choices with substantive evidence before exclusion or rater retraining.
 #'
-#' @section Typical workflow:
-#' 1. Fit separate models for each administration wave.
-#' 2. Combine into a named list: `fits <- list(Spring = fit_s, Fall = fit_f)`.
-#' 3. Call `drift <- detect_anchor_drift(fits)`.
-#' 4. Review `summary(drift)` and `plot(drift)`.
-#' 5. Flagged elements may need to be removed from anchor sets or
-#'    investigated for substantive causes (e.g., rater re-training).
+#' Use [anchor_to_baseline()] for raw new data and a baseline fit, or
+#' [build_equating_chain()] for cumulative offsets across ordered adjacent waves.
+#' These are different starting points, not required extra steps.
 #'
 #' @return Object of class `mfrm_anchor_drift` with components:
 #'   \describe{
@@ -4072,6 +4132,9 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' drift$common_elements
 #' }
 #' @order 1
+#' @concept confidence intervals
+#' @concept linking
+#' @concept visual diagnostics
 detect_anchor_drift <- function(fits,
                                 facets = NULL,
                                 drift_threshold = 0.5,
@@ -4469,29 +4532,20 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' thin retained anchor set signals an unstable link that may compromise the
 #' resulting scale placement.
 #'
-#' @section Which function should I use?:
-#' - Use [anchor_to_baseline()] for a single new wave anchored to a known
-#'   baseline.
-#' - Use [detect_anchor_drift()] when you want direct comparison against one
-#'   reference wave.
-#' - Use `build_equating_chain()` when no single wave should dominate and you
-#'   want ordered, adjacent links across the series.
+#' @section Reading the chain:
+#' Supply fits in an ordered named list and read `links` before `cumulative`:
+#' weak adjacent links affect later scale placement. [detect_anchor_drift()]
+#' instead compares every wave directly with one reference;
+#' [anchor_to_baseline()] fits raw new data against a baseline.
 #'
-#' @section Interpreting output:
-#' - `$links`: one row per adjacent pair with `From`, `To`, `N_Common`,
-#'   `N_Retained`, `Offset_Prelim`, `Offset`, `Offset_SD`, and
-#'   `Max_Residual`. Small `Offset_SD`
-#'   relative to the offset indicates a consistent shift across elements.
-#'   `LinkSupportAdequate = FALSE` means at least one linking facet retained
-#'   fewer than 5 common elements after screening.
-#' - `$cumulative`: one row per wave with its cumulative offset from Wave 1.
-#'   Wave 1 always has offset 0.
-#' - `$element_detail`: per-element linking statistics (estimate in each
-#'   wave, difference, residual from mean offset, and flag status).
-#'   Flagged elements may indicate DIF or rater re-training effects.
-#' - `$common_by_facet`: retained common-element counts by linking facet for
-#'   each adjacent link.
-#' - `$config`: records wave names and analysis parameters.
+#' - `links` records each `From`/`To` pair, `N_Common`, `N_Retained`,
+#'   `Offset_Prelim`, `Offset`, `Offset_SD` and `Max_Residual`.
+#'   `LinkSupportAdequate = FALSE` marks fewer than five retained common elements
+#'   in at least one facet. `common_by_facet` gives those facet counts.
+#' - `cumulative` gives offsets from the first wave, whose offset is zero.
+#' - `element_detail` retains each element's wave estimates, difference,
+#'   residual and flag; `config` records wave names and settings.
+#'
 #' - `OffsetStatus` / `OffsetReason` explain unavailable link offsets.
 #'   `ScreeningFallback` records use of all finite differences when no row
 #'   passed preliminary screening. `N_Contributing` and the element-level
@@ -4506,26 +4560,24 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' - `cumulative$Status` / `Reason` distinguish unavailable preceding links
 #'   from an unrepresentable cumulative sum. Later offsets do not become zero
 #'   when a link is unavailable.
-#' - Read `links` before `cumulative`: weak adjacent links can make later
-#'   cumulative offsets less trustworthy.
+#' @section Reviewing flagged links:
+#' Inspect `summary(chain)`, `plot(chain, type = "chain")` and
+#' `chain$element_detail`. A flag warrants investigation; changing the linking
+#' set requires substantive justification and sensitivity review.
 #'
 #' @section Common-element graph:
-#' `plot(chain, type = "graph")` displays waves as squares and common elements
-#' as circles, including waves without retained connections. Each element node
-#' belongs to one reviewed link: `[L1]` refers to link 1 in the returned links
-#' table. The same element can have different screening results in different
-#' comparisons, so it is repeated per link. Solid lines denote retained,
-#' unflagged elements; dot-dash denotes retained elements with a drift flag or
-#' an unavailable flag; dashed denotes excluded elements; dotted denotes
-#' unknown retention. These distinctions also apply in monochrome.
+#' `plot(chain, type = "graph")` uses squares for waves and circles for common
+#' elements, including waves without retained connections. Elements are repeated
+#' per reviewed link because screening can differ: `[L1]` denotes link 1.
+#' Lines are solid for retained/unflagged elements, dot-dash for retained elements
+#' with a positive or unavailable flag, dashed for excluded elements, and dotted
+#' for unknown retention. Monochrome preserves these distinctions.
 #'
-#' This is a graph of screened common-element comparisons, not an inventory
-#' of fixed anchors or an all-pairs assessment. Retention does not guarantee
-#' positive weight in the offset, invariance, adequate support or precision.
-#' New chains store positional `FromID`/`ToID` in `links` and `LinkID` in
-#' `element_detail`; display names may repeat or contain punctuation. Older
-#' chains are matched by their complete link labels; ambiguous references
-#' require rebuilding the chain.
+#' The graph represents recorded comparisons, not fixed anchors or all wave pairs.
+#' Retention implies neither positive offset weight nor invariance, support or
+#' precision. Positional `FromID`/`ToID` in `links` and `LinkID` in `element_detail`
+#' allow repeated or punctuated display names. Older chains use complete link
+#' labels; ambiguous references require rebuilding.
 #'
 #' With `draw = FALSE`, the plot returns an `mfrm_plot_data` object. Its
 #' `$data$data` contains `nodes`, `edges`, `links`, `elements`, `n_waves`,
@@ -4539,21 +4591,19 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' graphics are sufficient; no optional graph package is needed.
 #'
 #' @section Wave links and common-element removal:
-#' `plot(chain, type = "links")` summarizes the recorded wave-to-wave
-#' comparisons. Numbers count common elements with `Retained = TRUE`, including
-#' flagged retained elements. A dotted comparison has no recorded retained
-#' element; this is not proof that the original rating design is disconnected.
-#' Missing retention is counted separately. Dot-dash connections have flagged
-#' retained elements or inadequate/unknown recorded link support.
+#' `plot(chain, type = "links")` shows recorded comparisons and counts retained
+#' common elements, including flagged ones. Dotted links have no recorded retained
+#' element; this does not establish disconnection in the original rating design.
+#' Missing retention is counted separately. Dot-dash marks flagged retained
+#' elements or inadequate/unknown link support.
 #'
-#' `plot(chain, type = "anchor_removal")` removes each facet/level identity,
-#' one at a time, from all recorded comparisons. Other retention decisions stay
-#' fixed. The horizontal axis counts newly disconnected unordered wave pairs,
-#' including indirect paths. Pairs already disconnected at baseline are not
-#' counted. Losing a direct link need not disconnect its endpoints if another
-#' path remains. Zero means no new graph disconnection, not negligible impact
-#' on estimates or adequate linking support. No screening, offsets, estimates,
-#' SEs or confidence intervals are recomputed by either view.
+#' `plot(chain, type = "anchor_removal")` deletes each facet/level identity from
+#' all recorded comparisons, holding other retention decisions fixed. The axis
+#' counts newly disconnected unordered wave pairs, including indirect paths;
+#' already disconnected pairs are excluded. Losing a direct link need not
+#' disconnect its endpoints. Zero means no new graph disconnection, not negligible
+#' statistical influence or adequate support. Neither view recomputes screening,
+#' offsets, estimates, SEs or intervals.
 #'
 #' Both views return `$data$data$nodes`, `links`, `elements` and `summary`.
 #' The removal view additionally returns `removal` (one row per common-element
@@ -4615,16 +4665,6 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' is supplied. A small conditional change is not evidence of anchor invariance
 #' or negligible change under a full model refit. Notes remain available when
 #' figure titles and footers are omitted.
-#'
-#' @section Typical workflow:
-#' 1. Fit each administration wave separately: `fit_a <- fit_mfrm(...)`.
-#' 2. Combine into an ordered named list:
-#'    `fits <- list(Spring23 = fit_s, Fall23 = fit_f, Spring24 = fit_s2)`.
-#' 3. Call `chain <- build_equating_chain(fits)`.
-#' 4. Review `summary(chain)` for link quality.
-#' 5. Visualize with `plot(chain, type = "chain")`.
-#' 6. For problematic links, investigate flagged elements in
-#'    `chain$element_detail` and consider removing them from the anchor set.
 #'
 #' @return Object of class `mfrm_equating_chain` with components:
 #'   \describe{
@@ -4869,13 +4909,11 @@ NULL
 #'   (newly disconnected wave pairs after deleting each common element), or
 #'   `"offset_sensitivity"` (conditional rescreened linking-offset changes).
 #' @param preset Visual preset.
-#' @param draw If `TRUE`, print the `ggplot` object to the active device.
+#' @param draw If `TRUE`, draw the plot with base graphics.
 #' @param show_title Logical; display the main title.
 #' @param show_notes Logical; display graph/topology interpretation footers.
 #'   Returned notes and ordinary R warnings are unaffected. Axes, legends and
 #'   data labels remain visible; other chain views have no interpretation footer.
-#' @return Invisibly, a `ggplot` object carrying its saved plot payload for
-#'   [plot_data()].
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
@@ -4897,6 +4935,7 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
   type <- match.arg(type)
   style <- resolve_plot_preset(preset)
   if (identical(type, "chain")) {
+    if (isTRUE(draw)) apply_plot_preset(style)
     return(.plot_equating_chain(x, draw = draw, style = style,
       show_title = show_title, show_notes = show_notes, ...))
   }
@@ -4912,7 +4951,8 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
       legend = new_plot_legend(key$Label, rep("availability", 3), rep("shape", 3), key$Shape),
       preset = style$name
     ))
-    return(.mfrm_finalize_ggplot(out, draw = draw))
+    if (isTRUE(draw)) .draw_equating_offset_sensitivity(out, style)
+    return(invisible(out))
   }
   if (type %in% c("links", "anchor_removal")) {
     removal <- identical(type, "anchor_removal")
@@ -4937,7 +4977,8 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
         if (removal) key$Shape else key$Linetype),
       preset = style$name
     ))
-    return(.mfrm_finalize_ggplot(out, draw = draw))
+    if (isTRUE(draw)) .draw_equating_topology(out, style, removal = removal)
+    return(invisible(out))
   }
   if (identical(type, "graph")) {
     graph_data <- .equating_graph_data(x)
@@ -4959,7 +5000,8 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
       legend = new_plot_legend(key$Label, rep("screening", 4), rep("linetype", 4), key$Linetype),
       preset = style$name
     ))
-    return(.mfrm_finalize_ggplot(out, draw = draw))
+    if (isTRUE(draw)) .draw_equating_graph(out, style)
+    return(invisible(out))
   }
   # type == "common_anchors": bar chart of pairwise common anchor counts.
   links <- as.data.frame(x$links %||% data.frame(), stringsAsFactors = FALSE)
@@ -4987,7 +5029,21 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
     )
   )
   out$data$notes <- .mfrm_plot_notes(out$data)
-  .mfrm_finalize_ggplot(out, draw = draw)
+  if (isTRUE(draw)) {
+    apply_plot_preset(style)
+    old_par <- graphics::par()["mar"]
+    on.exit(graphics::par(old_par), add = TRUE)
+    graphics::par(mar = c(8, 5, 3, 1))
+    graphics::barplot(
+      height = links$N_Common,
+      names.arg = links$Pair,
+      las = 2,
+      col = style$accent_primary,
+      main = .mfrm_plot_display_title(out$data),
+      ylab = "N common"
+    )
+  }
+  invisible(out)
 }
 
 #' @rdname build_equating_chain
@@ -5446,40 +5502,25 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #'   outputs. The full object keeps the full risk tables.
 #'
 #' For `summary()`: Number of top linking-risk rows to keep in the compact summary.
-#' @details `build_linking_review()` does not recompute anchor, drift, or chain
-#' statistics. It is a synthesis layer that organizes package-native evidence
-#' into one operational review surface with:
+#' @details
+#' Combine saved anchor, drift and chain results without recalculation. Choose
+#' the inputs for the question: [review_mfrm_anchors()] checks receiving-data
+#' constraints, [detect_anchor_drift()] compares waves with a reference, and
+#' [build_equating_chain()] follows adjacent links. These are complementary
+#' sources, not a required sequence.
 #'
-#' - a front-door status block,
-#' - ranked linking risks,
-#' - explicit next actions,
-#' - plot routing metadata,
-#' - a reporting/export handoff map.
+#' The combined review does not verify source-fit readiness, cross-wave identity,
+#' invariance or group-anchor assumptions, and cannot establish scale equivalence
+#' or score comparability. Its documented scope is RSM/PCM; GPCM drift/chain
+#' inputs remain exploratory with scope `supported_with_caveat`.
 #'
-#' The helper keeps the current conservative interpretation policy:
-#' anchor drift and screened links are operational review tools, not automatic
-#' proofs of scale equivalence or score comparability.
-#' It also does not verify source-fit readiness, cross-wave element identity,
-#' invariance, or the external assumptions behind group anchors; these must be
-#' established before promoting the synthesized review.
-#' @section Recommended input route:
-#' Use existing package-native outputs in this order:
-#' 1. [review_mfrm_anchors()] for pre-fit anchor adequacy.
-#' 2. [detect_anchor_drift()] for direct wave-to-reference drift screening.
-#' 3. [build_equating_chain()] for adjacent screened-link review across waves.
-#' @section Interpreting output:
-#' - `overview`: which evidence sources were supplied and the current review status.
-#' - `top_linking_risks`: primary operational triage table.
-#' - `group_view_index`: stable wave/link/facet/source-family grouping routes.
-#' - `plot_map`: which plotting function to use for each result.
-#' - `reporting_map`: what is covered here versus which manuscript-oriented
-#'   helper should be used separately.
-#' @section GPCM boundary:
-#' This helper summarizes the documented `RSM` / `PCM` linking workflow.
-#' When supplied drift/chain sources resolve to `GPCM`, it retains an explicitly
-#' exploratory review and marks that scope as `supported_with_caveat`.
-#' This does not establish score interchangeability, invariance or a common
-#' scale across administrations.
+#' @section Using the review:
+#' Read `overview` for supplied sources and status, then `top_linking_risks` for
+#' ranked follow-up. `group_view_index` groups by wave, link, facet or source
+#' family. `plot_map` routes to the source plots; `reporting_map` identifies
+#' coverage and separate manuscript-reporting helpers. Retain the original
+#' results when inspecting risks or deciding next actions.
+#'
 #' @return An object of class `mfrm_linking_review`.
 #' @seealso [review_mfrm_anchors()], [detect_anchor_drift()],
 #'   [build_equating_chain()], [plot(x)][plot.mfrm_anchor_drift], [mfrmr_linking_and_dff]
@@ -6663,8 +6704,10 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #' - displacement flags from [displacement_table()]
 #'
 #' The result is an operational review bundle. It is not a formal adjudication
-#' system, and repeated signals across evidence families should be prioritized
-#' over any single isolated case row. In addition to raw case rows, the object
+#' system. Several flags can arise from the same responses and correlated
+#' statistics; their co-occurrence is not independent corroboration or a
+#' combined significance test. Interpret magnitude, context and availability
+#' before prioritizing follow-up. In addition to raw case rows, the object
 #' includes stable grouping views such as `by_person`, `by_facet_level`,
 #' `by_source_family`, and `by_wave` to support operational triage. The
 #' `source_support` component records which evidence families are currently
@@ -7387,7 +7430,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' should be read as an operational weighting-policy review, not as a formal
 #' validity adjudication.
 #' @return An object of class `mfrm_weighting_review`.
-#' @seealso [compare_mfrm()], [compute_information()], [mfrmr_gpcm_scope]
+#' @seealso [compare_mfrm()], [compute_information()], [gpcm_capability_matrix()]
 #' @examples # Long-running workflow; run explicitly when needed.
 #' # example("build_weighting_review", run.dontrun = TRUE)
 #' \dontrun{
@@ -7937,7 +7980,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
       BiasScreening = status_for("residual_bias_screening"),
       SummaryAppendix = status_for("summary_appendix"),
       PrimaryHelpers = paste(
-        "mfrmr_output_guide(\"gpcm_capabilities\"); build_apa_outputs();",
+        "gpcm_capability_matrix(); build_apa_outputs();",
         "facets_output_file_bundle(include = \"score\"); build_linking_review();",
         "simulate_mfrm_recovery(); fair_average_table(); estimate_bias();",
         "export_summary_appendix()"
@@ -8066,7 +8109,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
     base <- dplyr::bind_rows(
       tibble::tibble(
         Question = "What is the exact GPCM support boundary?",
-        PrimaryHelper = "mfrmr_output_guide(\"gpcm_capabilities\")",
+        PrimaryHelper = "gpcm_capability_matrix()",
         Interpretation = "Treat supported_with_caveat rows as review outputs and blocked/deferred rows as out of scope."
       ),
       base
@@ -8118,7 +8161,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #'   recovery, fair averages, bias screening, and summary-appendix handoff;
 #' - report wording templates that avoid treating better `GPCM` fit as
 #'   an automatic operational-scoring decision;
-#' - `mfrmr_output_guide("gpcm_capabilities")` when `GPCM` is present;
+#' - [gpcm_capability_matrix()] when `GPCM` is present;
 #' - optionally, [build_weighting_review()] for the first Rasch-family reference
 #'   versus `GPCM` pair.
 #'
@@ -8133,7 +8176,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' q<31 fits retain raw criteria but produce a screening/review-only bundle.
 #' @return An object of class `mfrm_model_choice_review`.
 #' @seealso [compare_mfrm()], [build_weighting_review()],
-#'   [mfrmr_gpcm_scope], [compute_information()]
+#'   [gpcm_capability_matrix()], [compute_information()]
 #' @examples toy <- load_mfrmr_data("example_core")
 #' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                     method = "MML", model = "RSM", quad_points = 31)

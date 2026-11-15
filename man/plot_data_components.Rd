@@ -7,14 +7,15 @@
 plot_data_components(x, type = NULL, ...)
 }
 \arguments{
-\item{x}{An \code{mfrm_plot_data} object, or a fitted/report/review object with a
+\item{x}{An \code{mfrm_plot_data} object, an mfrmr-generated ggplot retaining
+its plot metadata, or a fitted/report/review object with a
 \code{plot(..., draw = FALSE)} method.}
 
 \item{type}{Optional plot type passed to \code{plot()} when \code{x} is not already an
-\code{mfrm_plot_data} object.}
+saved mfrmr plot object.}
 
 \item{...}{Additional arguments passed to \code{plot(..., draw = FALSE)} when
-\code{x} is not already an \code{mfrm_plot_data} object.}
+\code{x} is not already a saved mfrmr plot object.}
 }
 \value{
 A data frame with one row per reusable plot-data component.

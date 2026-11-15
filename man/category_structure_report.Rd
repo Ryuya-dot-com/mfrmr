@@ -58,7 +58,7 @@ are unavailable because outcome-selected residuals lack a unit baseline
 Practical read order:
 \enumerate{
 \item \code{summary(out)} for compact warnings and threshold ordering.
-\item \code{out$category_table} for sparse/misfitting categories.
+\item \code{out$category_table} for sparse categories and descriptive residual patterns.
 \item \code{out$median_thresholds} for cumulative 50\% boundaries and their range
 status; \code{AndrichThreshold} separately retains adjacent-category steps.
 \item \code{plot(out)} for quick visual check.
@@ -91,7 +91,7 @@ base renderer or explicitly grouped custom graphics from \code{\link[=plot_data]
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("category_structure_report", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.

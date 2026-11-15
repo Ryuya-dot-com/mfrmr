@@ -70,8 +70,7 @@ test_that("residual network agrees with independent aggregation and common-perso
   expect_equal(n$clustering$membership, cutree(hclust(distance, method = "average"), k = 2))
   expect_equal(unname(n$cell_counts), unname(table(as.character(o$Person), as.character(o$Criterion))), ignore_attr = TRUE)
   p <- plot(z$fit, type = "local_dependence", diagnostics = z$diagnostics, facet = "Criterion", draw = FALSE)
-  expect_s3_class(p, "ggplot")
-  expect_equal(plot_data(p, "matrix"), n$matrix, tolerance = 1e-12)
+  expect_equal(p$data$matrix, n$matrix, tolerance = 1e-12)
   threshold <- mfrm_residual_network(z$fit, z$diagnostics, facet = "Criterion",
     missing = "complete", clusters = 2, min_abs = 1)
   expect_equal(n$clustering, threshold$clustering)
@@ -112,20 +111,18 @@ test_that("saved plots and report exports retain residual evidence", {
   path <- tempfile(); saveRDS(n, path); saved <- readRDS(path)
   for (type in c("network", "matrix", "dendrogram")) {
     fig <- plot(saved, type = type, draw = FALSE)
-    expect_s3_class(fig, "ggplot")
-    expect_s3_class(attr(fig, "mfrmr_plot_data"), "mfrm_plot_data")
-    expect_identical(plot_data(fig, "matrix"), n$matrix)
-    expect_identical(plot_data(fig, "clustering"), n$clustering)
+    expect_s3_class(fig, "mfrm_plot_data")
+    expect_identical(fig$data$matrix, n$matrix)
+    expect_identical(fig$data$clustering, n$clustering)
   }
   pdf <- tempfile(fileext = ".pdf"); grDevices::pdf(pdf)
   tryCatch(for (type in c("network", "matrix", "dendrogram")) plot(saved, type = type),
     finally = grDevices::dev.off())
   expect_true(file.info(pdf)$size > 0)
-  if (requireNamespace("ggplot2", quietly = TRUE)) {
+  if (requireNamespace("ggplot2", quietly = TRUE))
     expect_s3_class(as_ggplot(plot(saved, type = "matrix", draw = FALSE)), "ggplot")
-    expect_s3_class(as_ggplot(plot(saved, type = "network", draw = FALSE)), "ggplot")
-    expect_s3_class(as_ggplot(plot(saved, type = "dendrogram", draw = FALSE)), "ggplot")
-  }
+  expect_error(as_ggplot(plot(saved, type = "network", draw = FALSE)), "matrix.*only")
+  expect_error(as_ggplot(plot(saved, type = "dendrogram", draw = FALSE)), "matrix.*only")
   r <- mfrm_report(saved)
   expect_identical(r$tables$pairs, n$pairs)
   expect_identical(build_summary_table_bundle(r)$tables$nodes, n$nodes)

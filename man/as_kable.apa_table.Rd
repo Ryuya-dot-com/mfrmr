@@ -18,7 +18,8 @@
 }
 \value{
 A \code{knitr_kable} object ready to be printed inline in a
-report, or a message when \code{knitr} is unavailable.
+report. If \code{knitr} is unavailable, emits a message and returns
+\code{NULL} invisibly.
 }
 \description{
 Renders the table data for direct inclusion in RMarkdown,

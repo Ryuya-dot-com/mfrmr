@@ -83,7 +83,7 @@ storage is quadratic in the declared category count. Custom weights and
 circular, bipolar, radical and ratio weights are not implemented.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("gwet_ac2_table", run.dontrun = TRUE)
 \dontrun{
 data("mfrmr_example_agreement", package = "mfrmr")

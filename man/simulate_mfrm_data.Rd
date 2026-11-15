@@ -134,8 +134,12 @@ also included.
 Simulate long-format ordered many-facet data for design studies
 }
 \details{
-This function generates synthetic ordered many-facet data under \code{RSM},
-\code{PCM}, or the package's \code{GPCM} branch.
+For a reusable generator, pass a specification from \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}
+or \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} through \code{sim_spec}.
+}
+\section{Data-generating model}{
+
+
 The data-generating process is:
 \enumerate{
 \item Draw person abilities: \eqn{\theta_n \sim N(0, \texttt{theta\_sd}^2)}
@@ -186,11 +190,9 @@ the shift in adjacent-category log odds is the specified effect multiplied
 by the observation's discrimination. A common injected effect therefore
 need not imply equal response-probability changes across facet levels.
 
-The generator targets the common two-facet rating design (persons
-\eqn{\times} raters \eqn{\times} criteria).  \code{raters_per_person}
-controls the incomplete-block structure: when less than \code{n_rater},
-each person is assigned a rotating subset of raters to keep coverage
-balanced and reproducible.
+The design is persons \eqn{\times} raters \eqn{\times} criteria.
+For custom facet names and planning limits, see "Model and planning scope"
+in \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}.
 
 Threshold handling is intentionally explicit:
 \itemize{
@@ -209,8 +211,10 @@ samples responses from the corresponding GPCM category probabilities.
 Independent arbitrary slope-facet planning is not supported by these
 design, population-forecasting, diagnostic-screening, or signal-detection
 helpers.
+}
 
-Assignment handling is also explicit:
+\section{Assignment and dependence}{
+
 \itemize{
 \item \code{"crossed"} uses the full person x rater x criterion design
 \item \code{"rotating"} assigns a deterministic rotating subset of raters per person
@@ -242,20 +246,15 @@ This does not establish independence of repeated ratings in the source data,
 or simulate serial, occasion or peer-network dependence. \code{Weight} is passed
 through to fitting, not interpreted as additional independently generated rows.
 
-Sparse linked simulation is intended for planned-missing rating designs in
-which connectivity is maintained through common linking persons. The
-returned \code{mfrm_sparse_design} attribute summarizes design density, planned
-missingness, rater coverage, and rater-pair common-person counts. These
-summaries are design diagnostics, not model-fit statistics or universal
-adequacy thresholds. This branch follows sparse rater-mediated assessment
-design work by Wind, Jones, and Grajeda (2023,
-doi:10.1177/01466216231182148), Wind and Jones (2018,
-doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
-(2023).
+Sparse linking represents planned missingness through common linking persons.
+The returned \code{mfrm_sparse_design} diagnostics describe coverage and overlap,
+not model fit or universal adequacy thresholds. The design motivation follows
+Wind, Jones, and Grajeda (2023, doi:10.1177/01466216231182148), Wind and Jones
+(2018, doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat (2023).
+}
 
-For more controlled workflows, build a reusable simulation specification
-first via \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} or derive one from an observed fit with
-\code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, then pass it through \code{sim_spec}.
+\section{Returned metadata}{
+
 
 Returned data include attributes:
 \itemize{
@@ -278,6 +277,7 @@ including the effective \code{population_assignment} (\code{"matched"},
 rate, rater coverage, and rater-pair common-person counts
 }
 }
+
 \section{Interpreting output}{
 
 \itemize{
@@ -299,7 +299,7 @@ record any injected detection targets.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("simulate_mfrm_data", run.dontrun = TRUE)
 \dontrun{
 sim <- simulate_mfrm_data(

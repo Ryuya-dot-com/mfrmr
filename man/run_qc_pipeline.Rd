@@ -48,14 +48,14 @@ only when distinguishing criterion difficulties is a substantive goal.}
 
 \item{draw}{If \code{FALSE}, return plot data invisibly without drawing.}
 
-\item{...}{Additional plotting arguments for the selected view.}
+\item{...}{Additional base-graphics arguments for the selected view.}
 }
 \value{
 Object of class \code{mfrm_qc_pipeline} with verdicts, overall status,
 details, and recommendations.
 
 For \code{plot()}:
-Invisibly, a \code{ggplot} object carrying the QC verdicts in \code{plot_data(p, "verdicts")}.
+Invisible verdicts tibble from the QC pipeline.
 }
 \description{
 Integrates convergence, model fit, reliability, separation, element misfit,
@@ -231,8 +231,8 @@ ratings <- load_mfrmr_data("study1")
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
 qc <- run_qc_pipeline(fit)
-qc_plot <- plot(qc, draw = FALSE)
-head(plot_data(qc_plot, "verdicts"))
+verdicts <- plot(qc, draw = FALSE)
+head(verdicts)
 }
 }
 \seealso{

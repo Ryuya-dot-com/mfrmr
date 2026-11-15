@@ -25,9 +25,7 @@ test_that("ordinary saved inputs retain their data and replay matching diagnosti
     expect_identical(x$diagnostics$residual_pca_mode, "none")
     res <- mfrm_results(x$fit, diagnostics = x$diagnostics, compute = "never")
     expect_s3_class(res, "mfrm_results")
-    p_res <- plot(res, type = "wright", draw = FALSE)
-    expect_s3_class(p_res, "ggplot")
-    expect_equal(plot_data(p_res),
+    expect_equal(plot(res, type = "wright", draw = FALSE)$data,
       plot_data(res, type = "wright"))
     expect_identical(x, before)
   }
@@ -188,12 +186,9 @@ test_that("packaged extended examples are coherent and replay without recomputat
   expect_equal(nrow(confint(x$random_rater$intervals, level = .90)), 4)
   for (result in list(testlet, random)) {
     p <- plot(result, type = "wright", draw = FALSE)
-    expect_s3_class(p, "ggplot")
-    expect_equal(plot_data(p), plot_data(result, type = "wright"))
+    expect_equal(p$data, plot_data(result, type = "wright"))
   }
-  p_tdiag <- plot(x$testlet$diagnostics, draw = FALSE)
-  expect_s3_class(p_tdiag, "ggplot")
-  expect_equal(plot_data(p_tdiag),
+  expect_equal(plot(x$testlet$diagnostics, draw = FALSE)$data,
     plot_data(x$testlet$diagnostics))
   expect_identical(serialize(x, NULL), before)
 
@@ -237,4 +232,77 @@ test_that("extended reports distinguish unsupplied response diagnostics from una
   expect_identical(row$Status, "caveat")
   expect_identical(row$Readiness, "Descriptive only")
   expect_identical(report$tables$response_overview, res$tables$response_overview)
+})
+
+test_that("consumer example fits preserve their source and work without refitting", {
+  saved <- readRDS(system.file("examples", "consumer-fits.rds",
+    package = "mfrmr", mustWork = TRUE))
+  before <- unserialize(serialize(saved, NULL))
+  ratings <- load_mfrmr_data(saved$dataset)
+  expect_identical(saved$dataset, "example_core")
+  for (name in c("rsm", "pcm", "mml")) {
+    for (column in c("Person", "Rater", "Criterion", "Score")) {
+      expect_identical(as.character(saved[[name]]$prep$data[[column]]),
+        as.character(ratings[[column]]))
+    }
+    expect_identical(saved[[name]]$config$model, if (name == "pcm") "PCM" else "RSM")
+    expect_identical(saved[[name]]$config$method, if (name == "mml") "MML" else "JML")
+  }
+  expect_identical(saved$pcm$config$step_facet, "Rater")
+  blocked <- function(...) stop("Unexpected refitting")
+  local_mocked_bindings(fit_mfrm = blocked, .package = "mfrmr")
+  centrality <- rater_centrality_table(saved$rsm, saved$pcm, rater_facet = "Rater")
+  expect_equal(nrow(centrality$table), length(unique(ratings$Rater)))
+  persons <- as.character(unique(saved$mml$prep$data$Person))[1:4]
+  scores <- score_mfrm_persons(saved$mml, persons = persons,
+    cut_scores = c(Basic = -0.5, Advanced = 0.8))
+  expect_identical(scores$table$Person, persons)
+  expect_true(all(scores$table$Status == "available_conditional"))
+  expect_true(all(scores$table$Lower < scores$table$Upper))
+  expect_gt(nrow(scores$decisions), 0L)
+  expect_gt(nrow(apa_table(scores, which = "decisions")$table), 0L)
+  expect_equal(plot_data(plot(scores, draw = FALSE)), plot_data(scores))
+  expect_identical(saved, before)
+})
+
+test_that("consumer example recipes reproduce estimation and downstream results", {
+  skip_on_cran()
+  recipe <- new.env(parent = baseenv())
+  sys.source(system.file("examples", "consumer-fits.R", package = "mfrmr",
+    mustWork = TRUE), envir = recipe)
+  fresh <- recipe$consumer_fit_examples()
+  saved <- readRDS(system.file("examples", "consumer-fits.rds",
+    package = "mfrmr", mustWork = TRUE))
+  expect_identical(names(fresh), names(saved))
+  # Absolute error is bounded even for zero estimates; statuses and structure
+  # must match exactly. Platform floating-point variation is not bit identity.
+  compare_values <- function(actual, expected) {
+    comparison <- all.equal(actual, expected, tolerance = 1e-8, scale = 1)
+    expect_true(isTRUE(comparison), info = paste(comparison, collapse = "\n"))
+  }
+  for (name in c("rsm", "pcm", "mml")) {
+    expect_identical(fresh[[name]]$prep, saved[[name]]$prep)
+    controls <- c("maxit", "reltol", "quad_points", "mml_integration")
+    expect_identical(fresh[[name]]$config$estimation_control[controls],
+      saved[[name]]$config$estimation_control[controls])
+    compare_values(fresh[[name]]$opt$par, saved[[name]]$opt$par)
+    compare_values(fresh[[name]]$summary$LogLik, saved[[name]]$summary$LogLik)
+    expect_identical(fresh[[name]]$summary$InferenceReady,
+      saved[[name]]$summary$InferenceReady)
+    expect_identical(fresh[[name]]$summary$ConvergenceSeverity,
+      saved[[name]]$summary$ConvergenceSeverity)
+  }
+  centrality <- function(x) rater_centrality_table(x$rsm, x$pcm,
+    rater_facet = "Rater")
+  # Source fits also retain elapsed-time telemetry. Compare all computed
+  # centrality outputs; fit parameters, controls and status are checked above.
+  fields <- c("table", "thresholds", "categories", "settings", "notes")
+  compare_values(centrality(fresh)[fields], centrality(saved)[fields])
+  scoring <- function(x) score_mfrm_persons(x$mml,
+    persons = as.character(unique(x$mml$prep$data$Person))[1:4],
+    cut_scores = c(Basic = -0.5, Advanced = 0.8))
+  fresh_scores <- scoring(fresh)
+  saved_scores <- scoring(saved)
+  compare_values(fresh_scores$table, saved_scores$table)
+  compare_values(fresh_scores$decisions, saved_scores$decisions)
 })

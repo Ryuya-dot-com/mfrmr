@@ -90,6 +90,51 @@ reachable through fixed-width output generation. It is available only for
 retained with missing screening results. \code{top_n} limits displayed rows;
 the summary always describes the complete pairwise family.
 }
+\section{Pairwise calculation}{
+
+For each target element, compare its local measure in two contexts.
+If the target has predictor sign \code{s}, its local measure is
+\code{target + bias/s}; the contrast is Context1 minus Context2. A negatively
+oriented rater therefore has local severity \code{severity - bias}.
+\code{TargetSign} comes from the saved bias result's \code{orientation_review}.
+Missing orientation withholds local measures, contrasts and tail areas;
+it is not inferred from a facet name.
+
+\code{SE1} and \code{SE2} are conditional cell-information SEs with baseline
+calibration held fixed. The contrast SE is \code{sqrt(SE1^2 + SE2^2)} under
+conditional independence of the two cells. Calibration uncertainty and
+cross-cell covariance are not propagated. \verb{Target S.E.} describes the
+original target estimate separately and is not added to the conditional
+local SE; a fixed target can still have uncertain local bias.
+
+The default \code{df_method = "facets"} uses the modified Rasch-Welch formula
+described in the FACETS t-statistics manual (von Davier, 2025). Writing
+\code{v1 = SE1^2}, \code{v2 = SE2^2} and \code{n1}, \code{n2} for weighted counts, its df is
+\code{(v1+v2)^2 * (n1+n2-2) / ((n1+n2+2) * (v1^2/(n1+1)+v2^2/(n2+1)))}.
+The tail area uses its integer part, matching executed FACETS 4.5.0
+unequal-count examples. Values are stabilized to ten decimal places before
+truncation to avoid numerical noise at integer boundaries. \code{DFUnrounded}
+retains the original continuous value.
+\code{df_method = "classical"} retains the former Welch-Satterthwaite reference
+with \code{n1-1}, \code{n2-1} and no integer truncation. \code{DFMethod} and \code{DFBasis}
+identify the choice; equal counts alone cannot distinguish the formulas.
+\code{ObsN1} and \code{ObsN2} are raw row counts. Both weighted counts must exceed
+one, both SEs must be positive and finite, and the final df must be positive.
+Otherwise the screen remains unavailable. Fractional weights follow the
+same rule but are outside the executed comparison. These are conditional
+screens, not calibrated fairness tests or general FACETS equivalence.
+}
+
+\section{Saved pairwise results}{
+
+Current tables carry \code{CalculationVersion = 3}. Recreate older fixed or
+pairwise reports using \code{\link[=build_fixed_reports]{build_fixed_reports()}} or \code{\link[=bias_pairwise_report]{bias_pairwise_report()}}.
+If the bias bundle predates baseline-score corrections or lacks orientation,
+recreate \code{\link[=estimate_bias]{estimate_bias()}} from the saved fit and current diagnostics first.
+No main calibration refit is needed. Keep historical values separately;
+summaries and fixed-report plots reject older pairwise calculations.
+}
+
 \section{Interpreting output}{
 
 \itemize{
@@ -153,53 +198,8 @@ rater effects using many-facet Rasch measurement: Part II.
 }
 }
 
-\section{Pairwise calculation}{
-
-For each target element, compare its local measure in two contexts.
-If the target has predictor sign \code{s}, its local measure is
-\code{target + bias/s}; the contrast is Context1 minus Context2. A negatively
-oriented rater therefore has local severity \code{severity - bias}.
-\code{TargetSign} comes from the saved bias result's \code{orientation_review}.
-Missing orientation withholds local measures, contrasts and tail areas;
-it is not inferred from a facet name.
-
-\code{SE1} and \code{SE2} are conditional cell-information SEs with baseline
-calibration held fixed. The contrast SE is \code{sqrt(SE1^2 + SE2^2)} under
-conditional independence of the two cells. Calibration uncertainty and
-cross-cell covariance are not propagated. \verb{Target S.E.} describes the
-original target estimate separately and is not added to the conditional
-local SE; a fixed target can still have uncertain local bias.
-
-The default \code{df_method = "facets"} uses the modified Rasch-Welch formula
-described in the FACETS t-statistics manual (von Davier, 2025). Writing
-\code{v1 = SE1^2}, \code{v2 = SE2^2} and \code{n1}, \code{n2} for weighted counts, its df is
-\code{(v1+v2)^2 * (n1+n2-2) / ((n1+n2+2) * (v1^2/(n1+1)+v2^2/(n2+1)))}.
-The tail area uses its integer part, matching executed FACETS 4.5.0
-unequal-count examples. Values are stabilized to ten decimal places before
-truncation to avoid numerical noise at integer boundaries. \code{DFUnrounded}
-retains the original continuous value.
-\code{df_method = "classical"} retains the former Welch-Satterthwaite reference
-with \code{n1-1}, \code{n2-1} and no integer truncation. \code{DFMethod} and \code{DFBasis}
-identify the choice; equal counts alone cannot distinguish the formulas.
-\code{ObsN1} and \code{ObsN2} are raw row counts. Both weighted counts must exceed
-one, both SEs must be positive and finite, and the final df must be positive.
-Otherwise the screen remains unavailable. Fractional weights follow the
-same rule but are outside the executed comparison. These are conditional
-screens, not calibrated fairness tests or general FACETS equivalence.
-}
-
-\section{Saved pairwise results}{
-
-Current tables carry \code{CalculationVersion = 3}. Recreate older fixed or
-pairwise reports using \code{\link[=build_fixed_reports]{build_fixed_reports()}} or \code{\link[=bias_pairwise_report]{bias_pairwise_report()}}.
-If the bias bundle predates baseline-score corrections or lacks orientation,
-recreate \code{\link[=estimate_bias]{estimate_bias()}} from the saved fit and current diagnostics first.
-No main calibration refit is needed. Keep historical values separately;
-summaries and fixed-report plots reject older pairwise calculations.
-}
-
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("bias_pairwise_report", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.

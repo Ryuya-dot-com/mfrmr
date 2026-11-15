@@ -147,7 +147,7 @@ and missing intervals. A slope value of one is not a rater-quality threshold.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("mfrm_curve_intervals", run.dontrun = TRUE)
 \dontrun{
 # How do category probabilities vary with ability in one rating context?

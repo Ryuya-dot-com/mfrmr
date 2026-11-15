@@ -499,13 +499,15 @@ mfrm_results_shiny_app <- function(x, top_n = 100L) {
 
     output$qc_plot <- shiny::renderPlot({
       if (!inherits(x$diagnostics, "mfrm_diagnostics")) {
-        print(.mfrmr_empty_ggplot("QC plot requires diagnostics in the mfrm_results object.", preset = "publication"))
+        graphics::plot.new()
+        graphics::text(0.5, 0.5, "QC plot requires diagnostics in the mfrm_results object.")
         return(invisible(NULL))
       }
       tryCatch(
         plot_qc_dashboard(x$fit, diagnostics = x$diagnostics, preset = "publication"),
         error = function(e) {
-          print(.mfrmr_empty_ggplot(conditionMessage(e), preset = "publication"))
+          graphics::plot.new()
+          graphics::text(0.5, 0.5, conditionMessage(e))
         }
       )
     })
@@ -514,20 +516,23 @@ mfrm_results_shiny_app <- function(x, top_n = 100L) {
       tryCatch(
         plot(x$fit, type = "pathway", preset = "publication"),
         error = function(e) {
-          print(.mfrmr_empty_ggplot(conditionMessage(e), preset = "publication"))
+          graphics::plot.new()
+          graphics::text(0.5, 0.5, conditionMessage(e))
         }
       )
     })
 
     output$response_time_plot <- shiny::renderPlot({
       if (!isTRUE(has_response_time_plot)) {
-        print(.mfrmr_empty_ggplot("Response-time plot requires include = \"response_time\" with timing metadata.", preset = "publication"))
+        graphics::plot.new()
+        graphics::text(0.5, 0.5, "Response-time plot requires include = \"response_time\" with timing metadata.")
         return(invisible(NULL))
       }
       tryCatch(
         plot(x, type = "response_time", preset = "publication"),
         error = function(e) {
-          print(.mfrmr_empty_ggplot(conditionMessage(e), preset = "publication"))
+          graphics::plot.new()
+          graphics::text(0.5, 0.5, conditionMessage(e))
         }
       )
     })
@@ -611,7 +616,8 @@ mfrm_results_shiny_app <- function(x, top_n = 100L) {
         tryCatch(
           plot(x, type = type),
           error = function(e) {
-            print(.mfrmr_empty_ggplot(conditionMessage(e), preset = "publication"))
+            graphics::plot.new()
+            graphics::text(0.5, 0.5, conditionMessage(e))
           }
         )
       })

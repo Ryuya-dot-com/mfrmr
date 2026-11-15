@@ -235,8 +235,9 @@ test_that("mice imputed logical and ordered features retain their meaning", {
     expect_identical(levels(a$feature_data$data$age), levels(attributes$age))
   }
   bad <- model
-  bad$imp$hyp[1, 2] <- 2
-  expect_error(mfrm_cluster_imputed(x, bad, x$missing, 2), "Imputation 2: Feature types")
+  # Change the source type: mice now restores logical values during completion.
+  bad$data$age <- factor(bad$data$age, ordered = FALSE)
+  expect_error(mfrm_cluster_imputed(x, bad, x$missing, 2), "^Feature types and factor levels/order")
 })
 
 test_that("imputation co-membership uses all completions and retains undefined cells", {

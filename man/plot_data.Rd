@@ -14,17 +14,18 @@ plot_data(
 )
 }
 \arguments{
-\item{x}{An \code{mfrm_plot_data} object, or a fitted/report/review object with a
+\item{x}{An \code{mfrm_plot_data} object, an mfrmr-generated ggplot retaining
+its plot metadata, or a fitted/report/review object with a
 \code{plot(..., draw = FALSE)} method.}
 
 \item{component}{Optional single component name inside the reusable plot
 data. When \code{NULL}, the full plot-data list is returned.}
 
 \item{type}{Optional plot type passed to \code{plot()} when \code{x} is not already an
-\code{mfrm_plot_data} object.}
+saved mfrmr plot object.}
 
 \item{...}{Additional arguments passed to \code{plot(..., draw = FALSE)} when
-\code{x} is not already an \code{mfrm_plot_data} object.}
+\code{x} is not already a saved mfrmr plot object.}
 
 \item{format}{\code{"native"} (default) returns the saved component unchanged.
 \code{"long"} reshapes a selected table or matrix without dropping missing cells.}
@@ -51,7 +52,7 @@ one.
 Titles, subtitles, and explanatory footnotes are omitted from figures by
 default. Use \code{plot_data(p, "title")} for the suggested title and
 \code{plot_data(p, "notes")} for a \code{Type}/\code{Text} table of descriptions and cautions.
-This works for saved \verb{0.2.x} plot payloads and mfrmr-generated ggplots,
+This works for returned base-graphics payloads and mfrmr-generated ggplots,
 including after \code{saveRDS()}/\code{readRDS()}. Printing an \code{mfrm_plot_data} object
 also displays its notes in the console. Axes, legends, panel headings and
 data/status symbols remain in the figure. Removing figure text does not
@@ -66,7 +67,7 @@ select the plotted population explicitly. \code{table} is the summary, not raw
 observations. Export either with write.csv; use the observations for custom
 box/violin/raincloud plots. Feature units are the original units, supplied by
 the study. A smooth density is usually inappropriate for a few ordinal bins.
-\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} demonstrates custom plots and CSVs.
+\href{https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html}{mfrmr-networks-and-reporting} demonstrates custom plots and CSVs.
 }
 
 \examples{

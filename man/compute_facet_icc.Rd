@@ -129,19 +129,23 @@ also unavailable and withholds the interval.
 The \code{Interpretation} column uses \strong{two scales} so the same numeric
 ICC reads correctly for each facet role:
 \itemize{
-\item For the \code{person} facet, higher ICC = better. Koo & Li (2016, p. 161)
-bands are applied: \verb{< 0.5} Poor, \verb{[0.5, 0.75]} Moderate,
-\verb{(0.75, 0.9]} Good, \verb{> 0.9} Excellent. The strict \code{>} boundary at
-0.9 follows Koo & Li's wording "values greater than 0.90 indicate
-excellent reliability" (so an ICC of exactly 0.9 reads as Good).
-\item For non-person facets (Rater, Criterion, Task, Region, ...) the
-same numeric value is a \strong{variance share}: how much of the total
-observed score variance sits at that facet. The bands used here
-are different (\verb{Trivial share} < 0.05, \verb{Small share} < 0.15,
-\verb{Moderate share} < 0.30, \verb{Large share} >= 0.30), and a large
-rater share is generally \emph{bad} news (raters disagree about
-averages), not good news.
+\item For \code{person}, the stored labels apply the Koo & Li (2016) bands to
+the point estimate: \verb{< 0.5} Poor, \verb{[0.5, 0.75]} Moderate,
+\verb{(0.75, 0.9]} Good and \verb{> 0.9} Excellent. These are descriptive labels,
+not universal acceptance rules. The share depends on Person heterogeneity
+as well as other sources of variation. It is not automatically the
+reliability of a composite, a mean over ratings or a different design.
+\item Other facets use package-defined variance-share bands: \verb{Trivial share}
+< 0.05, \verb{Small share} < 0.15, \verb{Moderate share} < 0.30 and
+\verb{Large share} >= 0.30. These cutoffs are not supplied by Koo & Li.
+A larger rater component describes systematic differences in score
+levels; its practical importance depends on the design and decision.
+Criterion or task variation is not inherently undesirable.
 }
+
+This is a Gaussian random-intercept model of numeric scores, not an
+ordinal response model or an automatic selection among standard ICC forms.
+State the fitted formula, score coding, target and uncertainty when reporting.
 
 The \code{InterpretationScale} column explicitly records which scale
 applies to each row, so downstream reporting does not confuse the
@@ -196,7 +200,7 @@ approximations. These do not estimate the precision of the full design.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("compute_facet_icc", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_core")
@@ -205,11 +209,11 @@ if (requireNamespace("lme4", quietly = TRUE)) {
                            score = "Score", person = "Person")
   print(icc)
   # Look for:
-  # - Person ICC reads as Koo & Li (2016) reliability: < 0.5 poor,
-  #   0.5-0.75 moderate, 0.75-0.9 good, > 0.9 excellent.
+  # - Person labels apply Koo & Li bands descriptively to the point.
+  #   Check the model, Person heterogeneity and interval before interpreting.
   # - Rater / Criterion ICC reads as variance share, NOT reliability;
   #   small values indicate limited systematic facet differences, and
-  #   shares > 0.10 hint at meaningful systematic facet differences.
+  #   practical importance is not determined by a universal share cutoff.
   # - `Interpretation` summarises the variance-share band the helper
   #   has assigned to each row.
 }

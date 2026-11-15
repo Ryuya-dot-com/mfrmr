@@ -639,22 +639,22 @@ print.mfrm_fair_intervals <- function(x, ...) {
 
 #' @rdname confint.mfrm_fair_average
 #' @details `plot()` method: Plot common-plan expected-score intervals
-#' @param draw Logical; print the `ggplot` figure when `TRUE`.
+#' @param draw Logical; draw with base graphics when true.
 #' @param show_title,show_notes Logical; display title/cautions, off by default.
-#' @return For `plot()`: Invisibly a `ggplot` object. [plot_data()] retains all
-#'   result rows, uncertainty labels, `monte_carlo` enclosures, and `notes`.
+#' @return For `plot()`: Invisibly an `mfrm_plot_data` object. Its `data$data` retains all
+#'   result rows and uncertainty labels; `data$notes` retains interpretation.
 #' @details For `plot()`: Points are common-plan expected scores or declared paired differences.
 #'   Bars show only available pointwise bounds under the saved method. Missing
 #'   bars are not zero uncertainty. Plotting never recalculates the fit or removes
 #'   unresolved rows from the saved result. For refit results the bars show the
 #'   empirical interval; endpoint Monte Carlo enclosures are retained in the
-#'   returned table and `plot_data(p)$monte_carlo`, not drawn as sampling intervals. See
+#'   returned table and `data$monte_carlo`, not drawn as sampling intervals. See
 #'   [confint.mfrm_fair_average()] for
 #'   the estimand, assumptions and finite-sample limitations.
 #' @examples # Continue the confint.mfrm_fair_average() example:
 #' # plot(ci)
 #' # p <- plot(ci, draw = FALSE)
-#' # plot_data(p, "notes")
+#' # p$data$notes
 #' @export
 plot.mfrm_fair_intervals <- function(x, draw = TRUE, show_title = FALSE, show_notes = FALSE, ...) {
   rlang::check_dots_empty()
@@ -682,7 +682,21 @@ plot.mfrm_fair_intervals <- function(x, draw = TRUE, show_title = FALSE, show_no
     plot_data = data.frame(Label = d$Target, X = d$Estimate, Y = y,
       Lower = d$CI_Lower, Upper = d$CI_Upper, Available = d$Available),
     notes = data.frame(Type = "uncertainty", Text = note),
-    title = "Common-plan expected-score intervals", subtitle = note, xlab = xlab,
+    title = "Common-plan expected-score intervals", xlab = xlab,
     display = list(show_title = show_title, show_notes = show_notes)))
-  .mfrm_finalize_ggplot(out, draw = draw)
+  if (isTRUE(draw)) {
+    label_margin <- max(graphics::strwidth(d$Target, units = "inches",
+      cex = graphics::par("cex.axis"))) /
+      (graphics::par("csi") * graphics::par("mex")) + 2
+    old <- graphics::par(mar = c(if (show_notes) 6 else 4.5,
+      max(7, label_margin), if (show_title) 3 else 1, 1))
+    on.exit(graphics::par(old), add = TRUE)
+    graphics::plot(d$Estimate, y, xlim = range(c(d$Estimate, d$CI_Lower, d$CI_Upper), finite = TRUE),
+      ylim = c(.5, nrow(d) + .5), yaxt = "n", ylab = "", xlab = out$data$xlab,
+      main = if (show_title) out$data$title else "", pch = 19)
+    graphics::axis(2, at = y, labels = d$Target, las = 2)
+    graphics::segments(d$CI_Lower, y, d$CI_Upper, y)
+    if (show_notes) graphics::mtext(note, side = 1, line = 4, cex = .7)
+  }
+  invisible(out)
 }

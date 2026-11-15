@@ -5,9 +5,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <limits>
 #include <string>
 #include <unordered_map>
+#include <limits>
 #include <vector>
 
 using namespace cpp11;
@@ -25,8 +25,7 @@ ProbabilityRows probability_representatives(doubles base_eta,
                                              doubles_matrix<> person_nodes,
                                              const double* steps,
                                              int k_cat,
-                                             bool observation_steps,
-                                             const double* slopes = nullptr) {
+                                             bool observation_steps) {
   const int n = base_eta.size();
   if (n < 32 || person_nodes.ncol() < 2 || k_cat < 2 ||
       person_nodes.nrow() == 0) {
@@ -50,18 +49,11 @@ ProbabilityRows probability_representatives(doubles base_eta,
   ProbabilityRows rows;
   rows.group.resize(static_cast<size_t>(n));
   std::string key;
-  const size_t key_doubles = 1 + (slopes != nullptr ? 1 : 0) +
-                             (observation_steps ? static_cast<size_t>(k_cat) : 0);
-  key.reserve(sizeof(double) * key_doubles);
+  key.reserve(sizeof(double) * static_cast<size_t>(observation_steps ? k_cat + 1 : 1));
   for (int i = 0; i < n; ++i) {
     const double eta = base_eta[i];
     if (!std::isfinite(eta)) return {};
     key.assign(reinterpret_cast<const char*>(&eta), sizeof(double));
-    if (slopes != nullptr) {
-      const double sl = slopes[i];
-      if (!std::isfinite(sl)) return {};
-      key.append(reinterpret_cast<const char*>(&sl), sizeof(double));
-    }
     if (observation_steps) {
       for (int k = 0; k < k_cat; ++k) {
         const double step = steps[static_cast<size_t>(i) + static_cast<size_t>(n) * k];
@@ -313,6 +305,7 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
   double high = 1.0;
   double z = 0.0;
   AdaptivePointMoments cur = m0;
+  bool bracketed = false;
 
   if (m0.score > 0.0) {
     low = 0.0;
@@ -325,7 +318,7 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
         out.error_message = "Non-finite adaptive posterior score or information.";
         return out;
       }
-      if (mh.score <= 0.0) break;
+      if (mh.score <= 0.0) { bracketed = true; break; }
       low = high;
       step *= 2.0;
       high += step;
@@ -341,11 +334,19 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
         out.error_message = "Non-finite adaptive posterior score or information.";
         return out;
       }
-      if (ml.score >= 0.0) break;
+      if (ml.score >= 0.0) { bracketed = true; break; }
       high = low;
       step *= 2.0;
       low -= step;
     }
+  }
+
+  // Preserve the R solver as a fallback when the native search cannot certify
+  // a bracket or termination; a finite endpoint is not a posterior mode.
+  if (!bracketed) {
+    out.error_code = 5;
+    out.error_message = "Unable to bracket adaptive posterior mode.";
+    return out;
   }
 
   // Start Newton from the initial step at z = 0, safeguarded inside (low, high)
@@ -355,6 +356,7 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
   }
   z = z_next;
 
+  bool converged = false;
   for (int iter = 0; iter < 80; ++iter) {
     cur = eval_z(z);
     if (!cur.finite_ok) {
@@ -363,6 +365,7 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
       return out;
     }
     if (std::abs(cur.score) <= 1e-14) {
+      converged = true;
       break;
     }
     if (cur.score > 0.0) {
@@ -372,6 +375,7 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
     }
     const double scale_z = std::max(1.0, std::abs(z));
     if ((high - low) <= 4.0 * std::numeric_limits<double>::epsilon() * scale_z) {
+      converged = true;
       break;
     }
     double cand = z + cur.score / cur.information;
@@ -387,8 +391,15 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
         out.error_message = "Non-finite adaptive posterior score or information.";
         return out;
       }
+      converged = true;
       break;
     }
+  }
+
+  if (!converged) {
+    out.error_code = 5;
+    out.error_message = "Adaptive posterior mode did not converge.";
+    return out;
   }
 
   const double sc = 1.0 / std::sqrt(cur.information);
@@ -425,6 +436,7 @@ inline void sparse_crossprod_add(int pat,
     target[static_cast<size_t>(col)] += alpha * acc;
   }
 }
+
 
 }  // namespace
 
@@ -488,12 +500,11 @@ writable::list mfrm_cpp_rsm_logprob_bundle(integers score_k,
       for (int i = 0; i < n; ++i) {
         const int person_row = person_int[i] - 1;
         const int obs_col = score_k[i];
-        const int group = reuse_probabilities ? probability_rows.group[static_cast<size_t>(i)] : 0;
-        const int source_row = reuse_probabilities ? probability_rows.first[static_cast<size_t>(group)] : i;
+        const int group = reuse_probabilities ? probability_rows.group[i] : 0;
+        const int source_row = reuse_probabilities ? probability_rows.first[group] : i;
         if (source_row != i) {
           double lp = (cached_log_num[static_cast<size_t>(group) * k_cat + obs_col] -
-                       cached_row_max[static_cast<size_t>(group)]) -
-                      cached_log_denom[static_cast<size_t>(group)];
+                       cached_row_max[group]) - cached_log_denom[group];
           if (has_weight) lp *= weight_vec[i];
           log_prob_mat(i, q) = lp;
           for (int k = 0; k < k_cat; ++k) {
@@ -523,8 +534,8 @@ writable::list mfrm_cpp_rsm_logprob_bundle(integers score_k,
           for (int k = 0; k < k_cat; ++k) {
             cached_log_num[static_cast<size_t>(group) * k_cat + k] = log_num[static_cast<size_t>(k)];
           }
-          cached_row_max[static_cast<size_t>(group)] = row_max;
-          cached_log_denom[static_cast<size_t>(group)] = log_denom;
+          cached_row_max[group] = row_max;
+          cached_log_denom[group] = log_denom;
         }
 
         double lp = (log_num[static_cast<size_t>(obs_col)] - row_max) - log_denom;
@@ -541,12 +552,11 @@ writable::list mfrm_cpp_rsm_logprob_bundle(integers score_k,
       for (int i = 0; i < n; ++i) {
         const int person_row = person_int[i] - 1;
         const int obs_col = score_k[i];
-        const int group = reuse_probabilities ? probability_rows.group[static_cast<size_t>(i)] : 0;
-        const int source_row = reuse_probabilities ? probability_rows.first[static_cast<size_t>(group)] : i;
+        const int group = reuse_probabilities ? probability_rows.group[i] : 0;
+        const int source_row = reuse_probabilities ? probability_rows.first[group] : i;
         if (source_row != i) {
           double lp = (cached_log_num[static_cast<size_t>(group) * k_cat + obs_col] -
-                       cached_row_max[static_cast<size_t>(group)]) -
-                      cached_log_denom[static_cast<size_t>(group)];
+                       cached_row_max[group]) - cached_log_denom[group];
           if (has_weight) lp *= weight_vec[i];
           log_prob_mat(i, q) = lp;
           continue;
@@ -571,8 +581,8 @@ writable::list mfrm_cpp_rsm_logprob_bundle(integers score_k,
           for (int k = 0; k < k_cat; ++k) {
             cached_log_num[static_cast<size_t>(group) * k_cat + k] = log_num[static_cast<size_t>(k)];
           }
-          cached_row_max[static_cast<size_t>(group)] = row_max;
-          cached_log_denom[static_cast<size_t>(group)] = log_denom;
+          cached_row_max[group] = row_max;
+          cached_log_denom[group] = log_denom;
         }
 
         double lp = (log_num[static_cast<size_t>(obs_col)] - row_max) - log_denom;
@@ -634,12 +644,11 @@ writable::list mfrm_cpp_pcm_logprob_bundle(integers score_k,
       for (int i = 0; i < n; ++i) {
         const int person_row = person_int[i] - 1;
         const int obs_col = score_k[i];
-        const int group = reuse_probabilities ? probability_rows.group[static_cast<size_t>(i)] : 0;
-        const int source_row = reuse_probabilities ? probability_rows.first[static_cast<size_t>(group)] : i;
+        const int group = reuse_probabilities ? probability_rows.group[i] : 0;
+        const int source_row = reuse_probabilities ? probability_rows.first[group] : i;
         if (source_row != i) {
           double lp = (cached_log_num[static_cast<size_t>(group) * k_cat + obs_col] -
-                       cached_row_max[static_cast<size_t>(group)]) -
-                      cached_log_denom[static_cast<size_t>(group)];
+                       cached_row_max[group]) - cached_log_denom[group];
           if (has_weight) lp *= weight_vec[i];
           log_prob_mat(i, q) = lp;
           for (int k = 0; k < k_cat; ++k) {
@@ -669,8 +678,8 @@ writable::list mfrm_cpp_pcm_logprob_bundle(integers score_k,
           for (int k = 0; k < k_cat; ++k) {
             cached_log_num[static_cast<size_t>(group) * k_cat + k] = log_num[static_cast<size_t>(k)];
           }
-          cached_row_max[static_cast<size_t>(group)] = row_max;
-          cached_log_denom[static_cast<size_t>(group)] = log_denom;
+          cached_row_max[group] = row_max;
+          cached_log_denom[group] = log_denom;
         }
 
         double lp = (log_num[static_cast<size_t>(obs_col)] - row_max) - log_denom;
@@ -687,12 +696,11 @@ writable::list mfrm_cpp_pcm_logprob_bundle(integers score_k,
       for (int i = 0; i < n; ++i) {
         const int person_row = person_int[i] - 1;
         const int obs_col = score_k[i];
-        const int group = reuse_probabilities ? probability_rows.group[static_cast<size_t>(i)] : 0;
-        const int source_row = reuse_probabilities ? probability_rows.first[static_cast<size_t>(group)] : i;
+        const int group = reuse_probabilities ? probability_rows.group[i] : 0;
+        const int source_row = reuse_probabilities ? probability_rows.first[group] : i;
         if (source_row != i) {
           double lp = (cached_log_num[static_cast<size_t>(group) * k_cat + obs_col] -
-                       cached_row_max[static_cast<size_t>(group)]) -
-                      cached_log_denom[static_cast<size_t>(group)];
+                       cached_row_max[group]) - cached_log_denom[group];
           if (has_weight) lp *= weight_vec[i];
           log_prob_mat(i, q) = lp;
           continue;
@@ -717,8 +725,8 @@ writable::list mfrm_cpp_pcm_logprob_bundle(integers score_k,
           for (int k = 0; k < k_cat; ++k) {
             cached_log_num[static_cast<size_t>(group) * k_cat + k] = log_num[static_cast<size_t>(k)];
           }
-          cached_row_max[static_cast<size_t>(group)] = row_max;
-          cached_log_denom[static_cast<size_t>(group)] = log_denom;
+          cached_row_max[group] = row_max;
+          cached_log_denom[group] = log_denom;
         }
 
         double lp = (log_num[static_cast<size_t>(obs_col)] - row_max) - log_denom;
@@ -743,188 +751,64 @@ writable::list mfrm_cpp_pcm_logprob_bundle(integers score_k,
 }
 
 [[cpp11::register]]
-writable::list mfrm_cpp_gpcm_logprob_bundle(integers score_k,
-                                            integers person_int,
-                                            doubles base_eta,
-                                            doubles_matrix<> person_nodes,
-                                            doubles_matrix<> step_cum_obs,
-                                            doubles slope_obs,
-                                            sexp weight,
-                                            bool include_probs,
-                                            bool include_linear_part) {
-  const int n = base_eta.size();
-  const int n_nodes = person_nodes.ncol();
-  const int k_cat = step_cum_obs.ncol();
-  const bool has_weight = !Rf_isNull(weight);
-  doubles weight_vec;
-  if (has_weight) {
-    weight_vec = as_doubles(weight);
+writable::list mfrm_cpp_expected_category_bundle(list prob_list,
+                                                 doubles_matrix<> obs_posterior,
+                                                 bool include_p_geq) {
+  const int n_nodes = prob_list.size();
+  if (n_nodes == 0) {
+    stop("`prob_list` must contain at least one probability matrix.");
   }
 
-  writable::doubles_matrix<> log_prob_mat(n, n_nodes);
-  writable::list prob_list;
-  writable::list linear_part_list;
-  if (include_probs) {
-    prob_list = writable::list(n_nodes);
+  doubles_matrix<> first_prob(prob_list[0]);
+  const int n = first_prob.nrow();
+  const int k_cat = first_prob.ncol();
+  writable::doubles_matrix<> posterior_prob(n, k_cat);
+  for (int i = 0; i < n; ++i) {
+    for (int k = 0; k < k_cat; ++k) {
+      posterior_prob(i, k) = 0.0;
+    }
   }
-  if (include_linear_part) {
-    linear_part_list = writable::list(n_nodes);
-  }
-
-  std::vector<double> linear_row(static_cast<size_t>(k_cat));
-  std::vector<double> log_num(static_cast<size_t>(k_cat));
-  std::vector<double> prob_row(static_cast<size_t>(k_cat));
-  const ProbabilityRows probability_rows = probability_representatives(
-    base_eta, person_nodes, REAL(step_cum_obs), k_cat, true, REAL(slope_obs));
-  const bool reuse_probabilities = !probability_rows.group.empty();
-  std::vector<double> cached_log_num(probability_rows.first.size() * static_cast<size_t>(k_cat));
-  std::vector<double> cached_row_max(probability_rows.first.size());
-  std::vector<double> cached_log_denom(probability_rows.first.size());
 
   for (int q = 0; q < n_nodes; ++q) {
-    if (include_probs || include_linear_part) {
-      writable::doubles_matrix<> probs_q(include_probs ? n : 0, include_probs ? k_cat : 0);
-      writable::doubles_matrix<> linear_q(include_linear_part ? n : 0, include_linear_part ? k_cat : 0);
-      for (int i = 0; i < n; ++i) {
-        const int person_row = person_int[i] - 1;
-        const int obs_col = score_k[i];
-        const int group = reuse_probabilities ? probability_rows.group[static_cast<size_t>(i)] : 0;
-        const int source_row = reuse_probabilities ? probability_rows.first[static_cast<size_t>(group)] : i;
-        if (source_row != i) {
-          double lp = (cached_log_num[static_cast<size_t>(group) * k_cat + obs_col] -
-                       cached_row_max[static_cast<size_t>(group)]) -
-                      cached_log_denom[static_cast<size_t>(group)];
-          if (has_weight) lp *= weight_vec[i];
-          log_prob_mat(i, q) = lp;
-          if (include_probs) {
-            for (int k = 0; k < k_cat; ++k) {
-              probs_q(i, k) = probs_q(source_row, k);
-            }
-          }
-          if (include_linear_part) {
-            for (int k = 0; k < k_cat; ++k) {
-              linear_q(i, k) = linear_q(source_row, k);
-            }
-          }
-          continue;
-        }
-        const double eta_q = base_eta[i] + person_nodes(person_row, q);
-        const double sl = slope_obs[i];
-        double row_max = -std::numeric_limits<double>::infinity();
-
-        for (int k = 0; k < k_cat; ++k) {
-          const double lin = eta_q * static_cast<double>(k) - step_cum_obs(i, k);
-          const double value = lin * sl;
-          linear_row[static_cast<size_t>(k)] = lin;
-          log_num[static_cast<size_t>(k)] = value;
-          if (value > row_max) {
-            row_max = value;
-          }
-        }
-
-        double denom_sum = 0.0;
-        for (int k = 0; k < k_cat; ++k) {
-          const double prob = std::exp(log_num[static_cast<size_t>(k)] - row_max);
-          prob_row[static_cast<size_t>(k)] = prob;
-          denom_sum += prob;
-        }
-        const double log_denom = std::log(denom_sum);
-        if (reuse_probabilities) {
-          for (int k = 0; k < k_cat; ++k) {
-            cached_log_num[static_cast<size_t>(group) * k_cat + k] = log_num[static_cast<size_t>(k)];
-          }
-          cached_row_max[static_cast<size_t>(group)] = row_max;
-          cached_log_denom[static_cast<size_t>(group)] = log_denom;
-        }
-
-        double lp = (log_num[static_cast<size_t>(obs_col)] - row_max) - log_denom;
-        if (has_weight) {
-          lp *= weight_vec[i];
-        }
-        log_prob_mat(i, q) = lp;
-        if (include_probs) {
-          for (int k = 0; k < k_cat; ++k) {
-            probs_q(i, k) = prob_row[static_cast<size_t>(k)] / denom_sum;
-          }
-        }
-        if (include_linear_part) {
-          for (int k = 0; k < k_cat; ++k) {
-            linear_q(i, k) = linear_row[static_cast<size_t>(k)];
-          }
-        }
-      }
-      if (include_probs) prob_list[q] = probs_q;
-      if (include_linear_part) linear_part_list[q] = linear_q;
-    } else {
-      for (int i = 0; i < n; ++i) {
-        const int person_row = person_int[i] - 1;
-        const int obs_col = score_k[i];
-        const int group = reuse_probabilities ? probability_rows.group[static_cast<size_t>(i)] : 0;
-        const int source_row = reuse_probabilities ? probability_rows.first[static_cast<size_t>(group)] : i;
-        if (source_row != i) {
-          double lp = (cached_log_num[static_cast<size_t>(group) * k_cat + obs_col] -
-                       cached_row_max[static_cast<size_t>(group)]) -
-                      cached_log_denom[static_cast<size_t>(group)];
-          if (has_weight) lp *= weight_vec[i];
-          log_prob_mat(i, q) = lp;
-          continue;
-        }
-        const double eta_q = base_eta[i] + person_nodes(person_row, q);
-        const double sl = slope_obs[i];
-        double row_max = -std::numeric_limits<double>::infinity();
-
-        for (int k = 0; k < k_cat; ++k) {
-          const double lin = eta_q * static_cast<double>(k) - step_cum_obs(i, k);
-          const double value = lin * sl;
-          log_num[static_cast<size_t>(k)] = value;
-          if (value > row_max) {
-            row_max = value;
-          }
-        }
-
-        double denom_sum = 0.0;
-        for (int k = 0; k < k_cat; ++k) {
-          denom_sum += std::exp(log_num[static_cast<size_t>(k)] - row_max);
-        }
-        const double log_denom = std::log(denom_sum);
-        if (reuse_probabilities) {
-          for (int k = 0; k < k_cat; ++k) {
-            cached_log_num[static_cast<size_t>(group) * k_cat + k] = log_num[static_cast<size_t>(k)];
-          }
-          cached_row_max[static_cast<size_t>(group)] = row_max;
-          cached_log_denom[static_cast<size_t>(group)] = log_denom;
-        }
-
-        double lp = (log_num[static_cast<size_t>(obs_col)] - row_max) - log_denom;
-        if (has_weight) {
-          lp *= weight_vec[i];
-        }
-        log_prob_mat(i, q) = lp;
+    doubles_matrix<> probs_q(prob_list[q]);
+    for (int i = 0; i < n; ++i) {
+      const double post_q = obs_posterior(i, q);
+      for (int k = 0; k < k_cat; ++k) {
+        posterior_prob(i, k) += probs_q(i, k) * post_q;
       }
     }
   }
 
-  if (include_probs && include_linear_part) {
+  writable::doubles expected_k(n);
+  writable::doubles var_k(n);
+  for (int i = 0; i < n; ++i) {
+    double first_moment = 0.0;
+    for (int k = 0; k < k_cat; ++k) {
+      const double p = posterior_prob(i, k);
+      first_moment += p * static_cast<double>(k);
+    }
+    expected_k[i] = first_moment;
+    double variance = 0.0;
+    for (int k = 0; k < k_cat; ++k) {
+      const double centered = static_cast<double>(k) - first_moment;
+      variance += posterior_prob(i, k) * centered * centered;
+    }
+    var_k[i] = variance;
+  }
+
+  if (include_p_geq && k_cat > 1) {
     return writable::list({
-      "log_prob_mat"_nm = log_prob_mat,
-      "prob_list"_nm = prob_list,
-      "linear_part_list"_nm = linear_part_list
+      "posterior_prob"_nm = posterior_prob,
+      "expected_k"_nm = expected_k,
+      "var_k"_nm = var_k,
+      "p_geq"_nm = build_p_geq(posterior_prob)
     });
   }
-  if (include_probs) {
-    return writable::list({
-      "log_prob_mat"_nm = log_prob_mat,
-      "prob_list"_nm = prob_list
-    });
-  }
-  if (include_linear_part) {
-    return writable::list({
-      "log_prob_mat"_nm = log_prob_mat,
-      "linear_part_list"_nm = linear_part_list
-    });
-  }
+
   return writable::list({
-    "log_prob_mat"_nm = log_prob_mat
+    "posterior_prob"_nm = posterior_prob,
+    "expected_k"_nm = expected_k,
+    "var_k"_nm = var_k
   });
 }
 
@@ -1431,143 +1315,6 @@ writable::doubles mfrm_cpp_indexed_sum(doubles x,
   return out;
 }
 
-[[cpp11::register]]
-writable::list mfrm_cpp_jml_eval_bundle(int model_code,
-                                        integers score_k,
-                                        integers person_int,
-                                        int n_theta,
-                                        doubles eta,
-                                        doubles step_cum_rsm,
-                                        doubles_matrix<> step_cum_mat,
-                                        integers step_idx,
-                                        doubles slopes,
-                                        integers slope_idx,
-                                        sexp weight,
-                                        bool include_grad) {
-  const int n = eta.size();
-  const int k_cat = (model_code == 0) ? step_cum_rsm.size() : step_cum_mat.ncol();
-  const int n_steps = std::max(k_cat - 1, 0);
-  const int n_criteria = (model_code == 0) ? 1 : step_cum_mat.nrow();
-  const int n_slopes = (model_code == 2) ? slopes.size() : 0;
-  const bool has_weight = !Rf_isNull(weight);
-  doubles weight_vec;
-  if (has_weight) weight_vec = as_doubles(weight);
-
-  std::vector<double> step_rm;
-  if (model_code != 0) {
-    step_rm.resize(static_cast<size_t>(n_criteria) * k_cat);
-    for (int c = 0; c < n_criteria; ++c) {
-      for (int k = 0; k < k_cat; ++k) {
-        step_rm[static_cast<size_t>(c) * k_cat + k] = step_cum_mat(c, k);
-      }
-    }
-  }
-  const double* step_rsm_ptr = (model_code == 0 && k_cat > 0) ? REAL(step_cum_rsm) : nullptr;
-  const int* step_idx_ptr = (model_code != 0 && n > 0) ? INTEGER(step_idx) : nullptr;
-  const double* slopes_ptr = (model_code == 2 && n_slopes > 0) ? REAL(slopes) : nullptr;
-  const int* slope_idx_ptr = (model_code == 2 && n > 0) ? INTEGER(slope_idx) : nullptr;
-
-  std::vector<double> linear_buf(static_cast<size_t>(k_cat));
-  std::vector<double> log_num_buf(static_cast<size_t>(k_cat));
-  std::vector<double> prob_buf(static_cast<size_t>(k_cat));
-  std::vector<double> pgeq_buf(static_cast<size_t>(std::max(n_steps, 1)));
-
-  double neg_loglik = 0.0;
-  writable::doubles residual(include_grad ? n : 0);
-  writable::doubles grad_theta_exp(include_grad ? n_theta : 0);
-  for (int t = 0; t < (include_grad ? n_theta : 0); ++t) grad_theta_exp[t] = 0.0;
-  writable::doubles_matrix<> grad_step_mat(include_grad ? n_criteria : 0, include_grad ? n_steps : 0);
-  if (include_grad) {
-    for (int c = 0; c < n_criteria; ++c) {
-      for (int s = 0; s < n_steps; ++s) {
-        grad_step_mat(c, s) = 0.0;
-      }
-    }
-  }
-  writable::doubles grad_log_slope_exp(include_grad ? n_slopes : 0);
-  for (int s = 0; s < (include_grad ? n_slopes : 0); ++s) grad_log_slope_exp[s] = 0.0;
-
-  for (int i = 0; i < n; ++i) {
-    const int y = score_k[i];
-    const double eta_i = eta[i];
-    const double sl = (model_code == 2) ? slopes_ptr[slope_idx_ptr[i] - 1] : 1.0;
-    const double w = has_weight ? weight_vec[i] : 1.0;
-    const double* st_ptr = (model_code == 0)
-      ? step_rsm_ptr
-      : (step_rm.data() + static_cast<size_t>(step_idx_ptr[i] - 1) * k_cat);
-
-    double row_max = -std::numeric_limits<double>::infinity();
-    for (int k = 0; k < k_cat; ++k) {
-      const double lin = eta_i * static_cast<double>(k) - st_ptr[k];
-      const double val = (model_code == 2) ? (lin * sl) : lin;
-      linear_buf[static_cast<size_t>(k)] = lin;
-      log_num_buf[static_cast<size_t>(k)] = val;
-      if (val > row_max) row_max = val;
-    }
-    double denom_sum = 0.0;
-    for (int k = 0; k < k_cat; ++k) {
-      const double e = std::exp(log_num_buf[static_cast<size_t>(k)] - row_max);
-      prob_buf[static_cast<size_t>(k)] = e;
-      denom_sum += e;
-    }
-    double lp = (log_num_buf[static_cast<size_t>(y)] - row_max) - std::log(denom_sum);
-    if (has_weight) lp *= w;
-    neg_loglik -= lp;
-
-    if (include_grad) {
-      double expected = 0.0;
-      for (int k = 0; k < k_cat; ++k) {
-        prob_buf[static_cast<size_t>(k)] /= denom_sum;
-        expected += prob_buf[static_cast<size_t>(k)] * static_cast<double>(k);
-      }
-      double res_i = (model_code == 2)
-        ? (sl * (static_cast<double>(y) - expected))
-        : (static_cast<double>(y) - expected);
-      if (has_weight) res_i *= w;
-      residual[i] = res_i;
-      if (n_theta > 0) {
-        grad_theta_exp[person_int[i] - 1] += res_i;
-      }
-
-      if (n_steps > 0) {
-        pgeq_buf[static_cast<size_t>(n_steps - 1)] = prob_buf[static_cast<size_t>(k_cat - 1)];
-        for (int s = n_steps - 2; s >= 0; --s) {
-          pgeq_buf[static_cast<size_t>(s)] = pgeq_buf[static_cast<size_t>(s + 1)] +
-                                             prob_buf[static_cast<size_t>(s + 1)];
-        }
-        const int c_row = (model_code == 0) ? 0 : (step_idx_ptr[i] - 1);
-        double scale_step = (model_code == 2) ? sl : 1.0;
-        if (has_weight) scale_step *= w;
-        for (int s = 0; s < n_steps; ++s) {
-          const double ind = (y >= (s + 1)) ? 1.0 : 0.0;
-          grad_step_mat(c_row, s) += (pgeq_buf[static_cast<size_t>(s)] - ind) * scale_step;
-        }
-      }
-
-      if (model_code == 2) {
-        const double obs_lin = linear_buf[static_cast<size_t>(y)];
-        double acc = 0.0;
-        for (int k = 0; k < k_cat; ++k) {
-          acc += prob_buf[static_cast<size_t>(k)] * (obs_lin - linear_buf[static_cast<size_t>(k)]);
-        }
-        double sc = sl * acc;
-        if (has_weight) sc *= w;
-        grad_log_slope_exp[slope_idx_ptr[i] - 1] += sc;
-      }
-    }
-  }
-
-  if (!include_grad) {
-    return writable::list({"value"_nm = neg_loglik});
-  }
-  return writable::list({
-    "value"_nm = neg_loglik,
-    "residual"_nm = residual,
-    "grad_theta_exp"_nm = grad_theta_exp,
-    "grad_step_mat"_nm = grad_step_mat,
-    "grad_log_slope_exp"_nm = grad_log_slope_exp
-  });
-}
 
 [[cpp11::register]]
 writable::list mfrm_cpp_adaptive_quad_basis(int model_code,
@@ -2203,1614 +1950,3 @@ writable::list mfrm_cpp_adaptive_mml_eval(int model_code,
   });
 }
 
-[[cpp11::register]]
-writable::list mfrm_cpp_cml_esf(list features,
-                                doubles par,
-                                bool information) {
-  const int p = par.size();
-  const int n_items = features.size();
-
-  int nz = 1;
-  std::vector<double> logz(1, 0.0);
-  // Row-major means: nz x p -> s * p + d
-  std::vector<double> means(static_cast<size_t>(p), 0.0);
-  // Slice-major symmetric covariances: s * p * p + d1 * p + d2
-  std::vector<double> covs(information ? static_cast<size_t>(p) * p : 0, 0.0);
-
-  std::vector<double> eta;
-  std::vector<double> logs;
-  std::vector<double> weights;
-  std::vector<double> sqrt_weights;
-  std::vector<double> cand;
-  std::vector<double> centered;
-  std::vector<double> mu(static_cast<size_t>(p));
-
-  for (int item = 0; item < n_items; ++item) {
-    doubles_matrix<> x(features[item]);
-    const int k_max_item = x.nrow() - 1;
-    eta.resize(static_cast<size_t>(k_max_item + 1));
-    for (int k = 0; k <= k_max_item; ++k) {
-      double acc = 0.0;
-      for (int d = 0; d < p; ++d) {
-        acc += x(k, d) * par[d];
-      }
-      if (!std::isfinite(acc)) {
-        stop("Nonfinite CML category predictors.");
-      }
-      eta[static_cast<size_t>(k)] = acc;
-    }
-
-    const int next_nz = nz + k_max_item;
-    std::vector<double> next_logz(static_cast<size_t>(next_nz), 0.0);
-    std::vector<double> next_means(static_cast<size_t>(next_nz) * p, 0.0);
-    std::vector<double> next_covs(information ? static_cast<size_t>(next_nz) * p * p : 0, 0.0);
-
-    for (int s = 0; s < next_nz; ++s) {
-      const int k_lo = std::max(0, s - nz + 1);
-      const int k_hi = std::min(k_max_item, s);
-      const int m_h = k_hi - k_lo + 1;
-
-      logs.resize(static_cast<size_t>(m_h));
-      weights.resize(static_cast<size_t>(m_h));
-      double peak = -std::numeric_limits<double>::infinity();
-      for (int h = 0; h < m_h; ++h) {
-        const int k = k_lo + h;
-        const int from = s - k;
-        const double lv = logz[static_cast<size_t>(from)] + eta[static_cast<size_t>(k)];
-        logs[static_cast<size_t>(h)] = lv;
-        if (lv > peak) peak = lv;
-      }
-      double w_sum = 0.0;
-      for (int h = 0; h < m_h; ++h) {
-        const double w = std::exp(logs[static_cast<size_t>(h)] - peak);
-        weights[static_cast<size_t>(h)] = w;
-        w_sum += w;
-      }
-      next_logz[static_cast<size_t>(s)] = peak + std::log(w_sum);
-      for (int h = 0; h < m_h; ++h) {
-        weights[static_cast<size_t>(h)] /= w_sum;
-      }
-
-      cand.resize(static_cast<size_t>(m_h) * p);
-      for (int h = 0; h < m_h; ++h) {
-        const int k = k_lo + h;
-        const int from = s - k;
-        const double* m_from = means.data() + static_cast<size_t>(from) * p;
-        double* c_row = cand.data() + static_cast<size_t>(h) * p;
-        for (int d = 0; d < p; ++d) {
-          c_row[d] = m_from[d] + x(k, d);
-        }
-      }
-
-      double* dst_mu = next_means.data() + static_cast<size_t>(s) * p;
-      for (int d = 0; d < p; ++d) {
-        double acc = 0.0;
-        for (int h = 0; h < m_h; ++h) {
-          acc += weights[static_cast<size_t>(h)] * cand[static_cast<size_t>(h) * p + d];
-        }
-        mu[static_cast<size_t>(d)] = acc;
-        dst_mu[d] = acc;
-      }
-
-      if (information) {
-        sqrt_weights.resize(static_cast<size_t>(m_h));
-        centered.resize(static_cast<size_t>(m_h) * p);
-        for (int h = 0; h < m_h; ++h) {
-          const double sw = std::sqrt(weights[static_cast<size_t>(h)]);
-          sqrt_weights[static_cast<size_t>(h)] = sw;
-          const double* c_row = cand.data() + static_cast<size_t>(h) * p;
-          double* cen_row = centered.data() + static_cast<size_t>(h) * p;
-          for (int d = 0; d < p; ++d) {
-            cen_row[d] = (c_row[d] - mu[static_cast<size_t>(d)]) * sw;
-          }
-        }
-        double* dst_cov = next_covs.data() + static_cast<size_t>(s) * p * p;
-        for (int d1 = 0; d1 < p; ++d1) {
-          for (int d2 = d1; d2 < p; ++d2) {
-            double v_acc = 0.0;
-            for (int h = 0; h < m_h; ++h) {
-              v_acc += centered[static_cast<size_t>(h) * p + d1] *
-                       centered[static_cast<size_t>(h) * p + d2];
-            }
-            for (int h = 0; h < m_h; ++h) {
-              const int from = s - (k_lo + h);
-              v_acc += weights[static_cast<size_t>(h)] *
-                       covs[static_cast<size_t>(from) * p * p + static_cast<size_t>(d1) * p + d2];
-            }
-            dst_cov[static_cast<size_t>(d1) * p + d2] = v_acc;
-            dst_cov[static_cast<size_t>(d2) * p + d1] = v_acc;
-          }
-        }
-      }
-    }
-
-    nz = next_nz;
-    logz.swap(next_logz);
-    means.swap(next_means);
-    if (information) covs.swap(next_covs);
-  }
-
-  writable::doubles logz_out(nz);
-  for (int s = 0; s < nz; ++s) logz_out[s] = logz[static_cast<size_t>(s)];
-
-  writable::doubles_matrix<> means_out(nz, p);
-  for (int s = 0; s < nz; ++s) {
-    for (int d = 0; d < p; ++d) {
-      means_out(s, d) = means[static_cast<size_t>(s) * p + d];
-    }
-  }
-
-  if (!information) {
-    return writable::list({
-      "logz"_nm = logz_out,
-      "means"_nm = means_out,
-      "covariance"_nm = R_NilValue
-    });
-  }
-
-  writable::doubles cov_out(static_cast<R_xlen_t>(p) * p * nz);
-  for (int s = 0; s < nz; ++s) {
-    const double* src = covs.data() + static_cast<size_t>(s) * p * p;
-    const R_xlen_t offset = static_cast<R_xlen_t>(s) * p * p;
-    for (int d2 = 0; d2 < p; ++d2) {
-      for (int d1 = 0; d1 < p; ++d1) {
-        cov_out[offset + static_cast<R_xlen_t>(d2) * p + d1] =
-          src[static_cast<size_t>(d1) * p + d2];
-      }
-    }
-  }
-  cov_out.attr("dim") = writable::integers({p, p, nz});
-
-  return writable::list({
-    "logz"_nm = logz_out,
-    "means"_nm = means_out,
-    "covariance"_nm = cov_out
-  });
-}
-
-[[cpp11::register]]
-writable::list mfrm_cpp_expected_category_bundle(list prob_list,
-                                                 doubles_matrix<> obs_posterior,
-                                                 bool include_p_geq) {
-  const int n_nodes = prob_list.size();
-  if (n_nodes == 0) {
-    stop("`prob_list` must contain at least one probability matrix.");
-  }
-
-  doubles_matrix<> first_prob(prob_list[0]);
-  const int n = first_prob.nrow();
-  const int k_cat = first_prob.ncol();
-  writable::doubles_matrix<> posterior_prob(n, k_cat);
-  for (int i = 0; i < n; ++i) {
-    for (int k = 0; k < k_cat; ++k) {
-      posterior_prob(i, k) = 0.0;
-    }
-  }
-
-  for (int q = 0; q < n_nodes; ++q) {
-    doubles_matrix<> probs_q(prob_list[q]);
-    for (int i = 0; i < n; ++i) {
-      const double post_q = obs_posterior(i, q);
-      for (int k = 0; k < k_cat; ++k) {
-        posterior_prob(i, k) += probs_q(i, k) * post_q;
-      }
-    }
-  }
-
-  writable::doubles expected_k(n);
-  writable::doubles var_k(n);
-  for (int i = 0; i < n; ++i) {
-    double first_moment = 0.0;
-    for (int k = 0; k < k_cat; ++k) {
-      const double p = posterior_prob(i, k);
-      first_moment += p * static_cast<double>(k);
-    }
-    expected_k[i] = first_moment;
-    double variance = 0.0;
-    for (int k = 0; k < k_cat; ++k) {
-      const double centered = static_cast<double>(k) - first_moment;
-      variance += posterior_prob(i, k) * centered * centered;
-    }
-    var_k[i] = variance;
-  }
-
-  if (include_p_geq && k_cat > 1) {
-    return writable::list({
-      "posterior_prob"_nm = posterior_prob,
-      "expected_k"_nm = expected_k,
-      "var_k"_nm = var_k,
-      "p_geq"_nm = build_p_geq(posterior_prob)
-    });
-  }
-
-  return writable::list({
-    "posterior_prob"_nm = posterior_prob,
-    "expected_k"_nm = expected_k,
-    "var_k"_nm = var_k
-  });
-}
-
-[[cpp11::register]]
-writable::list mfrm_cpp_testlet_kernel(doubles_matrix<> design_X,
-                                       int ns,
-                                       doubles par,
-                                       doubles theta,
-                                       doubles rule_nodes,
-                                       doubles rule_weights,
-                                       bool gradient,
-                                       integers persons,
-                                       integers person_block_ptr,
-                                       integers block_entry_ptr,
-                                       integers entry_cell,
-                                       integers entry_count) {
-  const int nb = design_X.ncol();
-  const int nd = design_X.nrow();
-  const int npar = nb + ns + 1;
-  const double v = par[nb + ns];
-  const int nq = theta.size();
-  const int np = persons.size();
-  const int ng = (v == 0.0) ? 1 : rule_nodes.size();
-
-  writable::doubles_matrix<> loglik_out(nq, np);
-  for (int pi = 0; pi < np; ++pi) {
-    for (int q = 0; q < nq; ++q) {
-      loglik_out(q, pi) = 0.0;
-    }
-  }
-
-  const R_xlen_t score_len = gradient
-    ? (static_cast<R_xlen_t>(nq) * static_cast<R_xlen_t>(np) * static_cast<R_xlen_t>(npar))
-    : 0;
-  writable::doubles scores_out(score_len);
-  writable::doubles_matrix<> theta_score_out(gradient ? nq : 0, gradient ? np : 0);
-  writable::doubles_matrix<> theta_curv_out(gradient ? nq : 0, gradient ? np : 0);
-
-  if (gradient) {
-    double* sp = score_len > 0 ? REAL(scores_out) : nullptr;
-    for (R_xlen_t idx = 0; idx < score_len; ++idx) {
-      sp[idx] = 0.0;
-    }
-    scores_out.attr("dim") = writable::integers({nq, np, npar});
-    for (int pi = 0; pi < np; ++pi) {
-      for (int q = 0; q < nq; ++q) {
-        theta_score_out(q, pi) = 0.0;
-        theta_curv_out(q, pi) = 0.0;
-      }
-    }
-  }
-
-  if (nq == 0 || np == 0 || nd == 0) {
-    return writable::list({
-      "loglik"_nm = loglik_out,
-      "score"_nm = gradient ? static_cast<SEXP>(scores_out) : R_NilValue,
-      "theta_score"_nm = gradient ? static_cast<SEXP>(theta_score_out) : R_NilValue,
-      "theta_curvature"_nm = gradient ? static_cast<SEXP>(theta_curv_out) : R_NilValue
-    });
-  }
-
-  std::vector<double> gamma(static_cast<size_t>(ng), 0.0);
-  std::vector<double> logweights(static_cast<size_t>(ng), 0.0);
-  if (v > 0.0) {
-    const double sqrt_v = std::sqrt(v);
-    for (int m = 0; m < ng; ++m) {
-      gamma[static_cast<size_t>(m)] = sqrt_v * rule_nodes[m];
-      logweights[static_cast<size_t>(m)] = std::log(rule_weights[m]);
-    }
-  }
-
-  const int k_cat = ns + 1;
-  std::vector<double> steps_cum(static_cast<size_t>(k_cat), 0.0);
-  for (int s = 1; s <= ns; ++s) {
-    steps_cum[static_cast<size_t>(s)] =
-      steps_cum[static_cast<size_t>(s - 1)] + par[nb + s - 1];
-  }
-
-  const int* p_blk_ptr = INTEGER(person_block_ptr);
-  const int* blk_ent_ptr = INTEGER(block_entry_ptr);
-  const int* ent_cell_ptr = entry_cell.size() > 0 ? INTEGER(entry_cell) : nullptr;
-  const int* ent_cnt_ptr = entry_count.size() > 0 ? INTEGER(entry_count) : nullptr;
-
-  std::vector<uint8_t> active_design(static_cast<size_t>(nd), 0);
-  for (int pi = 0; pi < np; ++pi) {
-    const int p0 = persons[pi] - 1;
-    const int b_start = p_blk_ptr[p0];
-    const int b_end = p_blk_ptr[p0 + 1];
-    for (int b = b_start; b < b_end; ++b) {
-      const int e_start = blk_ent_ptr[b];
-      const int e_end = blk_ent_ptr[b + 1];
-      for (int e = e_start; e < e_end; ++e) {
-        const int d = ent_cell_ptr[e] % nd;
-        active_design[static_cast<size_t>(d)] = 1;
-      }
-    }
-  }
-
-  const size_t n_qm = static_cast<size_t>(nq) * static_cast<size_t>(ng);
-  std::vector<double> design_logp(static_cast<size_t>(nd) * k_cat * n_qm, 0.0);
-  std::vector<double> design_mean;
-  std::vector<double> design_var;
-  std::vector<double> design_pgeq;
-  if (gradient) {
-    design_mean.assign(static_cast<size_t>(nd) * n_qm, 0.0);
-    design_var.assign(static_cast<size_t>(nd) * n_qm, 0.0);
-    design_pgeq.assign(static_cast<size_t>(nd) * std::max(ns, 1) * n_qm, 0.0);
-  }
-
-  std::vector<double> logw_buf(static_cast<size_t>(k_cat));
-  std::vector<double> prob_buf(static_cast<size_t>(k_cat));
-
-  for (int d = 0; d < nd; ++d) {
-    if (!active_design[static_cast<size_t>(d)]) continue;
-    double shift_d = 0.0;
-    for (int b = 0; b < nb; ++b) {
-      shift_d += design_X(d, b) * par[b];
-    }
-    for (int m = 0; m < ng; ++m) {
-      const double gm = gamma[static_cast<size_t>(m)];
-      for (int q = 0; q < nq; ++q) {
-        const size_t iqm = static_cast<size_t>(m) * nq + static_cast<size_t>(q);
-        const double eta = (theta[q] + gm) - shift_d;
-        double rmax = -std::numeric_limits<double>::infinity();
-        for (int k = 0; k < k_cat; ++k) {
-          const double lw = eta * static_cast<double>(k) - steps_cum[static_cast<size_t>(k)];
-          logw_buf[static_cast<size_t>(k)] = lw;
-          if (lw > rmax) rmax = lw;
-        }
-        double sum_exp = 0.0;
-        for (int k = 0; k < k_cat; ++k) {
-          const double ev = std::exp(logw_buf[static_cast<size_t>(k)] - rmax);
-          prob_buf[static_cast<size_t>(k)] = ev;
-          sum_exp += ev;
-        }
-        const double den = std::log(sum_exp);
-        for (int k = 0; k < k_cat; ++k) {
-          design_logp[(static_cast<size_t>(d) * k_cat + k) * n_qm + iqm] =
-            (logw_buf[static_cast<size_t>(k)] - rmax) - den;
-        }
-        if (gradient) {
-          double mean_val = 0.0;
-          for (int k = 0; k < k_cat; ++k) {
-            const double pk = prob_buf[static_cast<size_t>(k)] / sum_exp;
-            prob_buf[static_cast<size_t>(k)] = pk;
-            mean_val += pk * static_cast<double>(k);
-          }
-          double var_val = 0.0;
-          for (int k = 0; k < k_cat; ++k) {
-            const double ck = static_cast<double>(k) - mean_val;
-            var_val += prob_buf[static_cast<size_t>(k)] * ck * ck;
-          }
-          design_mean[static_cast<size_t>(d) * n_qm + iqm] = mean_val;
-          design_var[static_cast<size_t>(d) * n_qm + iqm] = var_val;
-          if (ns > 0) {
-            double tail = 0.0;
-            for (int s = ns - 1; s >= 0; --s) {
-              tail += prob_buf[static_cast<size_t>(s + 1)];
-              design_pgeq[(static_cast<size_t>(d) * ns + s) * n_qm + iqm] = tail;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  std::vector<double> lc(n_qm);
-  std::vector<double> S_mat(gradient ? n_qm : 0);
-  std::vector<double> V_mat(gradient ? n_qm : 0);
-  std::vector<double> lw_mat(n_qm);
-  std::vector<double> weights_mat(gradient ? n_qm : 0);
-  std::vector<double> offset_vec(static_cast<size_t>(nq));
-  std::vector<double> marginal_vec(static_cast<size_t>(nq));
-  std::vector<double> r_bar(gradient ? static_cast<size_t>(nq) : 0);
-  double* scores_ptr = (gradient && score_len > 0) ? REAL(scores_out) : nullptr;
-
-  for (int pi = 0; pi < np; ++pi) {
-    const int p0 = persons[pi] - 1;
-    const int b_start = p_blk_ptr[p0];
-    const int b_end = p_blk_ptr[p0 + 1];
-    for (int b_idx = b_start; b_idx < b_end; ++b_idx) {
-      std::fill(lc.begin(), lc.end(), 0.0);
-      if (gradient) {
-        std::fill(S_mat.begin(), S_mat.end(), 0.0);
-        std::fill(V_mat.begin(), V_mat.end(), 0.0);
-      }
-      const int e_start = blk_ent_ptr[b_idx];
-      const int e_end = blk_ent_ptr[b_idx + 1];
-      for (int e_idx = e_start; e_idx < e_end; ++e_idx) {
-        const int cell0 = ent_cell_ptr[e_idx];
-        const int d = cell0 % nd;
-        const int y = cell0 / nd;
-        const double cnt = static_cast<double>(ent_cnt_ptr[e_idx]);
-        const double* lp_src = design_logp.data() + (static_cast<size_t>(d) * k_cat + y) * n_qm;
-        for (size_t iqm = 0; iqm < n_qm; ++iqm) {
-          lc[iqm] += cnt * lp_src[iqm];
-        }
-        if (gradient) {
-          const double yd = static_cast<double>(y);
-          const double* mn_src = design_mean.data() + static_cast<size_t>(d) * n_qm;
-          const double* vr_src = design_var.data() + static_cast<size_t>(d) * n_qm;
-          for (size_t iqm = 0; iqm < n_qm; ++iqm) {
-            S_mat[iqm] += cnt * (yd - mn_src[iqm]);
-            V_mat[iqm] += cnt * vr_src[iqm];
-          }
-        }
-      }
-
-      for (int q = 0; q < nq; ++q) {
-        double off = -std::numeric_limits<double>::infinity();
-        for (int m = 0; m < ng; ++m) {
-          const double val = lc[static_cast<size_t>(m) * nq + q];
-          if (val > off) off = val;
-        }
-        offset_vec[static_cast<size_t>(q)] = off;
-        double largest = -std::numeric_limits<double>::infinity();
-        for (int m = 0; m < ng; ++m) {
-          const size_t iqm = static_cast<size_t>(m) * nq + q;
-          const double lw_val = (lc[iqm] - off) + logweights[static_cast<size_t>(m)];
-          lw_mat[iqm] = lw_val;
-          if (lw_val > largest) largest = lw_val;
-        }
-        double sum_lw = 0.0;
-        for (int m = 0; m < ng; ++m) {
-          sum_lw += std::exp(lw_mat[static_cast<size_t>(m) * nq + q] - largest);
-        }
-        const double marg = largest + std::log(sum_lw);
-        marginal_vec[static_cast<size_t>(q)] = marg;
-        loglik_out(q, pi) += off + marg;
-      }
-
-      if (gradient) {
-        for (int m = 0; m < ng; ++m) {
-          for (int q = 0; q < nq; ++q) {
-            const size_t iqm = static_cast<size_t>(m) * nq + q;
-            weights_mat[iqm] = std::exp(lw_mat[iqm] - marginal_vec[static_cast<size_t>(q)]);
-          }
-        }
-
-        const R_xlen_t var_col_base =
-          (static_cast<R_xlen_t>(npar - 1) * static_cast<R_xlen_t>(np) + pi) * nq;
-        for (int q = 0; q < nq; ++q) {
-          double b_score = 0.0;
-          double sv_mean = 0.0;
-          double var_score_q = 0.0;
-          for (int m = 0; m < ng; ++m) {
-            const size_t iqm = static_cast<size_t>(m) * nq + q;
-            const double w_qm = weights_mat[iqm];
-            const double s_qm = S_mat[iqm];
-            const double sv_qm = s_qm * s_qm - V_mat[iqm];
-            b_score += w_qm * s_qm;
-            sv_mean += w_qm * sv_qm;
-            if (v > 0.0) {
-              var_score_q += w_qm * (s_qm * (gamma[static_cast<size_t>(m)] / (2.0 * v)));
-            }
-          }
-          if (v == 0.0) {
-            var_score_q = 0.5 * sv_mean;
-          }
-          theta_score_out(q, pi) += b_score;
-          theta_curv_out(q, pi) += sv_mean - b_score * b_score;
-          scores_ptr[var_col_base + q] += var_score_q;
-        }
-
-        for (int e_idx = e_start; e_idx < e_end; ++e_idx) {
-          const int cell0 = ent_cell_ptr[e_idx];
-          const int d = cell0 % nd;
-          const int y = cell0 / nd;
-          const double yd = static_cast<double>(y);
-          const double cnt = static_cast<double>(ent_cnt_ptr[e_idx]);
-          const double* mn_src = design_mean.data() + static_cast<size_t>(d) * n_qm;
-
-          if (nb > 0) {
-            for (int q = 0; q < nq; ++q) {
-              double acc = 0.0;
-              for (int m = 0; m < ng; ++m) {
-                const size_t iqm = static_cast<size_t>(m) * nq + q;
-                acc += weights_mat[iqm] * (yd - mn_src[iqm]);
-              }
-              r_bar[static_cast<size_t>(q)] = acc;
-            }
-            for (int b = 0; b < nb; ++b) {
-              const double xb = -cnt * design_X(d, b);
-              if (xb == 0.0) continue;
-              const R_xlen_t col_base =
-                (static_cast<R_xlen_t>(b) * static_cast<R_xlen_t>(np) + pi) * nq;
-              for (int q = 0; q < nq; ++q) {
-                scores_ptr[col_base + q] += xb * r_bar[static_cast<size_t>(q)];
-              }
-            }
-          }
-
-          for (int s = 0; s < ns; ++s) {
-            const double ind = (y >= (s + 1)) ? 1.0 : 0.0;
-            const double* pg_src = design_pgeq.data() + (static_cast<size_t>(d) * ns + s) * n_qm;
-            const R_xlen_t col_base =
-              (static_cast<R_xlen_t>(nb + s) * static_cast<R_xlen_t>(np) + pi) * nq;
-            for (int q = 0; q < nq; ++q) {
-              double pg_bar = 0.0;
-              for (int m = 0; m < ng; ++m) {
-                const size_t iqm = static_cast<size_t>(m) * nq + q;
-                pg_bar += weights_mat[iqm] * pg_src[iqm];
-              }
-              scores_ptr[col_base + q] += cnt * (pg_bar - ind);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return writable::list({
-    "loglik"_nm = loglik_out,
-    "score"_nm = gradient ? static_cast<SEXP>(scores_out) : R_NilValue,
-    "theta_score"_nm = gradient ? static_cast<SEXP>(theta_score_out) : R_NilValue,
-    "theta_curvature"_nm = gradient ? static_cast<SEXP>(theta_curv_out) : R_NilValue
-  });
-}
-
-[[cpp11::register]]
-writable::list mfrm_cpp_marginal_pairwise_expectations(list prob_list,
-                                                       doubles_matrix<> obs_posterior,
-                                                       integers row_i,
-                                                       integers row_j,
-                                                       integers adj_col1,
-                                                       integers adj_col2) {
-  const int n_pairs = row_i.size();
-  writable::doubles exp_exact(n_pairs);
-  writable::doubles exp_adjacent(n_pairs);
-  if (n_pairs == 0) {
-    return writable::list({
-      "exp_exact"_nm = exp_exact,
-      "exp_adjacent"_nm = exp_adjacent
-    });
-  }
-
-  const int n_nodes = prob_list.size();
-  doubles_matrix<> first_prob(prob_list[0]);
-  const int n_obs = first_prob.nrow();
-  const int k_cat = first_prob.ncol();
-  const int n_adj = adj_col1.size();
-
-  const int* ri_ptr = INTEGER(row_i);
-  const int* rj_ptr = INTEGER(row_j);
-  std::vector<int> slot_of_row(static_cast<size_t>(n_obs), -1);
-  std::vector<int> used_rows;
-  used_rows.reserve(static_cast<size_t>(n_obs));
-  for (int p = 0; p < n_pairs; ++p) {
-    const int i0 = ri_ptr[p] - 1;
-    const int j0 = rj_ptr[p] - 1;
-    if (slot_of_row[static_cast<size_t>(i0)] < 0) {
-      slot_of_row[static_cast<size_t>(i0)] = static_cast<int>(used_rows.size());
-      used_rows.push_back(i0);
-    }
-    if (slot_of_row[static_cast<size_t>(j0)] < 0) {
-      slot_of_row[static_cast<size_t>(j0)] = static_cast<int>(used_rows.size());
-      used_rows.push_back(j0);
-    }
-  }
-
-  const size_t n_used = used_rows.size();
-  std::vector<double> probs_flat(n_used * static_cast<size_t>(n_nodes) * static_cast<size_t>(k_cat));
-  for (int q = 0; q < n_nodes; ++q) {
-    doubles_matrix<> probs_q(prob_list[q]);
-    for (size_t s = 0; s < n_used; ++s) {
-      const int r = used_rows[s];
-      double* dst = probs_flat.data() +
-        (s * static_cast<size_t>(n_nodes) + static_cast<size_t>(q)) * static_cast<size_t>(k_cat);
-      for (int k = 0; k < k_cat; ++k) {
-        dst[k] = probs_q(r, k);
-      }
-    }
-  }
-
-  std::vector<int> adj1(static_cast<size_t>(n_adj));
-  std::vector<int> adj2(static_cast<size_t>(n_adj));
-  for (int a = 0; a < n_adj; ++a) {
-    adj1[static_cast<size_t>(a)] = adj_col1[a] - 1;
-    adj2[static_cast<size_t>(a)] = adj_col2[a] - 1;
-  }
-
-  for (int p = 0; p < n_pairs; ++p) {
-    const int i0 = ri_ptr[p] - 1;
-    const int j0 = rj_ptr[p] - 1;
-    const size_t si = static_cast<size_t>(slot_of_row[static_cast<size_t>(i0)]);
-    const size_t sj = static_cast<size_t>(slot_of_row[static_cast<size_t>(j0)]);
-    double ee = 0.0;
-    double ea = 0.0;
-    for (int q = 0; q < n_nodes; ++q) {
-      const double* pi_vec = probs_flat.data() +
-        (si * static_cast<size_t>(n_nodes) + static_cast<size_t>(q)) * static_cast<size_t>(k_cat);
-      const double* pj_vec = probs_flat.data() +
-        (sj * static_cast<size_t>(n_nodes) + static_cast<size_t>(q)) * static_cast<size_t>(k_cat);
-      double exact_q = 0.0;
-      for (int k = 0; k < k_cat; ++k) {
-        exact_q += pi_vec[k] * pj_vec[k];
-      }
-      double adjacent_q = 0.0;
-      for (int a = 0; a < n_adj; ++a) {
-        adjacent_q += pi_vec[adj1[static_cast<size_t>(a)]] * pj_vec[adj2[static_cast<size_t>(a)]];
-      }
-      const double post_q = obs_posterior(i0, q);
-      ee += post_q * exact_q;
-      ea += post_q * adjacent_q;
-    }
-    exp_exact[p] = ee;
-    exp_adjacent[p] = ea;
-  }
-
-  return writable::list({
-    "exp_exact"_nm = exp_exact,
-    "exp_adjacent"_nm = exp_adjacent
-  });
-}
-
-namespace {
-
-struct PosteriorPersonObs {
-  double delta;
-  double alpha;
-  const double* cum_steps;
-  int y;
-};
-
-inline void eval_person_logpost_z(double z,
-                                  double mu,
-                                  double sigma,
-                                  int n_cat,
-                                  const std::vector<PosteriorPersonObs>& obs,
-                                  std::vector<double>& log_num_buf,
-                                  std::vector<double>& prob_buf,
-                                  double& log_post,
-                                  double* grad_z,
-                                  double* neg_hess_z) {
-  const double theta = mu + sigma * z;
-  const int m_obs = static_cast<int>(obs.size());
-  double ll = 0.0;
-  double s_grad = 0.0;
-  double s_info = 0.0;
-
-  for (int j = 0; j < m_obs; ++j) {
-    const PosteriorPersonObs& o = obs[static_cast<size_t>(j)];
-    const double eta = theta + o.delta;
-    const double alpha = o.alpha;
-    const double* cs = o.cum_steps;
-    double row_max = -std::numeric_limits<double>::infinity();
-    for (int k = 0; k < n_cat; ++k) {
-      const double u = alpha * (static_cast<double>(k) * eta - cs[k]);
-      log_num_buf[static_cast<size_t>(k)] = u;
-      if (u > row_max) row_max = u;
-    }
-    double denom = 0.0;
-    for (int k = 0; k < n_cat; ++k) {
-      const double e = std::exp(log_num_buf[static_cast<size_t>(k)] - row_max);
-      prob_buf[static_cast<size_t>(k)] = e;
-      denom += e;
-    }
-    ll += (log_num_buf[static_cast<size_t>(o.y)] - row_max) - std::log(denom);
-    if (grad_z != nullptr || neg_hess_z != nullptr) {
-      double ek = 0.0;
-      double ek2 = 0.0;
-      for (int k = 0; k < n_cat; ++k) {
-        const double pk = prob_buf[static_cast<size_t>(k)] / denom;
-        const double dk = static_cast<double>(k);
-        ek += pk * dk;
-        if (neg_hess_z != nullptr) ek2 += pk * dk * dk;
-      }
-      if (grad_z != nullptr) {
-        s_grad += alpha * (static_cast<double>(o.y) - ek);
-      }
-      if (neg_hess_z != nullptr) {
-        const double vk = std::max(0.0, ek2 - ek * ek);
-        s_info += alpha * alpha * vk;
-      }
-    }
-  }
-
-  // -0.5 * log(2 * pi) = -0.91893853320467274178
-  log_post = -0.5 * z * z - 0.91893853320467274178 + ll;
-  if (grad_z != nullptr) {
-    *grad_z = -z + sigma * s_grad;
-  }
-  if (neg_hess_z != nullptr) {
-    *neg_hess_z = 1.0 + sigma * sigma * s_info;
-  }
-}
-
-inline double integrate_gl_panel_post(double a,
-                                      double b,
-                                      double h_star,
-                                      double mu,
-                                      double sigma,
-                                      int n_cat,
-                                      const std::vector<PosteriorPersonObs>& obs,
-                                      const double* gl_nodes,
-                                      const double* gl_weights,
-                                      int n_gl,
-                                      std::vector<double>& log_num_buf,
-                                      std::vector<double>& prob_buf) {
-  if (!(b > a)) return 0.0;
-  const double half = 0.5 * (b - a);
-  const double mid = 0.5 * (a + b);
-  double acc = 0.0;
-  for (int q = 0; q < n_gl; ++q) {
-    const double z = mid + half * gl_nodes[q];
-    double lp = 0.0;
-    eval_person_logpost_z(z, mu, sigma, n_cat, obs, log_num_buf, prob_buf, lp, nullptr, nullptr);
-    acc += gl_weights[q] * std::exp(lp - h_star);
-  }
-  return half * acc;
-}
-
-inline double integrate_gl_panel_stdnorm(double a,
-                                         double b,
-                                         const double* gl_nodes,
-                                         const double* gl_weights,
-                                         int n_gl) {
-  if (!(b > a)) return 0.0;
-  const double half = 0.5 * (b - a);
-  const double mid = 0.5 * (a + b);
-  double acc = 0.0;
-  for (int q = 0; q < n_gl; ++q) {
-    const double z = mid + half * gl_nodes[q];
-    acc += gl_weights[q] * Rf_dnorm4(z, 0.0, 1.0, 0);
-  }
-  return half * acc;
-}
-
-} // namespace
-
-[[cpp11::register]]
-writable::list mfrm_cpp_posterior_person_score(int n_cat,
-                                               doubles_matrix<> loc_draws,
-                                               doubles_matrix<> cum_step_draws,
-                                               doubles_matrix<> slope_draws,
-                                               doubles mu_draws,
-                                               doubles sigma_draws,
-                                               integers_matrix<> row_loc_idx,
-                                               doubles facet_signs,
-                                               integers row_owner,
-                                               integers row_slope_idx,
-                                               integers row_y,
-                                               integers person_row_starts,
-                                               integers person_rows,
-                                               doubles probs,
-                                               doubles cut_scores,
-                                               doubles score_values,
-                                               doubles gl_nodes,
-                                               doubles gl_weights,
-                                               bool compute_predictive,
-                                               bool keep_person_draws) {
-  const int n_draws = mu_draws.size();
-  const int n_person = person_row_starts.size() - 1;
-  const int n_facets = facet_signs.size();
-  const int n_prob = probs.size();
-  const int k_cut = cut_scores.size();
-  const int n_dec_cols = (k_cut > 0) ? (2 * k_cut + 1) : 0;
-  const int n_gl = gl_nodes.size();
-  const int n_pred_rows = compute_predictive ? person_rows.size() : 0;
-  const int k_max = n_cat - 1;
-
-  writable::integers status_code(n_person);
-  writable::strings error_message(n_person);
-  writable::integers observed_count(n_person);
-  writable::integers omitted_count(n_person);
-  writable::doubles out_mean(n_person);
-  writable::doubles out_within_sd(n_person);
-  writable::doubles out_between_sd(n_person);
-  writable::doubles out_total_sd(n_person);
-  writable::doubles out_log_ml(n_person);
-  writable::doubles_matrix<> out_quantiles(n_person, n_prob);
-  writable::doubles_matrix<> out_dec_probs(n_person, n_dec_cols);
-  writable::doubles_matrix<> out_dec_between_sd(n_person, n_dec_cols);
-  writable::doubles_matrix<> out_pred_probs(n_pred_rows, compute_predictive ? n_cat : 0);
-  writable::doubles out_pred_exp_sd(n_pred_rows);
-  writable::doubles_matrix<> out_draw_mean(keep_person_draws ? n_person : 0, keep_person_draws ? n_draws : 0);
-  writable::doubles_matrix<> out_draw_sd(keep_person_draws ? n_person : 0, keep_person_draws ? n_draws : 0);
-  writable::doubles_matrix<> out_draw_log_z(keep_person_draws ? n_person : 0, keep_person_draws ? n_draws : 0);
-
-  const double* gl_x = REAL(gl_nodes);
-  const double* gl_w = REAL(gl_weights);
-  const double* sc_vals = REAL(score_values);
-
-  std::vector<double> log_num_buf(static_cast<size_t>(n_cat));
-  std::vector<double> prob_buf(static_cast<size_t>(n_cat));
-  std::vector<PosteriorPersonObs> obs_buf;
-
-  std::vector<double> draw_mu_p(static_cast<size_t>(n_draws));
-  std::vector<double> draw_var_p(static_cast<size_t>(n_draws));
-  std::vector<double> draw_log_z_p(static_cast<size_t>(n_draws));
-  std::vector<double> draw_z_star(static_cast<size_t>(n_draws));
-  std::vector<double> draw_d1(static_cast<size_t>(n_draws));
-  std::vector<double> draw_d2(static_cast<size_t>(n_draws));
-  std::vector<double> draw_d3(static_cast<size_t>(n_draws));
-  std::vector<double> draw_h_star(static_cast<size_t>(n_draws));
-  std::vector<double> draw_i0(static_cast<size_t>(n_draws));
-  std::vector<double> draw_panel0(static_cast<size_t>(n_draws));
-  std::vector<double> draw_panel1(static_cast<size_t>(n_draws));
-  std::vector<double> draw_panel2(static_cast<size_t>(n_draws));
-  std::vector<double> draw_panel5(static_cast<size_t>(n_draws));
-  std::vector<double> draw_panel6(static_cast<size_t>(n_draws));
-  std::vector<double> draw_panel7(static_cast<size_t>(n_draws));
-  std::vector<double> cum_steps_flat(static_cast<size_t>(cum_step_draws.nrow()) *
-                                     static_cast<size_t>(cum_step_draws.ncol()));
-  {
-    const int nr_cs = cum_step_draws.nrow();
-    const int nc_cs = cum_step_draws.ncol();
-    for (int m = 0; m < nr_cs; ++m) {
-      for (int c = 0; c < nc_cs; ++c) {
-        cum_steps_flat[static_cast<size_t>(m) * static_cast<size_t>(nc_cs) + static_cast<size_t>(c)] =
-          cum_step_draws(m, c);
-      }
-    }
-  }
-  const int nc_cs_stride = cum_step_draws.ncol();
-
-  std::vector<double> dec_sum(static_cast<size_t>(n_dec_cols));
-  std::vector<double> dec_draws(static_cast<size_t>(n_draws) * static_cast<size_t>(n_dec_cols));
-  std::vector<double> band_tmp(static_cast<size_t>(k_cut + 1));
-
-  std::vector<double> quad_z(static_cast<size_t>(8 * n_gl));
-  std::vector<double> quad_w_norm(static_cast<size_t>(8 * n_gl));
-
-  for (int p = 0; p < n_person; ++p) {
-    const int r_start = person_row_starts[p];
-    const int r_end = person_row_starts[p + 1];
-    const int n_p_rows = r_end - r_start;
-
-    std::vector<int> obs_rows_p;
-    obs_rows_p.reserve(static_cast<size_t>(n_p_rows));
-    int n_omit_p = 0;
-    for (int idx = r_start; idx < r_end; ++idx) {
-      const int r0 = person_rows[idx] - 1;
-      if (row_y[r0] >= 0) {
-        obs_rows_p.push_back(r0);
-      } else {
-        ++n_omit_p;
-      }
-    }
-    const int m_obs = static_cast<int>(obs_rows_p.size());
-    observed_count[p] = m_obs;
-    omitted_count[p] = n_omit_p;
-
-    auto mark_unavailable = [&](const std::string& msg) {
-      status_code[p] = 2;
-      error_message[p] = msg;
-      out_mean[p] = NA_REAL;
-      out_within_sd[p] = NA_REAL;
-      out_between_sd[p] = NA_REAL;
-      out_total_sd[p] = NA_REAL;
-      out_log_ml[p] = NA_REAL;
-      for (int qi = 0; qi < n_prob; ++qi) out_quantiles(p, qi) = NA_REAL;
-      for (int dc = 0; dc < n_dec_cols; ++dc) {
-        out_dec_probs(p, dc) = NA_REAL;
-        out_dec_between_sd(p, dc) = NA_REAL;
-      }
-      if (compute_predictive) {
-        for (int idx = r_start; idx < r_end; ++idx) {
-          for (int k = 0; k < n_cat; ++k) out_pred_probs(idx, k) = NA_REAL;
-          out_pred_exp_sd[idx] = NA_REAL;
-        }
-      }
-      if (keep_person_draws) {
-        for (int m = 0; m < n_draws; ++m) {
-          out_draw_mean(p, m) = NA_REAL;
-          out_draw_sd(p, m) = NA_REAL;
-          out_draw_log_z(p, m) = NA_REAL;
-        }
-      }
-    };
-
-    if (n_draws < 1) {
-      mark_unavailable("No calibration draws were supplied for scoring.");
-      continue;
-    }
-
-    // Per-person predictive accumulators across rows r_start .. r_end - 1
-    std::vector<double> pred_prob_acc;
-    std::vector<double> pred_exp_draws;
-    if (compute_predictive && n_p_rows > 0) {
-      pred_prob_acc.assign(static_cast<size_t>(n_p_rows) * static_cast<size_t>(n_cat), 0.0);
-      pred_exp_draws.assign(static_cast<size_t>(n_p_rows) * static_cast<size_t>(n_draws), 0.0);
-    }
-    if (n_dec_cols > 0) {
-      std::fill(dec_sum.begin(), dec_sum.end(), 0.0);
-    }
-
-    bool failed = false;
-    std::string fail_msg;
-
-    if (m_obs == 0) {
-      // Prior-only Person: exact normal mixture across calibration draws
-      for (int m = 0; m < n_draws; ++m) {
-        const double mu_m = mu_draws[m];
-        const double sig_m = sigma_draws[m];
-        if (!std::isfinite(mu_m) || !std::isfinite(sig_m) || sig_m <= 0.0) {
-          failed = true;
-          fail_msg = "Population mean or SD draw is not finite and positive.";
-          break;
-        }
-        draw_mu_p[static_cast<size_t>(m)] = mu_m;
-        draw_var_p[static_cast<size_t>(m)] = sig_m * sig_m;
-        draw_log_z_p[static_cast<size_t>(m)] = 0.0;
-
-        if (k_cut > 0) {
-          for (int b = 0; b <= k_cut; ++b) {
-            const double lo_x = (b == 0) ? -std::numeric_limits<double>::infinity() : cut_scores[b - 1];
-            const double hi_x = (b == k_cut) ? std::numeric_limits<double>::infinity() : cut_scores[b];
-            const double ua = std::isfinite(lo_x) ? ((lo_x - mu_m) / sig_m) : -std::numeric_limits<double>::infinity();
-            const double ub = std::isfinite(hi_x) ? ((hi_x - mu_m) / sig_m) : std::numeric_limits<double>::infinity();
-            double prob_b = 0.0;
-            if (ub <= 0.0) {
-              const double pb = Rf_pnorm5(ub, 0.0, 1.0, 1, 0);
-              const double pa = std::isfinite(ua) ? Rf_pnorm5(ua, 0.0, 1.0, 1, 0) : 0.0;
-              prob_b = pb - pa;
-              if (std::isfinite(ua) && prob_b < 0.5 * pb) {
-                prob_b = integrate_gl_panel_stdnorm(std::max(-12.0, ua), std::min(12.0, ub), gl_x, gl_w, n_gl);
-              }
-            } else if (ua >= 0.0) {
-              const double qa = Rf_pnorm5(ua, 0.0, 1.0, 0, 0);
-              const double qb = std::isfinite(ub) ? Rf_pnorm5(ub, 0.0, 1.0, 0, 0) : 0.0;
-              prob_b = qa - qb;
-              if (std::isfinite(ub) && prob_b < 0.5 * qa) {
-                prob_b = integrate_gl_panel_stdnorm(std::max(-12.0, ua), std::min(12.0, ub), gl_x, gl_w, n_gl);
-              }
-            } else {
-              const double left_p = std::isfinite(ua) ? (0.5 - Rf_pnorm5(ua, 0.0, 1.0, 1, 0)) : 0.5;
-              const double right_p = std::isfinite(ub) ? (0.5 - Rf_pnorm5(ub, 0.0, 1.0, 0, 0)) : 0.5;
-              prob_b = left_p + right_p;
-            }
-            band_tmp[static_cast<size_t>(b)] = std::max(0.0, std::min(1.0, prob_b));
-          }
-          double bsum = 0.0;
-          for (int b = 0; b <= k_cut; ++b) bsum += band_tmp[static_cast<size_t>(b)];
-          if (!std::isfinite(bsum) || std::abs(bsum - 1.0) > 1e-8) {
-            failed = true;
-            fail_msg = "Prior-only decision probability normalization failed.";
-            break;
-          }
-          for (int b = 0; b <= k_cut; ++b) band_tmp[static_cast<size_t>(b)] /= bsum;
-          double running_above = 0.0;
-          for (int c = k_cut - 1; c >= 0; --c) {
-            running_above += band_tmp[static_cast<size_t>(c + 1)];
-            const double val = std::min(1.0, running_above);
-            dec_draws[static_cast<size_t>(m) * static_cast<size_t>(n_dec_cols) + static_cast<size_t>(c)] = val;
-            dec_sum[static_cast<size_t>(c)] += val;
-          }
-          for (int b = 0; b <= k_cut; ++b) {
-            const int col = k_cut + b;
-            const double val = band_tmp[static_cast<size_t>(b)];
-            dec_draws[static_cast<size_t>(m) * static_cast<size_t>(n_dec_cols) + static_cast<size_t>(col)] = val;
-            dec_sum[static_cast<size_t>(col)] += val;
-          }
-        }
-
-        if (compute_predictive && n_p_rows > 0) {
-          const double panels[9] = {-10.0, -6.0, -3.5, -1.5, 0.0, 1.5, 3.5, 6.0, 10.0};
-          double i0_norm = 0.0;
-          int q_slot = 0;
-          for (int pan = 0; pan < 8; ++pan) {
-            const double half = 0.5 * (panels[pan + 1] - panels[pan]);
-            const double mid = 0.5 * (panels[pan + 1] + panels[pan]);
-            for (int q = 0; q < n_gl; ++q) {
-              const double z = mid + half * gl_x[q];
-              const double u = half * gl_w[q] * Rf_dnorm4(z, 0.0, 1.0, 0);
-              quad_z[static_cast<size_t>(q_slot)] = z;
-              quad_w_norm[static_cast<size_t>(q_slot)] = u;
-              i0_norm += u;
-              ++q_slot;
-            }
-          }
-          for (int q = 0; q < 8 * n_gl; ++q) quad_w_norm[static_cast<size_t>(q)] /= i0_norm;
-          for (int r_local = 0; r_local < n_p_rows; ++r_local) {
-            const int r0 = person_rows[r_start + r_local] - 1;
-            double delta_r = 0.0;
-            for (int f = 0; f < n_facets; ++f) {
-              delta_r += facet_signs[f] * loc_draws(m, row_loc_idx(r0, f) - 1);
-            }
-            const double alpha_r = slope_draws(m, row_slope_idx[r0] - 1);
-            const double* cs_r = cum_steps_flat.data() +
-              static_cast<size_t>(m) * static_cast<size_t>(nc_cs_stride) +
-              static_cast<size_t>(row_owner[r0] - 1) * static_cast<size_t>(n_cat);
-            double exp_m = 0.0;
-            for (int q = 0; q < 8 * n_gl; ++q) {
-              const double wq = quad_w_norm[static_cast<size_t>(q)];
-              const double eta = (mu_m + sig_m * quad_z[static_cast<size_t>(q)]) + delta_r;
-              double rmax = -std::numeric_limits<double>::infinity();
-              for (int k = 0; k < n_cat; ++k) {
-                const double u = alpha_r * (static_cast<double>(k) * eta - cs_r[k]);
-                log_num_buf[static_cast<size_t>(k)] = u;
-                if (u > rmax) rmax = u;
-              }
-              double den = 0.0;
-              for (int k = 0; k < n_cat; ++k) {
-                const double e = std::exp(log_num_buf[static_cast<size_t>(k)] - rmax);
-                prob_buf[static_cast<size_t>(k)] = e;
-                den += e;
-              }
-              for (int k = 0; k < n_cat; ++k) {
-                const double pk = prob_buf[static_cast<size_t>(k)] / den;
-                pred_prob_acc[static_cast<size_t>(r_local) * static_cast<size_t>(n_cat) + static_cast<size_t>(k)] += wq * pk;
-                exp_m += wq * pk * sc_vals[k];
-              }
-            }
-            pred_exp_draws[static_cast<size_t>(r_local) * static_cast<size_t>(n_draws) + static_cast<size_t>(m)] = exp_m;
-          }
-        }
-      }
-
-      if (failed) {
-        mark_unavailable(fail_msg);
-        continue;
-      }
-
-      double mean_p = 0.0;
-      double within_var = 0.0;
-      for (int m = 0; m < n_draws; ++m) {
-        mean_p += draw_mu_p[static_cast<size_t>(m)];
-        within_var += draw_var_p[static_cast<size_t>(m)];
-      }
-      mean_p /= static_cast<double>(n_draws);
-      within_var /= static_cast<double>(n_draws);
-      double between_var = 0.0;
-      for (int m = 0; m < n_draws; ++m) {
-        const double diff = draw_mu_p[static_cast<size_t>(m)] - mean_p;
-        between_var += diff * diff;
-      }
-      between_var /= static_cast<double>(n_draws);
-      const double total_sd = std::sqrt(within_var + between_var);
-
-      // Exact normal-mixture quantile inversion
-      double x_min = std::numeric_limits<double>::infinity();
-      double x_max = -std::numeric_limits<double>::infinity();
-      for (int m = 0; m < n_draws; ++m) {
-        const double mu_m = draw_mu_p[static_cast<size_t>(m)];
-        const double sig_m = std::sqrt(draw_var_p[static_cast<size_t>(m)]);
-        x_min = std::min(x_min, mu_m - 12.0 * sig_m);
-        x_max = std::max(x_max, mu_m + 12.0 * sig_m);
-      }
-
-      for (int qi = 0; qi < n_prob; ++qi) {
-        const double pr = probs[qi];
-        if (n_draws == 1) {
-          const double mu0 = draw_mu_p[0];
-          const double sig0 = std::sqrt(draw_var_p[0]);
-          out_quantiles(p, qi) = (pr <= 0.5)
-            ? (mu0 + sig0 * Rf_qnorm5(pr, 0.0, 1.0, 1, 0))
-            : (mu0 - sig0 * Rf_qnorm5(1.0 - pr, 0.0, 1.0, 1, 0));
-          continue;
-        }
-        double lo = x_min;
-        double hi = x_max;
-        double x = mean_p + total_sd * Rf_qnorm5(pr, 0.0, 1.0, 1, 0);
-        if (!(x > lo && x < hi)) x = 0.5 * (lo + hi);
-        double prev_width = hi - lo;
-        const double tol_err = std::min(1e-12, 1e-8 * std::min(pr, 1.0 - pr));
-        for (int it = 0; it < 60; ++it) {
-          double sum_tail = 0.0;
-          double sum_pdf = 0.0;
-          for (int m = 0; m < n_draws; ++m) {
-            const double mu_m = draw_mu_p[static_cast<size_t>(m)];
-            const double sig_m = std::sqrt(draw_var_p[static_cast<size_t>(m)]);
-            const double z = (x - mu_m) / sig_m;
-            if (pr <= 0.5) {
-              sum_tail += Rf_pnorm5(z, 0.0, 1.0, 1, 0);
-            } else {
-              sum_tail += Rf_pnorm5(z, 0.0, 1.0, 0, 0);
-            }
-            sum_pdf += Rf_dnorm4(z, 0.0, 1.0, 0) / sig_m;
-          }
-          const double err = (pr <= 0.5)
-            ? (sum_tail / static_cast<double>(n_draws) - pr)
-            : ((1.0 - pr) - sum_tail / static_cast<double>(n_draws));
-          const double pdf = sum_pdf / static_cast<double>(n_draws);
-          if (err < 0.0 && x > lo) lo = x;
-          if (err > 0.0 && x < hi) hi = x;
-          if (std::abs(err) <= tol_err || (hi - lo) <= 1e-13 * std::max(1.0, std::abs(x))) {
-            break;
-          }
-          double x_new = (pdf > 0.0) ? (x - err / pdf) : (0.5 * (lo + hi));
-          if (!(x_new > lo && x_new < hi) || std::abs(x_new - x) > 0.5 * prev_width) {
-            x_new = 0.5 * (lo + hi);
-          }
-          prev_width = hi - lo;
-          x = x_new;
-        }
-        out_quantiles(p, qi) = x;
-      }
-
-      status_code[p] = 1;
-      error_message[p] = "";
-      out_mean[p] = mean_p;
-      out_within_sd[p] = std::sqrt(within_var);
-      out_between_sd[p] = std::sqrt(between_var);
-      out_total_sd[p] = total_sd;
-      out_log_ml[p] = 0.0;
-    } else {
-      // Observed Person: exact bracketed Newton mode + 6-panel GL quadrature
-      obs_buf.resize(static_cast<size_t>(m_obs));
-      for (int m = 0; m < n_draws; ++m) {
-        const double mu_m = mu_draws[m];
-        const double sig_m = sigma_draws[m];
-        if (!std::isfinite(mu_m) || !std::isfinite(sig_m) || sig_m <= 0.0) {
-          failed = true;
-          fail_msg = "Population mean or SD draw is not finite and positive.";
-          break;
-        }
-
-        double s1 = 0.0;
-        double a_sum = 0.0;
-        double a_max = 0.0;
-        for (int j = 0; j < m_obs; ++j) {
-          const int r0 = obs_rows_p[static_cast<size_t>(j)];
-          double delta_j = 0.0;
-          for (int f = 0; f < n_facets; ++f) {
-            delta_j += facet_signs[f] * loc_draws(m, row_loc_idx(r0, f) - 1);
-          }
-          const double alpha_j = slope_draws(m, row_slope_idx[r0] - 1);
-          if (!std::isfinite(delta_j) || !std::isfinite(alpha_j) || alpha_j <= 0.0) {
-            failed = true;
-            fail_msg = "Facet location or slope draw is not finite and positive.";
-            break;
-          }
-          const double* cs_j = cum_steps_flat.data() +
-            static_cast<size_t>(m) * static_cast<size_t>(nc_cs_stride) +
-            static_cast<size_t>(row_owner[r0] - 1) * static_cast<size_t>(n_cat);
-          const int y_j = row_y[r0];
-          obs_buf[static_cast<size_t>(j)] = PosteriorPersonObs{delta_j, alpha_j, cs_j, y_j};
-          s1 += alpha_j * static_cast<double>(y_j);
-          a_sum += alpha_j;
-          if (alpha_j > a_max) a_max = alpha_j;
-        }
-        if (failed) break;
-
-        double z_lo = sig_m * (s1 - static_cast<double>(k_max) * a_sum);
-        double z_hi = sig_m * s1;
-        if (!(z_hi > z_lo)) {
-          z_lo -= 1.0;
-          z_hi += 1.0;
-        }
-        double z = (0.0 > z_lo && 0.0 < z_hi) ? 0.0 : (0.5 * (z_lo + z_hi));
-        double h_val = 0.0;
-        double grad = 0.0;
-        double neg_hess = 1.0;
-
-        for (int it = 0; it < 60; ++it) {
-          eval_person_logpost_z(z, mu_m, sig_m, n_cat, obs_buf, log_num_buf, prob_buf,
-                                h_val, &grad, &neg_hess);
-          if (grad > 0.0 && z > z_lo) z_lo = z;
-          if (grad < 0.0 && z < z_hi) z_hi = z;
-          if (std::abs(grad) <= 1e-13 || (z_hi - z_lo) <= 1e-14 * std::max(1.0, std::abs(z))) {
-            break;
-          }
-          double z_new = z + grad / neg_hess;
-          if (!(z_new > z_lo && z_new < z_hi)) {
-            z_new = 0.5 * (z_lo + z_hi);
-          }
-          z = z_new;
-        }
-        eval_person_logpost_z(z, mu_m, sig_m, n_cat, obs_buf, log_num_buf, prob_buf,
-                              h_val, &grad, &neg_hess);
-        if (!std::isfinite(h_val) || !std::isfinite(grad) || std::abs(grad) > 1e-8 ||
-            !std::isfinite(neg_hess) || neg_hess < 1.0) {
-          failed = true;
-          fail_msg = "Conditional posterior mode optimization did not converge.";
-          break;
-        }
-
-        const double s_eff = std::min(1.0 / std::sqrt(neg_hess), 1.5 / (sig_m * a_max));
-        const double d1 = std::max(1e-4, std::min(1.0, 2.5 * s_eff));
-        const double d2 = std::max(2.0 * d1, std::min(2.6, 7.0 * s_eff));
-        const double d3 = std::max(1.6 * d2, std::min(5.2, 4.5 * std::sqrt(s_eff)));
-        const double panels[9] = {
-          z - 10.0, z - d3, z - d2, z - d1, z, z + d1, z + d2, z + d3, z + 10.0
-        };
-        double panel_mass[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        double i1 = 0.0;
-        double i2 = 0.0;
-        int q_slot = 0;
-        for (int pan = 0; pan < 8; ++pan) {
-          const double half = 0.5 * (panels[pan + 1] - panels[pan]);
-          const double mid = 0.5 * (panels[pan + 1] + panels[pan]);
-          double pm = 0.0;
-          for (int q = 0; q < n_gl; ++q) {
-            const double zq = mid + half * gl_x[q];
-            double lpq = 0.0;
-            eval_person_logpost_z(zq, mu_m, sig_m, n_cat, obs_buf, log_num_buf, prob_buf,
-                                  lpq, nullptr, nullptr);
-            const double u = half * gl_w[q] * std::exp(lpq - h_val);
-            pm += u;
-            const double dz = zq - z;
-            i1 += dz * u;
-            i2 += dz * dz * u;
-            quad_z[static_cast<size_t>(q_slot)] = zq;
-            quad_w_norm[static_cast<size_t>(q_slot)] = u;
-            ++q_slot;
-          }
-          panel_mass[pan] = pm;
-        }
-        const double i0 = panel_mass[0] + panel_mass[1] + panel_mass[2] + panel_mass[3] +
-          panel_mass[4] + panel_mass[5] + panel_mass[6] + panel_mass[7];
-        if (!std::isfinite(i0) || i0 <= 0.0) {
-          failed = true;
-          fail_msg = "Conditional posterior normalizing constant is non-positive or non-finite.";
-          break;
-        }
-        const double dz_mean = i1 / i0;
-        const double var_z = i2 / i0 - dz_mean * dz_mean;
-        if (!std::isfinite(var_z) || var_z <= 0.0) {
-          failed = true;
-          fail_msg = "Conditional posterior variance is non-positive or non-finite.";
-          break;
-        }
-
-        draw_mu_p[static_cast<size_t>(m)] = mu_m + sig_m * (z + dz_mean);
-        draw_var_p[static_cast<size_t>(m)] = sig_m * sig_m * var_z;
-        draw_log_z_p[static_cast<size_t>(m)] = h_val + std::log(i0);
-        draw_z_star[static_cast<size_t>(m)] = z;
-        draw_d1[static_cast<size_t>(m)] = d1;
-        draw_d2[static_cast<size_t>(m)] = d2;
-        draw_d3[static_cast<size_t>(m)] = d3;
-        draw_h_star[static_cast<size_t>(m)] = h_val;
-        draw_i0[static_cast<size_t>(m)] = i0;
-        draw_panel0[static_cast<size_t>(m)] = panel_mass[0];
-        draw_panel1[static_cast<size_t>(m)] = panel_mass[1];
-        draw_panel2[static_cast<size_t>(m)] = panel_mass[2];
-        draw_panel5[static_cast<size_t>(m)] = panel_mass[5];
-        draw_panel6[static_cast<size_t>(m)] = panel_mass[6];
-        draw_panel7[static_cast<size_t>(m)] = panel_mass[7];
-
-        // Positive-weight 8-panel cut-score band integration
-        if (k_cut > 0) {
-          for (int b = 0; b <= k_cut; ++b) {
-            const double za = (b == 0)
-              ? panels[0]
-              : std::max(panels[0], std::min(panels[8], (cut_scores[b - 1] - mu_m) / sig_m));
-            const double zb = (b == k_cut)
-              ? panels[8]
-              : std::max(panels[0], std::min(panels[8], (cut_scores[b] - mu_m) / sig_m));
-            double b_mass = 0.0;
-            if (zb > za) {
-              for (int pan = 0; pan < 8; ++pan) {
-                const double sub_a = std::max(za, panels[pan]);
-                const double sub_b = std::min(zb, panels[pan + 1]);
-                if (sub_b > sub_a) {
-                  if (sub_a == panels[pan] && sub_b == panels[pan + 1]) {
-                    b_mass += panel_mass[pan];
-                  } else {
-                    b_mass += integrate_gl_panel_post(sub_a, sub_b, h_val, mu_m, sig_m, n_cat,
-                                                      obs_buf, gl_x, gl_w, n_gl, log_num_buf, prob_buf);
-                  }
-                }
-              }
-            }
-            band_tmp[static_cast<size_t>(b)] = std::max(0.0, b_mass / i0);
-          }
-          double bsum = 0.0;
-          for (int b = 0; b <= k_cut; ++b) bsum += band_tmp[static_cast<size_t>(b)];
-          if (!std::isfinite(bsum) || std::abs(bsum - 1.0) > 1e-8) {
-            failed = true;
-            fail_msg = "Decision probability band partition failed accuracy check.";
-            break;
-          }
-          for (int b = 0; b <= k_cut; ++b) band_tmp[static_cast<size_t>(b)] /= bsum;
-          double running_above = 0.0;
-          for (int c = k_cut - 1; c >= 0; --c) {
-            running_above += band_tmp[static_cast<size_t>(c + 1)];
-            const double val = std::min(1.0, running_above);
-            dec_draws[static_cast<size_t>(m) * static_cast<size_t>(n_dec_cols) + static_cast<size_t>(c)] = val;
-            dec_sum[static_cast<size_t>(c)] += val;
-          }
-          for (int b = 0; b <= k_cut; ++b) {
-            const int col = k_cut + b;
-            const double val = band_tmp[static_cast<size_t>(b)];
-            dec_draws[static_cast<size_t>(m) * static_cast<size_t>(n_dec_cols) + static_cast<size_t>(col)] = val;
-            dec_sum[static_cast<size_t>(col)] += val;
-          }
-        }
-
-        // Posterior predictive category probabilities across all rows of Person p
-        if (compute_predictive && n_p_rows > 0) {
-          for (int q = 0; q < 8 * n_gl; ++q) quad_w_norm[static_cast<size_t>(q)] /= i0;
-          for (int r_local = 0; r_local < n_p_rows; ++r_local) {
-            const int r0 = person_rows[r_start + r_local] - 1;
-            double delta_r = 0.0;
-            for (int f = 0; f < n_facets; ++f) {
-              delta_r += facet_signs[f] * loc_draws(m, row_loc_idx(r0, f) - 1);
-            }
-            const double alpha_r = slope_draws(m, row_slope_idx[r0] - 1);
-            const double* cs_r = cum_steps_flat.data() +
-              static_cast<size_t>(m) * static_cast<size_t>(nc_cs_stride) +
-              static_cast<size_t>(row_owner[r0] - 1) * static_cast<size_t>(n_cat);
-            double exp_m = 0.0;
-            for (int q = 0; q < 8 * n_gl; ++q) {
-              const double wq = quad_w_norm[static_cast<size_t>(q)];
-              const double eta = (mu_m + sig_m * quad_z[static_cast<size_t>(q)]) + delta_r;
-              double rmax = -std::numeric_limits<double>::infinity();
-              for (int k = 0; k < n_cat; ++k) {
-                const double u = alpha_r * (static_cast<double>(k) * eta - cs_r[k]);
-                log_num_buf[static_cast<size_t>(k)] = u;
-                if (u > rmax) rmax = u;
-              }
-              double den = 0.0;
-              for (int k = 0; k < n_cat; ++k) {
-                const double e = std::exp(log_num_buf[static_cast<size_t>(k)] - rmax);
-                prob_buf[static_cast<size_t>(k)] = e;
-                den += e;
-              }
-              for (int k = 0; k < n_cat; ++k) {
-                const double pk = prob_buf[static_cast<size_t>(k)] / den;
-                pred_prob_acc[static_cast<size_t>(r_local) * static_cast<size_t>(n_cat) + static_cast<size_t>(k)] += wq * pk;
-                exp_m += wq * pk * sc_vals[k];
-              }
-            }
-            pred_exp_draws[static_cast<size_t>(r_local) * static_cast<size_t>(n_draws) + static_cast<size_t>(m)] = exp_m;
-          }
-        }
-      }
-
-      if (failed) {
-        mark_unavailable(fail_msg);
-        continue;
-      }
-
-      // Mixture moments and log marginal likelihood
-      double mean_p = 0.0;
-      double within_var = 0.0;
-      double max_lz = -std::numeric_limits<double>::infinity();
-      for (int m = 0; m < n_draws; ++m) {
-        mean_p += draw_mu_p[static_cast<size_t>(m)];
-        within_var += draw_var_p[static_cast<size_t>(m)];
-        if (draw_log_z_p[static_cast<size_t>(m)] > max_lz) max_lz = draw_log_z_p[static_cast<size_t>(m)];
-      }
-      mean_p /= static_cast<double>(n_draws);
-      within_var /= static_cast<double>(n_draws);
-
-      double between_var = 0.0;
-      double sum_exp_lz = 0.0;
-      for (int m = 0; m < n_draws; ++m) {
-        const double diff = draw_mu_p[static_cast<size_t>(m)] - mean_p;
-        between_var += diff * diff;
-        sum_exp_lz += std::exp(draw_log_z_p[static_cast<size_t>(m)] - max_lz);
-      }
-      between_var /= static_cast<double>(n_draws);
-      const double total_sd = std::sqrt(within_var + between_var);
-      const double log_ml = max_lz + std::log(sum_exp_lz) - std::log(static_cast<double>(n_draws));
-
-      // Continuous mixture CDF/PDF inversion across calibration draws
-      double x_min = std::numeric_limits<double>::infinity();
-      double x_max = -std::numeric_limits<double>::infinity();
-      for (int m = 0; m < n_draws; ++m) {
-        const double mu_m = mu_draws[m];
-        const double sig_m = sigma_draws[m];
-        const double zs = draw_z_star[static_cast<size_t>(m)];
-        x_min = std::min(x_min, mu_m + sig_m * (zs - 10.0));
-        x_max = std::max(x_max, mu_m + sig_m * (zs + 10.0));
-      }
-
-      for (int qi = 0; qi < n_prob; ++qi) {
-        const double pr = probs[qi];
-        double lo = x_min;
-        double hi = x_max;
-        double x = mean_p + total_sd * Rf_qnorm5(pr, 0.0, 1.0, 1, 0);
-        if (!(x > lo && x < hi)) x = 0.5 * (lo + hi);
-        double prev_width = hi - lo;
-        const double tol_err = std::min(1e-12, 1e-8 * std::min(pr, 1.0 - pr));
-        double final_err = 1.0;
-
-        for (int it = 0; it < 60; ++it) {
-          double sum_tail = 0.0;
-          double sum_pdf = 0.0;
-
-          for (int m = 0; m < n_draws; ++m) {
-            const double mu_m = mu_draws[m];
-            const double sig_m = sigma_draws[m];
-            const double zs = draw_z_star[static_cast<size_t>(m)];
-            const double zx = (x - mu_m) / sig_m;
-            if (zx <= zs - 10.0) {
-              if (pr > 0.5) sum_tail += 1.0;
-              continue;
-            }
-            if (zx >= zs + 10.0) {
-              if (pr <= 0.5) sum_tail += 1.0;
-              continue;
-            }
-
-            // Reconstruct obs_buf for draw m to evaluate single active sub-panel + exact PDF
-            for (int j = 0; j < m_obs; ++j) {
-              const int r0 = obs_rows_p[static_cast<size_t>(j)];
-              double delta_j = 0.0;
-              for (int f = 0; f < n_facets; ++f) {
-                delta_j += facet_signs[f] * loc_draws(m, row_loc_idx(r0, f) - 1);
-              }
-              const double alpha_j = slope_draws(m, row_slope_idx[r0] - 1);
-              const double* cs_j = cum_steps_flat.data() +
-                static_cast<size_t>(m) * static_cast<size_t>(nc_cs_stride) +
-                static_cast<size_t>(row_owner[r0] - 1) * static_cast<size_t>(n_cat);
-              obs_buf[static_cast<size_t>(j)] = PosteriorPersonObs{delta_j, alpha_j, cs_j, row_y[r0]};
-            }
-
-            const double d1 = draw_d1[static_cast<size_t>(m)];
-            const double d2 = draw_d2[static_cast<size_t>(m)];
-            const double d3 = draw_d3[static_cast<size_t>(m)];
-            const double hs = draw_h_star[static_cast<size_t>(m)];
-            const double i0 = draw_i0[static_cast<size_t>(m)];
-
-            double lp_x = 0.0;
-            eval_person_logpost_z(zx, mu_m, sig_m, n_cat, obs_buf, log_num_buf, prob_buf,
-                                  lp_x, nullptr, nullptr);
-            sum_pdf += std::exp(lp_x - hs) / (sig_m * i0);
-
-            double f_m = 0.0;
-            double u_m = 0.0;
-            if (zx <= zs - d3) {
-              const double l_mass = integrate_gl_panel_post(zs - 10.0, zx, hs, mu_m, sig_m, n_cat,
-                                                            obs_buf, gl_x, gl_w, n_gl, log_num_buf, prob_buf);
-              f_m = std::min(1.0, std::max(0.0, l_mass / i0));
-              u_m = 1.0 - f_m;
-            } else if (zx <= zs - d2) {
-              const double l_mass = draw_panel0[static_cast<size_t>(m)] +
-                integrate_gl_panel_post(zs - d3, zx, hs, mu_m, sig_m, n_cat,
-                                        obs_buf, gl_x, gl_w, n_gl, log_num_buf, prob_buf);
-              f_m = std::min(1.0, std::max(0.0, l_mass / i0));
-              u_m = 1.0 - f_m;
-            } else if (zx <= zs - d1) {
-              const double l_mass = draw_panel0[static_cast<size_t>(m)] +
-                draw_panel1[static_cast<size_t>(m)] +
-                integrate_gl_panel_post(zs - d2, zx, hs, mu_m, sig_m, n_cat,
-                                        obs_buf, gl_x, gl_w, n_gl, log_num_buf, prob_buf);
-              f_m = std::min(1.0, std::max(0.0, l_mass / i0));
-              u_m = 1.0 - f_m;
-            } else if (zx <= zs) {
-              const double l_mass = draw_panel0[static_cast<size_t>(m)] +
-                draw_panel1[static_cast<size_t>(m)] +
-                draw_panel2[static_cast<size_t>(m)] +
-                integrate_gl_panel_post(zs - d1, zx, hs, mu_m, sig_m, n_cat,
-                                        obs_buf, gl_x, gl_w, n_gl, log_num_buf, prob_buf);
-              f_m = std::min(1.0, std::max(0.0, l_mass / i0));
-              u_m = 1.0 - f_m;
-            } else if (zx < zs + d1) {
-              const double r_mass = integrate_gl_panel_post(zx, zs + d1, hs, mu_m, sig_m, n_cat,
-                                                            obs_buf, gl_x, gl_w, n_gl, log_num_buf, prob_buf) +
-                draw_panel5[static_cast<size_t>(m)] +
-                draw_panel6[static_cast<size_t>(m)] +
-                draw_panel7[static_cast<size_t>(m)];
-              u_m = std::min(1.0, std::max(0.0, r_mass / i0));
-              f_m = 1.0 - u_m;
-            } else if (zx < zs + d2) {
-              const double r_mass = integrate_gl_panel_post(zx, zs + d2, hs, mu_m, sig_m, n_cat,
-                                                            obs_buf, gl_x, gl_w, n_gl, log_num_buf, prob_buf) +
-                draw_panel6[static_cast<size_t>(m)] +
-                draw_panel7[static_cast<size_t>(m)];
-              u_m = std::min(1.0, std::max(0.0, r_mass / i0));
-              f_m = 1.0 - u_m;
-            } else if (zx < zs + d3) {
-              const double r_mass = integrate_gl_panel_post(zx, zs + d3, hs, mu_m, sig_m, n_cat,
-                                                            obs_buf, gl_x, gl_w, n_gl, log_num_buf, prob_buf) +
-                draw_panel7[static_cast<size_t>(m)];
-              u_m = std::min(1.0, std::max(0.0, r_mass / i0));
-              f_m = 1.0 - u_m;
-            } else {
-              const double r_mass = integrate_gl_panel_post(zx, zs + 10.0, hs, mu_m, sig_m, n_cat,
-                                                            obs_buf, gl_x, gl_w, n_gl, log_num_buf, prob_buf);
-              u_m = std::min(1.0, std::max(0.0, r_mass / i0));
-              f_m = 1.0 - u_m;
-            }
-
-            if (pr <= 0.5) {
-              sum_tail += f_m;
-            } else {
-              sum_tail += u_m;
-            }
-          }
-
-          const double err = (pr <= 0.5)
-            ? (sum_tail / static_cast<double>(n_draws) - pr)
-            : ((1.0 - pr) - sum_tail / static_cast<double>(n_draws));
-          const double pdf = sum_pdf / static_cast<double>(n_draws);
-          final_err = std::abs(err);
-
-          if (err < 0.0 && x > lo) lo = x;
-          if (err > 0.0 && x < hi) hi = x;
-          if (final_err <= tol_err || (hi - lo) <= 1e-13 * std::max(1.0, std::abs(x))) {
-            break;
-          }
-          double x_new = (pdf > 0.0) ? (x - err / pdf) : (0.5 * (lo + hi));
-          if (!(x_new > lo && x_new < hi) || std::abs(x_new - x) > 0.5 * prev_width) {
-            x_new = 0.5 * (lo + hi);
-          }
-          prev_width = hi - lo;
-          x = x_new;
-        }
-
-        if (final_err > 1e-7 && (hi - lo) > 1e-9 * std::max(1.0, std::abs(x))) {
-          failed = true;
-          fail_msg = "Continuous posterior quantile root-finding did not reach target accuracy.";
-          break;
-        }
-        out_quantiles(p, qi) = x;
-      }
-
-      if (failed) {
-        mark_unavailable(fail_msg);
-        continue;
-      }
-
-      status_code[p] = 0;
-      error_message[p] = "";
-      out_mean[p] = mean_p;
-      out_within_sd[p] = std::sqrt(within_var);
-      out_between_sd[p] = std::sqrt(between_var);
-      out_total_sd[p] = total_sd;
-      out_log_ml[p] = log_ml;
-    }
-
-    // Store decision probabilities & between-draw SDs
-    if (n_dec_cols > 0) {
-      for (int dc = 0; dc < n_dec_cols; ++dc) {
-        const double mean_dec = std::min(1.0, std::max(0.0, dec_sum[static_cast<size_t>(dc)] / static_cast<double>(n_draws)));
-        out_dec_probs(p, dc) = mean_dec;
-        double var_dec = 0.0;
-        for (int m = 0; m < n_draws; ++m) {
-          const double dv = dec_draws[static_cast<size_t>(m) * static_cast<size_t>(n_dec_cols) + static_cast<size_t>(dc)] - mean_dec;
-          var_dec += dv * dv;
-        }
-        out_dec_between_sd(p, dc) = std::sqrt(var_dec / static_cast<double>(n_draws));
-      }
-    }
-
-    // Store posterior predictive probabilities & expected-score between-draw SD
-    if (compute_predictive && n_p_rows > 0) {
-      for (int r_local = 0; r_local < n_p_rows; ++r_local) {
-        const int out_r = r_start + r_local;
-        double psum = 0.0;
-        for (int k = 0; k < n_cat; ++k) {
-          const double pk = pred_prob_acc[static_cast<size_t>(r_local) * static_cast<size_t>(n_cat) + static_cast<size_t>(k)] /
-            static_cast<double>(n_draws);
-          out_pred_probs(out_r, k) = pk;
-          psum += pk;
-        }
-        if (psum > 0.0) {
-          for (int k = 0; k < n_cat; ++k) out_pred_probs(out_r, k) /= psum;
-        }
-        double mean_exp = 0.0;
-        for (int m = 0; m < n_draws; ++m) {
-          mean_exp += pred_exp_draws[static_cast<size_t>(r_local) * static_cast<size_t>(n_draws) + static_cast<size_t>(m)];
-        }
-        mean_exp /= static_cast<double>(n_draws);
-        double var_exp = 0.0;
-        for (int m = 0; m < n_draws; ++m) {
-          const double dv = pred_exp_draws[static_cast<size_t>(r_local) * static_cast<size_t>(n_draws) + static_cast<size_t>(m)] - mean_exp;
-          var_exp += dv * dv;
-        }
-        out_pred_exp_sd[out_r] = std::sqrt(var_exp / static_cast<double>(n_draws));
-      }
-    }
-
-    // Optional per-draw person moments
-    if (keep_person_draws) {
-      for (int m = 0; m < n_draws; ++m) {
-        out_draw_mean(p, m) = draw_mu_p[static_cast<size_t>(m)];
-        out_draw_sd(p, m) = std::sqrt(draw_var_p[static_cast<size_t>(m)]);
-        out_draw_log_z(p, m) = draw_log_z_p[static_cast<size_t>(m)];
-      }
-    }
-  }
-
-  return writable::list({
-    "status_code"_nm = status_code,
-    "error_message"_nm = error_message,
-    "observed_count"_nm = observed_count,
-    "omitted_count"_nm = omitted_count,
-    "mean"_nm = out_mean,
-    "within_sd"_nm = out_within_sd,
-    "between_sd"_nm = out_between_sd,
-    "total_sd"_nm = out_total_sd,
-    "log_marginal_lik"_nm = out_log_ml,
-    "quantiles"_nm = out_quantiles,
-    "decision_probs"_nm = out_dec_probs,
-    "decision_between_sd"_nm = out_dec_between_sd,
-    "pred_probs"_nm = out_pred_probs,
-    "pred_expected_mean_sd"_nm = out_pred_exp_sd,
-    "draw_mean"_nm = out_draw_mean,
-    "draw_sd"_nm = out_draw_sd,
-    "draw_log_z"_nm = out_draw_log_z
-  });
-}

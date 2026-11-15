@@ -110,7 +110,7 @@ normalized review table.
 Use \code{normalize_conquest_overlap_exports()} for the parameter, regression,
 covariance, and case-EAP CSV files requested by the generated command. The
 additional matrixout history CSV retains the objective trajectory and an
-independent estimated-parameter dimension for release verification; it is not
+independently reported number of estimated parameters for comparison; it is not
 parsed as a free-form report. \code{\link[=normalize_conquest_overlap_files]{normalize_conquest_overlap_files()}} and
 \code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}} remain available for already-extracted
 custom tables. Then use \code{\link[=review_conquest_overlap]{review_conquest_overlap()}} only after the matching
@@ -193,7 +193,7 @@ and convergence state
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("build_conquest_overlap_bundle", run.dontrun = TRUE)
 \dontrun{
 # Synthetic latent-regression fit; the full regeneration recipe is

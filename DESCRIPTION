@@ -1,10 +1,11 @@
 Package: mfrmr
 Type: Package
 Title: Estimation and Diagnostics for Many-Facet Measurement Models
-Version: 0.2.4.9000
-Config/mfrmr/release-status: development
+Version: 0.2.5
+Date: 2026-11-14
+Config/mfrmr/release-status: candidate
 Config/mfrmr/public-version: 0.2.4
-Authors@R:
+Authors@R: 
     person(given = "Ryuya", family = "Komuro", role = c("aut", "cre", "cph"),
            email = "ryuya.komuro.c4@tohoku.ac.jp",
            comment = c(ORCID = "0000-0001-9205-0926"))
@@ -20,7 +21,7 @@ Description: Estimates many-facet ordered-response
     Experimental two-family estimation and conditional scoring retain explicit
     uncertainty limitations. The fit, diagnose and report workflow covers
     anchoring, linking, bias and differential-functioning screening, with saved
-    results for replay. Observed-score G-Study and D-Study analyses
+    results for replay. Observed-score generalizability and decision studies
     support assessment planning under declared rating designs. Agreement,
     rater feedback and conditional classification summaries connect analysis
     to assessment decisions. See 'Andrich'
@@ -29,75 +30,28 @@ Description: Estimates many-facet ordered-response
     <doi:10.1177/014662169201600206> for the underlying ordered-response
     models.
 URL: https://ryuya-dot-com.github.io/mfrmr/,
-    https://github.com/Ryuya-dot-com/mfrmr
+        https://github.com/Ryuya-dot-com/mfrmr
 BugReports: https://github.com/Ryuya-dot-com/mfrmr/issues
 License: MIT + file LICENSE
 Language: en
 Encoding: UTF-8
 LazyData: true
-Roxygen: list(markdown = TRUE)
-Depends:
-    R (>= 4.1)
-Imports:
-    cli,
-    dplyr,
-    ggplot2 (>= 3.4.0),
-    Matrix,
-    grDevices,
-    graphics,
-    grid,
-    gtable,
-    tidyr,
-    tibble,
-    purrr,
-    stringr,
-    psych,
-    lifecycle,
-    rlang,
-    methods,
-    parallel,
-    stats,
-    tools,
-    utils
-LinkingTo:
-    cpp11 (>= 0.5.4)
-Suggests:
-    RTMB (>= 2.0),
-    brms,
-    cmdstanr,
-    jsonlite,
-    posterior,
-    cluster,
-    mice,
-    nleqslv,
-    testthat (>= 3.0.0),
-    callr,
-    pkgload,
-    withr,
-    covr,
-    knitr,
-    rmarkdown,
-    svglite,
-    igraph,
-    ergm (>= 4.0),
-    network,
-    lme4,
-    minqa,
-    nloptr,
-    numDeriv,
-    ordinal,
-    kableExtra,
-    flextable,
-    future,
-    future.apply,
-    shiny,
-    mirt,
-    TAM,
-    eRm,
-    lpSolve
-Additional_repositories: https://stan-dev.r-universe.dev
-SystemRequirements: CmdStan (optional, for running exported Stan models)
+Depends: R (>= 4.1)
+Imports: cli, dplyr, Matrix, grDevices, graphics, tidyr, tibble, purrr,
+        stringr, psych, lifecycle, rlang, methods, parallel, stats,
+        tools, utils
+LinkingTo: cpp11 (>= 0.5.4)
+Suggests: RTMB (>= 2.0), cluster, mice, nleqslv, testthat (>= 3.0.0),
+        callr, pkgload, withr, knitr, rmarkdown, igraph, ergm (>=
+        4.0), network, lme4, minqa, nloptr, numDeriv, ordinal,
+        kableExtra, flextable, future, future.apply, shiny, ggplot2 (>=
+        3.4.0), mirt, TAM, eRm, lpSolve
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/Needs/website: pkgdown, plotly, htmlwidgets
+Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.1.1
+NeedsCompilation: yes
+Author: Ryuya Komuro [aut, cre, cph] (ORCID:
+    <https://orcid.org/0000-0001-9205-0926>)
+Maintainer: Ryuya Komuro <ryuya.komuro.c4@tohoku.ac.jp>

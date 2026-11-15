@@ -4622,24 +4622,30 @@ structural_design_review_table_index <- function(active,
   )
 }
 
+structural_design_bind_tables <- function(parts) {
+  keep <- vapply(parts, function(df) is.data.frame(df) && nrow(df) > 0L, logical(1))
+  parts <- parts[keep]
+  if (length(parts) == 0L) return(data.frame())
+  out <- do.call(rbind, parts)
+  rownames(out) <- NULL
+  out
+}
+
+structural_design_selection_by_preset <- function(selection_catalog, summarize,
+    presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
+  parts <- lapply(unique(as.character(presets)), function(preset) {
+    summarize(selection_catalog = selection_catalog, preset = preset)
+  })
+  structural_design_bind_tables(parts)
+}
+
 structural_design_appendix_selection_tables <- function(bundle,
                                                     label = "structural_design_review",
                                                     presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   presets <- unique(as.character(presets))
   original_bundles <- stats::setNames(list(bundle), label)
 
-  bind_tables <- function(parts) {
-    keep <- vapply(parts, function(df) is.data.frame(df) && nrow(df) > 0L, logical(1))
-    parts <- parts[keep]
-    if (length(parts) == 0L) {
-      return(data.frame())
-    }
-    out <- do.call(rbind, parts)
-    rownames(out) <- NULL
-    out
-  }
-
-  selection_catalog <- bind_tables(lapply(presets, function(preset) {
+  selection_catalog <- structural_design_bind_tables(lapply(presets, function(preset) {
     selected <- export_select_summary_table_bundles_for_appendix(
       original_bundles,
       preset = preset
@@ -4653,13 +4659,13 @@ structural_design_appendix_selection_tables <- function(bundle,
 
   list(
     selection_catalog = selection_catalog,
-    selection_summary = bind_tables(lapply(presets, function(preset) {
+    selection_summary = structural_design_bind_tables(lapply(presets, function(preset) {
       export_summary_table_selection_summary(selection_catalog, preset = preset)
     })),
-    selection_role_summary = bind_tables(lapply(presets, function(preset) {
+    selection_role_summary = structural_design_bind_tables(lapply(presets, function(preset) {
       export_summary_table_selection_role_summary(selection_catalog, preset = preset)
     })),
-    selection_section_summary = bind_tables(lapply(presets, function(preset) {
+    selection_section_summary = structural_design_bind_tables(lapply(presets, function(preset) {
       export_summary_table_selection_section_summary(selection_catalog, preset = preset)
     }))
   )
@@ -4724,18 +4730,18 @@ structural_design_selection_table_summary <- function(selection_catalog,
   out[order(out$PreferredAppendixOrder, out$Table, na.last = TRUE), , drop = FALSE]
 }
 
+structural_design_selection_table_preset_summary <- function(selection_catalog,
+                                                         presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
+  structural_design_selection_by_preset(
+    selection_catalog, export_summary_table_selection_table_summary, presets
+  )
+}
 
-
-structural_design_selection_by_preset <- function(selection_catalog, summarize,
-    presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
-  parts <- lapply(unique(as.character(presets)), function(preset) {
-    summarize(selection_catalog = selection_catalog, preset = preset)
-  })
-  parts <- parts[vapply(parts, function(x) is.data.frame(x) && nrow(x) > 0L, logical(1))]
-  if (!length(parts)) return(data.frame())
-  out <- do.call(rbind, parts)
-  rownames(out) <- NULL
-  out
+structural_design_selection_handoff_table_summary <- function(selection_catalog,
+                                                          presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
+  structural_design_selection_by_preset(
+    selection_catalog, export_summary_table_selection_handoff_table_summary, presets
+  )
 }
 
 structural_design_selection_handoff_summary <- function(selection_catalog,
@@ -4780,9 +4786,33 @@ structural_design_selection_handoff_summary <- function(selection_catalog,
   out[order(out$Preset, out$AppendixSection), , drop = FALSE]
 }
 
+structural_design_selection_handoff_bundle_summary <- function(selection_catalog,
+                                                           presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
+  structural_design_selection_by_preset(
+    selection_catalog, export_summary_table_selection_handoff_bundle_summary, presets
+  )
+}
 
+structural_design_selection_handoff_preset_summary <- function(selection_catalog,
+                                                           presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
+  structural_design_selection_by_preset(
+    selection_catalog, export_summary_table_selection_handoff_preset_summary, presets
+  )
+}
 
+structural_design_selection_handoff_role_summary <- function(selection_catalog,
+                                                         presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
+  structural_design_selection_by_preset(
+    selection_catalog, export_summary_table_selection_handoff_role_summary, presets
+  )
+}
 
+structural_design_selection_handoff_role_section_summary <- function(selection_catalog,
+                                                                 presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
+  structural_design_selection_by_preset(
+    selection_catalog, export_summary_table_selection_handoff_role_section_summary, presets
+  )
+}
 
 structural_design_review_plot_index_from_bundle <- function(plot_index) {
   idx <- as.data.frame(plot_index %||% data.frame(), stringsAsFactors = FALSE)
@@ -4939,26 +4969,26 @@ summary.mfrm_structural_design_review <- function(object,
   out$selection_table_summary <- structural_design_selection_table_summary(
     selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_table_preset_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_table_summary, selection_catalog = selection_tables$selection_catalog
+  out$selection_table_preset_summary <- structural_design_selection_table_preset_summary(
+    selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_handoff_table_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_handoff_table_summary, selection_catalog = selection_tables$selection_catalog
+  out$selection_handoff_table_summary <- structural_design_selection_handoff_table_summary(
+    selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_handoff_preset_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_handoff_preset_summary, selection_catalog = selection_tables$selection_catalog
+  out$selection_handoff_preset_summary <- structural_design_selection_handoff_preset_summary(
+    selection_catalog = selection_tables$selection_catalog
   )
   out$selection_handoff_summary <- structural_design_selection_handoff_summary(
     selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_handoff_bundle_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_handoff_bundle_summary, selection_catalog = selection_tables$selection_catalog
+  out$selection_handoff_bundle_summary <- structural_design_selection_handoff_bundle_summary(
+    selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_handoff_role_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_handoff_role_summary, selection_catalog = selection_tables$selection_catalog
+  out$selection_handoff_role_summary <- structural_design_selection_handoff_role_summary(
+    selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_handoff_role_section_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_handoff_role_section_summary, selection_catalog = selection_tables$selection_catalog
+  out$selection_handoff_role_section_summary <- structural_design_selection_handoff_role_section_summary(
+    selection_catalog = selection_tables$selection_catalog
   )
   out$selection_summary <- selection_tables$selection_summary
   out$selection_role_summary <- selection_tables$selection_role_summary
@@ -5232,7 +5262,7 @@ print_compact_structural_design_review_summary <- function(x,
 #' @param label_angle Axis-label rotation angle.
 #' @param ... Reserved for generic compatibility.
 #'
-#' @return Invisibly, a `ggplot` object carrying reusable structural-design tables via [plot_data()].
+#' @return A plotting-data object of class `mfrm_plot_data`.
 #' @noRd
 #' @examples
 #' spec <- build_mfrm_sim_spec(
@@ -5416,23 +5446,32 @@ plot.mfrm_structural_design_review <- function(x,
     pal <- resolve_palette(palette = palette, defaults = default_palette)
     plot_title <- if (is.null(main)) paste("Structural design review:", gsub("_", " ", plot_name)) else as.character(main[1])
 
-    out <- new_mfrm_plot_data(
+    if (isTRUE(draw)) {
+      barplot_rot45(
+        height = values,
+        labels = labels,
+        col = pal[plot_name],
+        main = plot_title,
+        ylab = ylab,
+        label_angle = label_angle,
+        mar_bottom = 8.8
+      )
+      graphics::abline(h = 0, col = pal["grid"], lty = 2)
+    }
+
+    return(invisible(new_mfrm_plot_data(
       "structural_design_review",
       list(
         plot = plot_name,
         selection_value = measure$selection_value,
         appendix_preset = appendix_preset,
         table = tbl,
-        label = labels,
-        value = values,
-        ylab = ylab,
         title = plot_title,
         subtitle = subtitle,
         legend = new_plot_legend(legend_label, "structural_design", "bar", pal[plot_name]),
         reference_lines = new_reference_lines("h", 0, "Zero-table reference", "dashed", "reference")
       )
-    )
-    return(.mfrm_finalize_ggplot(out, draw = draw))
+    )))
   }
 
   if (type == "profile_metrics") {
@@ -5496,25 +5535,36 @@ plot.mfrm_structural_design_review <- function(x,
   color_name <- names(default_palette)[1]
   plot_title <- if (is.null(main)) "Structural design review" else as.character(main[1])
 
-  out <- new_mfrm_plot_data(
+  if (isTRUE(draw)) {
+    barplot_rot45(
+      height = values,
+      labels = labels,
+      col = pal[color_name],
+      main = plot_title,
+      ylab = legend_label,
+      label_angle = label_angle,
+      mar_bottom = 9
+    )
+    graphics::abline(h = 0, col = pal["grid"], lty = 2)
+  }
+
+  invisible(new_mfrm_plot_data(
     "structural_design_review",
     list(
       plot = plot_name,
       label = labels,
       value = values,
-      ylab = legend_label,
       title = plot_title,
       subtitle = subtitle,
       recommended_design_id = as.character(active$recommended_design_id %||% NA_character_),
       legend = new_plot_legend(legend_label, "structural_design", "bar", pal[color_name]),
       reference_lines = new_reference_lines("h", 0, "Zero reference", "dashed", "reference")
     )
-  )
-  .mfrm_finalize_ggplot(out, draw = draw)
+  ))
 }
 
 simulation_compact_structural_design_report_cache <- function(x) {
-  if (!is.list(x) || is.data.frame(x) || inherits(x, "mfrm_plot_data") || inherits(x, "ggplot")) {
+  if (!is.list(x) || is.data.frame(x) || inherits(x, "mfrm_plot_data")) {
     return(x)
   }
 
@@ -5532,7 +5582,7 @@ simulation_compact_structural_design_report_cache <- function(x) {
   x[intersect(names(x), nested_report_fields)] <- NULL
 
   for (nm in names(x)) {
-    if (is.list(x[[nm]]) && !is.data.frame(x[[nm]]) && !inherits(x[[nm]], "mfrm_plot_data") && !inherits(x[[nm]], "ggplot")) {
+    if (is.list(x[[nm]]) && !is.data.frame(x[[nm]]) && !inherits(x[[nm]], "mfrm_plot_data")) {
       x[[nm]] <- simulation_compact_structural_design_report_cache(x[[nm]])
     }
   }

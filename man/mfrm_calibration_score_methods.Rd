@@ -47,8 +47,8 @@ edge-mass views. Interval plots always label the displayed Persons.}
 
 \item{main}{Optional plot title.}
 
-\item{draw}{If \code{TRUE}, print the \code{ggplot} figure on the active graphics
-device. The \code{ggplot} object is returned invisibly in either case.}
+\item{draw}{If \code{TRUE}, draw with base R graphics. The returned
+\code{mfrm_plot_data} is available invisibly in either case.}
 
 \item{preset}{Visual preset: \code{"standard"}, \code{"publication"}, \code{"compact"},
 or \code{"monochrome"}.}
@@ -62,8 +62,7 @@ retains unrounded \code{quadrature_review} and a compact \code{quadrature_overvi
 When cut scores were requested, \code{decisions} preserves every probability,
 cut boundary and actual scoring prior without rounding; unavailable
 Persons remain in that table with \code{NA} probabilities.
-\code{plot()} returns a \code{ggplot} object (invisibly) whose underlying payload
-(accessible via \code{\link[=plot_data]{plot_data()}}) retains the selected plotting table,
+\code{plot()} returns an \code{mfrm_plot_data} with the selected plotting table,
 selection accounting, unplotted Person dispositions, interpretation
 guidance, and plotting settings.
 }
@@ -106,12 +105,10 @@ re-summarized. Saved grid-based intervals retain their original endpoints;
 printed results and interval plots explain that their posterior mass can
 differ from the requested level.
 Its print method shows at most ten rows from each table so routine console
-output stays compact. Plots distinguish scored and review states by shape
-as well as colour.
-\code{plot(x)} returns a \code{ggplot} object directly; \code{as_ggplot(p)} and
-\code{as_ggplot(p, component = "data")} preserve the same selected view, saved
-bounds, review symbols and unplotted dispositions for both \code{ggplot} and
-legacy \code{mfrm_plot_data} objects.
+output stays compact. Base and ggplot2 renderers distinguish scored and
+review states by shape as well as colour.
+\code{as_ggplot(p)} and \code{as_ggplot(p, component = "data")} preserve the same
+selected view, saved bounds, review symbols and unplotted dispositions.
 Use \code{\link[=plot_data]{plot_data()}} to extract other components. Changing the interval level
 requires an explicit scoring call; conversion does not recompute intervals.
 Notes remain in the returned object and are not automatically drawn.
@@ -138,8 +135,8 @@ q_review <- mml_quadrature_sensitivity(
 )
 summary(q_review) # Inspect movement; these grids are not universal cutoffs.
 fit <- q_review$fits$q61
-calibration <- update(status = "frozen", 
-  update(status = "validated", extract_mfrm_calibration(
+calibration <- freeze_mfrm_calibration(
+  validate_mfrm_calibration(extract_mfrm_calibration(
     fit, quadrature_review = q_review, scoring_quad_points = 121
   ))
 )
@@ -154,7 +151,7 @@ plot(scores, type = "edge_mass", draw = FALSE)
 }
 }
 \seealso{
-\link{mfrm_calibration_workflow}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
+\link{mfrm_calibration_workflow}, \link{mfrm_calibration_capabilities},
 \code{\link[=plot_data]{plot_data()}}, \code{\link[=plot_data_components]{plot_data_components()}}, \code{\link[=as_ggplot]{as_ggplot()}}, \code{\link[=apa_table]{apa_table()}},
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}},
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for conditional-decision interpretation

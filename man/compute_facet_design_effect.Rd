@@ -80,7 +80,7 @@ and variance calculation that represent the actual design.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("compute_facet_design_effect", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_core")

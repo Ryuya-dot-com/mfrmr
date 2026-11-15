@@ -42,7 +42,7 @@ marginal, pairwise, and report-review signals are screening readouts rather
 than pass/fail evidence.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("summary.mfrm_diagnostic_screening", run.dontrun = TRUE)
 \dontrun{
 # One saved replication illustrates output structure, not precise rates.

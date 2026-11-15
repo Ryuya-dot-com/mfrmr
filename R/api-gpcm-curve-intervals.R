@@ -97,7 +97,7 @@
 #'   not fix its slope, thresholds or whole response curve. Availability still
 #'   depends on the joint-information and numerical checks described above.
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("mfrm_curve_intervals", run.dontrun = TRUE)
 #' \dontrun{
 #' # How do category probabilities vary with ability in one rating context?
@@ -298,14 +298,12 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
       ggplot2::aes(shape = "Unavailable"), color = "#333333", size = 2.5,
       show.legend = c(shape = TRUE, color = FALSE, fill = FALSE, linetype = FALSE)) +
     ggplot2::scale_shape_manual(values = c(Unavailable = 4), name = "Interval")
-  saved_out <- new_mfrm_plot_data("gpcm_curve_intervals",
+  attr(p, "mfrmr_plot_data") <- new_mfrm_plot_data("gpcm_curve_intervals",
     list(table = tab, settings = x$settings, title = title, subtitle = subtitle, caption = caption,
       cautions = x$cautions, contexts = x$contexts, uncertainty_note = x$anchor_note))
-  attr(p, "mfrmr_plot_data") <- saved_out
-  attr(p, "mfrmr_notes") <- .mfrm_plot_annotation_notes(saved_out$data)
-  p <- .mfrmr_gg_labs(p, saved_out$data,
+  p <- .mfrmr_gg_labs(p, attr(p, "mfrmr_plot_data")$data,
     x = "Ability (native scale)",
     y = if (x$settings$type == "probability") "Category probability" else "Information per rating")
-  if (isTRUE(draw)) .mfrm_draw_ggplot_clean(p)
+  if (isTRUE(draw)) print(p)
   invisible(p)
 }

@@ -93,137 +93,73 @@
 #' @param ... Reserved for future use; additional arguments are rejected.
 #'
 #' @details
-#' G describes consistency of relative ordering: for example, ranking
-#' examinees. Phi also includes shifts caused by easier tasks or more lenient
-#' raters and concerns absolute score levels. Higher coefficients indicate
-#' greater dependability under the fitted model; neither gives the probability
-#' of a correct pass/fail decision. No universal acceptable cutoff is drawn.
+#' G concerns relative ordering; Phi also includes condition-wide shifts and
+#' concerns absolute score levels. SEM is the square root of error variance,
+#' in units of the selected mean score/composite, not uncertainty in G/Phi.
+#' Neither coefficient is a correct-classification probability. Read coefficients
+#' alongside SEM and the target population: larger universe-score variance can
+#' raise G/Phi without reducing error. Weights are not normalized; changing them
+#' can change the construct and score units. No universal cutoff or optimal
+#' allocation follows from a high or flattening curve.
 #'
-#' SEM is the square root of error variance. Lower values indicate less error
-#' in the units of the selected mean score or composite. Relative SEM concerns
-#' ordering; absolute SEM also includes condition-wide shifts. SEM is not a
-#' confidence interval for G or Phi. The two SEM panels share a scale, but
-#' different scores or differently scaled composites need not have comparable
-#' units. Weights are not normalized. Changing weights can also change the
-#' meaning of the score; a higher G or Phi alone does not justify a new set
-#' of weights.
+#' @section Read the scenarios and components:
+#' Points are the supplied complete balanced future plans, even when the source
+#' G-study was incomplete. Nested child counts are **per parent**, not total
+#' pool sizes. Lines connect supplied points at fixed other-facet counts; they
+#' do not fit curves or evaluate intermediate designs. Legends identify scores
+#' and counts; `panel_by` separates the other count with shared limits. Select
+#' relevant plans, scores or metrics to avoid crowding. These are 2D comparisons,
+#' not heatmaps or 3D surfaces. Equal products of rater/task counts imply equal
+#' rating counts, not necessarily equal burden or cost.
 #'
-#' With `type = "error_components"`, compare how complete plans change the
-#' sources of error. Each point is a projected variance component divided by
-#' its planned replication count. Relative error includes Person interactions
-#' and residual; absolute error also includes condition-wide shifts.
-#' For two crossed facets, Person-by-rater is divided by the rater count,
-#' Person-by-task by the task count, and the highest interaction/residual by
-#' their product. In a nested design, child counts are per parent; the parent
-#' and Person-by-parent terms use the parent count, and child-within-parent
-#' and residual terms use the product. See [mfrm_d_study()] for the formulas.
-#' Sources absent from an error definition are omitted, including the Person
-#' universe component.
+#' `type = "error_components"` shows projected components divided by planned
+#' replication counts. Relative error includes Person interactions/residual;
+#' absolute error adds condition-wide terms. The exact crossed/nested formulas
+#' are in [mfrm_d_study()]. Contributions add to **variance**, not SEM; composite
+#' projections include the full covariance matrices and fixed weights. Negative
+#' estimates remain visible, including when total SEM is unavailable; they do
+#' not imply negative population variance or harm from additional observations.
+#' The Person universe component is omitted from error. Curve-only `x_var`,
+#' `panel_by`, `reference` and `intervals` are not accepted for this view.
 #'
-#' Contributions add to error **variance**, in squared score units, not to
-#' SEM. Composite projections use the full covariance matrices and the saved
-#' weights. Negative component estimates remain visible even when the total
-#' error variance is negative and SEM is unavailable; they do not represent
-#' negative population variances. A negative contribution is not evidence
-#' that adding observations causes more population error. The plot compares
-#' point projections, not sampling uncertainty or an optimal allocation.
-#' Do not pass curve-only `x_var`, `panel_by`, `reference`, or `intervals`.
-#' Use a small set of relevant plans, and increase figure height for many
-#' scores or plans. Stored components and plans are checked against the saved
-#' D-study estimates without refitting the G-study.
+#' @section Interval overlays:
+#' By default only points are shown. `intervals = TRUE` calls
+#' [confint.mfrm_multivariate_d_study()] for each selected score/composite.
+#' REML fits a separate likelihood model; residual-contrast/spectral-F methods
+#' project retained ratings; other methods use saved ANOVA summaries. For other
+#' inference controls, such as `draws`/`seed`, pass saved interval results.
+#' This reuses bounds after checking source summaries, weights, plans, component
+#' treatment and points. Old intervals lacking source summaries need recreation
+#' for overlays; their standalone forest plots remain usable.
 #'
-#' Points represent only the supplied scenarios. Lines connect them as visual
-#' guides for each selected score at a fixed count of the other facet, without fitting a curve or
-#' evaluating intermediate designs. For example, with tasks on the horizontal
-#' axis, compare points along one line to change tasks while keeping raters
-#' constant. For overlaid curves, each legend entry identifies the score and
-#' the other facet count. With `panel_by`, the panel identifies the count and
-#' the legend identifies the score. Compare rater counts within the same score.
+#' Ribbons join supplied endpoints. Missing bounds break them and leave open
+#' points where estimates exist; isolated intervals are vertical segments, and
+#' intervals may remain visible without points. Delta bounds outside `[0,1]`
+#' expand the axis instead of being clipped, indicating an approximation limit.
+#' Monochrome boundary line types distinguish bands; notes and complete saved
+#' interval objects retain levels, methods, diagnostics and reasons.
 #'
-#' Multivariate means several score criteria, not a requirement for a 3D plot.
-#' Use these 2D panels to compare counts while holding the other facet fixed.
-#' With many lines, use `panel_by` to separate the other facet count, or
-#' specify a smaller set of relevant plans when creating the D-study. Panel
-#' axes share limits; only requested scenarios are drawn, even in a
-#' nonrectangular grid. Panel labels identify counts (and metrics when needed),
-#' while the figure title and cautions remain in the returned data. Increase
-#' figure height for many panels or select one `metric`. This method does not draw
-#' a heatmap or 3D surface. For uncertainty in a prespecified change, use
-#' [mfrm_multivariate_d_compare()] and its plot method; an SEM curve is not
-#' a confidence band. [plot_data()] supplies exact values, including unavailable
-#' estimates, and `preset = "monochrome"` retains line/point distinctions.
+#' Drawing ribbons adds no coverage guarantee. Simultaneous coverage across
+#' scores/metrics is not supplied; any joint coverage across plans depends on the
+#' method and assumptions. Overlap is not a paired test: use
+#' [mfrm_multivariate_d_compare()] for a prespecified change. SEM ribbons describe
+#' sampling uncertainty in population SEM, not Person-score intervals. SEM and
+#' paired-difference intervals cannot be used as coefficient ribbons. See the
+#' interval help for equations, approximation and boundary limitations.
 #'
-#' Coefficients also depend on variation among persons. If universe-score
-#' variance increases while error variance stays constant, G and Phi increase
-#' but SEM does not decrease. Therefore, comparing coefficients across different
-#' populations does not isolate improvement in the assessment. Read the SEMs,
-#' score units and target population alongside the coefficients.
+#' @section Missing and adjusted estimates:
+#' Missing values remain missing, with metric-specific statuses in `unavailable`
+#' and notes; unavailable Phi does not hide available G. Panels without estimates
+#' state the reason. Inspect non-PSD component diagnostics: larger planned counts
+#' cannot repair the source estimates. The saved `negative_components` treatment
+#' (raw, GENOVA ALGORITHM or GENOVA EMS) is preserved. Compatible original-source
+#' population intervals may not contain adjusted points; both are retained and
+#' distinguished. Other component treatments are rejected.
 #'
-#' Scenarios retain the G-study's crossed or nested structure, with complete
-#' balanced future conditions shared by every person and score. For a nested
-#' facet, the axis or legend says "per" to identify its count within each parent,
-#' for example "Raters per Task"; this is not the total rater pool size.
-#' Even when the G-study used incomplete
-#' data, the figure does not describe reliability of that sparse roster.
-#' Point projections use the estimated covariance components. By default no
-#' sampling intervals are shown. `intervals = TRUE` uses
-#' [confint.mfrm_multivariate_d_study()] for each selected score/composite,
-#' without changing the G-study. `method = "reml_profile"` fits a separate
-#' likelihood model once per selected score/composite. `"residual_contrast"`
-#' projects the retained ratings for one-facet relative SEM, and `"spectral_f"`
-#' does so for one-facet G; other methods
-#' use saved ANOVA summaries. To customize other inference settings such
-#' as pivotal `draws` or `seed`, pass saved `confint()` results instead.
-#' This alternative does not recalculate intervals. Source summaries, score weights, plans and stored point estimates
-#' are checked before overlaying. Older interval objects without source summaries
-#' must be recreated with `confint(x)`; their forest plots still work.
-#' Ribbons connect the supplied endpoints; intermediate plans are not evaluated.
-#' Delta normal-reference ribbons may extend outside `[0,1]`; both renderers
-#' expand the axis rather than clipping the saved limits. This indicates an
-#' approximation limitation, not a population coefficient outside its range.
-#' Missing intervals break the ribbon and leave open points when estimates exist.
-#' An isolated interval is a vertical segment. An interval can remain visible
-#' without a point estimate. Boundary line types distinguish overlapping bands
-#' in monochrome. Confidence levels, method limitations, numerical diagnostics
-#' and unavailable reasons remain in the returned object, not figure footnotes.
-#'
-#' Ribbons do not establish simultaneous coverage across scores or metrics.
-#' Joint coverage across future plans, if any, depends on the chosen method
-#' and its model assumptions; drawing a band supplies no additional guarantee.
-#' Overlap is not a test of score or plan differences. Measurement SEM and
-#' paired-difference intervals cannot be used as coefficient ribbons.
-#' SEM ribbons show sampling uncertainty in the population SEM, not intervals
-#' for Person scores. Their axes retain score units and include the entire
-#' interval. MLS bands are approximate; do not read a narrow ribbon as a
-#' guarantee of coverage. See [confint.mfrm_multivariate_d_study()] for the
-#' equations, small-sample evaluation and boundary limitations.
-#' A flattening curve can indicate limited gains from
-#' adding one facet alone; it does not identify a cost-effective optimum.
-#' The highest point alone does not account for uncertainty in the estimated
-#' components. Read the size of differences as well as their ordering. Equal products
-#' of rater and task counts give equal rating counts, not necessarily equal
-#' examinee burden or total cost. Unavailable candidates prevent a complete
-#' comparison for that metric.
-#'
-#' Unavailable estimates stay missing. A panel with no estimates states the
-#' reason; otherwise returned notes report unavailable scenarios. The returned
-#' `unavailable` table preserves their counts, metrics, and `Status` values.
-#' Each panel uses its metric's status, so an unavailable Phi does not hide
-#' an available G. Non-PSD component matrices are described in the returned
-#' notes; inspect `x$component_diagnostics` before using raw projections.
-#' Increasing planned counts does not repair those component estimates.
-#' The saved `negative_components` convention is preserved in curves and
-#' error-contribution plots. Notes identify raw, GENOVA ALGORITHM or GENOVA EMS
-#' projections; original G-study diagnostics remain available. GENOVA-adjusted
-#' results accept original-source population intervals calculated for that
-#' treatment by `confint(x)`. Bands retain their original bounds and may not
-#' contain adjusted points; notes and saved intervals retain the distinction.
-#' A saved interval with a different component treatment is rejected.
-#' Missing values are never plotted as zero. Previously saved D-study objects
-#' retain their recorded values and availability: rerun
-#' [mfrm_d_study()] on the saved G-study to apply current rules.
-#'
-#' @return Invisibly, a `ggplot` object. Use [plot_data()] to extract
+#' Use [plot_data()] for exact values and notes. Previously saved D-studies keep
+#' their recorded calculations; rerun [mfrm_d_study()] on the saved G-study to apply
+#' updated rules. Plotting never refits that G-study.
+#' @return Invisibly, an `mfrm_plot_data` object. Use [plot_data()] to extract
 #'   `table` (the selected scores/composites), `series` (one row per scenario and
 #'   plotted metric, including missing values), `unavailable`, `design_grid`,
 #'   `weights`, score identity, axis/group names, labels, `component_note`,
@@ -252,7 +188,7 @@
 #'   the optional ggplot2 package; for example, `as_ggplot(d, type = "sem")`.
 #' @seealso [mfrm_d_study()], [mfrm_g_study()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot.mfrm_multivariate_d_study", run.dontrun = TRUE)
 #' \dontrun{
 #' # Question: how much would doubling the common tasks change dependability?
@@ -484,7 +420,90 @@ plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem", "e
     out$data$notes <- rbind(out$data$notes,
       data.frame(Type = "uncertainty", Text = bands$notes))
   }
-  .mfrm_finalize_ggplot(out, draw = draw)
+  if (!draw) return(invisible(out))
+  old <- graphics::par()[c("mfrow", "mar", "oma", "cex", "mex")]
+  on.exit(graphics::par(old), add = TRUE)
+  apply_plot_preset(style)
+  graphics::par(mfrow = c(ceiling(nrow(panels) / panel_columns), panel_columns),
+    mar = if (faceted) c(4.3, 5.5, 3.2, 1) else c(4.7, 5.3, 2.3, if (show_legend) 8 else 1),
+    oma = c(if (faceted && show_legend) 1 + ceiling(length(groups) / 2) else .2, 0, .2, 0))
+  if (show_legend && !faceted) {
+    margin <- graphics::par("mar")
+    legend_width <- max(graphics::strwidth(paste("MMMM", groups), units = "inches", cex = 0.8))
+    margin[4L] <- max(margin[4L], legend_width / (graphics::par("csi") * graphics::par("mex")) + 1)
+    graphics::par(mar = margin)
+  }
+  y_lim <- .mfrm_mvds_y_limits(series, type == "coefficients", references$value)
+  for (i in seq_len(nrow(panels))) {
+    s <- series[if (faceted) series$Panel == panels$Panel[i] else
+      series$Metric == panels$Metric[i], , drop = FALSE]
+    ok <- s$Status == "Available" & is.finite(s$Value)
+    x_lim <- if (faceted) range(series$X) else range(s$X)
+    plot(x_lim, y_lim, type = "n", ylim = y_lim,
+      xlab = x_label,
+      ylab = if (length(metrics) == 1L) sub(": ", "\n", y_label) else if (type == "coefficients") "Dependability\nHigher is better" else "SEM (score units)\nLower is better",
+      main = if (faceted || length(metrics) > 1L) panels$Label[i] else NULL, xaxt = "n", yaxt = "n")
+    ticks <- sort(unique(if (faceted) series$X else s$X))
+    if (length(ticks) > 15L) ticks <- pretty(range(ticks))
+    axis(1, at = ticks[ticks >= x_lim[1] & ticks <= x_lim[2] & ticks == floor(ticks)])
+    has_intervals <- !is.null(bands) && any(s$IntervalAvailable)
+    if (any(ok) || has_intervals) {
+      if (type == "coefficients" && identical(y_lim, c(0, 1)))
+        axis(2, at = seq(0, 1, 0.2), las = 1) else axis(2, las = 1)
+      graphics::grid(nx = NA, ny = NULL, col = style$grid)
+      if (has_intervals) for (run in unique(stats::na.omit(s$IntervalRun))) {
+        z <- s[!is.na(s$IntervalRun) & s$IntervalRun == run, , drop = FALSE]
+        z <- z[order(z$X, z$Scenario), , drop = FALSE]
+        j <- match(z$Group[1L], groups)
+        if (length(unique(z$X)) == 1L) {
+          segments(z$X, z$Lower, z$X, z$Upper, col = cols[j], lty = line_types[j])
+        } else {
+          graphics::polygon(c(z$X, rev(z$X)), c(z$Lower, rev(z$Upper)),
+            col = grDevices::adjustcolor(cols[j], alpha.f = .14), border = NA)
+          lines(z$X, z$Lower, col = cols[j], lty = line_types[j], lwd = .7)
+          lines(z$X, z$Upper, col = cols[j], lty = line_types[j], lwd = .7)
+        }
+      }
+      for (j in seq_along(groups)) {
+        z <- s[s$Group == groups[j], , drop = FALSE]
+        z <- z[order(z$X, z$Scenario), , drop = FALSE]
+        z$Value[z$Status != "Available" | !is.finite(z$Value)] <- NA_real_
+        lines(z$X, z$Value, col = cols[j], lty = line_types[j], lwd = 2)
+        pch <- rep(shapes[j], nrow(z))
+        if (!is.null(bands)) pch[!z$IntervalAvailable] <- c(1, 2, 0, 5, 1, 2)[(j-1L) %% 6L+1L]
+        points(z$X, z$Value, col = cols[j], pch = pch)
+      }
+    } else {
+      text(mean(x_lim), mean(y_lim), .mfrm_mvds_unavailable_message(s$Status, compact = faceted),
+        cex = 0.8, col = style$foreground)
+    }
+    if (nrow(references)) abline(h = references$value,
+      lty = references$linetype, col = style$neutral)
+    if (show_legend && !faceted) {
+      .mfrm_mvds_legend(groups, cols, line_types, shapes, faceted = FALSE)
+    }
+  }
+  if (faceted && show_legend) {
+    .mfrm_mvds_legend(groups, cols, line_types, shapes, faceted = TRUE)
+  }
+  invisible(out)
+}
+
+.mfrm_mvds_legend <- function(groups, cols, line_types, shapes, faceted) {
+  # Recompute physical text spacing when pkgdown or a saved plot changes devices.
+  grDevices::recordGraphics({
+    if (faceted) {
+      legend(graphics::grconvertX(.5, from = "ndc"),
+        graphics::grconvertY(.015, from = "ndc"), legend = groups,
+        col = cols, lty = line_types, pch = shapes, ncol = min(2, length(groups)),
+        bty = "n", xpd = NA, xjust = .5, yjust = 0, cex = .8)
+    } else {
+      usr <- graphics::par("usr")
+      legend(usr[2] + 0.03 * diff(usr[1:2]), usr[4], legend = groups,
+        col = cols, lty = line_types, pch = shapes, bty = "n", xpd = NA, cex = .8)
+    }
+  }, list(groups = groups, cols = cols, line_types = line_types,
+    shapes = shapes, faceted = faceted), asNamespace("mfrmr"))
 }
 
 .mfrm_mvds_y_limits <- function(series, coefficients, references) {

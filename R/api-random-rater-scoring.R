@@ -79,7 +79,7 @@
 #' These are bounded numerical comparisons, not universal accuracy bounds or
 #' performance cutoffs. They do not establish repeated-sampling 95 percent
 #' coverage when calibration is estimated, qualify the calibration likelihood,
-#' or test Person differences. See [online random-rater guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html) for the
+#' or test Person differences. See [mfrmr-random-raters](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.html) for the
 #' reference-precision limitations and interpretation.
 #' @return An `mfrm_random_rater_scores` object with `table`, complete scoring
 #'   roster, data accounting, settings and source metadata for [mfrm_results()].
@@ -240,8 +240,7 @@ print.mfrm_random_rater_scores <- function(x, ...) {
 #' @seealso [plot.mfrm_testlet_scores()] for view selection, accessible output
 #'   and the meaning of the empirical distribution.
 #' @param draw `FALSE` returns plot data without opening a device.
-#' @return For `plot()`: Invisibly, a `ggplot` object; use [plot_data()] to
-#'   extract the underlying table and settings.
+#' @return For `plot()`: Invisibly, an `mfrm_plot_data` object; use [plot_data()].
 #' @details For `plot()`: In the default interval view, all requested Persons remain labeled. Open circles indicate
 #'   prior-only results; unavailable scores have no point or interval.
 #'   Intervals are conditional on calibration and use joint rater Laplace

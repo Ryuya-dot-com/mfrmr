@@ -87,21 +87,22 @@ source identity and unchanged source fit. With \code{contrasts}, also contains
 the column-aligned \code{contrasts} matrix and \code{contrast_covariance}; targets in
 the table have type \code{coefficient_contrast} and prefix \verb{contrast:}.
 
-For \code{plot()}: Invisibly, a \code{ggplot} object. Through \code{\link[=plot_data]{plot_data()}}, \code{table} preserves selected
+For \code{plot()}: Invisibly, an \code{mfrm_plot_data} object. \code{table} preserves selected
 source rows and adds \code{PlotStatus}, \code{Label} and \code{Y}; \code{intervals} retains the
 complete original table. \code{population_spec} preserves the formula, trained
 terms, factor levels and coding; \code{population_coding} is a readable coding
 table. \code{contrast_weights}, source identity, settings, numerical checks and
 interpretation notes accompany the figure. Use \code{\link[=plot_data]{plot_data()}} to inspect
-these; \code{\link[=as_ggplot]{as_ggplot()}} remains idempotent on the returned object.
+these and \code{\link[=as_ggplot]{as_ggplot()}} for an editable figure with the same saved values.
 }
 \description{
 Report coefficients, prespecified linear contrasts and residual variance from
 an estimated RSM/PCM MML population model. Coefficient intervals use a normal
 approximation; residual
 variance intervals exponentiate a normal interval for log residual variance.
-These experimental intervals have unqualified repeated-sample coverage.
-Method qualification is incomplete even when numerical checks pass.
+For these experimental intervals, nominal repeated-sample coverage has not
+been established across the supported designs. Passing numerical checks
+does not establish this statistical property.
 Saved cautions are also retained as an \code{interpretation_notes} table in
 \code{\link[=mfrm_results]{mfrm_results()}}, reports and table exports.
 }
@@ -250,7 +251,7 @@ interval qualified for a zero-variance boundary.
 }
 
 Coverage evidence is specific to the target, design and complete estimation
-procedure. In the retained RSM checks, mean-at-\eqn{X=1} and log-variance
+procedure. In limited RSM simulations, mean-at-\eqn{X=1} and log-variance
 intervals at 20 Persons remain inconclusive under the prespecified practical
 criteria. The independent 240-Person slope/mean-difference confirmation
 supports those targets in its tested design; it does not establish a minimum
@@ -261,7 +262,7 @@ These intervals do not add calibration uncertainty to individual scoring.
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} has separate source and scoring checks; its conditional
 posterior intervals hold the fitted calibration and population parameters
 fixed. Availability here does not authorize an otherwise refused scoring
-result. See \code{mfrmr_output_guide("intervals")} for the different uncertainty targets.
+result. See \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}} for the different uncertainty targets.
 }
 
 \section{Session plot defaults}{
@@ -298,6 +299,6 @@ apa_table(results$population_intervals$population)
 \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}, \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=mfrm_results]{mfrm_results()}},
 \code{\link[=plot.mfrm_population_intervals]{plot.mfrm_population_intervals()}}, \code{\link[=apa_table]{apa_table()}}, \code{\link[=export_mfrm_results]{export_mfrm_results()}}
 
-\code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
+\code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}, \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}},
 \code{\link[=plot.mfrm_facet_intervals]{plot.mfrm_facet_intervals()}}
 }

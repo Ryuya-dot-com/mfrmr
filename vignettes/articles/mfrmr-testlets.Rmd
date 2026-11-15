@@ -9,9 +9,7 @@ vignette: >
 
 ```{r setup, include=FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
-knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",eval = !is_cran_check, collapse = TRUE, comment = "#>", cache = FALSE,
+knitr::opts_chunk$set(eval = !is_cran_check, collapse = TRUE, comment = "#>", cache = FALSE,
                      dev.args = list(bg = "white"))
 library(mfrmr)
 ```
@@ -32,7 +30,7 @@ of the assessment.
 
 For decisions about adding tasks versus criteria, unequal rubric lengths,
 possible halo and task-specific dependence, see
-[Tasks, rubric criteria and testlet dependence](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlet-applications.html).
+[Tasks, rubric criteria and testlet dependence](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlet-applications.html).
 That article includes runnable allocation and score-sensitivity examples.
 A large local variance does not identify halo, and accounting for dependence
 does not enforce equal task weights. The current API estimates one common
@@ -45,7 +43,7 @@ that rater's severity across persons. Its **testlet membership** groups that
 rater's criteria within each person. The local effect for Person P01 and Rater
 R01 is independent of the local effect for Person P02 and Rater R01. It is
 not one random rater effect shared across both persons. For the latter model,
-see [Shared random raters: feedback and replacement raters](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html).
+see [mfrmr-random-raters](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.html).
 
 This example corresponds most directly to the distinction between fixed
 rater severity and Person-by-rater local effects in
@@ -329,7 +327,7 @@ plot_data(saved_plot)$table
 The ordinary fixed-facet model, shared random raters and Person-specific
 testlets answer different questions. Use
 `mfrmr_output_guide("models")` to choose the route, then consult
-`help("mfrmr_workflow_methods")` and `mfrmr_output_guide("intervals")` for its supported
+`help("mfrmr_workflow_methods")` and `mfrmr_interval_guide()` for its supported
 outputs. In particular, `predict()` for a shared-rater fit returns score
 probabilities at supplied abilities, whereas `predict()` for a testlet fit
 estimates Person abilities from ratings.
@@ -373,7 +371,7 @@ These controls also pass through `plot(res, type = "scores", ...)`. Explain
 the conditional interval target in that caption or the surrounding text.
 `plot_data(scores)$alt_text` and `$display_data` provide a text alternative
 and row inclusion/reasons; supply them alongside images for accessible output.
-The [shared-rater tutorial](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html) shows these views and
+The [shared-rater tutorial](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.html) shows these views and
 presentation controls with saved estimates.
 `plot_data(scores)$settings` and `plot_data(scores)$notes` retain the basis for
 custom displays. Plot data saved by earlier versions can be converted without

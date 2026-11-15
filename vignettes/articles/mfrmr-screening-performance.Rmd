@@ -9,9 +9,7 @@ vignette: >
 
 ```{r setup, include=FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
-knitr::opts_chunk$set(
-  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
-  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",eval = !is_cran_check, collapse = TRUE, comment = "#>", dev.args = list(bg = "white"))
+knitr::opts_chunk$set(eval = !is_cran_check, collapse = TRUE, comment = "#>", dev.args = list(bg = "white"))
 library(mfrmr)
 ```
 
@@ -19,7 +17,7 @@ An assessment coordinator wants to use fit statistics when giving feedback to
 raters. Before choosing a warning rule, two questions matter: how often does it
 warn about a rater whose ratings follow the intended model, and how often does
 it detect a specified departure? A difference in severity alone is not such a
-departure. A consistently severe rater can fit a model that estimates severity.
+departure. A consistently strict rater can fit a model that estimates severity.
 
 `mfrm_screening_performance()` summarizes flags against **known simulation
 truth**. It accepts outcomes from your own generators, fitting methods and

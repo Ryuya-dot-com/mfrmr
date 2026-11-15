@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-reports.R
 \name{facet_statistics_report}
 \alias{facet_statistics_report}
-\title{Build a facet statistics report (preferred alias)}
+\title{Summarize facet levels and precision}
 \usage{
 facet_statistics_report(
   fit,
@@ -31,43 +31,38 @@ precision summary: \code{"both"} (default), \code{"sample"}, or \code{"populatio
 summary: \code{"both"} (default), \code{"model"}, or \code{"fit_adjusted"}.}
 }
 \value{
-A named list with facet-statistics components. Class:
-\code{mfrm_facet_statistics}.
+A \code{mfrm_facet_statistics} list:
+\itemize{
+\item \code{table}, \code{ranges}: descriptive statistics/rulers and global metric ranges.
+\item \code{precision_summary}: precision/separation by \code{DistributionBasis} and
+\code{SEMode}; definitions are in \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. \code{distribution_basis} and
+\code{se_mode} filter this component, not the descriptive table or its sample SD.
+\item \code{variability_tests}: facet diagnostics with inference flags.
+\item \code{se_modes}: available SE modes and level-SE summaries.
+\item \code{settings}: metrics, precision modes and ruler legend.
+}
+
+Use \code{summary(out)} or \code{plot(out, type = "means")} (\code{"sds"}, \code{"ranges"})
+for the descriptive table.
 }
 \description{
-Build a facet statistics report (preferred alias)
+Summarize level estimates, fit indices, and precision within each facet.
 }
 \details{
-\code{summary(out)} is supported through \code{summary()}.
-\code{plot(out)} is dispatched through \code{plot()} for class
-\code{mfrm_facet_statistics} (\code{type = "means"}, \code{"sds"}, \code{"ranges"}).
-}
-\section{Interpreting output}{
+\code{table} summarizes each metric across equally weighted levels.
+\code{Levels} counts diagnostic rows; \code{FiniteLevels} counts finite values;
+\code{ExcludedLevels} counts missing/infinite values. Means and ranges use the
+finite values; \code{SD} uses denominator \code{FiniteLevels - 1} and needs two values.
+Mean SE is not the SE of the facet mean; mean Infit/Outfit is not pooled
+response fit. See \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for metric scales and uncertainty.
 
-\itemize{
-\item facet-level means/SD/ranges of selected metrics (\code{Estimate}, fit indices, \code{SE}).
-\item fixed-width ruler rows (\code{M/S/Q/X}) for compact profile scanning.
+Ruler marks \code{M/S/Q/X} indicate the mean and mean plus/minus 1/2/3 SDs,
+not confidence or acceptance limits. Each metric shares the finite
+\code{GlobalMin}/\code{GlobalMax} across facets. Marks are clipped to that range;
+collisions prefer \code{M}, then \code{S}, \code{Q}, \code{X}. Use numeric summaries for comparisons.
 }
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Run \code{facet_statistics_report(fit)}.
-\item Inspect summary/ranges for anomalous facets.
-\item Cross-check flagged facets with fit and chi-square diagnostics.
-The returned bundle now includes:
-}
-\itemize{
-\item \code{precision_summary}: facet precision/separation indices by
-\code{DistributionBasis} and \code{SEMode}
-\item \code{variability_tests}: fixed/random variability tests by facet
-\item \code{se_modes}: compact list of available SE modes by facet
-}
-}
-
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("facet_statistics_report", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.

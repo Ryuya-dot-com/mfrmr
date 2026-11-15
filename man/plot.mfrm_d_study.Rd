@@ -67,8 +67,10 @@ between 0 and 1 for coefficients or nonnegative for error variance.
 \item{...}{Reserved for method compatibility.}
 }
 \value{
-Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts the scenario
-\code{table}, metric \code{series}, axis/group/panel settings, and labels.
+Invisibly, an \code{mfrm_plot_data} object with the scenario \code{table},
+metric \code{series}, axis/group/panel settings, and labels. Use \code{\link[=plot_data]{plot_data()}}
+for custom graphics. Automatic \code{\link[=as_ggplot]{as_ggplot()}} conversion is not provided
+for this class; the base plots preserve the chosen comparisons.
 }
 \description{
 Compare planned facet counts using an existing \code{\link[=mfrm_d_study]{mfrm_d_study()}} result.

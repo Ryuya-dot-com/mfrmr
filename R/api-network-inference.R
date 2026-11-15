@@ -369,36 +369,35 @@ confint.mfrm_network_ergm <- function(object, parm = NULL, level = .95, ...) {
 #' @rdname fit_rater_network
 #' @details `plot()` method: Plot ERGM model checks or coefficient intervals
 #' @param type `"coefficients"` or `"gof"` (requires saved GOF).
-#' @param draw Whether to print the `ggplot` figure; `FALSE` returns the `ggplot`
-#'   object without drawing.
-#' @param preset Visual preset; see [mfrmr_visual_diagnostics].
-#' @return For `plot()`: Invisibly, a `ggplot` object. [plot_data()] extracts
-#'   coefficient rows or GOF summaries and long-form simulation draws.
+#' @param draw Whether to draw; `FALSE` returns plot data only.
+#' @return For `plot()`: Invisibly, an `mfrm_plot_data` object containing coefficient rows or
+#'   GOF summaries and long-form simulation draws. Use [plot_data()] to export.
 #' @details For `plot()`: Coefficient intervals are approximate pointwise normal intervals.
-#'   They are not evidence of MCMC convergence.
+#'   They are not evidence of MCMC convergence. The GOF plot delegates to ergm;
+#'   its graphical options remain available through `...`.
 #' @export
-plot.mfrm_network_ergm <- function(x,
-                                   type = c("coefficients", "gof"),
-                                   draw = TRUE,
-                                   preset = c("standard", "publication", "compact", "monochrome"),
-                                   ...) {
+plot.mfrm_network_ergm <- function(x, type = c("coefficients", "gof"), draw = TRUE, ...) {
   type <- match.arg(type)
-  if (missing(preset)) preset <- .mfrm_default_plot_preset()
-  style <- resolve_plot_preset(preset)
   if (type == "gof" && is.null(x$gof)) stop("No saved GOF: supply gof when fitting.", call. = FALSE)
-  if (isTRUE(draw) && type == "coefficients") {
-    z <- x$coefficients
-    keep <- is.finite(z$Estimate) & is.finite(z$Lower) & is.finite(z$Upper)
-    if (!any(keep)) stop("No finite coefficient intervals to plot.", call. = FALSE)
+  if (isTRUE(draw)) {
+    if (type == "gof") {
+      args <- list(x = x$gof, main = "")
+      dots <- list(...); args[names(dots)] <- dots
+      do.call(graphics::plot, args)
+    } else {
+      z <- x$coefficients; keep <- is.finite(z$Estimate) & is.finite(z$Lower) & is.finite(z$Upper)
+      z <- z[keep, , drop = FALSE]
+      if (!nrow(z)) stop("No finite coefficient intervals to plot.", call. = FALSE)
+      args <- list(x = z$Estimate, y = seq_len(nrow(z)),
+        xlim = range(c(z$Lower, z$Upper)), yaxt = "n", xlab = "Conditional log-odds coefficient", ylab = "", main = "")
+      dots <- list(...); args[names(dots)] <- dots
+      do.call(graphics::plot, args)
+      graphics::segments(z$Lower, seq_len(nrow(z)), z$Upper, seq_len(nrow(z)))
+      graphics::axis(2, seq_len(nrow(z)), z$Term, las = 1)
+      graphics::abline(v = 0, lty = 2)
+    }
   }
-  dots <- list(...)
-  out <- new_mfrm_plot_data("network_ergm", list(
-    plot = type,
+  invisible(new_mfrm_plot_data("network_ergm", list(plot = type,
     table = if (type == "gof") x$gof_table else x$coefficients,
-    draws = if (type == "gof") x$gof_draws else NULL,
-    notes = x$notes,
-    title = dots$main %||% if (type == "gof") "ERGM goodness-of-fit" else "ERGM coefficient intervals",
-    preset = style$name
-  ))
-  .mfrm_finalize_ggplot(out, draw = draw)
+    draws = if (type == "gof") x$gof_draws else NULL, notes = x$notes)))
 }

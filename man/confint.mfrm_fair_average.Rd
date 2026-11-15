@@ -110,7 +110,7 @@ Default \code{.95}. This measures finite-replication error, separately from
 
 For \code{plot()}: Saved output of \code{\link[=confint.mfrm_fair_average]{confint.mfrm_fair_average()}}.}
 
-\item{draw}{Logical; print the \code{ggplot} figure when \code{TRUE}.}
+\item{draw}{Logical; draw with base graphics when true.}
 
 \item{show_title, show_notes}{Logical; display title/cautions, off by default.}
 }
@@ -138,8 +138,8 @@ Their SE and simulation-count columns are missing; the radius is not an SE.
 supports export and \code{saveRDS()} preserves the full evidence. See
 \code{\link[=plot.mfrm_fair_intervals]{plot.mfrm_fair_intervals()}} for display and interpretation.
 
-For \code{plot()}: Invisibly a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} retains all
-result rows, uncertainty labels, \code{monte_carlo} enclosures, and \code{notes}.
+For \code{plot()}: Invisibly an \code{mfrm_plot_data} object. Its \code{data$data} retains all
+result rows and uncertainty labels; \code{data$notes} retains interpretation.
 }
 \description{
 Fixed-Person parametric refit intervals or a local delta approximation for a
@@ -277,7 +277,7 @@ Bars show only available pointwise bounds under the saved method. Missing
 bars are not zero uncertainty. Plotting never recalculates the fit or removes
 unresolved rows from the saved result. For refit results the bars show the
 empirical interval; endpoint Monte Carlo enclosures are retained in the
-returned table and \code{plot_data(p)$monte_carlo}, not drawn as sampling intervals. See
+returned table and \code{data$monte_carlo}, not drawn as sampling intervals. See
 \code{\link[=confint.mfrm_fair_average]{confint.mfrm_fair_average()}} for
 the estimand, assumptions and finite-sample limitations.
 }
@@ -447,7 +447,7 @@ attr(bounded, "support") # Check how much of the plan was actually observed.
 # Continue the confint.mfrm_fair_average() example:
 # plot(ci)
 # p <- plot(ci, draw = FALSE)
-# plot_data(p, "notes")
+# p$data$notes
 }
 \references{
 Murphy, K. M., and Topel, R. H. (1985). Estimation and inference

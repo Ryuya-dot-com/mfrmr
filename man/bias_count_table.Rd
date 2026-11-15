@@ -102,7 +102,7 @@ cells.}
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("bias_count_table", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_bias.

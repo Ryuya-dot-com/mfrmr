@@ -215,7 +215,7 @@ q3_statistic <- function(fit,
     draw = FALSE
   )
 
-  pairs_df <- as.data.frame(plot_data(h)$pairs %||% data.frame(),
+  pairs_df <- as.data.frame(h$data$pairs %||% data.frame(),
                              stringsAsFactors = FALSE)
   pairs_df$Q3 <- suppressWarnings(as.numeric(pairs_df$ResidualCor))
   pairs_df$AbsQ3 <- abs(pairs_df$Q3)

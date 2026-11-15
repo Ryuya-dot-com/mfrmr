@@ -542,8 +542,10 @@ mfrm_results_native_diagnostics_match <- function(fit, diagnostics) {
   fields <- setdiff(names(current), c("readiness", "optimizer"))
   # Missing optional entries can have NA names; use positions in difference
   # messages while retaining the attribute/name checks themselves.
-  if (!is.list(source) || !all(fields %in% names(source)) ||
-      !isTRUE(all.equal(source[fields], current[fields], tolerance = 0,
+  if (!is.list(source) || !all(fields %in% names(source))) return(FALSE)
+  # Reject different data shapes before all.equal.factor can recycle NA masks.
+  if (!identical(dim(source$source$data), dim(current$source$data))) return(FALSE)
+  if (!isTRUE(all.equal(source[fields], current[fields], tolerance = 0,
                         use.names = FALSE))) return(FALSE)
   # Equal observations/locations alone do not identify the estimator or its
   # inference status (especially for incomplete or previously saved diagnostics).
@@ -937,7 +939,7 @@ mfrm_results_misfit_review_bundle <- function(fit, diagnostics, top_n = 50L) {
   unexpected <- unexpected_response_table(fit, diagnostics = diagnostics, top_n = top_n)
   displacement <- displacement_table(fit, diagnostics = diagnostics, top_n = top_n)
   pathway <- plot(fit, type = "pathway", draw = FALSE)
-  pathway_data <- plot_data(pathway) %||% list()
+  pathway_data <- pathway$data %||% list()
   guidance <- data.frame(
     Area = c("Unexpected responses", "Displacement", "Pathway map", "Interpretation boundary"),
     Status = c(
@@ -1011,7 +1013,7 @@ mfrm_results_linking_review_bundle <- function(fit) {
       "summary(res$components$linking_review); plot(res, type = \"anchors\")",
       "detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2)); plot(drift)",
       "build_equating_chain(list(Form1 = fit1, Form2 = fit2)); plot(chain, type = \"chain\")",
-      "mfrmr_output_guide(\"gpcm_capabilities\")",
+      "gpcm_capability_matrix()",
       "build_summary_table_bundle(res$components$linking_review)"
     ),
     Detail = c(
@@ -1084,7 +1086,7 @@ mfrm_results_response_time_bundle <- function(ctx,
     Detail = c(
       paste0("Response-time column `", time_col, "` was reviewed outside the fitted MFRM likelihood."),
       "Response-time summaries do not estimate speed parameters, modify logits, or create automatic exclusion rules.",
-      "Distribution, person, facet, and score views return ggplot objects whose tables can be extracted via plot_data()."
+      "Distribution, person, facet, and score views can be extracted as mfrm_plot_data objects."
     ),
     stringsAsFactors = FALSE
   )
@@ -1394,7 +1396,7 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
     )
   } else if (mfrm_has_product_slopes(fit)) {
     add("Diagnostics", "not_available", "diagnostics_unsupported",
-      "mfrmr_output_guide(\"gpcm_capabilities\")",
+      "gpcm_capability_matrix()",
       "Ordinary diagnostics are not supported for two-family GPCM. Separately saved descriptive response diagnostics do not supply ordinary fit tests.")
   } else {
     diagnostics_not_computed <- nrow(status) > 0L &&
@@ -1610,7 +1612,7 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
       "Model scope",
       "info",
       "bounded_gpcm_scope",
-      "mfrmr_output_guide(\"gpcm_capabilities\")",
+      "gpcm_capability_matrix()",
       "GPCM results should be read through the documented capability matrix and caveats."
     )
   }
@@ -1813,7 +1815,7 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
       13L,
       "GPCM scope",
       "Check GPCM support boundaries before interpreting advanced outputs.",
-      "mfrmr_output_guide(\"gpcm_capabilities\")",
+      "gpcm_capability_matrix()",
       "The GPCM route is supported with documented helper-specific caveats and should not be treated as a universal Rasch-family replacement."
     )
   }
@@ -2366,7 +2368,7 @@ mfrm_report_section_plan <- function(x, sx, style) {
       "GPCM scope",
       "caveat",
       "The fitted model is GPCM.",
-      "mfrmr_output_guide(\"gpcm_capabilities\"); mfrmr_output_guide(\"gpcm\")",
+      "gpcm_capability_matrix(); mfrmr_output_guide(\"gpcm\")",
       "Use direct outputs with documented helper-specific caveats.",
       "Do not present GPCM helper coverage as universal equivalence with all RSM/PCM report routes."
     )
@@ -2854,80 +2856,6 @@ mfrm_report_template_enrich <- function(df,
   df
 }
 
-mfrm_report_component_bundle <- function(x, name, class_name,
-                                         unavailable_source = "not_requested") {
-  comps <- x$components %||% list()
-  if (name %in% names(comps) && inherits(comps[[name]], class_name)) {
-    return(list(
-      available = TRUE,
-      bundle = comps[[name]],
-      source = paste0("res$components$", name)
-    ))
-  }
-  list(
-    available = FALSE,
-    bundle = NULL,
-    source = unavailable_source
-  )
-}
-
-mfrm_report_template_builder <- function(style, boundary_type, include_facet = FALSE) {
-  audience <- mfrm_report_fit_template_audience(style)
-  rows <- list()
-  list(
-    unavailable = function(topic, template, evidence, caveat, route) {
-      mfrm_report_template_enrich(
-        data.frame(
-          Audience = audience,
-          Topic = as.character(topic),
-          Template = as.character(template),
-          EvidenceUsed = as.character(evidence),
-          Caveat = as.character(caveat),
-          Route = as.character(route),
-          Style = style,
-          stringsAsFactors = FALSE
-        ),
-        boundary_type = boundary_type,
-        default_claim_strength = "not_supported_without_followup"
-      )
-    },
-    add = function(topic, template, evidence, caveat, route, facet = NA_character_) {
-      row <- if (isTRUE(include_facet)) {
-        data.frame(
-          Audience = audience,
-          Topic = as.character(topic),
-          Facet = facet,
-          Template = as.character(template),
-          EvidenceUsed = as.character(evidence),
-          Caveat = as.character(caveat),
-          Route = as.character(route),
-          Style = style,
-          stringsAsFactors = FALSE
-        )
-      } else {
-        data.frame(
-          Audience = audience,
-          Topic = as.character(topic),
-          Template = as.character(template),
-          EvidenceUsed = as.character(evidence),
-          Caveat = as.character(caveat),
-          Route = as.character(route),
-          Style = style,
-          stringsAsFactors = FALSE
-        )
-      }
-      rows[[length(rows) + 1L]] <<- row
-    },
-    finish = function(default_claim_strength = "write_with_caveat") {
-      mfrm_report_template_enrich(
-        do.call(rbind, rows),
-        boundary_type = boundary_type,
-        default_claim_strength = default_claim_strength
-      )
-    }
-  )
-}
-
 mfrm_report_fit_reporting_templates <- function(style,
                                                 fit_evidence_summary,
                                                 fit_threshold_sensitivity,
@@ -2937,7 +2865,7 @@ mfrm_report_fit_reporting_templates <- function(style,
   th <- as.data.frame(fit_threshold_sensitivity %||% data.frame(), stringsAsFactors = FALSE)
   df <- as.data.frame(fit_df_sensitivity_summary %||% data.frame(), stringsAsFactors = FALSE)
   available <- nrow(ev) > 0L && as.character(ev$Status[1] %||% "") %in% "available"
-  builder <- mfrm_report_template_builder(style, "fit_not_validity")
+  audience <- mfrm_report_fit_template_audience(style)
   style_lead <- switch(
     style,
     apa = "Report in the manuscript as a descriptive diagnostic, then cite the exact table route.",
@@ -2949,19 +2877,34 @@ mfrm_report_fit_reporting_templates <- function(style,
   )
 
   if (!available) {
-    return(builder$unavailable(
-      "Fit evidence unavailable",
-      paste0(
+    return(mfrm_report_template_enrich(data.frame(
+      Audience = audience,
+      Topic = "Fit evidence unavailable",
+      Template = paste0(
         "Result-specific fit wording was not generated because the stored ",
         "mfrm_results object does not contain a fit-measures component. This is an output-collection state, not evidence of numerical failure."
       ),
-      "fit_evidence_summary",
-      "Rebuild the result with mfrm_results(fit, include = c(\"diagnostics\", \"tables\")) before reporting fit counts.",
-      "mfrm_results(fit, include = c(\"diagnostics\", \"tables\"))"
-    ))
+      EvidenceUsed = "fit_evidence_summary",
+      Caveat = "Rebuild the result with mfrm_results(fit, include = c(\"diagnostics\", \"tables\")) before reporting fit counts.",
+      Route = "mfrm_results(fit, include = c(\"diagnostics\", \"tables\"))",
+      Style = style,
+      stringsAsFactors = FALSE
+    ), boundary_type = "fit_not_validity", default_claim_strength = "not_supported_without_followup"))
   }
 
-  add <- builder$add
+  rows <- list()
+  add <- function(topic, template, evidence, caveat, route) {
+    rows[[length(rows) + 1L]] <<- data.frame(
+      Audience = audience,
+      Topic = as.character(topic),
+      Template = as.character(template),
+      EvidenceUsed = as.character(evidence),
+      Caveat = as.character(caveat),
+      Route = as.character(route),
+      Style = style,
+      stringsAsFactors = FALSE
+    )
+  }
 
   rows_n <- mfrm_report_fmt_int(ev$Rows[1])
   underfit <- mfrm_report_fmt_int(ev$UnderfitRows[1])
@@ -3054,13 +2997,27 @@ mfrm_report_fit_reporting_templates <- function(style,
     "report$fit_decision_policy"
   )
 
-  builder$finish()
+  mfrm_report_template_enrich(
+    do.call(rbind, rows),
+    boundary_type = "fit_not_validity",
+    default_claim_strength = "write_with_caveat"
+  )
 }
 
 mfrm_report_precision_bundle <- function(x) {
-  mfrm_report_component_bundle(
-    x, "precision_review", "mfrm_precision_review",
-    unavailable_source = "not_available"
+  comps <- x$components %||% list()
+  if ("precision_review" %in% names(comps) &&
+      inherits(comps$precision_review, "mfrm_precision_review")) {
+    return(list(
+      available = TRUE,
+      bundle = comps$precision_review,
+      source = "res$components$precision_review"
+    ))
+  }
+  list(
+    available = FALSE,
+    bundle = NULL,
+    source = "not_available"
   )
 }
 
@@ -3205,21 +3162,37 @@ mfrm_report_precision_reporting_templates <- function(style,
                                                       precision_by_facet = data.frame()) {
   ev <- as.data.frame(precision_evidence_summary %||% data.frame(), stringsAsFactors = FALSE)
   basis <- as.data.frame(precision_basis %||% data.frame(), stringsAsFactors = FALSE)
-  builder <- mfrm_report_template_builder(style, "precision_not_agreement", include_facet = TRUE)
+  audience <- mfrm_report_fit_template_audience(style)
   if (nrow(ev) == 0L || as.character(ev$Status[1] %||% "") %in% "not_available") {
-    return(builder$unavailable(
-      "Precision evidence unavailable",
-      paste0(
+    return(mfrm_report_template_enrich(data.frame(
+      Audience = audience,
+      Topic = "Precision evidence unavailable",
+      Template = paste0(
         "Precision, separation, reliability, and strata wording was not ",
         "generated because no stored precision evidence was available."
       ),
-      "precision_evidence_summary",
-      "Rebuild the result with mfrm_results(fit, include = \"precision\") before writing precision claims.",
-      "mfrm_results(fit, include = \"precision\")"
-    ))
+      EvidenceUsed = "precision_evidence_summary",
+      Caveat = "Rebuild the result with mfrm_results(fit, include = \"precision\") before writing precision claims.",
+      Route = "mfrm_results(fit, include = \"precision\")",
+      Style = style,
+      stringsAsFactors = FALSE
+    ), boundary_type = "precision_not_agreement", default_claim_strength = "not_supported_without_followup"))
   }
 
-  add <- builder$add
+  rows <- list()
+  add <- function(topic, template, evidence, caveat, route, facet = NA_character_) {
+    rows[[length(rows) + 1L]] <<- data.frame(
+      Audience = audience,
+      Topic = as.character(topic),
+      Facet = facet,
+      Template = as.character(template),
+      EvidenceUsed = as.character(evidence),
+      Caveat = as.character(caveat),
+      Route = as.character(route),
+      Style = style,
+      stringsAsFactors = FALSE
+    )
+  }
 
   tier <- as.character(ev$PrecisionTier[1] %||% "")
   supports <- isTRUE(ev$SupportsFormalInference[1])
@@ -3288,11 +3261,28 @@ mfrm_report_precision_reporting_templates <- function(style,
     "report$precision_basis; report$fit_decision_policy"
   )
 
-  builder$finish()
+  mfrm_report_template_enrich(
+    do.call(rbind, rows),
+    boundary_type = "precision_not_agreement",
+    default_claim_strength = "write_with_caveat"
+  )
 }
 
 mfrm_report_bias_bundle <- function(x) {
-  mfrm_report_component_bundle(x, "bias_screen", "mfrm_bias_screen")
+  comps <- x$components %||% list()
+  if ("bias_screen" %in% names(comps) &&
+      inherits(comps$bias_screen, "mfrm_bias_screen")) {
+    return(list(
+      available = TRUE,
+      bundle = comps$bias_screen,
+      source = "res$components$bias_screen"
+    ))
+  }
+  list(
+    available = FALSE,
+    bundle = NULL,
+    source = "not_requested"
+  )
 }
 
 mfrm_report_bias_evidence_summary <- function(x) {
@@ -3347,21 +3337,36 @@ mfrm_report_bias_evidence_summary <- function(x) {
 
 mfrm_report_bias_reporting_templates <- function(style, bias_evidence_summary) {
   ev <- as.data.frame(bias_evidence_summary %||% data.frame(), stringsAsFactors = FALSE)
-  builder <- mfrm_report_template_builder(style, "screen_not_fairness_decision")
+  audience <- mfrm_report_fit_template_audience(style)
   if (nrow(ev) == 0L || !as.character(ev$Status[1] %||% "") %in% "available") {
-    return(builder$unavailable(
-      "Bias/DFF evidence not requested",
-      paste0(
+    return(mfrm_report_template_enrich(data.frame(
+      Audience = audience,
+      Topic = "Bias/DFF evidence not requested",
+      Template = paste0(
         "Bias, DFF, or fairness-screen wording was not generated because ",
         "the mfrm_results object was not built with include = \"bias\"."
       ),
-      "bias_evidence_summary",
-      "Request the bias preset or run an explicit bias/DFF helper before writing fairness language.",
-      "mfrm_results(fit, include = \"bias\"); estimate_bias(); analyze_dff()"
-    ))
+      EvidenceUsed = "bias_evidence_summary",
+      Caveat = "Request the bias preset or run an explicit bias/DFF helper before writing fairness language.",
+      Route = "mfrm_results(fit, include = \"bias\"); estimate_bias(); analyze_dff()",
+      Style = style,
+      stringsAsFactors = FALSE
+    ), boundary_type = "screen_not_fairness_decision", default_claim_strength = "not_supported_without_followup"))
   }
 
-  add <- builder$add
+  rows <- list()
+  add <- function(topic, template, evidence, caveat, route) {
+    rows[[length(rows) + 1L]] <<- data.frame(
+      Audience = audience,
+      Topic = as.character(topic),
+      Template = as.character(template),
+      EvidenceUsed = as.character(evidence),
+      Caveat = as.character(caveat),
+      Route = as.character(route),
+      Style = style,
+      stringsAsFactors = FALSE
+    )
+  }
   style_lead <- switch(
     style,
     apa = "Report as a screening diagnostic only when bias or DFF was a study question.",
@@ -3431,11 +3436,28 @@ mfrm_report_bias_reporting_templates <- function(style, bias_evidence_summary) {
     "Do not present screen positives or null screens as standalone fairness decisions.",
     "report$evidence_boundary; reporting_checklist()"
   )
-  builder$finish()
+  mfrm_report_template_enrich(
+    do.call(rbind, rows),
+    boundary_type = "screen_not_fairness_decision",
+    default_claim_strength = "write_with_caveat"
+  )
 }
 
 mfrm_report_misfit_bundle <- function(x) {
-  mfrm_report_component_bundle(x, "misfit_review", "mfrm_misfit_review")
+  comps <- x$components %||% list()
+  if ("misfit_review" %in% names(comps) &&
+      inherits(comps$misfit_review, "mfrm_misfit_review")) {
+    return(list(
+      available = TRUE,
+      bundle = comps$misfit_review,
+      source = "res$components$misfit_review"
+    ))
+  }
+  list(
+    available = FALSE,
+    bundle = NULL,
+    source = "not_requested"
+  )
 }
 
 mfrm_report_first_column <- function(df, candidates) {
@@ -3535,21 +3557,36 @@ mfrm_report_misfit_evidence_summary <- function(x) {
 
 mfrm_report_misfit_reporting_templates <- function(style, misfit_evidence_summary) {
   ev <- as.data.frame(misfit_evidence_summary %||% data.frame(), stringsAsFactors = FALSE)
-  builder <- mfrm_report_template_builder(style, "misfit_not_exclusion_rule")
+  audience <- mfrm_report_fit_template_audience(style)
   if (nrow(ev) == 0L || !as.character(ev$Status[1] %||% "") %in% "available") {
-    return(builder$unavailable(
-      "Misfit/pathway evidence not requested",
-      paste0(
+    return(mfrm_report_template_enrich(data.frame(
+      Audience = audience,
+      Topic = "Misfit/pathway evidence not requested",
+      Template = paste0(
         "Misfit/pathway wording was not generated because the mfrm_results ",
         "object was not built with include = \"misfit_review\"."
       ),
-      "misfit_evidence_summary",
-      "Request the misfit_review preset or run the local misfit helpers before writing case-review language.",
-      "mfrm_results(fit, include = \"misfit_review\"); build_misfit_casebook()"
-    ))
+      EvidenceUsed = "misfit_evidence_summary",
+      Caveat = "Request the misfit_review preset or run the local misfit helpers before writing case-review language.",
+      Route = "mfrm_results(fit, include = \"misfit_review\"); build_misfit_casebook()",
+      Style = style,
+      stringsAsFactors = FALSE
+    ), boundary_type = "misfit_not_exclusion_rule", default_claim_strength = "not_supported_without_followup"))
   }
 
-  add <- builder$add
+  rows <- list()
+  add <- function(topic, template, evidence, caveat, route) {
+    rows[[length(rows) + 1L]] <<- data.frame(
+      Audience = audience,
+      Topic = as.character(topic),
+      Template = as.character(template),
+      EvidenceUsed = as.character(evidence),
+      Caveat = as.character(caveat),
+      Route = as.character(route),
+      Style = style,
+      stringsAsFactors = FALSE
+    )
+  }
   style_lead <- switch(
     style,
     apa = "Report local misfit as follow-up case review only when it was part of the analysis plan.",
@@ -3625,11 +3662,28 @@ mfrm_report_misfit_reporting_templates <- function(style, misfit_evidence_summar
     "Do not present unexpected-response, displacement, or pathway flags as automatic exclusion or acceptance rules.",
     "report$evidence_boundary; reporting_checklist()"
   )
-  builder$finish()
+  mfrm_report_template_enrich(
+    do.call(rbind, rows),
+    boundary_type = "misfit_not_exclusion_rule",
+    default_claim_strength = "write_with_caveat"
+  )
 }
 
 mfrm_report_linking_bundle <- function(x) {
-  mfrm_report_component_bundle(x, "linking_review", "mfrm_linking_review")
+  comps <- x$components %||% list()
+  if ("linking_review" %in% names(comps) &&
+      inherits(comps$linking_review, "mfrm_linking_review")) {
+    return(list(
+      available = TRUE,
+      bundle = comps$linking_review,
+      source = "res$components$linking_review"
+    ))
+  }
+  list(
+    available = FALSE,
+    bundle = NULL,
+    source = "not_requested"
+  )
 }
 
 mfrm_report_linking_guidance_status <- function(review, area, default = "not_available") {
@@ -3717,21 +3771,36 @@ mfrm_report_linking_evidence_summary <- function(x) {
 
 mfrm_report_linking_reporting_templates <- function(style, linking_evidence_summary) {
   ev <- as.data.frame(linking_evidence_summary %||% data.frame(), stringsAsFactors = FALSE)
-  builder <- mfrm_report_template_builder(style, "anchor_not_drift_absence")
+  audience <- mfrm_report_fit_template_audience(style)
   if (nrow(ev) == 0L || !as.character(ev$Status[1] %||% "") %in% "available") {
-    return(builder$unavailable(
-      "Linking evidence not requested",
-      paste0(
+    return(mfrm_report_template_enrich(data.frame(
+      Audience = audience,
+      Topic = "Linking evidence not requested",
+      Template = paste0(
         "Anchor/linking wording was not generated because the mfrm_results ",
         "object was not built with include = \"linking\"."
       ),
-      "linking_evidence_summary",
-      "Request the linking preset or run explicit anchor, drift, or equating-chain helpers before writing linking claims.",
-      "mfrm_results(fit, include = \"linking\"); review_mfrm_anchors(); detect_anchor_drift(); build_equating_chain()"
-    ))
+      EvidenceUsed = "linking_evidence_summary",
+      Caveat = "Request the linking preset or run explicit anchor, drift, or equating-chain helpers before writing linking claims.",
+      Route = "mfrm_results(fit, include = \"linking\"); review_mfrm_anchors(); detect_anchor_drift(); build_equating_chain()",
+      Style = style,
+      stringsAsFactors = FALSE
+    ), boundary_type = "anchor_not_drift_absence", default_claim_strength = "not_supported_without_followup"))
   }
 
-  add <- builder$add
+  rows <- list()
+  add <- function(topic, template, evidence, caveat, route) {
+    rows[[length(rows) + 1L]] <<- data.frame(
+      Audience = audience,
+      Topic = as.character(topic),
+      Template = as.character(template),
+      EvidenceUsed = as.character(evidence),
+      Caveat = as.character(caveat),
+      Route = as.character(route),
+      Style = style,
+      stringsAsFactors = FALSE
+    )
+  }
   style_lead <- switch(
     style,
     apa = "Report anchor/linking evidence only for the scale-maintenance question addressed by the design.",
@@ -3810,7 +3879,7 @@ mfrm_report_linking_reporting_templates <- function(style, linking_evidence_summ
     ),
     "linking_evidence_summary; support_status",
     "Do not extend RSM/PCM linking synthesis wording to GPCM without an explicit validation route.",
-    "mfrmr_output_guide(\"gpcm_capabilities\"); mfrmr_output_guide(\"gpcm\")"
+    "gpcm_capability_matrix(); mfrmr_output_guide(\"gpcm\")"
   )
   add(
     "Boundary wording",
@@ -3823,7 +3892,11 @@ mfrm_report_linking_reporting_templates <- function(style, linking_evidence_summ
     "Do not report anchor evidence as automatic drift absence, completed equating, DFF support, or validity proof.",
     "report$evidence_boundary; reporting_checklist()"
   )
-  builder$finish()
+  mfrm_report_template_enrich(
+    do.call(rbind, rows),
+    boundary_type = "anchor_not_drift_absence",
+    default_claim_strength = "write_with_caveat"
+  )
 }
 
 mfrm_report_section_row <- function(sections, section) {
@@ -3892,7 +3965,7 @@ mfrm_report_claim_readiness <- function(x, sections, style) {
     "Fit, separation, and precision",
     "Selected MnSq threshold profile, observed fit-status counts, ZSTD convention, fit df, df-sensitivity rows, separation, reliability, strata, and uncertainty/context notes.",
     "Report MnSq fit, ZSTD standardization, separation, and reliability as separate evidence streams with the selected threshold profile stated.",
-    "Use report$fit_evidence_summary, report$fit_threshold_sensitivity, report$fit_df_sensitivity_summary, precision_review_report(), and facets_guide('fit_df').",
+    "Use report$fit_evidence_summary, report$fit_threshold_sensitivity, report$fit_df_sensitivity_summary, precision_review_report(), and facets_fit_df_guide().",
     "Do not reduce these indices to one pass/fail claim, and do not interpret a df-sensitive ZSTD flag without MnSq and context."
   )
   add(
@@ -3957,7 +4030,7 @@ mfrm_report_claim_readiness <- function(x, sections, style) {
       "GPCM scope",
       "Capability-matrix row for each helper used with GPCM outputs.",
       "Report GPCM outputs through documented helper-specific caveats.",
-      "Use mfrmr_output_guide(\"gpcm_capabilities\") and mfrmr_output_guide(\"gpcm\").",
+      "Use gpcm_capability_matrix() and mfrmr_output_guide(\"gpcm\").",
       "Do not imply full equivalence with every RSM/PCM report route.",
       status = "caveat"
     )
@@ -5104,12 +5177,11 @@ summary.mfrm_report <- function(object, top_n = 8,
 
   out <- list(
     overview = overview,
-    decision = as.data.frame(
+    decision = mfrm_display_fit_decision(
       object$decision %||% mfrm_fit_decision_summary(
         object$fit_readiness %||% data.frame(),
         next_action = overview$FirstAction[1L] %||% NA_character_
-      ),
-      stringsAsFactors = FALSE
+      )
     ),
     fit_readiness = as.data.frame(
       object$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
@@ -5172,7 +5244,11 @@ mfrm_report_html_tables <- function(report) {
     report_summary_boundary_index = sx$boundary_index,
     report_summary_routes = sx$routes
   )
-  c(summary_tables, report$tables %||% list())
+  tables <- report$tables %||% list()
+  if ("decision" %in% names(tables)) {
+    tables$decision <- mfrm_display_fit_decision(tables$decision)
+  }
+  c(summary_tables, tables)
 }
 
 mfrm_report_html <- function(report) {
@@ -5185,7 +5261,7 @@ mfrm_report_html <- function(report) {
     tables = mfrm_report_html_tables(report),
     text_sections = list("Reader guidance" = mfrm_report_html_guidance(sx)),
     text_sections_after = if (is.null(report$evidence_roles))
-      list("Report Markdown" = report$markdown) else NULL
+      list("Report Markdown" = mfrm_decision_display_text(report$markdown)) else NULL
   )
   path <- tempfile("mfrmr_report_", fileext = ".html")
   writeLines(enc2utf8(html), con = path, useBytes = TRUE)
@@ -5201,31 +5277,26 @@ mfrm_report_html <- function(report) {
 #' Build reports from measurement, G/D-study or residual results
 #'
 #' @description
-#' `mfrm_report()` connects existing measurement results, G/D-study results
-#' and residual exploration to tables, Markdown and HTML. It does not refit,
-#' recompute diagnostics or create new inferential support. Pass G/D-study
-#' and [mfrm_residual_network()] objects directly. Rater/halo networks and
-#' [fit_rater_network()] results also connect directly, retaining definitions,
-#' unavailable pairs, network fit, cluster-bootstrap contrasts and ERGM checks.
-#' Attach previously calculated
-#' G/D intervals explicitly. See the dedicated section below and the editable
-#' `templates/gtheory-report.Rmd`.
+#' Turn completed analyses into tables, Markdown or HTML. For measurement models,
+#' pass the object from [mfrm_results()]; supported G/D-study and network results
+#' enter directly. With `report <- mfrm_report(res)`, read
+#' `summary(report, view = "reader")` and `report$first_screen` before using its
+#' wording. Reports reuse saved estimates and evidence without refitting,
+#' recomputing diagnostics or upgrading inference.
 #'
-#' For an [mfrm_results()] object, it turns the comprehensive first-screen
-#' result into a first-screen table, section plan, claim-readiness table,
-#' report-gap table, report-index table, template-index table,
-#' fit-criteria table, result-specific fit evidence summaries,
-#' fit-reporting wording templates, precision/separation reporting templates,
-#' bias/DFF reporting templates, misfit/pathway reporting templates,
-#' linking/anchor reporting templates, ZSTD-convention table,
-#' evidence-boundary table, next-action table, and optional Markdown or HTML
-#' report.
-#' For `mfrm_results()` inputs, except for the individual rater sheet, the object and its
-#' table list retain the exact source-fit
-#' `fit_readiness*` tables from `mfrm_results()`; report synthesis does not
-#' reinterpret or upgrade them. The `decision` table translates that same
-#' record into interpretation, formal-inference, reason, and next-action text.
+#' @details
+#' For `mfrm_results()` input, `first_screen` and `report_index` lead to estimates,
+#' diagnostics and interpretation notes. Except for individual rater sheets, the
+#' report and table list retain the exact source `fit_readiness*` tables. The
+#' `decision` table expresses that same record as interpretation, formal-inference
+#' status, reason and next action. Inspect the supporting evidence before using
+#' report wording in a manuscript.
 #'
+#' Pass G/D-study, [mfrm_residual_network()], rater/halo-network or
+#' [fit_rater_network()] results directly. Their definitions, unavailable pairs,
+#' network fit, cluster-bootstrap contrasts and ERGM checks remain available.
+#' Supply previously calculated G/D intervals explicitly; see the domain-specific
+#' section below and the installed `templates/gtheory-report.Rmd`.
 #' @param x An [mfrm_results()] object, a supported G/D-study or network result,
 #'   or output from [estimate_bias()], [estimate_all_bias()], [review_mfrm_anchors()],
 #'   [build_linking_review()] or [build_model_choice_review()].
@@ -5277,28 +5348,18 @@ mfrm_report_html <- function(report) {
 #'   context intended for that recipient; text is copied verbatim.
 #'
 #' @section Anchor, bias and model-choice modules:
-#' Use `mfrm_report(review_mfrm_anchors(...))` before anchored fitting,
-#' `mfrm_report(build_linking_review(...))` for saved link evidence,
-#' `mfrm_report(estimate_bias(...))` for a prespecified interaction, and
-#' `mfrm_report(estimate_all_bias(...))` for a collection of exploratory screens.
-#' Collection reports keep every requested interaction in `tables$overview`,
-#' all retained cells in `tables$bias_cells` with an `Interaction` key, failed
-#' pairs in `tables$errors`, and calculation settings/history and facet directions.
-#' Failed pairs remain visible even with `keep_errors = FALSE`; unavailable
-#' screens are not reported as negative results. No collection-wide multiplicity
-#' adjustment is added. Use
-#' `mfrm_report(build_model_choice_review(...))` for candidate-model roles
-#' and comparability. Reporting does not fit a new model, select new
-#' interaction cells, calculate a missing LRT or test anchor invariance.
-#' Full bias cells and anchor values remain alongside compact summaries;
-#' source objects and unavailable states are preserved. `style = "rater"`
-#' continues to require individual feedback from `mfrm_results()`.
-#' Supply `study_context` to keep rubric direction, transformations, anchor
-#' provenance and the question with the report. A shared declaration does not
-#' establish equivalence between a raw G-study score and a latent MFRM measure.
-#' See the editable `templates/assessment-review.Rmd` for separate modules
-#' using bundled data and a saved report archive.
+#' Pass saved [review_mfrm_anchors()], [build_linking_review()],
+#' [estimate_bias()], [estimate_all_bias()] or [build_model_choice_review()]
+#' results directly. Reports preserve complete cells/anchors, settings and
+#' unavailable states without fitting, choosing cells, computing missing LRTs
+#' or testing invariance. Bias collections retain `tables$overview`,
+#' `tables$bias_cells` keyed by `Interaction`, and `tables$errors` even when
+#' `keep_errors = FALSE`; no collection-wide multiplicity adjustment is added.
+#' `style = "rater"` still requires `mfrm_results()` input.
 #'
+#' Use `study_context` for the question, rubric and anchor provenance. Shared
+#' wording does not equate a raw G-study score with an MFRM measure. The installed
+#' `templates/assessment-review.Rmd` demonstrates these separate modules.
 #' @section Planning and numerical review:
 #' Pass [recommend_mfrm_design()] results directly to preserve the planning
 #' target, threshold sources, all candidate designs and long criterion outcomes.
@@ -5315,46 +5376,32 @@ mfrm_report_html <- function(report) {
 #' This table neither reruns diagnostics nor changes inferential readiness.
 #'
 #' @section G/D-study and residual-exploration reports:
-#' Saved Stan/brms summaries read by [read_mfrm_posterior()] also enter this
-#' route directly. Reports retain their credible-interval level, fixed values,
-#' priors, model-data identity and sampling review. They do not calculate new
-#' intervals, native MML diagnostics, prior sensitivity or posterior predictions.
+#' Pass [mfrm_g_study()], [mfrm_d_study()],
+#' [mfrm_multivariate_d_compare()] or [mfrm_residual_network()] output directly.
+#' All non-rater styles preserve complete domain tables and notes; the overall
+#' review requests substantive context rather than assessing convergence/inference.
 #'
-#' Pass [mfrm_g_study()], [mfrm_d_study()], [mfrm_multivariate_d_compare()]
-#' or [mfrm_residual_network()] output directly, without `mfrm_results()`.
-#' The non-rater styles all preserve the same complete domain-specific tables
-#' and interpretation notes. Report creation never refits, clusters or computes
-#' intervals. The overall review status asks for substantive study context;
-#' it is not a numerical convergence or formal-inference assessment.
+#' G/D tables distinguish observed and future counts, weights, signed covariance
+#' components, component policy, G/Phi, universe/error variances and measurement
+#' SEM. Supplied component/plan/contrast intervals retain methods, assumptions
+#' and any separate center; absent intervals are `not_requested`. Paired-delta
+#' reports preserve shared-source covariance. These are observed-score studies,
+#' not latent-trait fits or MFRM separation reliability. Brennan (2003) motivates
+#' reporting error variance with coefficients; Jiang et al. (2022) examine interval
+#' uncertainty under specific designs, not every method offered here.
 #'
-#' G/D tables retain observed counts separately from future plans, fixed
-#' score/composite weights, signed covariance components, component policy,
-#' G/Phi, universe/error variances, measurement SEM and unavailable states.
-#' Saved component or plan/contrast intervals retain their methods, assumptions
-#' and any separate interval center. Without supplied intervals the report
-#' explicitly states `not_requested`. Paired-delta comparisons have their own
-#' report, preserving their shared-source covariance and approximation.
-#' These are observed-score studies, not latent-trait fits or MFRM separation
-#' reliability. Brennan (2003) explains why coefficients should be accompanied
-#' by error variances; Jiang et al. (2022) emphasize uncertainty and studied
-#' design conditions. Their findings do not validate every interval method
-#' supplied here.
-#'
-#' Use `build_summary_table_bundle(report)` for all numerical and contextual
-#' tables, `apa_table(report, which = "coefficients")` for a selected D-study
-#' table, and [export_summary_appendix()] for CSV/HTML. `summary(report)` keeps
-#' the full evidence tables in `evidence_tables`; `top_n` does not truncate
-#' them. Save the complete report/source with `saveRDS()` for replay.
-#' Source archives can contain participant identifiers and require sharing
-#' review. The installed editable template is located by
+#' Use [build_summary_table_bundle()] for all tables, [apa_table()] for a selected
+#' table and [export_summary_appendix()] for CSV/HTML. `summary(report)$evidence_tables`
+#' is complete regardless of `top_n`. Save the report and source with `saveRDS()`;
+#' archives may contain participant identifiers. The editable template is
 #' `system.file("templates", "gtheory-report.Rmd", package = "mfrmr")`.
 #'
-#' Residual reports retain all nodes and pairs, overlap, threshold settings
-#' and cluster availability. They support exploratory review; they do not
-#' establish dimensions, rater quality, stable classes or causal relationships.
-#' See [mfrm_residual_network()] for unsupervised learning, validation and the
-#' distinct role of supervised random forests.
-#'
+#' Residual reports retain every node/pair, overlap, thresholds and cluster
+#' availability. They do not establish dimensions, stable classes, rater quality
+#' or causality; see [mfrm_residual_network()]. Saved Stan/brms summaries from
+#' [read_mfrm_posterior()] also enter directly, retaining credible levels, fixed
+#' values, priors, model-data identity and sampling review. Reporting calculates
+#' neither new intervals/diagnostics nor prior sensitivity or predictions.
 #' @references
 #' Brennan, R. L. (2003). *Coefficients and indices in generalizability theory*.
 #' CASMA Research Report No. 1, University of Iowa.
@@ -5366,23 +5413,16 @@ mfrm_report_html <- function(report) {
 #' \doi{10.1177/00131644211033899}.
 #'
 #' @section Stored agreement in ordinary-model reports:
-#' When diagnostics are present, the narrative and
-#' `tables$interrater_interpretation` distinguish observed agreement from the
-#' fitted-model expected baseline and from separation reliability.
-#' `tables$interrater_summary` retains the stored numerical summary unchanged.
-#' The denominator counts matched-context opportunities across rater pairs,
-#' not independent people. Unavailable values, zero matched opportunities and
-#' an absent stored summary are described explicitly; no missing agreement
-#' statistic is computed during reporting. Reports without diagnostics retain
-#' their existing component-status explanation rather than inventing values.
-#' These summaries share their interpretation with [build_apa_outputs()].
-#' See [interrater_agreement_table()] for calculations and matching conventions.
-#' Markdown and HTML contain the same explanation; export with
-#' `export_mfrm_results(res, include = "report")` to retain the summary and
-#' interpretation as CSV files as well. Existing saved APA drafts retain their
-#' original wording until regenerated with [build_apa_outputs()] and the same
-#' saved fit/diagnostics. Regeneration does not refit the model.
-#'
+#' `tables$interrater_summary` preserves the saved numbers;
+#' `tables$interrater_interpretation` and the narrative distinguish observed
+#' agreement, model-expected agreement and separation reliability. The denominator
+#' counts matched pair-context opportunities, not independent Persons. Missing
+#' summaries, unavailable values and zero opportunities remain distinct; no
+#' missing statistic is computed. See [interrater_agreement_table()] for matching
+#' and calculations. The same interpretation appears in Markdown/HTML and
+#' [build_apa_outputs()]; `export_mfrm_results(res, include = "report")` saves
+#' the numerical and interpretation tables. Regenerate old drafts from the same
+#' saved fit/diagnostics to update wording without refitting.
 #' @section Two-family GPCM reports:
 #' Reports retain all saved non-Person fitted locations, category steps and
 #' component slopes. Locations identify their centering constraint; steps
@@ -5400,7 +5440,7 @@ mfrm_report_html <- function(report) {
 #' Saved [mfrm_response_diagnostics()] output adds conditional response means,
 #' probabilities and descriptive residual summaries, with unavailable indices
 #' and their reasons retained. These do not classify rater quality. See
-#' [mfrm_results()] and the **Corrected JML** section of [fit_mfrm()].
+#' [mfrm_results()] and the **Corrected JML** section of [fit_mfrm_technical_details].
 #'
 #' @section Individual rater sheets:
 #' Use `mfrm_report(res, style = "rater", facet = "Rater", rater = "R01",
@@ -5494,106 +5534,42 @@ mfrm_report_html <- function(report) {
 #' with other report styles, even when explicitly supplied as `NULL`.
 #'
 #' @details
-#' The intended workflow is:
-#' 1. Create `res <- mfrm_results(fit, include = ...)`.
-#' 2. Inspect `summary(res)$triage` and `summary(res)$next_actions`.
-#' 3. Create `report <- mfrm_report(res, style = "qc")`.
-#' 4. Read `summary(report)` and `report$first_screen` before opening detailed
-#'    report tables.
-#' 5. Use `report$report_index` to choose the next `PrimaryTable`,
-#'    `TemplateTable`, plot route, or export route.
-#' 6. Use `report$template_index` before copying APA/QC/validation wording.
-#' 7. Use `style = "apa"`, `"validation"`, `"reviewer"`, or `"technical"` only
-#'    when that reporting question is needed.
+#' For ordinary models, use the following reading order. Report creation reuses
+#' stored evidence, and neither a style nor a template creates a pass/fail decision.
 #'
-#' Report rows deliberately distinguish evidence from claims. The
-#' testlet and random-rater route is a smaller stored-result report: all
-#' supported styles (excluding `"rater"`)
-#' retain numerical checks, data usage, interval meanings and supplied
-#' predictions/intervals. When saved scores include a scoring roster, the
-#' `scoring_roster` table preserves its rows, identifiers and omitted scores;
-#' testlet `scoring_blocks` separately summarizes observed blocks. Older
-#' results without a roster do not reconstruct one from calibration rows.
-#' It does not supply ordinary residual diagnostics or
-#' fit/APA wording templates; `template_index` is empty. See the model-specific
-#' section in [mfrm_results()] for supported tables and plots.
-#' The `Response residuals` row distinguishes an unsupplied saved
-#' [mfrm_response_diagnostics()] result (`not_computed`) from a supplied result
-#' with no available observed-row results (`unavailable`) or results requiring review.
-#' If needed, compute these diagnostics separately for a numerically ready fit
-#' and attach them through `mfrm_results(fit, response_diagnostics = diagnostics)`.
-#' Available summaries remain descriptive (`caveat`): ordinary-model cutoffs
-#' do not apply, and they do not establish model adequacy. Report creation
-#' never computes the missing diagnostics. Older result bundles can be passed
-#' to `mfrm_report()` again to update the report; previously exported files
-#' retain their original text.
+#' | Table | Purpose |
+#' | --- | --- |
+#' | `first_screen` | Overall and area-specific status, issue, next action and route; also summarized by `summary(report)` and printing |
+#' | `report_index` | Select `PrimaryTable`/`TemplateTable`, plot/export route or results preset |
+#' | `claim_readiness`, `report_gaps` | Ready, caveated, unavailable or unrequested evidence and follow-up |
+#' | `template_index` | Review wording boundaries before opening area-specific templates |
 #'
-#' For ordinary models, the
-#' `first_screen` table is the compact entry point: it gives an overall row and
-#' one row per major evidence area with status, readiness, main issue, next
-#' action, and primary route. The
-#' `summary.mfrm_report` method summarizes that first screen into immediate
-#' actions, optional not-requested sections, claim-readiness counts, report
-#' gaps, and template-boundary rows without introducing a new pass/fail
-#' decision. The default print method follows the same short reading order and
-#' does not print every detailed evidence table. HTML output places the same
-#' reader guidance and report-summary tables before the full Markdown text so
-#' the browser view starts from the first-screen route. The
-#' `report_index` table is the detailed evidence-route index: it lists the
-#' major report areas, evidence status, readiness label, review-signal count,
-#' and the primary/template tables, evidence routes, template routes, plot
-#' routes, export route, and `mfrm_results(include = ...)` preset to inspect
-#' next. In ordinary use, open detailed tables through the `PrimaryTable` and
-#' `TemplateTable` columns rather than scanning every element of `report$tables`.
-#' The
-#' `template_index` table then stacks all fit, precision, bias, misfit, and
-#' linking wording templates into a single boundary/claim-strength index before
-#' users drill into the area-specific template tables. The
-#' `claim_readiness` table marks which report claims are ready, caveated,
-#' unavailable, or require additional requested sections. The `report_gaps`
-#' table turns those statuses into follow-up actions. The fit-specific tables
-#' keep multiple MnSq threshold profiles, observed fit-status counts, and
-#' engine-vs-FACETS-style ZSTD conventions visible, including the
-#' small-df/capping boundary used for FACETS-style ZSTD review. They summarize
-#' the stored `fit_measures` component from `mfrm_results()`; `mfrm_report()`
-#' itself does not recompute diagnostics. The `fit_reporting_templates` table
-#' turns those counts into cautious reporting language while keeping MnSq,
-#' ZSTD standardization, df sensitivity, and
-#' separation/reliability in separate sentences. All reporting-template tables
-#' share `EvidenceTable`, `EvidenceRoute`, `BoundaryType`, `ClaimStrength`, and
-#' `RecommendedUse` columns so each template can be traced back to its evidence
-#' and claim boundary. The default `RecommendedUse` is
-#' `"report_with_context"`; more restrictive rows request evidence, identify a
-#' methods or appendix caveat, or require targeted follow-up. `template_index`
-#' stacks those columns across all
-#' template areas so report authors can review unsupported or caveated wording
-#' before opening the full template text. The `precision_reporting_templates`
-#' table does the same for separation, reliability, and strata using the
-#' stored precision review and `diagnostics$reliability`. `precision_by_facet`
-#' preserves every stored facet row, original values, missing-value reasons and
-#' inference flags. Templates report model and fit-adjusted indices separately
-#' for each facet; they are not confidence bounds. Cross-facet ranges in the
-#' compatibility summary are not an overall reliability coefficient. A Person
-#' separation index computed with EAP/posterior SD is not posterior-variance EAP
-#' reliability; this report does not compute that different index.
-#' `fit_calculation_basis` identifies the recorded target of the MnSq tables,
-#' including EAP plug-in and imported source definitions. Missing metadata stays
-#' unrecorded. Rebuild reports from saved results to obtain these explanations;
-#' no re-estimation is needed. The
-#' `bias_reporting_templates` table is
-#' available when the source result was built with `include = "bias"` and keeps
-#' facet-level screens, interaction-bias contrasts, DFF follow-up, and fairness
-#' conclusions in separate sections. The `misfit_reporting_templates` table is
-#' available when the source result was built with `include = "misfit_review"`
-#' and keeps unexpected responses, displacement, pathway-map evidence, and
-#' case-review actions separate. The `linking_reporting_templates` table is
-#' available when the source result was built with `include = "linking"` and
-#' keeps anchor readiness, drift review, equating-chain review, and GPCM
-#' support boundaries separate. For example, fit and separation are not
-#' collapsed into a single pass/fail statement; bias screens are not treated
-#' as final fairness conclusions; pathway/misfit rows are case-review prompts;
-#' and drift/equating claims require multiple fitted forms or waves.
+#' Templates share `EvidenceTable`, `EvidenceRoute`, `BoundaryType`, `ClaimStrength`
+#' and `RecommendedUse` (default `"report_with_context"`). Fit templates preserve
+#' MnSq profiles/counts, ZSTD/df conventions and small-df/capping cautions;
+#' `fit_calculation_basis` identifies EAP plug-in/imported definitions, leaving
+#' missing metadata unrecorded. Precision templates use stored precision and
+#' reliability; `precision_by_facet` retains all original rows, reasons and flags.
+#' Model/fit-adjusted indices are separate, cross-facet ranges are not an overall
+#' coefficient, and Person separation using EAP/posterior SD is not posterior-variance
+#' EAP reliability. No such additional index is computed.
 #'
+#' Bias, misfit and linking templates require the corresponding `include`
+#' sections in [mfrm_results()]. They distinguish interaction screens from
+#' fairness conclusions, case-review prompts from findings, and anchor readiness
+#' from drift/chain evidence requiring multiple waves. HTML starts with the same
+#' reader/summary tables; detailed evidence remains in `report$tables`.
+#'
+#' Testlet/random-rater reports retain checks, data usage, uncertainty and supplied
+#' predictions/intervals, without ordinary fit/APA templates (`template_index` is
+#' empty). A saved `scoring_roster` retains identifiers and omissions;
+#' `scoring_blocks` records testlet blocks. Missing old rosters cannot be rebuilt
+#' from calibration rows. Saved [mfrm_response_diagnostics()] is `not_computed`
+#' when absent, `unavailable` when no observed-row results are available, and
+#' `caveat`/review when supplied descriptive results need qualification. Ordinary
+#' cutoffs do not apply. Compute diagnostics separately and attach them through
+#' [mfrm_results()] if needed. Rebuilding reports updates wording from saved
+#' results; previously exported files keep their original contents.
 #' @return Depending on `output`, an `mfrm_report` object, a Markdown character
 #'   scalar, an `mfrm_report_html` object, or a named list of data frames.
 #'   For `style = "rater"`, object output has class `mfrm_rater_feedback` and
@@ -5667,6 +5643,7 @@ mfrm_report <- function(x,
   if (!inherits(x, "mfrm_results")) {
     stop("`x` must be mfrm_results, a saved posterior summary, a design recommendation, a G/D-study, a paired D-study comparison, a residual/rater/halo network, an ERGM result, bias estimates, or an anchor/linking/model-choice review. Use `mfrm_results()` for a supported native fit or `read_mfrm_posterior()` for an exported Bayesian summary.", call. = FALSE)
   }
+  validate_diagnostics_zstd(x$diagnostics %||% x$components$diagnostics)
   style <- match.arg(tolower(as.character(style[1])), c("qc", "apa", "validation", "reviewer", "technical", "rater"))
   output <- match.arg(tolower(as.character(output[1])), c("object", "markdown", "html", "tables"))
   if (style == "rater") {
@@ -5930,10 +5907,9 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' Export an mfrm_results analysis archive
 #'
 #' @description
-#' `export_mfrm_results()` writes the contents of an existing [mfrm_results()]
-#' object to a compact analysis folder. It is a results-download helper for the
-#' comprehensive first-screen workflow, not a new estimation, diagnostics, or
-#' validation step. The folder is not deidentified or automatically shareable.
+#' Write an existing [mfrm_results()] object and its selected outputs to an
+#' analysis folder. Exporting does not rerun or validate the analysis, and the
+#' folder is not deidentified or automatically shareable.
 #'
 #' @param x An [mfrm_results()] object.
 #' @param output_dir Directory where files should be written.
@@ -5947,7 +5923,7 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #'   title/notes CSV files, or use `"all"`.
 #' @param preset Optional reader-facing analysis-archive preset. `"starter"` adds the
 #'   report and plot routes to the default files and writes `index.html` with
-#'   the required Wright map for ordinary models, or the available model-specific
+#'   the default Wright map for ordinary models, or the available model-specific
 #'   figures for testlet and random-rater results.
 #' @param overwrite Logical; if `FALSE`, existing files stop the export.
 #' @param acknowledge_sensitive Logical; set to `TRUE` only after acknowledging
@@ -5982,40 +5958,31 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #'   `_plot_fit_category_characteristic_curves`, rather than one combined PNG;
 #' - a written-files manifest and compact export summary.
 #'
-#' For every supported result type, replay reloads the exported RDS without
-#' reconstructing the analysis, refitting, rescoring or resampling. Requesting
-#' `"replay"` also includes `"rds"`; source-session variables such as `fit`
-#' and `diagnostics` are not required. Run the script with
-#' `source("path/to/prefix_replay.R", chdir = TRUE)`, replacing the path with
-#' the exported script's location, or run it from the exported folder.
-#' Use [export_mfrm_bundle()] for a separate refitting script.
-#' Result CSV files use UTF-8; when importing with base R, use
-#' `read.csv(path, encoding = "UTF-8", check.names = FALSE)` to preserve
-#' user-supplied names across locales.
+#' Replay reloads the complete RDS for every supported result type without
+#' refitting, rescoring or resampling; source-session variables are unnecessary.
+#' Run `source("path/to/prefix_replay.R", chdir = TRUE)` using the exported path,
+#' or run the script from its folder. [export_mfrm_bundle()] instead supplies
+#' a refitting script; [export_mfrm_tables()] exports only core fit tables.
 #'
-#' Use [export_mfrm_tables()] when only the fit's core CSV tables are needed.
+#' CSV files use UTF-8. With base R, import using
+#' `read.csv(path, encoding = "UTF-8", check.names = FALSE)` to preserve user names
+#' across locales.
+#'
 #' Stored prediction settings,
 #' unavailable rows, numerical checks and interval meanings travel with the
 #' result. A bootstrap interval may have infinite endpoints; exports retain
 #' them instead of substituting finite ordinary intervals.
 #'
-#' All presets, including `"starter"`, are analysis archives. In particular,
-#' the default `.rds` file retains the complete result object, and CSV, HTML,
-#' plot, and replay artifacts can retain direct identifiers or other sensitive
-#' study information. The manifest labels each file for review, but the helper
-#' does not pseudonymize, redact, or certify an export for sharing. Apply the
-#' study's data-governance process before moving the files outside the approved
-#' analysis environment.
+#' All presets retain potentially sensitive study information as described by
+#' `acknowledge_sensitive`. The manifest labels files for review, but supplies
+#' no redaction or sharing certification. Apply the study's data-governance
+#' process before moving files outside the approved analysis environment.
 #'
-#' Plot export is intentionally optional because some plot routes can be
-#' comparatively slow or require richer graphics devices. Plot failures are
-#' recorded in the returned `plot_errors` table rather than stopping the export.
-#' The `"starter"` preset is the recommended reader-oriented analysis archive
-#' because, for ordinary models, it
-#' requests the Wright map in addition to the result summary, report, replay
-#' script, and manifest. Its Infit pathway includes a bounded selection of
-#' person rows so person fit can be reviewed without replacing the required
-#' Wright-map first screen.
+#' Plotting is optional because it can be slow or require richer graphics
+#' devices. Failures go to `plot_errors` without stopping the export. The
+#' `"starter"` preset includes the model-appropriate figures described under
+#' `preset`. For ordinary models, its Infit pathway uses a bounded selection of
+#' Person rows for focused review alongside the Wright map.
 #'
 #' With `overwrite = TRUE`, a requested ZIP is rebuilt from files written by
 #' this call; members from an older archive are not retained. ZIP command or
@@ -6088,6 +6055,7 @@ export_mfrm_results <- function(x,
   }
   x <- mfrm_results_restore_response_overview(x)
   mfrm_gpcm_results_validate_scores(x)
+  validate_diagnostics_zstd(x$diagnostics %||% x$components$diagnostics)
   preset_name <- if (is.null(preset)) "none" else match.arg(
     tolower(as.character(preset[1])), c("starter")
   )
@@ -6486,8 +6454,14 @@ export_mfrm_results <- function(x,
   out
 }
 
-#' Build comprehensive first-screen MFRM results
+#' Collect fitted estimates, diagnostics and reporting tables
 #'
+#' Combine a fitted model and its matching diagnostics into a reusable
+#' `mfrm_results` object for [mfrm_report()], `plot()` and
+#' [export_mfrm_results()]. With `res <- mfrm_results(fit)`, requested diagnostics
+#' are computed if needed; pass `diagnostics = diagnostics` to reuse them.
+#' Start with `summary(res)$decision` and `summary(res)$status`. Unsupported sections remain
+#' marked unavailable. A `summary(fit)` object is not this reporting input.
 #' @param fit Output from [fit_mfrm()], [run_mfrm_facets()],
 #'   [fit_mfrm_testlet()] or [fit_mfrm_random_rater()]. A standard
 #'   long-format `data.frame` is also accepted when person and score columns can
@@ -6512,26 +6486,32 @@ export_mfrm_results <- function(x,
 #'   available data frames, or `"html"` for a temporary HTML report.
 #'
 #' @details
-#' `mfrm_results()` is a high-level result object. It does not introduce a new
-#' estimator or a new validity rule. It fits only when `fit` is a data frame,
-#' computes diagnostics automatically when needed, and collects output from
-#' functions such as [diagnose_mfrm()],
-#' [fit_measures_table()], [precision_review_report()], and
-#' [reporting_checklist()]. Sections that are unsupported for a particular fit
-#' are retained in the `status` table as `not_available` rather than stopping
-#' the whole results workflow. The additive `readiness` table keeps Numerical,
-#' Data, Design, Stability, Diagnostics, Reporting, and Plot interpretation
-#' states separate. Plot routes can therefore remain available for diagnosis
-#' while `InterpretationStatus` marks them as review-only. The returned object
-#' also carries
-#' `next_actions` and `input$reproducible_code` so users can move from the
-#' comprehensive first screen to explicit reporting or replay code.
-#' The examples call this object `res` to distinguish it from
-#' `results <- summary(fit)` in the quick start. Use `mfrm_report(res)` and
-#' `export_mfrm_results(res)` for reporting and export; those functions need
-#' the comprehensive results object. If diagnostics were already computed,
-#' pass them with `diagnostics = diagnostics` to reuse them.
+#' This function collects existing analyses; it does not create a new estimator
+#' or upgrade inferential support. It fits a model only for the restricted
+#' data-frame input described below. Prefer an explicit [fit_mfrm()] call in
+#' research scripts so that the data roles and model assumptions are recorded.
 #'
+#' `status` retains unsupported sections as `not_available`. `readiness` separates
+#' Numerical, Data, Design, Stability, Diagnostics, Reporting and plot-interpretation
+#' states. A plot may be available for diagnosis while its `InterpretationStatus`
+#' is review-only. `next_actions` and `input$reproducible_code` retain follow-up
+#' and replay instructions.
+#' @section What to inspect first:
+#' Read `summary(res)$decision`, `$triage` and `$next_actions` before
+#' the detailed tables. `decision` combines source readiness with saved diagnostic
+#' precision: missing precision remains unreviewed, and a positive precision
+#' assessment cannot override fit restrictions. Summarizing computes no new
+#' diagnostics and does not establish coverage.
+#'
+#' | Field | Read it for |
+#' | --- | --- |
+#' | `overview` | Input mode, model/method and table/plot counts |
+#' | `readiness` | Separate analysis and plot-interpretation checks |
+#' | `fit_readiness`, `fit_readiness_components`, `fit_readiness_parameters` | Exact source-fit records, distinct from workflow readiness |
+#' | `triage` | Signals ordered unavailable/review/info/ok |
+#' | `status` | Available, skipped and unsupported sections |
+#' | `plot_map` | Supported routes and their interpretation status |
+#' | `next_actions`, `reproducible_code` | Follow-up calls and first-screen replay |
 #' @section Include presets:
 #' - `"standard"`: fit, diagnostics, tables, precision, reporting, categories,
 #'   and plot routes
@@ -6563,24 +6543,6 @@ export_mfrm_results <- function(x,
 #' also supply `response_time_data = original_data` because fitted objects keep
 #' only the measurement columns needed for estimation.
 #'
-#' @section What to inspect first:
-#' Start with `summary(res)`. The most useful fields are:
-#' - `overview`: input mode, model, method, table count, and plot-route count
-#' - `decision`: plain-language interpretation, formal-inference, reason, and
-#'   next-action text derived from source-fit readiness and the saved diagnostic
-#'   precision profile. Missing precision remains unreviewed; a positive
-#'   precision assessment cannot override source-fit restrictions. Reading this
-#'   summary does not compute new diagnostics or establish sampling coverage.
-#' - `readiness`: separate analysis and plot-interpretation checks
-#' - `fit_readiness`, `fit_readiness_components`, and
-#'   `fit_readiness_parameters`: the exact source-fit readiness record retained
-#'   separately from the workflow-level `readiness` table
-#' - `triage`: first-screen signals ordered by unavailable/review/info/ok
-#' - `status`: which sections were available, skipped, or unsupported
-#' - `plot_map`: supported plot routes, availability, and interpretation status
-#' - `next_actions`: recommended follow-up calls
-#' - `reproducible_code`: replay script for the first-screen route
-#'
 #' @section Data-frame input:
 #' Direct data-frame input is intentionally narrow. It accepts unambiguous
 #' `Person` / `Score` columns and familiar facet-role names such as `Rater`,
@@ -6592,47 +6554,24 @@ export_mfrm_results <- function(x,
 #' [mfrm_results_interactive()] only for opt-in column selection at the console.
 #'
 #' @section Visualization and HTML:
-#' For ordinary models, `plot(res)` routes to the primary native Wright map when the fitted object
-#' contains compatible person and facet locations. This default retains
-#' available mfrmr facet uncertainty. Use `plot(res, type = "fit")` when the
-#' explicit three-plot Wright/pathway/category bundle is wanted. The compact
-#' native default discloses any omitted facet locations in its subtitle and
-#' `data$retention`; use `plot(res, top_n = Inf)` for a complete final map.
-#' Other routes include `plot(res, type = "wright")`, `"pathway"`,
-#' `"fit_pathway"`, `"qc"`, `"category"`, `"anchors"`, `"response_time"`,
-#' and `"tables"`. The Wright map is the required first fitted-scale figure;
-#' `"fit_pathway"` is a follow-up with Infit or Outfit on the horizontal axis
-#' and measure on the vertical axis. `output = "html"` writes a
-#' lightweight temporary HTML file;
-#' use [launch_mfrmr_viewer()] when you want an optional local Shiny reader
-#' for an already-created `mfrm_results` object. Use
-#' [export_mfrm_results()] for a compact analysis archive of the comprehensive
-#' results object, or [export_mfrm_bundle()] when a fit-centered durable
-#' analysis archive is needed. Neither route deidentifies its contents.
+#' For compatible ordinary fits, `plot(res)` draws a Wright map;
+#' `type = "fit"` requests the Wright/pathway/category bundle. Select other views
+#' from `summary(res)$plot_map`; `fit_pathway` places Infit/Outfit against measure.
+#' After `p <- plot(res, draw = FALSE)`, inspect `plot_data(p)$retention` and notes
+#' for omissions; `top_n = Inf` requests every level. Ordinary maps retain their
+#' own facet-uncertainty definitions.
 #'
-#' @section Typical workflow:
-#' 1. Fit explicitly with [fit_mfrm()] in scripts and manuscripts.
-#' 2. Call `res <- mfrm_results(fit)`.
-#' 3. Read `summary(res, view = "brief")` and its `readiness` table, then create
-#'    the required
-#'    `plot(res, type = "wright", show_ci = TRUE, top_n = Inf)` figure.
-#' 4. Read `summary(res)$triage`, `summary(res)$status`,
-#'    `summary(res)$plot_map`, and `summary(res)$next_actions`.
-#' 5. Call `report <- mfrm_report(res)` when a report-ready surface is needed.
-#' 6. Use `export_mfrm_results(res, preset = "starter")` to write the Wright
-#'    map, CSV, report, RDS, replay, and
-#'    manifest files for controlled review. Treat the folder as potentially
-#'    identifying unless it has been separately transformed and reviewed under
-#'    the applicable data-handling policy.
-#' 7. Use `plot(res, type = "fit_pathway", include_person = TRUE,
-#'    top_n_person = 12, person_labels = "none", facet_labels = "flagged")`
-#'    or
-#'    `plot(res, type = "qc")` for focused visual follow-up.
-#' 8. Optionally inspect the same result with [launch_mfrmr_viewer()] in an
-#'    interactive session.
-#' 9. Use [build_summary_table_bundle()] or the helper named in
-#'    `summary(res)$next_actions` for report-specific follow-up.
-#'
+#' `output = "html"` creates a temporary report. [launch_mfrmr_viewer()] is an
+#' optional local Shiny reader for an existing result. For durable archives,
+#' use [export_mfrm_results()] on the result or [export_mfrm_bundle()] on the fit;
+#' neither deidentifies the contents.
+#' @section Reporting and saving:
+#' Pass `res` to [mfrm_report()] or [export_mfrm_results()]. The latter's
+#' `preset = "starter"` writes CSV, report, RDS, replay and manifest files
+#' plus model-appropriate figures.
+#' These archives can identify participants; the export does not deidentify them.
+#' For focused follow-up, choose a supported route from `summary(res)$plot_map`
+#' or `summary(res)$next_actions`. See [mfrmr_visual_diagnostics] for plotting controls.
 #' @param response_time Optional response-time column name. When `NULL` and
 #'   `include` contains `"response_time"`, conservative column names such as
 #'   `ResponseTime`, `response_time`, or `RT` are detected when available.
@@ -6730,39 +6669,30 @@ export_mfrm_results <- function(x,
 #' alongside the ordinary maps, whose uncertainty and fit meanings are separate.
 #'
 #' @section Saved RSM/PCM fixed-facet intervals:
-#' For supported MML fits, use `intervals = list(raters = ci)` with output from
-#' [mfrm_facet_intervals()]. Native CML and comparison-only fits are not inputs
-#' to this collector. For CML, use `summary(fit)` and save the interval result
-#' separately with `saveRDS(ci, file)`; `summary(ci)`, `plot(ci)` and
-#' [apa_table()] reuse that result without an ordinary report bundle.
-#' The fit must match the saved data, parameters, constraints, population and
-#' integration settings. Named results give `facet_` plot routes, for example
-#' `plot(res, type = "facet_raters")`; a single result gives `facet_inference`.
-#' Include `"plots"` to enable those routes. [as_ggplot()] supports customization.
-#' Tables, reports and exports preserve the selected method, confidence level,
-#' contrasts, cluster mapping and fixed/unavailable targets. Export replay
-#' reloads saved results without refitting or changing the selected intervals.
-#' These are pointwise fixed-facet intervals, not simultaneous rater decisions
-#' or uncertainty for replacement raters. Ordinary map and fit displays keep
-#' their own meanings and are not recalculated with the attached covariance.
+#' Attach [mfrm_facet_intervals()] output to a supported MML fit as
+#' `intervals = list(raters = ci)`. Data, parameters, constraints, population and
+#' integration must match. With `"plots"` included, the name creates
+#' `plot(res, type = "facet_raters")`; a single unnamed result uses
+#' `facet_inference`. [as_ggplot()] supports customization.
 #'
+#' Tables/reports/exports preserve methods, levels, contrasts, cluster mappings
+#' and fixed/unavailable targets. These pointwise intervals concern fixed facets,
+#' not simultaneous decisions or replacement raters; ordinary maps do not adopt
+#' their covariance. CML and comparison-only fits remain outside this collector:
+#' use their summaries and save/plot/format the interval object directly.
 #' @section Corrected JML results:
-#' For an explicit correction fitted by [fit_mfrm()], this helper collects
-#' saved estimates, numerical status and the RootSE interpretation without
-#' computing ordinary diagnostics. Unavailable requested sections are labelled
-#' in `status`. `plot()` offers `"slopes"`, `"locations"` and `"steps"`, with
-#' point or cumulative-distribution displays and [as_ggplot()] conversion.
-#' [mfrm_report()] and [export_mfrm_results()] retain the estimator, correction
-#' order, unavailable inference and covariance-failure reasons. Saved replay
-#' reloads the result without refitting. Attach saved [mfrm_response_diagnostics()]
-#' output through `response_diagnostics` to include conditional probabilities,
-#' expected scores and descriptive Infit/Outfit. The source and probability
-#' definition are checked; collection never recomputes probabilities. Use
-#' `plot(res, type = "response_diagnostics")` for paired or scatter views,
-#' retaining available Infit when Outfit is undefined. Ordinary diagnostic, comparison,
-#' prediction and interval attachments and individual rater sheets are
-#' unavailable; a numerical solution is not a rater-quality judgment.
+#' An explicit corrected-JML fit contributes saved estimates, numerical
+#' status and RootSE interpretation. Unsupported sections remain in `status`;
+#' no ordinary diagnostics are computed. Plots offer slopes, locations and steps
+#' as points/CDFs, with [as_ggplot()] conversion. Reports/exports retain correction
+#' order, unavailable inference and covariance-failure reasons.
 #'
+#' Attach saved [mfrm_response_diagnostics()] through `response_diagnostics` for
+#' conditional probabilities, expected scores and descriptive Infit/Outfit.
+#' Source and probability definitions are checked without recomputation.
+#' `plot(res, type = "response_diagnostics")` retains available Infit when Outfit
+#' is undefined. Ordinary diagnostics, comparison/prediction/interval attachments
+#' and individual rater sheets are unsupported; a root is not a rater-quality judgment.
 #' @section Provisional two-family results:
 #' For a two-slope-family GPCM fit, `mfrm_results(fit)` collects its saved
 #' estimates and numerical status, with `include = c("fit", "plots")` when
@@ -6804,48 +6734,35 @@ export_mfrm_results <- function(x,
 #' CSV exports and saved replay. Native scoring records omitted row counts but
 #' does not enumerate a not-scored Person roster; portable scoring retains it.
 #' This attachment adds tables and reports; it does not add a score plot route.
-#' The intervals exclude calibration uncertainty; coverage and population
-#' transport remain unqualified. [extract_mfrm_calibration()] provides the
-#' separately checked portable route without retaining training responses.
+#' The intervals exclude calibration uncertainty. Their coverage and
+#' applicability to a different population have not been established.
+#' [extract_mfrm_calibration()] provides the separately checked portable route
+#' without retaining training responses.
 #' Ordinary diagnostics, Wright/Pathway maps and model comparison are unavailable.
 #' The starter export uses the available saved curves instead of requesting
 #' an unsupported Wright map.
 #'
 #' @section Saved one-family GPCM Person scores:
-#' First compute `scores <- predict_mfrm_units(fit, new_ratings)` under the
-#' intended scoring prior, then attach them with
-#' `res <- mfrm_results(fit, scores = scores, include = "fit", compute = "never")`.
-#' This accepts the existing ordinary MML/JML scoring routes and their recorded
-#' review restrictions; it does not extend scoring to new designs or estimators.
-#' Collection checks the fitted calibration, data, population coding and
-#' numerical state, plus the saved prior, interval and integration records.
-#' It does not refit, rescore or repeat source numerical checks. Older scores
-#' without compatible fitted-analysis identity or check records must be
-#' recreated from the saved fit before attachment; no model refit is needed.
+#' Compute [predict_mfrm_units()] under the intended prior, then pass
+#' `scores = scores` to `mfrm_results()` (for example with `include = "fit"`,
+#' `compute = "never"`). Existing MML/JML scope is unchanged. Collection checks
+#' calibration, data, population coding, numerical state and saved prior/interval/
+#' integration records without refitting, rescoring or repeating source checks.
+#' Recreate older scores lacking these records from the saved fit before attachment.
 #'
-#' `res$tables$person_scores` retains EAP (`Estimate`), posterior `SD`, continuous
-#' equal-tail posterior bounds (`Lower`, `Upper`), level and numerical status.
-#' Posterior SD is neither the SD of EAPs across Persons nor the population SD
-#' or a calibration-parameter SE. These bounds differ from the diagnostic
-#' EAP +/- normal-multiplier times posterior-SD bands elsewhere in the report.
-#' Neither route includes calibration/population estimation uncertainty or
-#' establishes frequentist coverage for fixed abilities.
+#' `person_scores` retains EAP (`Estimate`), posterior `SD`, continuous equal-tail
+#' `Lower`/`Upper`, level and numerical status. These bounds differ from diagnostic
+#' normal-multiplier bands. Posterior SD is neither across-Person EAP variation,
+#' population SD nor a calibration SE; both interval routes exclude calibration/
+#' population estimation uncertainty and do not establish fixed-ability coverage.
+#' JML-derived EAPs are post-hoc scores, not the original JML Person estimates.
 #'
-#' `scoring_priors` retains each Person's fitted and scoring priors, including
-#' explicit prior overrides and covariate-dependent means. The scalar
-#' `PriorMean`/`PriorSD` in `scoring_settings` are NA when they differ by Person;
-#' use `scoring_priors` instead. `scoring_integration`, `scoring_row_review` and
-#' any `scoring_population_review` retain checks and omissions. Native scoring
-#' does not enumerate a complete not-scored Person roster: `NotScored` is NA.
-#' Review-only scores stay review-only even when calibration-parameter
-#' inference has a different readiness state. JML-derived EAP scores are
-#' post hoc posterior summaries, not the original JML Person estimates.
-#'
-#' [mfrm_report()] and [export_mfrm_results()] retain all attached tables and
-#' complete saved scoring objects. Replay reloads them without recomputing.
-#' This adds no score plot route; ordinary diagnostic maps keep their existing
-#' targets and are not replaced by the attached scores.
-#'
+#' `scoring_priors` records individual priors/overrides; scalar `PriorMean`/`PriorSD`
+#' in `scoring_settings` are NA when they vary by Person. `scoring_integration`,
+#' `scoring_row_review` and optional `scoring_population_review` preserve checks
+#' and omissions. Native scoring has no complete not-scored roster (`NotScored = NA`).
+#' Review-only scores remain so. Reports, exports and saved replay retain all
+#' tables/objects; attachment adds no score plot and does not replace diagnostic maps.
 #' @section Saved GPCM inference:
 #' Attach explicitly selected results, for example
 #' `intervals = list(slopes = confint(fit, parm = "slopes", scale = "standardized"))`.
@@ -6940,8 +6857,8 @@ mfrm_results <- function(fit,
                          response_diagnostics = NULL,
                          calibration_intervals = c("none", "normal"),
                          calibration_level = .95) {
-  if (inherits(fit, c("mfrm_posterior_summary", "mfrm_posterior_scores")))
-    stop("Send saved posterior summaries or posterior Person scores directly to mfrm_report(), plot() or confint(). mfrm_results() requires a supported native fit and does not reconstruct native diagnostics from external Bayesian outputs.", call. = FALSE)
+  if (inherits(fit, "mfrm_posterior_summary"))
+    stop("Send saved posterior summaries directly to mfrm_report(), plot() or confint(). mfrm_results() requires a supported native fit and does not reconstruct native diagnostics from marginal posterior summaries.", call. = FALSE)
   if (inherits(fit, "mfrm_cml_fit") ||
       (inherits(fit, "mfrm_comparison_fit") && identical(fit$config$method, "CML"))) {
     stop(paste0("mfrm_results() does not support CML fits. Use summary(fit) for structural estimates ",
@@ -7229,6 +7146,7 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
   }
   object <- mfrm_results_restore_response_overview(object)
   mfrm_gpcm_results_validate_scores(object)
+  validate_diagnostics_zstd(object$diagnostics %||% object$components$diagnostics)
   view <- match.arg(tolower(as.character(view[1])), c("full", "brief"))
   digits <- max(0L, as.integer(digits))
   top_n <- max(1L, as.integer(top_n))
@@ -7554,6 +7472,7 @@ plot.mfrm_results <- function(x,
     stop("`x` must be an mfrm_results object.", call. = FALSE)
   }
   mfrm_gpcm_results_validate_scores(x)
+  validate_diagnostics_zstd(x$diagnostics %||% x$components$diagnostics)
   if (mfrm_has_jml_adjustment(x$fit)) {
     if (!"plots" %in% x$include) stop("This result did not include plots.",call.=FALSE)
     if (identical(type,"response_diagnostics")) {

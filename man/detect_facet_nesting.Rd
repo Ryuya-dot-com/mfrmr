@@ -51,8 +51,12 @@ effects.
 \item \code{"Crossed"}: index < 0.50.
 }
 
-The direction column records which facet is nested in which, or
-\code{"crossed"} when neither direction is above 0.95.
+These are package screening bands, not tests of exact nesting or full
+crossing. \code{Direction} is \code{"isomorphic"} when both indices are at least
+0.95, names a nesting direction when only that index is at least 0.95,
+and is \code{"crossed"} when both are below 0.95. Thus the direction can say
+\code{"crossed"} even when a classification is \code{"Partially nested"}.
+Zero-entropy cases have \code{Direction = "insufficient_data"}.
 }
 
 \section{Missing values and weights}{
@@ -70,18 +74,18 @@ the observed pattern represents the missing ratings.
 
 \section{Interpreting output}{
 
-A \code{Direction} value of \code{"Rater nested in Region"} means that every
-rater appears in exactly one region (or very close to it). For
-additive fixed-effects MFRM, this is a concern: the severity of a
-rater is confounded with region-level variance that the model cannot
-partition. Consider reporting the nesting direction explicitly and,
-when relevant, refitting without the nested facet or moving to a
-hierarchical estimation tool (e.g. \code{lme4::lmer}, \code{brms}, \code{TAM}) to
-separate the variance components.
+Exact nesting of Rater within Region confounds unrestricted additive
+rater and region effects. A near-nesting label instead signals limited
+overlap; inspect the actual cross-tabulation and model design. The index
+alone establishes neither rank deficiency nor identification.
 
-\code{Direction = "crossed"} is the most common reading when both nesting
-indices are below 0.5; the two facets largely co-occur at multiple
-combinations, which is the setting Linacre (1989) assumed.
+A hierarchical model can separate within- and between-group variation
+under additional distributional assumptions and adequate replication;
+switching software does not supply missing design information. Dropping
+a facet also changes the model and interpretation. Report the observed
+design and justify the chosen parameterization. A \code{"crossed"} label
+does not establish that every combination was observed or that the full
+many-facet design is connected.
 }
 
 \section{Typical workflow}{

@@ -47,9 +47,9 @@
 #'   in the table with their overlap count and reason, and appear as `NA`
 #'   in the matrix.
 #' @param preset Visual preset.
-#' @param draw If `TRUE`, print the `ggplot` object.
+#' @param draw If `TRUE`, draw with base graphics.
 #'
-#' @return Invisibly, a `ggplot` object. `plot_data(p)` bundles the symmetric
+#' @return An `mfrm_plot_data` whose `data` slot bundles the symmetric
 #'   residual `matrix`, one row per unordered pair in `pairs`, and the
 #'   minimum overlap `min_pairs`. Interpretation notes are available through
 #'   `plot_data(p, "notes")`. Save the complete payload with [base::saveRDS()];
@@ -57,7 +57,7 @@
 #' @seealso [plot(x, type = "marginal_pairwise")][plot.mfrm_fit], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_local_dependence_heatmap", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -65,14 +65,14 @@
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' p <- plot(fit, type = "local_dependence", draw = FALSE)
-#' dim(plot_data(p, "matrix"))
+#' dim(p$data$matrix)
 #' # Inspect large absolute correlations alongside shared-person counts.
 #' # Unavailable pairs are not evidence of local independence.
 #' }
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -89,7 +89,32 @@ plot_local_dependence_heatmap <- function(fit,
   pairs_df <- associations$pairs
   rater_cols <- colnames(mat)
 
-  out <- new_mfrm_plot_data(
+  if (isTRUE(draw)) {
+    apply_plot_preset(style)
+    cols <- grDevices::hcl.colors(20L, "RdBu", rev = TRUE)
+    old_par <- graphics::par()["mar"]
+    on.exit(graphics::par(old_par), add = TRUE)
+    graphics::par(mar = c(5, 5, 3, 2))
+    image(
+      x = seq_len(ncol(mat)), y = seq_len(nrow(mat)),
+      z = mat, col = cols, zlim = c(-1, 1),
+      xaxt = "n", yaxt = "n", xlab = facet, ylab = facet,
+      main = ""
+    )
+    axis(1, at = seq_along(rater_cols), labels = rater_cols,
+                    las = 2, cex.axis = 0.8)
+    axis(2, at = seq_along(rater_cols), labels = rater_cols,
+                    las = 1, cex.axis = 0.8)
+    for (i in seq_along(rater_cols)) for (j in seq_along(rater_cols)) {
+      v <- mat[i, j]
+      if (is.finite(v)) {
+        text(j, i, sprintf("%.2f", v), cex = 0.7,
+                        col = if (abs(v) > 0.6) "white" else "black")
+      }
+    }
+  }
+
+  invisible(new_mfrm_plot_data(
     "local_dependence_heatmap",
     list(
       matrix = mat,
@@ -104,8 +129,7 @@ plot_local_dependence_heatmap <- function(fit,
         "Unavailable pairs are NA, not zero; inspect the pair table for overlap counts and reasons."),
       preset = style$name
     )
-  )
-  .mfrm_finalize_ggplot(out, draw = draw)
+  ))
 }
 
 
@@ -133,7 +157,7 @@ plot_local_dependence_heatmap <- function(fit,
 #' role changes its interpretation. Person separation reliability is analogous
 #' to test reliability, not numerically identical to Cronbach's alpha; MML
 #' Person rows using EAP/posterior SD also have the limitations described in
-#' [mfrmr-package]. No universal adequate/strong reference lines are drawn.
+#' [diagnose_mfrm()]. No universal adequate/strong reference lines are drawn.
 #' Reliability, separation and Strata use approximate marginal-SE variance
 #' subtraction and do not propagate covariance among estimates, even when
 #' the SEs come from joint information. Model and fit-adjusted indices are
@@ -150,15 +174,15 @@ plot_local_dependence_heatmap <- function(fit,
 #' @param metric `"reliability"` (default), `"separation"`, or
 #'   `"strata"`.
 #' @param preset Visual preset.
-#' @param draw If `TRUE`, print the `ggplot` object.
+#' @param draw If `TRUE`, draw with base graphics.
 #'
-#' @return Invisibly, a `ggplot` object. `plot_data(p, "table")` is a tidy
+#' @return An `mfrm_plot_data` whose `data` slot bundles a tidy
 #'   `Facet`, `Metric`, `Value` data frame. When present in the supplied
 #'   diagnostics, precision tier, reliability use/basis, formal-inference flag
 #'   and model-summary notes are retained alongside each plotted value.
 #' @seealso [diagnose_mfrm()], [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_reliability_snapshot", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -166,11 +190,11 @@ plot_local_dependence_heatmap <- function(fit,
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' p <- plot(fit, type = "reliability", draw = FALSE)
-#' plot_data(p, "table")
+#' p$data$table
 #' # High Person value: distinguishable abilities.
 #' # High rater value: distinguishable severities, not agreement.
 #' # Low rater value: not proof of agreement; inspect estimation precision.
-#' plot_data(p, "notes")
+#' p$data$notes
 #' }
 #' @references
 #' Linacre, J. M. Facets documentation, \emph{Reliability - separation - strata}.
@@ -178,7 +202,7 @@ plot_local_dependence_heatmap <- function(fit,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -239,7 +263,31 @@ plot_reliability_snapshot <- function(fit,
     notes <- paste(notes, "Ordinary JML uses exploratory location precision; these indices are screening summaries, not structural confidence intervals.")
   }
 
-  out <- new_mfrm_plot_data(
+  if (isTRUE(draw)) {
+    apply_plot_preset(style)
+    old_par <- graphics::par()["mar"]
+    on.exit(graphics::par(old_par), add = TRUE)
+    graphics::par(mar = c(4.5, 6, 1.5, 2))
+    bar_max <- if (identical(metric, "reliability")) {
+      max(1.0, max(payload$Value, na.rm = TRUE)) * 1.15
+    } else {
+      max(payload$Value, na.rm = TRUE) * 1.15
+    }
+    bp <- barplot(
+      payload$Value, names.arg = payload$Facet,
+      horiz = TRUE, las = 1,
+      xlim = c(0, bar_max),
+      col = grDevices::adjustcolor(style$accent_primary, alpha.f = 0.7),
+      border = style$accent_primary,
+      xlab = if (metric == "reliability") "Separation reliability" else metric_col,
+      main = ""
+    )
+    text(payload$Value, bp,
+                    labels = sprintf("%.2f", payload$Value),
+                    pos = 4, cex = 0.85, col = style$neutral)
+  }
+
+  invisible(new_mfrm_plot_data(
     "reliability_snapshot",
     list(
       table = payload,
@@ -252,8 +300,7 @@ plot_reliability_snapshot <- function(fit,
       preset = style$name,
       reference_lines = NULL
     )
-  )
-  .mfrm_finalize_ggplot(out, draw = draw)
+  ))
 }
 
 
@@ -274,15 +321,15 @@ plot_reliability_snapshot <- function(fit,
 #'   to keep the figure legible; persons are kept by largest absolute
 #'   residual mean.
 #' @param preset Visual preset.
-#' @param draw If `TRUE`, print the `ggplot` object.
+#' @param draw If `TRUE`, draw with base graphics.
 #'
-#' @return Invisibly, a `ggplot` object. `plot_data(p)` bundles the residual
+#' @return An `mfrm_plot_data` whose `data` slot bundles the residual
 #'   `matrix` (rows = Person, columns = facet level) and the long-form
 #'   `obs` table.
 #' @seealso [plot(x, type = "guttman")][plot.mfrm_fit], [plot(x, type = "unexpected")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_residual_matrix", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -290,7 +337,7 @@ plot_reliability_snapshot <- function(fit,
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' p <- plot(fit, type = "residual_matrix", top_n_persons = 12, draw = FALSE)
-#' dim(plot_data(p, "matrix"))
+#' dim(p$data$matrix)
 #' # Look for: |residual| > 2 or > 3 crosses conventional two- or
 #' #   three-standard-deviation review bands; these are heuristic screens,
 #' #   not calibrated 5% or 1% tests (Wright & Linacre 1994). Repeated
@@ -300,7 +347,7 @@ plot_reliability_snapshot <- function(fit,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -366,7 +413,26 @@ plot_residual_matrix <- function(fit,
   ok <- is.finite(ix) & is.finite(jx)
   mat[cbind(ix[ok], jx[ok])] <- agg$StdResidual[ok]
 
-  out <- new_mfrm_plot_data(
+  if (isTRUE(draw)) {
+    apply_plot_preset(style)
+    cols <- grDevices::hcl.colors(40L, "RdBu", rev = TRUE)
+    zmax <- max(3, max(abs(mat), na.rm = TRUE))
+    old_par <- graphics::par()["mar"]
+    on.exit(graphics::par(old_par), add = TRUE)
+    graphics::par(mar = c(5, 6, 3, 2))
+    image(
+      x = seq_along(levels_x), y = seq_along(persons),
+      z = t(mat), col = cols, zlim = c(-zmax, zmax),
+      xaxt = "n", yaxt = "n", xlab = facet, ylab = "Person",
+      main = ""
+    )
+    axis(1, at = seq_along(levels_x), labels = levels_x,
+                    las = 2, cex.axis = 0.7)
+    axis(2, at = seq_along(persons),
+                    labels = persons, las = 1, cex.axis = 0.7)
+  }
+
+  invisible(new_mfrm_plot_data(
     "residual_matrix",
     list(
       matrix = mat,
@@ -380,8 +446,7 @@ plot_residual_matrix <- function(fit,
         "h", 0, "Zero residual", "dashed", "reference"
       )
     )
-  )
-  .mfrm_finalize_ggplot(out, draw = draw)
+  ))
 }
 
 
@@ -407,16 +472,16 @@ plot_residual_matrix <- function(fit,
 #'   cross-level covariance; zero width after full pooling is not perfect precision.
 #' @param ci_level Nominal normal-band level when `show_ci = TRUE`; default
 #'   0.95. This does not assert repeated-sampling coverage.
-#' @param draw If `TRUE`, print the `ggplot` object.
+#' @param draw If `TRUE`, draw with base graphics.
 #'
-#' @return Invisibly, a `ggplot` object. `plot_data(p, "table")` is the long
+#' @return An `mfrm_plot_data` whose `data` slot bundles the long
 #'   `Level`, `RawEstimate`, `ShrunkEstimate`, `ShrinkageFactor` table.
 #'   When `show_ci = TRUE`, the table also includes `RawCI_Lower`,
 #'   `RawCI_Upper`, `ShrunkCI_Lower`, `ShrunkCI_Upper`, and `CI_Level`.
 #' @seealso [apply_empirical_bayes_shrinkage()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_shrinkage_funnel", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -425,7 +490,7 @@ plot_residual_matrix <- function(fit,
 #' fit <- example_fit$fit
 #' fit_eb <- apply_empirical_bayes_shrinkage(fit)
 #' p <- plot(fit_eb, type = "shrinkage", view = "funnel", draw = FALSE)
-#' head(plot_data(p, "table"))
+#' head(p$data$table)
 #' # Look for: short segments (Raw and Shrunken close together) =
 #' #   little pooling. Long segments fanning toward the centre = the
 #' #   prior pulled the estimate strongly; this is most pronounced for
@@ -435,7 +500,7 @@ plot_residual_matrix <- function(fit,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -534,6 +599,58 @@ plot_shrinkage_funnel <- function(fit,
   }
 
   style <- resolve_plot_preset(preset)
+  if (isTRUE(draw)) {
+    apply_plot_preset(style)
+    old_par <- graphics::par()["mar"]
+    on.exit(graphics::par(old_par), add = TRUE)
+    graphics::par(mar = c(5, 6, 3, 2))
+    x_values <- c(payload$RawEstimate, payload$ShrunkEstimate)
+    if (isTRUE(show_ci)) {
+      x_values <- c(x_values, payload$RawCI_Lower, payload$RawCI_Upper,
+                    payload$ShrunkCI_Lower, payload$ShrunkCI_Upper)
+    }
+    xr <- range(x_values[is.finite(x_values)], na.rm = TRUE)
+    if (!all(is.finite(xr))) xr <- c(-1, 1)
+    if (diff(xr) == 0) xr <- xr + c(-0.5, 0.5)
+    xr <- xr + c(-0.06, 0.06) * diff(xr)
+    plot(NA, xlim = xr, ylim = c(0.5, nrow(payload) + 0.5),
+                    yaxt = "n",
+                    xlab = "Estimate (logits)", ylab = facet,
+                    main = "")
+    abline(v = 0, lty = 3, col = style$grid)
+    axis(2, at = payload$RowOrder, labels = payload$Level,
+                    las = 1, cex.axis = 0.7)
+    segments(payload$RawEstimate, payload$RowOrder,
+                        payload$ShrunkEstimate, payload$RowOrder,
+                        col = style$neutral, lwd = 1.2)
+    if (isTRUE(show_ci)) {
+      segments(payload$RawCI_Lower, payload$RowOrder - 0.12,
+                         payload$RawCI_Upper, payload$RowOrder - 0.12,
+                         col = style$accent_primary, lwd = 1)
+      segments(payload$ShrunkCI_Lower, payload$RowOrder + 0.12,
+                         payload$ShrunkCI_Upper, payload$RowOrder + 0.12,
+                         col = style$accent_tertiary, lwd = 1)
+    }
+    points(payload$RawEstimate, payload$RowOrder,
+                      pch = 1, col = style$accent_primary, cex = 1.0)
+    points(payload$ShrunkEstimate, payload$RowOrder,
+                      pch = 19, col = style$accent_tertiary, cex = 1.0)
+    legend_labels <- c("Raw", "Shrunken")
+    legend_pch <- c(1, 19)
+    legend_lty <- c(NA, NA)
+    legend_col <- c(style$accent_primary, style$accent_tertiary)
+    if (isTRUE(show_ci)) {
+      legend_labels <- c(legend_labels,
+                         sprintf("%g%% plug-in band", round(100 * ci_level)))
+      legend_pch <- c(legend_pch, NA)
+      legend_lty <- c(legend_lty, 1)
+      legend_col <- c(legend_col, style$accent_primary)
+    }
+    legend("topright",
+                      legend = legend_labels,
+                      pch = legend_pch, lty = legend_lty, col = legend_col,
+                      bty = "n", cex = 0.85, inset = 0.02)
+  }
 
   legend_label <- c("Raw estimate", "Shrunken estimate",
                     "Shrinkage movement", "Zero shrinkage target")
@@ -548,7 +665,7 @@ plot_shrinkage_funnel <- function(fit,
     legend_aesthetic <- c(legend_aesthetic, "line")
     legend_value <- c(legend_value, style$accent_primary)
   }
-  out <- new_mfrm_plot_data(
+  invisible(new_mfrm_plot_data(
     "shrinkage_funnel",
     list(
       table = payload,
@@ -570,6 +687,5 @@ plot_shrinkage_funnel <- function(fit,
         "v", 0, "Zero shrinkage target", "dashed", "reference"
       )
     )
-  )
-  .mfrm_finalize_ggplot(out, draw = draw)
+  ))
 }
