@@ -20,13 +20,23 @@ a warning rule detects affected raters or flags unaffected raters. Supply the
 planned trials and observed flags; this function does not generate or fit
 simulated ratings. Unknown truth in real ratings cannot supply these rates.
 Unavailable screens remain unavailable, and correlated raters are not counted
-as independent simulation trials.">
+as independent simulation trials.
+See how detection and false-flag rates change when you change fit-screening
+thresholds in a simulation with known truth. Apply specified mean-square
+bands to saved Infit/Outfit values without refitting models. Keep underfit,
+overfit and their union separate. Here sensitivity analysis means comparing
+thresholds; the reported Sensitivity rate means detecting an affected target.">
 <meta property="og:description" content="In a simulation where the true problem status is known, summarize how often
 a warning rule detects affected raters or flags unaffected raters. Supply the
 planned trials and observed flags; this function does not generate or fit
 simulated ratings. Unknown truth in real ratings cannot supply these rates.
 Unavailable screens remain unavailable, and correlated raters are not counted
-as independent simulation trials.">
+as independent simulation trials.
+See how detection and false-flag rates change when you change fit-screening
+thresholds in a simulation with known truth. Apply specified mean-square
+bands to saved Infit/Outfit values without refitting models. Keep underfit,
+overfit and their union separate. Here sensitivity analysis means comparing
+thresholds; the reported Sensitivity rate means detecting an affected target.">
 <meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png">
 </head>
 <body>
@@ -37,7 +47,7 @@ as independent simulation trials.">
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,32 +56,26 @@ as independent simulation trials.">
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -90,7 +94,7 @@ as independent simulation trials.">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Evaluate screening outcomes against a planned simulation roster</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-screening-performance.R" class="external-link"><code>R/api-screening-performance.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-screening-performance.R" class="external-link"><code>R/api-screening-performance.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-screening-sensitivity.R" class="external-link"><code>R/api-screening-sensitivity.R</code></a></small>
       <div class="d-none name"><code>mfrm_screening_performance.Rd</code></div>
     </div>
 
@@ -101,6 +105,11 @@ planned trials and observed flags; this function does not generate or fit
 simulated ratings. Unknown truth in real ratings cannot supply these rates.
 Unavailable screens remain unavailable, and correlated raters are not counted
 as independent simulation trials.</p>
+<p>See how detection and false-flag rates change when you change fit-screening
+thresholds in a simulation with known truth. Apply specified mean-square
+bands to saved Infit/Outfit values without refitting models. Keep underfit,
+overfit and their union separate. Here sensitivity analysis means comparing
+thresholds; the reported Sensitivity rate means detecting an affected target.</p>
     </div>
 
     <div class="section level2">
@@ -108,11 +117,57 @@ as independent simulation trials.</p>
 </h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">mfrm_screening_performance</span><span class="op">(</span><span class="va">roster</span>, <span class="va">results</span>, <span class="va">rule</span>, level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
 <span></span>
+<span><span class="fu">mfrm_screening_sensitivity</span><span class="op">(</span></span>
+<span>  <span class="va">roster</span>,</span>
+<span>  <span class="va">measures</span>,</span>
+<span>  <span class="va">thresholds</span>,</span>
+<span>  <span class="va">rule</span>,</span>
+<span>  statistic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"either"</span>, <span class="st">"infit"</span>, <span class="st">"outfit"</span><span class="op">)</span>,</span>
+<span>  zstd_cut <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  level <span class="op">=</span> <span class="fl">0.95</span></span>
+<span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># S3 method for class 'mfrm_screening_performance'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'mfrm_screening_performance'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_screening_performance'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  scope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"family"</span>, <span class="st">"target"</span><span class="op">)</span>,</span>
+<span>  metric <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"false_flags"</span>, <span class="st">"detection"</span><span class="op">)</span>,</span>
+<span>  condition <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_screening_sensitivity'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_screening_sensitivity'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_screening_sensitivity'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"tiles"</span>, <span class="st">"curves"</span><span class="op">)</span>,</span>
+<span>  direction <span class="op">=</span> <span class="st">"either"</span>,</span>
+<span>  metric <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"false_flags"</span>, <span class="st">"detection"</span><span class="op">)</span>,</span>
+<span>  condition <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  quantity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rate"</span>, <span class="st">"unavailable"</span><span class="op">)</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  palette <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"accessible"</span>, <span class="st">"mono"</span><span class="op">)</span>,</span>
+<span>  title <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  caption <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  show_title <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  show_notes <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  show_labels <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  text_scale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  point_size <span class="op">=</span> <span class="fl">2.5</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -152,14 +207,139 @@ default 0.95. These describe simulation uncertainty, not an interval for
 rater severity or a guarantee of screening accuracy.</p></dd>
 
 
+<dt id="arg-measures">measures<a class="anchor" aria-label="anchor" href="#arg-measures"></a>
+</dt>
+<dd><p>Data frame with <code>Condition</code>, <code>Replicate</code>, <code>Target</code>, <code>Infit</code>
+and <code>Outfit</code>. Include <code>InfitZSTD</code> and <code>OutfitZSTD</code> when requesting the
+combined ZSTD rule. The selected statistic's columns are required;
+nonfinite values and omitted rows remain unavailable. Additional source
+columns, such as numerical readiness, are retained without filtering.</p></dd>
+
+
+<dt id="arg-thresholds">thresholds<a class="anchor" aria-label="anchor" href="#arg-thresholds"></a>
+</dt>
+<dd><p>Data frame with unique nonempty <code>Profile</code> labels and
+numeric <code>Lower</code>, <code>Upper</code> bounds satisfying <code>0 &lt; Lower &lt; Upper</code>.
+Profiles are compared in supplied order, without selecting an optimum.</p></dd>
+
+
+<dt id="arg-statistic">statistic<a class="anchor" aria-label="anchor" href="#arg-statistic"></a>
+</dt>
+<dd><p><code>"either"</code> (default) flags Infit OR Outfit; <code>"infit"</code> or
+<code>"outfit"</code> uses only the specified index.</p></dd>
+
+
+<dt id="arg-zstd-cut">zstd_cut<a class="anchor" aria-label="anchor" href="#arg-zstd-cut"></a>
+</dt>
+<dd><p><code>NULL</code> (default) uses only mean squares. A positive finite
+number adds directional ZSTD flags with inclusive boundaries. This is an
+explicit alternative rule, not a significance calibration. Record the
+chosen df convention and residual definition in <code>rule</code>.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a>
+</dt>
+<dd><p>An <code>mfrm_screening_sensitivity</code> object.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a>
 </dt>
-<dd><p>Unused by print and summary methods.</p></dd>
+<dd>
+<p>For <code>summary.mfrm_screening_sensitivity()</code>: Unused by print and summary.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Unused.</p>
+</dd>
 
 
-<dt id="arg-x-object">x, object<a class="anchor" aria-label="anchor" href="#arg-x-object"></a>
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a>
 </dt>
-<dd><p>An object returned by <code>mfrm_screening_performance()</code>.</p></dd>
+<dd>
+<p>Output from <code>mfrm_screening_sensitivity()</code>.</p>
+<p>Also for <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: An <code>mfrm_screening_sensitivity</code> object.</p>
+</dd>
+
+
+<dt id="arg-scope">scope<a class="anchor" aria-label="anchor" href="#arg-scope"></a>
+</dt>
+<dd><p><code>"family"</code> (default) shows any-flag events once per replication;
+<code>"target"</code> shows each individual target separately.</p></dd>
+
+
+<dt id="arg-metric">metric<a class="anchor" aria-label="anchor" href="#arg-metric"></a>
+</dt>
+<dd><p><code>"false_flags"</code> or <code>"detection"</code> chooses the family event.</p></dd>
+
+
+<dt id="arg-condition">condition<a class="anchor" aria-label="anchor" href="#arg-condition"></a>
+</dt>
+<dd><p>Optional condition labels to display.</p></dd>
+
+
+<dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a>
+</dt>
+<dd><p>Logical; <code>FALSE</code> returns the <code>ggplot</code> object without opening a device.</p></dd>
+
+
+<dt id="arg-style">style<a class="anchor" aria-label="anchor" href="#arg-style"></a>
+</dt>
+<dd><p><code>"tiles"</code> shows a labelled rate matrix. <code>"curves"</code> shows
+profile comparisons with pointwise Monte Carlo intervals by condition.</p></dd>
+
+
+<dt id="arg-direction">direction<a class="anchor" aria-label="anchor" href="#arg-direction"></a>
+</dt>
+<dd><p>One or more of <code>"either"</code>, <code>"underfit"</code>, <code>"overfit"</code>.</p></dd>
+
+
+<dt id="arg-quantity">quantity<a class="anchor" aria-label="anchor" href="#arg-quantity"></a>
+</dt>
+<dd><p><code>"rate"</code> (default) or <code>"unavailable"</code>, the proportion of
+planned family events whose outcome is unresolved.</p></dd>
+
+
+<dt id="arg-palette">palette<a class="anchor" aria-label="anchor" href="#arg-palette"></a>
+</dt>
+<dd><p><code>"accessible"</code> uses a sequential blue scale for tiles and
+blue/orange/purple lines with different symbols. <code>"mono"</code> uses greys.</p></dd>
+
+
+<dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a>
+</dt>
+<dd><p><code>NULL</code> uses the default text; a string replaces it;
+<code>""</code> removes it. Interpretation notes remain in the saved plot data.</p></dd>
+
+
+<dt id="arg-caption">caption<a class="anchor" aria-label="anchor" href="#arg-caption"></a>
+</dt>
+<dd><p><code>NULL</code> uses the default text; a string replaces it;
+<code>""</code> removes it. Interpretation notes remain in the saved plot data.</p></dd>
+
+
+<dt id="arg-show-title">show_title<a class="anchor" aria-label="anchor" href="#arg-show-title"></a>
+</dt>
+<dd><p>Show the title and caption, respectively.
+<code>FALSE</code> hides text without deleting its metadata.</p></dd>
+
+
+<dt id="arg-show-notes">show_notes<a class="anchor" aria-label="anchor" href="#arg-show-notes"></a>
+</dt>
+<dd><p>Show the title and caption, respectively.
+<code>FALSE</code> hides text without deleting its metadata.</p></dd>
+
+
+<dt id="arg-show-labels">show_labels<a class="anchor" aria-label="anchor" href="#arg-show-labels"></a>
+</dt>
+<dd><p>Show percentages and known/planned counts in tiles.</p></dd>
+
+
+<dt id="arg-text-scale">text_scale<a class="anchor" aria-label="anchor" href="#arg-text-scale"></a>
+</dt>
+<dd><p>Positive multiplier for text size.</p></dd>
+
+
+<dt id="arg-point-size">point_size<a class="anchor" aria-label="anchor" href="#arg-point-size"></a>
+</dt>
+<dd><p>Positive point size in ggplot millimetres; base graphics
+use the corresponding relative size (2.5 is the default).</p></dd>
 
 </dl>
 </div>
@@ -176,6 +356,15 @@ bound the realized proportion across all planned trials by assigning every
 unknown outcome negative or positive. These latter bounds are not confidence
 intervals. A family with no relevant targets has zero planned trials and
 undefined rates. <code>CompleteScreens</code> counts fully observed families.</p>
+<p>An <code>mfrm_screening_sensitivity</code> object with <code>by_target</code>, <code>by_family</code>,
+aligned <code>outcomes</code>, replication-level <code>family_outcomes</code>, source <code>roster</code>
+and <code>measures</code>, <code>thresholds</code> and <code>settings</code>. Each result table identifies
+<code>Profile</code>, <code>Lower</code>, <code>Upper</code> and <code>Direction</code>; the remaining columns have
+the meanings documented by <code>mfrm_screening_performance()</code>.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Invisibly, a <code>ggplot</code> object. Use <code><a href="plot_data.html">plot_data()</a></code> to inspect
+underlying tables and notes.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Invisibly, a <code>ggplot</code> object carrying exact selected tables, settings,
+notes, and alternative text accessible via <code><a href="plot_data.html">plot_data()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a>
@@ -199,6 +388,39 @@ difference alone is not rater misfit. Known simulation truth is required;
 labeling unknown real-world rater quality does not create a validation study.
 Define computable screening output separately from formal inference eligibility.
 The recorded rule cannot prove that it was selected before seeing outcomes.</p>
+<p>Mean-square boundaries are strict: equality is inside the band.
+Missing values use three-valued logic: TRUE OR NA is TRUE, but FALSE OR NA
+is NA. The family event counts any affected or any unaffected target once
+per independent replication. Correlated raters are not independent trials.
+The source roster fixes truth and planned denominators for every profile.
+<code>Affected</code> denotes the departure of interest; when comparing directional
+screens, an affected-target flag can have the wrong direction for that
+departure. Inspect directions together, not just the union's sensitivity.</p>
+<p>Thresholds are review heuristics, not universal error-controlled tests.
+A low mean square describes low residual variability, not poor rater quality
+or proof of misconduct. ZSTD is sensitive to sample size and its df
+convention. Selecting a threshold on these results and reporting its same-
+sample performance is optimistic; use a separately designed validation.
+Pointwise Monte Carlo intervals are not simultaneous across profiles or
+conditions. Their overlap is not a paired test of rules applied to the
+same replications. No automatic exclusion or refitting is performed.</p>
+<p>This helper does not qualify the supplied statistics. In particular,
+ordinary Rasch bands must not be transferred to extended-model posterior-
+predictive residual summaries that lack the same reference distribution.</p>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: Plot screening performance and unresolved outcomes</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Blue points and whiskers show conditional rates and their exact
+binomial Monte Carlo intervals. Gray segments bound the realized all-trial
+proportion by assigning unresolved outcomes negative or positive; these
+are not confidence intervals. A row with no known outcomes has no point
+estimate. Right-hand counts show available/planned events. No model is
+fitted and no threshold is selected by this plot.</p>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: Plot directional screening rates across threshold profiles</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Tile shading is supplemented by numeric labels; missing estimates
+are labelled NA. Profile order is supplied order, not an optimized ranking.
+Curves connect discrete profile choices, not a continuous threshold scale.
+Tile plots do not display uncertainty intervals: consult the retained table
+or curve view. Exact intervals are pointwise and conditional on known
+outcomes; all-trial bounds are retained, not confidence intervals.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -207,12 +429,18 @@ The recorded rule cannot prove that it was selected before seeing outcomes.</p>
 Using simulation studies to evaluate statistical methods.
 <em>Statistics in Medicine</em>, 38, 2074–2102. <a href="https://doi.org/10.1002/sim.8086" class="external-link">doi:10.1002/sim.8086</a>
 .</p>
+<p>Linacre, J. M. (2003). Size vs. significance: standardized
+chi-square fit statistic. <em>Rasch Measurement Transactions</em>, 17(1), 918.
+<a href="https://www.rasch.org/rmt/rmt171n.htm" class="external-link">https://www.rasch.org/rmt/rmt171n.htm</a>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a>
 </h2>
-    <div class="dont-index"><p><code><a href="mfrm_screening_sensitivity.html">mfrm_screening_sensitivity()</a></code> for several threshold bands,
-<code><a href="evaluate_mfrm_signal_detection.html">evaluate_mfrm_signal_detection()</a></code>, <code><a href="facet_quality_dashboard.html">facet_quality_dashboard()</a></code></p></div>
+    <div class="dont-index">
+<p><code>mfrm_screening_sensitivity()</code> for several threshold bands,
+<code><a href="evaluate_mfrm_signal_detection.html">evaluate_mfrm_signal_detection()</a></code>, <code><a href="facet_quality_dashboard.html">facet_quality_dashboard()</a></code></p>
+<p><code><a href="fit_measures_table.html">fit_measures_table()</a></code>, <code>mfrm_screening_performance()</code></p>
+</div>
     </div>
 
     <div class="section level2">
@@ -261,6 +489,18 @@ Using simulation studies to evaluate statistical methods.
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">performance</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="mfrm_screening_performance-1.png" alt="Null-condition family false-flag rate of one third among three known outcomes out of four planned trials. The wide line is a pointwise Monte Carlo interval; the shaded unresolved-outcome range is distinct from that interval." width="700" height="433"></span>
+<span class="r-in"><span><span class="va">roster</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>Condition <span class="op">=</span> <span class="st">"Null"</span>, Replicate <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span></span>
+<span class="r-in"><span>                      Target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"R1"</span>, <span class="st">"R2"</span><span class="op">)</span>, stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">roster</span><span class="op">$</span><span class="va">Affected</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span></span>
+<span class="r-in"><span><span class="va">measures</span> <span class="op">&lt;-</span> <span class="va">roster</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Condition"</span>, <span class="st">"Replicate"</span>, <span class="st">"Target"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">measures</span><span class="op">$</span><span class="va">Infit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.45</span>, <span class="fl">.8</span>, <span class="fl">1.1</span>, <span class="cn">NA</span>, <span class="fl">.9</span>, <span class="fl">1.4</span>, <span class="fl">1.2</span>, <span class="cn">NA</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">measures</span><span class="op">$</span><span class="va">Outfit</span> <span class="op">&lt;-</span> <span class="va">measures</span><span class="op">$</span><span class="va">Infit</span></span></span>
+<span class="r-in"><span><span class="va">bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Profile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Broad"</span>, <span class="st">"Narrow"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    Lower <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>, <span class="fl">.7</span><span class="op">)</span>, Upper <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.5</span>, <span class="fl">1.3</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">sensitivity</span> <span class="op">&lt;-</span> <span class="fu">mfrm_screening_sensitivity</span><span class="op">(</span><span class="va">roster</span>, <span class="va">measures</span>, <span class="va">bands</span>,</span></span>
+<span class="r-in"><span>  rule <span class="op">=</span> <span class="st">"Illustrative fixed-rater residual screen; no exclusion/refit"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sensitivity</span>, direction <span class="op">=</span> <span class="st">"overfit"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="mfrm_screening_performance-2.png" alt="Overfit family false-flag rates for Broad and Narrow threshold profiles under a null condition. Both show 33.3 percent among three known outcomes out of four planned trials; the unresolved trial is not counted as a non-flag." width="700" height="433"></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

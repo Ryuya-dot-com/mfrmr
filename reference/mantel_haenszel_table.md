@@ -1,8 +1,9 @@
-# Compare binary responses between matched groups
+# Compare matched responses using MH or generalized CMH
 
-Compute a Mantel–Haenszel (MH) odds ratio for each declared target, with
-conditional exact or asymptotic inference. Matching strata are supplied
-explicitly; this function does not estimate ability or fit an MFRM.
+Compute a binary Mantel–Haenszel (MH) odds ratio or a generalized
+Cochran–Mantel–Haenszel (GMH) association test for each target. Matching
+strata are supplied explicitly; this function does not estimate ability
+or fit an MFRM.
 
 ## Usage
 
@@ -18,7 +19,9 @@ mantel_haenszel_table(
   inference = c("exact", "asymptotic"),
   correct = TRUE,
   conf_level = 0.95,
-  p_adjust = "holm"
+  p_adjust = "holm",
+  method = c("mh", "gmh"),
+  categories = c(0, 1)
 )
 ```
 
@@ -38,8 +41,9 @@ mantel_haenszel_table(
 
 - score:
 
-  Name of a numeric column containing only 0, 1 or missing values. No
-  automatic dichotomization or category recoding is performed.
+  Name of a numeric response column: 0/1 for MH, or one of the declared
+  `categories` for GMH. Missing values are allowed. No automatic
+  dichotomization or category recoding is performed.
 
 - group:
 
@@ -54,14 +58,15 @@ mantel_haenszel_table(
 
 - groups:
 
-  Two distinct group labels in reference, focal order. Data containing
-  other groups are rejected rather than silently filtered.
+  Distinct group labels: exactly two in reference, focal order for MH;
+  two or more for GMH. Data containing other groups are rejected rather
+  than silently filtered.
 
 - inference:
 
   `"exact"` (default) uses the conditional distribution given each
-  stratum's margins. `"asymptotic"` uses the MH chi-squared
-  approximation.
+  stratum's margins. `"asymptotic"` uses a chi-squared approximation.
+  GMH requires explicit `inference = "asymptotic"`.
 
 - correct:
 
@@ -69,18 +74,29 @@ mantel_haenszel_table(
   [`stats::mantelhaen.test()`](https://rdrr.io/r/stats/mantelhaen.test.html)
   for asymptotic inference. Ignored for exact inference; the resolved
   setting is saved. This does not correct for repeated ratings, matching
-  errors or multiple testing.
+  errors or multiple testing. Not used by GMH.
 
 - conf_level:
 
   Confidence level strictly between 0 and 1. Intervals are pointwise,
-  not simultaneous across targets.
+  not simultaneous across targets. Not used by GMH.
 
 - p_adjust:
 
   A [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html) method,
   default `"holm"`. The family includes every observed target, including
   targets with unavailable tests.
+
+- method:
+
+  `"mh"` (default) retains binary two-group odds-ratio inference.
+  `"gmh"` tests general association for two or more groups/categories.
+
+- categories:
+
+  Distinct finite numeric category labels, default `c(0, 1)`. MH
+  requires this default. GMH treats categories as nominal: their spacing
+  and order do not define a trend test. Declare a common set per call.
 
 ## Value
 
@@ -95,15 +111,25 @@ inference. Save with
 [`base::saveRDS()`](https://rdrr.io/r/base/readRDS.html) and export each
 data frame with
 [`utils::write.csv()`](https://rdrr.io/r/utils/write.table.html);
-reading these outputs performs no calculation.
+reading these outputs performs no calculation. For GMH, `table` instead
+contains the omnibus statistic, degrees of freedom, p-values and
+availability; `strata` contains support counts. Additional `counts`
+gives observed/expected group-by-category counts and within-stratum
+group proportions, including zero cells; `group_counts` gives input,
+complete and included Person counts per target/group. Proportions
+describe the observed data, not an adjusted effect estimate. A row can
+contribute counts (`Included`) even when the target's full test is
+unavailable. See the [linking and DFF
+guide](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
+for a worked GMH example and comparison with ordinal logistic models.
 
 ## Details
 
-An odds ratio above 1 means higher odds of score 1 in the reference
-group. `MHOddsRatio` is always sum(A*D/N)/sum(B*C/N), with reference
-successes A, reference failures B, focal successes C and focal failures
-D. No .5 is added to zero cells. Zero and infinite estimates are
-retained.
+With `method = "mh"`, an odds ratio above 1 means higher odds of score 1
+in the reference group. `MHOddsRatio` is always sum(A*D/N)/sum(B*C/N),
+with reference successes A, reference failures B, focal successes C and
+focal failures D. No .5 is added to zero cells. Zero and infinite
+estimates are retained.
 
 `OddsRatio` and its interval follow the selected inference: conditional
 maximum likelihood and an exact equal-tail interval for `"exact"`, or
@@ -135,14 +161,14 @@ missing-score duplicates, are rejected. Multiple targets may use the
 same Persons; dependence across targets does not invalidate Holm
 adjustment of valid individual p-values.
 
-The inferential model requires independent Persons within each target
-and a common conditional odds ratio across its strata. Small cells alone
-do not invalidate the exact conditional calculation, but exact inference
-does not establish these assumptions. The separate stratum odds ratios
-help reveal opposing effects that a common MH effect can conceal; no
-test of homogeneity, power guarantee, ETS label or automatic DIF/bias
-flag is given. The number of independent Persons is not the number of
-rating rows.
+The binary MH inferential model requires independent Persons within each
+target and a common conditional odds ratio across its strata. Small
+cells alone do not invalidate the exact conditional calculation, but
+exact inference does not establish these assumptions. The separate
+stratum odds ratios help reveal opposing effects that a common MH effect
+can conceal; no test of homogeneity, power guarantee, ETS label or
+automatic DIF/bias flag is given. The number of independent Persons is
+not the number of rating rows.
 
 Interpreting conditional association as DIF additionally requires
 adequate matching and comparable exposure. With a common binary Rasch
@@ -165,6 +191,29 @@ new `method` for
 Residual and linked-refit contrasts have different targets; their
 agreement does not certify robustness or fairness.
 
+## Generalized association
+
+GMH compares group-by-category distributions conditional on stratum
+margins. It uses
+[`stats::mantelhaen.test()`](https://rdrr.io/r/stats/mantelhaen.test.html)
+(the existing double-precision MH statistic without continuity
+correction in the 2-by-2 case). Degrees of freedom are
+`(length(groups) - 1) * (length(categories) - 1)`. This is an omnibus
+association test, not an estimate of severity, a common odds ratio or a
+confidence interval. No post-hoc group comparisons are supplied.
+
+Each contributing stratum needs at least two observed groups and
+categories; different strata may support different subsets. Collectively
+all declared groups and categories must occur, and the conditional
+covariance must be nonsingular. Missing overall support or a failed
+calculation leaves the test unavailable with a reason; levels are not
+silently dropped and a reduced-rank test is not substituted. `NominalDF`
+retains the requested dimension. Numerical availability does not
+establish a reliable chi-squared approximation in sparse samples. The
+independent-Person and matching requirements above still apply. Effects
+reversing across strata may cancel; GMH is not a test of association
+heterogeneity across strata.
+
 ## References
 
 Holland, P. W., & Thayer, D. T. (1986). *Differential item functioning
@@ -173,17 +222,25 @@ and the Mantel-Haenszel procedure*. ETS Research Report RR-86-31, pp.
 [doi:10.1002/j.2330-8516.1986.tb00186.x](https://doi.org/10.1002/j.2330-8516.1986.tb00186.x)
 . See
 [`stats::mantelhaen.test()`](https://rdrr.io/r/stats/mantelhaen.test.html)
-for the numerical inference conventions.
+for the numerical inference conventions. Yesiltas, G., & Paek, I.
+(2020). A log-linear modeling approach for differential item functioning
+detection in polytomously scored items. *Educational and Psychological
+Measurement*, 80, 145–162.
+[doi:10.1177/0013164419853000](https://doi.org/10.1177/0013164419853000)
+.
 
 ## See also
 
 [`ordinal_logistic_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/ordinal_logistic_table.md),
 [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
-[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
+[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("mantel_haenszel_table", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # One binary target per Person; both groups share two declared strata.
 d <- data.frame(Person = paste0("P", 1:16), Item = "A",
   Group = rep(c("Reference", "Focal"), each = 8),
@@ -192,19 +249,6 @@ d <- data.frame(Person = paste0("P", 1:16), Item = "A",
 mh <- mantel_haenszel_table(d, "Person", "Item", "Score", "Group",
                            "Matching", c("Reference", "Focal"))
 mh$table
-#>   Target Reference Focal NReference NFocal InputRows CompleteRows ExcludedRows
-#> 1      A Reference Focal          8      8        16           16            0
-#>   InformativeStrata MHOddsRatio OddsRatio     Lower    Upper ConfidenceLevel
-#> 1                 2           3  2.601683 0.2547306 38.55288            0.95
-#>    EstimateMethod ChiSquared DF   PValue    Status IntervalStatus Message
-#> 1 conditional_mle         NA NA 0.622449 available      available        
-#>   PAdjusted
-#> 1  0.622449
 mh$strata
-#>   Target Stratum ReferenceSuccess ReferenceFailure FocalSuccess FocalFailure N
-#> 1      A       1                3                1            2            2 8
-#> 2      A       2                2                2            1            3 8
-#>   OddsRatio Informative      Reason
-#> 1         3        TRUE informative
-#> 2         3        TRUE informative
+} # }
 ```

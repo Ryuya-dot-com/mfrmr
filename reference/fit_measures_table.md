@@ -56,7 +56,7 @@ fit_measures_table(
 - lower, upper:
 
   Optional mean-square review band. Defaults to
-  [`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_misfit_thresholds.md).
+  [`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_threshold_profiles.md).
 
 - zstd_cut:
 
@@ -231,8 +231,8 @@ Transactions*, 8(3), 370. <https://www.rasch.org/rmt/rmt83b.htm>.
 [`facets_fit_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_fit_review.md),
 [plot(x, type =
 "bubble")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
-[`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_misfit_thresholds.md),
-[`mfrm_screening_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_sensitivity.md)
+[`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_threshold_profiles.md),
+[`mfrm_screening_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_performance.md)
 
 ## Examples
 

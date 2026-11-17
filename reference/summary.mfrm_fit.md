@@ -1,6 +1,9 @@
-# Summarize an `mfrm_fit` object in a user-friendly format
+# Inspect fitted estimates and interpretation status
 
-Summarize an `mfrm_fit` object in a user-friendly format
+Summarize a fitted model without changing its estimates. The default
+returns fit-only tables; read `s$decision` after `s <- summary(fit)` for
+interpretation limits and next actions. Individual estimates are
+available separately through `as.data.frame(fit)`.
 
 ## Usage
 
@@ -83,305 +86,177 @@ summary(
   [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
   Explicitly requests fitted contrasts and retained- point numerical
   checks through
-  [`interaction_effect_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interaction_effect_table.md),
+  [`interaction_effect_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
   saved as `$interaction_comparisons`. It does not fit a model or supply
   intervals.
 
 ## Value
 
-An object of class `summary.mfrm_fit` with:
+A `summary.mfrm_fit` list. Components are grouped below by purpose;
+model-specific components are populated only where supported.
 
-- `overview`: global model/fit indicators. For MML, `MMLEngineUsed`
-  records the actual algorithm, `IterationsBasis` explains what is
-  counted, and `ConvergenceBasis` identifies the numerical stopping
-  rule. Numerical convergence does not establish identification or
-  interval eligibility
+**Interpretation and availability**
 
-- `status`: concise front-door status block for quick review
+- `decision`: interpretation, `FormalInference`, `Why` and `NextAction`,
+  combining source-fit readiness with supplied precision evidence.
+  `"No"` can mean that precision has not been assessed, rather than that
+  point estimation failed. `"Yes"` is conditional on the fitted model
+  and checked method; it does not establish model adequacy or
+  finite-sample coverage.
 
-- `decision`: plain-language interpretation, formal-inference status,
-  reason, and highest-priority next action derived from the stored
-  readiness contract plus supplied precision evidence; fit readiness
-  alone never yields `FormalInference = "Yes"`
+- `status`, `readiness`, `data_review`: compact status, separate
+  workflow states and their connectivity/category-support evidence.
+  `InferenceReady` is a compatibility indicator for stored
+  `FitReadiness = "ready"`; numerical convergence cannot override data,
+  estimability or boundary issues.
 
-- `readiness`: the stored fit-level state plus numerical, data, design,
-  stability, diagnostic, and reporting workflow states
+- `key_warnings`, `notes`, `next_actions`: issues and follow-up calls.
+  `caveats` retains the detailed score-support and population-design
+  rows, including omissions or unstable residual variance where
+  recorded.
 
-- `data_review`: structured connectivity and facet-support evidence used
-  by the non-numerical readiness requirements
+- `section_status`: availability, including requested but `not_computed`
+  sections. An unassessed check is not a passed check.
 
-- `key_warnings`: highest-priority warnings to review first
+**Estimates and model settings**
 
-- `next_actions`: recommended follow-up helpers
+- `overview`: counts, likelihood, information criteria and convergence.
+  `MMLEngineUsed`, `IterationsBasis` and `ConvergenceBasis` identify the
+  algorithm and stopping record. See
+  [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
+  and the information-criterion section of
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)
+  for eligibility, MML denominators based on Persons and quadrature
+  requirements before ranking models.
 
-- `population_overview`: current population-model basis, residual
-  variance, and omission review
+- `person_overview`, `facet_overview`, `targeting`: distributions and
+  Person-versus-facet targeting. For the meaning and direction of
+  individual `Estimate` values, see
+  [`as.data.frame.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_fit_extractors.md).
+  A blocked source fit's extreme MML EAPs are excluded from aggregate
+  Person/targeting summaries but retained in the extreme tables; counts,
+  exclusions and estimate use are reported.
 
-- `population_coefficients`: fitted latent-regression coefficients when
-  a population model is active
+- `person_high`, `person_low`, `facet_extremes`: extreme estimates;
+  Person identifiers are printed only with `include_person = TRUE`.
 
-- `population_design`: latent-regression design-matrix column check when
-  a population model is active
+- `step_overview`: spread and monotonicity by PCM/GPCM `StepFacet`
+  ladder, or the common RSM ladder.
 
-- `population_coding`: categorical covariate levels and contrast
-  provenance when a population model uses model-matrix coding
+- `settings_overview`: identification, category and numerical settings.
+  `CenteringScope` distinguishes whole-facet and remainder centering
+  from `NoncenterFacet`. `CategoryPolicy` is the declared choice;
+  `ScoreRecoded` records actual value changes. An unchanged score map
+  does not identify the policy. Missing historical metadata retain
+  legacy centering and `"not_recorded"`/`NA` category fields. Regenerate
+  the summary from its fit to obtain new fields; reading an old summary
+  does not update stored results.
 
-- `facet_overview`: per-facet estimate distribution summary
+- `population_overview`, `population_coefficients`, `population_design`,
+  `population_coding`: population basis/variance/omissions, active
+  regression coefficients, design checks, and categorical
+  levels/contrasts needed when scoring new Persons.
 
-- `person_overview`: person-measure distribution summary with the actual
-  aggregation denominator, blocked extreme-EAP exclusion count, and
-  estimate use
+- `interaction_overview`: fitted interactions. `interaction_comparisons`
+  appears only when requested through `comparison_review`, preserving
+  unavailable contrasts, the review and numerical checks without new
+  fitting.
 
-- `targeting`: person-versus-non-person facet targeting overview
-  (Wright-map-style mean/SD comparison)
+**Numerical and boundary evidence**
 
-- `step_overview`: threshold/step diagnostics by PCM/GPCM `StepFacet`
-  ladder, or for the common RSM ladder
-
-- `slope_overview`: parameter-readiness and explicitly labelled
-  optimizer- trace summary for `GPCM` discriminations. `SlopeOwner`
-  identifies the facet whose levels carry slopes. `Min`, `Max` and
-  `GeometricMean` summarize primary estimates; the `Optimizer*` fields
-  retain numerical iterates when primary estimates are unavailable. The
-  scale reference is an identification constraint, not evidence that
-  estimates or intervals are reliable
-
-- `inference_evidence`: for `GPCM` MML, a compact separation of
-  optimizer stationarity, retained-point local rank,
-  observed-information curvature, slope-boundary screening, and the
-  final readiness decision. Supportive local evidence does not override
-  an inconclusive boundary audit
-
-- `interaction_overview`: model-estimated facet-interaction summary when
-  the fit was specified with `facet_interactions`
-
-- `interaction_comparisons`: explicitly requested joint-fit contrasts,
-  retaining unavailable rows, the prospective review and numerical
-  checks; absent unless `comparison_review` is supplied
-
-- `settings_overview`: estimation-settings overview that pins the
-  configuration that affects identification/scoring. `CenteringScope`
-  distinguishes whole-facet (`"facet"`) from legacy remainder centering
-  (`"remainder"`), separately from `NoncenterFacet`. Native fits saved
-  before convention metadata retain the legacy interpretation. Recreate
-  this summary from the fit to obtain new fields; reading an old summary
-  does not update it or refit the model
-
-- `numerical_review`: separate optimization, curvature, starting-value,
-  integration and reproducible-refit evidence with specific next
-  actions. Missing checks remain unassessed; this table does not change
-  readiness
+- `numerical_review`: optimization, curvature, starting-value,
+  integration and reproducible-refit checks with next actions; does not
+  change readiness.
 
 - `starting_values`, `starting_value_notes`: all attempted starts,
-  numerical outcomes, selection and interpretation limits when
-  `fit_mfrm(mml_starts = ...)` was requested. These describe numerical
-  sensitivity, not sampling uncertainty
+  selection, failures and cautions after `fit_mfrm(mml_starts = ...)`.
+  These concern numerical sensitivity, not sampling uncertainty.
 
-- `attached_diagnostics`: logical flag indicating whether the `mfrm_fit`
-  was returned with diagnostics already attached
+- `facet_support_boundaries`: observed boundary-constant facet levels;
+  these alone do not prove infinite MLEs. `facet_recession_review`
+  records certified JML additive recession directions, their scope and
+  completeness. Joint rows are relative directions under the fitted
+  constraints.
 
-- `attached_diagnostics_cols`: character vector of diagnostic columns
-  attached to `fit$facets$person` when `attached_diagnostics = TRUE`
+- `slope_overview`: GPCM slope-owner and parameter-status summary.
+  `Min`, `Max` and `GeometricMean` use primary estimates; `Optimizer*`
+  fields retain numerical iterates where primary estimates are
+  unavailable. An identification constraint does not establish
+  precision.
 
-- `row_retention`: row counts before and after preparation filters
+- `inference_evidence`: GPCM MML stationarity, local rank, information,
+  slope-boundary screening and final decision. Local evidence does not
+  override an inconclusive boundary audit.
 
-- `preparation_notes`: structured preparation notes retained from
-  `fit$prep`
+- `point_estimation`: for two-family GPCM and supported endpoint
+  reductions, the point-estimate status and separate integration,
+  local-maximum and limited boundary reviews. This does not qualify SEs
+  or intervals. Older fits are labelled unreviewed
 
-- `reporting_map`: routing map showing which companion summaries and
-  tables should be used for the four manuscript-oriented reporting
-  sections (data description, diagnostics, category checks, draft
-  reporting)
+- `point_targets`, `step_targets`, `point_limit`, and optional
+  `category_map`: target status, refit counts and original score labels
+  for supported GPCM limiting-likelihood estimates; see
+  [mfrmr_gpcm_scope](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_gpcm_scope.md)
+  for the distinction between deliberately skipped optimization,
+  numerical failure and available limiting estimates
 
-- `person_high` / `person_low`: highest and lowest person measures
+- `rating_support`, `rating_crossings`, `rating_categories`,
+  `rating_support_notes`: two-family per-level persons, rating rows,
+  per-person exposure, marginal crossings and category counts.
+  `DataBasis` separates full-model and limiting-fit data. Counts do not
+  qualify precision
 
-- `facet_extremes`: extreme facet-level estimates
+**Preparation and reporting**
 
-- `facet_support_boundaries`: observed boundary-constant non-person
-  facet levels, kept distinct from parameter-level recession conclusions
+- `row_retention`, `preparation_notes`: retained rows and preparation
+  records.
 
-- `facet_recession_review`: certified JML additive facet recession
-  directions, including review scope and completeness
+- `attached_diagnostics`, `attached_diagnostics_cols`: whether
+  diagnostics were attached to the fit, and which columns were attached
+  to Person rows.
 
-- `caveats`: structured warning/review rows for score-support and
-  latent-regression population-model issues
+- `reporting_map`, `required_visual`: companion tables and ordered
+  Wright-map/ fit-pathway routes for reporting. Figure availability does
+  not qualify intervals.
 
-- `notes`: short interpretation notes
+- `provenance`, `analysis`: profile, diagnostic source, computation
+  policy and compact fit/results indexes. `results` is the reused
+  [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+  object for expanded profiles, or `NULL` for the default fit-only
+  profile.
 
-- `digits`: numeric-print precision threaded through to
-  `print.summary.mfrm_fit()`
-
-- `section_status`: availability and explicit non-computation boundaries
-
-- `required_visual`: ordered Wright-map and Infit-pathway routes
-
-- `provenance`: profile, diagnostic source, computation policy, and the
-  FACETS-organization interpretation boundary
-
-- `analysis`: compact fit/results indexes used for first-screen review
-
-- `results`: the reused `mfrm_results` backend for expanded profiles, or
-  `NULL` for the lightweight `"fit"` profile
+- `digits`: numeric print precision. Printing does not refit or change
+  the stored tables.
 
 ## Details
 
-Start with `results <- summary(fit)`. Use `results$person_overview` for
-the distribution of person ability estimates and
-`results$facet_overview` for the distribution of estimates within each
-non-person facet. These are aggregate summaries; use
-`as.data.frame(fit)` for individual person and facet-level estimates.
-Read `results$decision` before interpreting results. Assignment with
-`<-` saves the summary without printing it; enter `results` to print the
-full summary or use `$` to display a selected table. In the example,
-`person_overview` has one row for all persons and `facet_overview` has
-one row for raters and one for criteria. Each non-person facet's mean is
-constrained to zero in this fit; use its SD and range or individual
-estimates to inspect differences among its levels.
+Keep the fitted object for further analysis. `s <- summary(fit)` saves
+tables; print `s` or select a component with `$`. Start with
+`s$decision`, then `s$person_overview` and `s$facet_overview`. These
+describe distributions of estimates; use `as.data.frame(fit)` for
+individual Person and facet-level rows. Centered facet means can be zero
+by constraint, so compare levels or their spread rather than
+interpreting the mean as an empirical finding.
 
-This method provides a compact, human-readable summary oriented to
-reporting. The expanded profiles use FACETS-style organization for
-navigation, but do not claim that FACETS was executed or that estimates
-are numerically equivalent to FACETS output. It returns a structured
-object and prints:
+The default `profile = "fit"` does not compute diagnostics. For an
+ordinary RSM/PCM precision review, pass matching
+`diagnostics = diagnose_mfrm(fit)`; reuse existing diagnostics when
+available. Read `decision$Why` together with the parameter-specific
+status; the Value section explains the decision fields.
 
-- model fit overview (N, LogLik, the canonical/legacy IC status,
-  convergence)
+Expanded profiles use FACETS-style organization without running FACETS
+or claiming numerical equivalence. Reuse their `$results` and
+`$results$diagnostics` for further reporting.
 
-- estimation settings that affect identification/scoring interpretation
+## Corrected JML
 
-- facet-level estimate distribution (mean/SD/range)
-
-- person measure distribution
-
-- step/threshold checks
-
-- a reporting map showing which companion summaries/tables should be
-  used for manuscript-oriented data description, diagnostics, category
-  checks, and draft reporting
-
-- extreme facet levels and, when explicitly requested, high/low person
-  measures
-
-## Interpreting output
-
-Corrected JML has a separate summary of saved `tables` and numerical
-`attempts`, with the correction order and the meaning of RootSE. All
-profiles show the same saved summary and never compute ordinary
-diagnostics. Use `include_person = TRUE` for conditional Person profiles
-without Person SEs. See the **Corrected JML** section of
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
-The entries below describe the ordinary, uncorrected fitting routes.
-
-- `overview`: convergence plus the versioned information-criterion
-  contract. For eligible fixed-facet MML fits, BIC/SABIC use unique
-  Persons, not response rows; JML, non-unit observation weights, and
-  legacy objects do not enter the common MML ranking panel.
-  `ICSelectable` additionally distinguishes raw screening/review
-  criteria at q\<31 from criteria that may enter automatic same-grid
-  comparison at q\>=31; close decisions still require a denser
-  common-grid sensitivity check.
-
-- `readiness`: the stored fit-readiness result followed by Numerical,
-  Data, Design, Stability, Diagnostics, and Reporting workflow states.
-  `InferenceReady` is a conservative compatibility scalar and is `TRUE`
-  only when the stored `FitReadiness` is `ready`; numerical convergence
-  cannot override input, estimability, category, or boundary review.
-
-- `decision`: separates fit readiness from formal precision support. A
-  fit-only summary returns `FormalInference = "No"` until a matching
-  `mfrm_diagnostics` object is supplied through `diagnostics =`; use
-  `summary(diagnostics)$decision` for the equivalent precision-aware
-  view. The console uses this single decision throughout; a converged
-  optimizer or a passed fit check does not independently authorize
-  formal inference. Printed workflow, population and GPCM descriptions
-  use readable labels. The returned tables retain their numerical values
-  and structured status fields for programmatic use. Reprinting an
-  existing summary updates its display without refitting or changing its
-  stored results.
-
-- `data_review`: overall multi-facet connectivity, facet-level score
-  support, boundary-constant levels, single-level facets, and retained
-  preparation notes behind the readiness rows.
-
-- `facet_overview`: per-facet spread and range of estimates.
-
-- `person_overview`: distribution of person measures. For a blocked
-  source fit, a prior-regularized extreme MML EAP is retained in
-  `person_high` / `person_low` but excluded from this aggregate and
-  `targeting`; the table records its distribution denominator, exclusion
-  count, and estimate use.
-
-- `step_overview`: threshold spread and monotonicity checks, reported by
-  `StepFacet` ladder for PCM/GPCM fits and as one common ladder for RSM
-  fits.
-
-- `settings_overview`: estimation settings that affect interpretation.
-  `CategoryPolicy` records `"preserve"` or `"collapse"`; `ScoreRecoded`
-  states whether the stored original-to-internal score map changes
-  values. A collapse policy need not recode a complete contiguous scale.
-  For older saved fits, absent policy or mapping records give
-  `"not_recorded"` or `NA`, respectively; an unchanged score map does
-  not identify the chosen policy. For MML fits, the printed fit and
-  summary also state the engine, fixed or adaptive Gauss–Hermite rule
-  and order, one-dimensional latent structure, population
-  identification, and discrimination constraint.
-
-- `population_coding`: fitted categorical levels and contrasts that must
-  be reused when scoring new persons under the population-model
-  posterior.
-
-- `key_warnings` / `notes`: short triage subset of retained zero-count
-  score categories and latent-regression population-model caveats such
-  as complete-case omissions, zero-variance design columns, missing
-  coefficients, or unstable residual variance when present. Incomplete
-  or non-finite covariates are normally handled before fitting as input
-  errors or complete-case omissions; they appear here only if retained
-  in a population-design check row.
-
-- `caveats`: structured rows behind those warnings for appendix/export
-  use; `print(summary(fit))` shows a compact `Caveats` block when rows
-  are present.
-
-- `reporting_map`: where to get companion outputs for manuscript
-  reporting.
-
-- `person_high` / `person_low` (opt-in for printing) and
-  `facet_extremes`: extreme estimates for focused review.
-
-- `facet_support_boundaries`: observed non-person facet levels whose
-  retained responses are constant at the minimum or maximum score. This
-  is a data- support warning, not by itself a proof that a parameter MLE
-  is infinite.
-
-- `facet_recession_review`: non-person facet directions certified as
-  unbounded in an evaluated JML additive recession subspace. Joint rows
-  are relative directions under the fitted identification constraints.
-
-## Typical workflow
-
-1.  Review data and score support with
-    [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
-
-2.  Fit with
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-    and read `summary(fit, profile = "fit")`.
-
-3.  Request `summary(fit, profile = "facets")` for the comprehensive
-    measurement review. The historical profile name does not mean that
-    FACETS is run.
-
-4.  Draw the required native Wright map with
-    `plot(fit, type = "wright", show_ci = TRUE)`; add the FACETS
-    renderer or Infit pathway only when they answer a specific follow-up
-    question.
-
-5.  For `RSM` / `PCM`, continue with
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-    for element-level fit checks. For `GPCM`, continue with
-    [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
-    /
-    [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_information.md)
-    or the fitted-object posterior scoring helpers.
+Corrected JML returns a separate summary of saved `tables`, numerical
+`attempts`, correction order and RootSE interpretation. All profiles use
+that same saved summary without ordinary diagnostics.
+`include_person = TRUE` adds conditional Person profiles without Person
+SEs. See
+[fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md);
+the Value section describes uncorrected fits.
 
 ## See also
 
@@ -418,8 +293,10 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 results$decision
 #>                                                           Interpretation
 #> 1 Fit-readiness requirements satisfied; formal precision review required
-#>   FormalInference FitReadiness                                              Why
-#> 1              No        ready Formal precision support has not been evaluated.
+#>   FormalInference FitReadiness
+#> 1              No        ready
+#>                                                                                                                                                                                                                                      Why
+#> 1 Formal precision support has not been evaluated. These checks assess numerical readiness and the requested precision method under the specified model; they do not establish model adequacy or finite-sample coverage for this design.
 #>                                                                                                                                                   NextAction
 #> 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.
 

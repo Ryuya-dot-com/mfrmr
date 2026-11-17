@@ -11,6 +11,9 @@ build_linking_review(
   chain = NULL,
   top_n = 10
 )
+
+# S3 method for class 'mfrm_linking_review'
+summary(object, digits = 3, top_n = 10, ...)
 ```
 
 ## Arguments
@@ -32,79 +35,104 @@ build_linking_review(
 
 - top_n:
 
-  Maximum number of linking-risk rows to highlight in summary outputs.
-  The full object keeps the full risk tables.
+  For `build_linking_review()`: Maximum number of linking-risk rows to
+  highlight in summary outputs. The full object keeps the full risk
+  tables.
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): Number of top
+  linking-risk rows to keep in the compact summary.
+
+- object:
+
+  Output from `build_linking_review()`.
+
+- digits:
+
+  Number of digits for printed numeric values.
+
+- ...:
+
+  Reserved for generic compatibility.
 
 ## Value
 
 An object of class `mfrm_linking_review`.
 
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_linking_review`.
+
 ## Details
 
-`build_linking_review()` does not recompute anchor, drift, or chain
-statistics. It is a synthesis layer that organizes package-native
-evidence into one operational review surface with:
+Combine saved anchor, drift and chain results without recalculation.
+Choose the inputs for the question:
+[`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
+checks receiving-data constraints,
+[`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md)
+compares waves with a reference, and
+[`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md)
+follows adjacent links. These are complementary sources, not a required
+sequence.
 
-- a front-door status block,
+The combined review does not verify source-fit readiness, cross-wave
+identity, invariance or group-anchor assumptions, and cannot establish
+scale equivalence or score comparability. Its documented scope is
+RSM/PCM; GPCM drift/chain inputs remain exploratory with scope
+`supported_with_caveat`.
 
-- ranked linking risks,
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize a
+linking-review object
 
-- explicit next actions,
+## Using the review
 
-- plot routing metadata,
+Read `overview` for supplied sources and status, then
+`top_linking_risks` for ranked follow-up. `group_view_index` groups by
+wave, link, facet or source family. `plot_map` routes to the source
+plots; `reporting_map` identifies coverage and separate
+manuscript-reporting helpers. Retain the original results when
+inspecting risks or deciding next actions.
 
-- a reporting/export handoff map.
+## Linking and DFF route map
 
-The helper keeps the current conservative interpretation policy: anchor
-drift and screened links are operational review tools, not automatic
-proofs of scale equivalence or score comparability. It also does not
-verify source-fit readiness, cross-wave element identity, invariance, or
-the external assumptions behind group anchors; these must be established
-before promoting the synthesized review.
+|  |  |
+|----|----|
+| Question | Route |
+| Do planned/observed assignments connect ratings? | [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md) (`design_connectivity`), [`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md) |
+| Which baseline locations can serve as anchors? | [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md), [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md) |
+| How do I fit new data with baseline locations fixed? | [`anchor_to_baseline()`](https://ryuya-dot-com.github.io/mfrmr/reference/anchor_to_baseline.md) |
+| Have common elements shifted across waves? | [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md), [`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md), `build_linking_review()` |
+| Do facet levels differ between groups? | [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md) (`mfrm_report(x, type = "dff")`); see [`mantel_haenszel_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/mantel_haenszel_table.md) and [`ordinal_logistic_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/ordinal_logistic_table.md) |
 
-## Recommended input route
+Keep four concepts distinct: **common ratings** (observed overlap),
+**scale identification** (e.g., sum-to-zero centering), **direct
+anchors** (`Facet`, `Level`, `Anchor` fixing internal logit
+coordinates), and **group anchors** (`Facet`, `Level`, `Group`,
+`GroupValue` fixing an unweighted arithmetic group mean). With
+`centering_scope = "facet"` (default), centered facets sum to zero
+across all levels including anchors/groups; `"remainder"` centers
+unconstrained levels only; `"anchor_origin"` (additive RSM/PCM JML) lets
+anchors replace centering on their facet when an active unanchored
+`noncenter_facet` is selected.
 
-Use existing package-native outputs in this order:
-
-1.  [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
-    for pre-fit anchor adequacy.
-
-2.  [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md)
-    for direct wave-to-reference drift screening.
-
-3.  [`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md)
-    for adjacent screened-link review across waves.
-
-## Interpreting output
-
-- `overview`: which evidence sources were supplied and the current
-  review status.
-
-- `top_linking_risks`: primary operational triage table.
-
-- `group_view_index`: stable wave/link/facet/source-family grouping
-  routes.
-
-- `plot_map`: which plotting function to use for each result.
-
-- `reporting_map`: what is covered here versus which manuscript-oriented
-  helper should be used separately.
-
-## GPCM boundary
-
-This helper summarizes the documented `RSM` / `PCM` linking workflow.
-When supplied drift/chain sources resolve to `GPCM`, it retains an
-explicitly exploratory review and marks that scope as
-`supported_with_caveat`. This does not establish score
-interchangeability, invariance or a common scale across administrations.
+[`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md)
+and
+[`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md)
+estimate one pooled offset per link (`Offset_SD` is residual spread
+across retained elements, not an offset SE; `LinkSupportAdequate` is a
+local 5-element count screen, not proof of invariance). Source-anchor
+covariance is excluded unless explicitly requested via
+`anchor_covariance` and `independent_anchors = TRUE` in
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+(intercept-only RSM/PCM anchor-origin MML).
 
 ## See also
 
 [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md),
 [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md),
 [`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md),
-[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_anchor_drift.md),
-[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
+[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md),
+mfrmr_linking_and_dff
+
+`build_linking_review()`
 
 ## Examples
 

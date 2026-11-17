@@ -6,19 +6,13 @@ reused at its own quadrature count; all other fits reuse its stored
 model, identification, anchor, interaction, optimizer, and population
 settings.
 
+Use `mml_quadrature_sensitivity()` for all supported model families. The
+former GPCM-only name is no longer exported.
+
 ## Usage
 
 ``` r
 mml_quadrature_sensitivity(
-  fit,
-  data,
-  quad_points = c(31L, 41L),
-  theta_range = c(-4, 4),
-  theta_points = 161L,
-  adaptive_quad_points = NULL
-)
-
-gpcm_mml_quadrature_sensitivity(
   fit,
   data,
   quad_points = c(31L, 41L),
@@ -34,7 +28,6 @@ gpcm_mml_quadrature_sensitivity(
 
   An RSM, PCM, or GPCM MML `mfrm_fit` returned by
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
-  `gpcm_mml_quadrature_sensitivity()` accepts only GPCM fits.
 
 - data:
 
@@ -173,13 +166,14 @@ facet slopes; moving the integration grid retains the original N(0,1)
 density and its Jacobian. This does not provide adaptive EM, update
 estimates or repair their intervals.
 
-More quadrature points improve the numerical approximation, not the
-amount of observed information. In a sparse design, a small group of
-candidates rated many times may need a finer grid than candidates with
-few ratings. Inspect interval availability and measured changes; no
-fixed point count is guaranteed to be adequate for every design. See the
-GPCM scope vignette for a same-data example and its sampling
-limitations.
+More quadrature points refine the integration rule, not the amount of
+observed information. Accuracy need not improve monotonically; compare
+the resulting estimates and numerical diagnostics. In a sparse design, a
+small group of candidates rated many times may need a finer grid than
+candidates with few ratings. Inspect interval availability and measured
+changes; no fixed point count is guaranteed to be adequate for every
+design. See the GPCM scope vignette for a same-data example and its
+sampling limitations.
 
 ## See also
 

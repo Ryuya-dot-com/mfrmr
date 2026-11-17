@@ -20,30 +20,65 @@ you:
 - **Explain results:** examine agreement and prepare tables, figures and
   reports for researchers or raters.
 
+[`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md)
+lists the five central workflows. Use
+[`summary()`](https://rdrr.io/r/base/summary.html) and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) on the
+resulting objects; interval methods are documented with each result
+class. `mfrmr_output_guide("all")` lists specialist tools.
+
 [![Three ggplot examples: rater severity with intervals, task/rater
 planning curves, and score-category probabilities. All use synthetic
 data.](reference/figures/visual-gallery.png)](https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html)
 
-**[Explore the interactive
+**[Explore the interactive visual
 gallery](https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html)**:
 inspect values, compare rating plans, and reuse the ggplot2 code in your
 report.
 
-## Install the version used here
+## Install and open tutorials
 
-**This website documents mfrmr 0.2.4, available from CRAN.** Install it
-in R:
+Install `mfrmr` from CRAN and open its five core offline tutorials
+(workflow, model choice, G-theory planning, visual diagnostics and
+reporting):
 
 ``` r
+
 install.packages("mfrmr")
 browseVignettes("mfrmr")
 ```
 
-Check `packageVersion("mfrmr")` before following the examples. For the
-upcoming 0.3.0 interface, use the separate [development
-documentation](https://ryuya-dot-com.github.io/mfrmr/dev/) and
-[interactive
-tour](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html).
+When updating scripts written for `0.2.x`, open
+[`help("mfrmr_api_migration_030")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
+for replacement calls and argument mappings. Extended articles and
+worked examples are available on the [documentation
+website](https://ryuya-dot-com.github.io/mfrmr/).
+
+To build from a repository checkout that retains local research
+directories, follow the [source-build
+steps](https://github.com/Ryuya-dot-com/mfrmr/blob/main/CONTRIBUTING.md#building-from-a-checkout-with-retained-research-results)
+to stage and build `mfrmr_0.3.0.tar.gz` (requires R build tools, R
+Markdown and Pandoc), then install the archive in a fresh R session:
+
+``` r
+
+install.packages("mfrmr_0.3.0.tar.gz", repos = NULL, type = "source")
+```
+
+**[Start the interactive
+tour](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html)**
+to follow one assessment from rating data to diagnostics, rater
+feedback, assessment planning and a saved report. You can explore the
+figures before running R. To start with your own data, follow the [data
+and design
+section](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html#look-at-data).
+
+For an external-data example, the ICNALE essay-rating workflow
+(`vignettes/articles/mfrmr-icnale-caf.Rmd` in the [source
+repository](https://github.com/Ryuya-dot-com/mfrmr)) starts with a
+workbook you obtain yourself and connects cleaning, calibration, local
+rater feedback and assessment planning. Corpus data and individual
+results are not included; the website displays code for local execution.
 
 ## Try one assessment
 
@@ -53,6 +88,7 @@ ratings are observed. Here, interpret 1 as lower performance and 4 as
 higher performance.
 
 ``` r
+
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
 head(ratings[c("Person", "Rater", "Criterion", "Score")], 3)
@@ -70,14 +106,16 @@ assessment criterion.
 
 Fit a rating-scale model (RSM), which uses shared category steps across
 criteria, by marginal maximum likelihood (MML). For your assessment, see
-the [model-choice
-guide](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.html).
+the
+[`vignette("mfrmr-model-choice", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.md).
 
 ``` r
+
 fit <- fit_mfrm(
   ratings, person = "Person", facets = c("Rater", "Criterion"), score = "Score",
   rating_min = 1, rating_max = 4, category_policy = "preserve",
-  method = "MML", model = "RSM"
+  method = "MML", model = "RSM",
+  population_formula = ~ 1, person_data = unique(ratings["Person"])
 )
 
 analysis <- mfrm_results(fit, include = "publication")  # Gather diagnostics and tables
@@ -85,14 +123,30 @@ check <- summary(analysis)
 check$decision[, c("FormalInference", "NextAction")]
 ```
 
-Here, `FormalInference` is `Yes`: the implemented inference checks pass.
-If it is `No` for your data, follow `NextAction` before making
-inferential claims. Passing these checks does not establish construct
-validity.
+This example estimates the ability population’s mean and SD while
+centering rater, criterion and step parameters. The legacy RSM/PCM
+defaults instead fix the population to N(0,1) **and** center all these
+locations. That combination constrains the overall score level as well
+as the population spread; it is appropriate only when those assumptions
+are intended. See
+[`?fit_mfrm`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+for mean-only estimation and alternative location constraints.
+
+Here, `FormalInference` is `No`: estimation completes, but the current
+estimated-population route does not complete the fit-readiness
+identification review. Treat the estimates and figure below as
+descriptive, and inspect `check$decision` before using an interval or
+making an inferential claim. Even `Yes` means only that the implemented
+numerical and precision-method checks pass under the chosen model; it
+does not establish model adequacy, finite-sample coverage for your
+design, or construct validity. Ordinary RSM/PCM Stan export currently
+requires a fixed N(0,1) population; it rejects this estimated-population
+fit rather than silently changing its model.
 
 ## Read the first figure
 
 ``` r
+
 plot(fit, show_ci = FALSE)
 ```
 
@@ -105,22 +159,23 @@ Wright map from the synthetic example: person estimates on the left,
 rater and criterion locations in the middle, and shared category steps
 on the right; confidence intervals are not shown.
 
-Start with **Rater**: R01 is about −0.61 and R06 about +0.41 logits.
+Start with **Rater**: R01 is about −0.59 and R06 about +0.43 logits.
 Higher rater locations mean lower expected scores for the same person
-and criterion, so R06 is estimated to score more strictly. Zero is a
+and criterion, so R06 is estimated to score more severely. Zero is a
 centered reference, not a quality standard; point estimates alone do not
 establish a statistically significant difference. The IQR bars describe
 spread, not uncertainty.
 
 The left panel shows person estimates; other columns show criteria and
-category steps. See the [visual
-guide](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.html).
-State what high scores mean: *difficulty in understanding* and *ease of
-understanding* run in opposite directions.
+category steps. Open
+[`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md)
+for interpretation. State what high scores mean: *difficulty in
+understanding* and *ease of understanding* run in opposite directions.
 
 ## Make a report and keep the analysis
 
 ``` r
+
 report <- mfrm_report(analysis, style = "apa", output = "html")
 browseURL(report$path)  # Open the draft report in your browser
 export_mfrm_results(analysis, output_dir = "assessment-export", preset = "starter")
@@ -132,8 +187,7 @@ tables, available figures and a reloadable analysis. Open
 study question, sampling, rubric and interpretation. Review person-level
 information before sharing.
 
-The [reporting
-guide](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-reporting-and-apa.html)
+[`vignette("mfrmr-reporting-and-apa", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-reporting-and-apa.md)
 introduces three editable manuscript templates:
 
 | Your question | Template |
@@ -148,29 +202,36 @@ agreement (Krippendorff’s alpha and pairwise Cohen’s kappa).
 
 ## Choose your next task
 
-| Task | Guide |
-|----|----|
-| Use your own CSV | [Data-to-report workflow](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.html) |
-| Plan the number of raters or tasks | [G-theory and assessment design](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gtheory.html) |
-| Review agreement and rater differences | [Agreement](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-rating-agreement.html); [rater intervals](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facet-intervals.html) |
-| Check rating links; explore residual patterns | [Networks and reporting](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html) |
-| Choose a model | [Model choice](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.html); [GPCM scope](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html) |
-| Reuse a calibration or move from other software | [Portable calibration](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-portable-calibration.html); [FACETS migration](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facets-migration.html); [`?build_conquest_overlap_bundle`](https://ryuya-dot-com.github.io/mfrmr/reference/build_conquest_overlap_bundle.md) |
-| Continue in Stan/brms and report saved estimates | [Model export](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.html); [return to figures and reports](https://ryuya-dot-com.github.io/mfrmr/reference/read_mfrm_posterior.html) |
+Run these commands in the R session using the version installed above.
+For the [visual
+tour](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html),
+use the development website’s **Get started** entry or
+`vignettes/articles/mfrmr.Rmd` in the matching source checkout.
 
-In R, use `mfrmr_output_guide("beginner")` to choose an entry point. The
-public website may be older; `browseVignettes("mfrmr")` matches your
-installation.
+| Task | Documentation for your installed version |
+|----|----|
+| Understand which functions connect | [Input → fit → diagnostics → results → report](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html#how-functions-connect), with a separate G/D-study route |
+| Use your own CSV | [`vignette("mfrmr-workflow", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md) |
+| Plan the number of raters or tasks | [`vignette("mfrmr-gtheory", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gtheory.md) |
+| Interpret facet intervals | [`help("mfrm_facet_intervals")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md) |
+| Review rating networks and residual patterns | [`help("mfrm_network_analysis")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md); [`help("mfrm_residual_network")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_residual_network.md) |
+| Choose a model | [`vignette("mfrmr-model-choice", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.md); [`help("mfrmr_gpcm_scope")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_gpcm_scope.md) |
+| Reuse a calibration or compare external software | [`help("mfrm_calibration_workflow")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md); [`help("facets_guide")`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_guide.md); [`help("build_conquest_overlap_bundle")`](https://ryuya-dot-com.github.io/mfrmr/reference/build_conquest_overlap_bundle.md) |
+| Continue in Stan/brms and report saved estimates | [`help("export_mfrm_model")`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.md); [`help("read_mfrm_posterior")`](https://ryuya-dot-com.github.io/mfrmr/reference/read_mfrm_posterior.md) |
+
+In R, use `mfrmr_output_guide("beginner")` to choose an entry point.
 
 ## Updating, scope and citation
 
 Installing a new version does not update saved calculations. Keep
 originals and follow
-[NEWS](https://ryuya-dot-com.github.io/mfrmr/NEWS.md) and **Updating
-saved analyses for 0.2.4** in
-[`help("mfrmr_workflow_methods")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md).
+[NEWS](https://ryuya-dot-com.github.io/mfrmr/NEWS.md) and
+[`help("mfrmr_api_migration_030")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
+for the 0.2.4-to-0.3.0 transition. Earlier saved-object guidance remains
+in
+[`help("mfrmr_workflow_methods")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr-package.md).
 For retired drawing helpers, see
-[`help("mfrmr_plot_migration")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md);
+[`help("mfrmr_plot_migration")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md);
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) is the main
 entry point.
 
@@ -182,9 +243,12 @@ defined observed scores. The
 separates current capabilities from future work.
 
 Use `citation("mfrmr")` and the methodological references in the
-relevant help. Licensed under the [MIT
+relevant help. For reproducible numerical checks, historical results and
+their limits, see the [validation evidence
+guide](https://github.com/Ryuya-dot-com/mfrmr/blob/main/inst/validation/README.md).
+A passing software test is distinct from a repeated-sampling coverage
+study. Licensed under the [MIT
 License](https://opensource.org/licenses/MIT).
 
 `mfrmr` has benefited from discussion and methodological input from
-[Dr. Atsushi Mizumoto](https://mizumot.com/) and [Dr. Taichi
-Yamashita](https://kugakujo.kansai-u.ac.jp/html/100000882_en.html).
+Dr. Atsushi Mizumoto and Dr. Taichi Yamashita.

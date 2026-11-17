@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,32 +33,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Choose a model and estimator for your assessment</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-model-choice.Rmd" class="external-link"><code>vignettes/mfrmr-model-choice.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/vignettes/mfrmr-model-choice.Rmd" class="external-link"><code>vignettes/mfrmr-model-choice.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-model-choice.Rmd</code></div>
     </div>
 
@@ -122,7 +116,7 @@ identical.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>How much stricter are these particular judges, after allowing for
+<td>How much more severe are these particular judges, after allowing for
 the tasks?</td>
 <td>Fixed-facet RSM or PCM; consider CML if structural comparisons are
 the main target.</td>
@@ -181,32 +175,46 @@ MFRM fit is required.</td>
 <td>Did judges actually assign the same scores to the same
 performances?</td>
 <td>
-<a href="mfrmr-rating-agreement.html">Rating agreement and score
-comparisons</a>.</td>
+<a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html">Rating
+agreement and score comparisons</a>.</td>
 <td>Agreement concerns observed scores. Small estimated severity
 differences do not establish agreement.</td>
 </tr>
 </tbody>
 </table>
+</div>
+<div class="section level2">
+<h2 id="check-sample-size-and-rating-assignments">Check sample size and rating assignments<a class="anchor" aria-label="anchor" href="#check-sample-size-and-rating-assignments"></a>
+</h2>
 <p>These are starting choices, not automatic rules based on the number
-of rows. Use <code><a href="../reference/describe_mfrm_data.html">describe_mfrm_data()</a></code> to inspect score
-categories and rating assignments. For example, if each judge works on a
-different task and no observations separate the two effects, a richer
-model cannot invent the missing comparison. More Persons can improve
-precision in supported directions while leaving that confounding intact.
-Missing or unassigned ratings are not zero scores.</p>
-<p>The package does not impose one minimum Person count for every task.
-Full RSM/PCM JML, CML and fixed-population MML can accept a single
-Person if their checks pass; other calibration routes retain an
-at-least-two-Person support limit. One-Person JML/MML requires
-<code>lpSolve</code> for a pre-fit recession check. Independent repeated
-ratings can sometimes identify a comparison within that Person, but
-copying the same rating does not create information. The results retain
-a single-Person caution: a finite point or model-information interval
-does not establish coverage or empirical between-Person variation.
-Person- cluster sandwich uncertainty is unavailable. Scoring a new
-Person against an existing calibration is a different task; see the <a href="mfrmr-portable-calibration.html">portable calibration
-tutorial</a>.</p>
+of rows. Distinguish the number of <strong>independent Persons</strong>,
+the number of <strong>raters and tasks</strong>, the <strong>ratings per
+Person and per facet level</strong>, and the <strong>overlap in
+assignments</strong>. More ratings of the same Person do not create more
+independent Persons. More raters or tasks also introduce effects to
+estimate; their counts are not interchangeable with the number of
+Persons.</p>
+<p>Use <code><a href="../reference/describe_mfrm_data.html">describe_mfrm_data()</a></code> to inspect score categories and
+rating assignments. For example, if each judge works on a different task
+and no observations separate the two effects, a richer model cannot
+invent the missing comparison. More Persons can improve precision in
+supported directions while leaving that confounding intact. Missing or
+unassigned ratings are not zero scores.</p>
+<p>There is no universal minimum Person count or automatic small-sample
+correction in this package. The same counts can yield different
+precision when ability, severity or difficulty variation changes which
+categories are used. A sample’s observed rating SD also reflects the
+rubric and assignments; it is not the latent ability SD. Choose the
+comparison and required precision before using counts to plan a
+study.</p>
+<p>Full RSM/PCM JML, CML and fixed-population MML can accept a single
+Person after their checks, but acceptance does not establish interval
+coverage or between-Person variation. Person-cluster sandwich
+uncertainty is unavailable with one Person. The installed help for
+<code><a href="../reference/mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code>, under “Small samples and singleton
+categories”, gives the exact scope and cautions. Scoring a new Person
+against an existing calibration is a different task; see the <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-portable-calibration.html">portable
+calibration tutorial</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="choose-what-the-response-model-needs-to-explain">Choose what the response model needs to explain<a class="anchor" aria-label="anchor" href="#choose-what-the-response-model-needs-to-explain"></a>
@@ -218,8 +226,8 @@ whose levels receive separate transitions between adjacent categories.
 The <strong>slope owner</strong> supplies separate discriminations: how
 strongly the rating probabilities change with ability. Several facets
 still describe one latent ability dimension in these models.</p>
-<p>Severity and category use are different effects. A judge can be
-stricter overall while using the same relative step pattern as other
+<p>Severity and category use are different effects. A judge can be more
+severe overall while using the same relative step pattern as other
 judges; RSM already allows that severity difference. PCM is relevant
 when the step pattern itself differs after allowing for the modeled
 locations.</p>
@@ -262,8 +270,8 @@ the same owner.</td>
 </tr>
 <tr class="even">
 <td>Two-family GPCM</td>
-<td>Two ordered slope families for exactly two non-Person facets, under
-the documented constraints.</td>
+<td>Two slope families among declared fixed additive facets, with
+explicit step/location roles and a named GM1 slope reference.</td>
 <td>A provisional MML route for questions requiring both families. It
 needs a design that separates them and has a narrower set of supported
 outputs; it is still unidimensional.</td>
@@ -286,12 +294,22 @@ effects.</td>
 </tr>
 </tbody>
 </table>
+<p>Native <code><a href="../reference/fit_mfrm.html">fit_mfrm()</a></code> currently uses one declared
+<code>rating_min</code>/<code>rating_max</code> for the entire fit. PCM
+varies step parameters within that common range; it does not declare a
+different category set for each criterion or rubric. Mixing a binary
+criterion with a 0–4 criterion therefore requires support for distinct
+response ranges, which this interface does not yet provide. A category
+impossible under a rubric must not be treated as merely unobserved in
+the sample.</p>
 <p>The extensions are not interchangeable. PCM step variation, GPCM
 discrimination variation, testlet dependence and random-rater variation
 answer different questions. The current testlet and random-rater
 functions fit their specified RSM extensions; they are not switches that
-can be added to every PCM or GPCM. See the <a href="mfrmr-gpcm-scope.html">GPCM scope guide</a>, <a href="mfrmr-testlets.html">testlet tutorial</a> and <a href="mfrmr-random-raters.html">random-rater tutorial</a> for the exact
-fitted models.</p>
+can be added to every PCM or GPCM. See the <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html">GPCM
+scope guide</a>, <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlets.html">testlet
+tutorial</a> and <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html">random-rater
+tutorial</a> for the exact fitted models.</p>
 </div>
 <div class="section level2">
 <h2 id="choose-how-person-ability-enters-estimation">Choose how Person ability enters estimation<a class="anchor" aria-label="anchor" href="#choose-how-person-ability-enters-estimation"></a>
@@ -381,7 +399,7 @@ then 1 both total one, but the probability of each pattern depends on
 which rating has the steeper slope. Conditioning on that total therefore
 does not remove ability. This is a limit of ordinary total-score
 conditioning, not a claim that no sufficient statistic can exist in any
-GPCM submodel; the <a href="mfrmr-gpcm-scope.html#why-total-score-conditioning-does-not-remove-ability">GPCM
+GPCM submodel; the <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html#why-total-score-conditioning-does-not-remove-ability">GPCM
 guide gives the calculation</a>.</p>
 <p>If the ability distribution may be skewed, CML is an attractive
 option for RSM/PCM structural comparisons when their conditional
@@ -464,11 +482,11 @@ failed.</p>
 native CML, keep the declared rubric with
 <code>category_policy = "preserve"</code>, use unit response weights and
 specify <code>step_facet</code> explicitly for PCM. Use
-<code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> and
-<code><a href="../reference/mfrmr_interval_guide.html">mfrmr_interval_guide()</a></code> to check the required output before
-committing to a workflow. Corrected JML is requested explicitly with
-<code>jml_correction_order</code>; it is not selected automatically by
-increasing iterations. Its adjustment is related to <a href="https://doi.org/10.1007/s13209-023-00283-1" class="external-link">Dhaene and Weidner
+<code>mfrmr_output_guide("gpcm_capabilities")</code> and
+<code>mfrmr_output_guide("intervals")</code> to check the required
+output before committing to a workflow. Corrected JML is requested
+explicitly with <code>jml_correction_order</code>; it is not selected
+automatically by increasing iterations. Its adjustment is related to <a href="https://doi.org/10.1007/s13209-023-00283-1" class="external-link">Dhaene and Weidner
 (2023)</a>; the package’s plug-in implementation and limits are
 explained in the GPCM guide.</p>
 </div>
@@ -527,7 +545,7 @@ Conversely, pooling genuinely different effects can introduce bias;
 fewer parameters are not always better. For example, with the same two
 binary items answered once by each Person, the default GPCM has more
 free parameters than the response distribution can identify. Increasing
-the number of Persons alone cannot resolve this problem; see the <a href="mfrmr-gpcm-scope.html#how-uncertain-is-a-relative-slope">GPCM
+the number of Persons alone cannot resolve this problem; see the <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html#how-uncertain-is-a-relative-slope">GPCM
 inference explanation</a>.</li>
 <li>
 <strong>Flexibility in one respect leaves other assumptions
@@ -605,12 +623,16 @@ to force a successful fit changes the question.</p>
 <h2 id="continue-to-the-analysis-and-reporting">Continue to the analysis and reporting<a class="anchor" aria-label="anchor" href="#continue-to-the-analysis-and-reporting"></a>
 </h2>
 <p>For ordinary RSM/PCM MML, start with the <a href="mfrmr-workflow.html">workflow tutorial</a>. For CML structural
-comparisons and model-specific uncertainty, use <a href="mfrmr-facet-intervals.html">facet intervals</a>. For GPCM or
-either dependence extension, follow the dedicated guides linked above.
-In an R installation without vignettes,
-<code><a href="../reference/mfrmr_workflow_methods.html">help("mfrmr_workflow_methods")</a></code> gives the workflow and
-<code><a href="../reference/mfrmr_methods_reference.html">help("mfrmr_methods_reference")</a></code> links questions to methods
-and references.</p>
+comparisons and model-specific uncertainty, use
+<code><a href="../reference/mfrm_facet_intervals.html">help("mfrm_facet_intervals")</a></code> for supported inputs, output
+states and assumptions; the <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-facet-intervals.html">online
+facet-interval guide</a> adds worked rater comparisons and simulation
+results. For GPCM or either dependence extension, follow the dedicated
+guides linked above. Core help remains available offline:
+<code><a href="../reference/fit_mfrm_technical_details.html">help("fit_mfrm_technical_details")</a></code> gives exact model and
+estimator contracts, and <code><a href="../reference/mfrmr-package.html">help("mfrmr_workflow_methods")</a></code>
+provides a workflow when vignettes were not installed. Use Web
+documentation matching your installed package version.</p>
 <p>When reporting, explain <strong>what you wanted to compare, why the
 chosen response and population model suit the design, and how the result
 answers that question</strong>. Name the estimator, scale constraints,

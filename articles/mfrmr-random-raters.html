@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,32 +33,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Shared random raters: feedback and replacement raters</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-random-raters.Rmd" class="external-link"><code>vignettes/mfrmr-random-raters.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/vignettes/articles/mfrmr-random-raters.Rmd" class="external-link"><code>vignettes/articles/mfrmr-random-raters.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-random-raters.Rmd</code></div>
     </div>
 
@@ -378,8 +372,8 @@ conditional Person intervals have the separate meanings below.</p>
 <span><span class="co">#&gt; 3   R03      48  0.1566218     0.1228254    0.1492172    NA    NA</span></span>
 <span><span class="co">#&gt; 4   R04      48  0.2730197     0.1229746    0.1514764    NA    NA</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">random_fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/severity-1.png" class="r-plt" alt="Conditional-mode severity estimates for four observed raters relative to the assumed population mean. Positive values indicate stricter ratings. The default shows points without interval bounds or quality classifications." width="672"></p>
-<p>Positive severity means stricter ratings relative to the assumed
+<p><img src="mfrmr-random-raters_files/figure-html/severity-1.svg" class="r-plt" alt="Conditional-mode severity estimates for four observed raters relative to the assumed population mean. Positive values indicate more severe ratings. The default shows points without interval bounds or quality classifications." width="672"></p>
+<p>Positive severity means more severe ratings relative to the assumed
 rater population mean. Points are conditional modes, with shrinkage
 toward that mean. <code>ConditionalSD</code> describes uncertainty
 holding calibration fixed. <code>PredictionSE</code> additionally
@@ -462,11 +456,11 @@ Four raters make a small descriptive example.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">random_fit</span>, style <span class="op">=</span> <span class="st">"precision"</span>, intervals <span class="op">=</span> <span class="st">"normal"</span>, point_size <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>     title <span class="op">=</span> <span class="st">"Rater severity and approximate interval width"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/severity-precision-1.png" class="r-plt" alt="Four observed rater estimates plotted against explicitly requested approximate interval width. Saved plot data provide the exact estimates and bounds; nominal coverage is not established." width="672"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/severity-precision-1.svg" class="r-plt" alt="Four observed rater estimates plotted against explicitly requested approximate interval width. Saved plot data provide the exact estimates and bounds; nominal coverage is not established." width="672"></p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">random_fit</span>, style <span class="op">=</span> <span class="st">"distribution"</span>, reference <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>     title <span class="op">=</span> <span class="st">"Distribution of the observed rater estimates"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/severity-distribution-1.png" class="r-plt" alt="Empirical cumulative distribution of four observed rater estimates. The shaded step curve describes point estimates, not a latent population distribution." width="672"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/severity-distribution-1.svg" class="r-plt" alt="Empirical cumulative distribution of four observed rater estimates. The shaded step curve describes point estimates, not a latent population distribution." width="672"></p>
 <p>The same views work for saved Person scores and testlet fixed-facet
 estimates. <code>sort = "estimate"</code> or
 <code>sort = "uncertainty"</code> reorders an interval plot without
@@ -485,7 +479,7 @@ text:</p>
 <code class="sourceCode R"><span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">random_fit</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, sort <span class="op">=</span> <span class="st">"estimate"</span>, palette <span class="op">=</span> <span class="st">"mono"</span>,</span>
 <span>               show_title <span class="op">=</span> <span class="cn">FALSE</span>, show_notes <span class="op">=</span> <span class="cn">FALSE</span>, text_scale <span class="op">=</span> <span class="fl">1.15</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="../reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="va">figure</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/severity-custom-1.png" class="r-plt" alt="Monochrome rater point estimates in increasing estimate order, with the title and caption hidden. Text alternatives and the full table follow the figure." width="672"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/severity-custom-1.svg" class="r-plt" alt="Monochrome rater point estimates in increasing estimate order, with the title and caption hidden. Text alternatives and the full table follow the figure." width="672"></p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Text alternatives and the full table can accompany the exported image:</span></span>
 <span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">figure</span><span class="op">)</span><span class="op">$</span><span class="va">alt_text</span></span>
@@ -584,10 +578,10 @@ ordinary RSM default instead fixes N(0,1).</p>
 <span><span class="co">#&gt; 2 MML: Person quadrature and shared-rater Laplace</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">model_comparison</span><span class="op">$</span><span class="va">effects</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Rater"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Facet Level SourceReference SourceComparison CenterReference CenterComparison</span></span>
-<span><span class="co">#&gt; 5 Rater   R01      -0.1829209       -0.1603836   -6.938894e-18     8.464462e-06</span></span>
-<span><span class="co">#&gt; 6 Rater   R02      -0.3073556       -0.2692240   -6.938894e-18     8.464462e-06</span></span>
-<span><span class="co">#&gt; 7 Rater   R03       0.1786365        0.1566218   -6.938894e-18     8.464462e-06</span></span>
-<span><span class="co">#&gt; 8 Rater   R04       0.3116400        0.2730197   -6.938894e-18     8.464462e-06</span></span>
+<span><span class="co">#&gt; 5 Rater   R01      -0.1829209       -0.1603836               0     8.464462e-06</span></span>
+<span><span class="co">#&gt; 6 Rater   R02      -0.3073556       -0.2692240               0     8.464462e-06</span></span>
+<span><span class="co">#&gt; 7 Rater   R03       0.1786365        0.1566218               0     8.464462e-06</span></span>
+<span><span class="co">#&gt; 8 Rater   R04       0.3116400        0.2730197               0     8.464462e-06</span></span>
 <span><span class="co">#&gt;    Reference Comparison       Mean  Difference        ReferenceKind</span></span>
 <span><span class="co">#&gt; 5 -0.1829209 -0.1603921 -0.1716565  0.02252884 Fixed facet estimate</span></span>
 <span><span class="co">#&gt; 6 -0.3073556 -0.2692324 -0.2882940  0.03812311 Fixed facet estimate</span></span>
@@ -599,7 +593,7 @@ ordinary RSM default instead fixes N(0,1).</p>
 <span><span class="co">#&gt; 7 Conditional rater mode available_descriptive       </span></span>
 <span><span class="co">#&gt; 8 Conditional rater mode available_descriptive</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">model_comparison</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, style <span class="op">=</span> <span class="st">"paired"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/model-comparison-1.png" class="r-plt" alt="Fixed versus shared random rater effects, centered over the same observed panel. Points show descriptive changes relative to the equality line; no difference intervals or model preference are shown." width="672"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/model-comparison-1.svg" class="r-plt" alt="Fixed versus shared random rater effects, centered over the same observed panel. Points show descriptive changes relative to the equality line; no difference intervals or model preference are shown." width="672"></p>
 <p>Each model’s rater estimates are centered at the unweighted mean over
 the same observed panel. This preserves pairwise rater contrasts while
 removing arbitrary origins. The raw values and subtracted centers remain
@@ -801,19 +795,19 @@ its intervals.</p>
 <span><span class="co">#&gt; rater_sd 0.1165953 0.6743442</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">sd_interval</span>, <span class="st">"profile"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;          SD      NLL  PersonSD EstimatedPersonVarianceBoundary OptimizerCode</span></span>
-<span><span class="co">#&gt; 2 0.0000000 914.2742 0.9273613                           FALSE             0</span></span>
-<span><span class="co">#&gt; 4 0.1001617 907.8849 0.9426478                           FALSE             0</span></span>
+<span><span class="co">#&gt; 2 0.0000000 914.2742 0.9273610                           FALSE             0</span></span>
+<span><span class="co">#&gt; 4 0.1001617 907.8849 0.9426480                           FALSE             0</span></span>
 <span><span class="co">#&gt; 7 0.1165474 907.1121 0.9468114                           FALSE             0</span></span>
-<span><span class="co">#&gt; 8 0.1165953 907.1101 0.9468232                           FALSE             0</span></span>
+<span><span class="co">#&gt; 8 0.1165953 907.1101 0.9468233                           FALSE             0</span></span>
 <span><span class="co">#&gt; 6 0.1184987 907.0329 0.9472890                           FALSE             0</span></span>
-<span><span class="co">#&gt; 5 0.1308901 906.5867 0.9502072                           FALSE             0</span></span>
+<span><span class="co">#&gt; 5 0.1308901 906.5867 0.9502075                           FALSE             0</span></span>
 <span><span class="co">#&gt;    MaxGradient LogLikDifference GradientDifference InformationPositive</span></span>
-<span><span class="co">#&gt; 2 3.959996e-05     2.736442e-09       1.008696e-07                TRUE</span></span>
-<span><span class="co">#&gt; 4 6.415218e-05     1.584453e-09       6.101197e-08                TRUE</span></span>
-<span><span class="co">#&gt; 7 1.029421e-08     1.099806e-09       4.437632e-08                TRUE</span></span>
-<span><span class="co">#&gt; 8 1.924490e-05     1.098101e-09       4.432370e-08                TRUE</span></span>
-<span><span class="co">#&gt; 6 2.896967e-05     1.034891e-09       4.215298e-08                TRUE</span></span>
-<span><span class="co">#&gt; 5 2.973017e-05     5.883294e-10       2.686202e-08                TRUE</span></span>
+<span><span class="co">#&gt; 2 2.076559e-10     2.736670e-09       1.008748e-07                TRUE</span></span>
+<span><span class="co">#&gt; 4 1.173729e-05     1.584567e-09       6.101162e-08                TRUE</span></span>
+<span><span class="co">#&gt; 7 7.438240e-11     1.099920e-09       4.437634e-08                TRUE</span></span>
+<span><span class="co">#&gt; 8 5.485608e-05     1.097646e-09       4.432108e-08                TRUE</span></span>
+<span><span class="co">#&gt; 6 3.786531e-09     1.034664e-09       4.215246e-08                TRUE</span></span>
+<span><span class="co">#&gt; 5 3.151627e-05     5.882157e-10       2.686387e-08                TRUE</span></span>
 <span><span class="co">#&gt;   NumericalReady Detail        LR</span></span>
 <span><span class="co">#&gt; 2           TRUE        18.169547</span></span>
 <span><span class="co">#&gt; 4           TRUE         5.390822</span></span>
@@ -969,7 +963,7 @@ yields unbounded limits. Inspect the numerical and variance-boundary
 records before investing in more draws.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bootstrap_intervals</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/bootstrap-plot-1.png" class="r-plt" alt="Explicit bootstrap intervals for observed rater effects. Arrowheads mark unbounded limits caused by unresolved studentized errors; all planned refits remain in the adjacent trial table." width="672"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/bootstrap-plot-1.svg" class="r-plt" alt="Explicit bootstrap intervals for observed rater effects. Arrowheads mark unbounded limits caused by unresolved studentized errors; all planned refits remain in the adjacent trial table." width="672"></p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bootstrap_intervals</span><span class="op">$</span><span class="va">trials</span><span class="op">[</span></span>
 <span>  <span class="op">!</span><span class="va">bootstrap_intervals</span><span class="op">$</span><span class="va">trials</span><span class="op">$</span><span class="va">FitReady</span> <span class="op">|</span></span>
@@ -1151,7 +1145,7 @@ Selecting output Persons keeps all of their peers’ responses in the
 calculation.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">person_scores</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/person-score-plot-1.png" class="r-plt" alt="Conditional Person EAP estimates and equal-tail intervals using all shared-rater evidence in the scoring roster. Calibration is held fixed; these are not intervals for Person differences." width="768"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/person-score-plot-1.svg" class="r-plt" alt="Conditional Person EAP estimates and equal-tail intervals using all shared-rater evidence in the scoring roster. Calibration is held fixed; these are not intervals for Person differences." width="768"></p>
 <p>Filled points are response-based scores; open points, when present,
 indicate prior-only results. An unavailable row remains labeled without
 a point or interval. Use
@@ -1339,7 +1333,7 @@ assigned ratings.</p>
 <span><span class="co">#&gt; 3 descriptive_only       </span></span>
 <span><span class="co">#&gt; 4 descriptive_only</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">response_review</span>, style <span class="op">=</span> <span class="st">"paired"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/response-diagnostics-1.png" class="r-plt" alt="Paired descriptive Infit and Outfit by rater for the selected Person's ratings, conditioned on the full roster. No fit thresholds or rater-quality flags are shown." width="768"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/response-diagnostics-1.svg" class="r-plt" alt="Paired descriptive Infit and Outfit by rater for the selected Person's ratings, conditioned on the full roster. No fit thresholds or rater-quality flags are shown." width="768"></p>
 <p>The category-specific Laplace numerator integrals are normalized to
 obtain a probability distribution.
 <code>response_review$rows$NormalizationError</code> retains the
@@ -1393,7 +1387,7 @@ have a different definition and cannot replace this step.</p>
 <span><span class="co">#&gt; 3        1.006529        0.9785775      -0.02795123</span></span>
 <span><span class="co">#&gt; 4        1.017346        1.0456353       0.02828969</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">model_comparison</span>, metric <span class="op">=</span> <span class="st">"infit"</span>, style <span class="op">=</span> <span class="st">"difference"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/predictive-comparison-1.png" class="r-plt" alt="Differences in descriptive posterior predictive Infit for matched rater summaries. Zero means agreement between models, not acceptable model fit." width="768"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/predictive-comparison-1.svg" class="r-plt" alt="Differences in descriptive posterior predictive Infit for matched rater summaries. Zero means agreement between models, not acceptable model fit." width="768"></p>
 <p>These differences are descriptive and hold each model’s calibration
 fixed. The zero line means the summaries agree. A smaller Infit does
 <strong>not</strong> show that the model is better or the rater is more
@@ -1404,7 +1398,7 @@ while all observed Persons inform the shared-rater posterior.</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="va">model_comparison</span>, metric <span class="op">=</span> <span class="st">"probability"</span>, show_labels <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  palette <span class="op">=</span> <span class="st">"mono"</span>, show_title <span class="op">=</span> <span class="cn">FALSE</span>, show_notes <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/predictive-probabilities-1.png" class="r-plt" alt="Paired category probabilities from the two models, one panel per score category. The dashed diagonal marks equal probabilities; this monochrome display has no quality flags." width="864"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/predictive-probabilities-1.svg" class="r-plt" alt="Paired category probabilities from the two models, one panel per score category. The dashed diagonal marks equal probabilities; this monochrome display has no quality flags." width="864"></p>
 <p>Use <code>metric = "expected_score"</code>, <code>"variance"</code>
 or <code>"outfit"</code> to change the quantity, and
 <code>category = 4</code> with <code>metric = "probability"</code> to
@@ -1456,7 +1450,7 @@ and variance.</p>
 <span><span class="co">#&gt; 1 available_descriptive        -0.002662728</span></span>
 <span><span class="co">#&gt; 2 available_descriptive        -0.005447231</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">model_comparison</span>, metric <span class="op">=</span> <span class="st">"person"</span>, style <span class="op">=</span> <span class="st">"difference"</span>, show_labels <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/person-comparison-1.png" class="r-plt" alt="Changes in conditional Person EAPs after centering each model at its fitted population mean. There are no model-difference confidence intervals or significance decisions." width="768"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/person-comparison-1.svg" class="r-plt" alt="Changes in conditional Person EAPs after centering each model at its fitted population mean. There are no model-difference confidence intervals or significance decisions." width="768"></p>
 <p>The comparison subtracts each model’s fitted population mean to
 remove its arbitrary origin; it preserves the Rasch logit unit. It
 retains raw scores, origins, posterior SDs and conditional endpoints.
@@ -1468,7 +1462,7 @@ differences remain withheld.</p>
 <code class="sourceCode R"><span><span class="va">map_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_results.html">mfrm_results</a></span><span class="op">(</span><span class="va">random_fit</span>, scores <span class="op">=</span> <span class="va">source_scores</span>,</span>
 <span>  response_diagnostics <span class="op">=</span> <span class="va">response_review</span>, comparison <span class="op">=</span> <span class="va">model_comparison</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">map_results</span>, type <span class="op">=</span> <span class="st">"wright"</span>, show_labels <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/model-wright-1.png" class="r-plt" alt="Model-aware Wright map of selected Person EAPs, conditional facet reference locations and adjacent category boundaries. Only Person points have conditional interval whiskers." width="960"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/model-wright-1.svg" class="r-plt" alt="Model-aware Wright map of selected Person EAPs, conditional facet reference locations and adjacent category boundaries. Only Person points have conditional interval whiskers." width="960"></p>
 <p>The Person column shows the selected source EAPs. Facet positions
 equal the severity coefficient plus the <strong>mean step
 location</strong>: the average adjacent category boundary when other
@@ -1488,7 +1482,7 @@ uncertainty targets.</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">map_results</span>, type <span class="op">=</span> <span class="st">"fit_pathway"</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>,</span>
 <span>  palette <span class="op">=</span> <span class="st">"mono"</span>, show_title <span class="op">=</span> <span class="cn">FALSE</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-random-raters_files/figure-html/model-fit-pathway-1.png" class="r-plt" alt="Rater reference locations against descriptive posterior Infit for the selected ratings. Rater labels identify points; the monochrome plot has no acceptable-fit bands or reference value of one." width="768"></p>
+<p><img src="mfrmr-random-raters_files/figure-html/model-fit-pathway-1.svg" class="r-plt" alt="Rater reference locations against descriptive posterior Infit for the selected ratings. Rater labels identify points; the monochrome plot has no acceptable-fit bands or reference value of one." width="768"></p>
 <p>This pathway connects position with the previously defined
 <strong>descriptive</strong> posterior residual index. Here they
 describe only the selected Person’s ratings, although all 768 observed
@@ -1554,14 +1548,14 @@ not run them automatically.</p>
 <span><span class="co">#&gt; R04   R04      19    17          2  FALSE</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">comparison_effects</span></span>
 <span><span class="co">#&gt;       Facet        Level SourceReference SourceComparison CenterReference</span></span>
-<span><span class="co">#&gt; 1 Criterion     Accuracy      0.23250785       0.23147642    0.000000e+00</span></span>
-<span><span class="co">#&gt; 2 Criterion      Content     -0.38809689      -0.38637722    0.000000e+00</span></span>
-<span><span class="co">#&gt; 3 Criterion     Language      0.09102647       0.09062358    0.000000e+00</span></span>
-<span><span class="co">#&gt; 4 Criterion Organization      0.06456257       0.06427722    0.000000e+00</span></span>
-<span><span class="co">#&gt; 5     Rater          R01     -0.18292092      -0.16038361   -6.938894e-18</span></span>
-<span><span class="co">#&gt; 6     Rater          R02     -0.30735556      -0.26922398   -6.938894e-18</span></span>
-<span><span class="co">#&gt; 7     Rater          R03      0.17863651       0.15662179   -6.938894e-18</span></span>
-<span><span class="co">#&gt; 8     Rater          R04      0.31163997       0.27301966   -6.938894e-18</span></span>
+<span><span class="co">#&gt; 1 Criterion     Accuracy      0.23250785       0.23147642               0</span></span>
+<span><span class="co">#&gt; 2 Criterion      Content     -0.38809689      -0.38637722               0</span></span>
+<span><span class="co">#&gt; 3 Criterion     Language      0.09102647       0.09062358               0</span></span>
+<span><span class="co">#&gt; 4 Criterion Organization      0.06456257       0.06427722               0</span></span>
+<span><span class="co">#&gt; 5     Rater          R01     -0.18292092      -0.16038361               0</span></span>
+<span><span class="co">#&gt; 6     Rater          R02     -0.30735556      -0.26922398               0</span></span>
+<span><span class="co">#&gt; 7     Rater          R03      0.17863651       0.15662179               0</span></span>
+<span><span class="co">#&gt; 8     Rater          R04      0.31163997       0.27301966               0</span></span>
 <span><span class="co">#&gt;   CenterComparison   Reference  Comparison        Mean    Difference</span></span>
 <span><span class="co">#&gt; 1    -1.387779e-17  0.23250785  0.23147642  0.23199214 -0.0010314221</span></span>
 <span><span class="co">#&gt; 2    -1.387779e-17 -0.38809689 -0.38637722 -0.38723705  0.0017196695</span></span>

@@ -110,7 +110,7 @@ if (requireNamespace("igraph", quietly = TRUE)) {
 ![Planned person-rater assignments. Columns represent three panels;
 circles are persons and squares are raters. The red line links P16 to
 R5. The third panel remains disconnected; the added single link is
-fragile.](mfrmr-networks-and-reporting_files/figure-html/panel-figure-1.png)
+fragile.](mfrmr-networks-and-reporting_files/figure-html/panel-figure-1.svg)
 
 Planned person-rater assignments. Columns represent three panels;
 circles are persons and squares are raters. The red line links P16 to
@@ -186,7 +186,18 @@ if (requireNamespace("igraph", quietly = TRUE)) {
 the same rater positions. Edge widths represent the relevant
 proportions. In the right panel larger nodes have higher network
 severity indices, not greater statistical
-significance.](mfrmr-networks-and-reporting_files/figure-html/agreement-direction-1.png)
+significance.](mfrmr-networks-and-reporting_files/figure-html/agreement-direction-1.svg)
+
+Observed agreement (left) and directional discrepancies (right), with
+the same rater positions. Edge widths represent the relevant
+proportions. In the right panel larger nodes have higher network
+severity indices, not greater statistical significance.
+
+![Observed agreement (left) and directional discrepancies (right), with
+the same rater positions. Edge widths represent the relevant
+proportions. In the right panel larger nodes have higher network
+severity indices, not greater statistical
+significance.](mfrmr-networks-and-reporting_files/figure-html/agreement-direction-2.svg)
 
 Observed agreement (left) and directional discrepancies (right), with
 the same rater positions. Edge widths represent the relevant
@@ -194,7 +205,7 @@ proportions. In the right panel larger nodes have higher network
 severity indices, not greater statistical significance.
 
     #>   Rater SeverityIndex    Estimate        SE
-    #> 1   R01   -0.38260697 -0.64335896 0.1945869
+    #> 1   R01   -0.38260697 -0.64335897 0.1945869
     #> 2   R02   -0.08004271 -0.35687808 0.1797840
     #> 3   R03    0.23515170  0.37432053 0.1954466
     #> 4   R04    0.00000000  0.23506014 0.2034984
@@ -225,7 +236,7 @@ if (requireNamespace("igraph", quietly = TRUE)) {
 ![Rater nodes joined by pairwise Krippendorff alpha edges. Width
 represents magnitude; negative edges, when present, are dashed.
 Unavailable pairs have no
-edge.](mfrmr-networks-and-reporting_files/figure-html/signed-alpha-and-network-fit-1.png)
+edge.](mfrmr-networks-and-reporting_files/figure-html/signed-alpha-and-network-fit-1.svg)
 
     #>     Rater Partners Comparisons OutStrength InStrength SeverityIndex
     #> R01   R01        2          46   1.1468254  0.5277778    -0.7760776
@@ -285,7 +296,7 @@ if (requireNamespace("igraph", quietly = TRUE)) {
 scored by the same rater and grey lines join different raters. Width
 shows correlation magnitude; dashed lines indicate negative
 correlations. Correlation does not identify a causal halo
-effect.](mfrmr-networks-and-reporting_files/figure-html/halo-figure-1.png)
+effect.](mfrmr-networks-and-reporting_files/figure-html/halo-figure-1.svg)
 
 Rater-by-criterion observed-score network. Nodes are grouped by rater
 (C: Content, L: Language, O: Organization); blue lines join criteria
@@ -481,9 +492,10 @@ guide; the GPCM example does not claim to execute every one of them.
 `plot_data(picture, "nodes")`, `plot_data(picture, "edges")` and
 `plot_data(picture, "coordinates")` provide editable graph data.
 `source_edges` keeps the calculated graph when the picture is filtered.
-Graph views do not automatically convert with
-[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md);
-use these tables with your chosen graph library. For matrices, use
+Both [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+render `ggplot` graph views directly, and you can also pass these tables
+to an external graph library if desired. For matrices, use
 `plot_data(p, "matrix", format = "long")`; for a wide table, select
 explicit `value_cols` with `format = "long"`. Missing cells and
 identifiers remain. A long table does not make unlike quantities
@@ -500,7 +512,7 @@ write.csv(raw, "feature-observations.csv", row.names = FALSE)
 ```
 
 The [feature
-lesson](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.html#custom-distribution-plots)
+lesson](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html#custom-distribution-plots)
 shows an editable raincloud plot from the new `observations` component.
 It retains individual values, cluster membership, missingness and
 inclusion. Parameter summaries, SEs and interval bounds are not raw

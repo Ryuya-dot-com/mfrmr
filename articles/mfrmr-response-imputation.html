@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,32 +33,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Missing scores on assigned ratings</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-response-imputation.Rmd" class="external-link"><code>vignettes/mfrmr-response-imputation.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/vignettes/articles/mfrmr-response-imputation.Rmd" class="external-link"><code>vignettes/articles/mfrmr-response-imputation.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-response-imputation.Rmd</code></div>
     </div>
 
@@ -297,7 +291,7 @@ area.</p>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">j</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text</a></span><span class="op">(</span><span class="va">j</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>,</span>
 <span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%.0f%%"</span>, <span class="va">probabilities</span><span class="op">[</span><span class="va">n</span><span class="op">:</span><span class="fl">1</span>, <span class="va">j</span><span class="op">]</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span>, cex <span class="op">=</span> <span class="fl">.65</span>,</span>
 <span>  col <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-response-imputation_files/figure-html/imputation-diagnostics-1.png" class="r-plt" alt="Category probabilities for thirty missing assigned ratings; each cell shows its percentage." width="624"></p>
+<p><img src="mfrmr-response-imputation_files/figure-html/imputation-diagnostics-1.svg" class="r-plt" alt="Category probabilities for thirty missing assigned ratings; each cell shows its percentage." width="624"></p>
 <p>Rounded zero percentages do not mean impossible categories. In
 addition to sampling diagnostics, examine whether predictions describe
 the assessment. Because we deliberately masked scores, we can compare
@@ -338,7 +332,7 @@ fixed-standard-normal RSM/PCM MML analysis. PCM requires
 supplied, but are treated as known: their uncertainty is not
 included.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">analyses</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm_imputed.html">fit_mfrm_imputed</a></span><span class="op">(</span><span class="va">review</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">61</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">analyses</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_response_imputations.html">fit_mfrm_imputed</a></span><span class="op">(</span><span class="va">review</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">61</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">analyses</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Imputation"</span>, <span class="st">"Status"</span>, <span class="st">"Error"</span>, <span class="st">"Warnings"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;    Imputation   Status Error Warnings</span></span>
 <span><span class="co">#&gt; 1           1 eligible               </span></span>
@@ -404,7 +398,7 @@ completed analysis.</p>
 <span><span class="va">contrast</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">levels</span><span class="op">)</span>,</span>
 <span>                   dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"R04 minus R01"</span>, <span class="va">levels</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">contrast</span><span class="op">[</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"R04"</span>, <span class="st">"R01"</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">pooled</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_mfrm_imputed.html">pool_mfrm_imputed</a></span><span class="op">(</span><span class="va">analyses</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, contrasts <span class="op">=</span> <span class="va">contrast</span><span class="op">)</span></span>
+<span><span class="va">pooled</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_response_imputations.html">pool_mfrm_imputed</a></span><span class="op">(</span><span class="va">analyses</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, contrasts <span class="op">=</span> <span class="va">contrast</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pooled</span><span class="op">)</span></span>
 <span><span class="co">#&gt;          Target  Estimate        SE     Lower     Upper       DF IntervalReason</span></span>
 <span><span class="co">#&gt; 1 R04 minus R01 0.4681867 0.1457127 0.1824438 0.7539296 2284.941      available</span></span>
@@ -414,7 +408,7 @@ completed analysis.</p>
 <span><span class="co">#&gt; 1  0.008225319 pooled</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pooled</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-response-imputation_files/figure-html/pooled-plot-1.png" class="r-plt" alt="Pooled R04-minus-R01 severity contrast with a pointwise Rubin t interval incorporating within- and between-imputation covariance. The result is conditional on the supplied imputations and analysis assumptions." width="672"></p>
+<p><img src="mfrmr-response-imputation_files/figure-html/pooled-plot-1.svg" class="r-plt" alt="Pooled R04-minus-R01 severity contrast with a pointwise Rubin t interval incorporating within- and between-imputation covariance. The result is conditional on the supplied imputations and analysis assumptions." width="672"></p>
 <p>The development version also supports a ggplot made from these saved
 intervals:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -423,7 +417,7 @@ intervals:</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">pooled_figure</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">pooled_figure</span><span class="op">)</span><span class="op">$</span><span class="va">table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Target"</span>, <span class="st">"Estimate"</span>, <span class="st">"Lower"</span>, <span class="st">"Upper"</span>, <span class="st">"DF"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p><img src="mfrmr-response-imputation_files/figure-html/pooled-ggplot-1.png" class="r-plt" alt="The saved R04-minus-R01 contrast and its pointwise multiple-imputation t interval, rendered with ggplot. Changing the title does not recalculate the interval or change its confidence level." width="672"></p>
+<p><img src="mfrmr-response-imputation_files/figure-html/pooled-ggplot-1.svg" class="r-plt" alt="The saved R04-minus-R01 contrast and its pointwise multiple-imputation t interval, rendered with ggplot. Changing the title does not recalculate the interval or change its confidence level." width="672"></p>
 <pre><code><span><span class="co">#&gt;          Target  Estimate     Lower     Upper       DF</span></span>
 <span><span class="co">#&gt; 1 R04 minus R01 0.4681867 0.1824438 0.7539296 2284.941</span></span></code></pre>
 <p>Default and <code>component = "table"</code> conversion keep the
@@ -664,8 +658,8 @@ assumptions as additional imputations of one model.</p>
 <span>  assigned <span class="op">=</span> <span class="st">"Assigned"</span>, imputation_model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    baseline <span class="op">=</span> <span class="va">model</span>, assumption <span class="op">=</span> <span class="st">"Missing scores one category lower, floored at 1"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">lower_analyses</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm_imputed.html">fit_mfrm_imputed</a></span><span class="op">(</span><span class="va">lower_review</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">61</span><span class="op">)</span></span>
-<span><span class="va">lower_pooled</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_mfrm_imputed.html">pool_mfrm_imputed</a></span><span class="op">(</span><span class="va">lower_analyses</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, contrasts <span class="op">=</span> <span class="va">contrast</span><span class="op">)</span></span>
+<span><span class="va">lower_analyses</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_response_imputations.html">fit_mfrm_imputed</a></span><span class="op">(</span><span class="va">lower_review</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">61</span><span class="op">)</span></span>
+<span><span class="va">lower_pooled</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_response_imputations.html">pool_mfrm_imputed</a></span><span class="op">(</span><span class="va">lower_analyses</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, contrasts <span class="op">=</span> <span class="va">contrast</span><span class="op">)</span></span>
 <span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>Assumption <span class="op">=</span> <span class="st">"Joint RSM baseline"</span>, <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pooled</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>Assumption <span class="op">=</span> <span class="st">"Missing scores one category lower"</span>, <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">lower_pooled</span><span class="op">)</span><span class="op">)</span></span>

@@ -5,7 +5,7 @@ feedback to raters. Before choosing a warning rule, two questions
 matter: how often does it warn about a rater whose ratings follow the
 intended model, and how often does it detect a specified departure? A
 difference in severity alone is not such a departure. A consistently
-strict rater can fit a model that estimates severity.
+severe rater can fit a model that estimates severity.
 
 [`mfrm_screening_performance()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_performance.md)
 summarizes flags against **known simulation truth**. It accepts outcomes
@@ -64,7 +64,7 @@ plot(performance)
 ![One known positive family event among three available trials out of
 four planned. The conditional rate is one third; unresolved-outcome
 bounds span one quarter to one half and are not confidence
-intervals.](mfrmr-screening-performance_files/figure-html/incomplete-plot-1.png)
+intervals.](mfrmr-screening-performance_files/figure-html/incomplete-plot-1.svg)
 
 Blue whiskers are exact binomial Monte Carlo intervals, conditional on
 known outcomes. The gray segment describes unresolved outcomes. The
@@ -250,7 +250,7 @@ plot(sensitivity, direction = c("underfit", "overfit"))
 threshold profiles. Each cell shows the conditional percentage and
 known/planned replication count; these six illustrative trials do not
 qualify screening
-accuracy.](mfrmr-screening-performance_files/figure-html/directional-tiles-1.png)
+accuracy.](mfrmr-screening-performance_files/figure-html/directional-tiles-1.svg)
 
 ``` r
 
@@ -260,7 +260,7 @@ plot(sensitivity, style = "curves", direction = c("underfit", "overfit"))
 ![Directional false-flag rates across discrete threshold profiles, with
 pointwise Monte Carlo intervals. Different symbols and line types
 distinguish underfit and
-overfit.](mfrmr-screening-performance_files/figure-html/directional-curves-1.png)
+overfit.](mfrmr-screening-performance_files/figure-html/directional-curves-1.svg)
 
 The intervals describe Monte Carlo uncertainty across independent
 simulated datasets; six trials leave considerable uncertainty.

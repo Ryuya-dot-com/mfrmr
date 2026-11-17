@@ -29,7 +29,7 @@ with calibration held fixed and shared raters integrated jointly.">
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,32 +38,26 @@ with calibration held fixed and shared raters integrated jointly.">
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -82,7 +76,7 @@ with calibration held fixed and shared raters integrated jointly.">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Score Persons while integrating shared random raters</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-random-rater-scoring.R" class="external-link"><code>R/api-random-rater-scoring.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-random-rater-scoring.R" class="external-link"><code>R/api-random-rater-scoring.R</code></a></small>
       <div class="d-none name"><code>score_mfrm_random_rater.Rd</code></div>
     </div>
 
@@ -107,7 +101,25 @@ with calibration held fixed and shared raters integrated jointly.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'mfrm_random_rater_scores'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_random_rater_scores'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"interval"</span>, <span class="st">"precision"</span>, <span class="st">"distribution"</span><span class="op">)</span>,</span>
+<span>  sort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"input"</span>, <span class="st">"estimate"</span>, <span class="st">"uncertainty"</span><span class="op">)</span>,</span>
+<span>  palette <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"accessible"</span>, <span class="st">"mono"</span><span class="op">)</span>,</span>
+<span>  title <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  caption <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  show_title <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  show_notes <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  show_labels <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  reference <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  text_scale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  point_size <span class="op">=</span> <span class="fl">2.5</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -153,14 +165,91 @@ fit's order. Scores are checked at <code>2 * quad_points + 1</code> points.</p><
 omission in a supplied roster must be requested explicitly.</p></dd>
 
 
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a>
+</dt>
+<dd>
+<p>For <code>score_mfrm_random_rater()</code>: A scoring result.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: A result from <code>score_mfrm_random_rater()</code>.</p>
+</dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a>
 </dt>
 <dd><p>Unused.</p></dd>
 
 
-<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a>
+<dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a>
 </dt>
-<dd><p>A scoring result.</p></dd>
+<dd><p><code>FALSE</code> returns plot data without opening a device.</p></dd>
+
+
+<dt id="arg-style">style<a class="anchor" aria-label="anchor" href="#arg-style"></a>
+</dt>
+<dd><p><code>"interval"</code> keeps every labeled row; <code>"precision"</code> plots
+estimates against interval width (upper minus lower bound); <code>"distribution"</code>
+shows the empirical cumulative distribution of finite point estimates,
+excluding prior-only and unavailable scores. No density is reconstructed.</p></dd>
+
+
+<dt id="arg-sort">sort<a class="anchor" aria-label="anchor" href="#arg-sort"></a>
+</dt>
+<dd><p>Row order for interval plots: input order, increasing estimate,
+or increasing interval width. Missing values come last; ties retain input
+order. Sorting is descriptive, not a test of differences.</p></dd>
+
+
+<dt id="arg-palette">palette<a class="anchor" aria-label="anchor" href="#arg-palette"></a>
+</dt>
+<dd><p><code>"accessible"</code> uses blue and dark orange with filled/open
+symbols; <code>"mono"</code> uses dark grey with the same symbol distinctions.</p></dd>
+
+
+<dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a>
+</dt>
+<dd><p><code>NULL</code> uses the default text; a string replaces it;
+<code>""</code> removes it. Interpretation notes remain in the saved plot data.</p></dd>
+
+
+<dt id="arg-caption">caption<a class="anchor" aria-label="anchor" href="#arg-caption"></a>
+</dt>
+<dd><p><code>NULL</code> uses the default text; a string replaces it;
+<code>""</code> removes it. Interpretation notes remain in the saved plot data.</p></dd>
+
+
+<dt id="arg-show-title">show_title<a class="anchor" aria-label="anchor" href="#arg-show-title"></a>
+</dt>
+<dd><p>Show the title and caption, respectively.
+<code>FALSE</code> hides text without deleting its metadata.</p></dd>
+
+
+<dt id="arg-show-notes">show_notes<a class="anchor" aria-label="anchor" href="#arg-show-notes"></a>
+</dt>
+<dd><p>Show the title and caption, respectively.
+<code>FALSE</code> hides text without deleting its metadata.</p></dd>
+
+
+<dt id="arg-show-labels">show_labels<a class="anchor" aria-label="anchor" href="#arg-show-labels"></a>
+</dt>
+<dd><p>Show IDs on interval and precision plots. Distribution
+plots summarize estimates and do not label individual IDs. For crowded
+precision plots use <code>FALSE</code> and consult the retained table.</p></dd>
+
+
+<dt id="arg-reference">reference<a class="anchor" aria-label="anchor" href="#arg-reference"></a>
+</dt>
+<dd><p>Vertical reference line in logits; <code>NULL</code> omits it.
+This is an orientation aid, not a quality threshold.</p></dd>
+
+
+<dt id="arg-text-scale">text_scale<a class="anchor" aria-label="anchor" href="#arg-text-scale"></a>
+</dt>
+<dd><p>Positive multiplier for text size.</p></dd>
+
+
+<dt id="arg-point-size">point_size<a class="anchor" aria-label="anchor" href="#arg-point-size"></a>
+</dt>
+<dd><p>Positive point size in ggplot millimetres; base graphics
+use the corresponding relative size (2.5 is the default).</p></dd>
 
 </dl>
 </div>
@@ -173,6 +262,8 @@ Save it with <code><a href="https://rdrr.io/r/base/readRDS.html" class="external
 Keep <code>table$Status</code> and <code>table$Reason</code> with exported scores: <code>prior_only</code>
 describes the assumed population without observed responses for that Person;
 <code>unavailable</code> withholds the estimate, SD and bounds with a recorded cause.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Invisibly, a <code>ggplot</code> object; use <code><a href="plot_data.html">plot_data()</a></code> to
+extract the underlying table and settings.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a>
@@ -205,7 +296,7 @@ saved conditional distribution. Shared-rater distributions are calculated
 from the supplied responses and fitted population parameters. To retain
 earlier responses, include them in the complete scoring table, with each
 intended rating event appearing once. By contrast,
-<code><a href="predict.mfrm_random_rater.html">predict.mfrm_random_rater()</a></code> with <code>rater = "observed"</code> uses the rater's
+<code><a href="fit_mfrm_random_rater.html">predict.mfrm_random_rater()</a></code> with <code>rater = "observed"</code> uses the rater's
 conditional distribution from the calibration responses at abilities you
 supply; it does not estimate abilities from new responses.</p>
 <p>Intervals condition on all supplied observed responses, fitted calibration
@@ -223,6 +314,12 @@ the requested Person's row and reason. No missing scores are imputed.
 Older saved fits keep their original known N(0,1) ability population.
 If an older fit omitted scores without saving the original roster, supply
 that roster explicitly to retain its unobserved Persons and row accounting.</p>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: Plot Person scores from a shared-rater model</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: In the default interval view, all requested Persons remain labeled. Open circles indicate
+prior-only results; unavailable scores have no point or interval.
+Intervals are conditional on calibration and use joint rater Laplace
+integration. They are not tests of Person differences. <code><a href="as_ggplot.html">as_ggplot()</a></code>
+preserves these meanings without rerunning scoring.</p>
     </div>
     <div class="section level2">
     <h2 id="numerical-evidence">Numerical evidence<a class="anchor" aria-label="anchor" href="#numerical-evidence"></a>
@@ -240,13 +337,17 @@ endpoints, allowing for Monte Carlo and numerical error.</p>
 <p>These are bounded numerical comparisons, not universal accuracy bounds or
 performance cutoffs. They do not establish repeated-sampling 95 percent
 coverage when calibration is estimated, qualify the calibration likelihood,
-or test Person differences. See <code><a href="../articles/mfrmr-random-raters.html">vignette("mfrmr-random-raters")</a></code> for the
+or test Person differences. See <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html">online random-rater guide</a> for the
 reference-precision limitations and interpretation.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a>
 </h2>
-    <div class="dont-index"><p><code><a href="predict.mfrm_random_rater.html">predict.mfrm_random_rater()</a></code>, <code><a href="plot.mfrm_random_rater_scores.html">plot.mfrm_random_rater_scores()</a></code></p></div>
+    <div class="dont-index">
+<p><code><a href="fit_mfrm_random_rater.html">predict.mfrm_random_rater()</a></code>, <code>plot.mfrm_random_rater_scores()</code></p>
+<p><code><a href="fit_mfrm_testlet.html">plot.mfrm_testlet_scores()</a></code> for view selection, accessible output
+and the meaning of the empirical distribution.</p>
+</div>
     </div>
 
     <div class="section level2">

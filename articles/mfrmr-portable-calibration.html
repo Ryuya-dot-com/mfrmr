@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,32 +33,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Portable calibration and fresh-session scoring</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-portable-calibration.Rmd" class="external-link"><code>vignettes/mfrmr-portable-calibration.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/vignettes/articles/mfrmr-portable-calibration.Rmd" class="external-link"><code>vignettes/articles/mfrmr-portable-calibration.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-portable-calibration.Rmd</code></div>
     </div>
 
@@ -159,16 +153,18 @@ Experimental corrected shared-owner GPCM JML uses file format 5 with
 fresh adjusted-equation checks, an explicit correction order and a
 separate post-hoc normal reference prior. Its finite EAPs are not
 corrected Person maxima; calibration uncertainty and residual bias are
-not included in posterior intervals. See the corrected-JML example in
-<code><a href="../articles/mfrmr-gpcm-scope.html">vignette("mfrmr-gpcm-scope", package = "mfrmr")</a></code>.
-Estimated-population RSM/PCM and latent regression remain
-fitted-object-only routes.</p>
+not included in posterior intervals. See the corrected-JML example in <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html">GPCM
+scope and current limitations</a>. Estimated-population RSM/PCM and
+latent regression remain fitted-object-only routes.</p>
 <p>Experimental two-family GPCM MML uses file format 6 with the same
 public lifecycle below. It retains two ordered slope owners,
 second-owner steps, the original category coding and fixed N(0,1) prior.
 The first owner’s locations and log slopes are centered; the second
-owner’s locations and slopes remain free. Source identity/convergence
-and finer-integration checks must pass before extraction; review-only
+owner’s locations and slopes remain free. Extended roles use format 7
+with the named slope reference and noncentered location facet; all other
+location facets and each declared step set are centered. Format 6
+retains its original meaning. Source identity/convergence and
+finer-integration checks must pass before extraction; review-only
 sources cannot be frozen. Each scoring batch must pass its own EAP/SD
 integration checks. Both fixed-grid EM and adaptive direct MML retain
 their scoring integration method.</p>
@@ -181,8 +177,9 @@ names must not collide with the reserved scoring/disposition columns
 listed in <code><a href="../reference/mfrm_calibration_workflow.html">?mfrm_calibration_workflow</a></code>. Validation and
 freezing do not qualify sampling coverage, global identification or
 population transport, and intervals exclude calibration uncertainty.
-Older readers refuse format 6; formats 1–5 retain their interpretation.
-See the two-family example in the GPCM scope vignette.</p>
+Readers must support the artifact’s format; adding format 7 does not
+change the interpretation of formats 1–6. See the two-family example in
+the GPCM scope article.</p>
 <p>For a JML source, EAP holds the calibration fixed and adds a
 standard-normal reference prior by default, or uses an explicit
 <code>scoring_prior</code>. JML did not estimate that distribution. This
@@ -234,7 +231,7 @@ to it.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/mfrm_calibration_capabilities.html">mfrm_calibration_capabilities</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/mfrmr_output_guide.html">mfrmr_output_guide</a></span><span class="op">(</span><span class="st">"calibration_capabilities"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Model"</span>, <span class="st">"Estimator"</span>, <span class="st">"ScoringBasis"</span>, <span class="st">"PortableCalibration"</span></span>
 <span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;                 Model     Estimator                              ScoringBasis</span></span>
@@ -332,8 +329,8 @@ that count.</p>
 <span><span class="co">#&gt; [1] Code      FieldPath Detail    Severity </span></span>
 <span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span>
 <span></span>
-<span><span class="va">validated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">validate_mfrm_calibration</a></span><span class="op">(</span><span class="va">draft</span><span class="op">)</span></span>
-<span><span class="va">frozen</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">freeze_mfrm_calibration</a></span><span class="op">(</span><span class="va">validated</span><span class="op">)</span></span>
+<span><span class="va">validated</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span>status <span class="op">=</span> <span class="st">"validated"</span>, <span class="va">draft</span><span class="op">)</span></span>
+<span><span class="va">frozen</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span>status <span class="op">=</span> <span class="st">"frozen"</span>, <span class="va">validated</span><span class="op">)</span></span>
 <span><span class="va">frozen</span></span>
 <span><span class="co">#&gt; &lt;mfrm_calibration&gt;</span></span>
 <span><span class="co">#&gt;   State: frozen</span></span>
@@ -390,11 +387,11 @@ artifact, so none can influence the score.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Fixed-parameter integration review (adaptive minus fixed)</span></span>
 <span><span class="co">#&gt;  FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange</span></span>
-<span><span class="co">#&gt;         121            31       2           0            6.549072e-11</span></span>
+<span><span class="co">#&gt;         121            31       2           0            6.549428e-11</span></span>
 <span><span class="co">#&gt;         121            61       2           0            6.549428e-11</span></span>
 <span><span class="co">#&gt;  MaxAbsEAPChange MaxAbsSDChange</span></span>
-<span><span class="co">#&gt;     5.946026e-10   3.467934e-10</span></span>
-<span><span class="co">#&gt;     5.946025e-10   3.467933e-10</span></span>
+<span><span class="co">#&gt;      5.94602e-10   3.467935e-10</span></span>
+<span><span class="co">#&gt;      5.94602e-10   3.467933e-10</span></span>
 <span><span class="co">#&gt;   Calibration: portable-rsm-example</span></span>
 <span><span class="co">#&gt;   Model / estimator: RSM / MML</span></span>
 <span><span class="co">#&gt;   Persons: 2 scored (1 requiring review); 0 not scored</span></span>
@@ -464,18 +461,20 @@ artifact, so none can influence the score.</p>
 <span>  type <span class="op">=</span> <span class="st">"interval"</span>,</span>
 <span>  preset <span class="op">=</span> <span class="st">"publication"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-portable-calibration_files/figure-html/score-from-artifact-1.png" class="r-plt" alt="Posterior EAP intervals for two newly scored Persons. A blue circle marks a conditionally ready score, an orange triangle marks a score requiring review, and a dashed vertical line marks the zero-logit scale origin." width="672"></p>
+<p><img src="mfrmr-portable-calibration_files/figure-html/score-from-artifact-1.svg" class="r-plt" alt="Posterior EAP intervals for two newly scored Persons. A blue circle marks a conditionally ready score, an orange triangle marks a score requiring review, and a dashed vertical line marks the zero-logit scale origin." width="672"></p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">artifact_file</span><span class="op">)</span></span></code></pre></div>
-<p>The base and optional ggplot2 renderers distinguish scored and review
-states by shape as well as colour. The complete score and review tables
-remain in the summary object even though its console printout shows only
-a compact preview. <code>as_ggplot(plot(scores, draw = FALSE))</code>
-and an explicit <code>component = "data"</code> preserve the same
-selected display and saved endpoints. Use <code><a href="../reference/plot_data.html">plot_data()</a></code> for
-other components; drawing does not change the requested interval level.
-For overlapping review labels in precision or edge-mass plots, use
+<p>Both <code>plot(scores, ...)</code> and
+<code>as_ggplot(scores, ...)</code> return <code>ggplot</code> objects
+that distinguish scored and review states by shape as well as colour.
+The complete score and review tables remain in the summary object even
+though its console printout shows only a compact preview.
+<code>as_ggplot(plot(scores, draw = FALSE))</code> and an explicit
+<code>component = "data"</code> preserve the same selected display and
+saved endpoints. Use <code><a href="../reference/plot_data.html">plot_data()</a></code> for other components;
+drawing does not change the requested interval level. For overlapping
+review labels in precision or edge-mass plots, use
 <code>label_review = FALSE</code> and inspect
 <code>summary(scores)$review</code> for Person IDs. The colour and shape
 still identify review points.</p>
@@ -484,8 +483,8 @@ identify Persons whose <code>Disposition</code> is
 <code>scored_review</code>; inspect their <code>ReasonCodes</code>
 before using the estimate. A Person with no valid response has no score
 coordinate and therefore appears in <code>summary(scores)$review</code>
-and in the draw-free plot payload’s <code>unplotted_dispositions</code>,
-not as an artificial point.</p>
+and in <code>plot_data(p, "unplotted_dispositions")</code>, not as an
+artificial point.</p>
 <p>Two focused follow-up views use the same score object without
 consulting the source fit:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -494,8 +493,8 @@ consulting the source fit:</p>
 <span></span>
 <span><span class="co"># Posterior mass on the outer quadrature nodes versus the recorded threshold.</span></span>
 <span><span class="va">edge_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scores</span>, type <span class="op">=</span> <span class="st">"edge_mass"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">edge_review</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">selection_summary</span></span>
-<span><span class="va">edge_review</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">unplotted_dispositions</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">edge_review</span>, <span class="st">"selection_summary"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">edge_review</span>, <span class="st">"unplotted_dispositions"</span><span class="op">)</span></span></code></pre></div>
 <p>These displays review a returned score batch. They do not establish
 source-fit quality, reliability, calibration transport, or validity.
 Every interval and posterior SD remains conditional on the frozen point
@@ -610,26 +609,26 @@ the calibration parameters and prior fixed.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span><span class="op">$</span><span class="va">quadrature_overview</span></span>
 <span><span class="co">#&gt;   FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange</span></span>
-<span><span class="co">#&gt; 1        121            31       2           0            6.549072e-11</span></span>
+<span><span class="co">#&gt; 1        121            31       2           0            6.549428e-11</span></span>
 <span><span class="co">#&gt; 2        121            61       2           0            6.549428e-11</span></span>
 <span><span class="co">#&gt;   MaxAbsEAPChange MaxAbsSDChange</span></span>
-<span><span class="co">#&gt; 1    5.946026e-10   3.467934e-10</span></span>
-<span><span class="co">#&gt; 2    5.946025e-10   3.467933e-10</span></span>
+<span><span class="co">#&gt; 1     5.94602e-10   3.467935e-10</span></span>
+<span><span class="co">#&gt; 2     5.94602e-10   3.467933e-10</span></span>
 <span><span class="co"># Keep full precision when inspecting individual differences.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">scores</span><span class="op">$</span><span class="va">quadrature_review</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Person"</span>, <span class="st">"AdaptiveNodes"</span>, <span class="st">"EAPChange"</span>, <span class="st">"PosteriorSDChange"</span>,</span>
 <span>  <span class="st">"AdaptiveEAPChangeFromPrevious"</span>, <span class="st">"AdaptiveSDChangeFromPrevious"</span>, <span class="st">"Status"</span></span>
 <span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         Person AdaptiveNodes     EAPChange PosteriorSDChange</span></span>
-<span><span class="co">#&gt; 1 NEW_PERSON_1            31 -5.946026e-10      3.467934e-10</span></span>
-<span><span class="co">#&gt; 2 NEW_PERSON_1            61 -5.946025e-10      3.467933e-10</span></span>
-<span><span class="co">#&gt; 3 NEW_PERSON_2            31 -6.661338e-15     -1.021405e-13</span></span>
-<span><span class="co">#&gt; 4 NEW_PERSON_2            61  1.776357e-15     -9.769963e-15</span></span>
+<span><span class="co">#&gt; 1 NEW_PERSON_1            31 -5.946020e-10      3.467935e-10</span></span>
+<span><span class="co">#&gt; 2 NEW_PERSON_1            61 -5.946020e-10      3.467933e-10</span></span>
+<span><span class="co">#&gt; 3 NEW_PERSON_2            31 -7.105427e-15     -1.019185e-13</span></span>
+<span><span class="co">#&gt; 4 NEW_PERSON_2            61  2.220446e-15     -9.658940e-15</span></span>
 <span><span class="co">#&gt;   AdaptiveEAPChangeFromPrevious AdaptiveSDChangeFromPrevious   Status</span></span>
 <span><span class="co">#&gt; 1                            NA                           NA computed</span></span>
-<span><span class="co">#&gt; 2                  1.110223e-16                -1.110223e-16 computed</span></span>
+<span><span class="co">#&gt; 2                  0.000000e+00                -1.665335e-16 computed</span></span>
 <span><span class="co">#&gt; 3                            NA                           NA computed</span></span>
-<span><span class="co">#&gt; 4                  8.437695e-15                 9.237056e-14 computed</span></span></code></pre></div>
+<span><span class="co">#&gt; 4                  9.325873e-15                 9.225953e-14 computed</span></span></code></pre></div>
 <p>Check fixed-versus-adaptive differences and changes between adaptive
 orders, including log-marginal likelihood contributions in the full
 table. Observation weights, when supplied, enter the likelihood as in
@@ -753,7 +752,7 @@ required step in scoring or an interval for a new person’s ability. Once
 <span>  source_fit_id <span class="op">=</span> <span class="st">"training-cohort"</span>, scoring_quad_points <span class="op">=</span> <span class="fl">141</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">review_mfrm_calibration</a></span><span class="op">(</span><span class="va">draft</span><span class="op">)</span></span>
-<span><span class="va">calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">freeze_mfrm_calibration</a></span><span class="op">(</span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">validate_mfrm_calibration</a></span><span class="op">(</span><span class="va">draft</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span>status <span class="op">=</span> <span class="st">"frozen"</span>, <span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span>status <span class="op">=</span> <span class="st">"validated"</span>, <span class="va">draft</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">save_mfrm_calibration</a></span><span class="op">(</span><span class="va">calibration</span>, <span class="st">"gpcm-calibration.rds"</span><span class="op">)</span></span></code></pre></div>
 <p>In a <strong>new R session</strong>, read that artifact and the later
 cohort’s responses:</p>
@@ -990,7 +989,7 @@ increase <code>scoring_quad_points</code> when extracting.</p>
 <span>  model <span class="op">=</span> <span class="st">"PCM"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, step_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
 <span>  maxit <span class="op">=</span> <span class="fl">500</span>, reltol <span class="op">=</span> <span class="fl">1e-10</span><span class="op">)</span></span>
 <span><span class="va">jml_draft</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">extract_mfrm_calibration</a></span><span class="op">(</span><span class="va">jml_fit</span>, scoring_quad_points <span class="op">=</span> <span class="fl">141</span><span class="op">)</span></span>
-<span><span class="va">jml_calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">freeze_mfrm_calibration</a></span><span class="op">(</span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">validate_mfrm_calibration</a></span><span class="op">(</span><span class="va">jml_draft</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">jml_calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span>status <span class="op">=</span> <span class="st">"frozen"</span>, <span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span>status <span class="op">=</span> <span class="st">"validated"</span>, <span class="va">jml_draft</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">save_mfrm_calibration</a></span><span class="op">(</span><span class="va">jml_calibration</span>, <span class="st">"jml-calibration.rds"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># In a new session, supply your later cohort's ratings instead of these example rows.</span></span>
@@ -1029,7 +1028,7 @@ owner; different slope and step owners remain MML-only.</p>
 <code class="sourceCode R"><span><span class="va">gpcm_jml_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">jml_data</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
 <span>  model <span class="op">=</span> <span class="st">"GPCM"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, step_facet <span class="op">=</span> <span class="st">"Criterion"</span>, slope_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
 <span>  maxit <span class="op">=</span> <span class="fl">600</span>, reltol <span class="op">=</span> <span class="fl">1e-11</span><span class="op">)</span></span>
-<span><span class="va">gpcm_jml_calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">freeze_mfrm_calibration</a></span><span class="op">(</span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">validate_mfrm_calibration</a></span><span class="op">(</span></span>
+<span><span class="va">gpcm_jml_calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span>status <span class="op">=</span> <span class="st">"frozen"</span>, <span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span>status <span class="op">=</span> <span class="st">"validated"</span>, </span>
 <span>  <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">extract_mfrm_calibration</a></span><span class="op">(</span><span class="va">gpcm_jml_fit</span>, scoring_quad_points <span class="op">=</span> <span class="fl">141</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">save_mfrm_calibration</a></span><span class="op">(</span><span class="va">gpcm_jml_calibration</span>, <span class="st">"gpcm-jml-calibration.rds"</span><span class="op">)</span></span>
 <span><span class="va">gpcm_jml_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">score_mfrm_calibration</a></span><span class="op">(</span></span>

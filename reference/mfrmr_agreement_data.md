@@ -31,10 +31,10 @@ standards or evidence of a method's performance in a population.
 
 ## See also
 
-[`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_kappa_table.md),
-[`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/krippendorff_alpha_table.md),
-[`gwet_ac2_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/gwet_ac2_table.md),
-[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_icc_table.md),
+[`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md),
+[`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md),
+[`gwet_ac2_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md),
+[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md),
 [`load_mfrmr_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/load_mfrmr_data.md)
 
 ## Examples

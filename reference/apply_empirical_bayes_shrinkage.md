@@ -15,6 +15,11 @@ shrinkage factor is \\B_j = \mathrm{SE}\_j^2 / (\hat{\tau}^2 +
 (1-B_j)\hat{\delta}\_j\\ and \\\mathrm{ShrunkSE}\_j =
 \sqrt{(1-B_j)\mathrm{SE}\_j^2}\\.
 
+Summarize how much an optional empirical-Bayes adjustment moves facet
+estimates toward zero. The report is available after
+`apply_empirical_bayes_shrinkage()` or
+`fit_mfrm(..., facet_shrinkage = "empirical_bayes")`.
+
 ## Usage
 
 ``` r
@@ -23,15 +28,15 @@ apply_empirical_bayes_shrinkage(
   facet_prior_sd = NULL,
   shrink_person = FALSE
 )
+
+shrinkage_report(fit)
 ```
 
 ## Arguments
 
 - fit:
 
-  An `mfrm_fit` from
-  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-  with a non-empty `facets$others` table.
+  An `mfrm_fit` object.
 
 - facet_prior_sd:
 
@@ -54,6 +59,9 @@ apply_empirical_bayes_shrinkage(
 The same `mfrm_fit`, with augmented columns and a new `shrinkage_report`
 list entry, and with `fit$config$facet_shrinkage` set to
 `"empirical_bayes"`.
+
+A data.frame with one row per facet (and optionally `"Person"`) or
+`NULL` when shrinkage has not been applied.
 
 ## Details
 
@@ -91,12 +99,29 @@ Reapplication replaces the previous adjustment; `shrink_person = FALSE`
 removes any previous Person shrinkage columns. The original fitting
 inputs remain recorded separately from the latest post-fit shrinkage
 settings.
-[`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_replay_script.md)
+[`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
 replays the adjustment after fitting, preserving whether diagnostic SEs
 were attached by
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 Manually edited SEs or other table edits require their own reproducible
 editing steps.
+
+`MeanShrinkage` averages available shrinkage fractions: 0 leaves an
+estimate unchanged; 1 pools it at zero. `EffectiveDF` sums retained
+weights conditional on the prior variance; it is not a test or AIC
+degrees of freedom.
+
+`NLevels` counts all levels; `NLevelsUsed` counts finite
+estimate/positive-SE pairs. `Tau2` is the selected prior variance in
+squared parameter units; `PriorSource` identifies empirical moments or a
+supplied prior. `MeanSE2` averages squared input SEs. Below three
+eligible levels no adjustment is applied, `Tau2` is unavailable and
+shrinkage is zero for eligible levels; inspect `Note`.
+
+`SupportsFormalInference` is false. Full pooling's zero plug-in SE does
+not establish perfect precision. `apply_empirical_bayes_shrinkage()`
+defines the calculation and omitted uncertainty; original MFRM estimates
+remain unchanged.
 
 ## Typical workflow
 
@@ -134,6 +159,9 @@ applications. *Journal of the American Statistical Association,
 (which accepts `facet_shrinkage` directly),
 [`facet_small_sample_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_small_sample_review.md),
 [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md).
+
+`apply_empirical_bayes_shrinkage()`,
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
 ## Examples
 
@@ -175,4 +203,13 @@ head(fit_eb$facets$others[, c("Facet", "Level", "Estimate",
 #> 6 Criterion  Content -0.4150443     -0.3508124       0.1547591
 # Look for: rows where `ShrinkageFactor` is large (close to 1) had
 #   their estimates pulled most strongly toward the facet mean (0).
+# Optional workflow; run the example explicitly as shown below.
+# example("shrinkage_report", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+toy <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                method = "JML", maxit = 300,
+                facet_shrinkage = "empirical_bayes")
+shrinkage_report(fit)
+} # }
 ```

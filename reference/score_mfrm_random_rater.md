@@ -21,6 +21,24 @@ summary(object, ...)
 
 # S3 method for class 'mfrm_random_rater_scores'
 print(x, ...)
+
+# S3 method for class 'mfrm_random_rater_scores'
+plot(
+  x,
+  draw = TRUE,
+  style = c("interval", "precision", "distribution"),
+  sort = c("input", "estimate", "uncertainty"),
+  palette = c("accessible", "mono"),
+  title = NULL,
+  caption = NULL,
+  show_title = FALSE,
+  show_notes = FALSE,
+  show_labels = TRUE,
+  reference = 0,
+  text_scale = 1,
+  point_size = 2.5,
+  ...
+)
 ```
 
 ## Arguments
@@ -59,13 +77,79 @@ print(x, ...)
   `"fail"` or `"omit"`. Source replay uses the fit's policy; omission in
   a supplied roster must be requested explicitly.
 
+- x :
+
+  For `score_mfrm_random_rater()`: A scoring result.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): A result
+  from `score_mfrm_random_rater()`.
+
 - ... :
 
   Unused.
 
-- x :
+- draw :
 
-  A scoring result.
+  `FALSE` returns plot data without opening a device.
+
+- style :
+
+  `"interval"` keeps every labeled row; `"precision"` plots estimates
+  against interval width (upper minus lower bound); `"distribution"`
+  shows the empirical cumulative distribution of finite point estimates,
+  excluding prior-only and unavailable scores. No density is
+  reconstructed.
+
+- sort :
+
+  Row order for interval plots: input order, increasing estimate, or
+  increasing interval width. Missing values come last; ties retain input
+  order. Sorting is descriptive, not a test of differences.
+
+- palette :
+
+  `"accessible"` uses blue and dark orange with filled/open symbols;
+  `"mono"` uses dark grey with the same symbol distinctions.
+
+- title :
+
+  `NULL` uses the default text; a string replaces it; `""` removes it.
+  Interpretation notes remain in the saved plot data.
+
+- caption :
+
+  `NULL` uses the default text; a string replaces it; `""` removes it.
+  Interpretation notes remain in the saved plot data.
+
+- show_title :
+
+  Show the title and caption, respectively. `FALSE` hides text without
+  deleting its metadata.
+
+- show_notes :
+
+  Show the title and caption, respectively. `FALSE` hides text without
+  deleting its metadata.
+
+- show_labels :
+
+  Show IDs on interval and precision plots. Distribution plots summarize
+  estimates and do not label individual IDs. For crowded precision plots
+  use `FALSE` and consult the retained table.
+
+- reference :
+
+  Vertical reference line in logits; `NULL` omits it. This is an
+  orientation aid, not a quality threshold.
+
+- text_scale :
+
+  Positive multiplier for text size.
+
+- point_size :
+
+  Positive point size in ggplot millimetres; base graphics use the
+  corresponding relative size (2.5 is the default).
 
 ## Value
 
@@ -77,6 +161,11 @@ summary and plots need no live optimizer. Keep `table$Status` and
 `table$Reason` with exported scores: `prior_only` describes the assumed
 population without observed responses for that Person; `unavailable`
 withholds the estimate, SD and bounds with a recorded cause.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object; use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+to extract the underlying table and settings.
 
 ## Details
 
@@ -112,7 +201,7 @@ saved conditional distribution. Shared-rater distributions are
 calculated from the supplied responses and fitted population parameters.
 To retain earlier responses, include them in the complete scoring table,
 with each intended rating event appearing once. By contrast,
-[`predict.mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict.mfrm_random_rater.md)
+[`predict.mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
 with `rater = "observed"` uses the rater's conditional distribution from
 the calibration responses at abilities you supply; it does not estimate
 abilities from new responses.
@@ -136,6 +225,17 @@ population. If an older fit omitted scores without saving the original
 roster, supply that roster explicitly to retain its unobserved Persons
 and row accounting.
 
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot
+Person scores from a shared-rater model
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): In the
+default interval view, all requested Persons remain labeled. Open
+circles indicate prior-only results; unavailable scores have no point or
+interval. Intervals are conditional on calibration and use joint rater
+Laplace integration. They are not tests of Person differences.
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+preserves these meanings without rerunning scoring.
+
 ## Numerical evidence
 
 An independent joint-posterior comparison at fixed calibration covered
@@ -151,14 +251,18 @@ Carlo and numerical error.
 These are bounded numerical comparisons, not universal accuracy bounds
 or performance cutoffs. They do not establish repeated-sampling 95
 percent coverage when calibration is estimated, qualify the calibration
-likelihood, or test Person differences. See
-[`vignette("mfrmr-random-raters")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.md)
+likelihood, or test Person differences. See [online random-rater
+guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html)
 for the reference-precision limitations and interpretation.
 
 ## See also
 
-[`predict.mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict.mfrm_random_rater.md),
-[`plot.mfrm_random_rater_scores()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_random_rater_scores.md)
+[`predict.mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md),
+`plot.mfrm_random_rater_scores()`
+
+[`plot.mfrm_testlet_scores()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+for view selection, accessible output and the meaning of the empirical
+distribution.
 
 ## Examples
 

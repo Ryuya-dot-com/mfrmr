@@ -28,7 +28,7 @@ displacement_table(
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
   Must match this fitted analysis; see
-  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
   for migration of saved diagnostics.
 
 - facets:
@@ -63,20 +63,34 @@ A named list with:
 
 ## Details
 
-Displacement is computed as a one-step Newton update:
-`sum(residual) / sum(information)` for each facet level. This
-approximates how much a level would move if constraints were relaxed.
+Displacement is the facet sign times the weighted sum of observation
+score derivatives divided by weighted score information. For
+unit-discrimination RSM/PCM these reduce to observed-minus-expected
+residuals and conditional score variances. The Person sign is positive;
+default severity/difficulty signs are negative. GPCM uses its
+slope-aware derivatives and information. This is a conditional one-step
+location adjustment with other fitted quantities held fixed, not a joint
+unconstrained refit. `DisplacementSE` is inverse square-root
+information; it excludes cross-parameter and source-anchor uncertainty.
+Nonpositive information gives unavailable values.
 
 ## Interpreting output
 
-- `table`: level-wise displacement and flag indicators.
+`Displacement` is the proposed change in the fitted location coordinate.
+For a default negatively oriented Rater facet, a positive displacement
+means greater severity and lower predicted scores, holding other terms
+fixed. This is the opposite score direction to positive `Bias Size` in
+[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
+which is added directly to the score predictor.
 
-- `summary`: count/share of flagged levels.
-
-- `thresholds`: displacement and t-value cutoffs.
-
-Large absolute displacement in anchored levels suggests potential
-instability in anchor assumptions.
+`ReleasedEstimate = Estimate + Displacement` is only a one-step
+projection; no anchor is actually released or model refitted.
+`AnchorGap` subtracts the directly supplied `AnchorValue` from this
+projection. A large gap suggests tension with the fitted baseline, not
+proof that the anchor changed. `DisplacementT` is a conditional
+screening ratio, not a calibrated test. Inspect finite
+displacement/information before reading `Flag`: a missing calculation
+cannot cross its cutoff and therefore need not produce a flag.
 
 ## Typical workflow
 
@@ -98,23 +112,33 @@ The `table` data.frame contains:
 
 - Displacement:
 
-  One-step Newton displacement estimate (logits).
+  One-step location change in native ability units; adjacent-logit units
+  for RSM/PCM. GPCM's score effect also depends on slopes.
 
 - DisplacementSE:
 
-  Standard error of the displacement.
+  Inverse square-root conditional information; excludes uncertainty in
+  the other fitted parameters and anchor source.
 
 - DisplacementT:
 
-  Displacement / SE ratio.
+  `Displacement / DisplacementSE`.
 
 - Estimate, SE:
 
-  Current measure estimate and its standard error.
+  Current measure and its diagnostic uncertainty; MML Person SEs are
+  posterior SDs. See
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
 
-- N:
+- N, WeightedN:
 
-  Number of observations involving this level.
+  Summed response weights for this level in native diagnostics, equal to
+  the row count with unit weights; not independent Persons.
+
+- ReleasedEstimate, AnchorGap:
+
+  One-step projected location and its difference from a directly
+  supplied anchor, when available.
 
 - AnchorValue, AnchorStatus, AnchorType:
 
@@ -122,7 +146,8 @@ The `table` data.frame contains:
 
 - Flag:
 
-  Logical; `TRUE` when displacement exceeds thresholds.
+  TRUE when either finite absolute displacement or its absolute
+  screening ratio reaches the corresponding cutoff.
 
 ## Saved-result reuse
 
@@ -130,7 +155,7 @@ The returned `fit_identity` records the fitted analysis for reuse with
 reports and exports. Recreate older results from the saved fit and
 matching diagnostics using the original screening options; no model
 refit is needed. See
-[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 for migration instructions.
 
 ## See also
@@ -142,67 +167,16 @@ for migration instructions.
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("displacement_table", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 fit <- example_fit$fit
 disp <- displacement_table(fit, anchored_only = FALSE)
 summary(disp)
-#> mfrmr Displacement Summary 
-#>   Class: mfrm_displacement
-#>   Components: 4
-#> 
-#> Displacement summary
-#>  Levels AnchoredLevels FlaggedLevels FlaggedAnchoredLevels MaxAbsDisplacement
-#>      56              0             0                     0                  0
-#>  MaxAbsDisplacementT AbsDisplacementThreshold AbsTThreshold
-#>                    0                      0.5             2
-#> 
-#> Displacement rows: table
-#>   Facet        Level WeightedN ResidualSum Information FacetSign Displacement
-#>  Person <suppressed>        16           0       3.461         1            0
-#>  Person <suppressed>        16           0       6.761         1            0
-#>  Person <suppressed>        16           0       9.206         1            0
-#>  Person <suppressed>        16           0       9.206         1            0
-#>  Person <suppressed>        16           0       9.206         1            0
-#>  Person <suppressed>        16           0       9.183         1            0
-#>  Person <suppressed>        16           0       9.453         1            0
-#>  Person <suppressed>        16           0       9.453         1            0
-#>  Person <suppressed>        16           0       4.967         1            0
-#>  Person <suppressed>        16           0       6.553         1            0
-#>  DisplacementSE DisplacementT Estimate    SE  N AnchorValue AnchorStatus
-#>           0.538             0    2.684 0.538 16          NA             
-#>           0.385             0   -1.665 0.385 16          NA             
-#>           0.330             0    0.791 0.330 16          NA             
-#>           0.330             0    0.791 0.330 16          NA             
-#>           0.330             0    0.791 0.330 16          NA             
-#>           0.330             0   -0.918 0.330 16          NA             
-#>           0.325             0    0.684 0.325 16          NA             
-#>           0.325             0    0.684 0.325 16          NA             
-#>           0.449             0   -2.178 0.449 16          NA             
-#>           0.391             0    1.672 0.391 16          NA             
-#>  AnchorType ReleasedEstimate AnchorGap FlagDisplacement FlagT  Flag
-#>        Free            2.684        NA            FALSE FALSE FALSE
-#>        Free           -1.665        NA            FALSE FALSE FALSE
-#>        Free            0.791        NA            FALSE FALSE FALSE
-#>        Free            0.791        NA            FALSE FALSE FALSE
-#>        Free            0.791        NA            FALSE FALSE FALSE
-#>        Free           -0.918        NA            FALSE FALSE FALSE
-#>        Free            0.684        NA            FALSE FALSE FALSE
-#>        Free            0.684        NA            FALSE FALSE FALSE
-#>        Free           -2.178        NA            FALSE FALSE FALSE
-#>        Free            1.672        NA            FALSE FALSE FALSE
-#> 
-#> Settings
-#>                Setting Value
-#>  abs_displacement_warn   0.5
-#>             abs_t_warn     2
-#> 
-#> Notes
-#>  - Displacement summary for anchor drift and baseline drift checks.
-#>  - Person identifiers are suppressed in this summary. Use `include_person =
-#>    TRUE` only under appropriate privacy controls.
 p_disp <- plot(disp, draw = FALSE)
-p_disp$data$plot
-#> [1] "lollipop"
+plot_data(p_disp, "plot")
+} # }
 ```

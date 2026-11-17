@@ -15,7 +15,7 @@ facet-specific residual PCA on person x facet-level matrices
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,31 +23,25 @@ facet-specific residual PCA on person x facet-level matrices
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -61,7 +55,7 @@ facet-specific residual PCA on person x facet-level matrices
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Run exploratory residual PCA summaries</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-plotting-dispatch.R" class="external-link"><code>R/api-plotting-dispatch.R</code></a></small>
       <div class="d-none name"><code>analyze_residual_pca.Rd</code></div>
     </div>
 
@@ -82,7 +76,10 @@ facet-specific residual PCA on person x facet-level matrices
 <span>  parallel_quantile <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  parallel_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"residual_permutation"</span>, <span class="st">"model_bootstrap"</span><span class="op">)</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_residual_pca'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="st">"scree"</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -94,7 +91,9 @@ facet-specific residual PCA on person x facet-level matrices
 
 
 <dt id="arg-mode">mode<a class="anchor" aria-label="anchor" href="#arg-mode"></a></dt>
-<dd><p><code>"overall"</code>, <code>"facet"</code>, or <code>"both"</code>.</p></dd>
+<dd><p>For <code>analyze_residual_pca()</code>: <code>"overall"</code>, <code>"facet"</code>, or <code>"both"</code>.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: <code>"overall"</code> (default) or <code>"facet"</code>. Do not also supply <code>mode</code>
+when using a prefixed <code>type</code> such as <code>"facet_scree"</code>.</p></dd>
 
 
 <dt id="arg-facets">facets<a class="anchor" aria-label="anchor" href="#arg-facets"></a></dt>
@@ -135,6 +134,22 @@ diagnostics. See Model-generated reference below for restrictions.</p></dd>
 <dd><p>Optional integer seed for reproducible simulation. When supplied,
 the caller's random-number state is restored after the calculation.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>A result from <code>analyze_residual_pca()</code>.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p><code>"scree"</code>, <code>"parallel_scree"</code>, <code>"parallel_excess"</code>, or <code>"loadings"</code>.
+Existing <code>"overall_*"</code> and <code>"facet_*"</code> spellings remain supported.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p><code>facet</code> selects a facet for <code>mode = "facet"</code> (default: the first
+available facet); <code>component = 1</code> selects a loading component; <code>top_n = 20</code>
+limits displayed loadings. <code>preset</code> is <code>"standard"</code>, <code>"publication"</code>,
+<code>"compact"</code>, or <code>"monochrome"</code>; <code>draw = FALSE</code> returns data without drawing.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -158,139 +173,56 @@ not confirmatory evidence.</p></li>
 <code>PrimaryReportingEligible</code>, <code>ReportingUse</code>, and <code>DecisionUse</code>:
 machine-readable guards that keep this route exploratory and prohibit an
 automatic dimensionality or subscore decision.</p></li>
+</ul><p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>:
+Invisibly, a <code>ggplot</code> object whose <code>plot_data(p)</code> payload contains:</p><ul><li><p><code>plot</code>: <code>"scree"</code>, <code>"parallel_scree"</code>, <code>"parallel_excess"</code>, or
+<code>"loadings"</code></p></li>
+<li><p><code>mode</code>: <code>"overall"</code> or <code>"facet"</code></p></li>
+<li><p><code>facet</code>: facet name (or <code>NULL</code>)</p></li>
+<li><p><code>title</code>: plot title text</p></li>
+<li><p><code>data</code>: underlying table used for plotting</p></li>
+<li><p><code>InferenceTier</code>, <code>SupportsFormalInference</code>,
+<code>PrimaryReportingEligible</code>, <code>ReportingUse</code>, and <code>DecisionUse</code>:
+machine-readable exploratory-screening guards</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The function works on standardized residual structures derived from
-<code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. When a fitted object from <code><a href="fit_mfrm.html">fit_mfrm()</a></code> is supplied,
-diagnostics are computed internally.</p>
-<p>Conceptually, this follows the Rasch residual-PCA tradition of examining
-structure in model residuals after the primary Rasch dimension has been
-extracted. In <code>mfrmr</code>, however, the implementation is an <strong>exploratory
-many-facet adaptation</strong>: it works on standardized residual matrices built as
-person x combined-facet or person x facet-level layouts, rather than
-reproducing FACETS/Winsteps residual-contrast tables one-to-one.</p>
-<p>Residual PCA should therefore be reported as residual-structure evidence,
-not as a formal proof of unidimensionality. It also should not be described
-as DIMTEST or UNIDIM: those essential-unidimensionality tests require a
-separate item-response-layer definition that is not uniquely determined by a
-many-facet long data set. In applied MFRM reporting, residual PCA is best
-triangulated with global residual fit, element fit, and Q3-style
-local-dependence screens.</p>
-<p>Correlations use persons with observed residuals for each pair. Every column
-and pair must have defined correlations, and the resulting matrix must be
-positive semidefinite (allowing numerical roundoff). Missing correlations
-are not set to zero, and invalid matrices are not smoothed. Unavailable
-analyses retain an explanation in <code>errors</code>. Older stored PCA calculations
-are recomputed from the supplied observations when this function is called.</p>
-<p>Output tables use:</p><ul><li><p><code>Component</code>: principal-component index (1, 2, ...)</p></li>
-<li><p><code>Eigenvalue</code>: eigenvalue for each component</p></li>
-<li><p><code>Proportion</code>: component variance proportion</p></li>
-<li><p><code>Cumulative</code>: cumulative variance proportion</p></li>
-</ul><p>When <code>parallel = TRUE</code>, the variance tables additionally include
-reference summaries (the method is retained in <code>ParallelMethod</code>):</p><ul><li><p><code>ParallelMean</code>: mean reference eigenvalue</p></li>
-<li><p><code>ParallelCutoff</code>: <code>parallel_quantile</code> cutoff of reference eigenvalues</p></li>
-<li><p><code>ExcessOverParallelCutoff</code>: observed eigenvalue minus the cutoff</p></li>
-<li><p><code>ExceedsParallelCutoff</code>: whether the observed eigenvalue exceeds the
-selected reference cutoff</p></li>
-</ul><p>With <code>parallel_method = "residual_permutation"</code>, the comparison conditions
-on the fitted residuals and missingness pattern;
-it does not simulate responses or refit the model. It does not account for
-fitted-parameter uncertainty and is not a calibrated dimensionality test.
-If any requested permutation has unavailable or invalid correlations, the
-comparison is withheld rather than conditioning on successful permutations.
-<code>parallel_status</code> retains the successful count and the reason.
-More permutations improve numerical stability of the reference quantile,
-but do not establish error-rate control for the fitted model.</p>
-<p>For <code>mode = "facet"</code> or <code>"both"</code>, <code>by_facet_table</code> additionally includes
-a <code>Facet</code> column.</p>
-<p><code>summary(pca)</code> is supported through <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>.
-<code>plot(pca)</code> dispatches on class <code>mfrm_residual_pca</code>. Use
-<code>type = "scree"</code>, <code>"parallel_scree"</code>, <code>"parallel_excess"</code> or <code>"loadings"</code>,
-with <code>mode = "overall"</code> or <code>mode = "facet", facet = "Criterion"</code>.
-Existing prefixed spellings such as <code>"facet_scree"</code> remain supported.
-Plotting a saved PCA does not generate or refit a parallel reference.
-Save the complete result with <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">base::saveRDS()</a></code>, including <code>errors</code>,
-<code>warnings</code>, <code>parallel_status</code> and any <code>bootstrap_trials</code>; export the
-desired tables separately with <code><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">utils::write.csv()</a></code>. <code><a href="as_ggplot.html">as_ggplot()</a></code> converts
-a saved plot payload without redoing PCA. A blank unavailable plot is not
-evidence of an absence of residual structure.</p>
+    <p>Performs exploratory eigenvalue/loading PCA on pairwise-complete standardized
+residual correlation matrices (<code>overall</code> Person-by-combined-facet and/or
+<code>facet</code> Person-by-facet-level). Undefined pairwise correlations or non-PSD
+matrices are recorded in <code>errors</code> without zero-filling or smoothing.</p>
+<p>With <code>parallel = TRUE</code>, <code>"residual_permutation"</code> permutes standardized
+residuals within columns; <code>"model_bootstrap"</code> simulates conditionally
+independent ratings and refits unanchored unit-weight RSM/PCM MML models with
+fixed <code>N(0, 1)</code> ability, retaining all attempted replicates in
+<code>bootstrap_trials</code> and withholding cutoffs (<code>ParallelMean</code>, <code>ParallelCutoff</code>,
+<code>ExcessOverParallelCutoff</code>, <code>ExceedsParallelCutoff</code>) if any replicate fails.
+Reference quantiles are exploratory componentwise screens rather than
+multiplicity-calibrated dimensionality tests; pass <code>residual_pca = "none"</code> to
+<code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> when calling <code>analyze_residual_pca()</code> separately.</p>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: Plot saved residual PCA</p>
+<p>Display a saved residual PCA or its saved parallel-analysis comparison.
+Plotting does not generate a new parallel reference.</p>
     </div>
     <div class="section level2">
-    <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
+    <h2 id="fitting-before-a-separate-pca">Fitting before a separate PCA<a class="anchor" aria-label="anchor" href="#fitting-before-a-separate-pca"></a></h2>
 
 
-<p>Use <code>overall_table</code> first:</p><ul><li><p>early components with noticeably larger eigenvalues or proportions
-suggest residual structure that may deserve follow-up. Small early
-components do not establish unidimensionality; inspect the residual
-aggregation, available person overlaps, fit and local-dependence screens.</p></li>
-</ul><p>Then inspect <code>by_facet_table</code>:</p><ul><li><p>describes patterns within each facet-level residual matrix. Different
-numbers of columns, aggregation and overlaps prevent treating eigenvalues
-across facets as a ranking of their contributions to a single decomposition.</p></li>
-</ul><p>Finally, inspect loadings via <a href="plot.mfrm_fit.html">plot(x, type = "residual_pca")</a> to identify which
-variables/elements drive each component.</p>
+<p>Use <code>diagnose_mfrm(fit, residual_pca = "none")</code> when PCA will be requested
+separately with <code>analyze_residual_pca(..., mode = "both")</code>, avoiding duplicate
+PCA calculation. Inspect the tables/plots above with the model's fit diagnostics.</p>
     </div>
     <div class="section level2">
-    <h2 id="model-generated-reference">Model-generated reference<a class="anchor" aria-label="anchor" href="#model-generated-reference"></a></h2>
+    <h2 id="reading-pca-plots">Reading PCA plots<a class="anchor" aria-label="anchor" href="#reading-pca-plots"></a></h2>
 
 
-<p><code>parallel_method = "model_bootstrap"</code> is an exploratory parametric-bootstrap
-reference for native RSM/PCM MML fits with a fixed standard-normal population,
-fixed quadrature, additive facets and unit weights. Anchors, dummy/positive
-facets, shrinkage, estimated population models, GPCM, JML and extended
-testlet/shared-rater models are not supported by this reference yet.</p>
-<p>Each replicate draws one independent standard-normal ability per Person and
-shares it across that Person's retained rating rows. Fitted facet and step
-parameters generate conditionally independent ratings. The model is refitted
-with the original identification, category map, quadrature and optimization
-settings. Standardized residuals use the same scoring and aggregation as the
-observed analysis. One refit supplies every requested PCA scope.</p>
-<p>The reference conditions on the analyzed assignment and observation pattern:
-it does not fill unassigned or missing ratings or simulate informative
-missingness. Sparse designs remain usable only when the required residual
-correlations are defined and their matrix is positive semidefinite.
-Source and refitted models must pass numerical convergence checks. The
-observed PCA itself can be unavailable despite successful fitting, for
-example because the assignment lacks shared-Person pairs. This is reported
-separately from refit failure. Every planned replicate is retained in <code>bootstrap_trials</code>, including warnings and
-failures. An affected scope has no reference cutoff if any replicate fails;
-successful replicates are not substituted or selected to form its reference.
-Raw eigenvalue draws, with missing rows for failures, are stored under each
-PCA bundle's <code>parallel$draws</code>.</p>
-<p>Refitting includes variation from parameter estimation under the fitted null;
-generating parameters themselves are plug-in estimates, not posterior draws.
-Cutoffs are componentwise reference quantiles, not multiplicity-adjusted
-tests. Scanning every component does not preserve the nominal false-flag
-probability of one component. Absence of a flag is not evidence that all
-model assumptions hold. Few replicates give unstable tail quantiles. Neither a fixed number of
-replicates nor this algorithm establishes calibrated false-flag rates or
-proves unidimensionality. Inspect convergence, quadrature sensitivity,
-overlap and competing dependence explanations before substantive use.</p>
+<p>Start with overall mode, then facet views. <code>"scree"</code> shows eigenvalues;
+<code>"parallel_scree"</code> adds saved means/cutoffs, and <code>"parallel_excess"</code> plots
+observed-minus-cutoff. First compute references with <code>parallel = TRUE</code>;
+inspect <code>parallel_status</code>/<code>bootstrap_trials</code> and distinguish permutation from
+refitted bootstrap. <code>"loadings"</code> selects largest absolute loadings; read both
+signs and magnitudes. These reuse the exploratory evidence described above;
+multiple views neither provide independent evidence nor prove dimensionality.</p>
     </div>
-    <div class="section level2">
-    <h2 id="dimensionality-and-network-follow-up">Dimensionality and network follow-up<a class="anchor" aria-label="anchor" href="#dimensionality-and-network-follow-up"></a></h2>
-
-
-<p>Checking a one-dimensional model does not require fitting a multidimensional
-alternative first. Residual structure can also reflect testlet, rater or
-assignment effects; neither the component count nor the count plus one is
-an estimated number of substantive abilities. Combine the screen with
-<code><a href="q3_statistic.html">q3_statistic()</a></code>, marginal-fit review and substantive task/criterion evidence.
-The current permutation reference does not replace a fitted-model parametric
-bootstrap. No native residual-network/EGA or calibrated dimensionality
-decision is supplied here. Residual communities would describe remaining
-associations, not automatically latent dimensions. See
-<code><a href="../articles/mfrmr-visual-diagnostics.html">vignette("mfrmr-visual-diagnostics")</a></code> for alternatives and their scope.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
-
-
-<ol><li><p>Fit model and run <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> with <code>residual_pca = "none"</code> or <code>"both"</code>.</p></li>
-<li><p>Call <code>analyze_residual_pca(..., mode = "both")</code>.</p></li>
-<li><p>Review <code>summary(pca)</code>, then plot scree/loadings.</p></li>
-<li><p>Cross-check with fit/misfit diagnostics before conclusions.</p></li>
-</ol></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>The residual-PCA idea follows the Rasch residual-structure literature,
@@ -324,25 +256,11 @@ components analysis (PCA)?</em> Rasch Measurement Transactions, 12(2), 636.
 <a href="https://www.rasch.org/rmt/rmt122m.htm" class="external-link">https://www.rasch.org/rmt/rmt122m.htm</a></p></li>
 <li><p>Linacre, J. M. (1998). <em>Detecting multidimensionality: Which residual
 data-type works best?</em> Journal of Outcome Measurement, 2(3), 266-283.</p></li>
-</ul><p>Applications and broader measurement discussions below provide context;
-they do not validate this implementation's residual aggregation, reference
-cutoffs or automatic dimensionality decisions:</p><ul><li><p>Eckes, T. (2005). Examining rater effects in TestDaF writing and speaking
-performance assessments: A many-facet Rasch analysis. <em>Language Assessment
-Quarterly</em>, 2(3), 197-221.</p></li>
-<li><p>Yamashita, T. (2024). An application of many-facet Rasch measurement to
-evaluate automated essay scoring: A case of ChatGPT-4.0. <em>Research Methods
-in Applied Linguistics</em>, 3(3), 100133.</p></li>
-<li><p>Uto, M. (2021). A multidimensional generalized many-facet Rasch model for
-rubric-based performance assessment. <em>Behaviormetrika</em>, 48(2), 425-457.</p></li>
-<li><p>Aryadoust, V., Ng, L. Y., &amp; Sayama, H. (2021). A comprehensive review of
-Rasch measurement in language assessment: Recommendations and guidelines
-for research. <em>Language Testing</em>, 38(1), 6-40.</p></li>
-<li><p>Tseng, W.-T. (2016). Measuring English vocabulary size via computerized
-adaptive testing. <em>Computers &amp; Education</em>, 97, 69-85.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>, <a href="plot.mfrm_fit.html">plot(x, type = "residual_pca")</a>, <a href="mfrmr_visual_diagnostics.html">mfrmr_visual_diagnostics</a></p></div>
+    <div class="dont-index"><p><code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>, <a href="plot.mfrm_fit.html">plot(x, type = "residual_pca")</a>, <a href="plot.mfrm_fit.html">mfrmr_visual_diagnostics</a></p>
+<p><code>analyze_residual_pca()</code>, <a href="mfrmr_api_migration_030.html">mfrmr_plot_migration</a></p></div>
     </div>
 
     <div class="section level2">
@@ -351,9 +269,9 @@ adaptive testing. <em>Computers &amp; Education</em>, 97, 69-85.</p></li>
 <span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
 <span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"core-jml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
-<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu">analyze_residual_pca</span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">pca2</span> <span class="op">&lt;-</span> <span class="fu">analyze_residual_pca</span><span class="op">(</span><span class="va">fit</span>, mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># A fitted model is also accepted: analyze_residual_pca(fit, mode = "both").</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pca</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Residual PCA summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -374,60 +292,21 @@ adaptive testing. <em>Computers &amp; Education</em>, 97, 69-85.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   9      0.949      0.059</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  10      0.846      0.053</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Residual PCA is exploratory residual-structure screening (overall and/or by facet), not a standalone dimensionality test or an automatic decision about dimensions or subscores. </span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"residual_pca"</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, view <span class="op">=</span> <span class="st">"scree"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "scree"</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $plot</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "scree"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $mode</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "overall"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $facet</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $title</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Overall Residual PCA (Scree)"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $subtitle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Variance explained by residual components"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $legend</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                     label      role  aesthetic   value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                    Residual eigenvalues component line-point #1f78b4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Unit eigenvalue (descriptive reference) reference       line #6b7280</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"scree"</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"data"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Component Eigenvalue Proportion Cumulative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1   2.113557 0.13209732  0.1320973</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         2   1.832887 0.11455546  0.2466528</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         3   1.706239 0.10663995  0.3532927</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         4   1.519039 0.09493995  0.4482327</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         5   1.289992 0.08062450  0.5288572</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6         6   1.157287 0.07233045  0.6011876</span>
+<span class="r-in"><span><span class="co"># Optional permutation reference repeats the PCA calculation.</span></span></span>
+<span class="r-in"><span><span class="co"># example("analyze_residual_pca", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">pca_pa</span> <span class="op">&lt;-</span> <span class="fu">analyze_residual_pca</span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, parallel <span class="op">=</span> <span class="cn">TRUE</span>, parallel_reps <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pca_pa</span><span class="op">$</span><span class="va">overall_table</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Component Eigenvalue Proportion Cumulative ParallelMean ParallelSD</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1   2.113557 0.13209732  0.1320973     2.160927 0.14855886</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2         2   1.832887 0.11455546  0.2466528     1.918644 0.07914518</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3         3   1.706239 0.10663995  0.3532927     1.697854 0.06203292</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4         4   1.519039 0.09493995  0.4482327     1.485691 0.07927506</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5         5   1.289992 0.08062450  0.5288572     1.297384 0.04976571</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6         6   1.157287 0.07233045  0.6011876     1.199563 0.04271580</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ParallelCutoff ParallelQuantile ExcessOverParallelCutoff</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       2.449728             0.95              -0.33617090</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2       2.025494             0.95              -0.19260707</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3       1.801772             0.95              -0.09553311</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4       1.628404             0.95              -0.10936434</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       1.407595             0.95              -0.11760270</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       1.257091             0.95              -0.09980357</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ExceedsParallelCutoff ParallelReps SuccessfulParallelReps</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 FALSE           10                     10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                 FALSE           10                     10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                 FALSE           10                     10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 FALSE           10                     10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                 FALSE           10                     10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                 FALSE           10                     10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         ParallelMethod</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 residual_permutation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 residual_permutation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 residual_permutation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 residual_permutation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 residual_permutation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 residual_permutation</span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">overall_table</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Component Eigenvalue Proportion Cumulative</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1         1   2.113557 0.13209732  0.1320973</span>
@@ -436,6 +315,30 @@ adaptive testing. <em>Computers &amp; Education</em>, 97, 69-85.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4         4   1.519039 0.09493995  0.4482327</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5         5   1.289992 0.08062450  0.5288572</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6         6   1.157287 0.07233045  0.6011876</span>
+<span class="r-in"><span><span class="co"># Optional workflow; run the example explicitly as shown below.</span></span></span>
+<span class="r-in"><span><span class="co"># example("plot.mfrm_residual_pca", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">ratings_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">selected_people</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">ratings_all</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">24</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="va">ratings_all</span><span class="op">[</span></span></span>
+<span class="r-in"><span>  <span class="va">ratings_all</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">selected_people</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"overall"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu">analyze_residual_pca</span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"overall"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">plt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"scree"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">plt</span>, <span class="st">"data"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Ten replicates illustrate the display, not a stable reference cutoff.</span></span></span>
+<span class="r-in"><span><span class="va">pca_pa</span> <span class="op">&lt;-</span> <span class="fu">analyze_residual_pca</span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, parallel <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>                               parallel_reps <span class="op">=</span> <span class="fl">10</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pca_pa</span>, type <span class="op">=</span> <span class="st">"parallel_scree"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">pa</span>, <span class="st">"data"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">plt_load</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"loadings"</span>, component <span class="op">=</span> <span class="fl">1</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">plt_load</span>, <span class="st">"data"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"scree"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

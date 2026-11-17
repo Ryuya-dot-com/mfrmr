@@ -106,13 +106,13 @@ print(x, ...)
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
   Ignored by the S3 print and summary methods on this page.
 
-- x:
-
-  An `mfrm_anchored_fit` object.
-
 - object:
 
   An `mfrm_anchored_fit` object (for `summary`).
+
+- x:
+
+  An `mfrm_anchored_fit` object.
 
 ## Value
 
@@ -141,7 +141,7 @@ Object of class `mfrm_anchored_fit` with components:
 This function automates the baseline-anchored calibration workflow:
 
 1.  Extracts anchor values from the baseline fit using
-    [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md).
+    [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md).
 
 2.  Re-estimates the model on `new_data` with those anchors fixed via
     `fit_mfrm(..., anchors = anchor_table)`.
@@ -261,11 +261,11 @@ formal z tests or calibrated error-rate decisions.
 ## See also
 
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-[`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md),
+[`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md),
 [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md),
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md),
-[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
+[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
 
 ## Examples
 

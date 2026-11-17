@@ -23,23 +23,41 @@ print(x, ...)
 
 # S3 method for class 'mfrm_pca'
 summary(object, ...)
+
+# S3 method for class 'mfrm_pca'
+plot(
+  x,
+  type = c("scree", "scores", "loadings"),
+  components = NULL,
+  groups = NULL,
+  labels = NULL,
+  marginal = c("auto", "histogram", "none"),
+  draw = TRUE,
+  preset = "standard",
+  ...
+)
 ```
 
 ## Arguments
 
 - x :
 
-  A table reviewed with
+  For `mfrm_pca()`: A table reviewed with
   [`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md).
-  For
-  [`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md),
-  a result from `mfrm_pca()` is also accepted.
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): A result
+  from `mfrm_pca()`.
 
 - components :
 
-  Number of leading principal components to retain. `NULL` retains the
-  numerical rank, using `sqrt(.Machine$double.eps)` relative to the
-  largest singular value. A requested count cannot exceed that rank.
+  For `mfrm_pca()`: Number of leading principal components to retain.
+  `NULL` retains the numerical rank, using `sqrt(.Machine$double.eps)`
+  relative to the largest singular value. A requested count cannot
+  exceed that rank.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): For
+  scores, two distinct retained component numbers. For loadings, one
+  retained component number. Defaults to `c(1, 2)` for scores and `1`
+  for loadings. Unavailable axes cause an error.
 
 - scale :
 
@@ -50,23 +68,61 @@ summary(object, ...)
 
 - weights :
 
-  Optional named, strictly positive finite numeric vector with one
-  weight per selected feature. Defaults to equal weights. Names, not
-  vector order, identify features. Remove a feature to exclude it.
+  As in
+  [`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md).
+  The same choices apply to every imputation.
 
 - missing :
 
-  Either `"error"` (default) or `"omit"`. The latter excludes incomplete
-  entities explicitly, retaining their IDs, reasons, and missing group
-  membership in the result. No values are imputed.
+  Either `"error"` (default) or `"omit"`, applied to missing features
+  remaining after imputation. Explicit omission retains excluded IDs
+  with unavailable memberships and pairwise proportions.
 
 - ... :
 
-  Reserved for method compatibility.
+  For [`print()`](https://rdrr.io/r/base/print.html): Reserved for
+  method compatibility. For
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Reserved for
+  future use; additional arguments are rejected.
 
 - object :
 
   An object returned by `mfrm_pca()`.
+
+- type :
+
+  `"scree"` (default), `"scores"`, or `"loadings"`.
+
+- groups :
+
+  Optional
+  [`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
+  result used to color a scores plot. Its IDs, included entities and
+  shared PCA features must match. Labels only annotate the view; they do
+  not refit PCA or imply separation on every component. Groups use both
+  colour and point shape, including monochrome output. Shapes repeat
+  after six groups; inspect the ID-aligned table for crowded views.
+
+- labels :
+
+  Show entity IDs in scores plots; `NULL` labels at most 50 included
+  entities. Loading plots label features and scree plots label
+  components. Hiding entity labels does not omit observations.
+
+- marginal :
+
+  Marginal histogram display for `type = "scores"`: `"auto"` (default;
+  displayed when at least 8 finite score pairs are plotted),
+  `"histogram"`, or `"none"`.
+
+- draw :
+
+  Draw the plot when `TRUE`; `FALSE` only returns plotted values.
+
+- preset :
+
+  Plot style: `"standard"`, `"publication"`, `"compact"`, or
+  `"monochrome"`.
 
 ## Value
 
@@ -75,6 +131,26 @@ An `mfrm_pca` object with ID-aligned `scores` (omitted rows are `NA`),
 proportion and retained status), `transformation` (centers, divisors and
 weight factors), original `feature_data` and `settings`.
 [`summary()`](https://rdrr.io/r/base/summary.html) returns `variance`.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object carrying the underlying `mfrm_plot_data` payload
+(accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md))
+with the exact plotted table, selected components, group colour/shape
+encoding, excluded IDs and axis meanings. Scree data retain the full
+variance table, including components not used for clustering.
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+extracts these values.
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+converts all three views using their saved axes and encodings;
+`component = "table"` retains the complete view. Excluded IDs and
+transformation metadata remain attached. Use
+`ggplot2::labs(title = NULL, subtitle = NULL)` to hide headings in the
+returned ggplot. Labels follow the saved `labels` setting; no entities
+are sampled when labels are hidden. Physical text and point sizes can
+differ between base graphics and ggplot. Converted scores use equal axis
+units and equal displayed spans to avoid a narrow panel when the
+selected components explain very different amounts of variation.
 
 ## Details
 
@@ -96,18 +172,41 @@ their subspace. Loadings are eigenvector coefficients in the transformed
 feature space, not correlations in the original units.
 
 Use the same fitted PCA to review scores, loadings and groups. Passing
-its result to
-[`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md)
-uses the retained scores without further standardization or whitening.
-PCA is not a required step for k-means. Group comparison and imputation
-sensitivity retain their descriptive scope.
+its result to `mfrm_cluster(..., method = "kmeans")` uses the retained
+scores without further standardization or whitening. PCA is not a
+required step for k-means. Group comparison and imputation sensitivity
+retain their descriptive scope.
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot
+numeric feature PCA and optional exploratory groups
+
+Review explained variation, original-feature coefficients or entity
+scores from a saved PCA without refitting it.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Scores and
+loading signs are arbitrary. Loadings are eigenvector coefficients in
+the centered, weighted and optionally standardized space; they are not
+original-unit correlations. A two-component scores view omits other
+directions, so apparent overlap or separation is only a projection. No
+confidence region, group validity or rater-quality judgment is implied.
+
+## Session plot defaults
+
+See
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+for `options(mfrmr.plot_preset)`, argument precedence, and appearance
+when saving or reusing a plot.
 
 ## See also
 
-[`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md),
-[`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md),
-[`plot.mfrm_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_pca.md),
+[k-means
+details](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
+[`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
+`plot.mfrm_pca()`,
 [`stats::prcomp()`](https://rdrr.io/r/stats/prcomp.html)
+
+`mfrm_pca()`, [k-means
+details](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
 
 ## Examples
 
@@ -128,8 +227,21 @@ pca$loadings
 #> ExperienceYears 0.5831713 -0.5122424
 #> WorkshopHours   0.5485673  0.8207647
 #> AnnualRatings   0.5991537 -0.2528894
-groups <- mfrm_cluster_kmeans(pca, k = 2, seed = 17, silhouette = FALSE)
+groups <- mfrm_cluster(method = "kmeans", pca, k = 2, seed = 17, silhouette = FALSE)
 plot(pca, type = "scores", groups = groups)
 
 plot(groups, type = "profile", feature = "ExperienceYears")
+
+# Optional workflow; run the example explicitly as shown below.
+# example("plot.mfrm_pca", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+attributes <- data.frame(ID = letters[1:6],
+  ExperienceYears = c(1, 2, 4, 8, 10, 12),
+  WorkshopHours = c(8, 16, 12, 24, 16, 32))
+result <- mfrm_pca(mfrm_features(attributes, "ID", names(attributes)[-1]))
+plot(result)
+plot(result, type = "scores")
+plot(result, type = "loadings", components = 1)
+plot_data(plot(result, type = "scores", draw = FALSE))$table
+} # }
 ```

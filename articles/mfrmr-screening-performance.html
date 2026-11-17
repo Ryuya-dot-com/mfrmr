@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,32 +33,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>How often does a rater screen give the right warning?</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-screening-performance.Rmd" class="external-link"><code>vignettes/mfrmr-screening-performance.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/vignettes/articles/mfrmr-screening-performance.Rmd" class="external-link"><code>vignettes/articles/mfrmr-screening-performance.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-screening-performance.Rmd</code></div>
     </div>
 
@@ -94,7 +88,7 @@ feedback to raters. Before choosing a warning rule, two questions
 matter: how often does it warn about a rater whose ratings follow the
 intended model, and how often does it detect a specified departure? A
 difference in severity alone is not such a departure. A consistently
-strict rater can fit a model that estimates severity.</p>
+severe rater can fit a model that estimates severity.</p>
 <p><code><a href="../reference/mfrm_screening_performance.html">mfrm_screening_performance()</a></code> summarizes flags against
 <strong>known simulation truth</strong>. It accepts outcomes from your
 own generators, fitting methods and screening rules. It does not
@@ -140,7 +134,7 @@ Omitting a result row also leaves it unavailable. Removing it from the
 roster would incorrectly change the intended experiment.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">performance</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-screening-performance_files/figure-html/incomplete-plot-1.png" class="r-plt" alt="One known positive family event among three available trials out of four planned. The conditional rate is one third; unresolved-outcome bounds span one quarter to one half and are not confidence intervals." width="768"></p>
+<p><img src="mfrmr-screening-performance_files/figure-html/incomplete-plot-1.svg" class="r-plt" alt="One known positive family event among three available trials out of four planned. The conditional rate is one third; unresolved-outcome bounds span one quarter to one half and are not confidence intervals." width="768"></p>
 <p>Blue whiskers are exact binomial Monte Carlo intervals, conditional
 on known outcomes. The gray segment describes unresolved outcomes. The
 right column shows available/planned events. A completely unavailable
@@ -267,7 +261,7 @@ for every assessment.</p>
 <span>  Profile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0.5-1.5"</span>, <span class="st">"0.7-1.3"</span>, <span class="st">"0.8-1.2"</span>, <span class="st">"0.4-1.2"</span><span class="op">)</span>,</span>
 <span>  Lower <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>, <span class="fl">.7</span>, <span class="fl">.8</span>, <span class="fl">.4</span><span class="op">)</span>, Upper <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.5</span>, <span class="fl">1.3</span>, <span class="fl">1.2</span>, <span class="fl">1.2</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">sensitivity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_screening_sensitivity.html">mfrm_screening_sensitivity</a></span><span class="op">(</span><span class="va">planned</span>, <span class="va">observed</span>, <span class="va">bands</span>,</span>
+<span><span class="va">sensitivity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_screening_performance.html">mfrm_screening_sensitivity</a></span><span class="op">(</span><span class="va">planned</span>, <span class="va">observed</span>, <span class="va">bands</span>,</span>
 <span>  rule <span class="op">=</span> <span class="st">"Ordinary RSM MML; EAP plug-in residuals; all raters; no exclusion/refit"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">sensitivity</span><span class="op">$</span><span class="va">by_family</span>, <span class="va">Targets</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        Condition                        Metric Targets CompleteScreens Planned</span></span>
@@ -311,10 +305,10 @@ for every assessment.</p>
 <span><span class="co">#&gt; 23      0.0000000      0.0000000 0.4-1.2   0.4   1.2    either</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sensitivity</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"underfit"</span>, <span class="st">"overfit"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-screening-performance_files/figure-html/directional-tiles-1.png" class="r-plt" alt="Separate underfit and overfit family false-flag rates for declared threshold profiles. Each cell shows the conditional percentage and known/planned replication count; these six illustrative trials do not qualify screening accuracy." width="864"></p>
+<p><img src="mfrmr-screening-performance_files/figure-html/directional-tiles-1.svg" class="r-plt" alt="Separate underfit and overfit family false-flag rates for declared threshold profiles. Each cell shows the conditional percentage and known/planned replication count; these six illustrative trials do not qualify screening accuracy." width="864"></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sensitivity</span>, style <span class="op">=</span> <span class="st">"curves"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"underfit"</span>, <span class="st">"overfit"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-screening-performance_files/figure-html/directional-curves-1.png" class="r-plt" alt="Directional false-flag rates across discrete threshold profiles, with pointwise Monte Carlo intervals. Different symbols and line types distinguish underfit and overfit." width="672"></p>
+<p><img src="mfrmr-screening-performance_files/figure-html/directional-curves-1.svg" class="r-plt" alt="Directional false-flag rates across discrete threshold profiles, with pointwise Monte Carlo intervals. Different symbols and line types distinguish underfit and overfit." width="672"></p>
 <p>The intervals describe Monte Carlo uncertainty across independent
 simulated datasets; six trials leave considerable uncertainty.
 Thresholds applied to the same ratings are paired, so comparing their
@@ -345,7 +339,7 @@ earlier combined rule available explicitly:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_measures_table.html">fit_measures_table</a></span><span class="op">(</span><span class="va">fit</span>, flag_basis <span class="op">=</span> <span class="st">"mnsq"</span><span class="op">)</span></span>
 <span><span class="va">combined_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_measures_table.html">fit_measures_table</a></span><span class="op">(</span><span class="va">fit</span>, flag_basis <span class="op">=</span> <span class="st">"mnsq_or_zstd"</span><span class="op">)</span></span>
-<span><span class="va">combined_study</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_screening_sensitivity.html">mfrm_screening_sensitivity</a></span><span class="op">(</span><span class="va">planned</span>, <span class="va">observed</span>, <span class="va">bands</span>,</span>
+<span><span class="va">combined_study</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_screening_performance.html">mfrm_screening_sensitivity</a></span><span class="op">(</span><span class="va">planned</span>, <span class="va">observed</span>, <span class="va">bands</span>,</span>
 <span>  rule <span class="op">=</span> <span class="st">"Same saved residuals; engine ZSTD; no exclusion/refit"</span>, zstd_cut <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p>Changing the mean-square band under the combined rule need not change
 a ZSTD-only warning. ZSTD depends on sample size and on the df

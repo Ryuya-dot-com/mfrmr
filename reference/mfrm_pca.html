@@ -37,7 +37,7 @@ retained.">
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,32 +46,26 @@ retained.">
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -90,7 +84,7 @@ retained.">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Principal components of numeric external features</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-numeric-features.R" class="external-link"><code>R/api-numeric-features.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-numeric-features.R" class="external-link"><code>R/api-numeric-features.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-plotting-pca.R" class="external-link"><code>R/api-plotting-pca.R</code></a></small>
       <div class="d-none name"><code>mfrm_pca.Rd</code></div>
     </div>
 
@@ -118,7 +112,20 @@ retained.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'mfrm_pca'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_pca'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"scree"</span>, <span class="st">"scores"</span>, <span class="st">"loadings"</span><span class="op">)</span>,</span>
+<span>  components <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  groups <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  labels <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  marginal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"histogram"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  preset <span class="op">=</span> <span class="st">"standard"</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -129,15 +136,20 @@ retained.</p>
 <dl>
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a>
 </dt>
-<dd><p>A table reviewed with <code><a href="mfrm_features.html">mfrm_features()</a></code>. For <code><a href="mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code>,
-a result from <code>mfrm_pca()</code> is also accepted.</p></dd>
+<dd><p>For <code>mfrm_pca()</code>: A table reviewed with <code><a href="mfrm_features.html">mfrm_features()</a></code>.
+For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: A result from <code>mfrm_pca()</code>.</p></dd>
 
 
 <dt id="arg-components">components<a class="anchor" aria-label="anchor" href="#arg-components"></a>
 </dt>
-<dd><p>Number of leading principal components to retain. <code>NULL</code>
+<dd>
+<p>For <code>mfrm_pca()</code>: Number of leading principal components to retain. <code>NULL</code>
 retains the numerical rank, using <code>sqrt(.Machine$double.eps)</code> relative to
-the largest singular value. A requested count cannot exceed that rank.</p></dd>
+the largest singular value. A requested count cannot exceed that rank.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: For scores, two distinct retained component numbers.
+For loadings, one retained component number. Defaults to <code>c(1, 2)</code> for
+scores and <code>1</code> for loadings. Unavailable axes cause an error.</p>
+</dd>
 
 
 <dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a>
@@ -150,26 +162,65 @@ factors, ordered factors, characters and logical features are refused.</p></dd>
 
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a>
 </dt>
-<dd><p>Optional named, strictly positive finite numeric vector with
-one weight per selected feature. Defaults to equal weights. Names, not
-vector order, identify features. Remove a feature to exclude it.</p></dd>
+<dd><p>As in <code><a href="mfrm_cluster.html">mfrm_cluster()</a></code>. The same choices apply to every
+imputation.</p></dd>
 
 
 <dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a>
 </dt>
-<dd><p>Either <code>"error"</code> (default) or <code>"omit"</code>. The latter excludes
-incomplete entities explicitly, retaining their IDs, reasons, and missing
-group membership in the result. No values are imputed.</p></dd>
+<dd><p>Either <code>"error"</code> (default) or <code>"omit"</code>, applied to missing
+features remaining after imputation. Explicit omission retains excluded
+IDs with unavailable memberships and pairwise proportions.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a>
 </dt>
-<dd><p>Reserved for method compatibility.</p></dd>
+<dd><p>For <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>: Reserved for method compatibility.
+For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Reserved for future use; additional arguments are rejected.</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a>
 </dt>
 <dd><p>An object returned by <code>mfrm_pca()</code>.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a>
+</dt>
+<dd><p><code>"scree"</code> (default), <code>"scores"</code>, or <code>"loadings"</code>.</p></dd>
+
+
+<dt id="arg-groups">groups<a class="anchor" aria-label="anchor" href="#arg-groups"></a>
+</dt>
+<dd><p>Optional <code><a href="mfrm_cluster.html">mfrm_cluster()</a></code> result used to color a scores plot. Its IDs,
+included entities and shared PCA features must match. Labels only annotate
+the view; they do not refit PCA or imply separation on every component.
+Groups use both colour and point shape, including monochrome output.
+Shapes repeat after six groups; inspect the ID-aligned table for crowded views.</p></dd>
+
+
+<dt id="arg-labels">labels<a class="anchor" aria-label="anchor" href="#arg-labels"></a>
+</dt>
+<dd><p>Show entity IDs in scores plots; <code>NULL</code> labels at most
+50 included entities. Loading plots label features and scree plots label
+components. Hiding entity labels does not omit observations.</p></dd>
+
+
+<dt id="arg-marginal">marginal<a class="anchor" aria-label="anchor" href="#arg-marginal"></a>
+</dt>
+<dd><p>Marginal histogram display for <code>type = "scores"</code>:
+<code>"auto"</code> (default; displayed when at least 8 finite score pairs are plotted),
+<code>"histogram"</code>, or <code>"none"</code>.</p></dd>
+
+
+<dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a>
+</dt>
+<dd><p>Draw the plot when <code>TRUE</code>; <code>FALSE</code> only returns plotted values.</p></dd>
+
+
+<dt id="arg-preset">preset<a class="anchor" aria-label="anchor" href="#arg-preset"></a>
+</dt>
+<dd><p>Plot style: <code>"standard"</code>, <code>"publication"</code>, <code>"compact"</code>, or
+<code>"monochrome"</code>.</p></dd>
 
 </dl>
 </div>
@@ -180,6 +231,19 @@ group membership in the result. No values are imputed.</p></dd>
 <code>loadings</code>, a <code>variance</code> table (variance, proportion, cumulative proportion
 and retained status), <code>transformation</code> (centers, divisors and weight factors),
 original <code>feature_data</code> and <code>settings</code>. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns <code>variance</code>.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Invisibly, a <code>ggplot</code> object carrying the underlying
+<code>mfrm_plot_data</code> payload (accessible via <code><a href="plot_data.html">plot_data()</a></code>) with the exact plotted table,
+selected components, group colour/shape encoding, excluded IDs and axis meanings. Scree data retain the
+full variance table, including components not used for clustering.
+<code><a href="plot_data.html">plot_data()</a></code> extracts these values. <code><a href="as_ggplot.html">as_ggplot()</a></code> converts all three views
+using their saved axes and encodings; <code>component = "table"</code> retains the
+complete view. Excluded IDs and transformation metadata remain attached.
+Use <code>ggplot2::labs(title = NULL, subtitle = NULL)</code> to hide headings in
+the returned ggplot. Labels follow the saved <code>labels</code> setting; no entities
+are sampled when labels are hidden. Physical text and point sizes can
+differ between base graphics and ggplot. Converted scores use equal axis
+units and equal displayed spans to avoid a narrow panel when the selected
+components explain very different amounts of variation.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a>
@@ -199,15 +263,34 @@ and scores are arbitrary; tied eigenvalues can also rotate their subspace.
 Loadings are eigenvector coefficients in the transformed feature space,
 not correlations in the original units.</p>
 <p>Use the same fitted PCA to review scores, loadings and groups. Passing its
-result to <code><a href="mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code> uses the retained scores without further
+result to <code>mfrm_cluster(..., method = "kmeans")</code> uses the retained scores without further
 standardization or whitening. PCA is not a required step for k-means.
 Group comparison and imputation sensitivity retain their descriptive scope.</p>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: Plot numeric feature PCA and optional exploratory groups</p>
+<p>Review explained variation, original-feature coefficients or entity scores
+from a saved PCA without refitting it.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Scores and loading signs are arbitrary. Loadings are eigenvector
+coefficients in the centered, weighted and optionally standardized space;
+they are not original-unit correlations. A two-component scores view omits
+other directions, so apparent overlap or separation is only a projection.
+No confidence region, group validity or rater-quality judgment is implied.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="session-plot-defaults">Session plot defaults<a class="anchor" aria-label="anchor" href="#session-plot-defaults"></a>
+</h2>
+
+
+<p>See <a href="plot.mfrm_fit.html">mfrmr_visual_diagnostics</a> for <code>options(mfrmr.plot_preset)</code>, argument
+precedence, and appearance when saving or reusing a plot.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a>
 </h2>
-    <div class="dont-index"><p><code><a href="mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code>, <code><a href="mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code>, <code><a href="plot.mfrm_pca.html">plot.mfrm_pca()</a></code>,
-<code><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">stats::prcomp()</a></code></p></div>
+    <div class="dont-index">
+<p><a href="mfrm_cluster.html">k-means details</a>, <code><a href="mfrm_cluster.html">mfrm_cluster_compare()</a></code>, <code>plot.mfrm_pca()</code>,
+<code><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">stats::prcomp()</a></code></p>
+<p><code>mfrm_pca()</code>, <a href="mfrm_cluster.html">k-means details</a></p>
+</div>
     </div>
 
     <div class="section level2">
@@ -229,11 +312,23 @@ Group comparison and imputation sensitivity retain their descriptive scope.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ExperienceYears 0.5831713 -0.5122424</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> WorkshopHours   0.5485673  0.8207647</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> AnnualRatings   0.5991537 -0.2528894</span>
-<span class="r-in"><span><span class="va">groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_cluster_kmeans.html">mfrm_cluster_kmeans</a></span><span class="op">(</span><span class="va">pca</span>, k <span class="op">=</span> <span class="fl">2</span>, seed <span class="op">=</span> <span class="fl">17</span>, silhouette <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_cluster.html">mfrm_cluster</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"kmeans"</span>, <span class="va">pca</span>, k <span class="op">=</span> <span class="fl">2</span>, seed <span class="op">=</span> <span class="fl">17</span>, silhouette <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"scores"</span>, groups <span class="op">=</span> <span class="va">groups</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="mfrm_pca-1.png" alt="Scores on the first two external-feature principal components for eight raters, with two k-means groups distinguished by color and shape. The axes summarize transformed features, not latent ability or rater quality." width="700" height="433"></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">groups</span>, type <span class="op">=</span> <span class="st">"profile"</span>, feature <span class="op">=</span> <span class="st">"ExperienceYears"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="mfrm_pca-2.png" alt="Mean and median experience in years for two k-means groups of four raters. Group 1 is near 12.5 years and group 2 near 2.5 years. No uncertainty intervals or causal effects are shown." width="700" height="433"></span>
+<span class="r-in"><span><span class="co"># Optional workflow; run the example explicitly as shown below.</span></span></span>
+<span class="r-in"><span><span class="co"># example("plot.mfrm_pca", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">attributes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>ID <span class="op">=</span> <span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  ExperienceYears <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">8</span>, <span class="fl">10</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  WorkshopHours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">16</span>, <span class="fl">12</span>, <span class="fl">24</span>, <span class="fl">16</span>, <span class="fl">32</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">mfrm_pca</span><span class="op">(</span><span class="fu"><a href="mfrm_features.html">mfrm_features</a></span><span class="op">(</span><span class="va">attributes</span>, <span class="st">"ID"</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">attributes</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span>, type <span class="op">=</span> <span class="st">"scores"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span>, type <span class="op">=</span> <span class="st">"loadings"</span>, components <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span>, type <span class="op">=</span> <span class="st">"scores"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">table</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

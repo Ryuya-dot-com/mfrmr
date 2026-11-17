@@ -1,9 +1,10 @@
 # Explore ratings, plans and score probabilities
 
-**Who scores more strictly? What changes when we add tasks? Which scores
+**Who scores more severely? What changes when we add tasks? Which scores
 does our model predict?** Explore each question below, then adapt the
-code to your own assessment. These examples use **mfrmr 0.2.4, available from CRAN**; follow the [installation
-instructions](https://ryuya-dot-com.github.io/mfrmr/index.html#install-the-version-used-here).
+code to your own assessment. These examples use the **development
+interface for 0.3.0**; follow the [installation
+instructions](https://ryuya-dot-com.github.io/mfrmr/index.html#install-and-choose-matching-documentation).
 All observations here are synthetic.
 
 Hover or tap to inspect values, drag to zoom and double-click to reset.
@@ -95,7 +96,7 @@ rater_gg
 
 ![Six rater severity estimates with 95 percent model-based normal
 intervals. R01 is near minus 0.61 and R06 near plus 0.41 logits. Higher
-locations mean stricter scoring; zero is a centering
+locations mean more severe scoring; zero is a centering
 reference.](visual-gallery_files/figure-html/rater-static-1.png)
 
 | Rater | Logits | 95% lower | 95% upper | Interval use      |
@@ -271,7 +272,7 @@ The saved mfrmr plot retains the interval definitions and diagnostics.
 [`ggplotly()`](https://rdrr.io/pkg/plotly/man/ggplotly.html) returns a
 Plotly widget, not an mfrmr result; keep its source plot and notes
 alongside it. Use
-[`plot_data_components()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data_components.md)
+[`plot_data_components()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
 to inspect available tables and
 `plot_data(..., format = "long", value_cols = ...)` to build your own
 views. For a raincloud of observed scores, use the original rating rows:

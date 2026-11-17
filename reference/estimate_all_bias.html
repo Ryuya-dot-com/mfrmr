@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,31 +15,25 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -53,7 +47,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Estimate bias across multiple facet pairs</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-bias-collection.R" class="external-link"><code>R/api-bias-collection.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-bias-collection.R" class="external-link"><code>R/api-bias-collection.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-plotting-bias-collection.R" class="external-link"><code>R/api-plotting-bias-collection.R</code></a></small>
       <div class="d-none name"><code>estimate_all_bias.Rd</code></div>
     </div>
 
@@ -74,6 +68,25 @@
 <span>  omit_extreme <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  max_iter <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  tol <span class="op">=</span> <span class="fl">0.001</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_bias_collection'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_bias_collection'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'summary.mfrm_bias_collection'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_bias_collection'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  pair <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"overview"</span>, <span class="st">"scatter"</span>, <span class="st">"ranked"</span>, <span class="st">"heatmap"</span>, <span class="st">"abs_t_hist"</span>, <span class="st">"facet_profile"</span><span class="op">)</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  preset <span class="op">=</span> <span class="st">"standard"</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -88,7 +101,7 @@
 <dt id="arg-diagnostics">diagnostics<a class="anchor" aria-label="anchor" href="#arg-diagnostics"></a></dt>
 <dd><p>Optional output from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. When <code>NULL</code>,
 diagnostics are computed with <code>residual_pca = "none"</code>.
-Must match this fitted analysis; see <a href="mfrmr_compatibility_layer.html">mfrmr_compatibility_layer</a> for
+Must match this fitted analysis; see <a href="mfrmr_api_migration_030.html">mfrmr_compatibility_layer</a> for
 migration of saved diagnostics.</p></dd>
 
 
@@ -134,27 +147,75 @@ stop the batch.</p></dd>
 <dt id="arg-tol">tol<a class="anchor" aria-label="anchor" href="#arg-tol"></a></dt>
 <dd><p>Passed to <code><a href="estimate_bias.html">estimate_bias()</a></code>.</p></dd>
 
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>A result from <code>estimate_all_bias()</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: With <code>pair</code>, additional arguments to <code><a href="estimate_bias.html">plot.mfrm_bias()</a></code>, such as
+<code>top_n</code> or <code>sort_by</code>. The overview rejects additional arguments.</p>
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: Reserved; additional arguments are rejected.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>A result from <code>estimate_all_bias()</code>.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Number of significant digits used for printing; calculations
+and returned tables retain their precision.</p></dd>
+
+
+<dt id="arg-pair">pair<a class="anchor" aria-label="anchor" href="#arg-pair"></a></dt>
+<dd><p>An exact <code>Interaction</code> label from <code>summary(x)$overview</code>, or its
+row number. <code>NULL</code> (default) shows all requested pairs.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p><code>"overview"</code> shows signed cell estimates grouped by pair.
+With <code>pair</code> supplied, the default becomes <code>"heatmap"</code>; <code>"scatter"</code>,
+<code>"ranked"</code>, <code>"abs_t_hist"</code> and <code>"facet_profile"</code> select the corresponding
+<code><a href="estimate_bias.html">plot.mfrm_bias()</a></code> view.</p></dd>
+
+
+<dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a></dt>
+<dd><p>Draw the figure. <code>FALSE</code> returns its data without opening a device.</p></dd>
+
+
+<dt id="arg-preset">preset<a class="anchor" aria-label="anchor" href="#arg-preset"></a></dt>
+<dd><p>A package plot preset, for example <code>"standard"</code> or <code>"monochrome"</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A named list with class <code>mfrm_bias_collection</code>.</p>
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns a <code>summary.mfrm_bias_collection</code> list:
+<code>overview</code> has one row per requested interaction, <code>cells</code> combines retained
+cell tables with an <code>Interaction</code> identifier and explicit <code>PointAvailable</code>,
+<code>ScreenAvailable</code> and <code>ScreenPositive</code> fields, <code>errors</code> lists failed pairs,
+and <code>optimization_failures</code> retains cell-level optimizer records.
+Original cell columns, including facet levels, observed counts, signed
+<code>Bias Size</code>, conditional <code>S.E.</code>, <code>t</code> and any GPCM profile status, are
+preserved. <code>settings</code>, <code>fit_identity</code> and <code>notes</code> retain provenance and
+interpretation. Print methods return their input invisibly.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Invisibly, a <code>ggplot</code> object carrying its saved
+plot payload for <code><a href="plot_data.html">plot_data()</a></code>. For the overview, <code><a href="plot_data.html">plot_data()</a></code> provides
+<code>table</code> (all combined cells, including unavailable rows), <code>overview</code>,
+<code>errors</code>, <code>optimization_failures</code>, <code>fit_identity</code>, <code>settings</code>, axis labels
+and notes. <code><a href="as_ggplot.html">as_ggplot()</a></code> returns the overview <code>ggplot</code>. A selected pair
+returns the ordinary bias <code>ggplot</code> with <code>collection_pair</code> and
+<code>fit_identity</code> provenance added to <code><a href="plot_data.html">plot_data()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This function orchestrates repeated calls to <code><a href="estimate_bias.html">estimate_bias()</a></code> across
-multiple facet pairs and returns a consolidated bundle.</p>
-<p><strong>Bias/interaction</strong> in MFRM refers to a systematic departure from
-the additive model for a specific combination of facet elements
-(e.g., a particular rater is unexpectedly harsh on a particular
-criterion).  See <code><a href="estimate_bias.html">estimate_bias()</a></code> for the mathematical formulation.</p>
-<p>When <code>pairs = NULL</code>, the function builds all 2-way combinations of
-modelled facets automatically.  For a model with facets Rater,
-Criterion, and Task, this yields Rater\(\times\)Criterion,
-Rater\(\times\)Task, and Criterion\(\times\)Task.
-With <code>include_person = TRUE</code>, Person\(\times\)facet pairs are prepended in
-the fit's facet order. They are conditional plug-in likelihood screens, not
-jointly fitted Person\(\times\)facet terms. A single warning records this
-boundary for the batch.</p>
+    <p>Calls <code><a href="estimate_bias.html">estimate_bias()</a></code> for each requested interaction, retaining its
+fixed-baseline target and screening limitations. Default pairs for Rater,
+Criterion and Task are Rater\(\times\)Criterion, Rater\(\times\)Task and
+Criterion\(\times\)Task. <code>include_person = TRUE</code> prepends
+Person\(\times\)facet pairs in fitted facet order. These are conditional
+screens, not jointly fitted Person\(\times\)facet terms; one batch warning
+records that distinction.</p>
 <p>The <code>summary</code> table aggregates results across pairs:</p><ul><li><p><code>Rows</code>: number of interaction cells estimated</p></li>
 <li><p><code>Points</code>: cells with an available bias estimate
 (including bounded optima; inspect <code>BiasStatus</code> in the combined cells)</p></li>
@@ -168,15 +229,47 @@ conditional screening statistic</p></li>
 <code>available</code> refers to conditional screening, not formal inference</p></li>
 <li><p><code>FormalInferenceEligible</code> / <code>PrimaryReportingEligible</code>: always <code>FALSE</code>;
 these conditional plug-in interaction statistics are screening evidence</p></li>
-</ul><p>Per-pair failures (e.g., insufficient data for a sparse pair) are
-captured in <code>errors</code> rather than stopping the entire batch.
-There is no collection-wide multiplicity correction. Cells and pairs reuse
-the same observations and fitted calibration. Adjusting their screening tail
-areas would not establish formal family-wise error or false-discovery control.
-A screen-positive result is a prompt for review, not proof of unfairness;
-no screen-positive cells does not establish absence of interaction.
-Search-boundary points remain visible, with missing screening statistics
-and the <code>ScreenStatus</code>/<code>ScreenReason</code> returned by <code><a href="estimate_bias.html">estimate_bias()</a></code>.</p>
+</ul><p>Pair failures do not stop the batch; <code>summary$Error</code> retains them even when
+the optional <code>errors</code> table is not kept. There is no collection-wide
+multiplicity correction: pairs reuse observations/calibration, and adjusted
+plug-in tails would not establish family-wise error or false-discovery control.
+Boundary points retain missing statistics with <code>ScreenStatus</code>/<code>ScreenReason</code>.
+A screen-positive cell warrants review but does not prove unfairness. An absence
+of positive screens does not establish absence of interaction.</p>
+<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: Summarize all retained bias screens</p>
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: No model, diagnostics or cell calculation is repeated. The overview
+counts finite bias estimates from successful cell optimizations separately
+from cells with a finite screening statistic and positive finite conditional
+SE. <code>ScreenPositive</code> is missing when no statistic can be screened, rather
+than reporting zero. Failed pairs remain visible even when the original
+batch used <code>keep_errors = FALSE</code>. Older collections without retained tables
+are labeled <code>not_retained</code>; they are not recalculated.</p>
+<p>A positive bias shift increases expected coded scores conditional on the
+fitted model. It does not necessarily mean better performance or unfair
+leniency. Baseline calibration and Person uncertainty are held fixed.
+Different pairs use overlapping data, so do not add their observed counts
+to obtain a study sample size. The overview's mean absolute bias describes
+magnitude only; use the signed cell estimates to study direction.
+Counts cover retained <code><a href="estimate_bias.html">estimate_bias()</a></code> cells: unobserved combinations and
+cells omitted by the chosen screening options are not reconstructed.
+No multiplicity-adjusted confirmatory decisions are supplied.</p>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: Explore bias across facet pairs</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: The overview plots every finite retained bias estimate, without ranking or
+a significance cutoff. Positive shifts increase expected coded scores under
+the fitted model; score meaning depends on the rubric. Vertical spreading
+only separates cells visually and has no statistical meaning.</p>
+<p>Filled circles have a usable conditional screening statistic; open circles
+retain a point without one. These symbols indicate availability, not whether
+a cell is flagged. Pair labels report usable statistics / retained cells and
+the range of observed row counts per cell (<code>n</code>), not independent Person
+counts. Pairs share observations. Empty, failed and unavailable pairs remain
+labeled, without substituting a point at zero. The vertical zero line means
+no conditional shift, not a threshold for practical importance.</p>
+<p>No model or diagnostics are recalculated. The overview supplies no intervals,
+multiplicity correction or formal bias test. Review the individual cell
+counts, optimizer status and subject-matter explanations; selecting a pair
+after this overview does not make its subsequent analysis confirmatory.
+Titles and interpretation notes are returned outside the figure.</p>
     </div>
     <div class="section level2">
     <h2 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a></h2>
@@ -190,25 +283,21 @@ and the <code>ScreenStatus</code>/<code>ScreenReason</code> returned by <code><a
 <li><p><code>primary</code>: first successful bias bundle, useful for downstream helpers</p></li>
 </ul></div>
     <div class="section level2">
-    <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
+    <h2 id="reviewing-and-reporting-the-collection">Reviewing and reporting the collection<a class="anchor" aria-label="anchor" href="#reviewing-and-reporting-the-collection"></a></h2>
 
 
-<ol><li><p>Fit with <code><a href="fit_mfrm.html">fit_mfrm()</a></code> and diagnose with <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. For
-<code>RSM</code> / <code>PCM</code> reporting runs, prefer <code>method = "MML"</code> plus
-<code>diagnostic_mode = "both"</code> in the diagnostics call.</p></li>
-<li><p>Run <code>estimate_all_bias()</code> to compute the requested multi-pair interactions.</p></li>
-<li><p>Inspect <code>summary(bias_all)$overview</code> for availability and magnitude, then
-<code>summary(bias_all)$cells</code> for all retained cells and their observed counts.
-Use <code><a href="plot.mfrm_bias_collection.html">plot.mfrm_bias_collection()</a></code> for the overview or a named pair.</p></li>
-<li><p>Use <code>report &lt;- mfrm_report(bias_all)</code> to retain the full search, failed
-pairs and all cells in one report; <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code> saves its
-tables. Supply <code>study_context</code> to state rubric endpoints and score direction.
-The <code>by_pair</code> list also feeds <code><a href="reporting_checklist.html">reporting_checklist()</a></code> or <code><a href="facet_quality_dashboard.html">facet_quality_dashboard()</a></code>.</p></li>
-<li><p>For a substantively justified joint interaction model, use
-<code>facet_interactions</code> in <code><a href="fit_mfrm.html">fit_mfrm()</a></code> and <code><a href="compare_mfrm.html">compare_mfrm()</a></code> on compatible
-fits. Selecting terms from these screens makes same-data comparisons
-exploratory; it does not create a prespecified confirmatory test.</p></li>
-</ol></div>
+<p>Fit and diagnose under the intended assumptions; for supported MML,
+<code>diagnostic_mode = "both"</code> also retains marginal fit. After <code>estimate_all_bias()</code>,
+read <code>summary(bias_all)$overview</code> for availability/magnitude and <code>$cells</code> for
+all retained cells/counts. <code>plot.mfrm_bias_collection()</code> shows the overview
+or a selected pair.</p>
+<p><code>mfrm_report(bias_all)</code> and <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code> retain the full search,
+failures and cells; <code>study_context</code> records rubric endpoints/direction.
+<code>by_pair</code> also feeds <a href="mfrm_report.html">mfrm_report_checklist</a> or <code><a href="facet_quality_dashboard.html">facet_quality_dashboard()</a></code>.
+Joint interactions instead require <code>fit_mfrm(facet_interactions = ...)</code> and
+compatible <code><a href="compare_mfrm.html">compare_mfrm()</a></code> fits. Terms selected from these same-data screens
+remain exploratory, not prespecified confirmatory tests.</p>
+    </div>
     <div class="section level2">
     <h2 id="saved-result-reuse">Saved-result reuse<a class="anchor" aria-label="anchor" href="#saved-result-reuse"></a></h2>
 
@@ -216,12 +305,22 @@ exploratory; it does not create a prespecified confirmatory test.</p></li>
 <p>The returned <code>fit_identity</code> records the fitted analysis for reuse with
 reports and exports. Recreate older results from the saved fit and matching
 diagnostics using the original screening options; no model refit is needed.
-See <a href="mfrmr_compatibility_layer.html">mfrmr_compatibility_layer</a> for migration instructions.</p>
+See <a href="mfrmr_api_migration_030.html">mfrmr_compatibility_layer</a> for migration instructions.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="session-plot-defaults">Session plot defaults<a class="anchor" aria-label="anchor" href="#session-plot-defaults"></a></h2>
+
+
+<p>See <a href="plot.mfrm_fit.html">mfrmr_visual_diagnostics</a> for <code>options(mfrmr.plot_preset)</code>, argument
+precedence, and appearance when saving or reusing a plot.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="estimate_bias.html">estimate_bias()</a></code>, <code><a href="mfrm_report.html">mfrm_report()</a></code>, <code><a href="compare_mfrm.html">compare_mfrm()</a></code>,
-<code><a href="reporting_checklist.html">reporting_checklist()</a></code>, <code><a href="facet_quality_dashboard.html">facet_quality_dashboard()</a></code></p></div>
+<a href="mfrm_report.html">mfrm_report_checklist</a>, <code><a href="facet_quality_dashboard.html">facet_quality_dashboard()</a></code></p>
+<p><code>estimate_all_bias()</code>, <code>plot.mfrm_bias_collection()</code>, <code><a href="mfrm_report.html">mfrm_report()</a></code>, <code><a href="estimate_bias.html">estimate_bias()</a></code></p>
+<p><code>estimate_all_bias()</code>, <code>summary.mfrm_bias_collection()</code>,
+<code><a href="estimate_bias.html">plot.mfrm_bias()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -240,6 +339,28 @@ See <a href="mfrmr_compatibility_layer.html">mfrmr_compatibility_layer</a> for m
 <span class="r-in"><span>  score_direction <span class="op">=</span> <span class="st">"Higher coded scores indicate better performance"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">report</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">overview</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">report</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">bias_cells</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("summary.mfrm_bias_collection", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"MML"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">screens</span> <span class="op">&lt;-</span> <span class="fu">estimate_all_bias</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">screens</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">overview</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">review</span><span class="op">$</span><span class="va">cells</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Interaction"</span>, <span class="st">"Bias Size"</span>, <span class="st">"ObsN"</span>, <span class="st">"ScreenAvailable"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("plot.mfrm_bias_collection", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"MML"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">screens</span> <span class="op">&lt;-</span> <span class="fu">estimate_all_bias</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">screens</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"overview"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">screens</span>, pair <span class="op">=</span> <span class="st">"Rater x Criterion"</span>, type <span class="op">=</span> <span class="st">"ranked"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

@@ -1,22 +1,51 @@
-# Create and use a portable fixed calibration
+# Review and plot portable fixed-calibration scores
 
-These functions implement a strict lifecycle for a saved, versioned
-calibration. `extract_mfrm_calibration()` creates a draft from an
-eligible `RSM` or `PCM` MML fit under the fixed standard-normal scoring
-basis, or a one-family GPCM MML fit with an estimated intercept-only
-normal population that passes the conditional source checks in
-[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md).
-Experimental two-family GPCM MML retains a fixed N(0,1) prior and its
-own source checks. RSM/PCM and shared-owner GPCM JML support portable
-post-hoc EAP with a standard-normal reference prior; explicit corrected
-GPCM JML preserves its correction order and uses adjusted-equation
-checks, as described below. `validate_mfrm_calibration()` and
-`freeze_mfrm_calibration()` are separate, fail-closed transitions. Only
-a frozen artifact can be passed to `score_mfrm_calibration()`.
+These methods provide the first review surface for the result returned
+by `score_mfrm_calibration()`.
+[`print()`](https://rdrr.io/r/base/print.html) gives a compact batch
+disposition, [`summary()`](https://rdrr.io/r/base/summary.html) exposes
+readable score and review tables, and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) shows
+conditional score uncertainty or numerical review quantities without
+refitting a model.
+
+Manage a fail-closed, versioned portable calibration lifecycle (`draft`
+-\> `"validated"` -\> `"frozen"` -\> `"superseded"` / `"retired"`) for
+scoring new response rows without training data or an executable fit
+object. Only a `"frozen"` artifact can be passed to
+`score_mfrm_calibration()`.
+
+[`print()`](https://rdrr.io/r/base/print.html) gives a compact lifecycle
+and scope overview. [`summary()`](https://rdrr.io/r/base/summary.html)
+returns the same identifiers together with coordinate and anchor counts
+and the structured validation refusals, if any. Both methods inspect the
+stored artifact and do not refit a model or consult training responses.
 
 ## Usage
 
 ``` r
+# S3 method for class 'mfrm_calibration_score'
+summary(object, digits = 3L, ...)
+
+# S3 method for class 'mfrm_calibration_score'
+print(x, ...)
+
+# S3 method for class 'summary.mfrm_calibration_score'
+print(x, ...)
+
+# S3 method for class 'mfrm_calibration_score'
+plot(
+  x,
+  type = c("interval", "precision", "edge_mass"),
+  top_n = 40L,
+  sort_by = c("estimate", "sd", "person"),
+  label_review = TRUE,
+  main = NULL,
+  draw = TRUE,
+  preset = c("standard", "publication", "compact", "monochrome"),
+  ...
+)
+
 extract_mfrm_calibration(
   fit,
   calibration_id = NULL,
@@ -28,13 +57,8 @@ extract_mfrm_calibration(
 
 review_mfrm_calibration(calibration)
 
-validate_mfrm_calibration(calibration, validated_at_utc = NULL)
-
-freeze_mfrm_calibration(calibration, frozen_at_utc = NULL)
-
-supersede_mfrm_calibration(calibration, record_id, superseded_at_utc = NULL)
-
-retire_mfrm_calibration(calibration, record_id, retired_at_utc = NULL)
+# S3 method for class 'mfrm_calibration'
+update(object, status, record_id = NULL, at_utc = NULL, ...)
 
 save_mfrm_calibration(calibration, file, overwrite = FALSE)
 
@@ -54,475 +78,367 @@ score_mfrm_calibration(
   scoring_prior = NULL,
   cut_scores = NULL
 )
+
+# S3 method for class 'mfrm_calibration'
+summary(object, ...)
+
+# S3 method for class 'mfrm_calibration'
+print(x, ...)
+
+# S3 method for class 'summary.mfrm_calibration'
+print(x, ...)
 ```
 
 ## Arguments
 
+- object:
+
+  An `mfrm_calibration` returned by the portable calibration workflow.
+
+- digits:
+
+  Number of decimal places in the summary.
+
+- ...:
+
+  Reserved for generic compatibility.
+
+- x:
+
+  An `mfrm_calibration` returned by the portable calibration workflow.
+
+- type:
+
+  One of `"interval"`, `"precision"`, or `"edge_mass"`.
+
+- top_n:
+
+  Maximum number of scored Persons shown. Review rows are selected first
+  when truncation is necessary. Use `Inf` to show all.
+
+- sort_by:
+
+  Selection priority after review rows: absolute estimate, posterior SD,
+  or Person identifier.
+
+- label_review:
+
+  Whether review points are labelled in the precision and edge-mass
+  views. Interval plots always label the displayed Persons.
+
+- main:
+
+  Optional plot title.
+
+- draw:
+
+  If `TRUE`, print the `ggplot` figure on the active graphics device.
+  The `ggplot` object is returned invisibly in either case.
+
+- preset:
+
+  Visual preset: `"standard"`, `"publication"`, `"compact"`, or
+  `"monochrome"`.
+
 - fit:
 
-  An eligible `mfrm_fit` produced by
+  Eligible `mfrm_fit` from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
 - calibration_id:
 
-  Optional nonempty calibration identifier.
+  Optional identifiers and RFC3339 UTC timestamp.
 
 - source_fit_id:
 
-  Optional nonempty source-fit identifier.
+  Optional identifiers and RFC3339 UTC timestamp.
 
 - created_at_utc:
 
-  Optional RFC3339 UTC timestamp. Omit it to use the current time.
+  Optional identifiers and RFC3339 UTC timestamp.
 
 - scoring_quad_points:
 
-  Integer quadrature order of at least 2 used for later artifact
-  scoring. It is independent of the fit-time quadrature and defaults
-  to 31. The fixed or adaptive integration mode is inherited from the
-  source fit and stored in the artifact's scoring algorithm identity.
-  With adaptive scoring, stored nodes and weights define the base
-  Hermite rule; their person-specific locations are recomputed for each
-  new batch.
+  Quadrature order (`>= 2`, default `31`) stored for artifact scoring
+  (inherits fixed vs adaptive mode from `fit`).
 
 - quadrature_review:
 
-  Required for RSM/PCM MML, optional for GPCM MML (which checks the
-  fitted calibration directly); not used when checking JML fits. An
-  `mfrm_quadrature_sensitivity` from
-  [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
-  for the same data and model. `fit` must be the exact highest-grid fit
-  stored in this object. The package checks this procedural evidence but
-  leaves acceptable numerical movement to the user.
+  Required `mfrm_quadrature_sensitivity` object for RSM/PCM MML (`fit`
+  must be its highest-grid fit); optional for GPCM MML.
 
 - calibration:
 
-  An `mfrm_calibration` object.
+  An `mfrm_calibration` object (`object` in
+  [`update()`](https://rdrr.io/r/stats/update.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`print()`](https://rdrr.io/r/base/print.html), or
+  `mfrm_calibration_score` in score methods).
 
-- validated_at_utc, frozen_at_utc:
+- status:
 
-  Optional RFC3339 UTC timestamps for reproducible lifecycle records.
-  Omit them to use the current time.
+  Target lifecycle state in
+  [`update()`](https://rdrr.io/r/stats/update.html) (`"validated"`,
+  `"frozen"`, `"superseded"`, `"retired"`), optional RFC3339 timestamp,
+  and distinct terminal `record_id`.
 
 - record_id:
 
-  A nonempty identifier for a terminal superseded or retired record. It
-  must differ from the frozen parent identifier.
+  Target lifecycle state in
+  [`update()`](https://rdrr.io/r/stats/update.html) (`"validated"`,
+  `"frozen"`, `"superseded"`, `"retired"`), optional RFC3339 timestamp,
+  and distinct terminal `record_id`.
 
-- superseded_at_utc, retired_at_utc:
+- at_utc:
 
-  Optional RFC3339 UTC timestamps.
+  Target lifecycle state in
+  [`update()`](https://rdrr.io/r/stats/update.html) (`"validated"`,
+  `"frozen"`, `"superseded"`, `"retired"`), optional RFC3339 timestamp,
+  and distinct terminal `record_id`.
 
 - file:
 
-  A path ending in `.rds`.
+  `.rds` file path and replacement logical.
 
 - overwrite:
 
-  Whether an existing persistence target may be replaced.
+  `.rds` file path and replacement logical.
 
 - new_data:
 
-  A data frame of response rows for new Persons.
+  New-Person response `data.frame` and optional column/facet mappings
+  (`event_id` distinguishes repeated events where supported).
 
-- person, score, weight, event_id:
+- person:
 
-  Optional input-column names. Stored source-column names are used when
-  applicable. `event_id` distinguishes otherwise duplicate response
-  events.
+  New-Person response `data.frame` and optional column/facet mappings
+  (`event_id` distinguishes repeated events where supported).
 
 - facets:
 
-  Optional named character vector mapping stored facet names to input
-  columns.
+  New-Person response `data.frame` and optional column/facet mappings
+  (`event_id` distinguishes repeated events where supported).
+
+- score:
+
+  New-Person response `data.frame` and optional column/facet mappings
+  (`event_id` distinguishes repeated events where supported).
+
+- weight:
+
+  New-Person response `data.frame` and optional column/facet mappings
+  (`event_id` distinguishes repeated events where supported).
 
 - interval_level:
 
-  Central posterior interval level, strictly between 0 and 1.
+  Central posterior interval level in `(0, 1)` and missing-score policy
+  (`"error"` or `"omit"`).
 
 - missing_response:
 
-  Either `"error"` or `"omit"`.
+  Central posterior interval level in `(0, 1)` and missing-score policy
+  (`"error"` or `"omit"`).
+
+- event_id:
+
+  New-Person response `data.frame` and optional column/facet mappings
+  (`event_id` distinguishes repeated events where supported).
 
 - adaptive_quad_points:
 
-  Optional vector of at least two distinct integer orders \>= 3, for
-  example `c(31, 61)`, used only by `score_mfrm_calibration()`. Adds an
-  unrounded `quadrature_review` comparing stored-grid results with
-  mode/curvature-adapted integration for each Person. Inspect both
-  fixed/adaptive differences and changes between adaptive orders. This
-  does not change the artifact or replace the reported scores/intervals;
-  adaptive results condition on the same point calibration. For GPCM or
-  an explicitly supplied scoring prior, reference orders are added
-  automatically and the comparison governs numerical score acceptance.
-  Only Persons with scored responses have numerical review rows.
-  `Status = "computed"` means the calculation finished, not that
-  accuracy is certified; an unavailable row retains the reason in
-  `Detail`.
+  Optional adaptive reference orders (`>= 2` integers `>= 3`), shared
+  normal prior override `list(mean = ..., sd = ...)`, and strictly
+  increasing ability `cut_scores` (unit-weight continuous-posterior
+  RSM/PCM only).
 
 - scoring_prior:
 
-  Optional `list(mean = ..., sd = ...)` for `score_mfrm_calibration()`.
-  `NULL` retains the artifact's normal prior. Values use the unchanged
-  calibration scale and must be finite with positive SD and
-  representable positive variance. A supplied prior automatically
-  receives numerical scoring checks and does not modify the frozen
-  artifact. Legacy artifacts with discrete grid-endpoint intervals
-  require re-extraction before using this option. The prior is common to
-  all scored persons; covariate-dependent overrides are not supported.
-  Two-family GPCM format 6 requires `scoring_prior = NULL` and retains
-  the fixed N(0,1) prior.
+  Optional adaptive reference orders (`>= 2` integers `>= 3`), shared
+  normal prior override `list(mean = ..., sd = ...)`, and strictly
+  increasing ability `cut_scores` (unit-weight continuous-posterior
+  RSM/PCM only).
 
 - cut_scores:
 
-  Optional named, strictly increasing finite ability cuts for
-  `score_mfrm_calibration()`. Ordinary RSM/PCM with unit weights and
-  continuous posterior intervals only. Returns a `decisions` table of
-  probabilities above cuts and in successive bands on the calibration
-  scale. Calibration, prior and cuts are held fixed; this excludes their
-  estimation uncertainty. Unscored Persons remain unavailable. Cut names
-  do not establish CEFR alignment. See
-  [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
-  for interpretation and reporting.
+  Optional adaptive reference orders (`>= 2` integers `>= 3`), shared
+  normal prior override `list(mean = ..., sd = ...)`, and strictly
+  increasing ability `cut_scores` (unit-weight continuous-posterior
+  RSM/PCM only).
 
 ## Value
 
-`extract_mfrm_calibration()`, `validate_mfrm_calibration()`,
-`freeze_mfrm_calibration()`, `supersede_mfrm_calibration()`,
-`retire_mfrm_calibration()`, and `load_mfrm_calibration()` return an
-`mfrm_calibration`. `review_mfrm_calibration()` returns a data frame of
-structured refusals, with zero rows for an acceptable object.
-`save_mfrm_calibration()` invisibly returns the normalized path.
-`score_mfrm_calibration()` returns an `mfrm_calibration_score`
-containing estimates plus row and Person dispositions and scoring
-identities. With `cut_scores`, it also retains `decisions`: conditional
-event probabilities with boundaries, labels, actual priors and
-availability. When requested and scored rows exist, `quadrature_review`
-contains the fixed/adaptive comparison;
-[`summary()`](https://rdrr.io/r/base/summary.html) preserves it and adds
-a compact `quadrature_overview`.
+[`print()`](https://rdrr.io/r/base/print.html) returns its input
+invisibly. [`summary()`](https://rdrr.io/r/base/summary.html) returns a
+`summary.mfrm_calibration_score` containing `overview`, `estimates`,
+`review`, `row_review`, `settings`, and `notes`. When adaptive
+integration was requested and scored rows exist, it also retains
+unrounded `quadrature_review` and a compact `quadrature_overview`. When
+cut scores were requested, `decisions` preserves every probability, cut
+boundary and actual scoring prior without rounding; unavailable Persons
+remain in that table with `NA` probabilities.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns a
+`ggplot` object (invisibly) whose underlying payload (accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md))
+retains the selected plotting table, selection accounting, unplotted
+Person dispositions, interpretation guidance, and plotting settings.
+
+`extract_mfrm_calibration()`,
+[`update()`](https://rdrr.io/r/stats/update.html), and
+`load_mfrm_calibration()` return `mfrm_calibration`;
+`review_mfrm_calibration()` returns a refusal `data.frame` (`0` rows
+when valid); `save_mfrm_calibration()` invisibly returns the path;
+`score_mfrm_calibration()` returns `mfrm_calibration_score`
+(`estimates`, `decisions`, `quadrature_review`, row/Person
+dispositions).
+
+[`summary()`](https://rdrr.io/r/base/summary.html) returns a
+`summary.mfrm_calibration`.
+[`print()`](https://rdrr.io/r/base/print.html) returns its input
+invisibly.
 
 ## Details
 
-The portable workflow supports one observed score scale, one latent
-dimension and known non-Person facet levels. RSM/PCM MML retain stored
-anchors and two-way facet interactions in file format 1. One-family GPCM
-MML uses file format 2, retaining both step and slope owners, positive
-geometric-mean-one relative slopes and the estimated population mean and
-SD. The slope multiplies the entire adjacent-category predictor.
-Portable GPCM requires unit weights and no anchors or interactions.
-One-family MML uses an estimated intercept-only normal population.
-Shared-owner GPCM JML uses file format 4 and a post-hoc N(0,1) reference
-prior; its distinct checks are described below. Experimental two-family
-GPCM MML uses file format 6, with two ordered slope owners, second-owner
-steps and the fixed N(0,1) prior. The first owner's locations and log
-slopes are centered; the second owner's locations and slopes remain
-free. Both fitting engines retain their fixed or adaptive scoring
-algorithm. Source identity/convergence and finer-integration checks must
-pass; review-only sources cannot be exported for frozen scoring. No
-separate `quadrature_review` is accepted for this route. The file
-contains component slopes and observed facet combinations, without
-training responses, Person estimates or an executable fit. Known levels
-may form new combinations; `row_dispositions$ObservedContext` identifies
-whether each pair occurred in calibration. New combinations are
-model-based, not empirically validated. Prior overrides and `event_id`
-extensions are unsupported; repeated Person- facet cells are rejected.
-Facet names must not collide with scoring/disposition columns (`Person`,
-`Score`, `Weight`, `InputRow`, `EventId`, `Disposition`, `ReasonCode`,
-`CalibrationId`, `ObservedContext`).
+The default interval plot shows posterior EAP estimates and central
+intervals. `type = "precision"` plots the number of valid response rows
+against posterior SD. `type = "edge_mass"` compares posterior mass on
+the two outer quadrature nodes with the recorded review threshold.
+Review dispositions are highlighted in every view.
 
-For format 6, use the same extract, validate, freeze, save, load and
-score functions as below. Each new batch must pass its own integration
-checks; validation and freezing do not establish sampling coverage,
-global identification, boundary absence or population transport.
-Posterior intervals exclude calibration uncertainty. Older readers
-refuse format 6; existing formats 1–5 keep their original
-interpretation. RSM/PCM JML uses file format 3, with unit weights, no
-anchors or interactions, a finite identified source and a post-hoc
-N(0,1) reference prior. This prior is not estimated by JML.
-Estimated-population RSM/PCM and latent regression use fitted-object
-routes; other structures follow their documented capabilities. See
-[`mfrm_calibration_capabilities()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_capabilities.md).
+These are score-batch review displays, not calibration-fit diagnostics.
+Posterior SDs and intervals are conditional on the frozen point
+calibration and the actual scoring prior. They exclude
+calibration-parameter uncertainty. For GPCM or an explicitly supplied
+scoring prior, summaries and plot data retain both original and actual
+prior values without rounding, the per-Person integration checks, and
+(for GPCM) the source decision recorded at extraction. These records
+describe conditional scoring, not a new evaluation of the training fit
+or the suitability of its population for another cohort.
+`summary(x)$settings$score_integration_review` compares the reported
+EAP/SD with higher-order adaptive references. The separate
+`quadrature_review` compares adaptive and fixed grids; for an adaptive
+scorer, that fixed grid did not produce the reported scores. Printing
+distinguishes the two checks. Persons with no valid responses have no
+score coordinate and are retained in `summary(x)$review` and in the plot
+payload's `unplotted_dispositions` component.
 
-One-family GPCM MML extraction freshly evaluates the native fit's local
-likelihood, gradient, unregularized information and source-integration
-stability using the same conditional source checks as
-[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md).
-A failed or unresolved source cannot be frozen by selecting a review
-policy. The artifact retains the passing extraction decision, numerical
-comparison, and original global boundary/identification states. Reading
-it validates these records against its stored identity; it does not
-refit the source or claim a global maximum, valid population transport
-or calibration intervals. Every GPCM scoring call also checks EAP/SD
-against two adaptive reference orders under the actual scoring prior.
-Failed score integration stops with `SCORING_INTEGRATION_FAILED`;
-extract with more `scoring_quad_points` before retrying. Endpoint and
-sparse-pattern review labels remain separate from numerical accuracy.
-File format 1 retains its original default semantics.
+The summary object retains every returned score and review disposition.
+Its estimates table preserves the available estimate and uncertainty
+basis columns, calibration identifiers, scoring algorithm and requested
+interval level when extracted or written to CSV. The interval level is
+not rounded. Older score results recover these fields from their
+recorded settings when re-summarized. Saved grid-based intervals retain
+their original endpoints; printed results and interval plots explain
+that their posterior mass can differ from the requested level. Its print
+method shows at most ten rows from each table so routine console output
+stays compact. Plots distinguish scored and review states by shape as
+well as colour. `plot(x)` returns a `ggplot` object directly;
+`as_ggplot(p)` and `as_ggplot(p, component = "data")` preserve the same
+selected view, saved bounds, review symbols and unplotted dispositions
+for both `ggplot` and legacy `mfrm_plot_data` objects. Use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+to extract other components. Changing the interval level requires an
+explicit scoring call; conversion does not recompute intervals. Notes
+remain in the returned object and are not automatically drawn.
 
-For RSM/PCM MML extraction, run
-[`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
-on user-selected grids and inspect its continuous differences. Pass the
-exact highest-grid fit in that object together with `quadrature_review`.
-The retained fits must use their recorded grid sizes and the same data,
-score map and fitting settings, including anchors and integration mode,
-and must all have converged. This procedural requirement does not
-declare the fit numerically stable: the package does not choose the
-application-specific tolerance or decide whether more grids are needed.
-Archive the review separately when it is part of the audit trail,
-because response-linked fits are deliberately not embedded in the
-portable artifact. GPCM uses the fresh source checks above and does not
-require an additional refitting study. If supplied, `quadrature_review`
-is still validated.
+**Supported formats and source checks.**
 
-RSM/PCM JML extraction requires current passing input, identification,
-category, boundary and numerical checks from the fitted-object scoring
-policy. It freshly evaluates the joint likelihood and gradient: the
-stored objective must agree within 1e-6 and the maximum absolute
-gradient must be \<= 1e-4. These are numerical source criteria, not
-interval-coverage or bias guarantees. Boundary or unresolved sources are
-refused; there is no review override. No MML quadrature review is used
-because JML does not integrate over Persons during calibration. Every
-new JML score batch receives adaptive-reference EAP/SD checks under the
-actual scoring prior. Increase `scoring_quad_points` on extraction if
-the scoring grid is inadequate. Source checks and the prior origin
-persist through saving, loading and score summaries; replay checks the
-stored evidence without re-estimating the training model.
+- **Format 1**: ordinary RSM/PCM MML (`N(0, 1)` prior, retaining anchors
+  and two-way interactions; requires `quadrature_review` from
+  [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
+  with `fit` equal to the highest-grid fit).
 
-Experimental corrected GPCM JML uses file format 5 and its own source
-checks. Extraction reconstructs the adjusted equation from the observed
-ratings and checks the saved root, full equation Jacobian and parameter
-tables. The maximum mean-equation residual must be \<= 1e-7 and the
-remaining Newton step \<= 1e-5. These are numerical checks, not a global
-uniqueness or bias guarantee. An unavailable covariance does not erase a
-valid calibration. The artifact records correction order,
-assignment-sampling assumption, local-root status and numerical checks
-without training responses or Person estimates. It is never labelled an
-ordinary JML likelihood maximum. Its EAP and continuous posterior
-intervals use a separate normal scoring prior; they exclude calibration
-uncertainty and do not supply corrected Person ML/WLE or structural
-confidence intervals. Older file formats retain their original checks.
-See
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-for corrected estimation limits.
+- **Format 2**: one-family GPCM MML (unit weights, no
+  anchors/interactions, intercept-only normal population; checks local
+  likelihood, gradient, unregularized Hessian, and source/batch
+  integration).
 
-For shared-owner uncorrected GPCM JML, extraction checks the joint
-likelihood and gradient, and positive-definite, unregularized curvature
-over all free Person and structural parameters (reciprocal condition
-number \> 1e-10). Recorded Person, additive or slope boundary
-certificates prevent automatic scoring; finite optimizer traces cannot
-override them. Detected identification failure, inadequate categories,
-failed numerical checks and unsupported structures also prevent
-extraction. Otherwise, global identification/boundary audits labelled as
-incomplete stay incomplete in the artifact. This qualifies conditional
-EAP only, not global optimality or formal JML slope inference. Source
-curvature currently uses a dense joint matrix, so its memory cost grows
-quadratically with the number of free parameters, including Persons.
-Frozen-artifact scoring does not repeat that calculation or use training
-data. The objective, gradient and condition-number cutoffs are package
-numerical criteria, not statistical thresholds established by the
-scoring literature. A refused source does not imply that all its
-structural parameters are inestimable: portable scoring does not
-currently qualify boundary-profile calibrations with infinite
-training-Person estimates.
+- **Format 3 / Format 4**: unit-weight unanchored RSM/PCM JML (format 3)
+  and shared-owner GPCM JML (format 4, checking positive-definite joint
+  curvature with reciprocal condition `> 1e-10`), scored under a
+  post-hoc `N(0, 1)` reference prior.
 
-Posterior EAP estimates, posterior standard deviations, and intervals
-are conditional on the frozen point calibration and the scoring prior.
-For GPCM MML, the prior mean and SD estimated during calibration are
-frozen; a new cohort does not reestimate or replace them. Use
-`scoring_prior` to examine another shared normal prior without changing
-the artifact. The original and scoring prior identities remain separate
-in estimates and settings, including summaries, plot data and exports. A
-supplied prior is an analyst assumption, not a population estimate.
-Intervals exclude both population-parameter and calibration-parameter
-uncertainty. Loading validates structure and semantic consistency, but
-does not authenticate an artifact from an untrusted source. New v2
-scoring algorithms invert the continuous posterior CDF for equal-tail
-intervals. EAP and SD retain the stored quadrature rule. Saved v1
-artifacts preserve their discrete grid interval endpoints and carry a
-note that the continuous posterior mass can differ from the requested
-interval level.
+- **Format 5**: experimental corrected GPCM JML
+  (`jml_correction_order`), checking mean-equation residual `<= 1e-7`
+  and Newton step `<= 1e-5`.
 
-## Anchors, centering and score uncertainty
+- **Formats 6 & 7**: experimental two-family GPCM MML (`N(0, 1)` prior,
+  two slope owners, plus extended named
+  `slope_reference`/`noncenter_facet` roles in format 7;
+  `row_dispositions$ObservedContext` flags novel facet combinations).
 
-New exports distinguish whole-facet centering, legacy remainder
-centering and uncentered facets in `constraints$identification`. Direct
-values and group means are retained in `constraints$anchors`; validation
-checks the explicit facet maps against the stored coordinates and free
-dimensions. For example, if four raters are centered as a whole and the
-first three have mean 0.10, the fourth is fixed at -0.30. Freezing
-retains all four calibrated values, including the estimates of the free
-group members.
-
-Scoring uses those expanded values without centering or estimating them
-again. A returned `SD` is a Person posterior SD conditional on the
-entire frozen calibration and scoring prior. It is not a rater SE and
-excludes uncertainty in both the estimated calibration and supplied
-anchors. Use
-[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
-for supported conditional facet intervals. With an anchored fitted
-model,
-[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
-accepts supplied response rows; the narrower
-[`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
-entry excludes anchors.
-
-Loading an older artifact preserves its values and original constraint
-labels. Older generic labels do not fully identify the centering
-convention; consult the source fit or re-extract it to obtain explicit
-labels. Changing a label cannot convert a calibration to another scale.
-
-## Statistical basis and external comparisons
-
-Bock and Mislevy (1982, pp. 432-433) describe posterior-mean and
-posterior-SD scoring from fixed response functions and a specified
-prior, including multiple-category responses. This supports the scoring
-layer; it does not validate JML calibration bias, the default reference
-prior for a new cohort, or the numerical tolerances used to check a
-fitted calibration. Their adaptive testing simulations do not establish
-coverage for sparse many-facet designs. Muraki (1992) supplies the GPCM
-model basis and an EM estimation method, not evidence that many-facet
-JML intervals have accurate coverage.
-
-External checks of fixed probabilities, likelihoods and EAP/SD must
-align the response functions and prior. They do not compare free JML
-estimation. ConQuest documents that JML cannot estimate item scores (the
-free scores used for GPCM discrimination). TAM's `tam.jml()` uses a
-supplied loading array and defaults to extreme-score adjustment and
-item-bias correction; its default output is not the same estimator as
-unadjusted JML. Do not infer agreement of estimators from agreement of
-fixed-calibration scores.
-
-## Choose what to save
-
-Save a fitted analysis or
-[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
-with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) when you need to
-revisit its diagnostics and reports. A portable `mfrm_calibration` has a
-different purpose: scoring new response rows without the training fit or
-training responses. Use `save_mfrm_calibration()` and
-`load_mfrm_calibration()` for that artifact. Save an already computed
-`mfrm_calibration_score` with
-[`saveRDS()`](https://rdrr.io/r/base/readRDS.html) to reproduce its
-tables and figures without scoring the responses again. A CSV is a
-table, not a replacement for any of these complete objects.
-
-Validation checks the saved parameters, scoring settings and model
-checks; freezing marks that calibration as ready for scoring without
-changing it. These steps do not establish model fit, lack of bias or
-suitability for another population. New Persons may use known calibrated
-facet levels. An unknown rater, task or score category requires an
-appropriate calibration workflow; assigning an existing level's name is
-not a way to extend the calibration. Missing responses are not zero
-scores. With `missing_response = "omit"`, inspect row dispositions and
-Persons who could not be scored.
-
-Older saved objects are checked against their recorded format and
-evidence. Inspect `review_mfrm_calibration()` if a file has missing or
-inconsistent records. Do not change saved check results to force
-acceptance. If checks of the original fitted model are missing,
-re-extract from that saved model if it passes the current checks; when
-only the score records are incomplete, score again from a valid frozen
-artifact. Neither action means that model refitting is automatically
-necessary.
-
-## Conditional ability decisions
-
-Supply `cut_scores` on the calibration's ability scale to obtain
-`decisions`, with one row per Person and requested event.
-`Type = "above_cut"` gives \\P(\theta \> c \mid y, \widehat\psi)\\;
-`Type = "ability_band"` gives the probability between successive cuts,
-including the two outer bands. `Lower < ability <= Upper` defines every
-row. `Label` uses the supplied cut names (or `Cut1`, ...) and `Band1`,
-... in increasing order. These events overlap: only the ability-band
-probabilities sum to one.
-
-`PriorMean` and `PriorSD` record the actual Person-specific normal
-prior; `Status` and `Reason` retain scoring availability.
-`available_conditional` means the applicable numerical checks passed,
-not that the model or the cut's substantive meaning has been validated.
-`review_only` requires inspection before interpretation. Source-roster
-scoring may return `prior_only` for missing-only Persons; portable
-scoring instead retains them as `unavailable` with `NA` probabilities.
-Fitted-object scoring omits Persons with no retained rows; inspect its
-row and population reviews. A Person absent from the input is never
-invented.
-
-Probabilities integrate the continuous posterior, rather than counting
-[`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md)
-draws or applying a normal approximation to EAP/SD. They condition on
-point calibration, population/prior parameters and supplied cuts, as
-recorded in `Uncertainty`. They do not propagate estimation error,
-compare two Persons or predict passing a future test. CEFR labels
-require externally justified cuts on this same scale. Very small tails
-have absolute, not relative, numerical accuracy; a returned zero or one
-is not a claim of impossibility or certainty.
-
-Review the scoring population as well as the calibration. An estimated
-normal prior is treated as known during scoring; its sampling
-uncertainty can matter especially with a small calibration cohort. A
-larger calibration cohort can improve parameter precision without
-correcting a prior that mismatches a new population's mean, spread or
-shape. Passing numerical checks does not establish that probabilities
-are accurate for that new population. A fixed reference prior is not a
-universal remedy: justify it for the target population on the
-calibration scale. If a prior override is supported, comparing
-externally justified alternatives is a sensitivity analysis, not
-evidence that the alternative giving the preferred classification is
-valid. Population-averaged accuracy also does not guarantee accuracy
-near each cut, within every subgroup or for each individual Person.
-
-Use
-[`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
-for eligible ordinary RSM MML source Persons,
-[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
-for ordinary RSM/PCM MML or JML fitted-object scoring, and
-`score_mfrm_calibration()` for eligible continuous-posterior RSM/PCM
-artifacts. Each route retains its existing source and population
-restrictions. Unit weights are required; GPCM, shared-rater and testlet
-cut probabilities are not supported. JML uses a separate scoring prior,
-not a population estimated by JML. `NULL` leaves the existing output
-unchanged.
-
-`summary(x)$decisions` and
-[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
-with `which = "decisions"` reuse saved probabilities without rounding
-them. Fitted-object and portable score batches also support
-[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
-and
-[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
-Save the complete result with
-[`saveRDS()`](https://rdrr.io/r/base/readRDS.html) to retain cuts,
-priors and review states for later reporting. Existing score plots
-display EAPs and intervals, not these event probabilities.
-
-## References
-
-Bock, R. D., & Mislevy, R. J. (1982). Adaptive EAP estimation of ability
-in a microcomputer environment. *Applied Psychological Measurement*,
-6(4), 431-444.
+New v2 artifacts invert the continuous posterior CDF for equal-tail
+intervals while retaining stored quadrature for EAP and `SD`
+(conditional on the frozen point calibration and prior, excluding
+calibration/anchor uncertainty; Bock & Mislevy, 1982,
 [doi:10.1177/014662168200600405](https://doi.org/10.1177/014662168200600405)
-.
-
-Muraki, E. (1992). A generalized partial credit model: Application of an
-EM algorithm. *Applied Psychological Measurement*, 16(2), 159-176.
+; Muraki, 1992,
 [doi:10.1177/014662169201600206](https://doi.org/10.1177/014662169201600206)
-.
+). See `mfrmr_output_guide("calibration_capabilities")`.
 
-[TAM joint maximum likelihood
-documentation](https://alexanderrobitzsch.github.io/TAM/reference/tam.jml.html)
-and [ACER ConQuest command
-reference](https://conquestmanual.acer.org/s4-00.html).
+A calibration artifact intentionally has no
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method. Its
+coordinate table mixes facet, step, and interaction parameter roles, and
+the artifact does not contain calibration-parameter uncertainty. Plot
+returned score batches with mfrm_calibration_score_methods instead;
+inspect `calibration$parameters$coordinates` when auditing stored point
+coordinates.
+
+## Session plot defaults
+
+See
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+for `options(mfrmr.plot_preset)`, argument precedence, and appearance
+when saving or reusing a plot.
 
 ## See also
 
+mfrm_calibration_workflow,
+[`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md),
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md),
+[`plot_data_components()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md),
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md),
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md),
+[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md),
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md),
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+for conditional-decision interpretation
+
 [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md),
-[mfrm_calibration_score_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md)
-for an executable scoring example, concise review and visualization of
-returned score batches;
 [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md),
-[`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md),
-[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
-and
-[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
-for saved-score tables.
+[`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md)
+
+mfrm_calibration_workflow, mfrm_calibration_score_methods
+
+## Examples
+
+``` r
+# Long-running workflow; run explicitly when needed.
+# example("mfrm_calibration_score_methods", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+dat <- load_mfrmr_data("example_core")
+ids <- unique(dat$Person)
+training <- dat[dat$Person %in% ids[1:18], , drop = FALSE]
+fit <- fit_mfrm(
+  training, "Person", c("Rater", "Criterion"), "Score",
+  model = "RSM", method = "MML", quad_points = 31
+)
+q_review <- mml_quadrature_sensitivity(
+  fit, training, quad_points = c(31, 61), theta_points = 41
+)
+summary(q_review) # Inspect movement; these grids are not universal cutoffs.
+fit <- q_review$fits$q61
+calibration <- update(status = "frozen", 
+  update(status = "validated", extract_mfrm_calibration(
+    fit, quadrature_review = q_review, scoring_quad_points = 121
+  ))
+)
+new_rows <- dat[dat$Person %in% ids[19:20], , drop = FALSE]
+scores <- score_mfrm_calibration(calibration, new_rows,
+  cut_scores = c(Basic = -0.5, Advanced = 0.8))
+summary(scores)
+apa_table(scores, which = "decisions")
+build_summary_table_bundle(scores)$table_index
+plot(scores, type = "interval", draw = FALSE)
+plot(scores, type = "edge_mass", draw = FALSE)
+} # }
+```

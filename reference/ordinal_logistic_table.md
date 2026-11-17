@@ -1,8 +1,9 @@
 # Compare ordered responses using cumulative logistic models
 
-Compare two groups at an explicitly supplied numeric matching variable,
-using three nested proportional-odds models. This independent-Person
-sensitivity analysis does not estimate ability or fit an MFRM.
+Compare two or more groups at an explicitly supplied numeric matching
+variable, using three nested proportional-odds models. This
+independent-Person sensitivity analysis does not estimate ability or fit
+an MFRM.
 
 ## Usage
 
@@ -51,7 +52,8 @@ ordinal_logistic_table(
 
 - groups:
 
-  Two distinct labels in reference, focal order.
+  At least two distinct labels. The first is the reference; the
+  remaining labels specify focal groups in reporting order.
 
 - categories:
 
@@ -89,38 +91,61 @@ Requires the optional package ordinal. Maximum likelihood is computed by
 [`ordinal::clm()`](https://rdrr.io/pkg/ordinal/man/clm.html) with a
 logit link and flexible thresholds. For each target, matching is
 centered at its pooled midrange and divided by its half-range:
-`z = (matching - Center) / Scale`. Group is coded 0 for reference and 1
-for focal. `M1` uses `z`, `M2` uses `z + g`, and `M3` uses `z * g`. All
-three use identical complete responses. The model is
+`z = (matching - Center) / Scale`. Two groups retain numeric 0/1 coding.
+With more groups, `g` is an unordered factor with fixed treatment
+contrasts, using the first declared group as reference;
+`settings$group_coding` maps labels to coefficient terms (`g2`, `g3`,
+...). `M1` uses `z`, `M2` uses `z + g`, and `M3` uses `z * g`. All three
+use identical complete responses. The model is
 `logit Pr(Y <= k) = threshold[k] - linear_predictor`.
 
-`Uniform` compares M2 to M1 (1 df), `Nonuniform` compares M3 to M2 (1
-df), and `Joint` compares M3 to M1 (2 df). These are asymptotic
-likelihood-ratio tests. A uniform comparison assumes no interaction; its
-coefficient must not be interpreted as a constant group difference when
-an interaction matters. No automatic selection between these models or
-DIF/bias flag is made. `NagelkerkeR2` is
-`(1-exp(2*(LL0-LL)/N))/(1-exp(2*LL0/N))`, where LL0 is the
-intercept-only multinomial log likelihood. `DeltaNagelkerkeR2` subtracts
-the reduced model's value from the full model's value. This is not
-explained score variance or McKelvey–Zavoina R-squared; no universal
+For G groups, `Uniform` compares M2 to M1 (G-1 df), `Nonuniform`
+compares M3 to M2 (G-1 df), and `Joint` compares M3 to M1 (2(G-1) df).
+These are omnibus, asymptotic likelihood-ratio tests. A uniform
+comparison assumes no interaction; its coefficient must not be
+interpreted as a constant group difference when an interaction matters.
+A significant omnibus test does not identify which group differs. No
+automatic selection between these models or DIF/bias flag is made.
+`NagelkerkeR2` is `(1-exp(2*(LL0-LL)/N))/(1-exp(2*LL0/N))`, where LL0 is
+the intercept-only multinomial log likelihood. `DeltaNagelkerkeR2`
+subtracts the reduced model's value from the full model's value. This is
+not explained score variance or McKelvey–Zavoina R-squared; no universal
 effect-size cutoff is applied.
 
-`contrasts` gives M3's reference/focal upper-tail odds ratio at the
-lower endpoint, midpoint and upper endpoint of the groups' overlapping
-matching ranges. Its log is `-(beta_g + beta_z:g * z)`; a value above 1
-favors higher reference scores. This applies to each category cut under
-proportional odds. These are point estimates, not simultaneous
+In `coefficients`, `Parameter` distinguishes thresholds from slopes;
+`Estimate` is a logit coefficient, not a severity or an odds ratio. For
+M1–M3, `z` is the matching slope in the reference group. Divide it by
+`matching$Scale` for a one-unit change in the original matching
+variable. In M3, add the corresponding `z:g` interaction for a focal
+group's slope. A positive group coefficient means higher focal-group
+upper-tail odds at `matching = Center` (where `z = 0`). With an
+interaction it is not a constant group effect. Thresholds are
+cumulative-logit cutpoints on the declared category order, not RSM/PCM
+step offsets.
+
+`contrasts` gives M3's reference/focal upper-tail odds ratio for each
+focal group at the lower endpoint, midpoint and upper endpoint of the
+matching range shared by all declared groups. Its log for a focal group
+is `-(beta_g + beta_z:g * z)`; a value above 1 favors higher reference
+scores. Thus at `Center` it is the reciprocal of the exponentiated group
+coefficient. `OverlapMid` need not equal `Center`: one uses the shared
+range, the other the pooled range. This applies to each category cut
+under proportional odds. These are point estimates, not simultaneous
 intervals. Fits use all complete responses, including those outside that
 overlap. Range overlap alone does not establish comparable distributions
 or adequate local support. Each group must have varying matching values
-and their ranges must overlap with positive width. The `matching` table
-retains the ranges and transformation.
+and all ranges must share a positive-width interval. This is the
+supported comparison design, not a necessary condition for mathematical
+identifiability or a finite ML solution. The `matching` table has one
+row per reference/focal pair, retaining the individual ranges, common
+overlap and transformation. `InputRows` and `CompleteRows` are
+target-level totals repeated on those rows; do not sum them across
+pairs.
 
 For three or more categories, `proportional_odds` compares M3 with a
-model in which all three slopes may differ across cumulative category
+model in which all `2G-1` slopes may differ across cumulative category
 cuts (`clm(y ~ 1, nominal = ~ z * g)`). This global asymptotic LR
-diagnostic has `3 * (K - 2)` df. It concerns equality across category
+diagnostic has `(2G-1) * (K-2)` df. It concerns equality across category
 cuts, whereas the nonuniform comparison concerns differences across
 matching values. They are different questions. The diagnostic is not
 applicable to binary responses. An unavailable or nonsignificant
@@ -166,6 +191,13 @@ itself establish DIF.
 
 ## References
 
+Magis, D., Raiche, G., Beland, S., & Gerard, P. (2011). A generalized
+logistic regression procedure to detect differential item functioning
+among multiple groups. *International Journal of Testing, 11*, 365–386.
+[doi:10.1080/15305058.2011.602810](https://doi.org/10.1080/15305058.2011.602810)
+. The binary multiple-group tests correspond to this framework; the
+ordinal extension additionally assumes proportional odds.
+
 Rogers, H. J., & Swaminathan, H. (1993). A comparison of logistic
 regression and Mantel-Haenszel procedures for detecting differential
 item functioning. *Applied Psychological Measurement, 17*, 105–116.
@@ -182,11 +214,14 @@ definitions and thresholds in that handbook are not interchangeable.
 
 [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
 [`mantel_haenszel_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/mantel_haenszel_table.md),
-[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
+[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("ordinal_logistic_table", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 if (requireNamespace("ordinal", quietly = TRUE)) {
   d <- expand.grid(Match = c(-1, 0, 1), Group = c("R", "F"),
                    Score = 0:2, Replicate = 1:5)
@@ -197,6 +232,5 @@ if (requireNamespace("ordinal", quietly = TRUE)) {
   ol$table
   ol$proportional_odds
 }
-#>   Target ChiSquared DF PValue    Status PAdjusted
-#> 1      A          0  3      1 available         1
+} # }
 ```

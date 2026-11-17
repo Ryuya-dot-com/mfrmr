@@ -1,4 +1,4 @@
-# Launch a local Shiny viewer for an mfrm_results object
+# Interactively choose data-frame columns before calling `mfrm_results()`
 
 `launch_mfrmr_viewer()` opens a local Shiny app for reading the object
 returned by
@@ -9,6 +9,12 @@ object, not a new estimation interface.
 ## Usage
 
 ``` r
+mfrm_results_interactive(
+  data,
+  include = "standard",
+  output = c("object", "summary", "tables", "html")
+)
+
 launch_mfrmr_viewer(
   x,
   top_n = 100L,
@@ -22,6 +28,20 @@ launch_mfrmr_viewer(
 ```
 
 ## Arguments
+
+- data:
+
+  A long-format data frame.
+
+- include:
+
+  Passed to
+  [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
+
+- output:
+
+  Passed to
+  [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
 
 - x:
 
@@ -68,11 +88,25 @@ launch_mfrmr_viewer(
 
 ## Value
 
+The selected
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+output.
+
 Invisibly returns the value from
 [`shiny::runApp()`](https://rdrr.io/pkg/shiny/man/runApp.html), or the
 Shiny app object when `return_app = TRUE`.
 
 ## Details
+
+This helper is deliberately opt-in and stops in non-interactive
+sessions. It asks the user to choose the person, score, optional weight,
+and facet columns, prints reproducible code for the selected roles, then
+fits the documented `RSM`/`MML` starting route before calling
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
+Use explicit
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+calls in scripts, Quarto documents, batch workflows, and reproducible
+analyses.
 
 Testlet and random-rater results are not supported by this viewer. Use
 `mfrm_report(res, output = "html")` or
@@ -99,14 +133,29 @@ decision outside the viewer.
 `shiny` is an optional dependency. Install it before using this viewer:
 `install.packages("shiny")`.
 
+## Why this helper is opt-in
+
+Interactive prompts are useful at the console but are unsafe defaults
+for reproducible analysis, unattended workflows, and manuscripts. The
+helper therefore prints replay code and leaves the scripted route
+explicit.
+
 ## See also
 
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md),
-[`mfrm_results_interactive()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results_interactive.md)
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
+[`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)
+
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md),
+`mfrm_results_interactive()`
 
 ## Examples
 
 ``` r
+if (interactive()) {
+  toy <- load_mfrmr_data("example_core")
+  res <- mfrm_results_interactive(toy)
+}
 if (FALSE) { # interactive()
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(

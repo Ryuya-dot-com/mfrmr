@@ -115,10 +115,10 @@ variance; it does not use the RSM default fixed N(0,1).
 Exact agreement proportions describe the retained benchmark mix.
 Accuracy logits adjust for the specified difficulty structure under the
 response model, local independence and a connected identifiable design.
-They are neither ordinary rater severity nor examinee proficiency.
-Binary coding discards the direction and magnitude of disagreements. The
-native fit's readiness and estimate-use labels remain visible; finite
-numbers do not establish reportability, model fit or transport to other
+They are neither ordinary rater severity nor examinee ability. Binary
+coding discards the direction and magnitude of disagreements. The native
+fit's readiness and estimate-use labels remain visible; finite numbers
+do not establish reportability, model fit or transport to other
 benchmarks. High separation reliability for these accuracy locations
 would describe differences in accuracy, not agreement or differences in
 severity.
@@ -148,9 +148,9 @@ d$Rating <- ifelse(matched == 1, d$Reference, (d$Reference %% 3) + 1)
 accuracy <- fit_rater_accuracy(d, "Judge", "Benchmark", "Rating", "Reference")
 accuracy$table
 #>   Rater InputRows RatingRows ExcludedRows Matches ExactAgreement      Accuracy
-#> 1    J1         6          6            0       3      0.5000000  1.573963e-16
+#> 1    J1         6          6            0       3      0.5000000  1.568847e-16
 #> 2    J2         6          6            0       4      0.6666667  6.931472e-01
-#> 3    J3         6          6            0       3      0.5000000  1.281556e-16
+#> 3    J3         6          6            0       3      0.5000000  1.279850e-16
 #> 4    J4         6          6            0       2      0.3333333 -6.931472e-01
 #>   PosteriorSD Extreme SourceFitReadiness SourceInferenceReady      EstimateUse
 #> 1          NA    none              ready                 TRUE source_fit_ready
@@ -159,11 +159,11 @@ accuracy$table
 #> 4          NA    none              ready                 TRUE source_fit_ready
 accuracy$difficulty
 #>       Facet Level    Difficulty
-#> 1 Benchmark    B1 -7.089018e-15
-#> 2 Benchmark    B2 -7.187996e-15
-#> 3 Benchmark    B3 -6.820947e-15
-#> 4 Benchmark    B4 -7.089018e-15
-#> 5 Benchmark    B5 -7.089018e-15
-#> 6 Benchmark    B6  3.527600e-14
+#> 1 Benchmark    B1 -7.075716e-15
+#> 2 Benchmark    B2 -7.174610e-15
+#> 3 Benchmark    B3 -6.808328e-15
+#> 4 Benchmark    B4 -7.075716e-15
+#> 5 Benchmark    B5 -7.075716e-15
+#> 6 Benchmark    B6  3.521009e-14
 # Review SourceFitReadiness and EstimateUse, especially for small samples.
 ```

@@ -41,8 +41,8 @@ shared-owner GPCM JML uses file format 5 with fresh adjusted-equation
 checks, an explicit correction order and a separate post-hoc normal
 reference prior. Its finite EAPs are not corrected Person maxima;
 calibration uncertainty and residual bias are not included in posterior
-intervals. See the corrected-JML example in
-[`vignette("mfrmr-gpcm-scope", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md).
+intervals. See the corrected-JML example in [GPCM scope and current
+limitations](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html).
 Estimated-population RSM/PCM and latent regression remain
 fitted-object-only routes.
 
@@ -50,11 +50,14 @@ Experimental two-family GPCM MML uses file format 6 with the same public
 lifecycle below. It retains two ordered slope owners, second-owner
 steps, the original category coding and fixed N(0,1) prior. The first
 owner’s locations and log slopes are centered; the second owner’s
-locations and slopes remain free. Source identity/convergence and
-finer-integration checks must pass before extraction; review-only
-sources cannot be frozen. Each scoring batch must pass its own EAP/SD
-integration checks. Both fixed-grid EM and adaptive direct MML retain
-their scoring integration method.
+locations and slopes remain free. Extended roles use format 7 with the
+named slope reference and noncentered location facet; all other location
+facets and each declared step set are centered. Format 6 retains its
+original meaning. Source identity/convergence and finer-integration
+checks must pass before extraction; review-only sources cannot be
+frozen. Each scoring batch must pass its own EAP/SD integration checks.
+Both fixed-grid EM and adaptive direct MML retain their scoring
+integration method.
 
 The artifact contains no training responses or Person estimates. Known
 facet levels may form new combinations, flagged by
@@ -65,9 +68,9 @@ collide with the reserved scoring/disposition columns listed in
 [`?mfrm_calibration_workflow`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md).
 Validation and freezing do not qualify sampling coverage, global
 identification or population transport, and intervals exclude
-calibration uncertainty. Older readers refuse format 6; formats 1–5
-retain their interpretation. See the two-family example in the GPCM
-scope vignette.
+calibration uncertainty. Readers must support the artifact’s format;
+adding format 7 does not change the interpretation of formats 1–6. See
+the two-family example in the GPCM scope article.
 
 For a JML source, EAP holds the calibration fixed and adds a
 standard-normal reference prior by default, or uses an explicit
@@ -129,7 +132,7 @@ to it.
 
 library(mfrmr)
 
-mfrm_calibration_capabilities()[, c(
+mfrmr_output_guide("calibration_capabilities")[, c(
   "Model", "Estimator", "ScoringBasis", "PortableCalibration"
 )]
 #>                 Model     Estimator                              ScoringBasis
@@ -229,8 +232,8 @@ review_mfrm_calibration(draft)
 #> [1] Code      FieldPath Detail    Severity 
 #> <0 rows> (or 0-length row.names)
 
-validated <- validate_mfrm_calibration(draft)
-frozen <- freeze_mfrm_calibration(validated)
+validated <- update(status = "validated", draft)
+frozen <- update(status = "frozen", validated)
 frozen
 #> <mfrm_calibration>
 #>   State: frozen
@@ -290,11 +293,11 @@ summary(scores)
 #> 
 #> Fixed-parameter integration review (adaptive minus fixed)
 #>  FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange
-#>         121            31       2           0            6.549072e-11
+#>         121            31       2           0            6.549428e-11
 #>         121            61       2           0            6.549428e-11
 #>  MaxAbsEAPChange MaxAbsSDChange
-#>     5.946026e-10   3.467934e-10
-#>     5.946025e-10   3.467933e-10
+#>      5.94602e-10   3.467935e-10
+#>      5.94602e-10   3.467933e-10
 #>   Calibration: portable-rsm-example
 #>   Model / estimator: RSM / MML
 #>   Persons: 2 scored (1 requiring review); 0 not scored
@@ -369,7 +372,7 @@ plot(
 ![Posterior EAP intervals for two newly scored Persons. A blue circle
 marks a conditionally ready score, an orange triangle marks a score
 requiring review, and a dashed vertical line marks the zero-logit scale
-origin.](mfrmr-portable-calibration_files/figure-html/score-from-artifact-1.png)
+origin.](mfrmr-portable-calibration_files/figure-html/score-from-artifact-1.svg)
 
 ``` r
 
@@ -377,12 +380,13 @@ origin.](mfrmr-portable-calibration_files/figure-html/score-from-artifact-1.png)
 unlink(artifact_file)
 ```
 
-The base and optional ggplot2 renderers distinguish scored and review
-states by shape as well as colour. The complete score and review tables
-remain in the summary object even though its console printout shows only
-a compact preview. `as_ggplot(plot(scores, draw = FALSE))` and an
-explicit `component = "data"` preserve the same selected display and
-saved endpoints. Use
+Both `plot(scores, ...)` and `as_ggplot(scores, ...)` return `ggplot`
+objects that distinguish scored and review states by shape as well as
+colour. The complete score and review tables remain in the summary
+object even though its console printout shows only a compact preview.
+`as_ggplot(plot(scores, draw = FALSE))` and an explicit
+`component = "data"` preserve the same selected display and saved
+endpoints. Use
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
 for other components; drawing does not change the requested interval
 level. For overlapping review labels in precision or edge-mass plots,
@@ -393,8 +397,8 @@ The interval figure is the first score-batch review. Orange triangles
 identify Persons whose `Disposition` is `scored_review`; inspect their
 `ReasonCodes` before using the estimate. A Person with no valid response
 has no score coordinate and therefore appears in
-`summary(scores)$review` and in the draw-free plot payload’s
-`unplotted_dispositions`, not as an artificial point.
+`summary(scores)$review` and in
+`plot_data(p, "unplotted_dispositions")`, not as an artificial point.
 
 Two focused follow-up views use the same score object without consulting
 the source fit:
@@ -406,8 +410,8 @@ plot(scores, type = "precision", preset = "publication")
 
 # Posterior mass on the outer quadrature nodes versus the recorded threshold.
 edge_review <- plot(scores, type = "edge_mass", draw = FALSE)
-edge_review$data$selection_summary
-edge_review$data$unplotted_dispositions
+plot_data(edge_review, "selection_summary")
+plot_data(edge_review, "unplotted_dispositions")
 ```
 
 These displays review a returned score batch. They do not establish
@@ -533,26 +537,26 @@ parameters and prior fixed.
 
 summary(scores)$quadrature_overview
 #>   FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange
-#> 1        121            31       2           0            6.549072e-11
+#> 1        121            31       2           0            6.549428e-11
 #> 2        121            61       2           0            6.549428e-11
 #>   MaxAbsEAPChange MaxAbsSDChange
-#> 1    5.946026e-10   3.467934e-10
-#> 2    5.946025e-10   3.467933e-10
+#> 1     5.94602e-10   3.467935e-10
+#> 2     5.94602e-10   3.467933e-10
 # Keep full precision when inspecting individual differences.
 head(scores$quadrature_review[c(
   "Person", "AdaptiveNodes", "EAPChange", "PosteriorSDChange",
   "AdaptiveEAPChangeFromPrevious", "AdaptiveSDChangeFromPrevious", "Status"
 )])
 #>         Person AdaptiveNodes     EAPChange PosteriorSDChange
-#> 1 NEW_PERSON_1            31 -5.946026e-10      3.467934e-10
-#> 2 NEW_PERSON_1            61 -5.946025e-10      3.467933e-10
-#> 3 NEW_PERSON_2            31 -6.661338e-15     -1.021405e-13
-#> 4 NEW_PERSON_2            61  1.776357e-15     -9.769963e-15
+#> 1 NEW_PERSON_1            31 -5.946020e-10      3.467935e-10
+#> 2 NEW_PERSON_1            61 -5.946020e-10      3.467933e-10
+#> 3 NEW_PERSON_2            31 -7.105427e-15     -1.019185e-13
+#> 4 NEW_PERSON_2            61  2.220446e-15     -9.658940e-15
 #>   AdaptiveEAPChangeFromPrevious AdaptiveSDChangeFromPrevious   Status
 #> 1                            NA                           NA computed
-#> 2                  1.110223e-16                -1.110223e-16 computed
+#> 2                  0.000000e+00                -1.665335e-16 computed
 #> 3                            NA                           NA computed
-#> 4                  8.437695e-15                 9.237056e-14 computed
+#> 4                  9.325873e-15                 9.225953e-14 computed
 ```
 
 Check fixed-versus-adaptive differences and changes between adaptive
@@ -692,7 +696,7 @@ draft <- extract_mfrm_calibration(
   source_fit_id = "training-cohort", scoring_quad_points = 141
 )
 review_mfrm_calibration(draft)
-calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
+calibration <- update(status = "frozen", update(status = "validated", draft))
 save_mfrm_calibration(calibration, "gpcm-calibration.rds")
 ```
 
@@ -889,7 +893,7 @@ jml_fit <- fit_mfrm(jml_data, "Person", c("Rater", "Criterion"), "Score",
   model = "PCM", method = "JML", step_facet = "Criterion",
   maxit = 500, reltol = 1e-10)
 jml_draft <- extract_mfrm_calibration(jml_fit, scoring_quad_points = 141)
-jml_calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(jml_draft))
+jml_calibration <- update(status = "frozen", update(status = "validated", jml_draft))
 save_mfrm_calibration(jml_calibration, "jml-calibration.rds")
 
 # In a new session, supply your later cohort's ratings instead of these example rows.
@@ -933,7 +937,7 @@ owner; different slope and step owners remain MML-only.
 gpcm_jml_fit <- fit_mfrm(jml_data, "Person", c("Rater", "Criterion"), "Score",
   model = "GPCM", method = "JML", step_facet = "Criterion", slope_facet = "Criterion",
   maxit = 600, reltol = 1e-11)
-gpcm_jml_calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(
+gpcm_jml_calibration <- update(status = "frozen", update(status = "validated", 
   extract_mfrm_calibration(gpcm_jml_fit, scoring_quad_points = 141)))
 save_mfrm_calibration(gpcm_jml_calibration, "gpcm-jml-calibration.rds")
 gpcm_jml_scores <- score_mfrm_calibration(

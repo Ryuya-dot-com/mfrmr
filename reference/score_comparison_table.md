@@ -163,6 +163,21 @@ ratings; its zero is the fitted model reference. Severity and
 Infit/Outfit do not measure criterion accuracy and receive no automatic
 quality threshold.
 
+## Migration from automated_scoring_table
+
+The earlier callable interface is removed in 0.3.0. Use this function
+with `screen = "williamson2012"` to retain its default numerical screen.
+Rename `automated`/`human`/`human_reference` to
+`scores`/`reference`/`reference2`, `automated_categories` to
+`score_categories`, and `automated_rater` to `rater`. Rename
+`smd = "human"` to `smd = "reference"`; the selected SD denominator is
+unchanged. Threshold overrides keep their names and meanings. The
+generic default remains `screen = "none"`.
+[mfrmr_api_migration_030](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
+lists the output column and count-table key replacements. Earlier saved
+lists retain their original fields and can be reopened directly without
+recomputing anything.
+
 ## References
 
 Williamson, D. M., Xi, X., & Breyer, F. J. (2012). A framework for
@@ -174,9 +189,7 @@ Especially pp. 7-10 and p. 12, notes 1 and 4.
 ## See also
 
 [`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md),
-[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
-[`automated_scoring_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/automated_scoring_table.md)
-for the earlier automated-scoring interface.
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
 
 ## Examples
 

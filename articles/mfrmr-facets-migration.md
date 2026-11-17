@@ -26,8 +26,8 @@ coverage boundary:
 
 ``` r
 
-facets_feature_coverage()
-facets_feature_coverage("not_implemented")
+facets_guide('coverage')
+facets_guide('coverage', "not_implemented")
 ```
 
 This matrix describes the availability of package-native output
@@ -44,10 +44,10 @@ freedom, or numerical contract.
 | Output | Tables 0-30 plus graphic files | Returned R objects with [`summary()`](https://rdrr.io/r/base/summary.html) and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods |
 | Anchoring | Element/group anchors, rating-scale calibration, and reusable starting values | Element and group anchors; no general threshold/scale anchors or fixed-calibration starting-value bundle |
 | Repeated cells | Multiple observations may be represented within a design cell | Exact Person-by-facet duplicates are retained but force Data review; distinguish legitimate repeats with an event/occasion facet |
-| Bias / interaction | Table 13 cell effects; Table 14 pairwise comparisons | [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md) and [`bias_interaction_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/bias_interaction_report.md); conditional screens with the differences below |
+| Bias / interaction | Table 13 cell effects; Table 14 pairwise comparisons | [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md) and `mfrm_report(fit, type = "bias_interaction")`; conditional screens with the differences below |
 | Wright map / variable map | Graphic variable-map output | `plot(fit, type = "wright")` and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) |
 | Fair average | Table 7 fair-M average | [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md) |
-| Reproducibility | Specification, input data, FACETS version, and recorded run environment/settings | [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md) plus [`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_replay_script.md) |
+| Reproducibility | Specification, input data, FACETS version, and recorded run environment/settings | [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md) plus [`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md) |
 
 ## Visualize an existing FACETS analysis
 
@@ -96,7 +96,7 @@ plot(facets_result, type = "measure", facets = "Person")
 upward triangles mark extreme-score adjustments, a square marks a
 direct/group anchor flag whose subtype is not determined by the import,
 and circles mark estimated measures. No confidence intervals are
-shown.](mfrmr-facets-migration_files/figure-html/facets-import-measures-1.png)
+shown.](mfrmr-facets-migration_files/figure-html/facets-import-measures-1.svg)
 
 Squares identify FACETS `Status=1`, which can denote a direct anchor or
 a member of a group anchor. The import retains
@@ -194,7 +194,7 @@ display_names <- data.frame(Facet = "Person", ElementID = c("1", "2"),
   DisplayLabel = c("受検者 甲", "受検者 乙"))
 labelled <- plot(facets_result, facets = "Person",
   label_map = display_names, draw = FALSE)
-labelled$data$plot_data[, c("ElementID", "Label", "DisplayLabel")]
+plot_data(labelled, "plot_data")[, c("ElementID", "Label", "DisplayLabel")]
 #>   ElementID Label DisplayLabel
 #> 1         1     1    受検者 甲
 #> 2         2     2    受検者 乙
@@ -205,11 +205,11 @@ labelled$data$plot_data[, c("ElementID", "Label", "DisplayLabel")]
 ```
 
 The original result and its labels remain unchanged;
-`labelled$data$label_map` retains the supplied correspondence. Unknown
-or repeated keys are errors. Repeated display names are distinguished by
-element key. Only measure plots draw element labels; other element plots
-keep the names in their returned data. This map does not apply to
-Graphfile category labels.
+`plot_data(labelled, "label_map")` retains the supplied correspondence.
+Unknown or repeated keys are errors. Repeated display names are
+distinguished by element key. Only measure plots draw element labels;
+other element plots keep the names in their returned data. This map does
+not apply to Graphfile category labels.
 
 Japanese text also needs a graphics device and font with the required
 glyphs. With Cairo support and Meiryo installed on Windows, save the
@@ -247,7 +247,7 @@ complete result; `as.data.frame(facets_result)` exports its element
 table. See
 [`?read_facets_results`](https://ryuya-dot-com.github.io/mfrmr/reference/read_facets_results.md)
 and
-[`?plot.mfrm_facets_results`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_facets_results.md)
+[`?plot.mfrm_facets_results`](https://ryuya-dot-com.github.io/mfrmr/reference/read_facets_results.md)
 for the supported scope.
 
 For category-probability and expected-score curves, export a FACETS
@@ -283,7 +283,7 @@ plot(facets_curves, type = "ccc", scales = 1)
 FACETS PCM analysis, on the original Graphfile measure axis. Categories
 0 through 3 are distinguished by color and line type. Lines join
 exported points; there are no confidence
-intervals.](mfrmr-facets-migration_files/figure-html/facets-import-category-curves-1.png)
+intervals.](mfrmr-facets-migration_files/figure-html/facets-import-category-curves-1.svg)
 
 Use `type = "expected"` for the exported expected-score curve. Inspect
 the actual coordinates and source-consistency checks with:
@@ -400,17 +400,16 @@ choice; `df_method = "classical"` reproduces the earlier reference.
 
 Corrected pairwise tables carry `CalculationVersion = 3`. Recreate
 [`build_fixed_reports()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_fixed_reports.md)
-and
-[`bias_pairwise_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/bias_pairwise_report.md)
-from the current bias bundle. First recreate old bias bundles from the
-saved fit and current diagnostics; no main calibration refit is needed.
-Historical report values are not automatically corrected by reloading
-them. Local and contrast SEs describe conditional cell uncertainty;
-calibration uncertainty and cross-cell covariance are not propagated.
-The earlier claim that these contrasts were generally conservative was
-incorrect. Check `ScreenUnavailable` in the pairwise summary before
-reading `Flagged`; the summary covers the full family even when `top_n`
-limits the table.
+and `mfrm_report(bias, type = "bias_pairwise")` from the current bias
+bundle. First recreate old bias bundles from the saved fit and current
+diagnostics; no main calibration refit is needed. Historical report
+values are not automatically corrected by reloading them. Local and
+contrast SEs describe conditional cell uncertainty; calibration
+uncertainty and cross-cell covariance are not propagated. The earlier
+claim that these contrasts were generally conservative was incorrect.
+Check `ScreenUnavailable` in the pairwise summary before reading
+`Flagged`; the summary covers the full family even when `top_n` limits
+the table.
 
 The [Table 4 rule](https://www.winsteps.com/facetman64/table4.htm) and
 its [default
@@ -431,16 +430,15 @@ category removes the universal unit baseline, so category ZSTD and its
 flags are unavailable. This does not turn a missing fit flag into
 evidence that the category functions well.
 
-In
-[`category_structure_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_structure_report.md),
-`MedianThreshold` now means a cumulative 50% boundary;
-`AndrichThreshold` retains the adjacent-category step. Recreate saved
-structure reports. Half-score crossings outside `theta_range` stay
-missing, and modal peaks describe only the requested grid. The random
-chi-square likewise cannot establish normality: with equal SEs and
-positive adjusted variance it is fixed by the number of eligible
-elements, regardless of shape. Chi-square summaries retain unavailable
-flags and use the full family before truncation.
+In `mfrm_report(fit, type = "category_structure")`, `MedianThreshold`
+now means a cumulative 50% boundary; `AndrichThreshold` retains the
+adjacent-category step. Recreate saved structure reports. Half-score
+crossings outside `theta_range` stay missing, and modal peaks describe
+only the requested grid. The random chi-square likewise cannot establish
+normality: with equal SEs and positive adjusted variance it is fixed by
+the number of eligible elements, regardless of shape. Chi-square
+summaries retain unavailable flags and use the full family before
+truncation.
 
 For external files, fixed-field import requires validated all-field
 headings and element number after the statistics; other layouts should
@@ -581,7 +579,7 @@ common-plan delta procedure instead holds each Person’s ability fixed
 across repeated responses. Passing that RootSE into the common-plan
 interval calculation would change both the estimator and the sampling
 target. Corrected JML is therefore not admitted by
-[`confint.mfrm_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fair_average.md).
+[`confint.mfrm_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md).
 
 The benefit of retaining both estimators is that external compatibility
 and a possible reduction in incidental-parameter bias can be studied
@@ -617,9 +615,9 @@ Executed TAM 4.3-25 comparisons support close ordinary-JML agreement for
 matched complete/sparse RSM/PCM designs and supported partial Person
 anchors. They do not establish general coverage, every FACETS anchoring
 convention, or a new JML import route:
-[`import_tam_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/import_tam_fit.md)
-remains MML-only. Retain unavailable uncertainty instead of substituting
-WLE SEs or conditional information for it.
+[`import_irt_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/import_irt_fit.md)
+for `TAM` remains MML-only. Retain unavailable uncertainty instead of
+substituting WLE SEs or conditional information for it.
 
 Inspect returned anchors too. In the checked TAM 4.3-25 version-1 path,
 `theta.fixed` with `xsi.fixed = NULL` still recenters every Person after
@@ -638,9 +636,10 @@ execution.
 
 If the goal is to translate a FACETS-style script with minimal R-side
 plumbing, use
-[`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)
-(alias
-[`mfrmRFacets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)):
+[`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md).
+In older scripts, replace the former
+[`mfrmRFacets()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
+name with this call and keep the same arguments:
 
 ``` r
 
@@ -985,8 +984,8 @@ head(run$fair_average)
 #> 30 Fitted measure or unavailable       0.54      0.66       1.54       1.05
 #> 31 Fitted measure or unavailable       0.55      0.55       0.43      -1.16
 #> 32 Fitted measure or unavailable       0.60      0.63       1.07       0.32
-#> 33 Fitted measure or unavailable       0.54      0.57       1.11       0.37
-#> 34 Fitted measure or unavailable       0.54      0.54       0.50      -1.00
+#> 33 Fitted measure or unavailable       0.54      0.54       0.50      -1.00
+#> 34 Fitted measure or unavailable       0.54      0.57       1.11       0.37
 #> 35 Fitted measure or unavailable       0.52      0.53       1.04       0.26
 #> 36 Fitted measure or unavailable       0.55      0.55       0.29      -1.68
 #> 37 Fitted measure or unavailable       0.56      0.56       0.79      -0.24
@@ -1034,8 +1033,8 @@ head(run$fair_average)
 #> 30        1.49        0.98       0.54          0.40                    0.34
 #> 31        0.43       -1.19       0.58          0.29                    0.24
 #> 32        1.10        0.36       0.75          0.30                    0.24
-#> 33        1.03        0.24      -0.09          0.48                    0.41
-#> 34        0.53       -0.92       0.66          0.48                    0.41
+#> 33        0.53       -0.92       0.66          0.48                    0.41
+#> 34        1.03        0.24      -0.09          0.48                    0.41
 #> 35        1.06        0.29      -0.16          0.30                    0.25
 #> 36        0.31       -1.61       0.79          0.39                    0.33
 #> 37        0.79       -0.23       0.71          0.47                    0.40
@@ -1181,8 +1180,8 @@ head(run$fair_average)
 #> 30                P018            2.17            2.16
 #> 31                P042            2.00            2.10
 #> 32                P039            2.00            2.07
-#> 33                P043            2.17            2.06
-#> 34                P046            2.17            2.06
+#> 33                P046            2.17            2.06
+#> 34                P043            2.17            2.06
 #> 35                P009            2.33            2.03
 #> 36                P017            2.00            1.99
 #> 37                P044            2.00            1.90
@@ -1230,8 +1229,8 @@ head(run$fair_average)
 #> 30                        2.16         0.54          0.66
 #> 31                        2.10         0.55          0.55
 #> 32                        2.07         0.60          0.63
-#> 33                        2.06         0.54          0.57
-#> 34                        2.06         0.54          0.54
+#> 33                        2.06         0.54          0.54
+#> 34                        2.06         0.54          0.57
 #> 35                        2.03         0.52          0.53
 #> 36                        1.99         0.55          0.55
 #> 37                        1.90         0.56          0.56
@@ -1697,8 +1696,8 @@ head(run$fair_average)
 #> 30      0.66       1.54       1.05        1.49        0.98       0.54
 #> 31      0.55       0.43      -1.16        0.43       -1.19       0.58
 #> 32      0.63       1.07       0.32        1.10        0.36       0.75
-#> 33      0.57       1.11       0.37        1.03        0.24      -0.09
-#> 34      0.54       0.50      -1.00        0.53       -0.92       0.66
+#> 33      0.54       0.50      -1.00        0.53       -0.92       0.66
+#> 34      0.57       1.11       0.37        1.03        0.24      -0.09
 #> 35      0.53       1.04       0.26        1.06        0.29      -0.16
 #> 36      0.55       0.29      -1.68        0.31       -1.61       0.79
 #> 37      0.56       0.79      -0.24        0.79       -0.23       0.71
@@ -1929,8 +1928,8 @@ head(run$fair_average)
 #> 30                     P018            2.17            2.16
 #> 31                     P042            2.00            2.10
 #> 32                     P039            2.00            2.07
-#> 33                     P043            2.17            2.06
-#> 34                     P046            2.17            2.06
+#> 33                     P046            2.17            2.06
+#> 34                     P043            2.17            2.06
 #> 35                     P009            2.33            2.03
 #> 36                     P017            2.00            1.99
 #> 37                     P044            2.00            1.90
@@ -1987,8 +1986,8 @@ head(run$fair_average)
 #> 30                        2.16         0.54          0.66
 #> 31                        2.10         0.55          0.55
 #> 32                        2.07         0.60          0.63
-#> 33                        2.06         0.54          0.57
-#> 34                        2.06         0.54          0.54
+#> 33                        2.06         0.54          0.54
+#> 34                        2.06         0.54          0.57
 #> 35                        2.03         0.52          0.53
 #> 36                        1.99         0.55          0.55
 #> 37                        1.90         0.56          0.56
@@ -2495,7 +2494,7 @@ not connect otherwise unobserved rating subsets.
 ## Reviewing output contracts and fit tables
 
 When migrating an existing study,
-[`facets_output_contract_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_output_contract_review.md)
+[`facets_output_contract_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_fit_review.md)
 checks whether the package-generated report components satisfy the
 FACETS-style output contract encoded in the package:
 
@@ -2522,9 +2521,8 @@ evaluates residual-based fit statistics at shrunken EAP person measures
 while FACETS uses JMLE estimates, so MnSq differences can reflect the
 residual basis rather than a fit-computation difference; refit with
 `method = "JML"` before attributing such gaps. See
-[`facets_fit_df_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_fit_df_guide.md)
-for this boundary and for the separate df/ZSTD standardization
-conventions.
+`facets_guide('fit_df')` for this boundary and for the separate df/ZSTD
+standardization conventions.
 
 If you already have a FACETS fit table on disk, read it first and then
 run the fit review. This does not run FACETS; it consumes an exported or
@@ -2532,7 +2530,7 @@ otherwise harmonized table.
 
 ``` r
 
-facets_fit <- read_facets_fit_table(
+facets_fit <- read_facets_results(
   "score.2.txt",
   facet_map = c("1" = "Person", "2" = "Rater", "3" = "Criterion")
 )
@@ -2560,7 +2558,7 @@ T.Count columns, or if duplicate `Facet` x `Level` rows were supplied.
 ## Producing FACETS-style output files
 
 For traceability or downstream tools that expect FACETS output files,
-[`facets_output_file_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_output_file_bundle.md)
+[`facets_output_file_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_fit_review.md)
 writes a parallel set of fixed-width or CSV exports:
 
 ``` r
@@ -2575,8 +2573,9 @@ files <- facets_output_file_bundle(
 
 For RSM and PCM the score-side helpers are available. Under `GPCM` the
 score-side bundle is intentionally restricted; see
-[`?gpcm_capability_matrix`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-and the `mfrmr-gpcm-scope` vignette for the documented limitation.
+[`?mfrmr_gpcm_scope`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_gpcm_scope.md)
+(`mfrmr_output_guide("gpcm_capabilities")`) and the `mfrmr-gpcm-scope`
+vignette for the documented limitation.
 
 ## Recommended next steps
 
@@ -2748,28 +2747,25 @@ mfrmr reporting workflow extends the analysis with:
 - `diagnose_mfrm(diagnostic_mode = "both")` for the strict marginal
   screen alongside the residual stack.
 - [`rating_scale_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rating_scale_table.md),
-  [`category_structure_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_structure_report.md),
-  and
-  [`category_curves_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_curves_report.md)
-  for category-functioning evidence.
+  `mfrm_report(fit, type = "category_structure")`, and
+  `mfrm_report(fit, type = "category_curves")` for category-functioning
+  evidence.
 - [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
   when FACETS Table 7 fair-average review is needed.
 - `plot(fit, type = "wright")` or
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for a
   variable-map view of targeting and threshold placement.
 - [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
-  [`bias_interaction_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/bias_interaction_report.md),
-  and
-  [`bias_pairwise_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/bias_pairwise_report.md)
-  when FACETS Table 14-style local interaction screening is
-  substantively relevant.
-- [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-  for a manuscript-readiness summary.
+  `mfrm_report(fit, type = "bias_interaction")`, and
+  `mfrm_report(bias, type = "bias_pairwise")` when FACETS Table 14-style
+  local interaction screening is substantively relevant.
+- `mfrm_report(fit, type = "checklist")` for a manuscript-readiness
+  summary.
 - [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
   for Method and Results paragraphs and APA tables.
-- [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md)
+- [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
   and
-  [`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_replay_script.md)
+  [`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
   for the reproducibility bundle alongside the FACETS-style handoff out
   of the box.
 

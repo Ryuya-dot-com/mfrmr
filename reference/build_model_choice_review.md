@@ -14,14 +14,21 @@ build_model_choice_review(
   top_n = 10L,
   warn_constraints = TRUE
 )
+
+# S3 method for class 'mfrm_model_choice_review'
+summary(object, digits = 3, ...)
 ```
 
 ## Arguments
 
 - ...:
 
-  Two or more fitted `mfrm_fit` objects from
+  For `build_model_choice_review()`: Two or more fitted `mfrm_fit`
+  objects from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): Reserved for
+  generic compatibility.
 
 - labels:
 
@@ -36,7 +43,19 @@ build_model_choice_review(
   [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
   for the first such pair.
 
-- theta_range, theta_points, top_n:
+- theta_range:
+
+  Passed to
+  [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
+  when `run_weighting_review = TRUE`.
+
+- theta_points:
+
+  Passed to
+  [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
+  when `run_weighting_review = TRUE`.
+
+- top_n:
 
   Passed to
   [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
@@ -47,14 +66,25 @@ build_model_choice_review(
   Passed to
   [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
 
+- object:
+
+  Output from `build_model_choice_review()`.
+
+- digits:
+
+  Number of digits for printed numeric values.
+
 ## Value
 
 An object of class `mfrm_model_choice_review`.
 
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_model_choice_review`.
+
 ## Details
 
-`build_model_choice_review()` is a user-facing synthesis helper. It does
-not estimate new models. It bundles:
+`build_model_choice_review()` synthesizes saved model fits without
+estimating new models. It bundles:
 
 - [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
   for verified AIC/Person-BIC/SABIC/log-likelihood comparison;
@@ -77,8 +107,7 @@ not estimate new models. It bundles:
 - report wording templates that avoid treating better `GPCM` fit as an
   automatic operational-scoring decision;
 
-- [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-  when `GPCM` is present;
+- `mfrmr_output_guide("gpcm_capabilities")` when `GPCM` is present;
 
 - optionally,
   [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
@@ -95,12 +124,17 @@ helpers outside the documented boundary. Model-choice ranking also
 requires the current selectable IC contract: q\<31 fits retain raw
 criteria but produce a screening/review-only bundle.
 
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize a
+model-choice review
+
 ## See also
 
 [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md),
 [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md),
-[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md),
+[mfrmr_gpcm_scope](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_gpcm_scope.md),
 [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
+
+`build_model_choice_review()`
 
 ## Examples
 

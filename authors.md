@@ -8,16 +8,16 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/inst/CITATION)
+[`inst/CITATION`](https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/inst/CITATION)
 
 Komuro R (2026). *mfrmr: Estimation and Diagnostics for Many-Facet
-Measurement Models*. R package version 0.2.4,
+Measurement Models*. R package version 0.3.0,
 <https://ryuya-dot-com.github.io/mfrmr/>.
 
     @Manual{,
       title = {{mfrmr}: Estimation and Diagnostics for Many-Facet Measurement Models},
       author = {Ryuya Komuro},
       year = {2026},
-      note = {R package version 0.2.4},
+      note = {R package version 0.3.0},
       url = {https://ryuya-dot-com.github.io/mfrmr/},
     }

@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,32 +33,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Linking and DFF</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-linking-and-dff.Rmd" class="external-link"><code>vignettes/mfrmr-linking-and-dff.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/vignettes/articles/mfrmr-linking-and-dff.Rmd" class="external-link"><code>vignettes/articles/mfrmr-linking-and-dff.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-linking-and-dff.Rmd</code></div>
     </div>
 
@@ -101,7 +95,7 @@ screening</li>
 <p>For a broader workflow guide, see
 <code><a href="../articles/mfrmr-workflow.html">vignette("mfrmr-workflow", package = "mfrmr")</a></code>. For the
 shorter help-page map, see
-<code><a href="../reference/mfrmr_linking_and_dff.html">help("mfrmr_linking_and_dff", package = "mfrmr")</a></code>.</p>
+<code><a href="../reference/build_linking_review.html">help("mfrmr_linking_and_dff", package = "mfrmr")</a></code>.</p>
 <div class="section level2">
 <h2 id="first-example-reuse-selected-criterion-locations">First example: reuse selected criterion locations<a class="anchor" aria-label="anchor" href="#first-example-reuse-selected-criterion-locations"></a>
 </h2>
@@ -132,7 +126,7 @@ time.</p>
 <span><span class="va">baseline_data</span> <span class="op">&lt;-</span> <span class="va">ratings</span><span class="op">[</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">people</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">24</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
 <span><span class="va">new_data</span> <span class="op">&lt;-</span> <span class="va">ratings</span><span class="op">[</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">people</span><span class="op">[</span><span class="fl">25</span><span class="op">:</span><span class="fl">48</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></code></pre></div>
 <p>Fit the reference and select its Criterion locations.
-<code><a href="../reference/make_anchor_table.html">make_anchor_table()</a></code> requires a numerically eligible source,
+<code><a href="../reference/review_mfrm_anchors.html">make_anchor_table()</a></code> requires a numerically eligible source,
 but does not establish substantive invariance. If it refuses a source,
 inspect that model’s diagnostics; exporting with
 <code>readiness_policy = "review"</code> is for inspection, not for
@@ -143,7 +137,7 @@ bypassing the requirement in a new calibration.</p>
 <span>  method <span class="op">=</span> <span class="st">"MML"</span>, rating_min <span class="op">=</span> <span class="fl">1</span>, rating_max <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  category_policy <span class="op">=</span> <span class="st">"preserve"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">anchors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_anchor_table.html">make_anchor_table</a></span><span class="op">(</span><span class="va">baseline</span>, facets <span class="op">=</span> <span class="st">"Criterion"</span><span class="op">)</span></span>
+<span><span class="va">anchors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/review_mfrm_anchors.html">make_anchor_table</a></span><span class="op">(</span><span class="va">baseline</span>, facets <span class="op">=</span> <span class="st">"Criterion"</span><span class="op">)</span></span>
 <span><span class="va">anchors</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 3</span></span></span>
 <span><span class="co">#&gt;   Facet     Level        Anchor</span></span>
@@ -294,11 +288,12 @@ Persons can be present in the design without being anchored. Choosing
 JML changes the estimator and should follow the analysis question, not
 merely avoid an error.</li>
 <li>
-<strong>Anchor uncertainty is conditional.</strong> The new fit
-treats supplied values as exact. It does not propagate their source
-estimation error; an unavailable SE for a fixed value does not mean its
-source was perfectly known. Compare defensible anchor sets when
-conclusions depend on that choice.</li>
+<strong>Anchor uncertainty is conditional by default.</strong> The
+new fit treats supplied values as exact. A separate, scoped interval
+calculation can add independent source-calibration uncertainty; see <a href="#which-uncertainty-is-available-with-anchors">the supported routes
+below</a>. A fixed value is not therefore perfectly known in its source
+population. Compare defensible anchor sets when conclusions depend on
+that choice.</li>
 <li>
 <strong>Locations are not the entire calibration.</strong> To hold
 thresholds and other supported calibration components fixed while
@@ -420,6 +415,45 @@ do not estimate changing cohort means. In a joint model, do not assign
 conflicting Person-level year covariates to a common recording rated in
 several years. Its rating occasion is not a different underlying
 performance.</p>
+<p>For joint RSM/PCM MML, a cohort predictor belongs to the
+performance’s original cohort, even when that recording is rated again
+later. The estimated cohort difference and panel difference then rely on
+common criterion/step parameters and the specified conditional-normal
+population. The current alternative with a directly anchored, uncentered
+Rater facet supports only an intercept-only population with an
+explicitly fixed SD. It cannot be substituted for this cohort-regression
+model. Retaining the default whole-facet zero sum while fixing the old
+panel would also constrain the new panel’s mean.</p>
+<p>Distinguish ability-population SD from the SE of an estimated cohort
+difference, the spread of rater severities, and the observed score SD.
+With a cohort predictor, native RSM/PCM MML estimates different
+conditional means but one shared residual variance. Setting
+<code>population_sd</code> instead supplies a known common SD; it does
+not estimate separate annual variances. In a simulation, changing the
+generating SD while estimating that common variance tests a different
+question from fixing the fitted SD at a supplied value. Generating
+different annual SDs tests a violation of the shared-variance
+assumption. When planning common recordings, also distinguish the
+population’s SD from the realized ability spread of the selected
+recording subset. Increasing the recording count can improve precision
+without resolving a misspecified population model. Assess the variance
+assumption separately from whether a reported interval is narrow or
+numerically available.</p>
+<p>A multiple-group population model can estimate annual residual
+variances separately while retaining common calibration parameters; see
+the <a href="https://cran.r-universe.dev/TAM/doc/manual.html" class="external-link">TAM
+reference manual</a> (<code>tam.mml</code>, Details, multiple-group
+model). Separate annual fits without a shared scale are not equivalent
+to this joint model. The additional variance parameter also needs
+information: in a small cohort, its estimate can approach zero. At that
+boundary, an ordinary interior-point Wald interval is not justified. For
+annual or panel contrasts, interval calculations must account for
+covariance with the estimated calibration and population parameters. An
+external model’s point estimates or quick SEs alone do not establish the
+coverage of those contrast intervals. This multiple-group extension is
+not a native RSM/PCM option in the current development version. Compare
+bias and RMSE as well as interval width, availability and coverage; an
+improvement in one does not establish an improvement in the others.</p>
 </div>
 <div class="section level3">
 <h3 id="read-the-existing-helper-results-for-their-stated-purpose">Read the existing helper results for their stated purpose<a class="anchor" aria-label="anchor" href="#read-the-existing-helper-results-for-their-stated-purpose"></a>
@@ -487,6 +521,45 @@ reference scores. If the contest is rated live but the calibration uses
 video, paired live/video ratings of some performances can help assess
 whether the estimated severity transfers. Repeated ratings can be
 dependent even when their IDs are correct.</p>
+<p>Common recordings do not always separate presentation mode from a
+panel change. Consider this particular assignment, where the old ratings
+were made live:</p>
+<table class="table">
+<thead><tr class="header">
+<th>Rating occasion</th>
+<th>New cohort (<code>C</code>)</th>
+<th>New panel (<code>B</code>)</th>
+<th>Video (<code>V</code>)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Old panel, old live performance</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>New panel, recording of that old performance</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>New panel, new live performance</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Here <code>B = C + V</code> in every row. A common new-panel severity
+shift, a cohort mean difference and a video effect cannot all be
+estimated freely. More recordings with the same assignment do not remove
+this alias. Assuming the video effect is zero identifies a more
+restricted model; it does not test that assumption. Additional
+live/video crossing for the same performances and judges can break the
+design alias, but repeated-rating dependence, order effects and the
+resulting precision still require assessment.</p>
 <p>Annual-difference uncertainty needs the covariance between the
 relevant estimates, or propagation of reference-calibration uncertainty
 where applicable. Adding two squared SEs assumes away covariance;
@@ -505,19 +578,46 @@ model-information or cluster-sandwich intervals for free facet locations
 and contrasts, subject to its checks. They condition on the supplied
 anchors. A fixed target has SE zero and no inferential bounds; this does
 not describe the uncertainty of its original calibration.</p>
-<p>If the population mean and variance are also estimated, anchored
-point estimation is supported, but the native location and population
-interval helpers currently exclude anchors and group constraints.
-Inspect <code>fit$readiness$fit</code>:
-<code>EstimabilityState = "not_evaluated"</code> means the
-identification review is incomplete, not that numerical optimization
-failed or the model was proved unidentified. The separate
-<code>fit$data_review$estimability$nonlinear_local_estimability</code>
-can pass its local-rank check while overall readiness remains under
-review. That local result alone does not authorize intervals or
-exporting anchors for reuse. Choose the population assumption for the
-assessment question, not simply because one configuration supplies
-intervals.</p>
+<p>The <strong>anchor-origin</strong> route estimates the receiving
+population mean and variance with direct RSM/PCM MML,
+<code>population_formula = ~1</code>, and direct anchors on the
+noncentered facet. Fixed and adaptive integration are supported. Specify
+<code>population_sd</code> only when a fixed population SD is
+substantively intended. Keep the model’s origin distinct from its unit:
+fixing a Rater location identifies the origin in an otherwise identified
+design; the unit slopes of RSM/PCM set the logit unit without requiring
+population SD to equal one.</p>
+<p>Eligible free locations and population parameters can receive
+conditional model-information intervals. Supplying
+<code>anchor_covariance</code> and
+<code>independent_anchors = TRUE</code> to
+<code><a href="../reference/mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> or
+<code><a href="../reference/mfrm_population_intervals.html">mfrm_population_intervals()</a></code> adds the source contribution by
+first-order sensitivity. Use the full anchor covariance, including
+correlations. Estimated variance retains its log-scale interval
+construction; an explicitly fixed variance still has no inferential
+interval. This route excludes population covariates, interactions and
+group constraints, and does not correct drift. See
+<code><a href="../reference/mfrm_facet_intervals.html">help("mfrm_facet_intervals")</a></code> for an executable two-sample
+example.</p>
+<p>Independent source and receiving Persons are a sampling assumption,
+not a consequence of different IDs. The same recording rated again still
+represents the same performance. Shared Persons or clusters require
+cross-sample covariance or a joint model; they cannot be passed to the
+independent-source formula. Likewise, subtracting the source population
+mean from the receiving mean requires the source mean–anchor covariance.
+The new population interval alone is not an interval for that
+difference.</p>
+<p>For design planning, distinguish the source Person count, receiving
+Person count, independent linking performances, and each anchor rater’s
+exposure. More receiving ratings cannot remove error in an externally
+calibrated scale. If all supplied rater anchors move by the same amount,
+the receiving mean and unanchored rater locations can move by that
+amount without changing fitted probabilities. Good fit therefore cannot
+rule out a shared anchor shift. Source-error propagation quantifies
+sampling uncertainty under invariance; it does not identify this drift.
+Neither numerical eligibility nor a single successful dataset
+establishes a minimum sample size or nominal coverage.</p>
 <p>For <strong>one-family GPCM</strong>, model-information and
 cluster-sandwich slope and curve intervals can include fixed facet
 anchors or group means when their own numerical checks pass. Use
@@ -558,14 +658,14 @@ does not convert the statistical model.</p>
 <td>
 <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS()</a></code>; inspect
 <code>summary(fit, compute = "never")</code> and
-<code>specifications_report(fit)</code>
+<code>mfrm_report(type = "specifications", fit)</code>
 </td>
 <td>No estimates or constraints. A native fit lacking convention
 metadata retains legacy remainder centering.</td>
 </tr>
 <tr class="even">
 <td>Repeat the original estimation</td>
-<td>Generate <code><a href="../reference/build_mfrm_replay_script.html">build_mfrm_replay_script()</a></code> and run it with the
+<td>Generate <code><a href="../reference/export_mfrm_bundle.html">build_mfrm_replay_script()</a></code> and run it with the
 original data</td>
 <td>A new fit under the original convention, with newly evaluated
 readiness.</td>
@@ -618,7 +718,7 @@ assessment question.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">legacy_fit</span>, <span class="va">fit_file</span><span class="op">)</span></span>
 <span><span class="va">restored_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">fit_file</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">fit_file</span><span class="op">)</span></span>
-<span><span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/specifications_report.html">specifications_report</a></span><span class="op">(</span><span class="va">restored_fit</span><span class="op">)</span><span class="op">$</span><span class="va">data_spec</span></span>
+<span><span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"specifications"</span>, <span class="va">restored_fit</span><span class="op">)</span><span class="op">$</span><span class="va">data_spec</span></span>
 <span><span class="va">spec</span><span class="op">[</span><span class="va">spec</span><span class="op">$</span><span class="va">Setting</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NonCenteredFacet"</span>, <span class="st">"CenteringScope"</span><span class="op">)</span>, <span class="op">]</span></span>
 <span><span class="co">#&gt;            Setting     Value</span></span>
 <span><span class="co">#&gt; 6 NonCenteredFacet    Person</span></span>
@@ -650,7 +750,10 @@ is not an accuracy guarantee.</p>
 <span><span class="co">#&gt;  - Interpretation: Fit-readiness requirements satisfied; formal precision</span></span>
 <span><span class="co">#&gt;    review required</span></span>
 <span><span class="co">#&gt;  - Formal inference: No</span></span>
-<span><span class="co">#&gt;  - Why: Formal precision support has not been evaluated.</span></span>
+<span><span class="co">#&gt;  - Why: Formal precision support has not been evaluated. These checks assess</span></span>
+<span><span class="co">#&gt;    numerical readiness and the requested precision method under the specified</span></span>
+<span><span class="co">#&gt;    model; they do not establish model adequacy or finite-sample coverage for</span></span>
+<span><span class="co">#&gt;    this design.</span></span>
 <span><span class="co">#&gt;  - Next: Run `diagnose_mfrm()` and pass its result as `diagnostics =` to</span></span>
 <span><span class="co">#&gt;    evaluate formal precision support; fit readiness alone is not a</span></span>
 <span><span class="co">#&gt;    formal-inference decision.</span></span>
@@ -704,8 +807,8 @@ is not an accuracy guarantee.</p>
 <span><span class="co">#&gt;    show_ci = TRUE, top_n = Inf, preset = "publication")`.</span></span>
 <span><span class="co">#&gt;  - Reuse `review$results$diagnostics`; call `diagnose_mfrm()` again only for</span></span>
 <span><span class="co">#&gt;    residual PCA or other custom settings.</span></span>
-<span><span class="co">#&gt;  - Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for</span></span>
-<span><span class="co">#&gt;    reporting readiness.</span></span>
+<span><span class="co">#&gt;  - Use `mfrm_report(type = 'checklist', fit, diagnostics =</span></span>
+<span><span class="co">#&gt;    review$results$diagnostics)` for reporting readiness.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Facet measure overview</span></span>
 <span><span class="co">#&gt;      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate Span</span></span>
@@ -751,7 +854,7 @@ is not an accuracy guarantee.</p>
 <span>                    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">new_raters</span><span class="op">$</span><span class="va">Estimate</span><span class="op">[</span><span class="va">new_raters</span><span class="op">$</span><span class="va">Level</span> <span class="op">!=</span> <span class="st">"R01"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Convention FixedR01 OtherRaterSum</span></span>
-<span><span class="co">#&gt; 1  remainder      0.7  1.387779e-17</span></span>
+<span><span class="co">#&gt; 1  remainder      0.7 -1.387779e-17</span></span>
 <span><span class="co">#&gt; 2      facet      0.7 -7.000000e-01</span></span></code></pre></div>
 <p>Both fits keep R01 at 0.70. The remaining raters sum to zero in the
 legacy fit and -0.70 in the whole-facet fit. This changes R01’s
@@ -773,13 +876,13 @@ This recipe <strong>refits</strong>. By contrast, the replay written by
 without reconstructing the model.</p>
 <p>If only a frozen calibration survives, retain its original scoring
 meaning. Generic old identification labels are insufficient to infer its
-centering convention. See
-<code><a href="../articles/mfrmr-portable-calibration.html">vignette("mfrmr-portable-calibration", package = "mfrmr")</a></code>
-for re-extraction and validation; changing a label is not recalibration.
-Earlier MML fits containing Person anchors require special review
-because those values were ignored. Current fitting rejects them;
-choosing <code>centering_scope = "remainder"</code> does not repair that
-earlier analysis.</p>
+centering convention. See <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-portable-calibration.html">Portable
+calibration and fresh-session scoring</a> for re-extraction and
+validation; changing a label is not recalibration. Earlier MML fits
+containing Person anchors require special review because those values
+were ignored. Current fitting rejects them; choosing
+<code>centering_scope = "remainder"</code> does not repair that earlier
+analysis.</p>
 </div>
 <div class="section level3">
 <h3 id="comparing-an-anchor-with-tam-or-conquest">Comparing an anchor with TAM or ConQuest<a class="anchor" aria-label="anchor" href="#comparing-an-anchor-with-tam-or-conquest"></a>
@@ -976,7 +1079,7 @@ subgroup or cross-form contrasts.</p>
 <span><span class="co">#&gt;   Subset Observations ObservationPercent</span></span>
 <span><span class="co">#&gt; 1      1          384                100</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sc</span>, type <span class="op">=</span> <span class="st">"design_matrix"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-linking-and-dff_files/figure-html/connectivity-1.png" class="r-plt" alt="Observed rating connections across design subsets. Disconnected blocks indicate where a common measurement scale needs additional linking evidence." width="672"></p>
+<p><img src="mfrmr-linking-and-dff_files/figure-html/connectivity-1.svg" class="r-plt" alt="Observed rating connections across design subsets. Disconnected blocks indicate where a common measurement scale needs additional linking evidence." width="672"></p>
 <p>Interpretation:</p>
 <ul>
 <li>Sparse rows or columns indicate weaker design coverage.</li>
@@ -990,11 +1093,11 @@ scale.</li>
 <div class="section level2">
 <h2 id="export-anchor-candidates">2. Export anchor candidates<a class="anchor" aria-label="anchor" href="#export-anchor-candidates"></a>
 </h2>
-<p><code><a href="../reference/make_anchor_table.html">make_anchor_table()</a></code> mechanically exports fitted values
+<p><code><a href="../reference/review_mfrm_anchors.html">make_anchor_table()</a></code> mechanically exports fitted values
 in the direct-anchor schema. Its output is a candidate table, not a
 validated anchor set.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">anchors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_anchor_table.html">make_anchor_table</a></span><span class="op">(</span><span class="va">fit</span>, facets <span class="op">=</span> <span class="st">"Criterion"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">anchors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/review_mfrm_anchors.html">make_anchor_table</a></span><span class="op">(</span><span class="va">fit</span>, facets <span class="op">=</span> <span class="st">"Criterion"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">anchors</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 3</span></span></span>
 <span><span class="co">#&gt;   Facet     Level         Anchor</span></span>
@@ -1003,7 +1106,7 @@ validated anchor set.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Criterion Content      -<span style="color: #BB0000;">0.199</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Criterion Language     -<span style="color: #BB0000;">0.275</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Criterion Organization -<span style="color: #BB0000;">0.049</span><span style="color: #BB0000; text-decoration: underline;">9</span></span></span></code></pre></div>
-<p>By default, <code><a href="../reference/make_anchor_table.html">make_anchor_table()</a></code> refuses a source whose
+<p>By default, <code><a href="../reference/review_mfrm_anchors.html">make_anchor_table()</a></code> refuses a source whose
 current readiness record does not have
 <code>InferenceReady = TRUE</code>. Use
 <code>readiness_policy = "review"</code> only to inspect review-only
@@ -1079,7 +1182,7 @@ and original data; no model refit is needed.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">screen</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">dff_resid</span>, type <span class="op">=</span> <span class="st">"summary"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-linking-and-dff_files/figure-html/dff-residual-1.png" class="r-plt" alt="Ordered criterion contrasts in mean observed-minus-expected scores, Group1 minus Group2. These descriptive differences are in score units, without confidence intervals or a formal DFF decision." width="672"></p>
+<p><img src="mfrmr-linking-and-dff_files/figure-html/dff-residual-1.svg" class="r-plt" alt="Ordered criterion contrasts in mean observed-minus-expected scores, Group1 minus Group2. These descriptive differences are in score units, without confidence intervals or a formal DFF decision." width="672"></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">comparisons</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">screen</span>, <span class="st">"pairs"</span><span class="op">)</span></span>
 <span><span class="va">comparisons</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Level"</span>, <span class="st">"Group1"</span>, <span class="st">"Group2"</span>, <span class="st">"Contrast"</span>,</span>
@@ -1141,10 +1244,14 @@ response absent from the fitted data. A fully matched example has no
 excluded rows; this does not establish independence. Response exclusions
 and unavailable <em>comparisons</em> are different stages.</p>
 <p>For a grid of the same pairwise differences, use
-<code>plot(dff_resid, type = "heatmap", metric = "contrast")</code>. The
-default heatmap instead shows each group’s mean observed-minus-expected
-score. That cell mean can appear even below <code>min_obs</code>; read
-its saved <code>pairs$sparse</code> and counts. The scaled-residual
+<code>plot(dff_resid, type = "heatmap", metric = "contrast")</code>. To
+compare two subgroups directly on a two-dimensional coordinate plane
+(with aligned X/Y marginal histograms when at least eight finite
+comparable levels exist and an identity reference line), use
+<code>plot(dff_resid, type = "scatter")</code>. The default heatmap
+instead shows each group’s mean observed-minus-expected score. That cell
+mean can appear even below <code>min_obs</code>; read its saved
+<code>pairs$sparse</code> and counts. The scaled-residual
 (<code>metric = "t"</code>) and pairwise-contrast routes withhold values
 below this threshold. Missing cells/contrasts stay missing, not zero. If
 every contrast is unavailable, inspect <code>dff_resid$dif_table</code>
@@ -1211,6 +1318,35 @@ under the baseline calibration, before fitting the shift.
 <code>AfterBiasObsExpAverage</code> records the remaining discrepancy
 with that shift included. Both are on the score scale;
 <code>Bias Size</code> is in logits.</p>
+<p>For a prespecified Rater-by-Criterion interaction, a separate joint
+route uses <code>fit_mfrm(facet_interactions = "Rater:Criterion")</code>
+followed by
+<code>mfrm_facet_intervals(fit, interaction = "Rater:Criterion")</code>.
+Its cell and contrast intervals use the full joint information,
+including covariance with the main effects, thresholds and any estimated
+population coefficients and residual variance. Direct RSM/PCM MML
+supports fixed or adaptive integration with either a fixed
+standard-normal population or an estimated normal mean/regression and
+variance. The route retains one two-facet interaction, unit weights and
+no anchors; supplied fixed population SD is not supported. EM/hybrid
+require fixed-grid, fixed-standard-normal fits. The intervals do not
+supply simultaneous inference, prove fairness, or upgrade the
+conditional bias/refit screens above. Include relevant ability
+predictors through the supported population model and inspect
+identification; omitting group ability differences can confound their
+interpretation with differential functioning. See
+<code><a href="../reference/mfrm_facet_intervals.html">help("mfrm_facet_intervals")</a></code> for all numerical and design
+restrictions.</p>
+<p>Define the contrast before inspecting the fitted cells. For example,
+<code>(R1,C1) - (R2,C1) - (R1,C2) + (R2,C2)</code> asks whether the
+R1-versus-R2 predictor difference changes between C1 and C2. Under the
+joint model this cancels their main effects and compares four
+interaction cells. Its SE must use their covariance, not the sum of four
+squared cell SEs. A row or column sum constrained to zero has no
+inferential interval; it is not evidence of agreement. Cell rating
+counts, independent Persons and overlap between raters remain different
+design quantities. A numerically available interval does not establish
+the sample size needed to detect the chosen effect.</p>
 <p>Refits currently refuse baselines with user-specified active
 population models, fitted facet interactions, or group-anchor
 constraints because those structures cannot yet be replayed and linked
@@ -1450,7 +1586,7 @@ additive RSM. No interaction fit is silently added.</p>
 <span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">support</span>, <span class="st">"comparison_review"</span><span class="op">)</span><span class="op">$</span><span class="va">weights</span></span>
 <span><span class="co">#&gt;                           R01   R02   R03   R04</span></span>
 <span><span class="co">#&gt; First rater versus panel 0.75 -0.25 -0.25 -0.25</span></span>
-<span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dif_report.html">dif_report</a></span><span class="op">(</span><span class="va">rater_screen</span><span class="op">)</span></span>
+<span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"dff"</span>, <span class="va">rater_screen</span><span class="op">)</span></span>
 <span><span class="va">report</span><span class="op">$</span><span class="va">comparison_review</span><span class="op">$</span><span class="va">table</span></span>
 <span><span class="co">#&gt;                 Comparison Group1 Group2 Facet Model Method StepFacet</span></span>
 <span><span class="co">#&gt; 1 First rater versus panel      A      B Rater   RSM    MML    shared</span></span>
@@ -1605,7 +1741,7 @@ therefore not a replication of the preceding full-design MML value.</p>
 <span>       comparison_review <span class="op">=</span> <span class="va">partial_review</span>, interaction_policy <span class="op">=</span> <span class="st">"silent"</span><span class="op">)</span>,</span>
 <span>  <span class="va">partial_review</span><span class="op">$</span><span class="va">comparison_review</span><span class="op">$</span><span class="va">fit_arguments</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">partial_comparisons</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/interaction_effect_table.html">interaction_effect_table</a></span><span class="op">(</span><span class="va">partial_fit</span><span class="op">)</span></span>
+<span><span class="va">partial_comparisons</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_bias.html">interaction_effect_table</a></span><span class="op">(</span><span class="va">partial_fit</span><span class="op">)</span></span>
 <span><span class="va">partial_comparisons</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Comparison"</span>, <span class="st">"ConditionalState"</span>, <span class="st">"Estimate"</span>, <span class="st">"EstimateStatus"</span>,</span>
 <span>  <span class="st">"BoundaryState"</span>, <span class="st">"NumericalState"</span>, <span class="st">"EstimateReason"</span></span>
@@ -1681,7 +1817,7 @@ explicitly:</p>
 <span>       comparison_review <span class="op">=</span> <span class="va">cml_review</span>, interaction_policy <span class="op">=</span> <span class="st">"silent"</span><span class="op">)</span>,</span>
 <span>  <span class="va">cml_review</span><span class="op">$</span><span class="va">comparison_review</span><span class="op">$</span><span class="va">fit_arguments</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">cml_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/interaction_effect_table.html">interaction_effect_table</a></span><span class="op">(</span><span class="va">cml_fit</span><span class="op">)</span></span>
+<span><span class="va">cml_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_bias.html">interaction_effect_table</a></span><span class="op">(</span><span class="va">cml_fit</span><span class="op">)</span></span>
 <span><span class="va">cml_table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Comparison"</span>, <span class="st">"ConditionalState"</span>, <span class="st">"Estimate"</span>, <span class="st">"SE"</span>, <span class="st">"Lower"</span>,</span>
 <span>              <span class="st">"Upper"</span>, <span class="st">"FormalInferenceEligible"</span>, <span class="st">"EstimateReason"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 8</span></span></span>
@@ -1713,7 +1849,7 @@ estimated”, with no point or interval:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cml_intervals</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_facet_intervals.html">mfrm_facet_intervals</a></span><span class="op">(</span><span class="va">cml_fit</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cml_intervals</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-linking-and-dff_files/figure-html/partial-cml-interval-display-1.png" class="r-plt" alt="CML rater-by-origin contrasts: the pair estimate has a pointwise 95 percent conditional-information interval; the unidentified panel row is labeled not estimated and has no point." width="672"></p>
+<p><img src="mfrmr-linking-and-dff_files/figure-html/partial-cml-interval-display-1.svg" class="r-plt" alt="CML rater-by-origin contrasts: the pair estimate has a pointwise 95 percent conditional-information interval; the unidentified panel row is labeled not estimated and has no point." width="672"></p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/apa_table.html">apa_table</a></span><span class="op">(</span><span class="va">cml_intervals</span>, which <span class="op">=</span> <span class="st">"intervals"</span><span class="op">)</span><span class="op">$</span><span class="va">table</span></span>
 <span><span class="co">#&gt;   Comparison Group1 Group2       Facet Model Method StepFacet SlopeFacet</span></span>
@@ -1869,7 +2005,7 @@ The ratio can be unstable when the fitted SD is near zero;
 standardization does not cure weak information.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sd_intervals</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-linking-and-dff_files/figure-html/standardized-interaction-plot-1.png" class="r-plt" alt="Two rater-by-origin interaction contrasts with pointwise 95 percent model-information delta-method intervals in estimated population standard-deviation units; the zero line is a reference." width="672"></p>
+<p><img src="mfrmr-linking-and-dff_files/figure-html/standardized-interaction-plot-1.svg" class="r-plt" alt="Two rater-by-origin interaction contrasts with pointwise 95 percent model-information delta-method intervals in estimated population standard-deviation units; the zero line is a reference." width="672"></p>
 <p>The usual saved-results path carries the same targets, scale, checks
 and review into plots, reports and table exports, without fitting
 again:</p>
@@ -1902,11 +2038,13 @@ a calibrated DFF classification.</p>
 MH comparison with explicit matching strata and one response per Person
 and target. Its default conditional exact inference uses
 <code><a href="https://rdrr.io/r/stats/mantelhaen.test.html" class="external-link">stats::mantelhaen.test()</a></code>; an asymptotic option is also
-available. <code><a href="../reference/analyze_dff.html">analyze_dff()</a></code> retains its residual and refit
-routes. <code><a href="../reference/ordinal_logistic_table.html">ordinal_logistic_table()</a></code> supplies the
-independent-Person cumulative-logit comparison through the optional
-<code>ordinal</code> package. Pooled repeated-rating comparisons remain
-planned work. First specify what each result describes:</p>
+available. Explicit <code>method = "gmh"</code> extends the comparison
+to multiple categories and groups using an asymptotic association test.
+<code><a href="../reference/analyze_dff.html">analyze_dff()</a></code> retains its residual and refit routes.
+<code><a href="../reference/ordinal_logistic_table.html">ordinal_logistic_table()</a></code> supplies the independent-Person
+cumulative-logit comparison through the optional <code>ordinal</code>
+package. Pooled repeated-rating comparisons remain planned work. First
+specify what each result describes:</p>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -1933,6 +2071,11 @@ anchors</td>
 strata</td>
 </tr>
 <tr class="even">
+<td>Generalized CMH (GMH)</td>
+<td>An omnibus group-by-category association conditional on declared
+matching strata; no scalar severity/odds-ratio estimate</td>
+</tr>
+<tr class="odd">
 <td>Cumulative ordinal logistic</td>
 <td>Group and matching-by-group terms in a proportional-odds response
 model</td>
@@ -1987,11 +2130,12 @@ rows. Its <code>table</code> separates uniform (M2/M1), nonuniform
 (M3/M2) and joint (M3/M1) likelihood-ratio tests, with Holm adjustment
 across all three tests and targets. <code>DeltaNagelkerkeR2</code> names
 the pseudo-R-squared definition explicitly. The <code>contrasts</code>
-table reports M3’s reference/focal upper-tail odds ratios at the
-endpoints and midpoint of the overlapping matching ranges; values above
-one favor higher reference scores. Fits use all complete responses. An
-interaction means this odds ratio changes with matching, so one constant
-group coefficient does not summarize the full difference.</p>
+table reports M3’s reference/focal upper-tail odds ratios for each focal
+group at the endpoints and midpoint of the matching range shared by all
+declared groups; values above one favor higher reference scores. Fits
+use all complete responses. An interaction means this odds ratio changes
+with matching, so one constant group coefficient does not summarize the
+full difference.</p>
 <p>The separate <code>proportional_odds</code> table tests whether
 slopes can differ across category cuts, using a global nonproportional
 alternative. This diagnostic has its own multiplicity family and does
@@ -2005,8 +2149,8 @@ exact numerical checks. All reported p-values are asymptotic:
 convergence or a nonsignificant diagnostic does not establish adequate
 small-sample inference or proportional odds.</p>
 <p>A bounded known-model check illustrates this limit. With three
-categories, balanced groups, a fixed matching grid and total N=40, all
-1,000 simulated data sets had computable group tests. Under no group
+categories, two balanced groups, a fixed matching grid and total N=40,
+all 1,000 simulated data sets had computable group tests. Under no group
 difference and true proportional odds, the unadjusted joint test
 rejected in 65/1,000 cases (6.5%; 95% Monte Carlo Wilson interval
 5.1%–8.2%). The proportional-odds diagnostic was unavailable in 42 cases
@@ -2065,6 +2209,181 @@ Ottawa, ON: Directorate of Human Resources Research and Evaluation,
 Department of National Defense.</p>
 </div>
 <div class="section level3">
+<h3 id="compare-multiple-categories-or-groups-with-gmh">Compare multiple categories or groups with GMH<a class="anchor" aria-label="anchor" href="#compare-multiple-categories-or-groups-with-gmh"></a>
+</h3>
+<p>Use GMH when the question concerns the category distribution across
+declared groups within defensible matching strata. It treats response
+categories as nominal, so reordering or changing the spacing of their
+numeric labels does not change the test. This differs from a
+one-degree-of-freedom ordinal trend test. Multi-category GMH can detect
+some category-specific differences that a single location-shift
+comparison misses; it can still miss effects that cancel across matching
+strata. The comparison study by <a href="https://doi.org/10.1177/0013164419853000" class="external-link">Yesiltas and Paek
+(2020), GMH section</a> does not establish performance for small,
+crossed rating designs.</p>
+<p>The following constructed count example illustrates the input and
+audit tables. Each expanded row represents a distinct Person with one
+response to one target, here a particular rater and criterion. The
+matching labels stand for prespecified comparable strata; constructing
+labels alone does not establish comparability. This is not a recommended
+sample size or a detection study. For your data, supply the
+corresponding Person, target, score, group and matching columns directly
+instead of expanding counts.</p>
+<details><summary>
+R code: a three-group, three-category matched comparison
+</summary><div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
+<span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>Group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span><span class="op">)</span>, Score <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">2</span>,</span>
+<span>                     Matching <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Low"</span>, <span class="st">"High"</span><span class="op">)</span>,</span>
+<span>                     KEEP.OUT.ATTRS <span class="op">=</span> <span class="cn">FALSE</span>, stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cells</span><span class="op">$</span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">8</span>, <span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span>, <span class="fl">8</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">8</span>,</span>
+<span>              <span class="fl">6</span>, <span class="fl">4</span>, <span class="fl">2</span>, <span class="fl">8</span>, <span class="fl">8</span>, <span class="fl">6</span>, <span class="fl">6</span>, <span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span></span>
+<span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="va">cells</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span><span class="op">)</span>, <span class="va">cells</span><span class="op">$</span><span class="va">N</span><span class="op">)</span>,</span>
+<span>                 <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Group"</span>, <span class="st">"Score"</span>, <span class="st">"Matching"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"P"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">ratings</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">ratings</span><span class="op">$</span><span class="va">Target</span> <span class="op">&lt;-</span> <span class="st">"Rater A: Content"</span></span>
+<span></span>
+<span><span class="va">gmh</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mantel_haenszel_table.html">mantel_haenszel_table</a></span><span class="op">(</span></span>
+<span>  <span class="va">ratings</span>, person <span class="op">=</span> <span class="st">"Person"</span>, target <span class="op">=</span> <span class="st">"Target"</span>, score <span class="op">=</span> <span class="st">"Score"</span>,</span>
+<span>  group <span class="op">=</span> <span class="st">"Group"</span>, strata <span class="op">=</span> <span class="st">"Matching"</span>, groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span><span class="op">)</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"gmh"</span>, categories <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">2</span>, inference <span class="op">=</span> <span class="st">"asymptotic"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">gmh</span><span class="op">$</span><span class="va">table</span>        <span class="co"># Overall association, degrees of freedom and availability</span></span>
+<span><span class="co">#&gt;             Target NGroups NCategories InputRows CompleteRows IncludedRows</span></span>
+<span><span class="co">#&gt; 1 Rater A: Content       3           3       120          120          120</span></span>
+<span><span class="co">#&gt;   ExcludedRows InformativeStrata      TestMethod NominalDF ChiSquared DF</span></span>
+<span><span class="co">#&gt; 1            0                 2 generalized_cmh         4   12.34973  4</span></span>
+<span><span class="co">#&gt;       PValue    Status Message  PAdjusted</span></span>
+<span><span class="co">#&gt; 1 0.01493155 available         0.01493155</span></span>
+<span><span class="va">gmh</span><span class="op">$</span><span class="va">group_counts</span> <span class="co"># Independent Persons contributing from each group</span></span>
+<span><span class="co">#&gt;             Target Group InputRows CompleteRows IncludedRows</span></span>
+<span><span class="co">#&gt; 1 Rater A: Content     A        40           40           40</span></span>
+<span><span class="co">#&gt; 2 Rater A: Content     B        40           40           40</span></span>
+<span><span class="co">#&gt; 3 Rater A: Content     C        40           40           40</span></span>
+<span><span class="va">gmh</span><span class="op">$</span><span class="va">counts</span>       <span class="co"># Observed/expected counts and within-stratum group proportions</span></span>
+<span><span class="co">#&gt;              Target Stratum Group Score Observed Expected Proportion Included</span></span>
+<span><span class="co">#&gt; 1  Rater A: Content       1     A     0        6 4.000000        0.3     TRUE</span></span>
+<span><span class="co">#&gt; 2  Rater A: Content       1     B     0        4 4.000000        0.2     TRUE</span></span>
+<span><span class="co">#&gt; 3  Rater A: Content       1     C     0        2 4.000000        0.1     TRUE</span></span>
+<span><span class="co">#&gt; 4  Rater A: Content       1     A     1        8 7.333333        0.4     TRUE</span></span>
+<span><span class="co">#&gt; 5  Rater A: Content       1     B     1        8 7.333333        0.4     TRUE</span></span>
+<span><span class="co">#&gt; 6  Rater A: Content       1     C     1        6 7.333333        0.3     TRUE</span></span>
+<span><span class="co">#&gt; 7  Rater A: Content       1     A     2        6 8.666667        0.3     TRUE</span></span>
+<span><span class="co">#&gt; 8  Rater A: Content       1     B     2        8 8.666667        0.4     TRUE</span></span>
+<span><span class="co">#&gt; 9  Rater A: Content       1     C     2       12 8.666667        0.6     TRUE</span></span>
+<span><span class="co">#&gt; 10 Rater A: Content       2     A     0       12 8.000000        0.6     TRUE</span></span>
+<span><span class="co">#&gt; 11 Rater A: Content       2     B     0        8 8.000000        0.4     TRUE</span></span>
+<span><span class="co">#&gt; 12 Rater A: Content       2     C     0        4 8.000000        0.2     TRUE</span></span>
+<span><span class="co">#&gt; 13 Rater A: Content       2     A     1        6 7.333333        0.3     TRUE</span></span>
+<span><span class="co">#&gt; 14 Rater A: Content       2     B     1        8 7.333333        0.4     TRUE</span></span>
+<span><span class="co">#&gt; 15 Rater A: Content       2     C     1        8 7.333333        0.4     TRUE</span></span>
+<span><span class="co">#&gt; 16 Rater A: Content       2     A     2        2 4.666667        0.1     TRUE</span></span>
+<span><span class="co">#&gt; 17 Rater A: Content       2     B     2        4 4.666667        0.2     TRUE</span></span>
+<span><span class="co">#&gt; 18 Rater A: Content       2     C     2        8 4.666667        0.4     TRUE</span></span></code></pre></div>
+</details><p>The requested test has <code>(3 - 1) * (3 - 1) = 4</code> degrees of
+freedom. A small p-value concerns this overall association: it does not
+identify a particular group pair, measure rater severity or prove bias.
+Inspect the category distributions and substantive rating conditions.
+<code>Proportion</code> is an observed within-stratum group proportion,
+not a matched or model-adjusted effect. The result supplies no common
+odds ratio or confidence interval. Save the plain result with
+<code>saveRDS(gmh, "gmh.rds")</code>, or export its data frames with
+<code><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv()</a></code>; rereading does not rerun a test.</p>
+<p>Strata with fewer than two observed groups or categories do not
+contribute. All declared groups and categories must occur collectively
+in contributing strata, and the conditional covariance must be
+nonsingular. The function retains zero cells, exclusions and failures
+instead of silently dropping levels or testing a smaller question.
+Counts can be marked <code>Included</code> while the full target test is
+unavailable. Small expected counts warrant attention to the chi-squared
+approximation; numerical success is not evidence of calibrated
+small-sample inference. An exact request is rejected rather than
+silently converted to asymptotic inference. Binary two-group MH defaults
+are unchanged.</p>
+<p>If a rater scores several criteria or occasions for each Person,
+pooling those rows as independent Person-rater observations is not
+valid. A separate target for each rater-criterion combination can define
+one response per Person; an overall rater comparison requires a model or
+resampling method accounting for the repeated observations. Holm
+adjustment across valid target tests does not correct an invalid
+within-target independence assumption.</p>
+</div>
+<div class="section level3">
+<h3 id="compare-multiple-groups-with-logistic-models">Compare multiple groups with logistic models<a class="anchor" aria-label="anchor" href="#compare-multiple-groups-with-logistic-models"></a>
+</h3>
+<p>The generalized logistic procedure of <a href="https://doi.org/10.1080/15305058.2011.602810" class="external-link">Magis et al. (2011),
+pp. 368–373</a> extends binary-response logistic DIF to multiple groups,
+separating group intercepts from group-by-matching slopes. It is
+distinct from multi-category GMH and from a mixed-effects model.
+<code><a href="../reference/ordinal_logistic_table.html">ordinal_logistic_table()</a></code> accepts two or more groups with
+binary or ordered responses. Its binary tests correspond to this
+framework; the ordinal extension additionally assumes proportional odds
+across cumulative category cuts. Joint MFRM contrasts described above
+instead target declared model parameters and their uncertainty.</p>
+<p>With G declared groups, the uniform and nonuniform tests each have
+G-1 degrees of freedom and the joint test has 2(G-1). A significant
+omnibus test says that some group terms are needed; it does not identify
+a particular group pair. The <code>contrasts</code> table provides point
+effects against the first group, without pairwise p-values or
+simultaneous intervals. With K ordered categories, the separate
+proportional-odds diagnostic has (2G-1)(K-2) degrees of freedom.</p>
+<p>All declared groups must have varying matching values and share a
+positive-width matching range. This defines the supported comparison
+design; it is not a claim that other designs have no identifiable finite
+estimates. Models use all complete rows, not just rows inside the common
+range. Each <code>matching</code> row describes a reference/focal pair,
+so its repeated target-level <code>InputRows</code> and
+<code>CompleteRows</code> must not be summed across pairs.</p>
+<p>The code below reuses the constructed ratings in the preceding GMH
+example, explicitly assigning -1 and 1 to its two matching levels. For a
+continuous matching variable in real data, supply the justified original
+numeric values. Changing the reference group changes the reported
+contrasts, not the omnibus hypotheses. A three-group analysis is not
+three independent two-group analyses.</p>
+<details><summary>
+R code: omnibus tests and reference/focal effects for three groups
+</summary><div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ordinal"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">ratings</span><span class="op">$</span><span class="va">MatchingScore</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">ratings</span><span class="op">$</span><span class="va">Matching</span> <span class="op">==</span> <span class="st">"Low"</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="va">ol_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ordinal_logistic_table.html">ordinal_logistic_table</a></span><span class="op">(</span></span>
+<span>    <span class="va">ratings</span>, person <span class="op">=</span> <span class="st">"Person"</span>, target <span class="op">=</span> <span class="st">"Target"</span>, score <span class="op">=</span> <span class="st">"Score"</span>,</span>
+<span>    group <span class="op">=</span> <span class="st">"Group"</span>, matching <span class="op">=</span> <span class="st">"MatchingScore"</span>,</span>
+<span>    groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span><span class="op">)</span>, categories <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="va">ol_groups</span><span class="op">$</span><span class="va">table</span>                 <span class="co"># Three omnibus tests for this target</span></span>
+<span>  <span class="va">ol_groups</span><span class="op">$</span><span class="va">contrasts</span>             <span class="co"># A/B and A/C effects at common-range points</span></span>
+<span>  <span class="va">ol_groups</span><span class="op">$</span><span class="va">matching</span>              <span class="co"># Group counts, ranges and eligibility</span></span>
+<span>  <span class="va">ol_groups</span><span class="op">$</span><span class="va">proportional_odds</span>     <span class="co"># A separate model diagnostic</span></span>
+<span>  <span class="va">ol_groups</span><span class="op">$</span><span class="va">models</span>                <span class="co"># Convergence and numerical availability</span></span>
+<span>  <span class="co"># Save the complete result, including cases and reasons, for later reporting:</span></span>
+<span>  <span class="co"># saveRDS(ol_groups, "ordinal-dff.rds")</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt;      LogLik Parameters Convergence  MaxGradient MinEigenvalue ConditionNumber</span></span>
+<span><span class="co">#&gt; 1 -127.5754          3           0 2.568523e-11    17.3205003        2.805128</span></span>
+<span><span class="co">#&gt; 2 -121.1700          5           0 1.414086e-08     2.3230305       18.520282</span></span>
+<span><span class="co">#&gt; 3 -121.0045          7           0 1.714442e-08     2.2604673       20.885024</span></span>
+<span><span class="co">#&gt; 4 -120.9910         12           0 2.495781e-13     0.9773595       50.838167</span></span>
+<span><span class="co">#&gt;   MaxNewtonStep    Status</span></span>
+<span><span class="co">#&gt; 1  6.576524e-13 available</span></span>
+<span><span class="co">#&gt; 2  6.240601e-10 available</span></span>
+<span><span class="co">#&gt; 3  7.345380e-10 available</span></span>
+<span><span class="co">#&gt; 4  3.335759e-14 available</span></span>
+<span><span class="co">#&gt;                                                                       Message</span></span>
+<span><span class="co">#&gt; 1 successful convergence; Absolute and relative convergence criteria were met</span></span>
+<span><span class="co">#&gt; 2 successful convergence; Absolute and relative convergence criteria were met</span></span>
+<span><span class="co">#&gt; 3 successful convergence; Absolute and relative convergence criteria were met</span></span>
+<span><span class="co">#&gt; 4 successful convergence; Absolute and relative convergence criteria were met</span></span>
+<span><span class="co">#&gt;             Target Model   N NagelkerkeR2</span></span>
+<span><span class="co">#&gt; 1 Rater A: Content    M1 120   0.07010937</span></span>
+<span><span class="co">#&gt; 2 Rater A: Content    M2 120   0.17701760</span></span>
+<span><span class="co">#&gt; 3 Rater A: Content    M3 120   0.17963245</span></span>
+<span><span class="co">#&gt; 4 Rater A: Content NonPO 120   0.17984445</span></span></code></pre></div>
+</details><p>This comparison still requires independent Persons within each
+target. It does not propagate matching-score estimation uncertainty or
+purify anchors automatically. Numerical agreement with another
+implementation does not establish false-positive rates or power for a
+sparse rating design.</p>
+</div>
+<div class="section level3">
 <h3 id="compare-an-explicitly-shared-response-roster">Compare an explicitly shared response roster<a class="anchor" aria-label="anchor" href="#compare-an-explicitly-shared-response-roster"></a>
 </h3>
 <p>The following self-contained example puts the three procedures beside
@@ -2080,7 +2399,7 @@ each total separately; the logistic models instead assume a linear
 relationship with total on the logit scale. Even in this Rasch example,
 those are different matching models. The residual calculation uses the
 fitted Person and item parameters.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">241010</span><span class="op">)</span></span>
 <span><span class="va">group_order</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Reference"</span>, <span class="st">"Focal"</span><span class="op">)</span></span>
@@ -2110,7 +2429,7 @@ data, not the position of a row in a result table. It retains exclusions
 rather than choosing the intersection of the methods’ retained rows.
 With one response per Person-item, the counts below are also
 distinct-Person counts within each item and group.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">case_audit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Method <span class="op">=</span> <span class="st">"Residual"</span>, Row <span class="op">=</span> <span class="va">residual</span><span class="op">$</span><span class="va">cases</span><span class="op">$</span><span class="va">InputRow</span>,</span>
 <span>    Included <span class="op">=</span> <span class="va">residual</span><span class="op">$</span><span class="va">cases</span><span class="op">$</span><span class="va">Included</span>, Reason <span class="op">=</span> <span class="va">residual</span><span class="op">$</span><span class="va">cases</span><span class="op">$</span><span class="va">Reason</span><span class="op">)</span>,</span>
@@ -2143,7 +2462,7 @@ default exact analysis; the distinct MH estimator remains in
 <code>mh$table$MHOddsRatio</code>. Logistic values come from M3 and can
 change direction over total scores. Keep their matching values and
 numerical status visible.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">r</span> <span class="op">&lt;-</span> <span class="va">residual</span><span class="op">$</span><span class="va">dif_table</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">r</span><span class="op">$</span><span class="va">Group1</span> <span class="op">==</span> <span class="va">group_order</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">r</span><span class="op">$</span><span class="va">Group2</span> <span class="op">==</span> <span class="va">group_order</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">effects</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Target <span class="op">=</span> <span class="va">r</span><span class="op">$</span><span class="va">Level</span>, ResidualDifference <span class="op">=</span> <span class="va">r</span><span class="op">$</span><span class="va">Contrast</span>,</span>
@@ -2208,7 +2527,7 @@ validity from the other methods’ p-values.</p>
 <p>To retain this analysis, save the input, matching definition,
 calibration and complete results together. Later displays can be rebuilt
 from this object without rerunning the models.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">shared</span>, groups <span class="op">=</span> <span class="va">group_order</span>, categories <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span>,</span>
 <span>  matching_rule <span class="op">=</span> <span class="st">"Complete common eight-item total, including the target"</span>,</span>
 <span>  fit <span class="op">=</span> <span class="va">shared_fit</span>, residual <span class="op">=</span> <span class="va">residual</span>, mh <span class="op">=</span> <span class="va">mh</span>, ordinal <span class="op">=</span> <span class="va">ologit</span>,</span>
@@ -2229,7 +2548,7 @@ robustness, invariance or fairness classification.</p>
 </h2>
 <p>If the level-wise screen points to a specific facet, follow up with
 the interaction table and narrative report.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dif_interaction_table.html">dif_interaction_table</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  <span class="va">diag</span>,</span>
@@ -2252,7 +2571,7 @@ the interaction table and narrative report.</p>
 <span><span class="co">#&gt; <span style="color: #949494;">#   FormalInferenceEligible &lt;lgl&gt;, ReportingUse &lt;chr&gt;, Interpretation &lt;chr&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   p_adjusted &lt;dbl&gt;, flag_t &lt;lgl&gt;, flag_bias &lt;lgl&gt;</span></span></span>
 <span></span>
-<span><span class="va">dr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dif_report.html">dif_report</a></span><span class="op">(</span><span class="va">dff_resid</span><span class="op">)</span></span>
+<span><span class="va">dr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"dff"</span>, <span class="va">dff_resid</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">dr</span><span class="op">$</span><span class="va">narrative</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Mean observed-minus-expected scores were compared for the Criterion facet across levels of Group. 4 of 4 group comparisons had sufficient observations to report a residual difference. Differences are in score units. They do not isolate differential functioning: group residual means can differ even when response parameters are the same. No p-values, confidence intervals or positive/negative classifications are provided.</span></span></code></pre></div>
 </div>
@@ -2266,7 +2585,7 @@ effects. <code><a href="../reference/estimate_all_bias.html">estimate_all_bias()
 pairs by default; specify <code>pairs</code> to limit the search. It
 holds the calibration and Person estimates fixed, so these cell shifts
 differ from jointly estimated interaction effects.</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span>
 <span><span class="va">fit_add</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
 <span>  <span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
@@ -2300,7 +2619,7 @@ facet interaction in the model likelihood. An interaction selected after
 inspecting these screens can also be fitted, but its same-data
 comparison remains exploratory: the LRT p-value does not account for
 that selection.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Continue with ratings and fit_add from the preceding block.</span></span>
 <span><span class="va">fit_interaction</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
 <span>  <span class="va">ratings</span>,</span>
@@ -2313,7 +2632,7 @@ that selection.</p>
 <span>  quad_points <span class="op">=</span> <span class="fl">31</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/interaction_effect_table.html">interaction_effect_table</a></span><span class="op">(</span><span class="va">fit_interaction</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/estimate_bias.html">interaction_effect_table</a></span><span class="op">(</span><span class="va">fit_interaction</span><span class="op">)</span></span>
 <span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_mfrm.html">compare_mfrm</a></span><span class="op">(</span>Additive <span class="op">=</span> <span class="va">fit_add</span>, Interaction <span class="op">=</span> <span class="va">fit_interaction</span>,</span>
 <span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Additive"</span>, <span class="st">"Interaction"</span><span class="op">)</span>, nested <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">comparison</span></span>
@@ -2366,7 +2685,7 @@ levels have documented cross-wave identity and unchanged meaning.</p>
 <code>ej2021_study2</code> here. They are independent legacy synthetic
 studies; reused raw labels do not identify common persons, raters, or
 anchors and do not link their scales.</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">declared_common_facets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Criterion"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
@@ -2425,15 +2744,16 @@ passed an SE-ratio check.</p>
 <li><code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code></li>
 <li><code><a href="../reference/subset_connectivity_report.html">subset_connectivity_report()</a></code></li>
 <li>
-<code><a href="../reference/make_anchor_table.html">make_anchor_table()</a></code> or
+<code><a href="../reference/review_mfrm_anchors.html">make_anchor_table()</a></code> or
 <code><a href="../reference/review_mfrm_anchors.html">review_mfrm_anchors()</a></code>
 </li>
 <li><code><a href="../reference/analyze_dff.html">analyze_dff()</a></code></li>
 <li>
-<code><a href="../reference/dif_report.html">dif_report()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
+<code>mfrm_report(dif, type = "dff")</code> and
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
 </li>
 <li>
-<code><a href="../reference/interaction_effect_table.html">interaction_effect_table()</a></code> after a confirmatory
+<code><a href="../reference/estimate_bias.html">interaction_effect_table()</a></code> after a confirmatory
 <code>facet_interactions</code> fit</li>
 <li>
 <code><a href="../reference/anchor_to_baseline.html">anchor_to_baseline()</a></code> /
@@ -2444,10 +2764,10 @@ passed an SE-ratio check.</p>
 <h2 id="related-help">Related help<a class="anchor" aria-label="anchor" href="#related-help"></a>
 </h2>
 <ul>
-<li><code><a href="../reference/mfrmr_linking_and_dff.html">help("mfrmr_linking_and_dff", package = "mfrmr")</a></code></li>
+<li><code><a href="../reference/build_linking_review.html">help("mfrmr_linking_and_dff", package = "mfrmr")</a></code></li>
 <li><code><a href="../reference/subset_connectivity_report.html">help("subset_connectivity_report", package = "mfrmr")</a></code></li>
 <li><code><a href="../reference/analyze_dff.html">help("analyze_dff", package = "mfrmr")</a></code></li>
-<li><code><a href="../reference/interaction_effect_table.html">help("interaction_effect_table", package = "mfrmr")</a></code></li>
+<li><code><a href="../reference/estimate_bias.html">help("interaction_effect_table", package = "mfrmr")</a></code></li>
 <li><code><a href="../reference/detect_anchor_drift.html">help("detect_anchor_drift", package = "mfrmr")</a></code></li>
 </ul>
 </div>
@@ -2483,7 +2803,7 @@ practical assignments. Four common persons and eight raters illustrate
 the syntax; they are not recommended minimum counts. The common-person
 example uses more rating rows than the other examples, so this is not an
 equal-budget precision comparison.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">common</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mfrm_sim_spec.html">build_mfrm_sim_spec</a></span><span class="op">(</span></span>

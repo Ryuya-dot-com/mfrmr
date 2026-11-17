@@ -11,7 +11,7 @@ and DIF/bias into a single pass/warn/fail report."><meta property="og:image" con
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -19,31 +19,25 @@ and DIF/bias into a single pass/warn/fail report."><meta property="og:image" con
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -57,7 +51,7 @@ and DIF/bias into a single pass/warn/fail report."><meta property="og:image" con
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Run automated quality control pipeline</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-plotting-dispatch.R" class="external-link"><code>R/api-plotting-dispatch.R</code></a></small>
       <div class="d-none name"><code>run_qc_pipeline.Rd</code></div>
     </div>
 
@@ -78,7 +72,10 @@ and DIF/bias into a single pass/warn/fail report.</p>
 <span>  include_bias <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  bias_results <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  separation_facets <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_qc_pipeline'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"traffic_light"</span>, <span class="st">"detail"</span><span class="op">)</span>, draw <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -123,11 +120,29 @@ these facets. With the default <code>NULL</code>, these two checks are not reque
 they do not affect the overall verdict. For example, use <code>"Criterion"</code>
 only when distinguishing criterion difficulties is a substantive goal.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>Output from <code>run_qc_pipeline()</code>.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>Plot type: <code>"traffic_light"</code> (default) or <code>"detail"</code>.</p></dd>
+
+
+<dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a></dt>
+<dd><p>If <code>FALSE</code>, return plot data invisibly without drawing.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Additional plotting arguments for the selected view.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Object of class <code>mfrm_qc_pipeline</code> with verdicts, overall status,
 details, and recommendations.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>:
+Invisibly, a <code>ggplot</code> object carrying the QC verdicts in <code>plot_data(p, "verdicts")</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -163,7 +178,17 @@ triage over supported diagnostics. Its pass/warn/fail labels remain package
 QC policy overlays; they are not FACETS score-side equivalence, operational
 scoring decisions, design-forecasting evidence, or automatic fairness /
 validity decisions.</p>
-    </div>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: Plot a saved QC pipeline</p>
+<p>Display the checks already returned by <code>run_qc_pipeline()</code>. Use the colored
+verdicts for triage, then read the returned detail for the reason and next review.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>:
+Two plot types are provided for visual triage of QC results:</p><ul><li><p><strong><code>"traffic_light"</code></strong> (default): A horizontal bar chart with one row
+per QC check.  Bars are coloured green (Pass), amber (Warn), or red
+(Fail).  Provides an at-a-glance summary of the current QC review state.</p></li>
+<li><p><strong><code>"detail"</code></strong>: A panel showing the saved <code>Detail</code> text beside each
+verdict. Read this explanation and the returned table to understand
+why a check was flagged or unavailable.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="qc-checks">QC checks<a class="anchor" aria-label="anchor" href="#qc-checks"></a></h2>
 
@@ -211,7 +236,7 @@ collapsing categories automatically.</p></li>
 <li><p>Check <code>qc$overall</code> for the headline verdict.</p></li>
 <li><p>Review <code>qc$verdicts</code> for per-check details.</p></li>
 <li><p>Follow <code>qc$recommendations</code> for remediation.</p></li>
-<li><p>Visualize with <a href="plot.mfrm_qc_pipeline.html">plot(x)</a>.</p></li>
+<li><p>Visualize with plot(x).</p></li>
 </ol></div>
     <div class="section level2">
     <h2 id="saved-result-reuse">Saved-result reuse<a class="anchor" aria-label="anchor" href="#saved-result-reuse"></a></h2>
@@ -219,14 +244,32 @@ collapsing categories automatically.</p></li>
 
 <p>Supplied screening results must describe this fitted analysis. Results from
 another fit or older results without identity metadata are refused. See
-<a href="mfrmr_compatibility_layer.html">mfrmr_compatibility_layer</a> to recreate them from the saved fit and matching
+<a href="mfrmr_api_migration_030.html">mfrmr_compatibility_layer</a> to recreate them from the saved fit and matching
 diagnostics without refitting the model.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="interpretation">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation"></a></h2>
+
+
+<p>The rows are the actual checks returned by <code>run_qc_pipeline()</code>: convergence,
+global fit, selected-facet reliability and separation, element misfit,
+unexpected responses, category structure, connectivity, inter-rater
+agreement, and the functioning/bias screen. Element misfit uses the
+configured mean-square band; it is not a ZSTD test. PCA and displacement
+are separate diagnostics and are not checks in this pipeline.</p>
+<p>Green (Pass), amber (Warn), and red (Fail) describe the selected screening
+rules. Grey (Skip) marks unrequested or unavailable checks; <code>AffectsOverall</code>
+in the returned data distinguishes their contribution to the overall result.
+A missing result is not evidence of acceptable fit. High rater separation
+is not high agreement, and no colour establishes statistical validity or
+justifies deleting raters or collapsing categories without further review.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>, <code><a href="estimate_bias.html">estimate_bias()</a></code>,
-<code><a href="mfrm_threshold_profiles.html">mfrm_threshold_profiles()</a></code>, <a href="plot.mfrm_qc_pipeline.html">plot(x)</a>,
-<a href="plot.mfrm_fit.html">plot(x, type = "qc")</a>, <code><a href="build_visual_summaries.html">build_visual_summaries()</a></code></p></div>
+<code><a href="mfrm_threshold_profiles.html">mfrm_threshold_profiles()</a></code>, plot(x),
+<a href="plot.mfrm_fit.html">plot(x, type = "qc")</a>, <code><a href="build_visual_summaries.html">build_visual_summaries()</a></code></p>
+<p><code>run_qc_pipeline()</code>, <a href="mfrmr_api_migration_030.html">mfrmr_plot_migration</a></p></div>
     </div>
 
     <div class="section level2">
@@ -242,6 +285,18 @@ diagnostics without refitting the model.</p>
 <span class="r-in"><span><span class="va">qc</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">qc</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">qc</span><span class="op">$</span><span class="va">verdicts</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("plot.mfrm_qc_pipeline", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"study1"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># These observed data trigger a category-support warning: the QC plot</span></span></span>
+<span class="r-in"><span><span class="co"># displays that review requirement; convergence does not remove it.</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">qc</span> <span class="op">&lt;-</span> <span class="fu">run_qc_pipeline</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">qc_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">qc</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">qc_plot</span>, <span class="st">"verdicts"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

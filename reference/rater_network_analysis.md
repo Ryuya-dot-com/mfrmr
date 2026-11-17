@@ -108,7 +108,7 @@ rater_network_analysis(
 - alpha_level, alpha_categories:
 
   Measurement level and category order for `KrippendorffAlpha`; see
-  [`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/krippendorff_alpha_table.md).
+  [`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md).
   The default interval level follows Lamprianou (2025); ordinal alpha
   requires a declared order.
 
@@ -146,23 +146,17 @@ A bundle of class `mfrm_rater_network` containing:
 
 ## Details
 
-This function implements a package-native rater-effect network view
-complementary to MFRM output. It follows the pairwise-network logic used
-in Lamprianou's rater-effect network work: nodes are raters, edges
-summarize pairwise relationships among raters in shared scoring
-contexts, and directed disagreement edges can be interpreted as relative
-leniency/severity indicators. These network summaries are descriptive
-diagnostics, not Rasch logit estimates and not formal fit statistics.
-They describe score relationships conditional on observed shared
-contexts; they do not test the assignment graph's connectedness or
-establish a common measurement scale.
-
-`Degree`, `Strength`, `Betweenness`, and `Closeness` are graph-theoretic
-quantities computed after `min_pair_n`, `min_weight`, and (for directed
-networks) `score_diff_tolerance` are applied. They are not rating-scale
-central tendency or restriction-of-range measures. Use
+Nodes are raters; edges summarize agreement or directional disagreement
+in shared observed scoring contexts. These descriptive score
+relationships are not Rasch logit estimates or formal fit statistics.
+They do not establish assignment connectedness or a common scale; use
 [`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md)
-for assignment/co-observation connectedness.
+to inspect assignments.
+
+`Degree`, `Strength`, `Betweenness` and `Closeness` describe the graph
+after `min_pair_n`, `min_weight` and, for directed networks,
+`score_diff_tolerance` filtering. They are not rating-scale central
+tendency or range restriction.
 
 For `mode = "severity_direction"`, outgoing strength means the rater
 more often assigned higher scores than comparison raters; incoming
@@ -235,10 +229,10 @@ test. Use
 [`mfrm_residual_network()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_residual_network.md)
 for residual associations and
 [`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md)
-for prefit assignment links. See
-[`vignette("mfrmr-networks-and-reporting")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.md)
+for prefit assignment links. See [online networks and reporting
+guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html)
 for complementary views, paired overlap, direction and interpretation.
-[`plot.mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_bundle.md)
+[`plot.mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
 documents custom layouts and display-only filters, which do not change
 the computed network.
 
@@ -258,7 +252,7 @@ effects in language assessment: A comparison of ChatGPT vs human raters.
 [plot(x, type =
 "agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md),
-[`plot.mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_bundle.md)
+[`plot.mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
 
 ## Examples
 
@@ -268,7 +262,8 @@ effects in language assessment: A comparison of ChatGPT vs human raters.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 fit <- example_fit$fit
 if (requireNamespace("igraph", quietly = TRUE)) {
-  rn <- rater_network_analysis(fit, mode = "severity_direction")
+  rn <- rater_network_analysis(fit, diagnostics = example_fit$diagnostics,
+    mode = "severity_direction")
   rn$summary
   head(rn$node_metrics)
   plot(rn, type = "severity", draw = FALSE)

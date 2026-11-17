@@ -7,10 +7,25 @@ nested, based on a conditional-entropy index:
 index near 1 means that knowing the level of `A` essentially determines
 the level of `B` (A is nested in B).
 
+Renders the directed nesting index \\1 - H(B \mid A)/H(B)\\ as a heatmap
+between facet pairs, with larger values indicating less conditional
+uncertainty about B given A. Exactly 1 means B is determined by A when
+H(B) is positive; near 1 is not exact nesting. Zero means empirical
+independence, not necessarily a completely crossed design. Undefined
+zero-entropy cases remain unavailable.
+
 ## Usage
 
 ``` r
 detect_facet_nesting(data, facets, person = NULL, weight_col = NULL)
+
+# S3 method for class 'mfrm_facet_nesting'
+plot(
+  x,
+  preset = c("standard", "publication", "compact", "monochrome"),
+  draw = TRUE,
+  ...
+)
 ```
 
 ## Arguments
@@ -35,6 +50,22 @@ detect_facet_nesting(data, facets, person = NULL, weight_col = NULL)
   Weighted frequencies are used directly, without rounding or
   replicating rows.
 
+- x:
+
+  An `mfrm_facet_nesting` object.
+
+- preset:
+
+  Plot preset.
+
+- draw:
+
+  Logical; print the `ggplot` figure when `TRUE`.
+
+- ...:
+
+  Reserved.
+
 ## Value
 
 A list of class `mfrm_facet_nesting` with:
@@ -47,6 +78,10 @@ A list of class `mfrm_facet_nesting` with:
   non-crossed structure was detected.
 
 - `facets`: the facet vector that was reviewed.
+
+Invisibly, a `ggplot` object.
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+extracts the rendered nesting matrix and pairwise summary table.
 
 ## Details
 
@@ -64,8 +99,12 @@ effects.
 
 - `"Crossed"`: index \< 0.50.
 
-The direction column records which facet is nested in which, or
-`"crossed"` when neither direction is above 0.95.
+These are package screening bands, not tests of exact nesting or full
+crossing. `Direction` is `"isomorphic"` when both indices are at least
+0.95, names a nesting direction when only that index is at least 0.95,
+and is `"crossed"` when both are below 0.95. Thus the direction can say
+`"crossed"` even when a classification is `"Partially nested"`.
+Zero-entropy cases have `Direction = "insufficient_data"`.
 
 ## Missing values and weights
 
@@ -82,19 +121,18 @@ represents the missing ratings.
 
 ## Interpreting output
 
-A `Direction` value of `"Rater nested in Region"` means that every rater
-appears in exactly one region (or very close to it). For additive
-fixed-effects MFRM, this is a concern: the severity of a rater is
-confounded with region-level variance that the model cannot partition.
-Consider reporting the nesting direction explicitly and, when relevant,
-refitting without the nested facet or moving to a hierarchical
-estimation tool (e.g.
-[`lme4::lmer`](https://rdrr.io/pkg/lme4/man/lmer.html), `brms`, `TAM`)
-to separate the variance components.
+Exact nesting of Rater within Region confounds unrestricted additive
+rater and region effects. A near-nesting label instead signals limited
+overlap; inspect the actual cross-tabulation and model design. The index
+alone establishes neither rank deficiency nor identification.
 
-`Direction = "crossed"` is the most common reading when both nesting
-indices are below 0.5; the two facets largely co-occur at multiple
-combinations, which is the setting Linacre (1989) assumed.
+A hierarchical model can separate within- and between-group variation
+under additional distributional assumptions and adequate replication;
+switching software does not supply missing design information. Dropping
+a facet also changes the model and interpretation. Report the observed
+design and justify the chosen parameterization. A `"crossed"` label does
+not establish that every combination was observed or that the full
+many-facet design is connected.
 
 ## Typical workflow
 
@@ -106,8 +144,15 @@ combinations, which is the setting Linacre (1989) assumed.
 3.  For downstream reporting, use
     [`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md)
     to bundle this output with ICC and design-effect summaries, which
-    [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
+    [mfrm_report_checklist](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
     can record as available report material.
+
+## Session plot defaults
+
+See
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+for `options(mfrmr.plot_preset)`, argument precedence, and appearance
+when saving or reusing a plot.
 
 ## References
 
@@ -126,9 +171,12 @@ Linacre, J. M. (1989). *Many-facet Rasch measurement*. MESA Press.
 [`facet_small_sample_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_small_sample_review.md),
 [`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md),
 [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md),
-[`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md),
+[`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md),
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
 (see "Fixed effects assumption" in its details).
+
+`detect_facet_nesting()`,
+[`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md).
 
 ## Examples
 

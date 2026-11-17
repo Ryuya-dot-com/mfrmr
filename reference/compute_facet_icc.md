@@ -7,6 +7,11 @@ and returns the proportion of observed score variance attributable to
 each facet. This is a descriptive summary complementary to the
 Rasch-metric rater separation/reliability reported elsewhere.
 
+Combines per-facet average cluster size with ICC estimates to return the
+Kish-style approximation `Deff = 1 + (m - 1) * rho`, where `m` is the
+average number of observations per facet element and `rho` is the ICC
+variance share. Each facet is evaluated separately.
+
 ## Usage
 
 ``` r
@@ -24,13 +29,24 @@ compute_facet_icc(
   ci_boot_ncpus = 1L,
   missing = c("error", "omit")
 )
+
+compute_facet_design_effect(
+  data,
+  facets,
+  icc_table = NULL,
+  score = NULL,
+  person = NULL,
+  missing = c("error", "omit")
+)
 ```
 
 ## Arguments
 
 - data:
 
-  Data frame in long format.
+  Data frame in long format, used to fit the ICC model when `icc_table`
+  is `NULL`. With a supplied ICC table, sample sizes come from its
+  retained row accounting, not from `data`.
 
 - facets:
 
@@ -38,12 +54,11 @@ compute_facet_icc(
 
 - score:
 
-  Name of the score column.
+  Score column name; required when `icc_table` is `NULL`.
 
 - person:
 
-  Optional person column. If supplied it is added as a separate random
-  intercept so Person-level variance is partitioned out.
+  Person column; passed through to compute_facet_icc().
 
 - reml:
 
@@ -95,10 +110,16 @@ compute_facet_icc(
 
 - missing:
 
-  How to handle missing scores or selected grouping values: `"error"`
-  (default) or explicit complete-case omission with `"omit"`. Numeric
-  character/factor score labels retain their numeric values. Nonnumeric
-  scores, infinite values, and blank grouping labels are refused.
+  Missing-value policy passed to `compute_facet_icc()` when `icc_table`
+  is `NULL`. A supplied table retains its original policy.
+
+- icc_table:
+
+  Output from `compute_facet_icc()` (optional; will be computed on the
+  fly when `NULL`). Must retain its `data_usage` attribute. Rerun older
+  saved ICC results from their original data and settings before
+  calculating design effects; their analysis sample cannot be
+  reconstructed from the ICC table alone.
 
 ## Value
 
@@ -135,16 +156,21 @@ returned, its `bootstrap` entry contains every draw, per-refit
 convergence and singularity indicators, the number of refit errors, and
 lme4's message/warning/error tables.
 
+A data.frame of class `mfrm_facet_design_effect` with columns `Facet`,
+`AvgClusterSize`, `ICC`, `DesignEffect`, `EffectiveN`, `InputRows`,
+`UsedRows`, and `ExcludedRows`. Its `data_usage` attribute is retained
+from the ICC result. Cluster sizes and effective sample sizes use only
+rows included in that model.
+
 ## Rows used
 
 Missingness is checked only in the score, facets, and optional person
 column. `InputRows`, `UsedRows`, and `ExcludedRows` are included in the
 table. `attr(x, "data_usage")` retains these counts, excluded input row
 positions, missing columns per row, and observed grouping-level counts
-after omission.
-[`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md)
-uses these retained counts for its sample sizes. Omission does not
-impute scores or correct missing-data bias.
+after omission. `compute_facet_design_effect()` uses these retained
+counts for its sample sizes. Omission does not impute scores or correct
+missing-data bias.
 
 ## Score units and zero variation
 
@@ -162,18 +188,24 @@ bootstrap refit is also unavailable and withholds the interval.
 The `Interpretation` column uses **two scales** so the same numeric ICC
 reads correctly for each facet role:
 
-- For the `person` facet, higher ICC = better. Koo & Li (2016, p. 161)
-  bands are applied: `< 0.5` Poor, `[0.5, 0.75]` Moderate, `(0.75, 0.9]`
-  Good, `> 0.9` Excellent. The strict `>` boundary at 0.9 follows Koo &
-  Li's wording "values greater than 0.90 indicate excellent reliability"
-  (so an ICC of exactly 0.9 reads as Good).
+- For `person`, the stored labels apply the Koo & Li (2016) bands to the
+  point estimate: `< 0.5` Poor, `[0.5, 0.75]` Moderate, `(0.75, 0.9]`
+  Good and `> 0.9` Excellent. These are descriptive labels, not
+  universal acceptance rules. The share depends on Person heterogeneity
+  as well as other sources of variation. It is not automatically the
+  reliability of a composite, a mean over ratings or a different design.
 
-- For non-person facets (Rater, Criterion, Task, Region, ...) the same
-  numeric value is a **variance share**: how much of the total observed
-  score variance sits at that facet. The bands used here are different
-  (`Trivial share` \< 0.05, `Small share` \< 0.15, `Moderate share` \<
-  0.30, `Large share` \>= 0.30), and a large rater share is generally
-  *bad* news (raters disagree about averages), not good news.
+- Other facets use package-defined variance-share bands: `Trivial share`
+  \< 0.05, `Small share` \< 0.15, `Moderate share` \< 0.30 and
+  `Large share` \>= 0.30. These cutoffs are not supplied by Koo & Li. A
+  larger rater component describes systematic differences in score
+  levels; its practical importance depends on the design and decision.
+  Criterion or task variation is not inherently undesirable.
+
+This is a Gaussian random-intercept model of numeric scores, not an
+ordinal response model or an automatic selection among standard ICC
+forms. State the fitted formula, score coding, target and uncertainty
+when reporting.
 
 The `InterpretationScale` column explicitly records which scale applies
 to each row, so downstream reporting does not confuse the two. FACETS
@@ -181,7 +213,7 @@ to each row, so downstream reporting does not confuse the two. FACETS
 instead of an ICC; mfrmr surfaces both, with the Rasch-metric version in
 `diagnostics$reliability` and this variance-share view here. For
 agreement or consistency between specific pairs on common units, use
-[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_icc_table.md)
+[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
 instead. A small rater variance share here does not establish pairwise
 agreement; residual disagreement can still be large.
 
@@ -200,6 +232,30 @@ fits (zero random-effect components) are recorded separately and
 retained when they converge; they are not automatically treated as
 failures. Inspect `ICC_CI_Status` and `attr(x, "icc_ci")` before
 reporting intervals.
+
+The formula describes the variance inflation of an unweighted mean under
+a single clustering factor with equal cluster sizes, independent
+clusters, and common within-cluster correlation. This helper substitutes
+the average cluster size and one fitted facet variance share. It does
+not calculate the variance of a specified estimator under the full
+sampling design.
+
+- `Deff = 1` means this approximation adds no inflation for that facet;
+  it does not establish independence of observations or adequate
+  precision.
+
+- `Deff > 1` signals potential clustering influence under this
+  approximation. `EffectiveN = UsedRows / Deff` is a descriptive
+  equivalent row count, not a count of independent Persons or an
+  assurance of matching precision.
+
+- Unequal cluster sizes, crossed or nested dependencies, sampling
+  weights, and finite-population corrections are not accounted for.
+  Per-facet values must not be added or multiplied to obtain an overall
+  design effect.
+
+- Reported `ICC` is pulled from `icc_table$ICC` (the variance share);
+  interpretation is the same as in `compute_facet_icc()`.
 
 ## Updating saved intervals
 
@@ -224,11 +280,21 @@ their calculations.
 2.  Call `compute_facet_icc(data, facets, score, person)` to get the
     complementary variance-share summary.
 
-3.  Feed into
-    [`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md)
-    to convert ICCs and average cluster sizes into descriptive,
-    per-facet design-effect approximations. These do not estimate the
-    precision of the full design.
+3.  Feed into `compute_facet_design_effect()` to convert ICCs and
+    average cluster sizes into descriptive, per-facet design-effect
+    approximations. These do not estimate the precision of the full
+    design.
+
+&nbsp;
+
+1.  Run `compute_facet_icc()` to get the variance-component shares.
+
+2.  Feed the result and the data into
+    `compute_facet_design_effect(data, facets, icc_table = icc)`.
+
+3.  Use these values to flag facets for design review. For standard
+    errors, sample-size planning, or comparisons of precision, use an
+    estimator and variance calculation that represent the actual design.
 
 ## References
 
@@ -240,46 +306,57 @@ Bates, D., Maechler, M., Bolker, B., & Walker, S. (2015). Fitting linear
 mixed-effects models using lme4. *Journal of Statistical Software,
 67*(1), 1-48.
 
+Kish, L. (1965). *Survey Sampling*. New York: Wiley.
+
+Park, I., & Lee, H. (2004). Design effects for the weighted mean and
+total estimators under complex survey sampling. *Survey Methodology,
+30*(2), 183-193.
+<https://www150.statcan.gc.ca/n1/pub/12-001-x/2004002/article/7751-eng.pdf>
+
 ## See also
 
-[`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md),
-[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_icc_table.md),
+`compute_facet_design_effect()`,
+[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md),
 [`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md),
 [`detect_facet_nesting()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_facet_nesting.md),
 [`facet_small_sample_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_small_sample_review.md).
 
+`compute_facet_icc()`,
+[`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md).
+
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("compute_facet_icc", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_core")
 if (requireNamespace("lme4", quietly = TRUE)) {
   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
                            score = "Score", person = "Person")
   print(icc)
   # Look for:
-  # - Person ICC reads as Koo & Li (2016) reliability: < 0.5 poor,
-  #   0.5-0.75 moderate, 0.75-0.9 good, > 0.9 excellent.
+  # - Person labels apply Koo & Li bands descriptively to the point.
+  #   Check the model, Person heterogeneity and interval before interpreting.
   # - Rater / Criterion ICC reads as variance share, NOT reliability;
   #   small values indicate limited systematic facet differences, and
-  #   shares > 0.10 hint at meaningful systematic facet differences.
+  #   practical importance is not determined by a universal share cutoff.
   # - `Interpretation` summarises the variance-share band the helper
   #   has assigned to each row.
 }
-#> mfrm_facet_icc
-#>   ICC rows: 768 input, 768 used, 0 excluded.
-#>      Facet   Variance    ICC Interpretation InterpretationScale ICC_CI_Lower
-#>     Person 0.34626071 0.3511           Poor  Koo-Li reliability           NA
-#>      Rater 0.02667343 0.0270  Trivial share      Variance share           NA
-#>  Criterion 0.02188365 0.0222  Trivial share      Variance share           NA
-#>   Residual 0.59144865 0.5997    Large share      Variance share           NA
-#>  ICC_CI_Upper ICC_CI_Level ICC_CI_Method ICC_CI_Status InputRows UsedRows
-#>            NA         0.95          none Not requested       768      768
-#>            NA         0.95          none Not requested       768      768
-#>            NA         0.95          none Not requested       768      768
-#>            NA         0.95          none Not requested       768      768
-#>  ExcludedRows
-#>             0
-#>             0
-#>             0
-#>             0
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("compute_facet_design_effect", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+toy <- load_mfrmr_data("example_core")
+if (requireNamespace("lme4", quietly = TRUE)) {
+  icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
+                           score = "Score", person = "Person")
+  deff <- compute_facet_design_effect(toy,
+                                      facets = c("Rater", "Criterion"),
+                                      icc_table = icc)
+  print(deff)
+  # Review clustering influence; EffectiveN is a descriptive row count.
+}
+} # }
 ```

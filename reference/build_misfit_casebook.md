@@ -14,6 +14,9 @@ build_misfit_casebook(
   wave_id = NULL,
   top_n = 25
 )
+
+# S3 method for class 'mfrm_misfit_casebook'
+summary(object, digits = 3, top_n = 10, ...)
 ```
 
 ## Arguments
@@ -28,7 +31,7 @@ build_misfit_casebook(
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
   Must match this fitted analysis; see
-  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
   for migration of saved diagnostics.
 
 - unexpected:
@@ -54,11 +57,30 @@ build_misfit_casebook(
 
 - top_n:
 
-  Maximum number of rows to keep in compact summary outputs.
+  For `build_misfit_casebook()`: Maximum number of rows to keep in
+  compact summary outputs.
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): Number of top
+  case rows to keep in the compact summary.
+
+- object:
+
+  Output from `build_misfit_casebook()`.
+
+- digits:
+
+  Number of digits for printed numeric values.
+
+- ...:
+
+  Reserved for generic compatibility.
 
 ## Value
 
 An object of class `mfrm_misfit_casebook`.
+
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_misfit_casebook`.
 
 ## Details
 
@@ -83,13 +105,18 @@ surface:
   [`displacement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/displacement_table.md)
 
 The result is an operational review bundle. It is not a formal
-adjudication system, and repeated signals across evidence families
-should be prioritized over any single isolated case row. In addition to
+adjudication system. Several flags can arise from the same responses and
+correlated statistics; their co-occurrence is not independent
+corroboration or a combined significance test. Interpret magnitude,
+context and availability before prioritizing follow-up. In addition to
 raw case rows, the object includes stable grouping views such as
 `by_person`, `by_facet_level`, `by_source_family`, and `by_wave` to
 support operational triage. The `source_support` component records which
 evidence families are currently supported, caveated, or deferred under
 the active model.
+
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize a
+misfit-casebook object
 
 ## Recommended input route
 
@@ -118,7 +145,7 @@ test.
 Supplied screening results must describe this fitted analysis. Results
 from another fit or older results without identity metadata are refused.
 See
-[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 to recreate them from the saved fit and matching diagnostics without
 refitting the model.
 
@@ -135,6 +162,8 @@ refitting the model.
 "marginal_fit")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [plot(x, type =
 "marginal_pairwise")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+
+`build_misfit_casebook()`
 
 ## Examples
 

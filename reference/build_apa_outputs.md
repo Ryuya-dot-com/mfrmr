@@ -2,6 +2,8 @@
 
 Build APA text outputs from model results
 
+Print APA narrative text with preserved line breaks
+
 ## Usage
 
 ``` r
@@ -12,6 +14,12 @@ build_apa_outputs(
   context = list(),
   whexact = FALSE
 )
+
+# S3 method for class 'mfrm_apa_text'
+print(x, ...)
+
+# S3 method for class 'mfrm_apa_outputs'
+summary(object, top_n = 3, preview_chars = 160, ...)
 ```
 
 ## Arguments
@@ -39,6 +47,26 @@ build_apa_outputs(
 
   Use exact ZSTD transformation.
 
+- x:
+
+  Character text object from `build_apa_outputs()$report_text`.
+
+- ...:
+
+  Reserved for generic compatibility.
+
+- object:
+
+  Output from `build_apa_outputs()`.
+
+- top_n:
+
+  Maximum non-empty lines shown in each component preview.
+
+- preview_chars:
+
+  Maximum characters shown in each preview cell.
+
 ## Value
 
 An object of class `mfrm_apa_outputs` with:
@@ -46,8 +74,8 @@ An object of class `mfrm_apa_outputs` with:
 - `report_text`: APA-oriented Method/Results draft prose
 
 - `decision`: plain-language source-fit interpretation plus the separate
-  precision-contract decision; `FormalInference` is `"Yes"` only when
-  both fit readiness and `contract$precision$supports_formal_inference`
+  uncertainty assessment; `FormalInference` is `"Yes"` only when both
+  fit readiness and `contract$precision$supports_formal_inference`
   support it
 
 - `fit_readiness`, `fit_readiness_components`, and
@@ -60,25 +88,27 @@ An object of class `mfrm_apa_outputs` with:
 
 - `section_map`: package-native section table for manuscript assembly
 
-- `contract`: structured APA reporting contract used for downstream
-  checks
+- `contract`: draft content, uncertainty basis and source-fit checks
+
+The input object (invisibly).
+
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_apa_outputs`.
 
 ## Details
 
-`context` is an optional named list for narrative customization.
-Frequently used fields include:
+Use `context` to supply study information for the draft:
 
-- `assessment`, `setting`, `scale_desc`
+- `assessment`, `setting`, `scale_desc`: assessment name, administration
+  context and score scale.
 
-- `rater_training`, `raters_per_response`
+- `rater_training`, `raters_per_response`: training and assignment
+  details.
 
-- `rater_facet` (used for targeted reliability note text)
+- `rater_facet`: facet label for reliability wording, subject to the
+  agreement-summary restriction below.
 
-- `line_width` (optional text wrapping width for `report_text`; default
-  = 92)
-
-Output text includes residual-PCA screening commentary if PCA
-diagnostics are available in `diagnostics`.
+- `line_width`: text wrapping width for `report_text` (default 92).
 
 For `GPCM`, this helper returns a caveated partial reporting bundle over
 supported diagnostics, direct tables, and plots. It also includes a
@@ -124,56 +154,36 @@ probabilities. An absent summary does not establish agreement. See
 [`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
 for the matching, repeated-rating and denominator conventions.
 
-## Interpreting output
+Prints APA narrative text with preserved paragraph breaks using
+[`cat()`](https://rdrr.io/r/base/cat.html). This is preferred over bare
+[`print()`](https://rdrr.io/r/base/print.html) when you want readable
+multi-line report output in the console.
 
-- `report_text`: manuscript-draft narrative covering Method (model
-  specification, estimation, convergence) and Results (global fit, facet
-  separation/reliability, misfit triage, category diagnostics,
-  residual-PCA screening, bias screening), organized as an APA-oriented,
-  third-person Method/Results draft. It is intended for human review and
-  is not a claim of complete APA 7 or JARS compliance.
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize APA
+report-output bundles
 
-- `table_figure_notes`: reusable draft note blocks for table/figure
-  appendices.
+For [`summary()`](https://rdrr.io/r/base/summary.html): Inspect
+component coverage, line/character counts and previews before reading
+the full draft.
 
-- `table_figure_captions`: draft caption candidates aligned to generated
-  outputs.
+## Reviewing the draft
 
-- active latent-regression fits add a population-model section and Table
-  5 notes/captions that distinguish conditional-normal coefficient
-  reporting from post hoc regression on EAP/MLE scores.
+`report_text` is a third-person Method/Results draft;
+`table_figure_notes` and `table_figure_captions` provide matching notes
+and captions. Review them against the study record before manuscript
+use; these are not certifications of APA 7 or JARS compliance. Active
+latent-regression fits add a population section and Table 5
+notes/captions distinguishing conditional-normal coefficients from post
+hoc regression on EAP/MLE scores.
 
-When bias results or PCA diagnostics are not supplied, those sections
-are omitted from the narrative rather than producing placeholder text.
-Reporting reuses stored residual PCA results and does not compute
-omitted overall or facet-specific analyses. Request the intended scope
-with `diagnose_mfrm(..., residual_pca = "overall")`, `"facet"`, or
-`"both"` first.
-
-## Typical workflow
-
-1.  Build diagnostics (and optional bias results). For `RSM` / `PCM`
-    reporting runs, prefer an `MML` fit and
-    `diagnose_mfrm(..., diagnostic_mode = "both")`.
-
-2.  Run `build_apa_outputs(...)`.
-
-3.  Check `summary(apa)` for completeness.
-
-4.  Insert `apa$report_text` and note/caption fields into manuscript
-    drafts after checking the listed cautions.
-
-## Context template
-
-A minimal `context` list can include fields such as:
-
-- `assessment`: name of the assessment task
-
-- `setting`: administration context
-
-- `scale_desc`: short description of the score scale
-
-- `rater_facet`: rater facet label used in narrative reliability text
+Missing bias or PCA inputs cause those sections to be omitted. Reporting
+does not compute omitted PCA analyses: choose
+`residual_pca = "overall"`, `"facet"` or `"both"` in
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+first. For supported MML fits, `diagnostic_mode = "both"` retains
+plug-in and marginal diagnostics with different interpretations. Use
+`summary(apa)$content_checks` to check the draft against the supplied
+results, then read the full text.
 
 ## Input validation
 
@@ -192,20 +202,63 @@ or another package-native bias helper that provides a table component.
 Supplied screening results must describe this fitted analysis. Results
 from another fit or older results without identity metadata are refused.
 See
-[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 to recreate them from the saved fit and matching diagnostics without
 refitting the model.
+
+## Interpreting output
+
+The printed text is the same content stored in
+`build_apa_outputs(...)$report_text`, but with explicit paragraph
+breaks.
+
+For [`summary()`](https://rdrr.io/r/base/summary.html):
+
+- `overview`: total coverage across standard text components.
+
+- `decision`: the source-fit decision shown before draft-completeness
+  checks; text completeness cannot promote a review or blocked fit.
+
+- `components`: per-component density and mention checks (including
+  residual-PCA mentions).
+
+- `sections`: package-native section coverage table.
+
+- `content_checks`: checks that draft text agrees with the supplied
+  results.
+
+- `overview$DraftContractPass`: whether the expected information is
+  present in draft text components.
+
+- `overview$ReadyForAPA`: a backward-compatible alias of that
+  completeness flag, not a certification of inferential adequacy.
+
+- `preview`: first non-empty lines for fast visual review.
+
+## Typical workflow
+
+1.  Generate `apa <- build_apa_outputs(...)`.
+
+2.  Print readable narrative with `apa$report_text`.
+
+3.  Use `summary(apa)` to check completeness before manuscript use.
 
 ## See also
 
 [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md),
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
-[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
-[mfrmr_reporting_and_apa](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reporting_and_apa.md)
+[mfrm_report_checklist](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
+[mfrmr_reporting_and_apa](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md)
+
+`build_apa_outputs()`,
+[`base::summary()`](https://rdrr.io/r/base/summary.html)
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("build_apa_outputs", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 library(mfrmr)
 
 # Saved synthetic MML/RSM analysis of example_operational.
@@ -231,121 +284,29 @@ apa <- build_apa_outputs(
 # Check which sections are supported, then read the draft
 apa_review <- summary(apa)
 apa_review$content_checks
-#>                           Check Passed
-#> 1        Method section heading   TRUE
-#> 2       Results section heading   TRUE
-#> 3   Precision caution alignment   TRUE
-#> 4 Bias screening note alignment   TRUE
-#> 5         Residual PCA coverage   TRUE
-#> 6                 Note coverage   TRUE
-#> 7              Caption coverage   TRUE
-#> 8         Core section coverage   TRUE
-#> 9  Interrater summary alignment   TRUE
-#>                                                                            Detail
-#> 1                               APA narrative should begin with a Method heading.
-#> 2                                 APA narrative should include a Results heading.
-#> 3                               No extra precision caution required for this run.
-#> 4                                               No bias screening block required.
-#> 5    Residual PCA availability should be reflected in prose, notes, and captions.
-#> 6       All note-map entries should be represented in the consolidated note text.
-#> 7 All caption-map entries should be represented in the consolidated caption text.
-#> 8            Core package-native sections should be available in the section map.
-#> 9         Interrater agreement wording should appear in the report text or notes.
 cat(apa$report_text)
-#> Method.
-#> 
-#> Design and data.
-#> The analysis focused on Synthetic writing assessment in Demonstration dataset. A many-facet
-#> rating-scale Rasch model was fit to 282 observations from 48 persons scored on a 4-category
-#> scale (1-4). The design included facets for Rater (n = 6), Criterion (n = 3). The smallest
-#> non-person facet-level count was 38 retained rating rows, placing it in the package's
-#> 'standard' screening band. These counts are not counts of independent examinees or
-#> effective sample sizes and do not establish precision or interval coverage. Review
-#> targeting, connectedness and estimator-specific uncertainty alongside
-#> `facet_small_sample_review()`. The rating scale was described as 1-4 rating scale.
-#> 
-#> Estimation settings.
-#> The RSM specification was estimated using MML with mfrmr. Model-based precision summaries
-#> were available for this run. Person measures are expected a posteriori (EAP) estimates
-#> under the marginal person distribution, and residual-based fit statistics are evaluated at
-#> these EAP measures rather than at joint maximum likelihood (JMLE) estimates. Recommended
-#> use for this precision profile: Uncertainty is conditional on the fitted model. Person
-#> posterior SDs condition on the fitted calibration; facet standard errors use observed
-#> information. Review interval assumptions before reporting.. Optimization met the numerical
-#> convergence checks after 28 function evaluations and 28 gradient evaluations (LogLik =
-#> -347.240, canonical MML AIC = 712.480, Person-BIC = 729.320, Sclove SABIC = 701.085). MML
-#> integration used fixed Gauss-Hermite quadrature (q=31). Terminal gradient sup-norm = 0.0000
-#> (review threshold = 0.0001). Constraint settings: noncenter facet = Person; anchored levels
-#> = 0 (facets: none); group anchors = 0 (facets: none); dummy facets = none. Centered facets
-#> sum to zero across all levels, including anchors and group totals.
-#> 
-#> Results.
-#> 
-#> Scale functioning.
-#> Category counts were available for all 4 categories: 0 unused and 0 below 10. Counts alone
-#> do not establish category adequacy. Adjacent threshold comparisons: 0 decreasing among 2
-#> available; 0 of 2 comparisons unavailable. Available estimates range from -1.22 to 1.06
-#> logits. Adjacent threshold comparisons: 0 decreasing among 2 available; 0 of 2 comparisons
-#> unavailable.
-#> 
-#> Facet measures.
-#> Person measures ranged from -1.72 to 1.51 logits (M = -0.16, SD = 0.82). Rater measures
-#> ranged from -0.61 to 0.41 logits (M = 0.00, SD = 0.40). Criterion measures ranged from
-#> -0.34 to 0.22 logits (M = 0.00, SD = 0.30).
-#> 
-#> Fit and precision.
-#> Overall mean-square fit was within the 0.5-1.5 screening band (infit MnSq = 0.87, outfit
-#> MnSq = 0.86). This band is the package's review convention; published mean-square
-#> guidelines differ, and band position is screening evidence rather than a model-validity
-#> decision. MnSq outside [0.5, 1.5]: 18 of 57 classified elements flagged; 0 of 57 elements
-#> unclassified. Largest misfit signals among 57 elements with complete paired statistics:
-#> Person:P022 (|ZSTD| = 2.88); Person:P026 (|ZSTD| = 2.84); Criterion:Content (|ZSTD| =
-#> 2.27). Criterion reliability = 0.87 (separation = 2.56). Person reliability = 0.66
-#> (separation = 1.41). Rater reliability = 0.68 (separation = 1.45). Separation reliability
-#> describes differences among facet locations relative to their estimation errors. High
-#> Person values indicate distinguishable abilities; high rater values indicate
-#> distinguishable severities, not inter-rater agreement. Low rater values can also reflect
-#> imprecision and do not establish agreement. The index does not test every rater pair or
-#> quantify the practical size of severity differences. Reliability, separation and Strata are
-#> approximate compatibility indices using marginal SEs; joint-information SEs do not validate
-#> this variance decomposition. They do not account for covariance among estimates. EAP-based
-#> separation is not posterior-variance EAP reliability. Model and fit-adjusted values are
-#> companion indices, not confidence limits. Strata describes hypothetical distinguishable
-#> strata, not discovered groups. Facet heterogeneity chi-square summaries use diagonal SE
-#> weights, not full-covariance joint tests. The Person row uses EAP measures with posterior
-#> SDs, which yields a conservative summary that is not numerically comparable to JMLE-based
-#> person reliability from FACETS. Inter-rater agreement for Rater is reported separately from
-#> separation reliability. Diagnostics match scores within Person and all remaining non-rater
-#> facets; each compared pair contributes one opportunity per matched context. The denominator
-#> is 138 matched-context opportunities across rater pairs, not a count of independent people.
-#> 6 of 15 candidate rater pairs have matched scores. Observed exact agreement = 0.39;
-#> observed adjacent agreement (absolute score difference at most 1, including exact matches)
-#> = 0.86; model-expected exact agreement = 0.35. The model-expected baseline uses fitted
-#> category probabilities with calibration fixed; it is not chance agreement or an inferential
-#> test. It assumes conditional independence at the saved Person point score (EAP for MML),
-#> rather than integrating over the Person posterior. These descriptive summaries do not
-#> classify rater quality or establish fairness. Element-level 95% approximate intervals
-#> (Normal approximation) accompany 57 of 57 estimates; 57 of 57 estimates have intervals
-#> eligible for primary reporting.
-#> 
-#> Residual structure.
-#> Overall categories: 0 flagged among 4 classified; 0 of 4 unavailable. Step/scale groups: 0
-#> flagged among 1 classified; 0 of 1 unavailable. Facet levels: 1 flagged among 9 classified;
-#> 0 of 9 unavailable. Level pairs: 1 flagged among 9 classified; 0 of 9 unavailable. Expected
-#> counts condition on the same responses through Person posteriors, with fitted calibration
-#> held fixed. Residual scales omit cross-response covariance and calibration-parameter
-#> uncertainty; thresholds are descriptive, not calibrated tests. Strict marginal screening
-#> gives an overall RMSD of 0.01, overall max |standardized residual| = 0.43. The largest
-#> strict marginal cell involved Criterion: Content | Cat 4 (standardized residual = -1.53,
-#> proportion difference = -0.06). Strict pairwise local-dependence follow-up flagged 1 level
-#> pair(s) under the latent-integrated agreement screen. The largest strict pairwise signal
-#> involved Rater: R04 vs R05 (exact-agreement standardized residual = 2.09,
-#> adjacent-agreement standardized residual = 0.22).
-#> 
-#> Reporting cautions.
-#> Fit-basis note: MnSq/ZSTD fit statistics in this run were computed at EAP person measures,
-#> which are shrunken toward the population mean; they are therefore not numerically
-#> interchangeable with JMLE-based engines such as FACETS. Refit with method = "JML" when a
-#> JMLE-style residual basis is required for external comparison.
 # Adapt the text to the study question, design, and evidence before using it
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("print.mfrm_apa_text", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+apa <- build_apa_outputs(fit, diag)
+apa$report_text
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_apa_outputs", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+apa <- build_apa_outputs(fit, diag)
+summary(apa)
+} # }
 ```

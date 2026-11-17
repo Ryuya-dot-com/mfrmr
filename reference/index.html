@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,31 +15,25 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -56,9 +50,14 @@
     </div>
 
     <div class="section level2">
-      <h2 id="primary-workflow">Primary workflow<a class="anchor" aria-label="anchor" href="#primary-workflow"></a></h2>
+      <h2 id="measurement-fit-and-interpret-ratings">Measurement: fit and interpret ratings<a class="anchor" aria-label="anchor" href="#measurement-fit-and-interpret-ratings"></a></h2>
 
-      <div class="section-desc"><p>Start here for routine fit, first-screen results, reports, and exports.</p></div>
+      <div class="section-desc"><p>Follow <a href="../articles/mfrmr.html#how-functions-connect">how the functions connect</a>. Keep the input and result objects at each step. The measurement route below is for ordinary RSM/PCM MML/JML; G-theory planning starts separately from observed scores. Other models use their documented output routes.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+      <h3 id="step-prepare-rating-data">Step 1: Prepare rating data<a class="anchor" aria-label="anchor" href="#step-prepare-rating-data"></a></h3>
+      <div class="section-desc"><p>Input: one row per rating. describe_mfrm_data() returns a design review; pass the rating data itself to fit_mfrm().</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -67,19 +66,113 @@
 
       <dl><dt>
 
-          <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code>
-
-        </dt>
-        <dd>Load a packaged ordered-response MFRM dataset</dd>
-
-        <dt>
-
-          <code><a href="list_mfrmr_data.html">list_mfrmr_data()</a></code>
+          <code><a href="load_mfrmr_data.html">list_mfrmr_data()</a></code> <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code>
 
         </dt>
         <dd>List packaged ordered-response MFRM datasets</dd>
 
         <dt>
+
+          <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code> <code><a href="describe_mfrm_data.html">summary(<i>&lt;mfrm_data_description&gt;</i>)</a></code> <code><a href="describe_mfrm_data.html">plot(<i>&lt;mfrm_data_description&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Check rating data before fitting an MFRM</dd>
+      </dl></div><div class="section level2">
+
+      <h3 id="step-fit-and-inspect-the-model">Step 2: Fit and inspect the model<a class="anchor" aria-label="anchor" href="#step-fit-and-inspect-the-model"></a></h3>
+      <div class="section-desc"><p>Keep fit &lt;- fit_mfrm(…). summary(fit) shows tables; it does not replace fit or compute the default diagnostics.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="fit_mfrm.html">fit_mfrm()</a></code> <code><a href="fit_mfrm.html">summary(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="fit_mfrm.html">print(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="fit_mfrm.html">print(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="fit_mfrm.html">summary(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Fit many-facet models to ordered ratings</dd>
+      </dl></div><div class="section level2">
+
+      <h3 id="step-diagnose-and-collect-evidence">Step 3: Diagnose and collect evidence<a class="anchor" aria-label="anchor" href="#step-diagnose-and-collect-evidence"></a></h3>
+      <div class="section-desc"><p>Keep diagnostics &lt;- diagnose_mfrm(fit), then pass both fit and matching diagnostics to mfrm_results().</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> <code><a href="diagnose_mfrm.html">summary(<i>&lt;mfrm_diagnostics&gt;</i>)</a></code> <code><a href="diagnose_mfrm.html">plot(<i>&lt;mfrm_diagnostics&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Review response fit and the support for uncertainty summaries</dd>
+
+        <dt>
+
+          <code><a href="mfrm_results.html">mfrm_results()</a></code>
+
+        </dt>
+        <dd>Collect fitted estimates, diagnostics and reporting tables</dd>
+      </dl></div><div class="section level2">
+
+      <h3 id="step-report-and-save">Step 4: Report and save<a class="anchor" aria-label="anchor" href="#step-report-and-save"></a></h3>
+      <div class="section-desc"><p>Pass collected results to mfrm_report() or export_mfrm_results(). G/D-study and other supported result objects enter mfrm_report() directly.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="mfrm_report.html">summary(<i>&lt;mfrm_reporting_checklist&gt;</i>)</a></code> <code><a href="mfrm_report.html">mfrm_report()</a></code>
+
+        </dt>
+        <dd>Build reports from measurement, G-Study/D-Study, or residual results</dd>
+
+        <dt>
+
+          <code><a href="export_mfrm_results.html">export_mfrm_results()</a></code>
+
+        </dt>
+        <dd>Export an mfrm_results analysis archive</dd>
+      </dl></div><div class="section level2">
+
+      <h3 id="extract-estimates-and-uncertainty">Extract estimates and uncertainty<a class="anchor" aria-label="anchor" href="#extract-estimates-and-uncertainty"></a></h3>
+      <div class="section-desc"><p>Use these with fit when you need individual estimates, covariance, fitted responses or supported intervals. They complement the compact summary.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="mfrm_fit_extractors.html">coef(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">coef(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">coef(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">vcov(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">vcov(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">nobs(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">nobs(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">nobs(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">logLik(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">logLik(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">AIC(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">BIC(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">AIC(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">BIC(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">fitted(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">residuals(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">predict(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">fitted(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">fitted(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">residuals(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">residuals(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">predict(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">predict(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">as.data.frame(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">vcov(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">logLik(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">summary(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">print(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">coef(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">fitted(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">vcov(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">confint(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">logLik(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Extract coefficients, covariance, likelihood and observation counts</dd>
+
+        <dt>
+
+          <code><a href="confint.mfrm_fit.html">confint(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="confint.mfrm_fit.html">confint(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="confint.mfrm_fit.html">confint(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Confidence intervals for native fit coefficients and GPCM slopes</dd>
+      </dl></div><div class="section level2">
+
+      <h3 id="data-examples">Data examples<a class="anchor" aria-label="anchor" href="#data-examples"></a></h3>
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
 
           <code><a href="mfrmr_example_data.html">mfrmr_example_data</a></code> <code><a href="mfrmr_example_data.html">mfrmr_example_operational</a></code> <code><a href="mfrmr_example_data.html">mfrmr_example_core</a></code> <code><a href="mfrmr_example_data.html">mfrmr_example_bias</a></code>
 
@@ -106,78 +199,33 @@
 
         </dt>
         <dd>Synthetic ratings illustrating agreement, offsets and missing scores</dd>
+      </dl></div><div class="section level2">
 
-        <dt>
+      <h3 id="detailed-estimation-reference">Detailed estimation reference<a class="anchor" aria-label="anchor" href="#detailed-estimation-reference"></a></h3>
+      <div class="section-desc"><p>Open the selected model or estimator’s section for calculation and inference conditions.</p></div>
 
-          <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>
+      <dl></dl></div><div class="section level2">
 
-        </dt>
-        <dd>Check rating data before fitting an MFRM</dd>
 
-        <dt>
 
-          <code><a href="fit_mfrm.html">fit_mfrm()</a></code> <code><a href="fit_mfrm.html">summary(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="fit_mfrm.html">print(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="fit_mfrm.html">print(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="fit_mfrm.html">summary(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code>
 
-        </dt>
-        <dd>Fit many-facet ordered-response models with a flexible number of facets</dd>
+      <dl><dt>
 
-        <dt>
-
-          <code><a href="summary.mfrm_jeffreys_fit.html">summary(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="summary.mfrm_jeffreys_fit.html">print(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="summary.mfrm_jeffreys_fit.html">coef(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="summary.mfrm_jeffreys_fit.html">fitted(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="summary.mfrm_jeffreys_fit.html">vcov(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="summary.mfrm_jeffreys_fit.html">confint(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code> <code><a href="summary.mfrm_jeffreys_fit.html">logLik(<i>&lt;mfrm_jeffreys_fit&gt;</i>)</a></code>
+          <code><a href="fit_mfrm_technical_details.html">fit_mfrm_technical_details</a></code>
 
         </dt>
-        <dd>Inspect a Jeffreys-penalized fit</dd>
+        <dd>Technical Reference for fit_mfrm() Specifications, Controls, and Estimators</dd>
+      </dl></div><div class="section level2">
 
-        <dt>
+      <h3 id="workflow-and-method-guides">Workflow and method guides<a class="anchor" aria-label="anchor" href="#workflow-and-method-guides"></a></h3>
+      <div class="section-desc"><p>Choose a question, then follow the relevant analysis route; these are not additional required steps.</p></div>
 
-          <code><a href="mfrm_fit_extractors.html">coef(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">coef(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">coef(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">vcov(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">vcov(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">nobs(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">nobs(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">nobs(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">logLik(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">logLik(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">AIC(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">BIC(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">AIC(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">BIC(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">vcov(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_extractors.html">logLik(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code>
+      <dl></dl></div><div class="section level2">
 
-        </dt>
-        <dd>Extract coefficients, covariance, likelihood and observation counts</dd>
 
-        <dt>
 
-          <code><a href="mfrm_fit_responses.html">fitted(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_responses.html">residuals(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_responses.html">predict(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_responses.html">fitted(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_responses.html">fitted(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_responses.html">residuals(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_responses.html">residuals(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_responses.html">predict(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="mfrm_fit_responses.html">predict(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code>
 
-        </dt>
-        <dd>Extract fitted rating values and residuals</dd>
-
-        <dt>
-
-          <code><a href="confint.mfrm_fit.html">confint(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="confint.mfrm_fit.html">confint(<i>&lt;mfrm_cml_fit&gt;</i>)</a></code> <code><a href="confint.mfrm_fit.html">confint(<i>&lt;mfrm_comparison_fit&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Confidence intervals for native fit coefficients and GPCM slopes</dd>
-
-        <dt>
-
-          <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>
-
-        </dt>
-        <dd>Compute diagnostics for an <code>mfrm_fit</code> object</dd>
-
-        <dt>
-
-          <code><a href="mfrm_results.html">mfrm_results()</a></code>
-
-        </dt>
-        <dd>Build comprehensive first-screen MFRM results</dd>
-
-        <dt>
-
-          <code><a href="mfrm_report.html">mfrm_report()</a></code>
-
-        </dt>
-        <dd>Build reports from measurement, G/D-study or residual results</dd>
-
-        <dt>
-
-          <code><a href="export_mfrm_results.html">export_mfrm_results()</a></code>
-
-        </dt>
-        <dd>Export an mfrm_results analysis archive</dd>
-
-        <dt>
+      <dl><dt>
 
           <code><a href="mfrmr_output_guide.html">mfrmr_output_guide()</a></code>
 
@@ -186,17 +234,10 @@
 
         <dt>
 
-          <code><a href="mfrmr_interval_guide.html">mfrmr_interval_guide()</a></code>
+          <code><a href="mfrmr-package.html">mfrmr</a></code> <code><a href="mfrmr-package.html">mfrmr_workflow_methods</a></code> <code><a href="mfrmr-package.html">mfrmr-package</a></code>
 
         </dt>
-        <dd>Confidence-interval and uncertainty route guide</dd>
-
-        <dt>
-
-          <code><a href="mfrmr_workflow_methods.html">mfrmr_workflow_methods</a></code>
-
-        </dt>
-        <dd>mfrmr Workflow and Method Map</dd>
+        <dd>mfrmr: Many-Facet Ordered-Response Modeling in R</dd>
 
         <dt>
 
@@ -223,14 +264,14 @@
 
         <dt>
 
-          <code><a href="detect_facet_nesting.html">detect_facet_nesting()</a></code>
+          <code><a href="detect_facet_nesting.html">detect_facet_nesting()</a></code> <code><a href="detect_facet_nesting.html">plot(<i>&lt;mfrm_facet_nesting&gt;</i>)</a></code>
 
         </dt>
         <dd>Detect nesting structure between facets</dd>
 
         <dt>
 
-          <code><a href="facet_small_sample_review.html">facet_small_sample_review()</a></code>
+          <code><a href="facet_small_sample_review.html">facet_small_sample_review()</a></code> <code><a href="facet_small_sample_review.html">plot(<i>&lt;mfrm_facet_sample_review&gt;</i>)</a></code>
 
         </dt>
         <dd>Review rating counts for each facet level</dd>
@@ -251,21 +292,21 @@
 
         <dt>
 
-          <code><a href="build_mfrm_network_review.html">build_mfrm_network_review()</a></code>
+          <code><a href="build_mfrm_network_review.html">build_mfrm_network_review()</a></code> <code><a href="build_mfrm_network_review.html">summary(<i>&lt;mfrm_network_review&gt;</i>)</a></code>
 
         </dt>
         <dd>Build an MFRM network review</dd>
 
         <dt>
 
-          <code><a href="build_peer_review_sim_spec.html">build_peer_review_sim_spec()</a></code>
+          <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code> <code><a href="build_mfrm_sim_spec.html">print(<i>&lt;mfrm_sim_spec&gt;</i>)</a></code> <code><a href="build_mfrm_sim_spec.html">build_peer_review_sim_spec()</a></code> <code><a href="build_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code>
 
         </dt>
-        <dd>Build a peer-review simulation specification</dd>
+        <dd>Build an explicit simulation specification for MFRM design studies</dd>
 
         <dt>
 
-          <code><a href="review_peer_design.html">review_peer_design()</a></code>
+          <code><a href="review_peer_design.html">review_peer_design()</a></code> <code><a href="review_peer_design.html">summary(<i>&lt;mfrm_peer_review_design_review&gt;</i>)</a></code>
 
         </dt>
         <dd>Review a peer-assessment assignment design</dd>
@@ -281,33 +322,12 @@
 
       <dl><dt>
 
-          <code><a href="mfrm_response_imputations.html">review_mfrm_imputations()</a></code> <code><a href="mfrm_response_imputations.html">mfrm_response_imputations()</a></code> <code><a href="mfrm_response_imputations.html">print(<i>&lt;mfrm_response_imputations&gt;</i>)</a></code> <code><a href="mfrm_response_imputations.html">summary(<i>&lt;mfrm_response_imputations&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Review multiple imputations of scores on assigned ratings</dd>
-
-        <dt>
-
-          <code><a href="fit_mfrm_imputed.html">fit_mfrm_imputed()</a></code> <code><a href="fit_mfrm_imputed.html">print(<i>&lt;mfrm_imputed_fits&gt;</i>)</a></code> <code><a href="fit_mfrm_imputed.html">summary(<i>&lt;mfrm_imputed_fits&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Fit the same MFRM to every completed rating data set</dd>
-
-        <dt>
-
-          <code><a href="pool_mfrm_imputed.html">pool_mfrm_imputed()</a></code> <code><a href="pool_mfrm_imputed.html">print(<i>&lt;mfrm_pooled&gt;</i>)</a></code> <code><a href="pool_mfrm_imputed.html">summary(<i>&lt;mfrm_pooled&gt;</i>)</a></code>
+          <code><a href="mfrm_response_imputations.html">pool_mfrm_imputed()</a></code> <code><a href="mfrm_response_imputations.html">fit_mfrm_imputed()</a></code> <code><a href="mfrm_response_imputations.html">print(<i>&lt;mfrm_imputed_fits&gt;</i>)</a></code> <code><a href="mfrm_response_imputations.html">summary(<i>&lt;mfrm_imputed_fits&gt;</i>)</a></code> <code><a href="mfrm_response_imputations.html">print(<i>&lt;mfrm_pooled&gt;</i>)</a></code> <code><a href="mfrm_response_imputations.html">summary(<i>&lt;mfrm_pooled&gt;</i>)</a></code> <code><a href="mfrm_response_imputations.html">plot(<i>&lt;mfrm_pooled&gt;</i>)</a></code> <code><a href="mfrm_response_imputations.html">review_mfrm_imputations()</a></code> <code><a href="mfrm_response_imputations.html">print(<i>&lt;mfrm_response_imputations&gt;</i>)</a></code> <code><a href="mfrm_response_imputations.html">summary(<i>&lt;mfrm_response_imputations&gt;</i>)</a></code>
 
         </dt>
         <dd>Pool common facet targets across imputed rating analyses</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_pooled.html">plot(<i>&lt;mfrm_pooled&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot pooled facet estimates or prespecified contrasts</dd>
       </dl></div><div class="section level2">
-      <h2 id="g-theory-assessment-planning">G-theory assessment planning<a class="anchor" aria-label="anchor" href="#g-theory-assessment-planning"></a></h2>
+      <h2 id="assessment-planning-g-study-and-d-study">Assessment planning: G-Study and D-Study<a class="anchor" aria-label="anchor" href="#assessment-planning-g-study-and-d-study"></a></h2>
 
       <div class="section-desc"><p>Separate observed-score variation, project specified future plans, and compare eligible prespecified plans. Start with the G-theory planning article.</p></div>
 
@@ -321,21 +341,14 @@
           <code><a href="mfrm_g_study.html">mfrm_g_study()</a></code> <code><a href="mfrm_g_study.html">print(<i>&lt;mfrm_multivariate_gstudy&gt;</i>)</a></code> <code><a href="mfrm_g_study.html">summary(<i>&lt;mfrm_multivariate_gstudy&gt;</i>)</a></code>
 
         </dt>
-        <dd>G-study for one or several observed scores</dd>
+        <dd>G-Study for one or several observed scores</dd>
 
         <dt>
 
-          <code><a href="confint.mfrm_multivariate_gstudy.html">confint(<i>&lt;mfrm_multivariate_gstudy&gt;</i>)</a></code>
+          <code><a href="confint.mfrm_multivariate_gstudy.html">confint(<i>&lt;mfrm_multivariate_gstudy&gt;</i>)</a></code> <code><a href="confint.mfrm_multivariate_gstudy.html">vcov(<i>&lt;mfrm_multivariate_gstudy&gt;</i>)</a></code>
 
         </dt>
-        <dd>Sampling uncertainty in G-study variance and covariance components</dd>
-
-        <dt>
-
-          <code><a href="vcov.mfrm_multivariate_gstudy.html">vcov(<i>&lt;mfrm_multivariate_gstudy&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Sampling covariance and SEs of G-study component estimates</dd>
+        <dd>Sampling uncertainty in G-Study variance and covariance components</dd>
 
         <dt>
 
@@ -353,24 +366,10 @@
 
         <dt>
 
-          <code><a href="summary.mfrm_multivariate_d_study.html">summary(<i>&lt;mfrm_multivariate_d_study&gt;</i>)</a></code> <code><a href="summary.mfrm_multivariate_d_study.html">print(<i>&lt;summary.mfrm_multivariate_d_study&gt;</i>)</a></code>
+          <code><a href="confint.mfrm_multivariate_d_study.html">confint(<i>&lt;mfrm_multivariate_d_study&gt;</i>)</a></code> <code><a href="confint.mfrm_multivariate_d_study.html">summary(<i>&lt;mfrm_multivariate_d_study&gt;</i>)</a></code> <code><a href="confint.mfrm_multivariate_d_study.html">print(<i>&lt;summary.mfrm_multivariate_d_study&gt;</i>)</a></code> <code><a href="confint.mfrm_multivariate_d_study.html">plot(<i>&lt;mfrm_dstudy_intervals&gt;</i>)</a></code>
 
         </dt>
-        <dd>Summarize assessment plans with their uncertainty</dd>
-
-        <dt>
-
-          <code><a href="confint.mfrm_multivariate_d_study.html">confint(<i>&lt;mfrm_multivariate_d_study&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Confidence intervals for dependability and SEM in D-study plans</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_dstudy_intervals.html">plot(<i>&lt;mfrm_dstudy_intervals&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Compare D-study confidence interval methods</dd>
+        <dd>Confidence intervals for dependability and SEM in D-Study plans</dd>
 
         <dt>
 
@@ -381,38 +380,17 @@
 
         <dt>
 
-          <code><a href="mfrm_multivariate_d_compare.html">mfrm_multivariate_d_compare()</a></code> <code><a href="mfrm_multivariate_d_compare.html">summary(<i>&lt;mfrm_multivariate_d_comparison&gt;</i>)</a></code> <code><a href="mfrm_multivariate_d_compare.html">print(<i>&lt;mfrm_multivariate_d_comparison&gt;</i>)</a></code>
+          <code><a href="mfrm_d_study_comparison.html">summary(<i>&lt;mfrm_multivariate_d_comparison&gt;</i>)</a></code> <code><a href="mfrm_d_study_comparison.html">print(<i>&lt;mfrm_multivariate_d_comparison&gt;</i>)</a></code> <code><a href="mfrm_d_study_comparison.html">plot(<i>&lt;mfrm_multivariate_d_comparison&gt;</i>)</a></code>
 
         </dt>
         <dd>Compare prespecified multivariate D-study plans</dd>
 
         <dt>
 
-          <code><a href="plot.mfrm_multivariate_d_comparison.html">plot(<i>&lt;mfrm_multivariate_d_comparison&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot prespecified D-study plans and their differences</dd>
-
-        <dt>
-
-          <code><a href="mfrm_generalizability.html">mfrm_generalizability()</a></code>
+          <code><a href="mfrm_generalizability.html">mfrm_generalizability()</a></code> <code><a href="mfrm_generalizability.html">mfrm_d_study(<i>&lt;mfrm_generalizability&gt;</i>)</a></code> <code><a href="mfrm_generalizability.html">plot(<i>&lt;mfrm_d_study&gt;</i>)</a></code> <code><a href="mfrm_generalizability.html">mfrm_d_study(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_generalizability.html">summary(<i>&lt;mfrm_d_study&gt;</i>)</a></code>
 
         </dt>
         <dd>Main-effects generalizability approximation for an MFRM design</dd>
-
-        <dt>
-
-          <code><a href="mfrm_d_study_main_effects.html">mfrm_d_study(<i>&lt;mfrm_generalizability&gt;</i>)</a></code> <code><a href="mfrm_d_study_main_effects.html">mfrm_d_study(<i>&lt;mfrm_fit&gt;</i>)</a></code> <code><a href="mfrm_d_study_main_effects.html">summary(<i>&lt;mfrm_d_study&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Main-effects D-study approximation</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_d_study.html">plot(<i>&lt;mfrm_d_study&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot design comparisons from a main-effects D-study</dd>
       </dl></div><div class="section level2">
       <h2 id="facet-and-population-uncertainty">Facet and population uncertainty<a class="anchor" aria-label="anchor" href="#facet-and-population-uncertainty"></a></h2>
 
@@ -425,31 +403,17 @@
 
       <dl><dt>
 
-          <code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> <code><a href="mfrm_facet_intervals.html">print(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code> <code><a href="mfrm_facet_intervals.html">summary(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code> <code><a href="mfrm_facet_intervals.html">confint(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code> <code><a href="mfrm_facet_intervals.html">vcov(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code>
+          <code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> <code><a href="mfrm_facet_intervals.html">print(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code> <code><a href="mfrm_facet_intervals.html">summary(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code> <code><a href="mfrm_facet_intervals.html">confint(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code> <code><a href="mfrm_facet_intervals.html">vcov(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code> <code><a href="mfrm_facet_intervals.html">plot(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code>
 
         </dt>
         <dd>Pointwise intervals for fixed facet estimates and contrasts</dd>
 
         <dt>
 
-          <code><a href="plot.mfrm_facet_intervals.html">plot(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot fixed-facet interval methods</dd>
-
-        <dt>
-
-          <code><a href="mfrm_population_intervals.html">mfrm_population_intervals()</a></code> <code><a href="mfrm_population_intervals.html">print(<i>&lt;mfrm_population_intervals&gt;</i>)</a></code> <code><a href="mfrm_population_intervals.html">summary(<i>&lt;mfrm_population_intervals&gt;</i>)</a></code> <code><a href="mfrm_population_intervals.html">vcov(<i>&lt;mfrm_population_intervals&gt;</i>)</a></code>
+          <code><a href="mfrm_population_intervals.html">mfrm_population_intervals()</a></code> <code><a href="mfrm_population_intervals.html">plot(<i>&lt;mfrm_population_intervals&gt;</i>)</a></code> <code><a href="mfrm_population_intervals.html">print(<i>&lt;mfrm_population_intervals&gt;</i>)</a></code> <code><a href="mfrm_population_intervals.html">summary(<i>&lt;mfrm_population_intervals&gt;</i>)</a></code> <code><a href="mfrm_population_intervals.html">vcov(<i>&lt;mfrm_population_intervals&gt;</i>)</a></code>
 
         </dt>
         <dd>Pointwise intervals for a conditional-normal population model</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_population_intervals.html">plot(<i>&lt;mfrm_population_intervals&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot saved latent-population coefficients or contrasts</dd>
       </dl></div><div class="section level2">
       <h2 id="response-probabilities-and-residuals">Response probabilities and residuals<a class="anchor" aria-label="anchor" href="#response-probabilities-and-residuals"></a></h2>
 
@@ -462,17 +426,10 @@
 
       <dl><dt>
 
-          <code><a href="mfrm_response_diagnostics.html">mfrm_response_diagnostics()</a></code> <code><a href="mfrm_response_diagnostics.html">summary(<i>&lt;mfrm_response_diagnostics&gt;</i>)</a></code> <code><a href="mfrm_response_diagnostics.html">print(<i>&lt;mfrm_response_diagnostics&gt;</i>)</a></code>
+          <code><a href="mfrm_response_diagnostics.html">mfrm_response_diagnostics()</a></code> <code><a href="mfrm_response_diagnostics.html">plot(<i>&lt;mfrm_response_diagnostics&gt;</i>)</a></code> <code><a href="mfrm_response_diagnostics.html">summary(<i>&lt;mfrm_response_diagnostics&gt;</i>)</a></code> <code><a href="mfrm_response_diagnostics.html">print(<i>&lt;mfrm_response_diagnostics&gt;</i>)</a></code>
 
         </dt>
         <dd>Describe fitted response probabilities and residuals</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_response_diagnostics.html">plot(<i>&lt;mfrm_response_diagnostics&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot descriptive response residual summaries</dd>
       </dl></div><div class="section level2">
       <h2 id="shared-random-raters">Shared random raters<a class="anchor" aria-label="anchor" href="#shared-random-raters"></a></h2>
 
@@ -485,14 +442,14 @@
 
       <dl><dt>
 
-          <code><a href="fit_mfrm_random_rater.html">fit_mfrm_random_rater()</a></code> <code><a href="fit_mfrm_random_rater.html">summary(<i>&lt;mfrm_random_rater&gt;</i>)</a></code> <code><a href="fit_mfrm_random_rater.html">print(<i>&lt;mfrm_random_rater&gt;</i>)</a></code>
+          <code><a href="fit_mfrm_random_rater.html">fit_mfrm_random_rater()</a></code> <code><a href="fit_mfrm_random_rater.html">predict(<i>&lt;mfrm_random_rater&gt;</i>)</a></code> <code><a href="fit_mfrm_random_rater.html">plot(<i>&lt;mfrm_random_rater&gt;</i>)</a></code> <code><a href="fit_mfrm_random_rater.html">confint(<i>&lt;mfrm_random_rater&gt;</i>)</a></code> <code><a href="fit_mfrm_random_rater.html">summary(<i>&lt;mfrm_random_rater&gt;</i>)</a></code> <code><a href="fit_mfrm_random_rater.html">print(<i>&lt;mfrm_random_rater&gt;</i>)</a></code>
 
         </dt>
         <dd>Fit a rating-scale model with shared random rater severity</dd>
 
         <dt>
 
-          <code><a href="score_mfrm_random_rater.html">score_mfrm_random_rater()</a></code> <code><a href="score_mfrm_random_rater.html">summary(<i>&lt;mfrm_random_rater_scores&gt;</i>)</a></code> <code><a href="score_mfrm_random_rater.html">print(<i>&lt;mfrm_random_rater_scores&gt;</i>)</a></code>
+          <code><a href="score_mfrm_random_rater.html">score_mfrm_random_rater()</a></code> <code><a href="score_mfrm_random_rater.html">summary(<i>&lt;mfrm_random_rater_scores&gt;</i>)</a></code> <code><a href="score_mfrm_random_rater.html">print(<i>&lt;mfrm_random_rater_scores&gt;</i>)</a></code> <code><a href="score_mfrm_random_rater.html">plot(<i>&lt;mfrm_random_rater_scores&gt;</i>)</a></code>
 
         </dt>
         <dd>Score Persons while integrating shared random raters</dd>
@@ -506,45 +463,10 @@
 
         <dt>
 
-          <code><a href="plot.mfrm_random_rater_scores.html">plot(<i>&lt;mfrm_random_rater_scores&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot Person scores from a shared-rater model</dd>
-
-        <dt>
-
-          <code><a href="confint.mfrm_random_rater.html">confint(<i>&lt;mfrm_random_rater&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Population-SD profiles and explicit shared-rater model intervals</dd>
-
-        <dt>
-
-          <code><a href="predict.mfrm_random_rater.html">predict(<i>&lt;mfrm_random_rater&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Predict category probabilities for observed or replacement raters</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_random_rater.html">plot(<i>&lt;mfrm_random_rater&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot observed-rater severity under a shared-rater RSM</dd>
-
-        <dt>
-
-          <code><a href="mfrm_random_rater_intervals.html">mfrm_random_rater_intervals()</a></code> <code><a href="mfrm_random_rater_intervals.html">confint(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code> <code><a href="mfrm_random_rater_intervals.html">summary(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code> <code><a href="mfrm_random_rater_intervals.html">print(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code>
+          <code><a href="mfrm_random_rater_intervals.html">mfrm_random_rater_intervals()</a></code> <code><a href="mfrm_random_rater_intervals.html">plot(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code> <code><a href="mfrm_random_rater_intervals.html">confint(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code> <code><a href="mfrm_random_rater_intervals.html">summary(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code> <code><a href="mfrm_random_rater_intervals.html">print(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code>
 
         </dt>
         <dd>Bootstrap prediction intervals for observed random raters</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_random_rater_intervals.html">plot(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Compare bootstrap and ordinary random-rater intervals</dd>
       </dl></div><div class="section level2">
       <h2 id="person-specific-testlets">Person-specific testlets<a class="anchor" aria-label="anchor" href="#person-specific-testlets"></a></h2>
 
@@ -557,38 +479,10 @@
 
       <dl><dt>
 
-          <code><a href="fit_mfrm_testlet.html">fit_mfrm_testlet()</a></code> <code><a href="fit_mfrm_testlet.html">summary(<i>&lt;mfrm_testlet&gt;</i>)</a></code> <code><a href="fit_mfrm_testlet.html">print(<i>&lt;mfrm_testlet&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Fit a rating-scale model with dependence within Person-specific testlets</dd>
-
-        <dt>
-
-          <code><a href="confint.mfrm_testlet.html">confint(<i>&lt;mfrm_testlet&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Explicit normal-approximation intervals for testlet calibration</dd>
-
-        <dt>
-
-          <code><a href="predict.mfrm_testlet.html">predict(<i>&lt;mfrm_testlet&gt;</i>)</a></code> <code><a href="predict.mfrm_testlet.html">summary(<i>&lt;mfrm_testlet_scores&gt;</i>)</a></code> <code><a href="predict.mfrm_testlet.html">print(<i>&lt;mfrm_testlet_scores&gt;</i>)</a></code>
+          <code><a href="fit_mfrm_testlet.html">predict(<i>&lt;mfrm_testlet&gt;</i>)</a></code> <code><a href="fit_mfrm_testlet.html">fit_mfrm_testlet()</a></code> <code><a href="fit_mfrm_testlet.html">confint(<i>&lt;mfrm_testlet&gt;</i>)</a></code> <code><a href="fit_mfrm_testlet.html">summary(<i>&lt;mfrm_testlet_scores&gt;</i>)</a></code> <code><a href="fit_mfrm_testlet.html">print(<i>&lt;mfrm_testlet_scores&gt;</i>)</a></code> <code><a href="fit_mfrm_testlet.html">plot(<i>&lt;mfrm_testlet&gt;</i>)</a></code> <code><a href="fit_mfrm_testlet.html">plot(<i>&lt;mfrm_testlet_scores&gt;</i>)</a></code> <code><a href="fit_mfrm_testlet.html">summary(<i>&lt;mfrm_testlet&gt;</i>)</a></code> <code><a href="fit_mfrm_testlet.html">print(<i>&lt;mfrm_testlet&gt;</i>)</a></code>
 
         </dt>
         <dd>Score Persons using a fixed testlet calibration</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_testlet.html">plot(<i>&lt;mfrm_testlet&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot testlet-model fixed-facet estimates</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_testlet_scores.html">plot(<i>&lt;mfrm_testlet_scores&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot conditional Person scores from a testlet model</dd>
       </dl></div><div class="section level2">
       <h2 id="person-scoring-and-conditional-decisions">Person scoring and conditional decisions<a class="anchor" aria-label="anchor" href="#person-scoring-and-conditional-decisions"></a></h2>
 
@@ -608,7 +502,7 @@
 
         <dt>
 
-          <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code>
+          <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> <code><a href="predict_mfrm_units.html">summary(<i>&lt;mfrm_unit_prediction&gt;</i>)</a></code>
 
         </dt>
         <dd>Score future or partially observed units under the fitted scoring basis</dd>
@@ -622,14 +516,7 @@
 
         <dt>
 
-          <code><a href="summary.mfrm_unit_prediction.html">summary(<i>&lt;mfrm_unit_prediction&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize posterior unit scoring output</dd>
-
-        <dt>
-
-          <code><a href="sample_mfrm_plausible_values.html">sample_mfrm_plausible_values()</a></code>
+          <code><a href="sample_mfrm_plausible_values.html">sample_mfrm_plausible_values()</a></code> <code><a href="sample_mfrm_plausible_values.html">summary(<i>&lt;mfrm_plausible_values&gt;</i>)</a></code>
 
         </dt>
         <dd>Sample approximate plausible values under fitted posterior scoring</dd>
@@ -645,28 +532,7 @@
 
       <dl><dt>
 
-          <code><a href="mfrm_calibration_capabilities.html">mfrm_calibration_capabilities()</a></code>
-
-        </dt>
-        <dd>Portable fixed-calibration capabilities</dd>
-
-        <dt>
-
-          <code><a href="mfrm_calibration_workflow.html">extract_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">review_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">validate_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">freeze_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">supersede_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">retire_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">save_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">load_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">score_mfrm_calibration()</a></code>
-
-        </dt>
-        <dd>Create and use a portable fixed calibration</dd>
-
-        <dt>
-
-          <code><a href="mfrm_calibration_methods.html">summary(<i>&lt;mfrm_calibration&gt;</i>)</a></code> <code><a href="mfrm_calibration_methods.html">print(<i>&lt;mfrm_calibration&gt;</i>)</a></code> <code><a href="mfrm_calibration_methods.html">print(<i>&lt;summary.mfrm_calibration&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Inspect a portable fixed calibration</dd>
-
-        <dt>
-
-          <code><a href="mfrm_calibration_score_methods.html">summary(<i>&lt;mfrm_calibration_score&gt;</i>)</a></code> <code><a href="mfrm_calibration_score_methods.html">print(<i>&lt;mfrm_calibration_score&gt;</i>)</a></code> <code><a href="mfrm_calibration_score_methods.html">print(<i>&lt;summary.mfrm_calibration_score&gt;</i>)</a></code> <code><a href="mfrm_calibration_score_methods.html">plot(<i>&lt;mfrm_calibration_score&gt;</i>)</a></code>
+          <code><a href="mfrm_calibration_workflow.html">summary(<i>&lt;mfrm_calibration_score&gt;</i>)</a></code> <code><a href="mfrm_calibration_workflow.html">print(<i>&lt;mfrm_calibration_score&gt;</i>)</a></code> <code><a href="mfrm_calibration_workflow.html">print(<i>&lt;summary.mfrm_calibration_score&gt;</i>)</a></code> <code><a href="mfrm_calibration_workflow.html">plot(<i>&lt;mfrm_calibration_score&gt;</i>)</a></code> <code><a href="mfrm_calibration_workflow.html">extract_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">review_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">update(<i>&lt;mfrm_calibration&gt;</i>)</a></code> <code><a href="mfrm_calibration_workflow.html">save_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">load_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">score_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">summary(<i>&lt;mfrm_calibration&gt;</i>)</a></code> <code><a href="mfrm_calibration_workflow.html">print(<i>&lt;mfrm_calibration&gt;</i>)</a></code> <code><a href="mfrm_calibration_workflow.html">print(<i>&lt;summary.mfrm_calibration&gt;</i>)</a></code>
 
         </dt>
         <dd>Review and plot portable fixed-calibration scores</dd>
@@ -682,28 +548,21 @@
 
       <dl><dt>
 
-          <code><a href="compare_mfrm.html">compare_mfrm()</a></code> <code><a href="compare_mfrm.html">summary(<i>&lt;mfrm_extended_comparison&gt;</i>)</a></code> <code><a href="compare_mfrm.html">print(<i>&lt;mfrm_extended_comparison&gt;</i>)</a></code>
+          <code><a href="compare_mfrm.html">compare_mfrm()</a></code> <code><a href="compare_mfrm.html">summary(<i>&lt;mfrm_extended_comparison&gt;</i>)</a></code> <code><a href="compare_mfrm.html">print(<i>&lt;mfrm_extended_comparison&gt;</i>)</a></code> <code><a href="compare_mfrm.html">plot(<i>&lt;mfrm_extended_comparison&gt;</i>)</a></code>
 
         </dt>
-        <dd>Compare two or more fitted MFRM models</dd>
+        <dd>Compare fitted measurement models or prespecified assessment plans</dd>
 
         <dt>
 
-          <code><a href="plot.mfrm_extended_comparison.html">plot(<i>&lt;mfrm_extended_comparison&gt;</i>)</a></code>
+          <code><a href="mfrmr_gpcm_scope.html">mfrmr_gpcm_scope</a></code>
 
         </dt>
-        <dd>Plot matched facet effects or posterior predictions across MFRMs</dd>
+        <dd>GPCM Workflow, Identification, and Score Availability</dd>
 
         <dt>
 
-          <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code>
-
-        </dt>
-        <dd>GPCM workflow and score availability</dd>
-
-        <dt>
-
-          <code><a href="bootstrap_mfrm_gpcm.html">bootstrap_mfrm_gpcm()</a></code> <code><a href="bootstrap_mfrm_gpcm.html">confint(<i>&lt;mfrm_gpcm_bootstrap&gt;</i>)</a></code> <code><a href="bootstrap_mfrm_gpcm.html">summary(<i>&lt;mfrm_gpcm_bootstrap&gt;</i>)</a></code> <code><a href="bootstrap_mfrm_gpcm.html">print(<i>&lt;mfrm_gpcm_bootstrap&gt;</i>)</a></code>
+          <code><a href="bootstrap_mfrm_gpcm.html">bootstrap_mfrm_gpcm()</a></code> <code><a href="bootstrap_mfrm_gpcm.html">confint(<i>&lt;mfrm_gpcm_bootstrap&gt;</i>)</a></code> <code><a href="bootstrap_mfrm_gpcm.html">summary(<i>&lt;mfrm_gpcm_bootstrap&gt;</i>)</a></code> <code><a href="bootstrap_mfrm_gpcm.html">print(<i>&lt;mfrm_gpcm_bootstrap&gt;</i>)</a></code> <code><a href="bootstrap_mfrm_gpcm.html">plot(<i>&lt;mfrm_slope_intervals&gt;</i>)</a></code> <code><a href="bootstrap_mfrm_gpcm.html">plot(<i>&lt;mfrm_gpcm_bootstrap&gt;</i>)</a></code>
 
         </dt>
         <dd>Parametric bootstrap for GPCM slopes or a matched PCM comparison</dd>
@@ -717,52 +576,31 @@
 
         <dt>
 
-          <code><a href="plot.mfrm_slope_intervals.html">plot(<i>&lt;mfrm_slope_intervals&gt;</i>)</a></code> <code><a href="plot.mfrm_slope_intervals.html">plot(<i>&lt;mfrm_gpcm_bootstrap&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Display saved GPCM intervals and bootstrap results</dd>
-
-        <dt>
-
-          <code><a href="build_model_choice_review.html">build_model_choice_review()</a></code>
+          <code><a href="build_model_choice_review.html">build_model_choice_review()</a></code> <code><a href="build_model_choice_review.html">summary(<i>&lt;mfrm_model_choice_review&gt;</i>)</a></code>
 
         </dt>
         <dd>Build a model-choice review across RSM, PCM, and GPCM fits</dd>
 
         <dt>
 
-          <code><a href="build_weighting_review.html">build_weighting_review()</a></code>
+          <code><a href="build_weighting_review.html">build_weighting_review()</a></code> <code><a href="build_weighting_review.html">summary(<i>&lt;mfrm_weighting_review&gt;</i>)</a></code>
 
         </dt>
         <dd>Build a weighting-policy review between Rasch-family and GPCM fits</dd>
 
         <dt>
 
-          <code><a href="mml_quadrature_sensitivity.html">mml_quadrature_sensitivity()</a></code> <code><a href="mml_quadrature_sensitivity.html">gpcm_mml_quadrature_sensitivity()</a></code>
+          <code><a href="mml_quadrature_sensitivity.html">mml_quadrature_sensitivity()</a></code>
 
         </dt>
         <dd>Review MML sensitivity to the quadrature grid</dd>
 
         <dt>
 
-          <code><a href="compute_information.html">compute_information()</a></code>
+          <code><a href="compute_information.html">compute_information()</a></code> <code><a href="compute_information.html">plot(<i>&lt;mfrm_information&gt;</i>)</a></code>
 
         </dt>
         <dd>Compute design-weighted precision curves for ordered many-facet fits</dd>
-
-        <dt>
-
-          <code><a href="category_structure_report.html">category_structure_report()</a></code>
-
-        </dt>
-        <dd>Build a category structure report (preferred alias)</dd>
-
-        <dt>
-
-          <code><a href="category_curves_report.html">category_curves_report()</a></code>
-
-        </dt>
-        <dd>Build a category curve export bundle (preferred alias)</dd>
       </dl></div><div class="section level2">
       <h2 id="diagnostics-and-quality-control">Diagnostics and quality control<a class="anchor" aria-label="anchor" href="#diagnostics-and-quality-control"></a></h2>
 
@@ -782,24 +620,10 @@
 
         <dt>
 
-          <code><a href="facet_quality_dashboard.html">facet_quality_dashboard()</a></code>
+          <code><a href="facet_quality_dashboard.html">facet_quality_dashboard()</a></code> <code><a href="facet_quality_dashboard.html">summary(<i>&lt;mfrm_facet_dashboard&gt;</i>)</a></code> <code><a href="facet_quality_dashboard.html">plot(<i>&lt;mfrm_facet_dashboard&gt;</i>)</a></code>
 
         </dt>
         <dd>Facet-quality dashboard for facet-level screening</dd>
-
-        <dt>
-
-          <code><a href="review_accessors.html">anchor_review()</a></code> <code><a href="review_accessors.html">precision_review()</a></code>
-
-        </dt>
-        <dd>Extract canonical review components</dd>
-
-        <dt>
-
-          <code><a href="precision_review_report.html">precision_review_report()</a></code>
-
-        </dt>
-        <dd>Build a precision review report</dd>
 
         <dt>
 
@@ -817,38 +641,10 @@
 
         <dt>
 
-          <code><a href="interrater_agreement_table.html">interrater_agreement_table()</a></code>
-
-        </dt>
-        <dd>Build an inter-rater agreement report</dd>
-
-        <dt>
-
-          <code><a href="pairwise_icc_table.html">pairwise_icc_table()</a></code>
-
-        </dt>
-        <dd>Compute observed-score ICCs for each rater pair</dd>
-
-        <dt>
-
-          <code><a href="krippendorff_alpha_table.html">krippendorff_alpha_table()</a></code>
+          <code><a href="interrater_agreement_table.html">krippendorff_alpha_table()</a></code> <code><a href="interrater_agreement_table.html">pairwise_icc_table()</a></code> <code><a href="interrater_agreement_table.html">interrater_agreement_table()</a></code> <code><a href="interrater_agreement_table.html">pairwise_kappa_table()</a></code> <code><a href="interrater_agreement_table.html">gwet_ac2_table()</a></code>
 
         </dt>
         <dd>Compute Krippendorff's alpha across raters</dd>
-
-        <dt>
-
-          <code><a href="pairwise_kappa_table.html">pairwise_kappa_table()</a></code>
-
-        </dt>
-        <dd>Compute pairwise weighted Cohen's kappa</dd>
-
-        <dt>
-
-          <code><a href="gwet_ac2_table.html">gwet_ac2_table()</a></code>
-
-        </dt>
-        <dd>Compute Gwet's AC2 or unweighted AC1</dd>
 
         <dt>
 
@@ -856,13 +652,6 @@
 
         </dt>
         <dd>Compare aligned scores against reference ratings</dd>
-
-        <dt>
-
-          <code><a href="automated_scoring_table.html">automated_scoring_table()</a></code>
-
-        </dt>
-        <dd>Automated-scoring compatibility interface for score comparisons</dd>
 
         <dt>
 
@@ -887,17 +676,10 @@
 
         <dt>
 
-          <code><a href="fit_rater_network.html">fit_rater_network()</a></code> <code><a href="fit_rater_network.html">summary(<i>&lt;mfrm_network_ergm&gt;</i>)</a></code> <code><a href="fit_rater_network.html">coef(<i>&lt;mfrm_network_ergm&gt;</i>)</a></code> <code><a href="fit_rater_network.html">vcov(<i>&lt;mfrm_network_ergm&gt;</i>)</a></code> <code><a href="fit_rater_network.html">confint(<i>&lt;mfrm_network_ergm&gt;</i>)</a></code>
+          <code><a href="fit_rater_network.html">fit_rater_network()</a></code> <code><a href="fit_rater_network.html">summary(<i>&lt;mfrm_network_ergm&gt;</i>)</a></code> <code><a href="fit_rater_network.html">coef(<i>&lt;mfrm_network_ergm&gt;</i>)</a></code> <code><a href="fit_rater_network.html">vcov(<i>&lt;mfrm_network_ergm&gt;</i>)</a></code> <code><a href="fit_rater_network.html">confint(<i>&lt;mfrm_network_ergm&gt;</i>)</a></code> <code><a href="fit_rater_network.html">plot(<i>&lt;mfrm_network_ergm&gt;</i>)</a></code>
 
         </dt>
         <dd>Fit an ERGM to a declared binary rater network</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_network_ergm.html">plot(<i>&lt;mfrm_network_ergm&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot ERGM model checks or coefficient intervals</dd>
 
         <dt>
 
@@ -908,7 +690,7 @@
 
         <dt>
 
-          <code><a href="unexpected_response_table.html">unexpected_response_table()</a></code>
+          <code><a href="unexpected_response_table.html">unexpected_response_table()</a></code> <code><a href="unexpected_response_table.html">unexpected_after_bias_table()</a></code>
 
         </dt>
         <dd>Build an unexpected-response screening report</dd>
@@ -922,24 +704,17 @@
 
         <dt>
 
-          <code><a href="analyze_residual_pca.html">analyze_residual_pca()</a></code>
+          <code><a href="analyze_residual_pca.html">analyze_residual_pca()</a></code> <code><a href="analyze_residual_pca.html">plot(<i>&lt;mfrm_residual_pca&gt;</i>)</a></code>
 
         </dt>
         <dd>Run exploratory residual PCA summaries</dd>
 
         <dt>
 
-          <code><a href="mfrm_residual_network.html">mfrm_residual_network()</a></code> <code><a href="mfrm_residual_network.html">summary(<i>&lt;mfrm_residual_network&gt;</i>)</a></code> <code><a href="mfrm_residual_network.html">print(<i>&lt;mfrm_residual_network&gt;</i>)</a></code>
+          <code><a href="mfrm_residual_network.html">mfrm_residual_network()</a></code> <code><a href="mfrm_residual_network.html">summary(<i>&lt;mfrm_residual_network&gt;</i>)</a></code> <code><a href="mfrm_residual_network.html">print(<i>&lt;mfrm_residual_network&gt;</i>)</a></code> <code><a href="mfrm_residual_network.html">plot(<i>&lt;mfrm_residual_network&gt;</i>)</a></code>
 
         </dt>
         <dd>Explore residual associations and groups of facet levels</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_residual_network.html">plot(<i>&lt;mfrm_residual_network&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot saved residual associations and exploratory groups</dd>
 
         <dt>
 
@@ -950,115 +725,38 @@
 
         <dt>
 
-          <code><a href="compute_person_fit_indices.html">compute_person_fit_indices()</a></code>
+          <code><a href="compute_person_fit_indices.html">compute_person_fit_indices()</a></code> <code><a href="compute_person_fit_indices.html">summary(<i>&lt;mfrm_person_fit_indices&gt;</i>)</a></code>
 
         </dt>
         <dd>Person fit indices: lz and Snijders-corrected lz*</dd>
 
         <dt>
 
-          <code><a href="run_qc_pipeline.html">run_qc_pipeline()</a></code>
+          <code><a href="run_qc_pipeline.html">run_qc_pipeline()</a></code> <code><a href="run_qc_pipeline.html">plot(<i>&lt;mfrm_qc_pipeline&gt;</i>)</a></code>
 
         </dt>
         <dd>Run automated quality control pipeline</dd>
 
         <dt>
 
-          <code><a href="mfrmr_visual_diagnostics.html">mfrmr_visual_diagnostics</a></code>
+          <code><a href="plot.mfrm_fit.html">plot(<i>&lt;mfrm_fit&gt;</i>)</a></code>
 
         </dt>
-        <dd>mfrmr Visual Diagnostics Map</dd>
+        <dd>Plot fitted MFRM results with ggplot2</dd>
 
         <dt>
 
-          <code><a href="mfrmr_plot_migration.html">mfrmr_plot_migration</a></code>
+          <code><a href="mfrmr_api_migration_030.html">compatibility_alias_table()</a></code>
 
         </dt>
-        <dd>Plotting after the 0.2.4 API consolidation</dd>
+        <dd>Fewer public entry points and unified ggplot2 graphics in 0.3.0</dd>
 
         <dt>
 
-          <code><a href="plot.mfrm_information.html">plot(<i>&lt;mfrm_information&gt;</i>)</a></code>
+          <code><a href="analyze_dff.html">analyze_dff()</a></code> <code><a href="analyze_dff.html">summary(<i>&lt;mfrm_dif&gt;</i>)</a></code> <code><a href="analyze_dff.html">summary(<i>&lt;mfrm_dff&gt;</i>)</a></code> <code><a href="analyze_dff.html">print(<i>&lt;summary.mfrm_dif&gt;</i>)</a></code> <code><a href="analyze_dff.html">print(<i>&lt;summary.mfrm_dff&gt;</i>)</a></code> <code><a href="analyze_dff.html">print(<i>&lt;mfrm_dif&gt;</i>)</a></code> <code><a href="analyze_dff.html">print(<i>&lt;mfrm_dff&gt;</i>)</a></code> <code><a href="analyze_dff.html">plot(<i>&lt;mfrm_dif&gt;</i>)</a></code>
 
         </dt>
-        <dd>Plot design-weighted information or conditional precision</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_dif.html">plot(<i>&lt;mfrm_dif&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot differential facet functioning</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_dif_interaction.html">plot(<i>&lt;mfrm_dif_interaction&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a differential-functioning interaction grid</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_anchor_drift.html">plot(<i>&lt;mfrm_anchor_drift&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a saved anchor-drift review</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_qc_pipeline.html">plot(<i>&lt;mfrm_qc_pipeline&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a saved QC pipeline</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_bias.html">plot(<i>&lt;mfrm_bias&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot saved bias-interaction results</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_bias_collection.html">plot(<i>&lt;mfrm_bias_collection&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Explore bias across facet pairs</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_residual_pca.html">plot(<i>&lt;mfrm_residual_pca&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot saved residual PCA</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_diagnostics.html">plot(<i>&lt;mfrm_diagnostics&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot saved ordinary-model diagnostics</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_facet_equivalence.html">plot(<i>&lt;mfrm_facet_equivalence&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a saved facet-equivalence analysis</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_facet_dashboard.html">plot(<i>&lt;mfrm_facet_dashboard&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a saved facet-quality dashboard</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_response_time_review.html">plot(<i>&lt;mfrm_response_time_review&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a saved response-time review</dd>
+        <dd>Differential facet functioning (DFF) screening</dd>
       </dl></div><div class="section level2">
       <h2 id="reporting-tables-and-exports">Reporting, tables, and exports<a class="anchor" aria-label="anchor" href="#reporting-tables-and-exports"></a></h2>
 
@@ -1071,14 +769,7 @@
 
       <dl><dt>
 
-          <code><a href="reporting_checklist.html">reporting_checklist()</a></code>
-
-        </dt>
-        <dd>Build an auto-filled MFRM reporting checklist</dd>
-
-        <dt>
-
-          <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code>
+          <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code> <code><a href="build_apa_outputs.html">print(<i>&lt;mfrm_apa_text&gt;</i>)</a></code> <code><a href="build_apa_outputs.html">summary(<i>&lt;mfrm_apa_outputs&gt;</i>)</a></code>
 
         </dt>
         <dd>Build APA text outputs from model results</dd>
@@ -1092,7 +783,7 @@
 
         <dt>
 
-          <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code>
+          <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> <code><a href="build_summary_table_bundle.html">summary(<i>&lt;mfrm_bundle&gt;</i>)</a></code> <code><a href="build_summary_table_bundle.html">plot(<i>&lt;mfrm_bundle&gt;</i>)</a></code> <code><a href="build_summary_table_bundle.html">summary(<i>&lt;mfrm_summary_table_bundle&gt;</i>)</a></code> <code><a href="build_summary_table_bundle.html">plot(<i>&lt;mfrm_summary_table_bundle&gt;</i>)</a></code>
 
         </dt>
         <dd>Build a manuscript-oriented table bundle from <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> outputs</dd>
@@ -1106,24 +797,10 @@
 
         <dt>
 
-          <code><a href="build_mfrm_manifest.html">build_mfrm_manifest()</a></code>
+          <code><a href="export_mfrm_bundle.html">build_mfrm_manifest()</a></code> <code><a href="export_mfrm_bundle.html">build_mfrm_replay_script()</a></code> <code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code>
 
         </dt>
         <dd>Build a reproducibility manifest for an MFRM analysis</dd>
-
-        <dt>
-
-          <code><a href="build_mfrm_replay_script.html">build_mfrm_replay_script()</a></code>
-
-        </dt>
-        <dd>Build a package-native replay script for an MFRM analysis</dd>
-
-        <dt>
-
-          <code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code>
-
-        </dt>
-        <dd>Export a fit-level analysis archive</dd>
 
         <dt>
 
@@ -1134,38 +811,31 @@
 
         <dt>
 
-          <code><a href="read_mfrm_posterior.html">read_mfrm_posterior()</a></code> <code><a href="read_mfrm_posterior.html">print(<i>&lt;mfrm_posterior_summary&gt;</i>)</a></code> <code><a href="read_mfrm_posterior.html">summary(<i>&lt;mfrm_posterior_summary&gt;</i>)</a></code> <code><a href="read_mfrm_posterior.html">confint(<i>&lt;mfrm_posterior_summary&gt;</i>)</a></code>
+          <code><a href="read_mfrm_posterior.html">read_mfrm_posterior()</a></code> <code><a href="read_mfrm_posterior.html">plot(<i>&lt;mfrm_posterior_summary&gt;</i>)</a></code> <code><a href="read_mfrm_posterior.html">print(<i>&lt;mfrm_posterior_summary&gt;</i>)</a></code> <code><a href="read_mfrm_posterior.html">summary(<i>&lt;mfrm_posterior_summary&gt;</i>)</a></code> <code><a href="read_mfrm_posterior.html">confint(<i>&lt;mfrm_posterior_summary&gt;</i>)</a></code> <code><a href="read_mfrm_posterior.html">as.data.frame(<i>&lt;mfrm_posterior_summary&gt;</i>)</a></code>
 
         </dt>
-        <dd>Read an exported Bayesian measurement summary</dd>
+        <dd>Read an exported Bayesian measurement summary and optional joint draws</dd>
 
         <dt>
 
-          <code><a href="plot.mfrm_posterior_summary.html">plot(<i>&lt;mfrm_posterior_summary&gt;</i>)</a></code>
+          <code><a href="predict.mfrm_posterior_summary.html">predict(<i>&lt;mfrm_posterior_summary&gt;</i>)</a></code> <code><a href="predict.mfrm_posterior_summary.html">print(<i>&lt;mfrm_posterior_scores&gt;</i>)</a></code> <code><a href="predict.mfrm_posterior_summary.html">summary(<i>&lt;mfrm_posterior_scores&gt;</i>)</a></code> <code><a href="predict.mfrm_posterior_summary.html">print(<i>&lt;summary.mfrm_posterior_scores&gt;</i>)</a></code> <code><a href="predict.mfrm_posterior_summary.html">confint(<i>&lt;mfrm_posterior_scores&gt;</i>)</a></code> <code><a href="predict.mfrm_posterior_summary.html">as.data.frame(<i>&lt;mfrm_posterior_scores&gt;</i>)</a></code> <code><a href="predict.mfrm_posterior_summary.html">plot(<i>&lt;mfrm_posterior_scores&gt;</i>)</a></code>
 
         </dt>
-        <dd>Plot saved posterior estimates and credible intervals</dd>
+        <dd>Score new Persons under a saved external Bayesian calibration</dd>
 
         <dt>
 
-          <code><a href="apa_table.html">apa_table()</a></code>
+          <code><a href="apa_table.html">apa_table()</a></code> <code><a href="apa_table.html">summary(<i>&lt;apa_table&gt;</i>)</a></code> <code><a href="apa_table.html">plot(<i>&lt;apa_table&gt;</i>)</a></code>
 
         </dt>
         <dd>Build an APA-oriented table handoff using base R structures</dd>
 
         <dt>
 
-          <code><a href="as_kable.html">as_kable()</a></code>
+          <code><a href="as_kable.html">as_kable()</a></code> <code><a href="as_kable.html">as_flextable()</a></code>
 
         </dt>
-        <dd>Generic for converting objects to a <code><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">knitr::kable</a></code></dd>
-
-        <dt>
-
-          <code><a href="as_flextable.html">as_flextable()</a></code>
-
-        </dt>
-        <dd>Generic for converting objects to a <code>flextable</code></dd>
+        <dd>Convert an <code>apa_table</code> to a <code><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">knitr::kable()</a></code> object</dd>
 
         <dt>
 
@@ -1176,31 +846,10 @@
 
         <dt>
 
-          <code><a href="plot_data.html">plot_data()</a></code>
+          <code><a href="plot_data.html">plot_data()</a></code> <code><a href="plot_data.html">plot_data_components()</a></code>
 
         </dt>
         <dd>Extract reusable data from an mfrmr plot object</dd>
-
-        <dt>
-
-          <code><a href="plot_data_components.html">plot_data_components()</a></code>
-
-        </dt>
-        <dd>List reusable components in mfrmr plot data</dd>
-
-        <dt>
-
-          <code><a href="mfrmr_reports_and_tables.html">mfrmr_reports_and_tables</a></code>
-
-        </dt>
-        <dd>mfrmr Reports and Tables Map</dd>
-
-        <dt>
-
-          <code><a href="mfrmr_reporting_and_apa.html">mfrmr_reporting_and_apa</a></code>
-
-        </dt>
-        <dd>mfrmr Reporting and APA Guide</dd>
       </dl></div><div class="section level2">
       <h2 id="simulation-design-and-recovery">Simulation, design, and recovery<a class="anchor" aria-label="anchor" href="#simulation-design-and-recovery"></a></h2>
 
@@ -1213,13 +862,6 @@
 
       <dl><dt>
 
-          <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code> <code><a href="build_mfrm_sim_spec.html">print(<i>&lt;mfrm_sim_spec&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Build an explicit simulation specification for MFRM design studies</dd>
-
-        <dt>
-
           <code><a href="simulate_mfrm_data.html">simulate_mfrm_data()</a></code>
 
         </dt>
@@ -1227,94 +869,52 @@
 
         <dt>
 
-          <code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code>
-
-        </dt>
-        <dd>Derive a simulation specification from a fitted MFRM object</dd>
-
-        <dt>
-
-          <code><a href="simulate_mfrm_recovery.html">simulate_mfrm_recovery()</a></code>
+          <code><a href="simulate_mfrm_recovery.html">simulate_mfrm_recovery()</a></code> <code><a href="simulate_mfrm_recovery.html">assess_mfrm_recovery()</a></code> <code><a href="simulate_mfrm_recovery.html">plot(<i>&lt;mfrm_recovery_assessment&gt;</i>)</a></code> <code><a href="simulate_mfrm_recovery.html">plot(<i>&lt;mfrm_recovery_simulation&gt;</i>)</a></code>
 
         </dt>
         <dd>Simulate parameter recovery by repeated generation and refitting</dd>
 
         <dt>
 
-          <code><a href="assess_mfrm_recovery.html">assess_mfrm_recovery()</a></code> <code><a href="assess_mfrm_recovery.html">plot(<i>&lt;mfrm_recovery_assessment&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Assess whether recovery-simulation results are ready to use</dd>
-
-        <dt>
-
-          <code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>
+          <code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code> <code><a href="evaluate_mfrm_design.html">summary(<i>&lt;mfrm_design_evaluation&gt;</i>)</a></code> <code><a href="evaluate_mfrm_design.html">plot(<i>&lt;mfrm_design_evaluation&gt;</i>)</a></code>
 
         </dt>
         <dd>Evaluate MFRM design conditions by repeated simulation</dd>
 
         <dt>
 
-          <code><a href="evaluate_mfrm_diagnostic_screening.html">evaluate_mfrm_diagnostic_screening()</a></code>
+          <code><a href="evaluate_mfrm_diagnostic_screening.html">evaluate_mfrm_diagnostic_screening()</a></code> <code><a href="evaluate_mfrm_diagnostic_screening.html">summary(<i>&lt;mfrm_diagnostic_screening&gt;</i>)</a></code> <code><a href="evaluate_mfrm_diagnostic_screening.html">plot(<i>&lt;mfrm_diagnostic_screening&gt;</i>)</a></code>
 
         </dt>
         <dd>Evaluate legacy and strict marginal diagnostic screening under controlled misfit scenarios</dd>
 
         <dt>
 
-          <code><a href="evaluate_mfrm_signal_detection.html">evaluate_mfrm_signal_detection()</a></code>
+          <code><a href="evaluate_mfrm_signal_detection.html">evaluate_mfrm_signal_detection()</a></code> <code><a href="evaluate_mfrm_signal_detection.html">summary(<i>&lt;mfrm_signal_detection&gt;</i>)</a></code> <code><a href="evaluate_mfrm_signal_detection.html">plot(<i>&lt;mfrm_signal_detection&gt;</i>)</a></code>
 
         </dt>
-        <dd>Evaluate DIF power and bias-screening behavior under known simulated signals</dd>
+        <dd>Evaluate differential-functioning contrasts and bias screens in simulations</dd>
 
         <dt>
 
-          <code><a href="mfrm_screening_performance.html">mfrm_screening_performance()</a></code> <code><a href="mfrm_screening_performance.html">summary(<i>&lt;mfrm_screening_performance&gt;</i>)</a></code> <code><a href="mfrm_screening_performance.html">print(<i>&lt;mfrm_screening_performance&gt;</i>)</a></code>
+          <code><a href="mfrm_screening_performance.html">mfrm_screening_performance()</a></code> <code><a href="mfrm_screening_performance.html">mfrm_screening_sensitivity()</a></code> <code><a href="mfrm_screening_performance.html">summary(<i>&lt;mfrm_screening_performance&gt;</i>)</a></code> <code><a href="mfrm_screening_performance.html">print(<i>&lt;mfrm_screening_performance&gt;</i>)</a></code> <code><a href="mfrm_screening_performance.html">plot(<i>&lt;mfrm_screening_performance&gt;</i>)</a></code> <code><a href="mfrm_screening_performance.html">summary(<i>&lt;mfrm_screening_sensitivity&gt;</i>)</a></code> <code><a href="mfrm_screening_performance.html">print(<i>&lt;mfrm_screening_sensitivity&gt;</i>)</a></code> <code><a href="mfrm_screening_performance.html">plot(<i>&lt;mfrm_screening_sensitivity&gt;</i>)</a></code>
 
         </dt>
         <dd>Evaluate screening outcomes against a planned simulation roster</dd>
 
         <dt>
 
-          <code><a href="plot.mfrm_screening_performance.html">plot(<i>&lt;mfrm_screening_performance&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot screening performance and unresolved outcomes</dd>
-
-        <dt>
-
-          <code><a href="mfrm_screening_sensitivity.html">mfrm_screening_sensitivity()</a></code> <code><a href="mfrm_screening_sensitivity.html">summary(<i>&lt;mfrm_screening_sensitivity&gt;</i>)</a></code> <code><a href="mfrm_screening_sensitivity.html">print(<i>&lt;mfrm_screening_sensitivity&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Compare fit-screening thresholds against known simulation truth</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_screening_sensitivity.html">plot(<i>&lt;mfrm_screening_sensitivity&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot directional screening rates across threshold profiles</dd>
-
-        <dt>
-
-          <code><a href="predict_mfrm_population.html">predict_mfrm_population()</a></code>
+          <code><a href="predict_mfrm_population.html">predict_mfrm_population()</a></code> <code><a href="predict_mfrm_population.html">summary(<i>&lt;mfrm_population_prediction&gt;</i>)</a></code>
 
         </dt>
         <dd>Forecast population-level MFRM operating characteristics for one future design</dd>
 
         <dt>
 
-          <code><a href="build_mfrm_resampling_spec.html">build_mfrm_resampling_spec()</a></code>
+          <code><a href="build_mfrm_resampling_spec.html">build_mfrm_resampling_spec()</a></code> <code><a href="build_mfrm_resampling_spec.html">draw_mfrm_resamples()</a></code>
 
         </dt>
         <dd>Build an observed-data resampling specification</dd>
-
-        <dt>
-
-          <code><a href="draw_mfrm_resamples.html">draw_mfrm_resamples()</a></code>
-
-        </dt>
-        <dd>Draw observed-data MFRM resamples</dd>
       </dl></div><div class="section level2">
       <h2 id="linking-bias-and-dff-screening">Linking, bias, and DFF screening<a class="anchor" aria-label="anchor" href="#linking-bias-and-dff-screening"></a></h2>
 
@@ -1327,24 +927,10 @@
 
       <dl><dt>
 
-          <code><a href="make_anchor_table.html">make_anchor_table()</a></code>
-
-        </dt>
-        <dd>Build a candidate direct-anchor table from fitted estimates</dd>
-
-        <dt>
-
-          <code><a href="review_mfrm_anchors.html">review_mfrm_anchors()</a></code>
+          <code><a href="review_mfrm_anchors.html">review_mfrm_anchors()</a></code> <code><a href="review_mfrm_anchors.html">summary(<i>&lt;mfrm_anchor_review&gt;</i>)</a></code> <code><a href="review_mfrm_anchors.html">plot(<i>&lt;mfrm_anchor_review&gt;</i>)</a></code> <code><a href="review_mfrm_anchors.html">make_anchor_table()</a></code>
 
         </dt>
         <dd>Review and normalize anchor/group-anchor tables</dd>
-
-        <dt>
-
-          <code><a href="review_accessors.html">anchor_review()</a></code> <code><a href="review_accessors.html">precision_review()</a></code>
-
-        </dt>
-        <dd>Extract canonical review components</dd>
 
         <dt>
 
@@ -1355,7 +941,7 @@
 
         <dt>
 
-          <code><a href="detect_anchor_drift.html">detect_anchor_drift()</a></code> <code><a href="detect_anchor_drift.html">print(<i>&lt;mfrm_anchor_drift&gt;</i>)</a></code> <code><a href="detect_anchor_drift.html">summary(<i>&lt;mfrm_anchor_drift&gt;</i>)</a></code> <code><a href="detect_anchor_drift.html">print(<i>&lt;summary.mfrm_anchor_drift&gt;</i>)</a></code>
+          <code><a href="detect_anchor_drift.html">detect_anchor_drift()</a></code> <code><a href="detect_anchor_drift.html">print(<i>&lt;mfrm_anchor_drift&gt;</i>)</a></code> <code><a href="detect_anchor_drift.html">summary(<i>&lt;mfrm_anchor_drift&gt;</i>)</a></code> <code><a href="detect_anchor_drift.html">print(<i>&lt;summary.mfrm_anchor_drift&gt;</i>)</a></code> <code><a href="detect_anchor_drift.html">plot(<i>&lt;mfrm_anchor_drift&gt;</i>)</a></code>
 
         </dt>
         <dd>Detect anchor drift across multiple calibrations</dd>
@@ -1369,38 +955,31 @@
 
         <dt>
 
-          <code><a href="build_linking_review.html">build_linking_review()</a></code>
+          <code><a href="build_linking_review.html">build_linking_review()</a></code> <code><a href="build_linking_review.html">summary(<i>&lt;mfrm_linking_review&gt;</i>)</a></code>
 
         </dt>
         <dd>Build a linking-review synthesis object</dd>
 
         <dt>
 
-          <code><a href="estimate_bias.html">estimate_bias()</a></code>
+          <code><a href="estimate_bias.html">estimate_bias()</a></code> <code><a href="estimate_bias.html">interaction_effect_table()</a></code> <code><a href="estimate_bias.html">summary(<i>&lt;mfrm_bias&gt;</i>)</a></code> <code><a href="estimate_bias.html">plot(<i>&lt;mfrm_bias&gt;</i>)</a></code> <code><a href="estimate_bias.html">bias_count_table()</a></code>
 
         </dt>
-        <dd>Estimate bias and interaction screening terms</dd>
+        <dd>Screen facet combinations for departures from a fitted model</dd>
 
         <dt>
 
-          <code><a href="estimate_all_bias.html">estimate_all_bias()</a></code>
+          <code><a href="estimate_all_bias.html">estimate_all_bias()</a></code> <code><a href="estimate_all_bias.html">summary(<i>&lt;mfrm_bias_collection&gt;</i>)</a></code> <code><a href="estimate_all_bias.html">print(<i>&lt;mfrm_bias_collection&gt;</i>)</a></code> <code><a href="estimate_all_bias.html">print(<i>&lt;summary.mfrm_bias_collection&gt;</i>)</a></code> <code><a href="estimate_all_bias.html">plot(<i>&lt;mfrm_bias_collection&gt;</i>)</a></code>
 
         </dt>
         <dd>Estimate bias across multiple facet pairs</dd>
 
         <dt>
 
-          <code><a href="analyze_dff.html">analyze_dff()</a></code> <code><a href="analyze_dff.html">analyze_dif()</a></code>
-
-        </dt>
-        <dd>Differential facet functioning analysis</dd>
-
-        <dt>
-
           <code><a href="mantel_haenszel_table.html">mantel_haenszel_table()</a></code>
 
         </dt>
-        <dd>Compare binary responses between matched groups</dd>
+        <dd>Compare matched responses using MH or generalized CMH</dd>
 
         <dt>
 
@@ -1411,33 +990,12 @@
 
         <dt>
 
-          <code><a href="dif_interaction_table.html">dif_interaction_table()</a></code>
+          <code><a href="dif_interaction_table.html">dif_interaction_table()</a></code> <code><a href="dif_interaction_table.html">plot(<i>&lt;mfrm_dif_interaction&gt;</i>)</a></code>
 
         </dt>
         <dd>Compute interaction table between a facet and a grouping variable</dd>
-
-        <dt>
-
-          <code><a href="dif_report.html">dif_report()</a></code>
-
-        </dt>
-        <dd>Generate a differential-functioning interpretation report</dd>
-
-        <dt>
-
-          <code><a href="mfrm_dff_methods.html">summary(<i>&lt;mfrm_dif&gt;</i>)</a></code> <code><a href="mfrm_dff_methods.html">summary(<i>&lt;mfrm_dff&gt;</i>)</a></code> <code><a href="mfrm_dff_methods.html">print(<i>&lt;summary.mfrm_dif&gt;</i>)</a></code> <code><a href="mfrm_dff_methods.html">print(<i>&lt;summary.mfrm_dff&gt;</i>)</a></code> <code><a href="mfrm_dff_methods.html">print(<i>&lt;mfrm_dif&gt;</i>)</a></code> <code><a href="mfrm_dff_methods.html">print(<i>&lt;mfrm_dff&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Review differential-functioning results</dd>
-
-        <dt>
-
-          <code><a href="mfrmr_linking_and_dff.html">mfrmr_linking_and_dff</a></code>
-
-        </dt>
-        <dd>mfrmr Linking and DFF Guide</dd>
       </dl></div><div class="section level2">
-      <h2 id="facets-and-related-package-migration">FACETS and related-package migration<a class="anchor" aria-label="anchor" href="#facets-and-related-package-migration"></a></h2>
+      <h2 id="saved-analyses-and-software-compatibility">Saved analyses and software compatibility<a class="anchor" aria-label="anchor" href="#saved-analyses-and-software-compatibility"></a></h2>
 
       <div class="section-desc"><p>FACETS handoff, external-table review, and related package import adapters.</p></div>
 
@@ -1448,115 +1006,38 @@
 
       <dl><dt>
 
-          <code><a href="facets_positioning_guide.html">facets_positioning_guide()</a></code>
-
-        </dt>
-        <dd>FACETS Positioning Guide</dd>
-
-        <dt>
-
-          <code><a href="facets_term_crosswalk.html">facets_term_crosswalk()</a></code>
-
-        </dt>
-        <dd>FACETS-to-mfrmr term crosswalk</dd>
-
-        <dt>
-
-          <code><a href="facets_feature_coverage.html">facets_feature_coverage()</a></code>
-
-        </dt>
-        <dd>FACETS Feature Coverage Matrix</dd>
-
-        <dt>
-
-          <code><a href="facets_visual_contract.html">facets_visual_contract()</a></code>
-
-        </dt>
-        <dd>FACETS-facing visual contract</dd>
-
-        <dt>
-
-          <code><a href="facets_fit_df_guide.html">facets_fit_df_guide()</a></code>
-
-        </dt>
-        <dd>Guide FACETS-style fit df and ZSTD standardization</dd>
-
-        <dt>
-
-          <code><a href="facets_fit_review.html">facets_fit_review()</a></code>
+          <code><a href="facets_fit_review.html">facets_fit_review()</a></code> <code><a href="facets_fit_review.html">facets_output_contract_review()</a></code> <code><a href="facets_fit_review.html">facets_chisq_table()</a></code> <code><a href="facets_fit_review.html">facets_output_file_bundle()</a></code>
 
         </dt>
         <dd>Review fit standardization against FACETS-style ZSTD conventions</dd>
 
         <dt>
 
-          <code><a href="facets_output_file_bundle.html">facets_output_file_bundle()</a></code>
+          <code><a href="read_facets_results.html">read_facets_results()</a></code> <code><a href="read_facets_results.html">summary(<i>&lt;mfrm_facets_results&gt;</i>)</a></code> <code><a href="read_facets_results.html">print(<i>&lt;mfrm_facets_results&gt;</i>)</a></code> <code><a href="read_facets_results.html">as.data.frame(<i>&lt;mfrm_facets_results&gt;</i>)</a></code> <code><a href="read_facets_results.html">plot(<i>&lt;mfrm_facets_results&gt;</i>)</a></code>
 
         </dt>
-        <dd>Build native graph and observation-score output files</dd>
+        <dd>Read FACETS results for standalone visualization and fit review</dd>
 
         <dt>
 
-          <code><a href="facets_output_contract_review.html">facets_output_contract_review()</a></code>
+          <code><a href="facets_guide.html">facets_guide()</a></code>
 
         </dt>
-        <dd>Build a FACETS output-contract review</dd>
+        <dd>Choose a FACETS comparison guide</dd>
 
         <dt>
 
-          <code><a href="read_facets_fit_table.html">read_facets_fit_table()</a></code> <code><a href="read_facets_fit_table.html">import_facets_fit_table()</a></code>
-
-        </dt>
-        <dd>Read a FACETS fit table for fit review</dd>
-
-        <dt>
-
-          <code><a href="read_facets_results.html">read_facets_results()</a></code> <code><a href="read_facets_results.html">summary(<i>&lt;mfrm_facets_results&gt;</i>)</a></code> <code><a href="read_facets_results.html">print(<i>&lt;mfrm_facets_results&gt;</i>)</a></code> <code><a href="read_facets_results.html">as.data.frame(<i>&lt;mfrm_facets_results&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Read FACETS results for standalone visualization</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_facets_results.html">plot(<i>&lt;mfrm_facets_results&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot imported FACETS measures, fit statistics and curves</dd>
-
-        <dt>
-
-          <code><a href="run_mfrm_facets.html">run_mfrm_facets()</a></code> <code><a href="run_mfrm_facets.html">mfrmRFacets()</a></code>
+          <code><a href="run_mfrm_facets.html">run_mfrm_facets()</a></code> <code><a href="run_mfrm_facets.html">summary(<i>&lt;mfrm_facets_run&gt;</i>)</a></code> <code><a href="run_mfrm_facets.html">plot(<i>&lt;mfrm_facets_run&gt;</i>)</a></code>
 
         </dt>
         <dd>Run a legacy-compatible estimation workflow wrapper</dd>
 
         <dt>
 
-          <code><a href="import_mirt_fit.html">import_mirt_fit()</a></code> <code><a href="import_mirt_fit.html">summary(<i>&lt;mfrm_imported_fit&gt;</i>)</a></code> <code><a href="import_mirt_fit.html">print(<i>&lt;summary.mfrm_imported_fit&gt;</i>)</a></code>
+          <code><a href="import_irt_fit.html">import_irt_fit()</a></code> <code><a href="import_irt_fit.html">summary(<i>&lt;mfrm_imported_fit&gt;</i>)</a></code> <code><a href="import_irt_fit.html">print(<i>&lt;summary.mfrm_imported_fit&gt;</i>)</a></code>
 
         </dt>
-        <dd>Import an <code>mirt</code> fit to an mfrmr-compatible bundle</dd>
-
-        <dt>
-
-          <code><a href="import_tam_fit.html">import_tam_fit()</a></code>
-
-        </dt>
-        <dd>Import a <code>TAM</code> fit to an mfrmr-compatible bundle</dd>
-
-        <dt>
-
-          <code><a href="import_erm_fit.html">import_erm_fit()</a></code>
-
-        </dt>
-        <dd>Import an <code>eRm</code> fit to an mfrmr-compatible bundle</dd>
-
-        <dt>
-
-          <code><a href="mfrmr_compatibility_layer.html">mfrmr_compatibility_layer</a></code>
-
-        </dt>
-        <dd>mfrmr Compatibility Layer Map</dd>
+        <dd>Import an external IRT fit (<code>mirt</code>, <code>TAM</code>, or <code>eRm</code>) to an mfrmr-compatible bundle</dd>
       </dl></div><div class="section level2">
       <h2 id="external-features-and-exploratory-groups">External features and exploratory groups<a class="anchor" aria-label="anchor" href="#external-features-and-exploratory-groups"></a></h2>
 
@@ -1576,59 +1057,17 @@
 
         <dt>
 
-          <code><a href="mfrm_cluster.html">mfrm_cluster_pam()</a></code> <code><a href="mfrm_cluster.html">mfrm_cluster()</a></code> <code><a href="mfrm_cluster.html">print(<i>&lt;mfrm_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">summary(<i>&lt;mfrm_clusters&gt;</i>)</a></code>
+          <code><a href="mfrm_cluster.html">mfrm_cluster()</a></code> <code><a href="mfrm_cluster.html">mfrm_cluster_compare()</a></code> <code><a href="mfrm_cluster.html">print(<i>&lt;mfrm_cluster_comparison&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">summary(<i>&lt;mfrm_cluster_comparison&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">print(<i>&lt;mfrm_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">summary(<i>&lt;mfrm_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">mfrm_cluster_imputed()</a></code> <code><a href="mfrm_cluster.html">print(<i>&lt;mfrm_imputed_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">summary(<i>&lt;mfrm_imputed_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">plot(<i>&lt;mfrm_hierarchical_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">plot(<i>&lt;mfrm_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">plot(<i>&lt;mfrm_imputed_clusters&gt;</i>)</a></code>
 
         </dt>
-        <dd>Group mixed external features using Gower distances and PAM</dd>
+        <dd>Group external features with an explicitly chosen clustering method</dd>
 
         <dt>
 
-          <code><a href="mfrm_cluster_hierarchical.html">mfrm_cluster_hierarchical()</a></code> <code><a href="mfrm_cluster_hierarchical.html">plot(<i>&lt;mfrm_hierarchical_clusters&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Hierarchical grouping of external features</dd>
-
-        <dt>
-
-          <code><a href="mfrm_pca.html">mfrm_pca()</a></code> <code><a href="mfrm_pca.html">print(<i>&lt;mfrm_pca&gt;</i>)</a></code> <code><a href="mfrm_pca.html">summary(<i>&lt;mfrm_pca&gt;</i>)</a></code>
+          <code><a href="mfrm_pca.html">mfrm_pca()</a></code> <code><a href="mfrm_pca.html">print(<i>&lt;mfrm_pca&gt;</i>)</a></code> <code><a href="mfrm_pca.html">summary(<i>&lt;mfrm_pca&gt;</i>)</a></code> <code><a href="mfrm_pca.html">plot(<i>&lt;mfrm_pca&gt;</i>)</a></code>
 
         </dt>
         <dd>Principal components of numeric external features</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_pca.html">plot(<i>&lt;mfrm_pca&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot numeric feature PCA and optional exploratory groups</dd>
-
-        <dt>
-
-          <code><a href="mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code>
-
-        </dt>
-        <dd>K-means groups from numeric features or retained principal components</dd>
-
-        <dt>
-
-          <code><a href="mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code> <code><a href="mfrm_cluster_imputed.html">print(<i>&lt;mfrm_imputed_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster_imputed.html">summary(<i>&lt;mfrm_imputed_clusters&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Compare exploratory groups across external-feature imputations</dd>
-
-        <dt>
-
-          <code><a href="mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code> <code><a href="mfrm_cluster_compare.html">print(<i>&lt;mfrm_cluster_comparison&gt;</i>)</a></code> <code><a href="mfrm_cluster_compare.html">summary(<i>&lt;mfrm_cluster_comparison&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Compare exploratory groups across settings and clustering methods</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_clusters.html">plot(<i>&lt;mfrm_clusters&gt;</i>)</a></code> <code><a href="plot.mfrm_clusters.html">plot(<i>&lt;mfrm_imputed_clusters&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot exploratory groups and imputation sensitivity</dd>
       </dl></div><div class="section level2">
       <h2 id="advanced-reviews-and-visualization">Advanced reviews and visualization<a class="anchor" aria-label="anchor" href="#advanced-reviews-and-visualization"></a></h2>
 
@@ -1641,70 +1080,21 @@
 
       <dl><dt>
 
-          <code><a href="analyze_facet_equivalence.html">analyze_facet_equivalence()</a></code>
+          <code><a href="analyze_facet_equivalence.html">analyze_facet_equivalence()</a></code> <code><a href="analyze_facet_equivalence.html">plot(<i>&lt;mfrm_facet_equivalence&gt;</i>)</a></code>
 
         </dt>
         <dd>Analyze practical equivalence within a facet</dd>
 
         <dt>
 
-          <code><a href="apply_empirical_bayes_shrinkage.html">apply_empirical_bayes_shrinkage()</a></code>
+          <code><a href="apply_empirical_bayes_shrinkage.html">apply_empirical_bayes_shrinkage()</a></code> <code><a href="apply_empirical_bayes_shrinkage.html">shrinkage_report()</a></code>
 
         </dt>
         <dd>Apply empirical-Bayes shrinkage to fitted non-person facet estimates</dd>
 
         <dt>
 
-          <code><a href="as.data.frame.mfrm_fit.html">as.data.frame(<i>&lt;mfrm_fit&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Convert mfrm_fit to a tidy data.frame</dd>
-
-        <dt>
-
-          <code><a href="as_flextable.apa_table.html">as_flextable(<i>&lt;apa_table&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Convert an <code>apa_table</code> to a <code>flextable</code></dd>
-
-        <dt>
-
-          <code><a href="as_kable.apa_table.html">as_kable(<i>&lt;apa_table&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Convert an <code>apa_table</code> to a <code><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">knitr::kable()</a></code> object</dd>
-
-        <dt>
-
-          <code><a href="bias_count_table.html">bias_count_table()</a></code>
-
-        </dt>
-        <dd>Build a bias-cell count report</dd>
-
-        <dt>
-
-          <code><a href="bias_interaction_report.html">bias_interaction_report()</a></code>
-
-        </dt>
-        <dd>Build a bias-interaction plot-data bundle (FACETS Table 13: ranked bias list)</dd>
-
-        <dt>
-
-          <code><a href="bias_iteration_report.html">bias_iteration_report()</a></code>
-
-        </dt>
-        <dd>Build a bias-iteration report (FACETS Table 9: iteration / convergence trace)</dd>
-
-        <dt>
-
-          <code><a href="bias_pairwise_report.html">bias_pairwise_report()</a></code>
-
-        </dt>
-        <dd>Build a conditional bias pairwise-contrast report (Table 14 style)</dd>
-
-        <dt>
-
-          <code><a href="build_conquest_overlap_bundle.html">build_conquest_overlap_bundle()</a></code>
+          <code><a href="build_conquest_overlap_bundle.html">build_conquest_overlap_bundle()</a></code> <code><a href="build_conquest_overlap_bundle.html">normalize_conquest_overlap_tables()</a></code> <code><a href="build_conquest_overlap_bundle.html">normalize_conquest_overlap_exports()</a></code> <code><a href="build_conquest_overlap_bundle.html">review_conquest_overlap()</a></code>
 
         </dt>
         <dd>Build a scoped ConQuest-overlap bundle</dd>
@@ -1718,38 +1108,17 @@
 
         <dt>
 
-          <code><a href="build_misfit_casebook.html">build_misfit_casebook()</a></code>
+          <code><a href="build_misfit_casebook.html">build_misfit_casebook()</a></code> <code><a href="build_misfit_casebook.html">summary(<i>&lt;mfrm_misfit_casebook&gt;</i>)</a></code>
 
         </dt>
         <dd>Build a case-level misfit review bundle</dd>
 
         <dt>
 
-          <code><a href="compatibility_alias_table.html">compatibility_alias_table()</a></code>
-
-        </dt>
-        <dd>List retained compatibility aliases and preferred names</dd>
-
-        <dt>
-
-          <code><a href="compute_facet_design_effect.html">compute_facet_design_effect()</a></code>
-
-        </dt>
-        <dd>Compute descriptive design-effect approximations for each facet</dd>
-
-        <dt>
-
-          <code><a href="compute_facet_icc.html">compute_facet_icc()</a></code>
+          <code><a href="compute_facet_icc.html">compute_facet_icc()</a></code> <code><a href="compute_facet_icc.html">compute_facet_design_effect()</a></code>
 
         </dt>
         <dd>Compute intra-class correlations for each facet</dd>
-
-        <dt>
-
-          <code><a href="data_quality_report.html">data_quality_report()</a></code>
-
-        </dt>
-        <dd>Build a data quality summary report (preferred alias)</dd>
 
         <dt>
 
@@ -1760,13 +1129,6 @@
 
         <dt>
 
-          <code><a href="estimation_iteration_report.html">estimation_iteration_report()</a></code>
-
-        </dt>
-        <dd>Build an estimation-iteration report (preferred alias)</dd>
-
-        <dt>
-
           <code><a href="export_mfrm_tables.html">export_mfrm_tables()</a></code>
 
         </dt>
@@ -1774,192 +1136,24 @@
 
         <dt>
 
-          <code><a href="facet_statistics_report.html">facet_statistics_report()</a></code>
-
-        </dt>
-        <dd>Build a facet statistics report (preferred alias)</dd>
-
-        <dt>
-
-          <code><a href="facets_chisq_table.html">facets_chisq_table()</a></code>
-
-        </dt>
-        <dd>Build facet variability diagnostics with fixed/random reference tests</dd>
-
-        <dt>
-
-          <code><a href="fair_average_table.html">fair_average_table()</a></code>
+          <code><a href="fair_average_table.html">confint(<i>&lt;mfrm_fair_average&gt;</i>)</a></code> <code><a href="fair_average_table.html">summary(<i>&lt;mfrm_fair_intervals&gt;</i>)</a></code> <code><a href="fair_average_table.html">print(<i>&lt;mfrm_fair_intervals&gt;</i>)</a></code> <code><a href="fair_average_table.html">plot(<i>&lt;mfrm_fair_intervals&gt;</i>)</a></code> <code><a href="fair_average_table.html">fair_average_table()</a></code>
 
         </dt>
         <dd>Build an adjusted-score reference table bundle</dd>
 
         <dt>
 
-          <code><a href="confint.mfrm_fair_average.html">confint(<i>&lt;mfrm_fair_average&gt;</i>)</a></code> <code><a href="confint.mfrm_fair_average.html">summary(<i>&lt;mfrm_fair_intervals&gt;</i>)</a></code> <code><a href="confint.mfrm_fair_average.html">print(<i>&lt;mfrm_fair_intervals&gt;</i>)</a></code>
+          <code><a href="mfrm_threshold_profiles.html">mfrm_threshold_profiles()</a></code> <code><a href="mfrm_threshold_profiles.html">summary(<i>&lt;mfrm_threshold_profiles&gt;</i>)</a></code> <code><a href="mfrm_threshold_profiles.html">mfrm_misfit_thresholds()</a></code>
 
         </dt>
-        <dd>Intervals for common-plan Person expected scores</dd>
+        <dd>List literature-informed and package-defined screening profiles</dd>
 
         <dt>
 
-          <code><a href="plot.mfrm_fair_intervals.html">plot(<i>&lt;mfrm_fair_intervals&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot common-plan expected-score intervals</dd>
-
-        <dt>
-
-          <code><a href="interaction_effect_table.html">interaction_effect_table()</a></code>
-
-        </dt>
-        <dd>Extract model-estimated facet interaction effects</dd>
-
-        <dt>
-
-          <code><a href="mfrm_misfit_thresholds.html">mfrm_misfit_thresholds()</a></code>
-
-        </dt>
-        <dd>MnSq misfit threshold pair used across mfrmr screening helpers</dd>
-
-        <dt>
-
-          <code><a href="mfrm_results_interactive.html">mfrm_results_interactive()</a></code>
+          <code><a href="launch_mfrmr_viewer.html">mfrm_results_interactive()</a></code> <code><a href="launch_mfrmr_viewer.html">launch_mfrmr_viewer()</a></code>
 
         </dt>
         <dd>Interactively choose data-frame columns before calling <code><a href="../reference/mfrm_results.html">mfrm_results()</a></code></dd>
-
-        <dt>
-
-          <code><a href="mfrm_threshold_profiles.html">mfrm_threshold_profiles()</a></code>
-
-        </dt>
-        <dd>List literature-based warning threshold profiles</dd>
-
-        <dt>
-
-          <code><a href="mfrmr-package.html">mfrmr</a></code> <code><a href="mfrmr-package.html">mfrmr-package</a></code>
-
-        </dt>
-        <dd>mfrmr: Many-Facet Ordered-Response Modeling in R</dd>
-
-        <dt>
-
-          <code><a href="normalize_conquest_overlap_exports.html">normalize_conquest_overlap_exports()</a></code>
-
-        </dt>
-        <dd>Normalize the CSV exports generated by the ConQuest overlap template</dd>
-
-        <dt>
-
-          <code><a href="normalize_conquest_overlap_files.html">normalize_conquest_overlap_files()</a></code>
-
-        </dt>
-        <dd>Normalize extracted ConQuest overlap files to the <code>mfrmr</code> review contract</dd>
-
-        <dt>
-
-          <code><a href="normalize_conquest_overlap_tables.html">normalize_conquest_overlap_tables()</a></code>
-
-        </dt>
-        <dd>Normalize extracted ConQuest overlap tables to the <code>mfrmr</code> review contract</dd>
-
-        <dt>
-
-          <code><a href="plot.apa_table.html">plot(<i>&lt;apa_table&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot an APA/FACETS table object using base R</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_anchor_review.html">plot(<i>&lt;mfrm_anchor_review&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot an anchor-review object</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_bundle.html">plot(<i>&lt;mfrm_bundle&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot report/table bundles with base R defaults</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_data_description.html">plot(<i>&lt;mfrm_data_description&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a data-description object</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_design_evaluation.html">plot(<i>&lt;mfrm_design_evaluation&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a design-simulation study</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_diagnostic_screening.html">plot(<i>&lt;mfrm_diagnostic_screening&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a diagnostic-screening simulation study</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_facet_nesting.html">plot(<i>&lt;mfrm_facet_nesting&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot the pairwise nesting index matrix</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_facet_sample_review.html">plot(<i>&lt;mfrm_facet_sample_review&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a facet sample-size review</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_facets_run.html">plot(<i>&lt;mfrm_facets_run&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot outputs from a legacy-compatible workflow run</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_fit.html">plot(<i>&lt;mfrm_fit&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot fitted MFRM results with base R</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_recovery_simulation.html">plot(<i>&lt;mfrm_recovery_simulation&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot parameter-recovery simulation results</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_signal_detection.html">plot(<i>&lt;mfrm_signal_detection&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot DIF/bias screening simulation results</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_summary_table_bundle.html">plot(<i>&lt;mfrm_summary_table_bundle&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a summary-table bundle for manuscript QC</dd>
-
-        <dt>
-
-          <code><a href="print.mfrm_apa_text.html">print(<i>&lt;mfrm_apa_text&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Print APA narrative text with preserved line breaks</dd>
 
         <dt>
 
@@ -1970,24 +1164,10 @@
 
         <dt>
 
-          <code><a href="recommend_mfrm_design.html">recommend_mfrm_design()</a></code>
+          <code><a href="recommend_mfrm_design.html">recommend_mfrm_design()</a></code> <code><a href="recommend_mfrm_design.html">summary(<i>&lt;mfrm_design_recommendation&gt;</i>)</a></code> <code><a href="recommend_mfrm_design.html">print(<i>&lt;summary.mfrm_design_recommendation&gt;</i>)</a></code> <code><a href="recommend_mfrm_design.html">print(<i>&lt;mfrm_design_recommendation&gt;</i>)</a></code> <code><a href="recommend_mfrm_design.html">plot(<i>&lt;mfrm_design_recommendation&gt;</i>)</a></code>
 
         </dt>
-        <dd>Recommend a design condition from simulation results</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_design_recommendation.html">summary(<i>&lt;mfrm_design_recommendation&gt;</i>)</a></code> <code><a href="summary.mfrm_design_recommendation.html">print(<i>&lt;summary.mfrm_design_recommendation&gt;</i>)</a></code> <code><a href="summary.mfrm_design_recommendation.html">print(<i>&lt;mfrm_design_recommendation&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Review a simulation-based design recommendation</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_design_recommendation.html">plot(<i>&lt;mfrm_design_recommendation&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot criteria behind a design recommendation</dd>
+        <dd>Review assessment plans against declared planning criteria</dd>
 
         <dt>
 
@@ -1998,262 +1178,24 @@
 
         <dt>
 
-          <code><a href="reference_case_review.html">reference_case_review()</a></code>
-
-        </dt>
-        <dd>Build a package-native reference review for report completeness</dd>
-
-        <dt>
-
-          <code><a href="review_conquest_overlap.html">review_conquest_overlap()</a></code>
-
-        </dt>
-        <dd>Review a ConQuest comparison within the documented <code>mfrmr</code> overlap scope</dd>
-
-        <dt>
-
-          <code><a href="response_time_review.html">response_time_review()</a></code>
+          <code><a href="response_time_review.html">response_time_review()</a></code> <code><a href="response_time_review.html">summary(<i>&lt;mfrm_response_time_review&gt;</i>)</a></code> <code><a href="response_time_review.html">plot(<i>&lt;mfrm_response_time_review&gt;</i>)</a></code>
 
         </dt>
         <dd>Review response-time patterns outside the MFRM likelihood</dd>
 
         <dt>
 
-          <code><a href="shrinkage_report.html">shrinkage_report()</a></code>
-
-        </dt>
-        <dd>Extract the shrinkage report from a fitted mfrm_fit</dd>
-
-        <dt>
-
-          <code><a href="specifications_report.html">specifications_report()</a></code>
-
-        </dt>
-        <dd>Build a specification summary report (preferred alias)</dd>
-
-        <dt>
-
-          <code><a href="summary.apa_table.html">summary(<i>&lt;apa_table&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize an APA/FACETS table object</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_anchor_review.html">summary(<i>&lt;mfrm_anchor_review&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize an anchor-review object</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_apa_outputs.html">summary(<i>&lt;mfrm_apa_outputs&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize APA report-output bundles</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_bias.html">summary(<i>&lt;mfrm_bias&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize an <code>mfrm_bias</code> object in a user-friendly format</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_bias_collection.html">summary(<i>&lt;mfrm_bias_collection&gt;</i>)</a></code> <code><a href="summary.mfrm_bias_collection.html">print(<i>&lt;mfrm_bias_collection&gt;</i>)</a></code> <code><a href="summary.mfrm_bias_collection.html">print(<i>&lt;summary.mfrm_bias_collection&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize all retained bias screens</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_bundle.html">summary(<i>&lt;mfrm_bundle&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize report/table bundles in a user-friendly format</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_data_description.html">summary(<i>&lt;mfrm_data_description&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a data-description object</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_design_evaluation.html">summary(<i>&lt;mfrm_design_evaluation&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a design-simulation study</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_diagnostic_screening.html">summary(<i>&lt;mfrm_diagnostic_screening&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a diagnostic-screening simulation study</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_diagnostics.html">summary(<i>&lt;mfrm_diagnostics&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize an <code>mfrm_diagnostics</code> object in a user-friendly format</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_facet_dashboard.html">summary(<i>&lt;mfrm_facet_dashboard&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a facet-quality dashboard</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_facets_run.html">summary(<i>&lt;mfrm_facets_run&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a legacy-compatible workflow run</dd>
-
-        <dt>
-
           <code><a href="summary.mfrm_fit.html">summary(<i>&lt;mfrm_fit&gt;</i>)</a></code>
 
         </dt>
-        <dd>Summarize an <code>mfrm_fit</code> object in a user-friendly format</dd>
+        <dd>Inspect fitted estimates and interpretation status</dd>
 
         <dt>
 
-          <code><a href="summary.mfrm_linking_review.html">summary(<i>&lt;mfrm_linking_review&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a linking-review object</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_misfit_casebook.html">summary(<i>&lt;mfrm_misfit_casebook&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a misfit-casebook object</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_model_choice_review.html">summary(<i>&lt;mfrm_model_choice_review&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a model-choice review</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_network_review.html">summary(<i>&lt;mfrm_network_review&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize an MFRM network review</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_peer_review_design_review.html">summary(<i>&lt;mfrm_peer_review_design_review&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a peer-review design review</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_person_fit_indices.html">summary(<i>&lt;mfrm_person_fit_indices&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize person-fit indices</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_plausible_values.html">summary(<i>&lt;mfrm_plausible_values&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize approximate plausible values from posterior scoring</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_population_prediction.html">summary(<i>&lt;mfrm_population_prediction&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a population-level design forecast</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_reporting_checklist.html">summary(<i>&lt;mfrm_reporting_checklist&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a reporting-checklist bundle for manuscript work</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_response_time_review.html">summary(<i>&lt;mfrm_response_time_review&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a response-time review</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_signal_detection.html">summary(<i>&lt;mfrm_signal_detection&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a DIF/bias screening simulation</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_summary_table_bundle.html">summary(<i>&lt;mfrm_summary_table_bundle&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a summary-table bundle for manuscript QC</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_threshold_profiles.html">summary(<i>&lt;mfrm_threshold_profiles&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize threshold-profile presets for visual warning logic</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_weighting_review.html">summary(<i>&lt;mfrm_weighting_review&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a weighting-review object</dd>
-
-        <dt>
-
-          <code><a href="unexpected_after_bias_table.html">unexpected_after_bias_table()</a></code>
-
-        </dt>
-        <dd>Build an unexpected-after-adjustment screening report</dd>
-
-        <dt>
-
-          <code><a href="visual_reporting_template.html">visual_reporting_template()</a></code>
-
-        </dt>
-        <dd>Figure-reporting template for visual diagnostics</dd>
-
-        <dt>
-
-          <code><a href="write_mfrm_residual_file.html">write_mfrm_residual_file()</a></code>
+          <code><a href="write_mfrm_residual_file.html">write_mfrm_residual_file()</a></code> <code><a href="write_mfrm_residual_file.html">write_mfrm_subset_file()</a></code>
 
         </dt>
         <dd>Write a standalone residual file</dd>
-
-        <dt>
-
-          <code><a href="write_mfrm_subset_file.html">write_mfrm_subset_file()</a></code>
-
-        </dt>
-        <dd>Write standalone subset-connectivity files</dd>
-
-        <dt>
-
-          <code><a href="launch_mfrmr_viewer.html">launch_mfrmr_viewer()</a></code>
-
-        </dt>
-        <dd>Launch a local Shiny viewer for an mfrm_results object</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

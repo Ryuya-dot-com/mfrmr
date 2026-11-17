@@ -68,12 +68,14 @@ distinguish the location types and prior-only results. A prior-only
 point is not a measured ability. `title`/`caption` replace defaults;
 `show_title`/`show_notes` hide annotations without removing
 interpretation metadata. `text_scale` and `point_size` change sizes, and
-`draw = FALSE` returns saved plot data.
+`draw = FALSE` returns the `ggplot` object without printing.
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+extracts the plotted tables (`locations` also retains undisplayed
+panels) and notes;
 [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
-preserves these choices and supplies alternative text. Plot tables
-retain all selected unavailable rows; `locations` also retains
-undisplayed panels. No fitting, scoring or integration is performed
-during plotting/export.
+remains idempotent on the returned object and supplies alternative text.
+Plot tables retain all selected unavailable rows. No fitting, scoring or
+integration is performed during plotting/export.
 
 ## Examples
 

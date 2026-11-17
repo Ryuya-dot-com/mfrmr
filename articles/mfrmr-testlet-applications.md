@@ -13,7 +13,7 @@ intonation and expression; in a clinical assessment, several indicators
 can refer to the same station. These substantive dimensions are not
 automatically interchangeable or manifestations of one ability. Choose
 the measurement purpose and grouping before fitting. The [testlet
-workflow](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlets.md)
+workflow](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlets.html)
 explains membership, calibration, scoring and saved results. Its
 simulation comparison also shows why planning precision and actual
 scoring accuracy must be distinguished: accounting for dependence
@@ -242,7 +242,7 @@ plot(unequal_scores$Testlet, sort = "estimate", palette = "mono",
 ![Conditional Person estimates for the baseline and two one-point
 changes under the testlet model. The full table above gives the values.
 Whiskers hold calibration fixed and are not task-weight or difference
-intervals.](mfrmr-testlet-applications_files/figure-html/unequal-plot-1.png)
+intervals.](mfrmr-testlet-applications_files/figure-html/unequal-plot-1.svg)
 
 The figure uses the existing scoring-result method;
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)

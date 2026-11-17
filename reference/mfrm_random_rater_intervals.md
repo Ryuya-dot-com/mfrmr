@@ -10,6 +10,26 @@ replicate.
 mfrm_random_rater_intervals(object, nsim = 499L, seed, level = 0.95)
 
 # S3 method for class 'mfrm_random_rater_intervals'
+plot(
+  x,
+  level = x$settings$level,
+  method = c("studentized", "error"),
+  comparison = TRUE,
+  draw = TRUE,
+  sort = c("input", "estimate", "uncertainty"),
+  palette = c("accessible", "mono"),
+  title = NULL,
+  caption = NULL,
+  show_title = FALSE,
+  show_notes = FALSE,
+  show_labels = TRUE,
+  reference = 0,
+  text_scale = 1,
+  point_size = 2.5,
+  ...
+)
+
+# S3 method for class 'mfrm_random_rater_intervals'
 confint(
   object,
   parm = NULL,
@@ -49,28 +69,98 @@ print(x, ...)
 
 - level:
 
-  Pointwise nominal coverage; default 0.95.
+  For `mfrm_random_rater_intervals()`: Pointwise nominal coverage;
+  default 0.95.
 
-- parm:
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Nominal
+  pointwise coverage; defaults to the saved level.
 
-  Rater IDs for [`confint()`](https://rdrr.io/r/stats/confint.html);
-  `NULL` returns all fitted raters.
+- x:
+
+  For `mfrm_random_rater_intervals()`: A bootstrap result.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): A result
+  from `mfrm_random_rater_intervals()`.
 
 - method:
 
-  `"studentized"` (default) uses generated-minus-estimated rater effects
-  divided by each refit's calibration-adjusted `PredictionSE`. `"error"`
-  uses unscaled prediction errors as a comparison. Changing method or
-  level through [`confint()`](https://rdrr.io/r/stats/confint.html)
-  reuses saved draws without new fitting.
+  For `mfrm_random_rater_intervals()`: `"studentized"` (default) uses
+  generated-minus-estimated rater effects divided by each refit's
+  calibration-adjusted `PredictionSE`. `"error"` uses unscaled
+  prediction errors as a comparison. Changing method or level through
+  [`confint()`](https://rdrr.io/r/stats/confint.html) reuses saved draws
+  without new fitting.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
+  `"studentized"` or `"error"`; see `mfrm_random_rater_intervals()`.
+
+- comparison:
+
+  Show ordinary normal intervals from the same source fit.
+
+- draw:
+
+  `FALSE` returns plotted data without opening a device.
+
+- sort:
+
+  Row order for interval plots: input order, increasing estimate, or
+  increasing interval width. Missing values come last; ties retain input
+  order. Sorting is descriptive, not a test of differences.
+
+- palette:
+
+  `"accessible"` uses blue and dark orange with filled/open symbols;
+  `"mono"` uses dark grey with the same symbol distinctions.
+
+- title:
+
+  `NULL` uses the default text; a string replaces it; `""` removes it.
+  Interpretation notes remain in the saved plot data.
+
+- caption:
+
+  `NULL` uses the default text; a string replaces it; `""` removes it.
+  Interpretation notes remain in the saved plot data.
+
+- show_title:
+
+  Show the title and caption, respectively. `FALSE` hides text without
+  deleting its metadata.
+
+- show_notes:
+
+  Show the title and caption, respectively. `FALSE` hides text without
+  deleting its metadata.
+
+- show_labels:
+
+  Show IDs on interval and precision plots. Distribution plots summarize
+  estimates and do not label individual IDs. For crowded precision plots
+  use `FALSE` and consult the retained table.
+
+- reference:
+
+  Vertical reference line in logits; `NULL` omits it. This is an
+  orientation aid, not a quality threshold.
+
+- text_scale:
+
+  Positive multiplier for text size.
+
+- point_size:
+
+  Positive point size in ggplot millimetres; base graphics use the
+  corresponding relative size (2.5 is the default).
 
 - ...:
 
   Unused.
 
-- x:
+- parm:
 
-  A bootstrap result.
+  Rater IDs for [`confint()`](https://rdrr.io/r/stats/confint.html);
+  `NULL` returns all fitted raters.
 
 ## Value
 
@@ -82,6 +172,11 @@ seeds, model settings and analysis data.
 matrix with availability, method and Monte Carlo resolution attributes.
 No native pointers are stored; save with
 [`saveRDS()`](https://rdrr.io/r/base/readRDS.html).
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object.
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+extracts exact bounds, availability, settings and the source estimates.
 
 ## Details
 
@@ -119,6 +214,15 @@ remain essential. Omitted scores stay omitted; this conditions on
 analyzed rows and does not simulate a missingness mechanism or impute
 assigned scores. Rater contrasts, familywise intervals and simultaneous
 rater classification are not provided.
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Compare
+bootstrap and ordinary random-rater intervals
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Arrows
+identify unbounded bootstrap endpoints. Their displayed ends are plot
+limits, not finite interval limits. Ordinary intervals never replace an
+unbounded bootstrap interval. These are pointwise prediction intervals
+for realized rater effects, not a rater-quality classification.
 
 ## Review unresolved refits
 
@@ -160,7 +264,11 @@ intervals in linear mixed models. *Annals of Statistics*, 36, 1221–1245.
 ## See also
 
 [`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md),
-[`plot.mfrm_random_rater_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_random_rater_intervals.md)
+`plot.mfrm_random_rater_intervals()`
+
+[`plot.mfrm_testlet_scores()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+for display controls and accessible output. Bootstrap comparisons retain
+the interval view.
 
 ## Examples
 

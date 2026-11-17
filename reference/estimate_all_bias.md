@@ -17,6 +17,25 @@ estimate_all_bias(
   max_iter = 4,
   tol = 0.001
 )
+
+# S3 method for class 'mfrm_bias_collection'
+summary(object, ...)
+
+# S3 method for class 'mfrm_bias_collection'
+print(x, digits = 3, ...)
+
+# S3 method for class 'summary.mfrm_bias_collection'
+print(x, digits = 3, ...)
+
+# S3 method for class 'mfrm_bias_collection'
+plot(
+  x,
+  pair = NULL,
+  type = c("overview", "scatter", "ranked", "heatmap", "abs_t_hist", "facet_profile"),
+  draw = TRUE,
+  preset = "standard",
+  ...
+)
 ```
 
 ## Arguments
@@ -32,7 +51,7 @@ estimate_all_bias(
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
   When `NULL`, diagnostics are computed with `residual_pca = "none"`.
   Must match this fitted analysis; see
-  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
   for migration of saved diagnostics.
 
 - pairs:
@@ -85,30 +104,91 @@ estimate_all_bias(
   Passed to
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
 
+- object:
+
+  A result from `estimate_all_bias()`.
+
+- ...:
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): With
+  `pair`, additional arguments to
+  [`plot.mfrm_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
+  such as `top_n` or `sort_by`. The overview rejects additional
+  arguments.
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): Reserved;
+  additional arguments are rejected.
+
+- x:
+
+  A result from `estimate_all_bias()`.
+
+- digits:
+
+  Number of significant digits used for printing; calculations and
+  returned tables retain their precision.
+
+- pair:
+
+  An exact `Interaction` label from `summary(x)$overview`, or its row
+  number. `NULL` (default) shows all requested pairs.
+
+- type:
+
+  `"overview"` shows signed cell estimates grouped by pair. With `pair`
+  supplied, the default becomes `"heatmap"`; `"scatter"`, `"ranked"`,
+  `"abs_t_hist"` and `"facet_profile"` select the corresponding
+  [`plot.mfrm_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
+  view.
+
+- draw:
+
+  Draw the figure. `FALSE` returns its data without opening a device.
+
+- preset:
+
+  A package plot preset, for example `"standard"` or `"monochrome"`.
+
 ## Value
 
 A named list with class `mfrm_bias_collection`.
 
+For [`summary()`](https://rdrr.io/r/base/summary.html):
+[`summary()`](https://rdrr.io/r/base/summary.html) returns a
+`summary.mfrm_bias_collection` list: `overview` has one row per
+requested interaction, `cells` combines retained cell tables with an
+`Interaction` identifier and explicit `PointAvailable`,
+`ScreenAvailable` and `ScreenPositive` fields, `errors` lists failed
+pairs, and `optimization_failures` retains cell-level optimizer records.
+Original cell columns, including facet levels, observed counts, signed
+`Bias Size`, conditional `S.E.`, `t` and any GPCM profile status, are
+preserved. `settings`, `fit_identity` and `notes` retain provenance and
+interpretation. Print methods return their input invisibly.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object carrying its saved plot payload for
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+For the overview,
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+provides `table` (all combined cells, including unavailable rows),
+`overview`, `errors`, `optimization_failures`, `fit_identity`,
+`settings`, axis labels and notes.
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+returns the overview `ggplot`. A selected pair returns the ordinary bias
+`ggplot` with `collection_pair` and `fit_identity` provenance added to
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+
 ## Details
 
-This function orchestrates repeated calls to
+Calls
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-across multiple facet pairs and returns a consolidated bundle.
-
-**Bias/interaction** in MFRM refers to a systematic departure from the
-additive model for a specific combination of facet elements (e.g., a
-particular rater is unexpectedly harsh on a particular criterion). See
-[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-for the mathematical formulation.
-
-When `pairs = NULL`, the function builds all 2-way combinations of
-modelled facets automatically. For a model with facets Rater, Criterion,
-and Task, this yields Rater\\\times\\Criterion, Rater\\\times\\Task, and
-Criterion\\\times\\Task. With `include_person = TRUE`,
-Person\\\times\\facet pairs are prepended in the fit's facet order. They
-are conditional plug-in likelihood screens, not jointly fitted
-Person\\\times\\facet terms. A single warning records this boundary for
-the batch.
+for each requested interaction, retaining its fixed-baseline target and
+screening limitations. Default pairs for Rater, Criterion and Task are
+Rater\\\times\\Criterion, Rater\\\times\\Task and
+Criterion\\\times\\Task. `include_person = TRUE` prepends
+Person\\\times\\facet pairs in fitted facet order. These are conditional
+screens, not jointly fitted Person\\\times\\facet terms; one batch
+warning records that distinction.
 
 The `summary` table aggregates results across pairs:
 
@@ -135,16 +215,63 @@ The `summary` table aggregates results across pairs:
   `FALSE`; these conditional plug-in interaction statistics are
   screening evidence
 
-Per-pair failures (e.g., insufficient data for a sparse pair) are
-captured in `errors` rather than stopping the entire batch. There is no
-collection-wide multiplicity correction. Cells and pairs reuse the same
-observations and fitted calibration. Adjusting their screening tail
-areas would not establish formal family-wise error or false-discovery
-control. A screen-positive result is a prompt for review, not proof of
-unfairness; no screen-positive cells does not establish absence of
-interaction. Search-boundary points remain visible, with missing
-screening statistics and the `ScreenStatus`/`ScreenReason` returned by
-[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
+Pair failures do not stop the batch; `summary$Error` retains them even
+when the optional `errors` table is not kept. There is no
+collection-wide multiplicity correction: pairs reuse
+observations/calibration, and adjusted plug-in tails would not establish
+family-wise error or false-discovery control. Boundary points retain
+missing statistics with `ScreenStatus`/`ScreenReason`. A screen-positive
+cell warrants review but does not prove unfairness. An absence of
+positive screens does not establish absence of interaction.
+
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize all
+retained bias screens
+
+For [`summary()`](https://rdrr.io/r/base/summary.html): No model,
+diagnostics or cell calculation is repeated. The overview counts finite
+bias estimates from successful cell optimizations separately from cells
+with a finite screening statistic and positive finite conditional SE.
+`ScreenPositive` is missing when no statistic can be screened, rather
+than reporting zero. Failed pairs remain visible even when the original
+batch used `keep_errors = FALSE`. Older collections without retained
+tables are labeled `not_retained`; they are not recalculated.
+
+A positive bias shift increases expected coded scores conditional on the
+fitted model. It does not necessarily mean better performance or unfair
+leniency. Baseline calibration and Person uncertainty are held fixed.
+Different pairs use overlapping data, so do not add their observed
+counts to obtain a study sample size. The overview's mean absolute bias
+describes magnitude only; use the signed cell estimates to study
+direction. Counts cover retained
+[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
+cells: unobserved combinations and cells omitted by the chosen screening
+options are not reconstructed. No multiplicity-adjusted confirmatory
+decisions are supplied.
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Explore
+bias across facet pairs
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): The
+overview plots every finite retained bias estimate, without ranking or a
+significance cutoff. Positive shifts increase expected coded scores
+under the fitted model; score meaning depends on the rubric. Vertical
+spreading only separates cells visually and has no statistical meaning.
+
+Filled circles have a usable conditional screening statistic; open
+circles retain a point without one. These symbols indicate availability,
+not whether a cell is flagged. Pair labels report usable statistics /
+retained cells and the range of observed row counts per cell (`n`), not
+independent Person counts. Pairs share observations. Empty, failed and
+unavailable pairs remain labeled, without substituting a point at zero.
+The vertical zero line means no conditional shift, not a threshold for
+practical importance.
+
+No model or diagnostics are recalculated. The overview supplies no
+intervals, multiplicity correction or formal bias test. Review the
+individual cell counts, optimizer status and subject-matter
+explanations; selecting a pair after this overview does not make its
+subsequent analysis confirmatory. Titles and interpretation notes are
+returned outside the figure.
 
 ## Output
 
@@ -163,41 +290,26 @@ The returned object is a bundle-like list with class
 
 - `primary`: first successful bias bundle, useful for downstream helpers
 
-## Typical workflow
+## Reviewing and reporting the collection
 
-1.  Fit with
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-    and diagnose with
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
-    For `RSM` / `PCM` reporting runs, prefer `method = "MML"` plus
-    `diagnostic_mode = "both"` in the diagnostics call.
+Fit and diagnose under the intended assumptions; for supported MML,
+`diagnostic_mode = "both"` also retains marginal fit. After
+`estimate_all_bias()`, read `summary(bias_all)$overview` for
+availability/magnitude and `$cells` for all retained cells/counts.
+`plot.mfrm_bias_collection()` shows the overview or a selected pair.
 
-2.  Run `estimate_all_bias()` to compute the requested multi-pair
-    interactions.
-
-3.  Inspect `summary(bias_all)$overview` for availability and magnitude,
-    then `summary(bias_all)$cells` for all retained cells and their
-    observed counts. Use
-    [`plot.mfrm_bias_collection()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_bias_collection.md)
-    for the overview or a named pair.
-
-4.  Use `report <- mfrm_report(bias_all)` to retain the full search,
-    failed pairs and all cells in one report;
-    [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
-    saves its tables. Supply `study_context` to state rubric endpoints
-    and score direction. The `by_pair` list also feeds
-    [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-    or
-    [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md).
-
-5.  For a substantively justified joint interaction model, use
-    `facet_interactions` in
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-    and
-    [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
-    on compatible fits. Selecting terms from these screens makes
-    same-data comparisons exploratory; it does not create a prespecified
-    confirmatory test.
+`mfrm_report(bias_all)` and
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
+retain the full search, failures and cells; `study_context` records
+rubric endpoints/direction. `by_pair` also feeds
+[mfrm_report_checklist](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+or
+[`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md).
+Joint interactions instead require `fit_mfrm(facet_interactions = ...)`
+and compatible
+[`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
+fits. Terms selected from these same-data screens remain exploratory,
+not prespecified confirmatory tests.
 
 ## Saved-result reuse
 
@@ -205,16 +317,30 @@ The returned `fit_identity` records the fitted analysis for reuse with
 reports and exports. Recreate older results from the saved fit and
 matching diagnostics using the original screening options; no model
 refit is needed. See
-[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 for migration instructions.
+
+## Session plot defaults
+
+See
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+for `options(mfrmr.plot_preset)`, argument precedence, and appearance
+when saving or reusing a plot.
 
 ## See also
 
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
 [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
 [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md),
-[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
+[mfrm_report_checklist](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
 [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md)
+
+`estimate_all_bias()`, `plot.mfrm_bias_collection()`,
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
+[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
+
+`estimate_all_bias()`, `summary.mfrm_bias_collection()`,
+[`plot.mfrm_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
 
 ## Examples
 
@@ -233,5 +359,27 @@ report <- mfrm_report(bias_all, study_context = c(
   score_direction = "Higher coded scores indicate better performance"))
 report$tables$overview
 head(report$tables$bias_cells)
+} # }
+# Long-running workflow; run explicitly when needed.
+# example("summary.mfrm_bias_collection", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+ratings <- load_mfrmr_data("example_bias")
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+                method = "MML")
+screens <- estimate_all_bias(fit)
+review <- summary(screens)
+review$overview
+head(review$cells[, c("Interaction", "Bias Size", "ObsN", "ScreenAvailable")])
+} # }
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_bias_collection", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+ratings <- load_mfrmr_data("example_bias")
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+                method = "MML")
+screens <- estimate_all_bias(fit)
+p <- plot(screens)
+plot_data(p, "overview")
+plot(screens, pair = "Rater x Criterion", type = "ranked")
 } # }
 ```

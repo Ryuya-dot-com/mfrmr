@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,32 +33,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Migrating from FACETS to mfrmr</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-facets-migration.Rmd" class="external-link"><code>vignettes/mfrmr-facets-migration.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/vignettes/articles/mfrmr-facets-migration.Rmd" class="external-link"><code>vignettes/articles/mfrmr-facets-migration.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-facets-migration.Rmd</code></div>
     </div>
 
@@ -112,8 +106,8 @@ operating model.</p>
 <p>Before treating a legacy workflow as covered, inspect the public
 coverage boundary:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/facets_feature_coverage.html">facets_feature_coverage</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/facets_feature_coverage.html">facets_feature_coverage</a></span><span class="op">(</span><span class="st">"not_implemented"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/facets_guide.html">facets_guide</a></span><span class="op">(</span><span class="st">'coverage'</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/facets_guide.html">facets_guide</a></span><span class="op">(</span><span class="st">'coverage'</span>, <span class="st">"not_implemented"</span><span class="op">)</span></span></code></pre></div>
 <p>This matrix describes the availability of package-native output
 surfaces. <code>implemented</code> does not by itself mean that the two
 programs use the same estimand, conditioning, extreme-score rule,
@@ -182,8 +176,8 @@ distinguish legitimate repeats with an event/occasion facet</td>
 <td>Table 13 cell effects; Table 14 pairwise comparisons</td>
 <td>
 <code><a href="../reference/estimate_bias.html">estimate_bias()</a></code> and
-<code><a href="../reference/bias_interaction_report.html">bias_interaction_report()</a></code>; conditional screens with the
-differences below</td>
+<code>mfrm_report(fit, type = "bias_interaction")</code>; conditional
+screens with the differences below</td>
 </tr>
 <tr class="odd">
 <td>Wright map / variable map</td>
@@ -202,8 +196,8 @@ differences below</td>
 <td>Specification, input data, FACETS version, and recorded run
 environment/settings</td>
 <td>
-<code><a href="../reference/build_mfrm_manifest.html">build_mfrm_manifest()</a></code> plus
-<code><a href="../reference/build_mfrm_replay_script.html">build_mfrm_replay_script()</a></code>
+<code><a href="../reference/export_mfrm_bundle.html">build_mfrm_manifest()</a></code> plus
+<code><a href="../reference/export_mfrm_bundle.html">build_mfrm_replay_script()</a></code>
 </td>
 </tr>
 </tbody>
@@ -244,7 +238,7 @@ counts do not assess the quality of the source analysis.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> Task   3         3       0.8    anchored</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">facets_result</span>, type <span class="op">=</span> <span class="st">"measure"</span>, facets <span class="op">=</span> <span class="st">"Person"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-facets-migration_files/figure-html/facets-import-measures-1.png" class="r-plt" alt="Reported FACETS measures for six synthetic Persons. Downward and upward triangles mark extreme-score adjustments, a square marks a direct/group anchor flag whose subtype is not determined by the import, and circles mark estimated measures. No confidence intervals are shown." width="672"></p>
+<p><img src="mfrmr-facets-migration_files/figure-html/facets-import-measures-1.svg" class="r-plt" alt="Reported FACETS measures for six synthetic Persons. Downward and upward triangles mark extreme-score adjustments, a square marks a direct/group anchor flag whose subtype is not determined by the import, and circles mark estimated measures. No confidence intervals are shown." width="672"></p>
 <p>Squares identify FACETS <code>Status=1</code>, which can denote a
 direct anchor or a member of a group anchor. The import retains
 <code>SourceStatus = "anchored"</code>, but this does
@@ -330,7 +324,7 @@ other elements retain their original labels:</p>
 <span>  DisplayLabel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"受検者 甲"</span>, <span class="st">"受検者 乙"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">labelled</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">facets_result</span>, facets <span class="op">=</span> <span class="st">"Person"</span>,</span>
 <span>  label_map <span class="op">=</span> <span class="va">display_names</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">labelled</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot_data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ElementID"</span>, <span class="st">"Label"</span>, <span class="st">"DisplayLabel"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">labelled</span>, <span class="st">"plot_data"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ElementID"</span>, <span class="st">"Label"</span>, <span class="st">"DisplayLabel"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;   ElementID Label DisplayLabel</span></span>
 <span><span class="co">#&gt; 1         1     1    受検者 甲</span></span>
 <span><span class="co">#&gt; 2         2     2    受検者 乙</span></span>
@@ -339,7 +333,7 @@ other elements retain their original labels:</p>
 <span><span class="co">#&gt; 5         5     5            5</span></span>
 <span><span class="co">#&gt; 6         6     6            6</span></span></code></pre></div>
 <p>The original result and its labels remain unchanged;
-<code>labelled$data$label_map</code> retains the supplied
+<code>plot_data(labelled, "label_map")</code> retains the supplied
 correspondence. Unknown or repeated keys are errors. Repeated display
 names are distinguished by element key. Only measure plots draw element
 labels; other element plots keep the names in their returned data. This
@@ -374,7 +368,7 @@ provide new-person scoring, threshold reconstruction or validation of
 the FACETS analysis. <code>saveRDS(facets_result, ...)</code> preserves
 the complete result; <code>as.data.frame(facets_result)</code> exports
 its element table. See <code><a href="../reference/read_facets_results.html">?read_facets_results</a></code> and
-<code><a href="../reference/plot.mfrm_facets_results.html">?plot.mfrm_facets_results</a></code> for the supported scope.</p>
+<code><a href="../reference/read_facets_results.html">?plot.mfrm_facets_results</a></code> for the supported scope.</p>
 <p>For category-probability and expected-score curves, export a FACETS
 Graphfile with headings. This separate synthetic PCM example contains
 one coordinate row per scale and reported measure; it is a different
@@ -397,7 +391,7 @@ analysis from the binary score example above.</p>
 <span><span class="co">#&gt; 4                      0</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">facets_curves</span>, type <span class="op">=</span> <span class="st">"ccc"</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-facets-migration_files/figure-html/facets-import-category-curves-1.png" class="r-plt" alt="Four reported category-probability curves for Scale 1 of a synthetic FACETS PCM analysis, on the original Graphfile measure axis. Categories 0 through 3 are distinguished by color and line type. Lines join exported points; there are no confidence intervals." width="672"></p>
+<p><img src="mfrmr-facets-migration_files/figure-html/facets-import-category-curves-1.svg" class="r-plt" alt="Four reported category-probability curves for Scale 1 of a synthetic FACETS PCM analysis, on the original Graphfile measure axis. Categories 0 through 3 are distinguished by color and line type. Lines join exported points; there are no confidence intervals." width="672"></p>
 <p>Use <code>type = "expected"</code> for the exported expected-score
 curve. Inspect the actual coordinates and source-consistency checks
 with:</p>
@@ -589,16 +583,16 @@ formula and integer truncation for the tail area.
 reference.</p>
 <p>Corrected pairwise tables carry <code>CalculationVersion = 3</code>.
 Recreate <code><a href="../reference/build_fixed_reports.html">build_fixed_reports()</a></code> and
-<code><a href="../reference/bias_pairwise_report.html">bias_pairwise_report()</a></code> from the current bias bundle. First
-recreate old bias bundles from the saved fit and current diagnostics; no
-main calibration refit is needed. Historical report values are not
-automatically corrected by reloading them. Local and contrast SEs
-describe conditional cell uncertainty; calibration uncertainty and
-cross-cell covariance are not propagated. The earlier claim that these
-contrasts were generally conservative was incorrect. Check
-<code>ScreenUnavailable</code> in the pairwise summary before reading
-<code>Flagged</code>; the summary covers the full family even when
-<code>top_n</code> limits the table.</p>
+<code>mfrm_report(bias, type = "bias_pairwise")</code> from the current
+bias bundle. First recreate old bias bundles from the saved fit and
+current diagnostics; no main calibration refit is needed. Historical
+report values are not automatically corrected by reloading them. Local
+and contrast SEs describe conditional cell uncertainty; calibration
+uncertainty and cross-cell covariance are not propagated. The earlier
+claim that these contrasts were generally conservative was incorrect.
+Check <code>ScreenUnavailable</code> in the pairwise summary before
+reading <code>Flagged</code>; the summary covers the full family even
+when <code>top_n</code> limits the table.</p>
 <p>The <a href="https://www.winsteps.com/facetman64/table4.htm" class="external-link">Table 4
 rule</a> and its <a href="https://www.winsteps.com/facetman64/unexpected.htm" class="external-link">default
 threshold</a> now match the native residual-only default. To retain the
@@ -616,7 +610,7 @@ response score. Category residual MnSq is descriptive: conditioning on
 the observed category removes the universal unit baseline, so category
 ZSTD and its flags are unavailable. This does not turn a missing fit
 flag into evidence that the category functions well.</p>
-<p>In <code><a href="../reference/category_structure_report.html">category_structure_report()</a></code>,
+<p>In <code>mfrm_report(fit, type = "category_structure")</code>,
 <code>MedianThreshold</code> now means a cumulative 50% boundary;
 <code>AndrichThreshold</code> retains the adjacent-category step.
 Recreate saved structure reports. Half-score crossings outside
@@ -796,7 +790,7 @@ cohorts; the common-plan delta procedure instead holds each Person’s
 ability fixed across repeated responses. Passing that RootSE into the
 common-plan interval calculation would change both the estimator and the
 sampling target. Corrected JML is therefore not admitted by
-<code><a href="../reference/confint.mfrm_fair_average.html">confint.mfrm_fair_average()</a></code>.</p>
+<code><a href="../reference/fair_average_table.html">confint.mfrm_fair_average()</a></code>.</p>
 <p>The benefit of retaining both estimators is that external
 compatibility and a possible reduction in incidental-parameter bias can
 be studied separately. The cost is a distinct mathematical, numerical
@@ -891,9 +885,9 @@ an all-item-fixed case with a Person anchor fails.</td>
 <p>Executed TAM 4.3-25 comparisons support close ordinary-JML agreement
 for matched complete/sparse RSM/PCM designs and supported partial Person
 anchors. They do not establish general coverage, every FACETS anchoring
-convention, or a new JML import route: <code><a href="../reference/import_tam_fit.html">import_tam_fit()</a></code>
-remains MML-only. Retain unavailable uncertainty instead of substituting
-WLE SEs or conditional information for it.</p>
+convention, or a new JML import route: <code><a href="../reference/import_irt_fit.html">import_irt_fit()</a></code> for
+<code>TAM</code> remains MML-only. Retain unavailable uncertainty
+instead of substituting WLE SEs or conditional information for it.</p>
 <p>Inspect returned anchors too. In the checked TAM 4.3-25 version-1
 path, <code>theta.fixed</code> with <code>xsi.fixed = NULL</code> still
 recenters every Person after an update, moving a supplied Person anchor.
@@ -911,8 +905,9 @@ comparison separate from a successful direct anchored TAM execution.</p>
 <h2 id="a-one-shot-legacy-compatible-call">A one-shot legacy-compatible call<a class="anchor" aria-label="anchor" href="#a-one-shot-legacy-compatible-call"></a>
 </h2>
 <p>If the goal is to translate a FACETS-style script with minimal R-side
-plumbing, use <code><a href="../reference/run_mfrm_facets.html">run_mfrm_facets()</a></code> (alias
-<code><a href="../reference/run_mfrm_facets.html">mfrmRFacets()</a></code>):</p>
+plumbing, use <code><a href="../reference/run_mfrm_facets.html">run_mfrm_facets()</a></code>. In older scripts, replace
+the former <code><a href="../reference/mfrmr_api_migration_030.html">mfrmRFacets()</a></code> name with this call and keep the
+same arguments:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"mfrmr_example_operational"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span></span>
@@ -1249,8 +1244,8 @@ table:</p>
 <span><span class="co">#&gt; 30 Fitted measure or unavailable       0.54      0.66       1.54       1.05</span></span>
 <span><span class="co">#&gt; 31 Fitted measure or unavailable       0.55      0.55       0.43      -1.16</span></span>
 <span><span class="co">#&gt; 32 Fitted measure or unavailable       0.60      0.63       1.07       0.32</span></span>
-<span><span class="co">#&gt; 33 Fitted measure or unavailable       0.54      0.57       1.11       0.37</span></span>
-<span><span class="co">#&gt; 34 Fitted measure or unavailable       0.54      0.54       0.50      -1.00</span></span>
+<span><span class="co">#&gt; 33 Fitted measure or unavailable       0.54      0.54       0.50      -1.00</span></span>
+<span><span class="co">#&gt; 34 Fitted measure or unavailable       0.54      0.57       1.11       0.37</span></span>
 <span><span class="co">#&gt; 35 Fitted measure or unavailable       0.52      0.53       1.04       0.26</span></span>
 <span><span class="co">#&gt; 36 Fitted measure or unavailable       0.55      0.55       0.29      -1.68</span></span>
 <span><span class="co">#&gt; 37 Fitted measure or unavailable       0.56      0.56       0.79      -0.24</span></span>
@@ -1298,8 +1293,8 @@ table:</p>
 <span><span class="co">#&gt; 30        1.49        0.98       0.54          0.40                    0.34</span></span>
 <span><span class="co">#&gt; 31        0.43       -1.19       0.58          0.29                    0.24</span></span>
 <span><span class="co">#&gt; 32        1.10        0.36       0.75          0.30                    0.24</span></span>
-<span><span class="co">#&gt; 33        1.03        0.24      -0.09          0.48                    0.41</span></span>
-<span><span class="co">#&gt; 34        0.53       -0.92       0.66          0.48                    0.41</span></span>
+<span><span class="co">#&gt; 33        0.53       -0.92       0.66          0.48                    0.41</span></span>
+<span><span class="co">#&gt; 34        1.03        0.24      -0.09          0.48                    0.41</span></span>
 <span><span class="co">#&gt; 35        1.06        0.29      -0.16          0.30                    0.25</span></span>
 <span><span class="co">#&gt; 36        0.31       -1.61       0.79          0.39                    0.33</span></span>
 <span><span class="co">#&gt; 37        0.79       -0.23       0.71          0.47                    0.40</span></span>
@@ -1445,8 +1440,8 @@ table:</p>
 <span><span class="co">#&gt; 30                P018            2.17            2.16</span></span>
 <span><span class="co">#&gt; 31                P042            2.00            2.10</span></span>
 <span><span class="co">#&gt; 32                P039            2.00            2.07</span></span>
-<span><span class="co">#&gt; 33                P043            2.17            2.06</span></span>
-<span><span class="co">#&gt; 34                P046            2.17            2.06</span></span>
+<span><span class="co">#&gt; 33                P046            2.17            2.06</span></span>
+<span><span class="co">#&gt; 34                P043            2.17            2.06</span></span>
 <span><span class="co">#&gt; 35                P009            2.33            2.03</span></span>
 <span><span class="co">#&gt; 36                P017            2.00            1.99</span></span>
 <span><span class="co">#&gt; 37                P044            2.00            1.90</span></span>
@@ -1494,8 +1489,8 @@ table:</p>
 <span><span class="co">#&gt; 30                        2.16         0.54          0.66</span></span>
 <span><span class="co">#&gt; 31                        2.10         0.55          0.55</span></span>
 <span><span class="co">#&gt; 32                        2.07         0.60          0.63</span></span>
-<span><span class="co">#&gt; 33                        2.06         0.54          0.57</span></span>
-<span><span class="co">#&gt; 34                        2.06         0.54          0.54</span></span>
+<span><span class="co">#&gt; 33                        2.06         0.54          0.54</span></span>
+<span><span class="co">#&gt; 34                        2.06         0.54          0.57</span></span>
 <span><span class="co">#&gt; 35                        2.03         0.52          0.53</span></span>
 <span><span class="co">#&gt; 36                        1.99         0.55          0.55</span></span>
 <span><span class="co">#&gt; 37                        1.90         0.56          0.56</span></span>
@@ -1961,8 +1956,8 @@ table:</p>
 <span><span class="co">#&gt; 30      0.66       1.54       1.05        1.49        0.98       0.54</span></span>
 <span><span class="co">#&gt; 31      0.55       0.43      -1.16        0.43       -1.19       0.58</span></span>
 <span><span class="co">#&gt; 32      0.63       1.07       0.32        1.10        0.36       0.75</span></span>
-<span><span class="co">#&gt; 33      0.57       1.11       0.37        1.03        0.24      -0.09</span></span>
-<span><span class="co">#&gt; 34      0.54       0.50      -1.00        0.53       -0.92       0.66</span></span>
+<span><span class="co">#&gt; 33      0.54       0.50      -1.00        0.53       -0.92       0.66</span></span>
+<span><span class="co">#&gt; 34      0.57       1.11       0.37        1.03        0.24      -0.09</span></span>
 <span><span class="co">#&gt; 35      0.53       1.04       0.26        1.06        0.29      -0.16</span></span>
 <span><span class="co">#&gt; 36      0.55       0.29      -1.68        0.31       -1.61       0.79</span></span>
 <span><span class="co">#&gt; 37      0.56       0.79      -0.24        0.79       -0.23       0.71</span></span>
@@ -2193,8 +2188,8 @@ table:</p>
 <span><span class="co">#&gt; 30                     P018            2.17            2.16</span></span>
 <span><span class="co">#&gt; 31                     P042            2.00            2.10</span></span>
 <span><span class="co">#&gt; 32                     P039            2.00            2.07</span></span>
-<span><span class="co">#&gt; 33                     P043            2.17            2.06</span></span>
-<span><span class="co">#&gt; 34                     P046            2.17            2.06</span></span>
+<span><span class="co">#&gt; 33                     P046            2.17            2.06</span></span>
+<span><span class="co">#&gt; 34                     P043            2.17            2.06</span></span>
 <span><span class="co">#&gt; 35                     P009            2.33            2.03</span></span>
 <span><span class="co">#&gt; 36                     P017            2.00            1.99</span></span>
 <span><span class="co">#&gt; 37                     P044            2.00            1.90</span></span>
@@ -2251,8 +2246,8 @@ table:</p>
 <span><span class="co">#&gt; 30                        2.16         0.54          0.66</span></span>
 <span><span class="co">#&gt; 31                        2.10         0.55          0.55</span></span>
 <span><span class="co">#&gt; 32                        2.07         0.60          0.63</span></span>
-<span><span class="co">#&gt; 33                        2.06         0.54          0.57</span></span>
-<span><span class="co">#&gt; 34                        2.06         0.54          0.54</span></span>
+<span><span class="co">#&gt; 33                        2.06         0.54          0.54</span></span>
+<span><span class="co">#&gt; 34                        2.06         0.54          0.57</span></span>
 <span><span class="co">#&gt; 35                        2.03         0.52          0.53</span></span>
 <span><span class="co">#&gt; 36                        1.99         0.55          0.55</span></span>
 <span><span class="co">#&gt; 37                        1.90         0.56          0.56</span></span>
@@ -2712,11 +2707,11 @@ unobserved rating subsets.</p>
 <h2 id="reviewing-output-contracts-and-fit-tables">Reviewing output contracts and fit tables<a class="anchor" aria-label="anchor" href="#reviewing-output-contracts-and-fit-tables"></a>
 </h2>
 <p>When migrating an existing study,
-<code><a href="../reference/facets_output_contract_review.html">facets_output_contract_review()</a></code> checks whether the
+<code><a href="../reference/facets_fit_review.html">facets_output_contract_review()</a></code> checks whether the
 package-generated report components satisfy the FACETS-style output
 contract encoded in the package:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">contract_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/facets_output_contract_review.html">facets_output_contract_review</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">contract_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/facets_fit_review.html">facets_output_contract_review</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  diagnostics <span class="op">=</span> <span class="va">diag</span>,</span>
 <span>  branch <span class="op">=</span> <span class="st">"facets"</span></span>
@@ -2733,13 +2728,13 @@ mfrmr evaluates residual-based fit statistics at shrunken EAP person
 measures while FACETS uses JMLE estimates, so MnSq differences can
 reflect the residual basis rather than a fit-computation difference;
 refit with <code>method = "JML"</code> before attributing such gaps. See
-<code><a href="../reference/facets_fit_df_guide.html">facets_fit_df_guide()</a></code> for this boundary and for the
+<code>facets_guide('fit_df')</code> for this boundary and for the
 separate df/ZSTD standardization conventions.</p>
 <p>If you already have a FACETS fit table on disk, read it first and
 then run the fit review. This does not run FACETS; it consumes an
 exported or otherwise harmonized table.</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">facets_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_facets_fit_table.html">read_facets_fit_table</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">facets_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_facets_results.html">read_facets_results</a></span><span class="op">(</span></span>
 <span>  <span class="st">"score.2.txt"</span>,</span>
 <span>  facet_map <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span> <span class="op">=</span> <span class="st">"Person"</span>, <span class="st">"2"</span> <span class="op">=</span> <span class="st">"Rater"</span>, <span class="st">"3"</span> <span class="op">=</span> <span class="st">"Criterion"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
@@ -2767,10 +2762,10 @@ FACETS export only contains ZStd and T.Count columns, or if duplicate
 <h2 id="producing-facets-style-output-files">Producing FACETS-style output files<a class="anchor" aria-label="anchor" href="#producing-facets-style-output-files"></a>
 </h2>
 <p>For traceability or downstream tools that expect FACETS output files,
-<code><a href="../reference/facets_output_file_bundle.html">facets_output_file_bundle()</a></code> writes a parallel set of
+<code><a href="../reference/facets_fit_review.html">facets_output_file_bundle()</a></code> writes a parallel set of
 fixed-width or CSV exports:</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/facets_output_file_bundle.html">facets_output_file_bundle</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/facets_fit_review.html">facets_output_file_bundle</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  diagnostics <span class="op">=</span> <span class="va">diag</span>,</span>
 <span>  out_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -2778,7 +2773,8 @@ fixed-width or CSV exports:</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p>For RSM and PCM the score-side helpers are available. Under
 <code>GPCM</code> the score-side bundle is intentionally restricted; see
-<code><a href="../reference/gpcm_capability_matrix.html">?gpcm_capability_matrix</a></code> and the
+<code><a href="../reference/mfrmr_gpcm_scope.html">?mfrmr_gpcm_scope</a></code>
+(<code>mfrmr_output_guide("gpcm_capabilities")</code>) and the
 <code>mfrmr-gpcm-scope</code> vignette for the documented
 limitation.</p>
 </div>
@@ -2953,9 +2949,9 @@ elements define a cross-form or cross-wave link.</li>
 marginal screen alongside the residual stack.</li>
 <li>
 <code><a href="../reference/rating_scale_table.html">rating_scale_table()</a></code>,
-<code><a href="../reference/category_structure_report.html">category_structure_report()</a></code>, and
-<code><a href="../reference/category_curves_report.html">category_curves_report()</a></code> for category-functioning
-evidence.</li>
+<code>mfrm_report(fit, type = "category_structure")</code>, and
+<code>mfrm_report(fit, type = "category_curves")</code> for
+category-functioning evidence.</li>
 <li>
 <code><a href="../reference/fair_average_table.html">fair_average_table()</a></code> when FACETS Table 7 fair-average
 review is needed.</li>
@@ -2964,18 +2960,18 @@ review is needed.</li>
 variable-map view of targeting and threshold placement.</li>
 <li>
 <code><a href="../reference/estimate_bias.html">estimate_bias()</a></code>,
-<code><a href="../reference/bias_interaction_report.html">bias_interaction_report()</a></code>, and
-<code><a href="../reference/bias_pairwise_report.html">bias_pairwise_report()</a></code> when FACETS Table 14-style local
-interaction screening is substantively relevant.</li>
+<code>mfrm_report(fit, type = "bias_interaction")</code>, and
+<code>mfrm_report(bias, type = "bias_pairwise")</code> when FACETS Table
+14-style local interaction screening is substantively relevant.</li>
 <li>
-<code><a href="../reference/reporting_checklist.html">reporting_checklist()</a></code> for a manuscript-readiness
-summary.</li>
+<code>mfrm_report(fit, type = "checklist")</code> for a
+manuscript-readiness summary.</li>
 <li>
 <code><a href="../reference/build_apa_outputs.html">build_apa_outputs()</a></code> for Method and Results paragraphs
 and APA tables.</li>
 <li>
-<code><a href="../reference/build_mfrm_manifest.html">build_mfrm_manifest()</a></code> and
-<code><a href="../reference/build_mfrm_replay_script.html">build_mfrm_replay_script()</a></code> for the reproducibility bundle
+<code><a href="../reference/export_mfrm_bundle.html">build_mfrm_manifest()</a></code> and
+<code><a href="../reference/export_mfrm_bundle.html">build_mfrm_replay_script()</a></code> for the reproducibility bundle
 alongside the FACETS-style handoff out of the box.</li>
 </ul>
 <p>The <code>mfrmr-workflow</code> vignette covers the full sequence end

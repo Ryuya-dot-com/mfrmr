@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,31 +15,25 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -53,7 +47,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a model-choice review across RSM, PCM, and GPCM fits</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>build_model_choice_review.Rd</code></div>
     </div>
 
@@ -71,7 +65,10 @@
 <span>  theta_points <span class="op">=</span> <span class="fl">61L</span>,</span>
 <span>  top_n <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  warn_constraints <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_model_choice_review'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, digits <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -79,7 +76,8 @@
 
 
 <dl><dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Two or more fitted <code>mfrm_fit</code> objects from <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.</p></dd>
+<dd><p>For <code>build_model_choice_review()</code>: Two or more fitted <code>mfrm_fit</code> objects from <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.</p>
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: Reserved for generic compatibility.</p></dd>
 
 
 <dt id="arg-labels">labels<a class="anchor" aria-label="anchor" href="#arg-labels"></a></dt>
@@ -94,7 +92,17 @@ at least one <code>RSM</code>/<code>PCM</code> reference plus one <code>GPCM</co
 <code><a href="build_weighting_review.html">build_weighting_review()</a></code> for the first such pair.</p></dd>
 
 
-<dt id="arg-theta-range-theta-points-top-n">theta_range, theta_points, top_n<a class="anchor" aria-label="anchor" href="#arg-theta-range-theta-points-top-n"></a></dt>
+<dt id="arg-theta-range">theta_range<a class="anchor" aria-label="anchor" href="#arg-theta-range"></a></dt>
+<dd><p>Passed to <code><a href="build_weighting_review.html">build_weighting_review()</a></code> when
+<code>run_weighting_review = TRUE</code>.</p></dd>
+
+
+<dt id="arg-theta-points">theta_points<a class="anchor" aria-label="anchor" href="#arg-theta-points"></a></dt>
+<dd><p>Passed to <code><a href="build_weighting_review.html">build_weighting_review()</a></code> when
+<code>run_weighting_review = TRUE</code>.</p></dd>
+
+
+<dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
 <dd><p>Passed to <code><a href="build_weighting_review.html">build_weighting_review()</a></code> when
 <code>run_weighting_review = TRUE</code>.</p></dd>
 
@@ -102,15 +110,24 @@ at least one <code>RSM</code>/<code>PCM</code> reference plus one <code>GPCM</co
 <dt id="arg-warn-constraints">warn_constraints<a class="anchor" aria-label="anchor" href="#arg-warn-constraints"></a></dt>
 <dd><p>Passed to <code><a href="compare_mfrm.html">compare_mfrm()</a></code>.</p></dd>
 
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>Output from <code>build_model_choice_review()</code>.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Number of digits for printed numeric values.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>mfrm_model_choice_review</code>.</p>
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: An object of class <code>summary.mfrm_model_choice_review</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><code>build_model_choice_review()</code> is a user-facing synthesis helper. It does not
-estimate new models. It bundles:</p><ul><li><p><code><a href="compare_mfrm.html">compare_mfrm()</a></code> for verified AIC/Person-BIC/SABIC/log-likelihood
+    <p><code>build_model_choice_review()</code> synthesizes saved model fits without
+estimating new models. It bundles:</p><ul><li><p><code><a href="compare_mfrm.html">compare_mfrm()</a></code> for verified AIC/Person-BIC/SABIC/log-likelihood
 comparison;</p></li>
 <li><p>comparison-boundary warnings captured from <code><a href="compare_mfrm.html">compare_mfrm()</a></code> and retained
 in <code>comparison_warnings</code> for printing and appendix export;</p></li>
@@ -121,7 +138,7 @@ and the stored fit-readiness decision for every supplied model;</p></li>
 recovery, fair averages, bias screening, and summary-appendix handoff;</p></li>
 <li><p>report wording templates that avoid treating better <code>GPCM</code> fit as
 an automatic operational-scoring decision;</p></li>
-<li><p><code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> when <code>GPCM</code> is present;</p></li>
+<li><p><code>mfrmr_output_guide("gpcm_capabilities")</code> when <code>GPCM</code> is present;</p></li>
 <li><p>optionally, <code><a href="build_weighting_review.html">build_weighting_review()</a></code> for the first Rasch-family reference
 versus <code>GPCM</code> pair.</p></li>
 </ul><p>The word "bounded" describes the documented model and workflow scope: the
@@ -133,11 +150,13 @@ slopes on the log scale with geometric mean 1, and keeps several downstream scor
 outside the documented boundary.
 Model-choice ranking also requires the current selectable IC contract:
 q&lt;31 fits retain raw criteria but produce a screening/review-only bundle.</p>
+<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: Summarize a model-choice review</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="compare_mfrm.html">compare_mfrm()</a></code>, <code><a href="build_weighting_review.html">build_weighting_review()</a></code>,
-<code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code>, <code><a href="compute_information.html">compute_information()</a></code></p></div>
+<a href="mfrmr_gpcm_scope.html">mfrmr_gpcm_scope</a>, <code><a href="compute_information.html">compute_information()</a></code></p>
+<p><code>build_model_choice_review()</code></p></div>
     </div>
 
     <div class="section level2">

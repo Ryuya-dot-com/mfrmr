@@ -124,7 +124,7 @@ scale.
 ## Typical workflow
 
 1.  Inspect available datasets with
-    [`list_mfrmr_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/list_mfrmr_data.md).
+    [`list_mfrmr_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/load_mfrmr_data.md).
 
 2.  Load one dataset using
     [`load_mfrmr_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/load_mfrmr_data.md).

@@ -11,6 +11,7 @@ Thanks for helping improve `mfrmr`.
 ## Development setup
 
 ``` r
+
 # from package root
 install.packages(c("devtools", "roxygen2", "testthat"))
 devtools::document()
@@ -21,6 +22,7 @@ To try a development checkout, start a fresh R session in its package
 root:
 
 ``` r
+
 pkgload::load_all(".", export_all = FALSE)
 getNamespaceInfo(asNamespace("mfrmr"), "path")
 ```
@@ -108,8 +110,13 @@ interactive gallery live in `vignettes/articles/` and are built by
 pkgdown. Keep their published article names stable. When linking from an
 installed tutorial to a website-only article, use its full website URL
 rather than [`vignette()`](https://rdrr.io/r/utils/vignette.html) or a
-local HTML path. All specialized calculations remain part of the
-evaluated website build.
+local HTML path. Specialized calculations normally remain part of the
+evaluated website build. Articles using licensed external data, such as
+the ICNALE CAF workflow, display code for local execution instead:
+disable evaluation explicitly, verify that code locally with authorized
+data, and keep inputs and individual outputs out of both the repository
+and generated site. Do not rely on `NOT_CRAN` to prevent website
+execution; pkgdown sets it to true.
 
 Keep each reference page focused on its question, minimal runnable use,
 arguments, output and essential interpretation limits. Link detailed
@@ -194,6 +201,16 @@ live release check.
 
 - Add or update tests for every user-visible change.
 - Keep tests deterministic (fixed seeds, no network calls).
+- Use explicit numerical tolerances for independent or repeated
+  floating-point calculations whose reduction order can differ across
+  BLAS/LAPACK libraries. Choose the bound from the calculation’s scale
+  and required accuracy; include an absolute allowance near zero and a
+  coordinatewise check where every derivative matters. Do not round
+  results or relax convergence criteria to make a comparison pass. Keep
+  independent formula or derivative checks, and compare diagnostic
+  decisions, unavailable states, names and dimensions exactly. Reserve
+  exact numerical equality for contracts that require it, such as
+  unchanged cached values and same-session serialization replay.
 - Avoid writing plot files during tests (use `draw = FALSE` unless
   plotting is under test).
 - Use `on.exit(..., add = TRUE)` or
@@ -216,9 +233,7 @@ live release check.
 ## Documentation expectations
 
 - Update roxygen comments when function arguments/returns change.
-- Run
-  [`devtools::document()`](https://devtools.r-lib.org/reference/document.html)
-  before committing.
+- Run `devtools::document()` before committing.
 - Do not pass a partial topic set to `roclet_output()` in the package
   directory: its default cleanup deletes other generated help files. Use
   normal package documentation generation or an isolated output
@@ -294,6 +309,7 @@ needed by both modes. To inspect or run a reference implementation
 directly from a matching checkout:
 
 ``` r
+
 source("scripts/load-research-code.R")
 reference <- load_mfrmr_research_code(".")
 ls(reference)
@@ -516,15 +532,15 @@ timeout.
   skips and unfinished steps. A focused check and the exhaustive
   `NOT_CRAN=true` regression job provide different evidence.
 
-- [`devtools::check()`](https://devtools.r-lib.org/reference/check.html)
-  defaults to `env_vars = c(NOT_CRAN = "true")`, which runs the full
-  **packaged** suite. To time the ordinary CRAN selection, set
-  `env_vars = c(NOT_CRAN = "false")`. This alone does not reproduce
-  win-builder: devtools also defaults to omitting the PDF manual, remote
-  incoming checks and strict Suggests availability. For a staged source
-  archive, use:
+- `devtools::check()` defaults to `env_vars = c(NOT_CRAN = "true")`,
+  which runs the full **packaged** suite. To time the ordinary CRAN
+  selection, set `env_vars = c(NOT_CRAN = "false")`. This alone does not
+  reproduce win-builder: devtools also defaults to omitting the PDF
+  manual, remote incoming checks and strict Suggests availability. For a
+  staged source archive, use:
 
   ``` r
+
   devtools::check_built("mfrmr_0.2.4.tar.gz", cran = TRUE,
     env_vars = c(NOT_CRAN = "false"), args = "--timings",
     manual = TRUE, remote = TRUE, force_suggests = TRUE)

@@ -8,7 +8,16 @@ This function runs the simulation and fits models. To review an already
 saved simulation result without new data generation or fitting, use
 assess_mfrm_recovery(). In 0.2.4 this replaces evaluate_mfrm_recovery();
 the old name remains an alias. See the details for corrected recovery
-targets, Monte Carlo uncertainty and migration of saved results."><meta property="og:description" content="Runs a compact parameter-recovery simulation study: generate data from a
+targets, Monte Carlo uncertainty and migration of saved results.
+Converts the numerical output from simulate_mfrm_recovery() into a
+reviewer-facing adequacy checklist. The goal is not to impose one universal
+pass/fail rule; it is to make the main user questions explicit: Did the runs
+finish? Did the fitted models converge? Are uncertainty summaries available?
+Are coverage and Monte Carlo precision plausible? If practical RMSE or bias
+limits are supplied, which parameter groups need follow-up? For
+GPCM, which slope-regime generator condition frames the recovery evidence?
+This only reads an existing simulation result. It does not generate data,
+refit models, add replications or repair unavailable uncertainty estimates."><meta property="og:description" content="Runs a compact parameter-recovery simulation study: generate data from a
 known ordered many-facet data-generating setup, refit the requested model,
 align estimates to the known truth where location indeterminacy requires it,
 and summarize bias, RMSE, MAE, correlation, and coverage of available
@@ -17,7 +26,16 @@ This function runs the simulation and fits models. To review an already
 saved simulation result without new data generation or fitting, use
 assess_mfrm_recovery(). In 0.2.4 this replaces evaluate_mfrm_recovery();
 the old name remains an alias. See the details for corrected recovery
-targets, Monte Carlo uncertainty and migration of saved results."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+targets, Monte Carlo uncertainty and migration of saved results.
+Converts the numerical output from simulate_mfrm_recovery() into a
+reviewer-facing adequacy checklist. The goal is not to impose one universal
+pass/fail rule; it is to make the main user questions explicit: Did the runs
+finish? Did the fitted models converge? Are uncertainty summaries available?
+Are coverage and Monte Carlo precision plausible? If practical RMSE or bias
+limits are supplied, which parameter groups need follow-up? For
+GPCM, which slope-regime generator condition frames the recovery evidence?
+This only reads an existing simulation result. It does not generate data,
+refit models, add replications or repair unavailable uncertainty estimates."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -25,7 +43,7 @@ targets, Monte Carlo uncertainty and migration of saved results."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,31 +51,25 @@ targets, Monte Carlo uncertainty and migration of saved results."><meta property
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -71,7 +83,7 @@ targets, Monte Carlo uncertainty and migration of saved results."><meta property
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Simulate parameter recovery by repeated generation and refitting</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>simulate_mfrm_recovery.Rd</code></div>
     </div>
 
@@ -83,9 +95,18 @@ and summarize bias, RMSE, MAE, correlation, and coverage of available
 centered structural facet intervals.
 This function runs the simulation and fits models. To review an already
 saved simulation result without new data generation or fitting, use
-<code><a href="assess_mfrm_recovery.html">assess_mfrm_recovery()</a></code>. In 0.2.4 this replaces <code>evaluate_mfrm_recovery()</code>;
+<code>assess_mfrm_recovery()</code>. In 0.2.4 this replaces <code>evaluate_mfrm_recovery()</code>;
 the old name remains an alias. See the details for corrected recovery
 targets, Monte Carlo uncertainty and migration of saved results.</p>
+<p>Converts the numerical output from <code>simulate_mfrm_recovery()</code> into a
+reviewer-facing adequacy checklist. The goal is not to impose one universal
+pass/fail rule; it is to make the main user questions explicit: Did the runs
+finish? Did the fitted models converge? Are uncertainty summaries available?
+Are coverage and Monte Carlo precision plausible? If practical RMSE or bias
+limits are supplied, which parameter groups need follow-up? For
+<code>GPCM</code>, which slope-regime generator condition frames the recovery evidence?
+This only reads an existing simulation result. It does not generate data,
+refit models, add replications or repair unavailable uncertainty estimates.</p>
     </div>
 
     <div class="section level2">
@@ -120,6 +141,48 @@ targets, Monte Carlo uncertainty and migration of saved results.</p>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  file <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  file_refit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"never"</span>, <span class="st">"on_change"</span>, <span class="st">"always"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">assess_mfrm_recovery</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  min_reps <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  min_success_rate <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  min_convergence_rate <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  min_se_available <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>  coverage_target <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  coverage_tolerance <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  max_mcse_rmse_ratio <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  max_rmse <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  max_abs_bias <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  top_n <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>  digits <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_recovery_assessment'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  y <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"status"</span>, <span class="st">"metrics"</span><span class="op">)</span>,</span>
+<span>  metric <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rmse"</span>, <span class="st">"bias"</span>, <span class="st">"coverage"</span>, <span class="st">"se_available"</span>, <span class="st">"mcse_rmse"</span><span class="op">)</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_recovery_simulation'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  y <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"summary"</span>, <span class="st">"coverage"</span>, <span class="st">"errors"</span>, <span class="st">"scatter"</span>, <span class="st">"replications"</span><span class="op">)</span>,</span>
+<span>  metric <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rmse"</span>, <span class="st">"bias"</span>, <span class="st">"mae"</span>, <span class="st">"correlation"</span>, <span class="st">"coverage"</span>, <span class="st">"mcse_bias"</span>, <span class="st">"mcse_rmse"</span>,</span>
+<span>    <span class="st">"raw_rmse"</span>, <span class="st">"raw_bias"</span>, <span class="st">"mean_se"</span>, <span class="st">"se_available"</span><span class="op">)</span>,</span>
+<span>  parameter_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  facet <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  comparison <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"aligned"</span>, <span class="st">"unaligned"</span><span class="op">)</span>,</span>
+<span>  marginal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"histogram"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  preset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"standard"</span>, <span class="st">"publication"</span>, <span class="st">"compact"</span>, <span class="st">"monochrome"</span><span class="op">)</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -236,7 +299,7 @@ same contract.</p></dd>
 
 <dt id="arg-sim-spec">sim_spec<a class="anchor" aria-label="anchor" href="#arg-sim-spec"></a></dt>
 <dd><p>Optional output from <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code> or
-<code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code>. When supplied, it defines the generator setup;
+<code><a href="build_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code>. When supplied, it defines the generator setup;
 direct scalar arguments are treated as legacy inputs and should generally
 be left at their defaults except for <code>seed</code>. Any custom public two-facet
 names recorded in <code>sim_spec$facet_names</code> are also carried into the
@@ -294,6 +357,118 @@ environment differ. <code>"always"</code> replaces the file with a new run. Unli
 <code>brms::brm(file_refit = "never")</code>, this function checks compatibility even
 under <code>"never"</code>; it does not silently return a different analysis.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>Output from <code>simulate_mfrm_recovery()</code>.</p></dd>
+
+
+<dt id="arg-min-reps">min_reps<a class="anchor" aria-label="anchor" href="#arg-min-reps"></a></dt>
+<dd><p>Minimum replication count expected before treating the
+simulation for inferential use.</p></dd>
+
+
+<dt id="arg-min-success-rate">min_success_rate<a class="anchor" aria-label="anchor" href="#arg-min-success-rate"></a></dt>
+<dd><p>Minimum acceptable proportion of replications that
+generated data and produced a fitted model.</p></dd>
+
+
+<dt id="arg-min-convergence-rate">min_convergence_rate<a class="anchor" aria-label="anchor" href="#arg-min-convergence-rate"></a></dt>
+<dd><p>Minimum acceptable proportion of replications
+whose fitted model reported convergence.</p></dd>
+
+
+<dt id="arg-min-se-available">min_se_available<a class="anchor" aria-label="anchor" href="#arg-min-se-available"></a></dt>
+<dd><p>Minimum acceptable proportion of all expected targets
+with matching structural standard errors in each parameter group, including
+targets in failed fits. Unknown target counts give <code>not_available</code>.
+Set to <code>NULL</code> to skip this check.</p></dd>
+
+
+<dt id="arg-coverage-target">coverage_target<a class="anchor" aria-label="anchor" href="#arg-coverage-target"></a></dt>
+<dd><p>Nominal coverage target, usually <code>0.95</code>.</p></dd>
+
+
+<dt id="arg-coverage-tolerance">coverage_tolerance<a class="anchor" aria-label="anchor" href="#arg-coverage-tolerance"></a></dt>
+<dd><p>Absolute tolerance around <code>coverage_target</code>.</p></dd>
+
+
+<dt id="arg-max-mcse-rmse-ratio">max_mcse_rmse_ratio<a class="anchor" aria-label="anchor" href="#arg-max-mcse-rmse-ratio"></a></dt>
+<dd><p>Maximum acceptable Monte Carlo SE of RMSE divided
+by RMSE. Set to <code>NULL</code> to skip this precision check.</p></dd>
+
+
+<dt id="arg-max-rmse">max_rmse<a class="anchor" aria-label="anchor" href="#arg-max-rmse"></a></dt>
+<dd><p>Optional practical RMSE limit. Use a scalar for all parameter
+groups or a named vector/list with names such as <code>"facet"</code>, <code>"step"</code>,
+<code>"slope"</code>, <code>"Rater"</code>, or <code>"facet:Rater:logit"</code>.</p></dd>
+
+
+<dt id="arg-max-abs-bias">max_abs_bias<a class="anchor" aria-label="anchor" href="#arg-max-abs-bias"></a></dt>
+<dd><p>Optional practical absolute-bias limit. Naming follows
+<code>max_rmse</code>. Mean-aligned location groups and complete identified log-slope
+blocks have zero average bias by construction and remain <code>not_assessed</code>.</p></dd>
+
+
+<dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
+<dd><p>Number of next-action lines retained in the compact output.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Digits used by the print method.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Reserved for generic compatibility.</p></dd>
+
+
+<dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
+<dd><p>Reserved for S3 generic compatibility.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>Plot route: <code>"summary"</code> draws a metric from
+<code>summary(x)$recovery_summary</code>, <code>"coverage"</code> draws 95% coverage by parameter group,
+<code>"errors"</code> draws row-level recovery-error distributions, <code>"scatter"</code> draws
+truth against estimated values, and <code>"replications"</code> summarizes run status.</p></dd>
+
+
+<dt id="arg-metric">metric<a class="anchor" aria-label="anchor" href="#arg-metric"></a></dt>
+<dd><p>Summary metric used when <code>type = "summary"</code>. Supported values
+are <code>"rmse"</code>, <code>"bias"</code>, <code>"mae"</code>, <code>"correlation"</code>, <code>"coverage"</code>,
+<code>"mcse_bias"</code>, <code>"mcse_rmse"</code>, <code>"raw_rmse"</code>, <code>"raw_bias"</code>, <code>"mean_se"</code>, and
+<code>"se_available"</code>.</p></dd>
+
+
+<dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a></dt>
+<dd><p>If <code>TRUE</code>, print the <code>ggplot</code> object. If <code>FALSE</code>, return the
+<code>ggplot</code> object invisibly without drawing.</p></dd>
+
+
+<dt id="arg-parameter-type">parameter_type<a class="anchor" aria-label="anchor" href="#arg-parameter-type"></a></dt>
+<dd><p>Optional parameter type filter, such as <code>"person"</code>,
+<code>"facet"</code>, <code>"step"</code>, <code>"slope"</code>, or <code>"population"</code>.</p></dd>
+
+
+<dt id="arg-facet">facet<a class="anchor" aria-label="anchor" href="#arg-facet"></a></dt>
+<dd><p>Optional facet filter.</p></dd>
+
+
+<dt id="arg-comparison">comparison<a class="anchor" aria-label="anchor" href="#arg-comparison"></a></dt>
+<dd><p>Error/estimate scale for row-level routes. <code>"aligned"</code>
+uses <code>EstimateAligned</code> / <code>ErrorAligned</code>; <code>"unaligned"</code> uses <code>Estimate</code> /
+<code>ErrorRaw</code> on the same comparison scale.</p></dd>
+
+
+<dt id="arg-marginal">marginal<a class="anchor" aria-label="anchor" href="#arg-marginal"></a></dt>
+<dd><p>Marginal histogram display for <code>type = "scatter"</code>: <code>"auto"</code>
+(default; shown when at least 8 finite pairs are plotted), <code>"histogram"</code>,
+or <code>"none"</code>.</p></dd>
+
+
+<dt id="arg-preset">preset<a class="anchor" aria-label="anchor" href="#arg-preset"></a></dt>
+<dd><p>Visual preset (<code>"standard"</code>, <code>"publication"</code>, <code>"compact"</code>, or
+<code>"monochrome"</code>).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -313,139 +488,100 @@ characteristic summary.</p></li>
 <li><p><code>ademp</code>: simulation-study metadata.</p></li>
 <li><p><code>reproducibility</code>: file identity, original inputs and per-trial seeds when
 <code>file</code> is supplied.</p></li>
-</ul></div>
+</ul><p>An object of class <code>mfrm_recovery_assessment</code> with:</p><ul><li><p><code>overview</code>: compact run-level status.</p></li>
+<li><p><code>checklist</code>: reviewer-facing adequacy checks.</p></li>
+<li><p><code>condition_review</code>: generator-condition metadata, including
+<code>GPCM</code> slope-regime interpretation and generated score-category support
+when available.</p></li>
+<li><p><code>condition_reporting_notes</code>: reporter-facing generator-condition caveats
+separated from parameter-recovery conclusions.</p></li>
+<li><p><code>diagnostic_reporting_notes</code>: reporter-facing fit/separation caveats
+retained as diagnostic context rather than recovery criteria.</p></li>
+<li><p><code>diagnostic_review</code>: optional fit/separation operating-characteristic
+context when retained by <code>simulate_mfrm_recovery()</code>.</p></li>
+<li><p><code>metric_review</code>: parameter-group metric checks.</p></li>
+<li><p><code>uncertainty_review</code>: coverage / SE availability interpretation with
+expected/available counts, coverage MCSE and unavailable reasons.</p></li>
+<li><p><code>reading_order</code>: recommended first-read order for the summary, condition,
+plot, and row-level recovery outputs.</p></li>
+<li><p><code>next_actions</code>: short action list sorted by severity.</p></li>
+<li><p><code>thresholds</code>: thresholds used for the assessment.</p></li>
+</ul><p>Invisibly, a <code>ggplot</code> object carrying reusable plot tables and
+metadata accessible via <code><a href="plot_data.html">plot_data()</a></code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This helper is deliberately narrower than <code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>. Design
-evaluation asks which design condition is operationally adequate; recovery
-simulation asks whether the fitted model recovers the known parameters under
-one explicit data-generating setup.</p>
-<p>Location-like parameters (<code>Person</code>, non-person facets, and steps) are
-summarized after mean alignment within each replication and parameter group.
-These errors describe relative locations within the matched group. Their
-average <code>Bias</code> is zero by construction, so it cannot establish absence of
-bias for individual parameters. <code>BiasBasis</code> identifies this restriction;
-<code><a href="assess_mfrm_recovery.html">assess_mfrm_recovery()</a></code> leaves its bias check <code>not_assessed</code>. Inspect RMSE
-and row-level errors for relative recovery instead.</p>
-<p>PCM/GPCM step vectors are centered within their owning facet level. Their
-generating step means are therefore added to the corresponding facet truth
-before comparison. A generated population intercept, when fitted, is shifted
-consistently with the fitted facet/step identification. <code>RawTruth</code> retains
-the original generator parameter. <code>Truth</code> is the comparison-coordinate
-truth; <code>ErrorRaw</code>, <code>RawBias</code> and <code>RawRMSE</code> use this truth before the additional
-within-group mean alignment, not necessarily <code>RawTruth</code>.</p>
-<p>For <code>GPCM</code>, supplied generator slopes are treated as relative
-discriminations and normalized to the same geometric-mean-one log-slope
-identification used by the fitter. Slope recovery is therefore summarized on
-the identified log-slope scale without an additional mean-alignment step.
-Average bias over a complete log-slope block is also zero by identification
-and is not an automatic adequacy criterion.
-Direct data generation and refitting are supported, but broader GPCM design-
-planning claims remain outside the current package boundary.</p>
-<p>Sparse linked generators are supported through <code>sim_spec</code> or direct
-<code>assignment = "sparse_linked"</code> plus <code>sparse_controls</code>. Their design-density
-and rater-link diagnostics are retained in <code>rep_overview</code>; recovery metrics
-remain parameter-recovery summaries and should not be read as evidence that
-a sparse linking design is adequate by itself.</p>
-<p>The returned <code>ademp</code> component follows the simulation-study framing of
-Morris, White, and Crowther (2019) and the ADEMP planning/reporting template
-used in later simulation-study guidance.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="saving-and-resuming-simulations">Saving and resuming simulations<a class="anchor" aria-label="anchor" href="#saving-and-resuming-simulations"></a></h2>
-
-
-<p>Pass the same <code>file</code> and analysis arguments on a subsequent call to reuse
-the completed result without generation or fitting, or to resume an
-interrupted run. The identity includes generator inputs/specification,
-fitting controls, requested replications, seed, RNG kind, package R code
-and native library fingerprints, relevant numerical/diagnostic R options,
-R/platform, numerical libraries and
-dependency versions. Changing <code>reps</code> starts a different study; extension of
-an existing study is not supported. <code>progress</code> and <code>parallel</code> do not change
-the identity. Cached results retain the settings of their original run.</p>
-<p>Recovery runs and serial design evaluations save after every finished
-trial. Future design evaluations save after a whole design row returns;
-an interrupted row may need to run again. A partially completed optimizer
-is not resumed. Fit failures are completed attempts and are saved too;
-resuming does not redraw failures until they succeed. An unexpected error
-outside the recorded fit/diagnostic failure routes stops the call and leaves
-earlier checkpoints available. These files do not change the interpretation
-or eligibility of the underlying estimates and intervals.</p>
-<p>Per-trial seeds are allocated before computation and retained even when
-<code>seed = NULL</code>; an explicit seed is preferable for reproducing a new run in
-another file. Each trial controls generation, fitting and diagnostics with
-its own seed. A matching environment is required for automatic reuse;
-recorded seeds alone do not guarantee identical floating-point results on
-other systems. Keep the analysis script and software environment as well.</p>
-<p>After completion, <code>readRDS(file)</code> returns the usual result object with an
-additional <code>reproducibility</code> component containing identity, inputs and
-trial seeds. Before completion the file is an internal checkpoint; resume
-through the same public function. Writes use a temporary file in the same
-directory and checked replacement. A <code>.lock</code> directory prevents concurrent
-writers. Normal returns/errors release it; after process termination, remove
-a remaining lock only after checking that no writer is active. Unreadable
-files are never silently reused or replaced by <code>"on_change"</code>.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="monte-carlo-uncertainty-and-missing-results">Monte Carlo uncertainty and missing results<a class="anchor" aria-label="anchor" href="#monte-carlo-uncertainty-and-missing-results"></a></h2>
-
-
-<p>Replications, not parameter rows within a replication, are independent.
-For a pooled available-row mean, let \(S_r\) be the sum of values in trial
-\(r\), \(n_r\) its available-row count and
-\(m = \sum_r S_r / \sum_r n_r\). With \(R\) recorded trials, the
+    <p><strong>Checkpointing (<code>file</code>)</strong>: Reuses or trial-checkpoints runs matching full
+generator/fitter inputs, <code>reps</code>, seeds, RNG kind, and package/platform
+fingerprints via atomic temp-file writes and a <code>.lock</code> directory. Failed fits
+are saved as completed attempts rather than redrawn.</p>
+<p><strong>Alignment, MCSE, and intervals</strong>: Location groups (<code>Person</code>, facets, steps)
+are mean-aligned within each trial (PCM/GPCM step means shift into owning
+facet <code>Truth</code>, while <code>RawTruth</code> keeps raw generator values; mean <code>Bias</code> is
+zero by construction), and <code>GPCM</code> log-slopes use geometric-mean-one
+identification. Across \(R\) trials with trial sums \(S_r\), counts
+\(n_r\), and pooled mean \(m = \sum_r S_r / \sum_r n_r\), the
 ratio-linearization MCSE is
-$$\mathrm{MCSE}(m) = \frac{\sqrt{R/(R-1)\sum_r(S_r-m n_r)^2}}{\sum_r n_r}.$$
-Failed trials contribute zero sums and counts. RMSE uses squared errors and
-the delta-method factor \(1/(2\sqrt{m})\); <code>McseCoverage95</code> applies the
-same ratio calculation to coverage indicators. Fewer than two contributing
-trials gives <code>NA</code>, as does the RMSE delta MCSE at zero RMSE. These are
-large-replication approximations; small examples do not qualify performance.</p>
-<p><code>recovery_targets</code> records expected target counts after generation, before
-fitting. Summaries retain <code>AttemptedReps</code>, <code>FailedReps</code>, <code>ExpectedRows</code>,
-<code>EstimateRows</code>, <code>SEAvailableRows</code>, <code>CoverageRows</code> and <code>CoverageReps</code>.
-<code>Coverage95</code> is conditional on an available interval: report it with
-<code>CoverageAvailabilityRate</code> and failures. Unavailable intervals are not
-counted as noncoverage. Availability rates use all expected targets,
-including failed fits. A generation failure or legacy result can leave the
-roster unknown; then <code>ExpectedRows</code> and full-denominator availability rates
-are <code>NA</code>, while <code>KnownTargetRows</code> and <code>KnownTargetReps</code> remain visible.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="interval-targets">Interval targets<a class="anchor" aria-label="anchor" href="#interval-targets"></a></h2>
-
-
-<p>For non-Person facets, coverage concerns each level minus its facet mean.
-With \(P = I - 11^T/m\), its covariance is \(P V P^T\); the original
-marginal SE cannot be reused after alignment. The runner obtains model-based
-95\<!-- % intervals from \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} for eligible MML fits, including -->
-its numerical/source checks. A complete matched facet roster is required.
-The row table retains <code>CoverageEstimate</code>, <code>CoverageTruth</code>, <code>SE</code>, <code>Lower95</code>,
-<code>Upper95</code>, <code>CIEligible</code> and <code>CIReason</code>. <code>RawSE</code> separately preserves the
-source uncertainty. A valid target SE can remain available when its interval
-bounds cannot be represented.</p>
-<p>JML remains a point-recovery route. Person-score uncertainty is conditional
-or posterior score uncertainty, not the centered structural interval above.
-Their coverage is unavailable with an explicit reason; step, slope and
-population recovery also retain point comparisons without a matching
-interval implementation here. This does not alter uncertainty available
-through other model-specific APIs. Numerical eligibility alone does not
-establish finite-sample coverage or robustness to model misspecification.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="previously-saved-recovery-results">Previously saved recovery results<a class="anchor" aria-label="anchor" href="#previously-saved-recovery-results"></a></h2>
-
-
-<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="assess_mfrm_recovery.html">assess_mfrm_recovery()</a></code> and summary/coverage <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> routes
-recompute aggregates from saved rows without fitting. They correct trial
-MCSEs and withhold old coverage whose centered covariance was not retained.
-They cannot repair the identified PCM/population truth from old row tables;
-start a new study to obtain those corrections and matched interval evidence.
-Read <code>summary(x)$notes</code> and the new availability/reason columns. Directly
-reading an old <code>x$recovery_summary</code> does not update that stored table.
-The default file reuse policy rejects the changed implementation identity;
-use a new file path to preserve the old study.</p>
+$$\mathrm{MCSE}(m) = \frac{\sqrt{R/(R-1)\sum_r(S_r-m n_r)^2}}{\sum_r n_r}$$
+(delta factor \(1/(2\sqrt{m})\) for RMSE). Non-Person MML facet coverage
+uses centered covariance \(P V P^T\) (\(P = I - 11^T/m\)) via
+<code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code>; <code>Coverage95</code> conditions on available intervals and
+must be read alongside <code>CoverageAvailabilityRate</code> and <code>FailedReps</code>.</p>
+<p>RMSE and bias adequacy depends on the substantive scale and the use case, so
+the function does not mark them as failed unless the user supplies
+<code>max_rmse</code> or <code>max_abs_bias</code>. Without those limits, the corresponding rows are
+marked <code>not_assessed</code> and the next action asks the user to set practical
+thresholds when a decision depends on the metric.
+<code>BiasBasis</code> explains groups whose mean bias is fixed at zero by identification;
+even a supplied bias limit cannot turn that identity into recovery evidence.
+Threshold names are matched from the most specific group to its type or
+<code>default</code>; see <code>max_rmse</code> for examples.</p>
+<p>Metrics are recomputed from row-level evidence. Coverage is conditional on
+the available centered facet intervals, not all planned targets.
+<code>uncertainty_review</code> retains counts, <code>CoverageAvailabilityRate</code>,
+<code>McseCoverage95</code> and <code>CIReasons</code> alongside its descriptive checklist.
+See <code>simulate_mfrm_recovery()</code> for the estimands, independent-trial MCSE,
+unsupported interval groups and handling of legacy saved results. Checklist
+tolerances do not replace the Monte Carlo uncertainty or qualify an estimator.</p>
+<p>The <code>condition_review</code> table is generator metadata for interpreting the
+recovery run. For <code>GPCM</code>, <code>GPCMSlopeRegime</code>, <code>StressLevel</code>, and
+generated score-category support describe the data-generating condition;
+they are not model-fit tests and they are not literature-derived adequacy
+cut points. <code>condition_reporting_notes</code> turns those generator conditions
+into reporter-facing caveats, such as high-dispersion slope stress or sparse
+generated score support.</p>
+<p>The optional <code>diagnostic_review</code> table is available when
+<code>simulate_mfrm_recovery()</code> was called with <code>include_diagnostics = TRUE</code>.
+It summarizes fit and separation operating characteristics as diagnostic
+context only. Its availability fields do not mean that fit or separation
+values are adequate, and those rows do not enter the recovery adequacy
+status. <code>diagnostic_reporting_notes</code> should be read first when drafting
+fit/separation language because it separates zero separation/reliability,
+absolute fit-ZSTD flags, and df-sensitive ZSTD flags from recovery criteria.</p>
+<p><code>plot.mfrm_recovery_assessment()</code> summarizes recovery checks visually. Use
+<code>type = "status"</code> first to see where checklist attention is needed, then
+<code>type = "metrics"</code> to inspect the parameter groups behind RMSE, bias,
+coverage, standard-error availability, or Monte Carlo precision statuses.
+The intended reading order is <code>summary(recovery_review)</code>, then
+<code>condition_reporting_notes</code> and <code>condition_review</code>, then
+<code>diagnostic_reporting_notes</code> and <code>diagnostic_review</code>, then the status plot,
+then the metric plot, then the row-level recovery table for the parameter
+groups that need follow-up. When <code>draw = FALSE</code>, the plot data also include
+<code>reading_order</code>, <code>guidance</code>, condition/diagnostic handoff tables, and
+structured plot tables such as <code>section_status</code> for status plots and
+<code>metric_review</code> for metric plots.</p>
+<p>These plots are intended as simulation-review graphics. They do not replace
+the row-level <code>x$recovery</code> table or the ADEMP metadata; they make the main
+recovery estimands easier to inspect during model-development and design
+checks. Coverage is displayed only for groups with valid centered structural
+intervals, conditional on availability. Summary/coverage routes refresh
+aggregates from saved rows; their <code>availability_table</code> component preserves all
+selected groups, including those omitted from drawing. Inspect counts,
+availability rates, MCSEs and <code>CIReasons</code> via <code><a href="plot_data.html">plot_data()</a></code> and in <code>summary(x)</code>.
+A wholly unavailable coverage plot gives an informative error; it does not
+draw missing coverage as zero. See <code>simulate_mfrm_recovery()</code> for the target
+and the treatment of legacy saved intervals. A zero mean-aligned bias is an
+identification identity, not evidence of unbiased estimation.</p>
     </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
@@ -469,7 +605,9 @@ Using simulation studies to evaluate statistical methods.
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="simulate_mfrm_data.html">simulate_mfrm_data()</a></code>, <code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>, <code><a href="fit_mfrm.html">fit_mfrm()</a></code>,
-<code><a href="assess_mfrm_recovery.html">assess_mfrm_recovery()</a></code>, <a href="mfrmr_compatibility_layer.html">mfrmr_compatibility_layer</a></p></div>
+<code>assess_mfrm_recovery()</code>, <a href="mfrmr_api_migration_030.html">mfrmr_compatibility_layer</a></p>
+<p><code>simulate_mfrm_recovery()</code>, <code>plot.mfrm_recovery_simulation()</code></p>
+<p><code>simulate_mfrm_recovery()</code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">base::summary()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -495,6 +633,71 @@ Using simulation studies to evaluate statistical methods.
 <span class="r-in"><span>  reps <span class="op">=</span> <span class="fl">1</span>, maxit <span class="op">=</span> <span class="fl">30</span>, seed <span class="op">=</span> <span class="fl">123</span>, file <span class="op">=</span> <span class="va">saved</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">rec</span>, <span class="va">again</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">saved</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("assess_mfrm_recovery", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">simulate_mfrm_recovery</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  n_person <span class="op">=</span> <span class="fl">12</span>,</span></span>
+<span class="r-in"><span>  n_rater <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>  n_criterion <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>  reps <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>  maxit <span class="op">=</span> <span class="fl">30</span>,</span></span>
+<span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">123</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">assess_mfrm_recovery</span><span class="op">(</span><span class="va">rec</span>, min_reps <span class="op">=</span> <span class="fl">1</span>, max_rmse <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Read the GPCM generator condition separately from recovery adequacy.</span></span></span>
+<span class="r-in"><span><span class="va">gpcm_spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  n_person <span class="op">=</span> <span class="fl">14</span>,</span></span>
+<span class="r-in"><span>  n_rater <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>  n_criterion <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>  raters_per_person <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"GPCM"</span>,</span></span>
+<span class="r-in"><span>  step_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span></span>
+<span class="r-in"><span>  slope_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span></span>
+<span class="r-in"><span>  slopes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.85</span>, <span class="fl">1.15</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  assignment <span class="op">=</span> <span class="st">"crossed"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">gpcm_rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu">simulate_mfrm_recovery</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  sim_spec <span class="op">=</span> <span class="va">gpcm_spec</span>,</span></span>
+<span class="r-in"><span>  reps <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>  fit_method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  quad_points <span class="op">=</span> <span class="fl">5</span>,</span></span>
+<span class="r-in"><span>  maxit <span class="op">=</span> <span class="fl">12</span>,</span></span>
+<span class="r-in"><span>  include_diagnostics <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  include_person <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">456</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">gpcm_review</span> <span class="op">&lt;-</span> <span class="fu">assess_mfrm_recovery</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">gpcm_rec</span>,</span></span>
+<span class="r-in"><span>  min_reps <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>  max_rmse <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>slope <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  max_abs_bias <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>slope <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  min_se_available <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
+<span class="r-in"><span>  max_mcse_rmse_ratio <span class="op">=</span> <span class="cn">NULL</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">gpcm_review</span><span class="op">$</span><span class="va">condition_reporting_notes</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"ConditionArea"</span>, <span class="st">"ReportingAttention"</span>, <span class="st">"ConditionFinding"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">gpcm_review</span><span class="op">$</span><span class="va">condition_review</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"Model"</span>, <span class="st">"GPCMSlopeRegime"</span>, <span class="st">"StressLevel"</span>, <span class="st">"ScoreSupportStatus"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">gpcm_review</span><span class="op">$</span><span class="va">diagnostic_reporting_notes</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"Facet"</span>, <span class="st">"ReportingAttention"</span>, <span class="st">"DiagnosticFinding"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">gpcm_review</span><span class="op">)</span><span class="op">$</span><span class="va">reading_order</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># Optional workflow; run the example explicitly as shown below.</span></span></span>
+<span class="r-in"><span><span class="co"># example("plot.mfrm_recovery_simulation", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># One saved replication illustrates output structure, not precise rates.</span></span></span>
+<span class="r-in"><span><span class="co"># Regeneration recipe: examples/simulation-results.R in the package.</span></span></span>
+<span class="r-in"><span><span class="va">saved</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"simulation-recovery.rds"</span>,</span></span>
+<span class="r-in"><span>  package <span class="op">=</span> <span class="st">"mfrmr"</span>, mustWork <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Inspect saved$generation_warnings and the result's run/status tables.</span></span></span>
+<span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="va">saved</span><span class="op">$</span><span class="va">result</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">rec</span>, type <span class="op">=</span> <span class="st">"summary"</span>, metric <span class="op">=</span> <span class="st">"rmse"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

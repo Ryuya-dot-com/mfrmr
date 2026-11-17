@@ -1,7 +1,16 @@
 # Evaluate legacy and strict marginal diagnostic screening under controlled misfit scenarios
 
-Evaluate legacy and strict marginal diagnostic screening under
-controlled misfit scenarios
+Summarizes output from `evaluate_mfrm_diagnostic_screening()` for
+reporting, appendix export, and draw-free visualization handoff. The
+summary keeps simulation operating characteristics separate from
+inferential conclusions: fit, marginal, pairwise, and report-review
+signals are screening readouts rather than pass/fail evidence.
+
+Builds an integrated visual summary from
+`evaluate_mfrm_diagnostic_screening()` output. The default view combines
+legacy residual, strict marginal, strict pairwise, strict combined, and
+optional report-index review rates so simulation results can be
+inspected in one operating-characteristic surface.
 
 ## Usage
 
@@ -34,6 +43,20 @@ evaluate_mfrm_diagnostic_screening(
   report_include = c("fit", "diagnostics", "tables", "precision", "reporting"),
   report_style = c("qc", "apa", "validation", "reviewer", "technical"),
   seed = NULL
+)
+
+# S3 method for class 'mfrm_diagnostic_screening'
+summary(object, digits = 3, ...)
+
+# S3 method for class 'mfrm_diagnostic_screening'
+plot(
+  x,
+  type = c("overview", "report", "contrast", "runtime"),
+  metric = NULL,
+  x_var = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
+  group_var = NULL,
+  draw = TRUE,
+  ...
 )
 ```
 
@@ -151,7 +174,7 @@ evaluate_mfrm_diagnostic_screening(
   Optional output from
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
   or
-  [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md)
+  [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
   used as the base data-generating mechanism.
 
 - include_report:
@@ -160,9 +183,11 @@ evaluate_mfrm_diagnostic_screening(
   [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
   and
   [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
-  and records the `report_index` readiness/signaling surface. This is
-  intentionally opt-in because it repeats the comprehensive
-  result-building workflow.
+  and records the `report_index` readiness/signaling surface. With
+  `residual_pca = "none"`, it reuses the replicate's diagnostics; other
+  PCA modes retain a separate PCA-free report diagnostic calculation.
+  Report assembly can add substantial work and is excluded from
+  `ElapsedSec`.
 
 - report_include:
 
@@ -179,6 +204,52 @@ evaluate_mfrm_diagnostic_screening(
 - seed:
 
   Optional seed for reproducible replications.
+
+- object:
+
+  Output from `evaluate_mfrm_diagnostic_screening()`.
+
+- digits:
+
+  Number of digits used in numeric summaries.
+
+- ...:
+
+  Reserved for generic compatibility.
+
+- x:
+
+  Output from `evaluate_mfrm_diagnostic_screening()`.
+
+- type:
+
+  Plot family. `"overview"` combines screening and optional report rates
+  or counts. `"report"` focuses on
+  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+  review signals. `"contrast"` plots
+  misspecification-minus-well-specified contrasts. `"runtime"` plots
+  elapsed-time summaries.
+
+- metric:
+
+  Metric family. Use `NULL` or `"auto"` for the default within each
+  `type`. Supported values are documented by error messages and include
+  `"rate"`, `"count"`, `"magnitude"`, `"elapsed"`, and
+  `"per_observation"` depending on `type`.
+
+- x_var:
+
+  Design variable for the horizontal axis. Public design aliases from a
+  simulation specification are accepted.
+
+- group_var:
+
+  Optional additional design variable to include in group labels. Public
+  design aliases are accepted.
+
+- draw:
+
+  Logical; if `FALSE`, return the plot-data bundle without drawing.
 
 ## Value
 
@@ -220,6 +291,44 @@ An object of class `mfrm_diagnostic_screening` with:
 - `ademp`: simulation-study metadata
 
 - `notes`: short interpretation notes
+
+An object of class `summary.mfrm_diagnostic_screening` with:
+
+- `overview`: run-level design, replication, convergence, and
+  report-review metadata
+
+- `reading_order`: recommended order for reading the summary tables
+
+- `next_actions`: action-oriented triage for interpreting and exporting
+  the summary
+
+- `reporting_notes`: report-facing boundaries and recommended wording
+  safeguards
+
+- `figure_recipes`: recommended figure/display recipes for the draw-free
+  plot-data tables
+
+- `scenario_summary`: aggregated scenario-by-design screening summaries
+
+- `performance_summary`: operating-characteristic rates and runtime
+  summaries
+
+- `report_signal_summary`: optional
+  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+  readiness/review signals
+
+- `scenario_contrast`: misspecification-minus-well-specified contrasts
+
+- `plot_*`: long-form draw-free plot tables for overview, report,
+  contrast, and runtime views
+
+- planning metadata, settings, ADEMP metadata, and interpretation notes
+
+Invisibly, a `ggplot` object carrying reusable metadata, a long-form
+`plot_long` table, and interpretation handoff tables (`overview`,
+`reading_order`, `next_actions`, `reporting_notes`, and
+`figure_recipes`) accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
 
 ## Details
 
@@ -276,6 +385,9 @@ under the evaluated role-based design.
 [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md),
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
 
+`evaluate_mfrm_diagnostic_screening()`, plot.mfrm_diagnostic_screening,
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+
 ## Examples
 
 ``` r
@@ -290,5 +402,31 @@ diag_eval <- evaluate_mfrm_diagnostic_screening(
 )
 diag_eval$scenario_summary
 diag_eval$scenario_contrast
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_diagnostic_screening", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+diag_eval <- saved$result
+summary(diag_eval)
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("plot.mfrm_diagnostic_screening", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+diag_eval <- saved$result
+plot(diag_eval, type = "overview", draw = FALSE)
+plot_data(diag_eval, type = "overview", component = "plot_long")
+plot_data(diag_eval, type = "overview", component = "next_actions")
+plot_data(diag_eval, type = "overview", component = "figure_recipes")
+plot(diag_eval, type = "report", metric = "rate", draw = FALSE)
 } # }
 ```

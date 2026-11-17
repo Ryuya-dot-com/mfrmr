@@ -34,15 +34,27 @@ vcov(object, ...)
 
 # S3 method for class 'mfrm_network_ergm'
 confint(object, parm = NULL, level = 0.95, ...)
+
+# S3 method for class 'mfrm_network_ergm'
+plot(
+  x,
+  type = c("coefficients", "gof"),
+  draw = TRUE,
+  preset = c("standard", "publication", "compact", "monochrome"),
+  ...
+)
 ```
 
 ## Arguments
 
 - x:
 
-  A rater or halo network result. All eligible pair metrics are used,
-  before graph/plot filtering; missing comparisons never become zero
-  ties.
+  For `fit_rater_network()`: A rater or halo network result. All
+  eligible pair metrics are used, before graph/plot filtering; missing
+  comparisons never become zero ties.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Output
+  from `fit_rater_network()`.
 
 - terms:
 
@@ -100,7 +112,13 @@ confint(object, parm = NULL, level = 0.95, ...)
 
 - ...:
 
-  Unused; unexpected arguments are rejected by extractors.
+  For `summary.mfrm_network_ergm()`: Unused; unexpected arguments are
+  rejected by extractors.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): `main`
+  overrides the saved title. Both coefficient and GOF views return
+  ggplots from saved tables; edit the returned ggplot for other display
+  controls. Backend `plot.gof` controls are not forwarded.
 
 - parm:
 
@@ -109,6 +127,20 @@ confint(object, parm = NULL, level = 0.95, ...)
 - level:
 
   Confidence level strictly between zero and one.
+
+- type:
+
+  `"coefficients"` or `"gof"` (requires saved GOF).
+
+- draw:
+
+  Whether to print the `ggplot` figure; `FALSE` returns the `ggplot`
+  object without drawing.
+
+- preset:
+
+  Visual preset; see
+  [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
 ## Value
 
@@ -128,6 +160,12 @@ originally stored 95% intervals or saved simulation GOF. Use
 and
 [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
 for stored reporting.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object.
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+extracts coefficient rows or GOF summaries and long-form simulation
+draws.
 
 ## Details
 
@@ -169,6 +207,13 @@ conditional on the selected binary network and model; they do not
 propagate estimated-edge or model-selection uncertainty. Changing
 `level` does not change the fitted object or its stored plot.
 
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot
+ERGM model checks or coefficient intervals
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
+Coefficient intervals are approximate pointwise normal intervals. They
+are not evidence of MCMC convergence.
+
 ## References
 
 Lamprianou, I. (2018). Investigation of rater effects using social
@@ -179,7 +224,7 @@ Psychological Measurement, 78, 430–459. doi:10.1177/0013164416689696.
 
 [`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md),
 [`rater_halo_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_halo_network_analysis.md),
-[`plot.mfrm_network_ergm()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_network_ergm.md)
+`plot.mfrm_network_ergm()`
 
 ## Examples
 

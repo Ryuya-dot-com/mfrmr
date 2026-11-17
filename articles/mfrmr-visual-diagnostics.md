@@ -1,7 +1,7 @@
 # mfrmr Visual Diagnostics
 
 Start with the [interactive ggplot2
-gallery](https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html)
+gallery](https://ryuya-dot-com.github.io/mfrmr/dev/articles/visual-gallery.html)
 for three worked examples with Plotly views, static figures and
 underlying values.
 
@@ -23,30 +23,30 @@ illustrate reusable styles, including views that remain interpretable
 without colour.
 
 If you are selecting figures for a report, use
-[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-before or alongside this vignette. Its `"Visual Displays"` rows now
-mirror the public plotting family shown here.
+`mfrm_report(fit, type = "checklist")` before or alongside this
+vignette. Its `"Visual Displays"` rows now mirror the public plotting
+family shown here.
 
 ## Find a figure by purpose
 
 Use [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on the
 fitted model or saved analysis result. In 0.2.4, the 33 former
 standalone drawing helpers are no longer exported. For existing scripts,
-[`help("mfrmr_plot_migration")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_plot_migration.md)
+[`help("mfrmr_plot_migration")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 gives every replacement and explains which `type`, `view` and `metric`
 controls apply.
 
 For observed rating agreement before model fitting, the
 [rating-agreement
-tutorial](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-rating-agreement.html#see-the-disagreement-then-compare-the-coefficients)
+tutorial](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html#see-the-disagreement-then-compare-the-coefficients)
 shows matched-score counts and pairwise QWK with retained sample sizes.
 Those custom ggplots use
-[`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_kappa_table.md)
+[`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
 output. They are distinct from the fitted-workflow
 exact-agreement/correlation heatmap below.
 
 For group comparisons of a rater or task, the [DFF
-tutorial](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.html#compare-group-residuals)
+tutorial](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html#compare-group-residuals)
 pairs a summary figure with response counts, display omissions and
 exclusion reasons. It explains why residual differences and linked-refit
 differences have different sign interpretations and what subgroup
@@ -62,41 +62,41 @@ misfit; feature groups describe backgrounds; a D-study plans an
 observed-score measurement.
 
 [![Wright map
-preview](mfrmr-visual-diagnostics_files/figure-html/wright-1.png)**Compare
+preview](mfrmr-visual-diagnostics_files/figure-html/wright-1.svg)**Compare
 persons, facet levels and category steps**](#figure-wright)
 
-Base R and dedicated ggplot conversion
+ggplot2 figure and dedicated component converter
 
 [![Infit versus location
-preview](mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.png)**Review
+preview](mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.svg)**Review
 severity together with response fit**](#figure-fit-pathway)
 
-Base R and dedicated ggplot conversion
+ggplot2 figure and dedicated component converter
 
 [![Category probability curves
-preview](mfrmr-visual-diagnostics_files/figure-html/category-curves-1.png)**Inspect
+preview](mfrmr-visual-diagnostics_files/figure-html/category-curves-1.svg)**Inspect
 category functioning**](#figure-category-curves)
 
-Base R and dedicated ggplot conversion
+ggplot2 figure and dedicated component converter
 
 [![Subset coverage
-preview](mfrmr-visual-diagnostics_files/figure-html/linking-1.png)**Inspect
+preview](mfrmr-visual-diagnostics_files/figure-html/linking-1.svg)**Inspect
 observed coverage across rating subsets**](#figure-linking)
 
-Base R; ggplot offers a different, table-based view
+ggplot2 figure; component converter offers a table-based view
 
 [![Feature dendrogram
-preview](mfrmr-visual-diagnostics_files/figure-html/feature-hierarchy-1.png)**Inspect
+preview](mfrmr-visual-diagnostics_files/figure-html/feature-hierarchy-1.svg)**Inspect
 a hierarchy of external-feature groups**](#figure-feature-hierarchy)
 
-Base R and dedicated ggplot conversion
+ggplot2 figure and dedicated component converter
 
 [![D-study coefficient curves
-preview](mfrmr-visual-diagnostics_files/figure-html/d-study-planning-1.png)**Plan
+preview](mfrmr-visual-diagnostics_files/figure-html/d-study-planning-1.svg)**Plan
 reliability for a multivariate score or
 composite**](#figure-d-study-planning)
 
-Base R and dedicated ggplot conversion
+ggplot2 figure and dedicated component converter
 
 Browse all selected plot routes
 
@@ -108,10 +108,10 @@ knitr::kable(figures[, c("Question", "ResultFunction", "GGPlot")])
 
 | Question | ResultFunction | GGPlot |
 |:---|:---|:---|
-| Inspect signed pairwise rater agreement | rater_network_analysis | unavailable |
-| Compare weighted network inconsistency indices | rater_network_analysis | unavailable |
-| Inspect conditional binary-network coefficients | fit_rater_network | unavailable |
-| Compare a binary network with model simulations | fit_rater_network | unavailable |
+| Inspect signed pairwise rater agreement | rater_network_analysis | dedicated |
+| Compare weighted network inconsistency indices | rater_network_analysis | dedicated |
+| Inspect conditional binary-network coefficients | fit_rater_network | dedicated |
+| Compare a binary network with model simulations | fit_rater_network | dedicated |
 | Compare persons, facet levels and category steps | fit_mfrm | dedicated |
 | Show expected scores across ability | fit_mfrm | dedicated |
 | Review severity together with response fit | fit_mfrm | dedicated |
@@ -119,9 +119,10 @@ knitr::kable(figures[, c("Question", "ResultFunction", "GGPlot")])
 | Inspect category functioning | fit_mfrm | dedicated |
 | Review pooled category counts | rating_scale_table | dedicated |
 | Review steps within their threshold owner | rating_scale_table | dedicated |
-| Compare category curve families | category_curves_report | unavailable |
+| Compare category curve families | mfrm_report | dedicated |
+| Compare group-pair DFF / DIF values on a 2D scatterplot | analyze_dff | dedicated |
 | Compare fixed-rater estimates and interval methods | mfrm_facet_intervals | dedicated |
-| Review conditional interaction departures | bias_interaction_report | dedicated |
+| Review conditional interaction departures | mfrm_report | dedicated |
 | Explore bias across all facet pairs | estimate_all_bias | dedicated |
 | Read latent-regression coefficients and uncertainty | mfrm_population_intervals | dedicated |
 | Read prespecified conditional population contrasts | mfrm_population_intervals | dedicated |
@@ -135,25 +136,26 @@ knitr::kable(figures[, c("Question", "ResultFunction", "GGPlot")])
 | Review response residuals under supported RSMs, two-family GPCM MML or corrected GPCM JML | mfrm_response_diagnostics | dedicated |
 | Compare ordinary and extended model results | compare_mfrm | dedicated |
 | Compare screening rules across known-truth conditions | mfrm_screening_sensitivity | dedicated |
-| Show screening performance with uncertainty | mfrm_screening_performance | unavailable |
+| Show screening performance with uncertainty | mfrm_screening_performance | dedicated |
 | Show pooled fixed-facet intervals after multiple imputation | pool_mfrm_imputed | dedicated |
 | Report saved external posterior intervals | read_mfrm_posterior | dedicated |
+| Review new-Person Bayesian posterior scores and variance sources | predict.mfrm_posterior_summary | dedicated |
 | Inspect all residual associations and missing pairs | mfrm_residual_network | dedicated |
-| Locate residual co-movement after model review | mfrm_residual_network | unavailable |
-| Inspect exploratory groups of residual profiles | mfrm_residual_network | unavailable |
+| Locate residual co-movement after model review | mfrm_residual_network | dedicated |
+| Inspect exploratory groups of residual profiles | mfrm_residual_network | dedicated |
 | Inspect separation of external-feature groups | mfrm_cluster | dedicated |
 | Describe an external feature within groups | mfrm_cluster | dedicated |
-| Inspect a hierarchy of external-feature groups | mfrm_cluster_hierarchical | dedicated |
+| Inspect a hierarchy of external-feature groups | mfrm_cluster | dedicated |
 | Inspect group stability across feature imputations | mfrm_cluster_imputed | dedicated |
 | Choose how many external-feature components to inspect | mfrm_pca | dedicated |
 | Locate entities on external-feature components | mfrm_pca | dedicated |
 | Identify features contributing to a component | mfrm_pca | dedicated |
-| Plan facet counts with an observed-score D-study | mfrm_d_study | unavailable |
+| Plan facet counts with an observed-score D-study | mfrm_d_study | dedicated |
 | Inspect sources of observed-score variation | mfrm_g_study | dedicated |
 | Plan reliability for a multivariate score or composite | mfrm_d_study | dedicated |
 | Plan absolute or relative error in score units | mfrm_d_study | dedicated |
 | Explain which error sources change across plans | mfrm_d_study | dedicated |
-| Compare D-study plans including the reference | mfrm_multivariate_d_compare | unavailable |
+| Compare D-study plans including the reference | compare_mfrm | dedicated |
 | Inspect observed coverage across rating subsets | subset_connectivity_report | generic |
 | Customize the underlying precision values | compute_information | generic |
 
@@ -167,13 +169,16 @@ a table to inspect; passing that component to
 [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
 may produce a different view from the full figure.
 
-`dedicated` means there is a converter for the figure; `native` means
-the plot already returns ggplot. `generic` describes a table-based
-graphic that need not reproduce the original layout or annotations.
-`unavailable` still allows the original plot and custom graphics from
-`plot_data(p)`. This is a selected map, not a claim that every plot or
-component has been covered. Graphical support does not extend the
-model’s statistical assumptions.
+`dedicated` means the figure has a dedicated
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+component converter in addition to the `ggplot` returned directly by
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html); `native` means
+the plot was originally authored as a direct `ggplot`. `generic`
+describes a table-based `as_ggplot(..., component = ...)` graphic that
+need not reproduce the full multi-layer layout. Custom graphics can
+always be constructed from `plot_data(p)`. This is a selected map, not a
+claim that every plot or component has been covered. Graphical support
+does not extend the model’s statistical assumptions.
 
 ## Latent regression: coefficients and specified comparisons
 
@@ -261,7 +266,7 @@ fit <- fit_mfrm(
 )
 
 diag <- diagnose_mfrm(fit, residual_pca = "none")
-checklist <- reporting_checklist(fit, diagnostics = diag)
+checklist <- mfrm_report(type = "checklist", fit, diagnostics = diag)
 subset(
   checklist$checklist,
   Section == "Visual Displays",
@@ -298,7 +303,7 @@ comprehensibility, 1 = difficult / 4 = easy makes higher Person
 locations mean easier speech; 1 = easy / 4 = difficult makes them mean
 more difficult speech. In both cases, higher Person locations predict
 higher coded scores. With the default negative Rater orientation, higher
-Rater locations predict **lower** coded scores, so “stricter” is
+Rater locations predict **lower** coded scores, so “more severe” is
 appropriate only when higher scores are more favorable.
 
 Record both endpoint labels with the analysis. `positive_facets` changes
@@ -322,8 +327,8 @@ wright <- plot(fit, type = "wright", preset = "publication", show_ci = TRUE)
 
 ![Wright map of person abilities, facet levels and category steps on the
 fitted logit scale, with requested uncertainty intervals. Higher facet
-locations indicate stricter scoring or greater
-difficulty.](mfrmr-visual-diagnostics_files/figure-html/wright-1.png)
+locations indicate more severe scoring or greater
+difficulty.](mfrmr-visual-diagnostics_files/figure-html/wright-1.svg)
 
 Interpretation:
 
@@ -440,7 +445,7 @@ plot(
 ![Text-style Wright display with rubric labels Beginning, Developing,
 Secure and Advanced. Locations share a fitted logit scale; labels
 describe ordered categories rather than equal observed-score
-intervals.](mfrmr-visual-diagnostics_files/figure-html/wright-facets-style-1.png)
+intervals.](mfrmr-visual-diagnostics_files/figure-html/wright-facets-style-1.svg)
 
 This renderer uses one common logit ruler, a `*` person-frequency
 column, signed facet headers, every facet level, and short labeled
@@ -464,7 +469,7 @@ plot(fit, type = "pathway", preset = "publication")
 ![Pathway display of fitted response probabilities across ability,
 separated by display layer. It shows model predictions rather than tests
 of rater
-bias.](mfrmr-visual-diagnostics_files/figure-html/pathway-1.png)
+bias.](mfrmr-visual-diagnostics_files/figure-html/pathway-1.svg)
 
 Interpretation:
 
@@ -504,7 +509,7 @@ the 12 persons furthest from expected fit, with requested location
 intervals. Labels are limited to flagged facet levels; the accompanying
 table identifies the points. Mean-square bands are descriptive review
 thresholds, not automatic
-decisions.](mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.png)
+decisions.](mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.svg)
 
 Interpretation:
 
@@ -579,7 +584,7 @@ category_curves <- plot(fit, type = "ccc", preset = "monochrome")
 ![Predicted category probabilities across ability for the fitted rating
 scale. Line patterns and colours identify categories; the curves use a
 reference profile with other additive facet effects fixed at
-zero.](mfrmr-visual-diagnostics_files/figure-html/category-curves-1.png)
+zero.](mfrmr-visual-diagnostics_files/figure-html/category-curves-1.svg)
 
 These are reference-profile probabilities, not observed category
 frequencies or uncertainty bands. For PCM/GPCM, select and interpret the
@@ -612,9 +617,9 @@ or `type = "thresholds"`; both support
 Counts in that figure are pooled: inspect `owner_category_table` for
 each step owner’s denominator and category support. Stored step SEs are
 not curve or gap intervals. The separate
-[`category_curves_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_curves_report.md)
-bundle uses base graphics for its multi-family overview and selected
-curve views; custom graphics from
+`mfrm_report(fit, type = "category_curves")` bundle also returns a
+`ggplot` for its multi-family overview and selected curve views; custom
+graphics from
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
 must retain the curve family and group.
 
@@ -630,7 +635,7 @@ plot(fit, type = "unexpected", diagnostics = diag, abs_z_min = 1.5, prob_max = 0
 ![Observed ratings screened by standardized residual size and fitted
 response probability. Highlighted observations merit contextual review
 rather than automatic
-deletion.](mfrmr-visual-diagnostics_files/figure-html/unexpected-1.png)
+deletion.](mfrmr-visual-diagnostics_files/figure-html/unexpected-1.svg)
 
 Interpretation:
 
@@ -649,7 +654,7 @@ plot(fit, type = "displacement", diagnostics = diag, anchored_only = FALSE, view
 ![Level-specific displacement summaries for the fitted facets, including
 unanchored levels. The displayed shifts are diagnostic summaries, not
 evidence that a level changed over
-time.](mfrmr-visual-diagnostics_files/figure-html/displacement-1.png)
+time.](mfrmr-visual-diagnostics_files/figure-html/displacement-1.svg)
 
 Interpretation:
 
@@ -685,7 +690,7 @@ diag_strict <- diagnose_mfrm(
   diagnostic_mode = "both"
 )
 
-strict_checklist <- reporting_checklist(fit_strict, diagnostics = diag_strict)
+strict_checklist <- mfrm_report(type = "checklist", fit_strict, diagnostics = diag_strict)
 subset(
   strict_checklist$checklist,
   Section == "Visual Displays" &
@@ -705,7 +710,7 @@ plot(diag_strict, type = "marginal_fit", top_n = 12, preset = "publication")
 ![Marginal fit summaries using posterior-averaged response
 probabilities. These diagnostics have a different probability basis from
 conditional residual
-screens.](mfrmr-visual-diagnostics_files/figure-html/strict-marginal-1.png)
+screens.](mfrmr-visual-diagnostics_files/figure-html/strict-marginal-1.svg)
 
 Interpretation:
 
@@ -731,7 +736,7 @@ coverage <- plot(sc, type = "design_matrix", preset = "publication")
 across observed subsets. Matrix cells compare each subset with the
 largest observed count for that facet; they are not completion rates for
 planned
-assignments.](mfrmr-visual-diagnostics_files/figure-html/linking-1.png)
+assignments.](mfrmr-visual-diagnostics_files/figure-html/linking-1.svg)
 
 The cells divide each subset’s observed number of facet levels by the
 largest such count for that facet among the observed subsets. They do
@@ -1202,7 +1207,7 @@ bias_figure <- plot(bias, type = "bias", view = "facet_profile", preset = "publi
 ![Rater-by-criterion interaction profiles from the fitted bias analysis.
 Differences identify combinations for review and do not establish a
 causal
-explanation.](mfrmr-visual-diagnostics_files/figure-html/bias-1.png)
+explanation.](mfrmr-visual-diagnostics_files/figure-html/bias-1.svg)
 
 The definition, sign, magnitude-only profile and uncertainty
 qualifications are retained in `plot_data(bias_figure, "notes")` and
@@ -1216,26 +1221,30 @@ Interpretation:
   tables, cell counts and calibration limitations. Several views of the
   same estimates are not independent confirmation of bias.
 
-For repeat plotting, save `bias_interaction_report(bias, ...)` after
-choosing the review thresholds. `plot(result, type = "scatter")`
-compares the observed-minus-expected score average with conditional bias
-in logits; `type = "ranked"` shows saved interaction estimates. These
-two views support
-[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md),
-including conditional bounds when `show_ci = TRUE`. They hold
-calibration fixed. The other bias views use base or custom graphics.
+For repeat plotting, save
+`mfrm_report(type = "bias_interaction", bias, ...)` after choosing the
+review thresholds. `plot(result, type = "scatter")` compares the
+observed-minus-expected score average with conditional bias in logits;
+`type = "ranked"` shows saved interaction estimates. Both
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+return `ggplot` objects, including conditional bounds when
+`show_ci = TRUE`, and hold calibration fixed (`type = "scatter"` adds
+aligned marginal histograms when at least eight finite pairs are
+available).
 
 Rater centrality and halo have different targets.
 [`rater_centrality_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_centrality_table.md)
 returns indirect indices in a plain list; save the list and review
 source status and unavailable-index reasons alongside its data frames.
 [`rater_halo_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_halo_network_analysis.md)
-returns observed-score profile correlations. Its `edge_distribution`,
-selected `halo_summary` metric and retained-edge `matrix` views support
-[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md);
-use base graphics for the network. Save the whole halo result to retain
-its pair counts, edge filters and caveats. Neither result is
-automatically added to an aggregate
+returns observed-score profile correlations. Its `network`,
+`edge_distribution`, selected `halo_summary` metric and retained-edge
+`matrix` views all return `ggplot` objects via
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md).
+Save the whole halo result to retain its pair counts, edge filters and
+caveats. Neither result is automatically added to an aggregate
 [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md).
 These views do not distinguish halo from horn effects: a negative
 impression can lower several criterion ratings together without creating
@@ -1259,7 +1268,7 @@ plot(fit, type = "wright", preset = "monochrome")
 ![Monochrome Wright map of person, facet and step locations on the
 common logit scale. The accompanying code extracts the plotted locations
 for custom
-displays.](mfrmr-visual-diagnostics_files/figure-html/custom-plot-data-1.png)
+displays.](mfrmr-visual-diagnostics_files/figure-html/custom-plot-data-1.svg)
 
 ``` r
 
@@ -1289,16 +1298,17 @@ plot_data_components(wright_payload)
 #> 20 wright_map               show_ci    scalar_or_vector        logical   NA
 #> 21 wright_map   uncertainty_display    scalar_or_vector      character   NA
 #> 22 wright_map                 group    scalar_or_vector           NULL   NA
-#> 23 wright_map                preset            settings      character   NA
-#> 24 wright_map                legend               style     data.frame    5
-#> 25 wright_map       reference_lines          annotation     data.frame    1
-#> 26 wright_map        scale_contract          table_data     data.frame    1
-#> 27 wright_map             plot_name    scalar_or_vector      character   NA
-#> 28 wright_map                 notes summary_or_guidance     data.frame    8
-#> 29 wright_map         fit_readiness          fit_review     data.frame    6
-#> 30 wright_map interpretation_status summary_or_guidance      character   NA
-#> 31 wright_map   interpretation_note summary_or_guidance      character   NA
-#> 32 wright_map               display            metadata      list:list   NA
+#> 23 wright_map         group_density    scalar_or_vector           NULL   NA
+#> 24 wright_map                preset            settings      character   NA
+#> 25 wright_map                legend               style     data.frame    5
+#> 26 wright_map       reference_lines          annotation     data.frame    1
+#> 27 wright_map        scale_contract          table_data     data.frame    1
+#> 28 wright_map             plot_name    scalar_or_vector      character   NA
+#> 29 wright_map                 notes summary_or_guidance     data.frame    8
+#> 30 wright_map         fit_readiness          fit_review     data.frame    6
+#> 31 wright_map interpretation_status summary_or_guidance      character   NA
+#> 32 wright_map   interpretation_note summary_or_guidance      character   NA
+#> 33 wright_map               display            metadata      list:list   NA
 #>    Columns Length IsTabular                                          Accessor
 #> 1       NA      1     FALSE          plot_data(x, component = "wright_style")
 #> 2       NA      1     FALSE              plot_data(x, component = "renderer")
@@ -1322,16 +1332,17 @@ plot_data_components(wright_payload)
 #> 20      NA      1     FALSE               plot_data(x, component = "show_ci")
 #> 21      NA      1     FALSE   plot_data(x, component = "uncertainty_display")
 #> 22      NA      0     FALSE                 plot_data(x, component = "group")
-#> 23      NA      1     FALSE                plot_data(x, component = "preset")
-#> 24       4      4      TRUE                plot_data(x, component = "legend")
-#> 25       5      5      TRUE       plot_data(x, component = "reference_lines")
-#> 26      15     15      TRUE        plot_data(x, component = "scale_contract")
-#> 27      NA      1     FALSE             plot_data(x, component = "plot_name")
-#> 28       2      2      TRUE                 plot_data(x, component = "notes")
-#> 29       2      2      TRUE         plot_data(x, component = "fit_readiness")
-#> 30      NA      1     FALSE plot_data(x, component = "interpretation_status")
-#> 31      NA      1     FALSE   plot_data(x, component = "interpretation_note")
-#> 32       2      2     FALSE               plot_data(x, component = "display")
+#> 23      NA      0     FALSE         plot_data(x, component = "group_density")
+#> 24      NA      1     FALSE                plot_data(x, component = "preset")
+#> 25       4      4      TRUE                plot_data(x, component = "legend")
+#> 26       5      5      TRUE       plot_data(x, component = "reference_lines")
+#> 27      15     15      TRUE        plot_data(x, component = "scale_contract")
+#> 28      NA      1     FALSE             plot_data(x, component = "plot_name")
+#> 29       2      2      TRUE                 plot_data(x, component = "notes")
+#> 30       2      2      TRUE         plot_data(x, component = "fit_readiness")
+#> 31      NA      1     FALSE plot_data(x, component = "interpretation_status")
+#> 32      NA      1     FALSE   plot_data(x, component = "interpretation_note")
+#> 33       2      2     FALSE               plot_data(x, component = "display")
 #>                                                                     Notes
 #> 1                                                                        
 #> 2                                                                        
@@ -1356,15 +1367,16 @@ plot_data_components(wright_payload)
 #> 21                                                                       
 #> 22                                                                       
 #> 23                                                                       
-#> 24                 Use to reproduce color, line-type, or legend mappings.
-#> 25 Use with primary data to draw thresholds, labels, and reference lines.
-#> 26                                                                       
+#> 24                                                                       
+#> 25                 Use to reproduce color, line-type, or legend mappings.
+#> 26 Use with primary data to draw thresholds, labels, and reference lines.
 #> 27                                                                       
-#> 28                           Use for captions, QA checks, or report text.
-#> 29                                                                       
-#> 30                           Use for captions, QA checks, or report text.
+#> 28                                                                       
+#> 29                           Use for captions, QA checks, or report text.
+#> 30                                                                       
 #> 31                           Use for captions, QA checks, or report text.
-#> 32                                                                       
+#> 32                           Use for captions, QA checks, or report text.
+#> 33                                                                       
 #>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ColumnNames
 #> 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
 #> 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
@@ -1389,15 +1401,16 @@ plot_data_components(wright_payload)
 #> 21                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
 #> 22                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
 #> 23                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-#> 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               label, role, aesthetic, value
-#> 25                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          axis, value, label, linetype, role
-#> 26                                                                                                                                                                                                                                                                    Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField
-#> 27                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-#> 28                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Type, Text
-#> 29                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              Domain, Status
-#> 30                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 25                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               label, role, aesthetic, value
+#> 26                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          axis, value, label, linetype, role
+#> 27                                                                                                                                                                                                                                                                    Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField
+#> 28                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 29                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Type, Text
+#> 30                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              Domain, Status
 #> 31                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-#> 32                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      show_title, show_notes
+#> 32                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 33                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      show_title, show_notes
 
 locations <- plot_data(wright_payload, component = "locations")
 head(locations)
@@ -1439,19 +1452,144 @@ the plot data:
 
 ``` r
 
-names(wright_payload$data)
-#>  [1] "wright_style"          "renderer"              "visual_contract"      
-#>  [4] "person"                "person_exclusions"     "person_hist"          
-#>  [7] "person_stats"          "locations"             "label_points"         
-#> [10] "group_summary"         "group_levels"          "y_range"              
-#> [13] "display_settings"      "label_limit"           "highlight"            
-#> [16] "retention"             "retention_note"        "title"                
-#> [19] "subtitle"              "show_ci"               "uncertainty_display"  
-#> [22] "group"                 "preset"                "legend"               
-#> [25] "reference_lines"       "scale_contract"        "plot_name"            
-#> [28] "notes"                 "fit_readiness"         "interpretation_status"
-#> [31] "interpretation_note"   "display"
-wright_payload$data$reference_lines
+plot_data_components(wright_payload)
+#>      PlotName             Component                Role     ObjectType Rows
+#> 1  wright_map          wright_style               style      character   NA
+#> 2  wright_map              renderer    scalar_or_vector      character   NA
+#> 3  wright_map       visual_contract    scalar_or_vector      character   NA
+#> 4  wright_map                person          table_data     data.frame   48
+#> 5  wright_map     person_exclusions          table_data     data.frame    0
+#> 6  wright_map           person_hist            metadata list:histogram   NA
+#> 7  wright_map          person_stats          table_data     data.frame    1
+#> 8  wright_map             locations          table_data     data.frame   12
+#> 9  wright_map          label_points          table_data     data.frame   12
+#> 10 wright_map         group_summary summary_or_guidance     data.frame    3
+#> 11 wright_map          group_levels            settings      character   NA
+#> 12 wright_map               y_range            settings         double   NA
+#> 13 wright_map      display_settings            settings     data.frame    1
+#> 14 wright_map           label_limit    scalar_or_vector        integer   NA
+#> 15 wright_map             highlight    scalar_or_vector           NULL   NA
+#> 16 wright_map             retention          table_data     data.frame    3
+#> 17 wright_map        retention_note summary_or_guidance      character   NA
+#> 18 wright_map                 title    scalar_or_vector      character   NA
+#> 19 wright_map              subtitle    scalar_or_vector      character   NA
+#> 20 wright_map               show_ci    scalar_or_vector        logical   NA
+#> 21 wright_map   uncertainty_display    scalar_or_vector      character   NA
+#> 22 wright_map                 group    scalar_or_vector           NULL   NA
+#> 23 wright_map         group_density    scalar_or_vector           NULL   NA
+#> 24 wright_map                preset            settings      character   NA
+#> 25 wright_map                legend               style     data.frame    5
+#> 26 wright_map       reference_lines          annotation     data.frame    1
+#> 27 wright_map        scale_contract          table_data     data.frame    1
+#> 28 wright_map             plot_name    scalar_or_vector      character   NA
+#> 29 wright_map                 notes summary_or_guidance     data.frame    8
+#> 30 wright_map         fit_readiness          fit_review     data.frame    6
+#> 31 wright_map interpretation_status summary_or_guidance      character   NA
+#> 32 wright_map   interpretation_note summary_or_guidance      character   NA
+#> 33 wright_map               display            metadata      list:list   NA
+#>    Columns Length IsTabular                                          Accessor
+#> 1       NA      1     FALSE          plot_data(x, component = "wright_style")
+#> 2       NA      1     FALSE              plot_data(x, component = "renderer")
+#> 3       NA      1     FALSE       plot_data(x, component = "visual_contract")
+#> 4       22     22      TRUE                plot_data(x, component = "person")
+#> 5       22     22      TRUE     plot_data(x, component = "person_exclusions")
+#> 6        6      6     FALSE           plot_data(x, component = "person_hist")
+#> 7        7      7      TRUE          plot_data(x, component = "person_stats")
+#> 8       39     39      TRUE             plot_data(x, component = "locations")
+#> 9       45     45      TRUE          plot_data(x, component = "label_points")
+#> 10      16     16      TRUE         plot_data(x, component = "group_summary")
+#> 11      NA      3     FALSE          plot_data(x, component = "group_levels")
+#> 12      NA      2     FALSE               plot_data(x, component = "y_range")
+#> 13       8      8      TRUE      plot_data(x, component = "display_settings")
+#> 14      NA      1     FALSE           plot_data(x, component = "label_limit")
+#> 15      NA      0     FALSE             plot_data(x, component = "highlight")
+#> 16       6      6      TRUE             plot_data(x, component = "retention")
+#> 17      NA      1     FALSE        plot_data(x, component = "retention_note")
+#> 18      NA      1     FALSE                 plot_data(x, component = "title")
+#> 19      NA      1     FALSE              plot_data(x, component = "subtitle")
+#> 20      NA      1     FALSE               plot_data(x, component = "show_ci")
+#> 21      NA      1     FALSE   plot_data(x, component = "uncertainty_display")
+#> 22      NA      0     FALSE                 plot_data(x, component = "group")
+#> 23      NA      0     FALSE         plot_data(x, component = "group_density")
+#> 24      NA      1     FALSE                plot_data(x, component = "preset")
+#> 25       4      4      TRUE                plot_data(x, component = "legend")
+#> 26       5      5      TRUE       plot_data(x, component = "reference_lines")
+#> 27      15     15      TRUE        plot_data(x, component = "scale_contract")
+#> 28      NA      1     FALSE             plot_data(x, component = "plot_name")
+#> 29       2      2      TRUE                 plot_data(x, component = "notes")
+#> 30       2      2      TRUE         plot_data(x, component = "fit_readiness")
+#> 31      NA      1     FALSE plot_data(x, component = "interpretation_status")
+#> 32      NA      1     FALSE   plot_data(x, component = "interpretation_note")
+#> 33       2      2     FALSE               plot_data(x, component = "display")
+#>                                                                     Notes
+#> 1                                                                        
+#> 2                                                                        
+#> 3                                                                        
+#> 4                                                                        
+#> 5                                                                        
+#> 6                                                                        
+#> 7                                                                        
+#> 8                                                                        
+#> 9                                                                        
+#> 10                           Use for captions, QA checks, or report text.
+#> 11                                                                       
+#> 12                                                                       
+#> 13                                                                       
+#> 14                                                                       
+#> 15                                                                       
+#> 16                                                                       
+#> 17                           Use for captions, QA checks, or report text.
+#> 18                                                                       
+#> 19                                                                       
+#> 20                                                                       
+#> 21                                                                       
+#> 22                                                                       
+#> 23                                                                       
+#> 24                                                                       
+#> 25                 Use to reproduce color, line-type, or legend mappings.
+#> 26 Use with primary data to draw thresholds, labels, and reference lines.
+#> 27                                                                       
+#> 28                                                                       
+#> 29                           Use for captions, QA checks, or report text.
+#> 30                                                                       
+#> 31                           Use for captions, QA checks, or report text.
+#> 32                           Use for captions, QA checks, or report text.
+#> 33                                                                       
+#>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ColumnNames
+#> 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+#> 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+#> 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+#> 4                                                                                                                                                                                                   Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse
+#> 5                                                                                                                                                                                                   Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse
+#> 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               breaks, counts, density, mids, xname, equidist
+#> 7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             N, ReviewExcludedN, FiniteN, BoundaryExcludedN, Mean, Median, SD
+#> 8                                                                    Group, Label, PlotType, Estimate, SE, Fixed, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, Highlighted, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus
+#> 9  Group, Label, PlotType, Estimate, SE, Fixed, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, Highlighted, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus, LabelY, LabelSide, LabelX, LabelHjust, LabelText, LabelDisplaced
+#> 10                                                                                                                                                                                                                                                                                                                                                                                                               Group, PlotType, Min, Q1, Median, Q3, Max, DisplayMin, DisplayQ1, DisplayMedian, DisplayQ3, DisplayMax, N, XBase, TargetGap, DisplayTargetGap
+#> 11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 13                                                                                                                                                                                                                                                                                                                                                                                                                           Renderer, LowerLogit, UpperLogit, AutoRangePolicy, BoundaryLevelsAtEnds, CIClippedCount, BoundaryCIEndpointCount, CIDisplayPolicy
+#> 14                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 15                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 16                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   Component, Shown, Total, Omitted, RequestedTopN, Complete
+#> 17                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 18                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 19                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 20                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 21                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 22                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 23                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 25                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               label, role, aesthetic, value
+#> 26                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          axis, value, label, linetype, role
+#> 27                                                                                                                                                                                                                                                                    Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField
+#> 28                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 29                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Type, Text
+#> 30                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              Domain, Status
+#> 31                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 32                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+#> 33                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      show_title, show_notes
+plot_data(wright_payload, "reference_lines")
 #>   axis value                    label linetype      role
 #> 1    h     0 Centered logit reference   dashed reference
 ```
@@ -1482,62 +1620,12 @@ saved_record$rubric
 #>            1            2            3            4 
 #>  "Beginning" "Developing"     "Secure"   "Advanced"
 print(saved_figure)
-#> <mfrm_plot_data>
-#>   name     : wright_map
-#>   title    : Wright map
-#>   subtitle : Shared logit scale for persons, facets, and thresholds
-#>   notes    :
-#>     [interpretation] Stored fit readiness plus numerical, data-support,
-#>     connectivity, and stability checks passed. Treat this display as
-#>     diagnostic evidence, not automatic publication approval.
-#>     [display] Persons: N=48; mean=-0.16; median=-0.21.
-#>     [score_coding] Score meaning is supplied by the rubric: higher coded
-#>     scores need not mean better performance. Reversing category labels
-#>     alone does not reverse the fitted scale.
-#>     [orientation] Higher Person locations increase expected coded scores in
-#>     these positive-discrimination models, holding other effects fixed.
-#>     [orientation] Rater: higher locations reduce expected coded scores,
-#>     holding other effects fixed.
-#>     [orientation] Criterion: higher locations reduce expected coded scores,
-#>     holding other effects fixed.
-#>     [step] A Step describes the transition between adjacent score
-#>     categories, not a learning stage or a pass/fail cut. At the
-#>     corresponding predictor value, the two categories have equal
-#>     probability, not necessarily probability 0.5 each. Stored step offsets
-#>     and full ability-axis crossings differ when other facet effects or
-#>     interactions are included; check the reference profile and step owner.
-#>   data     :
-#>     $wright_style : character [1]
-#>     $renderer : character [1]
-#>     $visual_contract : character [1]
-#>     $person : data.frame [48 x 22]
-#>     $person_exclusions : data.frame [0 x 22]
-#>     $person_hist : list (6 slots)
-#>     $person_stats : data.frame [1 x 7]
-#>     $locations : data.frame [12 x 39]
-#>     $label_points : data.frame [12 x 45]
-#>     $group_summary : data.frame [3 x 16]
-#>     $group_levels : character [3]
-#>     $y_range : double [2]
-#>     $display_settings : data.frame [1 x 8]
-#>     $label_limit : integer [1]
-#>     $highlight : NULL
-#>     $retention : data.frame [3 x 6]
-#>     $retention_note : character [1]
-#>     $show_ci : logical [1]
-#>     $uncertainty_display : character [1]
-#>     $group : NULL
-#>     $preset : character [1]
-#>     $scale_contract : data.frame [1 x 15]
-#>     $plot_name : character [1]
-#>     $fit_readiness : data.frame [6 x 2]
-#>     $interpretation_status : character [1]
-#>     $interpretation_note : character [1]
-#>     $display : list (2 slots)
-#>   legend   : 5 entries
-#>   ref lines: 1
-#> Use `plot_data()` to extract the saved values and notes.
-#> For supported views, `as_ggplot()` redraws this saved result.
+```
+
+![](mfrmr-visual-diagnostics_files/figure-html/save-figure-1.svg)
+
+``` r
+
 identical(plot_data(saved_figure, "locations"), plot_data(wright, "locations"))
 #> [1] TRUE
 ```
@@ -1550,13 +1638,15 @@ refitting or recalculating uncertainty:
 as_ggplot(saved_figure)
 ```
 
+`ggplot2` is imported by `mfrmr`, so both
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
 [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
-requires the optional ggplot2 package. Save the fit and matching
-diagnostics too if you want to choose a different analysis view later.
-The plot guide above distinguishes dedicated conversions, different
-table-based views and plots without automatic conversion. This example
-does not promise the same layout for every renderer or conversion of
-every plot family.
+return `ggplot` objects directly (and
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+also converts saved `0.2.x` `mfrm_plot_data` objects). Save the fit and
+matching diagnostics too if you want to choose a different analysis view
+later. The plot guide above distinguishes dedicated figure views and
+table-based component views.
 
 ### Set an appearance once for several plots
 
@@ -1571,7 +1661,10 @@ local({
   on.exit(options(old))
   saved <- plot(fit, type = "ccc", draw = FALSE)
   special <- plot(fit, type = "ccc", preset = "publication", draw = FALSE)
-  c(session_default = saved$data$preset, explicit_override = special$data$preset)
+  c(
+    session_default = plot_data(saved, "preset"),
+    explicit_override = plot_data(special, "preset")
+  )
 })
 #>   session_default explicit_override 
 #>      "monochrome"     "publication"
@@ -1613,12 +1706,12 @@ as_ggplot(plain)
 ![Infit and Outfit mean squares for fitted facet levels, with the title
 omitted. Bubble sizes reflect rating counts; reference lines and the
 saved descriptive review band remain
-unchanged.](mfrmr-visual-diagnostics_files/figure-html/title-controls-1.png)
+unchanged.](mfrmr-visual-diagnostics_files/figure-html/title-controls-1.svg)
 
 ``` r
 
 # Reuse the saved values, screening references and interval settings.
-plain$data$reference_lines
+plot_data(plain, "reference_lines")
 #>   axis value                 label linetype      role
 #> 1    h   0.5 Lower fit review band   dashed threshold
 #> 2    h   1.0          Ideal Outfit   dashed reference
@@ -1638,10 +1731,8 @@ figure caption or accompanying report if its heading is hidden.
 Existing `main` calls and positional arguments still work without
 deprecation warnings. `main = NULL` retains its earlier meaning of “use
 the default heading”. Do not supply both `main` and `title`, even with
-the same value. These aliases do not imply that every plot has an
-[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
-converter; consult `mfrmr_output_guide("plots")` for the supported
-route.
+the same value. Consult `mfrmr_output_guide("plots")` for the available
+figure views and table components.
 
 ### Fair Scores and annotations outside the figure
 
@@ -1655,21 +1746,21 @@ do not by themselves establish rater bias.
 ``` r
 
 p_fair <- plot(fit, type = "fair_average", diagnostics = diag, facet = "Rater", metric = "FairZ", view = "measure", show_ci = TRUE, preset = "monochrome", show_title = FALSE, show_notes = FALSE, draw = FALSE)
-p_fair$data$notes
-p_fair$data$plot_data
-p_fair$data$excluded
-# Requires ggplot2:
+plot_data(p_fair, "notes")
+plot_data(p_fair, "plot_data")
+plot_data(p_fair, "excluded")
 g_fair <- as_ggplot(p_fair)
 g_fair
 attr(g_fair, "mfrmr_notes")
 ```
 
-Use `draw = TRUE` to draw the base-R version. Titles and notes remain in
-the returned object when hidden in the figure. The same annotation
-controls apply to Wright, expected-score pathway, and CCC plots; they do
-not change readiness or interval eligibility. Keep the applicable notes
-in the surrounding caption or report. Other plotting helpers have their
-own documented options.
+Use `draw = TRUE` to draw the `ggplot` immediately on the active
+graphics device. Titles and notes remain in `plot_data(p_fair)` when
+hidden in the figure. The same annotation controls apply to Wright,
+expected-score pathway, and CCC plots; they do not change readiness or
+interval eligibility. Keep the applicable notes in the surrounding
+caption or report. Other plotting helpers have their own documented
+options.
 
 Fair-score intervals remain diagnostic-only (`CI_Eligible = FALSE`),
 with full-refit coverage unverified. RSM/PCM plots propagate only the
@@ -1704,8 +1795,8 @@ use them after the main screens above.
 - `plot(fit_a, type = "trajectory", comparison = list(T2 = fit_b), labels = c("T1", "T2"))`
   tracks rater severity across named waves. The helper does not perform
   linking; supply waves that have already been placed on a common
-  anchored scale (see
-  [`vignette("mfrmr-linking-and-dff")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.md))
+  anchored scale (see [mfrmr Linking and
+  DFF](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html))
   before interpreting movement as rater drift.
 - `plot(fit, type = "agreement", view = "heatmap", diagnostics = diagnostics)`
   renders a compact pairwise rater x rater agreement matrix; pass
@@ -1740,7 +1831,7 @@ p_agreement <- plot(agreement)
 ![Exact agreement for matched rater pairs with the fitted-model expected
 agreement overlaid. Review flags and the horizontal guide use the
 thresholds saved in the agreement
-result.](mfrmr-visual-diagnostics_files/figure-html/saved-agreement-view-1.png)
+result.](mfrmr-visual-diagnostics_files/figure-html/saved-agreement-view-1.svg)
 
 ``` r
 
@@ -1826,7 +1917,7 @@ plot(rt, type = "distribution", preset = "publication")
 ![Distribution of synthetic response times with selected lower and upper
 quantile screens. These thresholds describe this example and do not
 diagnose careless
-responding.](mfrmr-visual-diagnostics_files/figure-html/response-time-review-1.png)
+responding.](mfrmr-visual-diagnostics_files/figure-html/response-time-review-1.svg)
 
 ``` r
 
@@ -1835,7 +1926,7 @@ plot(rt, type = "person", preset = "publication")
 
 ![Person-level summaries of synthetic response times. Compare flagged
 patterns with their rating counts and context before drawing substantive
-conclusions.](mfrmr-visual-diagnostics_files/figure-html/response-time-review-2.png)
+conclusions.](mfrmr-visual-diagnostics_files/figure-html/response-time-review-2.svg)
 
 Interpretation:
 
@@ -1860,7 +1951,7 @@ fit_eb <- apply_empirical_bayes_shrinkage(fit)
 
 shrink <- plot(fit_eb, type = "shrinkage", view = "funnel", show_ci = TRUE, ci_level = 0.95, preset = "publication", draw = FALSE)
 
-head(shrink$data$table[, c(
+head(plot_data(shrink, "table")[, c(
   "Facet", "Level", "RawEstimate", "RawCI_Lower", "RawCI_Upper",
   "ShrunkEstimate", "ShrunkCI_Lower", "ShrunkCI_Upper",
   "ShrinkageFactor"
@@ -1886,7 +1977,7 @@ plot(fit_eb, type = "shrinkage", view = "funnel", show_ci = TRUE, ci_level = 0.9
 ![Raw and empirically shrunken facet estimates with their displayed
 uncertainty. Movement toward a facet center reflects shrinkage, not a
 change in observed
-ratings.](mfrmr-visual-diagnostics_files/figure-html/shrinkage-funnel-1.png)
+ratings.](mfrmr-visual-diagnostics_files/figure-html/shrinkage-funnel-1.svg)
 
 Interpretation:
 
@@ -1916,7 +2007,7 @@ backgrounds <- data.frame(
     "Advanced", "Advanced", "Specialist", "Specialist"),
     levels = c("Basic", "Advanced", "Specialist")))
 features <- mfrm_features(backgrounds, "Rater", c("Years", "Training"))
-hierarchy <- mfrm_cluster_hierarchical(features, k = 3, linkage = "average")
+hierarchy <- mfrm_cluster(method = "hierarchical", features, k = 3, linkage = "average")
 ```
 
 ``` r
@@ -1928,13 +2019,16 @@ hierarchy_plot <- plot(hierarchy, preset = "monochrome")
 dissimilarities in experience and ordered training level. Labelled
 leaves identify raters and boxes show the requested three groups;
 heights are dissimilarities, not significance
-levels.](mfrmr-visual-diagnostics_files/figure-html/feature-hierarchy-1.png)
+levels.](mfrmr-visual-diagnostics_files/figure-html/feature-hierarchy-1.svg)
 
 Three groups were requested; the diagram does not select that number or
 establish that the groups are real. Feature weights, coding and linkage
 can change the branches. The full tree and memberships in leaf order are
-available for inspection. The development version supports both the base
-plot and a dedicated ggplot conversion of this saved tree.
+available for inspection via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md),
+and both [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+return `ggplot` objects for this saved tree.
 
 ``` r
 
@@ -1963,7 +2057,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 ![The same saved hierarchy of eight fictional raters rendered with
 ggplot. Leaf order, Gower merge heights and the three group boxes are
 unchanged. The caption explains that heights are not branch
-support.](mfrmr-visual-diagnostics_files/figure-html/hierarchy-ggplot-1.png)
+support.](mfrmr-visual-diagnostics_files/figure-html/hierarchy-ggplot-1.svg)
 
 The conversion keeps the saved label setting and preset. Use
 `labels = FALSE` when creating a crowded tree to hide IDs without
@@ -1976,7 +2070,7 @@ leaves the tree and memberships in
 
 For imputed features, group comparisons and PCA, continue with
 [Exploring person, rater, and task
-attributes](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.md).
+attributes](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html).
 
 ### D-study planning
 
@@ -2033,7 +2127,7 @@ planning_plot <- plot(planned, type = "coefficients", preset = "monochrome")
 three, six and twelve planned Tasks. Separate panels distinguish
 relative and absolute decisions; points identify requested designs, and
 lines guide the
-eye.](mfrmr-visual-diagnostics_files/figure-html/d-study-planning-1.png)
+eye.](mfrmr-visual-diagnostics_files/figure-html/d-study-planning-1.svg)
 
 G concerns relative comparisons among Persons; Phi concerns absolute
 score interpretation. More tasks reduce the modeled task-related error
@@ -2070,8 +2164,13 @@ plot_data(planning_plot, component = "table")
 Use
 [`?mfrm_d_study`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md)
 for score/composite selection and supported crossed or nested designs.
-An ordinary `mfrm_d_study` object has its own base plot; its automatic
-ggplot conversion is currently unavailable.
+Both univariate (`mfrm_d_study`) and multivariate
+(`mfrm_multivariate_d_study`) D-Study objects return `ggplot`
+projections via [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+and
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md),
+with underlying tables accessible through
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
 
 ## Portable score-batch review
 
@@ -2095,16 +2194,16 @@ threshold. Persons with no valid responses remain in the summary and
 draw-free plot payload rather than being assigned an artificial
 coordinate. These displays do not replace source-fit diagnostics, and
 their uncertainty is conditional on the frozen point calibration. See
-[`vignette("mfrmr-portable-calibration", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-portable-calibration.md)
+[Portable calibration and fresh-session
+scoring](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-portable-calibration.html)
 for the complete fresh-session workflow.
 
 ## Recommended sequence
 
 For a compact visual workflow:
 
-1.  [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-    when you want the package to route which figures are already
-    supported.
+1.  `mfrm_report(fit, type = "checklist")` when you want the package to
+    route which figures are already supported.
 2.  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
     one-page triage.
 3.  [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
@@ -2133,6 +2232,6 @@ For a compact visual workflow:
 
 ## Related help
 
-- [`help("mfrmr_visual_diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
-- [`help("mfrmr_workflow_methods", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
-- `mfrmr_interval_guide("shrinkage")`
+- [`help("mfrmr_visual_diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+- [`help("mfrmr_workflow_methods", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr-package.md)
+- `mfrmr_output_guide("intervals", "shrinkage")`

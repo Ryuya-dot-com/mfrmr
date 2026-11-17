@@ -10,6 +10,9 @@ class.
 
 ``` r
 review_peer_design(peer_review_design, top_n = 10)
+
+# S3 method for class 'mfrm_peer_review_design_review'
+summary(object, digits = 3, top_n = 10, ...)
 ```
 
 ## Arguments
@@ -21,12 +24,31 @@ review_peer_design(peer_review_design, top_n = 10)
 
 - top_n:
 
-  Number of reviewer-load, submission-load, common-link, and
-  reciprocal-pair rows to keep in compact summary tables.
+  For `review_peer_design()`: Number of reviewer-load, submission-load,
+  common-link, and reciprocal-pair rows to keep in compact summary
+  tables.
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): Number of rows
+  to keep in compact follow-up tables.
+
+- object:
+
+  Output from `review_peer_design()`.
+
+- digits:
+
+  Number of digits for printed numeric values.
+
+- ...:
+
+  Reserved for generic compatibility.
 
 ## Value
 
 A bundle of class `mfrm_peer_review_design_review`.
+
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_peer_review_design_review`.
 
 ## Details
 
@@ -42,6 +64,9 @@ rater severity and leniency. Common-link anchor interpretation follows
 sparse rater-mediated design work; the review status is therefore
 descriptive and conservative rather than a literature-derived universal
 adequacy cutoff.
+
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize a
+peer-review design review
 
 ## References
 
@@ -60,10 +85,12 @@ adequacy cutoff.
 
 ## See also
 
-[`build_peer_review_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_peer_review_sim_spec.md),
+[`build_peer_review_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md),
 [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md),
 [`build_mfrm_network_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_network_review.md),
 [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
+
+`review_peer_design()`
 
 ## Examples
 

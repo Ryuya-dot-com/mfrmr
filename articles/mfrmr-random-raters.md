@@ -321,16 +321,16 @@ plot(random_fit)
 ```
 
 ![Conditional-mode severity estimates for four observed raters relative
-to the assumed population mean. Positive values indicate stricter
+to the assumed population mean. Positive values indicate more severe
 ratings. The default shows points without interval bounds or quality
-classifications.](mfrmr-random-raters_files/figure-html/severity-1.png)
+classifications.](mfrmr-random-raters_files/figure-html/severity-1.svg)
 
-Positive severity means stricter ratings relative to the assumed rater
-population mean. Points are conditional modes, with shrinkage toward
-that mean. `ConditionalSD` describes uncertainty holding calibration
-fixed. `PredictionSE` additionally incorporates first-order calibration
-uncertainty. The full `rater_covariance` retains dependence between
-raters. Neither number establishes the coverage of an interval.
+Positive severity means more severe ratings relative to the assumed
+rater population mean. Points are conditional modes, with shrinkage
+toward that mean. `ConditionalSD` describes uncertainty holding
+calibration fixed. `PredictionSE` additionally incorporates first-order
+calibration uncertainty. The full `rater_covariance` retains dependence
+between raters. Neither number establishes the coverage of an interval.
 
 Individual-rater `Lower` and `Upper` are missing by default, and the
 default plot shows points only. Nominal interval coverage has not been
@@ -418,7 +418,7 @@ plot(random_fit, style = "precision", intervals = "normal", point_size = 3,
 ![Four observed rater estimates plotted against explicitly requested
 approximate interval width. Saved plot data provide the exact estimates
 and bounds; nominal coverage is not
-established.](mfrmr-random-raters_files/figure-html/severity-precision-1.png)
+established.](mfrmr-random-raters_files/figure-html/severity-precision-1.svg)
 
 ``` r
 
@@ -428,7 +428,7 @@ plot(random_fit, style = "distribution", reference = NULL,
 
 ![Empirical cumulative distribution of four observed rater estimates.
 The shaded step curve describes point estimates, not a latent population
-distribution.](mfrmr-random-raters_files/figure-html/severity-distribution-1.png)
+distribution.](mfrmr-random-raters_files/figure-html/severity-distribution-1.svg)
 
 The same views work for saved Person scores and testlet fixed-facet
 estimates. `sort = "estimate"` or `sort = "uncertainty"` reorders an
@@ -453,7 +453,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) print(as_ggplot(figure))
 ![Monochrome rater point estimates in increasing estimate order, with
 the title and caption hidden. Text alternatives and the full table
 follow the
-figure.](mfrmr-random-raters_files/figure-html/severity-custom-1.png)
+figure.](mfrmr-random-raters_files/figure-html/severity-custom-1.svg)
 
 ``` r
 
@@ -560,10 +560,10 @@ model_comparison$models
 #> 2 MML: Person quadrature and shared-rater Laplace
 subset(model_comparison$effects, Facet == "Rater")
 #>   Facet Level SourceReference SourceComparison CenterReference CenterComparison
-#> 5 Rater   R01      -0.1829209       -0.1603836   -6.938894e-18     8.464462e-06
-#> 6 Rater   R02      -0.3073556       -0.2692240   -6.938894e-18     8.464462e-06
-#> 7 Rater   R03       0.1786365        0.1566218   -6.938894e-18     8.464462e-06
-#> 8 Rater   R04       0.3116400        0.2730197   -6.938894e-18     8.464462e-06
+#> 5 Rater   R01      -0.1829209       -0.1603836               0     8.464462e-06
+#> 6 Rater   R02      -0.3073556       -0.2692240               0     8.464462e-06
+#> 7 Rater   R03       0.1786365        0.1566218               0     8.464462e-06
+#> 8 Rater   R04       0.3116400        0.2730197               0     8.464462e-06
 #>    Reference Comparison       Mean  Difference        ReferenceKind
 #> 5 -0.1829209 -0.1603921 -0.1716565  0.02252884 Fixed facet estimate
 #> 6 -0.3073556 -0.2692324 -0.2882940  0.03812311 Fixed facet estimate
@@ -580,7 +580,7 @@ plot(model_comparison, facet = "Rater", style = "paired")
 ![Fixed versus shared random rater effects, centered over the same
 observed panel. Points show descriptive changes relative to the equality
 line; no difference intervals or model preference are
-shown.](mfrmr-random-raters_files/figure-html/model-comparison-1.png)
+shown.](mfrmr-random-raters_files/figure-html/model-comparison-1.svg)
 
 Each model’s rater estimates are centered at the unweighted mean over
 the same observed panel. This preserves pairwise rater contrasts while
@@ -725,19 +725,19 @@ sd_interval[, c("Lower", "Upper"), drop = FALSE]
 #> rater_sd 0.1165953 0.6743442
 head(attr(sd_interval, "profile"))
 #>          SD      NLL  PersonSD EstimatedPersonVarianceBoundary OptimizerCode
-#> 2 0.0000000 914.2742 0.9273613                           FALSE             0
-#> 4 0.1001617 907.8849 0.9426478                           FALSE             0
+#> 2 0.0000000 914.2742 0.9273610                           FALSE             0
+#> 4 0.1001617 907.8849 0.9426480                           FALSE             0
 #> 7 0.1165474 907.1121 0.9468114                           FALSE             0
-#> 8 0.1165953 907.1101 0.9468232                           FALSE             0
+#> 8 0.1165953 907.1101 0.9468233                           FALSE             0
 #> 6 0.1184987 907.0329 0.9472890                           FALSE             0
-#> 5 0.1308901 906.5867 0.9502072                           FALSE             0
+#> 5 0.1308901 906.5867 0.9502075                           FALSE             0
 #>    MaxGradient LogLikDifference GradientDifference InformationPositive
-#> 2 3.959996e-05     2.736442e-09       1.008696e-07                TRUE
-#> 4 6.415218e-05     1.584453e-09       6.101197e-08                TRUE
-#> 7 1.029421e-08     1.099806e-09       4.437632e-08                TRUE
-#> 8 1.924490e-05     1.098101e-09       4.432370e-08                TRUE
-#> 6 2.896967e-05     1.034891e-09       4.215298e-08                TRUE
-#> 5 2.973017e-05     5.883294e-10       2.686202e-08                TRUE
+#> 2 2.076559e-10     2.736670e-09       1.008748e-07                TRUE
+#> 4 1.173729e-05     1.584567e-09       6.101162e-08                TRUE
+#> 7 7.438240e-11     1.099920e-09       4.437634e-08                TRUE
+#> 8 5.485608e-05     1.097646e-09       4.432108e-08                TRUE
+#> 6 3.786531e-09     1.034664e-09       4.215246e-08                TRUE
+#> 5 3.151627e-05     5.882157e-10       2.686387e-08                TRUE
 #>   NumericalReady Detail        LR
 #> 2           TRUE        18.169547
 #> 4           TRUE         5.390822
@@ -917,7 +917,7 @@ plot(bootstrap_intervals)
 ![Explicit bootstrap intervals for observed rater effects. Arrowheads
 mark unbounded limits caused by unresolved studentized errors; all
 planned refits remain in the adjacent trial
-table.](mfrmr-random-raters_files/figure-html/bootstrap-plot-1.png)
+table.](mfrmr-random-raters_files/figure-html/bootstrap-plot-1.svg)
 
 ``` r
 
@@ -1070,7 +1070,7 @@ plot(person_scores)
 ![Conditional Person EAP estimates and equal-tail intervals using all
 shared-rater evidence in the scoring roster. Calibration is held fixed;
 these are not intervals for Person
-differences.](mfrmr-random-raters_files/figure-html/person-score-plot-1.png)
+differences.](mfrmr-random-raters_files/figure-html/person-score-plot-1.svg)
 
 Filled points are response-based scores; open points, when present,
 indicate prior-only results. An unavailable row remains labeled without
@@ -1248,7 +1248,7 @@ plot(response_review, style = "paired")
 ![Paired descriptive Infit and Outfit by rater for the selected Person's
 ratings, conditioned on the full roster. No fit thresholds or
 rater-quality flags are
-shown.](mfrmr-random-raters_files/figure-html/response-diagnostics-1.png)
+shown.](mfrmr-random-raters_files/figure-html/response-diagnostics-1.svg)
 
 The category-specific Laplace numerator integrals are normalized to
 obtain a probability distribution.
@@ -1312,7 +1312,7 @@ plot(model_comparison, metric = "infit", style = "difference")
 ![Differences in descriptive posterior predictive Infit for matched
 rater summaries. Zero means agreement between models, not acceptable
 model
-fit.](mfrmr-random-raters_files/figure-html/predictive-comparison-1.png)
+fit.](mfrmr-random-raters_files/figure-html/predictive-comparison-1.svg)
 
 These differences are descriptive and hold each model’s calibration
 fixed. The zero line means the summaries agree. A smaller Infit does
@@ -1331,7 +1331,7 @@ as_ggplot(model_comparison, metric = "probability", show_labels = FALSE,
 ![Paired category probabilities from the two models, one panel per score
 category. The dashed diagonal marks equal probabilities; this monochrome
 display has no quality
-flags.](mfrmr-random-raters_files/figure-html/predictive-probabilities-1.png)
+flags.](mfrmr-random-raters_files/figure-html/predictive-probabilities-1.svg)
 
 Use `metric = "expected_score"`, `"variance"` or `"outfit"` to change
 the quantity, and `category = 4` with `metric = "probability"` to focus
@@ -1389,7 +1389,7 @@ plot(model_comparison, metric = "person", style = "difference", show_labels = TR
 ![Changes in conditional Person EAPs after centering each model at its
 fitted population mean. There are no model-difference confidence
 intervals or significance
-decisions.](mfrmr-random-raters_files/figure-html/person-comparison-1.png)
+decisions.](mfrmr-random-raters_files/figure-html/person-comparison-1.svg)
 
 The comparison subtracts each model’s fitted population mean to remove
 its arbitrary origin; it preserves the Rasch logit unit. It retains raw
@@ -1409,7 +1409,7 @@ plot(map_results, type = "wright", show_labels = TRUE)
 ![Model-aware Wright map of selected Person EAPs, conditional facet
 reference locations and adjacent category boundaries. Only Person points
 have conditional interval
-whiskers.](mfrmr-random-raters_files/figure-html/model-wright-1.png)
+whiskers.](mfrmr-random-raters_files/figure-html/model-wright-1.svg)
 
 The Person column shows the selected source EAPs. Facet positions equal
 the severity coefficient plus the **mean step location**: the average
@@ -1437,7 +1437,7 @@ as_ggplot(plot(map_results, type = "fit_pathway", facet = "Rater",
 ![Rater reference locations against descriptive posterior Infit for the
 selected ratings. Rater labels identify points; the monochrome plot has
 no acceptable-fit bands or reference value of
-one.](mfrmr-random-raters_files/figure-html/model-fit-pathway-1.png)
+one.](mfrmr-random-raters_files/figure-html/model-fit-pathway-1.svg)
 
 This pathway connects position with the previously defined
 **descriptive** posterior residual index. Here they describe only the
@@ -1504,14 +1504,14 @@ res$tables$bootstrap_availability
 #> R04   R04      19    17          2  FALSE
 res$tables$comparison_effects
 #>       Facet        Level SourceReference SourceComparison CenterReference
-#> 1 Criterion     Accuracy      0.23250785       0.23147642    0.000000e+00
-#> 2 Criterion      Content     -0.38809689      -0.38637722    0.000000e+00
-#> 3 Criterion     Language      0.09102647       0.09062358    0.000000e+00
-#> 4 Criterion Organization      0.06456257       0.06427722    0.000000e+00
-#> 5     Rater          R01     -0.18292092      -0.16038361   -6.938894e-18
-#> 6     Rater          R02     -0.30735556      -0.26922398   -6.938894e-18
-#> 7     Rater          R03      0.17863651       0.15662179   -6.938894e-18
-#> 8     Rater          R04      0.31163997       0.27301966   -6.938894e-18
+#> 1 Criterion     Accuracy      0.23250785       0.23147642               0
+#> 2 Criterion      Content     -0.38809689      -0.38637722               0
+#> 3 Criterion     Language      0.09102647       0.09062358               0
+#> 4 Criterion Organization      0.06456257       0.06427722               0
+#> 5     Rater          R01     -0.18292092      -0.16038361               0
+#> 6     Rater          R02     -0.30735556      -0.26922398               0
+#> 7     Rater          R03      0.17863651       0.15662179               0
+#> 8     Rater          R04      0.31163997       0.27301966               0
 #>   CenterComparison   Reference  Comparison        Mean    Difference
 #> 1    -1.387779e-17  0.23250785  0.23147642  0.23199214 -0.0010314221
 #> 2    -1.387779e-17 -0.38809689 -0.38637722 -0.38723705  0.0017196695

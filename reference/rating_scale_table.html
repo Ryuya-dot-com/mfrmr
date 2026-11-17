@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,32 +36,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -80,7 +74,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a rating-scale diagnostics report</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>rating_scale_table.Rd</code></div>
     </div>
 
@@ -169,191 +163,21 @@ tables that feed the <code>MarginalOverallRMSD</code> columns in
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a>
 </h2>
-    <p>This helper provides category usage/fit statistics and threshold summaries
-for reviewing score-category functioning.
-<code>category_table</code> is a global observed-score screen. <code>owner_category_table</code>
-retains every declared category within each level of the fitted <code>step_facet</code>
-(or one <code>Common</code> family for RSM). Its percentages use that owner's total
-weight. These are observed ratings, not independent Persons or planned
-assignments. Missing categories alone cannot establish structural absence.
-<code>drop_unused</code> only filters the global display; owner counts stay complete.</p>
-<p>Typical checks:</p>
-<ul>
-<li><p>sparse category usage (<code>Count</code>, <code>ExpectedCount</code>)</p></li>
-<li><p>category fit (<code>Infit</code>, <code>Outfit</code>, <code>ZStd</code>)</p></li>
-<li><p>threshold ordering within each <code>StepFacet</code>
-(<code>threshold_table$Estimate</code>, <code>GapFromPrev</code>)</p></li>
-</ul>
-</div>
-    <div class="section level2">
-    <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a>
-</h2>
-
-
-<p>Start with <code>summary</code>:</p>
-<ul>
-<li><p><code>UsedCategories</code> close to total <code>Categories</code> suggests that most score
-categories are represented in the observed data.</p></li>
-<li><p>very small <code>MinCategoryCount</code> indicates potential instability.</p></li>
-<li><p><code>ThresholdMonotonic = FALSE</code> indicates disordered thresholds within at
-least one threshold set. In PCM fits, inspect <code>threshold_table</code> by
-<code>StepFacet</code> before drawing scale-wide conclusions.</p></li>
-</ul>
-<p>Then inspect:</p>
-<ul>
-<li><p><code>category_table</code> for global category-level misfit/sparsity.</p></li>
-<li><p><code>threshold_table</code> for adjacent-step gaps and ordering within each
-<code>StepFacet</code>.</p></li>
-</ul>
-<p>Stored <code>diagnostics$parameter_uncertainty$steps</code> are matched by threshold
-family and step, with fitted estimates and source identity checked. Inspect
-<code>SE_Status</code>, <code>CIEligible</code>, <code>CIUse</code> and <code>UncertaintySourceStatus</code>. Missing rows
-remain unavailable; duplicate or mismatched keys are rejected. Older
-diagnostics without a verifiable fitted-calibration identity must be
-regenerated with <code>diagnose_mfrm(fit, ...)</code>; model refitting is not required.
-Reordering stored step rows does not change their keyed correspondence.
-A bare fit supplies
-step points with <code>SE_Status = "not_supplied"</code>. A binary centered step has
-no free within-owner contrast (<code>fixed_by_step_centering</code>).</p>
-<p>Native thresholds here are centered step offsets. They are not full
-ability-axis crossings, cumulative-50% boundaries or decision cuts. An SE
-for a step does not include the covariance required for a crossing or an
-adjacent-step difference. Threshold disorder is descriptive, not an
-automatic category-merging rule. Two-family GPCM diagnostics remain
-unsupported by this helper; use its dedicated response/curve routes.</p>
+    <p>Summarizes observed category usage (<code>category_table</code>, <code>category_usage</code>, and
+per-step-owner <code>owner_category_table</code>) and centered step estimates
+(<code>threshold_table</code>, <code>threshold_coverage</code>). In <code>category_table</code>, <code>Count</code> sums
+observation weights, <code>AvgMeasure</code> / <code>ExpectedMeasure</code> summarize the oriented
+predictor (distinct from <code>AvgPersonMeasure</code> and <code>ExpectedAverage</code>), and
+<code>InfitZSTD</code>, <code>OutfitZSTD</code>, and fit flags are <code>NA</code> because conditioning on the
+observed outcome removes a unit-residual reference.</p>
+<p>In <code>threshold_table</code>, stored <code>diagnostics$parameter_uncertainty$steps</code> are
+keyed by <code>StepOwner</code>, <code>StepFacet</code>, and <code>Step</code> (<code>SE_Status</code>, <code>CIEligible</code>,
+<code>CIUse</code>); <code>GapFromPrev</code> reports adjacent differences without skipping missing
+steps, and <code>ThresholdMonotonic</code> checks nondecreasing point estimates within
+<code>sqrt(.Machine$double.eps)</code> (<code>NA</code> for binary scales or missing pairs). Step
+SEs describe centered step offsets, not curve crossings or adjacent gaps, and
+threshold disorder is descriptive rather than an automatic merging rule.</p>
     </div>
-    <div class="section level2">
-    <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a>
-</h2>
-
-
-<ol>
-<li><p>Fit model: <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.</p></li>
-<li><p>Build diagnostics: <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>.</p></li>
-<li><p>Run <code>rating_scale_table()</code> and review <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>.</p></li>
-<li><p>Use <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> to visualize category profile quickly.</p></li>
-</ol>
-<p>Save the complete result to retain owner counts, uncertainty status and
-notes. <code>plot(out, type = "counts")</code> shows global counts; use
-<code>plot(out, type = "thresholds")</code> for the stored step points. Both support
-<code><a href="as_ggplot.html">as_ggplot()</a></code> without recalculating values. Step figures do not draw stored
-SEs as crossing, gap or curve intervals; inspect <code>threshold_table</code> separately.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="further-guidance">Further guidance<a class="anchor" aria-label="anchor" href="#further-guidance"></a>
-</h2>
-
-
-<p>For a plot-selection guide and a longer walkthrough, see
-<a href="mfrmr_visual_diagnostics.html">mfrmr_visual_diagnostics</a> and
-<code><a href="../articles/mfrmr-visual-diagnostics.html">vignette("mfrmr-visual-diagnostics", package = "mfrmr")</a></code>.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="output-columns">Output columns<a class="anchor" aria-label="anchor" href="#output-columns"></a>
-</h2>
-
-
-<p>The <code>category_table</code> data.frame contains:</p>
-<dl>
-<dt>Category</dt>
-<dd><p>Score category value.</p></dd>
-
-<dt>Count, Percent</dt>
-<dd><p>Observed count and percentage of total. With observation
-weights, counts are sums of weights, not independent sample sizes. Missing
-or invalid scores/weights make the usage counts unavailable.</p></dd>
-
-<dt>AvgMeasure, ExpectedMeasure</dt>
-<dd><p>Observed-category mean oriented predictor
-and its model expectation, weighted by category probabilities across
-all retained observations.</p></dd>
-
-<dt>AvgPersonMeasure</dt>
-<dd><p>Mean person measure for respondents in this
-category; distinct from the oriented predictor.</p></dd>
-
-<dt>ExpectedAverage</dt>
-<dd><p>Mean predicted score among observations in this
-observed category; distinct from the expected generating measure.</p></dd>
-
-<dt>Infit, Outfit</dt>
-<dd><p>Descriptive category residual mean squares.</p></dd>
-
-<dt>InfitZSTD, OutfitZSTD</dt>
-<dd><p>Unavailable (NA); conditioning on the observed
-category does not preserve a universal unit-residual reference.</p></dd>
-
-<dt>ExpectedCount, DiffCount</dt>
-<dd><p>Expected count and observed-expected
-difference.</p></dd>
-
-<dt>LowCount</dt>
-<dd><p>Logical; <code>TRUE</code> if count is below minimum threshold.</p></dd>
-
-<dt>InfitFlag, OutfitFlag, ZSTDFlag</dt>
-<dd><p>Unavailable (NA). Outcome-selected
-residual summaries do not have a universal unit baseline or calibrated
-ZSTD reference. Low-count and generating-measure warnings remain descriptive.</p></dd>
-
-<dt>ZeroCount, UnusedCategoryType, WeaklyIdentified, CategoryCaveat</dt>
-<dd><p>Structured score-support caveats for retained zero-count categories.</p></dd>
-
-
-</dl>
-<p>The <code>owner_category_table</code> contains <code>StepOwner</code> (facet name), <code>StepFacet</code>
-(level), <code>Category</code> (model score), <code>CategoryLabel</code> (original score), raw and
-weighted counts (<code>RawCount</code>, <code>Count</code>), denominators (<code>OwnerRatings</code>,
-<code>OwnerWeight</code>), <code>Percent</code>, <code>ZeroCount</code> and <code>UsageStatus</code>. Status distinguishes
-observed, not observed, zero weight, no exposure and unavailable counts.
-No-exposure counts are zero but percentages are unavailable.</p>
-<p>The <code>threshold_table</code> data.frame contains:</p>
-<dl>
-<dt>Step</dt>
-<dd><p>Step label (e.g., <code>Step_1</code>, <code>Step_2</code>). Use <code>LowerCategory</code>
-and <code>UpperCategory</code> to identify the corresponding score transition.</p></dd>
-
-<dt>Estimate</dt>
-<dd><p>Estimated threshold/step difficulty (logits).</p></dd>
-
-<dt>StepOwner</dt>
-<dd><p>Name of the facet owning the steps, or <code>Common</code> for RSM.</p></dd>
-
-<dt>StepFacet</dt>
-<dd><p>Threshold family identifier when the fit uses facet-specific
-threshold sets.</p></dd>
-
-<dt>SE, CI_Lower, CI_Upper, SE_Status, CIEligible, CIUse</dt>
-<dd><p>Stored
-step uncertainty and reporting status, without new inference.</p></dd>
-
-<dt>LowerCategoryLabel, UpperCategoryLabel</dt>
-<dd><p>Original scores at the transition.</p></dd>
-
-<dt>LowerOwnerCount, UpperOwnerCount, OwnerSupportStatus</dt>
-<dd><p>Weighted
-counts and support within this threshold owner, not pooled frequencies.</p></dd>
-
-<dt>GapFromPrev</dt>
-<dd><p>Difference between adjacent numbered thresholds within
-the same <code>StepFacet</code>. Missing thresholds are not skipped to form a gap.
-No automatic category-merging rule is applied.</p></dd>
-
-<dt>ThresholdMonotonic</dt>
-<dd><p>Logical flag repeated within each threshold set.
-<code>FALSE</code> records at least one decreasing adjacent pair; <code>TRUE</code> requires
-every expected pair to be available and nondecreasing, allowing numerical
-differences up to <code>sqrt(.Machine$double.eps)</code>. Equal thresholds meet this
-descriptive condition. Otherwise the flag is <code>NA</code>. A binary scale has
-only one threshold and no applicable ordering comparison. This is a
-statement about point estimates, not a test of category adequacy.</p></dd>
-
-<dt>LowerCategory, UpperCategory, WeaklyIdentified, ThresholdCaveat</dt>
-<dd><p>Adjacent score-category support metadata. Thresholds adjacent to retained
-zero-count categories are flagged for cautious interpretation.</p></dd>
-
-
-</dl>
-</div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
@@ -383,7 +207,7 @@ interpreting the <code>summary(t8)$summary</code> flags in the
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a>
 </h2>
     <div class="dont-index"><p><code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>, <code><a href="measurable_summary_table.html">measurable_summary_table()</a></code>, <code><a href="plot.mfrm_fit.html">plot.mfrm_fit()</a></code>,
-<a href="mfrmr_visual_diagnostics.html">mfrmr_visual_diagnostics</a></p></div>
+<a href="plot.mfrm_fit.html">mfrmr_visual_diagnostics</a></p></div>
     </div>
 
     <div class="section level2">

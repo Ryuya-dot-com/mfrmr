@@ -12,10 +12,10 @@ workflow](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md).
 
 | Your question | Starting point | What the result describes |
 |----|----|----|
-| Do two raters give similar category scores to the same responses? | [`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_kappa_table.md) | Weighted agreement for each pair on its common complete units. |
-| How much agreement is present across the panel? | [`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/krippendorff_alpha_table.md) or [`gwet_ac2_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/gwet_ac2_table.md) | A pooled coefficient under a stated distance/weighting and chance model. Their definitions differ. |
+| Do two raters give similar category scores to the same responses? | [`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md) | Weighted agreement for each pair on its common complete units. |
+| How much agreement is present across the panel? | [`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md) or [`gwet_ac2_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md) | A pooled coefficient under a stated distance/weighting and chance model. Their definitions differ. |
 | Does a score source agree with a chosen reference, track its variation, or shift its mean? | [`score_comparison_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_comparison_table.md) | QWK, correlation and standardized mean difference on aligned records. A reference is not automatically correct. |
-| Which rater is stricter after accounting for the fitted facets? | [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md), then individual estimates and diagnostics | Model-adjusted severity. High rater separation reliability means distinguishable severities, not agreement. |
+| Which rater is more severe after accounting for the fitted facets? | [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md), then individual estimates and diagnostics | Model-adjusted severity. High rater separation reliability means distinguishable severities, not agreement. |
 | Does a rater tend to compress scores toward the middle? | [`rater_centrality_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_centrality_table.md) | Indirect RSM residual and/or rater-specific PCM threshold descriptions, with their source status. |
 | How accurately do raters match supplied expert benchmark ratings? | [`fit_rater_accuracy()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_rater_accuracy.md) | A separate Rasch model of exact-match indicators; the benchmark and its alignment must be justified. |
 
@@ -362,11 +362,11 @@ the reporting question. Krippendorff’s alpha is also distinct from
 Cronbach’s internal- consistency alpha.
 
 If your question instead concerns scores on a meaningful interval scale,
-[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_icc_table.md)
+[`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
 distinguishes absolute agreement from consistency and a single rating
 from the mean of two ratings. Numeric ordinal codes alone do not
 establish its interval-scale assumption. See
-[`?pairwise_icc_table`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_icc_table.md);
+[`?pairwise_icc_table`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md);
 the function’s pairwise average-rating ICC concerns two ratings, not the
 average of a whole panel.
 
@@ -422,7 +422,7 @@ if (can_plot) {
 ![R1 versus R2 score counts. Four responses occur at each of (0, 1), (1,
 2) and (2, 3). All lie one category above the equal-score diagonal; none
 has identical
-scores.](mfrmr-rating-agreement_files/figure-html/score-count-figure-1.png)
+scores.](mfrmr-rating-agreement_files/figure-html/score-count-figure-1.svg)
 
 All 12 responses sit one category above the diagonal. This makes the
 systematic shift visible despite the correlation of 1. Blank cells mean
@@ -466,7 +466,7 @@ if (can_plot) {
 ![Pairwise quadratic weighted kappa: R1/R2, 0.571 on 12 responses;
 R1/R3, 0.833 on 10; R2/R3, 0.455 on 10. Points have no uncertainty bars.
 The vertical dotted line marks zero, not a pass
-threshold.](mfrmr-rating-agreement_files/figure-html/pairwise-qwk-figure-1.png)
+threshold.](mfrmr-rating-agreement_files/figure-html/pairwise-qwk-figure-1.svg)
 
 `expand_limits()` includes 0 and 1 without removing negative estimates.
 Unavailable pairs retain their labelled row and status, with no point;
@@ -475,7 +475,7 @@ estimates are all available. Read the values with the exclusion audit
 rather than as evidence that one rater is more accurate or less severe.
 
 These are custom ggplot recipes from
-[`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_kappa_table.md)
+[`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
 results, not new mfrmr plot methods. The existing
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) displays exact
 agreement or correlation from a fitted-model workflow, not QWK. Keep
@@ -591,9 +591,9 @@ of two independent people for subsequent sampling inference.
 | High rater separation reliability alongside low agreement | Separation describes distinguishable model-adjusted severities; it is not an agreement coefficient. Low separation can reflect imprecision and does not prove agreement either. |
 
 Use
-[`?pairwise_kappa_table`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_kappa_table.md),
-[`?krippendorff_alpha_table`](https://ryuya-dot-com.github.io/mfrmr/reference/krippendorff_alpha_table.md),
-[`?gwet_ac2_table`](https://ryuya-dot-com.github.io/mfrmr/reference/gwet_ac2_table.md)
+[`?pairwise_kappa_table`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md),
+[`?krippendorff_alpha_table`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md),
+[`?gwet_ac2_table`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
 and
 [`?score_comparison_table`](https://ryuya-dot-com.github.io/mfrmr/reference/score_comparison_table.md)
 for formulas, argument details and references. For a broader

@@ -118,13 +118,12 @@ A named list of class `mfrm_summary_appendix_export` with:
 
 ## Details
 
-This helper is the narrow public bridge from documented
-[`summary()`](https://rdrr.io/r/base/summary.html) surfaces to
-manuscript appendix artifacts. It accepts the same reporting objects
-that
+Export the tables selected by
 [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
-supports, exports their table bundles as CSV, and optionally assembles a
-lightweight HTML appendix page.
+as CSV and optional HTML. Pass a supported object, its summary, a
+prebuilt bundle or a named list; a fitted model is not required. Presets
+select from tables already available in the source, not additional
+analyses.
 
 Inspect `written_files` for the actual file paths. An analysis table
 whose name conflicts with bundle metadata (for example, `overview`) is
@@ -138,46 +137,25 @@ are not carried forward. If ZIP creation fails, any older ZIP is
 retained, `summary$ZipWritten` is zero and `notes` explains the failure.
 Other files in the destination folder are left in place.
 
-Fit-level caveats are exported through the `analysis_caveats` role, and
-pre-fit score-support caveats are exported through the
-`score_category_caveats` role. Both roles are classified as diagnostics,
-so they remain available under `"recommended"` and `"diagnostics"`
-presets when the source summary contains caveat rows.
+## Retained reporting evidence
 
-Precision-review summaries keep `fit_separation_basis` in the exported
-precision-review role so fit, ZSTD, separation/reliability/strata, and
-package review thresholds can be reported without turning them into
-universal recovery criteria. Fit-measure and FACETS fit-review summaries
-keep df/ZSTD sensitivity and optional external FACETS matching tables in
-the same precision-review section.
+`analysis_caveats` and `score_category_caveats` remain in
+`"recommended"` and `"diagnostics"` selections when supplied.
+Precision-review tables retain `fit_separation_basis`; fit-measure and
+FACETS review tables retain df/ZSTD sensitivity and optional external
+matching. These distinguish fit, ZSTD, separation/reliability/strata and
+review thresholds from recovery criteria; see
+[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
+for roles and reading order.
 
-Parameter-recovery studies can be exported by passing
 [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
-or
-[`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)
-output directly. The exported bundle keeps the ADEMP-style simulation
-basis, recovery metrics, replication status, adequacy checklist,
-thresholds, and next actions in separate appendix-ready tables.
-
-A compatible precomputed recovery-evidence summary can also be exported,
-including its case assessments, condition notes, diagnostic notes, and
-domain assessments.
-
-Unlike
-[`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md),
-this helper does not require a fitted model. It is intended for the
-stage where compact reporting summaries already exist and the task is to
-hand off appendix-ready tables, catalogs, and reporting maps.
-
-## Typical workflow
-
-1.  Build `summary(...)` objects from fit, diagnostics, data
-    description, reporting checklist, or APA outputs.
-
-2.  Call `export_summary_appendix(...)` on one object or a named list.
-
-3.  Hand off the written CSV/HTML appendix artifacts to manuscript or QA
-    workflows.
+and
+[`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
+outputs retain the ADEMP simulation basis, recovery metrics, replication
+status, adequacy checklist, thresholds and next actions as separate
+tables. Compatible precomputed recovery summaries retain case and domain
+assessments plus condition and diagnostic notes. Review those notes
+before using the exported tables in a manuscript.
 
 ## See also
 
@@ -188,6 +166,9 @@ hand off appendix-ready tables, catalogs, and reporting maps.
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("export_summary_appendix", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -201,6 +182,5 @@ appendix <- export_summary_appendix(
   overwrite = TRUE
 )
 appendix$summary
-#>   BundlesWritten FilesWritten CsvWritten TextWritten HtmlWritten ZipWritten
-#> 1              2           50         47           2           1          0
+} # }
 ```

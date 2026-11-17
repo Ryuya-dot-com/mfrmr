@@ -1,8 +1,10 @@
 # Build an explicit simulation specification for MFRM design studies
 
-Shows the model, design size, assignment, and latent-distribution
-settings needed to understand the specification without printing its
-complete machine-readable planning metadata.
+Define the response model, latent distributions and rating assignment
+for
+[`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md).
+This creates a reusable specification; it does not draw responses or fit
+a model.
 
 ## Usage
 
@@ -45,6 +47,40 @@ build_mfrm_sim_spec(
 
 # S3 method for class 'mfrm_sim_spec'
 print(x, ...)
+
+build_peer_review_sim_spec(
+  n_submission = 50,
+  n_criterion = 4,
+  reviewers_per_submission = 3,
+  anchor_fraction = 0.1,
+  anchor_submissions = NULL,
+  anchor_reviewers_per_submission = NULL,
+  avoid_self_review = TRUE,
+  assignment_mode = c("balanced", "random"),
+  seed = NULL,
+  score_levels = 4,
+  theta_sd = 1,
+  reviewer_sd = 0.45,
+  criterion_sd = 0.25,
+  noise_sd = 0,
+  step_span = 1.4,
+  model = c("RSM", "PCM", "GPCM"),
+  step_facet = "Criterion",
+  thresholds = NULL,
+  group_levels = NULL,
+  dif_effects = NULL,
+  interaction_effects = NULL
+)
+
+extract_mfrm_sim_spec(
+  fit,
+  assignment = c("auto", "crossed", "rotating", "resampled", "skeleton"),
+  latent_distribution = c("normal", "empirical"),
+  source_data = NULL,
+  person = NULL,
+  group = NULL,
+  population_assignment = c("matched", "independent")
+)
 ```
 
 ## Arguments
@@ -59,7 +95,7 @@ print(x, ...)
 
 - n_criterion:
 
-  Number of criterion/item facet levels to generate.
+  Number of rubric criteria.
 
 - raters_per_person:
 
@@ -80,11 +116,13 @@ print(x, ...)
 
 - score_levels:
 
-  Number of ordered score categories.
+  Generator settings passed to `build_mfrm_sim_spec()`. `reviewer_sd`
+  maps to the standard MFRM rater-severity spread.
 
 - theta_sd:
 
-  Standard deviation of simulated person measures.
+  Generator settings passed to `build_mfrm_sim_spec()`. `reviewer_sd`
+  maps to the standard MFRM rater-severity spread.
 
 - rater_sd:
 
@@ -92,33 +130,33 @@ print(x, ...)
 
 - criterion_sd:
 
-  Standard deviation of simulated criterion difficulties.
+  Generator settings passed to `build_mfrm_sim_spec()`. `reviewer_sd`
+  maps to the standard MFRM rater-severity spread.
 
 - noise_sd:
 
-  Optional observation-level noise added to the linear predictor.
+  Generator settings passed to `build_mfrm_sim_spec()`. `reviewer_sd`
+  maps to the standard MFRM rater-severity spread.
 
 - step_span:
 
-  Spread used to generate equally spaced thresholds when
-  `thresholds = NULL`.
+  Generator settings passed to `build_mfrm_sim_spec()`. `reviewer_sd`
+  maps to the standard MFRM rater-severity spread.
 
 - thresholds:
 
-  Optional threshold specification. Use a numeric vector of common
-  thresholds; a named list such as `list(C01 = c(-1, 0, 1))`; a numeric
-  matrix with one row per `StepFacet` and one column per step; or a long
-  data frame with columns `StepFacet`, `Step`/`StepIndex`, and
-  `Estimate`.
+  Measurement-model settings passed to `build_mfrm_sim_spec()`. The
+  first public facet is `Reviewer`; the second is `Criterion`.
 
 - model:
 
-  Measurement model recorded in the simulation specification.
+  Measurement-model settings passed to `build_mfrm_sim_spec()`. The
+  first public facet is `Reviewer`; the second is `Criterion`.
 
 - step_facet:
 
-  Step facet used when `model = "PCM"` and threshold values vary across
-  levels.
+  Measurement-model settings passed to `build_mfrm_sim_spec()`. The
+  first public facet is `Reviewer`; the second is `Criterion`.
 
 - slope_facet:
 
@@ -146,18 +184,17 @@ print(x, ...)
 
 - assignment:
 
-  Assignment design. `"crossed"` means every person sees every rater;
-  `"rotating"` uses a balanced rotating subset; `"sparse_linked"` uses
-  an incomplete rating design with optional linking persons;
-  `"resampled"` reuses empirical person-level rater-assignment profiles;
-  `"skeleton"` reuses an observed person-by-facet design skeleton.
+  Assignment design to record in the returned specification. Use
+  `"resampled"` to reuse empirical person-level rater-assignment
+  profiles from the fitted data, or `"skeleton"` to reuse the observed
+  person-by-facet design skeleton from the fitted data.
 
 - latent_distribution:
 
-  Latent-value generator. `"normal"` samples from centered normal
-  distributions using the supplied standard deviations. `"empirical"`
-  resamples centered support values from
-  `empirical_person`/`empirical_rater`/`empirical_criterion`.
+  Latent-value generator to record in the returned specification.
+  `"normal"` stores spread summaries for parametric draws; `"empirical"`
+  additionally activates centered empirical resampling from the fitted
+  person/rater/criterion estimates.
 
 - empirical_person:
 
@@ -192,12 +229,11 @@ print(x, ...)
   `TemplatePersonReuse = TRUE` asks
   [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
   to keep the template-person order instead of resampling templates,
-  which is used by
-  [`build_peer_review_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_peer_review_sim_spec.md).
-  This flag must be uniform across the skeleton. Every row is retained,
-  including repeated Person-by-facet cells. Each generates a separate
-  conditionally independent response; `Weight` is carried into fitting
-  and does not multiply the number of generated responses.
+  which is used by `build_peer_review_sim_spec()`. This flag must be
+  uniform across the skeleton. Every row is retained, including repeated
+  Person-by-facet cells. Each generates a separate conditionally
+  independent response; `Weight` is carried into fitting and does not
+  multiply the number of generated responses.
 
 - sparse_controls:
 
@@ -209,15 +245,15 @@ print(x, ...)
 
 - group_levels:
 
-  Optional character vector of group labels.
+  Optional signal settings passed to `build_mfrm_sim_spec()`.
 
 - dif_effects:
 
-  Optional data frame of true group-linked DIF effects.
+  Optional signal settings passed to `build_mfrm_sim_spec()`.
 
 - interaction_effects:
 
-  Optional data frame of true interaction effects.
+  Optional signal settings passed to `build_mfrm_sim_spec()`.
 
 - population_formula:
 
@@ -276,139 +312,258 @@ print(x, ...)
 
   Reserved for generic compatibility.
 
+- n_submission:
+
+  Number of submissions/authors to generate.
+
+- reviewers_per_submission:
+
+  Number of peer reviewers assigned to each ordinary submission.
+
+- anchor_fraction:
+
+  Fraction of submissions treated as common-link anchor submissions when
+  `anchor_submissions` is not supplied.
+
+- anchor_submissions:
+
+  Optional number of common-link anchor submissions. Anchor submissions
+  receive `anchor_reviewers_per_submission` reviewers.
+
+- anchor_reviewers_per_submission:
+
+  Number of reviewers assigned to each anchor submission. Defaults to
+  all eligible peers when anchors are used and self-review is
+  disallowed; recorded as 0 when no anchor submissions are requested.
+
+- avoid_self_review:
+
+  Logical; if `TRUE`, a reviewer is never assigned to review their own
+  submission.
+
+- assignment_mode:
+
+  Assignment algorithm. `"balanced"` assigns reviewers with the lowest
+  current load using deterministic rotating tie-breaks. `"random"`
+  samples eligible reviewers without replacement.
+
+- seed:
+
+  Optional seed used only for random peer-review assignment when
+  `assignment_mode = "random"`.
+
+- reviewer_sd:
+
+  Generator settings passed to `build_mfrm_sim_spec()`. `reviewer_sd`
+  maps to the standard MFRM rater-severity spread.
+
+- fit:
+
+  Output from
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+
+- source_data:
+
+  Optional original source data used to recover additional
+  non-calibration columns, currently person-level `group` labels, when
+  building a fit-derived observed response skeleton.
+
+- person:
+
+  Optional person column name in `source_data`. Defaults to the person
+  column recorded in `fit`.
+
+- group:
+
+  Optional group column name in `source_data` to merge into the returned
+  `design_skeleton` as person-level metadata.
+
 ## Value
 
 An object of class `mfrm_sim_spec`.
 
 `x`, invisibly.
 
+An object of class `mfrm_sim_spec` with `peer_review` metadata and a
+fixed peer-review design skeleton.
+
+An object of class `mfrm_sim_spec`.
+
 ## Details
 
-`build_mfrm_sim_spec()` creates an explicit, portable simulation
-specification that can be passed to
-[`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md).
-The goal is to make the data-generating mechanism inspectable and
-reusable rather than relying only on ad hoc scalar arguments.
+Records design counts, normal or empirical latent spreads,
+`threshold_table`, optional `GPCM` `slope_table`
+(`slope_facet == step_facet`, unit geometric mean; Muraki, 1992,
+[doi:10.1177/014662169201600206](https://doi.org/10.1177/014662169201600206)
+; validation labels in `slope_regime`), assignment settings
+(`"crossed"`, `"rotating"`, `"sparse_linked"`, `"resampled"`,
+`"skeleton"`), optional DIF/interaction `signals`, role-based
+`planning_scope` / `planning_constraints` / `planning_schema`
+(`facet_names` renames the rater-like and criterion-like roles without
+enabling arbitrary-facet planning), and optional person
+latent-regression generator templates (\\\theta_n = x_n^\top \beta +
+\varepsilon_n\\, \\\varepsilon_n \sim N(0, \sigma^2)\\).
 
-The resulting object records:
+The [`print()`](https://rdrr.io/r/base/print.html) method shows the
+model, design size, assignment and latent-distribution settings without
+printing all stored metadata.
 
-- design counts (`n_person`, `n_rater`, `n_criterion`,
-  `raters_per_person`)
+`build_peer_review_sim_spec()` creates a fixed
+person-by-reviewer-by-rubric skeleton for peer-assessment or peer-review
+studies. Submissions and peer reviewers share the same ID universe
+(`P001`, `P002`, ...), so self-review can be structurally excluded and
+checked in the generated data. The specification uses the existing
+`assignment = "skeleton"` generator and records peer-review metadata; it
+does not introduce a new measurement model. MFRM still estimates
+person/submission measures, reviewer severity, and criterion difficulty,
+while design-network review can inspect whether the peer-review graph is
+sufficiently linked.
 
-- latent spread assumptions (`theta_sd`, `rater_sd`, `criterion_sd`)
+The common-link anchor controls follow the same logic used in sparse
+rater-mediated designs: when most submissions receive only a few peer
+reviews, assigning all or many reviewers to a small anchor set can
+strengthen links among reviewers. The helper labels these rows as design
+diagnostics, not universal adequacy thresholds for fit, separation, or
+recovery.
 
-- optional empirical latent support values for semi-parametric
-  simulation
+`extract_mfrm_sim_spec()` uses a fitted model as a practical starting
+point for later simulation studies. It extracts:
 
-- threshold structure (`threshold_table`)
+- design counts from the fitted data
 
-- optional discrimination structure for `GPCM` (`slope_table`) and its
-  identified log-slope spread label (`slope_regime`)
+- empirical spread of person and facet estimates
 
-- assignment design (`assignment`)
+- optional empirical support values for semi-parametric draws
 
-- optional sparse linked-design controls (`sparse_controls`) when
-  `assignment = "sparse_linked"`
+- fitted threshold values
 
-- optional empirical assignment profiles (`assignment_profiles`) with
-  optional person-level `Group` labels
+- either a simplified assignment summary (`"crossed"` / `"rotating"`),
+  empirical resampled assignment profiles (`"resampled"`), or an
+  observed response skeleton (`"skeleton"`, optionally carrying
+  `Group`/`Weight`)
 
-- optional observed response skeleton (`design_skeleton`) with optional
-  person-level `Group` labels and observation-level `Weight` values
+- when the fit used the latent-regression branch, the fitted
+  `population_formula`, coefficient vector, residual variance, and the
+  stored person-level covariate table, including model-matrix xlevel and
+  contrast provenance for categorical covariates
 
-- optional person-level latent-regression population metadata including
-  `population_formula`, `population_coefficients`, `population_sigma2`,
-  and a reusable template of person-level covariates, including
-  model-matrix xlevel/contrast provenance for categorical covariates
+This is intended as a **fit-derived parametric starting point**, not as
+a claim that the fitted object perfectly recovers the true
+data-generating mechanism. Users should review and, if necessary, edit
+the returned specification before using it for design planning. Observed
+skeleton rows retain repeated rating occasions. Remove accidental
+duplicate source rows before fitting; the generator cannot distinguish
+them from intentional repeated ratings. Covariates and assignment
+templates are linked by `TemplatePerson` under
+`population_assignment = "matched"`.
 
-- `planning_scope`, an explicit record that the current
-  planning/forecasting helpers target the role-based person x rater-like
-  x criterion-like design contract rather than a fully arbitrary-facet
-  planner
+Without an active population regression, `theta_sd` is the empirical SD
+of the reported Person estimates, including any shrinkage in those
+estimates. It is not an estimate of the latent population SD corrected
+for measurement error. The empirical option resamples centered estimates
+independently of their original IDs; it is not a draw from the source
+posterior. With an active population model, its coefficients, residual
+variance and fitted transformation basis replace this Person-spread
+approximation. Neither route propagates uncertainty in the source fit's
+generating parameters.
 
-- `planning_constraints`, an explicit record of which design variables
-  can currently be changed from that specification without rebuilding it
+`GPCM` fits with the same slope and step owner are supported here for
+direct data generation and parameter-recovery checks, provided that the
+returned simulation specification stores both a threshold table and a
+parallel slope table. The same fit-derived specification can feed
+caveated role-based design evaluation, population forecasting, and
+fit-based report/export bundles. Diagnostic and signal-detection design
+screening is available with explicit caveats. This
+simulation-specification helper does not perform full FACETS score-side
+review, Bayesian posterior predictive checks or MCMC estimation. For
+supported Bayesian specifications, see
+[`export_mfrm_model()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.md);
+its scope is separate from this generator.
 
-- `planning_schema`, a combined structural contract containing the role
-  descriptor, supported scope, mutability map, facet manifest, and the
-  normalized named-facet design representation. Its
-  `structural_design_*` fields describe deterministic balance and
-  connectivity reviews; they do not imply support for arbitrary-facet
-  simulation.
+If you want to carry person-level group labels into a fit-derived
+observed response skeleton, provide the original `source_data` together
+with `person` and `group`. Group labels are treated as person-level
+metadata and are checked for one-label-per-person consistency before
+being merged.
 
-- the `design$facets` parser normalizes named facet counts through the
-  same design representation used by the planning helpers
+## References
 
-- optional signal tables for DIF and interaction bias
+- Farrokhi, F., Esfandiari, R., & Schaefer, E. (2012). A many-facet
+  Rasch measurement of differential rater severity/leniency in three
+  types of assessment. *JALT Journal*, 34(1), 79-102.
+  doi:10.37546/JALTJJ34.1-3.
 
-The current generator targets the package's standard person x rater x
-criterion workflow, but the public output names for those two facet
-roles can now be customized with `facet_names`. This naming layer
-improves public ergonomics; it does not provide a fully arbitrary-facet
-simulator. Internally, helper objects keep canonical role mappings so
-that planning functions can treat the first non-person facet as
-rater-like and the second as criterion-like. When threshold values are
-provided by `StepFacet`, the supported step facets are the generated
-levels of the chosen public rater-like or criterion-like column. For
-convenience, step-facet-specific thresholds can be supplied as a named
-list or as a numeric matrix whose row names are `StepFacet` labels. When
-`model = "GPCM"`, the same public facet naming rules apply to the slope
-table; the current bounded branch keeps `slope_facet` equal to
-`step_facet`. The `slope_regime` field summarizes the centered log-slope
-spread so recovery simulations can be read against the intended
-generator stress level. Its labels (`unit_slopes`, `near_flat`,
-`moderate`, and `high_dispersion`) are package validation labels; they
-are not model-fit decisions and should not be interpreted as
-literature-derived adequacy thresholds. The GPCM data-generating form
-follows Muraki (1992, doi:10.1177/014662169201600206), while
-information-function interpretation follows Muraki (1993,
-doi:10.1177/014662169301700403). The explicit simulation-specification
-metadata is intended to support ADEMP-style simulation reporting as
-described by Morris, White, and Crowther (2019, doi:10.1002/sim.8086).
+- Uto, M., & Ueno, M. (2020). A generalized many-facet Rasch model and
+  its Bayesian estimation using Hamiltonian Monte Carlo.
+  *Behaviormetrika*, 47, 469-496. doi:10.1007/s41237-020-00115-7.
 
-The `assignment = "sparse_linked"` branch follows sparse rater-mediated
-assessment work in treating incomplete rater assignment as planned
-missingness rather than incidental nonresponse. Its `link_persons` and
-`link_raters_per_person` controls emulate a common linking set so users
-can inspect rater-pair common-person counts before using the generated
-data in recovery or design studies. This is a design generator and
-diagnostic metadata layer; it does not impose a universal
-minimum-linking cutoff. Sparse-design motivation follows Wind, Jones,
-and Grajeda (2023, doi:10.1177/01466216231182148), Wind and Jones (2018,
-doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
-(2023).
-
-If `population_formula` is supplied, the simulation specification
-carries a person-level latent-regression generator. This affects only
-the person distribution. The current implementation keeps the non-person
-facets in the existing many-facet Rasch generator and resamples rows
-from `population_covariates` to the requested design size before
-computing \\\theta_n = x_n^\top \beta + \varepsilon_n\\ with
-\\\varepsilon_n \sim N(0, \sigma^2)\\.
+- DeMars, C. E., Shapovalov, Y. A., & Hathcoat, J. D. (2023).
+  *Many-Facet Rasch Designs: How Should Raters be Assigned to
+  Examinees?* NCME presentation.
 
 ## Interpreting output
 
-This object does not contain simulated data. It is a data-generating
-specification that tells
-[`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
-how to generate them.
+The returned object is a simulation specification, not a prediction
+about one future sample. It captures one convenient approximation to the
+observed design and estimated spread in the fitted run.
 
 ## See also
 
-[`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md),
+`extract_mfrm_sim_spec()`,
+[`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
+
+[`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md),
+[`build_mfrm_network_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_network_review.md),
+`build_mfrm_sim_spec()`
+
+`build_mfrm_sim_spec()`,
 [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("build_mfrm_sim_spec", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 spec <- build_mfrm_sim_spec(
   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
   assignment = "rotating"
 )
 spec$model
-#> [1] "RSM"
 spec$assignment
-#> [1] "rotating"
 nrow(spec$threshold_table)
-#> [1] 3
+} # }
+peer_spec <- build_peer_review_sim_spec(
+  n_submission = 12,
+  n_criterion = 3,
+  reviewers_per_submission = 2,
+  anchor_submissions = 2
+)
+peer_spec$peer_review$overview
+#>      Scenario Submissions Reviewers Criteria OrdinaryReviewersPerSubmission
+#> 1 peer_review          12        12        3                              2
+#>   AnchorSubmissions AnchorReviewersPerSubmission AvoidSelfReview AssignmentMode
+#> 1                 2                           11            TRUE       balanced
+#>   SkeletonRows OrdinaryRows AnchorRows                              ReviewUse
+#> 1          126           60         66 design_diagnostic_not_measurement_gate
+toy <- simulate_mfrm_data(
+  n_person = 8,
+  n_rater = 3,
+  n_criterion = 2,
+  seed = 123
+)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
+spec <- extract_mfrm_sim_spec(fit, latent_distribution = "empirical")
+spec$assignment
+#> [1] "crossed"
+spec$model
+#> [1] "RSM"
+head(spec$threshold_table)
+#> # A tibble: 3 × 4
+#>   StepFacet StepIndex Step   Estimate
+#>   <chr>         <int> <chr>     <dbl>
+#> 1 Common            1 Step_1   -2.79 
+#> 2 Common            2 Step_2   -0.583
+#> 3 Common            3 Step_3    3.37 
 ```

@@ -165,7 +165,7 @@ simulate_mfrm_data(
   Optional output from
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
   or
-  [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md).
+  [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md).
   When supplied, it defines the generator setup; direct scalar arguments
   are treated as legacy inputs and should generally be left at their
   defaults except for `seed`. Any custom public two-facet names recorded
@@ -187,208 +187,24 @@ column is also included.
 
 ## Details
 
-This function generates synthetic ordered many-facet data under `RSM`,
-`PCM`, or the package's `GPCM` branch. The data-generating process is:
+Draws independent centered normal (or `sim_spec` empirical /
+latent-regression `population`) parameters \\\theta_n\\, \\\delta_j\\,
+\\\beta_i\\, forms \\\eta = \theta_n - \delta_j - \beta_i + \epsilon\\
+(plus optional `dif_effects` and `interaction_effects`, multiplied by
+slope in `GPCM` where `slope_facet == step_facet` is normalized to unit
+geometric mean), and samples ordered responses under `RSM`, `PCM`, or
+`GPCM`.
 
-1.  Draw person abilities: \\\theta_n \sim N(0, \texttt{theta\\sd}^2)\\
-
-2.  Draw rater severities: \\\delta_j \sim N(0, \texttt{rater\\sd}^2)\\
-
-3.  Draw criterion difficulties: \\\beta_i \sim N(0,
-    \texttt{criterion\\sd}^2)\\
-
-4.  Unless thresholds are supplied, generate evenly spaced thresholds
-    from `-step_span` to `step_span`; the single binary threshold is
-    zero
-
-5.  For each observation, compute the linear predictor \\\eta =
-    \theta_n - \delta_j - \beta_i + \epsilon\\ where \\\epsilon \sim
-    N(0, \texttt{noise\\sd}^2)\\ (optional)
-
-6.  Compute category probabilities under the recorded measurement model
-    (`RSM`, `PCM`, or `GPCM`) and sample the response
-
-Latent-value generation is explicit:
-
-- `latent_distribution = "normal"` draws centered normal person/rater/
-  criterion values using the supplied standard deviations. Values are
-  assigned independently to level IDs, without sorting them by severity
-  or difficulty; zero is the distribution mean, not a forced sample
-  mean.
-
-- `latent_distribution = "empirical"` resamples centered support values
-  recorded in `sim_spec$empirical_support`
-
-- if `sim_spec$population$active = TRUE`, person measures are generated
-  from the stored latent-regression population model and template person
-  covariates rather than from `theta_sd`
-
-Latent-regression transformations and factor coding retain their
-template basis during generation and refitting.
-`mfrm_population_data$population_formula` is a formula-compatible
-`terms` object carrying this basis, factor levels and contrasts. Pass it
-together with the returned `person_data` when fitting generated data
-manually. Old specifications containing transformed predictors but no
-stored basis must be rebuilt from the original template or source fit.
-Previously saved generated data/results are not silently reinterpreted.
-
-Earlier versions sorted normal rater/criterion draws before assigning
-IDs, imposing an association with ID order and any ID-specific
-steps/slopes. Correcting that ordering changes seeded datasets. Preserve
-old generated data and results for historical reproduction; new runs use
-the corrected generator and a matching saved specification/software
-environment.
-
-When `dif_effects` is supplied, the specified linear-predictor shift is
-added to \\\eta\\ for the focal group on the target facet level,
-creating a known DIF signal. Similarly, `interaction_effects` injects a
-known bias into specific facet-level combinations. For RSM/PCM this is
-also the adjacent-category log-odds shift. For GPCM, the shift in
-adjacent-category log odds is the specified effect multiplied by the
-observation's discrimination. A common injected effect therefore need
-not imply equal response-probability changes across facet levels.
-
-The generator targets the common two-facet rating design (persons
-\\\times\\ raters \\\times\\ criteria). `raters_per_person` controls the
-incomplete-block structure: when less than `n_rater`, each person is
-assigned a rotating subset of raters to keep coverage balanced and
-reproducible.
-
-Threshold handling is intentionally explicit:
-
-- if `thresholds = NULL`, common equally spaced thresholds are generated
-  from `step_span`
-
-- if `thresholds` is a numeric vector, it is used as one common
-  threshold set
-
-- if `thresholds` is a named list, numeric matrix, or data frame,
-  threshold values may vary by `StepFacet` (currently `Criterion` or
-  `Rater`)
-
-For `GPCM`, the generator requires an explicit slope contract in
-parallel with the threshold table. The supported route keeps
-`slope_facet == step_facet`, normalizes supplied slopes to the same
-geometric-mean-one log-slope identification used by
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-and samples responses from the corresponding GPCM category
-probabilities. Independent arbitrary slope-facet planning is not
-supported by these design, population-forecasting, diagnostic-screening,
-or signal-detection helpers.
-
-Assignment handling is also explicit:
-
-- `"crossed"` uses the full person x rater x criterion design
-
-- `"rotating"` assigns a deterministic rotating subset of raters per
-  person
-
-- `"sparse_linked"` assigns most persons to an incomplete rater subset
-  and assigns a configurable set of linking persons to a larger rater
-  set
-
-- `"resampled"` reuses empirical person-level rater profiles stored in
-  `sim_spec$assignment_profiles`, optionally carrying over person-level
-  `Group`
-
-- `"skeleton"` reuses an observed person-by-rater-by-criterion response
-  skeleton stored in `sim_spec$design_skeleton`, optionally carrying
-  over `Group` and `Weight`
-
-With an active population model, `population_assignment = "matched"` in
-[`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
-or
-[`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md)
-draws covariates and skeleton/profile assignments from the same template
-Person. Independent draws require
-`population_assignment = "independent"`. A population `Group` column
-supplies the response `Group`; it is not drawn a second time.
-Conflicting group labels or unmatched template IDs fail with an
-explanation. Stored specifications without `population_assignment`
-retain independent sampling; rebuild them to request matched sampling.
-The ambiguous case of independently drawn tables both defining `Group`
-now errors.
-
-Skeleton rows retain observation multiplicity. Repeated cells receive
-new, conditionally independent responses given the generated latent
-values and signals. Study runners declare this assumption via
-`repeated_ratings = "independent"` when refitting these generated data.
-This does not establish independence of repeated ratings in the source
-data, or simulate serial, occasion or peer-network dependence. `Weight`
-is passed through to fitting, not interpreted as additional
-independently generated rows.
-
-Sparse linked simulation is intended for planned-missing rating designs
-in which connectivity is maintained through common linking persons. The
-returned `mfrm_sparse_design` attribute summarizes design density,
-planned missingness, rater coverage, and rater-pair common-person
-counts. These summaries are design diagnostics, not model-fit statistics
-or universal adequacy thresholds. This branch follows sparse
-rater-mediated assessment design work by Wind, Jones, and Grajeda (2023,
-doi:10.1177/01466216231182148), Wind and Jones (2018,
-doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
-(2023).
-
-For more controlled workflows, build a reusable simulation specification
-first via
-[`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
-or derive one from an observed fit with
-[`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md),
-then pass it through `sim_spec`.
-
-Returned data include attributes:
-
-- `mfrm_truth`: simulated true parameters (for parameter-recovery
-  checks)
-
-- `mfrm_truth$signals`: injected DIF and interaction signal tables
-
-- `mfrm_truth$population$template_person` and
-  `mfrm_truth$design$template_person`: source template IDs keyed by
-  generated Person, where population or assignment templates are used
-
-- `mfrm_truth$slope_table`: simulated discrimination table for `GPCM`
-
-- `mfrm_population_data`: generated one-row-per-person background data
-  when the simulation specification stores an active latent-regression
-  generator, including model-matrix xlevel and contrast provenance for
-  categorical covariates
-
-- `mfrm_simulation_spec`: generation settings (for reproducibility)
-  including the effective `population_assignment` (`"matched"`,
-  `"independent"` or `"none"`) and the conditional response-independence
-  rule
-
-- `mfrm_sparse_design`: sparse-design diagnostics when
-  `assignment = "sparse_linked"`, including design density, planned
-  missing rate, rater coverage, and rater-pair common-person counts
-
-## Interpreting output
-
-- Higher `theta` values in `mfrm_truth$person` indicate higher person
-  measures.
-
-- Higher values in `mfrm_truth$facets$Rater` indicate more severe
-  raters.
-
-- Higher values in `mfrm_truth$facets$Criterion` indicate more difficult
-  criteria.
-
-- `mfrm_truth$signals$dif_effects` and
-  `mfrm_truth$signals$interaction_effects` record any injected detection
-  targets.
-
-## Typical workflow
-
-1.  Generate one design with `simulate_mfrm_data()`.
-
-2.  Fit with
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-    and diagnose with
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
-
-3.  For repeated design studies, use
-    [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md).
+Supports `"crossed"`, `"rotating"`, `"sparse_linked"` (retaining
+coverage and overlap counts in `attr(x, "mfrm_sparse_design")`; Wind et
+al., 2023,
+[doi:10.1177/01466216231182148](https://doi.org/10.1177/01466216231182148)
+), `"resampled"`, and `"skeleton"` assignments (preserving row
+multiplicity as conditionally independent draws and passing `Weight`
+through). Returned attributes carry `mfrm_truth` (including `signals`
+and `slope_table`), `mfrm_simulation_spec`, and optional
+`mfrm_population_data` (preserving template `terms`, factor levels, and
+contrasts).
 
 ## See also
 
@@ -399,6 +215,9 @@ Returned data include attributes:
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("simulate_mfrm_data", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 sim <- simulate_mfrm_data(
   n_person = 40,
   n_rater = 4,
@@ -407,14 +226,6 @@ sim <- simulate_mfrm_data(
   seed = 123
 )
 head(sim)
-#>             Study Person Rater Criterion Score
-#> 1 SimulatedDesign   P001   R01       C01     1
-#> 2 SimulatedDesign   P001   R02       C01     2
-#> 3 SimulatedDesign   P001   R01       C02     3
-#> 4 SimulatedDesign   P001   R02       C02     3
-#> 5 SimulatedDesign   P001   R01       C03     3
-#> 6 SimulatedDesign   P001   R02       C03     2
 names(attr(sim, "mfrm_truth"))
-#>  [1] "person"      "facets"      "steps"       "step_table"  "slopes"     
-#>  [6] "slope_table" "population"  "groups"      "signals"     "design"     
+} # }
 ```

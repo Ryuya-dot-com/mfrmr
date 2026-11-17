@@ -2,6 +2,8 @@
 
 Build an observed-data resampling specification
 
+Draw observed-data MFRM resamples
+
 ## Usage
 
 ``` r
@@ -21,6 +23,8 @@ build_mfrm_resampling_spec(
   min_per_stratum = 1,
   topup_preserve_facets = TRUE
 )
+
+draw_mfrm_resamples(spec, keep_data = TRUE)
 ```
 
 ## Arguments
@@ -91,8 +95,7 @@ build_mfrm_resampling_spec(
 
 - seed:
 
-  Optional seed used by
-  [`draw_mfrm_resamples()`](https://ryuya-dot-com.github.io/mfrmr/reference/draw_mfrm_resamples.md).
+  Optional seed used by `draw_mfrm_resamples()`.
 
 - min_per_stratum:
 
@@ -105,11 +108,42 @@ build_mfrm_resampling_spec(
   distribution and can increase stratum sizes; it is not an ordinary
   bootstrap. Set `FALSE` for ordinary cluster-bootstrap draws.
 
+- spec:
+
+  Output from `build_mfrm_resampling_spec()`.
+
+- keep_data:
+
+  Logical; if `TRUE`, return a list of replicate data frames. If
+  `FALSE`, return manifest tables only.
+
 ## Value
 
 An object of class `mfrm_resampling_spec` containing the input data,
 columns, target plan, person/stratum rosters, `sampling_scheme` and
 interpretation in `terminology`.
+
+An object of class `mfrm_resamples` with:
+
+- `samples`: replicate data frames with original Person, draw-unit,
+  stratum and top-up metadata, or an empty list when
+  `keep_data = FALSE`.
+
+- `manifest`: replicate seeds, sampling scheme, base/added/final cluster
+  counts, original Person counts, rating-row counts and coverage checks.
+
+- `stratum_manifest`: `BasePersonClusters` before top-up,
+  `TopupPersonClusters`, final `SelectedPersonClusters` and
+  `SelectedOriginalPersons`, and final `Rows` for each stratum.
+
+- `preserve_manifest`: observed coverage of requested facet levels.
+
+- `spec` and `terminology`: inputs, sampling assumptions and
+  interpretation. [`summary()`](https://rdrr.io/r/base/summary.html)
+  retains full manifests as well as compact tables. For older results
+  with top-up, pre-top-up stratum counts are retained as base counts;
+  unrecorded final cluster counts are `NA`, with a note, while final row
+  counts remain available. This does not redraw old samples.
 
 ## Details
 
@@ -127,6 +161,11 @@ The design is person-clustered: all rows for a selected person are kept
 together. For bootstrap draws, duplicated person clusters are re-keyed
 in the returned data while the original identifier is retained in
 `.mfrm_original_person`.
+
+See `build_mfrm_resampling_spec()` for sampling assumptions, top-up,
+label handling and saved-specification compatibility. Sampling keeps
+each selected Person's entire rating cluster and re-keys every instance
+when drawing with replacement. Other facet labels are retained.
 
 ## Sampling assumptions and interpretation
 
@@ -161,15 +200,14 @@ names `.mfrm_original_person`, `.mfrm_draw_unit`, `.mfrm_stratum`,
 `.mfrm_topup`, and `.mfrm_topup_reason` are reserved for returned
 metadata.
 
-[`draw_mfrm_resamples()`](https://ryuya-dot-com.github.io/mfrmr/reference/draw_mfrm_resamples.md)
-rebuilds derived tables from the specification's declared inputs,
-including saved older specifications. Corrected labels and top-up rules
-can change old draws even with the same seed; retain old results
-separately. `saveRDS(spec, ...)` preserves the input data and seed;
-`saveRDS(draws, ...)` preserves the actual samples, per-replicate seeds
-and manifests. Use an explicit seed to reproduce draws in a matching
-R/RNG environment. Manifest-only results retain the specification and
-input data but omit the materialized samples.
+`draw_mfrm_resamples()` rebuilds derived tables from the specification's
+declared inputs, including saved older specifications. Corrected labels
+and top-up rules can change old draws even with the same seed; retain
+old results separately. `saveRDS(spec, ...)` preserves the input data
+and seed; `saveRDS(draws, ...)` preserves the actual samples,
+per-replicate seeds and manifests. Use an explicit seed to reproduce
+draws in a matching R/RNG environment. Manifest-only results retain the
+specification and input data but omit the materialized samples.
 
 ## References
 
@@ -181,8 +219,10 @@ this Person-cluster helper.
 
 ## See also
 
-[`draw_mfrm_resamples()`](https://ryuya-dot-com.github.io/mfrmr/reference/draw_mfrm_resamples.md),
+`draw_mfrm_resamples()`,
 [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
+
+`build_mfrm_resampling_spec()`
 
 ## Examples
 
@@ -218,4 +258,18 @@ draws$stratum_manifest  # Base, top-up and final Person-cluster counts.
 #> 2                      12                   0
 #> 3                      12                   0
 #> 4                      12                   0
+# Same-size Person-cluster bootstrap within the observed Group strata.
+ratings <- load_mfrmr_data("example_operational")
+spec <- build_mfrm_resampling_spec(
+  ratings, person = "Person", facets = c("Rater", "Criterion"),
+  score = "Score", strata = "Group", reps = 2,
+  design = "stratified_bootstrap", sample_fraction = 1,
+  topup_preserve_facets = FALSE, seed = 99
+)
+draws <- draw_mfrm_resamples(spec, keep_data = FALSE)
+summary(draws)$overview
+#>                 Design              SamplingScheme Reps SamplesReturned Replace
+#> 1 stratified_bootstrap stratified_person_bootstrap    2               0    TRUE
+#>   PreserveCoverageCompleteRate TopupReps GapOrFallbackReps
+#> 1                            1         0                 0
 ```

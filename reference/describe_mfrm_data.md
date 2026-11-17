@@ -1,19 +1,19 @@
 # Check rating data before fitting an MFRM
 
-Inspect how many rating rows can be used, how often each score category
-occurs, and whether facet levels connect through shared persons. This
-function prepares descriptive checks; it does not fit a model or change
-the data object supplied by the caller. Each row should represent one
-rating, and `person`, `facets`, and `score` name its columns.
+Audit row retention, missingness, score category support, duplicate
+Person-by-facet cells, Person-facet graph connectivity, optional
+observed agreement, and optional prospective interaction contrast
+identifiability before calling
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
 ## Usage
 
 ``` r
 describe_mfrm_data(
   data,
-  person,
-  facets,
-  score,
+  person = NULL,
+  facets = NULL,
+  score = NULL,
   weight = NULL,
   rating_min = NULL,
   rating_max = NULL,
@@ -28,7 +28,23 @@ describe_mfrm_data(
   min_linking_persons = 2L,
   category_policy = NULL,
   repeated_ratings = c("review", "independent"),
-  comparisons = NULL
+  comparisons = NULL,
+  spec = NULL
+)
+
+# S3 method for class 'mfrm_data_description'
+summary(object, digits = 3, top_n = 10, ...)
+
+# S3 method for class 'mfrm_data_description'
+plot(
+  x,
+  y = NULL,
+  type = c("score_distribution", "facet_levels", "missing"),
+  main = NULL,
+  palette = NULL,
+  label_angle = 45,
+  draw = TRUE,
+  ...
 )
 ```
 
@@ -36,417 +52,300 @@ describe_mfrm_data(
 
 - data:
 
-  A data.frame in long format (one row per rating event). Grouped or
-  rowwise tibbles are treated as one table; only the selected model
-  columns enter row filtering and the design review.
+  Long-format rating `data.frame` (one row per rating event).
 
 - person:
 
-  Column name for person IDs.
+  Data column names, rubric bounds, category handling (`"collapse"` vs
+  `"preserve"`), duplicate-cell policy (`"review"` vs `"independent"`),
+  and sentinel recoding; shared with
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  via `spec` (see
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)).
 
 - facets:
 
-  Character vector of facet column names. The reserved data and
-  parameter names listed in
+  Data column names, rubric bounds, category handling (`"collapse"` vs
+  `"preserve"`), duplicate-cell policy (`"review"` vs `"independent"`),
+  and sentinel recoding; shared with
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-  cannot name facets; rename such columns before analysis.
+  via `spec` (see
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)).
 
 - score:
 
-  Column name for observed score. The category-code and near-integer
-  normalization rules are the same as in
-  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+  Data column names, rubric bounds, category handling (`"collapse"` vs
+  `"preserve"`), duplicate-cell policy (`"review"` vs `"independent"`),
+  and sentinel recoding; shared with
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  via `spec` (see
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)).
 
 - weight:
 
-  Optional weight/frequency column name, with the numeric precision and
-  finite-sum rules of
-  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+  Data column names, rubric bounds, category handling (`"collapse"` vs
+  `"preserve"`), duplicate-cell policy (`"review"` vs `"independent"`),
+  and sentinel recoding; shared with
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  via `spec` (see
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)).
 
 - rating_min:
 
-  Optional minimum category value. Supply with `rating_max` to retain
-  unused boundary categories in the intended score support.
+  Data column names, rubric bounds, category handling (`"collapse"` vs
+  `"preserve"`), duplicate-cell policy (`"review"` vs `"independent"`),
+  and sentinel recoding; shared with
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  via `spec` (see
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)).
 
 - rating_max:
 
-  Optional maximum category value. Supply with `rating_min` to retain
-  unused boundary categories in the intended score support.
+  Data column names, rubric bounds, category handling (`"collapse"` vs
+  `"preserve"`), duplicate-cell policy (`"review"` vs `"independent"`),
+  and sentinel recoding; shared with
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  via `spec` (see
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)).
 
 - keep_original:
 
-  Keep original category values. Use this with `rating_min` /
-  `rating_max` when the intended scale has unused intermediate
-  categories such as `1, 2, 4, 5` on a 1-5 scale. New code can instead
-  use `category_policy = "preserve"`.
+  Data column names, rubric bounds, category handling (`"collapse"` vs
+  `"preserve"`), duplicate-cell policy (`"review"` vs `"independent"`),
+  and sentinel recoding; shared with
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  via `spec` (see
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)).
 
 - missing_codes:
 
-  Optional. `NULL` (default) is a no-op; `TRUE` or `"default"` activates
-  the FACETS / SPSS / SAS convention
-  (`c("99", "999", "-1", "N", "NA", "n/a", ".", "")`) for the score
-  column while preserving person/facet identifiers; supply a character
-  vector to apply a custom code set across all model columns.
-  Replacement counts are returned in the `missing_recoding` component
-  when supported by the calling helper. See
-  [`recode_missing_codes()`](https://ryuya-dot-com.github.io/mfrmr/reference/recode_missing_codes.md)
-  for the standalone version.
+  Data column names, rubric bounds, category handling (`"collapse"` vs
+  `"preserve"`), duplicate-cell policy (`"review"` vs `"independent"`),
+  and sentinel recoding; shared with
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  via `spec` (see
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)).
 
 - include_person_facet:
 
-  If `TRUE`, include person-level rows in `facet_level_summary`.
+  Controls for including Person rows in `facet_level_summary` and
+  computing observed scorer agreement across matched `context_facets`.
 
 - include_agreement:
 
-  If `TRUE`, include an observed-score agreement bundle
-  (summary/pairs/settings) for a selected non-person facet.
+  Controls for including Person rows in `facet_level_summary` and
+  computing observed scorer agreement across matched `context_facets`.
 
 - rater_facet:
 
-  Optional facet name used to identify repeated scorers for agreement
-  summaries. If `NULL`, a rater-like name such as `Rater`, `Judge`, or
-  `Scorer` is inferred. No agreement analysis is run when such a name is
-  absent; set this argument explicitly only when another facet genuinely
-  represents repeated scorers.
+  Controls for including Person rows in `facet_level_summary` and
+  computing observed scorer agreement across matched `context_facets`.
 
 - context_facets:
 
-  Optional facets used to define matched contexts for agreement. If
-  `NULL`, all remaining facets (including `Person`) are used.
+  Controls for including Person rows in `facet_level_summary` and
+  computing observed scorer agreement across matched `context_facets`.
 
 - agreement_top_n:
 
-  Optional maximum number of agreement pair rows.
+  Controls for including Person rows in `facet_level_summary` and
+  computing observed scorer agreement across matched `context_facets`.
 
 - expected_design:
 
-  Optional data frame declaring the planned assignment roster. It must
-  contain the columns named by `person` and `facets`, with one row per
-  planned Person x facet cell. Extra columns are ignored. When supplied,
-  observed cells are compared with the roster so planned omissions can
-  be distinguished from cells that were never assigned.
+  Optional planned assignment roster `data.frame` (for
+  `structural_missingness`) and sparse-link Person count flag
+  (`linkage_summary$SparseLevels`).
 
 - min_linking_persons:
 
-  Positive integer used as a descriptive sparse-link flag. A facet level
-  observed for fewer than this many distinct persons is counted in
-  `linkage_summary$SparseLevels`. This is a review threshold, not a
-  model-acceptance rule.
+  Optional planned assignment roster `data.frame` (for
+  `structural_missingness`) and sparse-link Person count flag
+  (`linkage_summary$SparseLevels`).
 
 - category_policy:
 
-  Optional explicit category choice: `"collapse"` maps gaps in the
-  observed categories to consecutive scores; `"preserve"` keeps the
-  intended ladder, declared with `rating_min` and `rating_max`. This
-  changes the fitted category steps, not just labels. `NULL` (default)
-  uses `keep_original`, whose default is `FALSE` (`"collapse"`).
-  Supplying both choices is allowed only when they agree. Preservation
-  does not estimate unsupported steps: fitting stops if a retained
-  internal category has no observations. Use the same policy in
-  `describe_mfrm_data()` and
-  [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md).
+  Data column names, rubric bounds, category handling (`"collapse"` vs
+  `"preserve"`), duplicate-cell policy (`"review"` vs `"independent"`),
+  and sentinel recoding; shared with
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  via `spec` (see
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)).
 
 - repeated_ratings:
 
-  Treatment of repeated Person-by-facet cells. `"review"` (default)
-  retains the duplicate-cell warning and ordinary MML/JML input-review
-  state. Use `"independent"` only to declare that the rows are distinct,
-  conditionally independent rating events under the specified model.
-  Every row and its weight are retained; this argument does not
-  aggregate scores, add a facet, change the likelihood or establish
-  independence from the data. Other input, numerical and inference
-  checks still apply. The declaration is saved in preparation notes,
-  configuration and replay settings. Corrected JML already requires
-  conditionally independent repeated ratings; the argument records that
-  assumption explicitly there. It is not supported by the two-family
-  GPCM route.
+  Data column names, rubric bounds, category handling (`"collapse"` vs
+  `"preserve"`), duplicate-cell policy (`"review"` vs `"independent"`),
+  and sentinel recoding; shared with
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  via `spec` (see
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)).
 
 - comparisons:
 
-  Optional named specification for a prospective facet-by-origin
-  interaction review. See "Comparison-specific review". Default `NULL`
-  performs no model/target review or fitting.
+  Optional
+  `list(facet = ..., group = ..., groups = c("A", "B"), contrasts = W, model = ..., method = ...)`
+  reviewing prospective facet-by-origin interaction contrasts
+  (`IdentificationBasis`: `free_person_response_model`,
+  `population_restriction`, `conditional_support`, `unidentified`,
+  `not_evaluated`, `unsupported`) for
+  `fit_mfrm(fit_scope = "comparisons", comparison_review = ...)`.
+
+- spec:
+
+  Optional shared model-specification `list` accepted by
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
+  [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md),
+  and
+  [`export_mfrm_model()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.md).
+
+- object:
+
+  Output from `describe_mfrm_data()`.
+
+- digits:
+
+  Number of digits for numeric rounding.
+
+- top_n:
+
+  Maximum rows shown in preview blocks.
+
+- ...:
+
+  Reserved for generic compatibility.
+
+- x:
+
+  Output from `describe_mfrm_data()`.
+
+- y:
+
+  Reserved for generic compatibility.
+
+- type:
+
+  Plot type: `"score_distribution"`, `"facet_levels"`, or `"missing"`.
+
+- main:
+
+  Optional title override.
+
+- palette:
+
+  Optional named colors (`score`, `facet`, `missing`).
+
+- label_angle:
+
+  X-axis label angle for bar plots.
+
+- draw:
+
+  If `TRUE`, display the returned ggplot.
 
 ## Value
 
-A list of class `mfrm_data_description` with:
+An `mfrm_data_description` list
+([`summary()`](https://rdrr.io/r/base/summary.html),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html)) with
+`overview` (`CategoryPolicy`, `ScoreRecoded`), `missing_by_column`,
+`missing_rate_summary`, `score_descriptives`, `weight_descriptives`,
+`score_distribution`, `facet_level_summary`, `facet_crosstabs`,
+`linkage_summary`, `structural_missingness`, `design_connectivity`,
+`design_components`, `duplicate_cell_summary`, `duplicate_cell_detail`,
+`agreement`, `row_retention`, `preparation_notes`, `missing_recoding`,
+`score_support`, and optional `comparison_review`.
 
-- `overview`: one-row run-level summary including `CategoryPolicy` and
-  `ScoreRecoded`. The former records the selected category handling; the
-  latter indicates whether original score values actually changed. A
-  `"collapse"` policy can leave a contiguous scale unchanged. Inspect
-  `score_support$score_map` for the mapping.
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_data_description`.
 
-- `missing_by_column`: missing counts in selected input columns
+- `overview`: design/sample counts
 
-- `missing_rate_summary`: per-column missingness rate summary (one row
-  per input column, with raw and proportion-of-N columns)
+- `missing`: top columns by missingness
 
-- `score_descriptives`: output from
-  [`psych::describe()`](https://rdrr.io/pkg/psych/man/describe.html) for
-  score
+- `score_distribution`: compact score-usage table, including zero-count
+  categories retained by the prepared score support
 
-- `weight_descriptives`: output from
-  [`psych::describe()`](https://rdrr.io/pkg/psych/man/describe.html) for
-  weight
+- `facet_overview`: facet-level coverage summary
 
-- `score_distribution`: weighted and raw score frequencies over the
-  prepared score support. Unused boundary categories are retained when
-  the rating range was supplied explicitly; unused intermediate
-  categories require `keep_original = TRUE`.
+- `structural_missingness`: declared assignment coverage summary; status
+  is `"not_declared"` when no assignment roster was supplied
 
-- `facet_level_summary`: per-level usage and score summaries
+- `structural_level_coverage`: expected versus observed level counts
 
-- `facet_crosstabs`: pairwise observation-count crosstabs between
-  non-person facets (named list keyed `"facetA__facetB"`) for optional
-  downstream coverage displays
+- `design_connectivity`: Person-facet component counts for observed and
+  declared-expected designs
 
-- `linkage_summary`: person-facet connectivity diagnostics
+- `design_components`: component sizes and facet-level labels; person
+  labels are suppressed unless explicitly requested in
+  `describe_mfrm_data()`
 
-- `structural_missingness`: declared-design comparison bundle containing
-  a one-row summary, missing expected cells, unexpected observed cells,
-  per-facet level coverage, and settings
+- `linkage_summary`: sparse-support and shared-person counts by facet
 
-- `design_connectivity`: component counts for each observed Person-facet
-  graph and, when declared, each expected Person-facet graph
+- `duplicate_cell_summary`: aggregate duplicate-cell counts
 
-- `design_components`: component-level counts and facet-level labels;
-  person labels are included only when `include_person_facet = TRUE`
+- `agreement`: selected-facet agreement summary when available
 
-- `duplicate_cell_summary`: counts of duplicate Person x facet cells
-
-- `duplicate_cell_detail`: duplicate-cell keys and row counts
-
-- `agreement`: observed-score agreement bundle for the selected scorer
-  facet
+- `agreement_settings`: selected scorer facet, matching context, and
+  status
 
 - `row_retention`: row counts before and after preparation filters
 
-- `preparation_notes`: structured notes for row drops, ID trimming, and
-  design conditions detected during preparation
+- `preparation_notes`: structured preparation notes retained from
+  `describe_mfrm_data()`
 
-- `missing_recoding`: per-column counts of declared missing-code values
-  replaced with `NA` before row filtering
+- `reporting_map`: manuscript-oriented guide to what is covered here
+  versus which companion outputs should be consulted
 
-- `score_support`: minimal prepared score-support metadata used by
-  `summary(ds)$caveats`
+- `caveats`: structured warning/review rows for score-support issues;
+  `print(summary(ds))` shows a compact `Caveats` block when rows are
+  present
 
-- `comparison_review`: optional prospective interaction review,
-  including all requested rows and their explicit weights; also retained
-  by [`summary()`](https://rdrr.io/r/base/summary.html).
+- `notes`: plain-language explanations of missingness, preparation,
+  score support, and design-review findings
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): A `ggplot`
+object (invisibly), with underlying plot tables accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
 
 ## Details
 
-Set `rating_min` and `rating_max` from the rubric, including categories
-nobody received. Use `keep_original = TRUE` to preserve its category
-structure in the review. Numeric descriptives of score and weight use
-[`psych::describe()`](https://rdrr.io/pkg/psych/man/describe.html).
+[`summary()`](https://rdrr.io/r/base/summary.html) provides compact
+previews; the reading order and field differences are described under
+"Reading the data review".
 
-**Key data-quality checks to perform before fitting:**
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot a
+data-description object
 
-- *Sparse categories*: review categories with little weighted support
-  because their threshold estimates may be imprecise. Do not collapse
-  categories solely from a package warning; also consider the rubric,
-  intended score interpretation, and category diagnostics after fitting.
+## Reading data-review plots
 
-- *Unlinked elements*: inspect `design_connectivity` for the observed
-  Person-facet graph. More than one component means that the levels of
-  that facet are not connected through shared persons. This
-  facet-specific check is conservative and does not by itself prove full
-  model identification.
+- `"score_distribution"` plots `WeightedN`, the sum of weights per
+  category. Sparse categories limit threshold information, but
+  uniformity/unimodality is not required. Read floor/ceiling
+  concentrations against rubric, assignments and target population; this
+  is not a sample-adequacy test.
 
-- *Extreme scores*: MML uses a person distribution to obtain posterior
-  person scores, including for persons with all-minimum or all-maximum
-  scores. Non-person facets remain fixed effects: an extreme rater or
-  criterion is not given a prior or automatically shrunk by
-  choosing MML. Review the fitted boundary and precision evidence before
-  interpretation.
+- `"facet_levels"` shows distinct levels per facet. Check expected
+  levels, ratings per level and crossings: more levels increase
+  parameter dimension, while more optimizer iterations cannot repair
+  missing identification.
 
-## Comparison-specific review
-
-Use
-`comparisons = list(facet = ..., group = ..., groups = c("A", "B"), contrasts = W, model = "RSM", method = "JML")`
-to review explicitly declared interaction comparisons before estimation.
-Both `facet` and `group` must occur in `facets`; each Person/recording
-must keep one origin group. `groups` gives the subtraction order,
-including when additional neutral origins are present. Unit weights and
-preserved categories are required. `W` is a numeric matrix with unique
-comparison row names and every reviewed facet level as a named column,
-including zero weights. Each nonzero row must sum to zero. For four
-raters, weights `c(.75, -.25, -.25, -.25)` compare the first rater's
-A-minus-B interaction with the equal-weight panel; `c(1, -1, 0, 0)`
-compares the first two raters' A-minus-B interactions. These are
-different targets.
-
-The prospective model has centered measurement facets, a zero-valued
-group main facet, and the named facet-by-group interaction with zero
-marginal sums. JML has free Person locations. Choose `model = "PCM"`
-with an explicit `step_facet` for facet-owned steps. Optional
-`positive_facets` records the location orientation. Anchors, extra
-interactions and nonunit weights are outside this review. GPCM
-interaction requests return `unsupported`, not an additive-model
-substitute.
-
-`method = "MML"` uses a fixed common standard-normal population unless
-`population_formula` is supplied (an intercept or the origin group
-only). `ConditionalState` refers to the linear response map;
-`FreePersonState` reviews the same response structure with unrestricted
-Persons. A same-law alias remains unidentified after mixing. A positive
-conditional rank alone does not certify the marginal model: those MML
-rows have `State = "not_evaluated"`. No fit or numerical marginal-rank
-calculation is performed. JML rows distinguish
-`all_parameters_identified`, `target_identified_only`, and
-`target_unidentified`. Numerically sensitive or oversized dense maps
-remain `not_evaluated`.
-
-`IdentificationBasis` interprets these checks for each requested target:
-`free_person_response_model` means the declared response map identifies
-it even with unrestricted Person locations. `population_restriction`
-means an unrestricted-Person alias is removed only after imposing the
-declared population restrictions in the conditional map. This does
-**not** certify marginal identification, and the corresponding MML
-`State` stays `not_evaluated`. `conditional_support` identifies a CML
-target from response patterns at the observed totals. `unidentified`,
-`not_evaluated` and `unsupported` remain separate.
-`IdentificationDetail` explains the scope; `Basis` retains the broader
-estimator/model basis.
-
-A fixed common N(0,1) population or estimated common normal population
-(`~1`) restricts origin groups to the same ability distribution. This is
-substantive, not arbitrary scale coding. Origin regression relaxes only
-the means allowed by its design and retains a common residual SD.
-Interpret the zero origin main effect jointly with those restrictions. A
-contrast identified in a free-Person response map does not make its MML
-estimator distribution-free. All conclusions still depend on the
-declared response model, including equal slopes and shared/facet-owned
-step restrictions.
-
-`method = "CML"` instead reviews conditional support at the actual
-Person totals and rating rosters. A dynamic program spans differences
-between all possible patterns at those totals, so extreme scores and
-unavailable category combinations do not manufacture information.
-`State` and `ConditionalState` distinguish full identification,
-target-only identification and unidentified targets; `FreePersonState`
-is the separate unrestricted-Person response-map review. Person-constant
-main effects disappear, and no population distribution or SD is
-estimated. Population formulas are not accepted for CML.
-
-Read `$comparison_review$table`, `$weights`, `$cells` and `$notes`
-together. The table preserves group direction, model, step owner and
-counts; counts cover nonzero-weight facet levels, while `cells` includes
-empty cells. `$fit_arguments` records the prospective structural
-settings; use matching input preparation when fitting. An identified
-target does not permit fitting a rejected full parameterization.
-`Estimate` stays missing and formal inference is unavailable. Save the
-review with its retained response rows. Pass it as `comparison_review`
-to
-[`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
-to preserve this separate prospective question alongside residual/refit
-effects; it does not certify those different effects. See
-[`vignette("mfrmr-linking-and-dff")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.md)
-for a school-assignment example and
-[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
-for interpretation. A matching, fully supported joint fit can return
-descriptive contrasts via
-[`interaction_effect_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interaction_effect_table.md)
-or `summary(fit, comparison_review = review)`. These explicit calls add
-retained-point numerical checks, not partial estimation or formal
-uncertainty. To fit selected CML contrasts and obtain
-conditional-information Wald intervals, use
-`fit_mfrm(fit_scope = "comparisons", comparison_review = review)` with
-the CML review's `$fit_arguments`; see the comparison-only section of
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
-
-## Interpreting output
-
-Recommended order:
-
-- `overview`: confirms retained ratings (`Observations`), persons,
-  facets, and category span. Use `row_retention` to compare input and
-  retained `Rows`; `DroppedRows` counts exclusions during preparation.
-
-- `missing_by_column`: counts `NA` values in the input columns. A
-  missing score or required identifier excludes that rating row, not
-  automatically the person's other ratings. The package does not fill
-  missing ratings. When `missing_codes` is supplied, these counts still
-  describe the original input; inspect `missing_recoding` and
-  `preparation_notes` as well.
-
-- `structural_missingness`: compares observed rating cells with
-  `expected_design`, when supplied. Without a declared roster,
-  structural missingness is reported as not assessed rather than assumed
-  to be zero.
-
-- `score_distribution`: checks sparse/unused score categories. Skew can
-  be substantively expected, but weakly supported or unused categories
-  need explicit interpretation.
-
-- `facet_level_summary` and `linkage_summary`: checks per-level support,
-  shared-person counts, and sparse levels. Use `design_connectivity` for
-  the separate graph-component result.
-
-- `agreement`: optional observed agreement summary for the selected
-  scorer facet (exact agreement, correlation, and mean differences per
-  pair).
-
-`data_review <- describe_mfrm_data(...)` saves all these checks.
-`review <- summary(data_review)` provides a compact view; its
-missingness table is named `review$missing`, while the original full
-table is `data_review$missing_by_column`. Summary previews use
-`top_n = 10` by default. Use the original tables to inspect all rows or
-categories.
-
-## If the input needs attention
-
-- **Column name not found:** run `names(ratings)` and match spelling,
-  spaces, and case in `person`, `facets`, and `score`.
-
-- **Unexpected row loss:** inspect `row_retention`, `missing_by_column`,
-  and `preparation_notes`. Resolve unintended missing IDs and invalid
-  score text in the input data. For documented score markers such as
-  `99` or `.`, use
-  [`recode_missing_codes()`](https://ryuya-dot-com.github.io/mfrmr/reference/recode_missing_codes.md)
-  with explicit `columns` and `codes`.
-
-- **Repeated person-by-facet cells:** inspect `duplicate_cell_detail`.
-  Correct accidental duplicates; declare
-  `repeated_ratings = "independent"` for distinct conditionally
-  independent events, or model dependence. Include a task or occasion
-  facet when ratings represent distinct events in the design.
-
-- **Unused category or disconnected design:** inspect
-  `score_distribution` and `design_connectivity`. Review the rubric and
-  assignments before changing the model. A retained internal zero-count
-  category stops fitting; extra optimizer iterations cannot supply the
-  missing category information.
-
-After editing or recoding ratings, rerun this review on the corrected
-data and pass that same data to
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-using the same columns, score bounds, and `keep_original` setting. If
-you use `missing_codes` within the review instead of recoding first,
-supply the same option to the fit: reviewing does not modify the
-original data. For CSV import, column mapping, and a complete worked
-example, see
-[`vignette("mfrmr-workflow", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md).
-
-## Typical workflow
-
-1.  Run `data_review <- describe_mfrm_data(...)` on the rating data.
-
-2.  Inspect row retention, category counts, and design connectivity.
-
-3.  Correct input issues, repeat the review, and fit the reviewed data
-    with
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+- `"missing"` plots input missing counts. Investigate them using the
+  tables above; missing scores/Persons/facet IDs cause row exclusions in
+  fitting.
 
 ## See also
 
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-[`summary.mfrm_data_description()`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_data_description.md),
+[fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md),
 [`recode_missing_codes()`](https://ryuya-dot-com.github.io/mfrmr/reference/recode_missing_codes.md),
-[mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md),
 [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
+
+`describe_mfrm_data()`,
+[`summary.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_fit.md)
+
+`describe_mfrm_data()`,
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
 
 ## Examples
 
@@ -518,4 +417,38 @@ review$notes
 #> [1] "No missing values were detected in selected input columns."                                                                                                  
 #> [2] "Structural missingness was not assessed because `expected_design` was not supplied. Absent rows cannot be distinguished from cells that were never assigned."
 # For the next fit, use data = ratings; data_review is a set of checks, not ratings
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_data_description", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+library(mfrmr)
+ratings <- load_mfrmr_data("example_operational")
+
+# Demonstrate two missing scores in a copy of the example data
+ratings$Score[1:2] <- NA
+data_review <- describe_mfrm_data(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  category_policy = "preserve"
+)
+review <- summary(data_review)
+review$row_retention # 282 input rows, 280 retained rows
+review$missing       # Score has 2 missing input values
+review$overview      # Counts describe the retained ratings
+review$notes         # Explanations to read before fitting
+
+# The original description retains the full missingness table
+data_review$missing_by_column
+# Investigate missingness before using ratings in fit_mfrm()
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("plot.mfrm_data_description", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+toy <- load_mfrmr_data("example_core")
+ds <- describe_mfrm_data(toy, "Person", c("Rater", "Criterion"), "Score")
+p <- plot(ds, draw = FALSE)
+} # }
 ```

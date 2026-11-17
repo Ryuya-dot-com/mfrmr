@@ -4,12 +4,20 @@ Score ~ 1 + (1 | Person) + (1 | Facet1) + (1 | Facet2) + ...
 using lme4::lmer (in Suggests) and returns the proportion of
 observed score variance attributable to each facet. This is a
 descriptive summary complementary to the Rasch-metric rater
-separation/reliability reported elsewhere."><meta property="og:description" content="Fits a random-effects variance-components model
+separation/reliability reported elsewhere.
+Combines per-facet average cluster size with ICC estimates to return
+the Kish-style approximation Deff = 1 + (m - 1) * rho, where m
+is the average number of observations per facet element and rho is
+the ICC variance share. Each facet is evaluated separately."><meta property="og:description" content="Fits a random-effects variance-components model
 Score ~ 1 + (1 | Person) + (1 | Facet1) + (1 | Facet2) + ...
 using lme4::lmer (in Suggests) and returns the proportion of
 observed score variance attributable to each facet. This is a
 descriptive summary complementary to the Rasch-metric rater
-separation/reliability reported elsewhere."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+separation/reliability reported elsewhere.
+Combines per-facet average cluster size with ICC estimates to return
+the Kish-style approximation Deff = 1 + (m - 1) * rho, where m
+is the average number of observations per facet element and rho is
+the ICC variance share. Each facet is evaluated separately."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -17,7 +25,7 @@ separation/reliability reported elsewhere."><meta property="og:image" content="h
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,31 +33,25 @@ separation/reliability reported elsewhere."><meta property="og:image" content="h
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -63,7 +65,7 @@ separation/reliability reported elsewhere."><meta property="og:image" content="h
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compute intra-class correlations for each facet</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-hierarchical-audit.R" class="external-link"><code>R/api-hierarchical-audit.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-hierarchical-audit.R" class="external-link"><code>R/api-hierarchical-audit.R</code></a></small>
       <div class="d-none name"><code>compute_facet_icc.Rd</code></div>
     </div>
 
@@ -74,6 +76,10 @@ using <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-lin
 observed score variance attributable to each facet. This is a
 descriptive summary complementary to the Rasch-metric rater
 separation/reliability reported elsewhere.</p>
+<p>Combines per-facet average cluster size with ICC estimates to return
+the Kish-style approximation <code>Deff = 1 + (m - 1) * rho</code>, where <code>m</code>
+is the average number of observations per facet element and <code>rho</code> is
+the ICC variance share. Each facet is evaluated separately.</p>
     </div>
 
     <div class="section level2">
@@ -91,6 +97,15 @@ separation/reliability reported elsewhere.</p>
 <span>  ci_boot_parallel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"no"</span>, <span class="st">"multicore"</span>, <span class="st">"snow"</span><span class="op">)</span>,</span>
 <span>  ci_boot_ncpus <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  missing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"omit"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">compute_facet_design_effect</span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">facets</span>,</span>
+<span>  icc_table <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  score <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  person <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  missing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"omit"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -99,7 +114,9 @@ separation/reliability reported elsewhere.</p>
 
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>Data frame in long format.</p></dd>
+<dd><p>Data frame in long format, used to fit the ICC model when
+<code>icc_table</code> is <code>NULL</code>. With a supplied ICC table, sample sizes come from
+its retained row accounting, not from <code>data</code>.</p></dd>
 
 
 <dt id="arg-facets">facets<a class="anchor" aria-label="anchor" href="#arg-facets"></a></dt>
@@ -107,13 +124,11 @@ separation/reliability reported elsewhere.</p>
 
 
 <dt id="arg-score">score<a class="anchor" aria-label="anchor" href="#arg-score"></a></dt>
-<dd><p>Name of the score column.</p></dd>
+<dd><p>Score column name; required when <code>icc_table</code> is <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-person">person<a class="anchor" aria-label="anchor" href="#arg-person"></a></dt>
-<dd><p>Optional person column. If supplied it is added as a
-separate random intercept so Person-level variance is partitioned
-out.</p></dd>
+<dd><p>Person column; passed through to compute_facet_icc().</p></dd>
 
 
 <dt id="arg-reml">reml<a class="anchor" aria-label="anchor" href="#arg-reml"></a></dt>
@@ -164,10 +179,16 @@ integer. Interactive progress is available for serial execution.</p></dd>
 
 
 <dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
-<dd><p>How to handle missing scores or selected grouping values:
-<code>"error"</code> (default) or explicit complete-case omission with <code>"omit"</code>.
-Numeric character/factor score labels retain their numeric values.
-Nonnumeric scores, infinite values, and blank grouping labels are refused.</p></dd>
+<dd><p>Missing-value policy passed to <code>compute_facet_icc()</code> when
+<code>icc_table</code> is <code>NULL</code>. A supplied table retains its original policy.</p></dd>
+
+
+<dt id="arg-icc-table">icc_table<a class="anchor" aria-label="anchor" href="#arg-icc-table"></a></dt>
+<dd><p>Output from <code>compute_facet_icc()</code> (optional; will be
+computed on the fly when <code>NULL</code>). Must retain its <code>data_usage</code> attribute.
+Rerun older saved ICC results from their original data and settings before
+calculating design effects; their analysis sample cannot be reconstructed
+from the ICC table alone.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -192,6 +213,11 @@ intervals even when all draws are finite and all refits converge.</p></li>
 diagnostics and warnings. When bootstrap results are returned, its <code>bootstrap</code>
 entry contains every draw, per-refit convergence and singularity indicators,
 the number of refit errors, and lme4's message/warning/error tables.</p>
+<p>A data.frame of class <code>mfrm_facet_design_effect</code> with columns
+<code>Facet</code>, <code>AvgClusterSize</code>, <code>ICC</code>, <code>DesignEffect</code>, <code>EffectiveN</code>, <code>InputRows</code>,
+<code>UsedRows</code>, and <code>ExcludedRows</code>. Its <code>data_usage</code> attribute is retained
+from the ICC result. Cluster sizes and effective sample sizes use only
+rows included in that model.</p>
     </div>
     <div class="section level2">
     <h2 id="rows-used">Rows used<a class="anchor" aria-label="anchor" href="#rows-used"></a></h2>
@@ -201,7 +227,7 @@ the number of refit errors, and lme4's message/warning/error tables.</p>
 <code>InputRows</code>, <code>UsedRows</code>, and <code>ExcludedRows</code> are included in the table.
 <code>attr(x, "data_usage")</code> retains these counts, excluded input row positions,
 missing columns per row, and observed grouping-level counts after omission.
-<code><a href="compute_facet_design_effect.html">compute_facet_design_effect()</a></code> uses these retained counts for its sample
+<code>compute_facet_design_effect()</code> uses these retained counts for its sample
 sizes. Omission does not impute scores or correct missing-data bias.</p>
     </div>
     <div class="section level2">
@@ -222,26 +248,29 @@ also unavailable and withholds the interval.</p>
 
 
 <p>The <code>Interpretation</code> column uses <strong>two scales</strong> so the same numeric
-ICC reads correctly for each facet role:</p><ul><li><p>For the <code>person</code> facet, higher ICC = better. Koo &amp; Li (2016, p. 161)
-bands are applied: <code>&lt; 0.5</code> Poor, <code>[0.5, 0.75]</code> Moderate,
-<code>(0.75, 0.9]</code> Good, <code>&gt; 0.9</code> Excellent. The strict <code>&gt;</code> boundary at
-0.9 follows Koo &amp; Li's wording "values greater than 0.90 indicate
-excellent reliability" (so an ICC of exactly 0.9 reads as Good).</p></li>
-<li><p>For non-person facets (Rater, Criterion, Task, Region, ...) the
-same numeric value is a <strong>variance share</strong>: how much of the total
-observed score variance sits at that facet. The bands used here
-are different (<code>Trivial share</code> &lt; 0.05, <code>Small share</code> &lt; 0.15,
-<code>Moderate share</code> &lt; 0.30, <code>Large share</code> &gt;= 0.30), and a large
-rater share is generally <em>bad</em> news (raters disagree about
-averages), not good news.</p></li>
-</ul><p>The <code>InterpretationScale</code> column explicitly records which scale
+ICC reads correctly for each facet role:</p><ul><li><p>For <code>person</code>, the stored labels apply the Koo &amp; Li (2016) bands to
+the point estimate: <code>&lt; 0.5</code> Poor, <code>[0.5, 0.75]</code> Moderate,
+<code>(0.75, 0.9]</code> Good and <code>&gt; 0.9</code> Excellent. These are descriptive labels,
+not universal acceptance rules. The share depends on Person heterogeneity
+as well as other sources of variation. It is not automatically the
+reliability of a composite, a mean over ratings or a different design.</p></li>
+<li><p>Other facets use package-defined variance-share bands: <code>Trivial share</code>
+&lt; 0.05, <code>Small share</code> &lt; 0.15, <code>Moderate share</code> &lt; 0.30 and
+<code>Large share</code> &gt;= 0.30. These cutoffs are not supplied by Koo &amp; Li.
+A larger rater component describes systematic differences in score
+levels; its practical importance depends on the design and decision.
+Criterion or task variation is not inherently undesirable.</p></li>
+</ul><p>This is a Gaussian random-intercept model of numeric scores, not an
+ordinal response model or an automatic selection among standard ICC forms.
+State the fitted formula, score coding, target and uncertainty when reporting.</p>
+<p>The <code>InterpretationScale</code> column explicitly records which scale
 applies to each row, so downstream reporting does not confuse the
 two. FACETS (Linacre, 2026) reports rater separation/reliability on
 the Rasch metric instead of an ICC; mfrmr surfaces both, with the
 Rasch-metric version in <code>diagnostics$reliability</code> and this
 variance-share view here.
 For agreement or consistency between specific pairs on common units, use
-<code><a href="pairwise_icc_table.html">pairwise_icc_table()</a></code> instead. A small rater variance share here does not
+<code><a href="interrater_agreement_table.html">pairwise_icc_table()</a></code> instead. A small rater variance share here does not
 establish pairwise agreement; residual disagreement can still be large.</p>
 <p>Set <code>ci_method = "boot"</code> to request intervals alongside the point
 estimates. The <code>Interpretation</code> column still uses point estimates.
@@ -256,7 +285,22 @@ retained but never silently selected to calculate an interval. Singular
 fits (zero random-effect components) are recorded separately and retained
 when they converge; they are not automatically treated as failures.
 Inspect <code>ICC_CI_Status</code> and <code>attr(x, "icc_ci")</code> before reporting intervals.</p>
-    </div>
+
+<p>The formula describes the variance inflation of an unweighted mean under
+a single clustering factor with equal cluster sizes, independent clusters,
+and common within-cluster correlation. This helper substitutes the average
+cluster size and one fitted facet variance share. It does not calculate
+the variance of a specified estimator under the full sampling design.</p><ul><li><p><code>Deff = 1</code> means this approximation adds no inflation for that facet;
+it does not establish independence of observations or adequate precision.</p></li>
+<li><p><code>Deff &gt; 1</code> signals potential clustering influence under this approximation.
+<code>EffectiveN = UsedRows / Deff</code> is a descriptive equivalent row count,
+not a count of independent Persons or an assurance of matching precision.</p></li>
+<li><p>Unequal cluster sizes, crossed or nested dependencies, sampling weights,
+and finite-population corrections are not accounted for. Per-facet values
+must not be added or multiplied to obtain an overall design effect.</p></li>
+<li><p>Reported <code>ICC</code> is pulled from <code>icc_table$ICC</code> (the variance share);
+interpretation is the same as in <code>compute_facet_icc()</code>.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="updating-saved-intervals">Updating saved intervals<a class="anchor" aria-label="anchor" href="#updating-saved-intervals"></a></h2>
 
@@ -279,9 +323,15 @@ or plotting old interval results cannot correct their calculations.</p>
 separation/reliability.</p></li>
 <li><p>Call <code>compute_facet_icc(data, facets, score, person)</code> to get the
 complementary variance-share summary.</p></li>
-<li><p>Feed into <code><a href="compute_facet_design_effect.html">compute_facet_design_effect()</a></code> to convert ICCs and
+<li><p>Feed into <code>compute_facet_design_effect()</code> to convert ICCs and
 average cluster sizes into descriptive, per-facet design-effect
 approximations. These do not estimate the precision of the full design.</p></li>
+</ol><ol><li><p>Run <code>compute_facet_icc()</code> to get the variance-component shares.</p></li>
+<li><p>Feed the result and the data into
+<code>compute_facet_design_effect(data, facets, icc_table = icc)</code>.</p></li>
+<li><p>Use these values to flag facets for design review. For standard errors,
+sample-size planning, or comparisons of precision, use an estimator
+and variance calculation that represent the actual design.</p></li>
 </ol></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -291,47 +341,53 @@ research. <em>Journal of Chiropractic Medicine, 15</em>(2), 155-163.</p>
 <p>Bates, D., Maechler, M., Bolker, B., &amp; Walker, S. (2015). Fitting
 linear mixed-effects models using lme4. <em>Journal of Statistical
 Software, 67</em>(1), 1-48.</p>
+<p>Kish, L. (1965). <em>Survey Sampling</em>. New York: Wiley.</p>
+<p>Park, I., &amp; Lee, H. (2004). Design effects for the weighted mean and total
+estimators under complex survey sampling. <em>Survey Methodology, 30</em>(2),
+183-193. <a href="https://www150.statcan.gc.ca/n1/pub/12-001-x/2004002/article/7751-eng.pdf" class="external-link">https://www150.statcan.gc.ca/n1/pub/12-001-x/2004002/article/7751-eng.pdf</a></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="compute_facet_design_effect.html">compute_facet_design_effect()</a></code>, <code><a href="pairwise_icc_table.html">pairwise_icc_table()</a></code>,
+    <div class="dont-index"><p><code>compute_facet_design_effect()</code>, <code><a href="interrater_agreement_table.html">pairwise_icc_table()</a></code>,
 <code><a href="analyze_hierarchical_structure.html">analyze_hierarchical_structure()</a></code>, <code><a href="detect_facet_nesting.html">detect_facet_nesting()</a></code>,
-<code><a href="facet_small_sample_review.html">facet_small_sample_review()</a></code>.</p></div>
+<code><a href="facet_small_sample_review.html">facet_small_sample_review()</a></code>.</p>
+<p><code>compute_facet_icc()</code>, <code><a href="analyze_hierarchical_structure.html">analyze_hierarchical_structure()</a></code>.</p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Optional workflow; run the example explicitly as shown below.</span></span></span>
+<span class="r-in"><span><span class="co"># example("compute_facet_icc", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lme4"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">icc</span> <span class="op">&lt;-</span> <span class="fu">compute_facet_icc</span><span class="op">(</span><span class="va">toy</span>, facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                           score <span class="op">=</span> <span class="st">"Score"</span>, person <span class="op">=</span> <span class="st">"Person"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">icc</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="co"># Look for:</span></span></span>
-<span class="r-in"><span>  <span class="co"># - Person ICC reads as Koo &amp; Li (2016) reliability: &lt; 0.5 poor,</span></span></span>
-<span class="r-in"><span>  <span class="co">#   0.5-0.75 moderate, 0.75-0.9 good, &gt; 0.9 excellent.</span></span></span>
+<span class="r-in"><span>  <span class="co"># - Person labels apply Koo &amp; Li bands descriptively to the point.</span></span></span>
+<span class="r-in"><span>  <span class="co">#   Check the model, Person heterogeneity and interval before interpreting.</span></span></span>
 <span class="r-in"><span>  <span class="co"># - Rater / Criterion ICC reads as variance share, NOT reliability;</span></span></span>
 <span class="r-in"><span>  <span class="co">#   small values indicate limited systematic facet differences, and</span></span></span>
-<span class="r-in"><span>  <span class="co">#   shares &gt; 0.10 hint at meaningful systematic facet differences.</span></span></span>
+<span class="r-in"><span>  <span class="co">#   practical importance is not determined by a universal share cutoff.</span></span></span>
 <span class="r-in"><span>  <span class="co"># - `Interpretation` summarises the variance-share band the helper</span></span></span>
 <span class="r-in"><span>  <span class="co">#   has assigned to each row.</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrm_facet_icc</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ICC rows: 768 input, 768 used, 0 excluded.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet   Variance    ICC Interpretation InterpretationScale ICC_CI_Lower</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Person 0.34626071 0.3511           Poor  Koo-Li reliability           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater 0.02667343 0.0270  Trivial share      Variance share           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion 0.02188365 0.0222  Trivial share      Variance share           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Residual 0.59144865 0.5997    Large share      Variance share           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ICC_CI_Upper ICC_CI_Level ICC_CI_Method ICC_CI_Status InputRows UsedRows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none Not requested       768      768</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none Not requested       768      768</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none Not requested       768      768</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none Not requested       768      768</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ExcludedRows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             0</span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># Optional workflow; run the example explicitly as shown below.</span></span></span>
+<span class="r-in"><span><span class="co"># example("compute_facet_design_effect", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lme4"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">icc</span> <span class="op">&lt;-</span> <span class="fu">compute_facet_icc</span><span class="op">(</span><span class="va">toy</span>, facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                           score <span class="op">=</span> <span class="st">"Score"</span>, person <span class="op">=</span> <span class="st">"Person"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">deff</span> <span class="op">&lt;-</span> <span class="fu">compute_facet_design_effect</span><span class="op">(</span><span class="va">toy</span>,</span></span>
+<span class="r-in"><span>                                      facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                      icc_table <span class="op">=</span> <span class="va">icc</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">deff</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="co"># Review clustering influence; EffectiveN is a descriptive row count.</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

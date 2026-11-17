@@ -13,7 +13,7 @@ as rater severity and category thresholds; it does not fit the model again."><me
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -21,31 +21,25 @@ as rater severity and category thresholds; it does not fit the model again."><me
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -59,7 +53,7 @@ as rater severity and category thresholds; it does not fit the model again."><me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Estimate abilities for people already included in a fitted RSM</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-person-scoring.R" class="external-link"><code>R/api-person-scoring.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-person-scoring.R" class="external-link"><code>R/api-person-scoring.R</code></a></small>
       <div class="d-none name"><code>score_mfrm_persons.Rd</code></div>
     </div>
 
@@ -123,13 +117,17 @@ with optional distinct names. Ordinary RSM scoring only. Returns a
 are held fixed. Labels do not establish CEFR alignment or a pass/fail rule.</p></dd>
 
 
-<dt id="arg-object-x">object, x<a class="anchor" aria-label="anchor" href="#arg-object-x"></a></dt>
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>An ordinary <code>mfrm_person_scores</code> result.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Display controls passed to <code><a href="plot.mfrm_testlet_scores.html">plot.mfrm_testlet_scores()</a></code>; unused
+<dd><p>Display controls passed to <code><a href="fit_mfrm_testlet.html">plot.mfrm_testlet_scores()</a></code>; unused
 by print and summary.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>An ordinary <code>mfrm_person_scores</code> result.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -161,7 +159,7 @@ known N(0,1) or an estimated intercept-only normal population. Both the
 fitted population mean and variance are retained. EAP, posterior SD and
 interval endpoints integrate the continuous conditional density; endpoints
 are not quadrature-grid quantiles. Ordinary plug-in scoring is unchanged.</p>
-<p>For extensions this calls <code><a href="predict.mfrm_testlet.html">predict.mfrm_testlet()</a></code> or
+<p>For extensions this calls <code><a href="fit_mfrm_testlet.html">predict.mfrm_testlet()</a></code> or
 <code><a href="score_mfrm_random_rater.html">score_mfrm_random_rater()</a></code> on the complete source roster. Their numerical
 checks, approximation limits and uncertainty definitions apply unchanged.
 Use those functions directly for a different complete scoring roster.</p>
@@ -176,69 +174,27 @@ intervals. No missing scores are imputed.</p>
     <h2 id="conditional-ability-decisions">Conditional ability decisions<a class="anchor" aria-label="anchor" href="#conditional-ability-decisions"></a></h2>
 
 
-<p>Supply <code>cut_scores</code> on the calibration's ability scale to obtain
-<code>decisions</code>, with one row per Person and requested event. <code>Type = "above_cut"</code>
-gives \(P(\theta &gt; c \mid y, \widehat\psi)\); <code>Type = "ability_band"</code>
-gives the probability between successive cuts, including the two outer
-bands. <code>Lower &lt; ability &lt;= Upper</code> defines every row. <code>Label</code> uses the
-supplied cut names (or <code>Cut1</code>, ...) and <code>Band1</code>, ... in increasing order.
-These events overlap: only the ability-band probabilities sum to one.</p>
-<p><code>PriorMean</code> and <code>PriorSD</code> record the actual Person-specific normal prior;
-<code>Status</code> and <code>Reason</code> retain scoring availability. <code>available_conditional</code>
-means the applicable numerical checks passed, not that the model or the
-cut's substantive meaning has been validated. <code>review_only</code> requires
-inspection before interpretation. Source-roster scoring may return
-<code>prior_only</code> for missing-only Persons; portable scoring instead retains
-them as <code>unavailable</code> with <code>NA</code> probabilities. Fitted-object scoring omits
-Persons with no retained rows; inspect its row and population reviews.
-A Person absent from the input is never invented.</p>
-<p>Probabilities integrate the continuous posterior, rather than counting
-<code><a href="sample_mfrm_plausible_values.html">sample_mfrm_plausible_values()</a></code> draws or applying a normal approximation
-to EAP/SD. They condition on point calibration, population/prior parameters
-and supplied cuts, as recorded in <code>Uncertainty</code>. They do not propagate
-estimation error, compare two Persons or predict passing a future test.
-CEFR labels require externally justified cuts on this same scale.
-Very small tails have absolute, not relative, numerical accuracy; a
-returned zero or one is not a claim of impossibility or certainty.</p>
-<p>Review the scoring population as well as the calibration. An estimated
-normal prior is treated as known during scoring; its sampling uncertainty
-can matter especially with a small calibration cohort. A larger calibration
-cohort can improve parameter precision without correcting a prior that
-mismatches a new population's mean, spread or shape. Passing numerical checks
-does not establish that probabilities are accurate for that new population.
-A fixed reference prior is not a universal remedy: justify it for the target
-population on the calibration scale. If a prior override is supported,
-comparing externally justified alternatives is a sensitivity analysis, not
-evidence that the alternative giving the preferred classification is valid.
-Population-averaged accuracy also does not guarantee accuracy near each cut,
-within every subgroup or for each individual Person.</p>
-<p>Use <code>score_mfrm_persons()</code> for eligible ordinary RSM MML source Persons,
-<code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> for ordinary RSM/PCM MML or JML fitted-object scoring, and
-<code><a href="mfrm_calibration_workflow.html">score_mfrm_calibration()</a></code> for eligible continuous-posterior RSM/PCM
-artifacts. Each route retains its existing source and population
-restrictions. Unit weights are required; GPCM, shared-rater and testlet
-cut probabilities are not supported. JML uses a separate scoring prior,
-not a population estimated by JML. <code>NULL</code> leaves the existing output unchanged.</p>
-<p><code>summary(x)$decisions</code> and <code><a href="apa_table.html">apa_table()</a></code> with <code>which = "decisions"</code> reuse
-saved probabilities without rounding them. Fitted-object and portable
-score batches also support <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> and
-<code><a href="export_summary_appendix.html">export_summary_appendix()</a></code>. Save the complete result with <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code>
-to retain cuts, priors and review states for later reporting. Existing
-score plots display EAPs and intervals, not these event probabilities.</p>
+<p>Ordinary RSM scoring with unit weights supports <code>cut_scores</code>. Missing-only
+Persons retain <code>prior_only</code>: probabilities describe the assumed population,
+without response evidence. Keep <code>Status</code> and <code>Reason</code> with exported results.
+For event definitions, prior sensitivity and reporting, see
+"Conditional ability decisions" in <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="mfrm_calibration_workflow.html">score_mfrm_calibration()</a></code> for new people under an eligible saved
 ordinary RSM/PCM calibration; <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> for supplied response
-rows under a fitted calibration; <code><a href="plot.mfrm_testlet_scores.html">plot.mfrm_testlet_scores()</a></code>,
+rows under a fitted calibration; <code><a href="fit_mfrm_testlet.html">plot.mfrm_testlet_scores()</a></code>,
 <code><a href="mfrm_response_diagnostics.html">mfrm_response_diagnostics()</a></code></p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu">score_mfrm_persons</span><span class="op">(</span><span class="va">fit</span>, persons <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>,</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Saved ordinary RSM/MML calibration of the synthetic example_core ratings.</span></span></span>
+<span class="r-in"><span><span class="co"># For your data, start with fit_mfrm(); consumer-fits.R gives the full recipe.</span></span></span>
+<span class="r-in"><span><span class="va">saved</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"consumer-fits.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">saved</span><span class="op">$</span><span class="va">mml</span></span></span>
+<span class="r-in"><span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu">score_mfrm_persons</span><span class="op">(</span><span class="va">fit</span>, persons <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">prep</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>  cut_scores <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Basic <span class="op">=</span> <span class="op">-</span><span class="fl">0.5</span>, Advanced <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">scores</span><span class="op">$</span><span class="va">table</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Person Observed  Estimate ConditionalSD      Lower    Upper</span>

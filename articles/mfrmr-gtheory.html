@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,32 +33,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Plan an assessment with G theory</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-gtheory.Rmd" class="external-link"><code>vignettes/mfrmr-gtheory.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/vignettes/mfrmr-gtheory.Rmd" class="external-link"><code>vignettes/mfrmr-gtheory.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-gtheory.Rmd</code></div>
     </div>
 
@@ -120,9 +114,9 @@ appropriate ordered-response data.</td>
 </tr>
 <tr class="odd">
 <td>Which rating patterns deserve feedback or review?</td>
-<td>The <a href="mfrmr-rating-agreement.html">agreement lesson</a> and
-<code>mfrmr_output_guide("feedback")</code>. Agreement, severity and
-dependability answer different questions.</td>
+<td>The <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html">agreement
+lesson</a> and <code>mfrmr_output_guide("feedback")</code>. Agreement,
+severity and dependability answer different questions.</td>
 </tr>
 </tbody>
 </table>
@@ -141,10 +135,11 @@ one route suffices.</p>
 </h2>
 <p>Suppose a speaking assessment reports the equally weighted mean of
 Content and Organization scores. Tasks and raters are intended to be
-interchangeable with others from stated populations. The planned outcome
-is proficiency across those conditions, rather than performance on just
-one particular speech. Weights and the intended interpretation should be
-chosen before inspecting which plan has the highest coefficient.</p>
+interchangeable with others from stated populations. The generalization
+target is the universe score (expected observed performance across those
+conditions), rather than performance on just one particular speech.
+Weights and the intended interpretation should be chosen before
+inspecting which plan has the highest coefficient.</p>
 <p>This route analyzes <strong>numeric observed scores</strong>,
 including a single score or fixed combinations of several scores. It
 does not transform rubric categories into interval-scale measurements or
@@ -292,7 +287,7 @@ Comparing their sizes across scores requires comparable score units.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">components</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">g</span>, score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Content"</span>, <span class="st">"Organization"</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  preset <span class="op">=</span> <span class="st">"standard"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-gtheory_files/figure-html/crossed-score-components-1.png" class="r-plt" alt="Two panels show the seven variance components for Content and Organization on shared axes. They include Person, Rater, Task, three two-way interactions and the highest interaction combined with residual." width="672"></p>
+<p><img src="mfrmr-gtheory_files/figure-html/crossed-score-components-1.svg" class="r-plt" alt="Two panels show the seven variance components for Content and Organization on shared axes. They include Person, Rater, Task, three two-way interactions and the highest interaction combined with residual." width="672"></p>
 <p>Person variation represents differences between people.
 Person-by-Rater variation means that rater differences vary across
 people; Rater-by-Task means that rater differences vary across tasks.
@@ -422,7 +417,7 @@ Each color identifies a complete plan, and each point shows one source’s
 contribution to its error variance.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">errors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">d</span>, type <span class="op">=</span> <span class="st">"error_components"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-gtheory_files/figure-html/crossed-error-components-1.png" class="r-plt" alt="Relative and absolute error-variance contributions for three twelve-rating plans. Person-by-rater error falls with more raters; Person-by-task error rises when fewer tasks are used. The highest interaction and residual contribution is unchanged because the product of counts remains twelve." width="672"></p>
+<p><img src="mfrmr-gtheory_files/figure-html/crossed-error-components-1.svg" class="r-plt" alt="Relative and absolute error-variance contributions for three twelve-rating plans. Person-by-rater error falls with more raters; Person-by-task error rises when fewer tasks are used. The highest interaction and residual contribution is unchanged because the product of counts remains twelve." width="672"></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">errors</span>, <span class="st">"table"</span><span class="op">)</span> <span class="co"># Divisors, variance and covariance contributions.</span></span>
 <span><span class="co">#&gt;    Scenario Raters Tasks      Kind     Score                Metric Panel</span></span>
@@ -584,7 +579,7 @@ above.</p>
 <span>  weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Content <span class="op">=</span> <span class="fl">.5</span>, Organization <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">d_grid</span>, metric <span class="op">=</span> <span class="st">"Phi"</span>, x_var <span class="op">=</span> <span class="st">"Tasks"</span>, panel_by <span class="op">=</span> <span class="st">"Raters"</span>,</span>
 <span>  ncol <span class="op">=</span> <span class="fl">2</span>, intervals <span class="op">=</span> <span class="cn">TRUE</span>, assumption <span class="op">=</span> <span class="st">"normal"</span>, preset <span class="op">=</span> <span class="st">"standard"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-gtheory_files/figure-html/crossed-panels-1.png" class="r-plt" alt="Two panels show absolute dependability Phi for the same composite as task count increases. Each panel fixes two or four raters. Shaded regions are approximate 95 percent MLS intervals, not simultaneous confidence bands." width="672"></p>
+<p><img src="mfrmr-gtheory_files/figure-html/crossed-panels-1.svg" class="r-plt" alt="Two panels show absolute dependability Phi for the same composite as task count increases. Each panel fixes two or four raters. Shaded regions are approximate 95 percent MLS intervals, not simultaneous confidence bands." width="672"></p>
 <p>Within a panel, follow the curve to examine adding tasks. Across
 panels, compare the same task count to examine adding raters. More
 future ratings reduce projected error but do not add information to the
@@ -629,7 +624,7 @@ or treating plans as independent. For this two-crossed-facet example,
 the existing paired delta method gives approximate intervals for G/Phi
 and SEM differences.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_multivariate_d_compare.html">mfrm_multivariate_d_compare</a></span><span class="op">(</span><span class="va">d</span>, reference <span class="op">=</span> <span class="fl">1</span>,</span>
+<code class="sourceCode R"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_mfrm.html">compare_mfrm</a></span><span class="op">(</span><span class="va">d</span>, reference <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">comparison</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; D-study differences from reference scenario 1 </span></span>
@@ -684,12 +679,108 @@ facet pools, component boundaries, nonnormal effects and uneven
 assignments can impair the approximation. Selecting a winner after
 inspecting many plans is not protected by these intervals. This paired
 delta method does not apply to one-facet or nested designs; see the
-branches below and the <a href="../reference/mfrm_multivariate_d_compare.html">comparison
-help</a>.</p>
+branches below and the <a href="../reference/compare_mfrm.html">comparison help</a>. For a
+conservative joint-region alternative, see <a href="#compare-plan-differences-under-another-interval-method">Compare
+plan differences under another interval method</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="connect-the-comparison-to-resources-and-targets">Connect the comparison to resources and targets<a class="anchor" aria-label="anchor" href="#connect-the-comparison-to-resources-and-targets"></a>
+</h2>
+<p>The same paired comparison can be reviewed against explicit resource
+limits. Here the hours are illustrative operational inputs for one
+declared future cohort, not estimates from the G-study.
+<code>Scenario</code> links each row to <code>plans</code>; reordering
+the cost table does not change the association.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">costs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Scenario <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, RaterHours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">44</span>, <span class="fl">48</span><span class="op">)</span>,</span>
+<span>  TaskHours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">8</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/recommend_mfrm_design.html">recommend_mfrm_design</a></span><span class="op">(</span><span class="va">comparison</span>, costs <span class="op">=</span> <span class="va">costs</span>,</span>
+<span>  limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>RaterHours <span class="op">=</span> <span class="fl">46</span><span class="op">)</span>, targets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>G <span class="op">=</span> <span class="fl">.58</span>, Phi <span class="op">=</span> <span class="fl">.39</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">planning</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span>, planning <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">planning</span><span class="op">$</span><span class="va">plans</span></span>
+<span><span class="co">#&gt;   Scenario IsReference RatingsPerPerson         G       Phi RelativeSEM</span></span>
+<span><span class="co">#&gt; 1        1        TRUE               12 0.5607879 0.3646152   0.5774748</span></span>
+<span><span class="co">#&gt; 2        2       FALSE               12 0.5947792 0.3915712   0.5385960</span></span>
+<span><span class="co">#&gt; 3        3       FALSE               12 0.5993499 0.3910704   0.5335039</span></span>
+<span><span class="co">#&gt;   AbsoluteSEM Feasibility TargetStatus ReviewRequired</span></span>
+<span><span class="co">#&gt; 1   0.8613827    feasible         fail          FALSE</span></span>
+<span><span class="co">#&gt; 2   0.8133822    feasible         pass          FALSE</span></span>
+<span><span class="co">#&gt; 3   0.8142378  infeasible         pass          FALSE</span></span>
+<span><span class="va">planning</span><span class="op">$</span><span class="va">checks</span></span>
+<span><span class="co">#&gt;   Scenario         Type  Criterion      Value Relation Threshold Status</span></span>
+<span><span class="co">#&gt; 1        1     resource RaterHours 40.0000000       &lt;=     46.00   pass</span></span>
+<span><span class="co">#&gt; 2        2     resource RaterHours 44.0000000       &lt;=     46.00   pass</span></span>
+<span><span class="co">#&gt; 3        3     resource RaterHours 48.0000000       &lt;=     46.00   fail</span></span>
+<span><span class="co">#&gt; 4        1 point_target          G  0.5607879       &gt;=      0.58   fail</span></span>
+<span><span class="co">#&gt; 5        2 point_target          G  0.5947792       &gt;=      0.58   pass</span></span>
+<span><span class="co">#&gt; 6        3 point_target          G  0.5993499       &gt;=      0.58   pass</span></span>
+<span><span class="co">#&gt; 7        1 point_target        Phi  0.3646152       &gt;=      0.39   fail</span></span>
+<span><span class="co">#&gt; 8        2 point_target        Phi  0.3915712       &gt;=      0.39   pass</span></span>
+<span><span class="co">#&gt; 9        3 point_target        Phi  0.3910704       &gt;=      0.39   pass</span></span>
+<span><span class="va">planning</span><span class="op">$</span><span class="va">differences</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Scenario"</span>, <span class="st">"Metric"</span>, <span class="st">"Difference"</span>, <span class="st">"Lower"</span>, <span class="st">"Upper"</span>,</span>
+<span>                         <span class="st">"Direction"</span>, <span class="st">"Feasibility"</span>, <span class="st">"TargetStatus"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;   Scenario      Metric  Difference       Lower       Upper    Direction</span></span>
+<span><span class="co">#&gt; 1        2           G  0.03399130  0.02233487  0.04564774     improved</span></span>
+<span><span class="co">#&gt; 2        2         Phi  0.02695599 -0.01358272  0.06749470 inconclusive</span></span>
+<span><span class="co">#&gt; 3        2 RelativeSEM -0.03887873 -0.05251036 -0.02524709     improved</span></span>
+<span><span class="co">#&gt; 4        2 AbsoluteSEM -0.04800055 -0.12268000  0.02667890 inconclusive</span></span>
+<span><span class="co">#&gt; 5        3           G  0.03856203  0.01816839  0.05895568     improved</span></span>
+<span><span class="co">#&gt; 6        3         Phi  0.02645516 -0.04633515  0.09924547 inconclusive</span></span>
+<span><span class="co">#&gt; 7        3 RelativeSEM -0.04397091 -0.06736295 -0.02057887     improved</span></span>
+<span><span class="co">#&gt; 8        3 AbsoluteSEM -0.04714496 -0.17653559  0.08224567 inconclusive</span></span>
+<span><span class="co">#&gt;   Feasibility TargetStatus</span></span>
+<span><span class="co">#&gt; 1    feasible         pass</span></span>
+<span><span class="co">#&gt; 2    feasible         pass</span></span>
+<span><span class="co">#&gt; 3    feasible         pass</span></span>
+<span><span class="co">#&gt; 4    feasible         pass</span></span>
+<span><span class="co">#&gt; 5  infeasible         pass</span></span>
+<span><span class="co">#&gt; 6  infeasible         pass</span></span>
+<span><span class="co">#&gt; 7  infeasible         pass</span></span>
+<span><span class="co">#&gt; 8  infeasible         pass</span></span></code></pre></div>
+<p>The three-rater/four-task plan is within this rater-hour limit and
+its points meet both targets. Its G difference supports improvement
+under the model; its Phi difference remains <code>inconclusive</code>. A
+Phi point above .39 does not establish that population Phi exceeds .39.
+The four-rater/three-task plan exceeds the limit and stays visible as
+<code>infeasible</code>. Unknown costs are <code>NA</code> and make the
+relevant resource check <code>unavailable</code>, never free or passing.
+<code>RatingsPerPerson</code> is twelve here; it is not a cohort total.
+Supply future cohort totals and any further workload limits explicitly
+in <code>costs</code> and <code>limits</code>.</p>
+<p><code>ReviewRequired</code> flags covariance-component or
+sampling-covariance concerns without removing signed estimates or their
+diagnostics. No plan is selected automatically: resource feasibility,
+point-target attainment and paired interval direction answer different
+questions. Intervals remain pointwise for prespecified plans; searching
+for a winner can introduce selection bias.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">planning_report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span><span class="va">review</span>, study_context <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  score <span class="op">=</span> <span class="st">"Equal-weight mean of Content and Organization over the complete plan"</span>,</span>
+<span>  universe <span class="op">=</span> <span class="st">"Persons, tasks and raters sampled from the declared assessment populations"</span>,</span>
+<span>  resources <span class="op">=</span> <span class="st">"Illustrative total hours for the same future cohort"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">planning_report</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">planning_plans</span></span>
+<span><span class="co">#&gt;   Scenario IsReference RatingsPerPerson         G       Phi RelativeSEM</span></span>
+<span><span class="co">#&gt; 1        1        TRUE               12 0.5607879 0.3646152   0.5774748</span></span>
+<span><span class="co">#&gt; 2        2       FALSE               12 0.5947792 0.3915712   0.5385960</span></span>
+<span><span class="co">#&gt; 3        3       FALSE               12 0.5993499 0.3910704   0.5335039</span></span>
+<span><span class="co">#&gt;   AbsoluteSEM Feasibility TargetStatus ReviewRequired</span></span>
+<span><span class="co">#&gt; 1   0.8613827    feasible         fail          FALSE</span></span>
+<span><span class="co">#&gt; 2   0.8133822    feasible         pass          FALSE</span></span>
+<span><span class="co">#&gt; 3   0.8142378  infeasible         pass          FALSE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">review</span>, view <span class="op">=</span> <span class="st">"differences"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-gtheory_files/figure-html/crossed-resource-report-1.svg" class="r-plt" alt="" width="672"></p>
+<p>The report, <code><a href="../reference/plot_data.html">plot_data()</a></code> and appendix export retain every
+plan, resource check, direction and limitation. This workflow concerns
+observed-score G/Phi and measurement SEM under the existing
+two-crossed-facet paired delta method. It does not convert Bayesian
+new-Person ability scores into a future-plan comparison, and it does not
+broaden the scope of the interval procedure.</p>
 </div>
 <div class="section level2">
 <h2 id="save-the-result-and-know-which-operation-to-use">Save the result and know which operation to use<a class="anchor" aria-label="anchor" href="#save-the-result-and-know-which-operation-to-use"></a>
 </h2>
+<div role="region" aria-label="Result operations" tabindex="0" style="overflow-x: auto;">
+<div style="min-width: 36rem;">
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -732,7 +823,7 @@ returns <code>d</code> invisibly</td>
 </tr>
 <tr class="even">
 <td><code>plot(d)</code></td>
-<td>Draws point projections; returns plot data invisibly</td>
+<td>Returns an editable ggplot of point projections</td>
 <td>No, unless <code>intervals = TRUE</code> is requested</td>
 </tr>
 <tr class="odd">
@@ -749,6 +840,8 @@ returns <code>d</code> invisibly</td>
 </tr>
 </tbody>
 </table>
+</div>
+</div>
 <p><code>print(..., digits = 3)</code> changes display precision, not
 stored estimates. A summary list is not a new plotting input: use the
 D-study or its saved interval objects. To reuse intervals in a curve,
@@ -761,8 +854,11 @@ G-study objects include analyzed ratings and identifiers; choose an
 appropriate storage location. The temporary path below keeps this
 example runnable; replace it with a file in your project for lasting
 storage.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">analysis</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>study <span class="op">=</span> <span class="va">d</span>, summary <span class="op">=</span> <span class="va">s</span>, comparison <span class="op">=</span> <span class="va">comparison</span>, plot <span class="op">=</span> <span class="va">p</span>,</span>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">edited_plot</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Tasks per person"</span><span class="op">)</span></span>
+<span><span class="va">analysis</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>study <span class="op">=</span> <span class="va">d</span>, summary <span class="op">=</span> <span class="va">s</span>, comparison <span class="op">=</span> <span class="va">comparison</span>,</span>
+<span>  resource_review <span class="op">=</span> <span class="va">review</span>, resource_report <span class="op">=</span> <span class="va">planning_report</span>,</span>
+<span>  curve_study <span class="op">=</span> <span class="va">d_grid</span>, plot <span class="op">=</span> <span class="va">edited_plot</span>,</span>
 <span>  decisions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>score <span class="op">=</span> <span class="st">"Equal-weight Content/Organization mean"</span>,</span>
 <span>    comparison <span class="op">=</span> <span class="st">"Twelve ratings per person; task burden and costs differ"</span>,</span>
 <span>    assumption <span class="op">=</span> <span class="st">"Independent normal random effects"</span><span class="op">)</span><span class="op">)</span></span>
@@ -770,13 +866,28 @@ storage.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">analysis</span>, <span class="va">result_file</span><span class="op">)</span></span>
 <span><span class="va">reopened</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">result_file</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">reopened</span><span class="op">$</span><span class="va">summary</span>, <span class="va">s</span><span class="op">)</span>  <span class="co"># TRUE: the full summary was preserved.</span></span>
-<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
-<p>In another session, load <code>mfrmr</code> and read that file. Reuse
-the plot’s stored values with <code>as_ggplot(reopened$plot)</code> if
-ggplot2 is installed. A CSV of <code>s$table</code> is useful for a
-report, but loses the separate weights, notes and numerical diagnostics.
-Changing future counts requires a new D-study; changing the source data
-or model requires a new G-study.</p>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">reopened</span><span class="op">$</span><span class="va">resource_review</span>, planning <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">plans</span></span>
+<span><span class="co">#&gt;   Scenario IsReference RatingsPerPerson         G       Phi RelativeSEM</span></span>
+<span><span class="co">#&gt; 1        1        TRUE               12 0.5607879 0.3646152   0.5774748</span></span>
+<span><span class="co">#&gt; 2        2       FALSE               12 0.5947792 0.3915712   0.5385960</span></span>
+<span><span class="co">#&gt; 3        3       FALSE               12 0.5993499 0.3910704   0.5335039</span></span>
+<span><span class="co">#&gt;   AbsoluteSEM Feasibility TargetStatus ReviewRequired</span></span>
+<span><span class="co">#&gt; 1   0.8613827    feasible         fail          FALSE</span></span>
+<span><span class="co">#&gt; 2   0.8133822    feasible         pass          FALSE</span></span>
+<span><span class="co">#&gt; 3   0.8142378  infeasible         pass          FALSE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">reopened</span><span class="op">$</span><span class="va">plot</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-gtheory_files/figure-html/save-and-reopen-1.svg" class="r-plt" alt="" width="672"></p>
+<p>In another session, load <code>mfrmr</code> and read that file.
+<code>print(reopened$plot)</code> redraws the saved figure with its
+edits; <code>plot_data(reopened$plot)</code> retrieves its stored values
+and notes. <code>curve_study</code> preserves the grid behind that
+figure, while <code>study</code> holds the three equal-rating-count
+plans. The resource review and report retain all candidates, costs,
+limits and decision context. A CSV of <code>s$table</code> is useful for
+a report, but loses the separate weights, notes and numerical
+diagnostics. Changing future counts requires a new D-study; changing the
+source data or model requires a new G-study.</p>
 </div>
 <div class="section level2">
 <h2 id="report-the-assessment-planning-answer">Report the assessment-planning answer<a class="anchor" aria-label="anchor" href="#report-the-assessment-planning-answer"></a>
@@ -832,8 +943,8 @@ error-component plots</td>
 <td>Answer</td>
 <td>Magnitude and uncertainty of the prespecified plan difference;
 workload/cost tradeoff and limits</td>
-<td>Saved <code><a href="../reference/mfrm_multivariate_d_compare.html">mfrm_multivariate_d_compare()</a></code> result and the
-substantive interpretation</td>
+<td>Saved <code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> result and the substantive
+interpretation</td>
 </tr>
 </tbody>
 </table>
@@ -849,7 +960,7 @@ preserves signed components, observed counts, future plans, fixed
 weights, G/Phi, error variances and SEM. Supplied intervals are checked
 against their source; omitted intervals remain explicitly not
 requested.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span><span class="va">d</span>, intervals <span class="op">=</span> <span class="va">s</span><span class="op">$</span><span class="va">intervals</span>, style <span class="op">=</span> <span class="st">"apa"</span><span class="op">)</span></span>
 <span><span class="va">bundle</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_summary_table_bundle.html">build_summary_table_bundle</a></span><span class="op">(</span><span class="va">report</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/apa_table.html">apa_table</a></span><span class="op">(</span><span class="va">report</span>, which <span class="op">=</span> <span class="st">"coefficients"</span><span class="op">)</span></span>
@@ -925,7 +1036,8 @@ pieces fixed, using different judges for each athlete, or studying a
 time trend changes the target or supported design. Race times and match
 outcomes do not automatically fit a judged-performance model. Annual
 speech-contest linking with common recordings also requires the separate
-<a href="mfrmr-linking-and-dff.html">linking design</a>.</p>
+<a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html">linking
+design</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="examine-a-construct-claim">Examine a construct claim<a class="anchor" aria-label="anchor" href="#examine-a-construct-claim"></a>
@@ -941,7 +1053,7 @@ including an inconclusive result; they do not validate a speaking
 construct.</p>
 <p>Start with the Person matrix. Its diagonal contains variances; its
 off-diagonal entries are covariances, not correlations:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">g</span><span class="op">$</span><span class="va">components</span><span class="op">$</span><span class="va">Person</span></span>
 <span><span class="co">#&gt;                  Content Organization</span></span>
 <span><span class="co">#&gt; Content       0.94929920  -0.08845568</span></span>
@@ -951,14 +1063,14 @@ explicitly choose the conservative normal-model enclosure: it preserves
 signed covariance and requires no simulation, but can be very wide with
 few facet levels. It is one documented method, not an automatically
 preferred choice for every study.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">relations</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">g</span>, type <span class="op">=</span> <span class="st">"covariance"</span>, score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Content"</span>, <span class="st">"Organization"</span><span class="op">)</span>,</span>
 <span>  intervals <span class="op">=</span> <span class="cn">TRUE</span>, method <span class="op">=</span> <span class="st">"regression_region"</span>, assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-gtheory_files/figure-html/criterion-covariance-1.png" class="r-plt" alt="One panel shows Content-Organization covariance estimates and conservative pointwise 95 percent intervals for all seven sources. Every interval includes zero; the Task and Rater intervals are much wider than the others. These are covariance units, not correlations or halo scores." width="672"></p>
+<p><img src="mfrmr-gtheory_files/figure-html/criterion-covariance-1.svg" class="r-plt" alt="One panel shows Content-Organization covariance estimates and conservative pointwise 95 percent intervals for all seven sources. Every interval includes zero; the Task and Rater intervals are much wider than the others. These are covariance units, not correlations or halo scores." width="672"></p>
 <p>The full range stays visible. Use the table to read components whose
 bars are compressed by the widest intervals; the figure does not
 truncate them.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">relation_intervals</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">relations</span>, <span class="st">"intervals"</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="va">relation_intervals</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Source"</span>, <span class="st">"Estimate"</span>, <span class="st">"Lower"</span>, <span class="st">"Upper"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;         Source    Estimate        Lower       Upper</span></span>
@@ -1003,7 +1115,7 @@ feedback, and cites the <em>Standards</em> (2014, Standards 1.13–1.14)
 and Kane (2013).</p>
 <p>Retain the covariance figure and its full table with the same
 source:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">analysis</span><span class="op">$</span><span class="va">criterion_relations</span> <span class="op">&lt;-</span> <span class="va">relations</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">analysis</span>, <span class="va">result_file</span><span class="op">)</span></span>
 <span><span class="va">reopened</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">result_file</span><span class="op">)</span></span>
@@ -1023,7 +1135,7 @@ require running all of these analyses.</p>
 and W for ten persons and six common tasks. The future question below is
 whether doubling tasks changes absolute dependability of their fixed,
 equally weighted mean.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tasks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"mgenova-table12.csv"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">g_tasks</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_g_study.html">mfrm_g_study</a></span><span class="op">(</span><span class="va">tasks</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"V"</span>, <span class="st">"W"</span><span class="op">)</span>, rater <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="va">d_tasks</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_d_study.html">mfrm_d_study</a></span><span class="op">(</span><span class="va">g_tasks</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Tasks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">12</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -1069,7 +1181,7 @@ These different inference rules are detailed in <a href="../reference/confint.mf
 the bundled nested example, rater IDs are local to tasks: the Task–Rater
 pair identifies a rater. Increasing tasks while retaining three raters
 per task gives:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"mfrmr_example_gtheory_nested"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span></span>
 <span><span class="va">g_nested</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_g_study.html">mfrm_g_study</a></span><span class="op">(</span><span class="va">mfrmr_example_gtheory_nested</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Content"</span>, <span class="st">"Organization"</span><span class="op">)</span>, nesting <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Rater <span class="op">=</span> <span class="st">"Task"</span><span class="op">)</span><span class="op">)</span></span>
@@ -1130,14 +1242,14 @@ Delta supplies a sampling SE and normal-reference interval for the same
 original coefficient. A conservative mean-square region is another
 explicit alternative requiring optional lpSolve; the help also describes
 approximate F and other choices.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mls"</span>, <span class="st">"delta"</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lpSolve"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="va">methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">methods</span>, <span class="st">"mean_square_region"</span><span class="op">)</span></span>
 <span><span class="va">ci_methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">d</span>, parm <span class="op">=</span> <span class="st">"Phi"</span>, method <span class="op">=</span> <span class="va">methods</span>, assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ci_methods</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-gtheory_files/figure-html/crossed-interval-methods-1.png" class="r-plt" alt="One forest plot groups three future plans vertically. Adjacent rows compare selected interval methods for Phi on the same axis; color, shape and line type distinguish the methods." width="672"></p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<p><img src="mfrmr-gtheory_files/figure-html/crossed-interval-methods-1.svg" class="r-plt" alt="One forest plot groups three future plans vertically. Adjacent rows compare selected interval methods for Phi on the same axis; color, shape and line type distinguish the methods." width="672"></p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ci_methods</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Scenario"</span>, <span class="st">"Method"</span>, <span class="st">"Estimate"</span>, <span class="st">"SE"</span>, <span class="st">"Lower"</span>, <span class="st">"Upper"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;   Scenario                           Method  Estimate         SE      Lower</span></span>
 <span><span class="co">#&gt; 1        1 MLS null inversion (approximate) 0.3646152         NA 0.16862135</span></span>
@@ -1181,7 +1293,7 @@ not add information to the source study.</p>
 raters and four tasks from the same synthetic source. This is a
 deliberately less informative complete source, not a recommended way to
 shorten an analysis. The score and future plans remain the same.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">small</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">ratings</span>, <span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">Person</span><span class="op">)</span>, <span class="fl">10</span><span class="op">)</span> <span class="op">&amp;</span></span>
 <span>  <span class="va">Rater</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">Rater</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">Task</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">Task</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">g_small</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_g_study.html">mfrm_g_study</a></span><span class="op">(</span><span class="va">small</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Content"</span>, <span class="st">"Organization"</span><span class="op">)</span><span class="op">)</span></span>
@@ -1189,7 +1301,7 @@ shorten an analysis. The score and future plans remain the same.</p>
 <span>  weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Content <span class="op">=</span> <span class="fl">.5</span>, Organization <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">ci_small</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">d_small</span>, parm <span class="op">=</span> <span class="st">"Phi"</span>, method <span class="op">=</span> <span class="va">methods</span>, assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ci_small</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-gtheory_files/figure-html/crossed-small-source-intervals-1.png" class="r-plt" alt="The same Phi method comparison now uses a small complete source. Wide or unavailable intervals remain visible on the shared axis; the plot does not measure coverage." width="672"></p>
+<p><img src="mfrmr-gtheory_files/figure-html/crossed-small-source-intervals-1.svg" class="r-plt" alt="The same Phi method comparison now uses a small complete source. Wide or unavailable intervals remain visible on the shared axis; the plot does not measure coverage." width="672"></p>
 <p>Compare widths, unavailable rows and
 <code>attr(ci_small, "notes")</code>, not just the point estimates. Wide
 intervals are retained; missing intervals are not zero uncertainty.
@@ -1199,6 +1311,52 @@ automatically preferable. The <em>Choosing a two-facet method</em>
 section of <a href="../reference/confint.mfrm_multivariate_d_study.html"><code>confint(d)</code></a>
 gives the mathematical assumptions, finite-sample evaluations and their
 limitations.</p>
+</div>
+<div class="section level3">
+<h3 id="compare-plan-differences-under-another-interval-method">Compare plan differences under another interval method<a class="anchor" aria-label="anchor" href="#compare-plan-differences-under-another-interval-method"></a>
+</h3>
+<p>For this complete balanced source,
+<code>method = "mean_square_region"</code> uses one normal-model
+confidence region for the components. Projecting the same region onto
+plan differences gives conservative joint protection across the plans
+for this fixed score. This differs from the approximate pointwise paired
+delta intervals above. Choose the method for its assumptions and
+intended claim, before examining which result is narrower or excludes
+zero.</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lpSolve"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">joint</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">d</span>, intervals <span class="op">=</span> <span class="cn">TRUE</span>, parm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"G"</span>, <span class="st">"Phi"</span><span class="op">)</span>,</span>
+<span>    reference <span class="op">=</span> <span class="fl">1</span>, method <span class="op">=</span> <span class="st">"mean_square_region"</span>, assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span>
+<span>  <span class="co"># Attach only resource and point-target checks, matched by Scenario.</span></span>
+<span>  <span class="va">joint_planning</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">joint</span><span class="op">$</span><span class="va">table</span>,</span>
+<span>    <span class="va">planning</span><span class="op">$</span><span class="va">plans</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Scenario"</span>, <span class="st">"Feasibility"</span>, <span class="st">"TargetStatus"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>    by <span class="op">=</span> <span class="st">"Scenario"</span>, all.x <span class="op">=</span> <span class="cn">TRUE</span>, sort <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">joint_planning</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Scenario"</span>, <span class="st">"Metric"</span>, <span class="st">"Estimate"</span>, <span class="st">"Lower"</span>, <span class="st">"Upper"</span>,</span>
+<span>                         <span class="st">"Feasibility"</span>, <span class="st">"TargetStatus"</span><span class="op">)</span><span class="op">]</span>, digits <span class="op">=</span> <span class="fl">3</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt;  Scenario         Metric Estimate    Lower  Upper Feasibility TargetStatus</span></span>
+<span><span class="co">#&gt;         2   G difference   0.0340  0.00598 0.0786    feasible         pass</span></span>
+<span><span class="co">#&gt;         2 Phi difference   0.0270 -0.10102 0.1010    feasible         pass</span></span>
+<span><span class="co">#&gt;         3   G difference   0.0386 -0.00393 0.1065  infeasible         pass</span></span>
+<span><span class="co">#&gt;         3 Phi difference   0.0265 -0.17157 0.1716  infeasible         pass</span></span></code></pre></div>
+<p>The G difference is about 0.034 with a region enclosure of [0.006,
+0.079] for three raters and four tasks. For four raters and three tasks,
+the G enclosure is [-0.004, 0.107]: its direction remains uncertain,
+although the paired delta interval excludes zero. Both Phi enclosures
+include zero. Neither agreement nor disagreement between methods
+establishes coverage or identifies the best plan. These are
+model-dependent statements, not robust guarantees for arbitrary observed
+scores or a minimum source sample size.</p>
+<p><code><a href="../reference/recommend_mfrm_design.html">recommend_mfrm_design()</a></code> accepts the saved paired delta
+comparison, not <code>joint</code> or its interval objects. The join
+above reuses only resource and point-target checks; it does not transfer
+the delta interval’s direction. The four-rater plan remains infeasible
+under the illustrative hour limit. Preserve <code>joint</code> with
+<code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code> for its method notes, source and diagnostics;
+<code>plot(joint$intervals$G)</code> uses the saved interval without
+recalculation. See <a href="../reference/confint.mfrm_multivariate_d_study.html#differences-from-a-shared-mean-square-region">the
+interval help</a> for the shared-region construction and numerical
+failure states.</p>
 </div>
 <div class="section level3">
 <h3 id="incomplete-data-or-unavailable-results">Incomplete data or unavailable results<a class="anchor" aria-label="anchor" href="#incomplete-data-or-unavailable-results"></a>
@@ -1236,7 +1394,7 @@ pages below contain the worked incomplete-data and profile examples.</p>
 <code>residual_contrast</code> is a separate option that avoids
 likelihood fitting. The following removes three ratings from the bundled
 data to illustrate an incomplete assignment:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">observed</span> <span class="op">&lt;-</span> <span class="va">ratings</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">8</span>, <span class="fl">23</span><span class="op">)</span>, <span class="op">]</span></span>
 <span><span class="va">sparse_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_g_study.html">mfrm_g_study</a></span><span class="op">(</span><span class="va">observed</span>,</span>
 <span>  scores <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Content"</span>, <span class="st">"Organization"</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"minque0"</span><span class="op">)</span></span>
@@ -1264,7 +1422,7 @@ the residual. Reuse the published synthetic task scores loaded above,
 with an illustrative subset of missing ratings. Here the planning
 question is how relative measurement error changes between six and
 twelve tasks:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">observed_tasks</span> <span class="op">&lt;-</span> <span class="va">tasks</span><span class="op">[</span><span class="op">(</span><span class="va">tasks</span><span class="op">$</span><span class="va">Person</span> <span class="op">+</span> <span class="va">tasks</span><span class="op">$</span><span class="va">Task</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">3</span> <span class="op">!=</span> <span class="fl">0</span>, <span class="op">]</span></span>
 <span><span class="va">task_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_g_study.html">mfrm_g_study</a></span><span class="op">(</span><span class="va">observed_tasks</span>, <span class="st">"V"</span>, rater <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"minque0"</span><span class="op">)</span></span>
@@ -1315,7 +1473,7 @@ normal Person effects. It removes the task effects and uses the
 remaining Person and residual variation; it does not fit another
 likelihood model. Ask how much relative reliability would increase from
 six to twelve tasks:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">g_change</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">task_d</span>, parm <span class="op">=</span> <span class="st">"G"</span>, reference <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"spectral_f"</span>, assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span>
 <span><span class="va">g_change</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Tasks"</span>, <span class="st">"Estimate"</span>, <span class="st">"Lower"</span>, <span class="st">"Upper"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span>
@@ -1323,7 +1481,7 @@ six to twelve tasks:</p>
 <span><span class="co">#&gt; 1    12 0.07492288     0 0.1715729 Includes zero</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">task_d</span>, metric <span class="op">=</span> <span class="st">"G"</span>, intervals <span class="op">=</span> <span class="cn">TRUE</span>, method <span class="op">=</span> <span class="st">"spectral_f"</span>,</span>
 <span>  assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-gtheory_files/figure-html/incomplete-relative-g-1.png" class="r-plt" alt="Relative G increases with task count. The shaded interval uses a normal-model spectral F pivot from incomplete source ratings. Its wide lower range shows source uncertainty; it is not the interval for the difference between plans." width="672"></p>
+<p><img src="mfrmr-gtheory_files/figure-html/incomplete-relative-g-1.svg" class="r-plt" alt="Relative G increases with task count. The shaded interval uses a normal-model spectral F pivot from incomplete source ratings. Its wide lower range shows source uncertainty; it is not the interval for the difference between plans." width="672"></p>
 <p>The difference interval preserves dependence between the two plans.
 Positive values mean higher relative reliability; they do not settle
 whether extra tasks are worth their cost. The ribbon shows uncertainty
@@ -1390,8 +1548,9 @@ the named design/method sections</td>
 <tr class="odd">
 <td>Paired delta approximation and its applicability</td>
 <td>
-<a href="../reference/mfrm_multivariate_d_compare.html"><code>mfrm_multivariate_d_compare()</code></a>,
-<em>Calculation and source of the approximation</em>
+<a href="../reference/mfrm_d_study_comparison.html">D-study plan
+comparison</a>, <em>Calculation and source of the
+approximation</em>
 </td>
 </tr>
 </tbody>

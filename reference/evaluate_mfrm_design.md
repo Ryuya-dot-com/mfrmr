@@ -2,6 +2,10 @@
 
 Evaluate MFRM design conditions by repeated simulation
 
+Summarize a design-simulation study
+
+Plot a design-simulation study
+
 ## Usage
 
 ``` r
@@ -34,6 +38,23 @@ evaluate_mfrm_design(
   parallel = c("no", "future"),
   file = NULL,
   file_refit = c("never", "on_change", "always")
+)
+
+# S3 method for class 'mfrm_design_evaluation'
+summary(object, digits = 3, ...)
+
+# S3 method for class 'mfrm_design_evaluation'
+plot(
+  x,
+  facet = c("Rater", "Criterion", "Person"),
+  metric = c("separation", "reliability", "infit", "outfit", "misfitrate",
+    "severityrmse", "severitybias", "convergencerate", "elapsedsec", "mincategorycount",
+    "designdensity", "plannedmissingrate", "linkpersons", "linkfraction", "linkraters",
+    "mincommonpersons", "zerocommonpairs", "pairsshorttarget"),
+  x_var = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
+  group_var = NULL,
+  draw = TRUE,
+  ...
 )
 ```
 
@@ -161,7 +182,7 @@ evaluate_mfrm_design(
   Optional output from
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
   or
-  [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md)
+  [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
   used as the base data-generating mechanism. When supplied, the design
   grid still varies `n_person`, `n_rater`, `n_criterion`, and
   `raters_per_person`, but latent-spread assumptions, thresholds, and
@@ -217,6 +238,48 @@ evaluate_mfrm_design(
   compatibility even under `"never"`; it does not silently return a
   different analysis.
 
+- object:
+
+  Output from `evaluate_mfrm_design()`.
+
+- digits:
+
+  Number of digits used when printing the summary. Returned numeric
+  tables retain full precision for plotting and design decisions.
+
+- ...:
+
+  Reserved for generic compatibility.
+
+- x:
+
+  Output from `evaluate_mfrm_design()`.
+
+- facet:
+
+  Facet to visualize.
+
+- metric:
+
+  Metric to plot.
+
+- x_var:
+
+  Design variable used on the x-axis. When `x` was generated from a
+  `sim_spec` with custom public facet names, the corresponding aliases
+  (for example `n_judge`, `n_task`, `judge_per_person`) are also
+  accepted. Role keywords (`person`, `rater`, `criterion`, `assignment`)
+  are accepted as an abstraction over the current two-facet schema.
+
+- group_var:
+
+  Optional design variable used for separate lines. The same alias rules
+  as `x_var` apply.
+
+- draw:
+
+  If `TRUE`, draw with base graphics; otherwise return plotting data.
+
 ## Value
 
 An object of class `mfrm_design_evaluation` with components:
@@ -268,202 +331,136 @@ An object of class `mfrm_design_evaluation` with components:
 - `reproducibility`: file identity, original inputs and per-trial seeds
   when `file` is supplied.
 
+An object of class `summary.mfrm_design_evaluation` with components:
+
+- `overview`: run-level overview
+
+- `design_summary`: aggregated design-by-facet metrics, with
+  design-variable alias columns when applicable
+
+- `sparse_review`: compact planned-missingness and rater-link review
+  counts when sparse linked designs are active
+
+- `ademp`: simulation-study metadata carried forward from the original
+  object
+
+- `facet_names`: public facet labels carried from the simulation
+  specification
+
+- `design_variable_aliases`: accepted public aliases for design
+  variables
+
+- `design_descriptor`: role-based design-variable metadata
+
+- `planning_scope`: explicit record of the current planning contract
+
+- `planning_constraints`: explicit record of mutable/locked design
+  variables
+
+- `planning_schema`: structured planning metadata
+
+- `structural_design_review`: deterministic structural review of the
+  named-facet design grid; it reports design bookkeeping rather than
+  simulation performance
+
+- `notes`: short interpretation notes
+
+Invisibly, a `ggplot` object whose reusable payload (accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md))
+includes resolved canonical variables (`x_var`, `group_var`) together
+with public labels (`x_label`, `group_label`),
+`design_variable_aliases`, and `design_descriptor`, plus
+`planning_scope`, `planning_constraints`, and `planning_schema`.
+
 ## Details
 
-This helper runs a compact Monte Carlo design study for common
-rater-by-item many-facet settings.
+Evaluates candidate person-by-rater-by-criterion designs by repeated
+generation
+([`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)),
+fitting
+([`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)),
+and diagnostics
+([`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)).
+Serial runs checkpoint per trial and `"future"` runs per design row (see
+[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)).
+Set `fit_method`, `model`, `step_facet`, `maxit`, and `quad_points`
+explicitly rather than treating the fast exploratory defaults (`JML`,
+`maxit = 25`, `quad_points = 7`) as operational accuracy settings.
 
-For each design condition, the function:
+Reports facet `Separation` (\\G = \mathrm{SD\_{adj}} / \mathrm{RMSE}\\),
+`Reliability` (\\G^2 / (1 + G^2)\\, distinguishing facet levels rather
+than rater agreement), `Strata` (\\(4G + 1) / 3\\), mean
+`Infit`/`Outfit`, `MisfitRate` (\\\|\mathrm{ZSTD}\| \> 2\\),
+sparse-design overlap summaries, and mean-aligned `SeverityRMSE` /
+`SeverityBias` when generator and fitted models match (`NA` with reason
+otherwise; legacy unverified step-truth files report
+`RecoveryBasis = "legacy_step_location_truth_unverified"`).
 
-1.  generates synthetic data with
-    [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
+The summary emphasizes condition-level averages that are useful for
+practical design planning, especially:
 
-2.  fits the requested MFRM with
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+- convergence rate
 
-3.  computes diagnostics with
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+- separation and reliability by facet
 
-4.  stores recovery and precision summaries by facet
+- severity recovery RMSE
 
-Severity recovery compares relative locations after aligning group means
-within each trial. PCM/GPCM generating step means are absorbed into the
-owning facet truth before comparison, consistently with the fitted
-identification. `MeanSeverityRMSE` is the mean of available trial RMSEs,
-with MCSE across trials; it differs from a pooled-row RMSE.
-`SeverityBias` averages to zero by construction and cannot demonstrate
-unbiased individual estimates. `RecoveryAvailableReps` counts finite
-trial recovery metrics; review it alongside all-trial convergence and
-failures.
+- mean misfit rate
 
-Older PCM/GPCM results without this truth-coordinate review retain their
-historical tables. New summaries and recommendations withhold their
-recovery metrics with
-`RecoveryBasis = "legacy_step_location_truth_unverified"`.
-Re-summarizing cannot reconstruct the missing trial-level
-truth/estimates; rerun in a new file for corrected recovery, preserving
-the old evidence. Other saved diagnostics remain available. Numerical
-agreement and successful examples do not establish finite-sample
-performance or population forecasting.
+`Reps`, `ConvergenceRate`, and `McseConvergenceRate` use all recorded
+replications for each design, including fit and diagnostic failures.
+Only a recorded `Converged = TRUE` counts as converged. `AvailableReps`
+counts the replications with returned results for that facet;
+performance means still use the available metric values. Designs with no
+returned facet results have no performance-summary rows and cannot be
+recommended. To update an older saved summary, call
+[`summary()`](https://rdrr.io/r/base/summary.html) again on the original
+evaluation object; no simulation or refitting is needed. Rebuilding also
+restores full precision when an older summary stored rounded metrics. It
+also withholds legacy PCM/GPCM recovery metrics whose step-location
+truth coordinates were not verified; those require a new evaluation for
+corrected recovery, while other diagnostic metrics remain.
+`RecoveryAvailableReps` reports the number of finite trial RMSEs.
+Mean-aligned bias is zero by construction; see `evaluate_mfrm_design()`
+for the comparison target.
 
-The result is intended for planning questions such as:
+`MaxRatings` and `MaxRatingsPerRater` are the largest total rating count
+and individual rater workload across all recorded replications,
+including failed runs. A rating is one generated person-rater-criterion
+row; weights do not multiply workload. A maximum is `NA` when any
+replication lacks that count, including older evaluations without
+per-rater workload records.
 
-- how many raters are needed for stable rater separation?
+`MaxRaterComponents` and `MaxCriterionComponents` give the largest
+Person-facet component count across all recorded assignments; a missing
+count makes its maximum `NA`. `DisconnectedReps` counts replications
+with a recorded disconnection in either graph. Zero known disconnections
+does not establish connectedness when records are missing. Sparse-design
+summaries also use all run records, including failures.
 
-- how does `raters_per_person` affect severity recovery?
+This method is designed for quick design-planning scans rather than
+polished publication graphics.
 
-- when do category counts become too sparse for comfortable
-  interpretation?
+Useful first plots are:
 
-This is a **parametric simulation study**. It does not take one observed
-design (for example, 4 raters x 30 persons x 3 criteria) and
-analytically extrapolate what would happen under a different design (for
-example, 2 raters x 40 persons x 5 criteria). Instead, you specify a
-design grid and data-generating assumptions (latent spread, facet
-spread, thresholds, noise, and scoring structure), and the function
-repeatedly generates synthetic data under those assumptions.
+- rater `metric = "separation"` against `x_var = "n_person"`
 
-When you want the simulated conditions to resemble an existing study,
-use substantive knowledge or estimates from that study to choose
-`theta_sd`, `rater_sd`, `criterion_sd`, `score_levels`, and related
-settings before running the design evaluation.
+- criterion `metric = "severityrmse"` against `x_var = "n_person"` when
+  you want aligned recovery error rather than raw location shifts
 
-When `sim_spec` is supplied, the function uses it as the explicit
-data-generating mechanism. This is the recommended route when you want a
-design study to stay close to a previously fitted run while still
-varying the candidate sample sizes or rater-assignment counts. The
-specification supplies the generator, not the analysis settings:
-explicitly match `fit_method`, `model`, `step_facet`, `maxit`, and
-`quad_points` to the intended analysis. The defaults (`JML`, 25
-iterations; seven quadrature points if `MML` is selected) are small
-exploratory settings, not an accuracy recommendation. This helper does
-not automatically inherit anchors, interactions, adaptive integration,
-or optimizer controls from a source fit. If those are essential to the
-analysis, generate data with
-[`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
-and use the intended
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-call in each replicate.
+- rater `metric = "convergencerate"` against
+  `x_var = "raters_per_person"`
 
-Sparse linked simulation specifications and direct
-`assignment = "sparse_linked"` calls are carried into the
-design-evaluation output. The resulting sparse-design columns report
-planned-missingness and rater-link diagnostics (for example design
-density and rater-pair common persons). They are design diagnostics, not
-fit statistics or universal adequacy thresholds.
-
-If that specification also stores a latent-regression population
-generator, each replication carries forward the simulated
-one-row-per-person background data and refits the MML population-model
-branch. This remains a scenario study under explicit assumptions; it is
-not a closed-form predictive distribution for one future administration.
-
-`GPCM` design evaluation is available with caveats. It repeatedly
-generates data from the supplied or fit-derived slope-aware
-specification, refits `GPCM`, and summarizes facet-level operating
-characteristics. The route remains a role-based person x rater-like x
-criterion-like planner: it does not validate diagnostic-screening or
-signal-detection rules, does not provide a fully arbitrary-facet
-planner, and does not replace
-[`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
-for slope-recovery adequacy review.
-
-Recovery metrics are reported only when the generator and fitted model
-target the same facet-parameter contract. In practice this means the
-same `model`, and for `PCM`, the same `step_facet`. When these do not
-align, recovery fields are set to `NA` and the output records the
-reason. Even when these contract checks pass, the recovery summaries
-still assume compatible orientation and anchoring conventions across the
-generator and fitted model.
-
-## Reported metrics
-
-Facet-level simulation results include:
-
-- `Separation` (\\G = \mathrm{SD\_{adj}} / \mathrm{RMSE}\\): how many
-  statistically distinct strata the facet resolves.
-
-- `Reliability` (\\G^2 / (1 + G^2)\\): model-based separation
-  reliability for the facet levels in that fit, not Cronbach's alpha, a
-  G-theory coefficient, or the accuracy of an individual pass/fail
-  decision.
-
-- `Strata` (\\(4G + 1) / 3\\): number of distinguishable groups.
-
-- Mean `Infit` and `Outfit`: average fit mean-squares across elements.
-
-- `MisfitRate`: share of elements with \\\|\mathrm{ZSTD}\| \> 2\\.
-
-- Sparse-design diagnostics when `assignment = "sparse_linked"`:
-  `MeanDesignDensity`, `MeanPlannedMissingRate`, `MeanLinkPersons`,
-  `MeanMinCommonPersonsPerRaterPair`, `MaxZeroCommonRaterPairs`, and
-  `MaxRaterPairsBelowTarget`.
-
-- `SeverityRMSE`: root-mean-square error of recovered parameters vs the
-  known truth **after facet-wise mean alignment**, so that the usual
-  Rasch/MFRM location indeterminacy does not inflate recovery error.
-  This quantity is reported only when the generator and fitted model
-  target the same facet-parameter contract.
-
-- `SeverityBias`: mean signed recovery error after the same alignment;
-  values near zero are expected. This is likewise omitted when the
-  generator/fitted-model contract does not align.
-
-## Interpreting output
-
-Start with `summary(x)$design_summary`, then plot one focal metric at a
-time (for example rater `Separation` or criterion `SeverityRMSE`).
-
-Person separation/reliability describes how well the design
-distinguishes persons under the model. High rater separation/reliability
-instead means that severity differences are distinguishable; it does not
-mean agreement or better calibration. Low rater separation can reflect
-similar severity or inadequate precision. Interpret each facet against
-its purpose rather than maximizing every separation coefficient.
-Recovery RMSE and elapsed time concern accuracy and cost; a low
-misfit-screen rate alone does not establish useful detection, since
-sensitivity and false flags differ.
-
-When choosing among designs, look for the point where increasing
-`n_person` or `raters_per_person` yields diminishing returns in
-separation and RMSE, then compare the actual rating workload. Inspect
-failed-run reasons when convergence is low: iteration limits, weak
-identification, sparse categories and model mismatch require different
-remedies. Increasing sample size alone does not resolve every failure.
-Read Monte Carlo errors and available-result counts alongside the means;
-passing thresholds on simulation means is not a guarantee for a future
-sample.
-
-This is a Monte Carlo design-evaluation helper. It can visualize how
-separation, reliability, strata, RMSE, and fit-screen rates change when
-you vary person, rater, criterion, or assignment counts. For analytic
-generalizability-theory planning, pair observed variance-component
-review from
-[`mfrm_generalizability()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_generalizability.md)
-with D-study projections from
-[`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md).
-The complementary multivariate observed-score route is
-[`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md)
--\>
-[`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md).
-See
-[mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
-for choosing between simulation and G-theory: neither is automatically
-required by the other, and neither replaces the other's estimand. Read
-`IdentificationStatus`, `GStatus`, and `PhiStatus` before using the
-projected coefficients: boundary or singular mixed-model fits are
-design-identification warnings rather than high-stakes-ready reliability
-evidence.
+- sparse linked `metric = "plannedmissingrate"`, `"mincommonpersons"`,
+  `"zerocommonpairs"`, or `"pairsshorttarget"` to review planned
+  missingness and rater-pair linkage separately from recovery metrics
 
 ## References
 
-The simulation logic follows the general Monte Carlo /
-operating-characteristic framework described by Morris, White, and
-Crowther (2019) and the ADEMP-oriented planning/reporting guidance
-summarized for psychology by Siepe et al. (2024). In `mfrmr`,
-`evaluate_mfrm_design()` is a practical many-facet design-planning
-wrapper rather than a direct reproduction of one published simulation
-study.
+Morris, White, and Crowther (2019) and Siepe et al. (2024) provide the
+Monte Carlo/ADEMP planning and reporting framework. This helper is a
+many-facet application, not a reproduction of one published simulation
+design.
 
 - Morris, T. P., White, I. R., & Crowther, M. J. (2019). *Using
   simulation studies to evaluate statistical methods*. Statistics in
@@ -474,52 +471,14 @@ study.
   research in psychology: A standardized template for planning,
   preregistration, and reporting*. Psychological Methods.
 
-## Saving and resuming simulations
-
-Pass the same `file` and analysis arguments on a subsequent call to
-reuse the completed result without generation or fitting, or to resume
-an interrupted run. The identity includes generator
-inputs/specification, fitting controls, requested replications, seed,
-RNG kind, package R code and native library fingerprints, relevant
-numerical/diagnostic R options, R/platform, numerical libraries and
-dependency versions. Changing `reps` starts a different study; extension
-of an existing study is not supported. `progress` and `parallel` do not
-change the identity. Cached results retain the settings of their
-original run.
-
-Recovery runs and serial design evaluations save after every finished
-trial. Future design evaluations save after a whole design row returns;
-an interrupted row may need to run again. A partially completed
-optimizer is not resumed. Fit failures are completed attempts and are
-saved too; resuming does not redraw failures until they succeed. An
-unexpected error outside the recorded fit/diagnostic failure routes
-stops the call and leaves earlier checkpoints available. These files do
-not change the interpretation or eligibility of the underlying estimates
-and intervals.
-
-Per-trial seeds are allocated before computation and retained even when
-`seed = NULL`; an explicit seed is preferable for reproducing a new run
-in another file. Each trial controls generation, fitting and diagnostics
-with its own seed. A matching environment is required for automatic
-reuse; recorded seeds alone do not guarantee identical floating-point
-results on other systems. Keep the analysis script and software
-environment as well.
-
-After completion, `readRDS(file)` returns the usual result object with
-an additional `reproducibility` component containing identity, inputs
-and trial seeds. Before completion the file is an internal checkpoint;
-resume through the same public function. Writes use a temporary file in
-the same directory and checked replacement. A `.lock` directory prevents
-concurrent writers. Normal returns/errors release it; after process
-termination, remove a remaining lock only after checking that no writer
-is active. Unreadable files are never silently reused or replaced by
-`"on_change"`.
-
 ## See also
 
 [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md),
-[summary.mfrm_design_evaluation](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_design_evaluation.md),
-[plot.mfrm_design_evaluation](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_design_evaluation.md)
+summary.mfrm_design_evaluation, plot.mfrm_design_evaluation
+
+`evaluate_mfrm_design()`, plot.mfrm_design_evaluation
+
+`evaluate_mfrm_design()`, summary.mfrm_design_evaluation
 
 ## Examples
 
@@ -537,5 +496,31 @@ s_eval <- summary(sim_eval)
 s_eval$design_summary[, c("Facet", "n_person", "MeanSeparation", "MeanSeverityRMSE")]
 p_eval <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 names(p_eval)
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_design_evaluation", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-design.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sim_eval <- saved$result
+s <- summary(sim_eval)
+s$overview
+head(s$design_summary)
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("plot.mfrm_design_evaluation", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-design.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sim_eval <- saved$result
+p <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
+pd <- plot_data(p)
+c(pd$facet, pd$x_var)
 } # }
 ```

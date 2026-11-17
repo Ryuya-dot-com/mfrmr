@@ -22,6 +22,9 @@ sample_mfrm_plausible_values(
   seed = NULL,
   scoring_prior = NULL
 )
+
+# S3 method for class 'mfrm_plausible_values'
+summary(object, digits = 3, ...)
 ```
 
 ## Arguments
@@ -122,6 +125,18 @@ sample_mfrm_plausible_values(
   both the original and the supplied prior; checks of the fitted
   calibration and numerical accuracy are unchanged.
 
+- object:
+
+  Output from `sample_mfrm_plausible_values()`.
+
+- digits:
+
+  Number of digits used in numeric summaries.
+
+- ...:
+
+  Reserved for generic compatibility.
+
 ## Value
 
 An object of class `mfrm_plausible_values` with components:
@@ -143,6 +158,22 @@ An object of class `mfrm_plausible_values` with components:
 
 - `person_data`: cleaned or supplied person-level background data used
   for latent-regression scoring; `NULL` otherwise
+
+- `settings`: scoring settings
+
+- `notes`: interpretation notes
+
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_plausible_values` with:
+
+- `draw_summary`: empirical summaries of the sampled values by person
+
+- `estimates`: companion posterior EAP summaries
+
+- `row_review`: row-preparation review
+
+- `population_review`: optional person-level omission review for
+  latent-regression scoring
 
 - `settings`: scoring settings
 
@@ -174,6 +205,9 @@ layered on top of the fitted joint-likelihood calibration, whereas the
 latent-regression `MML` path uses the fitted one-dimensional conditional
 normal population model. Neither path should be described as a full
 many-facet plausible-values system with all ConQuest-style extensions.
+
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize
+approximate plausible values from posterior scoring
 
 ## Interpreting output
 
@@ -227,16 +261,21 @@ Fit-level export and replay helpers check the source calibration and
 scoring status of supplied draws. Recreate older results from the saved
 fit and original scoring inputs/settings, including the seed. This
 repeats drawing values without refitting the calibration. See
-[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md).
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md).
 
 ## See also
 
 [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md),
-[summary.mfrm_plausible_values](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_plausible_values.md)
+summary.mfrm_plausible_values
+
+`sample_mfrm_plausible_values()`
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("sample_mfrm_plausible_values", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_core")
 keep_people <- unique(toy$Person)[1:18]
 toy_fit <- fit_mfrm(
@@ -254,14 +293,26 @@ new_units <- data.frame(
 )
 pv <- sample_mfrm_plausible_values(toy_fit, new_units, n_draws = 3, seed = 1)
 summary(pv)$draw_summary
-#> # A tibble: 1 × 23
-#>   Person Draws MeanValue SDValue LowerValue UpperValue IntervalLevel
-#>   <chr>  <dbl>     <dbl>   <dbl>      <dbl>      <dbl>         <dbl>
-#> 1 NEW01      3    -0.373   0.323      -0.56          0          0.95
-#> # ℹ 16 more variables: DrawSummaryBasis <chr>, CalibrationMethod <chr>,
-#> #   Prior <chr>, PriorMean <dbl>, PriorSD <dbl>, PriorSource <chr>,
-#> #   RetainedPrior <chr>, RetainedPriorMean <dbl>, RetainedPriorSD <dbl>,
-#> #   WeightedLikelihood <lgl>, UncertaintyBasis <chr>, ScoringAlgorithm <chr>,
-#> #   SourceScoringReady <lgl>, ScoreIntegrationReady <lgl>, EstimateUse <chr>,
-#> #   DrawBasis <chr>
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_plausible_values", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+toy <- load_mfrmr_data("example_core")
+keep_people <- unique(toy$Person)[1:18]
+toy_fit <- fit_mfrm(
+  toy[toy$Person %in% keep_people, , drop = FALSE],
+  "Person", c("Rater", "Criterion"), "Score",
+  method = "MML",
+  quad_points = 5,
+  maxit = 30
+)
+new_units <- data.frame(
+  Person = c("NEW01", "NEW01"),
+  Rater = unique(toy$Rater)[1],
+  Criterion = unique(toy$Criterion)[1:2],
+  Score = c(2, 3)
+)
+pv <- sample_mfrm_plausible_values(toy_fit, new_units, n_draws = 3, seed = 1)
+summary(pv)
+} # }
 ```

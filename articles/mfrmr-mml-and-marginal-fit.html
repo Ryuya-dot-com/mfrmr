@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,32 +33,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>MML estimation and marginal-fit diagnostics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-mml-and-marginal-fit.Rmd" class="external-link"><code>vignettes/mfrmr-mml-and-marginal-fit.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/vignettes/articles/mfrmr-mml-and-marginal-fit.Rmd" class="external-link"><code>vignettes/articles/mfrmr-mml-and-marginal-fit.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-mml-and-marginal-fit.Rmd</code></div>
     </div>
 
@@ -92,8 +86,8 @@
 <p>This vignette explains how <code>mfrmr</code> fits ordinary RSM/PCM
 and one-family GPCM models by <code>MML</code>, and how to interpret
 their marginal diagnostic screens. The two-family GPCM route has
-separate engines and response diagnostics, noted below and in
-<code><a href="../articles/mfrmr-gpcm-scope.html">vignette("mfrmr-gpcm-scope", package = "mfrmr")</a></code>.</p>
+separate engines and response diagnostics, noted below and in <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html">GPCM
+scope and current limitations</a>.</p>
 <div class="section level2">
 <h2 id="why-the-mml-calculations-are-shared">Why the MML calculations are shared<a class="anchor" aria-label="anchor" href="#why-the-mml-calculations-are-shared"></a>
 </h2>
@@ -187,19 +181,20 @@ engine</td>
 </tr>
 <tr class="odd">
 <td>Experimental two-family GPCM</td>
-<td>Explicit <code>mml_engine = "em"</code>, with fixed or adaptive
-integration and fixed N(0,1)</td>
-<td>Direct/hybrid are unavailable; there are exactly two non-Person
-facets</td>
+<td>Fixed-grid <code>mml_engine = "em"</code> or adaptive
+<code>mml_engine = "direct"</code>, with fixed N(0,1)</td>
+<td>Two slope owners among declared fixed additive facets; explicit
+step/location/reference roles; adaptive EM and hybrid are
+unavailable</td>
 </tr>
 </tbody>
 </table>
 <p>The model, marginal-likelihood estimand and numerical algorithm are
 separate choices. Numerical convergence does not qualify interval
 coverage or resolve all nonlinear identification/boundary questions.
-Consult <code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> for output-specific
-restrictions. The ordinary <code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code> screens below do
-not apply to two-family GPCM; use its
+Consult <code>mfrmr_output_guide("gpcm_capabilities")</code> for
+output-specific restrictions. The ordinary <code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code>
+screens below do not apply to two-family GPCM; use its
 <code><a href="../reference/mfrm_response_diagnostics.html">mfrm_response_diagnostics()</a></code> route, which has no calibrated
 fit cutoffs.</p>
 </div>
@@ -280,7 +275,7 @@ population covariate. Unsupported settings are rejected rather than
 silently fitted as a different model.</p>
 <p>The wide input uses safe person and covariate aliases. Retain
 <code>person_map</code>, <code>covariate_map</code> and the bundle so
-<code><a href="../reference/normalize_conquest_overlap_exports.html">normalize_conquest_overlap_exports()</a></code> can restore original
+<code><a href="../reference/build_conquest_overlap_bundle.html">normalize_conquest_overlap_exports()</a></code> can restore original
 person IDs. The maps and original tables mean the bundle is not
 deidentified. IDs are read as text, preserving leading zeros and long
 numeric identifiers. Generic table import no longer guesses that a
@@ -535,10 +530,10 @@ design forecasting, and diagnostic/signal-detection design screening are
 available only as caveated <code>GPCM</code> surfaces with explicit
 boundary output. Full FACETS-style score-side contract review, posterior
 predictive checks, and MCMC estimation are not available for
-<code>GPCM</code>. See <code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> for the
-status and recommended alternative for each helper group. These
-permissions do not extend to the experimental two-family route described
-above.</p>
+<code>GPCM</code>. See
+<code>mfrmr_output_guide("gpcm_capabilities")</code> for the status and
+recommended alternative for each helper group. These permissions do not
+extend to the experimental two-family route described above.</p>
 </div>
 <div class="section level2">
 <h2 id="gpcm-model-and-inference-limits">GPCM model and inference limits<a class="anchor" aria-label="anchor" href="#gpcm-model-and-inference-limits"></a>
@@ -561,8 +556,9 @@ pointwise MML relative-slope intervals. MML IC ranking uses separate
 checks of the retained likelihood, gradient and positive unregularized
 information, alongside the common comparison requirements. Score-side
 and reporting helpers that rely on Rasch-family semantics also retain
-their documented limits. See <code><a href="../articles/mfrmr-gpcm-scope.html">vignette("mfrmr-gpcm-scope")</a></code>
-for the output-specific distinctions.</p>
+their documented limits. See <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html">GPCM
+scope and current limitations</a> for the output-specific
+distinctions.</p>
 </div>
 <div class="section level2">
 <h2 id="equal-weighting-as-a-model-choice-principle">Equal weighting as a model-choice principle<a class="anchor" aria-label="anchor" href="#equal-weighting-as-a-model-choice-principle"></a>

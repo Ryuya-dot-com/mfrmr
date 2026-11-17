@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,31 +15,25 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -53,7 +47,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an MFRM network review</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>build_mfrm_network_review.Rd</code></div>
     </div>
 
@@ -78,7 +72,10 @@
 <span>  score <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  basis <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"observed"</span>, <span class="st">"planned"</span><span class="op">)</span>,</span>
 <span>  weight <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_network_review'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, digits <span class="op">=</span> <span class="fl">3</span>, top_n <span class="op">=</span> <span class="fl">10</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -118,7 +115,9 @@ passed to <code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a>
 
 
 <dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
-<dd><p>Number of central/cut/bridge rows to retain in the review.</p></dd>
+<dd><p>For <code>build_mfrm_network_review()</code>: Number of central/cut/bridge rows to retain in the review.</p>
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: Number of central/cut/bridge rows to keep in the compact
+summary.</p></dd>
 
 
 <dt id="arg-include-graph">include_graph<a class="anchor" aria-label="anchor" href="#arg-include-graph"></a></dt>
@@ -152,6 +151,18 @@ Planned networks require <code>score = NULL</code> and <code>weight = NULL</code
 and zero-weight rows do not create edges. Edge weights still count rows,
 not sampling weights. Negative or infinite weights are refused.</p></dd>
 
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>Output from <code>build_mfrm_network_review()</code>.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Number of digits for printed numeric values.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Reserved for generic compatibility.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -163,21 +174,18 @@ not sampling weights. Negative or infinite weights are refused.</p></dd>
 <li><p><code>peer_review</code>: optional peer-review assignment and linkage diagnostics</p></li>
 <li><p><code>reporting_map</code>: boundary between MFRM, design network, sparse design,
 peer-review design, and rater-effect network routes</p></li>
-</ul></div>
+</ul><p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: An object of class <code>summary.mfrm_network_review</code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><code>build_mfrm_network_review()</code> is a synthesis layer over
-<code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a></code>. It keeps the measurement model and graph view in
-separate sections: MFRM estimates remain the measurement results, while the
-network review summarizes co-observation connectedness and linking
-vulnerability in the observed design. This is especially useful for sparse
-or incomplete rater-mediated designs, where common-person links, connected
-subsets, articulation points, and bridge edges can explain why an otherwise
-estimable model depends on fragile design links.</p>
-<p>The review status is deliberately conservative and descriptive. It is not a
-literature-derived adequacy cut point for fit, separation, recovery, or
-rater quality. Use it to decide which design links, anchors, or additional
-observations need inspection before making common-scale claims.</p>
+    <p>Combines MFRM estimates with a separate review of assignment connectivity
+and fragile links. See "Reading the graph" in <code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a></code> for
+components, articulation points, bridges and betweenness.</p>
+<p>Review status is a conservative descriptive screen, not a literature-derived
+cutoff for fit, separation, recovery or rater quality. Use it to prioritize
+inspection of links, anchors or additional observations before common-scale
+claims; the graph does not replace the measurement results.</p>
+<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: Summarize an MFRM network review</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -198,27 +206,27 @@ NCME presentation.</p></li>
     <h2 id="before-fitting">Before fitting<a class="anchor" aria-label="anchor" href="#before-fitting"></a></h2>
 
 
-<p>Supply <code>data</code>, <code>person</code>, <code>facets</code> and <code>score</code> instead of <code>fit</code>. Known levels
-from incomplete/unscored rows remain as nodes, including isolates. A planned
-assignment roster can be examined with <code>basis = "planned"</code>; absent assignments
-cannot be reconstructed from an observed-only file. <code>row_usage</code> records each
-input row's inclusion and first exclusion reason. With a fit, only its retained
-rows are available here; review original missing assignments before fitting.
-No prefit result supplies an identification audit or model-readiness decision.
-<code>settings$is_disjoint</code> describes the source graph, even when subset filters
-omit components; compare source/retained subset counts. Filters do not establish
-linking. See <code><a href="../articles/mfrmr-networks-and-reporting.html">vignette("mfrmr-networks-and-reporting")</a></code> for a panel example.</p>
+<p>Supply <code>data</code>, <code>person</code>, <code>facets</code> and <code>score</code> for a prefit graph, or use
+<code>basis = "planned"</code> for an assignment roster. Observed-only data cannot reveal
+absent assignments; a fit supplies only retained rows. Graph connectivity is
+not full model identification, and filtering does not establish linking.
+See "Before fitting" in <code><a href="subset_connectivity_report.html">subset_connectivity_report()</a></code> for unscored/isolate
+rows, the inclusion audit and source versus retained component counts.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a></code>, <code><a href="subset_connectivity_report.html">subset_connectivity_report()</a></code>,
 <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code>, <code><a href="rater_network_analysis.html">rater_network_analysis()</a></code>,
-<code><a href="rater_halo_network_analysis.html">rater_halo_network_analysis()</a></code></p></div>
+<code><a href="rater_halo_network_analysis.html">rater_halo_network_analysis()</a></code></p>
+<p><code>build_mfrm_network_review()</code></p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Saved synthetic JML/RSM analysis of example_core.</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Optional workflow; run the example explicitly as shown below.</span></span></span>
+<span class="r-in"><span><span class="co"># example("build_mfrm_network_review", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Saved synthetic JML/RSM analysis of example_core.</span></span></span>
 <span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
 <span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"core-jml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
@@ -227,57 +235,7 @@ linking. See <code><a href="../articles/mfrmr-networks-and-reporting.html">vigne
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="build_summary_table_bundle.html">build_summary_table_bundle</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Summary Table Bundle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  Title         SourceClass                SummaryClass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Network Review Tables mfrm_network_review summary.mfrm_network_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  TablesAvailable TablesReturned AppendixPreset</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               12             10           none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Table index</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Table Rows Cols                        Role</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           overview    1   14     network_review_overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    network_summary    1   16      network_design_summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      facet_summary    3    8 network_facet_vulnerability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  top_central_nodes   10   11       network_central_nodes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      top_cut_nodes    0   11  network_articulation_nodes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   top_bridge_edges    0   12        network_bridge_edges</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      reporting_map    5    4               reporting_map</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            caveats    1    3            analysis_caveats</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              notes    4    1        interpretation_notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           settings    5    2             review_settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                         Description</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                          Front-door connectedness and design-network review status.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    Graph-level connectedness, density, articulation-point, and bridge-edge metrics.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                           Facet-level aggregation of node centrality and design-link vulnerability.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                  Highest-betweenness design-network nodes for follow-up inspection.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                              Articulation-point rows whose removal would fragment the design graph.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                            Bridge-edge rows indicating one-link dependencies between graph regions.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Map separating MFRM measurement, design-network review, sparse-design review, peer-review design, and rater-effect network routes.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                              Interpretation caveats for network-design diagnostics.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                             Compact interpretation notes for network-design review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                    Settings and provenance recorded by build_mfrm_network_review().</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Plot index</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Table PlotReady NumericColumns               DefaultPlotTypes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           overview      TRUE              9 numeric_profile, first_numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    network_summary      TRUE             14 numeric_profile, first_numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      facet_summary      TRUE              7 numeric_profile, first_numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  top_central_nodes      TRUE              7 numeric_profile, first_numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      top_cut_nodes     FALSE              7                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   top_bridge_edges     FALSE              5                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      reporting_map     FALSE              0                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            caveats     FALSE              0                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              notes     FALSE              0                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           settings     FALSE              0                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - MFRM estimates remain the measurement-model results; network rows summarize observed design links.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Articulation points and bridge edges identify levels or links whose removal would fragment the co-observation graph.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Sparse-design review rows, when supplied, report planned-missingness and rater-link diagnostics rather than recovery or fit-readiness decisions.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Peer-review design rows, when supplied, report assignment structure and reviewer linkage rather than reviewer quality or fairness.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - 2 empty table(s) were omitted from `tables`; use `include_empty = TRUE` to retain them.</span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

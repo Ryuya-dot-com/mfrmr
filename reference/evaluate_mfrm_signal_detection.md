@@ -1,7 +1,9 @@
-# Evaluate DIF power and bias-screening behavior under known simulated signals
+# Evaluate differential-functioning contrasts and bias screens in simulations
 
-Evaluate DIF power and bias-screening behavior under known simulated
-signals
+Evaluate differential-functioning contrasts and bias screens in
+simulations
+
+Summarize a DIF/bias screening simulation
 
 ## Usage
 
@@ -45,6 +47,21 @@ evaluate_mfrm_signal_detection(
   bias_p_cut = 0.05,
   bias_abs_t = 2,
   seed = NULL
+)
+
+# S3 method for class 'mfrm_signal_detection'
+summary(object, digits = 3, ...)
+
+# S3 method for class 'mfrm_signal_detection'
+plot(
+  x,
+  signal = c("dif", "bias"),
+  metric = c("power", "false_positive", "estimate", "screen_rate",
+    "screen_false_positive"),
+  x_var = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
+  group_var = NULL,
+  draw = TRUE,
+  ...
 )
 ```
 
@@ -202,7 +219,7 @@ evaluate_mfrm_signal_detection(
   Optional output from
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
   or
-  [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md)
+  [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
   used as the base data-generating mechanism. When supplied, the design
   grid still varies `n_person`, `n_rater`, `n_criterion`, and
   `raters_per_person`, but latent spread, thresholds, and other
@@ -260,6 +277,53 @@ evaluate_mfrm_signal_detection(
   before execution and cover generation, fitting and diagnostics. A
   supplied seed preserves the caller's RNG state.
 
+- object:
+
+  Output from `evaluate_mfrm_signal_detection()`.
+
+- digits:
+
+  Number of digits used when printing numeric summaries.
+
+- ...:
+
+  Reserved for generic compatibility.
+
+- x:
+
+  Output from `evaluate_mfrm_signal_detection()`.
+
+- signal:
+
+  Whether to plot DIF or bias screening results.
+
+- metric:
+
+  Metric to plot. For `signal = "bias"`, prefer `metric = "screen_rate"`
+  for the screening hit rate. The older `metric = "power"` spelling is
+  retained as a backwards-compatible alias that maps to
+  `BiasScreenRate`. `"estimate"` plots the signed reference-minus-focal
+  DIF contrast or the additive bias shift. A refit contrast requires
+  common-scale linking.
+
+- x_var:
+
+  Design variable used on the x-axis. When `x` was generated from a
+  `sim_spec` with custom public facet names, the corresponding aliases
+  (for example `n_judge`, `n_task`, `judge_per_person`) are also
+  accepted. Role keywords (`person`, `rater`, `criterion`, `assignment`)
+  are accepted as an abstraction over the current two-facet schema.
+
+- group_var:
+
+  Optional design variable used for separate lines. The same alias rules
+  as `x_var` apply.
+
+- draw:
+
+  If `TRUE`, print the `ggplot` object; otherwise return the `ggplot`
+  object invisibly without drawing.
+
 ## Value
 
 An object of class `mfrm_signal_detection` with:
@@ -299,188 +363,112 @@ An object of class `mfrm_signal_detection` with:
 
 - `notes`: short interpretation notes
 
+An object of class `summary.mfrm_signal_detection` with:
+
+- `overview`: run-level overview
+
+- `detection_summary`: full-precision rates by design, with
+  design-variable aliases when applicable. `DIF*`, `DIFClass*` and
+  `BiasScreen*` columns retain `Planned`, `Available`, `Unavailable`,
+  `Positive`, `MCLower`, `MCUpper`, `AllTrialsLower` and
+  `AllTrialsUpper` for target outcomes. Monte Carlo bounds are exact 95%
+  binomial intervals conditional on availability; all-trial bounds
+  describe unresolved outcomes, not confidence intervals.
+  `DIFNonTarget*`/`BiasNonTarget*` retain summed `Planned` and
+  `Available` cell counts and `AvailableReps`, the number of trials
+  contributing a non-target proportion. Those proportions receive equal
+  weight across contributing trials, even with unequal cell counts;
+  their MCSE is the sample SD of the proportions divided by the square
+  root of `AvailableReps`. `TargetContrastAvailable`,
+  `TargetContrastAbsAvailable`, `TargetBiasAvailable` and
+  `TargetBiasTAvailable` are denominators for the corresponding finite
+  point summaries. All-missing means return `NA`.
+
+- `ademp`: simulation-study metadata carried forward from the original
+  object
+
+- `facet_names`: public facet labels carried from the simulation
+  specification
+
+- `design_variable_aliases`: accepted public aliases for design
+  variables
+
+- `design_descriptor`: role-based design-variable metadata
+
+- `planning_scope`: explicit record of the current planning contract
+
+- `planning_constraints`: explicit record of mutable/locked design
+  variables
+
+- `planning_schema`: structured planning metadata
+
+- `structural_design_review`: deterministic structural review of the
+  named-facet design grid; it reports design bookkeeping rather than
+  signal-detection performance
+
+- `gpcm_boundary`: `GPCM` caveat row when present
+
+- `notes`: short interpretation notes, including the bias-side screening
+  caveat
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object whose reusable payload (accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md))
+includes resolved canonical variables (`x_var`, `group_var`) together
+with public labels (`x_label`, `group_label`),
+`design_variable_aliases`, `design_descriptor`, `planning_scope`,
+`planning_constraints`, `planning_schema`, `display_metric`, and
+`interpretation_note` so callers can label bias-side plots as screening
+summaries rather than formal power/error-rate displays. `summary_table`
+retains per-design means and availability denominators; `notes` retains
+interpretation and legacy-result restrictions. If additional design
+variables are collapsed, each plotted point is an equally weighted
+average of available design-level means, not a pooled trial/cell rate.
+
 ## Details
 
-This function performs Monte Carlo design screening for two related
-tasks: DIF detection via
-[`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
-and interaction-bias screening via
-[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
-
-For each design condition (combination of `n_person`, `n_rater`,
-`n_criterion`, `raters_per_person`), the function:
-
-1.  Generates synthetic data with
-    [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
-
-2.  Injects one known Group \\\times\\ Criterion DIF effect
-    (`dif_effect` added to the focal group's linear predictor on the
-    target criterion)
-
-3.  Injects one known Rater \\\times\\ Criterion interaction-bias effect
-    (`bias_effect` added to the linear predictor)
-
-4.  Fits and diagnoses the MFRM
-
-5.  Runs
-    [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
-    and
-    [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-
-6.  Records whether the injected signals were detected or
-    screen-positive
-
-`GPCM` runs preserve the current package constraint
-`slope_facet == step_facet` within the generator and fitted model. The
-resulting DIF and bias rates are slope-aware screening summaries, not
-formal inferential power, alpha calibration, operational scoring, or
-arbitrary-facet planning evidence.
-
-**Detection criteria**: A DIF signal is counted as "detected" when the
-target contrast has \\p \le\\ `dif_p_cut` **and**, when an absolute
-contrast cutoff is in force, \\\|\mathrm{Contrast}\| \ge\\
-`dif_abs_cut`. For `dif_method = "refit"`, `dif_abs_cut` is interpreted
-on the logit scale. For `dif_method = "residual"`, DIF detection,
-classification and false-positive rates are unavailable (`NA`). Residual
-contrasts remain available as descriptive summaries; a missing test is
-not counted as a non-detection.
-
-Bias results are different:
-[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-reports `t` and `Prob.` as screening metrics rather than formal
-inferential quantities. Here, a bias cell is counted as
-**screen-positive** only when those screening metrics are available and
-satisfy
-
-\\p \le\\ `bias_p_cut` **and** \\\|t\| \ge\\ `bias_abs_t`. If either
-required metric is unavailable, the result is `NA`, not `FALSE`. A
-descriptive-only DIF classification likewise supplies no classification
-detection outcome, even when the contrast itself is available.
-
-**Power** is the proportion of replications in which the target signal
-was flagged when a comparison statistic is available. Refit DIF rates
-are conditional screening rates, not calibrated inferential power. For
-bias, the primary summary is `BiasScreenRate`, a screening hit rate
-rather than formal inferential power. With a zero generating effect, the
-target rate describes null flags rather than sensitivity. The historical
-column name `DIFPower` is retained for compatibility.
-
-**False-positive rate** first counts flags among available non-target
-cells within each replication, then averages those proportions across
-replications. `DIFNonTargetPlanned`/`DIFNonTargetAvailable` and the
-corresponding `BiasNonTarget*` columns retain cell denominators. These
-rates are neither calibrated inferential alpha levels nor probabilities
-of any false flag in a family. For per-target and any-target rates with
-a complete planned roster, use
-[`mfrm_screening_performance()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_performance.md).
-
-Target summaries retain planned, available, unavailable and positive
-counts, exact 95% binomial Monte Carlo bounds, and bounds obtained by
-assigning every unresolved outcome negative or positive. Rates and Monte
-Carlo intervals condition on available outcomes; unresolved-outcome
-bounds are not confidence intervals. These uncertainty calculations
-describe independent simulation replications, not uncertainty about the
-quality of a real rater.
-
-**Direction and scale**: `DIFContrast` is always reference minus focal,
-regardless of the order returned by
-[`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md).
-For `"residual"`, this is a difference in mean observed-minus-expected
-scores. For `"refit"`, it is a difference in facet locations; means and
-absolute means require documented common-scale comparability. Raw
-differences with unavailable linking remain in `results` with
-`DIFContrastComparable = FALSE` and `DIFScaleLinkStatus`. Neither
-contrast is automatically an estimate of the injected `dif_effect`: the
-residual contrast uses score units, and refit locations use difficulty/
-severity orientation and estimated linking anchors. `BiasSize` is a
-fitted additive shift relative to the estimated baseline, not recovery
-against a known unchanged baseline. See
+Injects Group \\\times\\ Criterion `dif_effect` and Rater \\\times\\
+Criterion `bias_effect` shifts (multiplied by slope in `GPCM` with
+`slope_facet == step_facet`) and evaluates
 [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
 and
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-for the conditioning assumptions.
+across replications. Because current residual and refit
+[`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
+routes return descriptive contrasts (`DIFContrast` as reference minus
+focal; `DIFContrastComparable` flags common-scale linking) without
+calibrated p-values, DIF detection and false-positive rates remain `NA`.
 
-**Failures and replay**: failures of generation, fitting or diagnostics
-keep their planned trial rows, with `Seed`, `ErrorStage` and `Error` in
-`rep_overview`. Missing outcomes do not count as negative screens.
-Generation failure gives unavailable observation/category counts, not
-zero observations. `ElapsedSec` includes generation and all analysis
-stages. Each later trial keeps its own seed even if an earlier trial
-fails. Save the returned object with
-[`saveRDS()`](https://rdrr.io/r/base/readRDS.html) and preserve the call
-and software environment; this helper does not provide the
-file/checkpoint arguments of
-[`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md).
-Seeds alone do not guarantee identical results across
-software/platforms.
+Bias cells count as screen-positive (`BiasScreenRate`) when both
+screening metrics are available and satisfy \\p \le\\ `bias_p_cut` and
+\\\|t\| \ge\\ `bias_abs_t` (`NA` when unavailable, never coerced to
+`FALSE`). Non-target false-positive averages (`BiasNonTarget*`) and
+exact binomial Monte Carlo plus unresolved-outcome bounds describe
+simulation replications rather than calibrated familywise alpha; see
+[`mfrm_screening_performance()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_performance.md)
+for complete-roster per-target and any-target summaries.
 
-Rebuild older saved summaries and plots from the original evaluation to
-correct unavailable target outcomes and retain full-precision summaries.
-Older runs lack non-target availability counts, so their non-target
-rates are withheld: recovering those cell rates requires rerunning the
-simulation. Runs lacking contrast-direction metadata cannot supply
-signed means; old refit runs lacking comparability metadata cannot
-supply absolute means either. Original stored results and otherwise
-available screening outcomes remain. This function evaluates
-Group-by-Criterion DIF and Rater-by-Criterion bias; it does not evaluate
-general Rater-by-Group differential rater functioning.
-
-**Default effect sizes**: `dif_effect = 0.6` and `bias_effect = -0.8`
-are example shifts of the latent linear predictor, not validated
-small/moderate/ large effect thresholds. Choose values of practical
-concern for the intended assessment. GPCM slopes multiply these shifts
-on the adjacent-logit scale; response-probability changes also depend on
-ability and category thresholds.
-
-This is again a **parametric simulation study**. The function does not
-estimate a new design directly from one observed dataset. Instead, it
-evaluates detection or screening behavior under user-specified design
-conditions and known injected signals.
-
-If you want to approximate a real study, choose the design grid and
-simulation settings so that they reflect the empirical context of
-interest. For example, you may set `n_person`, `n_rater`, `n_criterion`,
-`raters_per_person`, and the latent-spread arguments to values motivated
-by an existing assessment program, then study how operating
-characteristics change as those design settings vary.
-
-When `sim_spec` is supplied, the function uses it as the explicit
-data-generating mechanism for the latent spreads, thresholds, and
-assignment archetype, while still injecting the requested target DIF and
-bias effects for each design condition.
-
-If that specification also stores a latent-regression population
-generator, each replication carries simulated one-row-per-person
-background data into the MML fit. This remains a screening-oriented
-Monte Carlo study; it is not a person-level posterior prediction for one
-observed sample.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot
+DIF/bias screening simulation results
 
 ## References
 
-The simulation logic follows the general Monte Carlo /
-operating-characteristic framework described by Morris, White, and
-Crowther (2019) and the ADEMP-oriented planning/reporting guidance
-summarized for psychology by Siepe et al. (2024). In `mfrmr`,
-`evaluate_mfrm_signal_detection()` is a many-facet screening helper
-specialized to DIF and interaction-bias use cases; it is not a direct
-implementation of one published many-facet Rasch simulation design.
-
-- Morris, T. P., White, I. R., & Crowther, M. J. (2019). *Using
-  simulation studies to evaluate statistical methods*. Statistics in
-  Medicine, 38(11), 2074-2102.
-
-- Siepe, B. S., Bartos, F., Morris, T. P., Boulesteix, A.-L., Heck, D.
-  W., & Pawel, S. (2024). *Simulation studies for methodological
-  research in psychology: A standardized template for planning,
-  preregistration, and reporting*. Psychological Methods.
+See "References" in
+[`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md)
+for the Monte Carlo/ADEMP framework (Morris et al., 2019; Siepe et al.,
+2024). This helper applies that framework to DIF and interaction-bias
+screens; it does not reproduce a published many-facet simulation design.
 
 ## See also
 
 [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md),
 [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md),
 [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
-[`analyze_dif()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
+
+`evaluate_mfrm_signal_detection()`, plot.mfrm_signal_detection
+
+`evaluate_mfrm_signal_detection()`, summary.mfrm_signal_detection
 
 ## Examples
 
@@ -497,5 +485,27 @@ sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
 ))
 s_sig <- summary(sig_eval)
 s_sig$overview
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_signal_detection", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-signal-detection.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sig_eval <- saved$result
+summary(sig_eval)
+} # }
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_signal_detection", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-signal-detection.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sig_eval <- saved$result
+plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALSE)
 } # }
 ```

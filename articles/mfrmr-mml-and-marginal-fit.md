@@ -3,8 +3,8 @@
 This vignette explains how `mfrmr` fits ordinary RSM/PCM and one-family
 GPCM models by `MML`, and how to interpret their marginal diagnostic
 screens. The two-family GPCM route has separate engines and response
-diagnostics, noted below and in
-[`vignette("mfrmr-gpcm-scope", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md).
+diagnostics, noted below and in [GPCM scope and current
+limitations](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html).
 
 ## Why the MML calculations are shared
 
@@ -71,14 +71,13 @@ differs:
 |----|----|----|
 | Ordinary RSM/PCM | Direct optimization with fixed or adaptive quadrature; EM/hybrid for the supported fixed-integration, fixed-population additive models | Adaptive integration uses direct optimization without checkpoints |
 | One-family GPCM | Direct optimization with fixed or adaptive quadrature | EM/hybrid requests fall back to direct; inspect the recorded engine |
-| Experimental two-family GPCM | Explicit `mml_engine = "em"`, with fixed or adaptive integration and fixed N(0,1) | Direct/hybrid are unavailable; there are exactly two non-Person facets |
+| Experimental two-family GPCM | Fixed-grid `mml_engine = "em"` or adaptive `mml_engine = "direct"`, with fixed N(0,1) | Two slope owners among declared fixed additive facets; explicit step/location/reference roles; adaptive EM and hybrid are unavailable |
 
 The model, marginal-likelihood estimand and numerical algorithm are
 separate choices. Numerical convergence does not qualify interval
 coverage or resolve all nonlinear identification/boundary questions.
-Consult
-[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-for output-specific restrictions. The ordinary
+Consult `mfrmr_output_guide("gpcm_capabilities")` for output-specific
+restrictions. The ordinary
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
 screens below do not apply to two-family GPCM; use its
 [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
@@ -166,7 +165,7 @@ than silently fitted as a different model.
 
 The wide input uses safe person and covariate aliases. Retain
 `person_map`, `covariate_map` and the bundle so
-[`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md)
+[`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_conquest_overlap_bundle.md)
 can restore original person IDs. The maps and original tables mean the
 bundle is not deidentified. IDs are read as text, preserving leading
 zeros and long numeric identifiers. Generic table import no longer
@@ -409,10 +408,9 @@ and diagnostic/signal-detection design screening are available only as
 caveated `GPCM` surfaces with explicit boundary output. Full
 FACETS-style score-side contract review, posterior predictive checks,
 and MCMC estimation are not available for `GPCM`. See
-[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-for the status and recommended alternative for each helper group. These
-permissions do not extend to the experimental two-family route described
-above.
+`mfrmr_output_guide("gpcm_capabilities")` for the status and recommended
+alternative for each helper group. These permissions do not extend to
+the experimental two-family route described above.
 
 ## GPCM model and inference limits
 
@@ -435,8 +433,8 @@ MML relative-slope intervals. MML IC ranking uses separate checks of the
 retained likelihood, gradient and positive unregularized information,
 alongside the common comparison requirements. Score-side and reporting
 helpers that rely on Rasch-family semantics also retain their documented
-limits. See
-[`vignette("mfrmr-gpcm-scope")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md)
+limits. See [GPCM scope and current
+limitations](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html)
 for the output-specific distinctions.
 
 ## Equal weighting as a model-choice principle

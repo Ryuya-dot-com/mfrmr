@@ -27,6 +27,12 @@ response_time_review(
   slow_rate_warn = 0.25,
   min_n_flag = 3L
 )
+
+# S3 method for class 'mfrm_response_time_review'
+summary(object, top_n = 10L, ...)
+
+# S3 method for class 'mfrm_response_time_review'
+plot(x, type = c("distribution", "person", "facet", "score"), ...)
 ```
 
 ## Arguments
@@ -93,11 +99,46 @@ response_time_review(
 
   Minimum group size before rapid/slow rates are flagged; default 3.
 
+- object:
+
+  An object returned by `response_time_review()`.
+
+- top_n:
+
+  Number of top groups to retain in summary previews.
+
+- ...:
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): `facet`
+  selects a facet for `type = "facet"`; `top_n = 25` limits person/facet
+  rows; `preset` selects appearance; `draw = FALSE` returns plot data
+  without drawing. The returned payload retains thresholds, overview and
+  interpretation notes. These descriptive views do not fit a joint
+  response-time model.
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): Unused.
+
+- x:
+
+  A `mfrm_response_time_review` object.
+
+- type:
+
+  Plot type: `"distribution"`, `"person"`, `"facet"`, or `"score"`.
+
 ## Value
 
 An object of class `mfrm_response_time_review`, a list with `overview`,
 `thresholds`, `observations`, `person_summary`, `facet_summary`,
 `score_summary`, `flags`, and `notes`.
+
+For [`summary()`](https://rdrr.io/r/base/summary.html): A list of class
+`summary.mfrm_response_time_review`.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object (reusable tables and notes via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)).
+These are descriptive timing summaries.
 
 ## Details
 
@@ -117,12 +158,21 @@ are tied. `FlaggedGroups` counts distinct groups, while `Flags` counts
 rapid/slow rule crossings. Recreate older reviews from the original
 timing data before summary or plotting; no MFRM refit is needed.
 
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize a
+response-time review
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot a
+saved response-time review
+
 ## See also
 
-[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_response_time_review.md),
+plot(x),
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md),
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md)
+
+`response_time_review()`,
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 
 ## Examples
 

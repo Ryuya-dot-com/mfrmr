@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,31 +15,25 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -53,7 +47,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Analyze rater agreement, disagreement, and severity-direction networks</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>rater_network_analysis.Rd</code></div>
     </div>
 
@@ -163,7 +157,7 @@ returned bundle.</p></dd>
 
 <dt id="arg-alpha-level-alpha-categories">alpha_level, alpha_categories<a class="anchor" aria-label="anchor" href="#arg-alpha-level-alpha-categories"></a></dt>
 <dd><p>Measurement level and category order for
-<code>KrippendorffAlpha</code>; see <code><a href="krippendorff_alpha_table.html">krippendorff_alpha_table()</a></code>. The default interval
+<code>KrippendorffAlpha</code>; see <code><a href="interrater_agreement_table.html">krippendorff_alpha_table()</a></code>. The default interval
 level follows Lamprianou (2025); ordinal alpha requires a declared order.</p></dd>
 
 </dl></div>
@@ -195,20 +189,14 @@ output used for agreement statistics.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This function implements a package-native rater-effect network view
-complementary to MFRM output. It follows the pairwise-network logic used in
-Lamprianou's rater-effect network work: nodes are raters, edges summarize
-pairwise relationships among raters in shared scoring contexts, and directed
-disagreement edges can be interpreted as relative leniency/severity
-indicators. These network summaries are descriptive diagnostics, not Rasch
-logit estimates and not formal fit statistics. They describe score
-relationships conditional on observed shared contexts; they do not test the
-assignment graph's connectedness or establish a common measurement scale.</p>
-<p><code>Degree</code>, <code>Strength</code>, <code>Betweenness</code>, and <code>Closeness</code> are graph-theoretic
-quantities computed after <code>min_pair_n</code>, <code>min_weight</code>, and (for directed
-networks) <code>score_diff_tolerance</code> are applied. They are not rating-scale
-central tendency or restriction-of-range measures. Use
-<code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a></code> for assignment/co-observation connectedness.</p>
+    <p>Nodes are raters; edges summarize agreement or directional disagreement in
+shared observed scoring contexts. These descriptive score relationships are
+not Rasch logit estimates or formal fit statistics. They do not establish
+assignment connectedness or a common scale; use <code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a></code>
+to inspect assignments.</p>
+<p><code>Degree</code>, <code>Strength</code>, <code>Betweenness</code> and <code>Closeness</code> describe the graph after
+<code>min_pair_n</code>, <code>min_weight</code> and, for directed networks, <code>score_diff_tolerance</code>
+filtering. They are not rating-scale central tendency or range restriction.</p>
 <p>For <code>mode = "severity_direction"</code>, outgoing strength means the rater more
 often assigned higher scores than comparison raters; incoming strength means
 comparison raters more often assigned higher scores than this rater. The
@@ -274,8 +262,8 @@ rubric overlap; <code><a href="rater_halo_network_analysis.html">rater_halo_netw
 bootstrap contrasts instead of an independent-edge test.
 Use <code><a href="mfrm_residual_network.html">mfrm_residual_network()</a></code> for residual associations and
 <code><a href="subset_connectivity_report.html">subset_connectivity_report()</a></code> for prefit assignment links. See
-<code><a href="../articles/mfrmr-networks-and-reporting.html">vignette("mfrmr-networks-and-reporting")</a></code> for complementary views, paired
-overlap, direction and interpretation. <code><a href="plot.mfrm_bundle.html">plot.mfrm_bundle()</a></code> documents custom
+<a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html">online networks and reporting guide</a> for complementary views, paired
+overlap, direction and interpretation. <code><a href="build_summary_table_bundle.html">plot.mfrm_bundle()</a></code> documents custom
 layouts and display-only filters, which do not change the computed network.</p>
     </div>
     <div class="section level2">
@@ -290,7 +278,7 @@ effects in language assessment: A comparison of ChatGPT vs human raters.
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="interrater_agreement_table.html">interrater_agreement_table()</a></code>, <a href="plot.mfrm_fit.html">plot(x, type = "agreement")</a>,
-<code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a></code>, <code><a href="plot.mfrm_bundle.html">plot.mfrm_bundle()</a></code></p></div>
+<code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a></code>, <code><a href="build_summary_table_bundle.html">plot.mfrm_bundle()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -300,7 +288,8 @@ effects in language assessment: A comparison of ChatGPT vs human raters.
 <span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"core-jml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"igraph"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">rn</span> <span class="op">&lt;-</span> <span class="fu">rater_network_analysis</span><span class="op">(</span><span class="va">fit</span>, mode <span class="op">=</span> <span class="st">"severity_direction"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">rn</span> <span class="op">&lt;-</span> <span class="fu">rater_network_analysis</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">diagnostics</span>,</span></span>
+<span class="r-in"><span>    mode <span class="op">=</span> <span class="st">"severity_direction"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">rn</span><span class="op">$</span><span class="va">summary</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">rn</span><span class="op">$</span><span class="va">node_metrics</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">rn</span>, type <span class="op">=</span> <span class="st">"severity"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>

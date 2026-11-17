@@ -41,12 +41,12 @@ plot(
 
 ## Arguments
 
-- fit :
+- fit:
 
   A native GPCM MML fit. Two-family fits supply provisional point curves
   only; intervals and covariance adjustments are unavailable.
 
-- newdata :
+- newdata:
 
   Data frame with each fitted non-Person facet and a numeric `Theta`
   column. Each row is one rating context at one known ability value. Use
@@ -54,42 +54,71 @@ plot(
   Previously unobserved combinations of known levels are allowed and
   labelled in the returned `contexts` table.
 
-- type :
+- type:
 
   `"probability"` (one row per category) or `"information"` (one row per
   supplied context/ability). Information is per rating, not a sum over
   all observed exposures as in
   [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md).
 
-- method, clusters, adjust, level, simultaneous :
+- method:
 
   As in
   [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md).
 
-- object, x :
+- clusters:
+
+  As in
+  [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md).
+
+- adjust:
+
+  As in
+  [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md).
+
+- level:
+
+  As in
+  [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md).
+
+- simultaneous:
+
+  As in
+  [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md).
+
+- object:
 
   A saved `mfrm_curve_intervals` result.
 
-- ... :
+- ...:
 
   Unused.
 
-- title, subtitle :
+- x:
+
+  A saved `mfrm_curve_intervals` result.
+
+- title:
 
   Optional returned text; NULL removes it. Figure text is not drawn. Use
   `plot_data(p, "title")` and `plot_data(p, "notes")`.
 
-- palette :
+- subtitle:
+
+  Optional returned text; NULL removes it. Figure text is not drawn. Use
+  `plot_data(p, "title")` and `plot_data(p, "notes")`.
+
+- palette:
 
   Optional vector of colors, one per category/series. Line types
   distinguish series in addition to color. The default is colorblind
   friendly.
 
-- draw :
+- draw:
 
   Draw the ggplot immediately? Default TRUE; FALSE returns it only.
 
-- caption :
+- caption:
 
   Optional returned caption. If omitted, unavailable intervals are
   counted and explained, along with unobserved combinations of fitted
@@ -105,8 +134,8 @@ A `mfrm_curve_intervals` list with `table`, `settings`, and the exact
 unobserved combination of fitted facet levels (`ObservedContext`). This
 records the retained rating design, not statistical identification or
 interval reliability. Its plot method returns a ggplot with the plotted
-data available in `plot$data`; descriptions and cautions are available
-through `plot_data(p, "notes")`, separately from the figure.
+data available through `plot_data(p)`; descriptions and cautions are
+available through `plot_data(p, "notes")`, separately from the figure.
 [`summary()`](https://rdrr.io/r/base/summary.html) returns settings, the
 complete interval table, contexts, numerical cautions and the anchor
 note without recalculating information.
@@ -169,24 +198,33 @@ described above.
 ## Two slope families
 
 For a two-family fit, the two component slopes are multiplied in each
-specified context. The shared evaluator returns provisional fitted
-values, including after numerical nonconvergence; it does not certify
-their reliability. `SE`, `Lower` and `Upper` remain missing and
-`CIEligible` is false. Printing and default plot text identify this
-scope without claiming nominal intervals. Sandwich and simultaneous
-adjustments are not available. The existing plot, saved-data, report and
-export routes preserve these values and missing intervals. A slope value
-of one is not a rater-quality threshold.
+specified context. Curves reuse the saved fitted values and may also be
+available for a review-only or nonconverged fit. Inspect the source's
+parameter/readiness status: curve availability does not promote those
+values to qualified point estimates. `SE`, `Lower` and `Upper` remain
+missing and `CIEligible` is false. Printing and default plot text
+identify this scope without claiming nominal intervals. Sandwich and
+simultaneous adjustments are not available. The existing plot,
+saved-data, report and export routes preserve these values and missing
+intervals. A slope value of one is not a rater-quality threshold.
+Endpoint limiting fits also return point-only curves: original score
+labels are restored, and the removed endpoint is shown with probability
+zero and `CategoryBasis = "zero_probability_limit"`. This is a
+boundary-model value, not evidence that the category cannot occur.
+Ordinary intervals are unavailable.
 
 ## See also
 
 [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md),
-[`category_curves_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_curves_report.md),
+[mfrm_report_category_curves](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
 [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("mfrm_curve_intervals", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # How do category probabilities vary with ability in one rating context?
 ratings <- load_mfrmr_data("example_core")
 # Reuse the synthetic GPCM fit; estimation uses 61 quadrature points.
@@ -201,49 +239,12 @@ curves <- mfrm_curve_intervals(fit, grid)
 # At ability zero, read the probabilities of the original score categories.
 subset(curves$table, Theta == 0,
   select = c(Category, Estimate, Lower, Upper, CIEligible, InferenceReview))
-#>    Category   Estimate      Lower      Upper CIEligible
-#> 41        1 0.04778286 0.02327997 0.09555277       TRUE
-#> 42        2 0.26687841 0.20042971 0.34582863       TRUE
-#> 43        3 0.44514863 0.35944194 0.53424704       TRUE
-#> 44        4 0.24019010 0.17198450 0.32483327       TRUE
-#>                                                                                                        InferenceReview
-#> 41 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. 
-#> 42 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. 
-#> 43 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. 
-#> 44 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. 
 plot(curves)
-
 # Ribbons describe calibration uncertainty at fixed ability, not uncertainty
 # about an individual's ability. They are pointwise, not simultaneous bands.
 file <- tempfile(fileext = ".rds")
 saveRDS(curves, file) # Keep the complete result, including context and notes
 saved <- readRDS(file)
 saved$settings
-#> $type
-#> [1] "probability"
-#> 
-#> $method
-#> [1] "model"
-#> 
-#> $clusters
-#> NULL
-#> 
-#> $adjust
-#> [1] FALSE
-#> 
-#> $level
-#> [1] 0.95
-#> 
-#> $simultaneous
-#> [1] "none"
-#> 
-#> $facets
-#> [1] "Rater"     "Criterion"
-#> 
-#> $point_only
-#> [1] FALSE
-#> 
-#> $target
-#> [1] "Calibration uncertainty at fixed native-scale ability and rating context"
-#> 
+} # }
 ```

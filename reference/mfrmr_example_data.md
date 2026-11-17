@@ -101,10 +101,9 @@ demonstrate non-null findings.
 
 - Use `mfrmr_example_bias` for
   [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
-  [`analyze_dif()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
   [`dif_interaction_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/dif_interaction_table.md),
   [plot(x, type =
-  "heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_dif.md),
+  "heatmap")](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md),
   and
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
 

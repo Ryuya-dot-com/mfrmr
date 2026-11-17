@@ -1,9 +1,10 @@
-# Read FACETS results for standalone visualization
+# Read FACETS results for standalone visualization and fit review
 
 Import reported element measures, fit statistics and optional Graphfile
-curves without refitting a model. Use
-[`plot.mfrm_facets_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_facets_results.md)
-to inspect the saved results.
+curves without refitting a model. Use `plot.mfrm_facets_results()` to
+inspect the saved results, or pass the returned object to
+[`facets_fit_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_fit_review.md)
+for external FACETS-vs-mfrmr fit comparison.
 
 ## Usage
 
@@ -37,14 +38,30 @@ as.data.frame(
   ...,
   component = c("elements", "curves")
 )
+
+# S3 method for class 'mfrm_facets_results'
+plot(
+  x,
+  type = c("measure", "wright", "fit", "infit_outfit", "ccc", "expected"),
+  facets = NULL,
+  statistic = c("infit", "outfit"),
+  draw = TRUE,
+  show_title = FALSE,
+  show_notes = FALSE,
+  show_legend = TRUE,
+  scales = NULL,
+  label_map = NULL,
+  ...
+)
 ```
 
 ## Arguments
 
 - file:
 
-  Scorefile input as described below, or `NULL` when only `graph_file`
-  is supplied.
+  Scorefile input (a vector of file paths, a directory containing
+  `score.N.txt` files, or a data frame), or `NULL` when only
+  `graph_file` is supplied.
 
 - facet:
 
@@ -69,7 +86,13 @@ as.data.frame(
   rejected. Use named delimited columns for those layouts and for
   non-ASCII labels.
 
-- facet_col, level_col:
+- facet_col:
+
+  Optional explicit column names for delimited tables when automatic
+  detection is not sufficient. For score files, `level_col` can override
+  the column immediately before `F-Number`.
+
+- level_col:
 
   Optional explicit column names for delimited tables when automatic
   detection is not sufficient. For score files, `level_col` can override
@@ -108,7 +131,7 @@ as.data.frame(
   identity is recorded, but the reader cannot certify that the exports
   belong together.
 
-- object, x:
+- object:
 
   A saved `mfrm_facets_results` object.
 
@@ -120,6 +143,13 @@ as.data.frame(
 
   `"elements"` (default) or `"curves"` for Graphfile results.
 
+- x:
+
+  Saved output of `read_facets_results()`.
+
+  Also for [`summary()`](https://rdrr.io/r/base/summary.html): A saved
+  `mfrm_facets_results` object.
+
 - row.names:
 
   Optional row names for the exported data frame.
@@ -128,6 +158,60 @@ as.data.frame(
 
   Passed to
   [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html).
+
+- type:
+
+  `"measure"` for labelled element locations by facet; `"wright"` for
+  points by facet on one measure axis; `"fit"` for measure versus mean
+  square; or `"infit_outfit"` for Infit versus Outfit. Wright maps
+  require the explicit `common_scale = TRUE` declaration at import.
+  `"ccc"` plots Graphfile category probabilities and `"expected"` plots
+  Graphfile expected scores, each in separate scale panels.
+
+- facets:
+
+  Optional character vector of facet names to display.
+
+- statistic:
+
+  `"infit"` or `"outfit"`, used for `type = "fit"`.
+
+- draw:
+
+  Logical; print the `ggplot` figure when true.
+
+- show_title:
+
+  Logical; show title/interpretation notes in the plot, off by default.
+  Notes always remain in the returned data.
+
+- show_notes:
+
+  Logical; show title/interpretation notes in the plot, off by default.
+  Notes always remain in the returned data.
+
+- show_legend:
+
+  Logical; display the source-status symbol key or category curve key
+  below the panels. Defaults to true.
+
+- scales:
+
+  Optional vector of Graphfile scale numbers for curve plots. Facet
+  selectors do not apply to curves, and scale selectors do not apply to
+  element plots.
+
+- label_map:
+
+  Optional data frame with character columns `Facet`, `ElementID` and
+  `DisplayLabel` for element plots. Keys must match exported IDs in `x`,
+  including any leading zeros, and must be unique within a facet. A
+  partial map is allowed; unmapped rows retain their source labels.
+  Mapping is checked against the full result before `facets` selection.
+  This changes display labels only, not source labels or element
+  identity. Curve plots do not accept this map. Only `type = "measure"`
+  draws element labels; the other element plots retain them in returned
+  plot data.
 
 ## Value
 
@@ -142,12 +226,24 @@ system; its units remain unknown rather than inheriting element
 `measure_units`. [`summary()`](https://rdrr.io/r/base/summary.html)
 counts available rows by facet. `AnchorFlagged` counts
 `SourceStatus = "anchored"` rows, not individually fixed parameters; it
-replaces the earlier candidate's ambiguous `Anchored` summary column.
+replaces the ambiguous `Anchored` summary column in older saved results.
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) exports
 the element table. Use `component = "curves"` with either method to
 inspect Graphfile curves. Use
 [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) to retain the full
 object.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly
+a `ggplot` object whose underlying payload (accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md))
+retains every selected row in `plot_data` with `X`, `Y`, `Available` and
+`Reason`; element plots also have `Symbol`, and curves have `Series`,
+`Color`, `LineType` and `Segment`. Unavailable numerical coordinates are
+`NA` (measure plots retain label positions). Original reported
+values/status remain in the same rows. `notes`, `sources` and `metadata`
+describe interpretation and origin. `label_map` retains a supplied
+display map. Filtering and display labels do not change the saved
+results.
 
 ## Details
 
@@ -155,20 +251,18 @@ Each file must describe one analysis. Supply a vector of facet files or
 a directory containing `score.N.txt` files, or a named delimited table.
 Comma, tab and semicolon Scorefiles retain their native facet heading
 lines. Numeric facet numbers default to `Facet1`, `Facet2`, etc.; supply
-`facet_map` to name them. A data frame is also accepted. The supported
-layouts follow
-[`read_facets_fit_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/read_facets_fit_table.md).
-Use named delimited files for non-ASCII labels; fixed-width imports
-require ASCII because byte and character widths can differ. For text
-output from FACETS, request `Scorefile=score.txt`, `Heading lines=Yes`,
-`QM=Double` and `CSV=Commas`, `Tabs` or `Semicolons`. Check that the
-files were actually generated; a zero process exit code alone does not
-establish a successful export. Specify the encoding of the existing
-file; the reader does not configure FACETS input encoding or repair
-labels already lost during export. Element IDs are preserved separately
-from display labels. Where no ID was exported, the label is the key;
-ambiguous duplicate keys are rejected, not averaged. Unknown source
-status remains unknown.
+`facet_map` to name them. A data frame is also accepted. Validated
+fixed-field Scorefile layouts and named delimited tables are supported;
+use named delimited files for non-ASCII labels because byte and
+character widths can differ. For text output from FACETS, request
+`Scorefile=score.txt`, `Heading lines=Yes`, `QM=Double` and
+`CSV=Commas`, `Tabs` or `Semicolons`. Check that the files were actually
+generated; a zero process exit code alone does not establish a
+successful export. Specify the encoding of the existing file; the reader
+does not configure FACETS input encoding or repair labels already lost
+during export. Element IDs are preserved separately from display labels.
+Where no ID was exported, the label is the key; ambiguous duplicate keys
+are rejected, not averaged. Unknown source status remains unknown.
 
 FACETS status codes distinguish anchor-flagged, estimated, extreme,
 no-data, unmeasurable and single-observation elements. `StatusRaw = "1"`
@@ -221,6 +315,51 @@ flagged, with available individual probabilities retained. Nothing is
 renormalized, smoothed or extrapolated. These are source-consistency
 checks, not validation of the fitted model.
 
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot
+imported FACETS measures, fit statistics and curves
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Each
+measure panel has its own axis; the Wright display shares one measure
+axis without centering, reversing signs or inventing category
+thresholds. Filled circles denote estimated elements, squares
+direct/group anchor flags, downward/upward triangles extreme low/high
+source status, diamonds single observations and open circles unknown
+source status. The symbol key is in `plot_data(p, "legend")`. A square
+marks source Status 1; it does not identify an individually fixed
+measure. Group-anchor members can vary around a fixed group mean, and
+`GroupRaw` may instead be a reporting group. Check the original
+specification or Table 7 to distinguish direct and group anchors.
+Returned notes retain this limitation, also when plotting imports saved
+by an earlier version; the source object is not changed. Recreate saved
+plot-data objects with
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) to obtain the
+revised legend and notes. Duplicate display labels are disambiguated by
+element key in measure plots. Use `label_map` to display local names
+while retaining the original FACETS labels and IDs. It cannot recover
+names lost in an export; supply the known correspondence yourself.
+Character preservation and font rendering are separate: choose an
+installed font with the required glyphs on the graphics device. With
+Cairo support,
+[`grDevices::png()`](https://rdrr.io/r/grDevices/png.html) with
+`type = "cairo"` and
+[`grDevices::cairo_pdf()`](https://rdrr.io/r/grDevices/cairo.html)
+accept a `family` such as `"Meiryo"` on Windows when installed. Font
+availability differs across systems. The plot does not install fonts or
+change global font settings. Infit/Outfit reference lines at one
+describe the model reference, not a fairness or acceptability cutoff. No
+confidence bars are calculated. Extreme/single-observation fit
+placeholders and unmeasurable/no-data elements are retained as
+unavailable. A plot can have no usable points; inspect its row-level
+reasons. Unknown status is displayed explicitly, not certified.
+Graphfile curves join consecutive exported coordinates with straight
+line segments; this does not calculate new model predictions. Missing or
+invalid rows break the lines. The legend identifies source category
+labels. Expected scores and category labels retain their source coding.
+Each panel has its own reported Measure axis, independent of
+element-plot scale declarations. For curves, `plot_data(p, "data")`
+holds the raw Graphfile table, `plot_data(p, "plot_data")` the selected
+long rows, and `plot_data(p, "diagnostics")` the probability-sum checks.
+
 ## References
 
 FACETS Scorefile specification:
@@ -259,4 +398,28 @@ result$table[, c("Facet", "ElementID", "Label", "Estimate", "SourceStatus")]
 #> 10 Task   2         2       0      anchored    
 #> 11 Task   3         3       0.8    anchored    
 plot(result, type = "measure", facets = "Rater", draw = FALSE)
+# Optional workflow; run the example explicitly as shown below.
+# example("plot.mfrm_facets_results", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+path <- system.file("extdata", "facets-example", package = "mfrmr")
+result <- read_facets_results(path,
+  facet_map = c("Person", "Rater", "Task"), source_version = "4.5.0")
+plot(result, type = "measure", facets = "Person")
+p <- plot(result, type = "infit_outfit", facets = "Rater", draw = FALSE)
+plot_data(p, "plot_data")[, c("Label", "X", "Y", "Available", "Reason")]
+plot_data(p, "notes")
+# Display names are joined by facet and exported ID, never by row order.
+labels <- data.frame(Facet = "Person", ElementID = c("1", "2"),
+  DisplayLabel = c("Participant A", "Participant B"))
+labelled <- plot(result, facets = "Person", label_map = labels, draw = FALSE)
+plot_data(labelled, "plot_data")[, c("ElementID", "Label", "DisplayLabel")]
+# A separate synthetic PCM analysis, with four exported scale curves.
+graph_path <- system.file("extdata", "facets-graph-example", "graph.txt",
+  package = "mfrmr")
+curves <- read_facets_results(graph_file = graph_path, source_version = "4.5.0")
+summary(curves, component = "curves")
+plot(curves, type = "ccc", scales = 1)
+expected <- plot_data(curves, "plot_data", type = "expected", scales = 1)
+head(expected[, c("Scale", "Measure", "Value", "Available")])
+} # }
 ```

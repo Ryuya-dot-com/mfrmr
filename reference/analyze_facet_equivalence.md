@@ -13,6 +13,9 @@ analyze_facet_equivalence(
   ci_level = 0.95,
   conf_level = NULL
 )
+
+# S3 method for class 'mfrm_facet_equivalence'
+plot(x, ...)
 ```
 
 ## Arguments
@@ -56,9 +59,25 @@ analyze_facet_equivalence(
   Deprecated alias for `ci_level`; when supplied it takes precedence and
   emits a lifecycle deprecation warning.
 
+- x:
+
+  A result from `analyze_facet_equivalence()`.
+
+- ...:
+
+  Use `type = "forest"` (default) for deviations and intervals or
+  `type = "rope"` for normal confidence-distribution mass.
+  `draw = FALSE` returns the data without drawing (default: `TRUE`).
+
 ## Value
 
 A named list with class `mfrm_facet_equivalence`.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object carrying the equivalence plot payload and inference
+restrictions accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+Grand-mean proximity does not establish pairwise equivalence.
 
 ## Details
 
@@ -94,6 +113,16 @@ Bayesian posterior probability or a separate equivalence decision.
 The former BIC/Bayes-factor heuristic is unavailable: a Wald statistic
 is not a fitted likelihood comparison. For compatibility, `BF01` is `NA`
 and `BF01Label` states why no value is supplied.
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot a
+saved facet-equivalence analysis
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): When an
+interval cannot be represented at the requested numeric precision, the
+forest retains its estimate as a grey point without a whisker. Inspect
+`plot_data(p)$data$DeviationCIReason` and `plot_data(p)$note` for the
+reason. This does not change the pairwise TOST decision stored in the
+analysis.
 
 ## What this analysis means
 
@@ -132,6 +161,12 @@ differences, SEs and intervals. A negative result can reflect
 imprecision or a material difference. `chi_square` addresses exact
 equality, while `rope` and `forest` describe proximity to the facet
 mean.
+
+Both plots describe grand-mean proximity. Colors in the forest plot
+indicate whether the deviation interval is inside, outside, or overlaps
+the practical region. Neither plot establishes pairwise equivalence or a
+Bayesian probability. Read the pairwise TOST results for pair-specific
+conclusions.
 
 ## How to read the main outputs
 
@@ -179,9 +214,7 @@ bound to obtain a desired decision.
 
 3.  Read `summary` and `pairwise`.
 
-4.  Use [plot(x, type =
-    "facet_equivalence")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
-    for descriptive grand-mean proximity.
+4.  Use plot(eq, type = "forest") for descriptive grand-mean proximity.
 
 ## Output
 
@@ -190,6 +223,16 @@ A bundle with `summary`, `chi_square`, `pairwise`, `rope`, `forest`, and
 must be recomputed before using
 [`summary()`](https://rdrr.io/r/base/summary.html),
 [`print()`](https://rdrr.io/r/base/print.html), or plotting.
+
+## Plot types
+
+- `"forest"` shows each level's deviation from the equally weighted
+  facet mean, with covariance-aware deviation intervals and the
+  practical region around zero. The raw marginal measure intervals
+  remain in the data table.
+
+- `"rope"` shows the normal confidence-distribution mass within that
+  region.
 
 ## References
 
@@ -200,10 +243,11 @@ Biopharmaceutics, 15*(6), 657-680.
 
 ## See also
 
-[`facets_chisq_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_chisq_table.md),
+[`facets_chisq_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_fit_review.md),
 [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md),
-[plot(x, type =
-"facet_equivalence")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+plot(eq, type = "forest")
+
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 
 ## Examples
 

@@ -169,152 +169,31 @@ A bundle of class `mfrm_halo_network` containing:
 
 ## Details
 
-`rater_halo_network_analysis()` reshapes rating data so that each
-rater-by-criterion combination is a node. Edges are correlations between
-those node score vectors across shared contexts. Edges connecting two
-nodes from the same rater but different criteria are labelled `"halo"`;
-all other retained edges are labelled `"non_halo"`.
+Correlates weight-averaged observed context scores across
+rater-by-criterion nodes (`halo` = same-rater cross-criterion;
+`non_halo` = between-rater). `MeanHaloWeight`, `MeanNonHaloWeight`, and
+signed `halo_contrast` use all pairs meeting `min_pair_n` before `alpha`
+/ `min_abs_weight` / `positive_only` graph filters (`MeanRetained*`
+describes the filtered graph; inspect `MeanSignedHaloWeight` and
+`ReviewStatus` / `ReviewReason`).
 
-This response-profile network does not evaluate assignment connectedness
-or establish a common scale. Its degree, strength, betweenness, and
-closeness columns are graph-theoretic centrality summaries after
-adjusted-p, `min_abs_weight`, and sign filters are applied.
+Pairwise `PValue` / `PAdjusted` require `"Person"` in `context_facets`
+with no repeated Persons (`PValueStatus` explains `NA`, and `Welch*`
+columns remain `NA` because edges share observations). Optional
+`bootstrap` resamples whole Person clusters across the fixed
+`contrast_pairs` set, withholding percentile bounds if any required pair
+correlation is undefined (`bootstrap_draws`). Observed-score networks
+screen association rather than fitting latent halo mixture models (Jin &
+Chiu, 2022; Jin & Eckes, 2025).
 
-Per-rater `ReviewStatus` combines same-rater cross-criterion mean
-weight, incident non-halo comparison weight, and the number of retained
-halo edges. A `"warning"` means these criteria converge strongly enough
-to prioritize follow-up; `"review"` means at least one screening
-criterion is elevated. Neither label is a causal halo diagnosis, and the
-default review thresholds are package conventions rather than validated
-decision rules. Strong negative same-rater correlations are anomalous
-but are not evidence of a positive halo pattern; consult signed
-correlations in `pair_metrics` and `MeanSignedHaloWeight`.
+## Related network methods
 
-The key descriptive comparison is the distribution of halo-edge weights
-versus non-halo-edge weights. A larger halo-edge distribution is
-consistent with a halo pattern, but this function deliberately reports
-it as a screening diagnostic. `MeanHaloWeight` and `MeanNonHaloWeight`
-use all finite absolute correlations meeting `min_pair_n`, before
-adjusted-p, `min_abs_weight`, and sign filtering; the corresponding
-`MeanRetained*` columns describe the filtered graph. Candidate and
-unavailable pair counts accompany these available-pair means. An
-incomplete comparison cannot receive an unqualified no-flag assessment.
-
-`WelchT`, `WelchDF` and `WelchP` remain as unavailable compatibility
-columns. The correlations share observations, raters and nodes; an
-independent-sample test of their difference is not supplied. Pairwise
-correlation tail areas screen association under their sampling
-assumptions, not halo itself. For each pair, these tail areas require
-`"Person"` in `context_facets` and no repeated Person among its shared
-contexts. Otherwise the correlation is retained but `PValue` and
-`PAdjusted` are unavailable. `N` counts shared contexts, `Persons`
-counts distinct Persons when traceable, and `PValueStatus` explains
-availability. Repeating a Person across tasks does not create
-independent observations. No clustered test is substituted. Distinct
-identifiers do not establish independence: sampling dependence, fixed
-rater effects, ties and small-sample approximations still require
-review. Adjustments use the family of available pairwise p-values;
-counts of available and unavailable p-values are separate from
-correlation counts.
-
-With `alpha < 1`, an unavailable p-value excludes that pair from the
-graph and prevents an unqualified `"ok"` review for an affected rater.
-`alpha = 1` explicitly requests a descriptive graph without the p
-filter; it does not make the missing p-values available or validate
-review flags. No retained graph edges is not evidence that halo is
-absent; retain the originally specified thresholds. Recreate older
-network results from the existing fit and matching diagnostics before
-summary, plotting or export.
-
-The node vectors contain observed scores, not model residuals. Repeated
-ratings within a context-by-node cell are averaged using observation
-weights; the selected correlation then compares available context means.
-Ability differences, related criteria and the assignment design can
-produce strong associations without a causal halo effect. Graph
-centrality here is distinct from middle-category use measured by
-[`rater_centrality_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_centrality_table.md).
-
-A horn effect refers to an unfavorable impression spreading to ratings
-on other criteria. It is not a negative criterion correlation or simply
-high rater severity: lowering several criteria together can still
-produce positive correlations. Neither the sign of a network edge nor
-Infit/Outfit classifies halo versus horn; this function provides no such
-classification.
-
-Direct halo models are a separate approach. Jin and Chiu (2022)
-introduce the MRFM-H mixture Rasch facets model; Jin and Eckes (2025)
-distinguish general-impression and inadequate-criterion-discrimination
-mechanisms in MRFM-H(GI) and MRFM-H(ID). These models are not
-implemented here. Network summaries do not estimate their latent classes
-or adjust measurements for those mechanisms. See
-[mfrmr_methods_reference](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_methods_reference.md)
-for choosing the target.
-
-Save the complete result with
-[`base::saveRDS()`](https://rdrr.io/r/base/readRDS.html) before repeated
-plotting. `plot(out, type = "edge_distribution")` shows available
-absolute correlations before edge filters; `type = "halo_summary"` uses
-the selected `metric`. `type = "matrix"` shows signed retained
-correlations on a -1 to 1 scale, with grey unavailable/filtered entries.
-These views support
-[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md);
-the network view uses base graphics or custom graphics from
-[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
-Plot payloads retain settings, caveats and denominators outside the
-figure. Export the result's data frames with
-[`utils::write.csv()`](https://rdrr.io/r/utils/write.table.html); this
-standalone bundle is not an automatically included section of
-[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md).
-
-## Dependence-aware halo contrasts
-
-`halo_contrast` is the unweighted mean of signed same-rater correlations
-minus the mean of the declared between-rater reference correlations. It
-uses the original available pair set before p-value/sign/edge filtering;
-it may therefore differ from the legacy retained-edge summary. Report
-the actual criterion/overlap mix in `contrast_pairs`; the default
-removes same-criterion reference edges but does not balance unequal
-criterion-pair counts.
-
-Bootstrap resampling draws whole persons, keeping all their contexts,
-raters and criteria together, and recomputes every fixed pair. Repeated
-draws of a person remain repeated observations. This preserves
-within-person dependence and shared-edge sampling dependence. It assumes
-independent, representative person clusters and conditions on the
-observed raters, criteria and pair set. It does not generalize to a
-population of raters, account for clustering of persons within schools,
-establish causal halo, or validate missingness assumptions. A person
-context must be retained for resampling.
-
-`bootstrap_draws` retains every attempted replicate and its status. If
-any required correlation becomes undefined (e.g. constant bootstrap
-scores), the interval is withheld rather than conditioning on successful
-replicates or silently changing the target edge set. Few persons/sparse
-overlap can make this method unsuitable. Percentile intervals are
-approximate, pointwise and not selection-adjusted. No independent-edge
-Welch p-value is supplied.
-
-## Relation to MFRM and published network analyses
-
-These are observed-score relationships, not fitted residuals or adjusted
-Rasch parameters. Lamprianou (2025) compares agreement, directional and
-rater-by-criterion networks with MFRM; a close empirical correspondence
-is not numerical equivalence. Signed alpha edges and weighted
-directional SWS/PUS indices are available here;
-[`fit_rater_network()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_rater_network.md)
-supplies binary ERGM estimation. Halo-edge associations can reflect
-trait covariance and rubric overlap; `rater_halo_network_analysis()`
-offers person-cluster bootstrap contrasts instead of an independent-edge
-test. Use
-[`mfrm_residual_network()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_residual_network.md)
-for residual associations and
-[`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md)
-for prefit assignment links. See
-[`vignette("mfrmr-networks-and-reporting")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.md)
-for complementary views, paired overlap, direction and interpretation.
-[`plot.mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_bundle.md)
-documents custom layouts and display-only filters, which do not change
-the computed network.
+See "Relation to MFRM and published network analyses" in
+[`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md)
+for agreement/directional networks, ERGM, residual associations,
+assignment links and their relation to MFRM. For layouts and
+display-only filters, see "Network display controls" in
+[`plot.mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md).
 
 ## References
 
@@ -342,7 +221,7 @@ Research Methods, 57*, Article 149.
 
 [`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md),
 [`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md),
-[`plot.mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_bundle.md)
+[`plot.mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
 
 ## Examples
 

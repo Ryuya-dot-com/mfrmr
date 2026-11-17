@@ -19,6 +19,12 @@ facet_quality_dashboard(
   bias_abs_size_warn = 0.5,
   bias_p_max = 0.05
 )
+
+# S3 method for class 'mfrm_facet_dashboard'
+summary(object, digits = 3, top_n = 10, ...)
+
+# S3 method for class 'mfrm_facet_dashboard'
+plot(x, y = NULL, type = c("severity", "flags"), ...)
 ```
 
 ## Arguments
@@ -45,17 +51,18 @@ facet_quality_dashboard(
 
   Optional output from
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-  or a named list of such outputs. Non-matching bundles are skipped
-  quietly.
+  or a named list of such outputs. Supplied results must match the
+  fitted analysis; incompatible identity metadata is refused.
 
 - severity_warn:
 
-  Absolute estimate cutoff used to flag severity outliers.
+  Absolute location cutoff relative to the fitted origin, in the fitted
+  location units. It is a screening choice, not a quality standard.
 
 - misfit_warn:
 
   `NULL` (default) uses both bounds returned by
-  [`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_misfit_thresholds.md),
+  [`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_threshold_profiles.md),
   including any session options. A numeric value instead uses that upper
   cutoff and its reciprocal as the lower cutoff; it does not preserve
   the current lower bound. For example, `1.5` selects about 0.67–1.5,
@@ -67,7 +74,7 @@ facet_quality_dashboard(
   near the fitted origin. The default `NULL` disables this flag because
   origin proximity is not evidence that a rater avoids extreme score
   categories. Use
-  [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
+  [mfrm_report_data_quality](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
   for observed category-use screening and
   [`rater_centrality_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_centrality_table.md)
   for model-based indirect centrality indices.
@@ -91,6 +98,44 @@ facet_quality_dashboard(
   Probability cutoff used when deriving bias-row flags from a raw bias
   bundle.
 
+- object:
+
+  Output from `facet_quality_dashboard()`.
+
+- digits:
+
+  Number of digits for printed numeric values.
+
+- top_n:
+
+  Number of flagged levels to preview.
+
+- ...:
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
+  `top_n = 20`, `draw = TRUE`, `palette`, `label_angle = 45`, and
+  `title`. Use either `title` or the compatibility name `main`, never
+  both. `type = "severity"` shows estimates; `type = "flags"` shows the
+  saved screening flags. Fit inputs additionally accept the dashboard's
+  analysis controls documented above; saved dashboard inputs reuse their
+  existing results. Near-zero severity is not evidence of centrality,
+  and screening flags are not automatic exclusion rules.
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): Reserved for
+  generic compatibility.
+
+- x:
+
+  A result from `facet_quality_dashboard()`.
+
+- y:
+
+  Ignored; present for generic compatibility.
+
+- type:
+
+  `"severity"` or `"flags"`.
+
 ## Value
 
 An object of class `mfrm_facet_dashboard` (also inheriting from
@@ -103,18 +148,30 @@ review priority, `flagged` keeps only levels requiring follow-up,
 counts, `settings` stores the resolved thresholds, and `notes` gives
 short interpretation messages about how to read the dashboard.
 
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_facet_dashboard`.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object carrying the dashboard payload and screening cautions
+accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+
 ## Details
 
 The dashboard screens individual facet elements across four
 complementary criteria:
 
 - **Severity**: elements with \\\|\mathrm{Estimate}\| \>\\
-  `severity_warn` logits are flagged as unusually harsh or lenient.
+  `severity_warn` are flagged relative to the fitted origin. This is
+  rater severity only for a rater facet; other facets retain their own
+  meanings. Changing the origin changes this flag without changing fit.
+  For GPCM, interpret native location units together with the fitted
+  discriminations.
 
 - **Misfit**: elements with Infit or Outfit MnSq outside the configured
   heuristic review band are flagged. The band defaults to the package
   pair returned by
-  [`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_misfit_thresholds.md)
+  [`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_threshold_profiles.md)
   (Linacre 0.5-1.5); pass `misfit_warn = 1.5` to keep the older
   symmetric \\\[1/\\`misfit_warn`\\,\\\\`misfit_warn`\\\]\\ form
   (0.67-1.5).
@@ -125,7 +182,7 @@ complementary criteria:
   This only describes proximity to the fitted origin and must not be
   interpreted as central-category use or restriction of range. Those are
   response-pattern questions; see
-  [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
+  [mfrm_report_data_quality](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
   and
   [`rater_centrality_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_centrality_table.md)
   for their distinct descriptive indices.
@@ -136,8 +193,9 @@ complementary criteria:
   are flagged.
 
 A **flag density** score counts how many enabled criteria each element
-triggers. Elements flagged on multiple criteria warrant priority review
-and may motivate training or a documented data-quality review; the
+triggers. The criteria can be dependent; their count is not independent
+evidence of a problem or a calibrated quality score. Review the actual
+ratings and assignment before recommending training or other action; the
 dashboard does not justify automatic row, person, or rater exclusion.
 
 Default thresholds are screening heuristics. Prespecify and justify any
@@ -153,8 +211,14 @@ are retained in `fit_readiness`, `interpretation_status` and `notes`.
 Review overlap with
 [`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md)
 and category use with
-[`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
+[mfrm_report_data_quality](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
 before interpreting between-rater differences.
+
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize a
+facet-quality dashboard
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot a
+saved facet-quality dashboard
 
 ## Output
 
@@ -194,7 +258,7 @@ The returned object is a bundle-like list with class
 Supplied screening results must describe this fitted analysis. Results
 from another fit or older results without identity metadata are refused.
 See
-[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 to recreate them from the saved fit and matching diagnostics without
 refitting the model.
 
@@ -205,49 +269,32 @@ refitting the model.
 [plot(x, type =
 "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
+`facet_quality_dashboard()`, [plot(x, type =
+"facet_dashboard")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
+
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("facet_quality_dashboard", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_core")
 toy <- toy[toy$Person %in% unique(toy$Person)[1:8], ]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dash <- facet_quality_dashboard(fit, diagnostics = diag)
 summary(dash)
-#> mfrmr Facet Quality Dashboard Summary
-#> 
-#> Overview
-#>  Facet FacetSource Levels FlaggedLevels IncompleteLevels BiasSourceBundles
-#>  Rater    inferred      4             0                0                 0
-#> 
-#> Summary
-#>  Facet Levels MeanEstimate   SD MinEstimate MaxEstimate MeanInfit MeanOutfit
-#>  Rater      4            0 0.26      -0.322       0.315     0.997      0.978
-#>  SeverityFlagged MisfitFlagged CentralTendencyFlagged BiasFlagged AnyFlagged
-#>                0             0                      0           0          0
-#>  BiasRows
-#>         0
-#> 
-#> Settings
-#>               Setting    Value
-#>                 facet    Rater
-#>          facet_source inferred
-#>         severity_warn        1
-#>           misfit_warn      1.5
-#>          misfit_lower      0.5
-#>  central_tendency_max       NA
-#>       bias_count_warn        1
-#>       bias_abs_t_warn        2
-#>    bias_abs_size_warn      0.5
-#>            bias_p_max     0.05
-#>   bias_source_bundles        0
-#> 
-#> Notes
-#>  - Flags are screening prompts, not evidence of invalid ratings or grounds for automatic exclusion.
-#>  - Severity is relative to the fitted reference; inspect workload, category use and common ratings before comparing levels.
-#>  - FlagCount counts observed flags only. MissingMetrics identifies unavailable diagnostics; zero flags does not mean all checks passed.
-#>  - BiasCount counts flagged cells in supplied bias results only; zero does not establish absence of bias.
-#>  - Stored fit readiness plus numerical, data-support, connectivity, and stability checks passed. Treat this display as diagnostic evidence, not automatic publication approval.
-#>  - Legacy CentralTendencyFlag is disabled by default because origin proximity does not diagnose observed category avoidance or range restriction.
-#>  - No level-level flags were triggered under the current thresholds.
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_facet_dashboard", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+summary(facet_quality_dashboard(fit, diagnostics = diag))
+} # }
 ```

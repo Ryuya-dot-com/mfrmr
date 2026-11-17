@@ -88,211 +88,23 @@ A named list with:
 
 ## Details
 
-This helper provides category usage/fit statistics and threshold
-summaries for reviewing score-category functioning. `category_table` is
-a global observed-score screen. `owner_category_table` retains every
-declared category within each level of the fitted `step_facet` (or one
-`Common` family for RSM). Its percentages use that owner's total weight.
-These are observed ratings, not independent Persons or planned
-assignments. Missing categories alone cannot establish structural
-absence. `drop_unused` only filters the global display; owner counts
-stay complete.
-
-Typical checks:
-
-- sparse category usage (`Count`, `ExpectedCount`)
-
-- category fit (`Infit`, `Outfit`, `ZStd`)
-
-- threshold ordering within each `StepFacet`
-  (`threshold_table$Estimate`, `GapFromPrev`)
-
-## Interpreting output
-
-Start with `summary`:
-
-- `UsedCategories` close to total `Categories` suggests that most score
-  categories are represented in the observed data.
-
-- very small `MinCategoryCount` indicates potential instability.
-
-- `ThresholdMonotonic = FALSE` indicates disordered thresholds within at
-  least one threshold set. In PCM fits, inspect `threshold_table` by
-  `StepFacet` before drawing scale-wide conclusions.
-
-Then inspect:
-
-- `category_table` for global category-level misfit/sparsity.
-
-- `threshold_table` for adjacent-step gaps and ordering within each
-  `StepFacet`.
-
-Stored `diagnostics$parameter_uncertainty$steps` are matched by
-threshold family and step, with fitted estimates and source identity
-checked. Inspect `SE_Status`, `CIEligible`, `CIUse` and
-`UncertaintySourceStatus`. Missing rows remain unavailable; duplicate or
-mismatched keys are rejected. Older diagnostics without a verifiable
-fitted-calibration identity must be regenerated with
-`diagnose_mfrm(fit, ...)`; model refitting is not required. Reordering
-stored step rows does not change their keyed correspondence. A bare fit
-supplies step points with `SE_Status = "not_supplied"`. A binary
-centered step has no free within-owner contrast
-(`fixed_by_step_centering`).
-
-Native thresholds here are centered step offsets. They are not full
-ability-axis crossings, cumulative-50% boundaries or decision cuts. An
-SE for a step does not include the covariance required for a crossing or
-an adjacent-step difference. Threshold disorder is descriptive, not an
-automatic category-merging rule. Two-family GPCM diagnostics remain
-unsupported by this helper; use its dedicated response/curve routes.
-
-## Typical workflow
-
-1.  Fit model:
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
-
-2.  Build diagnostics:
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
-
-3.  Run `rating_scale_table()` and review
-    [`summary()`](https://rdrr.io/r/base/summary.html).
-
-4.  Use [`plot()`](https://rdrr.io/r/graphics/plot.default.html) to
-    visualize category profile quickly.
-
-Save the complete result to retain owner counts, uncertainty status and
-notes. `plot(out, type = "counts")` shows global counts; use
-`plot(out, type = "thresholds")` for the stored step points. Both
-support
-[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
-without recalculating values. Step figures do not draw stored SEs as
-crossing, gap or curve intervals; inspect `threshold_table` separately.
-
-## Further guidance
-
-For a plot-selection guide and a longer walkthrough, see
-[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
-and
-[`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md).
-
-## Output columns
-
-The `category_table` data.frame contains:
-
-- Category:
-
-  Score category value.
-
-- Count, Percent:
-
-  Observed count and percentage of total. With observation weights,
-  counts are sums of weights, not independent sample sizes. Missing or
-  invalid scores/weights make the usage counts unavailable.
-
-- AvgMeasure, ExpectedMeasure:
-
-  Observed-category mean oriented predictor and its model expectation,
-  weighted by category probabilities across all retained observations.
-
-- AvgPersonMeasure:
-
-  Mean person measure for respondents in this category; distinct from
-  the oriented predictor.
-
-- ExpectedAverage:
-
-  Mean predicted score among observations in this observed category;
-  distinct from the expected generating measure.
-
-- Infit, Outfit:
-
-  Descriptive category residual mean squares.
-
-- InfitZSTD, OutfitZSTD:
-
-  Unavailable (NA); conditioning on the observed category does not
-  preserve a universal unit-residual reference.
-
-- ExpectedCount, DiffCount:
-
-  Expected count and observed-expected difference.
-
-- LowCount:
-
-  Logical; `TRUE` if count is below minimum threshold.
-
-- InfitFlag, OutfitFlag, ZSTDFlag:
-
-  Unavailable (NA). Outcome-selected residual summaries do not have a
-  universal unit baseline or calibrated ZSTD reference. Low-count and
-  generating-measure warnings remain descriptive.
-
-- ZeroCount, UnusedCategoryType, WeaklyIdentified, CategoryCaveat:
-
-  Structured score-support caveats for retained zero-count categories.
-
-The `owner_category_table` contains `StepOwner` (facet name),
-`StepFacet` (level), `Category` (model score), `CategoryLabel` (original
-score), raw and weighted counts (`RawCount`, `Count`), denominators
-(`OwnerRatings`, `OwnerWeight`), `Percent`, `ZeroCount` and
-`UsageStatus`. Status distinguishes observed, not observed, zero weight,
-no exposure and unavailable counts. No-exposure counts are zero but
-percentages are unavailable.
-
-The `threshold_table` data.frame contains:
-
-- Step:
-
-  Step label (e.g., `Step_1`, `Step_2`). Use `LowerCategory` and
-  `UpperCategory` to identify the corresponding score transition.
-
-- Estimate:
-
-  Estimated threshold/step difficulty (logits).
-
-- StepOwner:
-
-  Name of the facet owning the steps, or `Common` for RSM.
-
-- StepFacet:
-
-  Threshold family identifier when the fit uses facet-specific threshold
-  sets.
-
-- SE, CI_Lower, CI_Upper, SE_Status, CIEligible, CIUse:
-
-  Stored step uncertainty and reporting status, without new inference.
-
-- LowerCategoryLabel, UpperCategoryLabel:
-
-  Original scores at the transition.
-
-- LowerOwnerCount, UpperOwnerCount, OwnerSupportStatus:
-
-  Weighted counts and support within this threshold owner, not pooled
-  frequencies.
-
-- GapFromPrev:
-
-  Difference between adjacent numbered thresholds within the same
-  `StepFacet`. Missing thresholds are not skipped to form a gap. No
-  automatic category-merging rule is applied.
-
-- ThresholdMonotonic:
-
-  Logical flag repeated within each threshold set. `FALSE` records at
-  least one decreasing adjacent pair; `TRUE` requires every expected
-  pair to be available and nondecreasing, allowing numerical differences
-  up to `sqrt(.Machine$double.eps)`. Equal thresholds meet this
-  descriptive condition. Otherwise the flag is `NA`. A binary scale has
-  only one threshold and no applicable ordering comparison. This is a
-  statement about point estimates, not a test of category adequacy.
-
-- LowerCategory, UpperCategory, WeaklyIdentified, ThresholdCaveat:
-
-  Adjacent score-category support metadata. Thresholds adjacent to
-  retained zero-count categories are flagged for cautious
-  interpretation.
+Summarizes observed category usage (`category_table`, `category_usage`,
+and per-step-owner `owner_category_table`) and centered step estimates
+(`threshold_table`, `threshold_coverage`). In `category_table`, `Count`
+sums observation weights, `AvgMeasure` / `ExpectedMeasure` summarize the
+oriented predictor (distinct from `AvgPersonMeasure` and
+`ExpectedAverage`), and `InfitZSTD`, `OutfitZSTD`, and fit flags are
+`NA` because conditioning on the observed outcome removes a
+unit-residual reference.
+
+In `threshold_table`, stored `diagnostics$parameter_uncertainty$steps`
+are keyed by `StepOwner`, `StepFacet`, and `Step` (`SE_Status`,
+`CIEligible`, `CIUse`); `GapFromPrev` reports adjacent differences
+without skipping missing steps, and `ThresholdMonotonic` checks
+nondecreasing point estimates within `sqrt(.Machine$double.eps)` (`NA`
+for binary scales or missing pairs). Step SEs describe centered step
+offsets, not curve crossings or adjacent gaps, and threshold disorder is
+descriptive rather than an automatic merging rule.
 
 ## References
 
@@ -322,7 +134,7 @@ The `threshold_table` data.frame contains:
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`measurable_summary_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/measurable_summary_table.md),
 [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
-[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 

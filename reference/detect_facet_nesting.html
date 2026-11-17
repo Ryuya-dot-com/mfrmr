@@ -4,12 +4,24 @@ as crossed, partially nested, near-perfectly nested, or fully nested,
 based on a conditional-entropy index:
 $$\text{nesting\_index}(A \to B) = 1 - H(B \mid A) / H(B).$$
 An index near 1 means that knowing the level of A essentially
-determines the level of B (A is nested in B)."><meta property="og:description" content="Classifies both directions of each pair of facets (optionally including Person)
+determines the level of B (A is nested in B).
+Renders the directed nesting index
+\(1 - H(B \mid A)/H(B)\) as a heatmap between facet pairs,
+with larger values indicating less conditional uncertainty about B given A.
+Exactly 1 means B is determined by A when H(B) is positive; near 1 is
+not exact nesting. Zero means empirical independence, not necessarily a
+completely crossed design. Undefined zero-entropy cases remain unavailable."><meta property="og:description" content="Classifies both directions of each pair of facets (optionally including Person)
 as crossed, partially nested, near-perfectly nested, or fully nested,
 based on a conditional-entropy index:
 $$\text{nesting\_index}(A \to B) = 1 - H(B \mid A) / H(B).$$
 An index near 1 means that knowing the level of A essentially
-determines the level of B (A is nested in B)."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+determines the level of B (A is nested in B).
+Renders the directed nesting index
+\(1 - H(B \mid A)/H(B)\) as a heatmap between facet pairs,
+with larger values indicating less conditional uncertainty about B given A.
+Exactly 1 means B is determined by A when H(B) is positive; near 1 is
+not exact nesting. Zero means empirical independence, not necessarily a
+completely crossed design. Undefined zero-entropy cases remain unavailable."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -17,7 +29,7 @@ determines the level of B (A is nested in B)."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,31 +37,25 @@ determines the level of B (A is nested in B)."><meta property="og:image" content
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -63,7 +69,7 @@ determines the level of B (A is nested in B)."><meta property="og:image" content
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Detect nesting structure between facets</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-hierarchical-audit.R" class="external-link"><code>R/api-hierarchical-audit.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-hierarchical-audit.R" class="external-link"><code>R/api-hierarchical-audit.R</code></a></small>
       <div class="d-none name"><code>detect_facet_nesting.Rd</code></div>
     </div>
 
@@ -74,11 +80,25 @@ based on a conditional-entropy index:
 $$\text{nesting\_index}(A \to B) = 1 - H(B \mid A) / H(B).$$
 An index near 1 means that knowing the level of <code>A</code> essentially
 determines the level of <code>B</code> (A is nested in B).</p>
+<p>Renders the directed nesting index
+\(1 - H(B \mid A)/H(B)\) as a heatmap between facet pairs,
+with larger values indicating less conditional uncertainty about B given A.
+Exactly 1 means B is determined by A when H(B) is positive; near 1 is
+not exact nesting. Zero means empirical independence, not necessarily a
+completely crossed design. Undefined zero-entropy cases remain unavailable.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">detect_facet_nesting</span><span class="op">(</span><span class="va">data</span>, <span class="va">facets</span>, person <span class="op">=</span> <span class="cn">NULL</span>, weight_col <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">detect_facet_nesting</span><span class="op">(</span><span class="va">data</span>, <span class="va">facets</span>, person <span class="op">=</span> <span class="cn">NULL</span>, weight_col <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_facet_nesting'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  preset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"standard"</span>, <span class="st">"publication"</span>, <span class="st">"compact"</span>, <span class="st">"monochrome"</span><span class="op">)</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -103,6 +123,22 @@ nesting matrix if supplied).</p></dd>
 weights. Zero-weight rows are excluded; at least one weight must be positive.
 Weighted frequencies are used directly, without rounding or replicating rows.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>An <code>mfrm_facet_nesting</code> object.</p></dd>
+
+
+<dt id="arg-preset">preset<a class="anchor" aria-label="anchor" href="#arg-preset"></a></dt>
+<dd><p>Plot preset.</p></dd>
+
+
+<dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a></dt>
+<dd><p>Logical; print the <code>ggplot</code> figure when <code>TRUE</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Reserved.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -112,7 +148,9 @@ Weighted frequencies are used directly, without rounding or replicating rows.</p
 <li><p><code>summary</code>: a one-line summary table with facet counts and whether
 any non-crossed structure was detected.</p></li>
 <li><p><code>facets</code>: the facet vector that was reviewed.</p></li>
-</ul></div>
+</ul><p>Invisibly, a <code>ggplot</code> object. <code><a href="plot_data.html">plot_data()</a></code> extracts the rendered
+nesting matrix and pairwise summary table.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This is a pure descriptive review of the observed design. It does not
@@ -127,8 +165,12 @@ effects.</p>
 <li><p><code>"Near-perfectly nested"</code>: 0.95 &lt;= index &lt; 0.99.</p></li>
 <li><p><code>"Partially nested"</code>: 0.50 &lt;= index &lt; 0.95.</p></li>
 <li><p><code>"Crossed"</code>: index &lt; 0.50.</p></li>
-</ul><p>The direction column records which facet is nested in which, or
-<code>"crossed"</code> when neither direction is above 0.95.</p>
+</ul><p>These are package screening bands, not tests of exact nesting or full
+crossing. <code>Direction</code> is <code>"isomorphic"</code> when both indices are at least
+0.95, names a nesting direction when only that index is at least 0.95,
+and is <code>"crossed"</code> when both are below 0.95. Thus the direction can say
+<code>"crossed"</code> even when a classification is <code>"Partially nested"</code>.
+Zero-entropy cases have <code>Direction = "insufficient_data"</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="missing-values-and-weights">Missing values and weights<a class="anchor" aria-label="anchor" href="#missing-values-and-weights"></a></h2>
@@ -148,17 +190,17 @@ the observed pattern represents the missing ratings.</p>
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
 
 
-<p>A <code>Direction</code> value of <code>"Rater nested in Region"</code> means that every
-rater appears in exactly one region (or very close to it). For
-additive fixed-effects MFRM, this is a concern: the severity of a
-rater is confounded with region-level variance that the model cannot
-partition. Consider reporting the nesting direction explicitly and,
-when relevant, refitting without the nested facet or moving to a
-hierarchical estimation tool (e.g. <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer</a></code>, <code>brms</code>, <code>TAM</code>) to
-separate the variance components.</p>
-<p><code>Direction = "crossed"</code> is the most common reading when both nesting
-indices are below 0.5; the two facets largely co-occur at multiple
-combinations, which is the setting Linacre (1989) assumed.</p>
+<p>Exact nesting of Rater within Region confounds unrestricted additive
+rater and region effects. A near-nesting label instead signals limited
+overlap; inspect the actual cross-tabulation and model design. The index
+alone establishes neither rank deficiency nor identification.</p>
+<p>A hierarchical model can separate within- and between-group variation
+under additional distributional assumptions and adequate replication;
+switching software does not supply missing design information. Dropping
+a facet also changes the model and interpretation. Report the observed
+design and justify the chosen parameterization. A <code>"crossed"</code> label
+does not establish that every combination was observed or that the full
+many-facet design is connected.</p>
     </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
@@ -169,8 +211,15 @@ combinations, which is the setting Linacre (1989) assumed.</p>
 numeric index and the <code>LevelsA</code>/<code>LevelsB</code> counts.</p></li>
 <li><p>For downstream reporting, use <code><a href="analyze_hierarchical_structure.html">analyze_hierarchical_structure()</a></code>
 to bundle this output with ICC and design-effect summaries, which
-<code><a href="reporting_checklist.html">reporting_checklist()</a></code> can record as available report material.</p></li>
+<a href="mfrm_report.html">mfrm_report_checklist</a> can record as available report material.</p></li>
 </ol></div>
+    <div class="section level2">
+    <h2 id="session-plot-defaults">Session plot defaults<a class="anchor" aria-label="anchor" href="#session-plot-defaults"></a></h2>
+
+
+<p>See <a href="plot.mfrm_fit.html">mfrmr_visual_diagnostics</a> for <code>options(mfrmr.plot_preset)</code>, argument
+precedence, and appearance when saving or reusing a plot.</p>
+    </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Shannon, C. E. (1948). A mathematical theory of communication.
@@ -185,8 +234,10 @@ Brigham Young University). <a href="https://scholarsarchive.byu.edu/etd/6689/" c
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="facet_small_sample_review.html">facet_small_sample_review()</a></code>,
 <code><a href="analyze_hierarchical_structure.html">analyze_hierarchical_structure()</a></code>, <code><a href="compute_facet_icc.html">compute_facet_icc()</a></code>,
-<code><a href="compute_facet_design_effect.html">compute_facet_design_effect()</a></code>, <code><a href="fit_mfrm.html">fit_mfrm()</a></code> (see "Fixed effects
-assumption" in its details).</p></div>
+<code><a href="compute_facet_icc.html">compute_facet_design_effect()</a></code>, <code><a href="fit_mfrm.html">fit_mfrm()</a></code> (see "Fixed effects
+assumption" in its details).</p>
+<p><code>detect_facet_nesting()</code>,
+<code><a href="analyze_hierarchical_structure.html">analyze_hierarchical_structure()</a></code>.</p></div>
     </div>
 
     <div class="section level2">

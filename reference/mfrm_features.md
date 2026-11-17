@@ -47,13 +47,17 @@ summary(object, ...)
   Unannotated missing cells are labelled "Not supplied". Reasons are
   supplied by the user, not inferred missing-data mechanisms.
 
-- x, object:
+- x:
 
   An object returned by the corresponding function.
 
 - ...:
 
   Reserved for method compatibility.
+
+- object:
+
+  An object returned by the corresponding function.
 
 ## Value
 
@@ -67,22 +71,23 @@ Numeric `NA` and `NaN` are missing. Infinite numeric values and blank
 categorical labels are refused; replace missing markers with `NA`
 explicitly. Constant and entirely missing features remain available for
 review but cannot be used by
-[`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md).
+[`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md).
 IDs and unselected columns do not enter distances. These functions are
 intended for external attributes such as training, experience, or
 specialization. They do not propagate uncertainty from estimated
-ability, severity, or fit statistics. See
-[`vignette("mfrmr-external-features")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.md)
+ability, severity, or fit statistics. See [online feature-analysis
+guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html)
 for a complete rater-attribute example including missingness review and
 multiple imputation.
 
 ## See also
 
-[`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
-[`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md),
-[`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md),
+[`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
+[`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
+[`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
 [`mfrm_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_pca.md),
-[`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md)
+[k-means
+details](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
 
 ## Examples
 

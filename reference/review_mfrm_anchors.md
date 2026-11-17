@@ -2,14 +2,16 @@
 
 Review and normalize anchor/group-anchor tables
 
+Build a candidate direct-anchor table from fitted estimates
+
 ## Usage
 
 ``` r
 review_mfrm_anchors(
   data,
-  person,
-  facets,
-  score,
+  person = NULL,
+  facets = NULL,
+  score = NULL,
   anchors = NULL,
   group_anchors = NULL,
   weight = NULL,
@@ -24,7 +26,31 @@ review_mfrm_anchors(
   dummy_facets = NULL,
   category_policy = NULL,
   repeated_ratings = c("review", "independent"),
-  centering_scope = c("facet", "remainder", "anchor_origin")
+  centering_scope = c("facet", "remainder", "anchor_origin"),
+  spec = NULL
+)
+
+# S3 method for class 'mfrm_anchor_review'
+summary(object, digits = 3, top_n = 10, ...)
+
+# S3 method for class 'mfrm_anchor_review'
+plot(
+  x,
+  y = NULL,
+  type = c("issue_counts", "facet_constraints", "level_observations"),
+  main = NULL,
+  palette = NULL,
+  label_angle = 45,
+  draw = TRUE,
+  ...
+)
+
+make_anchor_table(
+  fit,
+  facets = NULL,
+  include_person = FALSE,
+  digits = NULL,
+  readiness_policy = c("error", "review")
 )
 ```
 
@@ -40,7 +66,7 @@ review_mfrm_anchors(
 
 - facets:
 
-  Character vector of facet column names.
+  Optional subset of facets to include.
 
 - score:
 
@@ -109,44 +135,98 @@ review_mfrm_anchors(
 
 - category_policy:
 
-  Optional explicit category choice: `"collapse"` maps gaps in the
-  observed categories to consecutive scores; `"preserve"` keeps the
-  intended ladder, declared with `rating_min` and `rating_max`. This
-  changes the fitted category steps, not just labels. `NULL` (default)
-  uses `keep_original`, whose default is `FALSE` (`"collapse"`).
-  Supplying both choices is allowed only when they agree. Preservation
-  does not estimate unsupported steps: fitting stops if a retained
-  internal category has no observations. Use the same policy in
-  [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
-  and `review_mfrm_anchors()`.
+  Optional explicit category choice: `"collapse"` or `"preserve"`
+  (`NULL` uses `keep_original`).
 
 - repeated_ratings:
 
-  Treatment of repeated Person-by-facet cells. `"review"` (default)
-  retains the duplicate-cell warning and ordinary MML/JML input-review
-  state. Use `"independent"` only to declare that the rows are distinct,
-  conditionally independent rating events under the specified model.
-  Every row and its weight are retained; this argument does not
-  aggregate scores, add a facet, change the likelihood or establish
-  independence from the data. Other input, numerical and inference
-  checks still apply. The declaration is saved in preparation notes,
-  configuration and replay settings. Corrected JML already requires
-  conditionally independent repeated ratings; the argument records that
-  assumption explicitly there. It is not supported by the two-family
-  GPCM route.
+  Treatment of repeated Person-by-facet cells: `"review"` (default) or
+  `"independent"`. The latter declares distinct, conditionally
+  independent rating events; it does not establish independence from the
+  data or increase the number of independent Persons. See
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)
+  for estimator-specific restrictions.
 
 - centering_scope:
 
-  `"facet"` (default) centers each declared facet across all its levels,
-  including direct anchors and group totals. `"remainder"` reproduces
-  the earlier convention that centers only levels outside direct and
-  group constraints. For ordinary additive RSM/PCM JML,
-  `"anchor_origin"` lets direct or group anchors replace centering on
-  their facet; select an unanchored, active `noncenter_facet`. Other
-  facets remain centered. This option excludes comparison-only fitting.
-  None of these conventions changes the population model or category
-  steps. Unsupported specialized routes reject an explicit setting. See
-  **Anchors and scale constraints**.
+  Facet-centering convention: `"facet"` (default), `"remainder"`, or
+  `"anchor_origin"` (see
+  [fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)).
+
+- spec:
+
+  Optional named `list` of shared model-specification settings (the same
+  model-specification `spec` accepted by
+  [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md),
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
+  and
+  [`export_mfrm_model()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.md)).
+  Explicit top-level arguments override matching entries in `spec`.
+
+- object:
+
+  Output from `review_mfrm_anchors()`.
+
+- digits:
+
+  `NULL` (default) preserves the fitted numeric values. A nonnegative
+  integer explicitly rounds them for display or external use.
+
+- top_n:
+
+  Maximum rows shown in issue previews.
+
+- ...:
+
+  Reserved for generic compatibility.
+
+- x:
+
+  Output from `review_mfrm_anchors()`.
+
+- y:
+
+  Reserved for generic compatibility.
+
+- type:
+
+  Plot type: `"issue_counts"`, `"facet_constraints"`, or
+  `"level_observations"`.
+
+- main:
+
+  Optional title override.
+
+- palette:
+
+  Optional named colors.
+
+- label_angle:
+
+  X-axis label angle for bar plots.
+
+- draw:
+
+  If `TRUE`, print the `ggplot` figure on the active graphics device.
+
+- fit:
+
+  Output from
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+
+- include_person:
+
+  Include person estimates as candidate anchors. Use only when cross-run
+  person identity and the intended longitudinal constraint are
+  substantively justified. Fixed Person values are supported only by a
+  receiving JML fit; MML rejects Person anchors.
+
+- readiness_policy:
+
+  How a source fit that is not inference-ready is handled. `"error"`
+  (default) refuses anchor export or reuse. `"review"` permits explicit
+  review-only extraction; those values must not be used as operational
+  anchors.
 
 ## Value
 
@@ -173,28 +253,29 @@ A list of class `mfrm_anchor_review` with:
 
 - `recommendations`: package-native anchor guidance strings
 
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_anchor_review`.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): A `ggplot`
+object (invisibly), with underlying plot tables accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+
+A data.frame with `Facet`, `Level`, and `Anchor`.
+
 ## Details
 
-This helper reviews computational constraints. A *direct anchor* fixes
-an individual parameter to a supplied value. A *group anchor* constrains
-the mean of declared elements to a supplied target. A *common-element
-link* is different: it is observed overlap among administrations or
-subsets. Direct or group constraints can transfer coordinates from a
-defensible reference, but they do not manufacture empirical overlap.
+Check candidate direct/group constraints against the receiving data
+before estimation, using the preprocessing and key-resolution rules of
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+Such constraints can transfer coordinates from a defensible reference;
+they do not create the observed overlap required for a common-element
+link. The review does not verify source-fit readiness or invariant
+cross-run meaning of element labels.
 
-This function applies the same preprocessing and key-resolution rules as
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-but returns a review object so constraints can be checked *before*
-estimation. Running the review first helps avoid estimation failures
-caused by misspecified or data-incompatible anchors. It does not inspect
-source-fit readiness or establish that labels denote the same invariant
-elements across runs. Those substantive checks remain the caller's
-responsibility. This review has no estimation-method argument. A clean
-table can still request an unsupported model combination: in particular,
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-rejects Person direct/group anchors with MML. See the scale-constraint
-section of
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+There is no estimation-method argument: even a clean review can request
+an unsupported model combination. In particular, MML rejects Person
+direct/group anchors. See the scale-constraint section of
+[fit_mfrm_technical_details](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_technical_details.md)
 before using partial anchors.
 
 **Anchor types:**
@@ -227,40 +308,86 @@ user-configurable counts are package screening recommendations, not
 universal adequacy thresholds and not tests of connectedness or
 invariance.
 
-## Interpreting output
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize an
+anchor-review object
 
-- `issue_counts`/`issues`: concrete data or specification problems.
+For [`summary()`](https://rdrr.io/r/base/summary.html): Compact
+constraint coverage, support counts and recommendations; follow
+"Reviewing constraints before fitting" for reading order.
 
-- `facet_summary`: constraint coverage by facet. `FreeLevels` counts
-  levels outside direct and group constraints, not free parameters. A
-  group member may still vary, whereas centering removes a degree of
-  freedom outside groups.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot an
+anchor-review object
 
-- `design_checks`: observation counts against the requested screening
-  values.
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Start with
+`"issue_counts"` for counts by issue class. `"facet_constraints"` shows
+anchored, grouped and free levels; `"level_observations"` shows
+observation support. Interpret these alongside the constraint
+definitions and screening limits above, before fitting.
 
-- `recommendations`: action items before estimation.
+Convert fitted estimates to candidate direct constraints in the
+`Facet`/`Level`/`Anchor` schema. `Anchor` is the internal, untransformed
+location; fixing it in a new fit does not propagate source uncertainty.
+Thresholds, GPCM slopes, model settings and source SEs are excluded; use
+[`extract_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+for a complete saved calibration.
 
-## Typical workflow
+Export is refused unless the source fit is inference-ready under the
+current contract. `readiness_policy = "review"` allows inspection, not
+approval for reuse. Check cross-run element identity, substantive
+invariance and observed connectedness separately, then use
+`review_mfrm_anchors()` on the receiving data. That review checks
+constraints and data support, not source-fit quality or invariance.
 
-1.  Build candidate anchors (e.g., with
-    [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md)).
+Keep `digits = NULL` for recalibration. Rounding individual anchors can
+break their joint sum or group-mean constraint, even at six decimal
+places. Explicitly rounded values are different constraints and must be
+reviewed before reuse; the fitter does not silently recenter supplied
+anchors.
 
-2.  Run `review_mfrm_anchors(...)`.
+## Reviewing constraints before fitting
 
-3.  Resolve issues, then fit with
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+Start with `summary(review)$issue_counts`, inspect the full `issues` and
+`recommendations`, and resolve their stated problems before fitting.
+`facet_summary` describes constraint coverage: `FreeLevels` counts
+levels outside direct and group constraints, not free parameters. Group
+members can vary, while centering removes a degree of freedom outside
+groups. `design_checks` records support checks; the summary's
+`level_observation_summary` and `category_counts` show support relative
+to the requested screening counts.
+
+Build candidates with `make_anchor_table()` when appropriate, revise
+them after review, then pass the intended constraints to
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+
+## Using the candidates
+
+`Facet` names the facet, `Level` its element, and `Anchor` the fixed
+value (rounded only when `digits` is supplied). After reviewing the
+reference fit and receiving data, pass selected rows to
+`fit_mfrm(..., anchors = ...)`.
 
 ## See also
 
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
 [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md),
-[`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md),
-[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
+`make_anchor_table()`,
+[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
+
+`review_mfrm_anchors()`,
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+
+`review_mfrm_anchors()`, `make_anchor_table()`,
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
+`review_mfrm_anchors()`
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("review_mfrm_anchors", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 ratings <- load_mfrmr_data("example_operational")
 # Illustrative external value, not an estimate supplied with this dataset.
 anchors <- data.frame(Facet = "Rater", Level = "R01", Anchor = 0.35)
@@ -273,32 +400,8 @@ review <- review_mfrm_anchors(
   rating_min = 1, rating_max = 4, category_policy = "preserve"
 )
 review$anchors                 # Check the retained value and matching ID.
-#> # A tibble: 1 × 3
-#>   Facet Level Anchor
-#>   <chr> <chr>  <dbl>
-#> 1 Rater R01     0.35
 review$issue_counts
-#> # A tibble: 13 × 2
-#>    Issue                            N
-#>    <chr>                        <int>
-#>  1 anchor_schema_mismatch           0
-#>  2 group_anchor_schema_mismatch     0
-#>  3 unknown_anchor_facets            0
-#>  4 unknown_anchor_levels            0
-#>  5 invalid_anchor_values            0
-#>  6 duplicate_anchors                0
-#>  7 unknown_group_facets             0
-#>  8 unknown_group_levels             0
-#>  9 invalid_group_labels             0
-#> 10 duplicate_group_assignments      0
-#> 11 missing_group_values             0
-#> 12 group_value_conflicts            0
-#> 13 overlap_anchor_group             0
 review$recommendations         # Explains the selected centering convention.
-#> [1] "Package count screen: consider >= 5 directly anchored levels per facet. This does not verify cross-run identity or empirical connectedness. Low-count facets: Rater."                                                         
-#> [2] "Package observation-count screen: about 30 observations per element are used for review. Low-observation facets: Person."                                                                                                     
-#> [3] "Supply anchors in internal logit coordinates, not Umean/Uscale display units. Use compatible score coding, orientation and reporting scales across linked analyses."                                                          
-#> [4] "Current noncenter facet is 'Person'. Other facets sum to zero across all levels, including anchors and group totals. The ungrouped remainder balances those contributions; a single remaining level is fixed by that balance."
 
 # A duplicate is a separate input problem: resolve it before fitting.
 duplicate <- rbind(anchors, transform(anchors, Anchor = 0.10))
@@ -307,9 +410,33 @@ problem <- review_mfrm_anchors(
   anchors = duplicate
 )
 problem$issues$duplicate_anchors
-#> # A tibble: 1 × 5
-#>   Facet Level  Rows DistinctValues Values   
-#>   <chr> <chr> <int>          <int> <chr>    
-#> 1 Rater R01       2              2 0.35, 0.1
 # Normalization retains the last value; it does not decide which is correct.
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_anchor_review", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+toy <- load_mfrmr_data("example_core")
+review <- review_mfrm_anchors(toy, "Person", c("Rater", "Criterion"), "Score")
+summary(review)
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("plot.mfrm_anchor_review", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+toy <- load_mfrmr_data("example_core")
+review <- review_mfrm_anchors(toy, "Person", c("Rater", "Criterion"), "Score")
+p <- plot(review, draw = FALSE)
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("make_anchor_table", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+ratings <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  ratings, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", rating_min = 1, rating_max = 4,
+  category_policy = "preserve"
+)
+# Select a facet deliberately; matching labels alone do not prove invariance.
+anchors_tbl <- make_anchor_table(fit, facets = "Rater")
+anchors_tbl
+} # }
 ```

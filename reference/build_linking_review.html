@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,31 +15,25 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -53,7 +47,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a linking-review synthesis object</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/help_linking_and_dff.R" class="external-link"><code>R/help_linking_and_dff.R</code></a></small>
       <div class="d-none name"><code>build_linking_review.Rd</code></div>
     </div>
 
@@ -68,7 +62,10 @@
 <span>  drift <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  chain <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  top_n <span class="op">=</span> <span class="fl">10</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_linking_review'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, digits <span class="op">=</span> <span class="fl">3</span>, top_n <span class="op">=</span> <span class="fl">10</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -88,63 +85,75 @@
 
 
 <dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
-<dd><p>Maximum number of linking-risk rows to highlight in summary
-outputs. The full object keeps the full risk tables.</p></dd>
+<dd><p>For <code>build_linking_review()</code>: Maximum number of linking-risk rows to highlight in summary
+outputs. The full object keeps the full risk tables.</p>
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: Number of top linking-risk rows to keep in the compact summary.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>Output from <code>build_linking_review()</code>.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Number of digits for printed numeric values.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Reserved for generic compatibility.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>mfrm_linking_review</code>.</p>
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: An object of class <code>summary.mfrm_linking_review</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><code>build_linking_review()</code> does not recompute anchor, drift, or chain
-statistics. It is a synthesis layer that organizes package-native evidence
-into one operational review surface with:</p><ul><li><p>a front-door status block,</p></li>
-<li><p>ranked linking risks,</p></li>
-<li><p>explicit next actions,</p></li>
-<li><p>plot routing metadata,</p></li>
-<li><p>a reporting/export handoff map.</p></li>
-</ul><p>The helper keeps the current conservative interpretation policy:
-anchor drift and screened links are operational review tools, not automatic
-proofs of scale equivalence or score comparability.
-It also does not verify source-fit readiness, cross-wave element identity,
-invariance, or the external assumptions behind group anchors; these must be
-established before promoting the synthesized review.</p>
+    <p>Combine saved anchor, drift and chain results without recalculation. Choose
+the inputs for the question: <code><a href="review_mfrm_anchors.html">review_mfrm_anchors()</a></code> checks receiving-data
+constraints, <code><a href="detect_anchor_drift.html">detect_anchor_drift()</a></code> compares waves with a reference, and
+<code><a href="build_equating_chain.html">build_equating_chain()</a></code> follows adjacent links. These are complementary
+sources, not a required sequence.</p>
+<p>The combined review does not verify source-fit readiness, cross-wave identity,
+invariance or group-anchor assumptions, and cannot establish scale equivalence
+or score comparability. Its documented scope is RSM/PCM; GPCM drift/chain
+inputs remain exploratory with scope <code>supported_with_caveat</code>.</p>
+<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: Summarize a linking-review object</p>
     </div>
     <div class="section level2">
-    <h2 id="recommended-input-route">Recommended input route<a class="anchor" aria-label="anchor" href="#recommended-input-route"></a></h2>
+    <h2 id="using-the-review">Using the review<a class="anchor" aria-label="anchor" href="#using-the-review"></a></h2>
 
 
-<p>Use existing package-native outputs in this order:</p><ol><li><p><code><a href="review_mfrm_anchors.html">review_mfrm_anchors()</a></code> for pre-fit anchor adequacy.</p></li>
-<li><p><code><a href="detect_anchor_drift.html">detect_anchor_drift()</a></code> for direct wave-to-reference drift screening.</p></li>
-<li><p><code><a href="build_equating_chain.html">build_equating_chain()</a></code> for adjacent screened-link review across waves.</p></li>
-</ol></div>
+<p>Read <code>overview</code> for supplied sources and status, then <code>top_linking_risks</code> for
+ranked follow-up. <code>group_view_index</code> groups by wave, link, facet or source
+family. <code>plot_map</code> routes to the source plots; <code>reporting_map</code> identifies
+coverage and separate manuscript-reporting helpers. Retain the original
+results when inspecting risks or deciding next actions.</p>
+    </div>
     <div class="section level2">
-    <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
+    <h2 id="linking-and-dff-route-map">Linking and DFF route map<a class="anchor" aria-label="anchor" href="#linking-and-dff-route-map"></a></h2>
 
-
-<ul><li><p><code>overview</code>: which evidence sources were supplied and the current review status.</p></li>
-<li><p><code>top_linking_risks</code>: primary operational triage table.</p></li>
-<li><p><code>group_view_index</code>: stable wave/link/facet/source-family grouping routes.</p></li>
-<li><p><code>plot_map</code>: which plotting function to use for each result.</p></li>
-<li><p><code>reporting_map</code>: what is covered here versus which manuscript-oriented
-helper should be used separately.</p></li>
-</ul></div>
-    <div class="section level2">
-    <h2 id="gpcm-boundary">GPCM boundary<a class="anchor" aria-label="anchor" href="#gpcm-boundary"></a></h2>
-
-
-<p>This helper summarizes the documented <code>RSM</code> / <code>PCM</code> linking workflow.
-When supplied drift/chain sources resolve to <code>GPCM</code>, it retains an explicitly
-exploratory review and marks that scope as <code>supported_with_caveat</code>.
-This does not establish score interchangeability, invariance or a common
-scale across administrations.</p>
+<table class="table table"><tr><td>Question</td><td>Route</td></tr><tr><td>Do planned/observed assignments connect ratings?</td><td><code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code> (<code>design_connectivity</code>), <code><a href="subset_connectivity_report.html">subset_connectivity_report()</a></code></td></tr><tr><td>Which baseline locations can serve as anchors?</td><td><code><a href="review_mfrm_anchors.html">make_anchor_table()</a></code>, <code><a href="review_mfrm_anchors.html">review_mfrm_anchors()</a></code></td></tr><tr><td>How do I fit new data with baseline locations fixed?</td><td><code><a href="anchor_to_baseline.html">anchor_to_baseline()</a></code></td></tr><tr><td>Have common elements shifted across waves?</td><td><code><a href="detect_anchor_drift.html">detect_anchor_drift()</a></code>, <code><a href="build_equating_chain.html">build_equating_chain()</a></code>, <code>build_linking_review()</code></td></tr><tr><td>Do facet levels differ between groups?</td><td><code><a href="analyze_dff.html">analyze_dff()</a></code> (<code>mfrm_report(x, type = "dff")</code>); see <code><a href="mantel_haenszel_table.html">mantel_haenszel_table()</a></code> and <code><a href="ordinal_logistic_table.html">ordinal_logistic_table()</a></code></td></tr></table><p>Keep four concepts distinct: <strong>common ratings</strong> (observed overlap), <strong>scale
+identification</strong> (e.g., sum-to-zero centering), <strong>direct anchors</strong> (<code>Facet</code>,
+<code>Level</code>, <code>Anchor</code> fixing internal logit coordinates), and <strong>group anchors</strong>
+(<code>Facet</code>, <code>Level</code>, <code>Group</code>, <code>GroupValue</code> fixing an unweighted arithmetic
+group mean). With <code>centering_scope = "facet"</code> (default), centered facets sum
+to zero across all levels including anchors/groups; <code>"remainder"</code> centers
+unconstrained levels only; <code>"anchor_origin"</code> (additive RSM/PCM JML) lets
+anchors replace centering on their facet when an active unanchored
+<code>noncenter_facet</code> is selected.</p>
+<p><code><a href="detect_anchor_drift.html">detect_anchor_drift()</a></code> and <code><a href="build_equating_chain.html">build_equating_chain()</a></code> estimate one pooled
+offset per link (<code>Offset_SD</code> is residual spread across retained elements,
+not an offset SE; <code>LinkSupportAdequate</code> is a local 5-element count screen,
+not proof of invariance). Source-anchor covariance is excluded unless
+explicitly requested via <code>anchor_covariance</code> and <code>independent_anchors = TRUE</code>
+in <code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> (intercept-only RSM/PCM anchor-origin MML).</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="review_mfrm_anchors.html">review_mfrm_anchors()</a></code>, <code><a href="detect_anchor_drift.html">detect_anchor_drift()</a></code>,
-<code><a href="build_equating_chain.html">build_equating_chain()</a></code>, <a href="plot.mfrm_anchor_drift.html">plot(x)</a>, <a href="mfrmr_linking_and_dff.html">mfrmr_linking_and_dff</a></p></div>
+<code><a href="build_equating_chain.html">build_equating_chain()</a></code>, <a href="detect_anchor_drift.html">plot(x)</a>, mfrmr_linking_and_dff</p>
+<p><code>build_linking_review()</code></p></div>
     </div>
 
     <div class="section level2">

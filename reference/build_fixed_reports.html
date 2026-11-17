@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,31 +15,25 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -53,7 +47,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build legacy-compatible fixed-width text reports</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>build_fixed_reports.Rd</code></div>
     </div>
 
@@ -124,46 +118,22 @@ skipped.</p>
     <h2 id="pairwise-calculation">Pairwise calculation<a class="anchor" aria-label="anchor" href="#pairwise-calculation"></a></h2>
 
 
-<p>For each target element, compare its local measure in two contexts.
-If the target has predictor sign <code>s</code>, its local measure is
-<code>target + bias/s</code>; the contrast is Context1 minus Context2. A negatively
-oriented rater therefore has local severity <code>severity - bias</code>.
-<code>TargetSign</code> comes from the saved bias result's <code>orientation_review</code>.
-Missing orientation withholds local measures, contrasts and tail areas;
-it is not inferred from a facet name.</p>
-<p><code>SE1</code> and <code>SE2</code> are conditional cell-information SEs with baseline
-calibration held fixed. The contrast SE is <code>sqrt(SE1^2 + SE2^2)</code> under
-conditional independence of the two cells. Calibration uncertainty and
-cross-cell covariance are not propagated. <code>Target S.E.</code> describes the
-original target estimate separately and is not added to the conditional
-local SE; a fixed target can still have uncertain local bias.</p>
-<p>The default <code>df_method = "facets"</code> uses the modified Rasch-Welch formula
-described in the FACETS t-statistics manual (von Davier, 2025). Writing
-<code>v1 = SE1^2</code>, <code>v2 = SE2^2</code> and <code>n1</code>, <code>n2</code> for weighted counts, its df is
-<code>(v1+v2)^2 * (n1+n2-2) / ((n1+n2+2) * (v1^2/(n1+1)+v2^2/(n2+1)))</code>.
-The tail area uses its integer part, matching executed FACETS 4.5.0
-unequal-count examples. Values are stabilized to ten decimal places before
-truncation to avoid numerical noise at integer boundaries. <code>DFUnrounded</code>
-retains the original continuous value.
-<code>df_method = "classical"</code> retains the former Welch-Satterthwaite reference
-with <code>n1-1</code>, <code>n2-1</code> and no integer truncation. <code>DFMethod</code> and <code>DFBasis</code>
-identify the choice; equal counts alone cannot distinguish the formulas.
-<code>ObsN1</code> and <code>ObsN2</code> are raw row counts. Both weighted counts must exceed
-one, both SEs must be positive and finite, and the final df must be positive.
-Otherwise the screen remains unavailable. Fractional weights follow the
-same rule but are outside the executed comparison. These are conditional
-screens, not calibrated fairness tests or general FACETS equivalence.</p>
+<p>Local contrasts are Context1 minus Context2 using the saved target-facet
+orientation. Their SEs condition on baseline calibration and omit calibration
+uncertainty and cross-cell covariance; these remain screening statistics.
+Unavailable orientation or precision leaves comparisons unavailable.
+See "Pairwise calculation" in <a href="mfrm_report.html">mfrm_report_bias_pairwise</a> for the local-measure
+and SE formulas, weighted-count df conventions, availability conditions and
+the scope of the FACETS comparison.</p>
     </div>
     <div class="section level2">
     <h2 id="saved-pairwise-results">Saved pairwise results<a class="anchor" aria-label="anchor" href="#saved-pairwise-results"></a></h2>
 
 
-<p>Current tables carry <code>CalculationVersion = 3</code>. Recreate older fixed or
-pairwise reports using <code>build_fixed_reports()</code> or <code><a href="bias_pairwise_report.html">bias_pairwise_report()</a></code>.
-If the bias bundle predates baseline-score corrections or lacks orientation,
-recreate <code><a href="estimate_bias.html">estimate_bias()</a></code> from the saved fit and current diagnostics first.
-No main calibration refit is needed. Keep historical values separately;
-summaries and fixed-report plots reject older pairwise calculations.</p>
+<p>Current tables use <code>CalculationVersion = 3</code>. Older tables must be rebuilt,
+not relabelled. See "Saved pairwise results" in <a href="mfrm_report.html">mfrm_report_bias_pairwise</a> for
+when the underlying bias result also needs regeneration; no main calibration
+refit is required.</p>
     </div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
@@ -186,19 +156,22 @@ summaries and fixed-report plots reject older pairwise calculations.</p>
     <h2 id="preferred-route-for-new-analyses">Preferred route for new analyses<a class="anchor" aria-label="anchor" href="#preferred-route-for-new-analyses"></a></h2>
 
 
-<p>For new reporting workflows, prefer <code><a href="bias_interaction_report.html">bias_interaction_report()</a></code> and
+<p>For new reporting workflows, prefer <a href="mfrm_report.html">mfrm_report_bias_interaction</a> and
 <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code>. Use <code>build_fixed_reports()</code> when a fixed-width text
 artifact is specifically required for a compatibility handoff.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="estimate_bias.html">estimate_bias()</a></code>, <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code>, <code><a href="bias_interaction_report.html">bias_interaction_report()</a></code>,
-<a href="mfrmr_reports_and_tables.html">mfrmr_reports_and_tables</a>, <a href="mfrmr_compatibility_layer.html">mfrmr_compatibility_layer</a></p></div>
+    <div class="dont-index"><p><code><a href="estimate_bias.html">estimate_bias()</a></code>, <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code>, <a href="mfrm_report.html">mfrm_report_bias_interaction</a>,
+<a href="mfrmr_output_guide.html">mfrmr_reports_and_tables</a>, <a href="mfrmr_api_migration_030.html">mfrmr_compatibility_layer</a></p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Saved synthetic JML/RSM analysis of example_bias.</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Optional workflow; run the example explicitly as shown below.</span></span></span>
+<span class="r-in"><span><span class="co"># example("build_fixed_reports", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Saved synthetic JML/RSM analysis of example_bias.</span></span></span>
 <span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
 <span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"bias-jml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
@@ -207,139 +180,6 @@ artifact is specifically required for a compatibility handoff.</p>
 <span class="r-in"><span><span class="va">fixed</span> <span class="op">&lt;-</span> <span class="fu">build_fixed_reports</span><span class="op">(</span><span class="va">bias</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fixed_original</span> <span class="op">&lt;-</span> <span class="fu">build_fixed_reports</span><span class="op">(</span><span class="va">bias</span>, branch <span class="op">=</span> <span class="st">"original"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Fixed-Report Bundle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Branch         Style       Interaction PairwiseRows BiasTextLines</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  facets facets_manual Rater x Criterion           24            26</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  PairwiseTextLines</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 28</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Pairwise preview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Target TargetSign Target N Target Measure Target S.E. Context1 Context1 N</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     R01         -1        1         -0.867       0.152 Accuracy          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     R01         -1        1         -0.867       0.152 Accuracy          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     R01         -1        1         -0.867       0.152 Accuracy          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     R01         -1        1         -0.867       0.152  Content          2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     R01         -1        1         -0.867       0.152  Content          2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     R01         -1        1         -0.867       0.152 Language          3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     R02         -1        2          0.007       0.147 Accuracy          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     R02         -1        2          0.007       0.147 Accuracy          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     R02         -1        2          0.007       0.147 Accuracy          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     R02         -1        2          0.007       0.147  Content          2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Local Measure1   SE1 Obs-Exp Avg1 Count1 ObsN1     Context2 Context2 N</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -1.644 0.308        0.371     24    24      Content          2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -1.644 0.308        0.371     24    24     Language          3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -1.644 0.308        0.371     24    24 Organization          4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.589 0.301       -0.123     24    24     Language          3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.589 0.301       -0.123     24    24 Organization          4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.683 0.308       -0.079     24    24 Organization          4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.240 0.288        0.124     24    24      Content          2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.240 0.288        0.124     24    24     Language          3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.240 0.288        0.124     24    24 Organization          4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           0.036 0.296       -0.014     24    24     Language          3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Local Measure2   SE2 Obs-Exp Avg2 Count2 ObsN2 Contrast    SE      t d.f.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.589 0.301       -0.123     24    24   -1.054 0.431 -2.447   45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.683 0.308       -0.079     24    24   -0.961 0.436 -2.204   46</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.505 0.293       -0.169     24    24   -1.139 0.425 -2.678   45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.683 0.308       -0.079     24    24    0.094 0.431  0.217   45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.505 0.293       -0.169     24    24   -0.085 0.420 -0.202   45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.505 0.293       -0.169     24    24   -0.178 0.425 -0.419   45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           0.036 0.296       -0.014     24    24   -0.276 0.413 -0.670   45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           0.215 0.294       -0.099     24    24   -0.455 0.411 -1.106   45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           0.029 0.292       -0.011     24    24   -0.269 0.410 -0.656   45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           0.215 0.294       -0.099     24    24   -0.179 0.417 -0.429   45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Prob. InferenceTier SupportsFormalInference FormalInferenceEligible</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.018     screening                   FALSE                   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.033     screening                   FALSE                   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.010     screening                   FALSE                   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.829     screening                   FALSE                   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.841     screening                   FALSE                   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.677     screening                   FALSE                   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.506     screening                   FALSE                   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.275     screening                   FALSE                   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.515     screening                   FALSE                   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.670     screening                   FALSE                   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  PrimaryReportingEligible   ReportingUse CalculationVersion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     FALSE screening_only                  3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     FALSE screening_only                  3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     FALSE screening_only                  3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     FALSE screening_only                  3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     FALSE screening_only                  3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     FALSE screening_only                  3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     FALSE screening_only                  3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     FALSE screening_only                  3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     FALSE screening_only                  3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     FALSE screening_only                  3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           ScreenStatus ScreenReason</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional         &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional         &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional         &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional         &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional         &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional         &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional         &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional         &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional         &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  available_conditional         &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                            ContrastBasis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  local target measure in Context1 minus Context2, oriented by TargetSign</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  local target measure in Context1 minus Context2, oriented by TargetSign</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  local target measure in Context1 minus Context2, oriented by TargetSign</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  local target measure in Context1 minus Context2, oriented by TargetSign</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  local target measure in Context1 minus Context2, oriented by TargetSign</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  local target measure in Context1 minus Context2, oriented by TargetSign</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  local target measure in Context1 minus Context2, oriented by TargetSign</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  local target measure in Context1 minus Context2, oriented by TargetSign</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  local target measure in Context1 minus Context2, oriented by TargetSign</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  local target measure in Context1 minus Context2, oriented by TargetSign</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                   LocalSEBasis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  conditional cell information; baseline calibration held fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  conditional cell information; baseline calibration held fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  conditional cell information; baseline calibration held fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  conditional cell information; baseline calibration held fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  conditional cell information; baseline calibration held fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  conditional cell information; baseline calibration held fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  conditional cell information; baseline calibration held fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  conditional cell information; baseline calibration held fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  conditional cell information; baseline calibration held fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  conditional cell information; baseline calibration held fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                   SEBasis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  combined conditional bias SEs; cross-cell covariance and calibration uncertainty omitted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  combined conditional bias SEs; cross-cell covariance and calibration uncertainty omitted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  combined conditional bias SEs; cross-cell covariance and calibration uncertainty omitted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  combined conditional bias SEs; cross-cell covariance and calibration uncertainty omitted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  combined conditional bias SEs; cross-cell covariance and calibration uncertainty omitted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  combined conditional bias SEs; cross-cell covariance and calibration uncertainty omitted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  combined conditional bias SEs; cross-cell covariance and calibration uncertainty omitted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  combined conditional bias SEs; cross-cell covariance and calibration uncertainty omitted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  combined conditional bias SEs; cross-cell covariance and calibration uncertainty omitted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  combined conditional bias SEs; cross-cell covariance and calibration uncertainty omitted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  DFUnrounded DFMethod                  StatisticLabel   ProbabilityMetric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       45.976   facets Bias-contrast Welch screening t screening tail area</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       46.000   facets Bias-contrast Welch screening t screening tail area</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       45.886   facets Bias-contrast Welch screening t screening tail area</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       45.976   facets Bias-contrast Welch screening t screening tail area</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       45.966   facets Bias-contrast Welch screening t screening tail area</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       45.886   facets Bias-contrast Welch screening t screening tail area</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       45.969   facets Bias-contrast Welch screening t screening tail area</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       45.981   facets Bias-contrast Welch screening t screening tail area</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       45.990   facets Bias-contrast Welch screening t screening tail area</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       45.998   facets Bias-contrast Welch screening t screening tail area</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                   DFBasis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FACETS 4.5.0 modified Rasch-Welch using weighted counts; df rounded down</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FACETS 4.5.0 modified Rasch-Welch using weighted counts; df rounded down</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FACETS 4.5.0 modified Rasch-Welch using weighted counts; df rounded down</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FACETS 4.5.0 modified Rasch-Welch using weighted counts; df rounded down</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FACETS 4.5.0 modified Rasch-Welch using weighted counts; df rounded down</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FACETS 4.5.0 modified Rasch-Welch using weighted counts; df rounded down</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FACETS 4.5.0 modified Rasch-Welch using weighted counts; df rounded down</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FACETS 4.5.0 modified Rasch-Welch using weighted counts; df rounded down</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FACETS 4.5.0 modified Rasch-Welch using weighted counts; df rounded down</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FACETS 4.5.0 modified Rasch-Welch using weighted counts; df rounded down</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Legacy-compatible branch: fixed-width text follows the compatibility layout.</span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fixed</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fixed</span>, type <span class="op">=</span> <span class="st">"pvalue"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -352,6 +192,7 @@ artifact is specifically required for a compatibility handoff.</p>
 <span class="r-in"><span>    label_angle <span class="op">=</span> <span class="fl">45</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -21,6 +21,9 @@ build_mfrm_network_review(
   basis = c("observed", "planned"),
   weight = NULL
 )
+
+# S3 method for class 'mfrm_network_review'
+summary(object, digits = 3, top_n = 10, ...)
 ```
 
 ## Arguments
@@ -62,7 +65,11 @@ build_mfrm_network_review(
 
 - top_n:
 
-  Number of central/cut/bridge rows to retain in the review.
+  For `build_mfrm_network_review()`: Number of central/cut/bridge rows
+  to retain in the review.
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): Number of
+  central/cut/bridge rows to keep in the compact summary.
 
 - include_graph:
 
@@ -97,6 +104,18 @@ build_mfrm_network_review(
   zero-weight rows do not create edges. Edge weights still count rows,
   not sampling weights. Negative or infinite weights are refused.
 
+- object:
+
+  Output from `build_mfrm_network_review()`.
+
+- digits:
+
+  Number of digits for printed numeric values.
+
+- ...:
+
+  Reserved for generic compatibility.
+
 ## Value
 
 A bundle of class `mfrm_network_review` containing:
@@ -118,23 +137,24 @@ A bundle of class `mfrm_network_review` containing:
 - `reporting_map`: boundary between MFRM, design network, sparse design,
   peer-review design, and rater-effect network routes
 
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_network_review`.
+
 ## Details
 
-`build_mfrm_network_review()` is a synthesis layer over
-[`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md).
-It keeps the measurement model and graph view in separate sections: MFRM
-estimates remain the measurement results, while the network review
-summarizes co-observation connectedness and linking vulnerability in the
-observed design. This is especially useful for sparse or incomplete
-rater-mediated designs, where common-person links, connected subsets,
-articulation points, and bridge edges can explain why an otherwise
-estimable model depends on fragile design links.
+Combines MFRM estimates with a separate review of assignment
+connectivity and fragile links. See "Reading the graph" in
+[`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md)
+for components, articulation points, bridges and betweenness.
 
-The review status is deliberately conservative and descriptive. It is
-not a literature-derived adequacy cut point for fit, separation,
-recovery, or rater quality. Use it to decide which design links,
-anchors, or additional observations need inspection before making
-common-scale claims.
+Review status is a conservative descriptive screen, not a
+literature-derived cutoff for fit, separation, recovery or rater
+quality. Use it to prioritize inspection of links, anchors or additional
+observations before common-scale claims; the graph does not replace the
+measurement results.
+
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize an
+MFRM network review
 
 ## References
 
@@ -154,19 +174,14 @@ common-scale claims.
 
 ## Before fitting
 
-Supply `data`, `person`, `facets` and `score` instead of `fit`. Known
-levels from incomplete/unscored rows remain as nodes, including
-isolates. A planned assignment roster can be examined with
-`basis = "planned"`; absent assignments cannot be reconstructed from an
-observed-only file. `row_usage` records each input row's inclusion and
-first exclusion reason. With a fit, only its retained rows are available
-here; review original missing assignments before fitting. No prefit
-result supplies an identification audit or model-readiness decision.
-`settings$is_disjoint` describes the source graph, even when subset
-filters omit components; compare source/retained subset counts. Filters
-do not establish linking. See
-[`vignette("mfrmr-networks-and-reporting")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.md)
-for a panel example.
+Supply `data`, `person`, `facets` and `score` for a prefit graph, or use
+`basis = "planned"` for an assignment roster. Observed-only data cannot
+reveal absent assignments; a fit supplies only retained rows. Graph
+connectivity is not full model identification, and filtering does not
+establish linking. See "Before fitting" in
+[`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md)
+for unscored/isolate rows, the inclusion audit and source versus
+retained component counts.
 
 ## See also
 
@@ -176,9 +191,14 @@ for a panel example.
 [`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md),
 [`rater_halo_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_halo_network_analysis.md)
 
+`build_mfrm_network_review()`
+
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("build_mfrm_network_review", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -188,55 +208,5 @@ if (requireNamespace("igraph", quietly = TRUE)) {
   summary(review)
   build_summary_table_bundle(review)
 }
-#> mfrmr Summary Table Bundle
-#> 
-#> Overview
-#>                  Title         SourceClass                SummaryClass
-#>  Network Review Tables mfrm_network_review summary.mfrm_network_review
-#>  TablesAvailable TablesReturned AppendixPreset
-#>               12             10           none
-#> 
-#> Table index
-#>              Table Rows Cols                        Role
-#>           overview    1   14     network_review_overview
-#>    network_summary    1   16      network_design_summary
-#>      facet_summary    3    8 network_facet_vulnerability
-#>  top_central_nodes   10   11       network_central_nodes
-#>      top_cut_nodes    0   11  network_articulation_nodes
-#>   top_bridge_edges    0   12        network_bridge_edges
-#>      reporting_map    5    4               reporting_map
-#>            caveats    1    3            analysis_caveats
-#>              notes    4    1        interpretation_notes
-#>           settings    5    2             review_settings
-#>                                                                                                                         Description
-#>                                                                          Front-door connectedness and design-network review status.
-#>                                                    Graph-level connectedness, density, articulation-point, and bridge-edge metrics.
-#>                                                           Facet-level aggregation of node centrality and design-link vulnerability.
-#>                                                                  Highest-betweenness design-network nodes for follow-up inspection.
-#>                                                              Articulation-point rows whose removal would fragment the design graph.
-#>                                                            Bridge-edge rows indicating one-link dependencies between graph regions.
-#>  Map separating MFRM measurement, design-network review, sparse-design review, peer-review design, and rater-effect network routes.
-#>                                                                              Interpretation caveats for network-design diagnostics.
-#>                                                                             Compact interpretation notes for network-design review.
-#>                                                                    Settings and provenance recorded by build_mfrm_network_review().
-#> 
-#> Plot index
-#>              Table PlotReady NumericColumns               DefaultPlotTypes
-#>           overview      TRUE              9 numeric_profile, first_numeric
-#>    network_summary      TRUE             14 numeric_profile, first_numeric
-#>      facet_summary      TRUE              7 numeric_profile, first_numeric
-#>  top_central_nodes      TRUE              7 numeric_profile, first_numeric
-#>      top_cut_nodes     FALSE              7                               
-#>   top_bridge_edges     FALSE              5                               
-#>      reporting_map     FALSE              0                               
-#>            caveats     FALSE              0                               
-#>              notes     FALSE              0                               
-#>           settings     FALSE              0                               
-#> 
-#> Notes
-#>  - MFRM estimates remain the measurement-model results; network rows summarize observed design links.
-#>  - Articulation points and bridge edges identify levels or links whose removal would fragment the co-observation graph.
-#>  - Sparse-design review rows, when supplied, report planned-missingness and rater-link diagnostics rather than recovery or fit-readiness decisions.
-#>  - Peer-review design rows, when supplied, report assignment structure and reviewer linkage rather than reviewer quality or fairness.
-#>  - 2 empty table(s) were omitted from `tables`; use `include_empty = TRUE` to retain them.
+} # }
 ```

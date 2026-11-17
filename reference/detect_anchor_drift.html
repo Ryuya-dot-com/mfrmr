@@ -13,7 +13,7 @@ item banks."><meta property="og:image" content="https://ryuya-dot-com.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -21,31 +21,25 @@ item banks."><meta property="og:image" content="https://ryuya-dot-com.github.io/
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -59,7 +53,7 @@ item banks."><meta property="og:image" content="https://ryuya-dot-com.github.io/
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Detect anchor drift across multiple calibrations</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-plotting-dispatch.R" class="external-link"><code>R/api-plotting-dispatch.R</code></a></small>
       <div class="d-none name"><code>detect_anchor_drift.Rd</code></div>
     </div>
 
@@ -88,7 +82,10 @@ item banks.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'summary.mfrm_anchor_drift'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_anchor_drift'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"drift"</span>, <span class="st">"heatmap"</span>, <span class="st">"forest"</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -124,16 +121,28 @@ default 0.5). A non-negative scalar; <code>Inf</code> disables magnitude screeni
 the person identifiers refer to the same persons across fitted waves.</p></dd>
 
 
-<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>An <code>mfrm_anchor_drift</code> object.</p></dd>
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>An <code>mfrm_anchor_drift</code> object (for <code>summary</code>).</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Ignored.</p></dd>
+<dd><p>For <code>print.mfrm_anchor_drift()</code>: Ignored.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: <code>facet</code> optionally selects facets; <code>ci_level = 0.95</code> controls
+forest whiskers only; <code>preset</code> selects <code>"standard"</code>, <code>"publication"</code>,
+<code>"compact"</code>, or <code>"monochrome"</code>; <code>draw = FALSE</code> returns data without drawing.
+Additional base-graphics arguments depend on the selected view.</p></dd>
 
 
-<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
-<dd><p>An <code>mfrm_anchor_drift</code> object (for <code>summary</code>).</p></dd>
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For <code>print.mfrm_anchor_drift()</code>: An <code>mfrm_anchor_drift</code> object.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: A saved result from <code>detect_anchor_drift()</code>.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p><code>"drift"</code> for relative changes with screening flags,
+<code>"heatmap"</code> for wave-by-element patterns, or <code>"forest"</code> for per-wave
+estimates with approximate normal whiskers. A linking chain is a different
+result: use <code>plot(chain, type = "chain")</code> after <code><a href="build_equating_chain.html">build_equating_chain()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -164,21 +173,19 @@ robust the chain is to chained linking error.</p></dd>
 <dd><p>List of analysis configuration.</p></dd>
 
 
-</dl></div>
+</dl><p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Invisibly, a <code>ggplot</code> object carrying the underlying
+plot payload accessible via <code><a href="plot_data.html">plot_data()</a></code>.
+Drift/heatmap views store <code>table</code> (and <code>matrix</code> for a heatmap);
+forest rows store <code>data</code>, including <code>CI_Lower</code> and <code>CI_Upper</code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>For each non-reference wave, the function extracts facet-level estimates
-using <code><a href="make_anchor_table.html">make_anchor_table()</a></code> and computes the element-by-element difference
-against the reference wave.  Standard errors are obtained from
-<code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> applied to each fit.  Only elements common to both the
-reference and a comparison wave are included. Before reporting drift, the
-function removes the weighted common-element link offset between the two
-waves so that <code>Drift</code> represents residual instability rather than the
-overall shift between calibrations. The function also records how many
-common elements survive the screening step within each linking facet and
-treats fewer than 5 retained common elements per facet as thin support.
-This count is a package screening convention, not a universal adequacy
-threshold.</p>
+    <p>Compare each fitted wave with the reference using common facet-level estimates
+from <code><a href="review_mfrm_anchors.html">make_anchor_table()</a></code> and SEs from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. Removing the
+weighted common-element offset yields residual <code>Drift</code>, not the overall
+calibration shift. Fewer than five retained common elements in any linking
+facet is marked as thin support; this is a package screening convention,
+not a universal adequacy threshold.</p>
 <p>One <code>LinkOffset</code> is pooled across all selected common elements and facets.
 If at least one pair has finite positive SEs, only pairs with such SEs
 contribute to the inverse-variance weighted offset; rows without usable SEs
@@ -211,7 +218,7 @@ stability. The offset itself also cannot distinguish real panel change
 from a change of coordinates. Common recorded performances can provide
 a separate reference, but a complete recording-based annual analysis and
 its formal difference intervals are not yet verified here. See the annual
-assessment example in <a href="mfrmr_linking_and_dff.html">mfrmr_linking_and_dff</a>.</p>
+assessment example in <a href="build_linking_review.html">mfrmr_linking_and_dff</a>.</p>
 <p>An element is <strong>flagged</strong> when either condition is met:
 $$|\Delta_e| &gt; \texttt{drift\_threshold}$$
 $$|\Delta_e / SE_{\Delta_e}| &gt; \texttt{flag\_se\_ratio}$$
@@ -227,55 +234,43 @@ guaranteed to be conservative.</p>
 <p>When <code>facets</code> is <code>NULL</code>, all non-Person facets are compared.  Providing a
 subset (e.g., <code>facets = "Criterion"</code>) restricts comparison to those facets
 only.</p>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: Plot a saved anchor-drift review</p>
     </div>
     <div class="section level2">
-    <h2 id="which-function-should-i-use-">Which function should I use?<a class="anchor" aria-label="anchor" href="#which-function-should-i-use-"></a></h2>
+    <h2 id="reading-the-drift-review">Reading the drift review<a class="anchor" aria-label="anchor" href="#reading-the-drift-review"></a></h2>
 
 
-<ul><li><p>Use <code><a href="anchor_to_baseline.html">anchor_to_baseline()</a></code> when your starting point is raw new data plus a
-single baseline fit.</p></li>
-<li><p>Use <code>detect_anchor_drift()</code> when you already have multiple fitted waves
-and want a reference-versus-wave comparison.</p></li>
-<li><p>Use <code><a href="build_equating_chain.html">build_equating_chain()</a></code> when the waves form a sequence and you need
-cumulative linking offsets.</p></li>
-</ul></div>
+<p>Supply a named list of fitted waves, for example <code>list(Spring = fit_s, Fall = fit_f)</code>. Read <code>summary(drift)</code> before <code>drift$drift_table</code>, then inspect
+common-element support and flagged or unavailable rows.</p><ul><li><p><code>drift_table</code> contains element-by-wave <code>Facet</code>, <code>Level</code>, <code>Wave</code>, <code>Ref_Est</code>,
+<code>Wave_Est</code>, <code>LinkOffset</code>, <code>Drift</code>, <code>SE_Ref</code>, <code>SE_Wave</code>, <code>SE</code>,
+<code>Drift_SE_Ratio</code>, <code>LinkSupportAdequate</code> and <code>Flag</code>.</p></li>
+<li><p><code>summary</code> aggregates counts and mean/maximum absolute drift by facet and
+wave. <code>common_elements</code> records pairwise overlap; <code>common_by_facet</code> counts
+retained elements per linking facet. <code>LinkSupportAdequate = FALSE</code> marks
+fewer than five in at least one facet, not a verdict on all linking assumptions.</p></li>
+<li><p><code>config</code> records the analysis settings. Review flags and sensitivity to
+anchor choices with substantive evidence before exclusion or rater retraining.</p></li>
+</ul><p>Use <code><a href="anchor_to_baseline.html">anchor_to_baseline()</a></code> for raw new data and a baseline fit, or
+<code><a href="build_equating_chain.html">build_equating_chain()</a></code> for cumulative offsets across ordered adjacent waves.
+These are different starting points, not required extra steps.</p>
+    </div>
     <div class="section level2">
-    <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
+    <h2 id="reading-drift-plots">Reading drift plots<a class="anchor" aria-label="anchor" href="#reading-drift-plots"></a></h2>
 
 
-<ul><li><p><code>$drift_table</code>: one row per element x wave combination, with columns
-<code>Facet</code>, <code>Level</code>, <code>Wave</code>, <code>Ref_Est</code>, <code>Wave_Est</code>, <code>LinkOffset</code>, <code>Drift</code>,
-<code>SE_Ref</code>, <code>SE_Wave</code>, <code>SE</code>, <code>Drift_SE_Ratio</code>, <code>LinkSupportAdequate</code>, and
-<code>Flag</code>.  Large drift signals instability after alignment to the
-common-element link.</p></li>
-<li><p><code>$summary</code>: aggregated statistics by facet and wave: number of elements,
-mean/max absolute drift, and count of flagged elements.</p></li>
-<li><p><code>$common_elements</code>: pairwise common-element counts in tidy table form.
-Small
-overlap weakens the comparison and results should be interpreted
-cautiously.</p></li>
-<li><p><code>$common_by_facet</code>: retained common-element counts by linking facet for
-each reference-vs-wave comparison. <code>LinkSupportAdequate = FALSE</code> means the
-link rests on fewer than 5 retained common elements in at least one facet.</p></li>
-<li><p><code>$config</code>: records the analysis parameters for reproducibility.</p></li>
-<li><p>A practical reading order is <code>summary(drift)</code> first, then
-<code>drift$drift_table</code>, then <code>drift$common_by_facet</code> if overlap looks thin.</p></li>
-</ul></div>
-    <div class="section level2">
-    <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
-
-
-<ol><li><p>Fit separate models for each administration wave.</p></li>
-<li><p>Combine into a named list: <code>fits &lt;- list(Spring = fit_s, Fall = fit_f)</code>.</p></li>
-<li><p>Call <code>drift &lt;- detect_anchor_drift(fits)</code>.</p></li>
-<li><p>Review <code>summary(drift)</code> and <code>plot(drift)</code>.</p></li>
-<li><p>Flagged elements may need to be removed from anchor sets or
-investigated for substantive causes (e.g., rater re-training).</p></li>
-</ol></div>
+<p>Drift and heatmap views reuse saved residuals and screening rules; changing
+the display does not recalibrate them. Interpret with the offset and support
+review above: unflagged elements do not establish absence of panel-wide change.</p>
+<p>Forest whiskers describe individual wave estimates, not uncertainty in
+their differences. They do not include linking-offset uncertainty or
+cross-wave covariance, and their overlap is not a test of change. Missing
+standard errors produce no whisker, not a zero-width interval.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="anchor_to_baseline.html">anchor_to_baseline()</a></code>, <code><a href="build_equating_chain.html">build_equating_chain()</a></code>,
-<code><a href="make_anchor_table.html">make_anchor_table()</a></code>, <a href="plot.mfrm_anchor_drift.html">plot(x)</a>, <a href="mfrmr_linking_and_dff.html">mfrmr_linking_and_dff</a></p></div>
+<code><a href="review_mfrm_anchors.html">make_anchor_table()</a></code>, plot(x), <a href="build_linking_review.html">mfrmr_linking_and_dff</a></p>
+<p><code>detect_anchor_drift()</code>, <a href="mfrmr_api_migration_030.html">mfrmr_plot_migration</a></p></div>
     </div>
 
     <div class="section level2">
@@ -298,6 +293,31 @@ investigated for substantive causes (e.g., rater re-training).</p></li>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">drift</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">drift</span><span class="op">$</span><span class="va">drift_table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Facet"</span>, <span class="st">"Level"</span>, <span class="st">"Wave"</span>, <span class="st">"Drift"</span>, <span class="st">"Flag"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">drift</span><span class="op">$</span><span class="va">common_elements</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># Long-running workflow; run explicitly when needed.</span></span></span>
+<span class="r-in"><span><span class="co"># example("plot.mfrm_anchor_drift", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">people</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">d1</span> <span class="op">&lt;-</span> <span class="va">ratings</span><span class="op">[</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">people</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">d2</span> <span class="op">&lt;-</span> <span class="va">ratings</span><span class="op">[</span><span class="va">ratings</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">people</span><span class="op">[</span><span class="fl">13</span><span class="op">:</span><span class="fl">24</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">fit1</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">d1</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"JML"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit2</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">d2</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"JML"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Review convergence and common-element support before interpreting changes.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit2</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">drift</span> <span class="op">&lt;-</span> <span class="fu">detect_anchor_drift</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>W1 <span class="op">=</span> <span class="va">fit1</span>, W2 <span class="op">=</span> <span class="va">fit2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">drift_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">drift</span>, type <span class="op">=</span> <span class="st">"drift"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">drift_plot</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">drift_plot</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">chain</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_equating_chain.html">build_equating_chain</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>F1 <span class="op">=</span> <span class="va">fit1</span>, F2 <span class="op">=</span> <span class="va">fit2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">chain_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">chain</span>, type <span class="op">=</span> <span class="st">"chain"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">chain_plot</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">table</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">drift</span>, type <span class="op">=</span> <span class="st">"heatmap"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

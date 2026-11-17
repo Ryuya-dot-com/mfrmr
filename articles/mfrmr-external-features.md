@@ -143,10 +143,10 @@ table(features$row_summary$Complete)
 #>    48    72
 ```
 
-`mfrm_cluster_pam(features, k = 3)` would stop on the remaining missing
-values. Explicit `missing = "omit"` is available, but selects complete
-raters and changes the population being described. It does not correct
-missing-data bias.
+`mfrm_cluster(method = "pam", features, k = 3)` would stop on the
+remaining missing values. Explicit `missing = "omit"` is available, but
+selects complete raters and changes the population being described. It
+does not correct missing-data bias.
 
 ## Fit an explicit imputation model
 
@@ -188,7 +188,7 @@ plot(model, c("ExperienceYears", "AnnualRatings"), layout = c(2, 2))
 ![Imputation-chain means and standard deviations across iterations for
 experience years and annual rating workload. These traces help review
 mixing; they do not establish that the imputation model is
-appropriate.](mfrmr-external-features_files/figure-html/imputation-1.png)
+appropriate.](mfrmr-external-features_files/figure-html/imputation-1.svg)
 
 Five imputations and five iterations keep this executable example short;
 they are not an adequacy recommendation. The plot shows the mean and
@@ -198,7 +198,7 @@ investigation; overlapping lines in this short example do not establish
 convergence. Inspect logged events, chain behavior, observed versus
 imputed distributions, and substantive plausibility. A lack of logged
 events does not establish convergence or a suitable model.
-[`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
+[`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
 checks consistency of the data, not these assumptions.
 
 ## Describe groups and compare choices
@@ -468,7 +468,7 @@ plot(one_completion)
 ![Rater silhouette widths grouped by the descriptive partition in one
 completion. The dashed line is the overall mean; negative widths
 indicate profiles to inspect, not poor rater
-quality.](mfrmr-external-features_files/figure-html/silhouette-1.png)
+quality.](mfrmr-external-features_files/figure-html/silhouette-1.svg)
 
 Inspect one feature at a time so that its units and categories remain
 clear. Numeric profiles show means and medians in original units,
@@ -483,7 +483,7 @@ plot(one_completion, type = "profile", feature = "ExperienceYears")
 
 ![Experience in years summarized by descriptive rater group, with means
 and medians in the original units and no confidence
-intervals.](mfrmr-external-features_files/figure-html/profiles-1.png)
+intervals.](mfrmr-external-features_files/figure-html/profiles-1.svg)
 
 ``` r
 
@@ -492,7 +492,7 @@ plot(one_completion, type = "profile", feature = "TrainingLevel")
 
 ![Proportions of ordered training levels within each descriptive rater
 group. These profiles describe one imputed table, not effects of
-training.](mfrmr-external-features_files/figure-html/profiles-2.png)
+training.](mfrmr-external-features_files/figure-html/profiles-2.svg)
 
 The development version also offers dedicated ggplot conversion for
 these saved summaries. For example, remove the heading while keeping the
@@ -512,7 +512,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 feature table. Circles mark means and triangles mark medians, offset
 vertically so equal values remain visible. Group labels give counts; no
 confidence intervals are
-shown.](mfrmr-external-features_files/figure-html/profile-ggplot-1.png)
+shown.](mfrmr-external-features_files/figure-html/profile-ggplot-1.svg)
 
 Use `as_ggplot(one_completion)` for the silhouette view, retaining
 negative widths and the saved overall-mean line. Use the profile call
@@ -540,7 +540,7 @@ plot(analyses$ThreeGroups, ids = raters$Rater[1:20])
 ![Pairwise co-membership proportions across imputations for the first
 twenty rater IDs. The scale runs from zero to one; unavailable pairs are
 grey. These proportions are imputation sensitivity, not sampling
-stability.](mfrmr-external-features_files/figure-html/co-membership-1.png)
+stability.](mfrmr-external-features_files/figure-html/co-membership-1.svg)
 
 The colour scale always runs from zero to one. Grey denotes unavailable
 pairs involving excluded raters, not pairs that never share a group.
@@ -578,7 +578,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 order on both axes. The scale is fixed from zero to one; crosses mark
 unavailable cells, if any. Values use all supplied imputations and do
 not measure sampling
-stability.](mfrmr-external-features_files/figure-html/co-membership-ggplot-1.png)
+stability.](mfrmr-external-features_files/figure-html/co-membership-ggplot-1.svg)
 
 The default and `component = "matrix"` retain the same complete heatmap.
 For a new selection, use `as_ggplot(analyses$ThreeGroups, ids = ...)` or
@@ -659,7 +659,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 }
 ```
 
-![](mfrmr-external-features_files/figure-html/raincloud-1.png)
+![](mfrmr-external-features_files/figure-html/raincloud-1.svg)
 
 ``` r
 
@@ -673,19 +673,18 @@ For a selected wide plot table,
 chosen quantities; other columns remain identifiers or metadata.
 Matrices retain row/column indices and labels, including missing cells.
 The [network/reporting
-lesson](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.md)
+lesson](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html)
 shows how to export node, edge and coordinate tables without adopting a
 fixed figure style.
 
 ## Compare PAM with a hierarchy
 
 A hierarchy asks which groups merge as dissimilarity increases. Fit it
-separately from PAM:
-[`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md)
-uses average linkage (the mean of all cross-group Gower dissimilarities)
-or complete linkage (their maximum). The same feature types, weights,
-and missingness rules apply. Choose the group count explicitly; a tree
-does not automatically identify it.
+separately from PAM: `mfrm_cluster(x, k, method = "hierarchical")` uses
+average linkage (the mean of all cross-group Gower dissimilarities) or
+complete linkage (their maximum). The same feature types, weights, and
+missingness rules apply. Choose the group count explicitly; a tree does
+not automatically identify it.
 
 For multiply imputed features, reuse the same model and eligible cells.
 This holds the completed tables fixed while changing the grouping
@@ -774,7 +773,7 @@ plot(average$analyses[[1]])
 ![Average-linkage hierarchy from Gower dissimilarities in one completed
 rater-feature table. Boxes mark three groups; all 120 raters are
 included. Heights are dissimilarities, not significance or branch
-support.](mfrmr-external-features_files/figure-html/dendrogram-1.png)
+support.](mfrmr-external-features_files/figure-html/dendrogram-1.svg)
 
 This is the full tree for **one completion**, with boxes marking its
 three groups. The 120 raters are all included; ID labels are hidden by
@@ -876,9 +875,9 @@ tasks <- data.frame(
   TimeLimitMinutes = sample(c(10, 20, 30), 12, replace = TRUE),
   WordLimit = sample(c(100, 200, 400), 12, replace = TRUE),
   ResponseFormat = factor(rep(c("Summary", "Argument", "Explanation"), 4)))
-person_groups <- mfrm_cluster_pam(mfrm_features(persons, "Person",
+person_groups <- mfrm_cluster(method = "pam", mfrm_features(persons, "Person",
   c("LanguageStudyYears", "PreparationHours", "InstructionMode")), k = 3)
-task_groups <- mfrm_cluster_pam(mfrm_features(tasks, "Task",
+task_groups <- mfrm_cluster(method = "pam", mfrm_features(tasks, "Task",
   c("TimeLimitMinutes", "WordLimit", "ResponseFormat")), k = 3)
 ```
 
@@ -1038,11 +1037,11 @@ observed or missing values. MAR allows dependence on observed values,
 but not on missing values after conditioning on the observed
 information. MNAR allows additional dependence on the missing values.
 Planned allocation does not automatically imply MCAR: assignment may
-depend on recorded proficiency or on information absent from the
-analysis. A missingness rate or diagnostic test alone cannot establish
-MAR. See [Rubin (1976), *Inference and Missing
-Data*](https://doi.org/10.1093/biomet/63.3.581) for the conditions for
-ignoring a missingness process in inference.
+depend on prior ability estimates, recorded background variables, or
+information absent from the analysis. A missingness rate or diagnostic
+test alone cannot establish MAR. See [Rubin (1976), *Inference and
+Missing Data*](https://doi.org/10.1093/biomet/63.3.581) for the
+conditions for ignoring a missingness process in inference.
 
 Inspect both planned and observed connectivity, per-level support, and
 coverage within relevant subgroups. Connected Person-facet graphs do not
@@ -1097,9 +1096,7 @@ Ordinary PCA and k-means should not receive arbitrary numeric codes for
 nominal categories such as specialty. Keep Gower/PAM or average/complete
 linkage for mixed features. For selected numeric attributes,
 [`mfrm_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_pca.md)
-and
-[`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md)
-use R’s
+and `mfrm_cluster(x, k, method = "kmeans")` use R’s
 [`prcomp()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/prcomp.html)
 and
 [`kmeans()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/kmeans.html).
@@ -1196,7 +1193,7 @@ plot(first_numeric$pca)  # The full explained-variance table, including omitted 
 ![Explained-variance scree plot for numeric rater features in one
 completion. Filled points identify retained components and open points
 identify omitted
-components.](mfrmr-external-features_files/figure-html/numeric-pca-views-1.png)
+components.](mfrmr-external-features_files/figure-html/numeric-pca-views-1.svg)
 
 ``` r
 
@@ -1206,7 +1203,7 @@ plot(first_numeric$pca, type = "scores", groups = first_numeric, labels = FALSE)
 ![Scores on the first two principal components, with descriptive k-means
 groups distinguished by colour and point shape. This projection is not a
 latent ability or rater-quality
-scale.](mfrmr-external-features_files/figure-html/numeric-pca-views-2.png)
+scale.](mfrmr-external-features_files/figure-html/numeric-pca-views-2.svg)
 
 ``` r
 
@@ -1215,7 +1212,7 @@ plot(first_numeric$pca, type = "loadings", components = 1)
 
 ![First-component loadings for the transformed numeric rater features.
 Their signs are arbitrary and the coefficients are not original-unit
-correlations.](mfrmr-external-features_files/figure-html/numeric-pca-views-3.png)
+correlations.](mfrmr-external-features_files/figure-html/numeric-pca-views-3.svg)
 
 ``` r
 
@@ -1225,7 +1222,7 @@ plot(first_numeric, type = "profile", feature = "ExperienceYears")
 ![Experience in years summarized by the k-means groups fitted in the
 retained principal-component space. The original-unit profile describes
 this completion
-only.](mfrmr-external-features_files/figure-html/numeric-pca-views-4.png)
+only.](mfrmr-external-features_files/figure-html/numeric-pca-views-4.svg)
 
 The first-completion score plot annotates a two-dimensional projection
 with that completion’s group labels. Colour and point shape distinguish
@@ -1247,13 +1244,13 @@ numbers, and it does not Rubin-pool inference. These functions impute no
 rating scores.
 
 For an already complete numeric table, use
-`mfrm_cluster_kmeans(review, k=3)` directly. To inspect and retain a
-specific reduction, fit `pca <- mfrm_pca(review, components=2)` and then
-`mfrm_cluster_kmeans(pca, k=3)`. Passing a PCA object uses its scores
-exactly, without further standardization, range scaling or whitening.
-Save that PCA and its grouping together.
+`mfrm_cluster(method = "kmeans", review, k=3)` directly. To inspect and
+retain a specific reduction, fit `pca <- mfrm_pca(review, components=2)`
+and then `mfrm_cluster(method = "kmeans", pca, k=3)`. Passing a PCA
+object uses its scores exactly, without further standardization, range
+scaling or whitening. Save that PCA and its grouping together.
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
-[`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md)
+[`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
 reuse saved results; changing features, component counts, weights or
 seeds requires the corresponding new analysis.
 `mfrmr_output_guide("features")` lists the dedicated output routes. Use
@@ -1287,7 +1284,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 completed feature dataset. K-means groups use grayscale colours and
 different point shapes. Headings and entity labels are omitted; the
 saved data still identify the completion's transformation and excluded
-entities.](mfrmr-external-features_files/figure-html/numeric-pca-ggplot-1.png)
+entities.](mfrmr-external-features_files/figure-html/numeric-pca-ggplot-1.svg)
 
     #> [1] 1 2
 
@@ -1524,6 +1521,9 @@ plot_data(saved_features$view)    # Inspect this first-completion view.
 #> $labels
 #> [1] FALSE
 #> 
+#> $marginal
+#> [1] "auto"
+#> 
 #> $preset
 #> [1] "monochrome"
 #> 
@@ -1560,8 +1560,9 @@ omitted IDs and assumptions. These feature results use their own
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
 methods. They are separate from
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
-and from the pooled response-score intervals described in
-[`vignette("mfrmr-response-imputation")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-response-imputation.md).
+and from the pooled response-score intervals described in [Missing
+scores on assigned
+ratings](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-response-imputation.html).
 Saved feature files retain identifiers and original attributes, so
 review what they contain before sharing them.
 
@@ -1582,7 +1583,7 @@ total entities because its comparison matrix includes excluded IDs.
 These are input limits, not a guarantee of low memory use or acceptable
 run time. Multiple imputations also retain every completed analysis.
 Save the fitted imputation model and clustering results;
-[`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md)
+[`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
 reuses them without repeating the fits.
 
 Plan for temporary distance and silhouette calculations as well as the

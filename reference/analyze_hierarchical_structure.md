@@ -2,7 +2,7 @@
 
 One-stop review that combines the nesting, cross-tabulation, ICC, and
 design-effect reports into a single object. Its summary feeds into
-[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
+[mfrm_report_checklist](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
 after checking the reviewed data against the fit.
 
 ## Usage
@@ -29,29 +29,29 @@ analyze_hierarchical_structure(
 
 ## Arguments
 
-- data :
+- data:
 
   Data frame in long format, or an `mfrm_fit` (its `prep$data` is used).
 
-- facets :
+- facets:
 
   Character vector of facet column names. When `data` is an `mfrm_fit`,
   defaults to `fit$prep$facet_names`.
 
-- person :
+- person:
 
   Person column name. Defaults to `"Person"`.
 
-- score :
+- score:
 
   Score column name. Defaults to `"Score"`.
 
-- compute_icc :
+- compute_icc:
 
   Logical; if `TRUE` and `lme4` is available, adds ICC and design-effect
   tables.
 
-- ci_method :
+- ci_method:
 
   ICC confidence-interval method passed through to
   [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md).
@@ -60,34 +60,34 @@ analyze_hierarchical_structure(
   profile-likelihood interval. Deprecated alias: `icc_ci_method` (kept
   for backward compatibility, emits a lifecycle warning).
 
-- ci_level :
+- ci_level:
 
   Confidence level when `ci_method != "none"`; default `0.95`.
   Deprecated alias: `icc_ci_level`.
 
-- ci_boot_reps :
+- ci_boot_reps:
 
   Number of bootstrap replicates when `ci_method = "boot"`. Default
   `1000`. Deprecated alias: `icc_ci_boot_reps`.
 
-- ci_boot_seed :
+- ci_boot_seed:
 
   Optional RNG seed for reproducible bootstrap CIs. Deprecated alias:
   `icc_ci_boot_seed`.
 
-- igraph_layout :
+- igraph_layout:
 
   Logical; if `TRUE` and `igraph` is available, adds a connectivity
   component summary using a bipartite graph over person x facet levels.
 
-- icc_ci_method, icc_ci_level, icc_ci_boot_reps, icc_ci_boot_seed :
+- icc_ci_method, icc_ci_level, icc_ci_boot_reps, icc_ci_boot_seed:
 
   Deprecated compatibility spellings of the `ci_*` arguments above.
   Supplying a non-`NULL` value routes through
   [`lifecycle::deprecate_warn()`](https://lifecycle.r-lib.org/reference/deprecate_soft.html)
   and overrides the canonical `ci_*` argument.
 
-- missing :
+- missing:
 
   Missing-value policy for the ICC and design-effect tables, passed to
   [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md).
@@ -112,7 +112,7 @@ A list of class `mfrm_hierarchical_structure` with:
   when requested.
 
 - `design_effect`: output of
-  [`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md)
+  [`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md)
   when requested.
 
 - `connectivity`: named list with bipartite-graph component summary when
@@ -156,8 +156,10 @@ they do not change the underlying ICC estimates.
   full design.
 
 - `connectivity`: number of bipartite components linking Person x facet
-  levels. A single component is required for a common measurement scale;
-  multiple components indicate a disconnected design.
+  levels. Multiple components indicate no observed links between those
+  parts of the design. Their comparison may rely on external anchors or
+  population assumptions. A single component alone does not establish
+  identification of the full many-facet model.
 
 ## Typical workflow
 
@@ -169,11 +171,11 @@ they do not change the underlying ICC estimates.
 3.  Read `summary(x)` for the condensed view.
 
 4.  Pass it as `hierarchical_structure` to
-    [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
+    [mfrm_report_checklist](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
     and save the review with
     [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) when its full
     tables are needed later.
-    [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md)
+    [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
     records a separate fit-level rating-count review; it does not accept
     or archive this structural-review object.
 
@@ -193,7 +195,7 @@ other strata or columns absent from the fit remains usable on its own,
 but cannot mark this fit's checklist item as available. Recreate older
 reviews without `data_identity` from the saved fit or matching retained
 rows and original options; no MFRM refit is needed. See
-[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md).
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md).
 
 ## References
 
@@ -215,31 +217,23 @@ of Chiropractic Medicine, 15*(2), 155-163.
 [`detect_facet_nesting()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_facet_nesting.md),
 [`facet_small_sample_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_small_sample_review.md),
 [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md),
-[`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md),
-[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
-[`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md),
+[`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md),
+[mfrm_report_checklist](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
+[`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md),
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("analyze_hierarchical_structure", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 toy <- load_mfrmr_data("example_core")
 hs <- analyze_hierarchical_structure(toy,
                                      facets = c("Rater", "Criterion"),
                                      compute_icc = FALSE,
                                      igraph_layout = FALSE)
 summary(hs)
-#> mfrm_hierarchical_structure
-#> 
-#> Summary:
-#>  NFacets NestedPairs CrossedPairs ICCAvailable ConnectivityComponents
-#>        2           0            3        FALSE                     NA
-#> 
-#> Nesting review:
-#>  FacetA    FacetB NestingIndex_AinB NestingIndex_BinA Direction
-#>  Person     Rater                 0                 0   crossed
-#>  Person Criterion                 0                 0   crossed
-#>   Rater Criterion                 0                 0   crossed
 
 # Full review when lme4 and igraph are available.
 if (requireNamespace("lme4", quietly = TRUE) &&
@@ -249,50 +243,5 @@ if (requireNamespace("lme4", quietly = TRUE) &&
   summary(hs_full)
   plot(hs_full, type = "icc")
 }
-#> mfrm_hierarchical_structure
-#> 
-#> Summary:
-#>  NFacets NestedPairs CrossedPairs ICCAvailable ConnectivityComponents
-#>        2           0            3         TRUE                      1
-#> 
-#> Nesting review:
-#>  FacetA    FacetB NestingIndex_AinB NestingIndex_BinA Direction
-#>  Person     Rater                 0                 0   crossed
-#>  Person Criterion                 0                 0   crossed
-#>   Rater Criterion                 0                 0   crossed
-#> 
-#> ICC (lme4 variance-components):
-#> mfrm_facet_icc
-#>   ICC rows: 768 input, 768 used, 0 excluded.
-#>      Facet   Variance    ICC Interpretation InterpretationScale ICC_CI_Lower
-#>     Person 0.34626071 0.3511           Poor  Koo-Li reliability           NA
-#>      Rater 0.02667343 0.0270  Trivial share      Variance share           NA
-#>  Criterion 0.02188365 0.0222  Trivial share      Variance share           NA
-#>   Residual 0.59144865 0.5997    Large share      Variance share           NA
-#>  ICC_CI_Upper ICC_CI_Level ICC_CI_Method ICC_CI_Status InputRows UsedRows
-#>            NA         0.95          none Not requested       768      768
-#>            NA         0.95          none Not requested       768      768
-#>            NA         0.95          none Not requested       768      768
-#>            NA         0.95          none Not requested       768      768
-#>  ExcludedRows
-#>             0
-#>             0
-#>             0
-#>             0
-#> 
-#> Design-effect approximations:
-#> mfrm_facet_design_effect (per-facet approximation)
-#>   EffectiveN is a descriptive row count, not full-design precision.
-#>   ICC rows: 768 input, 768 used, 0 excluded.
-#>      Facet AvgClusterSize    ICC DesignEffect EffectiveN InputRows UsedRows
-#>      Rater            192 0.0270        6.157      124.7       768      768
-#>  Criterion            192 0.0222        5.240      146.6       768      768
-#>  ExcludedRows
-#>             0
-#>             0
-#> 
-#> Bipartite connectivity (via igraph):
-#>   Components: 1 
-#>   Largest component: 56 
-#>   Isolates: 0 
+} # }
 ```

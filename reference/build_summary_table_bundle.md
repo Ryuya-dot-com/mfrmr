@@ -3,6 +3,10 @@
 Build a manuscript-oriented table bundle from
 [`summary()`](https://rdrr.io/r/base/summary.html) outputs
 
+Summarize report/table bundles in a user-friendly format
+
+Plot report/table bundles with ggplot2
+
 ## Usage
 
 ``` r
@@ -15,37 +19,61 @@ build_summary_table_bundle(
   top_n = 10,
   preview_chars = 160
 )
+
+# S3 method for class 'mfrm_bundle'
+summary(object, digits = 3, top_n = 10, include_person = FALSE, ...)
+
+# S3 method for class 'mfrm_bundle'
+plot(x, y = NULL, type = NULL, ...)
+
+# S3 method for class 'mfrm_summary_table_bundle'
+summary(object, digits = 3, top_n = 8, ...)
+
+# S3 method for class 'mfrm_summary_table_bundle'
+plot(
+  x,
+  y = NULL,
+  type = c("table_rows", "role_tables", "appendix_roles", "appendix_sections",
+    "appendix_presets", "selection_handoff_presets", "selection_tables",
+    "selection_handoff", "selection_handoff_bundles", "selection_handoff_roles",
+    "selection_handoff_role_sections", "selection_bundles", "selection_roles",
+    "selection_sections", "numeric_profile", "first_numeric"),
+  which = NULL,
+  selection_value = c("count", "fraction"),
+  appendix_preset = c("recommended", "compact", "all", "methods", "results",
+    "diagnostics", "reporting"),
+  main = NULL,
+  palette = NULL,
+  label_angle = 45,
+  draw = TRUE,
+  ...
+)
 ```
 
 ## Arguments
 
 - x:
 
-  An `mfrm_fit`, `mfrm_diagnostics`, `mfrm_precision_review`,
-  `mfrm_fit_measures`, `mfrm_facets_fit_review`,
-  `mfrm_person_fit_indices`, `mfrm_data_description`,
-  `mfrm_reporting_checklist`, `mfrm_apa_outputs`,
-  `mfrm_design_evaluation`, `mfrm_signal_detection`,
-  `mfrm_recovery_simulation`, `mfrm_recovery_assessment`,
-  `mfrm_population_prediction`, `mfrm_facets_run`, `mfrm_bias`,
-  `mfrm_anchor_review`, `mfrm_linking_review`, `mfrm_misfit_casebook`,
-  `mfrm_model_choice_review`, `mfrm_weighting_review`,
-  `mfrm_calibration_score`, `mfrm_unit_prediction`, or
-  `mfrm_plausible_values` object, one of their
-  [`summary()`](https://rdrr.io/r/base/summary.html) outputs, or a
-  compatible precomputed recovery-evidence summary.
+  A bundle object returned by mfrmr table/report helpers.
 
 - which:
 
-  Optional character vector selecting a subset of named tables.
+  For `build_summary_table_bundle()`: Optional character vector
+  selecting a subset of named tables.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Optional
+  table selector used for numeric plot types.
 
 - appendix_preset:
 
-  Optional appendix-oriented table preset: `"all"`, `"recommended"`,
-  `"compact"`, `"methods"`, `"results"`, `"diagnostics"`, or
-  `"reporting"`. Cannot be combined with `which`. Section-aware presets
-  keep returned tables whose bundle catalog maps to the requested
-  appendix section.
+  For `build_summary_table_bundle()`: Optional appendix-oriented table
+  preset: `"all"`, `"recommended"`, `"compact"`, `"methods"`,
+  `"results"`, `"diagnostics"`, or `"reporting"`. Cannot be combined
+  with `which`. Section-aware presets keep returned tables whose bundle
+  catalog maps to the requested appendix section.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Appendix
+  preset used for `selection_*` plot types.
 
 - include_empty:
 
@@ -53,21 +81,76 @@ build_summary_table_bundle(
 
 - digits:
 
-  Digits forwarded when
-  [`summary()`](https://rdrr.io/r/base/summary.html) must be computed
-  from a raw object.
+  Number of digits for printed numeric values.
 
 - top_n:
 
-  Row cap forwarded to compact
-  [`summary()`](https://rdrr.io/r/base/summary.html) methods when `x` is
-  a raw object.
+  Number of preview rows shown from the main table component.
 
 - preview_chars:
 
   Character cap forwarded to
-  [`summary.mfrm_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_apa_outputs.md)
+  [`summary.mfrm_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
   when `x` is a raw APA-output object.
+
+- object:
+
+  Output from `build_summary_table_bundle()`.
+
+- include_person:
+
+  If `TRUE`, person-level identifiers may appear in supported summary
+  and preview tables. The default suppresses identifier columns,
+  person-facet level labels, and ConQuest case labels from the returned
+  summary object and its console output. This does not alter the source
+  bundle.
+
+- ...:
+
+  Reserved for generic compatibility.
+
+- y:
+
+  Reserved for generic compatibility.
+
+- type:
+
+  Plot type: `"table_rows"` for returned-table sizes, `"role_tables"`
+  for returned-table counts by reporting role, `"appendix_roles"` for
+  returned-table counts by reporting role under the bundle's
+  appendix-routing contract, `"appendix_sections"` for returned-table
+  counts by manuscript-facing appendix section, `"appendix_presets"` for
+  conservative appendix-preset counts, `"selection_handoff_presets"` for
+  workflow-only preset-level appendix handoff counts,
+  `"selection_tables"` / `"selection_handoff"` /
+  `"selection_handoff_bundles"` / `"selection_handoff_roles"` /
+  `"selection_bundles"` / `"selection_roles"` / `"selection_sections"`
+  for workflow-only appendix selection surfaces when present in the
+  bundle, `"numeric_profile"` for column means from a selected numeric
+  table, or `"first_numeric"` for the distribution of the first numeric
+  column in a selected table.
+
+- selection_value:
+
+  For `selection_*` plot types, whether to plot exact counts (`"count"`)
+  or the corresponding exact fraction (`"fraction"`) when that surface
+  exposes one.
+
+- main:
+
+  Optional title override.
+
+- palette:
+
+  Optional named color overrides.
+
+- label_angle:
+
+  Axis-label rotation angle for bar-type plots.
+
+- draw:
+
+  If `TRUE`, display the returned ggplot.
 
 ## Value
 
@@ -89,254 +172,446 @@ An object of class `mfrm_summary_table_bundle` with:
 
 - `summary_class`
 
+An object of class `summary.mfrm_bundle`.
+
+A `ggplot` object (invisibly), carrying the underlying `mfrm_plot_data`
+payload accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_summary_table_bundle`.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object carrying its saved plot payload accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+
 ## Details
 
-This helper turns the package's compact summary objects into a
-reproducible table bundle for manuscript drafting, appendix handoff, or
-downstream formatting. It does not replace
-[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md);
-instead, it provides a consistent bridge from
-[`summary()`](https://rdrr.io/r/base/summary.html) to named `data.frame`
-components that can later be rendered with
+Collects named data frames from supported `mfrmr` objects or their
+[`summary()`](https://rdrr.io/r/base/summary.html) outputs into
+`tables`, indexed by `table_index` (dimensions, appendix roles,
+descriptions) and `plot_index` (numeric views). G-study, D-study,
+D-study comparison, residual-network, and
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+inputs retain complete signed/unavailable evidence rows without `top_n`
+truncation, while fit, diagnostics, recovery, calibration, and
+model-choice summaries preserve their role-classified caveat,
+`reading_order`, `population_coding`, and df-sensitivity tables for
 [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
-or exported directly.
+and
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
 
-The public entry point validates `x` and the summary-object contract up
-front, so malformed summaries fail with a package-level message instead
-of falling through to opaque downstream errors.
+This method provides a compact summary for bundle-like outputs (for
+example: unexpected-response, fair-average, chi-square, and category
+report objects). It extracts:
 
-The function first normalizes `x` through the corresponding
-[`summary()`](https://rdrr.io/r/base/summary.html) method when needed,
-then records a `table_index` describing every available table and
-returns the selected tables in `tables`. Optional appendix presets can
-be applied at bundle-construction time when you want a conservative
-manuscript-facing subset before plotting or export.
+- object class and available components
 
-## Supported inputs
+- one-row summary table when available
 
-- [`mfrm_g_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_g_study.md),
-  [`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md),
-  [`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md),
-  [`mfrm_residual_network()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_residual_network.md)
-  or their
-  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
-  objects; supply saved intervals to
-  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
-  first. These routes retain all evidence tables, including signed
-  estimates, settings and unavailable states, without `top_n`
-  truncation.
+- preview rows from the main data component
 
-- [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-  or `summary(fit)`
+- resolved settings/options
 
-- [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-  or `summary(diag)`
+Branch-aware summaries are provided for:
 
-- [`precision_review_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/precision_review_report.md)
-  or `summary(precision_review)`
+- `mfrm_bias_count` (`branch = "original"` / `"facets"`)
 
-- [`fit_measures_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_measures_table.md)
-  or `summary(fit_measures)`
+- `mfrm_fixed_reports` (`branch = "original"` / `"facets"`)
 
-- [`facets_fit_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_fit_review.md)
-  or `summary(facets_fit_review)`
+- `mfrm_visual_summaries` (`branch = "original"` / `"facets"`)
 
-- [`compute_person_fit_indices()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_person_fit_indices.md)
-  or `summary(person_fit)`
+Additional class-aware summaries are provided for:
 
-- [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
-  or `summary(ds)`
+- `mfrm_unexpected`, `mfrm_fair_average`, `mfrm_displacement`
 
-- [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-  or `summary(chk)`
+- `mfrm_interrater`, `mfrm_facets_chisq`, `mfrm_bias_interaction`
 
-- [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
-  or `summary(apa)`
+- `mfrm_rating_scale`, `mfrm_category_structure`, `mfrm_category_curves`
 
-- [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md)
-  or `summary(sim_eval)`
+- `mfrm_measurable`, `mfrm_unexpected_after_bias`, `mfrm_output_bundle`
 
-- [`evaluate_mfrm_signal_detection()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_signal_detection.md)
-  or `summary(sig_eval)`
+- `mfrm_residual_pca`, `mfrm_specifications`, `mfrm_data_quality`,
+  `mfrm_fit_measures`
 
-- [`simulate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_recovery.md)
-  or `summary(rec)`
+- `mfrm_iteration_report`, `mfrm_subset_connectivity`,
+  `mfrm_facet_statistics`
 
-- [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)
-  or `summary(rec_assessment)`
+- `mfrm_facets_contract_review`, `mfrm_facets_fit_review`,
+  `mfrm_facets_fit_df_guide`, `mfrm_reference_benchmark`
 
-- a compatible precomputed recovery-evidence summary
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) dispatches by
+bundle class:
 
-- [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_population.md)
-  or `summary(pred)`
+- `mfrm_unexpected` -\> [plot(x, type =
+  "unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
-- the `structural_design_review` component of a design or prediction
-  summary
+- `mfrm_fair_average` -\> [plot(x, type =
+  "fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
-- [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)
-  or `summary(out)`
+- `mfrm_displacement` -\> [plot(x, type =
+  "displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
-- [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-  or `summary(bias)`
+- `mfrm_interrater` -\> [plot(x, type =
+  "agreement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
-- [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
-  or `summary(review)`
+- `mfrm_facets_chisq` -\> [plot(x, type =
+  "facets_chisq")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
-- [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
-  or `summary(review)`
+- `mfrm_bias_interaction` -\> [plot(x, type =
+  "bias")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
-- [`build_misfit_casebook()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_misfit_casebook.md)
-  or `summary(casebook)`
+- `mfrm_bias_count` -\> bias-count plots (cell counts / low-count rates)
 
-- [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md)
-  or `summary(review)`
+- `mfrm_fixed_reports` -\> pairwise-contrast diagnostics
 
-- [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
-  or `summary(review)`
+- `mfrm_visual_summaries` -\> warning/summary message count plots
 
-- [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
-  or `summary(pred_units)`
+- `mfrm_category_structure` -\> category count and boundary plots
 
-- [`score_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
-  or `summary(scores)`; includes all review dispositions and unrounded
-  conditional decisions when requested
+- `mfrm_category_curves` -\> overview (default), ogive, CCC / category
+  probability / conditional probability, cumulative, total-information,
+  and category-specific-information plots
 
-- [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md)
-  or `summary(pv)`
+- `mfrm_rating_scale` -\> category-counts/threshold plots
+
+- `mfrm_measurable` -\> measurable-data coverage/count plots
+
+- `mfrm_unexpected_after_bias` -\> post-bias unexpected-response plots
+
+- `mfrm_output_bundle` -\> graph/score output-file diagnostics,
+  including `type = "score_se"` when scorefile SE columns are available
+
+- `mfrm_residual_pca` -\> residual PCA scree, parallel-analysis, or
+  loadings views via [plot(x, type =
+  "residual_pca")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+
+- `mfrm_specifications` -\> facet/anchor/convergence plots
+
+- `mfrm_data_quality` -\> dashboard, quality-flag, score-map,
+  facet-pattern, and row/category/missing-row plots
+
+- `mfrm_facets_fit_review` -\> FACETS-style df-sensitivity plot
+
+- `mfrm_fit_measures` -\> fit-status counts, Infit/Outfit scatter,
+  measure normal bands, and FACETS-style df-sensitivity plots. For
+  `type = "measure_ci"`, the caption retains the source interval
+  interpretation (including exploratory JML bands); fixed values use
+  open diamonds and finite estimates without intervals use crosses.
+  `main = ""` omits the title and `show_notes = FALSE` hides the caption
+  without removing it from saved data. Changing `ci_level` does not
+  change inferential eligibility. See
+  [`fit_measures_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_measures_table.md).
+
+- `mfrm_iteration_report` -\> replayed-iteration trajectories
+
+- `mfrm_subset_connectivity` -\> subset-observation/connectivity plots
+
+- `mfrm_facet_statistics` -\> facet statistic profile plots
+
+- `mfrm_export_bundle` / `mfrm_summary_appendix_export` -\> export
+  handoff plots (`formats`, `artifact_groups`, `selection_tables`,
+  `selection_handoff`, `selection_handoff_bundles`,
+  `selection_handoff_roles`, `selection_handoff_role_sections`,
+  `selection_bundles`, `selection_roles`, `selection_sections`)
+
+If a class is outside these families, use dedicated plotting helpers or
+custom `ggplot2` graphics on component tables.
+
+For `mfrm_category_curves`, pass `preset = "monochrome"` for
+grayscale/line-type output. Cumulative `.5` boundary lines are shown
+only for interpretable in-range boundaries by default; use
+`boundary_status = "all"` to show every finite boundary estimate or
+`boundary_status = "none"` / `show_cumulative_boundaries = FALSE` to
+suppress those vertical boundary lines. Use
+`plot_data(x, component = "plot_long")` on a category-curve bundle when
+you want one ggplot2/plotly-friendly table across all curve families.
+Keep curve families and groups separate in custom figures. All
+category-curve, category-structure, rating-scale, and network bundle
+views render natively via `ggplot2`. Step displays use point estimates
+and do not turn stored step SEs into crossing, gap or curve intervals.
+
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize a
+summary-table bundle for manuscript QC
+
+For [`summary()`](https://rdrr.io/r/base/summary.html): Review
+returned-table coverage, dimensions, roles and numeric content before
+plotting or export.
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot a
+summary-table bundle for manuscript QC
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
+Table-count views describe reporting coverage, not study sample sizes.
+`selection_*` views use appendix selections already retained in the
+bundle; `"selection_handoff_role_sections"` groups them by reporting
+role and appendix section. Numeric views pass the selected table through
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+and
+[`plot.apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+for exploratory checks. See `type` for each view and `selection_value`
+for counts versus fractions.
 
 ## Interpreting output
 
-- `overview`: one-row metadata about the source summary and table
-  counts.
+- `overview`: class, component count, and selected preview component.
 
-- `table_index`: table names, dimensions, roles, and manuscript-oriented
-  descriptions.
+- `summary`: one-row aggregate block when supplied by the bundle.
 
-- `plot_index`: which returned tables contain numeric content and which
-  bundle-level plot types can use them directly.
+- `preview`: first `top_n` rows from the main table-like component.
 
-- `tables`: named `data.frame` objects ready for formatting or export.
+- `settings`: resolved option values if available.
 
-- `appendix_preset`: active appendix subset mode (`"none"` when not
-  used).
+- `validation_scope`: package-generated versus independently supplied
+  evidence scope when summarizing `mfrm_reference_benchmark`.
 
-- `notes`: short guidance about omitted empty tables or source-level
-  caveats.
+- `conquest_command_scope`: ConQuest command-template scope when
+  summarizing `mfrm_conquest_overlap_bundle`.
 
-- fit-level caveats use the `analysis_caveats` role; pre-fit data
-  score-support caveats use the `score_category_caveats` role. Both
-  roles are classified as diagnostics and stay in `recommended` appendix
-  subsets.
+- `conquest_output_contract`: requested ConQuest outputs and review
+  handoff when summarizing `mfrm_conquest_overlap_bundle`.
 
-- recovery-assessment and recovery-validation summaries expose
-  `diagnostic_reporting_notes` before `diagnostic_review` or
-  `diagnostic_oc_summary` so fit/separation caveats can be reported
-  without treating them as direct evidence of parameter recovery.
+- `mfrmr_fit_status`: actual optimizer controls, MML engine, convergence
+  evidence, and inference-readiness state for an
+  `mfrm_conquest_overlap_bundle`.
 
-- recovery-validation summaries expose `condition_reporting_notes`
-  before `condition_summary` so GPCM generator stress and sparse score
-  support are not mistaken for recovery-metric failures.
+- `normalization_scope`: extracted-table normalization scope when
+  summarizing `mfrm_conquest_overlap_tables`.
 
-- precision-review summaries expose `fit_separation_basis` so fit, ZSTD,
-  separation/reliability/strata, and QC thresholds remain distinct forms
-  of evidence rather than interchangeable summaries.
+- `review_scope`: supplied-table review scope when summarizing
+  `mfrm_conquest_overlap_review`.
 
-- fit-measure and FACETS fit-review summaries expose df/ZSTD sensitivity
-  tables under precision-review roles, keeping MnSq status, ZSTD
-  standardization, and external FACETS matching distinct in appendix
-  handoffs.
+- `conquest_overlap_checks` / `population_policy_checks`: specialized
+  benchmark check previews when summarizing `mfrm_reference_benchmark`.
 
-- latent-regression fit summaries expose `population_coding` in the
-  methods appendix role so categorical levels, contrasts, and encoded
-  columns can be documented with the coefficient table.
+The returned object is a `ggplot` object whose underlying plot payload
+and notes remain accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+and
+[`plot_data_components()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md);
+set `draw = TRUE` for immediate display.
 
-- model-choice-review summaries expose `comparison_table`,
-  `comparison_warnings`, `model_roles`, `downstream_routes`, and
-  `report_templates` so RSM/PCM versus `GPCM` comparisons remain tied to
-  their same-basis limits, equal-weighting, sensitivity, and
-  reporting-boundary roles.
+For [`summary()`](https://rdrr.io/r/base/summary.html):
+
+- `overview`: source class, returned-table count, note count, and
+  whether a numeric table is available for plotting.
+
+- `role_summary`: counts and total size by reporting role.
+
+- `table_catalog`: complete returned-table registry with plot/export
+  bridges.
+
+- `table_profile`: table-level dimensions, numeric-column counts, and
+  missing values for the largest returned tables.
+
+- `plot_index`: which returned tables are plot-ready and which
+  bundle-level numeric QC routes they support.
+
+- `appendix_presets`: conservative `all` / `recommended` / `compact`
+  plus section-aware `methods` / `results` / `diagnostics` / `reporting`
+  appendix-export presets derived from table roles.
+
+- `appendix_role_summary`: counts of returned tables by reporting role
+  under the same conservative appendix routing used by the bundle
+  catalog.
+
+- `appendix_section_summary`: counts of returned tables by
+  manuscript-facing appendix section.
+
+- When workflow appendix tables are present,
+  `selection_handoff_table_summary`, `selection_handoff_preset_summary`,
+  `selection_handoff_bundle_summary`, `selection_handoff_role_summary`
+  and `selection_handoff_role_section_summary` describe export
+  selections by table, preset, bundle-by-section, reporting role and
+  role-by-section, respectively.
+
+- `selection_summary`, `selection_table_summary`,
+  `selection_table_preset_summary`, `selection_role_summary`,
+  `selection_section_summary` and `selection_catalog` describe the
+  preset-filtered selections from those workflow tables.
+
+- `reporting_map`: where to go next for plotting, APA formatting, and
+  export.
+
+- `notes`: carried forward source-level caveats from the originating
+  summary.
 
 ## Typical workflow
 
-1.  Build a compact object with `summary(...)`.
+1.  Generate a bundle table/report helper output.
 
-2.  Convert it with `build_summary_table_bundle(...)`.
+2.  Run `summary(bundle)` for compact QA.
 
-3.  Use `bundle$tables[[...]]` directly, or hand a selected table to
-    [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
-    for formatted manuscript output.
+3.  Drill into specific components via `$` and visualize with
+    `plot(bundle, ...)`.
 
-4.  If you want a manuscript appendix subset up front, use a preset such
-    as `appendix_preset = "recommended"`, `"compact"`, or
-    `"diagnostics"`.
+&nbsp;
 
-5.  For recovery-assessment or recovery-validation summaries, inspect
-    `bundle$tables$reading_order` first when it is available.
+1.  Create bundle output (e.g.,
+    [`unexpected_response_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/unexpected_response_table.md)).
 
-6.  For recovery-assessment or recovery-validation summaries with
-    retained diagnostics, read `diagnostic_reporting_notes` before the
-    raw `diagnostic_review` or `diagnostic_oc_summary`. Read
-    `condition_reporting_notes` before `condition_review` or
-    `condition_summary` when `GPCM` generator stress is part of the
-    plan.
+2.  Inspect routing with `summary(bundle)` if needed.
+
+3.  Call `p <- plot(bundle, type = ..., draw = FALSE)` and inspect
+    `plot_data(p)` when needed.
+
+## Session plot defaults
+
+See
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+for `options(mfrmr.plot_preset)`, argument precedence, and appearance
+when saving or reusing a plot.
+
+## Network display controls
+
+For subset, design, rater and halo bundles with `type = "network"`, use
+`layout` (a two-column coordinate matrix, optionally row-named by all
+node IDs, or a function of the displayed igraph), `display_min_weight`
+(absolute edge weight for the picture only), and `graphical` for
+supported compatibility controls: `vertex.label` and the first positive
+`vertex.size` value. Other igraph styling controls are not applied by
+the ggplot renderer; customize the returned ggplot instead. Unnamed
+vectors and coordinates follow the returned `nodes` order. All nodes,
+including isolates, remain. The default layout is a deterministic
+circle; positions do not estimate anything. Labels are hidden by default
+above 80 nodes; set vertex.label explicitly to override. Supply the same
+named layout to compare views. Constructor filters such as `min_weight`
+change calculated metrics; `display_min_weight` does not. Returned
+`source_edges` retain the calculated graph, `edges` the displayed graph,
+and `coordinates` the actual positions. Titles are metadata by default;
+add displayed text with
+[`ggplot2::labs()`](https://ggplot2.tidyverse.org/reference/labs.html).
+See [online networks and reporting
+guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html)
+for bipartite assignment, directional disagreement and
+rater-by-criterion examples inspired by Lamprianou. With
+[`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md)
+and `weight_metric = "DirectionalMagnitude"`,
+`type = "fit", metric = "SWS"` (or `"PUS"`) shows the published network
+inconsistency index. The returned table retains unavailable
+rows/statuses; there are no calibrated reference cutoffs. An entirely
+unavailable index draws an unavailable message and retains the original
+rows/statuses in the returned table, rather than substituting zero. For
+signed alpha, `type = "matrix"` returns all eligible signed pair
+coefficients before graph filtering, retaining zero and undefined values
+separately. Network drawings use magnitude for edge width and dashed
+lines for negative agreement. Use
+[`plot.mfrm_network_ergm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_rater_network.md)
+for ERGM coefficient intervals and simulated GOF.
 
 ## See also
 
-[`summary()`](https://rdrr.io/r/base/summary.html),
+[`base::summary()`](https://rdrr.io/r/base/summary.html),
 [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md),
-[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
+[mfrm_report_checklist](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
 [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md),
 [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md),
 [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md),
 [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
 
+[`unexpected_response_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/unexpected_response_table.md),
+[`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+
+[`summary()`](https://rdrr.io/r/base/summary.html), [plot(x, type =
+"unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"fair_average")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
+[plot(x, type =
+"displacement")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+
+`build_summary_table_bundle()`,
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+
+`build_summary_table_bundle()`,
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md),
+[`plot.apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("build_summary_table_bundle", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 fit <- example_fit$fit
 bundle <- build_summary_table_bundle(fit)
 bundle$table_index
-#>                  Table Rows Cols                 Role
-#> 1             overview    1   89         run_overview
-#> 2  population_overview    1   17     population_basis
-#> 5    population_coding    0    6    population_coding
-#> 6       facet_overview    2    7   facet_distribution
-#> 7      person_overview    1   10  person_distribution
-#> 8        step_overview    1    5   category_structure
-#> 10   settings_overview    1   35  estimation_settings
-#> 11       reporting_map    6    3        reporting_map
-#> 12             caveats    0    8     analysis_caveats
-#> 13      facet_extremes    8    3 extreme_facet_levels
-#> 14         person_high   10   20  extreme_person_high
-#> 15          person_low   10   20   extreme_person_low
-#>                                                                                                                                       Description
-#> 1                                                                              One-row model fit, convergence, and information-criteria overview.
-#> 2                                                                                   Population-model basis, posterior basis, and omission review.
-#> 5                                                    Latent-regression categorical covariate levels, contrasts, and encoded model-matrix columns.
-#> 6                                                                                               Per-facet spread, range, and level-count summary.
-#> 7                                                                                     Distribution of person measures and posterior SD summaries.
-#> 8                                                                                                       Threshold range and monotonicity summary.
-#> 10                                                                             Estimation settings that affect identification and interpretation.
-#> 11                                                                                   Companion outputs to cite for manuscript-oriented reporting.
-#> 12 Structured fit-level caveats such as retained zero-count categories, score-category recoding, and latent-regression population-model warnings.
-#> 13                                                                                              Facet levels with the largest absolute estimates.
-#> 14                                                                                                  Highest person measures from the current fit.
-#> 15                                                                                                   Lowest person measures from the current fit.
 summary(bundle)$role_summary
-#>                    Role Tables TotalRows TotalCols
-#> 12         run_overview      1         1        89
-#> 11        reporting_map      1         6         3
-#> 10    population_coding      1         0         6
-#> 9      population_basis      1         1        17
-#> 8   person_distribution      1         1        10
-#> 7    facet_distribution      1         2         7
-#> 6    extreme_person_low      1        10        20
-#> 5   extreme_person_high      1        10        20
-#> 4  extreme_facet_levels      1         8         3
-#> 3   estimation_settings      1         1        35
-#> 2    category_structure      1         1         5
-#> 1      analysis_caveats      1         0         8
+
+} # }
+# Long-running workflow; run explicitly when needed.
+# example("summary.mfrm_bundle", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+toy_full <- load_mfrmr_data("example_core")
+toy_people <- unique(toy_full$Person)[1:12]
+toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
+fit <- suppressWarnings(
+  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+)
+t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
+summary(t4)
+diag <- diagnose_mfrm(fit, residual_pca = "none")
+bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
+t11 <- bias_count_table(bias, branch = "facets")
+summary(t11)
+} # }
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_bundle", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+toy_full <- load_mfrmr_data("example_core")
+toy_people <- unique(toy_full$Person)[1:12]
+toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
+fit <- suppressWarnings(
+  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+)
+t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
+p <- plot(t4, draw = FALSE)
+vis <- build_visual_summaries(fit, diagnose_mfrm(fit, residual_pca = "none"))
+p_vis <- plot(vis, type = "comparison", draw = FALSE)
+spec <- mfrm_report(type = "specifications", fit)
+p_spec <- plot(spec, type = "facet_elements", draw = FALSE)
+if (interactive()) {
+  plot(
+    t4,
+    type = "severity",
+    draw = TRUE,
+    main = "Unexpected Response Severity (Customized)",
+    palette = c(higher = "#d95f02", lower = "#1b9e77", bar = "#2b8cbe"),
+    label_angle = 45
+  )
+  plot(
+    vis,
+    type = "comparison",
+    draw = TRUE,
+    main = "Warning vs Summary Counts (Customized)",
+    palette = c(warning = "#cb181d", summary = "#3182bd"),
+    label_angle = 45
+  )
+}
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_summary_table_bundle", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+bundle <- build_summary_table_bundle(fit)
+summary(bundle)
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("plot.mfrm_summary_table_bundle", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+bundle <- build_summary_table_bundle(fit)
+plot(bundle, draw = FALSE)
+plot(bundle, type = "numeric_profile", which = "facet_overview", draw = FALSE)
+} # }
 ```

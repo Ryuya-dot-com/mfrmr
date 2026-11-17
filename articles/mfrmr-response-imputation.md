@@ -229,7 +229,7 @@ for (j in 1:4) text(j, seq_len(n),
 
 ![Category probabilities for thirty missing assigned ratings; each cell
 shows its
-percentage.](mfrmr-response-imputation_files/figure-html/imputation-diagnostics-1.png)
+percentage.](mfrmr-response-imputation_files/figure-html/imputation-diagnostics-1.svg)
 
 Rounded zero percentages do not mean impossible categories. In addition
 to sampling diagnostics, examine whether predictions describe the
@@ -362,7 +362,7 @@ plot(pooled)
 ![Pooled R04-minus-R01 severity contrast with a pointwise Rubin t
 interval incorporating within- and between-imputation covariance. The
 result is conditional on the supplied imputations and analysis
-assumptions.](mfrmr-response-imputation_files/figure-html/pooled-plot-1.png)
+assumptions.](mfrmr-response-imputation_files/figure-html/pooled-plot-1.svg)
 
 The development version also supports a ggplot made from these saved
 intervals:
@@ -379,7 +379,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 ![The saved R04-minus-R01 contrast and its pointwise multiple-imputation
 t interval, rendered with ggplot. Changing the title does not
 recalculate the interval or change its confidence
-level.](mfrmr-response-imputation_files/figure-html/pooled-ggplot-1.png)
+level.](mfrmr-response-imputation_files/figure-html/pooled-ggplot-1.svg)
 
     #>          Target  Estimate     Lower     Upper       DF
     #> 1 R04 minus R01 0.4681867 0.1824438 0.7539296 2284.941

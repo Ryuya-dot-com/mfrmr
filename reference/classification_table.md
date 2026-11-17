@@ -212,6 +212,9 @@ Psychological Measurement, 37*(3), 226-241.
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("classification_table", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 ratings <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(ratings, person = "Person", facets = c("Rater", "Criterion"),
   score = "Score", method = "MML", model = "RSM",
@@ -221,13 +224,6 @@ data("mfrmr_example_operational_design", package = "mfrmr")
 rating_plan <- subset(mfrmr_example_operational_design, Person == "P001",
   select = c("Rater", "Criterion"))
 rating_plan # Six ratings: two raters, each scoring three criteria.
-#>   Rater    Criterion
-#> 1   R01      Content
-#> 2   R01     Language
-#> 3   R01 Organization
-#> 4   R02      Content
-#> 5   R02     Language
-#> 6   R02 Organization
 # Illustrative rules: ability at least 0 logits; original-score sum at least 18.
 # score_cuts uses 0:3 category indices, not the original 1:4 score labels:
 # subtract 1 for each of the six ratings, so 18 - 6 = 12.
@@ -235,35 +231,8 @@ rating_plan # Six ratings: two raters, each scoring three criteria.
 result <- classification_table(fit, rating_plan,
   cut_scores = 0, score_cuts = 12, theta = c(-0.5, 0, 0.5))
 result$table
-#>   Point Theta TrueCategory        Method  Accuracy Consistency
-#> 1     1  -0.5            1       lee_sum 0.9033270   0.8253454
-#> 2     1  -0.5            1 rudner_normal 0.8505279   0.7457396
-#> 3     2   0.0            2       lee_sum 0.4008877   0.5196465
-#> 4     2   0.0            2 rudner_normal 0.5000000   0.5000000
-#> 5     3   0.5            2       lee_sum 0.7790621   0.6557513
-#> 6     3   0.5            2 rudner_normal 0.8308507   0.7189244
-#>   Overclassification Underclassification ExpectedSum Information       SEM
-#> 1         0.09667296           0.0000000    8.798214    4.315591 0.4813709
-#> 2         0.14947214           0.0000000    8.798214    4.315591 0.4813709
-#> 3         0.00000000           0.5991123   10.955735    4.229732 0.4862320
-#> 4         0.00000000           0.5000000   10.955735    4.229732 0.4862320
-#> 5         0.00000000           0.2209379   12.947095    3.667473 0.5221755
-#> 6         0.00000000           0.1691493   12.947095    3.667473 0.5221755
-#>      Status SourceStatus
-#> 1 available        ready
-#> 2 available        ready
-#> 3 available        ready
-#> 4 available        ready
-#> 5 available        ready
-#> 6 available        ready
 result$cuts
-#>    Cut TrueCut OperationalAbilityCut ScoreCut ExpectedSumAtTrueCut
-#> 1 Cut1       0                     0       12             10.95574
-#>   InformationAtTrueCut SEMAtTrueCut ExpectedSumAtOperationalCut
-#> 1             4.229732     0.486232                    10.95574
-#>   InformationAtOperationalCut SEMAtOperationalCut SourceStatus
-#> 1                    4.229732            0.486232        ready
 result$settings$calibration # These probabilities hold calibration fixed.
-#> [1] "fixed_point_estimates"
 # No population average is inferred from this three-point inspection grid.
+} # }
 ```

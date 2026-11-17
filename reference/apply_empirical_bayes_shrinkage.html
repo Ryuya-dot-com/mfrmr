@@ -13,7 +13,11 @@ constraint does not establish a known population mean or independent errors.
 The shrinkage factor is
 \(B_j = \mathrm{SE}_j^2 / (\hat{\tau}^2 + \mathrm{SE}_j^2)\), with
 \(\hat{\delta}_j^{EB} = (1-B_j)\hat{\delta}_j\) and
-\(\mathrm{ShrunkSE}_j = \sqrt{(1-B_j)\mathrm{SE}_j^2}\)."><meta property="og:description" content="Post-hoc normal-model shrinkage helper that augments an mfrm_fit
+\(\mathrm{ShrunkSE}_j = \sqrt{(1-B_j)\mathrm{SE}_j^2}\).
+Summarize how much an optional empirical-Bayes adjustment moves facet
+estimates toward zero. The report is available after
+apply_empirical_bayes_shrinkage() or
+fit_mfrm(..., facet_shrinkage = &quot;empirical_bayes&quot;)."><meta property="og:description" content="Post-hoc normal-model shrinkage helper that augments an mfrm_fit
 with descriptive empirical-Bayes adjustments for each non-person facet. The
 shrinkage variance \(\hat{\tau}^2\) is estimated by method of
 moments from the facet-level point estimates and their standard
@@ -27,7 +31,11 @@ constraint does not establish a known population mean or independent errors.
 The shrinkage factor is
 \(B_j = \mathrm{SE}_j^2 / (\hat{\tau}^2 + \mathrm{SE}_j^2)\), with
 \(\hat{\delta}_j^{EB} = (1-B_j)\hat{\delta}_j\) and
-\(\mathrm{ShrunkSE}_j = \sqrt{(1-B_j)\mathrm{SE}_j^2}\)."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+\(\mathrm{ShrunkSE}_j = \sqrt{(1-B_j)\mathrm{SE}_j^2}\).
+Summarize how much an optional empirical-Bayes adjustment moves facet
+estimates toward zero. The report is available after
+apply_empirical_bayes_shrinkage() or
+fit_mfrm(..., facet_shrinkage = &quot;empirical_bayes&quot;)."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -35,7 +43,7 @@ The shrinkage factor is
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,31 +51,25 @@ The shrinkage factor is
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -81,7 +83,7 @@ The shrinkage factor is
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Apply empirical-Bayes shrinkage to fitted non-person facet estimates</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-shrinkage.R" class="external-link"><code>R/api-shrinkage.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-shrinkage.R" class="external-link"><code>R/api-shrinkage.R</code></a></small>
       <div class="d-none name"><code>apply_empirical_bayes_shrinkage.Rd</code></div>
     </div>
 
@@ -101,6 +103,10 @@ The shrinkage factor is
 \(B_j = \mathrm{SE}_j^2 / (\hat{\tau}^2 + \mathrm{SE}_j^2)\), with
 \(\hat{\delta}_j^{EB} = (1-B_j)\hat{\delta}_j\) and
 \(\mathrm{ShrunkSE}_j = \sqrt{(1-B_j)\mathrm{SE}_j^2}\).</p>
+<p>Summarize how much an optional empirical-Bayes adjustment moves facet
+estimates toward zero. The report is available after
+<code>apply_empirical_bayes_shrinkage()</code> or
+<code>fit_mfrm(..., facet_shrinkage = "empirical_bayes")</code>.</p>
     </div>
 
     <div class="section level2">
@@ -109,7 +115,9 @@ The shrinkage factor is
 <span>  <span class="va">fit</span>,</span>
 <span>  facet_prior_sd <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  shrink_person <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">shrinkage_report</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -117,8 +125,7 @@ The shrinkage factor is
 
 
 <dl><dt id="arg-fit">fit<a class="anchor" aria-label="anchor" href="#arg-fit"></a></dt>
-<dd><p>An <code>mfrm_fit</code> from <code><a href="fit_mfrm.html">fit_mfrm()</a></code> with a non-empty
-<code>facets$others</code> table.</p></dd>
+<dd><p>An <code>mfrm_fit</code> object.</p></dd>
 
 
 <dt id="arg-facet-prior-sd">facet_prior_sd<a class="anchor" aria-label="anchor" href="#arg-facet-prior-sd"></a></dt>
@@ -142,6 +149,8 @@ SDs are not sampling SEs for a second normal-model update.</p></dd>
     <p>The same <code>mfrm_fit</code>, with augmented columns and a new
 <code>shrinkage_report</code> list entry, and with
 <code>fit$config$facet_shrinkage</code> set to <code>"empirical_bayes"</code>.</p>
+<p>A data.frame with one row per facet (and optionally
+<code>"Person"</code>) or <code>NULL</code> when shrinkage has not been applied.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -173,9 +182,22 @@ produce zero plug-in SE merely because a shrinkage factor rounded to one.
 Reapplication replaces the previous adjustment; <code>shrink_person = FALSE</code>
 removes any previous Person shrinkage columns. The original fitting inputs
 remain recorded separately from the latest post-fit shrinkage settings.
-<code><a href="build_mfrm_replay_script.html">build_mfrm_replay_script()</a></code> replays the adjustment after fitting, preserving
+<code><a href="export_mfrm_bundle.html">build_mfrm_replay_script()</a></code> replays the adjustment after fitting, preserving
 whether diagnostic SEs were attached by <code><a href="fit_mfrm.html">fit_mfrm()</a></code>. Manually edited SEs
 or other table edits require their own reproducible editing steps.</p>
+<p><code>MeanShrinkage</code> averages available shrinkage fractions: 0 leaves an
+estimate unchanged; 1 pools it at zero. <code>EffectiveDF</code> sums retained weights
+conditional on the prior variance; it is not a test or AIC degrees of freedom.</p>
+<p><code>NLevels</code> counts all levels; <code>NLevelsUsed</code> counts finite estimate/positive-SE
+pairs. <code>Tau2</code> is the selected prior variance in squared parameter units;
+<code>PriorSource</code> identifies empirical moments or a supplied prior.
+<code>MeanSE2</code> averages squared input SEs. Below three eligible levels no
+adjustment is applied, <code>Tau2</code> is unavailable and shrinkage is zero for
+eligible levels; inspect <code>Note</code>.</p>
+<p><code>SupportsFormalInference</code> is false. Full pooling's zero plug-in SE does
+not establish perfect precision. <code>apply_empirical_bayes_shrinkage()</code>
+defines the calculation and omitted uncertainty; original MFRM estimates
+remain unchanged.</p>
     </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
@@ -204,7 +226,8 @@ and applications. <em>Journal of the American Statistical Association,
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="fit_mfrm.html">fit_mfrm()</a></code> (which accepts <code>facet_shrinkage</code> directly),
-<code><a href="facet_small_sample_review.html">facet_small_sample_review()</a></code>, <code><a href="compute_facet_icc.html">compute_facet_icc()</a></code>.</p></div>
+<code><a href="facet_small_sample_review.html">facet_small_sample_review()</a></code>, <code><a href="compute_facet_icc.html">compute_facet_icc()</a></code>.</p>
+<p><code>apply_empirical_bayes_shrinkage()</code>, <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.</p></div>
     </div>
 
     <div class="section level2">
@@ -246,6 +269,15 @@ and applications. <em>Journal of the American Statistical Association,
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 Criterion  Content -0.4150443     -0.3508124       0.1547591</span>
 <span class="r-in"><span><span class="co"># Look for: rows where `ShrinkageFactor` is large (close to 1) had</span></span></span>
 <span class="r-in"><span><span class="co">#   their estimates pulled most strongly toward the facet mean (0).</span></span></span>
+<span class="r-in"><span><span class="co"># Optional workflow; run the example explicitly as shown below.</span></span></span>
+<span class="r-in"><span><span class="co"># example("shrinkage_report", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">300</span>,</span></span>
+<span class="r-in"><span>                facet_shrinkage <span class="op">=</span> <span class="st">"empirical_bayes"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">shrinkage_report</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

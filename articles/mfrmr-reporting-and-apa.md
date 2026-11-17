@@ -8,7 +8,7 @@ information that the researcher must provide outside the fitted model.
 
 For a literature-based comparison with FACETS/ConQuest and actual L2
 speaking/writing papers, see [connect designs, networks and
-reports](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html#connect-to-a-manuscript-not-a-coefficient-inventory).
+reports](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html#connect-to-a-manuscript-not-a-coefficient-inventory).
 That lesson also distinguishes the analysis units of MFRM and G/D
 studies.
 
@@ -23,14 +23,14 @@ defect, and a longer coefficient list is not stronger evidence.
 | When this is your question | Report these outputs together | Existing route |
 |----|----|----|
 | Can the model distinguish people or facet levels, and where does it misfit? | Estimates/intervals, Separation, Strata, model or fit-adjusted Reliability, fit basis, Wright map and relevant category curves | [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md) → [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md) → [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md); this lesson below |
-| Do two named raters agree on the same responses? | Exact/adjacent agreement when useful, Cohen’s kappa with declared unweighted/linear/quadratic weights, common-unit counts and exclusions | [`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_kappa_table.md); [agreement lesson](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-rating-agreement.md). Several raters produce separate pair results, not a single panel kappa. |
-| How much observed agreement does the panel show? | Krippendorff’s alpha with its distance and pairable units, or a justified alternative such as Gwet AC2 | [`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/krippendorff_alpha_table.md) / [`gwet_ac2_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/gwet_ac2_table.md). Choose the chance/distance model before interpreting the coefficient. |
-| How reproducible are numeric ratings under the specified rater model? | The stated ICC definition, single/average-score target, consistency/absolute-agreement target and analyzed sample | [`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_icc_table.md) and its help. An ICC is not interchangeable with separation reliability, alpha or kappa. |
+| Do two named raters agree on the same responses? | Exact/adjacent agreement when useful, Cohen’s kappa with declared unweighted/linear/quadratic weights, common-unit counts and exclusions | [`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md); [agreement lesson](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html). Several raters produce separate pair results, not a single panel kappa. |
+| How much observed agreement does the panel show? | Krippendorff’s alpha with its distance and pairable units, or a justified alternative such as Gwet AC2 | [`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md) / [`gwet_ac2_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md). Choose the chance/distance model before interpreting the coefficient. |
+| How reproducible are numeric ratings under the specified rater model? | The stated ICC definition, single/average-score target, consistency/absolute-agreement target and analyzed sample | [`pairwise_icc_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md) and its help. An ICC is not interchangeable with separation reliability, alpha or kappa. |
 | Which future assessment plan suits the intended score? | G-study variance/covariance components; D-study G/Phi/SEM, score weights, count grid, uncertainty and eligible paired contrasts | [G/D-study reporting structure](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gtheory.html#report-the-assessment-planning-answer), `mfrm_report(g/d, intervals = saved_ci)` → [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md); `plot(g/d)` and the editable G/D template |
-| Can scores be compared across forms or waves? | Anchor source, values, scale/direction, centering, overlap, invariance assumption, drift and uncertainty basis | [Linking workflow](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.md), [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md) → anchored fit / [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md) → [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md) |
-| Does a particular combination or group need investigation? | Signed bias/DFF contrast, cell evidence, reference group, multiplicity, uncertainty and follow-up | Specified [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md) / [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md) → [`plot()`](https://rdrr.io/r/graphics/plot.default.html) / tables. Supply matching bias results to [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md) and [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md); [`dif_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/dif_report.md) serves DFF. |
+| Can scores be compared across forms or waves? | Anchor source, values, scale/direction, centering, overlap, invariance assumption, drift and uncertainty basis | [Linking workflow](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html), [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md) → anchored fit / [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md) → [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md) |
+| Does a particular combination or group need investigation? | Signed bias/DFF contrast, cell evidence, reference group, multiplicity, uncertainty and follow-up | Specified [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md) / [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md) → [`plot()`](https://rdrr.io/r/graphics/plot.default.html) / tables. Supply matching bias results to `mfrm_report(fit, type = "checklist")` and [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md); `mfrm_report(dif, type = "dff")` serves DFF. |
 | Does a model choice change the answer? | Comparison basis, AIC/BIC where comparable, eligible LRT, numerical checks and changes in the target estimates/conclusion | [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md) → [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md) → [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md); [model choice](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-model-choice.html#compare-conclusions-not-just-fit-statistics) |
-| What unexplained structure or grouping merits follow-up? | Node/feature definition, residual versus observed-score basis, overlap, missingness, selection choices and exploratory stability | [Visual diagnostics](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md) and [feature groups](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.md); keep exploration separate from confirmation |
+| What unexplained structure or grouping merits follow-up? | Node/feature definition, residual versus observed-score basis, overlap, missingness, selection choices and exploratory stability | [Visual diagnostics](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md) and [feature groups](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html); keep exploration separate from confirmation |
 
 Separation describes spread relative to error; Strata transforms
 separation; Reliability expresses another ratio of the same underlying
@@ -117,9 +117,9 @@ is `gpcm-report-files`.
 | Separation, Strata, Reliability | `diagnose_mfrm(fit)$reliability` | Separation-based precision, with its recorded SE basis and eligibility; not observed agreement. |
 | Infit/Outfit and ZSTD | `diagnose_mfrm(fit)$fit` | Native MML EAP plug-in fit; not TAM/ConQuest posterior-averaged fit. |
 | Wright map | `plot(fit, diagnostics = diagnostics)` | Locations and targeting; the template deliberately draws points without implying qualified intervals. |
-| Category-probability curves | `plot(fit, type = "ccc")`; `category_curves_report(fit)` | Conditional reference profiles; retain their step/slope owners and reference settings. |
-| Krippendorff’s alpha | [`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/krippendorff_alpha_table.md) on the ratings | A separate observed-agreement calculation. [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md) does not automatically add it. |
-| Draft Methods/Results and reporting gaps | `mfrm_report(..., style = "apa")`, [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md), [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md) | Draft text and evidence tracking; recruitment, design justification and the substantive answer still come from the researcher. |
+| Category-probability curves | `plot(fit, type = "ccc")`; `mfrm_report(type = "category_curves", fit)` | Conditional reference profiles; retain their step/slope owners and reference settings. |
+| Krippendorff’s alpha | [`krippendorff_alpha_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md) on the ratings | A separate observed-agreement calculation. [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md) does not automatically add it. |
+| Draft Methods/Results and reporting gaps | `mfrm_report(..., style = "apa")`, [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md), `mfrm_report(fit, type = "checklist")` | Draft text and evidence tracking; recruitment, design justification and the substantive answer still come from the researcher. |
 
 These outputs can support a paper, but their presence does not qualify
 every claim. In particular, a converged one-family GPCM can retain
@@ -132,7 +132,7 @@ these states and separates model precision from alpha.
 It asks a panel-level agreement question, which explains its alpha
 section. Separation is already included. For a specified rater-pair
 question, add
-[`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/pairwise_kappa_table.md)
+[`pairwise_kappa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
 with explicit weights and the same matched rating units; the template
 includes an optional code example. The synthetic rating design has six
 raters but only six of the fifteen possible pairs share units. The
@@ -190,7 +190,7 @@ MML means marginal maximum likelihood; RSM is a rating-scale model with
 shared category thresholds. In this default fit, the person distribution
 is fixed to standard normal, person scores are expected a posteriori
 (EAP) estimates, and rater and criterion effects are fixed parameters
-centered within each facet. Higher rater estimates mean stricter
+centered within each facet. Higher rater estimates mean more severe
 ratings, in logits. In a real study, explain why this population
 assumption and shared-threshold rubric match the question. Record any
 different estimator, constraints, anchors, weights, interactions, or
@@ -220,13 +220,13 @@ results$row_retention
 results$decision
 #>               Interpretation FormalInference FitReadiness
 #> 1 Ready for formal inference             Yes        ready
-#>                                           Why
-#> 1 All stored fit-readiness components passed.
+#>                                                                                                                                                                                                                                 Why
+#> 1 All stored fit-readiness components passed. These checks assess numerical readiness and the requested precision method under the specified model; they do not establish model adequacy or finite-sample coverage for this design.
 #>                                                                                                                                                                   NextAction
 #> 1 After reviewing convergence, run `review <- summary(fit, profile = "facets", detail = "brief")` for the comprehensive measurement review; FACETS software is not required.
 
 # Record the iteration limit, integration grid, and numerical stopping details
-spec <- specifications_report(fit)
+spec <- mfrm_report(type = "specifications", fit)
 spec$convergence_control
 #>               Setting                                           Value
 #> 1       MaxIterations                                             400
@@ -354,7 +354,7 @@ a rater or criterion SE.
 
 ``` r
 
-prec <- precision_review_report(fit, diagnostics = diag)
+prec <- mfrm_report(type = "precision", fit, diagnostics = diag)
 prec$profile[, c(
   "PrecisionTier", "SupportsFormalInference", "PersonSEBasis", "NonPersonSEBasis"
 )]
@@ -383,16 +383,16 @@ prec$checks
 # These diagnostics address departures from the fitted response model
 diag_summary <- summary(diag)
 diag_summary$overall_fit
-#> # A tibble: 1 × 22
+#> # A tibble: 1 × 23
 #>   Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit DF_Infit_FACETS
 #>   <dbl>  <dbl>     <dbl>      <dbl>    <dbl>     <dbl>           <dbl>
 #> 1 0.866  0.857     -1.85      -1.91     353.      334.            353.
-#> # ℹ 15 more variables: DF_Outfit_FACETS <dbl>, FitResponseRows <int>,
-#> #   FitAvailableRows <int>, FitUnavailableRows <int>, FitStatus <chr>,
-#> #   FitReason <chr>, DF_Infit_ENGINE <dbl>, DF_Outfit_ENGINE <dbl>,
-#> #   InfitZSTD_ENGINE <dbl>, OutfitZSTD_ENGINE <dbl>, InfitZSTD_FACETS <dbl>,
-#> #   OutfitZSTD_FACETS <dbl>, FitDfMethod <chr>, FitZSTDTransform <chr>,
-#> #   FitZSTDCap <dbl>
+#> # ℹ 16 more variables: DF_Outfit_FACETS <dbl>, FitResponseRows <int>,
+#> #   FitAvailableRows <int>, FitUnavailableRows <int>, FitBoundaryRows <int>,
+#> #   FitStatus <chr>, FitReason <chr>, DF_Infit_ENGINE <dbl>,
+#> #   DF_Outfit_ENGINE <dbl>, InfitZSTD_ENGINE <dbl>, OutfitZSTD_ENGINE <dbl>,
+#> #   InfitZSTD_FACETS <dbl>, OutfitZSTD_FACETS <dbl>, FitDfMethod <chr>,
+#> #   FitZSTDTransform <chr>, FitZSTDCap <dbl>
 diag_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "ReportingUse")]
 #> # A tibble: 4 × 3
 #>   DiagnosticPath                   Status        ReportingUse               
@@ -518,7 +518,7 @@ rater_apa <- apa_table(
   caption = "Rater severity and fit in the synthetic MML/RSM example",
   note = paste(
     "282 ratings of 48 persons by six raters on three criteria using a 1-4 rubric.",
-    "N counts rating rows. Measures and SEs are in logits; higher values mean stricter ratings.",
+    "N counts rating rows. Measures and SEs are in logits; higher values mean more severe ratings.",
     "Intervals are 95% normal approximations from observed-information SEs.",
     "Rater effects are centered within facet. Infit and Outfit have reference value 1."
   )
@@ -532,7 +532,7 @@ rater_apa
 #>    R05 44   0.184 0.234   -0.275    0.643 0.648  0.640
 #>    R03 50   0.212 0.217   -0.212    0.637 1.011  0.981
 #>    R06 38   0.412 0.249   -0.077    0.901 0.820  0.798
-#> Note. 282 ratings of 48 persons by six raters on three criteria using a 1-4 rubric. N counts rating rows. Measures and SEs are in logits; higher values mean stricter ratings. Intervals are 95% normal approximations from observed-information SEs. Rater effects are centered within facet. Infit and Outfit have reference value 1.
+#> Note. 282 ratings of 48 persons by six raters on three criteria using a 1-4 rubric. N counts rating rows. Measures and SEs are in logits; higher values mean more severe ratings. Intervals are 95% normal approximations from observed-information SEs. Rater effects are centered within facet. Infit and Outfit have reference value 1.
 
 # Display the estimates on the common logit scale
 plot(fit, diagnostics = diag, show_ci = TRUE)
@@ -541,7 +541,7 @@ plot(fit, diagnostics = diag, show_ci = TRUE)
 ![Person abilities, facet locations and shared category steps on a
 common logit scale. Facet whiskers show 95% normal intervals from the
 fitted MML model; they do not test pairwise rater
-differences.](mfrmr-reporting-and-apa_files/figure-html/rater-estimates-1.png)
+differences.](mfrmr-reporting-and-apa_files/figure-html/rater-estimates-1.svg)
 
 Pass the same `diag` to the table and plot so their intervals use the
 same SEs. Without `diagnostics`, Wright-map intervals use exploratory
@@ -564,7 +564,7 @@ A worked explanation for this synthetic example is:
 > comparison. Estimated rater severity ranged from -0.606 logits (R01;
 > SE = 0.224, 95% CI \[-1.046, -0.166\]) to 0.412 logits (R06; SE =
 > 0.249, 95% CI \[-0.077, 0.901\]), a span of about 1.018 logits. Thus,
-> the fitted model describes R06 as stricter than R01 in these data.
+> the fitted model describes R06 as more severe than R01 in these data.
 > This span is descriptive: it is not an interval or a hypothesis test
 > for the difference. The evidence does not establish why the raters
 > differ or how much a particular examinee’s decision would change.
@@ -656,7 +656,7 @@ differences among rater pairs matter.
 
 For observed QWK, ordinal Krippendorff alpha, Gwet AC2 or an aligned
 score-source comparison, follow [Rating agreement and score
-comparisons](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-rating-agreement.md).
+comparisons](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html).
 That tutorial shows the matching keys and sample audits, and
 distinguishes these chance-agreement definitions from the fitted-model
 expectation above.
@@ -676,7 +676,7 @@ plot(scale)
 ![Category-use and threshold summaries for the synthetic four-category
 rubric. Review ordering and sparse use together rather than treating a
 single display as validation of the
-scale.](mfrmr-reporting-and-apa_files/figure-html/categories-1.png)
+scale.](mfrmr-reporting-and-apa_files/figure-html/categories-1.svg)
 
 ``` r
 
@@ -981,13 +981,13 @@ below). Shared category steps represented a common transition structure
 across criteria. The working person distribution was fixed to standard
 normal, person scores were EAP estimates, and rater and criterion
 effects were centered within facet. Higher rater estimates indicated
-stricter scoring. The fit used 31 quadrature points, an iteration limit
-of 400, and the recorded L-BFGS-B optimizer; the requested relative
-tolerance was 1e-9 and the effective selected-stage tolerance was 1e-13.
-We examined the stored readiness and precision checks, residual/EAP and
-marginal diagnostics, and category use. Rater and step intervals were
-95% normal approximations from observed-information SEs. Person
-uncertainty was reported as posterior SD.
+more severe scoring. The fit used 31 quadrature points, an iteration
+limit of 400, and the recorded L-BFGS-B optimizer; the requested
+relative tolerance was 1e-9 and the effective selected-stage tolerance
+was 1e-13. We examined the stored readiness and precision checks,
+residual/EAP and marginal diagnostics, and category use. Rater and step
+intervals were 95% normal approximations from observed-information SEs.
+Person uncertainty was reported as posterior SD.
 
 **Results.** The fit’s readiness and precision checks passed. Estimated
 rater severity spanned 1.018 logits, from -0.606 (R01; SE = 0.224) to
@@ -1026,7 +1026,7 @@ assumptions from the synthetic example.
 
 ``` r
 
-chk <- reporting_checklist(fit, diagnostics = diag, include_references = TRUE)
+chk <- mfrm_report(type = "checklist", fit, diagnostics = diag, include_references = TRUE)
 chk$section_summary
 #>                       Section Items Available DraftReady ReadyForAPA Missing
 #> 1 Bias / Interaction Analysis     2         0          0           0       2
@@ -1053,14 +1053,14 @@ subset(chk$checklist, !DraftReady, c("Section", "Item", "NextAction"))
 #> 27             Visual Displays          Residual PCA visuals
 #> 30             Visual Displays       Strict marginal visuals
 #> 31             Visual Displays            Bias / DIF visuals
-#>                                                                                                                                   NextAction
-#> 8  Run `analyze_hierarchical_structure(fit)` once per design and pass the result to `reporting_checklist(..., hierarchical_structure = hs)`.
-#> 10                                                                Run residual PCA if you want to comment on unexplained residual structure.
-#> 23                                                                   Run bias screening if the manuscript needs interaction-level follow-up.
-#> 24                                                                         Run bias screening before discussing interaction-level anomalies.
-#> 27                                                     Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
-#> 30             Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
-#> 31                                                                    Run bias or DIF screening before discussing interaction-level visuals.
+#>                                                                                                                                               NextAction
+#> 8  Run `analyze_hierarchical_structure(fit)` once per design and pass the result to `mfrm_report(type = 'checklist', ..., hierarchical_structure = hs)`.
+#> 10                                                                            Run residual PCA if you want to comment on unexplained residual structure.
+#> 23                                                                               Run bias screening if the manuscript needs interaction-level follow-up.
+#> 24                                                                                     Run bias screening before discussing interaction-level anomalies.
+#> 27                                                                 Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
+#> 30                         Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
+#> 31                                                                                Run bias or DIF screening before discussing interaction-level visuals.
 
 res <- mfrm_results(fit, diagnostics = diag, include = "publication")
 report <- mfrm_report(res, style = "apa")
@@ -1235,7 +1235,7 @@ compliance.
 | Raters, tasks, and rubric | Input facet labels and `data_summary$score_distribution`. | Rater expertise, recruitment and training, calibration, scoring instructions, task selection, category meanings, administration, blinding where relevant, and rubric rationale. For automated scoring, record the model/version, scoring date, prompts, exemplars and other scoring settings. Labels alone do not document these. |
 | Assignment, overlap, and linkage | `data_summary$structural_missingness`, `$design_connectivity`, `$linkage_summary`; diagnostic subset information. | Who rated whom, crossing/nesting, planned overlap, occasions/forms, allocation process, and substantive justification for common-scale comparisons. Supply the roster and any anchor provenance. |
 | Missing data, duplicates, and exclusions | `data_summary$missing`, `$duplicate_cell_summary`, `$row_retention`; `results$row_retention`. | Missing codes and reasons, planned versus absent ratings, treatment of repeated records, exclusion rules and counts at each stage, and missingness assumptions. Explain differences between preparation and fitting counts. |
-| Model and estimand | `results$settings_overview`, `$population_overview`; model call and `specifications_report(fit)`. | Why RSM/PCM/GPCM and MML/JML answer the question; population distribution, threshold structure, constraints, orientation, weights, anchors, and any interactions. State what score or contrast is estimated. |
+| Model and estimand | `results$settings_overview`, `$population_overview`; model call and `mfrm_report(type = "specifications", fit)`. | Why RSM/PCM/GPCM and MML/JML answer the question; population distribution, threshold structure, constraints, orientation, weights, anchors, and any interactions. State what score or contrast is estimated. |
 | Computation and reproducibility | `results$overview`, `$decision`; recorded estimation controls and replay/manifest export. | Software versions, optimizer and integration settings, tolerances, iteration limits, convergence problems and remedies, and relevant numerical sensitivity. Retain the exact analysis script. |
 | Estimates and uncertainty | `as.data.frame(fit)`; [`fit_measures_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_measures_table.md); person/facet/step summaries. | Units, direction, reference constraints, SE and interval basis and level, uncertainty for planned contrasts, effect magnitude, and practical interpretation. Do not invent unavailable contrast tests. |
 | Model fit and local diagnostics | `diag_summary$overall_fit`, `$diagnostic_basis`; [`plot()`](https://rdrr.io/r/graphics/plot.default.html), [`unexpected_response_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/unexpected_response_table.md), optional residual PCA. | Which assumptions each analysis probes, diagnostic mode, thresholds and their rationale/source, inspected flags, and follow-up decisions. Global fit does not establish validity; PCA does not prove unidimensionality. |
@@ -1328,7 +1328,7 @@ writeLines(c(
   "Figure 1. Person, facet, and step locations in the synthetic MML/RSM analysis.",
   "282 ratings; 48 persons, six raters, three criteria; rubric 1-4.",
   "The histogram shows person EAP estimates. All locations are in logits.",
-  "Higher rater/criterion values mean stricter scoring/greater difficulty; effects are centered within facet.",
+  "Higher rater/criterion values mean more severe scoring/greater difficulty; effects are centered within facet.",
   "Facet whiskers are 95% normal intervals using MML observed-information SEs from the same diagnostics as Table 1.",
   "Steps are shared adjacent-category transitions shown as point estimates; see Step-uncertainty.csv for their intervals.",
   "The display does not test rater contrasts or establish unidimensionality."
@@ -1392,7 +1392,7 @@ citation("mfrmr")
 #> To cite mfrmr in publications, use:
 #> 
 #>   Komuro R (2026). _mfrmr: Estimation and Diagnostics for Many-Facet
-#>   Measurement Models_. R package version 0.2.4,
+#>   Measurement Models_. R package version 0.3.0,
 #>   <https://ryuya-dot-com.github.io/mfrmr/>.
 #> 
 #> A BibTeX entry for LaTeX users is
@@ -1401,7 +1401,7 @@ citation("mfrmr")
 #>     title = {{mfrmr}: Estimation and Diagnostics for Many-Facet Measurement Models},
 #>     author = {Ryuya Komuro},
 #>     year = {2026},
-#>     note = {R package version 0.2.4},
+#>     note = {R package version 0.3.0},
 #>     url = {https://ryuya-dot-com.github.io/mfrmr/},
 #>   }
 citation()
@@ -1451,7 +1451,7 @@ chk$references
 
 # Retain the computing environment with the analysis record
 sessionInfo()
-#> R version 4.6.1 (2026-06-24)
+#> R version 4.6.2 (2026-10-29)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 26.04.1 LTS
 #> 
@@ -1472,22 +1472,24 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] mfrmr_0.2.4
+#> [1] mfrmr_0.3.0
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] Matrix_1.7-5      jsonlite_2.0.0    dplyr_1.2.1       compiler_4.6.1   
-#>  [5] tidyselect_1.2.1  psych_2.6.9       stringr_1.6.0     parallel_4.6.1   
-#>  [9] tidyr_1.3.2       jquerylib_0.1.4   systemfonts_1.3.2 textshaping_1.0.5
-#> [13] yaml_2.3.12       fastmap_1.2.0     lattice_0.22-9    R6_2.6.1         
-#> [17] generics_0.1.4    knitr_1.52        htmlwidgets_1.6.4 tibble_3.3.1     
-#> [21] desc_1.4.3        bslib_0.12.0      pillar_1.11.1     rlang_1.3.0      
-#> [25] utf8_1.2.6        stringi_1.8.9     cachem_1.1.0      xfun_0.62        
-#> [29] fs_2.1.0          sass_0.4.10       otel_0.2.0        cli_3.6.6        
-#> [33] withr_3.0.3       pkgdown_2.2.1     magrittr_2.0.5    digest_0.6.39    
-#> [37] grid_4.6.1        lifecycle_1.0.5   nlme_3.1-169      vctrs_0.7.3      
-#> [41] mnormt_2.1.2      evaluate_1.0.5    glue_1.8.1        ragg_1.5.2       
-#> [45] rmarkdown_2.32    purrr_1.2.2       tools_4.6.1       pkgconfig_2.0.3  
-#> [49] htmltools_0.5.9
+#>  [1] sass_0.4.10        utf8_1.2.6         generics_0.1.4     tidyr_1.3.2       
+#>  [5] stringi_1.8.9      lattice_0.23-1     digest_0.6.39      magrittr_2.0.5    
+#>  [9] evaluate_1.0.5     grid_4.6.2         RColorBrewer_1.1-3 fastmap_1.2.0     
+#> [13] jsonlite_2.0.0     Matrix_1.7-6       purrr_1.2.2        scales_1.4.0      
+#> [17] textshaping_1.0.5  jquerylib_0.1.4    mnormt_2.1.2       cli_3.6.6         
+#> [21] rlang_1.3.0        withr_3.0.3        cachem_1.1.0       yaml_2.3.12       
+#> [25] otel_0.3.0         tools_4.6.2        parallel_4.6.2     dplyr_1.2.1       
+#> [29] ggplot2_4.0.4      vctrs_0.7.3        R6_2.6.1           lifecycle_1.0.5   
+#> [33] stringr_1.6.0      fs_2.1.0           htmlwidgets_1.6.4  psych_2.6.9       
+#> [37] ragg_1.5.2         pkgconfig_2.0.3    desc_1.4.3         pkgdown_2.2.1     
+#> [41] pillar_1.11.1      bslib_0.12.0       gtable_0.3.6       glue_1.8.1        
+#> [45] systemfonts_1.3.3  xfun_0.62          tibble_3.3.1       tidyselect_1.2.1  
+#> [49] knitr_1.52         farver_2.1.2       htmltools_0.5.9    nlme_3.1-171      
+#> [53] rmarkdown_2.32     svglite_2.2.2      labeling_0.4.3     compiler_4.6.2    
+#> [57] S7_0.2.2
 ```
 
 `chk$references` contains abbreviated citations and topics. Obtain and
@@ -1506,7 +1508,7 @@ and the `mfrmr-linking-and-dff`, `mfrmr-gpcm-scope`, and
 population model sections of
 [`help("fit_mfrm")`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
 and
-[`help("mfrmr_reporting_and_apa")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reporting_and_apa.md).
+[`help("mfrmr_reporting_and_apa")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md).
 Fit any additional model explicitly before using it in a comparison or
 coefficient table.
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,31 +15,25 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -53,7 +47,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Simulate long-format ordered many-facet data for design studies</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>simulate_mfrm_data.Rd</code></div>
     </div>
 
@@ -220,7 +214,7 @@ same contract.</p></dd>
 
 <dt id="arg-sim-spec">sim_spec<a class="anchor" aria-label="anchor" href="#arg-sim-spec"></a></dt>
 <dd><p>Optional output from <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code> or
-<code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code>. When supplied, it defines the generator setup;
+<code><a href="build_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code>. When supplied, it defines the generator setup;
 direct scalar arguments are treated as legacy inputs and should generally
 be left at their defaults except for <code>seed</code>. Any custom public two-facet
 names recorded in <code>sim_spec$facet_names</code> are also carried into the
@@ -242,140 +236,22 @@ also included.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This function generates synthetic ordered many-facet data under <code>RSM</code>,
-<code>PCM</code>, or the package's <code>GPCM</code> branch.
-The data-generating process is:</p><ol><li><p>Draw person abilities: \(\theta_n \sim N(0, \texttt{theta\_sd}^2)\)</p></li>
-<li><p>Draw rater severities: \(\delta_j \sim N(0, \texttt{rater\_sd}^2)\)</p></li>
-<li><p>Draw criterion difficulties: \(\beta_i \sim N(0, \texttt{criterion\_sd}^2)\)</p></li>
-<li><p>Unless thresholds are supplied, generate evenly spaced thresholds from
-<code>-step_span</code> to <code>step_span</code>; the single binary threshold is zero</p></li>
-<li><p>For each observation, compute the linear predictor
-\(\eta = \theta_n - \delta_j - \beta_i + \epsilon\) where
-\(\epsilon \sim N(0, \texttt{noise\_sd}^2)\) (optional)</p></li>
-<li><p>Compute category probabilities under the recorded measurement model
-(<code>RSM</code>, <code>PCM</code>, or <code>GPCM</code>) and sample the response</p></li>
-</ol><p>Latent-value generation is explicit:</p><ul><li><p><code>latent_distribution = "normal"</code> draws centered normal person/rater/
-criterion values using the supplied standard deviations. Values are assigned
-independently to level IDs, without sorting them by severity or difficulty;
-zero is the distribution mean, not a forced sample mean.</p></li>
-<li><p><code>latent_distribution = "empirical"</code> resamples centered support values
-recorded in <code>sim_spec$empirical_support</code></p></li>
-<li><p>if <code>sim_spec$population$active = TRUE</code>, person measures are generated from
-the stored latent-regression population model and template person
-covariates rather than from <code>theta_sd</code></p></li>
-</ul><p>Latent-regression transformations and factor coding retain their template
-basis during generation and refitting. <code>mfrm_population_data$population_formula</code>
-is a formula-compatible <code>terms</code> object carrying this basis, factor levels and
-contrasts. Pass it together with the returned <code>person_data</code> when fitting
-generated data manually. Old specifications containing transformed predictors
-but no stored basis must be rebuilt from the original template or source fit.
-Previously saved generated data/results are not silently reinterpreted.</p>
-<p>Earlier versions sorted normal rater/criterion draws before assigning IDs,
-imposing an association with ID order and any ID-specific steps/slopes.
-Correcting that ordering changes seeded datasets. Preserve old generated
-data and results for historical reproduction; new runs use the corrected
-generator and a matching saved specification/software environment.</p>
-<p>When <code>dif_effects</code> is supplied, the specified linear-predictor shift is added to
-\(\eta\) for the focal group on the target facet level, creating a
-known DIF signal.  Similarly, <code>interaction_effects</code> injects a known
-bias into specific facet-level combinations.
-For RSM/PCM this is also the adjacent-category log-odds shift. For GPCM,
-the shift in adjacent-category log odds is the specified effect multiplied
-by the observation's discrimination. A common injected effect therefore
-need not imply equal response-probability changes across facet levels.</p>
-<p>The generator targets the common two-facet rating design (persons
-\(\times\) raters \(\times\) criteria).  <code>raters_per_person</code>
-controls the incomplete-block structure: when less than <code>n_rater</code>,
-each person is assigned a rotating subset of raters to keep coverage
-balanced and reproducible.</p>
-<p>Threshold handling is intentionally explicit:</p><ul><li><p>if <code>thresholds = NULL</code>, common equally spaced thresholds are generated
-from <code>step_span</code></p></li>
-<li><p>if <code>thresholds</code> is a numeric vector, it is used as one common threshold set</p></li>
-<li><p>if <code>thresholds</code> is a named list, numeric matrix, or data frame, threshold
-values may vary by <code>StepFacet</code> (currently <code>Criterion</code> or <code>Rater</code>)</p></li>
-</ul><p>For <code>GPCM</code>, the generator requires an explicit slope contract in
-parallel with the threshold table. The supported route keeps
-<code>slope_facet == step_facet</code>, normalizes supplied slopes to the same
-geometric-mean-one log-slope identification used by <code><a href="fit_mfrm.html">fit_mfrm()</a></code>, and
-samples responses from the corresponding GPCM category probabilities.
-Independent arbitrary slope-facet planning is not supported by these
-design, population-forecasting, diagnostic-screening, or signal-detection
-helpers.</p>
-<p>Assignment handling is also explicit:</p><ul><li><p><code>"crossed"</code> uses the full person x rater x criterion design</p></li>
-<li><p><code>"rotating"</code> assigns a deterministic rotating subset of raters per person</p></li>
-<li><p><code>"sparse_linked"</code> assigns most persons to an incomplete rater subset and
-assigns a configurable set of linking persons to a larger rater set</p></li>
-<li><p><code>"resampled"</code> reuses empirical person-level rater profiles stored in
-<code>sim_spec$assignment_profiles</code>, optionally carrying over person-level
-<code>Group</code></p></li>
-<li><p><code>"skeleton"</code> reuses an observed person-by-rater-by-criterion response
-skeleton stored in <code>sim_spec$design_skeleton</code>, optionally carrying over
-<code>Group</code> and <code>Weight</code></p></li>
-</ul><p>With an active population model, <code>population_assignment = "matched"</code> in
-<code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code> or <code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code> draws covariates and
-skeleton/profile assignments from the same template Person. Independent
-draws require <code>population_assignment = "independent"</code>. A population <code>Group</code>
-column supplies the response <code>Group</code>; it is not drawn a second time.
-Conflicting group labels or unmatched template IDs fail with an explanation.
-Stored specifications without <code>population_assignment</code> retain independent
-sampling; rebuild them to request matched sampling. The ambiguous case of
-independently drawn tables both defining <code>Group</code> now errors.</p>
-<p>Skeleton rows retain observation multiplicity. Repeated cells receive new,
-conditionally independent responses given the generated latent values and
-signals. Study runners declare this assumption via
-<code>repeated_ratings = "independent"</code> when refitting these generated data.
-This does not establish independence of repeated ratings in the source data,
-or simulate serial, occasion or peer-network dependence. <code>Weight</code> is passed
-through to fitting, not interpreted as additional independently generated rows.</p>
-<p>Sparse linked simulation is intended for planned-missing rating designs in
-which connectivity is maintained through common linking persons. The
-returned <code>mfrm_sparse_design</code> attribute summarizes design density, planned
-missingness, rater coverage, and rater-pair common-person counts. These
-summaries are design diagnostics, not model-fit statistics or universal
-adequacy thresholds. This branch follows sparse rater-mediated assessment
-design work by Wind, Jones, and Grajeda (2023,
-doi:10.1177/01466216231182148), Wind and Jones (2018,
-doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
-(2023).</p>
-<p>For more controlled workflows, build a reusable simulation specification
-first via <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code> or derive one from an observed fit with
-<code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code>, then pass it through <code>sim_spec</code>.</p>
-<p>Returned data include attributes:</p><ul><li><p><code>mfrm_truth</code>: simulated true parameters (for parameter-recovery checks)</p></li>
-<li><p><code>mfrm_truth$signals</code>: injected DIF and interaction signal tables</p></li>
-<li><p><code>mfrm_truth$population$template_person</code> and
-<code>mfrm_truth$design$template_person</code>: source template IDs keyed by generated
-Person, where population or assignment templates are used</p></li>
-<li><p><code>mfrm_truth$slope_table</code>: simulated discrimination table for
-<code>GPCM</code></p></li>
-<li><p><code>mfrm_population_data</code>: generated one-row-per-person background data when
-the simulation specification stores an active latent-regression generator,
-including model-matrix xlevel and contrast provenance for categorical
-covariates</p></li>
-<li><p><code>mfrm_simulation_spec</code>: generation settings (for reproducibility)
-including the effective <code>population_assignment</code> (<code>"matched"</code>,
-<code>"independent"</code> or <code>"none"</code>) and the conditional response-independence rule</p></li>
-<li><p><code>mfrm_sparse_design</code>: sparse-design diagnostics when
-<code>assignment = "sparse_linked"</code>, including design density, planned missing
-rate, rater coverage, and rater-pair common-person counts</p></li>
-</ul></div>
-    <div class="section level2">
-    <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
-
-
-<ul><li><p>Higher <code>theta</code> values in <code>mfrm_truth$person</code> indicate higher person measures.</p></li>
-<li><p>Higher values in <code>mfrm_truth$facets$Rater</code> indicate more severe raters.</p></li>
-<li><p>Higher values in <code>mfrm_truth$facets$Criterion</code> indicate more difficult criteria.</p></li>
-<li><p><code>mfrm_truth$signals$dif_effects</code> and <code>mfrm_truth$signals$interaction_effects</code>
-record any injected detection targets.</p></li>
-</ul></div>
-    <div class="section level2">
-    <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
-
-
-<ol><li><p>Generate one design with <code>simulate_mfrm_data()</code>.</p></li>
-<li><p>Fit with <code><a href="fit_mfrm.html">fit_mfrm()</a></code> and diagnose with <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>.</p></li>
-<li><p>For repeated design studies, use <code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>.</p></li>
-</ol></div>
+    <p>Draws independent centered normal (or <code>sim_spec</code> empirical / latent-regression
+<code>population</code>) parameters \(\theta_n\), \(\delta_j\), \(\beta_i\), forms
+\(\eta = \theta_n - \delta_j - \beta_i + \epsilon\) (plus optional
+<code>dif_effects</code> and <code>interaction_effects</code>, multiplied by slope in <code>GPCM</code> where
+<code>slope_facet == step_facet</code> is normalized to unit geometric mean), and
+samples ordered responses under <code>RSM</code>, <code>PCM</code>, or <code>GPCM</code>.</p>
+<p>Supports <code>"crossed"</code>, <code>"rotating"</code>, <code>"sparse_linked"</code> (retaining coverage and
+overlap counts in <code>attr(x, "mfrm_sparse_design")</code>; Wind et al., 2023,
+<a href="https://doi.org/10.1177/01466216231182148" class="external-link">doi:10.1177/01466216231182148</a>
+), <code>"resampled"</code>, and <code>"skeleton"</code> assignments
+(preserving row multiplicity as conditionally independent draws and passing
+<code>Weight</code> through). Returned attributes carry <code>mfrm_truth</code> (including
+<code>signals</code> and <code>slope_table</code>), <code>mfrm_simulation_spec</code>, and optional
+<code>mfrm_population_data</code> (preserving template <code>terms</code>, factor levels, and
+contrasts).</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>, <code><a href="fit_mfrm.html">fit_mfrm()</a></code>, <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code></p></div>
@@ -383,7 +259,10 @@ record any injected detection targets.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="fu">simulate_mfrm_data</span><span class="op">(</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Optional workflow; run the example explicitly as shown below.</span></span></span>
+<span class="r-in"><span><span class="co"># example("simulate_mfrm_data", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="fu">simulate_mfrm_data</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  n_person <span class="op">=</span> <span class="fl">40</span>,</span></span>
 <span class="r-in"><span>  n_rater <span class="op">=</span> <span class="fl">4</span>,</span></span>
 <span class="r-in"><span>  n_criterion <span class="op">=</span> <span class="fl">4</span>,</span></span>
@@ -391,16 +270,8 @@ record any injected detection targets.</p></li>
 <span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">123</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             Study Person Rater Criterion Score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 SimulatedDesign   P001   R01       C01     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 SimulatedDesign   P001   R02       C01     2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 SimulatedDesign   P001   R01       C02     3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 SimulatedDesign   P001   R02       C02     3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 SimulatedDesign   P001   R01       C03     3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 SimulatedDesign   P001   R02       C03     2</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">sim</span>, <span class="st">"mfrm_truth"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "person"      "facets"      "steps"       "step_table"  "slopes"     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] "slope_table" "population"  "groups"      "signals"     "design"     </span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

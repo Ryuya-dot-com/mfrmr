@@ -6,14 +6,30 @@ via lme4::lmer, and returns main-effect variance components,
 residual variance, and G / Phi coefficients under this simplified model.
 Interactions are not estimated separately. For a G-study including the
 supported interactions, use mfrm_g_study() with one or two
-common random facets; it also accepts a single score column."><meta property="og:description" content="Re-fits the rating data underlying an mfrm_fit as a crossed
+common random facets; it also accepts a single score column.
+mfrm_d_study() applies a practical D-study projection to the
+variance components from mfrm_generalizability(). It answers questions such
+as &quot;what happens to G and Phi if we use 2, 3, or 4 raters?&quot; without
+re-fitting the Rasch/MFRM model.
+Compare planned facet counts using an existing mfrm_d_study() result.
+G concerns relative ordering; Phi also includes shifts in absolute score
+levels. Larger coefficients mean greater dependability under the selected
+model and residual assumption, not proven pass/fail accuracy."><meta property="og:description" content="Re-fits the rating data underlying an mfrm_fit as a crossed
 random-effects model
 Score ~ 1 + (1 | Person) + (1 | Facet1) + ... + Residual
 via lme4::lmer, and returns main-effect variance components,
 residual variance, and G / Phi coefficients under this simplified model.
 Interactions are not estimated separately. For a G-study including the
 supported interactions, use mfrm_g_study() with one or two
-common random facets; it also accepts a single score column."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+common random facets; it also accepts a single score column.
+mfrm_d_study() applies a practical D-study projection to the
+variance components from mfrm_generalizability(). It answers questions such
+as &quot;what happens to G and Phi if we use 2, 3, or 4 raters?&quot; without
+re-fitting the Rasch/MFRM model.
+Compare planned facet counts using an existing mfrm_d_study() result.
+G concerns relative ordering; Phi also includes shifts in absolute score
+levels. Larger coefficients mean greater dependability under the selected
+model and residual assumption, not proven pass/fail accuracy."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -21,7 +37,7 @@ common random facets; it also accepts a single score column."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,31 +45,25 @@ common random facets; it also accepts a single score column."><meta property="og
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -67,7 +77,7 @@ common random facets; it also accepts a single score column."><meta property="og
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Main-effects generalizability approximation for an MFRM design</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-generalizability.R" class="external-link"><code>R/api-generalizability.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-generalizability.R" class="external-link"><code>R/api-generalizability.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-gstudy-entry.R" class="external-link"><code>R/api-gstudy-entry.R</code></a></small>
       <div class="d-none name"><code>mfrm_generalizability.Rd</code></div>
     </div>
 
@@ -80,6 +90,14 @@ residual variance, and G / Phi coefficients under this simplified model.
 Interactions are not estimated separately. For a G-study including the
 supported interactions, use <code><a href="mfrm_g_study.html">mfrm_g_study()</a></code> with one or two
 common random facets; it also accepts a single score column.</p>
+<p><code><a href="mfrm_d_study.html">mfrm_d_study()</a></code> applies a practical D-study projection to the
+variance components from <code>mfrm_generalizability()</code>. It answers questions such
+as "what happens to <code>G</code> and <code>Phi</code> if we use 2, 3, or 4 raters?" without
+re-fitting the Rasch/MFRM model.</p>
+<p>Compare planned facet counts using an existing <code><a href="mfrm_d_study.html">mfrm_d_study()</a></code> result.
+G concerns relative ordering; Phi also includes shifts in absolute score
+levels. Larger coefficients mean greater dependability under the selected
+model and residual assumption, not proven pass/fail accuracy.</p>
     </div>
 
     <div class="section level2">
@@ -91,7 +109,47 @@ common random facets; it also accepts a single score column.</p>
 <span>  random_facets <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  reml <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  missing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"omit"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_generalizability'</span></span>
+<span><span class="fu"><a href="mfrm_d_study.html">mfrm_d_study</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  design_grid <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  residual_scaling <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"highest_order"</span>, <span class="st">"single_condition"</span>, <span class="st">"none"</span>, <span class="st">"sensitivity"</span><span class="op">)</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_d_study'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  y <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"coefficients"</span>, <span class="st">"error_variance"</span>, <span class="st">"heatmap"</span>, <span class="st">"contour"</span>, <span class="st">"surface3d"</span><span class="op">)</span>,</span>
+<span>  x_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  y_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  group_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  panel_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  panel_grid <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  metric <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  main <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  palette <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  preset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"standard"</span>, <span class="st">"publication"</span>, <span class="st">"compact"</span>, <span class="st">"monochrome"</span><span class="op">)</span>,</span>
+<span>  reference <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_fit'</span></span>
+<span><span class="fu"><a href="mfrm_d_study.html">mfrm_d_study</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  design_grid <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  object_facet <span class="op">=</span> <span class="st">"Person"</span>,</span>
+<span>  random_facets <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  residual_scaling <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"highest_order"</span>, <span class="st">"single_condition"</span>, <span class="st">"none"</span>, <span class="st">"sensitivity"</span><span class="op">)</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_d_study'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -112,15 +170,13 @@ and cannot be facet names.</p></dd>
 
 
 <dt id="arg-object-facet">object_facet<a class="anchor" aria-label="anchor" href="#arg-object-facet"></a></dt>
-<dd><p>Facet that plays the role of the "object of
-measurement" – typically <code>"Person"</code> (default).</p></dd>
+<dd><p>Passed to <code>mfrm_generalizability()</code> when
+<code>x</code> is an <code>mfrm_fit</code>.</p></dd>
 
 
 <dt id="arg-random-facets">random_facets<a class="anchor" aria-label="anchor" href="#arg-random-facets"></a></dt>
-<dd><p>Character vector of other facets to
-treat as random conditions of measurement. The default uses <code>Person</code>
-and the configured MFRM facets, excluding <code>object_facet</code>. For example,
-when raters are the objects, persons remain a random condition.</p></dd>
+<dd><p>Passed to <code>mfrm_generalizability()</code> when
+<code>x</code> is an <code>mfrm_fit</code>.</p></dd>
 
 
 <dt id="arg-reml">reml<a class="anchor" aria-label="anchor" href="#arg-reml"></a></dt>
@@ -132,6 +188,110 @@ when raters are the objects, persons remain a random condition.</p></dd>
 selected facet values stop the analysis by default. Explicit omission
 fits only complete rows and records the excluded row positions and missing
 columns. Missingness in unselected columns does not exclude a row.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>An <code><a href="mfrm_d_study.html">mfrm_d_study()</a></code> result.</p></dd>
+
+
+<dt id="arg-design-grid">design_grid<a class="anchor" aria-label="anchor" href="#arg-design-grid"></a></dt>
+<dd><p>Data frame or named list giving planned counts for each
+random measurement facet. Column names may be the facet names themselves
+(for example <code>Rater</code>) or <code>n_</code> plus the facet name (for example
+<code>n_Rater</code>). Supply exactly one count column per facet, with unique names
+and an unambiguous one-to-one correspondence. Extra columns, duplicate
+aliases for a facet, or a column serving two facets are refused.
+Counts must be positive integers. When <code>NULL</code>, one row using
+the observed number of levels is
+returned.</p></dd>
+
+
+<dt id="arg-residual-scaling">residual_scaling<a class="anchor" aria-label="anchor" href="#arg-residual-scaling"></a></dt>
+<dd><p>How the collapsed residual variance should be scaled
+when planned facet counts increase. <code>"highest_order"</code> treats the residual
+as highest-order person-by-all-conditions/error variance and divides by
+the product of planned counts. <code>"single_condition"</code> divides by the smallest
+planned facet count, a sensitivity assumption for variation associated
+with the least-replicated condition. It is not a confidence bound. <code>"none"</code> leaves the residual
+unscaled. <code>"sensitivity"</code> returns all three assumptions for each design
+row.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Reserved for method compatibility.</p></dd>
+
+
+<dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
+<dd><p>Reserved for method compatibility.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p><code>"coefficients"</code> for G/Phi curves, <code>"error_variance"</code> for error
+variance curves, or <code>"heatmap"</code>, <code>"contour"</code>, or <code>"surface3d"</code> for one
+metric over two facet counts. Error variance is in squared score units,
+not SEM. Lower error variance is better.</p></dd>
+
+
+<dt id="arg-x-var">x_var<a class="anchor" aria-label="anchor" href="#arg-x-var"></a></dt>
+<dd><p>Planned-count columns such as <code>"n_Rater"</code>. The default
+horizontal axis is the first count column; surface plots use the next
+column on the other axis. The two axes must differ.</p></dd>
+
+
+<dt id="arg-y-var">y_var<a class="anchor" aria-label="anchor" href="#arg-y-var"></a></dt>
+<dd><p>Planned-count columns such as <code>"n_Rater"</code>. The default
+horizontal axis is the first count column; surface plots use the next
+column on the other axis. The two axes must differ.</p></dd>
+
+
+<dt id="arg-group-var">group_var<a class="anchor" aria-label="anchor" href="#arg-group-var"></a></dt>
+<dd><p>Optional additional column distinguishing curves. All
+non-horizontal facet counts and residual assumptions remain separate
+within each panel, including when <code>group_var</code> is supplied.</p></dd>
+
+
+<dt id="arg-panel-by">panel_by<a class="anchor" aria-label="anchor" href="#arg-panel-by"></a></dt>
+<dd><p>One column defining panels, or <code>NULL</code>.</p></dd>
+
+
+<dt id="arg-panel-grid">panel_grid<a class="anchor" aria-label="anchor" href="#arg-panel-grid"></a></dt>
+<dd><p>One or two columns defining panels. Use this or
+<code>panel_by</code>, not both. Surface plots require every other facet count and
+residual assumption to be constant within each panel. Subset the result
+or add panels when they vary; they cannot be silently averaged or overlaid.</p></dd>
+
+
+<dt id="arg-metric">metric<a class="anchor" aria-label="anchor" href="#arg-metric"></a></dt>
+<dd><p>Optional selection from <code>"G"</code>, <code>"Phi"</code>,
+<code>"RelativeErrorVariance"</code>, or <code>"AbsoluteErrorVariance"</code>, compatible with
+<code>type</code>. Surface plots require one metric and default to <code>"Phi"</code>.</p></dd>
+
+
+<dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a></dt>
+<dd><p>Draw when <code>TRUE</code>; <code>FALSE</code> only returns plot data.</p></dd>
+
+
+<dt id="arg-main">main<a class="anchor" aria-label="anchor" href="#arg-main"></a></dt>
+<dd><p>Optional plot title.</p></dd>
+
+
+<dt id="arg-palette">palette<a class="anchor" aria-label="anchor" href="#arg-palette"></a></dt>
+<dd><p>Optional colors.</p></dd>
+
+
+<dt id="arg-preset">preset<a class="anchor" aria-label="anchor" href="#arg-preset"></a></dt>
+<dd><p>Plot style: <code>"standard"</code>, <code>"publication"</code>, <code>"compact"</code>, or
+<code>"monochrome"</code>.</p></dd>
+
+
+<dt id="arg-reference">reference<a class="anchor" aria-label="anchor" href="#arg-reference"></a></dt>
+<dd><p>Optional distinct finite numeric reference values for curves,
+between 0 and 1 for coefficients or nonnegative for error variance.
+<code>NULL</code> draws no guides. Not supported for surface plots.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>A main-effects D-study result.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -167,93 +327,114 @@ coefficient table and D-study projections, including tabular exports;
 <code>GStudyDataSource</code> identifies the scope of those counts.</p></dd>
 
 
-</dl></div>
+</dl><p>An object of class <code>mfrm_d_study</code>, a data.frame with one row per
+design scenario and columns for planned facet counts, variance terms,
+projected <code>G</code>, projected <code>Phi</code>, interpretation bands, and identification
+status inherited from <code>mfrm_generalizability()</code>.
+<code>InputRows</code>, <code>UsedRows</code>, and <code>ExcludedRows</code> describe the source G-study,
+not the planned D-study sample; <code>GStudyDataSource</code> identifies their scope.
+The <code>data_usage</code> attribute retains its
+row accounting, including after subsetting. Older source results without
+accounting have <code>NA</code> counts; they are not assumed to have used all rows.
+<code>summary(d)</code> returns the coefficient data frame with these saved attributes,
+rather than generic per-column descriptive statistics. No intervals or
+new variance-component estimates are computed.
+<code>GReason</code>, <code>PhiReason</code>, <code>ObjectVarianceReason</code>, <code>RelativeErrorReason</code>,
+<code>AbsoluteErrorReason</code> and <code>ResidualDivisorReason</code> explain unavailable
+quantities; empty strings mean no calculation failure. Reasons distinguish
+unidentified targets, missing/invalid components, zero total variance and
+numerical range. Fit cautions remain separate in <code>IdentificationStatus</code>
+and <code>IdentificationNote</code>. <code>ComponentIdentificationChecked</code> and the
+<code>component_identification</code> attribute retain the source design check.</p>
+<p>Invisibly, a <code>ggplot</code> object. <code><a href="plot_data.html">plot_data()</a></code> extracts the scenario
+<code>table</code>, metric <code>series</code>, axis/group/panel settings, and labels.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The decomposition is on the observed numeric <code>Score</code> scale. It does not use
 the fitted MFRM latent scale or estimate a latent ordinal G/Phi coefficient.</p>
+<p>Fits the main-effects Gaussian linear mixed model
+<code>Score ~ 1 + (1 | Person) + (1 | Facet1) + ... + Residual</code> (<code>G = sigma2(p) / (sigma2(p) + sigma2(Residual))</code>; <code>Phi</code> adds facet main-effect variances
+before D-study scaling). Person-by-facet and facet-by-facet interactions are
+omitted and absorbed into <code>Residual</code> (use <code><a href="mfrm_g_study.html">mfrm_g_study()</a></code> when interaction
+components are required).</p>
+<p><strong>Component identification and boundaries</strong>: Linear independence of
+observation covariance kernels (after REML intercept projection) determines
+<code>Identified</code> in <code>variance_components</code> and <code>design$component_identification</code>
+separately from <code><a href="https://rdrr.io/pkg/lme4/man/isSingular.html" class="external-link">lme4::isSingular()</a></code> (<code>design$fit_status</code>). Identified sums
+can still supply <code>Phi</code> when individual confounded allocations cannot support
+unequal future D-study counts (<code>GStatus</code>, <code>PhiStatus</code>,
+<code>IdentificationStatus</code>; zero total variance gives <code>zero_total_variance</code>).</p>
+<p>The projection uses the variance decomposition already estimated by
+<code>mfrm_generalizability()</code>. For a random measurement facet <code>j</code>, main-effect
+variance contributes <code>sigma2_j / n_j</code> to the absolute-error denominator.
+Under the fitted additive model, residual errors are independent across
+observations. For a complete future crossing with common facet levels for
+all persons, their mean has variance <code>sigma2_Residual / prod(n_j)</code>.
+Facet-wide shifts cancel from relative comparisons but enter absolute error
+as <code>sum(sigma2_j / n_j)</code>. This justifies <code>"highest_order"</code> within that model.
+If omitted interactions actually exist, the fitted residual does not
+recover their separate variances or correlations; dividing it by the product
+is then an assumption. <code>"single_condition"</code> and <code>"none"</code> are alternative
+planning assumptions, not estimates of these correlations, confidence
+bounds, or a guarantee that the true projection lies between them.
+The relative-decision
+denominator uses only this scaled residual term. Missing or invalid required
+components leave the affected coefficient unavailable; they are not zero
+variance. These are point projections conditional on estimated components,
+not uncertainty bounds or automatic recommendations for sample size.
+Returned G/Phi retain full precision, as do the values used for their
+reference-status labels. Round only for presentation, after any comparisons.</p>
+<p>Error variances are evaluated independently of object variance: they
+remain available when object variance is zero or missing. Zero object
+variance with positive error gives a coefficient of zero; zero total
+variance is undefined. For checked sources, only identified variance sums
+enter the output. For example, two confounded facet main effects can still
+contribute their identified sum when their planned counts are equal;
+unequal counts require the separate, unidentified components.
+Coefficients use scaled sums to avoid overflow. A coefficient can therefore
+remain calculable even when its error variance exceeds floating-point range.
+Such unrepresentable quantities are returned as <code>NA</code> with reasons.</p>
+<p>This is a pragmatic D-study planning layer, not a full p x r x i ANOVA
+decomposition. If person-by-rater or person-by-item interactions are a
+primary estimand, consider <code><a href="mfrm_g_study.html">mfrm_g_study()</a></code> and
+<code><a href="mfrm_d_study.html">mfrm_d_study()</a></code> for one or two common random facets,
+including Person-by-Task, Person-by-Rater, and Person-by-Rater-by-Task. Those
+functions also accept a single score and estimate the corresponding
+interaction components explicitly. Changing <code>residual_scaling</code> here only
+explores assumptions; it does not estimate the omitted interactions.</p>
+<p>Pass the result directly to <code><a href="mfrm_report.html">mfrm_report()</a></code> for full projection tables and
+their assumptions. Newly created results retain source variance components,
+estimation settings and observed facet counts. Reports of older compatible
+results mark missing source details <code>not_recorded</code>; report creation never
+reconstructs components or computes confidence intervals.</p>
+<p>The <code>G</code> and <code>Phi</code> values returned here belong to the generalizability-theory
+metric family. They should not be interpreted as coefficient alpha, omega,
+KR-20, or IRT marginal/separation reliability, even though all of those
+summaries may be displayed on a 0–1 scale in broader reporting dashboards.
+They remain on the observed numeric score scale inherited from
+<code>mfrm_generalizability()</code>, not the fitted MFRM latent scale.</p>
+<p>Points represent requested scenarios; connecting lines and
+contours are visual guides. Missing estimates remain missing and break
+curves. If none are available, inspect the D-study table and source
+variance components. No reference lines are drawn by default. Specify
+<code>reference = c(0.70, 0.80)</code> to reproduce the earlier coefficient guides.
+User-chosen guides are not universal acceptance criteria or confidence
+bounds; their values and interpretation remain in the returned plot data.
+Heatmaps include a numeric color key; exact values remain in the table.</p>
+<p>The main-effects G-study combines unmodeled interactions in its residual.
+Different residual-scaling curves describe assumptions, not confidence
+bounds. All projections hold estimated components fixed. Check source
+fit warnings before interpreting even large coefficients. For supported
+designs with separately estimated interactions, including a single score,
+use <code><a href="mfrm_g_study.html">mfrm_g_study()</a></code> and <code><a href="mfrm_d_study.html">mfrm_d_study()</a></code>.</p>
     </div>
     <div class="section level2">
-    <h2 id="interpretation">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation"></a></h2>
+    <h2 id="session-plot-defaults">Session plot defaults<a class="anchor" aria-label="anchor" href="#session-plot-defaults"></a></h2>
 
 
-<ul><li><p><code>G</code> is appropriate for <strong>relative</strong> decisions (rank-ordering
-persons): <code>G = sigma2(p) / (sigma2(p) + sigma2(Residual))</code>.</p></li>
-<li><p>The reported <code>Phi</code> describes dependability for <strong>absolute</strong> decisions:
-<code>Phi = sigma2(p) / (sigma2(p) + sigma2(facet main effects) + sigma2(Residual))</code>, before D-study scaling.
-It does not estimate the probability of correct classification at a
-particular cut score.</p></li>
-<li><p>Use <code><a href="mfrm_d_study.html">mfrm_d_study()</a></code> to project <code>G</code> / <code>Phi</code> under planned numbers of
-raters, items, criteria, or other random measurement facets.</p></li>
-<li><p>Values of 0.70 and 0.80 are displayed as familiar planning references,
-not as universal decision rules. Required dependability depends on the
-decision, consequences, population, and evidence beyond a single
-coefficient.</p></li>
-<li><p>For ordered categories, <code>Score</code> is treated as a numeric observed response
-in a Gaussian linear mixed model; thresholding is not modeled.</p></li>
-</ul></div>
-    <div class="section level2">
-    <h2 id="component-identification-and-boundary-estimates">Component identification and boundary estimates<a class="anchor" aria-label="anchor" href="#component-identification-and-boundary-estimates"></a></h2>
-
-
-<p>A zero variance estimate can be a valid constrained ML/REML solution.
-It is distinct from a design that cannot separate two variance components.
-For example, if every rater identifier always corresponds to the same
-task identifier, their main-effect covariance kernels coincide. Their
-sum may be identified while the individual allocations are not.
-<code>isSingular()</code> alone does not test this design property.</p>
-<p>The design check uses linear independence of the observation covariance
-kernels (after projecting out the intercept for REML). Only variance
-combinations orthogonal to the numerical null space enter coefficients.
-Thus an identified sum can still supply Phi, while a future plan assigning
-unequal weights to its confounded components cannot. Individual fitted
-allocations remain available with <code>Identified = FALSE</code> for diagnosis.
-A full numerical rank does not establish correct model assumptions,
-optimizer accuracy or finite-sample precision.
-This is a linear design check; fitted boundary zeros are not used to
-resolve otherwise confounded components.</p>
-<p>If object variance is zero and the relevant error variance is positive,
-G or Phi equals zero and is retained with boundary diagnostics. A zero
-total variance gives an undefined ratio and <code>zero_total_variance</code>.
-The historical <code>IdentificationStatus</code> field summarizes design and fit
-cautions; inspect <code>design$component_identification</code> and <code>design$fit_status</code>
-to distinguish them. This function does not supply coefficient intervals.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="limitations">Limitations<a class="anchor" aria-label="anchor" href="#limitations"></a></h2>
-
-
-<p>This helper formulates the random-effects model with main effects
-only (<code>Score ~ 1 + (1|Person) + (1|Facet1) + ... + Residual</code>); no
-explicit <code>(1 | Person:Rater)</code>, <code>(1 | Person:Criterion)</code>, or
-<code>(1 | Rater:Criterion)</code> interaction terms are estimated. All
-interactions are omitted. The residual combines unexplained variation;
-omitted interactions may also affect the fitted main-effect components.
-Their separate variances and correct averaging rates are not recovered. This function reports the
-one-observation-per-cell baseline. <code><a href="mfrm_d_study.html">mfrm_d_study()</a></code> applies D-study
-scaling, including residual-scaling sensitivity checks, to the same
-simplified variance-component decomposition.
-Because person-by-facet interaction terms are not estimated separately,
-D-study projections remain practical planning evidence rather than a
-replacement for a fully specified G-theory design. Counts held constant in
-a D-study do not turn a random facet into a fixed-facet universe. Variance
-estimation uncertainty is not propagated to G/Phi. Component values and G/Phi are
-stored at full precision; rounding is only for display. Recreate older
-G/D results from the existing MFRM fit before reuse.
-Boundary or singular <code>lme4</code> fits are retained as diagnostic evidence but are
-not treated as decision-ready G/D-study evidence.
-New results record component separation explicitly. Earlier saved G-studies
-without this record can still supply conditional D-study calculations,
-with <code>ComponentIdentificationChecked = FALSE</code>; recreate the G-study from
-the original ratings to obtain the check. This needs no MFRM refit.</p>
-<p>Omission does not correct missing-data bias or identify why ratings are
-absent. Entirely absent assignments are not reconstructed. Review the
-rating design and missingness assumptions before interpreting G/D results.
-Earlier versions silently omitted incomplete rows and unparseable scores.
-To reproduce complete-row selection, clean invalid labels explicitly and
-choose <code>missing = "omit"</code>. Older saved results remain usable when their
-calculation version is current, but unavailable row counts are not guessed;
-rerun the G-study with the original data to obtain row accounting.</p>
+<p>See <a href="plot.mfrm_fit.html">mfrmr_visual_diagnostics</a> for <code>options(mfrmr.plot_preset)</code>, argument
+precedence, and appearance when saving or reusing a plot.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -261,7 +442,7 @@ rerun the G-study with the original data to obtain row accounting.</p>
 mixed-effects models using lme4. <em>Journal of Statistical Software, 67</em>(1),
 1–48. <a href="https://doi.org/10.18637/jss.v067.i01" class="external-link">doi:10.18637/jss.v067.i01</a>
 . Gaussian ML/REML model and optimization.
-See also <a href="https://lme4.github.io/lme4/reference/isSingular.html" class="external-link">https://lme4.github.io/lme4/reference/isSingular.html</a> for
+See also <code><a href="https://rdrr.io/pkg/lme4/man/isSingular.html" class="external-link">lme4::isSingular()</a></code> for
 the meaning of a singular fitted covariance matrix.</p>
 <p>Cronbach, L. J., Gleser, G. C., Nanda, H., &amp; Rajaratnam, N.
 (1972). <em>The dependability of behavioral measurements: Theory
@@ -270,11 +451,22 @@ of generalizability for scores and profiles</em>. Wiley.</p>
 <a href="https://doi.org/10.1007/978-1-4757-3456-0" class="external-link">doi:10.1007/978-1-4757-3456-0</a>
 . General G/D framework; the main-effects
 restriction and residual-scaling choices here are package-specific limits.</p>
+<p>Cronbach, L. J., Gleser, G. C., Nanda, H., &amp; Rajaratnam, N.
+(1972). <em>The dependability of behavioral measurements: Theory of
+generalizability for scores and profiles</em>. Wiley.</p>
+<p>Brennan, R. L. (2001). <em>Generalizability theory</em>. Springer.
+<a href="https://doi.org/10.1007/978-1-4757-3456-0" class="external-link">doi:10.1007/978-1-4757-3456-0</a>
+. This framework does not recover the
+interaction components omitted by the source main-effects model.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="mfrm_g_study.html">mfrm_g_study()</a></code>, <code><a href="mfrm_d_study.html">mfrm_d_study()</a></code>,
-<code><a href="compute_facet_icc.html">compute_facet_icc()</a></code>, <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code></p></div>
+<code><a href="compute_facet_icc.html">compute_facet_icc()</a></code>, <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code></p>
+<p><code>plot.mfrm_d_study()</code>, <code>mfrm_generalizability()</code>,
+<code><a href="mfrm_d_study.html">mfrm_d_study()</a></code>, <code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>,
+<code><a href="recommend_mfrm_design.html">recommend_mfrm_design()</a></code>, <code><a href="plot_data.html">plot_data()</a></code></p>
+<p><code><a href="mfrm_d_study.html">mfrm_d_study()</a></code>, <code><a href="plot.mfrm_multivariate_d_study.html">plot.mfrm_multivariate_d_study()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -302,6 +494,42 @@ restriction and residual-scaling choices here are package-specific limits.</p>
 <span class="r-in"><span>  <span class="co"># design-review evidence rather than decision-ready reliability.</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "No lme4 boundary or singular fit was detected."</span>
+<span class="r-in"><span><span class="co"># Saved synthetic JML/RSM analysis of example_core.</span></span></span>
+<span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
+<span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"core-jml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lme4"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">gt</span> <span class="op">&lt;-</span> <span class="fu">mfrm_generalizability</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_d_study.html">mfrm_d_study</a></span><span class="op">(</span><span class="va">gt</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>, Criterion <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">ds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"n_Rater"</span>, <span class="st">"n_Criterion"</span>, <span class="st">"G"</span>, <span class="st">"Phi"</span>,</span></span>
+<span class="r-in"><span>         <span class="st">"GStatus"</span>, <span class="st">"PhiStatus"</span>, <span class="st">"IdentificationStatus"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span>  <span class="co"># If IdentificationStatus is not "identified", even large G/Phi</span></span></span>
+<span class="r-in"><span>  <span class="co"># values remain identification warnings, not decision-ready evidence.</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr D-study projection</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Object of measurement: Person </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Random facets: Rater, Criterion </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimand scale: observed numeric score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G-study rows: 768 input; 768 used; 0 excluded.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Counts start from stored fitted rows; earlier MFRM filtering is not included.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Residual assumption: Divide residual by all facet counts </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  n_Rater n_Criterion         G       Phi</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        2           4 0.8240540 0.7887498</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        3           4 0.8753947 0.8447234</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        4           4 0.9035412 0.8757990</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Observed-score planning projections hold estimated variance components fixed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   They do not establish cut-score accuracy or an adequate rating design.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Note: 0.70 and 0.80 are reference guides, not universal decision rules.</span>
+<span class="r-in"><span><span class="co"># After creating ds with mfrm_d_study():</span></span></span>
+<span class="r-in"><span><span class="co"># plot(ds, x_var = "n_Rater", panel_grid = c("Metric", "ResidualScaling"))</span></span></span>
+<span class="r-in"><span><span class="co"># For Rater x Task x Occasion scenarios, separate occasions explicitly:</span></span></span>
+<span class="r-in"><span><span class="co"># plot(ds, type = "heatmap", x_var = "n_Rater", y_var = "n_Task",</span></span></span>
+<span class="r-in"><span><span class="co">#      metric = "Phi", panel_by = "n_Occasion")</span></span></span>
+<span class="r-in"><span><span class="co"># With residual_scaling = "sensitivity", use</span></span></span>
+<span class="r-in"><span><span class="co"># panel_grid = c("n_Occasion", "ResidualScaling") instead.</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

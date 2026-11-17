@@ -94,28 +94,27 @@ A bundle of class `mfrm_network_analysis` containing:
 
 ## Details
 
-`mfrm_network_analysis()` treats the person/facet-level observation
-design as an undirected weighted graph. Nodes are person or facet
-levels; edges connect levels that co-occur in at least one observed
-rating; edge weights are co-observation counts. The resulting network
-metrics are design diagnostics, not psychometric measures of person
-ability or rater quality. This is the package's
-assignment/co-observation network: unlike the score-relation networks
-returned by
+Nodes are Person or facet levels; undirected edges join levels appearing
+in the same rating, weighted by co-observation counts. This assignment
+graph reveals disconnected components, not ability or rater quality.
+Connectedness alone does not establish model identification. For score
+relationships instead, use
 [`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md)
-and
-[`rater_halo_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_halo_network_analysis.md),
-it exposes disconnected co-observation components. Graph connectedness
-alone does not establish model identification. `SourceSubsets`,
-`RetainedSubsets` and `ScopeComplete` record whether subset filters
-retained the full observed design. Connectedness of selected subsets
-cannot be generalized to omitted subsets. Recreate older design reviews
-from the existing fit and matching diagnostics to record this coverage.
-`plot(net, type = "centrality")`, `plot(net, type = "facet_summary")`,
-and `plot(net, type = "network")` provide immediate visual checks; use
-`draw = FALSE` to extract reusable plot data.
+or
+[`rater_halo_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_halo_network_analysis.md).
 
-The most useful review columns are:
+`SourceSubsets`, `RetainedSubsets` and `ScopeComplete` record whether
+subset filters retained the full observed design. Connectedness of
+selected subsets cannot be generalized to omitted subsets. Recreate
+older design reviews from the existing fit and matching diagnostics to
+record this coverage. `plot(net, type = "centrality")`,
+`plot(net, type = "facet_summary")`, and `plot(net, type = "network")`
+provide immediate visual checks; use `draw = FALSE` to return a ggplot
+without drawing, then
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+to extract its reusable data.
+
+## Reading the graph
 
 - `Components`: more than one component means separate co-observation
   regions, including known levels without observed links.
@@ -128,10 +127,6 @@ The most useful review columns are:
 - `Betweenness`: a routing-dependence indicator; high values identify
   levels that carry many shortest paths through the design graph.
 
-In incomplete rater-mediated designs, these graph summaries help
-identify fragile linking structures before interpreting facet measures
-or planning additional data collection.
-
 ## References
 
 - McEwen, M. R. (2015). *Development of a Software Prototype for
@@ -143,30 +138,28 @@ or planning additional data collection.
 
 ## Before fitting
 
-Supply `data`, `person`, `facets` and `score` instead of `fit`. Known
-levels from incomplete/unscored rows remain as nodes, including
-isolates. A planned assignment roster can be examined with
-`basis = "planned"`; absent assignments cannot be reconstructed from an
-observed-only file. `row_usage` records each input row's inclusion and
-first exclusion reason. With a fit, only its retained rows are available
-here; review original missing assignments before fitting. No prefit
-result supplies an identification audit or model-readiness decision.
-`settings$is_disjoint` describes the source graph, even when subset
-filters omit components; compare source/retained subset counts. Filters
-do not establish linking. See
-[`vignette("mfrmr-networks-and-reporting")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.md)
-for a panel example.
+Supply `data`, `person`, `facets` and `score` for a prefit graph, or use
+`basis = "planned"` for an assignment roster. Observed-only data cannot
+reveal absent assignments; a fit supplies only retained rows. Graph
+connectivity is not full model identification, and filtering does not
+establish linking. See "Before fitting" in
+[`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md)
+for unscored/isolate rows, the inclusion audit and source versus
+retained component counts.
 
 ## See also
 
 [`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md),
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
-[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md),
-[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
+[mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md),
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("mfrm_network_analysis", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 ratings <- load_mfrmr_data("example_operational")
 if (requireNamespace("igraph", quietly = TRUE)) {
   net <- mfrm_network_analysis(data = ratings, person = "Person",
@@ -174,4 +167,5 @@ if (requireNamespace("igraph", quietly = TRUE)) {
   net$summary
   plot(net, type = "network", draw = FALSE)
 }
+} # }
 ```

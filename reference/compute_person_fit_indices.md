@@ -9,6 +9,9 @@ the person-estimation method, Snijders' `lz*`.
 
 ``` r
 compute_person_fit_indices(diagnostics, fit = NULL)
+
+# S3 method for class 'mfrm_person_fit_indices'
+summary(object, digits = 3, top_n = 10, include_person = FALSE, ...)
 ```
 
 ## Arguments
@@ -26,6 +29,28 @@ compute_person_fit_indices(diagnostics, fit = NULL)
   estimates for which the Snijders (2001) correction is computed.
   MML/EAP person scores return `NA` for `lz_star` with an explanatory
   status. Supplied fit and diagnostics must identify the same analysis.
+
+- object:
+
+  Output from `compute_person_fit_indices()`.
+
+- digits:
+
+  Number of digits used when printing numeric columns.
+
+- top_n:
+
+  Number of review rows retained in `top_review`.
+
+- include_person:
+
+  If `TRUE`, print person identifiers in the review preview. The default
+  retains the rows in the returned object but suppresses identifiers
+  from console output.
+
+- ...:
+
+  Unused.
 
 ## Value
 
@@ -130,6 +155,40 @@ polytomous items, shrinking the reported `lz` toward zero. Numerical
 treat the values returned here as the polytomous statistic and
 re-evaluate any historical `|lz| > 1.96` flagging that was based on the
 earlier approximation.
+
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_person_fit_indices` with:
+
+- `overview`
+
+- `status_summary`
+
+- `report_index_summary`
+
+- `lz_star_status_summary`
+
+- `top_review`
+
+- `caveats`
+
+- `thresholds`
+
+- `reporting_map`
+
+- `notes`
+
+## Details
+
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize
+person-fit indices
+
+[`summary()`](https://rdrr.io/r/base/summary.html) method:
+[`summary()`](https://rdrr.io/r/base/summary.html) for
+`compute_person_fit_indices()` output gives a compact, report-ready
+reading order: first the number of persons and flags, then status
+counts, then the highest-priority review rows. The summary keeps
+`lz_star` availability visible so users do not silently treat
+uncorrected `lz` as Snijders-corrected output.
 
 ## References
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,31 +15,25 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -53,7 +47,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Analyze practical equivalence within a facet</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-facet-equivalence.R" class="external-link"><code>R/api-facet-equivalence.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-facet-equivalence.R" class="external-link"><code>R/api-facet-equivalence.R</code></a></small>
       <div class="d-none name"><code>analyze_facet_equivalence.Rd</code></div>
     </div>
 
@@ -70,7 +64,10 @@
 <span>  equivalence_bound <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  conf_level <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_facet_equivalence'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -111,10 +108,23 @@ the equivalence results.</p></dd>
 <dd><p>Deprecated alias for <code>ci_level</code>; when supplied it takes
 precedence and emits a lifecycle deprecation warning.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>A result from <code>analyze_facet_equivalence()</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Use <code>type = "forest"</code> (default) for deviations and intervals or
+<code>type = "rope"</code> for normal confidence-distribution mass. <code>draw = FALSE</code>
+returns the data without drawing (default: <code>TRUE</code>).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A named list with class <code>mfrm_facet_equivalence</code>.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Invisibly, a <code>ggplot</code> object carrying the equivalence
+plot payload and inference restrictions accessible via <code><a href="plot_data.html">plot_data()</a></code>.
+Grand-mean proximity does not establish pairwise equivalence.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -145,6 +155,11 @@ probability or a separate equivalence decision.</p>
 <p>The former BIC/Bayes-factor heuristic is unavailable: a Wald statistic is
 not a fitted likelihood comparison. For compatibility, <code>BF01</code> is <code>NA</code> and
 <code>BF01Label</code> states why no value is supplied.</p>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: Plot a saved facet-equivalence analysis</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: When an interval cannot be represented at the requested numeric precision,
+the forest retains its estimate as a grey point without a whisker. Inspect
+<code>plot_data(p)$data$DeviationCIReason</code> and <code>plot_data(p)$note</code> for the reason.
+This does not change the pairwise TOST decision stored in the analysis.</p>
     </div>
     <div class="section level2">
     <h2 id="what-this-analysis-means">What this analysis means<a class="anchor" aria-label="anchor" href="#what-this-analysis-means"></a></h2>
@@ -189,6 +204,11 @@ simultaneous confidence intervals or error control for selected pairs.</p>
 differences, SEs and intervals. A negative result can reflect imprecision
 or a material difference. <code>chi_square</code> addresses exact equality, while
 <code>rope</code> and <code>forest</code> describe proximity to the facet mean.</p>
+
+<p>Both plots describe grand-mean proximity. Colors in the forest plot indicate
+whether the deviation interval is inside, outside, or overlaps the practical
+region. Neither plot establishes pairwise equivalence or a Bayesian
+probability. Read the pairwise TOST results for pair-specific conclusions.</p>
     </div>
     <div class="section level2">
     <h2 id="how-to-read-the-main-outputs">How to read the main outputs<a class="anchor" aria-label="anchor" href="#how-to-read-the-main-outputs"></a></h2>
@@ -228,7 +248,7 @@ desired decision.</p>
 <ol><li><p>Fit and review an MML model with <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.</p></li>
 <li><p>Prespecify the practical bound and run <code>analyze_facet_equivalence()</code>.</p></li>
 <li><p>Read <code>summary</code> and <code>pairwise</code>.</p></li>
-<li><p>Use <a href="plot.mfrm_fit.html">plot(x, type = "facet_equivalence")</a> for descriptive grand-mean proximity.</p></li>
+<li><p>Use plot(eq, type = "forest") for descriptive grand-mean proximity.</p></li>
 </ol></div>
     <div class="section level2">
     <h2 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a></h2>
@@ -239,6 +259,15 @@ desired decision.</p>
 must be recomputed before using <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, or plotting.</p>
     </div>
     <div class="section level2">
+    <h2 id="plot-types">Plot types<a class="anchor" aria-label="anchor" href="#plot-types"></a></h2>
+
+
+<ul><li><p><code>"forest"</code> shows each level's deviation from the equally weighted facet
+mean, with covariance-aware deviation intervals and the practical region
+around zero. The raw marginal measure intervals remain in the data table.</p></li>
+<li><p><code>"rope"</code> shows the normal confidence-distribution mass within that region.</p></li>
+</ul></div>
+    <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Schuirmann, D. J. (1987). A comparison of the two one-sided tests
 procedure and the power approach for assessing the equivalence of
@@ -247,7 +276,8 @@ Biopharmaceutics, 15</em>(6), 657-680.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="facets_chisq_table.html">facets_chisq_table()</a></code>, <code><a href="fair_average_table.html">fair_average_table()</a></code>, <a href="plot.mfrm_fit.html">plot(x, type = "facet_equivalence")</a></p></div>
+    <div class="dont-index"><p><code><a href="facets_fit_review.html">facets_chisq_table()</a></code>, <code><a href="fair_average_table.html">fair_average_table()</a></code>, plot(eq, type = "forest")</p>
+<p><a href="mfrmr_api_migration_030.html">mfrmr_plot_migration</a></p></div>
     </div>
 
     <div class="section level2">

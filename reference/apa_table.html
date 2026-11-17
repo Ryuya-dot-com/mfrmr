@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,31 +15,25 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -53,7 +47,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an APA-oriented table handoff using base R structures</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>apa_table.Rd</code></div>
     </div>
 
@@ -74,6 +68,21 @@
 <span>  context <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  whexact <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  branch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"apa"</span>, <span class="st">"facets"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'apa_table'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, digits <span class="op">=</span> <span class="fl">3</span>, top_n <span class="op">=</span> <span class="fl">8</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'apa_table'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  y <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"numeric_profile"</span>, <span class="st">"first_numeric"</span><span class="op">)</span>,</span>
+<span>  main <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  palette <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  label_angle <span class="op">=</span> <span class="fl">45</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -82,11 +91,12 @@
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A data.frame, <code>mfrm_fit</code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> output supported by
+<dd><p>For <code>apa_table()</code>: A data.frame, <code>mfrm_fit</code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> output supported by
 <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code>, an <code>mfrm_summary_table_bundle</code>, diagnostics
 list, bias-result list, saved RSM/PCM fixed-facet intervals, or saved
 GPCM slope/curve/bootstrap inference. Ordinary Person-score results also
-support <code>which = "decisions"</code> when cut scores were requested.</p></dd>
+support <code>which = "decisions"</code> when cut scores were requested.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Output from <code>apa_table()</code>.</p></dd>
 
 
 <dt id="arg-which">which<a class="anchor" aria-label="anchor" href="#arg-which"></a></dt>
@@ -99,9 +109,10 @@ support <code>which = "decisions"</code> when cut scores were requested.</p></dd
 
 
 <dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
-<dd><p>Uniform number of rounding digits for numeric columns,
+<dd><p>For <code>apa_table()</code>: Uniform number of rounding digits for numeric columns,
 except saved decision probabilities, boundaries and priors, which are
-retained at full precision in <code>table</code>.</p></dd>
+retained at full precision in <code>table</code>.</p>
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: Number of digits used for numeric summaries.</p></dd>
 
 
 <dt id="arg-caption">caption<a class="anchor" aria-label="anchor" href="#arg-caption"></a></dt>
@@ -130,6 +141,43 @@ metadata for fit-based tables.</p></dd>
 <dd><p>Output branch:
 <code>"apa"</code> for manuscript-oriented labels, <code>"facets"</code> for FACETS-aligned labels.</p></dd>
 
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>Output from <code>apa_table()</code>.</p></dd>
+
+
+<dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
+<dd><p>Maximum numeric columns shown in <code>numeric_profile</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Reserved for generic compatibility.</p></dd>
+
+
+<dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
+<dd><p>Reserved for generic compatibility.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>Plot type: <code>"numeric_profile"</code> (column means) or
+<code>"first_numeric"</code> (distribution of the first numeric column).</p></dd>
+
+
+<dt id="arg-main">main<a class="anchor" aria-label="anchor" href="#arg-main"></a></dt>
+<dd><p>Optional title override.</p></dd>
+
+
+<dt id="arg-palette">palette<a class="anchor" aria-label="anchor" href="#arg-palette"></a></dt>
+<dd><p>Optional named color overrides.</p></dd>
+
+
+<dt id="arg-label-angle">label_angle<a class="anchor" aria-label="anchor" href="#arg-label-angle"></a></dt>
+<dd><p>Axis-label rotation angle for bar-type plots.</p></dd>
+
+
+<dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a></dt>
+<dd><p>If <code>TRUE</code>, display the returned ggplot.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -139,15 +187,16 @@ metadata for fit-based tables.</p></dd>
 <li><p><code>note</code></p></li>
 <li><p><code>digits</code></p></li>
 <li><p><code>branch</code>, <code>style</code></p></li>
-</ul></div>
+</ul><p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: An object of class <code>summary.apa_table</code>.</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: Invisibly, a <code>ggplot</code> object carrying its saved plot
+payload accessible via <code><a href="plot_data.html">plot_data()</a></code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This helper avoids styling dependencies and returns a reproducible base
-<code>data.frame</code> plus manuscript-oriented metadata. It does not claim complete
-APA 7 or JARS compliance: outside the saved <code>decisions</code> table, <code>digits</code>
-applies the same rounding rule to every numeric column, so statistic-specific formatting (for example, exact
-<em>p</em>-value, confidence-interval, and effect-size conventions) and the target
-journal's final typography still require human review.</p>
+    <p>Returns a base <code>data.frame</code> with a caption and note, without requiring styling
+packages. Except for saved <code>decisions</code>, <code>digits</code> rounds every numeric column
+uniformly. Review statistic-specific formatting (p-values, intervals and effect
+sizes) and journal typography; this is not complete APA 7 or JARS compliance.</p>
 <p>Supported <code>which</code> values:</p><ul><li><p>For <code>mfrm_fit</code>: <code>"summary"</code>, <code>"person"</code>, <code>"facets"</code>, <code>"steps"</code></p></li>
 <li><p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> outputs or <code>mfrm_summary_table_bundle</code>:
 names listed in <code>build_summary_table_bundle(x)$table_index</code></p></li>
@@ -168,7 +217,13 @@ or <code>"test"</code> for a null-model LRT. Extended results also expose <code>
 and <code>"clusters"</code>/<code>"contrasts"</code> when present. Saved profile intervals also
 expose <code>"profile"</code>, <code>"profile_endpoints"</code>, <code>"profile_checks"</code> and <code>"wald"</code>.
 Target and method columns are preserved.</p></li>
-</ul></div>
+</ul><p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: Summarize an APA/FACETS table object</p>
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: Compact summary helper for QA of table data before manuscript export.</p>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: Preview numeric columns of an APA/FACETS table</p>
+<p>For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: <code>"numeric_profile"</code> shows column means for checking
+scales and centering; <code>"first_numeric"</code> shows the first numeric column's
+distribution. Interpret means in their respective column units.</p>
+    </div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
 
@@ -177,22 +232,21 @@ Target and method columns are preserved.</p></li>
 with cut probabilities support <code>which = "decisions"</code>. Numeric probabilities,
 cut boundaries and priors are retained without decimal rounding in the table.
 They condition on calibration and the scoring prior; the cut labels do not
-establish CEFR alignment or a decision rule.</p><ul><li><p><code>table</code>: plain data.frame ready for export or further formatting.</p></li>
-<li><p><code>which</code>: source component that produced the table.</p></li>
-<li><p><code>caption</code>/<code>note</code>: manuscript-oriented metadata stored with the table.</p></li>
+establish CEFR alignment or a decision rule.</p>
+<p>Inspect <code>summary(tbl)</code> and the selected <code>tbl$table</code>; <code>which</code> records its source,
+and <code>caption</code>/<code>note</code> accompany the table for formatting or export. The numeric
+preview from <code>plot(tbl)</code> supports data checks, not final publication graphics.</p>
+
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p><ul><li><p><code>overview</code>: table size/composition and missingness.</p></li>
+<li><p><code>numeric_profile</code>: quick distribution summary of numeric columns.</p></li>
+<li><p><code>caption</code>/<code>note</code>: text metadata readiness.</p></li>
 </ul></div>
-    <div class="section level2">
-    <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
-
-
-<ol><li><p>Build table object with <code>apa_table(...)</code>.</p></li>
-<li><p>Inspect quickly with <code>summary(tbl)</code>.</p></li>
-<li><p>Render base preview via <code>plot(tbl, ...)</code> or export <code>tbl$table</code>.</p></li>
-</ol></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="fit_mfrm.html">fit_mfrm()</a></code>, <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>, <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code>,
-<code><a href="reporting_checklist.html">reporting_checklist()</a></code>, <a href="mfrmr_reporting_and_apa.html">mfrmr_reporting_and_apa</a>, <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code></p></div>
+<a href="mfrm_report.html">mfrm_report_checklist</a>, <a href="mfrmr_output_guide.html">mfrmr_reporting_and_apa</a>, <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code></p>
+<p><code>apa_table()</code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code></p>
+<p><code>apa_table()</code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">base::summary()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -221,6 +275,36 @@ establish CEFR alignment or a decision rule.</p><ul><li><p><code>table</code>: p
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 Criterion      3            0        0.3       -0.34        0.22 0.57</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2     Rater      6            0        0.4       -0.61        0.41 1.02</span>
 <span class="r-in"><span><span class="co"># This table summarizes facets; use as.data.frame(fit) for individual estimates</span></span></span>
+<span class="r-in"><span><span class="co"># Optional workflow; run the example explicitly as shown below.</span></span></span>
+<span class="r-in"><span><span class="co"># example("summary.apa_table", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Saved synthetic JML/RSM analysis of example_core.</span></span></span>
+<span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
+<span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"core-jml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
+<span class="r-in"><span><span class="va">tbl</span> <span class="op">&lt;-</span> <span class="fu">apa_table</span><span class="op">(</span><span class="va">fit</span>, which <span class="op">=</span> <span class="st">"summary"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">tbl</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># Optional workflow; run the example explicitly as shown below.</span></span></span>
+<span class="r-in"><span><span class="co"># example("plot.apa_table", run.dontrun = TRUE)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Saved synthetic JML/RSM analysis of example_core.</span></span></span>
+<span class="r-in"><span><span class="co"># For your own data, fit a model first; see ?fit_mfrm.</span></span></span>
+<span class="r-in"><span><span class="va">example_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"core-jml.rds"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">example_fit</span><span class="op">$</span><span class="va">fit</span></span></span>
+<span class="r-in"><span><span class="va">tbl</span> <span class="op">&lt;-</span> <span class="fu">apa_table</span><span class="op">(</span><span class="va">fit</span>, which <span class="op">=</span> <span class="st">"summary"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tbl</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tbl</span>, type <span class="op">=</span> <span class="st">"first_numeric"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">tbl</span>,</span></span>
+<span class="r-in"><span>    type <span class="op">=</span> <span class="st">"numeric_profile"</span>,</span></span>
+<span class="r-in"><span>    main <span class="op">=</span> <span class="st">"APA Numeric Profile (Customized)"</span>,</span></span>
+<span class="r-in"><span>    palette <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>numeric_profile <span class="op">=</span> <span class="st">"#2b8cbe"</span>, grid <span class="op">=</span> <span class="st">"#d9d9d9"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    label_angle <span class="op">=</span> <span class="fl">45</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -2,6 +2,8 @@
 
 Build an unexpected-response screening report
 
+Build an unexpected-after-adjustment screening report
+
 ## Usage
 
 ``` r
@@ -13,37 +15,54 @@ unexpected_response_table(
   top_n = 100,
   rule = c("residual", "either", "both")
 )
+
+unexpected_after_bias_table(
+  fit,
+  bias_results,
+  diagnostics = NULL,
+  abs_z_min = 3,
+  prob_max = 0.3,
+  top_n = 100,
+  rule = c("residual", "either", "both")
+)
 ```
 
 ## Arguments
 
-- fit :
+- fit:
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
-- diagnostics :
+- diagnostics:
 
   Optional output from
-  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+  for baseline comparison.
 
-- abs_z_min :
+- abs_z_min:
 
   Absolute standardized-residual cutoff.
 
-- prob_max :
+- prob_max:
 
   Maximum observed-category probability cutoff.
 
-- top_n :
+- top_n:
 
-  Maximum number of ranked rows to return in `table`. Summary counts and
-  percentages always use all flagged observations.
+  Maximum number of ranked rows to return in `table`. Summary counts,
+  percentages, and before/after comparisons use all flagged
+  observations, regardless of this display limit.
 
-- rule :
+- rule:
 
-  `"residual"` (default) uses only the absolute residual cutoff;
-  `"either"` and `"both"` also use the category-probability cutoff.
+  `"residual"` (default), `"either"`, or `"both"`; see
+  `unexpected_response_table()` for the same baseline/after-bias rule.
+
+- bias_results:
+
+  Output from
+  [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
 
 ## Value
 
@@ -54,6 +73,18 @@ A named list with:
 - `summary`: one-row overview
 
 - `thresholds`: applied thresholds
+
+A named list with:
+
+- `table`: unexpected responses after bias adjustment
+
+- `summary`: one-row summary (includes baseline-vs-after counts)
+
+- `thresholds`: applied thresholds
+
+- `facets`: analyzed bias facet pair
+
+- `gpcm_boundary`: `GPCM` interpretation guidance when applicable
 
 ## Details
 
@@ -76,6 +107,22 @@ The table includes row-level observed/expected values, residuals,
 observed-category probability, most-likely category, and a composite
 severity score for sorting.
 
+This helper recomputes expected values and residuals after interaction
+adjustments from
+[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
+have been introduced. Screening coverage is retained separately before
+and after adjustment. Reduction counts, percentages and the comparison
+plot are unavailable if either screen leaves responses unclassified.
+Recreate older saved results with the original settings; the MFRM fit
+does not need re-estimation.
+
+`summary(t10)` is supported through
+[`summary()`](https://rdrr.io/r/base/summary.html). `plot(t10)` is
+dispatched through
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) for class
+`mfrm_unexpected_after_bias` (`type = "scatter"`, `"severity"`,
+`"comparison"`).
+
 ## Interpreting output
 
 - `summary`: prevalence of unexpected responses under current
@@ -88,6 +135,19 @@ severity score for sorting.
 Compare results across `rule = "either"` and `rule = "both"` to assess
 how conservative your screening should be.
 
+- `summary`: before/after unexpected counts and reduction metrics.
+
+- `table`: residual unexpected responses after bias adjustment.
+
+- `thresholds`: screening settings used in this comparison.
+
+Lower after-adjustment counts describe an in-sample change in flags;
+they do not show that bias has been removed or establish fairness. For
+`GPCM`, both the bias estimate and the post-adjustment comparison use
+the fitted slope-aware probability kernel while holding the other fitted
+quantities fixed. Read the returned `gpcm_boundary` before reporting the
+comparison.
+
 ## Typical workflow
 
 1.  Start with the default residual screen. Category probability is an
@@ -99,10 +159,24 @@ how conservative your screening should be.
 3.  Inspect top rows and visualize with [plot(x, type =
     "unexpected")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
 
+&nbsp;
+
+1.  Run `unexpected_response_table()` as baseline.
+
+2.  Estimate bias via
+    [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
+
+3.  Run `unexpected_after_bias_table(...)` and compare reductions.
+
 ## Further guidance
 
 For a plot-selection guide and a longer walkthrough, see
-[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+and
+[`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md).
+
+For a plot-selection guide and a longer walkthrough, see
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 and
 [`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md).
 
@@ -174,7 +248,30 @@ The `summary` data.frame contains:
 
 - Rule:
 
-  "either" or "both".
+  "residual", "either", or "both".
+
+The `table` data.frame has the same structure as
+`unexpected_response_table()` output, with an additional
+`BiasAdjustment` column showing the bias correction applied to each
+observation's expected value.
+
+The `summary` data.frame contains:
+
+- TotalObservations:
+
+  Total observations analyzed.
+
+- BaselineUnexpectedN:
+
+  Unexpected count before bias adjustment.
+
+- AfterBiasUnexpectedN:
+
+  Unexpected count after adjustment.
+
+- ReducedBy, ReducedPercent:
+
+  Reduction in unexpected count.
 
 ## Saved-result reuse
 
@@ -182,7 +279,14 @@ The returned `fit_identity` records the fitted analysis for reuse with
 reports and exports. Recreate older results from the saved fit and
 matching diagnostics using the original screening options; no model
 refit is needed. See
-[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
+for migration instructions.
+
+The returned `fit_identity` records the fitted analysis for reuse with
+reports and exports. Recreate older results from the saved fit and
+matching diagnostics using the original screening options; no model
+refit is needed. See
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 for migration instructions.
 
 ## See also
@@ -190,11 +294,19 @@ for migration instructions.
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`displacement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/displacement_table.md),
 [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md),
-[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
+
+[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
+`unexpected_response_table()`,
+[`bias_count_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("unexpected_response_table", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 library(mfrmr)
 # Saved synthetic MML/RSM analysis of example_operational.
 # For your own data, fit a model first; see ?fit_mfrm.
@@ -205,32 +317,22 @@ unexpected <- unexpected_response_table(
   fit, diagnostics = diagnostics, abs_z_min = 1.5, prob_max = 0.4, top_n = 5
 )
 unexpected$summary # Counts and percentages for all flagged observations
-#> # A tibble: 1 × 10
-#>   TotalObservations EvaluatedObservations UnavailableObservations UnexpectedN
-#>               <int>                 <int>                   <int>       <int>
-#> 1               282                   282                       0          21
-#> # ℹ 6 more variables: UnexpectedPercent <dbl>, LowProbabilityN <int>,
-#> #   LargeResidualN <int>, Rule <chr>, AbsZThreshold <dbl>, ProbThreshold <dbl>
 unexpected$table   # Only the five highest-ranked cases
-#>   Row Person Rater    Criterion Weight Score Observed Expected  Residual
-#> 1  90   P016   R02 Organization      1     4        4 1.712717  2.287283
-#> 2  69   P012   R03 Organization      1     4        4 1.881621  2.118379
-#> 3 282   P048   R06 Organization      1     4        4 2.126046  1.873954
-#> 4 121   P021   R04      Content      1     1        1 2.867349 -1.867349
-#> 5 145   P025   R04     Language      1     1        1 2.815285 -1.815285
-#>   StdResidual    ObsProb MostLikely MostLikelyProb MostLikelyCount CategoryGap
-#> 1    3.204010 0.01227149          2      0.4446563               1           2
-#> 2    2.769635 0.02422218          2      0.4736443               1           2
-#> 3    2.291484 0.05270294          2      0.4734400               1           2
-#> 4   -2.214482 0.04860959          3      0.4171721               1           2
-#> 5   -2.139004 0.05557605          3      0.4123865               1           2
-#>   Surprise            Direction FlagLowProbability FlagLargeResidual Severity
-#> 1 1.911103 Higher than expected               TRUE              TRUE 6.115113
-#> 2 1.615787 Higher than expected               TRUE              TRUE 5.385422
-#> 3 1.278165 Higher than expected               TRUE              TRUE 4.569650
-#> 4 1.313278  Lower than expected               TRUE              TRUE 4.527760
-#> 5 1.255112  Lower than expected               TRUE              TRUE 4.394117
 plot(unexpected)
-
 # The rule is exploratory: inspect the scoring context before changing a rating
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("unexpected_after_bias_table", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_bias.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
+t10 <- unexpected_after_bias_table(fit, bias, diagnostics = diag, top_n = 20)
+summary(t10)
+p_t10 <- plot(t10, draw = FALSE)
+plot_data(p_t10, "plot")
+} # }
 ```

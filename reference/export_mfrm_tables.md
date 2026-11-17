@@ -127,10 +127,10 @@ in an older diagnostic result are not filled with assumed approval.
 
 [`fit_mfrm`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
 [`diagnose_mfrm`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
-[`as.data.frame.mfrm_fit`](https://ryuya-dot-com.github.io/mfrmr/reference/as.data.frame.mfrm_fit.md),
+[`as.data.frame.mfrm_fit`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_fit_extractors.md),
 [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md),
 [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md),
-[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 
 ## Examples
 

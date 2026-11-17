@@ -27,6 +27,15 @@ summary(object, ...)
 
 # S3 method for class 'mfrm_residual_network'
 print(x, ...)
+
+# S3 method for class 'mfrm_residual_network'
+plot(
+  x,
+  type = c("network", "matrix", "dendrogram"),
+  preset = c("standard", "publication", "compact", "monochrome"),
+  draw = TRUE,
+  ...
+)
 ```
 
 ## Arguments
@@ -85,7 +94,24 @@ print(x, ...)
 
 - x:
 
-  An `mfrm_residual_network`.
+  For `print.mfrm_residual_network()`: An `mfrm_residual_network`.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): A result
+  from `mfrm_residual_network()`.
+
+- type:
+
+  `"network"`, `"matrix"` or `"dendrogram"`.
+
+- preset:
+
+  Visual preset; see
+  [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md).
+
+- draw:
+
+  Whether to print the `ggplot` figure; `FALSE` returns the `ggplot`
+  object without drawing.
 
 ## Value
 
@@ -100,6 +126,30 @@ and
 [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
 connect the result to reporting. Complete RDS archives include person
 identifiers: review sharing permissions.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object.
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+extracts the selected view, saved matrix, nodes, pairs, edges,
+clustering, settings and interpretation notes. Plotting does not
+recompute residuals or clustering. Save the analysis object to redraw
+every view.
+
+## Details
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot
+saved residual associations and exploratory groups
+
+Compare the full matrix with its thresholded network, then inspect the
+clustering tree when requested. Network positions are a deterministic
+circle: distance on the page is not a statistical distance. Positive
+edges are solid red and negative edges dashed blue; thickness represents
+\|r\|. Gray matrix cells denote unavailable correlations. Node colors do
+not encode quality. Dendrogram labels append the chosen group number in
+square brackets; these numbers are labels, not ranks. Titles and
+cautions are retained in
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md),
+not printed into the figure.
 
 ## Statistical definition
 
@@ -154,29 +204,12 @@ resampled data; resampling saved residuals alone omits calibration
 uncertainty. The appropriate resampling unit follows the rating design,
 including dependencies across persons, tasks and raters.
 
-## Where random forests belong
-
-Wesolowski (2019) first used k-means on differential-rater-functioning
-indices to construct rater types, then random forests to predict those
-labels. That study motivates a supervised follow-up, not random forests
-as the clustering algorithm implemented here. Its features and targets
-differ from these residual correlations. In this supervised use, a
-forest combines predictions from bootstrap samples and random candidate
-feature subsets; it requires a declared prediction target and
-out-of-sample assessment.
-
-A classifier predicting exploratory groups can reproduce the grouping
-rule without establishing external validity. Fit feature
-transformations, measurement models and cluster discovery within
-training data, keep a separate test set and define how new units receive
-reference labels. Split at the intended generalization unit (for example
-new raters, persons or tasks); row-wise splitting of repeated ratings
-can leak information. Out-of-bag error alone does not validate labels
-constructed on all data. Report class balance, confusion matrices,
-discrimination/calibration where appropriate and independent substantive
-outcomes. Feature importance is predictive, not causal. This function
-does not fit a random forest; use established ML packages for a
-separately designed prediction study.
+Wesolowski (2019) used a different workflow: k-means on
+differential-rater indices, followed by random forests to predict the
+resulting groups. This function implements neither that classifier nor
+its features. Predicting exploratory group labels would require a
+separate target and independent validation; it does not validate the
+groups themselves.
 
 ## References
 
@@ -194,13 +227,18 @@ research. *PLOS ONE, 12*, e0174035.
 
 ## See also
 
-[`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md),
-[`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md),
-[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
+[k-means
+details](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
+[hierarchical clustering
+details](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
+[mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("mfrm_residual_network", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
 # For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -208,30 +246,9 @@ fit <- example_fit$fit
 net <- mfrm_residual_network(fit, facet = "Criterion", missing = "complete",
                              clusters = 2)
 net$pairs                 # association, shared-person count, unavailability
-#>     Level1       Level2 ResidualCor  N Reason Displayed
-#> 1 Accuracy      Content -0.24351341 48             TRUE
-#> 2 Accuracy     Language -0.47046424 48             TRUE
-#> 3 Accuracy Organization -0.05276933 48             TRUE
-#> 4  Content     Language -0.42513633 48             TRUE
-#> 5  Content Organization -0.35361668 48             TRUE
-#> 6 Language Organization -0.38506732 48             TRUE
 net$clustering$status     # check before interpreting groups
-#> [1] "available"
 plot(net, type = "matrix", draw = FALSE)
 report <- mfrm_report(net)
 build_summary_table_bundle(report)$table_index
-#>                  Table Rows Cols              Role
-#> 1             settings    1   11      study_design
-#> 2                nodes    4    4 study_diagnostics
-#> 3                pairs    6    6 study_diagnostics
-#> 4           clustering    1    2 study_diagnostics
-#> 5         source_model    1    3      study_design
-#> 6 interpretation_notes    6    1       study_notes
-#>                                                            Description
-#> 1       Residual definition, sample, threshold and clustering settings
-#> 2        All facet levels, displayed degree and exploratory membership
-#> 3   All residual pairs, including overlap and unavailable associations
-#> 4                  Clustering availability and interpretation boundary
-#> 5 Source measurement model; residuals are conditional on its estimates
-#> 6          Interpretation boundaries to retain with tables and figures
+} # }
 ```

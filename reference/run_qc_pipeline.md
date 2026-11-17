@@ -17,6 +17,9 @@ run_qc_pipeline(
   bias_results = NULL,
   separation_facets = NULL
 )
+
+# S3 method for class 'mfrm_qc_pipeline'
+plot(x, type = c("traffic_light", "detail"), draw = TRUE, ...)
 ```
 
 ## Arguments
@@ -64,10 +67,30 @@ run_qc_pipeline(
   they do not affect the overall verdict. For example, use `"Criterion"`
   only when distinguishing criterion difficulties is a substantive goal.
 
+- x:
+
+  Output from `run_qc_pipeline()`.
+
+- type:
+
+  Plot type: `"traffic_light"` (default) or `"detail"`.
+
+- draw:
+
+  If `FALSE`, return plot data invisibly without drawing.
+
+- ...:
+
+  Additional plotting arguments for the selected view.
+
 ## Value
 
 Object of class `mfrm_qc_pipeline` with verdicts, overall status,
 details, and recommendations.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object carrying the QC verdicts in
+`plot_data(p, "verdicts")`.
 
 ## Details
 
@@ -128,6 +151,25 @@ over supported diagnostics. Its pass/warn/fail labels remain package QC
 policy overlays; they are not FACETS score-side equivalence, operational
 scoring decisions, design-forecasting evidence, or automatic fairness /
 validity decisions.
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot a
+saved QC pipeline
+
+Display the checks already returned by `run_qc_pipeline()`. Use the
+colored verdicts for triage, then read the returned detail for the
+reason and next review.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Two plot
+types are provided for visual triage of QC results:
+
+- **`"traffic_light"`** (default): A horizontal bar chart with one row
+  per QC check. Bars are coloured green (Pass), amber (Warn), or red
+  (Fail). Provides an at-a-glance summary of the current QC review
+  state.
+
+- **`"detail"`**: A panel showing the saved `Detail` text beside each
+  verdict. Read this explanation and the returned table to understand
+  why a check was flagged or unavailable.
 
 ## QC checks
 
@@ -198,27 +240,46 @@ The 10 checks are:
 
 6.  Follow `qc$recommendations` for remediation.
 
-7.  Visualize with
-    [plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_qc_pipeline.md).
+7.  Visualize with plot(x).
 
 ## Saved-result reuse
 
 Supplied screening results must describe this fitted analysis. Results
 from another fit or older results without identity metadata are refused.
 See
-[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 to recreate them from the saved fit and matching diagnostics without
 refitting the model.
+
+## Interpretation
+
+The rows are the actual checks returned by `run_qc_pipeline()`:
+convergence, global fit, selected-facet reliability and separation,
+element misfit, unexpected responses, category structure, connectivity,
+inter-rater agreement, and the functioning/bias screen. Element misfit
+uses the configured mean-square band; it is not a ZSTD test. PCA and
+displacement are separate diagnostics and are not checks in this
+pipeline.
+
+Green (Pass), amber (Warn), and red (Fail) describe the selected
+screening rules. Grey (Skip) marks unrequested or unavailable checks;
+`AffectsOverall` in the returned data distinguishes their contribution
+to the overall result. A missing result is not evidence of acceptable
+fit. High rater separation is not high agreement, and no colour
+establishes statistical validity or justifies deleting raters or
+collapsing categories without further review.
 
 ## See also
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md),
 [`mfrm_threshold_profiles()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_threshold_profiles.md),
-[plot(x)](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_qc_pipeline.md),
-[plot(x, type =
+plot(x), [plot(x, type =
 "qc")](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
 [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md)
+
+`run_qc_pipeline()`,
+[mfrmr_plot_migration](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 
 ## Examples
 
@@ -234,5 +295,17 @@ qc <- run_qc_pipeline(fit)
 qc
 summary(qc)
 qc$verdicts
+} # }
+# Long-running workflow; run explicitly when needed.
+# example("plot.mfrm_qc_pipeline", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+ratings <- load_mfrmr_data("study1")
+# These observed data trigger a category-support warning: the QC plot
+# displays that review requirement; convergence does not remove it.
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+                method = "JML", maxit = 300)
+qc <- run_qc_pipeline(fit)
+qc_plot <- plot(qc, draw = FALSE)
+head(plot_data(qc_plot, "verdicts"))
 } # }
 ```

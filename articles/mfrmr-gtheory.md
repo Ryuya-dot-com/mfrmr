@@ -14,7 +14,7 @@ Choose the analysis that matches your question:
 |----|----|
 | How dependable is an observed score under a specified task/rater plan? | The G/D-study workflow below. No MFRM fit is needed. |
 | How do severity and ordered rubric categories relate to a latent trait? | The [measurement workflow](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md), using appropriate ordered-response data. |
-| Which rating patterns deserve feedback or review? | The [agreement lesson](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-rating-agreement.md) and `mfrmr_output_guide("feedback")`. Agreement, severity and dependability answer different questions. |
+| Which rating patterns deserve feedback or review? | The [agreement lesson](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html) and `mfrmr_output_guide("feedback")`. Agreement, severity and dependability answer different questions. |
 
 MFRM simulation is another planning option, not a reason to run both
 analyses automatically. It evaluates a fitted-score or diagnostic
@@ -33,10 +33,11 @@ suffices.
 
 Suppose a speaking assessment reports the equally weighted mean of
 Content and Organization scores. Tasks and raters are intended to be
-interchangeable with others from stated populations. The planned outcome
-is proficiency across those conditions, rather than performance on just
-one particular speech. Weights and the intended interpretation should be
-chosen before inspecting which plan has the highest coefficient.
+interchangeable with others from stated populations. The generalization
+target is the universe score (expected observed performance across those
+conditions), rather than performance on just one particular speech.
+Weights and the intended interpretation should be chosen before
+inspecting which plan has the highest coefficient.
 
 This route analyzes **numeric observed scores**, including a single
 score or fixed combinations of several scores. It does not transform
@@ -169,7 +170,7 @@ components <- plot(g, score = c("Content", "Organization"), ncol = 2,
 ![Two panels show the seven variance components for Content and
 Organization on shared axes. They include Person, Rater, Task, three
 two-way interactions and the highest interaction combined with
-residual.](mfrmr-gtheory_files/figure-html/crossed-score-components-1.png)
+residual.](mfrmr-gtheory_files/figure-html/crossed-score-components-1.svg)
 
 Person variation represents differences between people. Person-by-Rater
 variation means that rater differences vary across people; Rater-by-Task
@@ -285,7 +286,7 @@ twelve-rating plans. Person-by-rater error falls with more raters;
 Person-by-task error rises when fewer tasks are used. The highest
 interaction and residual contribution is unchanged because the product
 of counts remains
-twelve.](mfrmr-gtheory_files/figure-html/crossed-error-components-1.png)
+twelve.](mfrmr-gtheory_files/figure-html/crossed-error-components-1.svg)
 
 ``` r
 
@@ -457,7 +458,7 @@ p <- plot(d_grid, metric = "Phi", x_var = "Tasks", panel_by = "Raters",
 ![Two panels show absolute dependability Phi for the same composite as
 task count increases. Each panel fixes two or four raters. Shaded
 regions are approximate 95 percent MLS intervals, not simultaneous
-confidence bands.](mfrmr-gtheory_files/figure-html/crossed-panels-1.png)
+confidence bands.](mfrmr-gtheory_files/figure-html/crossed-panels-1.svg)
 
 Within a panel, follow the curve to examine adding tasks. Across panels,
 compare the same task count to examine adding raters. More future
@@ -508,7 +509,7 @@ differences.
 
 ``` r
 
-comparison <- mfrm_multivariate_d_compare(d, reference = 1,
+comparison <- compare_mfrm(d, reference = 1,
   assumption = "normal")
 print(comparison, digits = 3)
 #> D-study differences from reference scenario 1 
@@ -568,7 +569,112 @@ can impair the approximation. Selecting a winner after inspecting many
 plans is not protected by these intervals. This paired delta method does
 not apply to one-facet or nested designs; see the branches below and the
 [comparison
-help](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md).
+help](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
+For a conservative joint-region alternative, see [Compare plan
+differences under another interval
+method](#compare-plan-differences-under-another-interval-method).
+
+## Connect the comparison to resources and targets
+
+The same paired comparison can be reviewed against explicit resource
+limits. Here the hours are illustrative operational inputs for one
+declared future cohort, not estimates from the G-study. `Scenario` links
+each row to `plans`; reordering the cost table does not change the
+association.
+
+``` r
+
+costs <- data.frame(Scenario = 1:3, RaterHours = c(40, 44, 48),
+  TaskHours = c(12, 8, 6))
+review <- recommend_mfrm_design(comparison, costs = costs,
+  limits = c(RaterHours = 46), targets = c(G = .58, Phi = .39))
+planning <- summary(review, planning = TRUE)
+planning$plans
+#>   Scenario IsReference RatingsPerPerson         G       Phi RelativeSEM
+#> 1        1        TRUE               12 0.5607879 0.3646152   0.5774748
+#> 2        2       FALSE               12 0.5947792 0.3915712   0.5385960
+#> 3        3       FALSE               12 0.5993499 0.3910704   0.5335039
+#>   AbsoluteSEM Feasibility TargetStatus ReviewRequired
+#> 1   0.8613827    feasible         fail          FALSE
+#> 2   0.8133822    feasible         pass          FALSE
+#> 3   0.8142378  infeasible         pass          FALSE
+planning$checks
+#>   Scenario         Type  Criterion      Value Relation Threshold Status
+#> 1        1     resource RaterHours 40.0000000       <=     46.00   pass
+#> 2        2     resource RaterHours 44.0000000       <=     46.00   pass
+#> 3        3     resource RaterHours 48.0000000       <=     46.00   fail
+#> 4        1 point_target          G  0.5607879       >=      0.58   fail
+#> 5        2 point_target          G  0.5947792       >=      0.58   pass
+#> 6        3 point_target          G  0.5993499       >=      0.58   pass
+#> 7        1 point_target        Phi  0.3646152       >=      0.39   fail
+#> 8        2 point_target        Phi  0.3915712       >=      0.39   pass
+#> 9        3 point_target        Phi  0.3910704       >=      0.39   pass
+planning$differences[, c("Scenario", "Metric", "Difference", "Lower", "Upper",
+                         "Direction", "Feasibility", "TargetStatus")]
+#>   Scenario      Metric  Difference       Lower       Upper    Direction
+#> 1        2           G  0.03399130  0.02233487  0.04564774     improved
+#> 2        2         Phi  0.02695599 -0.01358272  0.06749470 inconclusive
+#> 3        2 RelativeSEM -0.03887873 -0.05251036 -0.02524709     improved
+#> 4        2 AbsoluteSEM -0.04800055 -0.12268000  0.02667890 inconclusive
+#> 5        3           G  0.03856203  0.01816839  0.05895568     improved
+#> 6        3         Phi  0.02645516 -0.04633515  0.09924547 inconclusive
+#> 7        3 RelativeSEM -0.04397091 -0.06736295 -0.02057887     improved
+#> 8        3 AbsoluteSEM -0.04714496 -0.17653559  0.08224567 inconclusive
+#>   Feasibility TargetStatus
+#> 1    feasible         pass
+#> 2    feasible         pass
+#> 3    feasible         pass
+#> 4    feasible         pass
+#> 5  infeasible         pass
+#> 6  infeasible         pass
+#> 7  infeasible         pass
+#> 8  infeasible         pass
+```
+
+The three-rater/four-task plan is within this rater-hour limit and its
+points meet both targets. Its G difference supports improvement under
+the model; its Phi difference remains `inconclusive`. A Phi point above
+.39 does not establish that population Phi exceeds .39. The
+four-rater/three-task plan exceeds the limit and stays visible as
+`infeasible`. Unknown costs are `NA` and make the relevant resource
+check `unavailable`, never free or passing. `RatingsPerPerson` is twelve
+here; it is not a cohort total. Supply future cohort totals and any
+further workload limits explicitly in `costs` and `limits`.
+
+`ReviewRequired` flags covariance-component or sampling-covariance
+concerns without removing signed estimates or their diagnostics. No plan
+is selected automatically: resource feasibility, point-target attainment
+and paired interval direction answer different questions. Intervals
+remain pointwise for prespecified plans; searching for a winner can
+introduce selection bias.
+
+``` r
+
+planning_report <- mfrm_report(review, study_context = c(
+  score = "Equal-weight mean of Content and Organization over the complete plan",
+  universe = "Persons, tasks and raters sampled from the declared assessment populations",
+  resources = "Illustrative total hours for the same future cohort"))
+planning_report$tables$planning_plans
+#>   Scenario IsReference RatingsPerPerson         G       Phi RelativeSEM
+#> 1        1        TRUE               12 0.5607879 0.3646152   0.5774748
+#> 2        2       FALSE               12 0.5947792 0.3915712   0.5385960
+#> 3        3       FALSE               12 0.5993499 0.3910704   0.5335039
+#>   AbsoluteSEM Feasibility TargetStatus ReviewRequired
+#> 1   0.8613827    feasible         fail          FALSE
+#> 2   0.8133822    feasible         pass          FALSE
+#> 3   0.8142378  infeasible         pass          FALSE
+plot(review, view = "differences")
+```
+
+![](mfrmr-gtheory_files/figure-html/crossed-resource-report-1.svg)
+
+The report,
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+and appendix export retain every plan, resource check, direction and
+limitation. This workflow concerns observed-score G/Phi and measurement
+SEM under the existing two-crossed-facet paired delta method. It does
+not convert Bayesian new-Person ability scores into a future-plan
+comparison, and it does not broaden the scope of the interval procedure.
 
 ## Save the result and know which operation to use
 
@@ -579,7 +685,7 @@ help](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compar
 | `summary(d, intervals = TRUE, assumption = "normal")` | Collects supported intervals, methods, context and notes | Yes, explicitly |
 | `confint(d, parm = "Phi", assumption = "normal")` | Returns one metric’s interval table with method attributes | Yes |
 | `print(s)` or `s$table` | Displays the saved summary or accesses its full data frame | No |
-| `plot(d)` | Draws point projections; returns plot data invisibly | No, unless `intervals = TRUE` is requested |
+| `plot(d)` | Returns an editable ggplot of point projections | No, unless `intervals = TRUE` is requested |
 | `plot(s$intervals$Phi)` | Draws a forest from the saved Phi intervals | No |
 | [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) / [`readRDS()`](https://rdrr.io/r/base/readRDS.html) | Saves/reopens complete objects, including notes and diagnostics | No |
 
@@ -597,7 +703,10 @@ replace it with a file in your project for lasting storage.
 
 ``` r
 
-analysis <- list(study = d, summary = s, comparison = comparison, plot = p,
+edited_plot <- p + ggplot2::labs(x = "Tasks per person")
+analysis <- list(study = d, summary = s, comparison = comparison,
+  resource_review = review, resource_report = planning_report,
+  curve_study = d_grid, plot = edited_plot,
   decisions = list(score = "Equal-weight Content/Organization mean",
     comparison = "Twelve ratings per person; task burden and costs differ",
     assumption = "Independent normal random effects"))
@@ -606,12 +715,28 @@ saveRDS(analysis, result_file)
 reopened <- readRDS(result_file)
 identical(reopened$summary, s)  # TRUE: the full summary was preserved.
 #> [1] TRUE
+summary(reopened$resource_review, planning = TRUE)$plans
+#>   Scenario IsReference RatingsPerPerson         G       Phi RelativeSEM
+#> 1        1        TRUE               12 0.5607879 0.3646152   0.5774748
+#> 2        2       FALSE               12 0.5947792 0.3915712   0.5385960
+#> 3        3       FALSE               12 0.5993499 0.3910704   0.5335039
+#>   AbsoluteSEM Feasibility TargetStatus ReviewRequired
+#> 1   0.8613827    feasible         fail          FALSE
+#> 2   0.8133822    feasible         pass          FALSE
+#> 3   0.8142378  infeasible         pass          FALSE
+print(reopened$plot)
 ```
 
-In another session, load `mfrmr` and read that file. Reuse the plot’s
-stored values with `as_ggplot(reopened$plot)` if ggplot2 is installed. A
-CSV of `s$table` is useful for a report, but loses the separate weights,
-notes and numerical diagnostics. Changing future counts requires a new
+![](mfrmr-gtheory_files/figure-html/save-and-reopen-1.svg)
+
+In another session, load `mfrmr` and read that file.
+`print(reopened$plot)` redraws the saved figure with its edits;
+`plot_data(reopened$plot)` retrieves its stored values and notes.
+`curve_study` preserves the grid behind that figure, while `study` holds
+the three equal-rating-count plans. The resource review and report
+retain all candidates, costs, limits and decision context. A CSV of
+`s$table` is useful for a report, but loses the separate weights, notes
+and numerical diagnostics. Changing future counts requires a new
 D-study; changing the source data or model requires a new G-study.
 
 ## Report the assessment-planning answer
@@ -625,7 +750,7 @@ above:
 | Source design | Population of persons and random conditions, crossing/nesting, planned and retained counts, missingness, estimator and negative-component policy | `g$design`, `g$data_usage`, `g$estimation`, component diagnostics |
 | Sources of variation | Relevant variances and cross-score covariances, uncertainty and combined residual terms | `g$components`, `plot(g)` and eligible `confint(g)` |
 | Future plans | Specified counts, score, G/Phi and relative/absolute SEM; assumptions and interval qualifications | `summary(d)` or saved `s$table`; planning and error-component plots |
-| Answer | Magnitude and uncertainty of the prespecified plan difference; workload/cost tradeoff and limits | Saved [`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md) result and the substantive interpretation |
+| Answer | Magnitude and uncertainty of the prespecified plan difference; workload/cost tradeoff and limits | Saved [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md) result and the substantive interpretation |
 
 For example: “For \[defined score and population\], increasing
 \[raters/tasks\] from \[a\] to \[b\] changed projected \[metric\] by
@@ -694,7 +819,7 @@ time trend changes the target or supported design. Race times and match
 outcomes do not automatically fit a judged-performance model. Annual
 speech-contest linking with common recordings also requires the separate
 [linking
-design](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.md).
+design](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html).
 
 ## Examine a construct claim
 
@@ -734,7 +859,7 @@ relations <- plot(g, type = "covariance", score = c("Content", "Organization"),
 conservative pointwise 95 percent intervals for all seven sources. Every
 interval includes zero; the Task and Rater intervals are much wider than
 the others. These are covariance units, not correlations or halo
-scores.](mfrmr-gtheory_files/figure-html/criterion-covariance-1.png)
+scores.](mfrmr-gtheory_files/figure-html/criterion-covariance-1.svg)
 
 The full range stays visible. Use the table to read components whose
 bars are compressed by the widest intervals; the figure does not
@@ -941,7 +1066,7 @@ plot(ci_methods)
 ![One forest plot groups three future plans vertically. Adjacent rows
 compare selected interval methods for Phi on the same axis; color, shape
 and line type distinguish the
-methods.](mfrmr-gtheory_files/figure-html/crossed-interval-methods-1.png)
+methods.](mfrmr-gtheory_files/figure-html/crossed-interval-methods-1.svg)
 
 ``` r
 
@@ -1007,7 +1132,7 @@ plot(ci_small, preset = "monochrome")
 ![The same Phi method comparison now uses a small complete source. Wide
 or unavailable intervals remain visible on the shared axis; the plot
 does not measure
-coverage.](mfrmr-gtheory_files/figure-html/crossed-small-source-intervals-1.png)
+coverage.](mfrmr-gtheory_files/figure-html/crossed-small-source-intervals-1.svg)
 
 Compare widths, unavailable rows and `attr(ci_small, "notes")`, not just
 the point estimates. Wide intervals are retained; missing intervals are
@@ -1018,6 +1143,55 @@ method* section of
 [`confint(d)`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_multivariate_d_study.md)
 gives the mathematical assumptions, finite-sample evaluations and their
 limitations.
+
+### Compare plan differences under another interval method
+
+For this complete balanced source, `method = "mean_square_region"` uses
+one normal-model confidence region for the components. Projecting the
+same region onto plan differences gives conservative joint protection
+across the plans for this fixed score. This differs from the approximate
+pointwise paired delta intervals above. Choose the method for its
+assumptions and intended claim, before examining which result is
+narrower or excludes zero.
+
+``` r
+
+if (requireNamespace("lpSolve", quietly = TRUE)) {
+  joint <- summary(d, intervals = TRUE, parm = c("G", "Phi"),
+    reference = 1, method = "mean_square_region", assumption = "normal")
+  # Attach only resource and point-target checks, matched by Scenario.
+  joint_planning <- merge(joint$table,
+    planning$plans[c("Scenario", "Feasibility", "TargetStatus")],
+    by = "Scenario", all.x = TRUE, sort = FALSE)
+  print(joint_planning[c("Scenario", "Metric", "Estimate", "Lower", "Upper",
+                         "Feasibility", "TargetStatus")], digits = 3, row.names = FALSE)
+}
+#>  Scenario         Metric Estimate    Lower  Upper Feasibility TargetStatus
+#>         2   G difference   0.0340  0.00598 0.0786    feasible         pass
+#>         2 Phi difference   0.0270 -0.10102 0.1010    feasible         pass
+#>         3   G difference   0.0386 -0.00393 0.1065  infeasible         pass
+#>         3 Phi difference   0.0265 -0.17157 0.1716  infeasible         pass
+```
+
+The G difference is about 0.034 with a region enclosure of \[0.006,
+0.079\] for three raters and four tasks. For four raters and three
+tasks, the G enclosure is \[-0.004, 0.107\]: its direction remains
+uncertain, although the paired delta interval excludes zero. Both Phi
+enclosures include zero. Neither agreement nor disagreement between
+methods establishes coverage or identifies the best plan. These are
+model-dependent statements, not robust guarantees for arbitrary observed
+scores or a minimum source sample size.
+
+[`recommend_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/recommend_mfrm_design.md)
+accepts the saved paired delta comparison, not `joint` or its interval
+objects. The join above reuses only resource and point-target checks; it
+does not transfer the delta interval’s direction. The four-rater plan
+remains infeasible under the illustrative hour limit. Preserve `joint`
+with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) for its method
+notes, source and diagnostics; `plot(joint$intervals$G)` uses the saved
+interval without recalculation. See [the interval
+help](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_multivariate_d_study.html#differences-from-a-shared-mean-square-region)
+for the shared-region construction and numerical failure states.
 
 ### Incomplete data or unavailable results
 
@@ -1156,7 +1330,7 @@ plot(task_d, metric = "G", intervals = TRUE, method = "spectral_f",
 normal-model spectral F pivot from incomplete source ratings. Its wide
 lower range shows source uncertainty; it is not the interval for the
 difference between
-plans.](mfrmr-gtheory_files/figure-html/incomplete-relative-g-1.png)
+plans.](mfrmr-gtheory_files/figure-html/incomplete-relative-g-1.svg)
 
 The difference interval preserves dependence between the two plans.
 Positive values mean higher relative reliability; they do not settle
@@ -1183,7 +1357,7 @@ apply at the point of use.
 | Coefficient/SEM intervals, boundary states, method comparisons and coverage evidence | [`confint(d)`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_multivariate_d_study.md), the named design/method sections |
 | Variance and signed covariance intervals | [`confint(g)`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_multivariate_gstudy.md) |
 | Sampling covariance and component SEs | [`vcov(g)`](https://ryuya-dot-com.github.io/mfrmr/reference/vcov.mfrm_multivariate_gstudy.md) |
-| Paired delta approximation and its applicability | [`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md), *Calculation and source of the approximation* |
+| Paired delta approximation and its applicability | [D-study plan comparison](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study_comparison.md), *Calculation and source of the approximation* |
 
 The help pages retain formulas, full methodological references and
 numerical qualifications. The G/D framework follows Brennan (2001),

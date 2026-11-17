@@ -13,6 +13,9 @@ build_weighting_review(
   top_n = 10L,
   nested = FALSE
 )
+
+# S3 method for class 'mfrm_weighting_review'
+summary(object, digits = 3, top_n = 10, ...)
 ```
 
 ## Arguments
@@ -42,7 +45,11 @@ build_weighting_review(
 
 - top_n:
 
-  Maximum number of rows to keep in compact summary outputs.
+  For `build_weighting_review()`: Maximum number of rows to keep in
+  compact summary outputs.
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): Number of top
+  rows to retain in compact summary tables.
 
 - nested:
 
@@ -50,9 +57,25 @@ build_weighting_review(
   `FALSE`. Requires matched MML fits and the checks in
   [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
 
+- object:
+
+  Output from `build_weighting_review()`.
+
+- digits:
+
+  Number of digits for printed numeric values.
+
+- ...:
+
+  Reserved for generic compatibility.
+
 ## Value
 
 An object of class `mfrm_weighting_review`.
+
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.mfrm_weighting_review`, including the evidence-tier
+`comparison_contract` table and any computed `lrt`.
 
 ## Details
 
@@ -95,6 +118,9 @@ automatic PCM-versus-GPCM model selection because it is unpenalized and
 the GPCM contains additional slope parameters. FACETS may serve as a
 direct comparator for the PCM/JML side only; its post-fit discrimination
 statistic is not a jointly estimated free-slope GPCM counterpart.
+
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize a
+weighting-review object
 
 ## Recommended input route
 
@@ -143,7 +169,9 @@ not as a formal validity adjudication.
 
 [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md),
 [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md),
-[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
+[mfrmr_gpcm_scope](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_gpcm_scope.md)
+
+`build_weighting_review()`
 
 ## Examples
 

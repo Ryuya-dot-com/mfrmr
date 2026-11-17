@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,32 +33,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Workflow</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-workflow.Rmd</code></div>
     </div>
 
@@ -95,6 +89,12 @@
 <p>Start with the intended score and decision, then choose a branch.
 These are connected workflows, not a checklist requiring every
 analysis.</p>
+<p>For a visual map of which object each function accepts and returns,
+see <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html#how-functions-connect">how
+the functions connect</a>. The map distinguishes <code>fit</code>,
+<code>diagnostics</code>, collected <code>results</code> and a
+<code>report</code>, with a separate observed-score route for G-Study /
+D-Study.</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -140,23 +140,23 @@ required.</td>
 </tr>
 <tr class="even">
 <td>Describe observed agreement</td>
-<td>Match the rating unit → <code><a href="../reference/pairwise_kappa_table.html">pairwise_kappa_table()</a></code>,
-<code><a href="../reference/krippendorff_alpha_table.html">krippendorff_alpha_table()</a></code> or
-<code><a href="../reference/pairwise_icc_table.html">pairwise_icc_table()</a></code>
+<td>Match the rating unit → <code><a href="../reference/interrater_agreement_table.html">pairwise_kappa_table()</a></code>,
+<code><a href="../reference/interrater_agreement_table.html">krippendorff_alpha_table()</a></code> or
+<code><a href="../reference/interrater_agreement_table.html">pairwise_icc_table()</a></code>
 </td>
 <td>
-<a href="mfrmr-rating-agreement.html">Agreement</a> target, category
-distances/ICC definition, overlap and exclusions. Choose the coefficient
-from the question.</td>
+<a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html">Agreement</a>
+target, category distances/ICC definition, overlap and exclusions.
+Choose the coefficient from the question.</td>
 </tr>
 <tr class="odd">
 <td>Reuse a scale across forms or waves</td>
 <td>Anchor review → anchored fit / linking review → drift and eligible
 uncertainty</td>
 <td>
-<a href="mfrmr-linking-and-dff.html">Anchor provenance and
-scale</a>, invariance assumption, fixed versus propagated uncertainty. A
-common label is not a common calibration.</td>
+<a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html">Anchor
+provenance and scale</a>, invariance assumption, fixed versus propagated
+uncertainty. A common label is not a common calibration.</td>
 </tr>
 <tr class="even">
 <td>Investigate an unexpected rater/criterion combination or group
@@ -165,9 +165,9 @@ contrast</td>
 <code><a href="../reference/analyze_dff.html">analyze_dff()</a></code> → signed tables and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> →
 reporting</td>
 <td>
-<a href="mfrmr-linking-and-dff.html">Bias/DFF</a> target, cell
-counts, direction, multiplicity and conditional uncertainty; a screen
-does not establish unfairness.</td>
+<a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html">Bias/DFF</a>
+target, cell counts, direction, multiplicity and conditional
+uncertainty; a screen does not establish unfairness.</td>
 </tr>
 <tr class="odd">
 <td>Decide whether another model changes the answer</td>
@@ -187,7 +187,7 @@ likelihoods, eligible tests and changes in substantive conclusions.</td>
 clustering</td>
 <td>
 <a href="mfrmr-visual-diagnostics.html#residual-networks-ega-and-the-assignment-graph-answer-different-questions">Residual
-exploration</a> and <a href="mfrmr-external-features.html">feature
+exploration</a> and <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html">feature
 groups</a> have different inputs. Retain overlap, feature construction
 and exploratory status.</td>
 </tr>
@@ -327,18 +327,16 @@ for an observed score, use <a href="mfrmr-gtheory.html">Plan an
 assessment with G theory</a>; no MFRM fit is required for that workflow.
 To choose between fixed facets, shared random raters and Person-specific
 testlets, use <code>mfrmr_output_guide("models")</code> or
-<code><a href="../reference/mfrmr_workflow_methods.html">help("mfrmr_workflow_methods")</a></code>. The extended models have
-dedicated tutorials:
-<code><a href="../articles/mfrmr-random-raters.html">vignette("mfrmr-random-raters", package = "mfrmr")</a></code> and
-<code><a href="../articles/mfrmr-testlets.html">vignette("mfrmr-testlets", package = "mfrmr")</a></code>. Their
-prediction targets and reporting support differ. The diagnostics and
-reports below follow ordinary RSM/PCM fits. Two-family GPCM and
-corrected JML also have class <code>mfrm_fit</code>, but require their
-model-specific result routes; sharing that class does not make these
-ordinary diagnostics available. See
-<code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> and
-<code><a href="../articles/mfrmr-gpcm-scope.html">vignette("mfrmr-gpcm-scope", package = "mfrmr")</a></code> before
-changing model family.</p>
+<code><a href="../reference/mfrmr-package.html">help("mfrmr_workflow_methods")</a></code>. The extended models have
+dedicated tutorials: <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html">Shared
+random raters: feedback and replacement raters</a> and <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlets.html">Dependent
+ratings within a person: testlet models</a>. Their prediction targets
+and reporting support differ. The diagnostics and reports below follow
+ordinary RSM/PCM fits. Two-family GPCM and corrected JML also have class
+<code>mfrm_fit</code>, but require their model-specific result routes;
+sharing that class does not make these ordinary diagnostics available.
+See <code>mfrmr_output_guide("gpcm_capabilities")</code> and <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html">GPCM
+scope and current limitations</a> before changing model family.</p>
 <p>This example estimates person abilities while accounting for rater
 severity and criterion difficulty. A <em>facet</em> is a source of
 variation in scores; here, <code>Rater</code> and <code>Criterion</code>
@@ -386,7 +384,7 @@ collapsed into a different scale.</p>
 <span></span>
 <span><span class="co"># Plot the results (Wright map)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/quick-start-1.png" class="r-plt" alt="Wright map of fitted person abilities, rater severities, criterion difficulties and shared category steps for the synthetic ratings. All locations use the same logit scale." width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/quick-start-1.svg" class="r-plt" alt="Wright map of fitted person abilities, rater severities, criterion difficulties and shared category steps for the synthetic ratings. All locations use the same logit scale." width="672"></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># Save the summary, then display its tables</span></span>
@@ -402,15 +400,17 @@ collapsed into a different scale.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 7</span></span></span>
 <span><span class="co">#&gt;   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Criterion      3     4.62<span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>      0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Criterion      3     0   <span style="color: #949494;"> </span>         0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater          6    -<span style="color: #BB0000;">4.64</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02</span></span>
 <span></span>
 <span><span class="co"># Check the interpretation status and recommended next step</span></span>
 <span><span class="va">results</span><span class="op">$</span><span class="va">decision</span></span>
 <span><span class="co">#&gt;                                                           Interpretation</span></span>
 <span><span class="co">#&gt; 1 Fit-readiness requirements satisfied; formal precision review required</span></span>
-<span><span class="co">#&gt;   FormalInference FitReadiness                                              Why</span></span>
-<span><span class="co">#&gt; 1              No        ready Formal precision support has not been evaluated.</span></span>
+<span><span class="co">#&gt;   FormalInference FitReadiness</span></span>
+<span><span class="co">#&gt; 1              No        ready</span></span>
+<span><span class="co">#&gt;                                                                                                                                                                                                                                      Why</span></span>
+<span><span class="co">#&gt; 1 Formal precision support has not been evaluated. These checks assess numerical readiness and the requested precision method under the specified model; they do not establish model adequacy or finite-sample coverage for this design.</span></span>
 <span><span class="co">#&gt;                                                                                                                                                   NextAction</span></span>
 <span><span class="co">#&gt; 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.</span></span></code></pre></div>
 <p><code>&lt;-</code> saves an object without printing it. Here
@@ -421,7 +421,7 @@ table. Enter <code>results</code> to print the full summary.</p>
 <p>The Wright map displays the estimates in logits, the model’s
 measurement units, rather than the original 1-to-4 scores. With this
 example’s default orientation, higher person estimates mean higher
-ability; higher rater estimates mean stricter ratings, and higher
+ability; higher rater estimates mean more severe ratings, and higher
 criterion estimates mean greater difficulty.</p>
 <p>The native models use the <strong>logistic metric (L-metric), with D
 = 1</strong>: there is no extra 1.7 or 1.702 normal-ogive approximation
@@ -483,8 +483,8 @@ fitting failed. The default summary does not compute diagnostics.</p>
 <span><span class="va">diagnostic_summary</span><span class="op">$</span><span class="va">decision</span></span>
 <span><span class="co">#&gt;               Interpretation FormalInference FitReadiness</span></span>
 <span><span class="co">#&gt; 1 Ready for formal inference             Yes        ready</span></span>
-<span><span class="co">#&gt;                                           Why</span></span>
-<span><span class="co">#&gt; 1 All stored fit-readiness components passed.</span></span>
+<span><span class="co">#&gt;                                                                                                                                                                                                                                 Why</span></span>
+<span><span class="co">#&gt; 1 All stored fit-readiness components passed. These checks assess numerical readiness and the requested precision method under the specified model; they do not establish model adequacy or finite-sample coverage for this design.</span></span>
 <span><span class="co">#&gt;                                                                                            NextAction</span></span>
 <span><span class="co">#&gt; 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.</span></span></code></pre></div>
 <p>For your own data, follow <a href="#use-your-own-csv">Use your own
@@ -742,8 +742,8 @@ evidence for the interpretation decision.</p>
 <span><span class="va">csv_results</span><span class="op">$</span><span class="va">decision</span></span>
 <span><span class="co">#&gt;               Interpretation FormalInference FitReadiness</span></span>
 <span><span class="co">#&gt; 1 Ready for formal inference             Yes        ready</span></span>
-<span><span class="co">#&gt;                                           Why</span></span>
-<span><span class="co">#&gt; 1 All stored fit-readiness components passed.</span></span>
+<span><span class="co">#&gt;                                                                                                                                                                                                                                 Why</span></span>
+<span><span class="co">#&gt; 1 All stored fit-readiness components passed. These checks assess numerical readiness and the requested precision method under the specified model; they do not establish model adequacy or finite-sample coverage for this design.</span></span>
 <span><span class="co">#&gt;                                                                                                                                                                   NextAction</span></span>
 <span><span class="co">#&gt; 1 After reviewing convergence, run `review &lt;- summary(fit, profile = "facets", detail = "brief")` for the comprehensive measurement review; FACETS software is not required.</span></span></code></pre></div>
 <p>Read <code>Why</code> and <code>NextAction</code> before using the
@@ -754,7 +754,7 @@ decision does not establish the validity of the assessment or answer the
 study’s substantive question.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">csv_fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/csv-results-1.png" class="r-plt" alt="Wright map for the ratings read from the example CSV. Compare person, facet and step locations on the fitted scale; the display does not establish that model assumptions hold." width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/csv-results-1.svg" class="r-plt" alt="Wright map for the ratings read from the example CSV. Compare person, facet and step locations on the fitted scale; the display does not establish that model assumptions hold." width="672"></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">csv_estimates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">csv_fit</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">csv_estimates</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Person"</span><span class="op">)</span><span class="op">)</span></span>
@@ -781,10 +781,10 @@ study’s substantive question.</p>
 <p><code>Level</code> identifies the person, rater, or criterion;
 <code>Estimate</code> is the fitted value in logits. With these
 defaults, higher person values mean higher ability, higher rater values
-mean stricter ratings, and higher criterion values mean greater
+mean more severe ratings, and higher criterion values mean greater
 difficulty. The rater and criterion estimates are centered at zero
 within each facet. In the practice file, R06 is about +0.41 and R01
-about -0.61: R06 is estimated to rate more strictly after accounting for
+about -0.61: R06 is estimated to rate more severely after accounting for
 person ability and criterion difficulty. This difference alone does not
 establish statistical significance.</p>
 <p>With custom facet names, change the <code>Facet</code> filters too,
@@ -980,8 +980,10 @@ lesson.</p>
 <span><span class="va">fit_summary_toy</span><span class="op">$</span><span class="va">decision</span></span>
 <span><span class="co">#&gt;                                                           Interpretation</span></span>
 <span><span class="co">#&gt; 1 Fit-readiness requirements satisfied; formal precision review required</span></span>
-<span><span class="co">#&gt;   FormalInference FitReadiness                                              Why</span></span>
-<span><span class="co">#&gt; 1              No        ready Formal precision support has not been evaluated.</span></span>
+<span><span class="co">#&gt;   FormalInference FitReadiness</span></span>
+<span><span class="co">#&gt; 1              No        ready</span></span>
+<span><span class="co">#&gt;                                                                                                                                                                                                                                      Why</span></span>
+<span><span class="co">#&gt; 1 Formal precision support has not been evaluated. These checks assess numerical readiness and the requested precision method under the specified model; they do not establish model adequacy or finite-sample coverage for this design.</span></span>
 <span><span class="co">#&gt;                                                                                                                                                   NextAction</span></span>
 <span><span class="co">#&gt; 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.</span></span></code></pre></div>
 <p>The example has 282 observed ratings from 48 persons, six raters, and
@@ -1025,23 +1027,23 @@ inference checks.</p>
 <span><span class="va">diagnostic_summary_toy</span><span class="op">$</span><span class="va">decision</span></span>
 <span><span class="co">#&gt;               Interpretation FormalInference FitReadiness</span></span>
 <span><span class="co">#&gt; 1 Ready for formal inference             Yes        ready</span></span>
-<span><span class="co">#&gt;                                           Why</span></span>
-<span><span class="co">#&gt; 1 All stored fit-readiness components passed.</span></span>
+<span><span class="co">#&gt;                                                                                                                                                                                                                                 Why</span></span>
+<span><span class="co">#&gt; 1 All stored fit-readiness components passed. These checks assess numerical readiness and the requested precision method under the specified model; they do not establish model adequacy or finite-sample coverage for this design.</span></span>
 <span><span class="co">#&gt;                                                                                            NextAction</span></span>
 <span><span class="co">#&gt; 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.</span></span>
 <span><span class="va">diagnostic_summary_toy</span><span class="op">$</span><span class="va">overall_fit</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 22</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 23</span></span></span>
 <span><span class="co">#&gt;   Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit DF_Infit_FACETS</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 0.866  0.857     -<span style="color: #BB0000;">1.85</span>      -<span style="color: #BB0000;">1.91</span>     353.      334.            353.</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 15 more variables: DF_Outfit_FACETS &lt;dbl&gt;, FitResponseRows &lt;int&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   FitAvailableRows &lt;int&gt;, FitUnavailableRows &lt;int&gt;, FitStatus &lt;chr&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   FitReason &lt;chr&gt;, DF_Infit_ENGINE &lt;dbl&gt;, DF_Outfit_ENGINE &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   InfitZSTD_ENGINE &lt;dbl&gt;, OutfitZSTD_ENGINE &lt;dbl&gt;, InfitZSTD_FACETS &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   OutfitZSTD_FACETS &lt;dbl&gt;, FitDfMethod &lt;chr&gt;, FitZSTDTransform &lt;chr&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   FitZSTDCap &lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 16 more variables: DF_Outfit_FACETS &lt;dbl&gt;, FitResponseRows &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   FitAvailableRows &lt;int&gt;, FitUnavailableRows &lt;int&gt;, FitBoundaryRows &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   FitStatus &lt;chr&gt;, FitReason &lt;chr&gt;, DF_Infit_ENGINE &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   DF_Outfit_ENGINE &lt;dbl&gt;, InfitZSTD_ENGINE &lt;dbl&gt;, OutfitZSTD_ENGINE &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   InfitZSTD_FACETS &lt;dbl&gt;, OutfitZSTD_FACETS &lt;dbl&gt;, FitDfMethod &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   FitZSTDTransform &lt;chr&gt;, FitZSTDCap &lt;dbl&gt;</span></span></span>
 <span></span>
-<span><span class="va">precision_toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/precision_review_report.html">precision_review_report</a></span><span class="op">(</span><span class="va">fit_toy</span>, diagnostics <span class="op">=</span> <span class="va">diag_toy</span><span class="op">)</span></span>
+<span><span class="va">precision_toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"precision"</span>, <span class="va">fit_toy</span>, diagnostics <span class="op">=</span> <span class="va">diag_toy</span><span class="op">)</span></span>
 <span><span class="va">precision_toy</span><span class="op">$</span><span class="va">profile</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"PrecisionTier"</span>, <span class="st">"SupportsFormalInference"</span>, <span class="st">"PersonSEBasis"</span>, <span class="st">"NonPersonSEBasis"</span></span>
 <span><span class="op">)</span><span class="op">]</span></span>
@@ -1069,7 +1071,7 @@ inference checks.</p>
 <span></span>
 <span><span class="co"># View the fitted locations with their uncertainty</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_toy</span>, diagnostics <span class="op">=</span> <span class="va">diag_toy</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/precision-and-fit-1.png" class="r-plt" alt="Fitted person, facet and step locations with the requested uncertainty display. Interpret precision using the accompanying table and its stated interval basis." width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/precision-and-fit-1.svg" class="r-plt" alt="Fitted person, facet and step locations with the requested uncertainty display. Interpret precision using the accompanying table and its stated interval basis." width="672"></p>
 <p>The fit-only summary reports <code>FormalInference = "No"</code>
 until precision evidence is supplied. Read the diagnostic decision’s
 <code>Why</code> and <code>NextAction</code> together with the precision
@@ -1115,7 +1117,7 @@ rubric:</p>
 <span><span class="co">#&gt; 2    Common Step_2  0.1634468 0.1670937 primary_reporting</span></span>
 <span><span class="co">#&gt; 3    Common Step_3  1.0595384 0.1765225 primary_reporting</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scale_toy</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/category-review-1.png" class="r-plt" alt="Category-use and threshold summaries for the fitted rubric. Sparse categories and transition ordering should be reviewed together with the rating design." width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/category-review-1.svg" class="r-plt" alt="Category-use and threshold summaries for the fitted rubric. Sparse categories and transition ordering should be reviewed together with the rating design." width="672"></p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scale_toy</span><span class="op">$</span><span class="va">notes</span></span>
 <span><span class="co">#&gt; [1] "Step owner: Common; selection: not_applicable."                                                                                                                                                                                                                                                                                                                                                  </span></span>
@@ -1186,7 +1188,7 @@ cases:</p>
 <span><span class="co">#&gt; 9    P024   R03      Content        1 2.656778   -1.931313</span></span>
 <span><span class="co">#&gt; 10   P018   R02     Language        4 2.340191    1.961204</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">unexpected_toy</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/diagnostics-reporting-1.png" class="r-plt" alt="Unusual rating observations selected by the stated residual and probability thresholds. Flags support review of the underlying records, not automatic removal." width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/diagnostics-reporting-1.svg" class="r-plt" alt="Unusual rating observations selected by the stated residual and probability thresholds. Flags support review of the underlying records, not automatic removal." width="672"></p>
 <p>Read the rule in <code>$summary</code> with the residuals. The
 displayed cases are a selected preview; <code>top_n</code> limits the
 table, while the summary counts all flagged ratings. Here this broad
@@ -1208,22 +1210,22 @@ reporting:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> strict_pairwise_local_dependence computed      screening_only             </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> posterior_predictive_follow_up   not_available screening_only</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_toy</span>, type <span class="op">=</span> <span class="st">"marginal_fit"</span>, diagnostics <span class="op">=</span> <span class="va">diag_toy</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/diagnostic-bases-1.png" class="r-plt" alt="Marginal fit display based on posterior-averaged response probabilities. Its probability basis differs from conditional residual diagnostics." width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/diagnostic-bases-1.svg" class="r-plt" alt="Marginal fit display based on posterior-averaged response probabilities. Its probability basis differs from conditional residual diagnostics." width="672"></p>
 <p>Follow a pairwise warning with <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>. Add residual PCA
 only when residual structure is relevant to the question, using
 <code>diagnose_mfrm(fit_toy, residual_pca = "both")</code>. Report the
 mode and limits of the screen; residual PCA alone does not establish
-unidimensionality. See
-<code><a href="../articles/mfrmr-mml-and-marginal-fit.html">vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")</a></code>
-and <code><a href="../articles/mfrmr-visual-diagnostics.html">vignette("mfrmr-visual-diagnostics", package = "mfrmr")</a></code>
-for these follow-ups.</p>
+unidimensionality. See <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-mml-and-marginal-fit.html">MML
+estimation and marginal-fit diagnostics</a> and
+<code><a href="../articles/mfrmr-visual-diagnostics.html">vignette("mfrmr-visual-diagnostics", package = "mfrmr")</a></code> for
+these follow-ups.</p>
 <p><strong>What should I discuss with a rater?</strong> Start from the
 coverage and category checks above, then view severity and its
 uncertainty alongside the screening results. Reuse the same fit and
 diagnostics:</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_toy</span>, type <span class="op">=</span> <span class="st">"rater_severity"</span>, diagnostics <span class="op">=</span> <span class="va">diag_toy</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, show_bands <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/rater-feedback-1.png" class="r-plt" alt="Rater severity estimates with 95% normal intervals on the fitted logit scale. Positive estimates indicate stricter ratings relative to the fitted reference." width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/rater-feedback-1.svg" class="r-plt" alt="Rater severity estimates with 95% normal intervals on the fitted logit scale. Positive estimates indicate more severe ratings relative to the fitted reference." width="672"></p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rater_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/facet_quality_dashboard.html">facet_quality_dashboard</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit_toy</span>, diagnostics <span class="op">=</span> <span class="va">diag_toy</span>, facet <span class="op">=</span> <span class="st">"Rater"</span></span>
@@ -1375,7 +1377,7 @@ diagnostics:</p>
 <span><span class="co">#&gt; proximity does not diagnose observed category avoidance or range</span></span>
 <span><span class="co">#&gt; restriction.</span></span>
 <span><span class="co">#&gt; No level-level flags were triggered under the current thresholds.</span></span></code></pre></div>
-<p>A stricter rater is not necessarily inconsistent or incorrect.
+<p>A more severe rater is not necessarily inconsistent or incorrect.
 Individual interval overlap is not a test of the difference between two
 raters. Read <code>MissingMetrics</code> before interpreting flags: zero
 observed flags is not a complete pass when diagnostics are unavailable.
@@ -1431,7 +1433,7 @@ includes them with the exported tables. See
 <span><span class="co">#&gt; 5                       Request this evidence only if the claim is needed.</span></span>
 <span><span class="co">#&gt; 6                  Use the listed template route if this area is reported.</span></span>
 <span></span>
-<span><span class="va">checklist_toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reporting_checklist.html">reporting_checklist</a></span><span class="op">(</span><span class="va">fit_toy</span>, diagnostics <span class="op">=</span> <span class="va">diag_toy</span><span class="op">)</span></span>
+<span><span class="va">checklist_toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"checklist"</span>, <span class="va">fit_toy</span>, diagnostics <span class="op">=</span> <span class="va">diag_toy</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">checklist_toy</span><span class="op">$</span><span class="va">checklist</span>, <span class="op">!</span><span class="va">DraftReady</span>,</span>
 <span>       <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Section"</span>, <span class="st">"Item"</span>, <span class="st">"NextAction"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                        Section                          Item</span></span>
@@ -1442,14 +1444,14 @@ includes them with the exported tables. See
 <span><span class="co">#&gt; 27             Visual Displays          Residual PCA visuals</span></span>
 <span><span class="co">#&gt; 30             Visual Displays       Strict marginal visuals</span></span>
 <span><span class="co">#&gt; 31             Visual Displays            Bias / DIF visuals</span></span>
-<span><span class="co">#&gt;                                                                                                                                   NextAction</span></span>
-<span><span class="co">#&gt; 8  Run `analyze_hierarchical_structure(fit)` once per design and pass the result to `reporting_checklist(..., hierarchical_structure = hs)`.</span></span>
-<span><span class="co">#&gt; 10                                                                Run residual PCA if you want to comment on unexplained residual structure.</span></span>
-<span><span class="co">#&gt; 23                                                                   Run bias screening if the manuscript needs interaction-level follow-up.</span></span>
-<span><span class="co">#&gt; 24                                                                         Run bias screening before discussing interaction-level anomalies.</span></span>
-<span><span class="co">#&gt; 27                                                     Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.</span></span>
-<span><span class="co">#&gt; 30             Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.</span></span>
-<span><span class="co">#&gt; 31                                                                    Run bias or DIF screening before discussing interaction-level visuals.</span></span></code></pre></div>
+<span><span class="co">#&gt;                                                                                                                                               NextAction</span></span>
+<span><span class="co">#&gt; 8  Run `analyze_hierarchical_structure(fit)` once per design and pass the result to `mfrm_report(type = 'checklist', ..., hierarchical_structure = hs)`.</span></span>
+<span><span class="co">#&gt; 10                                                                            Run residual PCA if you want to comment on unexplained residual structure.</span></span>
+<span><span class="co">#&gt; 23                                                                               Run bias screening if the manuscript needs interaction-level follow-up.</span></span>
+<span><span class="co">#&gt; 24                                                                                     Run bias screening before discussing interaction-level anomalies.</span></span>
+<span><span class="co">#&gt; 27                                                                 Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.</span></span>
+<span><span class="co">#&gt; 30                         Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.</span></span>
+<span><span class="co">#&gt; 31                                                                                Run bias or DIF screening before discussing interaction-level visuals.</span></span></code></pre></div>
 <p><code>DraftReady</code> describes available drafting material with
 caveats. An unrequested bias or linking analysis may be irrelevant to
 the question; do not run every helper merely to turn every flag
@@ -1475,7 +1477,7 @@ explanation.</p>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/apa_table.html">apa_table</a></span><span class="op">(</span><span class="va">rater_table_toy</span>, digits <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>          caption <span class="op">=</span> <span class="st">"Rater severity and fit"</span>,</span>
-<span>          note <span class="op">=</span> <span class="st">"N counts rating rows. Rater effects are centered within facet and measured in logits; higher values indicate stricter ratings. Intervals are 95% normal approximations from MML observed-information SEs. Infit and Outfit have reference value 1."</span><span class="op">)</span></span>
+<span>          note <span class="op">=</span> <span class="st">"N counts rating rows. Rater effects are centered within facet and measured in logits; higher values indicate more severe ratings. Intervals are 95% normal approximations from MML observed-information SEs. Infit and Outfit have reference value 1."</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Rater severity and fit</span></span>
 <span><span class="co">#&gt;  Level  N Measure    SE CI_Lower CI_Upper Infit Outfit</span></span>
 <span><span class="co">#&gt;    R05 44   0.184 0.234   -0.275    0.643 0.648  0.640</span></span>
@@ -1484,7 +1486,7 @@ explanation.</p>
 <span><span class="co">#&gt;    R04 47   0.180 0.223   -0.256    0.616 0.917  0.891</span></span>
 <span><span class="co">#&gt;    R02 56  -0.382 0.209   -0.791    0.027 0.954  1.015</span></span>
 <span><span class="co">#&gt;    R03 50   0.212 0.217   -0.212    0.637 1.011  0.981</span></span>
-<span><span class="co">#&gt; Note. N counts rating rows. Rater effects are centered within facet and measured in logits; higher values indicate stricter ratings. Intervals are 95% normal approximations from MML observed-information SEs. Infit and Outfit have reference value 1.</span></span></code></pre></div>
+<span><span class="co">#&gt; Note. N counts rating rows. Rater effects are centered within facet and measured in logits; higher values indicate more severe ratings. Intervals are 95% normal approximations from MML observed-information SEs. Infit and Outfit have reference value 1.</span></span></code></pre></div>
 <p>Report the score scale and direction with the table. For person
 results, state the EAP/posterior-SD basis; for rater results, explain
 that variation in severity is different from inconsistent scoring. Add a
@@ -1563,8 +1565,10 @@ computing diagnostics, locate the RDS in that file list:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">restored_results</span><span class="op">)</span><span class="op">$</span><span class="va">decision</span></span>
 <span><span class="co">#&gt;               Interpretation FormalInference FitReadiness</span></span>
 <span><span class="co">#&gt; 1 Ready for formal inference             Yes        ready</span></span>
-<span><span class="co">#&gt;                                           Why                        NextAction</span></span>
-<span><span class="co">#&gt; 1 All stored fit-readiness components passed. Read the compact results summary.</span></span></code></pre></div>
+<span><span class="co">#&gt;                                                                                                                                                                                                                                 Why</span></span>
+<span><span class="co">#&gt; 1 All stored fit-readiness components passed. These checks assess numerical readiness and the requested precision method under the specified model; they do not establish model adequacy or finite-sample coverage for this design.</span></span>
+<span><span class="co">#&gt;                          NextAction</span></span>
+<span><span class="co">#&gt; 1 Read the compact results summary.</span></span></code></pre></div>
 <p>This restores the collected results and diagnostics. The separate
 dashboard object <code>rater_review</code> still needs its own
 <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code> call as described above. The exported replay
@@ -1580,17 +1584,21 @@ table, figure, and their notes, follow Section 5 of
 <div class="section level3">
 <h3 id="further-analyses-should-answer-a-stated-question">Further analyses should answer a stated question<a class="anchor" aria-label="anchor" href="#further-analyses-should-answer-a-stated-question"></a>
 </h3>
-<p>For observed rating agreement, start with the <a href="mfrmr-rating-agreement.html">rating-agreement tutorial</a>. Its
-small runnable example shows how to match person-by-task records,
-distinguish correlation from agreement, compare a score source with a
-reference, and audit missing pairs without fitting another model. It
-also explains why these coefficients answer a different question from
-rater severity or separation reliability.</p>
+<p>For observed rating agreement, start with the <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-rating-agreement.html">rating-agreement
+tutorial</a>. Its small runnable example shows how to match
+person-by-task records, distinguish correlation from agreement, compare
+a score source with a reference, and audit missing pairs without fitting
+another model. It also explains why these coefficients answer a
+different question from rater severity or separation reliability.</p>
 <p>For prior sensitivity or an external Bayesian extension, use
-<code><a href="../reference/export_mfrm_model.html">export_mfrm_model()</a></code> with a unit-weight RSM/PCM or
-one-family GPCM MML fit on the fixed N(0,1) ability scale. Both Stan and
-brms retain supported fixed facet anchors and group means. This example
-reuses the RSM fit above:</p>
+<code><a href="../reference/export_mfrm_model.html">export_mfrm_model()</a></code> either with a unit-weight RSM/PCM or
+one-family GPCM MML fit, or directly with rating <code>data</code> and a
+model <code>spec</code> list when native MML optimization is not needed
+first (add <code>write_json = TRUE</code> on Stan bundles to write
+CmdStanR-compatible <code>model-data.json</code> alongside
+<code>model-data.rds</code>). Both Stan and brms retain supported fixed
+facet anchors and group means. This example reuses the RSM fit
+above:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Reuse the fit above; no additional estimation or backend is needed to export.</span></span>
 <span><span class="va">stan_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/export_mfrm_model.html">export_mfrm_model</a></span><span class="op">(</span></span>
@@ -1639,10 +1647,10 @@ unordered step offsets with their original sum constraints. Their
 explicit structural priors make this a Bayesian analysis; it does not
 reproduce MML point estimates or qualify frequentist interval coverage.
 Two-family GMFRM also supports Stan export, with explicit component
-log-slope priors and a <code>slope-levels.csv</code> mapping; see the <a href="mfrmr-gpcm-scope.html">two-family workflow</a>. One-family GPCM
-uses <code>log_slope_prior_sd</code> in both formats, with
-geometric-mean-one slopes. For brms, the source must use
-<code>gpcm_mml_identification = "fixed_standard_normal"</code>. The
+log-slope priors and a <code>slope-levels.csv</code> mapping; see the <a href="https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html">two-family
+workflow</a>. One-family GPCM uses <code>log_slope_prior_sd</code> in
+both formats, with geometric-mean-one slopes. For brms, the source must
+use <code>gpcm_mml_identification = "fixed_standard_normal"</code>. The
 default one-family GPCM estimates the population mean and variance. You
 can export its intercept-only population to Stan with
 <code>population_prior = list(mean = c(0, 1), log_sd = c(0, 0.5))</code>;
@@ -1749,7 +1757,7 @@ the model?</td>
 <code><a href="../reference/estimate_bias.html">estimate_bias()</a></code> supplies conditional screening
 evidence; <code><a href="../reference/analyze_dff.html">analyze_dff()</a></code> has its own scope. For jointly
 fitted interactions, see <code>fit_mfrm(facet_interactions = ...)</code>
-and <code><a href="../reference/interaction_effect_table.html">interaction_effect_table()</a></code>. Specify the target,
+and <code><a href="../reference/estimate_bias.html">interaction_effect_table()</a></code>. Specify the target,
 supported inference route and multiplicity plan before inspecting
 results. See the reporting vignette and
 <code>mfrmr-linking-and-dff</code>.</td>
@@ -1766,15 +1774,15 @@ unavailable results and Monte Carlo uncertainty.</td>
 <tr class="even">
 <td>Would the conclusions change under a GPCM?</td>
 <td>
-<code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> and
+<code>mfrmr_output_guide("gpcm_capabilities")</code> and
 <code>mfrmr-gpcm-scope</code>; explain what discrimination reweighting
 means for the score interpretation.</td>
 </tr>
 <tr class="odd">
 <td>Are scores missing from assigned rating events?</td>
 <td>Start with the assignment roster, then
-<code><a href="../reference/mfrm_response_imputations.html">review_mfrm_imputations()</a></code>, <code><a href="../reference/fit_mfrm_imputed.html">fit_mfrm_imputed()</a></code>
-and <code><a href="../reference/pool_mfrm_imputed.html">pool_mfrm_imputed()</a></code>. See
+<code><a href="../reference/mfrm_response_imputations.html">review_mfrm_imputations()</a></code>, <code><a href="../reference/mfrm_response_imputations.html">fit_mfrm_imputed()</a></code>
+and <code><a href="../reference/mfrm_response_imputations.html">pool_mfrm_imputed()</a></code>. See
 <code>mfrmr-response-imputation</code> for an explicit imputation model;
 the review function does not generate scores. Do not fill unassigned
 combinations.</td>
@@ -1811,7 +1819,7 @@ assumptions?</td>
 <td>
 <code><a href="../reference/build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code>,
 <code><a href="../reference/simulate_mfrm_recovery.html">simulate_mfrm_recovery()</a></code>, and
-<code><a href="../reference/assess_mfrm_recovery.html">assess_mfrm_recovery()</a></code>; report generating conditions,
+<code><a href="../reference/simulate_mfrm_recovery.html">assess_mfrm_recovery()</a></code>; report generating conditions,
 repetitions, failures, and Monte Carlo uncertainty.</td>
 </tr>
 <tr class="even">
@@ -1941,7 +1949,7 @@ and matching interval evidence; retain the old file as a separate study.
 The help page explains which fields can be recovered.</p>
 <p>For stability against an observed-data reference, use
 <code><a href="../reference/build_mfrm_resampling_spec.html">build_mfrm_resampling_spec()</a></code> and
-<code><a href="../reference/draw_mfrm_resamples.html">draw_mfrm_resamples()</a></code>. They resample entire Person clusters
+<code><a href="../reference/build_mfrm_resampling_spec.html">draw_mfrm_resamples()</a></code>. They resample entire Person clusters
 within optional strata, retaining all ratings for each selected Person.
 A same-size bootstrap requires
 <code>design = "stratified_bootstrap"</code>,

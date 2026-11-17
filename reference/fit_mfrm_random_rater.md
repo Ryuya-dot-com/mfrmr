@@ -7,6 +7,8 @@ maximum likelihood, with optional additive fixed facets. For a local
 effect within one person's performance instead, see
 [`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md).
 
+Evaluate a shared-rater RSM at explicitly supplied ability values.
+
 ## Usage
 
 ``` r
@@ -26,6 +28,38 @@ fit_mfrm_random_rater(
 )
 
 # S3 method for class 'mfrm_random_rater'
+predict(
+  object,
+  newdata,
+  ability,
+  rater = c("observed", "new"),
+  quad_points = 41L,
+  ...
+)
+
+# S3 method for class 'mfrm_random_rater'
+plot(
+  x,
+  draw = TRUE,
+  style = c("interval", "precision", "distribution"),
+  sort = c("input", "estimate", "uncertainty"),
+  palette = c("accessible", "mono"),
+  title = NULL,
+  caption = NULL,
+  show_title = FALSE,
+  show_notes = FALSE,
+  show_labels = TRUE,
+  reference = 0,
+  text_scale = 1,
+  point_size = 2.5,
+  intervals = c("none", "normal"),
+  ...
+)
+
+# S3 method for class 'mfrm_random_rater'
+confint(object, parm = "rater_sd", level = 0.95, ...)
+
+# S3 method for class 'mfrm_random_rater'
 summary(object, ..., calibration_intervals = c("none", "normal"), level = 0.95)
 
 # S3 method for class 'mfrm_random_rater'
@@ -34,79 +68,187 @@ print(x, ...)
 
 ## Arguments
 
-- data :
+- data:
 
   Long-format data, one row per observed or assigned rating.
 
-- person, rater, score :
+- person:
 
   Names of the person, rater and numeric score columns.
 
-- facets :
+- rater:
+
+  `"observed"` uses the approximate conditional distribution of an
+  observed rater given the calibration responses. `"new"` integrates a
+  replacement rater from the estimated population distribution. The
+  target is explicit; an unfamiliar label is never silently treated as
+  observed.
+
+- score:
+
+  Names of the person, rater and numeric score columns.
+
+- facets:
 
   Character vector of fixed-facet columns; default none. Include task or
   criterion columns explicitly when their difficulties are part of the
   intended model; their presence in `data` alone does not include them.
 
-- score_levels :
+- score_levels:
 
   Required consecutive integer score categories, in order.
 
-- rater_sd :
+- rater_sd:
 
   `NULL` estimates the population SD of rater severity. A nonnegative
   number fixes it as known; zero removes rater heterogeneity.
 
-- quad_points :
+- quad_points:
 
-  Number of standard-normal Gauss-Hermite points for each person
-  integral, from 7 to 241; default 31. The result is also evaluated at
-  `2 * quad_points + 1` points to check this integral's numerical
-  stability. This check does not assess the separate rater Laplace
-  approximation. If `checks$PersonQuadratureStable` is false, refit with
-  more points and recheck all of `checks`; a higher-order evaluation
-  alone does not refit the calibration. No allowed order is universally
-  sufficient.
+  Normal quadrature points for the prediction integral, from 7 to 121;
+  default 41. Compare orders when needed.
 
-- maxit :
+- maxit:
 
   Maximum optimizer iterations per start; default 300.
 
-- missing :
+- missing:
 
   `"fail"` (default) refuses missing assigned scores; `"omit"`
   explicitly analyzes observed scores and records omitted rows.
 
-- person_sd :
+- person_sd:
 
   `NULL` (default) estimates the normal ability SD. A finite positive
   number fixes it as known; `person_sd = 1` retains the standard normal
   population. This is a population restriction with Rasch slope one.
 
-- person_variance_max :
+- person_variance_max:
 
   Positive upper search bound for estimated ability variance;
   default 16. Reaching it fails numerical readiness; increase the bound
   and refit rather than interpreting a capped estimate as a solution.
 
-- ... :
+- object:
 
-  Unused by summary and print.
+  A fitted `mfrm_random_rater` object.
 
-- calibration_intervals :
+- newdata:
 
-  For summaries, `"none"` (default) omits calibration bounds; `"normal"`
-  explicitly requests their pointwise normal approximation. This does
-  not select individual-rater intervals.
+  Data frame with the fitted rater column and every fixed-facet column.
+  Observed-rater labels must be known; replacement-rater labels must be
+  new. Fixed-facet levels must always be known.
 
-- level :
+- ability:
+
+  A finite numeric value for all rows, one value per row, or the name of
+  a numeric column of `newdata`. These are specified abilities on the
+  fitted logit scale (mean ability zero, Rasch slope one), not estimated
+  person scores. A value of one is one logit, not one population SD.
+
+- ...:
+
+  For `summary.mfrm_random_rater()`: Unused by summary and print.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Unused.
+
+- x:
+
+  A result from `fit_mfrm_random_rater()`.
+
+  Also for [`summary()`](https://rdrr.io/r/base/summary.html): A fitted
+  `mfrm_random_rater` object.
+
+- draw:
+
+  Logical; `FALSE` returns plot data without opening a device.
+
+- style:
+
+  `"interval"` keeps every labeled row; `"precision"` plots estimates
+  against interval width (upper minus lower bound); `"distribution"`
+  shows the empirical cumulative distribution of finite point estimates,
+  excluding prior-only and unavailable scores. No density is
+  reconstructed.
+
+- sort:
+
+  Row order for interval plots: input order, increasing estimate, or
+  increasing interval width. Missing values come last; ties retain input
+  order. Sorting is descriptive, not a test of differences.
+
+- palette:
+
+  `"accessible"` uses blue and dark orange with filled/open symbols;
+  `"mono"` uses dark grey with the same symbol distinctions.
+
+- title:
+
+  `NULL` uses the default text; a string replaces it; `""` removes it.
+  Interpretation notes remain in the saved plot data.
+
+- caption:
+
+  `NULL` uses the default text; a string replaces it; `""` removes it.
+  Interpretation notes remain in the saved plot data.
+
+- show_title:
+
+  Show the title and caption, respectively. `FALSE` hides text without
+  deleting its metadata.
+
+- show_notes:
+
+  Show the title and caption, respectively. `FALSE` hides text without
+  deleting its metadata.
+
+- show_labels:
+
+  Show IDs on interval and precision plots. Distribution plots summarize
+  estimates and do not label individual IDs. For crowded precision plots
+  use `FALSE` and consult the retained table.
+
+- reference:
+
+  Vertical reference line in logits; `NULL` omits it. This is an
+  orientation aid, not a quality threshold.
+
+- text_scale:
+
+  Positive multiplier for text size.
+
+- point_size:
+
+  Positive point size in ggplot millimetres; base graphics use the
+  corresponding relative size (2.5 is the default).
+
+- intervals:
+
+  `"none"` (default) displays point estimates without automatic
+  prediction intervals. `"normal"` explicitly requests the first-order
+  approximation from `confint(x, parm = "raters")`; nominal coverage is
+  not established. Required for the interval-width precision view and
+  sorting by interval width (`sort = "uncertainty"`).
+
+- parm:
+
+  `"rater_sd"` (default) profiles population variation. `"raters"`
+  explicitly requests first-order normal prediction intervals for all
+  observed raters. These are not supplied automatically because their
+  nominal coverage is not established. `"calibration"` explicitly
+  requests observed-information normal approximations for fixed-facet
+  levels and steps, excluding population SDs.
+
+- level:
 
   Nominal level for explicitly requested summary calibration intervals;
   default 0.95. Numerical and variance-boundary restrictions remain.
 
-- x, object :
+- calibration_intervals:
 
-  A fitted `mfrm_random_rater` object.
+  For summaries, `"none"` (default) omits calibration bounds; `"normal"`
+  explicitly requests their pointwise normal approximation. This does
+  not select individual-rater intervals.
 
 ## Value
 
@@ -119,165 +261,145 @@ not an ordinary `mfrm_fit` or portable fixed-facet calibration object.
 Calibration and summary rater tables retain `IntervalStatus`,
 `CIEligible` and `InferenceReview` for normal-interval availability.
 These distinguish unrequested bounds, unsupported targets and unresolved
-checks or variance boundaries; see
-[`confint.mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_random_rater.md).
+checks or variance boundaries; see `confint.mfrm_random_rater()`.
 Retained points require the separate fit checks and are not certified by
 these fields.
 
+A list with `probabilities` (rows by categories), `expected_scores`,
+`newdata`, `ability`, `settings` and matching `source` metadata for
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
+No model is refitted. Save this list together with the fitted model and
+prediction inputs. The settings record the effect-sharing unit and
+whether integration uses the observed rater's conditional distribution
+or the replacement-rater population. These are preserved in the
+prediction settings table of
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object.
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+extracts the rater table, display metadata, and settings.
+
+A one-row matrix with `Lower` and `Upper`, and attributes `level`,
+`method`, `profile` and `note`. The profile retains every evaluated SD,
+refitted likelihood, `LR` (twice the loss from the source fit),
+information checks and `Detail`. Unresolved numerical checks or endpoint
+searches stop with an `mfrm_profile_error`; its `profile` field retains
+the evaluations. A failed search does not establish that a statistical
+interval is absent. With `parm = "raters"`, one row per rater, computed
+from saved estimates and `PredictionSE` without refitting or RTMB.
+Attributes retain the method, target, level and interpretation.
+Unresolved numerical/information checks, estimated variance boundaries
+and unavailable SEs give missing bounds. With `parm = "calibration"`,
+one row per fixed-facet level or step, with the same
+level/method/target/note attributes and availability guards. Default
+calibration tables omit bounds; this explicit calculation uses saved SEs
+without refitting and does not establish finite-sample coverage. Both
+normal-interval routes retain row-level `IntervalStatus`, `CIEligible`
+and plain-language `InferenceReview` in `attr(ci, "diagnostics")`,
+together with saved estimates/SEs, and source checks in
+`attr(ci, "checks")`. Export the diagnostics table when saving CSV; a
+two-column numeric matrix alone loses the explanation. See
+[`confint.mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+for the status meanings. A missing interval does not turn a retained
+point into a reliable estimate, and more iterations cannot by themselves
+remove an estimated-variance boundary restriction.
+
 ## Details
 
-The adjacent-category logit is \$\$\log\\P(Y\_{prj}=k)/P(Y\_{prj}=k-1)\\
-= \theta_p-u_r-x\_{prj}'\beta-\delta_k.\$\$ Persons are independent
-\\N(0,\sigma_p^2)\\ and raters independent \\N(0,\sigma_r^2)\\,
-independent of persons and assignment. Fixed-facet level effects sum to
-zero. Steps are unconstrained adjacent thresholds; they need not be
-ordered or sum to zero. Their mean sets the overall location. Rater
-effects are not centered within the observed sample.
+Fits the crossed random-rater RSM
+\$\$\log\\P(Y\_{prj}=k)/P(Y\_{prj}=k-1)\\ = \theta_p - u_r -
+x\_{prj}'\beta - \delta_k,\$\$ with independent \\\theta_p \sim N(0,
+\sigma_p^2)\\ and shared rater severities \\u_r \sim N(0, \sigma_r^2)\\,
+sum-to-zero fixed-facet effects \\\beta\\, and free adjacent steps
+\\\delta_k\\. Person integrals use Gauss-Hermite quadrature conditional
+on \\u\\, and the joint shared-rater integral uses RTMB's Laplace
+approximation (unit weights, connected design, observed categories).
+Extreme fixed-facet separation and zero-variance boundaries (checked via
+one-sided variance scores) fail `checks$NumericalReady` or withhold
+regular intervals.
 
-This is a frequentist likelihood fit, with no priors on calibration or
-variance parameters. Person effects are integrated by quadrature
-conditional on all shared rater effects; the resulting joint rater
-integral uses the Laplace approximation through the optional RTMB
-package. Integrating a new rater separately for each person would fit a
-different model. After marginalization, Persons sharing a rater are
-dependent. Adding Persons rated by the same fixed panel does not add
-independent draws from the rater population. Even if those rater effects
-became known exactly, a fixed number of draws would not consistently
-estimate a positive population variance. Person count or total rating
-count alone therefore cannot justify ordinary large-sample population-SD
-inference. The full calibration information includes all estimated
-population SDs, but this does not establish the required asymptotic
-regime or Laplace accuracy.
-
-The initial scope is RSM, unit weights, a connected person-rater design,
-multiple persons per rater, and full-rank additive fixed-facet coding.
-Every declared category must occur. Nonassigned combinations are absent;
-omitted scores are not imputed. Informative assignment, nonnormal rater
-populations, PCM, anchors, interactions, testlets and latent regression
-are not implemented by this route. Connectedness alone does not
-guarantee adequate information about rater variance. A fixed-facet level
-with only minimum or only maximum scores has no finite calibration
-estimate. Such separation fails `checks$NumericalReady` and
-`checks$InformationPositive`, even if the optimizer reports convergence.
-`checks$FixedFacetSeparation` records this sufficient separation check;
-its absence does not exclude separation along combinations of facets.
-
-Both estimated zero variances are considered explicitly. One-sided
-variance scores check these boundaries; the derivative with respect to
-SD alone cannot establish them. The ability-variance score uses checked
-one-sided differences of the complete approximate marginal likelihood,
-including the rater Laplace determinant. At either estimated boundary,
-regular calibration and rater intervals are withheld. A fixed zero SD is
-a known submodel, not a fitted model with arbitrary fixed rater
-severities.
-
-Fixed-facet and step tables retain estimates and approximate SEs but
-omit bounds by default.
-`confint(fit, parm = "calibration", level = 0.95)` or
-`summary(fit, calibration_intervals = "normal", level = 0.95)`
-explicitly requests observed-information normal approximations at an
-interior fit. Their finite-sample coverage is not established.
-Rebuilding summaries or
-[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
-from an older saved fit applies this policy without refitting or
-changing the saved fit. Population-SD intervals are requested separately
-with `confint(fit, parm = "rater_sd")`; no ability-SD interval is
-supplied. This avoids a Wald interval that excludes zero by
-construction. Rater estimates are conditional modes. Their
-`ConditionalSD` holds calibration fixed; `PredictionSE` adds first-order
-calibration uncertainty through RTMB's generalized delta method.
-Individual rater interval bounds are missing by default: nominal
-coverage is not established. `confint(fit, parm = "raters")` explicitly
-requests the normal approximation from saved estimates without
-refitting; `plot(fit, intervals = "normal")` displays it. These target
-realized random effects, not fixed-rater coefficients, and do not
-classify or exclude raters. This output restriction does not correct
-interval coverage.
-
-With estimated ability SD, a four-condition study (200 datasets per
-condition) found conditional individual-rater coverage of 91.6–91.8%
-with six raters and 94.0–94.1% with 24 raters; finite-interval
-availability was 99% and 87–88%, respectively. None met the prespecified
-combined coverage and availability criterion. Six-rater Monte Carlo
-uncertainty also prevented a conclusive material-undercoverage decision
-in this study. An earlier known-ability-SD pilot found 84.2% six-rater
-coverage. See
-[`vignette("mfrmr-random-raters")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.md)
-for designs and Monte Carlo intervals. These studies do not establish a
-safe minimum rater count. Numerical checks do not certify statistical
-validity or shared-rater Laplace accuracy.
-
-## Numerical evidence
-
-An independent comparison evaluated local marginal-likelihood changes at
-eight saved calibrations for three-category RSMs with 240 Persons, six
-or 24 raters, and rotating or weakly linked assignments. Displacements
-spanned all six calibration coordinates and named contrast/SD
-directions, scaled to one local information unit. All 144 planned
-comparisons (128 distinct parameter points) met a
-0.05-log-likelihood-unit tolerance including Monte Carlo uncertainty.
-The largest difference was 0.005 log-likelihood units. The reference
-reused joint posterior samples with an exact change-of-variables
-identity; the package likelihood and estimator were unchanged.
-
-This supports the tested local likelihood changes, not an exact maximum-
-likelihood solution, an absolute likelihood normalization, the entire SD
-profile, variance boundaries or repeated-sampling interval coverage.
-Person quadrature checks remain distinct from this comparison. See
-[`vignette("mfrmr-random-raters")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.md)
-for the reference-precision limits and scope.
-
-## Model assumptions and related research
-
-A shared rater effect represents differences in usual severity across
-raters, not inconsistency within a rater or differential severity toward
-a subgroup. Van den Noortgate et al. (2003, equation 7) describe crossed
-normal effects for binary responses. The binary case here has that
-sharing structure, with the rater sign reversed and unit Rasch slope.
-Huang and Cai (2024) extend crossed effects to item-level ordinal
-responses, using cumulative graded-response probabilities and estimated
-slopes. Their model and estimator are not this adjacent-category RSM and
-Laplace fit.
-
-Fixing ability variance at one while keeping the Rasch slope at one is a
-population restriction, not merely a change of units. The default
-estimates this variance, keeping the ability mean zero and step location
-free. It does not fit group-specific distributions or latent regression.
-Unequal ability populations across rater panels can violate its
-assumptions even when the assignment is connected. A successful
-numerical check cannot assess those population assumptions. Earlier
-saved fits without ability-population parameters retain their original
-known N(0,1) meaning for predictions, profiles and bootstrap refits.
-
-## Relation to testlets and discrimination
-
-A shared severity effect is not a random discrimination parameter. This
-RSM does not estimate GPCM slopes. Its rater effect spans persons,
-whereas
+Calibration and conditional-mode rater bounds (`ConditionalSD` vs
+`PredictionSE`) are omitted by default and requested explicitly via
+`confint(fit, parm = "calibration" | "rater_sd" | "raters")`;
+finite-sample coverage is not guaranteed with few raters (see the
+[online random-rater
+guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html)
+for likelihood and coverage benchmarks, and
 [`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
-uses a distinct effect for each Person/block pair, even when the block
-is named Rater. These sharing structures lead to different marginal
-likelihoods and prediction targets; the two routes cannot currently be
-combined. See
-[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-for the relationship to fixed slope families and local independence.
+for Person-specific local dependence).
 
-## Comparison with fixed-rater MFRM
+Predictions condition on estimated calibration and supplied ability.
+They do not propagate calibration-estimation uncertainty or uncertainty
+about ability. Observed-rater integration uses the conditional Laplace
+mean/mode and covariance, not the calibration-adjusted prediction SE.
+New-rater integration uses the population SD: substituting severity zero
+generally produces different probabilities.
 
-Compare the same observed rating events, categories, fixed facets and
-ability population. Fixed rater effects describe the observed panel;
-random effects refer to a population and are shrunk toward its mean.
-Their raw locations need not share an origin. Compare aligned rater
-contrasts or predictions at the same ability and facet settings. Setting
-`rater_sd = 0` removes all rater differences; it does not recover a
-model with freely estimated fixed rater effects. Shared raters induce
-dependence across Persons after marginalization, so a Person-count BIC
-or ordinary chi-squared likelihood-ratio test must not be copied from
-the fixed-facet model.
-[`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
-checks matched events and compares centered facet summaries, retaining
-each model's assumptions and readiness. It does not rank models or
-calculate intervals for their differences.
+Rows are marginal probabilities for individual future ratings, not a
+joint distribution or an interval for their average. Ratings with the
+same new rater ID share one random severity in the model; multiplying
+these row probabilities would discard that dependence. This function
+does not score latent abilities from responses or impute missing
+assigned scores. Use
+[`score_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_random_rater.md)
+for conditional Person scoring from a complete joint response roster.
+Supplying a score column in `newdata` does not update rater
+distributions or estimate abilities. Use the scoring function and its
+complete-roster rules when the input is a new batch of observed
+responses.
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Plot
+observed-rater severity under a shared-rater RSM
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Points are
+conditional modes of severity relative to the rater population mean
+zero; positive values mean more severe ratings. No individual rater
+intervals are supplied automatically, including for earlier saved fits.
+Explicit normal whiskers are approximate 95% prediction intervals, not
+qualified rater classifications. At an estimated zero variance or with
+unresolved numerical checks, even requested whiskers are unavailable.
+
+For `parm = "rater_sd"`, fixed facets, steps and any estimated ability
+SD are refitted at each candidate rater SD, including zero. A specified
+known ability SD stays fixed. Earlier saved fits retain their known
+N(0,1) population. The search brackets a lower and upper crossing of
+twice the log-likelihood loss with `qchisq(level, df = 1)`, around the
+fitted SD. It uses the same approximate marginal likelihood as the fit.
+The lower bound is zero when the zero-variance submodel belongs to the
+likelihood-ratio region. An estimated boundary can therefore have a
+positive upper limit even though ordinary Wald intervals are
+unavailable. Each nonzero endpoint must attain the likelihood-ratio
+cutoff to `1e-4 * min(1, cutoff)` absolute accuracy. Insufficient
+floating-point resolution stops the search instead of reporting
+coincident limits. Profile refits require positive nuisance information.
+With known ability SD, nuisance curvature is checked at both integration
+orders. These local numerical checks do not prove a global optimum or
+exclude disconnected likelihood-ratio regions between sampled
+candidates.
+
+This is an asymptotic likelihood-ratio interval, not a finite-sample
+coverage guarantee. The chi-square reference is nonregular at a true
+zero variance; the usual one-degree-of-freedom cutoff is conservative
+under the standard single-variance boundary asymptotics. Few raters,
+Laplace error and design misspecification can alter coverage. The
+numerical checks do not establish those asymptotic conditions. The
+calculation stops if the fitted or profiled ability variance is an
+estimated zero boundary; that additional nuisance boundary requires a
+different reference distribution for inference. No ability-SD interval
+is supplied. This interval does not quantify the predictive distribution
+of a replacement rater, whose variation is a different target.
+
+The separate `parm = "raters"` calculation uses the conditional mode
+plus or minus `qnorm((1 + level)/2) * PredictionSE`. It targets
+realized, uncentered rater effects relative to the population mean.
+First-order calibration uncertainty does not ensure nominal coverage. In
+particular, few-rater coverage remains unresolved; see [online
+random-rater
+guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-random-raters.html).
+Requesting this approximation does not make it qualified for
+classification or exclusion of raters. It is not a profile interval, a
+bootstrap or an interval for a difference of raters.
 
 ## References
 
@@ -298,20 +420,34 @@ Kristensen, K., Nielsen, A., Berg, C. W., Skaug, H. and Bell, B. M.
 *Journal of Statistical Software*, 70(5), 1–21.
 [doi:10.18637/jss.v070.i05](https://doi.org/10.18637/jss.v070.i05) .
 
+Self, S. G. and Liang, K.-Y. (1987). Asymptotic properties of maximum
+likelihood estimators and likelihood ratio tests under nonstandard
+conditions. *Journal of the American Statistical Association*, 82,
+605–610.
+[doi:10.1080/01621459.1987.10478472](https://doi.org/10.1080/01621459.1987.10478472)
+.
+
 ## See also
 
 [`score_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_random_rater.md),
-[`predict.mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict.mfrm_random_rater.md),
-[`plot.mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_random_rater.md),
+`predict.mfrm_random_rater()`, `plot.mfrm_random_rater()`,
 [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
 for descriptive posterior predictive residuals,
-[`confint.mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_random_rater.md),
+`confint.mfrm_random_rater()`,
 [`mfrm_random_rater_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_random_rater_intervals.md),
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+
+[`plot.mfrm_testlet_scores()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+for view selection and accessible output. The distribution view
+summarizes the observed conditional modes, not the assumed rater
+population.
 
 ## Examples
 
 ``` r
+# Optional workflow; run the example explicitly as shown below.
+# example("fit_mfrm_random_rater", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
 # Inspecting this saved synthetic fit does not require RTMB.
 example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
 fit <- example$random_rater$fit
@@ -320,123 +456,8 @@ fit <- example$random_rater$fit
 # fit <- fit_mfrm_random_rater(ratings, "Person", "Rater", "Score",
 #   facets = "Criterion", score_levels = 1:4, quad_points = 121)
 summary(fit)
-#> $calibration
-#>       Parameter     Facet             Level    Estimate         SE Lower Upper
-#> 1   Fixed facet Criterion          Accuracy  0.23147642 0.08215730    NA    NA
-#> 2   Fixed facet Criterion           Content -0.38637722 0.08391967    NA    NA
-#> 3   Fixed facet Criterion          Language  0.09062358 0.08137271    NA    NA
-#> 4   Fixed facet Criterion      Organization  0.06427722 0.08130389    NA    NA
-#> 5          Step     Score                 2 -1.20199830 0.23041987    NA    NA
-#> 6          Step     Score                 3 -0.05327141 0.21307110    NA    NA
-#> 7          Step     Score                 4  1.26465868 0.23030176    NA    NA
-#> 8 Population SD     Rater  Rater population  0.25403161 0.10660909    NA    NA
-#> 9 Population SD    Person Person population  0.96867912 0.12319493    NA    NA
-#>       IntervalStatus CIEligible
-#> 1      not_requested      FALSE
-#> 2      not_requested      FALSE
-#> 3      not_requested      FALSE
-#> 4      not_requested      FALSE
-#> 5      not_requested      FALSE
-#> 6      not_requested      FALSE
-#> 7      not_requested      FALSE
-#> 8 unsupported_target      FALSE
-#> 9 unsupported_target      FALSE
-#>                                                                                                                                   InferenceReview
-#> 1                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
-#> 2                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
-#> 3                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
-#> 4                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
-#> 5                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
-#> 6                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
-#> 7                                         Normal intervals were not requested. Use the documented confint() target to request this approximation.
-#> 8 This normal-interval route does not support population SDs or variances. A retained point or SE does not authorize a regular variance interval.
-#> 9 This normal-interval route does not support population SDs or variances. A retained point or SE does not authorize a regular variance interval.
-#> 
-#> $raters
-#>   Rater Persons   Estimate ConditionalSD PredictionSE Lower Upper
-#> 1   R01      48 -0.1603836     0.1228651    0.1492867    NA    NA
-#> 2   R02      48 -0.2692240     0.1230288    0.1514160    NA    NA
-#> 3   R03      48  0.1566218     0.1228254    0.1492172    NA    NA
-#> 4   R04      48  0.2730197     0.1229746    0.1514764    NA    NA
-#>   IntervalStatus CIEligible
-#> 1  not_requested      FALSE
-#> 2  not_requested      FALSE
-#> 3  not_requested      FALSE
-#> 4  not_requested      FALSE
-#>                                                                                           InferenceReview
-#> 1 Normal intervals were not requested. Use the documented confint() target to request this approximation.
-#> 2 Normal intervals were not requested. Use the documented confint() target to request this approximation.
-#> 3 Normal intervals were not requested. Use the documented confint() target to request this approximation.
-#> 4 Normal intervals were not requested. Use the documented confint() target to request this approximation.
-#> 
-#> $checks
-#>   OptimizerCode  MaxGradient ZeroVarianceScore EstimatedVarianceBoundary
-#> 1             0 3.494416e-05          1463.155                     FALSE
-#>   HigherOrderZeroVarianceScore EstimatedPersonVarianceBoundary
-#> 1                     1463.155                           FALSE
-#>   PersonVarianceUpperBoundary PersonZeroVarianceScore PersonZeroScoreDifference
-#> 1                       FALSE                1954.208               0.001859842
-#>   HigherOrderPersonZeroVarianceScore HigherOrderPersonZeroScoreDifference
-#> 1                           1954.208                          0.001859848
-#>   QuadraturePoints CheckPoints LogLikDifference GradientDifference
-#> 1              121         243      5.89398e-09       1.949798e-07
-#>   NumericalReady InformationPositive
-#> 1           TRUE                TRUE
-#> 
-#> $calibration_intervals
-#> $calibration_intervals$method
-#> [1] "none"
-#> 
-#> $calibration_intervals$level
-#> [1] 0.95
-#> 
-#> 
-#> $settings
-#> $settings$method
-#> [1] "MML: Person quadrature and shared-rater Laplace"
-#> 
-#> $settings$model
-#> [1] "RSM"
-#> 
-#> $settings$person_distribution
-#> [1] "N(0, person_sd^2)"
-#> 
-#> $settings$rater_distribution
-#> [1] "N(0, rater_sd^2)"
-#> 
-#> $settings$fixed_rater_sd
-#> NULL
-#> 
-#> $settings$fixed_person_sd
-#> NULL
-#> 
-#> $settings$person_variance_max
-#> [1] 16
-#> 
-#> $settings$quad_points
-#> [1] 121
-#> 
-#> $settings$maxit
-#> [1] 300
-#> 
-#> $settings$missing
-#> [1] "fail"
-#> 
-#> $settings$RTMB_version
-#> [1] "2.0"
-#> 
-#> 
-#> $data_usage
-#>    Input Analyzed  Omitted 
-#>      768      768        0 
-#> 
-#> $notes
-#> [1] "Calibration bounds are omitted by default; SEs are observed-information approximations. Request calibration_intervals = 'normal' explicitly to inspect pointwise bounds."                                                    
-#> [2] "Individual-rater intervals are not supplied automatically: nominal coverage is not established. PredictionSE is a first-order approximation. Use confint(object, parm = 'raters') only to inspect that normal approximation."
-#> [3] "Person quadrature checks do not assess the shared-rater Laplace error."                                                                                                                                                      
-#> 
 plot(fit)
-
-system.file("examples", "extended-models.R", package = "mfrmr")
-#> [1] "/home/runner/work/_temp/Library/mfrmr/examples/extended-models.R"
+recipe <- system.file("examples", "extended-models.R", package = "mfrmr")
+# Run source(recipe) separately to regenerate the saved fits.
+} # }
 ```

@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="CRAN release">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,32 +33,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/mfrmr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr.html">Get started: a visual tour of mfrmr</a></li>
+    <li><a class="dropdown-item" href="../articles/visual-gallery.html">Explore ratings, plans and score probabilities</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Analysis guides</h6></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Core guides</h6></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gtheory.html">Plan an assessment with G theory</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-model-choice.html">Choose a model and estimator for your assessment</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-networks-and-reporting.html">Connect rating designs, network diagnostics and reports</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-rating-agreement.html">Rating agreement and score comparisons</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
-    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Applications</h6></li>
+    <li><a class="dropdown-item" href="../articles/application-double-scoring.html">Double scoring: agreement before rater inference</a></li>
+    <li><a class="dropdown-item" href="../articles/application-plausible-values.html">Plausible values: keep the scoring basis with the draws</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Rating agreement and score comparisons</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/06cd94194d8dd06ddc9d1cb3492d0f6bbd9b8fc8/vignettes/mfrmr-rating-agreement.Rmd" class="external-link"><code>vignettes/mfrmr-rating-agreement.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b7674c4185d3eccc5c1f16bd5a97da584cbfd3a9/vignettes/articles/mfrmr-rating-agreement.Rmd" class="external-link"><code>vignettes/articles/mfrmr-rating-agreement.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-rating-agreement.Rmd</code></div>
     </div>
 
@@ -113,14 +107,14 @@ own CSV or fitting a model, start with the <a href="mfrmr-workflow.html">ordinar
 <tr class="odd">
 <td>Do two raters give similar category scores to the same
 responses?</td>
-<td><code><a href="../reference/pairwise_kappa_table.html">pairwise_kappa_table()</a></code></td>
+<td><code><a href="../reference/interrater_agreement_table.html">pairwise_kappa_table()</a></code></td>
 <td>Weighted agreement for each pair on its common complete units.</td>
 </tr>
 <tr class="even">
 <td>How much agreement is present across the panel?</td>
 <td>
-<code><a href="../reference/krippendorff_alpha_table.html">krippendorff_alpha_table()</a></code> or
-<code><a href="../reference/gwet_ac2_table.html">gwet_ac2_table()</a></code>
+<code><a href="../reference/interrater_agreement_table.html">krippendorff_alpha_table()</a></code> or
+<code><a href="../reference/interrater_agreement_table.html">gwet_ac2_table()</a></code>
 </td>
 <td>A pooled coefficient under a stated distance/weighting and chance
 model. Their definitions differ.</td>
@@ -133,7 +127,8 @@ variation, or shift its mean?</td>
 records. A reference is not automatically correct.</td>
 </tr>
 <tr class="even">
-<td>Which rater is stricter after accounting for the fitted facets?</td>
+<td>Which rater is more severe after accounting for the fitted
+facets?</td>
 <td>
 <code><a href="../reference/fit_mfrm.html">fit_mfrm()</a></code>, then individual estimates and
 diagnostics</td>
@@ -225,7 +220,7 @@ assignment roster.</p>
 rater. Quadratic weighting gives quadratic weighted kappa (QWK): a
 larger category disagreement receives a larger penalty.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">qwk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pairwise_kappa_table.html">pairwise_kappa_table</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">qwk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/interrater_agreement_table.html">pairwise_kappa_table</a></span><span class="op">(</span></span>
 <span>  <span class="va">ratings</span>, rater <span class="op">=</span> <span class="st">"Rater"</span>, unit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Person"</span>, <span class="st">"Task"</span><span class="op">)</span>, score <span class="op">=</span> <span class="st">"Score"</span>,</span>
 <span>  categories <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">3</span>, weights <span class="op">=</span> <span class="st">"quadratic"</span></span>
 <span><span class="op">)</span></span>
@@ -406,11 +401,11 @@ reference’s correctness.</p>
 <p>For a panel coefficient, compute the intended coefficient directly
 rather than averaging the pairwise kappas:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/krippendorff_alpha_table.html">krippendorff_alpha_table</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/interrater_agreement_table.html">krippendorff_alpha_table</a></span><span class="op">(</span></span>
 <span>  <span class="va">ratings</span>, rater <span class="op">=</span> <span class="st">"Rater"</span>, unit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Person"</span>, <span class="st">"Task"</span><span class="op">)</span>, score <span class="op">=</span> <span class="st">"Score"</span>,</span>
 <span>  level <span class="op">=</span> <span class="st">"ordinal"</span>, categories <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">3</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">ac2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gwet_ac2_table.html">gwet_ac2_table</a></span><span class="op">(</span></span>
+<span><span class="va">ac2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/interrater_agreement_table.html">gwet_ac2_table</a></span><span class="op">(</span></span>
 <span>  <span class="va">ratings</span>, rater <span class="op">=</span> <span class="st">"Rater"</span>, unit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Person"</span>, <span class="st">"Task"</span><span class="op">)</span>, score <span class="op">=</span> <span class="st">"Score"</span>,</span>
 <span>  categories <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">3</span>, weights <span class="op">=</span> <span class="st">"quadratic"</span></span>
 <span><span class="op">)</span></span>
@@ -492,10 +487,10 @@ missingness. Choosing whichever coefficient is largest after looking at
 the results changes the reporting question. Krippendorff’s alpha is also
 distinct from Cronbach’s internal- consistency alpha.</p>
 <p>If your question instead concerns scores on a meaningful interval
-scale, <code><a href="../reference/pairwise_icc_table.html">pairwise_icc_table()</a></code> distinguishes absolute
+scale, <code><a href="../reference/interrater_agreement_table.html">pairwise_icc_table()</a></code> distinguishes absolute
 agreement from consistency and a single rating from the mean of two
 ratings. Numeric ordinal codes alone do not establish its interval-scale
-assumption. See <code><a href="../reference/pairwise_icc_table.html">?pairwise_icc_table</a></code>; the function’s
+assumption. See <code><a href="../reference/interrater_agreement_table.html">?pairwise_icc_table</a></code>; the function’s
 pairwise average-rating ICC concerns two ratings, not the average of a
 whole panel.</p>
 </div>
@@ -545,7 +540,7 @@ rubric’s score values; use the category labels on the axes.</p>
 <span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">figures</span><span class="op">$</span><span class="va">score_counts</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p><img src="mfrmr-rating-agreement_files/figure-html/score-count-figure-1.png" class="r-plt" alt="R1 versus R2 score counts. Four responses occur at each of (0, 1), (1, 2) and (2, 3). All lie one category above the equal-score diagonal; none has identical scores." width="672"></p>
+<p><img src="mfrmr-rating-agreement_files/figure-html/score-count-figure-1.svg" class="r-plt" alt="R1 versus R2 score counts. Four responses occur at each of (0, 1), (1, 2) and (2, 3). All lie one category above the equal-score diagonal; none has identical scores." width="672"></p>
 <p>All 12 responses sit one category above the diagonal. This makes the
 systematic shift visible despite the correlation of 1. Blank cells mean
 no retained responses with that score combination; they do not identify
@@ -583,7 +578,7 @@ confidence intervals or quality bands.</p>
 <span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">figures</span><span class="op">$</span><span class="va">pairwise_qwk</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p><img src="mfrmr-rating-agreement_files/figure-html/pairwise-qwk-figure-1.png" class="r-plt" alt="Pairwise quadratic weighted kappa: R1/R2, 0.571 on 12 responses; R1/R3, 0.833 on 10; R2/R3, 0.455 on 10. Points have no uncertainty bars. The vertical dotted line marks zero, not a pass threshold." width="672"></p>
+<p><img src="mfrmr-rating-agreement_files/figure-html/pairwise-qwk-figure-1.svg" class="r-plt" alt="Pairwise quadratic weighted kappa: R1/R2, 0.571 on 12 responses; R1/R3, 0.833 on 10; R2/R3, 0.455 on 10. Points have no uncertainty bars. The vertical dotted line marks zero, not a pass threshold." width="672"></p>
 <p><code>expand_limits()</code> includes 0 and 1 without removing
 negative estimates. Unavailable pairs retain their labelled row and
 status, with no point; an unavailable value must not be drawn at zero.
@@ -591,7 +586,7 @@ This example’s three estimates are all available. Read the values with
 the exclusion audit rather than as evidence that one rater is more
 accurate or less severe.</p>
 <p>These are custom ggplot recipes from
-<code><a href="../reference/pairwise_kappa_table.html">pairwise_kappa_table()</a></code> results, not new mfrmr plot methods.
+<code><a href="../reference/interrater_agreement_table.html">pairwise_kappa_table()</a></code> results, not new mfrmr plot methods.
 The existing <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> displays exact agreement or correlation
 from a fitted-model workflow, not QWK. Keep suggested titles and
 interpretation notes outside the drawing and save them with the source
@@ -742,8 +737,8 @@ and does not prove agreement either.</td>
 </tr>
 </tbody>
 </table>
-<p>Use <code><a href="../reference/pairwise_kappa_table.html">?pairwise_kappa_table</a></code>,
-<code><a href="../reference/krippendorff_alpha_table.html">?krippendorff_alpha_table</a></code>, <code><a href="../reference/gwet_ac2_table.html">?gwet_ac2_table</a></code> and
+<p>Use <code><a href="../reference/interrater_agreement_table.html">?pairwise_kappa_table</a></code>,
+<code><a href="../reference/interrater_agreement_table.html">?krippendorff_alpha_table</a></code>, <code><a href="../reference/interrater_agreement_table.html">?gwet_ac2_table</a></code> and
 <code><a href="../reference/score_comparison_table.html">?score_comparison_table</a></code> for formulas, argument details and
 references. For a broader question-to-function map, use
 <code>mfrmr_output_guide("feedback")</code>. Future pass/fail accuracy

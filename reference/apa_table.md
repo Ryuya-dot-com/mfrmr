@@ -17,19 +17,37 @@ apa_table(
   whexact = FALSE,
   branch = c("apa", "facets")
 )
+
+# S3 method for class 'apa_table'
+summary(object, digits = 3, top_n = 8, ...)
+
+# S3 method for class 'apa_table'
+plot(
+  x,
+  y = NULL,
+  type = c("numeric_profile", "first_numeric"),
+  main = NULL,
+  palette = NULL,
+  label_angle = 45,
+  draw = TRUE,
+  ...
+)
 ```
 
 ## Arguments
 
 - x:
 
-  A data.frame, `mfrm_fit`,
+  For `apa_table()`: A data.frame, `mfrm_fit`,
   [`summary()`](https://rdrr.io/r/base/summary.html) output supported by
   [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md),
   an `mfrm_summary_table_bundle`, diagnostics list, bias-result list,
   saved RSM/PCM fixed-facet intervals, or saved GPCM
   slope/curve/bootstrap inference. Ordinary Person-score results also
   support `which = "decisions"` when cut scores were requested.
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Output
+  from `apa_table()`.
 
 - which:
 
@@ -43,9 +61,12 @@ apa_table(
 
 - digits:
 
-  Uniform number of rounding digits for numeric columns, except saved
-  decision probabilities, boundaries and priors, which are retained at
-  full precision in `table`.
+  For `apa_table()`: Uniform number of rounding digits for numeric
+  columns, except saved decision probabilities, boundaries and priors,
+  which are retained at full precision in `table`.
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): Number of
+  digits used for numeric summaries.
 
 - caption:
 
@@ -75,6 +96,43 @@ apa_table(
   Output branch: `"apa"` for manuscript-oriented labels, `"facets"` for
   FACETS-aligned labels.
 
+- object:
+
+  Output from `apa_table()`.
+
+- top_n:
+
+  Maximum numeric columns shown in `numeric_profile`.
+
+- ...:
+
+  Reserved for generic compatibility.
+
+- y:
+
+  Reserved for generic compatibility.
+
+- type:
+
+  Plot type: `"numeric_profile"` (column means) or `"first_numeric"`
+  (distribution of the first numeric column).
+
+- main:
+
+  Optional title override.
+
+- palette:
+
+  Optional named color overrides.
+
+- label_angle:
+
+  Axis-label rotation angle for bar-type plots.
+
+- draw:
+
+  If `TRUE`, display the returned ggplot.
+
 ## Value
 
 A list of class `apa_table` with fields:
@@ -91,15 +149,20 @@ A list of class `apa_table` with fields:
 
 - `branch`, `style`
 
+For [`summary()`](https://rdrr.io/r/base/summary.html): An object of
+class `summary.apa_table`.
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): Invisibly,
+a `ggplot` object carrying its saved plot payload accessible via
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+
 ## Details
 
-This helper avoids styling dependencies and returns a reproducible base
-`data.frame` plus manuscript-oriented metadata. It does not claim
-complete APA 7 or JARS compliance: outside the saved `decisions` table,
-`digits` applies the same rounding rule to every numeric column, so
-statistic-specific formatting (for example, exact *p*-value,
-confidence-interval, and effect-size conventions) and the target
-journal's final typography still require human review.
+Returns a base `data.frame` with a caption and note, without requiring
+styling packages. Except for saved `decisions`, `digits` rounds every
+numeric column uniformly. Review statistic-specific formatting
+(p-values, intervals and effect sizes) and journal typography; this is
+not complete APA 7 or JARS compliance.
 
 Supported `which` values:
 
@@ -138,6 +201,20 @@ Supported `which` values:
   `"profile_checks"` and `"wald"`. Target and method columns are
   preserved.
 
+[`summary()`](https://rdrr.io/r/base/summary.html) method: Summarize an
+APA/FACETS table object
+
+For [`summary()`](https://rdrr.io/r/base/summary.html): Compact summary
+helper for QA of table data before manuscript export.
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: Preview
+numeric columns of an APA/FACETS table
+
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
+`"numeric_profile"` shows column means for checking scales and
+centering; `"first_numeric"` shows the first numeric column's
+distribution. Interpret means in their respective column units.
+
 ## Interpreting output
 
 Saved ordinary Person-score, unit-prediction and portable-score results
@@ -147,28 +224,31 @@ rounding in the table. They condition on calibration and the scoring
 prior; the cut labels do not establish CEFR alignment or a decision
 rule.
 
-- `table`: plain data.frame ready for export or further formatting.
+Inspect `summary(tbl)` and the selected `tbl$table`; `which` records its
+source, and `caption`/`note` accompany the table for formatting or
+export. The numeric preview from `plot(tbl)` supports data checks, not
+final publication graphics.
 
-- `which`: source component that produced the table.
+For [`summary()`](https://rdrr.io/r/base/summary.html):
 
-- `caption`/`note`: manuscript-oriented metadata stored with the table.
+- `overview`: table size/composition and missingness.
 
-## Typical workflow
+- `numeric_profile`: quick distribution summary of numeric columns.
 
-1.  Build table object with `apa_table(...)`.
-
-2.  Inspect quickly with `summary(tbl)`.
-
-3.  Render base preview via `plot(tbl, ...)` or export `tbl$table`.
+- `caption`/`note`: text metadata readiness.
 
 ## See also
 
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md),
-[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
-[mfrmr_reporting_and_apa](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reporting_and_apa.md),
+[mfrm_report_checklist](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md),
+[mfrmr_reporting_and_apa](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md),
 [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+
+`apa_table()`, [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+
+`apa_table()`, [`base::summary()`](https://rdrr.io/r/base/summary.html)
 
 ## Examples
 
@@ -197,4 +277,34 @@ tbl$table
 #> 1 Criterion      3            0        0.3       -0.34        0.22 0.57
 #> 2     Rater      6            0        0.4       -0.61        0.41 1.02
 # This table summarizes facets; use as.data.frame(fit) for individual estimates
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.apa_table", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+tbl <- apa_table(fit, which = "summary")
+summary(tbl)
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("plot.apa_table", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+tbl <- apa_table(fit, which = "summary")
+p <- plot(tbl, draw = FALSE)
+p2 <- plot(tbl, type = "first_numeric", draw = FALSE)
+if (interactive()) {
+  plot(
+    tbl,
+    type = "numeric_profile",
+    main = "APA Numeric Profile (Customized)",
+    palette = c(numeric_profile = "#2b8cbe", grid = "#d9d9d9"),
+    label_angle = 45
+  )
+}
+} # }
 ```

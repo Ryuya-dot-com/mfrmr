@@ -3,6 +3,8 @@
 Forecast population-level MFRM operating characteristics for one future
 design
 
+Summarize a population-level design forecast
+
 ## Usage
 
 ``` r
@@ -22,6 +24,9 @@ predict_mfrm_population(
   residual_pca = c("none", "overall", "facet", "both"),
   seed = NULL
 )
+
+# S3 method for class 'mfrm_population_prediction'
+summary(object, digits = 3, ...)
 ```
 
 ## Arguments
@@ -37,7 +42,7 @@ predict_mfrm_population(
   Optional output from
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
   or
-  [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md).
+  [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md).
   Supply exactly one of `fit` or `sim_spec`.
 
 - n_person:
@@ -107,6 +112,18 @@ predict_mfrm_population(
 
   Optional seed for reproducible replications.
 
+- object:
+
+  Output from `predict_mfrm_population()`.
+
+- digits:
+
+  Number of digits used in numeric summaries.
+
+- ...:
+
+  Reserved for generic compatibility.
+
 ## Value
 
 An object of class `mfrm_population_prediction` with components:
@@ -153,6 +170,36 @@ An object of class `mfrm_population_prediction` with components:
 
 - `notes`: interpretation notes
 
+An object of class `summary.mfrm_population_prediction` with:
+
+- `design`: requested future design
+
+- `overview`: run-level overview
+
+- `forecast`: facet-level forecast table
+
+- `facet_names`: public non-person facet names used in the forecast
+
+- `design_variable_aliases`: public aliases for design variables
+
+- `design_descriptor`: role-based description of design variables
+
+- `planning_scope`: explicit record of the current planning contract
+
+- `planning_constraints`: explicit record of mutable/locked design
+  variables
+
+- `planning_schema`: structured planning metadata
+
+- `gpcm_boundary`: `GPCM` caveat row when present
+
+- `structural_design_review`: deterministic structural review of the
+  named-facet design grid; it is not a forecast-uncertainty result
+
+- `ademp`: simulation-study metadata
+
+- `notes`: interpretation notes
+
 ## Details
 
 `predict_mfrm_population()` is a **scenario-level forecasting helper**
@@ -173,7 +220,7 @@ one respondent or one rater.
 
 If `fit` is supplied, the function first constructs a fit-derived
 parametric starting point with
-[`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md)
+[`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
 and then evaluates the requested future design under that explicit
 data-generating mechanism. This should be interpreted as a fit-based
 forecast under modeling assumptions, not as a guaranteed out-of-sample
@@ -256,15 +303,17 @@ unavailable: the design-simulation refits do not preserve that variance
 constraint or an anchor-defined origin. An explicit `sim_spec` can
 describe a separate forecasting scenario, but does not reproduce those
 source-fit constraints. See
-[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+[mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_api_migration_030.md)
 for migration and replay behavior.
 
 ## See also
 
 [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md),
-[`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md),
+[`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md),
 [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md),
-[summary.mfrm_population_prediction](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_population_prediction.md)
+summary.mfrm_population_prediction
+
+`predict_mfrm_population()`
 
 ## Examples
 
@@ -288,5 +337,18 @@ pred <- predict_mfrm_population(
 )
 s_pred <- summary(pred)
 s_pred$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
+} # }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_population_prediction", run.dontrun = TRUE)
+if (FALSE) { # \dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-population.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+pred <- saved$result
+s <- summary(pred)
+s$overview
+s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
 } # }
 ```
