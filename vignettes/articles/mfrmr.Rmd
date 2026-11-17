@@ -732,7 +732,7 @@ fit_model <- function(model) {
     population_formula = ~ 1, person_data = unique(core["Person"]))
 }
 fits <- lapply(c(RSM = "RSM", PCM = "PCM", GPCM = "GPCM"), fit_model)
-curve_reports <- lapply(fits, category_curves_report, theta_range = c(-4, 4))
+curve_reports <- lapply(fits, mfrm_report, type = "category_curves", theta_range = c(-4, 4))
 ```
 
 ```{r three-model-curves, echo = FALSE, fig.height = 6.2, fig.cap = apa_figure("Fitted Category Probability Curves by Model and Criterion"), fig.alt = "Category probability curves for four criteria under RSM, PCM and GPCM. Under RSM the curves have the same shape for every criterion; under PCM the crossing points differ by criterion; under GPCM the steepness also differs slightly.", eval = has_ggplot2}
