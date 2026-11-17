@@ -3,6 +3,9 @@
 \name{simulate_mfrm_recovery}
 \alias{simulate_mfrm_recovery}
 \alias{evaluate_mfrm_recovery}
+\alias{assess_mfrm_recovery}
+\alias{plot.mfrm_recovery_assessment}
+\alias{plot.mfrm_recovery_simulation}
 \title{Simulate parameter recovery by repeated generation and refitting}
 \usage{
 simulate_mfrm_recovery(
@@ -35,6 +38,46 @@ simulate_mfrm_recovery(
   seed = NULL,
   file = NULL,
   file_refit = c("never", "on_change", "always")
+)
+
+assess_mfrm_recovery(
+  x,
+  min_reps = 30,
+  min_success_rate = 0.95,
+  min_convergence_rate = 0.95,
+  min_se_available = 0.8,
+  coverage_target = 0.95,
+  coverage_tolerance = 0.05,
+  max_mcse_rmse_ratio = 0.25,
+  max_rmse = NULL,
+  max_abs_bias = NULL,
+  top_n = 6,
+  digits = 3,
+  ...
+)
+
+\method{plot}{mfrm_recovery_assessment}(
+  x,
+  y = NULL,
+  type = c("status", "metrics"),
+  metric = c("rmse", "bias", "coverage", "se_available", "mcse_rmse"),
+  draw = TRUE,
+  ...
+)
+
+\method{plot}{mfrm_recovery_simulation}(
+  x,
+  y = NULL,
+  type = c("summary", "coverage", "errors", "scatter", "replications"),
+  metric = c("rmse", "bias", "mae", "correlation", "coverage", "mcse_bias", "mcse_rmse",
+    "raw_rmse", "raw_bias", "mean_se", "se_available"),
+  parameter_type = NULL,
+  facet = NULL,
+  comparison = c("aligned", "unaligned"),
+  marginal = c("auto", "histogram", "none"),
+  preset = c("standard", "publication", "compact", "monochrome"),
+  draw = TRUE,
+  ...
 )
 }
 \arguments{
@@ -147,6 +190,74 @@ produce an error. \code{"on_change"} restarts when inputs or implementation/
 environment differ. \code{"always"} replaces the file with a new run. Unlike
 \code{brms::brm(file_refit = "never")}, this function checks compatibility even
 under \code{"never"}; it does not silently return a different analysis.}
+
+\item{x}{Output from \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}}.}
+
+\item{min_reps}{Minimum replication count expected before treating the
+simulation for inferential use.}
+
+\item{min_success_rate}{Minimum acceptable proportion of replications that
+generated data and produced a fitted model.}
+
+\item{min_convergence_rate}{Minimum acceptable proportion of replications
+whose fitted model reported convergence.}
+
+\item{min_se_available}{Minimum acceptable proportion of all expected targets
+with matching structural standard errors in each parameter group, including
+targets in failed fits. Unknown target counts give \code{not_available}.
+Set to \code{NULL} to skip this check.}
+
+\item{coverage_target}{Nominal coverage target, usually \code{0.95}.}
+
+\item{coverage_tolerance}{Absolute tolerance around \code{coverage_target}.}
+
+\item{max_mcse_rmse_ratio}{Maximum acceptable Monte Carlo SE of RMSE divided
+by RMSE. Set to \code{NULL} to skip this precision check.}
+
+\item{max_rmse}{Optional practical RMSE limit. Use a scalar for all parameter
+groups or a named vector/list with names such as \code{"facet"}, \code{"step"},
+\code{"slope"}, \code{"Rater"}, or \code{"facet:Rater:logit"}.}
+
+\item{max_abs_bias}{Optional practical absolute-bias limit. Naming follows
+\code{max_rmse}. Mean-aligned location groups and complete identified log-slope
+blocks have zero average bias by construction and remain \code{not_assessed}.}
+
+\item{top_n}{Number of next-action lines retained in the compact output.}
+
+\item{digits}{Digits used by the print method.}
+
+\item{...}{Reserved for generic compatibility.}
+
+\item{y}{Reserved for S3 generic compatibility.}
+
+\item{type}{Plot route: \code{"summary"} draws a metric from
+\code{summary(x)$recovery_summary}, \code{"coverage"} draws 95\% coverage by parameter group,
+\code{"errors"} draws row-level recovery-error distributions, \code{"scatter"} draws
+truth against estimated values, and \code{"replications"} summarizes run status.}
+
+\item{metric}{Summary metric used when \code{type = "summary"}. Supported values
+are \code{"rmse"}, \code{"bias"}, \code{"mae"}, \code{"correlation"}, \code{"coverage"},
+\code{"mcse_bias"}, \code{"mcse_rmse"}, \code{"raw_rmse"}, \code{"raw_bias"}, \code{"mean_se"}, and
+\code{"se_available"}.}
+
+\item{draw}{If \code{TRUE}, print the \code{ggplot} object. If \code{FALSE}, return the
+\code{ggplot} object invisibly without drawing.}
+
+\item{parameter_type}{Optional parameter type filter, such as \code{"person"},
+\code{"facet"}, \code{"step"}, \code{"slope"}, or \code{"population"}.}
+
+\item{facet}{Optional facet filter.}
+
+\item{comparison}{Error/estimate scale for row-level routes. \code{"aligned"}
+uses \code{EstimateAligned} / \code{ErrorAligned}; \code{"unaligned"} uses \code{Estimate} /
+\code{ErrorRaw} on the same comparison scale.}
+
+\item{marginal}{Marginal histogram display for \code{type = "scatter"}: \code{"auto"}
+(default; shown when at least 8 finite pairs are plotted), \code{"histogram"},
+or \code{"none"}.}
+
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or
+\code{"monochrome"}).}
 }
 \value{
 An object of class \code{mfrm_recovery_simulation} with components:
@@ -168,6 +279,31 @@ characteristic summary.
 \item \code{reproducibility}: file identity, original inputs and per-trial seeds when
 \code{file} is supplied.
 }
+
+An object of class \code{mfrm_recovery_assessment} with:
+\itemize{
+\item \code{overview}: compact run-level status.
+\item \code{checklist}: reviewer-facing adequacy checks.
+\item \code{condition_review}: generator-condition metadata, including
+\code{GPCM} slope-regime interpretation and generated score-category support
+when available.
+\item \code{condition_reporting_notes}: reporter-facing generator-condition caveats
+separated from parameter-recovery conclusions.
+\item \code{diagnostic_reporting_notes}: reporter-facing fit/separation caveats
+retained as diagnostic context rather than recovery criteria.
+\item \code{diagnostic_review}: optional fit/separation operating-characteristic
+context when retained by \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}}.
+\item \code{metric_review}: parameter-group metric checks.
+\item \code{uncertainty_review}: coverage / SE availability interpretation with
+expected/available counts, coverage MCSE and unavailable reasons.
+\item \code{reading_order}: recommended first-read order for the summary, condition,
+plot, and row-level recovery outputs.
+\item \code{next_actions}: short action list sorted by severity.
+\item \code{thresholds}: thresholds used for the assessment.
+}
+
+Invisibly, a \code{ggplot} object carrying reusable plot tables and
+metadata accessible via \code{\link[=plot_data]{plot_data()}}.
 }
 \description{
 Runs a compact parameter-recovery simulation study: generate data from a
@@ -180,145 +316,97 @@ saved simulation result without new data generation or fitting, use
 \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}}. In 0.2.4 this replaces \code{evaluate_mfrm_recovery()};
 the old name remains an alias. See the details for corrected recovery
 targets, Monte Carlo uncertainty and migration of saved results.
+
+Converts the numerical output from \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} into a
+reviewer-facing adequacy checklist. The goal is not to impose one universal
+pass/fail rule; it is to make the main user questions explicit: Did the runs
+finish? Did the fitted models converge? Are uncertainty summaries available?
+Are coverage and Monte Carlo precision plausible? If practical RMSE or bias
+limits are supplied, which parameter groups need follow-up? For
+\code{GPCM}, which slope-regime generator condition frames the recovery evidence?
+This only reads an existing simulation result. It does not generate data,
+refit models, add replications or repair unavailable uncertainty estimates.
 }
 \details{
-This helper is deliberately narrower than \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}. Design
-evaluation asks which design condition is operationally adequate; recovery
-simulation asks whether the fitted model recovers the known parameters under
-one explicit data-generating setup.
+\strong{Checkpointing (\code{file})}: Reuses or trial-checkpoints runs matching full
+generator/fitter inputs, \code{reps}, seeds, RNG kind, and package/platform
+fingerprints via atomic temp-file writes and a \code{.lock} directory. Failed fits
+are saved as completed attempts rather than redrawn.
 
-Location-like parameters (\code{Person}, non-person facets, and steps) are
-summarized after mean alignment within each replication and parameter group.
-These errors describe relative locations within the matched group. Their
-average \code{Bias} is zero by construction, so it cannot establish absence of
-bias for individual parameters. \code{BiasBasis} identifies this restriction;
-\code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} leaves its bias check \code{not_assessed}. Inspect RMSE
-and row-level errors for relative recovery instead.
-
-PCM/GPCM step vectors are centered within their owning facet level. Their
-generating step means are therefore added to the corresponding facet truth
-before comparison. A generated population intercept, when fitted, is shifted
-consistently with the fitted facet/step identification. \code{RawTruth} retains
-the original generator parameter. \code{Truth} is the comparison-coordinate
-truth; \code{ErrorRaw}, \code{RawBias} and \code{RawRMSE} use this truth before the additional
-within-group mean alignment, not necessarily \code{RawTruth}.
-
-For \code{GPCM}, supplied generator slopes are treated as relative
-discriminations and normalized to the same geometric-mean-one log-slope
-identification used by the fitter. Slope recovery is therefore summarized on
-the identified log-slope scale without an additional mean-alignment step.
-Average bias over a complete log-slope block is also zero by identification
-and is not an automatic adequacy criterion.
-Direct data generation and refitting are supported, but broader GPCM design-
-planning claims remain outside the current package boundary.
-
-Sparse linked generators are supported through \code{sim_spec} or direct
-\code{assignment = "sparse_linked"} plus \code{sparse_controls}. Their design-density
-and rater-link diagnostics are retained in \code{rep_overview}; recovery metrics
-remain parameter-recovery summaries and should not be read as evidence that
-a sparse linking design is adequate by itself.
-
-The returned \code{ademp} component follows the simulation-study framing of
-Morris, White, and Crowther (2019) and the ADEMP planning/reporting template
-used in later simulation-study guidance.
-}
-\section{Saving and resuming simulations}{
-
-Pass the same \code{file} and analysis arguments on a subsequent call to reuse
-the completed result without generation or fitting, or to resume an
-interrupted run. The identity includes generator inputs/specification,
-fitting controls, requested replications, seed, RNG kind, package R code
-and native library fingerprints, relevant numerical/diagnostic R options,
-R/platform, numerical libraries and
-dependency versions. Changing \code{reps} starts a different study; extension of
-an existing study is not supported. \code{progress} and \code{parallel} do not change
-the identity. Cached results retain the settings of their original run.
-
-Recovery runs and serial design evaluations save after every finished
-trial. Future design evaluations save after a whole design row returns;
-an interrupted row may need to run again. A partially completed optimizer
-is not resumed. Fit failures are completed attempts and are saved too;
-resuming does not redraw failures until they succeed. An unexpected error
-outside the recorded fit/diagnostic failure routes stops the call and leaves
-earlier checkpoints available. These files do not change the interpretation
-or eligibility of the underlying estimates and intervals.
-
-Per-trial seeds are allocated before computation and retained even when
-\code{seed = NULL}; an explicit seed is preferable for reproducing a new run in
-another file. Each trial controls generation, fitting and diagnostics with
-its own seed. A matching environment is required for automatic reuse;
-recorded seeds alone do not guarantee identical floating-point results on
-other systems. Keep the analysis script and software environment as well.
-
-After completion, \code{readRDS(file)} returns the usual result object with an
-additional \code{reproducibility} component containing identity, inputs and
-trial seeds. Before completion the file is an internal checkpoint; resume
-through the same public function. Writes use a temporary file in the same
-directory and checked replacement. A \code{.lock} directory prevents concurrent
-writers. Normal returns/errors release it; after process termination, remove
-a remaining lock only after checking that no writer is active. Unreadable
-files are never silently reused or replaced by \code{"on_change"}.
-}
-
-\section{Monte Carlo uncertainty and missing results}{
-
-Replications, not parameter rows within a replication, are independent.
-For a pooled available-row mean, let \eqn{S_r} be the sum of values in trial
-\eqn{r}, \eqn{n_r} its available-row count and
-\eqn{m = \sum_r S_r / \sum_r n_r}. With \eqn{R} recorded trials, the
+\strong{Alignment, MCSE, and intervals}: Location groups (\code{Person}, facets, steps)
+are mean-aligned within each trial (PCM/GPCM step means shift into owning
+facet \code{Truth}, while \code{RawTruth} keeps raw generator values; mean \code{Bias} is
+zero by construction), and \code{GPCM} log-slopes use geometric-mean-one
+identification. Across \eqn{R} trials with trial sums \eqn{S_r}, counts
+\eqn{n_r}, and pooled mean \eqn{m = \sum_r S_r / \sum_r n_r}, the
 ratio-linearization MCSE is
-\deqn{\mathrm{MCSE}(m) = \frac{\sqrt{R/(R-1)\sum_r(S_r-m n_r)^2}}{\sum_r n_r}.}
-Failed trials contribute zero sums and counts. RMSE uses squared errors and
-the delta-method factor \eqn{1/(2\sqrt{m})}; \code{McseCoverage95} applies the
-same ratio calculation to coverage indicators. Fewer than two contributing
-trials gives \code{NA}, as does the RMSE delta MCSE at zero RMSE. These are
-large-replication approximations; small examples do not qualify performance.
+\deqn{\mathrm{MCSE}(m) = \frac{\sqrt{R/(R-1)\sum_r(S_r-m n_r)^2}}{\sum_r n_r}}
+(delta factor \eqn{1/(2\sqrt{m})} for RMSE). Non-Person MML facet coverage
+uses centered covariance \eqn{P V P^T} (\eqn{P = I - 11^T/m}) via
+\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}; \code{Coverage95} conditions on available intervals and
+must be read alongside \code{CoverageAvailabilityRate} and \code{FailedReps}.
 
-\code{recovery_targets} records expected target counts after generation, before
-fitting. Summaries retain \code{AttemptedReps}, \code{FailedReps}, \code{ExpectedRows},
-\code{EstimateRows}, \code{SEAvailableRows}, \code{CoverageRows} and \code{CoverageReps}.
-\code{Coverage95} is conditional on an available interval: report it with
-\code{CoverageAvailabilityRate} and failures. Unavailable intervals are not
-counted as noncoverage. Availability rates use all expected targets,
-including failed fits. A generation failure or legacy result can leave the
-roster unknown; then \code{ExpectedRows} and full-denominator availability rates
-are \code{NA}, while \code{KnownTargetRows} and \code{KnownTargetReps} remain visible.
+RMSE and bias adequacy depends on the substantive scale and the use case, so
+the function does not mark them as failed unless the user supplies
+\code{max_rmse} or \code{max_abs_bias}. Without those limits, the corresponding rows are
+marked \code{not_assessed} and the next action asks the user to set practical
+thresholds when a decision depends on the metric.
+\code{BiasBasis} explains groups whose mean bias is fixed at zero by identification;
+even a supplied bias limit cannot turn that identity into recovery evidence.
+Threshold names are matched from the most specific group to its type or
+\code{default}; see \code{max_rmse} for examples.
+
+Metrics are recomputed from row-level evidence. Coverage is conditional on
+the available centered facet intervals, not all planned targets.
+\code{uncertainty_review} retains counts, \code{CoverageAvailabilityRate},
+\code{McseCoverage95} and \code{CIReasons} alongside its descriptive checklist.
+See \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} for the estimands, independent-trial MCSE,
+unsupported interval groups and handling of legacy saved results. Checklist
+tolerances do not replace the Monte Carlo uncertainty or qualify an estimator.
+
+The \code{condition_review} table is generator metadata for interpreting the
+recovery run. For \code{GPCM}, \code{GPCMSlopeRegime}, \code{StressLevel}, and
+generated score-category support describe the data-generating condition;
+they are not model-fit tests and they are not literature-derived adequacy
+cut points. \code{condition_reporting_notes} turns those generator conditions
+into reporter-facing caveats, such as high-dispersion slope stress or sparse
+generated score support.
+
+The optional \code{diagnostic_review} table is available when
+\code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} was called with \code{include_diagnostics = TRUE}.
+It summarizes fit and separation operating characteristics as diagnostic
+context only. Its availability fields do not mean that fit or separation
+values are adequate, and those rows do not enter the recovery adequacy
+status. \code{diagnostic_reporting_notes} should be read first when drafting
+fit/separation language because it separates zero separation/reliability,
+absolute fit-ZSTD flags, and df-sensitive ZSTD flags from recovery criteria.
+
+\code{plot.mfrm_recovery_assessment()} summarizes recovery checks visually. Use
+\code{type = "status"} first to see where checklist attention is needed, then
+\code{type = "metrics"} to inspect the parameter groups behind RMSE, bias,
+coverage, standard-error availability, or Monte Carlo precision statuses.
+The intended reading order is \code{summary(recovery_review)}, then
+\code{condition_reporting_notes} and \code{condition_review}, then
+\code{diagnostic_reporting_notes} and \code{diagnostic_review}, then the status plot,
+then the metric plot, then the row-level recovery table for the parameter
+groups that need follow-up. When \code{draw = FALSE}, the plot data also include
+\code{reading_order}, \code{guidance}, condition/diagnostic handoff tables, and
+structured plot tables such as \code{section_status} for status plots and
+\code{metric_review} for metric plots.
+
+These plots are intended as simulation-review graphics. They do not replace
+the row-level \code{x$recovery} table or the ADEMP metadata; they make the main
+recovery estimands easier to inspect during model-development and design
+checks. Coverage is displayed only for groups with valid centered structural
+intervals, conditional on availability. Summary/coverage routes refresh
+aggregates from saved rows; their \code{availability_table} component preserves all
+selected groups, including those omitted from drawing. Inspect counts,
+availability rates, MCSEs and \code{CIReasons} via \code{\link[=plot_data]{plot_data()}} and in \code{summary(x)}.
+A wholly unavailable coverage plot gives an informative error; it does not
+draw missing coverage as zero. See \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} for the target
+and the treatment of legacy saved intervals. A zero mean-aligned bias is an
+identification identity, not evidence of unbiased estimation.
 }
-
-\section{Interval targets}{
-
-For non-Person facets, coverage concerns each level minus its facet mean.
-With \eqn{P = I - 11^T/m}, its covariance is \eqn{P V P^T}; the original
-marginal SE cannot be reused after alignment. The runner obtains model-based
-95\\% intervals from \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} for eligible MML fits, including
-its numerical/source checks. A complete matched facet roster is required.
-The row table retains \code{CoverageEstimate}, \code{CoverageTruth}, \code{SE}, \code{Lower95},
-\code{Upper95}, \code{CIEligible} and \code{CIReason}. \code{RawSE} separately preserves the
-source uncertainty. A valid target SE can remain available when its interval
-bounds cannot be represented.
-
-JML remains a point-recovery route. Person-score uncertainty is conditional
-or posterior score uncertainty, not the centered structural interval above.
-Their coverage is unavailable with an explicit reason; step, slope and
-population recovery also retain point comparisons without a matching
-interval implementation here. This does not alter uncertainty available
-through other model-specific APIs. Numerical eligibility alone does not
-establish finite-sample coverage or robustness to model misspecification.
-}
-
-\section{Previously saved recovery results}{
-
-\code{summary()}, \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} and summary/coverage \code{plot()} routes
-recompute aggregates from saved rows without fitting. They correct trial
-MCSEs and withhold old coverage whose centered covariance was not retained.
-They cannot repair the identified PCM/population truth from old row tables;
-start a new study to obtain those corrections and matched interval evidence.
-Read \code{summary(x)$notes} and the new availability/reason columns. Directly
-reading an old \code{x$recovery_summary} does not update that stored table.
-The default file reuse policy rejects the changed implementation identity;
-use a new file path to preserve the old study.
-}
-
 \section{Typical workflow}{
 
 \enumerate{
@@ -354,6 +442,71 @@ again <- simulate_mfrm_recovery(n_person = 12, n_rater = 2, n_criterion = 2,
 identical(rec, again)
 unlink(saved)
 }
+# Long-running workflow; run explicitly when needed.
+# example("assess_mfrm_recovery", run.dontrun = TRUE)
+\dontrun{
+rec <- simulate_mfrm_recovery(
+  n_person = 12,
+  n_rater = 2,
+  n_criterion = 2,
+  reps = 1,
+  maxit = 30,
+  seed = 123
+)
+assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
+
+# Read the GPCM generator condition separately from recovery adequacy.
+gpcm_spec <- build_mfrm_sim_spec(
+  n_person = 14,
+  n_rater = 2,
+  n_criterion = 2,
+  raters_per_person = 2,
+  model = "GPCM",
+  step_facet = "Criterion",
+  slope_facet = "Criterion",
+  slopes = c(0.85, 1.15),
+  assignment = "crossed"
+)
+gpcm_rec <- suppressWarnings(simulate_mfrm_recovery(
+  sim_spec = gpcm_spec,
+  reps = 1,
+  fit_method = "MML",
+  quad_points = 5,
+  maxit = 12,
+  include_diagnostics = TRUE,
+  include_person = FALSE,
+  seed = 456
+))
+gpcm_review <- assess_mfrm_recovery(
+  gpcm_rec,
+  min_reps = 1,
+  max_rmse = c(slope = 2),
+  max_abs_bias = c(slope = 1),
+  min_se_available = NULL,
+  max_mcse_rmse_ratio = NULL
+)
+gpcm_review$condition_reporting_notes[, c(
+  "ConditionArea", "ReportingAttention", "ConditionFinding"
+)]
+gpcm_review$condition_review[, c(
+  "Model", "GPCMSlopeRegime", "StressLevel", "ScoreSupportStatus"
+)]
+gpcm_review$diagnostic_reporting_notes[, c(
+  "Facet", "ReportingAttention", "DiagnosticFinding"
+)]
+summary(gpcm_review)$reading_order
+}
+# Optional workflow; run the example explicitly as shown below.
+# example("plot.mfrm_recovery_simulation", run.dontrun = TRUE)
+\dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-recovery.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+rec <- saved$result
+plot(rec, type = "summary", metric = "rmse", draw = FALSE)
+}
 }
 \references{
 Morris, T. P., White, I. R., and Crowther, M. J. (2019).
@@ -364,4 +517,8 @@ Using simulation studies to evaluate statistical methods.
 \seealso{
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \code{\link[=fit_mfrm]{fit_mfrm()}},
 \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}}, \link{mfrmr_compatibility_layer}
+
+\code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}}, \code{\link[=plot.mfrm_recovery_simulation]{plot.mfrm_recovery_simulation()}}
+
+\code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}}, \code{\link[base:summary]{base::summary()}}
 }

@@ -99,6 +99,7 @@ mfrm_extended_calibration_confint <- function(object, level) {
 #'   interpretation. [predict.mfrm_testlet()] supplies the separate conditional
 #'   Person-scoring intervals.
 #' @seealso [confint.mfrm_random_rater()], [mfrmr_output_guide()]
+#' @rdname fit_mfrm_testlet
 #' @export
 confint.mfrm_testlet <- function(object, parm = "calibration", level = .95, ...) {
   rlang::check_dots_empty()

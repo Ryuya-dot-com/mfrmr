@@ -137,27 +137,6 @@
   plot_object
 }
 
-.mfrm_plot_display_title <- function(plot_data, title = NULL,
-                                     fallback = "mfrmr plot") {
-  if (!isTRUE(plot_data$display$show_title)) return("")
-  display_title <- title
-  if (is.null(display_title) || length(display_title) == 0L ||
-      is.na(display_title[1L]) || !nzchar(as.character(display_title[1L]))) {
-    display_title <- plot_data$title %||% fallback
-  }
-  display_title <- as.character(display_title[1L])
-  if (!nzchar(display_title)) display_title <- as.character(fallback[1L])
-  review_only <- identical(
-    as.character(plot_data$interpretation_status %||% "")[1L],
-    "review_only"
-  )
-  if (isTRUE(review_only) && !identical(plot_data$display$show_notes, FALSE) &&
-      !startsWith(display_title, "REVIEW ONLY")) {
-    display_title <- paste0("REVIEW ONLY - ", display_title)
-  }
-  display_title
-}
-
 .mfrm_plot_notes <- function(data) {
   text <- c(data$interpretation_note, data$subtitle,
             data$curve_basis$Description, data$retention_note)
@@ -174,6 +153,9 @@
     text <- c(text, extra)
     type <- c(type, rep("display", length(extra)))
   }
+  density_notes <- data$group_density$notes
+  text <- c(text, density_notes)
+  type <- c(type, rep("group_distribution", length(density_notes)))
   out <- data.frame(Type = type, Text = as.character(text), stringsAsFactors = FALSE)
   out <- out[!is.na(out$Text) & nzchar(out$Text) & !duplicated(out$Text), , drop = FALSE]
   rownames(out) <- NULL
@@ -191,78 +173,94 @@ step_index_from_label <- function(step_labels) {
   idx
 }
 
-.build_wright_group_density <- function(x, group, group_data = NULL) {
-  # Returns a long-format data.frame with columns Group, Theta, Density
-  # for each subgroup of persons. The group label can come from:
-  #  * a column in `group_data` (data.frame with a Person column;
-  #    typical use for DIF screening when fit_mfrm was called without
-  #    the Group column);
-  #  * a column in `x$prep$data` (when the user passed it through the
-  #    fit), or
-  #  * a vector aligned with `x$facets$person$Person` (length match).
-  # NA / extreme rows are dropped before density estimation.
-  person_tbl <- as.data.frame(x$facets$person, stringsAsFactors = FALSE)
-  if (nrow(person_tbl) == 0L) {
-    stop("No person estimates available for group overlay.", call. = FALSE)
+.build_wright_group_density <- function(x, group, group_data = NULL,
+                                        bw = "nrd0", adjust = 1,
+                                        person_exclusions = NULL) {
+  person <- as.data.frame(x$facets$person, stringsAsFactors = FALSE)
+  if (!all(c("Person", "Estimate") %in% names(person)) || nrow(person) == 0L ||
+      anyNA(person$Person) || anyDuplicated(person$Person)) {
+    stop("Group overlays require one estimate row per non-missing Person ID.", call. = FALSE)
   }
-  joined <- NULL
-  if (is.character(group) && length(group) == 1L) {
-    if (!is.null(group_data) && is.data.frame(group_data) &&
-        "Person" %in% names(group_data) &&
-        group %in% names(group_data)) {
-      lookup <- unique(group_data[, c("Person", group), drop = FALSE])
-      names(lookup)[2] <- "Group"
-      joined <- merge(person_tbl[, c("Person", "Estimate")], lookup,
-                      by = "Person", all.x = TRUE)
-    } else {
-      obs_df <- as.data.frame(x$prep$data %||% NULL, stringsAsFactors = FALSE)
-      if (group %in% names(obs_df) && "Person" %in% names(obs_df)) {
-        lookup <- unique(obs_df[, c("Person", group), drop = FALSE])
-        names(lookup)[2] <- "Group"
-        joined <- merge(person_tbl[, c("Person", "Estimate")], lookup,
-                        by = "Person", all.x = TRUE)
-      } else {
-        stop(sprintf(
-          "Group column '%s' not found. Pass `group_data = <data.frame>` ",
-          group
-        ), sprintf(
-          "with a Person column and a '%s' column, or include the column in fit_mfrm()'s data argument.",
-          group
-        ), call. = FALSE)
-      }
+  if (!(is.numeric(bw) && length(bw) == 1L && is.finite(bw) && bw > 0) &&
+      !(is.character(bw) && length(bw) == 1L && !is.na(bw) &&
+        bw %in% c("nrd0", "nrd", "ucv", "bcv", "SJ", "SJ-ste", "SJ-dpi"))) {
+    stop("`density_bw` must be a positive number or a stats::density bandwidth rule.", call. = FALSE)
+  }
+  if (!is.numeric(adjust) || length(adjust) != 1L || !is.finite(adjust) || adjust <= 0) {
+    stop("`density_adjust` must be a positive finite number.", call. = FALSE)
+  }
+  points <- person[, c("Person", "Estimate"), drop = FALSE]
+  if (is.character(group) && length(group) == 1L && !is.na(group)) {
+    source <- if (is.null(group_data)) x$prep$data else group_data
+    if (!is.data.frame(source) || !all(c("Person", group) %in% names(source))) {
+      stop("Group column not found. Supply `group_data` with Person and the named group column.", call. = FALSE)
     }
-  } else if (length(group) == nrow(person_tbl)) {
-    joined <- data.frame(
-      Person = person_tbl$Person,
-      Estimate = person_tbl$Estimate,
-      Group = as.character(group),
-      stringsAsFactors = FALSE
-    )
+    lookup <- data.frame(Person = as.character(source$Person),
+                         Group = as.character(source[[group]]))
+    lookup <- unique(lookup[lookup$Person %in% points$Person & !is.na(lookup$Group), , drop = FALSE])
+    if (anyDuplicated(lookup$Person)) {
+      stop("Each Person must belong to only one group; conflicting group labels were found.", call. = FALSE)
+    }
+    points$Group <- lookup$Group[match(as.character(points$Person), lookup$Person)]
+  } else if (is.atomic(group) && is.null(dim(group)) && length(group) == nrow(person)) {
+    points$Group <- as.character(group)
   } else {
-    stop("`group` must be a column name (string) or a vector aligned ",
-         "with fit$facets$person rows.", call. = FALSE)
+    stop("`group` must be a column name or a vector aligned with fit$facets$person rows.", call. = FALSE)
   }
-  joined <- joined[is.finite(joined$Estimate) & !is.na(joined$Group), ,
-                    drop = FALSE]
-  groups <- unique(as.character(joined$Group))
-  if (length(groups) < 2L) {
-    stop("Group overlay requires at least two distinct group levels.",
-         call. = FALSE)
+  if (length(unique(points$Group[!is.na(points$Group)])) < 2L) {
+    stop("Group overlay requires at least two distinct group levels.", call. = FALSE)
   }
-  out <- do.call(rbind, lapply(groups, function(g) {
-    sub <- joined$Estimate[as.character(joined$Group) == g]
-    if (length(sub) < 5L) {
-      return(NULL)
-    }
-    d <- stats::density(sub, n = 256L)
-    data.frame(Group = g, Theta = d$x, Density = d$y,
-               stringsAsFactors = FALSE)
+  points$ExclusionReason <- ifelse(is.na(points$Estimate), "missing_estimate",
+    ifelse(is.finite(points$Estimate), "", "infinite_estimate"))
+  if (nrow(person_exclusions %||% data.frame()) > 0L) {
+    idx <- match(points$Person, person_exclusions$Person)
+    hit <- !is.na(idx)
+    points$ExclusionReason[hit] <- person_exclusions$PlotExclusionReason[idx[hit]]
+  }
+  points$ExclusionReason[is.na(points$Group)] <- "missing_group"
+  points$Included <- points$ExclusionReason == ""
+  points$ECDF <- NA_real_
+  if (any(points$Included)) {
+    points$ECDF[points$Included] <- ave(points$Estimate[points$Included],
+      points$Group[points$Included], FUN = function(z) rank(z, ties.method = "max") / length(z))
+  }
+  groups <- unique(points$Group)
+  summary <- do.call(rbind, lapply(groups, function(g) {
+    rows <- if (is.na(g)) is.na(points$Group) else !is.na(points$Group) & points$Group == g
+    z <- points$Estimate[rows & points$Included]
+    reason <- points$ExclusionReason[rows]
+    data.frame(Group = g, NTotal = sum(rows), NUsed = length(z),
+      NExcluded = sum(nzchar(reason)),
+      DensityStatus = if (is.na(g)) "missing_group" else if (length(z) < 5L)
+        "fewer_than_5_estimates" else if (length(unique(z)) < 2L)
+        "constant_estimates" else "available", stringsAsFactors = FALSE)
   }))
-  if (is.null(out) || nrow(out) == 0L) {
-    stop("No subgroup had at least 5 finite person estimates.",
-         call. = FALSE)
+  curves <- data.frame(Group = character(), Theta = numeric(), Density = numeric())
+  eligible <- summary$Group[summary$DensityStatus == "available"]
+  bandwidth <- NA_real_
+  if (length(eligible)) {
+    # One bandwidth and grid for comparisons; each Person contributes once.
+    pooled <- points$Estimate[points$Included]
+    reference <- stats::density(pooled, bw = bw, adjust = adjust, n = 256L)
+    bandwidth <- reference$bw
+    curves <- do.call(rbind, lapply(eligible, function(g) {
+      z <- points$Estimate[points$Included & !is.na(points$Group) & points$Group == g]
+      d <- stats::density(z, bw = bandwidth, n = 256L,
+                          from = min(reference$x), to = max(reference$x))
+      data.frame(Group = g, Theta = d$x, Density = d$y)
+    }))
   }
-  out
+  summary$Bandwidth <- ifelse(summary$DensityStatus == "available", bandwidth, NA_real_)
+  notes <- c(
+    "Group curves smooth fitted Person estimates, not the latent population density; group differences are not DIF/DFF tests. EAP shrinkage and unequal precision can affect their shape.",
+    sprintf("Group distribution: %d of %d Person estimates used; %d excluded. Inspect group_density$summary and group_density$points for counts and reasons.",
+      sum(points$Included), nrow(points), sum(!points$Included)),
+    "Curves use a common Gaussian bandwidth and equal Person weights, with unit area per group (not group size). Rug marks show included estimates. KDE tails outside the map range are clipped without renormalization.",
+    "Groups with fewer than five usable estimates or constant estimates retain rug marks and empirical CDF values but no density curve. This display rule is not a sample-size adequacy criterion."
+  )
+  list(curves = curves, summary = summary, points = points,
+       settings = list(bw = bw, adjust = adjust, bandwidth = bandwidth,
+                       kernel = "gaussian", weighting = "equal_person"), notes = notes)
 }
 
 build_step_curve_spec <- function(x) {
@@ -905,7 +903,6 @@ compute_se_for_plot <- function(x, ci_level = 0.95, diagnostics = NULL) {
   out
 }
 
-
 .build_wright_label_layout <- function(point_tbl, y_range) {
   out <- as.data.frame(point_tbl, stringsAsFactors = FALSE)
   if (nrow(out) == 0L) return(tibble::as_tibble(out))
@@ -1539,7 +1536,6 @@ build_wright_map_data <- function(x,
   footer_notes
 }
 
-
 build_pathway_map_data <- function(x,
                                    theta_range = c(-6, 6),
                                    theta_points = 241L,
@@ -1691,7 +1687,6 @@ build_pathway_map_data <- function(x,
     score_range = range(curve_tbl$expected$ExpectedScore, finite = TRUE)
   )
 }
-
 
 build_fit_pathway_data <- function(x,
                                    diagnostics = NULL,
@@ -1927,7 +1922,6 @@ build_fit_pathway_data <- function(x,
   )
 }
 
-
 build_ccc_data <- function(x, theta_range = c(-6, 6), theta_points = 241L) {
   curve_spec <- build_step_curve_spec(x)
   theta_grid <- seq(theta_range[1], theta_range[2], length.out = theta_points)
@@ -2110,390 +2104,190 @@ build_ccc_surface_data <- function(x, theta_range = c(-6, 6), theta_points = 121
   )
 }
 
-
-
-
-
 #' Plot fitted MFRM results with ggplot2
 #'
+#' @description
+#' Render a Wright map, pathway map, category probability curves (CCC), or
+#' consolidated diagnostic/comparison view from a fitted [fit_mfrm()] object.
+#' Invisibly returns a `ggplot` object carrying underlying tables and notes via
+#' [plot_data()] and [plot_data_components()].
+#'
 #' @param x An `mfrm_fit` object from [fit_mfrm()].
-#' @param type Plot type. Omit `type` (or use `NULL` / `"wright"`) for the
-#'   primary native Wright map. Use `"bundle"`, `"all"`, or `"default"` for
-#'   the three-part fit bundle; otherwise choose one of `"facet"`, `"person"`,
-#'   `"step"`, `"wright"`, `"pathway"`, `"fit_pathway"`, `"ccc"`,
-#'   `"ccc_surface"`, or `"category_surface"`. `"pathway"` is the
-#'   theta-to-expected-score display; `"fit_pathway"` is the
-#'   fit-statistic-to-measure display.
-#'   Additional diagnostic and reporting views are listed under "Single-fit
-#'   views" in [mfrmr_plot_migration], with replacements for all former helpers.
-#' @param facet Optional facet name for `type = "facet"`.
-#' @param top_n Maximum number of non-person facet locations retained by the
-#'   native Wright map for compact displays. Step transitions are always
-#'   retained separately and do not consume this limit;
-#'   any omitted facet locations are counted in the returned `retention` table
-#'   and disclosed in the plot subtitle/note. Use `Inf` for a complete
-#'   all-level final map. The FACETS-style payload always retains every fitted
-#'   facet and step location.
-#' @param highlight Optional named list of non-person facet level IDs, for
-#'   example `list(Rater = c("R01", "R02"))`, for Wright maps only (including
-#'   `view = "unified"` and the Wright component of a bundle). Selected labels
-#'   receive a `> ` prefix in both renderers and saved ggplot conversion.
-#'   Levels outside the usual `top_n` selection are added, so the displayed
-#'   count may exceed that limit. Fitted locations and uncertainty do not
-#'   change; the automatic scale uses all fitted locations before compaction.
-#'   Selection is not a statistical flag. Inspect `locations$Highlighted`,
-#'   `retention` and `notes` in the returned plot data. Unknown IDs or levels
-#'   without finite locations are rejected. `NULL` selects no levels.
-#' @param theta_range Numeric length-2 range for pathway, CCC, and
-#'   category-surface plot data.
-#' @param theta_points Number of theta grid points used for pathway, CCC, and
-#'   category-surface plot data.
-#' @param title Optional custom title.
-#' @param palette Optional color overrides.
-#' @param label_angle Rotation angle for x-axis labels where applicable.
-#'   Native Wright maps reserve bottom space for full labels when abbreviating
-#'   them would make different groups indistinguishable.
-#' @param show_ci Whether to add approximate confidence intervals when
-#'   available. `NULL` selects the display-specific default: `TRUE` for the
-#'   primary native Wright map and `type = "fit_pathway"`, and `FALSE` for the
-#'   FACETS-style ruler and other plot types. With `renderer = "facets"`,
-#'   explicitly setting `show_ci = TRUE` creates a hybrid display: FACETS-style
-#'   ruler grammar with mfrmr uncertainty intervals.
-#' @param ci_level Confidence level used when `show_ci = TRUE`.
-#' @param level Named alternative to `ci_level`, a single number strictly
-#'   between 0 and 1. Supply only one of these names, even when equal.
-#'   Both omitted retain 0.95. This controls the fitted-model plot intervals;
-#'   attached interval results retain the level chosen when they were computed.
-#' @param group Optional grouping for `type = "wright"` to overlay
-#'   per-group person-density curves (DIF / DFF screening view).
-#'   Either a column name (looked up first in `group_data` when
-#'   supplied through `...`, then in `fit$prep$data`) or a vector
-#'   aligned with `fit$facets$person`. Ignored for other `type`
-#'   values and for `wright_style = "facets_style"`, whose person column is a
-#'   single FACETS-style star frequency. To pass the source data alongside, use
-#'   `plot(fit, type = "wright", group = "MyCol", group_data = <df>)`.
-#' @param diagnostics Optional matching output from [diagnose_mfrm()].
-#'   Recompute it after refitting; mismatched or outdated readiness records
-#'   are rejected. When supplied,
-#'   Wright-map standard errors and precision metadata reuse matching rows from
-#'   `diagnostics$measures` without replacing fitted coordinates,
-#'   while pathway plot data reuse `fit_measures`, `fit_status`, and
-#'   `curve_fit_status` instead of recomputing diagnostics.
-#'   Must match this fitted analysis; see [mfrmr_compatibility_layer] for
-#'   migration of saved diagnostics.
-#' @param include_fit_measures If `TRUE` (default), pathway plot data include
-#'   tidy fit-measure and fit-status tables for custom R graphics. Set to
-#'   `FALSE` when only the curve coordinates are needed.
-#' @param fit_stat For `type = "fit_pathway"`, the horizontal fit statistic:
-#'   `"Infit"` (default) or `"Outfit"`.
-#' @param fit_scale For `type = "fit_pathway"`, use mean squares (`"mnsq"`)
-#'   or standardized fit (`"zstd"`) on the horizontal axis.
-#' @param zstd_method For a ZSTD fit pathway, `"facets"` (default) uses the
-#'   FACETS/Wright-Masters fourth-moment df, matching [diagnose_mfrm()].
-#'   `"engine"` retains the former package-native df convention. Neither
-#'   establishes complete FACETS output equivalence. Refreshing companions
-#'   from supplied diagnostics preserves their recorded WHEXACT choice.
-#' @param include_person If `TRUE`, include person rows in a fit pathway.
-#' @param person_subset Optional character vector of person IDs retained in a
-#'   fit pathway before ranking.
-#' @param top_n_person Maximum person rows retained in a fit pathway, ranked
-#'   by distance from expected fit. Use `Inf` for all selected persons.
-#' @param person_labels Person-label policy for a fit pathway: `"flagged"`
-#'   (default), `"all"`, or `"none"`.
-#' @param facet_labels Facet-level label policy for a fit pathway: `"all"`
-#'   (default), `"flagged"`, or `"none"`. This changes drawn labels only;
-#'   all retained facet rows remain in the draw-free table.
-#' @param panel Fit-pathway layout: `"combined"` (distinguish persons by
-#'   shape) or `"facet"` (one base-graphics panel per facet).
-#' @param fit_range Mean-square review lines for a fit pathway.
-#' @param zstd_cut Absolute ZSTD review line for a fit pathway.
-#' @param draw If `TRUE`, print the resulting `ggplot` object.
-#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`,
-#'   or `"monochrome"`).
-#' @param renderer Wright-map renderer. Use `"native"` (default) or
-#'   `"facets"` for the FACETS Table 6-style visual layout. This is the
-#'   canonical selector for new code. The native map is the primary display
-#'   and includes available facet uncertainty by default. The closest
-#'   FACETS-style visual uses `show_ci = FALSE`.
-#' @param wright_style Wright-map renderer. `"native"` preserves the package's
-#'   histogram, point, range, and facet-SE display. `"facets_style"` adds a
-#'   FACETS Table 6-style text ruler with person-frequency stars, signed facet
-#'   headers, and labeled score-transition lines. It is a visual-layout option,
-#'   not a claim of numerical equivalence with FACETS. This explicit style name
-#'   is equivalent to `renderer = "facets"`. Adding `show_ci = TRUE` to that
-#'   style is an mfrmr/FACETS hybrid rather than the closest FACETS-style view.
-#' @param category_labels Optional score rubric labels used by
-#'   `wright_style = "facets_style"`. Supply a named character vector keyed by
-#'   original score, an unnamed vector with one label per retained category, or
-#'   a data frame with `Score` and `Label` columns.
-#' @param rows_per_logit Number of FACETS-style ruler rows per logit.
-#' @param wright_range Optional finite increasing length-2 logit range for the
-#'   FACETS-style ruler. `NULL` derives a range that contains the fitted data.
-#' @param extreme_placement In the FACETS-style renderer, place extreme-score
-#'   persons at the ruler `"ends"` or retain their fitted `"estimate"`.
-#' @param persons_per_star Number of persons represented by one `*` in the
-#'   FACETS-style frequency column. `NULL` chooses a compact value automatically.
-#' @param show_title Logical; display the main plot title (default `FALSE`). Structural panel
-#'   headings, axis labels, legends, and data labels remain visible.
-#' @param show_notes Logical; display explanatory subtitles, footnotes, and
-#'   review-only title markers. Notes remain available in the returned object,
-#'   and R warnings are still issued. Default `FALSE`; use
-#'   `plot_data(p, "notes")` for the descriptions and cautions outside the figure.
-#' @param marginal Marginal histogram display for two-continuous-variable
-#'   scatterplots (`"auto"`, `"histogram"`, or `"none"`). Default `"auto"`
-#'   attaches aligned X/Y marginal histograms on single-panel scatterplots
-#'   with at least 8 finite plotted coordinate pairs.
-#' @param view Optional display variant for consolidated routes: for example,
-#'   `"pairs"` or `"heatmap"` for agreement, `"unified"` for the former unified
-#'   Wright helper, or `"funnel"` for shrinkage. See [mfrmr_plot_migration].
-#' @param metric Quantity for a consolidated route, for example `"reliability"`,
-#'   `"separation"` or `"strata"`, or `"exact"` / `"correlation"` for agreement.
-#' @param comparison Another fitted model for paired Wright/CCC displays, or an
-#'   ordered list of additional fits for `type = "trajectory"`. Plotting does
-#'   not equate their scales or perform a model-selection test.
-#' @param labels Labels for paired models or all trajectory waves, reference first.
-#' @param ... View-specific controls listed in [mfrmr_plot_migration]. The
-#'   consolidated routes reject irrelevant or duplicated arguments.
+#' @param type `NULL`/`"wright"` (primary Wright map), `"bundle"`/`"all"`/`"default"`
+#'   (Wright + pathway + CCC composite), `"facet"`, `"person"`, `"step"`,
+#'   `"pathway"`, `"fit_pathway"`, `"ccc"`, `"ccc_surface"`/`"category_surface"`,
+#'   `"trajectory"`, or a consolidated diagnostic route (`"person_fit"`,
+#'   `"rater_severity"`, `"thresholds"`, `"reliability"`, `"agreement"`,
+#'   `"guttman"`, `"residual_matrix"`, `"residual_qq"`, `"residual_pca"`,
+#'   `"local_dependence"`, `"bubble"`, `"marginal_fit"`, `"marginal_pairwise"`,
+#'   `"fair_average"`, `"displacement"`, `"unexpected"`, `"facets_chisq"`,
+#'   `"qc"`, `"facet_dashboard"`, `"facet_equivalence"`, `"bias"`,
+#'   `"shrinkage"`, `"apa_summary"`; corrected JML supports `"slopes"`,
+#'   `"locations"`, and `"steps"`).
+#' @param facet Optional facet name for `type = "facet"` or location views.
+#' @param top_n Maximum non-Person facet levels retained on compact
+#'   native Wright maps (`30` default; `Inf` keeps all; steps are retained
+#'   separately) and optional named list (e.g., `list(Rater = "R01")`) prefixing
+#'   selected labels with `> `.
+#' @param highlight Maximum non-Person facet levels retained on compact
+#'   native Wright maps (`30` default; `Inf` keeps all; steps are retained
+#'   separately) and optional named list (e.g., `list(Rater = "R01")`) prefixing
+#'   selected labels with `> `.
+#' @param theta_range Ability grid bounds (`c(-6, 6)`) and node
+#'   count for pathway, CCC, and surface views.
+#' @param theta_points Ability grid bounds (`c(-6, 6)`) and node
+#'   count for pathway, CCC, and surface views.
+#' @param title Optional title metadata, palette overrides,
+#'   and x-axis label angle.
+#' @param palette Optional title metadata, palette overrides,
+#'   and x-axis label angle.
+#' @param label_angle Optional title metadata, palette overrides,
+#'   and x-axis label angle.
+#' @param show_ci Display approximate intervals when available
+#'   (`NULL` enables CIs on native Wright and `fit_pathway` views; supply either
+#'   `ci_level` or `level`, default `0.95`).
+#' @param ci_level Display approximate intervals when available
+#'   (`NULL` enables CIs on native Wright and `fit_pathway` views; supply either
+#'   `ci_level` or `level`, default `0.95`).
+#' @param level Display approximate intervals when available
+#'   (`NULL` enables CIs on native Wright and `fit_pathway` views; supply either
+#'   `ci_level` or `level`, default `0.95`).
+#' @param group Optional Person grouping column name (in `group_data` or
+#'   `fit$prep$data`) or aligned vector overlaying descriptive Person KDE curves
+#'   on native Wright maps (`density_bw = "nrd0"`, `density_adjust = 1` via
+#'   `...`; `>= 5` non-constant included Persons required for a curve; inspect
+#'   `plot_data(p, "group_density")`).
+#' @param diagnostics Optional matching [diagnose_mfrm()]
+#'   object and logical (`TRUE` default) attaching fit-measure tables to pathway
+#'   payloads.
+#' @param include_fit_measures Optional matching [diagnose_mfrm()]
+#'   object and logical (`TRUE` default) attaching fit-measure tables to pathway
+#'   payloads.
+#' @param fit_stat Controls
+#'   for `type = "fit_pathway"`: `"Infit"`/`"Outfit"`, `"mnsq"`/`"zstd"`, ZSTD
+#'   df convention (`"facets"` or `"engine"`), Person inclusion/subset/ranking,
+#'   label policies (`"flagged"`, `"all"`, `"none"`), panel layout
+#'   (`"combined"` or `"facet"`), and heuristic review lines.
+#' @param fit_scale Controls
+#'   for `type = "fit_pathway"`: `"Infit"`/`"Outfit"`, `"mnsq"`/`"zstd"`, ZSTD
+#'   df convention (`"facets"` or `"engine"`), Person inclusion/subset/ranking,
+#'   label policies (`"flagged"`, `"all"`, `"none"`), panel layout
+#'   (`"combined"` or `"facet"`), and heuristic review lines.
+#' @param zstd_method Controls
+#'   for `type = "fit_pathway"`: `"Infit"`/`"Outfit"`, `"mnsq"`/`"zstd"`, ZSTD
+#'   df convention (`"facets"` or `"engine"`), Person inclusion/subset/ranking,
+#'   label policies (`"flagged"`, `"all"`, `"none"`), panel layout
+#'   (`"combined"` or `"facet"`), and heuristic review lines.
+#' @param include_person Controls
+#'   for `type = "fit_pathway"`: `"Infit"`/`"Outfit"`, `"mnsq"`/`"zstd"`, ZSTD
+#'   df convention (`"facets"` or `"engine"`), Person inclusion/subset/ranking,
+#'   label policies (`"flagged"`, `"all"`, `"none"`), panel layout
+#'   (`"combined"` or `"facet"`), and heuristic review lines.
+#' @param person_subset Controls
+#'   for `type = "fit_pathway"`: `"Infit"`/`"Outfit"`, `"mnsq"`/`"zstd"`, ZSTD
+#'   df convention (`"facets"` or `"engine"`), Person inclusion/subset/ranking,
+#'   label policies (`"flagged"`, `"all"`, `"none"`), panel layout
+#'   (`"combined"` or `"facet"`), and heuristic review lines.
+#' @param top_n_person Controls
+#'   for `type = "fit_pathway"`: `"Infit"`/`"Outfit"`, `"mnsq"`/`"zstd"`, ZSTD
+#'   df convention (`"facets"` or `"engine"`), Person inclusion/subset/ranking,
+#'   label policies (`"flagged"`, `"all"`, `"none"`), panel layout
+#'   (`"combined"` or `"facet"`), and heuristic review lines.
+#' @param person_labels Controls
+#'   for `type = "fit_pathway"`: `"Infit"`/`"Outfit"`, `"mnsq"`/`"zstd"`, ZSTD
+#'   df convention (`"facets"` or `"engine"`), Person inclusion/subset/ranking,
+#'   label policies (`"flagged"`, `"all"`, `"none"`), panel layout
+#'   (`"combined"` or `"facet"`), and heuristic review lines.
+#' @param facet_labels Controls
+#'   for `type = "fit_pathway"`: `"Infit"`/`"Outfit"`, `"mnsq"`/`"zstd"`, ZSTD
+#'   df convention (`"facets"` or `"engine"`), Person inclusion/subset/ranking,
+#'   label policies (`"flagged"`, `"all"`, `"none"`), panel layout
+#'   (`"combined"` or `"facet"`), and heuristic review lines.
+#' @param panel Controls
+#'   for `type = "fit_pathway"`: `"Infit"`/`"Outfit"`, `"mnsq"`/`"zstd"`, ZSTD
+#'   df convention (`"facets"` or `"engine"`), Person inclusion/subset/ranking,
+#'   label policies (`"flagged"`, `"all"`, `"none"`), panel layout
+#'   (`"combined"` or `"facet"`), and heuristic review lines.
+#' @param fit_range Controls
+#'   for `type = "fit_pathway"`: `"Infit"`/`"Outfit"`, `"mnsq"`/`"zstd"`, ZSTD
+#'   df convention (`"facets"` or `"engine"`), Person inclusion/subset/ranking,
+#'   label policies (`"flagged"`, `"all"`, `"none"`), panel layout
+#'   (`"combined"` or `"facet"`), and heuristic review lines.
+#' @param zstd_cut Controls
+#'   for `type = "fit_pathway"`: `"Infit"`/`"Outfit"`, `"mnsq"`/`"zstd"`, ZSTD
+#'   df convention (`"facets"` or `"engine"`), Person inclusion/subset/ranking,
+#'   label policies (`"flagged"`, `"all"`, `"none"`), panel layout
+#'   (`"combined"` or `"facet"`), and heuristic review lines.
+#' @param draw Print device toggle (`TRUE`
+#'   default), visual preset (`"standard"`, `"publication"`, `"compact"`,
+#'   `"monochrome"`), title/footnote canvas switches (`FALSE` defaults), and
+#'   2D scatterplot marginal histogram mode (`"auto"`, `"histogram"`, `"none"`).
+#' @param preset Print device toggle (`TRUE`
+#'   default), visual preset (`"standard"`, `"publication"`, `"compact"`,
+#'   `"monochrome"`), title/footnote canvas switches (`FALSE` defaults), and
+#'   2D scatterplot marginal histogram mode (`"auto"`, `"histogram"`, `"none"`).
+#' @param show_title Print device toggle (`TRUE`
+#'   default), visual preset (`"standard"`, `"publication"`, `"compact"`,
+#'   `"monochrome"`), title/footnote canvas switches (`FALSE` defaults), and
+#'   2D scatterplot marginal histogram mode (`"auto"`, `"histogram"`, `"none"`).
+#' @param show_notes Print device toggle (`TRUE`
+#'   default), visual preset (`"standard"`, `"publication"`, `"compact"`,
+#'   `"monochrome"`), title/footnote canvas switches (`FALSE` defaults), and
+#'   2D scatterplot marginal histogram mode (`"auto"`, `"histogram"`, `"none"`).
+#' @param marginal Print device toggle (`TRUE`
+#'   default), visual preset (`"standard"`, `"publication"`, `"compact"`,
+#'   `"monochrome"`), title/footnote canvas switches (`FALSE` defaults), and
+#'   2D scatterplot marginal histogram mode (`"auto"`, `"histogram"`, `"none"`).
+#' @param renderer Wright-map
+#'   renderer (`"native"` or `"facets"` / `wright_style = "facets_style"` for
+#'   FACETS Table 6 text-ruler layout) and ruler formatting controls.
+#' @param wright_style Wright-map
+#'   renderer (`"native"` or `"facets"` / `wright_style = "facets_style"` for
+#'   FACETS Table 6 text-ruler layout) and ruler formatting controls.
+#' @param category_labels Wright-map
+#'   renderer (`"native"` or `"facets"` / `wright_style = "facets_style"` for
+#'   FACETS Table 6 text-ruler layout) and ruler formatting controls.
+#' @param rows_per_logit Wright-map
+#'   renderer (`"native"` or `"facets"` / `wright_style = "facets_style"` for
+#'   FACETS Table 6 text-ruler layout) and ruler formatting controls.
+#' @param wright_range Wright-map
+#'   renderer (`"native"` or `"facets"` / `wright_style = "facets_style"` for
+#'   FACETS Table 6 text-ruler layout) and ruler formatting controls.
+#' @param extreme_placement Wright-map
+#'   renderer (`"native"` or `"facets"` / `wright_style = "facets_style"` for
+#'   FACETS Table 6 text-ruler layout) and ruler formatting controls.
+#' @param persons_per_star Wright-map
+#'   renderer (`"native"` or `"facets"` / `wright_style = "facets_style"` for
+#'   FACETS Table 6 text-ruler layout) and ruler formatting controls.
+#' @param view Display variant (`view`), target
+#'   quantity (`metric`), paired/trajectory comparison fit(s) and wave `labels`
+#'   (scales must already be linked), and route-specific controls.
+#' @param metric Display variant (`view`), target
+#'   quantity (`metric`), paired/trajectory comparison fit(s) and wave `labels`
+#'   (scales must already be linked), and route-specific controls.
+#' @param comparison Display variant (`view`), target
+#'   quantity (`metric`), paired/trajectory comparison fit(s) and wave `labels`
+#'   (scales must already be linked), and route-specific controls.
+#' @param labels Display variant (`view`), target
+#'   quantity (`metric`), paired/trajectory comparison fit(s) and wave `labels`
+#'   (scales must already be linked), and route-specific controls.
+#' @param ... Display variant (`view`), target
+#'   quantity (`metric`), paired/trajectory comparison fit(s) and wave `labels`
+#'   (scales must already be linked), and route-specific controls.
 #'
 #' @details
-#' Start with `plot(fit)`: it draws a Wright map of person abilities, rater
-#' severities, other facet locations, and category thresholds on one logit
-#' scale. No plot options are needed for this first view.
+#' **Scale, conditioning, and display payloads.** Higher Person locations raise
+#' expected coded scores; under default negative facet orientation, higher
+#' non-Person locations indicate greater severity/difficulty (`positive_facets`
+#' reverses sign). Pathway and CCC curves hold non-target additive facets and
+#' interactions at zero (`curve_basis`). Boundary-clipped coordinates record
+#' `OriginalEstimate` separately from `DisplayEstimate`, and blocked-fit extreme
+#' MML EAPs are recorded in `person_exclusions`.
 #'
-#' For adjusted-score comparisons, use `plot(fit, type = "fair_average",
-#' show_ci = TRUE)`. `metric = "FairM"` uses mean reference measures;
-#' `metric = "FairZ"` uses a zero reference, not a z-score. PCM averages
-#' expectations over administered scales with the table's observation weights
-#' and `totalscore` selection. Its conditional delta-method intervals use the
-#' same retained observations as the table: finite direct anchors in ordinary
-#' additive RSM/PCM JML are retained even with all-minimum/all-maximum responses,
-#' including when `totalscore = FALSE`. The intervals use the
-#' derivative of that same average. RSM/PCM intervals hold thresholds, other
-#' effects and reference means fixed; they are diagnostic approximations,
-#' not full calibration-uncertainty intervals. Inspect the returned data and
-#' notes for the interval method and unavailable rows. See [fair_average_table()]
-#' for reference definitions and [plot_fair_average] for view-specific controls.
-#' For ordinary additive RSM/PCM JML, `xtreme = .3, xtreme_method = "facets"`
-#' requests conditional total-score extrapolation of extreme measures and
-#' their fair scores. Primary estimates and fixed anchors are retained.
-#' Group-mean anchors are unsupported. The measure SE describes the corrected
-#' total; fair-score intervals remain unavailable for positive `xtreme`.
-#' The default `xtreme_method = "display"` retains the old average-score
-#' display convention and leaves fair scores unchanged.
-#'
-#' This S3 plotting method provides the core fit-family visuals for
-#' `mfrmr`. When `type` is omitted, it returns the Wright map alone as
-#' a `ggplot` object (the most useful single figure for a
-#' first inspection). Pass `type = "bundle"` (or `"all"` / `"default"`)
-#' to obtain a three-panel composite `ggplot` containing a
-#' Wright map, pathway map, and category characteristic curves. The
-#' compact native default records any omitted facet locations in
-#' `plot_data(p, "retention")` and the returned notes; use
-#' `top_n = Inf` to retain every fitted location in the final Wright map.
-#' `LabelX` / `LabelY` provide text positions, and leader lines connect displaced
-#' labels to unchanged fitted points. Display labels may be shortened;
-#' `plot_data(p, "label_points")` retains the full labels, fitted coordinates
-#' and text positions for custom graphics. Step transitions share one vertical ladder and their
-#' labels include the fitted threshold logit. When the fit records
-#' boundary-separated facet levels and no
-#' display range was supplied, the native and FACETS-style maps use the same
-#' robust automatic range and place those levels at ruler ends. Exact fitted
-#' values and intervals remain in `OriginalEstimate`, `CI_Lower`, and
-#' `CI_Upper`; `DisplayEstimate`, `DisplayCI_Lower`, `DisplayCI_Upper`, and the
-#' clipping-status columns describe only the rendered coordinates. Endpoint
-#' triangles and the returned notes disclose omitted or clipped intervals.
-#' The returned object always carries machine-readable metadata accessible
-#' through [plot_data()], even when the plot is drawn immediately.
-#' Titles and explanatory notes are omitted from the figure by default;
-#' use `show_title = TRUE` or `show_notes = TRUE` to include them. The returned
-#' `plot_data(p, "notes")` table contains `Type` and `Text` columns for interpretation,
-#' reference-profile conditions, and display/retention notes where applicable;
-#' `plot_data(p, "display")` records the two flags.
-#' Original titles, subtitles, coordinates, and readiness metadata are retained.
-#' `as_ggplot()` respects these flags and
-#' retains the notes in `attr(plot, "mfrmr_notes")`.
-#'
-#' Fit-family Wright, pathway, and CCC displays use a shared, CUD-informed
-#' palette. The first eight series use an Okabe-Ito foundation with bright
-#' yellow omitted and darker pink/amber/cyan entries for light backgrounds.
-#' Beyond eight series, colours come from the dark half of the viridis HCL
-#' palette. Expected-score and category curves also vary line type; Wright
-#' locations retain their distinct point shapes, and small data labels use
-#' dark neutral text. Six line types cycle for larger series sets, so dense
-#' plots still require labels, panels, or more space. This is not a guarantee
-#' of perceptual separation for every viewer or device.
-#' `preset = "monochrome"` applies to these series. Custom `palette` values
-#' are retained in the plot payload and used during saved-plot conversion;
-#' colour overrides keep the non-colour encodings.
-#' See \url{https://jfly.uni-koeln.de/color/} for Color Universal Design guidance.
-#'
-#' Every fit-derived payload also carries `data$fit_readiness`,
-#' `data$interpretation_status`, and `data$interpretation_note`. Availability
-#' and interpretability are separate: when a numerical, data, design, or
-#' stability status requires review, the coordinates remain available for
-#' diagnosis, but the call warns and records the review-only interpretation
-#' in the returned metadata. Hiding an annotation changes presentation
-#' only; it does not change the fit's interpretation status or suppress warnings.
-#' A prior-regularized extreme MML EAP remains in `fit$facets$person`. If its
-#' source fit is blocked, however, it is omitted from the Wright-map scale so
-#' that a finite but non-interpretable trace cannot collapse the display. The
-#' exact excluded rows and reason remain in `data$person_exclusions`, and the
-#' omission is stated in `data$retention_note`.
-#'
-#' `type = "unexpected"` uses the same default as
-#' [unexpected_response_table()]: `abs_z_min = 3, rule = "residual"`.
-#' The optional `rule = "either"` or `"both"` also uses `prob_max`.
-#' Saved table plots retain the recorded thresholds. A fully evaluated screen
-#' with no flags yields an empty display and retains its screening summary.
-#'
-#' `type = "wright"` shows persons, facet levels, and step thresholds on
-#' a shared logit scale. Estimates are plotted as fitted, so the sign
-#' convention follows the fit: higher Person values predict higher coded
-#' scores in these positive-discrimination models. Whether that means more
-#' comprehensible or less comprehensible speech depends on the rubric coding.
-#' Under the default negative orientation, higher non-Person facet values
-#' reduce expected coded scores; calling this greater severity/difficulty
-#' presumes that higher scores represent better performance.
-#' Facets listed in `fit_mfrm(positive_facets = ...)` are reversed
-#' (higher values raise expected scores); state the active orientation in
-#' figure captions when reporting.
-#' The returned `notes`, accessible through [plot_data()], state the recorded facet
-#' directions and the score-coding caveat. Missing orientation in an older or
-#' imported result is not guessed. Category labels do not recode the data.
-#' See [mfrmr_visual_diagnostics] for reverse-coded comprehensibility, fit,
-#' conditional bias and Step explanations.
-#'
-#' Set `renderer = "facets"` (equivalently,
-#' `wright_style = "facets_style"`) for a line-printer-inspired common
-#' ruler. That mode retains every facet location in its data and shows actual
-#' (original, when scores were internally recoded) adjacent score transitions.
-#' Its `facets_style` payload contains tidy ruler, person-frequency, facet,
-#' step, mean-half-score, header, category-label, and settings tables for custom
-#' graphics. `RulerValue` records the nearest discrete ruler row for
-#' line-printer reconstruction, whereas step and midpoint lines are drawn at
-#' their exact fitted `DrawValue` and step labels print that logit value. The
-#' styling emulates the semantics of FACETS Table 6; estimates
-#' and standard errors remain those produced by `mfrmr`. Use
-#' `show_ci = FALSE` for the closest FACETS-style rendering. If
-#' `show_ci = TRUE` is requested, interpret the result as a hybrid that adds
-#' mfrmr uncertainty intervals to FACETS-style ruler grammar.
-#' Column headings are retained even on narrow devices. If headings or person
-#' frequency stars need more space, drawing warns; use a wider device or increase
-#' `persons_per_star` for a more compact frequency column.
-#'
-#' `type = "pathway"` shows expected score
-#' traces and dominant-category regions across theta. This expected-score
-#' display is distinct from the Bond-and-Fox-style fit-versus-measure
-#' pathway: use `type = "fit_pathway"` for Infit/Outfit on the horizontal
-#' axis and measure logits on the vertical axis. Its draw-free plot data
-#' include person-selection settings, CI columns, and explicit SE-source
-#' metadata. The expected-score pathway draw-free data also
-#' includes `pathway_long`, `pathway_annotations`, `fit_measures`,
-#' `fit_status`, and `curve_fit_status`, so R users can rebuild the pathway
-#' map in ggplot2, plotly, or a report pipeline while keeping the same
-#' underfit/overfit labels used by [fit_measures_table()]. `type = "ccc"` shows
-#' category response probabilities. Multiple curve groups are faceted rather
-#' than overplotted by the native renderer, and category-specific legends use
-#' the same colours across panels. Multiple groups or more than five categories use one legend
-#' beside the plotting area; colour presets use distinct default colours
-#' beyond eight categories. For `GPCM`, these curves retain the
-#' estimated slope. With separate owners, each step-level/slope-level pair is
-#' a labeled curve group. Such joint profiles have no single-facet Infit/Outfit
-#' flag; inspect `fit_measures` or `type = "fit_pathway"` separately.
-#' All curve families are reference-profile curves
-#' with additive facet main effects and fitted interactions fixed at zero; the
-#' native footer and ggplot subtitle disclose that conditioning.
-#' Expected-score pathways use the same reference profile and expose the
-#' same `curve_basis` table. These curves do not average over the observed
-#' rater assignments or show a particular fitted interaction cell.
-#' The draw-free `curve_basis`, `CurveBasis`, and `PredictorOffset` fields make
-#' that conditioning explicit. `type = "ccc_surface"` or
-#' `type = "category_surface"` returns 3D-ready category-probability surface
-#' data for external rendering; it deliberately does not add a
-#' plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The
-#' returned object includes `category_support`, `interpretation_guide`, and
-#' `reporting_policy` tables so retained zero-frequency categories and
-#' manuscript-use boundaries remain visible to beginners. The remaining
-#' types (`"facet"`, `"person"`, `"step"`, `"shrinkage"`) provide
-#' compact location-specific displays.
-#'
-#' @section Facet locations and practical equivalence:
-#' `plot(fit, type = "rater_severity", facet = "Rater")` orders locations
-#' and shows available normal uncertainty intervals. Pass matching
-#' `diagnostics` to reuse their precision metadata. The default has no
-#' magnitude bands; `show_bands = TRUE` explicitly adds gray guides at
-#' +/-0.5 and +/-1.0 logits. These distances from the fitted zero are not
-#' equivalence bounds, evidence of homogeneity or calibration standards.
-#' The returned `data` table uses numerical absolute-location ranges in
-#' `Band`; a common range does not imply small pairwise differences.
-#'
-#' Use `p <- plot(fit, type = "rater_severity", diagnostics = diagnostics)`
-#' and [plot_data()] to read `"data"` and `"notes"`. Intervals retain their
-#' `CIUse`, `SE_Method` and `IntervalStatus`; individual whisker overlap is
-#' not a contrast interval. [analyze_facet_equivalence()] separately examines
-#' pairwise differences with their full covariance and a prespecified practical
-#' bound in its supported MML scope. It does not use the profile's guides.
-#' The zero depends on the model constraints/anchors, so read the signed
-#' differences and their uncertainty instead of inferring quality from color.
-#' Older saved profiles retain their original colors and labels when converted
-#' with [as_ggplot()]; regenerate the figure from the saved fit and matching
-#' diagnostics for the new display. No refitting is needed.
-#'
-#' @section Corrected JML plots:
-#' A fit with an explicit `jml_correction_order` uses `type = "slopes"`
-#' (default), `"locations"` or `"steps"`. Locations show one `facet`, defaulting
-#' to the first declared facet. `style = "points"` shows estimates without
-#' intervals; `"distribution"` shows their empirical cumulative distribution.
-#' These displays do not classify rater quality. They support `title`, `caption`,
-#' `show_title`, `show_notes`, `show_labels`, `sort`, `palette`, `preset`,
-#' `text_scale`, `point_size`, and draw-free [as_ggplot()] conversion. Slopes
-#' use a reference of one; location/step displays use zero. Ordinary plot types,
-#' `show_ci = TRUE`, and unrelated plot controls are rejected for this estimator.
-#' The figure retains point estimates if their RootSE is unavailable; it cannot
-#' be drawn if no unambiguous point solution was obtained.
-#'
-#' @section Graphics layout:
-#' Single-panel plots advance through a caller's `par(mfrow = ...)` or
-#' `layout()` arrangement and restore the style and margins they change.
-#' Native Wright maps, multi-group CCC plots, and faceted fit pathways create
-#' their own page layouts; call these outside a custom `layout()` arrangement.
-#' Use `renderer = "facets"` for a single-panel Wright map in a custom grid.
-#' A 7 by 5 inch device is a useful starting size for standalone plots;
-#' dense PCM labels benefit from a wider device.
-#' Native Wright/pathway plots warn when labels cannot be separated within
-#' the available space. Enlarge the device (for example, to 12 by 8 inches)
-#' and inspect the result; this warning concerns readability, not model fit.
-#' Abbreviated labels retain distinguishing text where possible, falling back
-#' to full names if needed. Original names remain available in the plot data.
-#' For non-Latin labels, select a graphics device and font that support the
-#' characters before plotting; the package retains the caller's font family.
-#'
-#' @section Typical workflow:
-#' 1. Fit a model with [fit_mfrm()].
-#' 2. Use `plot(fit)` to inspect the Wright map at a glance.
-#' 3. Switch to `type = "pathway"`, `"fit_pathway"`, `"ccc"`, or
-#'    `"shrinkage"` for the
-#'    relevant follow-up figure, or `type = "bundle"` for the
-#'    three-plot overview when preparing a FACETS-style summary.
-#'
-#' @section Further guidance:
-#' For a plot-selection guide and extended examples, see
-#' [mfrmr_visual_diagnostics] and
-#' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
-#'
-#' @return Invisibly, a `ggplot` object (including a 3-panel composite
-#'   `ggplot` when `type = "bundle"` / `"all"` / `"default"`). Each returned fit
-#'   plot carries its underlying plot payload and notes accessible via
-#'   [plot_data()] and [plot_data_components()], including domain-specific
-#'   readiness, an interpretation status, a `notes` table, `display` settings,
-#'   and a one-row `scale_contract` table recording the fitted coordinate basis,
-#'   population SD when applicable, discrimination basis, and GPCM MML
-#'   identification convention.
-#' @seealso [fit_mfrm()], [plot(x, type = "wright", view = "unified")][plot.mfrm_fit], [plot(x, type = "bubble")][plot.mfrm_fit],
-#'   [mfrmr_visual_diagnostics]
-#' @concept confidence intervals
-#' @concept visual diagnostics
-#' @concept shrinkage
+#' @return Invisibly, a `ggplot` object carrying `locations`, `notes`,
+#'   `display`, `retention`, `fit_readiness`, `interpretation_status`, and
+#'   `scale_contract` accessible via [plot_data()].
+#' @seealso [fit_mfrm()], [diagnose_mfrm()], [plot_data()], [as_ggplot()]
 #' @examples
 #' library(mfrmr)
 #'
@@ -2518,10 +2312,22 @@ build_ccc_surface_data <- function(x, theta_range = c(-6, 6), theta_points = 121
 #' judge <- subset(plot_data(wright, "locations"), Group == "Rater")$Label[1]
 #' focused <- plot(fit, highlight = list(Rater = judge), draw = FALSE)
 #' subset(plot_data(focused, "locations"), Highlighted)
-#' @section Session plot defaults:
-#' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
-#' precedence, and appearance when saving or reusing a plot.
+#'
+#' \dontrun{
+#' # Requires your own file with Person IDs matching the fitted data.
+#' groups <- read.csv("person-groups.csv") # columns: Person, Cohort
+#' grouped <- plot(fit, group = "Cohort", group_data = groups, draw = FALSE)
+#' plot_data(grouped, "group_density")$summary
+#' # Sensitivity to smoothing, keeping the fitted model unchanged:
+#' plot(fit, group = "Cohort", group_data = groups, density_adjust = 1.5)
+#' }
 #' @export
+#' @concept Wright maps
+#' @concept displacement
+#' @concept fair averages
+#' @concept linking
+#' @concept rater severity
+#' @concept reporting workflow
 plot.mfrm_fit <- function(x,
                           type = NULL,
                           facet = NULL,
@@ -2642,6 +2448,11 @@ plot.mfrm_fit <- function(x,
   style$accent_tertiary <- unname(wright_colors[1L])
   style$accent_secondary <- unname(wright_colors[2L])
   wright_style <- match_wright_style(wright_style, renderer = renderer)
+  density_controls <- intersect(names(list(...)), c("density_bw", "density_adjust"))
+  if (length(density_controls) &&
+      (selected != "wright" || is.null(group) || wright_style != "native")) {
+    stop("Density controls require a native Wright map with `group` supplied.", call. = FALSE)
+  }
   if (length(theta_range) != 2 || !all(is.finite(theta_range)) || theta_range[1] >= theta_range[2]) {
     stop("`theta_range` must be a numeric length-2 vector with increasing values.")
   }
@@ -2687,7 +2498,7 @@ plot.mfrm_fit <- function(x,
                     "category_characteristic_curves", "category_characteristic_curves_overlay",
                     "category_probability_surface")) {
       out$data$notes <- rbind(out$data$notes,
-        data.frame(Type = "step", Text = .mfrm_step_interpretation_note()))
+        data.frame(Type = "step", Text = .mfrmr_const_.mfrm_step_interpretation_note))
     }
     if (name %in% c("fit_pathway", "pathway_map")) {
       out$data$notes <- rbind(out$data$notes, data.frame(Type = "fit", Text = c(
@@ -2881,32 +2692,6 @@ plot.mfrm_fit <- function(x,
   }
 
   if (type == "wright") {
-    # Build optional subgroup density data when `group` names a
-    # column on the prepared data. Each subgroup gets its own per-bin
-    # density profile so DIF screening reads the same axis as the
-    # main Wright map.
-    group_payload <- NULL
-    if (!is.null(group)) {
-      if (identical(wright_style, "facets_style")) {
-        warning(
-          "`group` overlays are available only for `wright_style = \"native\"`; ",
-          "the FACETS-style star column remains ungrouped.",
-          call. = FALSE
-        )
-      } else {
-        group_payload <- tryCatch(
-          .build_wright_group_density(x, group = group,
-                                       group_data = list(...)$group_data),
-          error = function(e) {
-            message(sprintf(
-              "Wright group overlay disabled: %s",
-              conditionMessage(e)
-            ))
-            NULL
-          }
-        )
-      }
-    }
     wright_core <- build_wright_map_data(
       x,
       top_n = top_n,
@@ -2919,6 +2704,19 @@ plot.mfrm_fit <- function(x,
       extreme_placement = extreme_placement,
       persons_per_star = persons_per_star
     )
+    group_info <- NULL
+    if (!is.null(group)) {
+      if (identical(wright_style, "facets_style")) {
+        warning("`group` overlays are available only for `wright_style = \"native\"`; the FACETS-style star column remains ungrouped.", call. = FALSE)
+      } else {
+        dots <- list(...)
+        group_info <- .build_wright_group_density(x, group,
+          group_data = dots$group_data, bw = dots$density_bw %||% "nrd0",
+          adjust = dots$density_adjust %||% 1,
+          person_exclusions = wright_core$person_exclusions)
+      }
+    }
+    group_payload <- group_info$curves
     out <- as_plot_data("wright_map", c(
       wright_core,
       list(
@@ -2933,8 +2731,8 @@ plot.mfrm_fit <- function(x,
           "Shared logit scale for persons, facets, and thresholds"
         } else {
           sprintf(
-            "Shared logit scale; person density split by `%s` (%d level(s))",
-            group, length(unique(group_payload$Group))
+            "Shared logit scale; fitted Person distributions (%d groups)",
+            sum(!is.na(group_info$summary$Group))
           )
         },
         show_ci = isTRUE(show_ci),
@@ -2946,6 +2744,7 @@ plot.mfrm_fit <- function(x,
           "native_no_ci"
         },
         group = group_payload,
+        group_density = group_info,
         preset = style$name,
         legend = wright_legend(wright_core),
         reference_lines = new_reference_lines("h", 0, "Centered logit reference", "dashed", "reference")

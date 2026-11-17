@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{write_mfrm_residual_file}
 \alias{write_mfrm_residual_file}
+\alias{write_mfrm_subset_file}
 \title{Write a standalone residual file}
 \usage{
 write_mfrm_residual_file(
@@ -13,33 +14,55 @@ write_mfrm_residual_file(
   overwrite = FALSE,
   include_probabilities = FALSE
 )
+
+write_mfrm_subset_file(
+  fit,
+  diagnostics = NULL,
+  path,
+  node_path = NULL,
+  format = c("csv", "tsv"),
+  digits = 4,
+  overwrite = FALSE,
+  include_nodes = TRUE
+)
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. Supplying it
-avoids recomputing observation diagnostics.
+avoids recomputing subset connectivity.
 Must match this fitted analysis; see \link{mfrmr_compatibility_layer} for
 migration of saved diagnostics.}
 
-\item{path}{Output file path.}
+\item{path}{Output file path for the subset summary table.}
 
 \item{format}{File format: \code{"csv"} or \code{"tsv"}. If omitted, inferred from
 \code{path} when the extension is \code{.csv} or \code{.tsv}, otherwise \code{"csv"}.}
 
-\item{digits}{Rounding digits for numeric columns. \code{ConditionalVariance}
-retains full precision so small positive variances are not exported as zero.}
+\item{digits}{Rounding digits for numeric columns.}
 
 \item{overwrite}{If \code{FALSE}, existing files are not overwritten.}
 
 \item{include_probabilities}{If \code{TRUE}, append model probabilities for all
 response categories as \verb{PrCategory_*} columns.}
+
+\item{node_path}{Optional output file path for the node-level subset table.
+When \code{NULL} and \code{include_nodes = TRUE}, a sibling file ending in
+\verb{_nodes.csv} or \verb{_nodes.tsv} is created.}
+
+\item{include_nodes}{If \code{TRUE}, also write the node-level facet/level to
+subset membership table.}
 }
 \value{
 A bundle with \code{table}, \code{summary}, \code{written_files}, and \code{settings}.
+
+A bundle with \code{table}, \code{nodes}, \code{summary}, \code{written_files}, and
+\code{settings}.
 }
 \description{
 Write a standalone residual file
+
+Write standalone subset-connectivity files
 }
 \details{
 The exported table is observation-level and model-native. It includes the
@@ -53,6 +76,14 @@ interpretation and the legacy small-variance cutoff.
 
 This writer is separate from \code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}} because it is a
 direct analysis handoff rather than a legacy graph/score bundle.
+
+Subsets are connected components in the observation design graph. The graph
+links \code{Person} and all modeled facet levels that co-occur in an observation.
+A single co-observation graph component does not prove common-scale
+identification; shared other facets can conceal confounded panels. Consult
+the fitted estimability audit. Disconnected graphs need an explicit
+linking justification, such as defensible anchors or population assumptions,
+or separate calibrations. The graph alone does not assess those assumptions.
 }
 \examples{
 # Saved synthetic JML/RSM analysis of example_core.
@@ -67,8 +98,23 @@ data.frame(
   File = basename(out$written_files$Path)
 )
 # Full paths remain in out$written_files$Path.
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+path <- tempfile(fileext = ".csv")
+out <- write_mfrm_subset_file(fit, diag, path, overwrite = TRUE)
+data.frame(
+  Component = out$written_files$Component,
+  File = basename(out$written_files$Path)
+)
+# Full paths remain in out$written_files$Path.
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}},
 \code{\link[=write_mfrm_subset_file]{write_mfrm_subset_file()}}
+
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=subset_connectivity_report]{subset_connectivity_report()}},
+\code{\link[=write_mfrm_residual_file]{write_mfrm_residual_file()}}
 }

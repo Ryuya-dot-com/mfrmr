@@ -200,7 +200,7 @@ test_that("marginal coverage reaches summaries, reports, exports and saved-resul
   expect_false(grepl("largest strict marginal cell|largest strict pairwise signal", text))
   expect_true(is.na(rating_scale_table(fit, diag)$summary$MarginalFlaggedCategories))
   expect_equal(rating_scale_table(fit, diag)$summary$MarginalUnclassifiedCategories, fit$config$n_cat)
-  expect_true(is.na(summary(category_structure_report(fit, diag))$summary$MarginalFlaggedCategories))
+  expect_true(is.na(summary(mfrm_report(x = fit, diagnostics = diag, type = "category_structure"))$summary$MarginalFlaggedCategories))
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off(), add = TRUE)
   p <- plot_marginal_fit(diag, draw = TRUE)

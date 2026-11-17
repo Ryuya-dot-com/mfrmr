@@ -93,7 +93,7 @@ linking. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-netw
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("subset_connectivity_report", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
@@ -105,14 +105,14 @@ summary(out)
 p_sub <- plot(out, draw = FALSE)
 p_design <- plot(out, type = "design_matrix", draw = FALSE)
 p_net <- plot(out, type = "network", draw = FALSE)
-p_sub$data$plot
-p_design$data$plot
-p_net$data$edges
+plot_data(p_sub, "plot")
+plot_data(p_design, "plot")
+plot_data(p_net, "edges")
 out$summary[, c("Subset", "Observations", "ObservationPercent")]
 }
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}},
-\code{\link[=measurable_summary_table]{measurable_summary_table()}}, \code{\link[=data_quality_report]{data_quality_report()}}, \link{mfrmr_linking_and_dff},
+\code{\link[=measurable_summary_table]{measurable_summary_table()}}, \link{mfrm_report_data_quality}, \link{mfrmr_linking_and_dff},
 \link{mfrmr_visual_diagnostics}
 }

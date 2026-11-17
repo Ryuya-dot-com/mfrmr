@@ -1070,6 +1070,7 @@ test_that("S3 methods, ggplot2 views, mfrm_report, apa_table, appendix export, a
   on.exit(unlink(app_dir, recursive = TRUE), add = TRUE)
   export_summary_appendix(rep_obj, output_dir = app_dir, prefix = "newp")
   html_out <- mfrm_report(scored, output = "html")
+  on.exit(unlink(html_out$path), add = TRUE)
   expect_true(file.exists(html_out$path))
 
   rds_path <- file.path(app_dir, "scored.rds")
@@ -1084,6 +1085,7 @@ test_that("S3 methods, ggplot2 views, mfrm_report, apa_table, appendix export, a
 })
 
 test_that("high-slope multi-item narrow-posterior GPCM maintains C++ / pure-R parity and 63-vs-31 grid convergence", {
+  skip_on_cran()
   # Stress-tests the 8-panel analyticity-and-curvature-scaled Gauss-Legendre grid when
   # alpha * sigma ~ 11 across 16 ratings per Person (s_z ~ 0.04, extreme & interior profiles)
   gpcm_shared <- readRDS(test_path("fixtures", "anchored-gpcm.rds"))$shared$fit

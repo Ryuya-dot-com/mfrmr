@@ -78,10 +78,10 @@ A named list of class \code{mfrm_summary_appendix_export} with:
 Export manuscript appendix tables from documented summary surfaces
 }
 \details{
-This helper is the narrow public bridge from documented \code{summary()} surfaces
-to manuscript appendix artifacts. It accepts the same reporting objects that
-\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} supports, exports their table bundles as CSV,
-and optionally assembles a lightweight HTML appendix page.
+Export the tables selected by \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} as CSV and
+optional HTML. Pass a supported object, its summary, a prebuilt bundle or
+a named list; a fitted model is not required. Presets select from tables
+already available in the source, not additional analyses.
 
 Inspect \code{written_files} for the actual file paths. An analysis table whose
 name conflicts with bundle metadata (for example, \code{overview}) is retained
@@ -93,48 +93,26 @@ ZIP archives contain only files written by this call. With \code{overwrite = TRU
 obsolete members are not carried forward. If ZIP creation fails, any older
 ZIP is retained, \code{summary$ZipWritten} is zero and \code{notes} explains the
 failure. Other files in the destination folder are left in place.
-
-Fit-level caveats are exported through the \code{analysis_caveats} role, and
-pre-fit score-support caveats are exported through the
-\code{score_category_caveats} role. Both roles are classified as diagnostics, so
-they remain available under \code{"recommended"} and \code{"diagnostics"} presets when
-the source summary contains caveat rows.
-
-Precision-review summaries keep \code{fit_separation_basis} in the exported
-precision-review role so fit, ZSTD, separation/reliability/strata, and
-package review thresholds can be reported without turning them into
-universal recovery criteria.
-Fit-measure and FACETS fit-review summaries keep df/ZSTD sensitivity and
-optional external FACETS matching tables in the same precision-review section.
-
-Parameter-recovery studies can be exported by passing
-\code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} or \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} output directly. The
-exported bundle keeps the ADEMP-style simulation basis, recovery metrics,
-replication status, adequacy checklist, thresholds, and next actions in
-separate appendix-ready tables.
-
-A compatible precomputed recovery-evidence summary can also be exported,
-including its case assessments, condition
-notes, diagnostic notes, and domain assessments.
-
-Unlike \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, this helper does not require a fitted model.
-It is intended for the stage where compact reporting summaries already exist
-and the task is to hand off appendix-ready tables, catalogs, and reporting
-maps.
 }
-\section{Typical workflow}{
+\section{Retained reporting evidence}{
 
-\enumerate{
-\item Build \code{summary(...)} objects from fit, diagnostics, data description,
-reporting checklist, or APA outputs.
-\item Call \code{export_summary_appendix(...)} on one object or a named list.
-\item Hand off the written CSV/HTML appendix artifacts to manuscript or QA
-workflows.
-}
+\code{analysis_caveats} and \code{score_category_caveats} remain in \code{"recommended"}
+and \code{"diagnostics"} selections when supplied. Precision-review tables retain
+\code{fit_separation_basis}; fit-measure and FACETS review tables retain df/ZSTD
+sensitivity and optional external matching. These distinguish fit, ZSTD,
+separation/reliability/strata and review thresholds from recovery criteria;
+see \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} for roles and reading order.
+
+\code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} and \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} outputs retain the
+ADEMP simulation basis, recovery metrics, replication status, adequacy
+checklist, thresholds and next actions as separate tables. Compatible
+precomputed recovery summaries retain case and domain assessments plus
+condition and diagnostic notes. Review those notes before using the exported
+tables in a manuscript.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("export_summary_appendix", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.

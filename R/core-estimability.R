@@ -776,36 +776,18 @@ mfrmr_transformation_rank_ladder <- function(jacobian,
   )
 }
 
-mfrmr_empty_transformation_summary <- function() {
-  data.frame(
-    Block = character(0),
-    CoordinateSystem = character(0),
-    FreeCoordinates = integer(0),
-    ExpandedCoordinates = integer(0),
-    ExpectedRank = integer(0),
-    LogCoordinateRank = integer(0),
-    NaturalCoordinateRank = integer(0),
-    LogFullColumnRank = logical(0),
-    NaturalFullColumnRank = logical(0),
-    NaturalMinimum = numeric(0),
-    NaturalMaximum = numeric(0),
-    InvariantResidual = numeric(0),
-    MaxAbsLogJacobianDifference = numeric(0),
-    MaxAbsNaturalJacobianDifference = numeric(0),
-    MaxScaledNaturalJacobianDifference = numeric(0),
-    LogConditionIndex = numeric(0),
-    NaturalConditionIndex = numeric(0),
-    Finite = logical(0),
-    Status = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_empty_transformation_summary <- .mfrmr_empty_table(c(Block = "character", CoordinateSystem = "character", FreeCoordinates = "integer",
+    ExpandedCoordinates = "integer", ExpectedRank = "integer", LogCoordinateRank = "integer",
+    NaturalCoordinateRank = "integer", LogFullColumnRank = "logical", NaturalFullColumnRank = "logical",
+    NaturalMinimum = "double", NaturalMaximum = "double", InvariantResidual = "double", MaxAbsLogJacobianDifference = "double",
+    MaxAbsNaturalJacobianDifference = "double", MaxScaledNaturalJacobianDifference = "double",
+    LogConditionIndex = "double", NaturalConditionIndex = "double", Finite = "logical", Status = "character"))
 
 mfrmr_invalid_transformation_summary <- function(block,
                                                   coordinate_system,
                                                   free_coordinates,
                                                   expanded_coordinates) {
-  out <- mfrmr_empty_transformation_summary()[NA_integer_, , drop = FALSE]
+  out <- mfrmr_empty_transformation_summary[NA_integer_, , drop = FALSE]
   out$Block <- as.character(block)
   out$CoordinateSystem <- as.character(coordinate_system)
   out$FreeCoordinates <- as.integer(free_coordinates)
@@ -939,7 +921,7 @@ mfrmr_nonlinear_transformation_audit <- function(
       method = "coordinate_scaled_central_difference",
       relative_step = as.numeric(relative_step[1])
     ),
-    block_summary = mfrmr_empty_transformation_summary(),
+    block_summary = mfrmr_empty_transformation_summary,
     rank_ladder = data.frame(),
     parameterization_only = TRUE,
     likelihood_jacobian_evaluated = FALSE,
@@ -1061,7 +1043,7 @@ mfrmr_nonlinear_transformation_audit <- function(
     rownames(value) <- NULL
     value
   } else {
-    mfrmr_empty_transformation_summary()
+    mfrmr_empty_transformation_summary
   }
   ladder_rows <- Filter(
     function(x) is.data.frame(x) && nrow(x) > 0L,
@@ -1772,6 +1754,11 @@ mfrm_mml_inference_identification <- function(fit, sizes = NULL) {
     free_dimension = if (is.null(sizes)) length(fit$opt$par) else sum(unlist(sizes)),
     probability_dimension_bound = NA_real_, detail = "")
   if (!identical(cfg$method, "MML")) return(out)
+  if (!is.null(cfg$gpcm_limit_source)) {
+    out$excluded <- TRUE
+    out$detail <- "Ordinary intervals after a data-dependent limiting-likelihood reduction are not qualified."
+    return(out)
+  }
   data <- fit$prep$data
   if (is.data.frame(data) && nrow(data) && is.factor(data$Person) &&
       length(cfg$n_cat) == 1L && is.finite(cfg$n_cat) && cfg$n_cat >= 2 &&
@@ -2612,10 +2599,6 @@ audit_mfrm_mml_all_pattern_information <- function(
   base
 }
 
-mfrmr_nonlinear_local_estimability_contract_version <- function() {
-  "mfrmr-nonlinear-local-estimability-0.2.3-v1"
-}
-
 mfrmr_nonlinear_local_map_complete <- function(source) {
   free_dimension <- as.integer(source$free_dimension %||% NA_integer_)
   parameter_map <- as.data.frame(
@@ -2636,7 +2619,7 @@ mfrmr_classify_nonlinear_local_estimability <- function(audit, config) {
   )
   base <- list(
     contract_version =
-      mfrmr_nonlinear_local_estimability_contract_version(),
+      .mfrmr_const_mfrmr_nonlinear_local_estimability_contract_version,
     method = method,
     model = model,
     nonlinear_blocks = nonlinear_blocks,
@@ -3337,7 +3320,7 @@ audit_mfrm_estimability <- function(prep, idx, config, sizes) {
     ),
     nonlinear_local_estimability = list(
       contract_version =
-        mfrmr_nonlinear_local_estimability_contract_version(),
+        .mfrmr_const_mfrmr_nonlinear_local_estimability_contract_version,
       method = config$method,
       model = config$model,
       nonlinear_blocks = nonlinear_blocks,

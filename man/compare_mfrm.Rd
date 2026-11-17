@@ -5,7 +5,7 @@
 \alias{summary.mfrm_extended_comparison}
 \alias{print.mfrm_extended_comparison}
 \alias{plot.mfrm_extended_comparison}
-\title{Compare two or more fitted MFRM models}
+\title{Compare fitted measurement models or prespecified assessment plans}
 \usage{
 compare_mfrm(
   ...,
@@ -41,37 +41,34 @@ compare_mfrm(
 )
 }
 \arguments{
-\item{...}{For \code{compare_mfrm()}: Two or more \code{mfrm_fit} objects, or exactly one ordinary
-\code{mfrm_fit} and one \code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} or \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} result.
-The latter route is descriptive; see the extended-model section.
+\item{...}{Two or more \code{mfrm_fit} objects, one ordinary \code{mfrm_fit} paired
+with one testlet/random-rater fit, or one \code{\link[=mfrm_d_study]{mfrm_d_study()}} object with
+named plan-comparison options (\code{reference}, \code{score}/\code{composite},
+\code{assumption = "normal"}, \code{level}; see \link{mfrm_d_study_comparison}).}
 
-For \code{plot()}: Unused.}
+\item{labels}{Optional model labels and logical (\code{TRUE}
+default) warning when score coding or constraints differ (ranking is always
+suppressed when comparability fails).}
 
-\item{labels}{Optional character vector of labels for each model.
-If \code{NULL}, labels are generated from model/method combinations.}
+\item{warn_constraints}{Optional model labels and logical (\code{TRUE}
+default) warning when score coding or constraints differ (ranking is always
+suppressed when comparability fails).}
 
-\item{warn_constraints}{Logical. If \code{TRUE} (the default), emit a warning
-when models use different score coding or constraint settings. Ranking is
-suppressed whenever this basis differs, regardless of whether the warning
-is displayed.}
+\item{nested}{Logical (\code{FALSE} default); when \code{TRUE} for two comparable MML
+fits passing structural nesting review (\code{RSM} in \code{PCM}, \code{PCM} in \code{GPCM}
+with matched population/step constraints, or nested \code{facet_interactions}),
+computes \eqn{\Lambda = -2(\ell_{\mathrm{restricted}} - \ell_{\mathrm{full}})
+\sim \chi^2_{\Delta p}}.}
 
-\item{nested}{Logical. Set to \code{TRUE} only when the supplied models are
-known to be nested and fitted with the same likelihood basis on the same
-observations. The default is \code{FALSE}, in which case no likelihood-ratio
-test is reported. When \code{TRUE}, the function still runs a conservative
-structural nesting review and computes the LRT only for supported nesting patterns.}
+\item{response_diagnostics}{Optional length-2 lists of matching
+\code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} and \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} outputs for
+ordinary-vs-extended RSM descriptive comparisons.}
 
-\item{response_diagnostics}{Optional list of two saved
-\code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} outputs in the same order as the fits.
-Supported for an ordinary RSM paired with a testlet or shared-rater fit.
-This adds descriptive predictive comparisons without computing integrals.}
+\item{person_scores}{Optional length-2 lists of matching
+\code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} and \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} outputs for
+ordinary-vs-extended RSM descriptive comparisons.}
 
-\item{person_scores}{Optional list of two saved \code{\link[=score_mfrm_persons]{score_mfrm_persons()}}
-results in fit order for an ordinary versus extended RSM comparison.
-Both must score the same complete source roster, return the same Person
-IDs and use the same conditional interval level. No scoring is run here.}
-
-\item{object}{An extended-model comparison returned by \code{compare_mfrm()}.}
+\item{object}{An \code{mfrm_extended_comparison} object in \code{plot()}.}
 
 \item{x}{A descriptive extended-model result from \code{\link[=compare_mfrm]{compare_mfrm()}}.
 
@@ -89,10 +86,16 @@ indices these are facet names; for row moments the panel is
 \item{palette}{\code{"accessible"} uses blue points and a dashed grey reference;
 \code{"mono"} uses dark grey points. Meaning does not depend on colour.}
 
-\item{title, caption}{\code{NULL} uses the default text; a string replaces it;
+\item{title}{\code{NULL} uses the default text; a string replaces it;
 \code{""} removes it. Interpretation notes remain in the saved plot data.}
 
-\item{show_title, show_notes}{Show the title and caption, respectively.
+\item{caption}{\code{NULL} uses the default text; a string replaces it;
+\code{""} removes it. Interpretation notes remain in the saved plot data.}
+
+\item{show_title}{Show the title and caption, respectively.
+\code{FALSE} hides text without deleting its metadata.}
+
+\item{show_notes}{Show the title and caption, respectively.
 \code{FALSE} hides text without deleting its metadata.}
 
 \item{show_labels}{Show matched IDs beside the points. Defaults to \code{TRUE}
@@ -120,28 +123,9 @@ each fitted population mean, in logits. No difference interval is drawn.}
 a single panel), \code{"histogram"}, or \code{"none"}.}
 }
 \value{
-With one extended model, an \code{mfrm_extended_comparison} containing \code{models},
-\code{checks}, centered \code{effects}, \code{notes}, and source/omission metadata.
-With ordinary models only, an object of class \code{mfrm_comparison} (named list) with:
-\itemize{
-\item \code{table}: data.frame of model-level statistics including \code{LogLik},
-\code{Deviance}, \code{Npar} (and equal compatibility alias \code{npar}), \code{AIC}, \code{BIC},
-\code{SABIC}, criterion deltas and candidate-set weights, \code{ResponseRows},
-\code{WeightedResponseTotal}, \code{Persons}, \code{ICSampleSize}, formula and integration
-identities, integration tier/selectability, stored-value consistency
-fields, convergence fields,
-\code{ICComparable}, \code{SABICComparable}, and \code{ConstraintComparable}.
-\item \code{lrt}: data.frame with likelihood-ratio test result (only when two models
-are supplied and \code{nested = TRUE}). Contains \code{ChiSq}, \code{df}, \code{p_value}.
-\item \code{evidence_ratios}: data.frame of pairwise Akaike-weight ratios (Model1,
-Model2, EvidenceRatio, LogEvidenceRatio, RatioReason). \code{NULL} when
-comparison is ineligible. Extremely small normalized weights can round to zero.
-\item \code{preferred}: named list with the preferred model label by each criterion.
-\item \code{comparison_basis}: list describing whether IC and LRT comparisons were
-considered comparable. Includes a conservative \code{nesting_review} plus
-\code{lrt_status} / \code{lrt_reason} so withheld LRTs are explicit rather than
-silently absent.
-}
+\code{mfrm_comparison} (\code{table}, \code{lrt}, \code{evidence_ratios}, \code{preferred},
+\code{comparison_basis}), \code{mfrm_extended_comparison}, or
+\code{mfrm_multivariate_d_comparison}.
 
 For \code{plot()}: Invisibly, a \code{ggplot} object carrying the underlying
 \code{mfrm_plot_data} payload (accessible via \code{\link[=plot_data]{plot_data()}}) with source effects,
@@ -149,117 +133,21 @@ checks, interpretation notes, marginal histogram bins, and a text alternative.
 \code{\link[=as_ggplot]{as_ggplot()}} supports saved payloads without estimation.
 }
 \description{
-Produce a side-by-side comparison of multiple \code{\link[=fit_mfrm]{fit_mfrm()}} results using
-AIC, Person-based BIC, Sclove SABIC, log-likelihood, and free-parameter
-counts. An ordinary RSM paired with a testlet or shared-rater fit instead
-follows a descriptive facet-effect route, with no automatic ranking.
-For ordinary models, when exactly
-two models are supplied and the current conservative nesting review passes,
-a likelihood-ratio test is included.
+Compare two or more eligible MML \code{\link[=fit_mfrm]{fit_mfrm()}} models via \code{AIC}, Person-based
+\code{BIC}, Sclove \code{SABIC}, candidate weights, and optional nested likelihood-ratio
+tests (\code{nested = TRUE}), compare an ordinary RSM fit descriptively against a
+\code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} or \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} fit, or compare D-Study
+plans from one \code{\link[=mfrm_d_study]{mfrm_d_study()}} object (\code{assumption = "normal"}).
 }
 \details{
-GPCM MML and RSM/PCM MML with an estimated normal population use a separate
-local-solution check for information criteria, without refitting. It checks
-the retained likelihood, terminal gradient and positive unregularized
-observed information. \code{ICFitEligible}, \code{ICFitBasis} and \code{ICFitReview} record
-that decision; \code{ICComparable} also requires the common data/likelihood and
-integration checks. This can allow IC comparison while \code{InferenceReady}
-remains false for intervals or tests. It shares the joint-information
-calculation and workspace budget with \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}. Unknown, unstable or unavailable results
-remain ineligible with a reason. A local check does not prove a global
-maximum or negligible integration error; examine starting-value and
-\code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} results when the decision is close.
-Known marginal response-dimension deficits and complete-pattern first-order
-rank failures also prevent inferential model comparison, even with a positive
-numerical Hessian. More Persons with the same response designs improve
-precision but cannot repair a structural dimension deficit.
-Positive but ill-conditioned information may pass with a caution after
-numerical refinement, unregularized inversion and curvature-scaled gradient
-checks. A warning is emitted and retained in \code{ICFitCaution}, \code{ICFitReview}
-and the requested LRT's interpretation; it does not establish
-finite-sample accuracy for model ranking or tests.
-
-Models should be fit to the \strong{same data} (same rows, same person/facet
-columns) for the comparison to be meaningful. The function checks that
-observation counts match and warns otherwise.
-
-Information-criterion ranking is reported only when all candidates are
-eligible solutions under the package's current \code{MML} contract, use the same
-prepared observations, score coding, constraints, formula contract, and
-integration-evaluation identity, are eligible under the weighting policy,
-and have a selectable integration tier. For fixed-facet MML,
-\code{ICSampleSize} is the number of independent
-Persons and \code{ICSampleSizeBasis} is \code{"person_count"}; response rows and their
-weighted total are retained separately. Explicit all-unit weights are
-eligible, whereas every non-unit observation-weight fit fails closed under
-the current package contract.
-
-Canonical \code{AIC}, \code{BIC}, and \code{SABIC} are recomputed from the retained
-objective, optimizer-vector dimension, and Person count. A stale stored
-value, a legacy object without the current contract identity, a JML fit, or
-an ineligible weighted fit cannot enter ranking. Earlier raw values may be
-shown only as explicitly labelled \code{LegacyAIC} and \code{LegacyBIC} fields.
-
-\strong{Integration selection guard}: raw canonical criteria are retained at
-every valid MML quadrature count, but automatic comparison is screening-only
-below 15 points and review-only at 15--30 points. \code{ICSelectable} and
-\code{ICIntegrationSelectable} become \code{TRUE} at q>=31. q=31 is a starting grid,
-not a universal guarantee: close or consequential comparisons should be
-reevaluated at a denser shared grid (normally q>=61). The guard also applies
-to \code{nested = TRUE}, so a coarse-grid LRT cannot bypass it.
-
-\strong{Nesting}: Two models are \emph{nested} when one is a special case of the
-other obtained by imposing equality constraints.  The most common
-nesting in MFRM is RSM (shared thresholds) inside PCM
-(item-specific thresholds).  Models that differ only in estimation
-method (MML vs JML) on the same specification are not nested in the
-usual sense, and their information criteria do not share the common MML
-contract. Do not use either the LRT or IC ranking as a direct cross-method
-comparison.
-
-In the \strong{current \code{mfrmr} model space}, the automatic nesting review is
-intentionally conservative. It currently supports the following
-restrictions under shared data and shared constraints:
-\itemize{
-\item \code{RSM} nested inside \code{PCM} when the \code{PCM} fit has an explicit
-\code{step_facet} and retains every \code{facet_interactions} term in the RSM.
-The PCM may add interaction terms; omitting an RSM interaction is not
-repaired by freeing category steps;
-\item \code{PCM} nested inside \code{GPCM} with the same step facet, population
-design, other facet/step constraints and interactions. The only additional
-parameters must be G-1 relative log-slope contrasts for G slope levels.
-The GPCM slope owner may differ from the shared step owner;
-\item same-family additive-vs-interaction comparisons when the smaller fit's
-\code{facet_interactions} set is a subset of the larger fit's set.
-}
-
-Cross-method comparisons, comparisons that change anchors/dummying/centering,
-and same-family comparisons that do not add fixed interaction terms are not
-automatically promoted to LRT claims.
-
-Automatic nesting also requires a shared population specification: either
-both fits use the fixed standard-normal population or both use the same
-estimated-normal design, with the same declared columns and design values
-aligned by Person. Coefficient and variance estimates may differ. Row and
-column permutations are aligned; other recodings, changed designs, and
-unavailable design metadata require separate review. Passing this check
-does not grant inference readiness to an estimated-population fit. For a
-matched PCM/GPCM pair, the local-solution checks described above supply
-the numerical requirement independently of slope-interval availability.
-
-The \strong{likelihood-ratio test (LRT)} is reported only when exactly two
-models are supplied, \code{nested = TRUE}, the structural nesting review passes, and the
-difference in the number of parameters is positive:
-
-\deqn{\Lambda = -2 (\ell_{\mathrm{restricted}} - \ell_{\mathrm{full}})
-  \sim \chi^2_{\Delta p}}
-
-The LRT is asymptotically valid only under its regularity assumptions.
-With small samples or boundary/singular conditions, the reference
-chi-square p-value can be incorrect. At large Person counts, a very small
-practical improvement can also become statistically significant. Read the
-p-value as formal nested-fit evidence, not as an automatic practical model
-preference or evidence that a subscore is useful.
+\strong{Comparability and IC diagnostics.} Automatic IC deltas, candidate-set
+\code{AkaikeWeight}/\code{BICWeight}/\code{SABICWeight}, pairwise \code{EvidenceRatio}
+(\code{LogEvidenceRatio}, \code{RatioReason}), and LRT require identical prepared rows,
+unit weights, \code{quad_points >= 31} (\code{ICSelectable}), and passing local
+solution/curvature checks (\code{ICFitEligible}, \code{ICComparable}; \code{SABICComparable}
+additionally requires \verb{> 22} Persons; Burnham & Anderson, 2002). Ordinary vs
+extended RSM pairs return centered facet/response/Person differences without
+IC ranking or LRT.
 
 \code{plot()} method: Plot matched facet effects or posterior predictions across MFRMs
 
@@ -277,218 +165,6 @@ group; posterior conditioning retains all observed source ratings.
 Smaller residual indices do not establish better prediction or model
 adequacy. There are no ordinary fit cutoffs, tests or automatic ranking.
 }
-\section{Ordinary versus extended RSMs}{
-
-Exactly one ordinary RSM MML fit and one testlet/shared-rater fit return an
-\code{mfrm_extended_comparison}, with \code{models}, \code{checks}, \code{effects} and \code{notes}.
-The information-criterion and LRT sections describe ordinary \code{mfrm_fit}
-comparisons only. This route does not rank models, compute difference
-intervals, or provide an AIC/BIC preference. \code{nested = TRUE} is refused.
-
-Both fits must use identical observed rating events, including repeated
-events, category coding, unit weights and fixed facets except for the
-deliberately changed rater treatment. Use unanchored additive severity
-facets, \code{noncenter_facet = "Person"}, no facet shrinkage, and matching
-person/score column roles. Category recoding must preserve the same
-consecutive adjacent-category scale. These checks cannot be disabled by
-\code{warn_constraints = FALSE}.
-
-Match the population assumption: ordinary \code{population_formula = ~1} with
-both extension defaults estimates a common normal ability SD; the ordinary
-default and extension \code{person_sd = 1} impose known N(0,1). Covariate-dependent
-populations and fixed nonunit SDs have no matching ordinary route here.
-Population intercepts and free step locations may use different origins;
-they are recorded, not compared as substantive mean differences.
-
-The source roster and omitted counts must agree. New ordinary fits retain
-\code{prep$omitted_data} and \code{prep$omitted_input_rows}. When scores were omitted,
-their identities must match, including repeated events. Older fits without
-this provenance require refitting from the complete assigned-score roster.
-Missing IDs, excluded weights and population-data omissions are unsupported.
-
-Effects are centered at the unweighted mean of the same complete set of
-levels within each facet. This preserves pairwise contrasts while removing
-arbitrary facet origins. \code{SourceReference}/\code{SourceComparison} retain raw
-values and \code{CenterReference}/\code{CenterComparison} retain the subtracted means.
-\code{Difference} is comparison minus reference. Conditional rater modes and
-fixed coefficients are labeled separately; shrinkage is not evidence of
-greater accuracy or rater quality. Failed numerical checks or a missing
-level estimate withhold affected differences without dropping source rows.
-Native inference readiness remains explicit even when descriptive numerical
-checks pass. No SE or confidence interval for model differences is implied.
-
-With \code{response_diagnostics}, \code{responses} retains matched category
-probabilities, means, full mixture variances and grouped descriptive
-Infit/Outfit. Both saved diagnostics must use the same probability target,
-selected event multiset and shared \code{group_by} identifier columns. Matching
-uses event contents, including repeated-event multiplicities and missing
-scores, rather than assuming row numbers agree. Identical repeated events
-match in source occurrence order. \code{responses$events} and \code{responses$rows}
-retain the matching and original row numbers. Missing or unavailable rows
-remain explicit and differences involving them are withheld.
-
-All observed source events condition each model; selecting a Person's rows
-does not remove other Persons from shared-rater inference. These are
-same-data descriptive comparisons with calibration held fixed, not
-held-out predictive performance. A smaller Infit/Outfit is not evidence
-of improvement. Do not substitute ordinary plug-in diagnostics or their
-reference cutoffs. See \code{\link[=plot.mfrm_extended_comparison]{plot.mfrm_extended_comparison()}} for predictive
-paired and difference displays.
-
-With \code{person_scores}, \code{persons$table} compares conditional EAPs after
-subtracting each fitted population mean, retaining original estimates,
-origins, posterior SDs and aligned conditional endpoints. Unit Rasch slopes
-retain the logit unit; centering removes the arbitrary origin, not shrinkage
-or changes in the assumed population variance. Prior-only and unavailable
-differences are withheld. Separate conditional intervals are not intervals
-for model differences or tests of Person differences. Use \code{metric = "person"}
-in \code{\link[=plot.mfrm_extended_comparison]{plot.mfrm_extended_comparison()}} for a paired/difference display.
-
-The default facet-only output does not compare Person scores, steps,
-predictive Infit/Outfit or replacement-rater predictions. For testlets, zero local
-variance retains the fixed facets; zero shared-rater variance removes rater
-differences and is not the fixed-rater model. Numerical zero-reduction
-agreement does not establish model adequacy or variance-boundary inference.
-
-Use \code{plot(comparison, style = "paired")} for matched effects, or
-\code{style = "difference"} for differences versus means. See
-\code{\link[=plot.mfrm_extended_comparison]{plot.mfrm_extended_comparison()}} for display and accessibility controls.
-Attach saved results with \code{mfrm_results(extended_fit, comparison = comparison)}
-for static reports, tables, figures and replay. No comparison/report step
-fits, scores or resamples either model.
-}
-
-\section{Information-criterion diagnostics}{
-
-In addition to the canonical criteria, the function computes:
-\itemize{
-\item \strong{Delta_AIC / Delta_BIC / Delta_SABIC}: difference from the minimum
-value in the supplied candidate set.
-For AIC, the often-used Delta ranges below 2, 4--7, and above 10 are
-rough descriptions of decreasing relative support (Burnham & Anderson,
-2002), not significance thresholds, adequacy checks, or universal rules
-for BIC and SABIC.
-\item \strong{AkaikeWeight / BICWeight / SABICWeight}: relative candidate-set
-weights derived from \code{exp(-0.5 * Delta)} and normalized only across the
-supplied models. They are not posterior probabilities, probabilities of
-model truth, or guarantees that the candidate set is adequate.
-\item \strong{Evidence ratios}: pairwise ratios of Akaike weights, quantifying
-relative support within this candidate set. A ratio of 5 means only that
-one normalized Akaike weight is five times the other; it does not mean
-that one model is five times more likely to be true.
-Ratios are computed from AIC differences, so they remain available when
-both normalized weights round to zero. \code{LogEvidenceRatio} retains the
-natural log ratio; \code{RatioReason} explains \code{NA} ratios outside numeric range
-(\code{"overflow"}, \code{"underflow"}, or \code{"nonfinite_difference"}, otherwise
-\code{"available"}).
-}
-
-AIC, BIC, and SABIC answer different approximation/penalty questions. SABIC
-is a sensitivity criterion, not a universal tie-breaker. At 22 or fewer
-Persons its Sclove penalty is non-positive, so \code{SABICSelectable} and
-\code{SABICComparable} are \code{FALSE} and no automatic SABIC preference is returned.
-}
-
-\section{What this comparison means}{
-
-\code{compare_mfrm()} is a same-basis model-comparison helper. Its strongest
-claims apply only when the models were fit to the same response data,
-under a compatible likelihood basis, and with compatible constraint
-structure.
-}
-
-\section{What this comparison does not justify}{
-
-\itemize{
-\item Do not treat AIC/BIC/SABIC differences as primary evidence when
-\code{table$ICComparable} is \code{FALSE}.
-\item Do not infer numerical adequacy merely because all models share the same
-coarse quadrature identity. Below q=31, raw criteria are diagnostic only
-and automatic deltas, weights, preferences, and LRT are suppressed.
-\item Do not interpret the LRT unless \code{nested = TRUE} and the structural nesting review
-in \code{comparison_basis$nesting_review} passes.
-\item Same-family additive-vs-interaction fits are considered nested only when
-all other structural settings match and the smaller model's
-\code{facet_interactions} set is a subset of the larger model's set.
-\item Do not assume that \code{nested = TRUE} overrides the package's conservative
-nesting boundary; unsupported relations remain unsupported.
-\item PCM is the unit-slope reduction of an aligned GPCM. \code{nested = TRUE} tests
-equal relative slopes only after population, constraint, free-dimension
-and numerical checks pass. The relation is recorded as \code{PCM_in_GPCM}.
-Default PCM uses a fixed standard-normal population, whereas default GPCM
-estimates its mean and variance: changing only \code{model} does not isolate
-slope differences. Supply \code{population_formula = ~1} and the same
-\code{person_data} to both fits for an estimated-normal comparison.
-Unit slopes are interior positive values; the reference is ordinary
-asymptotic chi-square with G-1 degrees of freedom, not a boundary mixture.
-IC eligibility alone does not establish nesting or qualify slope intervals.
-\item Do not compare models fit to different datasets, different score codings,
-or materially different constraint systems as if they were commensurate.
-\item At large Person counts, a small systematic likelihood gain can dominate an
-IC difference; boundary or singular fits can also invalidate routine
-asymptotics. Evaluate effect size, stability, interpretability, and score
-consequences separately.
-}
-}
-
-\section{Interpreting output}{
-
-\itemize{
-\item Lower AIC/BIC values indicate relative support only when
-\code{table$ICComparable} is \code{TRUE}; use SABIC ranking only when
-\code{table$SABICComparable} is also \code{TRUE}.
-\item A significant LRT p-value is formal evidence against the restricted
-model under the stated assumptions; practical gain, score utility, and
-dimensional interpretation require separate checks.
-\item \code{preferred} identifies the minimum criterion within the supplied
-candidate set; it is not an unconditional model verdict.
-\item \code{evidence_ratios} gives pairwise Akaike-weight ratios (returned only
-when Akaike weights can be computed for at least two models).
-\item When comparing more than two models, interpret evidence ratios
-cautiously---they do not adjust for multiple comparisons.
-}
-}
-
-\section{How to read the main outputs}{
-
-\itemize{
-\item \code{table}: first-pass comparison table; start with \code{ICComparable},
-\code{ICSelectable}, \code{ICIntegrationTier}, \code{Model}, \code{Method}, \code{ICStatus}, \code{AIC},
-\code{BIC}, and \code{SABIC}.
-\item \code{comparison_basis}: records whether IC and LRT claims are defensible for
-the supplied models. Inspect \code{comparison_basis$nesting_review$relation}
-and \code{reason} before reading any LRT output.
-\item \code{lrt}: nested-model test summary, present only when the requested and
-reviewed conditions are met.
-\item \code{preferred}: candidate preferred by each criterion when those summaries
-are available.
-}
-}
-
-\section{Recommended next step}{
-
-Inspect \code{comparison_basis} before writing conclusions. If comparability is
-weak, treat the result as descriptive and revise the model setup (for
-example, explicit \code{step_facet}, common data, or common constraints) before
-using IC or LRT results in reporting.
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Fit two models with \code{\link[=fit_mfrm]{fit_mfrm()}} (e.g., PCM and GPCM) on the
-same prepared rows, explicit step owner, constraints, and MML quadrature
-setting. Use at least 31 common quadrature points for selectable ICs.
-\item Compare with \code{compare_mfrm(fit_pcm, fit_gpcm)} and start by checking
-\code{comparison$table$ICComparable}.
-\item Inspect \code{summary(comparison)} for AIC/BIC/SABIC diagnostics and the reasons
-for withholding ranking or tests. GPCM IC ranking has separate solution
-checks; request the matched PCM/GPCM test with \code{nested = TRUE}.
-\item Use \code{build_weighting_review(fit_pcm, fit_gpcm)} to inspect which selected
-facet levels and information shares were reweighted by the slopes.
-}
-}
-
 \section{References}{
 
 \itemize{
@@ -506,7 +182,7 @@ problems in multivariate analysis. \emph{Psychometrika, 52}(3), 333-343.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("compare_mfrm", run.dontrun = TRUE)
 \dontrun{
 # Load one dataset for both models
@@ -544,9 +220,11 @@ comparison$table[, c("Label", "AIC", "Delta_AIC", "BIC", "Delta_BIC")]
 # For close or consequential comparisons, check a denser shared grid with
 # mml_quadrature_sensitivity() before choosing a model
 # For a PCM/GPCM equal-slope test, see the matched-population example in
-# https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html; request compare_mfrm(..., nested = TRUE).
+# https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html
+# Request compare_mfrm(..., nested = TRUE).
 }
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}},
+\link{mfrm_d_study_comparison}
 }

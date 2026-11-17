@@ -550,7 +550,7 @@ diagnostic_summary_toy <- summary(diag_toy)
 diagnostic_summary_toy$decision
 diagnostic_summary_toy$overall_fit
 
-precision_toy <- precision_review_report(fit_toy, diagnostics = diag_toy)
+precision_toy <- mfrm_report(type = "precision", fit_toy, diagnostics = diag_toy)
 precision_toy$profile[, c(
   "PrecisionTier", "SupportsFormalInference", "PersonSEBasis", "NonPersonSEBasis"
 )]
@@ -714,7 +714,7 @@ res_toy <- mfrm_results(fit_toy, diagnostics = diag_toy, include = "publication"
 report_toy <- mfrm_report(res_toy, style = "apa")
 report_toy$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
 
-checklist_toy <- reporting_checklist(fit_toy, diagnostics = diag_toy)
+checklist_toy <- mfrm_report(type = "checklist", fit_toy, diagnostics = diag_toy)
 subset(checklist_toy$checklist, !DraftReady,
        c("Section", "Item", "NextAction"))
 ```

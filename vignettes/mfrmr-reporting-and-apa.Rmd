@@ -46,7 +46,7 @@ coefficient list is not stronger evidence.
 | How reproducible are numeric ratings under the specified rater model? | The stated ICC definition, single/average-score target, consistency/absolute-agreement target and analyzed sample | `pairwise_icc_table()` and its help. An ICC is not interchangeable with separation reliability, alpha or kappa. |
 | Which future assessment plan suits the intended score? | G-study variance/covariance components; D-study G/Phi/SEM, score weights, count grid, uncertainty and eligible paired contrasts | [G/D-study reporting structure](mfrmr-gtheory.html#report-the-assessment-planning-answer), `mfrm_report(g/d, intervals = saved_ci)` → `build_summary_table_bundle()`; `plot(g/d)` and the editable G/D template |
 | Can scores be compared across forms or waves? | Anchor source, values, scale/direction, centering, overlap, invariance assumption, drift and uncertainty basis | [Linking workflow](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-linking-and-dff.html), `review_mfrm_anchors()` → anchored fit / `build_linking_review()` → `build_summary_table_bundle()` |
-| Does a particular combination or group need investigation? | Signed bias/DFF contrast, cell evidence, reference group, multiplicity, uncertainty and follow-up | Specified `estimate_bias()` / `analyze_dff()` → `plot()` / tables. Supply matching bias results to `reporting_checklist()` and `build_apa_outputs()`; `dif_report()` serves DFF. |
+| Does a particular combination or group need investigation? | Signed bias/DFF contrast, cell evidence, reference group, multiplicity, uncertainty and follow-up | Specified `estimate_bias()` / `analyze_dff()` → `plot()` / tables. Supply matching bias results to `mfrm_report(fit, type = "checklist")` and `build_apa_outputs()`; `mfrm_report(dif, type = "dff")` serves DFF. |
 | Does a model choice change the answer? | Comparison basis, AIC/BIC where comparable, eligible LRT, numerical checks and changes in the target estimates/conclusion | `compare_mfrm()` → `build_model_choice_review()` → `build_summary_table_bundle()`; [model choice](mfrmr-model-choice.html#compare-conclusions-not-just-fit-statistics) |
 | What unexplained structure or grouping merits follow-up? | Node/feature definition, residual versus observed-score basis, overlap, missingness, selection choices and exploratory stability | [Visual diagnostics](mfrmr-visual-diagnostics.html) and [feature groups](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html); keep exploration separate from confirmation |
 
@@ -123,9 +123,9 @@ matching agreement keys. The default output folder is `gpcm-report-files`.
 | Separation, Strata, Reliability | `diagnose_mfrm(fit)$reliability` | Separation-based precision, with its recorded SE basis and eligibility; not observed agreement. |
 | Infit/Outfit and ZSTD | `diagnose_mfrm(fit)$fit` | Native MML EAP plug-in fit; not TAM/ConQuest posterior-averaged fit. |
 | Wright map | `plot(fit, diagnostics = diagnostics)` | Locations and targeting; the template deliberately draws points without implying qualified intervals. |
-| Category-probability curves | `plot(fit, type = "ccc")`; `category_curves_report(fit)` | Conditional reference profiles; retain their step/slope owners and reference settings. |
+| Category-probability curves | `plot(fit, type = "ccc")`; `mfrm_report(type = "category_curves", fit)` | Conditional reference profiles; retain their step/slope owners and reference settings. |
 | Krippendorff's alpha | `krippendorff_alpha_table()` on the ratings | A separate observed-agreement calculation. `mfrm_report()` does not automatically add it. |
-| Draft Methods/Results and reporting gaps | `mfrm_report(..., style = "apa")`, `build_apa_outputs()`, `reporting_checklist()` | Draft text and evidence tracking; recruitment, design justification and the substantive answer still come from the researcher. |
+| Draft Methods/Results and reporting gaps | `mfrm_report(..., style = "apa")`, `build_apa_outputs()`, `mfrm_report(fit, type = "checklist")` | Draft text and evidence tracking; recruitment, design justification and the substantive answer still come from the researcher. |
 
 These outputs can support a paper, but their presence does not qualify every
 claim. In particular, a converged one-family GPCM can retain incomplete
@@ -198,7 +198,7 @@ results$row_retention
 results$decision
 
 # Record the iteration limit, integration grid, and numerical stopping details
-spec <- specifications_report(fit)
+spec <- mfrm_report(type = "specifications", fit)
 spec$convergence_control
 results$overview[, c("OptimizerMethod", "ConvergenceStatus", "RequestedReltol", "EffectiveReltol")]
 ```
@@ -264,7 +264,7 @@ They are not interchangeable, and neither is a rater or criterion SE.
 ## 2. Check uncertainty and fit before writing the answer
 
 ```{r precision}
-prec <- precision_review_report(fit, diagnostics = diag)
+prec <- mfrm_report(type = "precision", fit, diagnostics = diag)
 prec$profile[, c(
   "PrecisionTier", "SupportsFormalInference", "PersonSEBasis", "NonPersonSEBasis"
 )]
@@ -706,7 +706,7 @@ unknown study details with assumptions from the synthetic example.
 ## 4. Review gaps and generate draft text
 
 ```{r checklist}
-chk <- reporting_checklist(fit, diagnostics = diag, include_references = TRUE)
+chk <- mfrm_report(type = "checklist", fit, diagnostics = diag, include_references = TRUE)
 chk$section_summary
 subset(chk$checklist, !DraftReady, c("Section", "Item", "NextAction"))
 
@@ -762,7 +762,7 @@ MFRM reporting guide, not a certification of journal compliance.
 | Raters, tasks, and rubric | Input facet labels and `data_summary$score_distribution`. | Rater expertise, recruitment and training, calibration, scoring instructions, task selection, category meanings, administration, blinding where relevant, and rubric rationale. For automated scoring, record the model/version, scoring date, prompts, exemplars and other scoring settings. Labels alone do not document these. |
 | Assignment, overlap, and linkage | `data_summary$structural_missingness`, `$design_connectivity`, `$linkage_summary`; diagnostic subset information. | Who rated whom, crossing/nesting, planned overlap, occasions/forms, allocation process, and substantive justification for common-scale comparisons. Supply the roster and any anchor provenance. |
 | Missing data, duplicates, and exclusions | `data_summary$missing`, `$duplicate_cell_summary`, `$row_retention`; `results$row_retention`. | Missing codes and reasons, planned versus absent ratings, treatment of repeated records, exclusion rules and counts at each stage, and missingness assumptions. Explain differences between preparation and fitting counts. |
-| Model and estimand | `results$settings_overview`, `$population_overview`; model call and `specifications_report(fit)`. | Why RSM/PCM/GPCM and MML/JML answer the question; population distribution, threshold structure, constraints, orientation, weights, anchors, and any interactions. State what score or contrast is estimated. |
+| Model and estimand | `results$settings_overview`, `$population_overview`; model call and `mfrm_report(type = "specifications", fit)`. | Why RSM/PCM/GPCM and MML/JML answer the question; population distribution, threshold structure, constraints, orientation, weights, anchors, and any interactions. State what score or contrast is estimated. |
 | Computation and reproducibility | `results$overview`, `$decision`; recorded estimation controls and replay/manifest export. | Software versions, optimizer and integration settings, tolerances, iteration limits, convergence problems and remedies, and relevant numerical sensitivity. Retain the exact analysis script. |
 | Estimates and uncertainty | `as.data.frame(fit)`; `fit_measures_table()`; person/facet/step summaries. | Units, direction, reference constraints, SE and interval basis and level, uncertainty for planned contrasts, effect magnitude, and practical interpretation. Do not invent unavailable contrast tests. |
 | Model fit and local diagnostics | `diag_summary$overall_fit`, `$diagnostic_basis`; `plot()`, `unexpected_response_table()`, optional residual PCA. | Which assumptions each analysis probes, diagnostic mode, thresholds and their rationale/source, inspected flags, and follow-up decisions. Global fit does not establish validity; PCA does not prove unidimensionality. |

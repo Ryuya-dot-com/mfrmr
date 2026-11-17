@@ -285,6 +285,7 @@ build_mfrm_resampling_spec <- function(data,
 #' )
 #' draws <- draw_mfrm_resamples(spec, keep_data = FALSE)
 #' summary(draws)$overview
+#' @rdname build_mfrm_resampling_spec
 #' @export
 draw_mfrm_resamples <- function(spec, keep_data = TRUE) {
   if (!inherits(spec, "mfrm_resampling_spec")) {
@@ -378,14 +379,7 @@ print.mfrm_resampling_spec <- function(x, ...) {
 print.summary.mfrm_resampling_spec <- function(x, ...) {
   cat("MFRM Observed-Data Resampling Specification Summary\n")
   print(x$overview, row.names = FALSE)
-  if (nrow(x$stratum_overview) > 0L) {
-    cat("\nStrata\n")
-    print(x$stratum_overview, row.names = FALSE)
-  }
-  if (nrow(x$preserve_overview) > 0L) {
-    cat("\nPreserve-facet coverage basis\n")
-    print(x$preserve_overview, row.names = FALSE)
-  }
+  print_summary_sections(x, .mfrmr_summary_print_sections[["print.summary.mfrm_resampling_spec_01"]])
   cat("\nTerminology\n")
   for (line in x$terminology) cat(" - ", line, "\n", sep = "")
   invisible(x)
@@ -484,14 +478,7 @@ NULL
 print.summary.mfrm_resamples <- function(x, ...) {
   cat("MFRM Observed-Data Resampling Draws Summary\n")
   print(x$overview, row.names = FALSE)
-  if (nrow(x$stratum_summary) > 0L) {
-    cat("\nStratum summary\n")
-    print(x$stratum_summary, row.names = FALSE)
-  }
-  if (nrow(x$preserve_summary) > 0L) {
-    cat("\nPreserve-facet summary\n")
-    print(x$preserve_summary, row.names = FALSE)
-  }
+  print_summary_sections(x, .mfrmr_summary_print_sections[["print.summary.mfrm_resamples_01"]])
   cat("\nTerminology\n")
   for (line in x$terminology) cat(" - ", line, "\n", sep = "")
   invisible(x)

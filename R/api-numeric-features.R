@@ -6,10 +6,8 @@
 #' fewer variables; the default retains all nonzero components. PCA does not
 #' estimate rater quality, ability or groups. Identifiers and omitted rows are
 #' retained.
-#' @param x For `mfrm_pca()`: A table reviewed with [mfrm_features()]. For `mfrm_cluster(..., method = "kmeans")`,
-#'   a result from `mfrm_pca()` is also accepted.
-#'
-#' For `plot()`: A result from [mfrm_pca()].
+#' @param x For `mfrm_pca()`: A table reviewed with [mfrm_features()].
+#'   For `plot()`: A result from [mfrm_pca()].
 #' @param components For `mfrm_pca()`: Number of leading principal components to retain. `NULL`
 #'   retains the numerical rank, using `sqrt(.Machine$double.eps)` relative to
 #'   the largest singular value. A requested count cannot exceed that rank.
@@ -115,77 +113,19 @@ summary.mfrm_pca <- function(object, ...) object$variance
 
 #' K-means groups from numeric features or retained principal components
 #'
-#' Divide people, raters or tasks into k groups with similar numeric attributes.
-#' The algorithm minimizes squared distances within groups, using the numeric
-#' features or retained principal components supplied by you. The groups are
-#' descriptive; they do not measure ability or rater quality.
-#'
-#' @inheritParams mfrm_pca
-#' @inheritParams mfrm_cluster
-#' @param nstart Number of random starts; default 25.
-#' @param iter.max Maximum iterations per start; default 100.
-#' @param seed Nonnegative integer seed. The default is 1. The caller's random
-#'   number state is restored; the RNG kind is retained in `settings`.
-#' @param silhouette Compute Euclidean silhouettes (`TRUE`, default) using the
-#'   optional `cluster` package. This requires pairwise distances and is limited
-#'   to 5,000 included entities. Explicit `FALSE` avoids that quadratic allocation;
-#'   silhouettes then remain unavailable, not zero. Other memory/time limits
-#'   still depend on the dimensions and numerical workload.
-#' @return An `mfrm_clusters` object with memberships, original-unit profiles,
-#'   cluster sizes and silhouettes, `centers` in the fitted space, per-cluster
-#'   `withinss`, `totss`, `tot.withinss`, the input PCA when used, original
-#'   feature data, transformation and settings. K-means has no medoids.
-#'   Numeric profiles use original feature units and sample SDs: SD is `NA`
-#'   for a one-entity group and zero for identical values in a larger group.
-#'   A singleton's silhouette is zero by convention, not evidence of separation.
-#' @details Uses [stats::kmeans()] with Hartigan-Wong updates and the stated
-#'   random starts. Warnings, nonconvergence and nonfinite sums of squares stop
-#'   the analysis; no failed run is silently presented as a usable result.
-#'   Multiple starts reduce sensitivity to initialization without guaranteeing
-#'   a global optimum. Review alternative seeds separately when needed. Labels
-#'   are arbitrary and results can depend on input order, ties and RNG kind.
-#'
-#'   Numeric preprocessing matches [mfrm_pca()]. With a PCA input, its retained
-#'   scores are used exactly: do not respecify `weights`, `scale` or `missing`.
-#'   Full-rank PCA preserves the distance objective; truncation changes it.
-#'   No component whitening is performed. The centers of a truncated PCA are
-#'   coordinates in that subspace; `profiles` describe the original attributes.
-#'   Categorical codes must not be converted to numeric solely to pass this
-#'   interface. Use [mfrm_cluster()] for Gower/PAM mixed-feature groups.
-#'
-#'   Compare fitted partitions using [mfrm_cluster_compare()]. Silhouettes
-#'   calculated in different geometries are not directly comparable evidence
-#'   of which feature set, scale or component count is correct. Grouping does
-#'   not propagate measurement uncertainty or establish rater quality.
-#' @section Reading clustering metrics:
-#' `withinss` is the sum of squared Euclidean distances from members to their
-#' cluster center; `tot.withinss` sums it across clusters. `totss` uses the
-#' grand center instead. The descriptive ratio 1 - tot.withinss/totss is the
-#' fraction of fitted-space scatter between groups, not predictive accuracy,
-#' latent reliability or a test of the chosen k. Increasing k usually improves
-#' this ratio even without meaningful groups. These sums have squared units
-#' of the transformed coordinates (SD-scaled/weighted features or retained PCs),
-#' not necessarily original feature units. Compare them only for the same rows
-#' and geometry. For silhouette a(i), b(i), range, singleton conventions and
-#' profile denominators, see the metric section of [mfrm_cluster()].
-#' @seealso [mfrm_pca()], [mfrm_cluster()], [mfrm_cluster_imputed()],
-#'   [mfrm_cluster_compare()], [plot.mfrm_clusters()], [stats::kmeans()]
-#' @examples
-#' raters <- data.frame(Rater = paste0("R", 1:8),
-#'   ExperienceYears = c(1, 2, 3, 4, 10, 12, 13, 15),
-#'   WorkshopHours = c(4, 12, 8, 20, 12, 28, 16, 32),
-#'   AnnualRatings = c(80, 120, 90, 160, 280, 350, 300, 400))
-#' features <- mfrm_features(raters, "Rater", names(raters)[-1])
-#' direct <- mfrm_cluster(method = "kmeans", features, 2, seed = 17, silhouette = FALSE)
-#' reduced <- mfrm_cluster(method = "kmeans", mfrm_pca(features, components = 2), 2,
-#'   seed = 17, silhouette = FALSE)
-#' summary(mfrm_cluster_compare(list(Features = direct, TwoPCs = reduced)))
-#' direct$centers
-#' direct$profiles$numeric
-#' @description For new code use `mfrm_cluster(..., method = "kmeans")`.
-#'   The former method-specific entry is no longer exported. This guide retains
-#'   the method's settings, geometry and interpretation.
+#' @details
+#' **Numeric k-means (`method = "kmeans"`)**: Uses [stats::kmeans()] with
+#' Hartigan-Wong updates (`nstart = 25`, `iter.max = 100`, `seed = 1`,
+#' `scale = TRUE`, `silhouette = TRUE` up to 5,000 included entities). Numeric
+#' preprocessing matches [mfrm_pca()]; when `x` is an `mfrm_pca` result, its
+#' saved scores are used without respecifying `weights`, `scale`, or `missing`.
+#' Warnings, nonconvergence, and nonfinite sums of squares fail closed. Returns
+#' an `mfrm_clusters` object with `centers`, `withinss`, `totss`, and
+#' `tot.withinss` (`medoids` is `NULL`); `1 - tot.withinss / totss` is
+#' descriptive fitted-space scatter, not predictive accuracy or a test of `k`.
+#' @aliases mfrm_cluster_kmeans
 #' @usage NULL
+#' @rdname mfrm_cluster
 mfrm_cluster_kmeans <- function(x, k, weights = NULL,
                                 missing = c("error", "omit"), scale = TRUE,
                                 nstart = 25, iter.max = 100, seed = 1,

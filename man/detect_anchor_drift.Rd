@@ -89,18 +89,12 @@ Useful for monitoring rater drift over time or checking the stability of
 item banks.
 }
 \details{
-For each non-reference wave, the function extracts facet-level estimates
-using \code{\link[=make_anchor_table]{make_anchor_table()}} and computes the element-by-element difference
-against the reference wave.  Standard errors are obtained from
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} applied to each fit.  Only elements common to both the
-reference and a comparison wave are included. Before reporting drift, the
-function removes the weighted common-element link offset between the two
-waves so that \code{Drift} represents residual instability rather than the
-overall shift between calibrations. The function also records how many
-common elements survive the screening step within each linking facet and
-treats fewer than 5 retained common elements per facet as thin support.
-This count is a package screening convention, not a universal adequacy
-threshold.
+Compare each fitted wave with the reference using common facet-level estimates
+from \code{\link[=make_anchor_table]{make_anchor_table()}} and SEs from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. Removing the
+weighted common-element offset yields residual \code{Drift}, not the overall
+calibration shift. Fewer than five retained common elements in any linking
+facet is marked as thin support; this is a package screening convention,
+not a universal adequacy threshold.
 
 One \code{LinkOffset} is pooled across all selected common elements and facets.
 If at least one pair has finite positive SEs, only pairs with such SEs
@@ -157,65 +151,33 @@ subset (e.g., \code{facets = "Criterion"}) restricts comparison to those facets
 only.
 
 \code{plot()} method: Plot a saved anchor-drift review
-
-Inspect relative changes after the common-element offset used by
-\code{\link[=detect_anchor_drift]{detect_anchor_drift()}}. Read \code{summary(x)} and link support alongside the plot.
 }
-\section{Which function should I use?}{
+\section{Reading the drift review}{
 
+Supply a named list of fitted waves, for example \code{list(Spring = fit_s, Fall = fit_f)}. Read \code{summary(drift)} before \code{drift$drift_table}, then inspect
+common-element support and flagged or unavailable rows.
 \itemize{
-\item Use \code{\link[=anchor_to_baseline]{anchor_to_baseline()}} when your starting point is raw new data plus a
-single baseline fit.
-\item Use \code{detect_anchor_drift()} when you already have multiple fitted waves
-and want a reference-versus-wave comparison.
-\item Use \code{\link[=build_equating_chain]{build_equating_chain()}} when the waves form a sequence and you need
-cumulative linking offsets.
-}
-}
-
-\section{Interpreting output}{
-
-\itemize{
-\item \verb{$drift_table}: one row per element x wave combination, with columns
-\code{Facet}, \code{Level}, \code{Wave}, \code{Ref_Est}, \code{Wave_Est}, \code{LinkOffset}, \code{Drift},
-\code{SE_Ref}, \code{SE_Wave}, \code{SE}, \code{Drift_SE_Ratio}, \code{LinkSupportAdequate}, and
-\code{Flag}.  Large drift signals instability after alignment to the
-common-element link.
-\item \verb{$summary}: aggregated statistics by facet and wave: number of elements,
-mean/max absolute drift, and count of flagged elements.
-\item \verb{$common_elements}: pairwise common-element counts in tidy table form.
-Small
-overlap weakens the comparison and results should be interpreted
-cautiously.
-\item \verb{$common_by_facet}: retained common-element counts by linking facet for
-each reference-vs-wave comparison. \code{LinkSupportAdequate = FALSE} means the
-link rests on fewer than 5 retained common elements in at least one facet.
-\item \verb{$config}: records the analysis parameters for reproducibility.
-\item A practical reading order is \code{summary(drift)} first, then
-\code{drift$drift_table}, then \code{drift$common_by_facet} if overlap looks thin.
-}
+\item \code{drift_table} contains element-by-wave \code{Facet}, \code{Level}, \code{Wave}, \code{Ref_Est},
+\code{Wave_Est}, \code{LinkOffset}, \code{Drift}, \code{SE_Ref}, \code{SE_Wave}, \code{SE},
+\code{Drift_SE_Ratio}, \code{LinkSupportAdequate} and \code{Flag}.
+\item \code{summary} aggregates counts and mean/maximum absolute drift by facet and
+wave. \code{common_elements} records pairwise overlap; \code{common_by_facet} counts
+retained elements per linking facet. \code{LinkSupportAdequate = FALSE} marks
+fewer than five in at least one facet, not a verdict on all linking assumptions.
+\item \code{config} records the analysis settings. Review flags and sensitivity to
+anchor choices with substantive evidence before exclusion or rater retraining.
 }
 
-\section{Typical workflow}{
-
-\enumerate{
-\item Fit separate models for each administration wave.
-\item Combine into a named list: \code{fits <- list(Spring = fit_s, Fall = fit_f)}.
-\item Call \code{drift <- detect_anchor_drift(fits)}.
-\item Review \code{summary(drift)} and \code{plot(drift)}.
-\item Flagged elements may need to be removed from anchor sets or
-investigated for substantive causes (e.g., rater re-training).
-}
+Use \code{\link[=anchor_to_baseline]{anchor_to_baseline()}} for raw new data and a baseline fit, or
+\code{\link[=build_equating_chain]{build_equating_chain()}} for cumulative offsets across ordered adjacent waves.
+These are different starting points, not required extra steps.
 }
 
-\section{Interpretation}{
+\section{Reading drift plots}{
 
-For \code{plot()}:
-
-Drift and heatmap views show the saved relative drift. Flags use the
-screening rules chosen during analysis; changing the display does not
-recalibrate these rules. Subtracting the common-element offset can remove
-a panel-wide shift, so unflagged elements do not establish absence of annual drift.
+Drift and heatmap views reuse saved residuals and screening rules; changing
+the display does not recalibrate them. Interpret with the offset and support
+review above: unflagged elements do not establish absence of panel-wide change.
 
 Forest whiskers describe individual wave estimates, not uncertainty in
 their differences. They do not include linking-offset uncertainty or
@@ -275,3 +237,6 @@ if (interactive()) {
 
 \code{\link[=detect_anchor_drift]{detect_anchor_drift()}}, \link{mfrmr_plot_migration}
 }
+\concept{confidence intervals}
+\concept{linking}
+\concept{visual diagnostics}

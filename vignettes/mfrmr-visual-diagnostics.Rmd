@@ -38,7 +38,7 @@ Model examples use packaged data; the feature hierarchy uses eight fictional
 raters. The `"publication"` and `"monochrome"` presets illustrate reusable
 styles, including views that remain interpretable without colour.
 
-If you are selecting figures for a report, use `reporting_checklist()` before
+If you are selecting figures for a report, use `mfrm_report(fit, type = "checklist")` before
 or alongside this vignette. Its `"Visual Displays"` rows now mirror the
 public plotting family shown here.
 
@@ -223,7 +223,7 @@ fit <- fit_mfrm(
 )
 
 diag <- diagnose_mfrm(fit, residual_pca = "none")
-checklist <- reporting_checklist(fit, diagnostics = diag)
+checklist <- mfrm_report(type = "checklist", fit, diagnostics = diag)
 subset(
   checklist$checklist,
   Section == "Visual Displays",
@@ -425,7 +425,7 @@ For observed counts and stored step points, save `rating_scale_table(fit, diag)`
 and use `plot(result, type = "counts")` or `type = "thresholds"`; both support
 `as_ggplot()`. Counts in that figure are pooled: inspect `owner_category_table`
 for each step owner's denominator and category support. Stored step SEs are
-not curve or gap intervals. The separate `category_curves_report()` bundle
+not curve or gap intervals. The separate `mfrm_report(fit, type = "category_curves")` bundle
 also returns a `ggplot` for its multi-family overview and selected curve views;
 custom graphics from `plot_data()` must retain the curve family and group.
 
@@ -479,7 +479,7 @@ diag_strict <- diagnose_mfrm(
   diagnostic_mode = "both"
 )
 
-strict_checklist <- reporting_checklist(fit_strict, diagnostics = diag_strict)
+strict_checklist <- mfrm_report(type = "checklist", fit_strict, diagnostics = diag_strict)
 subset(
   strict_checklist$checklist,
   Section == "Visual Displays" &
@@ -899,7 +899,7 @@ Interpretation:
   cell counts and calibration limitations. Several views of the same estimates
   are not independent confirmation of bias.
 
-For repeat plotting, save `bias_interaction_report(bias, ...)` after choosing
+For repeat plotting, save `mfrm_report(type = "bias_interaction", bias, ...)` after choosing
 the review thresholds. `plot(result, type = "scatter")` compares the
 observed-minus-expected score average with conditional bias in logits;
 `type = "ranked"` shows saved interaction estimates. Both `plot()` and
@@ -1349,7 +1349,7 @@ fresh-session workflow.
 
 For a compact visual workflow:
 
-1. `reporting_checklist()` when you want the package to route which figures are already supported.
+1. `mfrm_report(fit, type = "checklist")` when you want the package to route which figures are already supported.
 2. `plot()` for one-page triage.
 3. `plot()`, `plot()`, `plot()`, and `plot()` for local follow-up.
 4. `plot(fit, type = "wright")` and `plot(fit, type = "pathway")` for targeting and scale interpretation.

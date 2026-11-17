@@ -9,35 +9,12 @@
 # optimizer blocks separately, and gives positive boundary certificates
 # precedence over finite-point stationarity language.
 
-mfrmr_jml_gpcm_terminal_gradient_contract_version <- function() {
-  "mfrmr-jml-gpcm-fixed-objective-terminal-gradient-0.2.3-v1"
-}
+mfrmr_jml_gpcm_terminal_gradient_empty_block_table <- .mfrmr_empty_table(c(Block = "character", FreeCoordinates = "integer", GradientSupNorm = "double",
+    GradientRMS = "double", WithinImplementationTolerance = "logical"))
 
-mfrmr_jml_gpcm_terminal_gradient_empty_block_table <- function() {
-  data.frame(
-    Block = character(0),
-    FreeCoordinates = integer(0),
-    GradientSupNorm = numeric(0),
-    GradientRMS = numeric(0),
-    WithinImplementationTolerance = logical(0),
-    stringsAsFactors = FALSE
-  )
-}
-
-mfrmr_jml_gpcm_terminal_gradient_empty_probe_table <- function() {
-  data.frame(
-    OptimizerIndex = integer(0),
-    Block = character(0),
-    ParameterValue = numeric(0),
-    Step = numeric(0),
-    AnalyticGradient = numeric(0),
-    NumericGradient = numeric(0),
-    AbsoluteDifference = numeric(0),
-    ScaledDifference = numeric(0),
-    Evaluated = logical(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_gpcm_terminal_gradient_empty_probe_table <- .mfrmr_empty_table(c(OptimizerIndex = "integer", Block = "character", ParameterValue = "double",
+    Step = "double", AnalyticGradient = "double", NumericGradient = "double", AbsoluteDifference = "double",
+    ScaledDifference = "double", Evaluated = "logical"))
 
 mfrmr_jml_gpcm_terminal_gradient_block_labels <- function(sizes) {
   unlist(lapply(names(sizes), function(block) {
@@ -81,7 +58,7 @@ mfrmr_jml_gpcm_terminal_gradient_block_summary <- function(gradient,
   gradient <- as.numeric(gradient)
   labels <- mfrmr_jml_gpcm_terminal_gradient_block_labels(sizes)
   if (length(gradient) == 0L || length(labels) != length(gradient)) {
-    return(mfrmr_jml_gpcm_terminal_gradient_empty_block_table())
+    return(mfrmr_jml_gpcm_terminal_gradient_empty_block_table)
   }
   rows <- lapply(unique(labels), function(block) {
     values <- gradient[labels == block]
@@ -118,8 +95,8 @@ audit_mfrm_jml_gpcm_terminal_gradient <- function(
   method <- as.character(config$method %||% "unknown")[1]
   model <- as.character(config$model %||% "unknown")[1]
   free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
-  empty_blocks <- mfrmr_jml_gpcm_terminal_gradient_empty_block_table()
-  empty_probes <- mfrmr_jml_gpcm_terminal_gradient_empty_probe_table()
+  empty_blocks <- mfrmr_jml_gpcm_terminal_gradient_empty_block_table
+  empty_probes <- mfrmr_jml_gpcm_terminal_gradient_empty_probe_table
 
   finish <- function(state, evaluated, detail,
                      reason_codes,
@@ -143,7 +120,7 @@ audit_mfrm_jml_gpcm_terminal_gradient <- function(
                      polish_history_state = "not_evaluated") {
     list(
       contract_version =
-        mfrmr_jml_gpcm_terminal_gradient_contract_version(),
+        .mfrmr_const_mfrmr_jml_gpcm_terminal_gradient_contract_version,
       method = method,
       model = model,
       estimator_identity = "unpenalized_fixed_effects_jml_no_finite_box",
@@ -409,7 +386,7 @@ audit_mfrm_jml_gpcm_terminal_gradient <- function(
     metrics$TerminalGradientSupNorm <= implementation_tolerance
   boundary_contract_matches <- identical(
     as.character(boundary_classification$contract_version %||% "")[1],
-    mfrmr_jml_gpcm_boundary_classification_contract_version()
+    .mfrmr_const_mfrmr_jml_gpcm_boundary_classification_contract_version
   ) && identical(
     as.character(boundary_classification$objective_identity %||% "")[1],
     "identified_conditional_joint_log_likelihood"

@@ -74,8 +74,9 @@ e.g. \code{~ degree + distance} for an undirected graph. See \code{ergm::gof.erg
 
 \item{...}{For \code{summary.mfrm_network_ergm()}: Unused; unexpected arguments are rejected by extractors.
 
-For \code{plot()}: For GOF, arguments passed to ergm's \code{plot.gof}; for coefficients,
-arguments passed to base \code{\link[graphics:plot]{graphics::plot()}}.}
+For \code{plot()}: \code{main} overrides the saved title. Both coefficient and GOF
+views return ggplots from saved tables; edit the returned ggplot for
+other display controls. Backend \code{plot.gof} controls are not forwarded.}
 
 \item{parm}{Coefficient names or positive integer positions; NULL selects all.}
 

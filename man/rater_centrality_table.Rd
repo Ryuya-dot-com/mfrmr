@@ -96,12 +96,12 @@ its RSM formulation. They are references for the distinction, not additional
 estimation methods available through this function.
 }
 \examples{
-ratings <- load_mfrmr_data("example_core")
-rsm <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", model = "RSM", maxit = 100)
-pcm <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", model = "PCM", step_facet = "Rater",
-                maxit = 100)
+# Saved JML/RSM and JML/PCM fits of the same synthetic example_core ratings.
+# PCM steps belong to Rater; a Criterion-step fit would answer another question.
+# consumer-fits.R gives the data-to-fit recipe for these inputs.
+saved <- readRDS(system.file("examples", "consumer-fits.rds", package = "mfrmr"))
+rsm <- saved$rsm
+pcm <- saved$pcm
 centrality <- rater_centrality_table(rsm, pcm, rater_facet = "Rater")
 centrality$table
 centrality$thresholds

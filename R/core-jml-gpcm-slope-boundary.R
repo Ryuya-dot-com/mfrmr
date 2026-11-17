@@ -22,75 +22,24 @@
 # They do not by themselves certify a finite joint GPCM maximum, uncertainty,
 # or external-comparison eligibility.
 
-mfrmr_jml_gpcm_slope_empty_group_table <- function() {
-  data.frame(
-    SlopeFacet = character(0),
-    Level = character(0),
-    SlopeIndex = integer(0),
-    LogSlopeEstimate = numeric(0),
-    SlopeEstimate = numeric(0),
-    EffectiveObservations = integer(0),
-    EffectiveWeight = numeric(0),
-    MaxCompatible = logical(0),
-    MinCompatible = logical(0),
-    MaxSupportMargin = numeric(0),
-    MinSupportMargin = numeric(0),
-    StrictMaxRows = integer(0),
-    StrictMinRows = integer(0),
-    CurrentLogLikelihood = numeric(0),
-    HighBoundaryLogLikelihood = numeric(0),
-    LowBoundaryLogLikelihood = numeric(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_gpcm_slope_empty_group_table <- .mfrmr_empty_table(c(SlopeFacet = "character", Level = "character", SlopeIndex = "integer",
+    LogSlopeEstimate = "double", SlopeEstimate = "double", EffectiveObservations = "integer",
+    EffectiveWeight = "double", MaxCompatible = "logical", MinCompatible = "logical", MaxSupportMargin = "double",
+    MinSupportMargin = "double", StrictMaxRows = "integer", StrictMinRows = "integer", CurrentLogLikelihood = "double",
+    HighBoundaryLogLikelihood = "double", LowBoundaryLogLikelihood = "double"))
 
-mfrmr_jml_gpcm_slope_empty_target_table <- function() {
-  data.frame(
-    ParameterId = character(0),
-    ParameterClass = character(0),
-    Facet = character(0),
-    Level = character(0),
-    OptimizerLogEstimate = numeric(0),
-    OptimizerSlopeEstimate = numeric(0),
-    PositiveBoundaryPath = logical(0),
-    NegativeBoundaryPath = logical(0),
-    CandidateStatus = character(0),
-    EvaluationState = character(0),
-    ReasonCodes = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_gpcm_slope_empty_target_table <- .mfrmr_empty_table(c(ParameterId = "character", ParameterClass = "character", Facet = "character",
+    Level = "character", OptimizerLogEstimate = "double", OptimizerSlopeEstimate = "double",
+    PositiveBoundaryPath = "logical", NegativeBoundaryPath = "logical", CandidateStatus = "character",
+    EvaluationState = "character", ReasonCodes = "character"))
 
-mfrmr_jml_gpcm_slope_empty_pair_table <- function() {
-  data.frame(
-    PairId = character(0),
-    PositiveLevel = character(0),
-    NegativeLevel = character(0),
-    PositiveIndex = integer(0),
-    NegativeIndex = integer(0),
-    MaxSupportMargin = numeric(0),
-    MinSupportMargin = numeric(0),
-    StrictRows = integer(0),
-    DirectionSum = numeric(0),
-    CurrentLogLikelihood = numeric(0),
-    BoundaryLogLikelihood = numeric(0),
-    BoundaryImprovement = numeric(0),
-    Certified = logical(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_gpcm_slope_empty_pair_table <- .mfrmr_empty_table(c(PairId = "character", PositiveLevel = "character", NegativeLevel = "character",
+    PositiveIndex = "integer", NegativeIndex = "integer", MaxSupportMargin = "double", MinSupportMargin = "double",
+    StrictRows = "integer", DirectionSum = "double", CurrentLogLikelihood = "double", BoundaryLogLikelihood = "double",
+    BoundaryImprovement = "double", Certified = "logical"))
 
-mfrmr_jml_gpcm_slope_empty_loading_table <- function() {
-  data.frame(
-    PairId = character(0),
-    CoordinateType = character(0),
-    OptimizerIndex = integer(0),
-    Coordinate = character(0),
-    Level = character(0),
-    Loading = numeric(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_gpcm_slope_empty_loading_table <- .mfrmr_empty_table(c(PairId = "character", CoordinateType = "character", OptimizerIndex = "integer",
+    Coordinate = "character", Level = "character", Loading = "double"))
 
 mfrmr_jml_gpcm_slope_targets <- function(levels,
                                           slope_facet,
@@ -102,7 +51,7 @@ mfrmr_jml_gpcm_slope_targets <- function(levels,
                                           reason = "not_evaluated") {
   levels <- as.character(levels)
   n_levels <- length(levels)
-  if (n_levels == 0L) return(mfrmr_jml_gpcm_slope_empty_target_table())
+  if (n_levels == 0L) return(mfrmr_jml_gpcm_slope_empty_target_table)
   positive <- as.logical(positive %||% rep(NA, n_levels))
   negative <- as.logical(negative %||% rep(NA, n_levels))
   candidate <- rep("not_evaluated", n_levels)
@@ -191,10 +140,10 @@ audit_mfrm_jml_gpcm_slope_boundary <- function(
   method <- as.character(config$method %||% NA_character_)
   model <- as.character(config$model %||% NA_character_)
   slope_facet <- as.character(config$slope_facet %||% NA_character_)
-  empty_groups <- mfrmr_jml_gpcm_slope_empty_group_table()
-  empty_targets <- mfrmr_jml_gpcm_slope_empty_target_table()
-  empty_pairs <- mfrmr_jml_gpcm_slope_empty_pair_table()
-  empty_loadings <- mfrmr_jml_gpcm_slope_empty_loading_table()
+  empty_groups <- mfrmr_jml_gpcm_slope_empty_group_table
+  empty_targets <- mfrmr_jml_gpcm_slope_empty_target_table
+  empty_pairs <- mfrmr_jml_gpcm_slope_empty_pair_table
+  empty_loadings <- mfrmr_jml_gpcm_slope_empty_loading_table
 
   finish <- function(state, complete, scope_complete, detail,
                      target_status = empty_targets,

@@ -23,7 +23,7 @@
   } else {
     "For eligible full MML fits, compare prespecified mml_starts at the same fixed/adaptive rule. Auto integration and checkpoints cannot be combined with mml_starts; use a separate fixed-grid review at the retained order."
   }
-  data.frame(
+  out <- data.frame(
     Area = c("Optimization", "Curvature", "Starting values", "Integration", "Reproducible refit"),
     Status = c(d$ConvergenceSeverity %||% "not_assessed",
       if (any(is.finite(curvature))) "recorded" else "not_assessed",
@@ -45,6 +45,21 @@
         "Review estimator-specific diagnostics and uncertainty assumptions; a quadrature check is not applicable.",
       "Use build_mfrm_replay_script(fit) with matching original inputs when replay metadata are available. Save the original fit and change only the declared diagnostic control before comparing results."),
     stringsAsFactors = FALSE)
+  boundary <- mfrm_gpcm_boundary_guidance(fit)
+  if (!is.null(boundary)) {
+    if (boundary$skipped) {
+      out$Status[1:3] <- "not_run"
+      out$Evidence[1:3] <- boundary$issue
+    }
+    out$Status[4] <- "full_maximum_absent"
+    out$Evidence[4] <- "The full finite maximum is absent; this is not a quadrature error."
+    out$NextAction[1:4] <- boundary$actions[3]
+    out$NextAction[5] <- paste("Replay preserves the same boundary when data and model are unchanged.",
+      "Read the recorded reduction and its data basis before considering a different model.")
+    out <- rbind(out, data.frame(Area="Limiting estimates", Status=boundary$limit_status,
+      Evidence=boundary$limit_issue, NextAction=boundary$actions[2]))
+  }
+  out
 }
 
 mfrmr_mml_start_vectors <- function(start, requested, map) {

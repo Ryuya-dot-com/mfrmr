@@ -142,7 +142,7 @@ test_that("nested identities, facet order and weighted projections are invariant
   expected_absolute <- expected_relative + g$components$Task / 3 + g$components$`Rater(Task)` / 6
   expect_equal(d$covariances[[1]]$RelativeError, expected_relative)
   expect_equal(d$covariances[[1]]$AbsoluteError, expected_absolute)
-  expect_error(mfrm_multivariate_d_compare(d, assumption = "normal"), "nested-design intervals")
+  expect_error(compare_mfrm(d, assumption = "normal"), "nested-design intervals")
   path <- tempfile(fileext = ".rds"); on.exit(unlink(path))
   saveRDS(g, path)
   expect_equal(mfrm_d_study(readRDS(path), grid, weights), d)

@@ -41,32 +41,14 @@
 #'   \item `analyses`: the original results, including omitted IDs and all
 #'     imputation-specific partitions, profiles, and settings.
 #'   }
-#' @details Comparisons align entities by ID and do not compare numeric group
-#'   labels directly. Zero changed fraction and an adjusted Rand index of one
-#'   indicate identical partitions, allowing arbitrary renumbering of groups.
-#'   The changed fraction can be small when many pairs are separated in both
-#'   partitions. The adjusted Rand index corrects agreement against random
-#'   partitions with fixed group sizes; it can be negative. Neither measure
-#'   identifies the correct group count or establishes group validity.
-#'
-#'   Mean silhouette and group sizes help describe each partition. Silhouette
-#'   values calculated with different features or weights use different distances;
-#'   their maximum is not an automatic criterion for selecting features or weights. Review
-#'   group profiles in the retained `analyses` alongside the comparison.
-#'
-#'   With multiple imputations, feature selection is applied to the same
-#'   completed data on both sides, without refitting the imputation model.
-#'   A feature omitted from clustering can remain an imputation predictor;
-#'   this comparison does not evaluate its removal from the imputation model.
-#'   Every imputation is retained. Summary means and ranges
-#'   describe sensitivity to settings across those imputations; they are not
-#'   Rubin-pooled estimates, confidence intervals, or sampling stability.
-#'   Conflicting shared feature values or different inclusion masks cause an error rather than a
-#'   silent intersection of entities or imputations. No preferred setting,
-#'   consensus partition, or hypothesis test is returned.
-#'
-#'   For an executable rater-attribute example that pairs multiple imputations
-#'   across settings, see [online feature-analysis guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html).
+#' @details
+#' Comparisons align entities by ID: `ChangedFraction = 0` and
+#' `AdjustedRand = 1` indicate identical partitions up to group relabeling.
+#' Silhouettes computed under different feature sets, scalings, or weights use
+#' different geometries and are not automatic selection criteria. Across
+#' multiple imputations, summary means and ranges describe sensitivity across
+#' the retained completions rather than Rubin-pooled inference; conflicting
+#' shared feature values or differing inclusion masks fail closed.
 #' @references Hubert, L. and Arabie, P. (1985). Comparing partitions.
 #'   Journal of Classification, 2, 193--218. \doi{10.1007/BF01908075}.
 #' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_imputed()],
@@ -95,6 +77,7 @@
 #'   feature_comparison$analysis_summary
 #'   feature_comparison$weights
 #' }
+#' @rdname mfrm_cluster
 #' @export
 mfrm_cluster_compare <- function(analyses) {
   if (!is.list(analyses) || length(analyses) < 2L || is.null(names(analyses)) ||
@@ -262,8 +245,9 @@ mfrm_cluster_compare <- function(analyses) {
   out
 }
 
-#' @rdname mfrm_cluster_compare
-#' @param x,object An object returned by [mfrm_cluster_compare()].
+#' @rdname mfrm_cluster
+#' @param x An object returned by [mfrm_cluster_compare()].
+#' @param object An object returned by [mfrm_cluster_compare()].
 #' @param ... Reserved for method compatibility.
 #' @export
 print.mfrm_cluster_comparison <- function(x, ...) {
@@ -274,6 +258,6 @@ print.mfrm_cluster_comparison <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname mfrm_cluster_compare
+#' @rdname mfrm_cluster
 #' @export
 summary.mfrm_cluster_comparison <- function(object, ...) object$comparison_summary

@@ -1,5 +1,9 @@
 #' Build an explicit simulation specification for MFRM design studies
 #'
+#' @description Define the response model, latent distributions and rating
+#' assignment for [simulate_mfrm_data()]. This creates a reusable specification;
+#' it does not draw responses or fit a model.
+#'
 #' @param n_person Number of persons/respondents to generate.
 #' @param n_rater Number of rater facet levels to generate.
 #' @param n_criterion Number of criterion/item facet levels to generate.
@@ -116,98 +120,20 @@
 #'   `group_levels` must include all template labels and does not rebalance them.
 #'
 #' @details
-#' `build_mfrm_sim_spec()` creates an explicit, portable simulation
-#' specification that can be passed to [simulate_mfrm_data()]. The goal is to
-#' make the data-generating mechanism inspectable and reusable rather than
-#' relying only on ad hoc scalar arguments.
-#'
-#' The resulting object records:
-#' - design counts (`n_person`, `n_rater`, `n_criterion`, `raters_per_person`)
-#' - latent spread assumptions (`theta_sd`, `rater_sd`, `criterion_sd`)
-#' - optional empirical latent support values for semi-parametric simulation
-#' - threshold structure (`threshold_table`)
-#' - optional discrimination structure for `GPCM` (`slope_table`) and
-#'   its identified log-slope spread label (`slope_regime`)
-#' - assignment design (`assignment`)
-#' - optional sparse linked-design controls (`sparse_controls`) when
-#'   `assignment = "sparse_linked"`
-#' - optional empirical assignment profiles (`assignment_profiles`) with
-#'   optional person-level `Group` labels
-#' - optional observed response skeleton (`design_skeleton`)
-#'   with optional person-level `Group` labels and observation-level `Weight`
-#'   values
-#' - optional person-level latent-regression population metadata including
-#'   `population_formula`, `population_coefficients`, `population_sigma2`, and
-#'   a reusable template of person-level covariates, including model-matrix
-#'   xlevel/contrast provenance for categorical covariates
-#' - `planning_scope`, an explicit record that the current planning/forecasting
-#'   helpers target the role-based person x rater-like x criterion-like
-#'   design contract rather than a fully arbitrary-facet planner
-#' - `planning_constraints`, an explicit record of which design variables can
-#'   currently be changed from that specification without rebuilding it
-#' - `planning_schema`, a combined structural contract containing the role
-#'   descriptor, supported scope, mutability map, facet manifest, and the
-#'   normalized named-facet design representation. Its `structural_design_*`
-#'   fields describe deterministic balance and connectivity reviews; they do
-#'   not imply support for arbitrary-facet simulation.
-#' - the `design$facets` parser normalizes named facet counts through the same
-#'   design representation used by the planning helpers
-#' - optional signal tables for DIF and interaction bias
-#'
-#' The current generator targets the package's standard person x rater x
-#' criterion workflow, but the public output names for those two facet roles
-#' can now be customized with `facet_names`. This naming layer improves public
-#' ergonomics; it does not provide a fully arbitrary-facet
-#' simulator. Internally, helper objects keep canonical role mappings so that
-#' planning functions can treat the first non-person facet as rater-like and
-#' the second as criterion-like. When threshold values are provided by
-#' `StepFacet`, the supported step facets are the generated levels of the
-#' chosen public rater-like or criterion-like column. For convenience,
-#' step-facet-specific thresholds can be supplied as a named list or as a
-#' numeric matrix whose row names are `StepFacet` labels.
-#' When `model = "GPCM"`, the same public facet naming rules apply to the
-#' slope table; the current bounded branch keeps `slope_facet` equal to
-#' `step_facet`.
-#' The `slope_regime` field summarizes the centered log-slope spread so
-#' recovery simulations can be read against the intended generator stress
-#' level. Its labels (`unit_slopes`, `near_flat`, `moderate`, and
-#' `high_dispersion`) are package validation labels; they are not model-fit
-#' decisions and should not be interpreted as literature-derived adequacy
-#' thresholds. The GPCM data-generating form follows Muraki (1992,
-#' doi:10.1177/014662169201600206), while information-function interpretation
-#' follows Muraki (1993, doi:10.1177/014662169301700403). The explicit
-#' simulation-specification metadata is intended to support ADEMP-style
-#' simulation reporting as described by Morris, White, and Crowther (2019,
-#' doi:10.1002/sim.8086).
-#'
-#' The `assignment = "sparse_linked"` branch follows sparse
-#' rater-mediated assessment work in treating incomplete rater assignment as
-#' planned missingness rather than incidental nonresponse. Its `link_persons`
-#' and `link_raters_per_person` controls emulate a common linking set so users
-#' can inspect rater-pair common-person counts before using the generated data
-#' in recovery or design studies. This is a design generator and diagnostic
-#' metadata layer; it does not impose a universal minimum-linking cutoff.
-#' Sparse-design motivation follows Wind, Jones, and Grajeda (2023,
-#' doi:10.1177/01466216231182148), Wind and Jones (2018,
-#' doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
-#' (2023).
-#'
-#' If `population_formula` is supplied, the simulation specification carries a
-#' person-level latent-regression generator. This affects only the
-#' person distribution. The current implementation keeps the non-person facets
-#' in the existing many-facet Rasch generator and resamples rows from
-#' `population_covariates` to the requested design size before computing
-#' \eqn{\theta_n = x_n^\top \beta + \varepsilon_n} with
-#' \eqn{\varepsilon_n \sim N(0, \sigma^2)}.
-#'
-#' @section Interpreting output:
-#' This object does not contain simulated data. It is a data-generating
-#' specification that tells [simulate_mfrm_data()] how to generate them.
-#'
+#' Records design counts, normal or empirical latent spreads, `threshold_table`,
+#' optional `GPCM` `slope_table` (`slope_facet == step_facet`, unit geometric
+#' mean; Muraki, 1992, \doi{10.1177/014662169201600206}; validation labels in
+#' `slope_regime`), assignment settings (`"crossed"`, `"rotating"`,
+#' `"sparse_linked"`, `"resampled"`, `"skeleton"`), optional DIF/interaction
+#' `signals`, role-based `planning_scope` / `planning_constraints` /
+#' `planning_schema` (`facet_names` renames the rater-like and criterion-like
+#' roles without enabling arbitrary-facet planning), and optional person
+#' latent-regression generator templates (\eqn{\theta_n = x_n^\top \beta +
+#' \varepsilon_n}, \eqn{\varepsilon_n \sim N(0, \sigma^2)}).
 #' @return An object of class `mfrm_sim_spec`.
 #' @seealso [extract_mfrm_sim_spec()], [simulate_mfrm_data()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("build_mfrm_sim_spec", run.dontrun = TRUE)
 #' \dontrun{
 #' spec <- build_mfrm_sim_spec(
@@ -427,9 +353,8 @@ build_mfrm_sim_spec <- function(n_person = 50,
 
 #' Print an mfrmr simulation specification
 #'
-#' Shows the model, design size, assignment, and latent-distribution settings
-#' needed to understand the specification without printing its complete
-#' machine-readable planning metadata.
+#' @details The `print()` method shows the model, design size, assignment
+#' and latent-distribution settings without printing all stored metadata.
 #'
 #' @param x An `mfrm_sim_spec` object.
 #' @param ... Reserved for generic compatibility.
@@ -575,13 +500,38 @@ peer_review_build_design_skeleton <- function(n_submission,
 #'   `"random"` samples eligible reviewers without replacement.
 #' @param seed Optional seed used only for random peer-review assignment when
 #'   `assignment_mode = "random"`.
-#' @param score_levels,theta_sd,reviewer_sd,criterion_sd,noise_sd,step_span
+#' @param score_levels 
 #'   Generator settings passed to [build_mfrm_sim_spec()]. `reviewer_sd` maps
 #'   to the standard MFRM rater-severity spread.
-#' @param model,step_facet,thresholds Measurement-model settings passed to
+#' @param theta_sd 
+#'   Generator settings passed to [build_mfrm_sim_spec()]. `reviewer_sd` maps
+#'   to the standard MFRM rater-severity spread.
+#' @param reviewer_sd 
+#'   Generator settings passed to [build_mfrm_sim_spec()]. `reviewer_sd` maps
+#'   to the standard MFRM rater-severity spread.
+#' @param criterion_sd 
+#'   Generator settings passed to [build_mfrm_sim_spec()]. `reviewer_sd` maps
+#'   to the standard MFRM rater-severity spread.
+#' @param noise_sd 
+#'   Generator settings passed to [build_mfrm_sim_spec()]. `reviewer_sd` maps
+#'   to the standard MFRM rater-severity spread.
+#' @param step_span 
+#'   Generator settings passed to [build_mfrm_sim_spec()]. `reviewer_sd` maps
+#'   to the standard MFRM rater-severity spread.
+#' @param model Measurement-model settings passed to
 #'   [build_mfrm_sim_spec()]. The first public facet is `Reviewer`; the second
 #'   is `Criterion`.
-#' @param group_levels,dif_effects,interaction_effects Optional signal settings
+#' @param step_facet Measurement-model settings passed to
+#'   [build_mfrm_sim_spec()]. The first public facet is `Reviewer`; the second
+#'   is `Criterion`.
+#' @param thresholds Measurement-model settings passed to
+#'   [build_mfrm_sim_spec()]. The first public facet is `Reviewer`; the second
+#'   is `Criterion`.
+#' @param group_levels Optional signal settings
+#'   passed to [build_mfrm_sim_spec()].
+#' @param dif_effects Optional signal settings
+#'   passed to [build_mfrm_sim_spec()].
+#' @param interaction_effects Optional signal settings
 #'   passed to [build_mfrm_sim_spec()].
 #'
 #' @details
@@ -625,6 +575,7 @@ peer_review_build_design_skeleton <- function(n_submission,
 #'   anchor_submissions = 2
 #' )
 #' peer_spec$peer_review$overview
+#' @rdname build_mfrm_sim_spec
 #' @export
 build_peer_review_sim_spec <- function(n_submission = 50,
                                        n_criterion = 4,
@@ -794,7 +745,6 @@ build_peer_review_sim_spec <- function(n_submission = 50,
 #'   person column recorded in `fit`.
 #' @param group Optional group column name in `source_data` to merge into the
 #'   returned `design_skeleton` as person-level metadata.
-#' @inheritParams build_mfrm_sim_spec
 #'
 #' @details
 #' `extract_mfrm_sim_spec()` uses a fitted model as a practical starting point
@@ -835,8 +785,10 @@ build_peer_review_sim_spec <- function(n_submission = 50,
 #' The same fit-derived specification can feed caveated role-based design
 #' evaluation, population forecasting, and fit-based report/export bundles.
 #' Diagnostic and signal-detection design screening is available with explicit
-#' caveats. Full FACETS score-side contract review, posterior predictive checks,
-#' and MCMC estimation are not available for `GPCM`.
+#' caveats. This simulation-specification helper does not perform full FACETS
+#' score-side review, Bayesian posterior predictive checks or MCMC estimation.
+#' For supported Bayesian specifications, see [export_mfrm_model()]; its
+#' scope is separate from this generator.
 #'
 #' If you want to carry person-level group labels into a fit-derived observed
 #' response skeleton, provide the original `source_data` together with
@@ -862,6 +814,7 @@ build_peer_review_sim_spec <- function(n_submission = 50,
 #' spec$assignment
 #' spec$model
 #' head(spec$threshold_table)
+#' @rdname build_mfrm_sim_spec
 #' @export
 extract_mfrm_sim_spec <- function(fit,
                                   assignment = c("auto", "crossed", "rotating", "resampled", "skeleton"),
@@ -1048,7 +1001,7 @@ extract_mfrm_sim_spec <- function(fit,
       population_terms = prediction_population_terms(fit)
     )
   } else {
-    spec$population <- simulation_empty_population_spec()
+    spec$population <- .mfrmr_const_simulation_empty_population_spec
   }
   spec$source <- "fit_mfrm"
   spec$source_summary <- list(
@@ -1135,17 +1088,9 @@ simulation_validate_numeric <- function(x, arg_name, lower = -Inf) {
   value
 }
 
-simulation_default_output_facet_names <- function() {
-  c("Rater", "Criterion")
-}
-
-simulation_reserved_output_names <- function() {
-  c("Study", "Person", "Score", "Group", "Weight", "TemplatePerson")
-}
-
 simulation_validate_output_facet_names <- function(facet_names = NULL) {
   if (is.null(facet_names)) {
-    return(stats::setNames(simulation_default_output_facet_names(), c("rater", "criterion")))
+    return(stats::setNames(.mfrmr_const_simulation_default_output_facet_names, c("rater", "criterion")))
   }
 
   value <- facet_names
@@ -1161,7 +1106,7 @@ simulation_validate_output_facet_names <- function(facet_names = NULL) {
     )
   }
 
-  reserved <- intersect(value, simulation_reserved_output_names())
+  reserved <- intersect(value, .mfrmr_const_simulation_reserved_output_names)
   if (length(reserved) > 0L) {
     stop(
       "`facet_names` cannot reuse reserved output names: ",
@@ -1196,7 +1141,7 @@ simulation_generated_role_levels <- function(label, fallback_prefix, n_levels) {
 }
 
 simulation_spec_output_facet_names <- function(sim_spec = NULL) {
-  fallback <- simulation_default_output_facet_names()
+  fallback <- .mfrmr_const_simulation_default_output_facet_names
   facet_names <- sim_spec$facet_names %||% NULL
   if (is.null(facet_names)) {
     return(fallback)
@@ -1274,22 +1219,6 @@ simulation_build_empirical_support <- function(latent_distribution,
   )
 }
 
-simulation_empty_population_spec <- function() {
-  list(
-    active = FALSE,
-    formula = NULL,
-    terms = NULL,
-    coefficients = NULL,
-    sigma2 = NULL,
-    design_columns = NULL,
-    xlevels = NULL,
-    contrasts = NULL,
-    person_id = NULL,
-    covariate_template = NULL,
-    notes = "No latent-regression population generator is stored in this simulation specification."
-  )
-}
-
 simulation_build_population_spec <- function(population_formula = NULL,
                                              population_coefficients = NULL,
                                              population_sigma2 = NULL,
@@ -1304,7 +1233,7 @@ simulation_build_population_spec <- function(population_formula = NULL,
         call. = FALSE
       )
     }
-    return(simulation_empty_population_spec())
+    return(.mfrmr_const_simulation_empty_population_spec)
   }
 
   if (!is.data.frame(population_covariates)) {
@@ -1394,7 +1323,7 @@ simulation_build_population_spec <- function(population_formula = NULL,
 simulation_normalize_assignment_profiles <- function(assignment_profiles,
                                                      assignment,
                                                      n_rater,
-                                                     facet_names = simulation_default_output_facet_names()) {
+                                                     facet_names = .mfrmr_const_simulation_default_output_facet_names) {
   if (!identical(assignment, "resampled")) {
     return(NULL)
   }
@@ -1454,7 +1383,7 @@ simulation_normalize_design_skeleton <- function(design_skeleton,
                                                  assignment,
                                                  n_rater,
                                                  n_criterion,
-                                                 facet_names = simulation_default_output_facet_names()) {
+                                                 facet_names = .mfrmr_const_simulation_default_output_facet_names) {
   if (!identical(assignment, "skeleton")) {
     return(NULL)
   }

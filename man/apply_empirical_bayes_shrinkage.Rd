@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-shrinkage.R
 \name{apply_empirical_bayes_shrinkage}
 \alias{apply_empirical_bayes_shrinkage}
+\alias{shrinkage_report}
 \title{Apply empirical-Bayes shrinkage to fitted non-person facet estimates}
 \usage{
 apply_empirical_bayes_shrinkage(
@@ -9,10 +10,11 @@ apply_empirical_bayes_shrinkage(
   facet_prior_sd = NULL,
   shrink_person = FALSE
 )
+
+shrinkage_report(fit)
 }
 \arguments{
-\item{fit}{An \code{mfrm_fit} from \code{\link[=fit_mfrm]{fit_mfrm()}} with a non-empty
-\code{facets$others} table.}
+\item{fit}{An \code{mfrm_fit} object.}
 
 \item{facet_prior_sd}{Optional numeric scalar. When supplied, the
 shrinkage variance is fixed at \code{facet_prior_sd^2} instead of being
@@ -30,6 +32,9 @@ SDs are not sampling SEs for a second normal-model update.}
 The same \code{mfrm_fit}, with augmented columns and a new
 \code{shrinkage_report} list entry, and with
 \code{fit$config$facet_shrinkage} set to \code{"empirical_bayes"}.
+
+A data.frame with one row per facet (and optionally
+\code{"Person"}) or \code{NULL} when shrinkage has not been applied.
 }
 \description{
 Post-hoc normal-model shrinkage helper that augments an \code{mfrm_fit}
@@ -47,6 +52,11 @@ The shrinkage factor is
 \eqn{B_j = \mathrm{SE}_j^2 / (\hat{\tau}^2 + \mathrm{SE}_j^2)}, with
 \eqn{\hat{\delta}_j^{EB} = (1-B_j)\hat{\delta}_j} and
 \eqn{\mathrm{ShrunkSE}_j = \sqrt{(1-B_j)\mathrm{SE}_j^2}}.
+
+Summarize how much an optional empirical-Bayes adjustment moves facet
+estimates toward zero. The report is available after
+\code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}} or
+\code{fit_mfrm(..., facet_shrinkage = "empirical_bayes")}.
 }
 \details{
 \code{ShrunkSE} is a plug-in normal-model quantity conditional on the selected
@@ -82,6 +92,22 @@ remain recorded separately from the latest post-fit shrinkage settings.
 \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}} replays the adjustment after fitting, preserving
 whether diagnostic SEs were attached by \code{\link[=fit_mfrm]{fit_mfrm()}}. Manually edited SEs
 or other table edits require their own reproducible editing steps.
+
+\code{MeanShrinkage} averages available shrinkage fractions: 0 leaves an
+estimate unchanged; 1 pools it at zero. \code{EffectiveDF} sums retained weights
+conditional on the prior variance; it is not a test or AIC degrees of freedom.
+
+\code{NLevels} counts all levels; \code{NLevelsUsed} counts finite estimate/positive-SE
+pairs. \code{Tau2} is the selected prior variance in squared parameter units;
+\code{PriorSource} identifies empirical moments or a supplied prior.
+\code{MeanSE2} averages squared input SEs. Below three eligible levels no
+adjustment is applied, \code{Tau2} is unavailable and shrinkage is zero for
+eligible levels; inspect \code{Note}.
+
+\code{SupportsFormalInference} is false. Full pooling's zero plug-in SE does
+not establish perfect precision. \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}}
+defines the calculation and omitted uncertainty; original MFRM estimates
+remain unchanged.
 }
 \section{Typical workflow}{
 
@@ -115,6 +141,15 @@ head(fit_eb$facets$others[, c("Facet", "Level", "Estimate",
                                "ShrunkEstimate", "ShrinkageFactor")])
 # Look for: rows where `ShrinkageFactor` is large (close to 1) had
 #   their estimates pulled most strongly toward the facet mean (0).
+# Optional workflow; run the example explicitly as shown below.
+# example("shrinkage_report", run.dontrun = TRUE)
+\dontrun{
+toy <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                method = "JML", maxit = 300,
+                facet_shrinkage = "empirical_bayes")
+shrinkage_report(fit)
+}
 }
 \references{
 Efron, B., & Morris, C. (1973). Combining possibly related
@@ -132,4 +167,6 @@ and applications. \emph{Journal of the American Statistical Association,
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}} (which accepts \code{facet_shrinkage} directly),
 \code{\link[=facet_small_sample_review]{facet_small_sample_review()}}, \code{\link[=compute_facet_icc]{compute_facet_icc()}}.
+
+\code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}.
 }

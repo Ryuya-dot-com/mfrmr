@@ -20,7 +20,8 @@
 #'   row-level posterior predictive score distributions), or `"predictive"`
 #'   (ability table plus row-level posterior predictive score distributions,
 #'   defaulting `as.data.frame()` and `plot()` to predictive outputs when
-#'   inspected).
+#'   inspected). For `plot()` the choices are `"intervals"`, `"variance"`,
+#'   or `"predictive"`; the last requires saved predictive results.
 #' @param conditioning Calibration conditioning mode:
 #'   \describe{
 #'     \item{`"posterior"`}{(Default) Integrates ability continuously within
@@ -73,9 +74,27 @@
 #' @param keep_person_draws Logical (default `FALSE`); if `TRUE`, retains
 #'   `$person_draws` with each Person's per-draw conditional mean, conditional
 #'   SD, and log marginal likelihood across the calibration draws.
-#' @param x,parm,row.names,optional,digits,draw,reference,preset,show_legend,title,subtitle,caption
-#'   Arguments for `print()`, `summary()`, `confint()`, `as.data.frame()`, and
-#'   `plot()` methods on `mfrm_posterior_scores`.
+#' @param x A saved `mfrm_posterior_scores` result for display or extraction.
+#' @param parm Person IDs or distinct positive row indices selected by `confint()`;
+#'   `NULL` retains all scored Persons. It reuses the stored interval level;
+#'   request another level by repeating `predict()`, not by scaling its SD.
+#' @param row.names Passed to [base::as.data.frame()].
+#' @param optional Passed to [base::as.data.frame()].
+#' @param digits Numeric display precision; stored results are unchanged.
+#' @param draw Print the returned ggplot when `TRUE`; `FALSE` constructs it only.
+#' @param reference Optional finite numeric reference line in ability units.
+#' @param preset Appearance preset: `"standard"`, `"publication"`,
+#'   `"compact"`, or `"monochrome"`.
+#' @param show_legend Logical; display the plot legend.
+#' @param title Optional plot annotation metadata. `NULL` retains
+#'   the generated text; use [plot_data()] to read cautions and customize the
+#'   returned ggplot to display them as needed.
+#' @param subtitle Optional plot annotation metadata. `NULL` retains
+#'   the generated text; use [plot_data()] to read cautions and customize the
+#'   returned ggplot to display them as needed.
+#' @param caption Optional plot annotation metadata. `NULL` retains
+#'   the generated text; use [plot_data()] to read cautions and customize the
+#'   returned ggplot to display them as needed.
 #' @param what Table component for `as.data.frame()`: `"estimates"` (default,
 #'   or `"predictive"` when `x$settings$type == "predictive"`), `"predictive"`,
 #'   `"decisions"`, `"person_draws"`, or `"dispositions"`.
@@ -106,7 +125,7 @@
 #'     decomposing total posterior variance into conditional measurement
 #'     variance (`WithinSD^2`) and calibration posterior variance
 #'     (`BetweenSD^2`, share `CalibrationVarShare`). `Median`, `Lower`, and
-#'     `Upper` invert the exact continuous mixture CDF
+#'     `Upper` numerically invert the continuous mixture CDF
 #'     \eqn{F_p(x) = M^{-1}\sum_{m=1}^{M} F_{p,m}(x)}.
 #'   \item **Posterior-mean plug-in (`conditioning = "plugin_mean"`)**:
 #'     evaluates \eqn{p(\theta_{\mathrm{new}, p} \mid y_{\mathrm{new}, p}, \hat{\psi})}
@@ -121,7 +140,7 @@
 #'
 #' ### Out-of-sample person likelihood vs `predictive-draws.rds`
 #' Existing-Person `log_lik` arrays saved in `predictive-draws.rds` condition on
-#' sampled calibration abilities \eqn{\theta_j^{(m)}} and therefore validate
+#' sampled calibration abilities \eqn{\theta_j^{(m)}} and can be used to check
 #' conditional observation fit rather than leave-one-Person-out prediction. For
 #' genuinely new Persons (`CalibrationMember == FALSE`),
 #' `PersonLogMarginalLikelihood` integrates \eqn{\theta_{\mathrm{new}, p}} over
@@ -138,7 +157,16 @@
 #'   \item{`predictive`}{Row-level posterior predictive expected scores,
 #'     `PredictiveSD`, `ExpectedMeanSD`, `Residual`, `ModalScore`, and category
 #'     probabilities when `type` is `"both"` or `"predictive"` (`NULL`
-#'     otherwise). `IntegrationMaxDiff` compares category probabilities and
+#'     otherwise). `ExpectedScore` averages category scores using those
+#'     probabilities; `PredictiveSD` describes variation in a replicate rating
+#'     under that row's conditions, including response variability and the
+#'     ability/calibration uncertainty propagated by `conditioning`. Both are
+#'     in score units, not ability units.
+#'     `ExpectedMeanSD` is the SD across calibration draws of each draw's
+#'     ability-integrated expected score. It describes how that mean varies
+#'     with calibration, not the total predictive SD or an SE for a sample
+#'     mean. `Residual` is observed minus expected score, without
+#'     standardization. `IntegrationMaxDiff` compares category probabilities and
 #'     `ExpectedMeanSD` between quadrature orders for each row. `Status` and
 #'     `Reason` describe predictive availability; `PersonStatus` describes the
 #'     separate ability result. Failed predictive checks withhold probabilities
@@ -147,7 +175,11 @@
 #'     ability summaries, log likelihood and cut-score probabilities/SDs only.}
 #'   \item{`decisions`}{Long cut-score probability table (`above_cut` and
 #'     `ability_band`) with `Probability` and `ProbabilityBetweenSD` when
-#'     `cut_scores` is supplied (`NULL` otherwise).}
+#'     `cut_scores` is supplied (`NULL` otherwise). `Probability` is the
+#'     mixture probability of the stated ability event; `ProbabilityBetweenSD`
+#'     measures variation in that probability across calibration draws.
+#'     Like `ExpectedMeanSD`, it uses the number of draws as its variance
+#'     denominator, is not a Monte Carlo SE, and is `NA` for `plugin_mean`.}
 #'   \item{`person_draws`}{Optional per-draw conditional moments when
 #'     `keep_person_draws = TRUE`.}
 #'   \item{`source`, `posterior_decision`, `categories`, `data_usage`, `omitted_rows`, `settings`, `notes`}{ Provenance, row accounting, and interpretation notes.}

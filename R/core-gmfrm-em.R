@@ -112,7 +112,9 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
     if (length(par) != length(start) || any(!is.finite(par))) stop("Invalid parameter vector.")
     if (identical(par, cached_par)) return(cached_kernel)
     cached_par <<- NULL; cached_kernel <<- NULL
-    params <- tryCatch(expand_params(par, common$sizes, common$config),
+    # Iterative likelihood evaluations need numeric slopes, not reporting tables.
+    params <- tryCatch(expand_params(par, common$sizes, common$config,
+      include_slope_components = FALSE),
       mfrmr_gpcm_slope_numeric_boundary_error = function(e) NULL)
     if (is.null(params)) return(NULL)
     cell_slope <- params$slopes[common_cell]
@@ -301,6 +303,17 @@ mfrm_gmfrm_em <- function(problem, start = problem$start, maxit = 500L,
 
 # Compare adaptive solutions, never fixed-grid and adaptive objective values.
 # EM or supplied native vectors are starts only; inference keeps its own gates.
+mfrm_gmfrm_validate_starts <- function(problem, starts) {
+  if (is.object(starts) || length(starts) < 2L || is.null(names(starts)) ||
+      anyNA(names(starts)) || any(!nzchar(trimws(names(starts)))) || anyDuplicated(names(starts)))
+    stop("Supply a plain named list of at least two native starting vectors with distinct nonempty names.", call. = FALSE)
+  for (start in starts) if (!is.numeric(start) || is.complex(start) ||
+      !is.null(dim(start)) || length(start) != length(problem$start) || any(!is.finite(start)) ||
+      (!is.null(names(start)) && !identical(names(start), names(problem$start))))
+    stop("Each native start must be finite and match the model's free-parameter length and order; supplied parameter names must match exactly.", call. = FALSE)
+  invisible(starts)
+}
+
 mfrm_gmfrm_adaptive_fit <- function(problem, config, quad_points, maxit, reltol,
                                     optimizer, policy) {
   capture <- function(call) {
@@ -314,13 +327,7 @@ mfrm_gmfrm_adaptive_fit <- function(problem, config, quad_points, maxit, reltol,
   supplied <- is.list(policy)
   starts <- if (supplied) policy else list(neutral = problem$start)
   if (supplied) {
-    if (is.object(starts) || length(starts) < 2L || is.null(names(starts)) ||
-        anyNA(names(starts)) || any(!nzchar(trimws(names(starts)))) || anyDuplicated(names(starts)))
-      stop("Supply a plain named list of at least two native starting vectors with distinct nonempty names.", call. = FALSE)
-    for (start in starts) if (!is.numeric(start) || is.complex(start) ||
-        !is.null(dim(start)) || length(start) != length(problem$start) || any(!is.finite(start)) ||
-        (!is.null(names(start)) && !identical(names(start), names(problem$start))))
-      stop("Each native start must be finite and match the model's free-parameter length and order; supplied parameter names must match exactly.", call. = FALSE)
+    mfrm_gmfrm_validate_starts(problem, starts)
     policy <- "explicit"
   }
   em <- NULL
@@ -439,6 +446,19 @@ mfrm_gmfrm_fit_result <- function(problem, result) {
 
 # The two numerical engines share model identity and output restrictions;
 # the optimizer and integration metadata always describe the actual objective.
+# A neutral reference evaluated before a boundary refit is not an optimizer
+# endpoint. Preserve opt$par/value/gradient, but do not call them terminal checks.
+mfrm_gmfrm_not_run_diagnostics <- function(diagnostics) {
+  utils::modifyList(diagnostics, list(
+    OptimizerMethod="not_run", ConvergenceStatus="not_run_boundary",
+    ConvergenceBasis="analytic_boundary", ConvergenceReason="finite_maximum_absent",
+    ConvergenceSeverity="not_run", ReviewableWarning=FALSE,
+    ConvergenceDetail=paste("Full-model optimization was not run because no finite maximum exists.",
+      "Stored coordinates, objective and gradient are a neutral reference, not estimates or terminal checks."),
+    TerminalGradientSupNorm=NA_real_, TerminalGradientRMS=NA_real_,
+    GradientReviewTolerance=NA_real_))
+}
+
 mfrm_gmfrm_assemble_fit <- function(problem, config, opt, controls, transformation) {
   common <- problem$common
   prep <- common$prep; sizes <- common$sizes
@@ -471,7 +491,7 @@ mfrm_gmfrm_assemble_fit <- function(problem, config, opt, controls, transformati
   readiness <- build_mfrm_readiness_record(prep, data_review, config, opt, slopes)
   person <- apply_mfrm_person_source_readiness(person, readiness)
   slopes <- apply_mfrm_slope_readiness(slopes, readiness)
-  structure(list(
+  fit <- structure(list(
     summary = build_estimation_summary("GPCM", "MML", prep, config, sizes, opt, readiness),
     facets = list(person = person, others = build_other_facet_table(config, prep, params)),
     steps = build_step_table(config, prep, params), slopes = slopes,
@@ -481,6 +501,7 @@ mfrm_gmfrm_assemble_fit <- function(problem, config, opt, controls, transformati
     population = list(active = FALSE, posterior_basis = "fixed_standard_normal"),
     gmfrm = list(specification = problem$specification, controls = controls)),
     class = c("mfrm_fit", "list"))
+  mfrm_gmfrm_apply_point_review(fit)
 }
 
 # Scoped dispatch from fit_mfrm(); never silently drop a requested model option.
@@ -542,10 +563,53 @@ mfrm_fit_product_slopes <- function(args, supplied) {
     roles$facets, roles$step_facet, roles$noncenter_facet, roles$slope_reference)
   common <- problem$common
   category <- audit_mfrm_category_support(common$prep, common$config, common$sizes)
+  boundary <- mfrm_gmfrm_point_review(common$prep, common$config,
+    list(par=problem$start))$boundary
+  step_boundary <- nrow(boundary) > 0L && roles$step_facet != owners[1L] &&
+    all(boundary$Facet == roles$step_facet)
+  non_slope_boundary <- nrow(boundary) > 0L && length(unique(boundary$Facet)) == 1L &&
+    !boundary$Facet[1L] %in% owners
+  unsupported_scopes <- unique(category$support_table$StepScope[
+    category$support_table$InformationState == "unsupported_coordinate"])
   if (identical(category$readiness$CategoryState[1], "unsupported_coordinate")) {
-    mfrmr_stop_unsupported_category(category)
+    # An extreme non-reference level contributes one in the location limit,
+    # removing its own step block. Other missing-category cases still stop.
+    if (!step_boundary || !all(unsupported_scopes %in%
+        paste0(roles$step_facet, "=", boundary$Level))) mfrmr_stop_unsupported_category(category)
   }
-  if (em) {
+  policy <- if (em) NULL else if (is.list(args$gpcm_mml_start)) args$gpcm_mml_start else
+    match.arg(args$gpcm_mml_start %||% "neutral_em", c("neutral_em", "neutral"))
+  if (step_boundary || non_slope_boundary) {
+    if (is.list(policy)) mfrm_gmfrm_validate_starts(problem, policy)
+    config <- common$config
+    config$estimation_control <- list(maxit=args$maxit, reltol=if (!em) tol else NULL,
+      quad_points=args$quad_points, quadrature=problem$specification$quadrature,
+      mml_integration=args$mml_integration,
+      mml_engine_requested=args$mml_engine, mml_engine_used=args$mml_engine,
+      optimizer_requested=args$optimizer, optimizer_used="not_run",
+      optimization_status="not_run_boundary", em_score_tolerance=if (em) tol else NULL)
+    if (em) {
+      state <- problem$marginal(problem$start)
+      value <- -state$logLik
+      gradient <- state$gradient * problem$n_person
+    } else {
+      evaluate <- mfrmr_make_adaptive_mml_evaluator(common$idx, config, common$sizes, args$quad_points)
+      state <- evaluate(problem$start)
+      value <- state$value
+      gradient <- state$gradient
+    }
+    opt <- list(par=problem$start, value=value, gradient=gradient, convergence=2L,
+      counts=c("function"=1L, "gradient"=1L),
+      message="Full-model optimization was not run: an extreme facet level certifies no finite maximum.",
+      value_basis="neutral_boundary_reference")
+    opt$optimizer_diagnostics <- build_optimizer_diagnostics(opt,
+      gradient=gradient/problem$n_person, reltol=NA_real_, optimizer_method="not_run",
+      convergence_basis="marginal_score_per_person", gradient_tolerance=if (em) tol else 1e-6)
+    opt$optimizer_diagnostics <- mfrm_gmfrm_not_run_diagnostics(opt$optimizer_diagnostics)
+    fit <- mfrm_gmfrm_assemble_fit(problem, config, opt,
+      list(maxit=args$maxit, reltol=if (!em) tol else NULL, score_tol=if (em) tol else NULL),
+      mfrmr_nonlinear_transformation_audit(opt$par, common$sizes, config, "log_slopes"))
+  } else if (em) {
     result <- mfrm_gmfrm_em(problem, maxit = args$maxit, score_tol = tol)
     fit <- mfrm_gmfrm_fit_result(problem, result)
   } else {
@@ -555,8 +619,6 @@ mfrm_fit_product_slopes <- function(args, supplied) {
       mml_integration = "adaptive", mml_engine_requested = "direct", mml_engine_used = "direct",
       gradient_review_per_person = 1e-6,
       optimizer_requested = args$optimizer)
-    policy <- if (is.list(args$gpcm_mml_start)) args$gpcm_mml_start else
-      match.arg(args$gpcm_mml_start %||% "neutral_em", c("neutral_em", "neutral"))
     config$estimation_control$gpcm_mml_start <- if (is.list(policy)) "explicit" else policy
     opt <- mfrm_gmfrm_adaptive_fit(problem, config, args$quad_points, args$maxit,
       tol, args$optimizer, policy)
@@ -579,5 +641,5 @@ mfrm_fit_product_slopes <- function(args, supplied) {
   fit$config$attached_diagnostics <- FALSE
   fit$config$estimation_control$optimizer_requested <- args$optimizer
   fit$config$public_product_slopes <- TRUE
-  fit
+  mfrm_gmfrm_limit_points(fit)
 }

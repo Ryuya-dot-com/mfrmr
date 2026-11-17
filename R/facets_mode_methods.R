@@ -1,12 +1,6 @@
 # S3 methods for run_mfrm_facets() workflow objects
 
-round_numeric_frame <- function(df, digits = 3L) {
-  if (!is.data.frame(df) || nrow(df) == 0) return(df)
-  out <- df
-  num_cols <- vapply(out, is.numeric, logical(1))
-  out[num_cols] <- lapply(out[num_cols], round, digits = digits)
-  out
-}
+
 
 #' Summarize a legacy-compatible workflow run
 #'
@@ -39,7 +33,7 @@ round_numeric_frame <- function(df, digits = 3L) {
 #'   `summary()`
 #'
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("summary.mfrm_facets_run", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -55,6 +49,7 @@ round_numeric_frame <- function(df, digits = 3L) {
 #' s$overview[, c("Model", "Method", "Converged")]
 #' s$mapping
 #' }
+#' @rdname run_mfrm_facets
 #' @export
 summary.mfrm_facets_run <- function(object, digits = 3, top_n = 10, ...) {
   if (!inherits(object, "mfrm_facets_run")) {
@@ -92,7 +87,7 @@ print.summary.mfrm_facets_run <- function(x, ...) {
 
   cat("FACETS-style Workflow Summary\n")
   if (!is.null(x$overview) && nrow(x$overview) > 0) {
-    ov <- round_numeric_frame(as.data.frame(x$overview), digits = digits)[1, , drop = FALSE]
+    ov <- round_numeric_df(df = as.data.frame(x$overview), digits = digits)[1, , drop = FALSE]
     cat(sprintf("  Model: %s | Method: %s\n", ov$Model, ov$Method))
     cat(sprintf("  N: %s | Persons: %s | Facets: %s | Categories: %s\n", ov$N, ov$Persons, ov$Facets, ov$Categories))
     ic_lines <- mfrm_ic_console_lines(x$overview, digits = digits)
@@ -108,10 +103,7 @@ print.summary.mfrm_facets_run <- function(x, ...) {
     ))
   }
 
-  if (!is.null(x$mapping) && nrow(x$mapping) > 0) {
-    cat("\nColumn mapping\n")
-    print(as.data.frame(x$mapping), row.names = FALSE)
-  }
+  print_summary_sections(x, .mfrmr_summary_print_sections[["print.summary.mfrm_facets_run_01"]])
 
   cat("\nDetailed objects:\n")
   cat(" - summary(out$fit)\n")
@@ -145,8 +137,9 @@ NULL
 #' 1. Run [run_mfrm_facets()].
 #' 2. Start with `plot(out, type = "fit", draw = FALSE)`.
 #' 3. Continue with `plot(out, type = "qc", draw = FALSE)` for diagnostics.
-#' @return For `plot()`: A `ggplot` object (or `mfrm_plot_bundle` of `ggplot`
-#'   objects when `type = "fit"` delegates to `type = "bundle"`).
+#' @return For `plot()`: A `ggplot` object. The `"fit"` route composes Wright,
+#'   pathway and category curves; `plot_data(p, "wright_map")` extracts the
+#'   saved Wright payload, whose `locations` component contains facet points.
 #' @seealso [run_mfrm_facets()], [plot.mfrm_fit()], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics], [mfrmr_workflow_methods]
 #' @examples # Long-running workflow; run explicitly when needed.
@@ -162,7 +155,7 @@ NULL
 #'   maxit = 30
 #' )
 #' p_fit <- plot(out, type = "fit", draw = FALSE)
-#' plot_data(p_fit$wright_map)$plot
+#' plot_data(plot_data(p_fit, "wright_map"), "locations")
 #' p_qc <- plot(out, type = "qc", draw = FALSE)
 #' plot_data(p_qc)$plot
 #'

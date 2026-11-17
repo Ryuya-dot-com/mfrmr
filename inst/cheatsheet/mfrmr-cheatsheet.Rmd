@@ -115,7 +115,7 @@ plot(fit, type = "fit_pathway", diagnostics = diag,
 ## 5. Report / APA
 
 ```{r report}
-chk  <- reporting_checklist(fit, diagnostics = diag)
+chk  <- mfrm_report(fit, type = "checklist", diagnostics = diag)
 apa  <- build_apa_outputs(fit, diag)
 cat(apa$report_text)
 

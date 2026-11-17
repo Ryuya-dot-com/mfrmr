@@ -86,7 +86,8 @@ mfrm_fit_jeffreys <- function(a, supplied) {
 #' [fit_mfrm()] with `method = "JML", jml_penalty = "jeffreys"`.
 #' The result does not inherit ordinary JML uncertainty or FACETS diagnostics.
 #'
-#' @param object,x A `mfrm_jeffreys_fit` result.
+#' @param object A `mfrm_jeffreys_fit` result.
+#' @param x A `mfrm_jeffreys_fit` result.
 #' @param ... Unused; additional arguments are rejected.
 #' @return `summary()` returns Person, facet and step point-estimate tables,
 #'   checks, category-support evidence and notes. `coef()` returns the three
@@ -121,6 +122,7 @@ mfrm_fit_jeffreys <- function(a, supplied) {
 #' intervals[, c("Target", "Estimate", "SE", "Available", "CIEligible")]
 #' # Numerical availability is not a qualification of small-sample coverage.
 #' }
+#' @rdname mfrm_fit_extractors
 #' @export
 summary.mfrm_jeffreys_fit <- function(object, ...) {
   rlang::check_dots_empty()
@@ -130,7 +132,7 @@ summary.mfrm_jeffreys_fit <- function(object, ...) {
     notes = object$notes)
 }
 
-#' @rdname summary.mfrm_jeffreys_fit
+#' @rdname mfrm_fit_extractors
 #' @export
 print.mfrm_jeffreys_fit <- function(x, ...) {
   rlang::check_dots_empty()
@@ -140,14 +142,14 @@ print.mfrm_jeffreys_fit <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname summary.mfrm_jeffreys_fit
+#' @rdname mfrm_fit_extractors
 #' @export
 coef.mfrm_jeffreys_fit <- function(object, ...) {
   rlang::check_dots_empty()
   list(persons = object$facets$person, facets = object$facets$others, steps = object$steps)
 }
 
-#' @rdname summary.mfrm_jeffreys_fit
+#' @rdname mfrm_fit_extractors
 #' @export
 fitted.mfrm_jeffreys_fit <- function(object, ...) {
   rlang::check_dots_empty()
@@ -156,19 +158,19 @@ fitted.mfrm_jeffreys_fit <- function(object, ...) {
   p
 }
 
-#' @rdname summary.mfrm_jeffreys_fit
+#' @rdname mfrm_fit_extractors
 #' @export
 vcov.mfrm_jeffreys_fit <- function(object, ...) {
   stop("Parameter covariance for the Jeffreys estimator is unavailable; ordinary or penalized inverse curvature is not supplied as sampling covariance.", call. = FALSE)
 }
 
-#' @rdname summary.mfrm_jeffreys_fit
+#' @rdname mfrm_fit_extractors
 #' @export
 confint.mfrm_jeffreys_fit <- function(object, ...) {
   stop("Parameter intervals for the Jeffreys estimator are unavailable. For common-plan scores use confint(fair_average_table(object, reference_plan = ...), ...).", call. = FALSE)
 }
 
-#' @rdname summary.mfrm_jeffreys_fit
+#' @rdname mfrm_fit_extractors
 #' @export
 logLik.mfrm_jeffreys_fit <- function(object, ...) {
   stop("The penalized objective is not a maximized ordinary likelihood for AIC or likelihood-ratio inference; inspect summary(object)$checks instead.", call. = FALSE)

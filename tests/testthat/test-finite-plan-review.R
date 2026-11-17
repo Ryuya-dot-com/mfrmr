@@ -3,7 +3,7 @@ finite_plan_fixture <- function(duplicate = FALSE, reference = 1L) {
   grid <- data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3))
   if (duplicate) grid <- rbind(grid, grid[1, ])
   d <- mfrm_d_study(g, grid, c(Content = .5, Organization = .5))
-  list(g = g, d = d, comparison = mfrm_multivariate_d_compare(d,
+  list(g = g, d = d, comparison = compare_mfrm(d,
     reference = reference, assumption = "normal"))
 }
 
@@ -126,7 +126,7 @@ test_that("planning inputs reject mismatched identities, units and route-specifi
   expect_error(recommend_mfrm_design(x, min_reliability = .8), "Simulation-screening")
   expect_error(recommend_mfrm_design(x, prefer = "Raters"), "Simulation-screening")
   saved <- readRDS(system.file("examples", "simulation-design.rds", package = "mfrmr"))$result
-  expect_error(recommend_mfrm_design(saved, targets = c(G = .8)), "saved mfrm_multivariate_d_compare")
+  expect_error(recommend_mfrm_design(saved, targets = c(G = .8)), "saved compare_mfrm")
   bad <- x; bad$comparisons <- bad$comparisons[-1, ]
   expect_error(recommend_mfrm_design(bad), "each candidate/metric once")
   bad <- x; bad$comparisons$Difference[1] <- 1
@@ -139,7 +139,7 @@ test_that("planning tables and cautions reach plots, reports, CSV and saved resu
   local_mocked_bindings(
     mfrm_g_study = function(...) stop("Unexpected G-study recalculation"),
     mfrm_d_study = function(...) stop("Unexpected D-study recalculation"),
-    mfrm_multivariate_d_compare = function(...) stop("Unexpected paired interval recalculation"))
+    compare_mfrm = function(...) stop("Unexpected paired interval recalculation"))
   rec <- recommend_mfrm_design(x, costs = data.frame(Scenario = 1:3, Hours = c(4,7,NA)),
     limits = c(Hours = 5), targets = c(G = .58))
   s <- summary(rec, planning = TRUE)
@@ -176,4 +176,66 @@ test_that("planning tables and cautions reach plots, reports, CSV and saved resu
   reopened <- readRDS(file.path(out, "plans.rds"))
   expect_identical(summary(reopened, planning = TRUE), s)
   expect_identical(mfrm_report(reopened)$tables$planning_differences, s$differences)
+})
+
+
+test_that("large future counts give the same paired calculations with integer or double storage", {
+  g <- mfrm_g_study(mfrmr_example_gtheory_crossed, c("Content", "Organization"))
+  grid <- data.frame(Raters = c(50000L, 50001L, .Machine$integer.max),
+    Tasks = c(50000L, 60000L, 50000L))
+  numeric_grid <- as.data.frame(lapply(grid, as.double))
+  integer_plan <- mfrm_d_study(g, grid, c(Content = .5, Organization = .5))
+  numeric_plan <- mfrm_d_study(g, numeric_grid, c(Content = .5, Organization = .5))
+  expect_true(is.integer(integer_plan$design_grid$Raters))
+  expect_warning(integer_result <- compare_mfrm(integer_plan, assumption = "normal"), NA)
+  numeric_result <- compare_mfrm(numeric_plan, assumption = "normal")
+  expect_identical(integer_result$comparisons, numeric_result$comparisons)
+  expect_identical(integer_result$covariance, numeric_result$covariance)
+  expect_identical(integer_result$design_grid, grid)
+  expect_identical(integer_plan$design_grid, grid)
+})
+
+
+test_that("the common comparison entry separates plan and model controls", {
+  z <- finite_plan_fixture()
+  expect_false("mfrm_multivariate_d_compare" %in% getNamespaceExports("mfrmr"))
+  expect_false(exists("mfrm_multivariate_d_compare", asNamespace("mfrmr"), inherits = FALSE))
+  expect_s3_class(compare_mfrm(z$d, assumption = "normal"), "mfrm_multivariate_d_comparison")
+  expect_error(compare_mfrm(z$d), "assumption")
+  expect_error(compare_mfrm(z$d, z$d, assumption = "normal"), "one D-study")
+  expect_error(compare_mfrm(z$d, labels = "plan", assumption = "normal"), "Model-comparison arguments")
+  expect_error(compare_mfrm(z$d, score = "Content", composite = "Composite", assumption = "normal"), "Choose either")
+  fits <- readRDS(system.file("examples", "consumer-fits.rds", package = "mfrmr"))
+  expect_error(compare_mfrm(fits$rsm, fits$pcm, assumption = "normal"), "Plan-comparison arguments")
+  expect_s3_class(suppressWarnings(compare_mfrm(score = fits$rsm, reference = fits$pcm)), "mfrm_comparison")
+  expect_error(compare_mfrm(z$d, assumption = "normal", typo = TRUE), "Name D-study options")
+})
+
+
+test_that("shared D-study error coefficients follow the declared facet counts", {
+  grid <- data.frame(Judges = c(2L, 5L, .Machine$integer.max), Prompts = c(3L, 7L, 50000L))
+  cases <- list(
+    one = list(grid = grid["Judges"], names = c("Person", "Judge", "Person:Judge"), nesting = NULL),
+    crossed = list(grid = grid, names = c("Person", "Judge", "Prompt", "Person:Judge", "Person:Prompt", "Judge:Prompt", "Person:Judge:Prompt"), nesting = NULL),
+    nested = list(grid = grid[c("Prompts", "Judges")], names = c("Person", "Prompt", "Judge:Prompt", "Person:Prompt", "Person:Judge:Prompt"), nesting = c(Judge = "Prompt")))
+  for (case in names(cases)) {
+    x <- cases[[case]]
+    # Only source identities and plan counts enter this coefficient map.
+    d <- list(design_grid = x$grid, gstudy = list(
+      design = list(nesting = x$nesting, count_columns = c(Judge = "Judges", Prompt = "Prompts")),
+      components = stats::setNames(rep(list(0), length(x$names)), x$names)))
+    for (i in seq_len(nrow(grid))) for (metric in c("G", "Phi", "RelativeSEM", "AbsoluteSEM")) {
+      judge <- as.double(grid$Judges[i]); prompt <- as.double(grid$Prompts[i])
+      relative <- switch(case, one = c(0, 0, 1/judge),
+        crossed = c(0, 0, 0, 1/judge, 1/prompt, 0, 1/(judge*prompt)),
+        nested = c(0, 0, 0, 1/prompt, 1/(judge*prompt)))
+      extra <- switch(case, one = c(0, 1/judge, 0),
+        crossed = c(0, 1/judge, 1/prompt, 0, 0, 1/(judge*prompt), 0),
+        nested = c(0, 1/prompt, 1/(judge*prompt), 0, 0))
+      expected <- stats::setNames(if (metric %in% c("Phi", "AbsoluteSEM")) relative + extra else relative, x$names)
+      expect_identical(mfrmr:::.mfrm_mvgt_profile_error(d, i, metric), expected)
+      expect_identical(mfrmr:::.mfrm_mvgt_profile_error(d, i, metric,
+        counts = as.integer(x$grid[i, ])), expected)
+    }
+  }
 })

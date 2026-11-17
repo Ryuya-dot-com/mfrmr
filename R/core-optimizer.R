@@ -589,12 +589,12 @@ make_mfrm_em_mstep_evaluator <- function(cache, idx, config, sizes, quad,
 
 # One local curvature proposal after ordinary polishing stalls. Keep dense
 # curvature work bounded; a failed proposal leaves the previous stage intact.
-mfrm_optimizer_curvature_proposal <- function(par, fn, gr) {
+mfrm_optimizer_curvature_proposal <- function(par, fn, gr, max_parameters = 64L) {
   counts <- c("function" = 0L, "gradient" = 0L)
   value <- function(p) { counts[1L] <<- counts[1L] + 1L; fn(p) }
   gradient <- function(p) { counts[2L] <<- counts[2L] + 1L; gr(p) }
   proposal <- tryCatch({
-    if (!length(par) || length(par) > 64L) stop("Curvature restart is limited to 1-64 free parameters.")
+    if (!length(par) || length(par) > max_parameters) stop("Curvature restart exceeds its free-parameter limit.")
     f0 <- value(par)
     g0 <- gradient(par)
     h <- stats::optimHess(par, fn = value, gr = gradient)
@@ -708,7 +708,8 @@ run_mfrm_direct_optimization <- function(start,
     stage_opt <- tryCatch({
       if (isTRUE(curvature_restart)) {
         proposal <- mfrm_optimizer_curvature_proposal(
-          par, evaluator$value, evaluator$gradient
+          par, evaluator$value, evaluator$gradient,
+          max_parameters = if (method == "MML" && config$model %in% c("RSM", "PCM", "GPCM")) 200L else 64L
         )
         proposal_counts <- proposal$counts
         if (is.null(proposal$par)) stop(proposal$error)
@@ -918,10 +919,7 @@ run_mfrm_direct_optimization <- function(start,
   if (isTRUE(polish_triggered) &&
       identical(selected$diagnostics$ConvergenceReason, "code_zero_large_gradient") &&
       identical(method, "MML") &&
-      ((config$model %in% c("RSM", "PCM", "GPCM") && !mfrmr_adaptive_integration(config)) ||
-       (identical(config$model, "GPCM") && mfrmr_adaptive_integration(config) &&
-        !isTRUE(config$population_spec$active))) &&
-      length(start) <= 64L) {
+      config$model %in% c("RSM", "PCM", "GPCM") && length(start) <= 200L) {
     candidate <- run_stage(
       par = selected$opt$par, stage_method = selected$method,
       stage_reltol = selected$reltol, index = length(stages) + 1L,
@@ -1082,14 +1080,6 @@ run_mfrm_direct_optimization <- function(start,
   opt
 }
 
-mfrm_checkpoint_schema_id <- function() {
-  "mfrmr_mml_em_checkpoint"
-}
-
-mfrm_checkpoint_schema_version <- function() {
-  2L
-}
-
 mfrm_checkpoint_parameter_names <- function(sizes) {
   unlist(lapply(names(sizes), function(block) {
     size <- as.integer(sizes[[block]])
@@ -1169,8 +1159,8 @@ mfrm_checkpoint_identity <- function(idx, config, sizes, quad_points,
     "anchor_summary"
   )]
   list(
-    schema_id = mfrm_checkpoint_schema_id(),
-    schema_version = mfrm_checkpoint_schema_version(),
+    schema_id = .mfrmr_const_mfrm_checkpoint_schema_id,
+    schema_version = .mfrmr_const_mfrm_checkpoint_schema_version,
     package_version = as.character(utils::packageVersion("mfrmr")),
     engine = "mml_em",
     engine_stage = as.character(engine_stage),
@@ -1227,9 +1217,9 @@ mfrm_validate_checkpoint_control <- function(checkpoint) {
 mfrm_validate_checkpoint_payload <- function(saved, expected_identity) {
   if (!is.list(saved) ||
       !identical(saved$.mfrm_checkpoint_kind %||% "", "mml_em") ||
-      !identical(saved$schema_id %||% "", mfrm_checkpoint_schema_id()) ||
+      !identical(saved$schema_id %||% "", .mfrmr_const_mfrm_checkpoint_schema_id) ||
       !identical(saved$schema_version %||% NA_integer_,
-                 mfrm_checkpoint_schema_version())) {
+                 .mfrmr_const_mfrm_checkpoint_schema_version)) {
     stop(
       "The checkpoint uses an unsupported or legacy MML EM schema. Remove ",
       "it and start a new 0.2.4 checkpoint.",
@@ -1329,8 +1319,8 @@ mfrm_checkpoint_payload <- function(par, prev_loglik, ll_trace, total_fn,
   par <- stats::setNames(as.numeric(par), parameter_names)
   list(
     .mfrm_checkpoint_kind = "mml_em",
-    schema_id = mfrm_checkpoint_schema_id(),
-    schema_version = mfrm_checkpoint_schema_version(),
+    schema_id = .mfrmr_const_mfrm_checkpoint_schema_id,
+    schema_version = .mfrmr_const_mfrm_checkpoint_schema_version,
     identity = identity,
     par = par,
     prev_loglik = as.numeric(prev_loglik),

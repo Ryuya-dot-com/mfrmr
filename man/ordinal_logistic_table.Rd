@@ -32,7 +32,8 @@ factor scores are accepted, with order declared through \code{categories}.}
 differ across targets. Missing scores or matching values are excluded
 together from all models for the affected target.}
 
-\item{groups}{Two distinct labels in reference, focal order.}
+\item{groups}{At least two distinct labels. The first is the reference;
+the remaining labels specify focal groups in reporting order.}
 
 \item{categories}{Distinct numeric or character category labels, in increasing
 response order. Factor labels are treated as character. Category spacing
@@ -55,7 +56,7 @@ result with \code{\link[base:saveRDS]{base::saveRDS()}} and individual tables wi
 No backend model objects or executable environments are retained.
 }
 \description{
-Compare two groups at an explicitly supplied numeric matching variable,
+Compare two or more groups at an explicitly supplied numeric matching variable,
 using three nested proportional-odds models. This independent-Person
 sensitivity analysis does not estimate ability or fit an MFRM.
 }
@@ -63,36 +64,58 @@ sensitivity analysis does not estimate ability or fit an MFRM.
 Requires the optional package \pkg{ordinal}. Maximum likelihood is computed
 by \code{\link[ordinal:clm]{ordinal::clm()}} with a logit link and flexible thresholds. For each target,
 matching is centered at its pooled midrange and divided by its half-range:
-\code{z = (matching - Center) / Scale}. Group is coded 0 for reference and 1 for
-focal. \code{M1} uses \code{z}, \code{M2} uses \code{z + g}, and \code{M3} uses \code{z * g}. All three use
+\code{z = (matching - Center) / Scale}. Two groups retain numeric 0/1 coding.
+With more groups, \code{g} is an unordered factor with fixed treatment contrasts,
+using the first declared group as reference; \code{settings$group_coding} maps
+labels to coefficient terms (\code{g2}, \code{g3}, ...). \code{M1} uses \code{z}, \code{M2} uses
+\code{z + g}, and \code{M3} uses \code{z * g}. All three use
 identical complete responses. The model is
 \verb{logit Pr(Y <= k) = threshold[k] - linear_predictor}.
 
-\code{Uniform} compares M2 to M1 (1 df), \code{Nonuniform} compares M3 to M2 (1 df),
-and \code{Joint} compares M3 to M1 (2 df). These are asymptotic likelihood-ratio
+For G groups, \code{Uniform} compares M2 to M1 (G-1 df), \code{Nonuniform} compares M3
+to M2 (G-1 df), and \code{Joint} compares M3 to M1 (2(G-1) df). These are omnibus,
+asymptotic likelihood-ratio
 tests. A uniform comparison assumes no interaction; its coefficient must not
 be interpreted as a constant group difference when an interaction matters.
-No automatic selection between these models or DIF/bias flag is made.
+A significant omnibus test does not identify which group differs. No
+automatic selection between these models or DIF/bias flag is made.
 \code{NagelkerkeR2} is \code{(1-exp(2*(LL0-LL)/N))/(1-exp(2*LL0/N))}, where LL0 is the
 intercept-only multinomial log likelihood. \code{DeltaNagelkerkeR2} subtracts
 the reduced model's value from the full model's value. This is not explained
 score variance or McKelvey--Zavoina R-squared; no universal effect-size cutoff
 is applied.
 
-\code{contrasts} gives M3's reference/focal upper-tail odds ratio at the lower
-endpoint, midpoint and upper endpoint of the groups' overlapping matching
-ranges. Its log is \code{-(beta_g + beta_z:g * z)}; a value above 1 favors higher
-reference scores. This applies to each category cut under proportional odds.
-These are point estimates, not simultaneous intervals. Fits use all complete
+In \code{coefficients}, \code{Parameter} distinguishes thresholds from slopes;
+\code{Estimate} is a logit coefficient, not a severity or an odds ratio. For
+M1--M3, \code{z} is the matching slope in the reference group. Divide it by
+\code{matching$Scale} for a one-unit change in the original matching variable.
+In M3, add the corresponding \code{z:g} interaction for a focal group's slope.
+A positive group coefficient means higher focal-group upper-tail odds at
+\code{matching = Center} (where \code{z = 0}). With an interaction it is not a
+constant group effect. Thresholds are cumulative-logit cutpoints on the
+declared category order, not RSM/PCM step offsets.
+
+\code{contrasts} gives M3's reference/focal upper-tail odds ratio for each focal
+group at the lower endpoint, midpoint and upper endpoint of the matching
+range shared by all declared groups. Its log for a focal group is
+\code{-(beta_g + beta_z:g * z)}; a value above 1 favors higher
+reference scores. Thus at \code{Center} it is the reciprocal of the
+exponentiated group coefficient. \code{OverlapMid} need not equal \code{Center}:
+one uses the shared range, the other the pooled range. This applies to each
+category cut under proportional odds. These are point estimates, not simultaneous intervals. Fits use all complete
 responses, including those outside that overlap. Range overlap alone does not
 establish comparable distributions or adequate local support. Each group
-must have varying matching values and their ranges must overlap with positive
-width. The \code{matching} table retains the ranges and transformation.
+must have varying matching values and all ranges must share a positive-width
+interval. This is the supported comparison design, not a necessary condition
+for mathematical identifiability or a finite ML solution. The \code{matching}
+table has one row per reference/focal pair, retaining the individual ranges,
+common overlap and transformation. \code{InputRows} and \code{CompleteRows} are
+target-level totals repeated on those rows; do not sum them across pairs.
 
 For three or more categories, \code{proportional_odds} compares M3 with a model
-in which all three slopes may differ across cumulative category cuts
+in which all \verb{2G-1} slopes may differ across cumulative category cuts
 (\code{clm(y ~ 1, nominal = ~ z * g)}). This global asymptotic LR diagnostic has
-\code{3 * (K - 2)} df. It concerns equality across category cuts, whereas the
+\verb{(2G-1) * (K-2)} df. It concerns equality across category cuts, whereas the
 nonuniform comparison concerns differences across matching values. They are
 different questions. The diagnostic is not applicable to binary responses.
 An unavailable or nonsignificant diagnostic does not certify proportional
@@ -129,7 +152,7 @@ agreement with \code{\link[=analyze_dff]{analyze_dff()}} or \code{\link[=mantel_
 establish robustness, and disagreement does not by itself establish DIF.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("ordinal_logistic_table", run.dontrun = TRUE)
 \dontrun{
 if (requireNamespace("ordinal", quietly = TRUE)) {
@@ -145,6 +168,12 @@ if (requireNamespace("ordinal", quietly = TRUE)) {
 }
 }
 \references{
+Magis, D., Raiche, G., Beland, S., & Gerard, P. (2011). A generalized logistic
+regression procedure to detect differential item functioning among multiple
+groups. \emph{International Journal of Testing, 11}, 365--386.
+\doi{10.1080/15305058.2011.602810}. The binary multiple-group tests correspond
+to this framework; the ordinal extension additionally assumes proportional odds.
+
 Rogers, H. J., & Swaminathan, H. (1993). A comparison of logistic regression
 and Mantel-Haenszel procedures for detecting differential item functioning.
 \emph{Applied Psychological Measurement, 17}, 105--116.

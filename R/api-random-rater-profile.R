@@ -73,6 +73,7 @@
 #'   maximum likelihood estimators and likelihood ratio tests under nonstandard
 #'   conditions. *Journal of the American Statistical Association*, 82, 605--610.
 #'   \doi{10.1080/01621459.1987.10478472}.
+#' @rdname fit_mfrm_random_rater
 #' @export
 confint.mfrm_random_rater <- function(object, parm = "rater_sd", level = .95, ...) {
   rlang::check_dots_empty()

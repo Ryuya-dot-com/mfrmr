@@ -18,7 +18,7 @@ local({
 # ---- specifications_report ----
 
 test_that("specifications_report returns a bundle", {
-  spec <- specifications_report(.fit)
+  spec <- mfrm_report(x = .fit, type = "specifications")
   expect_s3_class(spec, "mfrm_bundle")
   s <- summary(spec)
   expect_s3_class(s, "summary.mfrm_bundle")
@@ -28,7 +28,7 @@ test_that("specifications_report returns a bundle", {
 
 test_that("estimation_iteration_report returns a bundle", {
   expect_no_warning(
-    iter <- estimation_iteration_report(.fit)
+    iter <- mfrm_report(x = .fit, type = "iterations")
   )
   expect_s3_class(iter, "mfrm_bundle")
 })
@@ -36,7 +36,7 @@ test_that("estimation_iteration_report returns a bundle", {
 # ---- data_quality_report ----
 
 test_that("data_quality_report returns a bundle", {
-  dq <- data_quality_report(.fit)
+  dq <- mfrm_report(x = .fit, type = "data_quality")
   expect_s3_class(dq, "mfrm_bundle")
   expect_true("quality_overview" %in% names(dq))
   expect_true("quality_flags" %in% names(dq))
@@ -46,7 +46,7 @@ test_that("data_quality_report returns a bundle", {
   s <- summary(dq)
   expect_s3_class(s, "summary.mfrm_bundle")
   expect_error(
-    data_quality_report(.fit, dominant_category_cutoff = 0),
+    mfrm_report(x = .fit, dominant_category_cutoff = 0, type = "data_quality"),
     "`dominant_category_cutoff`"
   )
 })
@@ -62,13 +62,8 @@ test_that("data_quality_report flags retained zero-frequency score categories", 
       keep_original = TRUE
     )
   )
-  dq <- data_quality_report(
-    fit,
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score"
-  )
+  dq <- mfrm_report(x = fit, data = d, person = "Person", facets = c("Rater", "Task", "Criterion"),
+    score = "Score", type = "data_quality")
   zero_row <- dq$category_counts[dq$category_counts$Score == 1, , drop = FALSE]
   expect_equal(nrow(zero_row), 1L)
   expect_true(isTRUE(zero_row$ZeroCount[1]))
@@ -98,13 +93,8 @@ test_that("data_quality_report flags original gaps hidden by score recoding", {
       keep_original = FALSE
     )
   )
-  dq <- data_quality_report(
-    fit,
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score"
-  )
+  dq <- mfrm_report(x = fit, data = d, person = "Person", facets = c("Rater", "Task", "Criterion"),
+    score = "Score", type = "data_quality")
   expect_true("score_categories_recoded" %in% dq$caveats$Condition)
   expect_true("original_score_gap_before_recoding" %in% dq$caveats$Condition)
   expect_equal(
@@ -134,14 +124,8 @@ test_that("data_quality_report flags facet-level category usage gaps", {
       keep_original = TRUE
     )
   )
-  dq <- data_quality_report(
-    fit,
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    min_category_count = 10
-  )
+  dq <- mfrm_report(x = fit, data = d, person = "Person", facets = c("Rater", "Task", "Criterion"),
+    score = "Score", min_category_count = 10, type = "data_quality")
 
   r1_mid <- dq$category_usage_by_facet[
     dq$category_usage_by_facet$Facet == "Rater" &
@@ -188,13 +172,8 @@ test_that("data_quality_report separates local range restriction from global sco
       keep_original = TRUE
     )
   )
-  dq <- data_quality_report(
-    fit,
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score"
-  )
+  dq <- mfrm_report(x = fit, data = d, person = "Person", facets = c("Rater", "Task", "Criterion"),
+    score = "Score", type = "data_quality")
   r1_summary <- dq$category_usage_summary[
     dq$category_usage_summary$Facet == "Rater" &
       dq$category_usage_summary$Level == "R1",
@@ -221,13 +200,8 @@ test_that("data_quality_report flags facet levels with restricted response patte
       keep_original = TRUE
     )
   )
-  dq <- data_quality_report(
-    fit,
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score"
-  )
+  dq <- mfrm_report(x = fit, data = d, person = "Person", facets = c("Rater", "Task", "Criterion"),
+    score = "Score", type = "data_quality")
 
   r1_pattern <- dq$facet_response_patterns[
     dq$facet_response_patterns$Facet == "Rater" &
@@ -351,7 +325,7 @@ test_that("fit-measure threshold profile rates use all selected rows", {
 # ---- category_curves_report ----
 
 test_that("category_curves_report returns a bundle", {
-  cc <- category_curves_report(.fit)
+  cc <- mfrm_report(x = .fit, type = "category_curves")
   expect_s3_class(cc, "mfrm_bundle")
   cc_summary <- summary(cc)
   expect_s3_class(cc_summary, "summary.mfrm_bundle")
@@ -438,7 +412,7 @@ test_that("standalone residual and subset writers create files", {
 # ---- category_structure_report ----
 
 test_that("category_structure_report returns a bundle", {
-  cs <- category_structure_report(.fit, diagnostics = .diag)
+  cs <- mfrm_report(x = .fit, diagnostics = .diag, type = "category_structure")
   expect_s3_class(cs, "mfrm_bundle")
 })
 
@@ -672,7 +646,7 @@ test_that("rater_halo_network_analysis returns rater-by-criterion halo diagnosti
 # ---- facet_statistics_report ----
 
 test_that("facet_statistics_report returns a bundle", {
-  fs <- facet_statistics_report(.fit, diagnostics = .diag)
+  fs <- mfrm_report(x = .fit, diagnostics = .diag, type = "facet_statistics")
   expect_s3_class(fs, "mfrm_bundle")
   expect_true(all(c("precision_summary", "variability_tests", "se_modes") %in% names(fs)))
   expect_true(is.data.frame(fs$precision_summary))
@@ -683,7 +657,7 @@ test_that("facet_statistics_report returns a bundle", {
 })
 
 test_that("precision_review_report returns a bundle", {
-  pa <- precision_review_report(.fit, diagnostics = .diag)
+  pa <- mfrm_report(x = .fit, diagnostics = .diag, type = "precision")
   expect_s3_class(pa, "mfrm_bundle")
   expect_true(all(c(
     "profile", "checks", "fit_separation_basis", "approximation_notes", "settings"
@@ -707,7 +681,7 @@ test_that("precision_review_report returns a bundle", {
 })
 
 test_that("precision_review_report marks JML runs as exploratory", {
-  pa <- precision_review_report(.fit, diagnostics = .diag)
+  pa <- mfrm_report(x = .fit, diagnostics = .diag, type = "precision")
   expect_identical(as.character(pa$profile$PrecisionTier[1]), "exploratory")
   expect_true(any(pa$checks$Status %in% c("review", "warn")))
 })
@@ -738,12 +712,8 @@ test_that("build_precision_profile demotes MML runs with fallback SE to hybrid t
 })
 
 test_that("facet_statistics_report filters precision summary by basis and SE mode", {
-  fs <- facet_statistics_report(
-    .fit,
-    diagnostics = .diag,
-    distribution_basis = "population",
-    se_mode = "model"
-  )
+  fs <- mfrm_report(x = .fit, diagnostics = .diag, distribution_basis = "population", se_mode = "model",
+    type = "facet_statistics")
   expect_true(all(fs$precision_summary$DistributionBasis == "population"))
   expect_true(all(fs$precision_summary$SEMode == "model"))
 })
@@ -904,15 +874,14 @@ test_that("facets_chisq_table produces valid output", {
 # ---- bias_interaction_report ----
 
 test_that("bias_interaction_report produces valid output", {
-  bi <- bias_interaction_report(.fit, diagnostics = .diag,
-                                facet_a = "Rater", facet_b = "Task")
+  bi <- mfrm_report(x = .fit, diagnostics = .diag, facet_a = "Rater", facet_b = "Task", type = "bias_interaction")
   expect_s3_class(bi, "mfrm_bundle")
   s <- summary(bi)
   expect_s3_class(s, "summary.mfrm_bundle")
 })
 
 test_that("bias_iteration_report produces valid output", {
-  bi <- bias_iteration_report(.bias)
+  bi <- mfrm_report(x = .bias, type = "bias_iterations")
   expect_s3_class(bi, "mfrm_bundle")
   expect_true(all(c("table", "summary", "orientation_review", "settings") %in% names(bi)))
   expect_true(is.data.frame(bi$table))
@@ -923,7 +892,7 @@ test_that("bias_iteration_report produces valid output", {
 })
 
 test_that("bias_pairwise_report produces valid output", {
-  bp <- bias_pairwise_report(.bias, top_n = 8)
+  bp <- mfrm_report(x = .bias, top_n = 8, type = "bias_pairwise")
   expect_s3_class(bp, "mfrm_bundle")
   expect_true(all(c("table", "summary", "orientation_review", "settings") %in% names(bp)))
   expect_true(is.data.frame(bp$table))
@@ -1015,7 +984,8 @@ test_that("bias reports flag mixed-sign orientation when facets mix score direct
     )
   )
   diag_pos <- diagnose_mfrm(fit_pos, residual_pca = "none")
-  bi <- bias_iteration_report(fit_pos, diagnostics = diag_pos, facet_a = "Rater", facet_b = "Task", max_iter = 2)
+  bi <- mfrm_report(x = fit_pos, diagnostics = diag_pos, facet_a = "Rater", facet_b = "Task", max_iter = 2,
+    type = "bias_iterations")
   expect_true(isTRUE(bi$summary$MixedSign[1]))
   expect_true(any(bi$orientation_review$Orientation == "positive"))
   expect_true(any(bi$orientation_review$Orientation == "negative"))
@@ -1045,7 +1015,7 @@ test_that("build_apa_outputs produces structured APA text", {
   )
   expect_true(is.data.frame(s$sections))
   expect_true("DraftContractPass" %in% names(s$overview))
-  expect_true(any(grepl("contract completeness", s$notes, fixed = TRUE)))
+  expect_true(any(grepl("expected draft information is present", s$notes, fixed = TRUE)))
   out <- capture.output(print(s))
   expect_true(any(grepl("^Decision$", out)))
   expect_true(any(grepl("Formal inference:", out, fixed = TRUE)))
@@ -1107,7 +1077,7 @@ test_that("APA formal-inference decision requires precision support after fit ga
   expect_identical(apa$decision$FormalInference[[1]], "No")
   expect_match(
     apa$decision$Why[[1]],
-    "precision contract does not support formal inference",
+    "uncertainty estimates do not support formal inference",
     fixed = TRUE
   )
   expect_match(

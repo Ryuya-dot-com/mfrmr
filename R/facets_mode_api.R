@@ -108,7 +108,7 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #' @return A list with components:
 #' - `fit`: [fit_mfrm()] result
 #' - `diagnostics`: [diagnose_mfrm()] result
-#' - `iteration`: [estimation_iteration_report()] result
+#' - `iteration`: [mfrm_report_iterations] result
 #' - `fair_average`: [fair_average_table()] result
 #' - `rating_scale`: [rating_scale_table()] result
 #' - `run_info`: run metadata table
@@ -118,9 +118,11 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #' - `method = "JML"` (default): legacy-compatible joint estimation
 #'   route; the default preserves the FACETS-style output continuity
 #'   that existing one-shot scripts expect. For new analysis scripts,
-#'   prefer `fit_mfrm(..., method = "MML")` -- MML is the package-wide
-#'   recommended route because person parameters are integrated out
-#'   under an N(0, 1) prior and per-person posterior SEs are available.
+#'   use [fit_mfrm()] and select the estimator for its assumptions and target.
+#'   MML integrates abilities under a specified population model; JML treats
+#'   them as fixed parameters and has incidental-parameter limitations.
+#'   Availability of posterior SDs alone does not justify choosing MML.
+#'
 #' - `method = "JMLE"`: backward-compatible input alias for the JML route;
 #'   fitted objects and generated outputs use the canonical `"JML"` label.
 #' - `method = "MML"`: marginal maximum likelihood route using
@@ -154,12 +156,12 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #'
 #' @section Preferred route for new analyses:
 #' For new scripts, prefer the package-native route:
-#' [fit_mfrm()] -> [diagnose_mfrm()] -> [reporting_checklist()] ->
+#' [fit_mfrm()] -> [diagnose_mfrm()] -> [mfrm_report_checklist] ->
 #' [build_apa_outputs()].
 #' Use `run_mfrm_facets()` when you specifically need the legacy-compatible
 #' one-shot wrapper.
 #'
-#' @seealso [fit_mfrm()], [diagnose_mfrm()], [estimation_iteration_report()],
+#' @seealso [fit_mfrm()], [diagnose_mfrm()], [mfrm_report_iterations],
 #'   [fair_average_table()], [rating_scale_table()], [mfrmr_visual_diagnostics],
 #'   [mfrmr_workflow_methods], [mfrmr_compatibility_layer]
 #'
@@ -182,7 +184,7 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #' s <- summary(out)
 #' s$overview[, c("Model", "Method", "Converged")]
 #' p_fit <- plot(out, type = "fit", draw = FALSE)
-#' p_fit$wright_map$data$plot
+#' plot_data(plot_data(p_fit, "wright_map"), "locations")
 #'
 #' # Optional: MML route
 #' if (interactive()) {
@@ -269,7 +271,7 @@ run_mfrm_facets <- function(data,
   )
 
   diagnostics <- diagnose_mfrm(fit, top_n_interactions = as.integer(top_n_interactions))
-  iter <- estimation_iteration_report(fit)
+  iter <- mfrm_report(x = fit, type = "iterations")
   fair <- fair_average_table(fit, diagnostics = diagnostics)
   rating <- rating_scale_table(fit, diagnostics = diagnostics)
 

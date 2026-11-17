@@ -35,10 +35,11 @@ after refitting; the model itself does not need to be fitted again.}
 a rater-like facet and otherwise falls back to the first modeled facet.}
 
 \item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list
-of such outputs. Non-matching bundles are skipped quietly.}
+of such outputs. Supplied results must match the fitted analysis;
+incompatible identity metadata is refused.}
 
-\item{severity_warn}{Absolute estimate cutoff used to flag severity
-outliers.}
+\item{severity_warn}{Absolute location cutoff relative to the fitted origin,
+in the fitted location units. It is a screening choice, not a quality standard.}
 
 \item{misfit_warn}{\code{NULL} (default) uses both bounds returned by
 \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}, including any session options. A numeric value
@@ -49,7 +50,7 @@ about 0.67--1.5, whereas the unmodified package defaults are 0.5--1.5.}
 \item{central_tendency_max}{Legacy opt-in absolute estimate cutoff for
 marking facet estimates near the fitted origin. The default \code{NULL}
 disables this flag because origin proximity is not evidence that a rater
-avoids extreme score categories. Use \code{\link[=data_quality_report]{data_quality_report()}} for observed
+avoids extreme score categories. Use \link{mfrm_report_data_quality} for observed
 category-use screening and \code{\link[=rater_centrality_table]{rater_centrality_table()}} for model-based
 indirect centrality indices.}
 
@@ -71,7 +72,13 @@ from a raw bias bundle.}
 
 \item{top_n}{Number of flagged levels to preview.}
 
-\item{...}{For \code{plot()}: Display controls from \code{\link[=plot_facet_quality_dashboard]{plot_facet_quality_dashboard()}}.
+\item{...}{For \code{plot()}: \code{top_n = 20}, \code{draw = TRUE}, \code{palette},
+\code{label_angle = 45}, and \code{title}. Use either \code{title} or the compatibility
+name \code{main}, never both. \code{type = "severity"} shows estimates;
+\code{type = "flags"} shows the saved screening flags. Fit inputs additionally
+accept the dashboard's analysis controls documented above; saved dashboard
+inputs reuse their existing results. Near-zero severity is not evidence
+of centrality, and screening flags are not automatic exclusion rules.
 
 For \code{summary()}: Reserved for generic compatibility.}
 
@@ -106,7 +113,10 @@ The dashboard screens individual facet elements across four
 complementary criteria:
 \itemize{
 \item \strong{Severity}: elements with \eqn{|\mathrm{Estimate}| >}
-\code{severity_warn} logits are flagged as unusually severe or lenient.
+\code{severity_warn} are flagged relative to the fitted origin. This is rater
+severity only for a rater facet; other facets retain their own meanings.
+Changing the origin changes this flag without changing fit. For GPCM,
+interpret native location units together with the fitted discriminations.
 \item \strong{Misfit}: elements with Infit or Outfit MnSq outside the
 configured heuristic review band are flagged. The band defaults to the package
 pair returned by \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}} (Linacre 0.5-1.5);
@@ -118,15 +128,16 @@ form (0.67-1.5).
 \eqn{|\mathrm{Estimate}| <} \code{central_tendency_max} logits are marked.
 This only describes proximity to the fitted origin and must not be
 interpreted as central-category use or restriction of range. Those are
-response-pattern questions; see \code{\link[=data_quality_report]{data_quality_report()}} and
+response-pattern questions; see \link{mfrm_report_data_quality} and
 \code{\link[=rater_centrality_table]{rater_centrality_table()}} for their distinct descriptive indices.
 \item \strong{Bias}: elements involved in \eqn{\ge} \code{bias_count_warn}
 screen-positive interaction cells (from \code{\link[=estimate_bias]{estimate_bias()}}) are flagged.
 }
 
 A \strong{flag density} score counts how many enabled criteria each element
-triggers. Elements flagged on multiple criteria warrant priority
-review and may motivate training or a documented data-quality review; the
+triggers. The criteria can be dependent; their count is not independent
+evidence of a problem or a calibrated quality score. Review the actual
+ratings and assignment before recommending training or other action; the
 dashboard does not justify automatic row, person, or rater exclusion.
 
 Default thresholds are screening heuristics. Prespecify and justify any
@@ -140,7 +151,7 @@ misfit exceedance still flags even if the other fit index is unavailable).
 describe supplied results only, not tests of absence of bias.
 Fit-readiness restrictions are retained in \code{fit_readiness},
 \code{interpretation_status} and \code{notes}. Review overlap with
-\code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and category use with \code{\link[=data_quality_report]{data_quality_report()}}
+\code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and category use with \link{mfrm_report_data_quality}
 before interpreting between-rater differences.
 
 \code{summary()} method: Summarize a facet-quality dashboard
@@ -181,7 +192,7 @@ diagnostics without refitting the model.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("facet_quality_dashboard", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_core")
@@ -191,7 +202,7 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 dash <- facet_quality_dashboard(fit, diagnostics = diag)
 summary(dash)
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("summary.mfrm_facet_dashboard", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.

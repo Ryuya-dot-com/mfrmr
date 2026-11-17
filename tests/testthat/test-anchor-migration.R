@@ -15,7 +15,7 @@ test_that('saved native constraints remain distinct in summaries and specificati
     expect_identical(s$settings_overview$CenteringScope,expected)
     expect_identical(s$settings_overview$NoncenterFacet,fit$config$noncenter_facet)
     expect_output(print(s),if(name=='legacy') 'legacy ungrouped' else 'whole declared facet')
-    spec <- specifications_report(fit,include_fixed=TRUE)
+    spec <- mfrm_report(x = fit, include_fixed = TRUE, type = "specifications")
     expect_identical(spec$data_spec$Value[spec$data_spec$Setting=='CenteringScope'],expected)
     expect_match(paste(spec$fixed,collapse=' '),expected)
     expect_match(summarize_anchor_constraints(fit$config),if(name=='legacy')

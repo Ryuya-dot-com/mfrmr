@@ -41,10 +41,12 @@ with optional distinct names. Ordinary RSM scoring only. Returns a
 (\verb{Lower < ability <= Upper}). Calibration, population parameters and cuts
 are held fixed. Labels do not establish CEFR alignment or a pass/fail rule.}
 
-\item{object, x}{An ordinary \code{mfrm_person_scores} result.}
+\item{object}{An ordinary \code{mfrm_person_scores} result.}
 
 \item{...}{Display controls passed to \code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}}; unused
 by print and summary.}
+
+\item{x}{An ordinary \code{mfrm_person_scores} result.}
 }
 \value{
 Ordinary fits return \code{mfrm_person_scores} with \code{table},
@@ -95,66 +97,19 @@ intervals. No missing scores are imputed.
 }
 \section{Conditional ability decisions}{
 
-Supply \code{cut_scores} on the calibration's ability scale to obtain
-\code{decisions}, with one row per Person and requested event. \code{Type = "above_cut"}
-gives \eqn{P(\theta > c \mid y, \widehat\psi)}; \code{Type = "ability_band"}
-gives the probability between successive cuts, including the two outer
-bands. \verb{Lower < ability <= Upper} defines every row. \code{Label} uses the
-supplied cut names (or \code{Cut1}, ...) and \code{Band1}, ... in increasing order.
-These events overlap: only the ability-band probabilities sum to one.
-
-\code{PriorMean} and \code{PriorSD} record the actual Person-specific normal prior;
-\code{Status} and \code{Reason} retain scoring availability. \code{available_conditional}
-means the applicable numerical checks passed, not that the model or the
-cut's substantive meaning has been validated. \code{review_only} requires
-inspection before interpretation. Source-roster scoring may return
-\code{prior_only} for missing-only Persons; portable scoring instead retains
-them as \code{unavailable} with \code{NA} probabilities. Fitted-object scoring omits
-Persons with no retained rows; inspect its row and population reviews.
-A Person absent from the input is never invented.
-
-Probabilities integrate the continuous posterior, rather than counting
-\code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} draws or applying a normal approximation
-to EAP/SD. They condition on point calibration, population/prior parameters
-and supplied cuts, as recorded in \code{Uncertainty}. They do not propagate
-estimation error, compare two Persons or predict passing a future test.
-CEFR labels require externally justified cuts on this same scale.
-Very small tails have absolute, not relative, numerical accuracy; a
-returned zero or one is not a claim of impossibility or certainty.
-
-Review the scoring population as well as the calibration. An estimated
-normal prior is treated as known during scoring; its sampling uncertainty
-can matter especially with a small calibration cohort. A larger calibration
-cohort can improve parameter precision without correcting a prior that
-mismatches a new population's mean, spread or shape. Passing numerical checks
-does not establish that probabilities are accurate for that new population.
-A fixed reference prior is not a universal remedy: justify it for the target
-population on the calibration scale. If a prior override is supported,
-comparing externally justified alternatives is a sensitivity analysis, not
-evidence that the alternative giving the preferred classification is valid.
-Population-averaged accuracy also does not guarantee accuracy near each cut,
-within every subgroup or for each individual Person.
-
-Use \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} for eligible ordinary RSM MML source Persons,
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for ordinary RSM/PCM MML or JML fitted-object scoring, and
-\code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} for eligible continuous-posterior RSM/PCM
-artifacts. Each route retains its existing source and population
-restrictions. Unit weights are required; GPCM, shared-rater and testlet
-cut probabilities are not supported. JML uses a separate scoring prior,
-not a population estimated by JML. \code{NULL} leaves the existing output unchanged.
-
-\code{summary(x)$decisions} and \code{\link[=apa_table]{apa_table()}} with \code{which = "decisions"} reuse
-saved probabilities without rounding them. Fitted-object and portable
-score batches also support \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} and
-\code{\link[=export_summary_appendix]{export_summary_appendix()}}. Save the complete result with \code{\link[=saveRDS]{saveRDS()}}
-to retain cuts, priors and review states for later reporting. Existing
-score plots display EAPs and intervals, not these event probabilities.
+Ordinary RSM scoring with unit weights supports \code{cut_scores}. Missing-only
+Persons retain \code{prior_only}: probabilities describe the assumed population,
+without response evidence. Keep \code{Status} and \code{Reason} with exported results.
+For event definitions, prior sensitivity and reporting, see
+"Conditional ability decisions" in \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.
 }
 
 \examples{
-ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score")
-scores <- score_mfrm_persons(fit, persons = unique(ratings$Person)[1:4],
+# Saved ordinary RSM/MML calibration of the synthetic example_core ratings.
+# For your data, start with fit_mfrm(); consumer-fits.R gives the full recipe.
+saved <- readRDS(system.file("examples", "consumer-fits.rds", package = "mfrmr"))
+fit <- saved$mml
+scores <- score_mfrm_persons(fit, persons = as.character(unique(fit$prep$data$Person))[1:4],
   cut_scores = c(Basic = -0.5, Advanced = 0.8))
 scores$table
 scores$decisions

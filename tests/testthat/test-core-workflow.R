@@ -128,7 +128,7 @@ test_that("core fit/diagnostics workflow runs", {
   expect_true(any(grepl("Many-Facet Measurement Diagnostics Summary", printed_diag, fixed = TRUE)))
   expect_true(any(grepl("Key warnings", printed_diag, fixed = TRUE)))
   expect_true(any(grepl("Next actions", printed_diag, fixed = TRUE)))
-  expect_true(any(grepl("Precision tier", printed_diag, fixed = TRUE)))
+  expect_true(any(grepl("Precision basis", printed_diag, fixed = TRUE)))
   expect_true(any(grepl("Additional tables remain in the structured summary", printed_diag, fixed = TRUE)))
 
   printed_diag_full <- capture.output(summary(diag, detail = "full"))
@@ -174,7 +174,7 @@ test_that("core fit/diagnostics workflow runs", {
   t5_summary <- summary(t5)
   expect_s3_class(t5_summary, "summary.mfrm_bundle")
 
-  t1 <- mfrmr::specifications_report(fit, title = "Toy run")
+  t1 <- mfrmr::mfrm_report(x = fit, title = "Toy run", type = "specifications")
   expect_s3_class(t1, "mfrm_specifications")
   expect_true(all(c("header", "data_spec", "facet_labels", "output_spec", "convergence_control", "anchor_summary") %in% names(t1)))
   expect_true(is.data.frame(t1$header))
@@ -182,20 +182,15 @@ test_that("core fit/diagnostics workflow runs", {
   t1_summary <- summary(t1)
   expect_s3_class(t1_summary, "summary.mfrm_bundle")
   expect_false("fixed" %in% names(t1))
-  t1_fixed <- mfrmr::specifications_report(fit, title = "Toy run", include_fixed = TRUE)
+  t1_fixed <- mfrmr::mfrm_report(x = fit, title = "Toy run", include_fixed = TRUE, type = "specifications")
   expect_true("fixed" %in% names(t1_fixed))
   expect_true(is.character(t1_fixed$fixed))
-  t1_alias <- mfrmr::specifications_report(fit, title = "Toy run")
+  t1_alias <- mfrmr::mfrm_report(x = fit, title = "Toy run", type = "specifications")
   expect_true(is.data.frame(t1_alias$header))
   expect_equal(names(t1_alias), names(t1))
 
-  t2 <- mfrmr::data_quality_report(
-    fit,
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score"
-  )
+  t2 <- mfrmr::mfrm_report(x = fit, data = d, person = "Person", facets = c("Rater", "Task", "Criterion"),
+    score = "Score", type = "data_quality")
   expect_s3_class(t2, "mfrm_data_quality")
   expect_true(all(c("summary", "model_match", "row_review", "unknown_elements", "category_counts") %in% names(t2)))
   expect_true(is.data.frame(t2$summary))
@@ -203,27 +198,16 @@ test_that("core fit/diagnostics workflow runs", {
   t2_summary <- summary(t2)
   expect_s3_class(t2_summary, "summary.mfrm_bundle")
   expect_false("fixed" %in% names(t2))
-  t2_fixed <- mfrmr::data_quality_report(
-    fit,
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    include_fixed = TRUE
-  )
+  t2_fixed <- mfrmr::mfrm_report(x = fit, data = d, person = "Person", facets = c("Rater", "Task", "Criterion"),
+    score = "Score", include_fixed = TRUE, type = "data_quality")
   expect_true("fixed" %in% names(t2_fixed))
   expect_true(is.character(t2_fixed$fixed))
-  t2_alias <- mfrmr::data_quality_report(
-    fit,
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score"
-  )
+  t2_alias <- mfrmr::mfrm_report(x = fit, data = d, person = "Person", facets = c("Rater", "Task", "Criterion"),
+    score = "Score", type = "data_quality")
   expect_true(is.data.frame(t2_alias$summary))
   expect_equal(names(t2_alias), names(t2))
 
-  t3 <- mfrmr::estimation_iteration_report(fit, max_iter = 3, include_prox = TRUE)
+  t3 <- mfrmr::mfrm_report(x = fit, max_iter = 3, include_prox = TRUE, type = "iterations")
   expect_s3_class(t3, "mfrm_iteration_report")
   expect_true(all(c("table", "summary", "settings") %in% names(t3)))
   expect_true(is.data.frame(t3$table))
@@ -231,10 +215,10 @@ test_that("core fit/diagnostics workflow runs", {
   t3_summary <- summary(t3)
   expect_s3_class(t3_summary, "summary.mfrm_bundle")
   expect_false("fixed" %in% names(t3))
-  t3_fixed <- mfrmr::estimation_iteration_report(fit, max_iter = 3, include_prox = TRUE, include_fixed = TRUE)
+  t3_fixed <- mfrmr::mfrm_report(x = fit, max_iter = 3, include_prox = TRUE, include_fixed = TRUE, type = "iterations")
   expect_true("fixed" %in% names(t3_fixed))
   expect_true(is.character(t3_fixed$fixed))
-  t3_alias <- mfrmr::estimation_iteration_report(fit, max_iter = 3, include_prox = TRUE)
+  t3_alias <- mfrmr::mfrm_report(x = fit, max_iter = 3, include_prox = TRUE, type = "iterations")
   expect_true(is.data.frame(t3_alias$table))
   expect_equal(names(t3_alias), names(t3))
 
@@ -251,7 +235,7 @@ test_that("core fit/diagnostics workflow runs", {
   expect_true(is.data.frame(t6_alias$summary))
   expect_equal(names(t6_alias), names(t6))
 
-  t62 <- mfrmr::facet_statistics_report(fit, diagnostics = diag)
+  t62 <- mfrmr::mfrm_report(x = fit, diagnostics = diag, type = "facet_statistics")
   expect_s3_class(t62, "mfrm_facet_statistics")
   expect_true(all(c("table", "ranges", "settings") %in% names(t62)))
   expect_true(is.data.frame(t62$table))
@@ -259,7 +243,7 @@ test_that("core fit/diagnostics workflow runs", {
   expect_true("Ruler" %in% names(t62$table))
   t62_summary <- summary(t62)
   expect_s3_class(t62_summary, "summary.mfrm_bundle")
-  t62_alias <- mfrmr::facet_statistics_report(fit, diagnostics = diag)
+  t62_alias <- mfrmr::mfrm_report(x = fit, diagnostics = diag, type = "facet_statistics")
   expect_true(is.data.frame(t62_alias$table))
   expect_equal(names(t62_alias), names(t62))
 
@@ -273,7 +257,7 @@ test_that("core fit/diagnostics workflow runs", {
   t8_plot <- plot(t8, draw = FALSE)
   expect_s3_class(t8_plot, "ggplot")
 
-  t8b <- mfrmr::category_structure_report(fit, diagnostics = diag)
+  t8b <- mfrmr::mfrm_report(x = fit, diagnostics = diag, type = "category_structure")
   expect_s3_class(t8b, "mfrm_category_structure")
   expect_true(all(c("category_table", "mode_peaks", "mode_boundaries", "median_thresholds", "mean_halfscore_points", "settings") %in% names(t8b)))
   expect_true(is.data.frame(t8b$category_table))
@@ -284,14 +268,14 @@ test_that("core fit/diagnostics workflow runs", {
   t8b_plot <- plot(t8b, draw = FALSE)
   expect_s3_class(t8b_plot, "ggplot")
   expect_false("fixed" %in% names(t8b))
-  t8b_fixed <- mfrmr::category_structure_report(fit, diagnostics = diag, include_fixed = TRUE)
+  t8b_fixed <- mfrmr::mfrm_report(x = fit, diagnostics = diag, include_fixed = TRUE, type = "category_structure")
   expect_true("fixed" %in% names(t8b_fixed))
   expect_true(is.character(t8b_fixed$fixed))
-  t8b_alias <- mfrmr::category_structure_report(fit, diagnostics = diag)
+  t8b_alias <- mfrmr::mfrm_report(x = fit, diagnostics = diag, type = "category_structure")
   expect_true(is.data.frame(t8b_alias$category_table))
   expect_equal(names(t8b_alias), names(t8b))
 
-  t8c <- mfrmr::category_curves_report(fit, theta_points = 101)
+  t8c <- mfrmr::mfrm_report(x = fit, theta_points = 101, type = "category_curves")
   expect_s3_class(t8c, "mfrm_category_curves")
   expect_true(all(c("graphfile", "graphfile_syntactic", "probabilities", "expected_ogive", "settings") %in% names(t8c)))
   expect_true(is.data.frame(t8c$graphfile))
@@ -303,10 +287,10 @@ test_that("core fit/diagnostics workflow runs", {
   t8c_plot <- plot(t8c, draw = FALSE)
   expect_s3_class(t8c_plot, "ggplot")
   expect_false("fixed" %in% names(t8c))
-  t8c_fixed <- mfrmr::category_curves_report(fit, theta_points = 101, include_fixed = TRUE)
+  t8c_fixed <- mfrmr::mfrm_report(x = fit, theta_points = 101, include_fixed = TRUE, type = "category_curves")
   expect_true("fixed" %in% names(t8c_fixed))
   expect_true(is.character(t8c_fixed$fixed))
-  t8c_alias <- mfrmr::category_curves_report(fit, theta_points = 101)
+  t8c_alias <- mfrmr::mfrm_report(x = fit, theta_points = 101, type = "category_curves")
   expect_true(is.data.frame(t8c_alias$graphfile))
   expect_equal(names(t8c_alias), names(t8c))
 
@@ -365,7 +349,7 @@ test_that("core fit/diagnostics workflow runs", {
   printed_bias <- capture.output(summary(bias))
   expect_true(any(grepl("Many-Facet Measurement Bias Summary", printed_bias, fixed = TRUE)))
 
-  t13 <- mfrmr::bias_interaction_report(bias, top_n = 20)
+  t13 <- mfrmr::mfrm_report(x = bias, top_n = 20, type = "bias_interaction")
   expect_s3_class(t13, "mfrm_bias_interaction")
   expect_true(all(c("ranked_table", "scatter_data", "summary", "thresholds", "facet_a", "facet_b") %in% names(t13)))
   expect_true(is.data.frame(t13$ranked_table))
@@ -374,7 +358,7 @@ test_that("core fit/diagnostics workflow runs", {
   expect_s3_class(t13_summary, "summary.mfrm_bundle")
   t13_plot <- plot(t13, draw = FALSE)
   expect_s3_class(t13_plot, "ggplot")
-  t13_alias <- mfrmr::bias_interaction_report(bias, top_n = 20)
+  t13_alias <- mfrmr::mfrm_report(x = bias, top_n = 20, type = "bias_interaction")
   expect_true(is.data.frame(t13_alias$ranked_table))
   expect_equal(names(t13_alias), names(t13))
 
@@ -428,7 +412,7 @@ test_that("core fit/diagnostics workflow runs", {
   expect_s3_class(bias3_summary, "summary.mfrm_bias")
   expect_true("Pair" %in% names(bias3_summary$top_rows))
 
-  t13_3 <- mfrmr::bias_interaction_report(bias3, top_n = 20)
+  t13_3 <- mfrmr::mfrm_report(x = bias3, top_n = 20, type = "bias_interaction")
   expect_s3_class(t13_3, "mfrm_bias_interaction")
   expect_true("facet_profile" %in% names(t13_3))
   expect_true(is.data.frame(t13_3$facet_profile))
@@ -680,7 +664,7 @@ test_that("legacy numbered API names are internal (not exported)", {
     "not an exported object"
   )
   old_t1 <- mfrmr:::table1_specifications(fit)
-  new_t1 <- mfrmr::specifications_report(fit)
+  new_t1 <- mfrmr::mfrm_report(x = fit, type = "specifications")
   expect_equal(names(old_t1), names(new_t1))
 
   expect_error(
@@ -688,7 +672,7 @@ test_that("legacy numbered API names are internal (not exported)", {
     "not an exported object"
   )
   old_t8 <- mfrmr:::table8_curves_export(fit, theta_points = 101)
-  new_t8 <- mfrmr::category_curves_report(fit, theta_points = 101)
+  new_t8 <- mfrmr::mfrm_report(x = fit, theta_points = 101, type = "category_curves")
   expect_equal(names(old_t8), names(new_t8))
 })
 

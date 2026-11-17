@@ -2,6 +2,8 @@
 % Please edit documentation in R/api-simulation.R
 \name{evaluate_mfrm_diagnostic_screening}
 \alias{evaluate_mfrm_diagnostic_screening}
+\alias{summary.mfrm_diagnostic_screening}
+\alias{plot.mfrm_diagnostic_screening}
 \title{Evaluate legacy and strict marginal diagnostic screening under controlled misfit scenarios}
 \usage{
 evaluate_mfrm_diagnostic_screening(
@@ -32,6 +34,18 @@ evaluate_mfrm_diagnostic_screening(
   report_include = c("fit", "diagnostics", "tables", "precision", "reporting"),
   report_style = c("qc", "apa", "validation", "reviewer", "technical"),
   seed = NULL
+)
+
+\method{summary}{mfrm_diagnostic_screening}(object, digits = 3, ...)
+
+\method{plot}{mfrm_diagnostic_screening}(
+  x,
+  type = c("overview", "report", "contrast", "runtime"),
+  metric = NULL,
+  x_var = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
+  group_var = NULL,
+  draw = TRUE,
+  ...
 )
 }
 \arguments{
@@ -98,8 +112,10 @@ simulation calls when \code{sim_spec = NULL}.}
 
 \item{include_report}{Logical; if \code{TRUE}, each successful replicate also
 builds \code{mfrm_results()} and \code{\link[=mfrm_report]{mfrm_report()}} and records the \code{report_index}
-readiness/signaling surface. This is intentionally opt-in because it
-repeats the comprehensive result-building workflow.}
+readiness/signaling surface. With \code{residual_pca = "none"}, it reuses the
+replicate's diagnostics; other PCA modes retain a separate PCA-free report
+diagnostic calculation. Report assembly can add substantial work and is
+excluded from \code{ElapsedSec}.}
 
 \item{report_include}{\code{include} vector passed to \code{\link[=mfrm_results]{mfrm_results()}} when
 \code{include_report = TRUE}.}
@@ -108,6 +124,32 @@ repeats the comprehensive result-building workflow.}
 \code{include_report = TRUE}.}
 
 \item{seed}{Optional seed for reproducible replications.}
+
+\item{object}{Output from \code{\link[=evaluate_mfrm_diagnostic_screening]{evaluate_mfrm_diagnostic_screening()}}.}
+
+\item{digits}{Number of digits used in numeric summaries.}
+
+\item{...}{Reserved for generic compatibility.}
+
+\item{x}{Output from \code{\link[=evaluate_mfrm_diagnostic_screening]{evaluate_mfrm_diagnostic_screening()}}.}
+
+\item{type}{Plot family. \code{"overview"} combines screening and optional report
+rates or counts. \code{"report"} focuses on \code{mfrm_report()} review signals.
+\code{"contrast"} plots misspecification-minus-well-specified contrasts.
+\code{"runtime"} plots elapsed-time summaries.}
+
+\item{metric}{Metric family. Use \code{NULL} or \code{"auto"} for the default within
+each \code{type}. Supported values are documented by error messages and include
+\code{"rate"}, \code{"count"}, \code{"magnitude"}, \code{"elapsed"}, and
+\code{"per_observation"} depending on \code{type}.}
+
+\item{x_var}{Design variable for the horizontal axis. Public design aliases
+from a simulation specification are accepted.}
+
+\item{group_var}{Optional additional design variable to include in group
+labels. Public design aliases are accepted.}
+
+\item{draw}{Logical; if \code{FALSE}, return the plot-data bundle without drawing.}
 }
 \value{
 An object of class \code{mfrm_diagnostic_screening} with:
@@ -132,9 +174,44 @@ well-specified baseline when the baseline scenario was evaluated
 \item \code{ademp}: simulation-study metadata
 \item \code{notes}: short interpretation notes
 }
+
+An object of class \code{summary.mfrm_diagnostic_screening} with:
+\itemize{
+\item \code{overview}: run-level design, replication, convergence, and report-review
+metadata
+\item \code{reading_order}: recommended order for reading the summary tables
+\item \code{next_actions}: action-oriented triage for interpreting and exporting the
+summary
+\item \code{reporting_notes}: report-facing boundaries and recommended wording
+safeguards
+\item \code{figure_recipes}: recommended figure/display recipes for the draw-free
+plot-data tables
+\item \code{scenario_summary}: aggregated scenario-by-design screening summaries
+\item \code{performance_summary}: operating-characteristic rates and runtime summaries
+\item \code{report_signal_summary}: optional \code{mfrm_report()} readiness/review signals
+\item \code{scenario_contrast}: misspecification-minus-well-specified contrasts
+\item \verb{plot_*}: long-form draw-free plot tables for overview, report, contrast,
+and runtime views
+\item planning metadata, settings, ADEMP metadata, and interpretation notes
+}
+
+Invisibly, a \code{ggplot} object carrying reusable metadata, a long-form
+\code{plot_long} table, and interpretation handoff tables (\code{overview},
+\code{reading_order}, \code{next_actions}, \code{reporting_notes}, and
+\code{figure_recipes}) accessible via \code{\link[=plot_data]{plot_data()}}.
 }
 \description{
-Evaluate legacy and strict marginal diagnostic screening under controlled misfit scenarios
+Summarizes output from \code{\link[=evaluate_mfrm_diagnostic_screening]{evaluate_mfrm_diagnostic_screening()}} for reporting,
+appendix export, and draw-free visualization handoff. The summary keeps
+simulation operating characteristics separate from inferential conclusions: fit,
+marginal, pairwise, and report-review signals are screening readouts rather
+than pass/fail evidence.
+
+Builds an integrated visual summary from
+\code{\link[=evaluate_mfrm_diagnostic_screening]{evaluate_mfrm_diagnostic_screening()}} output. The default view combines
+legacy residual, strict marginal, strict pairwise, strict combined, and
+optional report-index review rates so simulation results can be inspected in
+one operating-characteristic surface.
 }
 \details{
 This helper performs a compact Monte Carlo evaluation of the package's
@@ -187,7 +264,35 @@ diag_eval <- evaluate_mfrm_diagnostic_screening(
 diag_eval$scenario_summary
 diag_eval$scenario_contrast
 }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_diagnostic_screening", run.dontrun = TRUE)
+\dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+diag_eval <- saved$result
+summary(diag_eval)
+}
+# Optional workflow; run the example explicitly as shown below.
+# example("plot.mfrm_diagnostic_screening", run.dontrun = TRUE)
+\dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-diagnostic-screening.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+diag_eval <- saved$result
+plot(diag_eval, type = "overview", draw = FALSE)
+plot_data(diag_eval, type = "overview", component = "plot_long")
+plot_data(diag_eval, type = "overview", component = "next_actions")
+plot_data(diag_eval, type = "overview", component = "figure_recipes")
+plot(diag_eval, type = "report", metric = "rate", draw = FALSE)
+}
 }
 \seealso{
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
+
+\code{\link[=evaluate_mfrm_diagnostic_screening]{evaluate_mfrm_diagnostic_screening()}}, \link{plot.mfrm_diagnostic_screening}, \code{\link[=plot_data]{plot_data()}}
 }

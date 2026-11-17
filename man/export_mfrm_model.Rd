@@ -22,222 +22,48 @@ export_mfrm_model(
 )
 }
 \arguments{
-\item{fit}{Optional native RSM/PCM or GPCM MML \code{mfrm_fit} returned by
-\code{\link[=fit_mfrm]{fit_mfrm()}}. Supply either \code{fit}, or \code{data} together with \code{spec}.}
+\item{fit, data, spec}{Supply either a fitted MML \code{\link[=fit_mfrm]{fit_mfrm()}} \code{fit} (ordinary
+RSM/PCM, one-family GPCM, or Stan-only two-family GPCM) or long-format
+\code{data} with a shared \code{spec} list (unit weights, no \code{population_formula},
+\code{facet_interactions}, \code{dummy_facets}, or post-fit shrinkage; \code{anchor_policy}
+defaults to \code{"error"}).}
 
-\item{output_dir}{Destination directory. The bundle includes observed ratings
-and original level labels; review it before sharing.}
+\item{output_dir, format, overwrite, acknowledge_sensitive}{Destination
+directory (includes observed ratings and IDs), target backend (\code{"stan"} or
+\code{"brms"}), overwrite flag (\code{FALSE}), and privacy reminder toggle (\code{FALSE}).}
 
-\item{format}{Either \code{"stan"} (CmdStanR) or \code{"brms"} (custom family).}
+\item{location_prior_sd, step_prior_sd, log_slope_prior_sd, population_prior}{Marginal
+normal prior SDs on orthonormal/free location, step, and GPCM log-slope
+coordinates (\code{1} defaults), plus \code{list(mean = c(0, 1), log_sd = c(0, 0.5))}
+for estimated intercept-only GPCM Person populations in Stan.}
 
-\item{location_prior_sd}{Positive marginal prior SD for each varying facet
-location; fixed or uniquely determined locations have zero prior SD.}
-
-\item{step_prior_sd}{Positive marginal prior SD for each varying step offset.}
-
-\item{overwrite}{Replace bundle files that already exist? Defaults to \code{FALSE}.}
-
-\item{acknowledge_sensitive}{Suppress the reminder that ratings and original
-identifiers are included. Defaults to \code{FALSE}.}
-
-\item{log_slope_prior_sd}{Positive marginal prior SD of each component log
-slope for GPCM export. Defaults to 1; inspect prior
-sensitivity. Not used by RSM/PCM models.}
-
-\item{population_prior}{Normal prior parameters for an estimated Person
-population: a named list with \code{mean = c(location, scale)} for its mean
-and \code{log_sd = c(location, scale)} for the log of its standard deviation.
-Each scale must be positive. Defaults give \code{mu ~ normal(0, 1)} and
-\code{log(sigma) ~ normal(0, 0.5)}. Unused for fixed-population exports.}
-
-\item{data}{Optional long-format rating \code{data.frame} used with \code{spec} to
-export directly from rating data without fitting an MML model first.}
-
-\item{spec}{Optional named list defining the measurement model when \code{data}
-is supplied (the same 33-key \code{spec} shared with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}},
-\code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, and \code{\link[=fit_mfrm]{fit_mfrm()}}). Required entries are \code{person},
-\code{facets}, and \code{score}. Supported optional entries match \code{\link[=fit_mfrm]{fit_mfrm()}}:
-\code{model} (\code{"RSM"} default, \code{"PCM"}, or \code{"GPCM"}), \code{method} (\code{"MML"} only),
-\code{step_facet} (required for \code{"GPCM"}, not applicable to \code{"RSM"}),
-\code{slope_facet} (one declared facet for \code{"GPCM"}),
-\code{gpcm_mml_identification} (\code{"free_population"} default or
-\code{"fixed_standard_normal"}, \code{"GPCM"} only), \code{anchors}, \code{group_anchors},
-\code{anchor_policy} (\code{"error"} default before writing files, \code{"warn"}, or
-\code{"silent"}), \code{min_common_anchors}, \code{min_obs_per_element},
-\code{min_obs_per_category}, \code{noncenter_facet} (\code{"Person"} default),
-\code{centering_scope} (\code{"facet"} default or \code{"remainder"}), \code{positive_facets},
-\code{rating_min}, \code{rating_max}, \code{category_policy} (\code{"collapse"} or
-\code{"preserve"}), \code{keep_original}, \code{missing_codes}, \code{weight} (unit weights
-only), and \code{repeated_ratings} (\code{"review"} default or \code{"independent"}).
-Unsupported model extensions (\code{population_formula}, \code{facet_interactions},
-\code{dummy_facets}) or numerical \code{control} entries fail closed before files
-are written.}
-
-\item{write_json}{Logical; if \code{TRUE} (for \code{format = "stan"} only), also write
-CmdStanR-compatible \code{model-data.json} alongside \code{model-data.rds} and the
-CSV label/category maps, without requiring \code{cmdstanr} or \code{jsonlite}.
-Defaults to \code{FALSE}.}
-
-\item{run_cmdstan}{Logical; if \code{TRUE} (for \code{format = "stan"} only), compile
-and sample the exported Stan bundle immediately via \code{cmdstanr} using the
-bundle's \code{run.R} helper, persist \code{fit.rds}, \code{predictive-draws.rds},
-\code{posterior-summary.rds}, \code{posterior-draws.rds}, and CSV diagnostic tables,
-and attach the validated \code{mfrm_posterior_summary} object as \verb{$posterior}.
-Requires both the \code{cmdstanr} package and a configured CmdStan installation;
-fails before writing files when either is absent. Defaults to \code{FALSE}.}
-
-\item{cmdstan_args}{Optional named list of sampling arguments forwarded to
-\code{cmdstanr}'s \verb{$sample()} when \code{run_cmdstan = TRUE} (allowed entries:
-\code{seed}, \code{chains}, \code{parallel_chains}, \code{iter_warmup}, \code{iter_sampling},
-\code{adapt_delta}, \code{max_treedepth}, \code{refresh}, \code{show_messages},
-\code{show_exceptions}, \code{init}). \code{data} and \code{output_dir} are bound to the
-exported bundle and cannot be overridden. Defaults to \code{list()}.}
+\item{write_json, run_cmdstan, cmdstan_args}{For \code{format = "stan"}, write
+CmdStanR \code{model-data.json} (\code{FALSE} default), optionally compile/sample via
+\code{cmdstanr} immediately (\code{FALSE} default), and pass validated \verb{$sample()}
+arguments (\code{seed}, \code{chains}, \code{iter_warmup}, \code{iter_sampling}, \code{adapt_delta},
+\code{max_treedepth}, etc.).}
 }
 \value{
-Invisibly, a list with \code{format}, \code{model}, \code{output_dir} and named
-\code{files} (plus \code{posterior}, a validated \code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}} object with
-joint draws attached, when \code{run_cmdstan = TRUE}). When \code{run_cmdstan = FALSE}
-(default), no model is fitted and no external software is required.
+Invisibly, a list with \code{format}, \code{model}, \code{output_dir}, \code{files}, and
+(when \code{run_cmdstan = TRUE}) \verb{$posterior}.
 }
 \description{
-Write a self-contained Bayesian model bundle without running an estimator.
-Supply either a fitted native MML \code{mfrm_fit} (\code{fit}) or a long-format rating
-\code{data} table with a model specification list (\code{spec}) so ordinary RSM/PCM and
-one-family GPCM bundles can be written directly without MML optimization,
-Hessian evaluation, or EAP scoring.
-Supports ordinary RSM/PCM and fixed-population one-family GPCM in
-both formats. Estimated-population one-family GPCM (both \code{fit} and \code{spec}
-routes) and two-family GPCM (\code{fit} route) use
-Stan. Fixed facet/group and step anchors are retained.
-Sources must be unit-weight, with a fixed standard-normal Person population
-or (Stan only, one-family GPCM) an estimated intercept-only normal population,
-and no facet interactions or
-post-fit shrinkage. Unsupported specifications fail before files are written.
+Write a self-contained Bayesian model bundle (\code{model.stan} / \code{model.R},
+\code{model-data.rds}, optional \code{model-data.json}, label/category CSV maps, and
+\code{run.R} / \code{summarize.R}) from either a native MML \code{fit} or long-format \code{data}
+\itemize{
+\item \code{spec}, using the native logistic metric (\eqn{D = 1}).
+}
 }
 \details{
-The default one-family GPCM estimates its population mean and variance.
-Its intercept-only population can be exported to Stan, retaining the native
-metric, relative-slope constraint and supported fixed anchors. The generated
-model uses \code{theta = mu + sigma * z}, with independent standard-normal \code{z}.
-The population mean and SD are sampled, not fixed at their MML estimates.
-\code{population_prior} adds explicit Bayesian priors: by default sigma has median
-1 and a central 95\% prior interval of approximately 0.38 to 2.66. These are
-starting assumptions, not a population-size recommendation; inspect prior
-predictions and sensitivity for your rubric and anchors. The displayed
-Person prior SD includes uncertainty in both mu and sigma, not only sigma.
-Population regression, estimated-mean models with a fixed SD, and estimated-population
-brms or two-family exports are not supported. Choosing
-\code{gpcm_mml_identification = "fixed_standard_normal"} changes the model;
-it is not a file-format conversion or a workaround for these exclusions.
-
-Both formats retain the category ladder, facet signs, facet centering and
-RSM/PCM step ownership of the source specification. RSM/PCM adjacent-category log odds
-are \verb{theta + signed facet locations - step}. Steps follow their declared
-within-owner sum targets (zero by default) and are \strong{not ordered}. A binary
-ladder has its single offset fixed at its target. Fixed-population ability
-parameters have independent standard-normal priors; realized abilities are
-not centered across the observed Persons in either population mode.
-
-All supported exports preserve the native logistic metric (L-metric),
-with scaling constant \eqn{D = 1}. No extra 1.7 or 1.702 factor is used.
-Standard-normal ability priors do not imply a normal-ogive response link.
-The "Logistic metric (D = 1)" section of \code{\link[=fit_mfrm]{fit_mfrm()}} explains the scale
-and the adjustments needed before comparing other parameterizations.
-
-Centered locations and steps use an orthonormal contrast basis. Independent
-normal coordinates are scaled so each constrained component has the requested
-marginal SD. A centered singleton is fixed at zero. Uncentered locations have
-independent normal priors. These proper structural priors are additions to
-MML: the Bayesian posterior is not a reproduction of MML point estimates or
-frequentist confidence intervals. Review prior sensitivity for the application.
-
-Two-family GPCM is available with \code{format = "stan"} only. Its effective
-slope is the product of the two component slopes and multiplies the entire
-adjacent-category predictor, including locations and steps. The first
-family's log slopes sum to zero; the second family's log slopes are free
-on the fixed N(0,1) ability scale. Normal priors on orthonormal/free log-slope
-coordinates give each component the specified marginal log-slope SD.
-\code{slope-levels.csv} maps the generated \code{component_slopes} and
-\code{log_component_slopes} to their owners and levels. This preserves the source
-likelihood, not an MML interval or the exact priors/program of Uto and Ueno
-(2020). In particular, the extra 1.7 multiplier in their Appendix is absent.
-Additional fixed additive facets and separate step/noncentered roles are
-supported from an existing two-family fit. Extended bundles retain these
-roles in \code{model-data.rds$model_roles} and in the posterior reader. The
-geometric-mean-one reference is the source fit's \code{slope_reference}. Exporting
-a fit with another reference and fresh independent log-slope priors changes
-the Bayesian model; it is not a prior-preserving coordinate transformation.
-Direct \code{data}/\code{spec} export and new-Person posterior scoring remain unsupported
-for two-family models.
-One-family GPCM supports both formats. Its single owner's log slopes sum
-to zero (geometric mean one); its slope also multiplies the entire predictor.
-A singleton slope owner is fixed at one.
-
-Fixed non-Person facet anchors, group means and step anchors are exact affine
-constraints. The export preserves whole-facet versus remainder centering and
-each step owner's target. Priors on the remaining free contrasts are centered
-so each free level shares its block's remaining total equally. These priors
-are defined on the constrained subspace, not obtained by conditioning an
-earlier unanchored posterior. \code{levels.csv} and \code{steps.csv} in these bundles
-record the affine prior means, marginal SDs and fixed-coordinate indicators;
-\code{model-data.rds$constraints} retains the source constraints. One-family bundles
-use the same affine representation even without anchors. Anchors are fixed
-inputs: zero posterior spread does not establish certainty about their earlier
-calibration. Uncertain external calibration is not propagated. Retained step
-constraints are exported; this does not add a step-anchor fitting argument.
-Native two-family fitting retains its anchor exclusion. Person anchors
-require JML in native fitting and remain outside this MML exporter.
-
-\code{model-data.rds} records the design matrices, priors and mappings used by both
-formats. When \code{write_json = TRUE} (\code{format = "stan"} only), \code{model-data.json}
-also serializes \code{model-data.rds$stan_data} using CmdStanR's JSON array/scalar
-rules so external Stan runners can read the data without R; keep
-\code{model-data.rds} and the CSV files for label mappings and \code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}}.
-\code{levels.csv} maps original labels to generated parameters;
-\code{categories.csv} maps Stan/brms categories to the source score scale.
-\code{run.R} fits the exported model and saves draws, diagnostics and replicated
-ratings. Run it from the bundle directory, after installing CmdStanR/CmdStan
-and, for the brms format, brms. Neither is required to export a bundle.
-Both formats support \verb{Rscript run.R --summarize} to regenerate summaries
-from \code{fit.rds} without compiling or sampling. Keep \code{model-data.rds},
-\code{summarize.R} and the brms \code{model.R} with the saved fit.
-Read \code{summary-decision.csv} first, then \code{sampling-review.csv} for the checks,
-criteria and next actions. \code{parameter-summary.csv} joins original labels to
-estimates, references and score-direction notes. \code{value_role} distinguishes
-estimated values, fixed anchors and constraint-determined values. Fixed
-values have no estimated SD or interval (\code{NA}); they do not establish zero
-external calibration uncertainty. Varying parameters retain equal-tailed
-95\% credible bounds, endpoint MCSE, R-hat and bulk/tail ESS, even during
-review, with \code{interval_status} beside the values. \code{interval_computed} means
-finite bounds for a varying parameter, not reliable sampling or coverage.
-\code{sampler-diagnostics.csv} contains per-chain diagnostics;
-\code{posterior-summary.rds} retains all four tables and interpretation notes,
-and \code{posterior-draws.rds} stores the matching base-R chain-by-iteration
-parameter draws bound by checksum for contrasts and arbitrary credible levels.
-
-The screen checks at least four chains, R-hat below 1.01, bulk/tail ESS at
-least 100 per chain, zero divergences/tree-depth hits and E-BFMI at least
-0.3. Missing diagnostics require review; fixed coordinates are excluded
-using model constraints, not sample variance. Tree-depth hits flag efficiency
-separately from divergences. These checks follow the
-\href{https://mc-stan.org/learn-stan/diagnostics-warnings.html}{Stan diagnostic guidance}
-and are not a certificate of validity. Review all varying coordinates,
-model fit and priors. The larger endpoint MCSE divided by interval width
-measures simulation precision; no universal acceptable fraction is imposed.
-Read the matching summary, joint draws and model-data files with
-\code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}} to use \code{summary()}, \code{confint()}, \code{plot()},
-\code{as.data.frame()} and \code{\link[=mfrm_report]{mfrm_report()}} without either sampling backend.
-Keep \code{fit.rds} for posterior predictive replay and backend-specific tools.
-Generated brms callbacks support \code{log_lik()}, \code{posterior_predict()} and
-\code{posterior_epred()}; the last returns category probabilities.
-
-Log likelihood and replicated ratings condition on the sampled abilities of
-existing Persons. They do not provide leave-one-Person-out validation or
-predictions for new Persons; use \code{\link[=predict.mfrm_posterior_summary]{predict.mfrm_posterior_summary()}} to score
-new Persons against the saved calibration posterior without updating
-calibration parameters. Exporting does not qualify the original fit's
-convergence, inference, or an external sampler's diagnostics. Repeated ratings
-retain the source conditional-independence assumption.
+Centered blocks use orthonormal contrast bases so each constrained coordinate
+has the requested marginal prior SD (\code{Fixed} anchors and group/step
+constraints enter as exact affine offsets with \code{NA} posterior SDs). Generated
+summaries (\code{posterior-summary.rds} and checksum-bound \code{posterior-draws.rds})
+screen \verb{>= 4} chains, \code{R-hat < 1.01}, bulk/tail \code{ESS >= 100} per chain, \code{0}
+divergences/treedepth hits, and \code{E-BFMI >= 0.3}, connecting to
+\code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}} and \code{\link[=predict.mfrm_posterior_summary]{predict.mfrm_posterior_summary()}} (Uto & Ueno,
+2020, \doi{10.1007/s41237-020-00115-7}).
 }
 \examples{
 # Each row in example_core is one integer rating (Person x Rater x Criterion).
@@ -282,12 +108,7 @@ from_fit <- export_mfrm_model(fit, tempfile("mfrmr-fit-stan-"), "stan",
 unlink(from_fit$output_dir, recursive = TRUE)
 }
 }
-\references{
-Uto, M., & Ueno, M. (2020). A generalized many-facet Rasch model and its
-Bayesian estimation using Hamiltonian Monte Carlo. \emph{Behaviormetrika, 47},
-469-496. \doi{10.1007/s41237-020-00115-7}. Equation 9, Sections 6-7 and Appendix.
-}
 \seealso{
-\code{\link[=export_mfrm_results]{export_mfrm_results()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}},
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=read_mfrm_posterior]{read_mfrm_posterior()}},
 \code{\link[=predict.mfrm_posterior_summary]{predict.mfrm_posterior_summary()}}
 }

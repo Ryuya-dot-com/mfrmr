@@ -1,6 +1,6 @@
 #' Compare ordered responses using cumulative logistic models
 #'
-#' Compare two groups at an explicitly supplied numeric matching variable,
+#' Compare two or more groups at an explicitly supplied numeric matching variable,
 #' using three nested proportional-odds models. This independent-Person
 #' sensitivity analysis does not estimate ability or fit an MFRM.
 #'
@@ -13,7 +13,8 @@
 #' @param matching Name of one finite numeric matching column. Values may
 #'   differ across targets. Missing scores or matching values are excluded
 #'   together from all models for the affected target.
-#' @param groups Two distinct labels in reference, focal order.
+#' @param groups At least two distinct labels. The first is the reference;
+#'   the remaining labels specify focal groups in reporting order.
 #' @param categories Distinct numeric or character category labels, in increasing
 #'   response order. Factor labels are treated as character. Category spacing
 #'   has no effect. Every declared category must occur in each target's complete
@@ -27,36 +28,58 @@
 #' Requires the optional package \pkg{ordinal}. Maximum likelihood is computed
 #' by [ordinal::clm()] with a logit link and flexible thresholds. For each target,
 #' matching is centered at its pooled midrange and divided by its half-range:
-#' `z = (matching - Center) / Scale`. Group is coded 0 for reference and 1 for
-#' focal. `M1` uses `z`, `M2` uses `z + g`, and `M3` uses `z * g`. All three use
+#' `z = (matching - Center) / Scale`. Two groups retain numeric 0/1 coding.
+#' With more groups, `g` is an unordered factor with fixed treatment contrasts,
+#' using the first declared group as reference; `settings$group_coding` maps
+#' labels to coefficient terms (`g2`, `g3`, ...). `M1` uses `z`, `M2` uses
+#' `z + g`, and `M3` uses `z * g`. All three use
 #' identical complete responses. The model is
 #' `logit Pr(Y <= k) = threshold[k] - linear_predictor`.
 #'
-#' `Uniform` compares M2 to M1 (1 df), `Nonuniform` compares M3 to M2 (1 df),
-#' and `Joint` compares M3 to M1 (2 df). These are asymptotic likelihood-ratio
+#' For G groups, `Uniform` compares M2 to M1 (G-1 df), `Nonuniform` compares M3
+#' to M2 (G-1 df), and `Joint` compares M3 to M1 (2(G-1) df). These are omnibus,
+#' asymptotic likelihood-ratio
 #' tests. A uniform comparison assumes no interaction; its coefficient must not
 #' be interpreted as a constant group difference when an interaction matters.
-#' No automatic selection between these models or DIF/bias flag is made.
+#' A significant omnibus test does not identify which group differs. No
+#' automatic selection between these models or DIF/bias flag is made.
 #' `NagelkerkeR2` is `(1-exp(2*(LL0-LL)/N))/(1-exp(2*LL0/N))`, where LL0 is the
 #' intercept-only multinomial log likelihood. `DeltaNagelkerkeR2` subtracts
 #' the reduced model's value from the full model's value. This is not explained
 #' score variance or McKelvey--Zavoina R-squared; no universal effect-size cutoff
 #' is applied.
 #'
-#' `contrasts` gives M3's reference/focal upper-tail odds ratio at the lower
-#' endpoint, midpoint and upper endpoint of the groups' overlapping matching
-#' ranges. Its log is `-(beta_g + beta_z:g * z)`; a value above 1 favors higher
-#' reference scores. This applies to each category cut under proportional odds.
-#' These are point estimates, not simultaneous intervals. Fits use all complete
+#' In `coefficients`, `Parameter` distinguishes thresholds from slopes;
+#' `Estimate` is a logit coefficient, not a severity or an odds ratio. For
+#' M1--M3, `z` is the matching slope in the reference group. Divide it by
+#' `matching$Scale` for a one-unit change in the original matching variable.
+#' In M3, add the corresponding `z:g` interaction for a focal group's slope.
+#' A positive group coefficient means higher focal-group upper-tail odds at
+#' `matching = Center` (where `z = 0`). With an interaction it is not a
+#' constant group effect. Thresholds are cumulative-logit cutpoints on the
+#' declared category order, not RSM/PCM step offsets.
+#'
+#' `contrasts` gives M3's reference/focal upper-tail odds ratio for each focal
+#' group at the lower endpoint, midpoint and upper endpoint of the matching
+#' range shared by all declared groups. Its log for a focal group is
+#' `-(beta_g + beta_z:g * z)`; a value above 1 favors higher
+#' reference scores. Thus at `Center` it is the reciprocal of the
+#' exponentiated group coefficient. `OverlapMid` need not equal `Center`:
+#' one uses the shared range, the other the pooled range. This applies to each
+#' category cut under proportional odds. These are point estimates, not simultaneous intervals. Fits use all complete
 #' responses, including those outside that overlap. Range overlap alone does not
 #' establish comparable distributions or adequate local support. Each group
-#' must have varying matching values and their ranges must overlap with positive
-#' width. The `matching` table retains the ranges and transformation.
+#' must have varying matching values and all ranges must share a positive-width
+#' interval. This is the supported comparison design, not a necessary condition
+#' for mathematical identifiability or a finite ML solution. The `matching`
+#' table has one row per reference/focal pair, retaining the individual ranges,
+#' common overlap and transformation. `InputRows` and `CompleteRows` are
+#' target-level totals repeated on those rows; do not sum them across pairs.
 #'
 #' For three or more categories, `proportional_odds` compares M3 with a model
-#' in which all three slopes may differ across cumulative category cuts
+#' in which all `2G-1` slopes may differ across cumulative category cuts
 #' (`clm(y ~ 1, nominal = ~ z * g)`). This global asymptotic LR diagnostic has
-#' `3 * (K - 2)` df. It concerns equality across category cuts, whereas the
+#' `(2G-1) * (K-2)` df. It concerns equality across category cuts, whereas the
 #' nonuniform comparison concerns differences across matching values. They are
 #' different questions. The diagnostic is not applicable to binary responses.
 #' An unavailable or nonsignificant diagnostic does not certify proportional
@@ -102,6 +125,12 @@
 #'   No backend model objects or executable environments are retained.
 #'
 #' @references
+#' Magis, D., Raiche, G., Beland, S., & Gerard, P. (2011). A generalized logistic
+#' regression procedure to detect differential item functioning among multiple
+#' groups. *International Journal of Testing, 11*, 365--386.
+#' \doi{10.1080/15305058.2011.602810}. The binary multiple-group tests correspond
+#' to this framework; the ordinal extension additionally assumes proportional odds.
+#'
 #' Rogers, H. J., & Swaminathan, H. (1993). A comparison of logistic regression
 #' and Mantel-Haenszel procedures for detecting differential item functioning.
 #' *Applied Psychological Measurement, 17*, 105--116.
@@ -114,7 +143,7 @@
 #' that handbook are not interchangeable.
 #' @seealso [analyze_dff()], [mantel_haenszel_table()], [mfrmr_linking_and_dff]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("ordinal_logistic_table", run.dontrun = TRUE)
 #' \dontrun{
 #' if (requireNamespace("ordinal", quietly = TRUE)) {
@@ -144,9 +173,9 @@ ordinal_logistic_table <- function(data, person, target, score, group, matching,
   selected <- c(person, target, score, group, matching)
   if (anyDuplicated(selected) || !all(selected %in% names(data))) stop(
     "Person, target, score, group and matching must name distinct existing columns.", call. = FALSE)
-  if (!is.character(groups) || length(groups) != 2L || anyNA(groups) ||
+  if (!is.character(groups) || length(groups) < 2L || anyNA(groups) ||
       any(!nzchar(trimws(groups))) || anyDuplicated(groups)) stop(
-    "`groups` must contain two distinct nonblank labels in reference, focal order.", call. = FALSE)
+    "`groups` must contain at least two distinct nonblank labels, with the reference first.", call. = FALSE)
   for (nm in c(person, target, group)) {
     v <- data[[nm]]
     if (!is.null(dim(v)) || !(is.factor(v) || (!is.object(v) &&
@@ -182,7 +211,7 @@ ordinal_logistic_table <- function(data, person, target, score, group, matching,
   if (!requireNamespace("ordinal", quietly = TRUE)) stop(
     "Install the optional package `ordinal` to use `ordinal_logistic_table()`.", call. = FALSE)
 
-  k <- length(categories)
+  k <- length(categories); ng <- length(groups)
   complete <- !is.na(code) & !is.na(x)
   cases <- data.frame(Row = seq_len(nrow(data)), Person = pid, Target = tid,
     Group = g, Score = y, Matching = x, Included = FALSE,
@@ -193,34 +222,42 @@ ordinal_logistic_table <- function(data, person, target, score, group, matching,
   for (i in seq_along(targets)) {
     t <- targets[i]; rows <- which(tid == t); used <- rows[complete[rows]]
     counts <- tabulate(code[used], nbins = k)
-    xr <- x[used[g[used] == groups[1]]]; xf <- x[used[g[used] == groups[2]]]
-    rr <- if (length(xr)) range(xr) else c(NA_real_, NA_real_)
-    rf <- if (length(xf)) range(xf) else c(NA_real_, NA_real_)
-    lo <- max(rr[1], rf[1]); hi <- min(rr[2], rf[2])
+    group_x <- lapply(groups, function(label) x[used[g[used] == label]])
+    ranges <- lapply(group_x, function(v) if (length(v)) range(v) else c(NA_real_, NA_real_))
+    lo <- max(unlist(lapply(ranges, `[`, 1L)))
+    hi <- min(unlist(lapply(ranges, `[`, 2L)))
     center <- scale <- NA_real_
     reason <- if (!length(used)) "no_complete_responses" else
-      if (!length(xr) || !length(xf)) "missing_group" else
+      if (any(lengths(group_x) == 0L)) "missing_group" else
         if (any(counts == 0)) "unused_category" else
-          if (rr[1] == rr[2] || rf[1] == rf[2]) "constant_matching_within_group" else
+          if (any(vapply(ranges, function(r) r[1] == r[2], logical(1)))) "constant_matching_within_group" else
             if (lo >= hi) "no_matching_range_overlap" else "eligible"
     if (reason == "eligible") {
       center <- min(x[used]) / 2 + max(x[used]) / 2
       scale <- max(abs(x[used] - center))
       if (!is.finite(scale) || scale <= 0) reason <- "invalid_matching_scale"
     }
-    matches[[i]] <- data.frame(Target = t, Reference = groups[1], Focal = groups[2],
-      InputRows = length(rows), CompleteRows = length(used), NReference = length(xr), NFocal = length(xf),
-      ReferenceMin = rr[1], ReferenceMax = rr[2], FocalMin = rf[1], FocalMax = rf[2],
-      OverlapMin = lo, OverlapMax = hi, Center = center, Scale = scale, Status = reason)
+    matches[[i]] <- do.call(rbind, lapply(seq.int(2L, ng), function(h) data.frame(
+      Target = t, Reference = groups[1], Focal = groups[h],
+      InputRows = length(rows), CompleteRows = length(used),
+      NReference = length(group_x[[1]]), NFocal = length(group_x[[h]]),
+      ReferenceMin = ranges[[1]][1], ReferenceMax = ranges[[1]][2],
+      FocalMin = ranges[[h]][1], FocalMax = ranges[[h]][2],
+      OverlapMin = lo, OverlapMax = hi, Center = center, Scale = scale, Status = reason)))
     cases$Reason[used] <- if (reason == "eligible") "model_input" else reason
     cases$Included[used] <- reason == "eligible"
     fits <- setNames(vector("list", 3L + (k > 2L)), c("M1", "M2", "M3", if (k > 2L) "NonPO"))
     ll0 <- if (length(used)) sum(counts[counts > 0] * log(counts[counts > 0] / length(used))) else NA_real_
     forms <- list(y ~ z, y ~ z + g, y ~ z * g, y ~ 1)
+    model_data <- if (reason == "eligible") data.frame(
+      y = ordered(code[used], levels = seq_len(k)), z = (x[used] - center) / scale,
+      g = if (ng == 2L) as.integer(g[used] == groups[2]) else
+        factor(match(g[used], groups), levels = seq_len(ng))) else NULL
+    # Fix coding independently of session-wide contrast options and label syntax.
+    if (ng > 2L && !is.null(model_data)) stats::contrasts(model_data$g) <-
+      stats::contr.treatment(as.character(seq_len(ng)), base = 1L)
     for (j in seq_along(fits)) {
-      f <- mfrm_ordinal_fit(if (reason == "eligible") data.frame(
-        y = ordered(code[used], levels = seq_len(k)),
-        z = (x[used] - center) / scale, g = as.integer(g[used] == groups[2])) else NULL,
+      f <- mfrm_ordinal_fit(model_data,
         forms[[j]], nominal = if (j == 4L) ~ z * g else NULL, unavailable = reason)
       f$row$Target <- t; f$row$Model <- names(fits)[j]
       f$row$N <- length(used)
@@ -246,14 +283,16 @@ ordinal_logistic_table <- function(data, person, target, score, group, matching,
       if (k > 2L) mfrm_ordinal_lr(fits$M3$row, fits$NonPO$row) else
         data.frame(ChiSquared = NA_real_, DF = NA_real_, PValue = NA_real_, Status = "not_applicable_binary"))
     points <- if (reason == "eligible") c(lo, lo / 2 + hi / 2, hi) else rep(NA_real_, 3)
-    logor <- rep(NA_real_, 3)
-    if (fits$M3$row$Status == "available") {
-      b <- fits$M3$coefficients
-      logor <- unname(-(b["g"] + b["z:g"] * (points - center) / scale))
-    }
-    contrasts[[i]] <- data.frame(Target = t, Reference = groups[1], Focal = groups[2],
-      Position = c("OverlapMin", "OverlapMid", "OverlapMax"), Matching = points,
-      LogOddsRatio = logor, OddsRatio = exp(logor), Status = fits$M3$row$Status)
+    contrasts[[i]] <- do.call(rbind, lapply(seq.int(2L, ng), function(h) {
+      logor <- rep(NA_real_, 3)
+      if (fits$M3$row$Status == "available") {
+        b <- fits$M3$coefficients; term <- if (ng == 2L) "g" else paste0("g", h)
+        logor <- unname(-(b[term] + b[paste0("z:", term)] * (points - center) / scale))
+      }
+      data.frame(Target = t, Reference = groups[1], Focal = groups[h],
+        Position = c("OverlapMin", "OverlapMid", "OverlapMax"), Matching = points,
+        LogOddsRatio = logor, OddsRatio = exp(logor), Status = fits$M3$row$Status)
+    }))
   }
   out <- lapply(list(table = comparisons, models = models, coefficients = coefficients,
     contrasts = contrasts, proportional_odds = diagnostics, matching = matches), function(x) {
@@ -268,7 +307,8 @@ ordinal_logistic_table <- function(data, person, target, score, group, matching,
   out$settings <- list(person = person, target = target, score = score, group = group,
     matching = matching, groups = groups, categories = categories, p_adjust = p_adjust,
     adjustment_family_size = nrow(out$table), diagnostic_family_size = length(targets),
-    link = "logit", group_coding = c(reference = 0L, focal = 1L),
+    link = "logit", group_coding = if (ng == 2L) c(reference = 0L, focal = 1L) else
+      stats::setNames(c("reference", paste0("g", seq.int(2L, ng))), groups),
     backend = "ordinal::clm", backend_version = as.character(utils::packageVersion("ordinal")),
     gradient_tolerance = 1e-6, newton_step_tolerance = 1e-4,
     hessian_relative_tolerance = sqrt(.Machine$double.eps))

@@ -14,111 +14,25 @@
 #'   all candidate pairs. Leave `NULL` to retain the complete pair audit.
 #'
 #' @details
-#' This helper computes pairwise rater agreement on matched contexts
-#' and returns both a pair-level table and a one-row summary. The output is
-#' package-native and does not require knowledge of legacy report numbering.
-#' When fitted category probabilities are available, expected exact agreement
-#' for a matched context is the model-implied quantity
-#' \eqn{\sum_k P_{r1}(X=k)P_{r2}(X=k)}. It is not a marginal-frequency chance
-#' agreement statistic. This product assumes conditional independence at the
-#' saved Person point score and fitted structural parameters. MML uses the
-#' saved EAP: it does not integrate either the product or its factors over
-#' the Person posterior. Calibration and population uncertainty are not
-#' propagated. Nonfinite primary Person/facet/step estimates or unavailable
-#' GPCM slopes withhold the affected expectations; finite internal optimizer
-#' proxies are not substituted and limiting boundary probabilities are not
-#' calculated here. `ExpectedReason` records unavailable primary estimates,
-#' repeated ratings, unavailable probabilities or absent matched scores.
-#' Observed exact agreement uses equality of the package's
-#' observed score categories. Repeated ratings in a rater/context cell are
-#' averaged using observation weights; comparisons then describe those means,
-#' and expected exact agreement is withheld for the repeated cells. The
-#' current function does not translate category
-#' positions across multiple independent scales, apply an agreement-based SE
-#' inflation, or establish numerical equivalence with FACETS Table 7.
-#' For two-way observed-score ICCs without an MFRM fit, use
-#' [pairwise_icc_table()]. That function requires one rating per rater/unit
-#' and an explicit choice of agreement/consistency and single/average ratings.
-#' The raw-score kappa, alpha and AC2 helpers also reject repeated rater-unit
-#' cells; they do not inherit this function's averaging convention. See
-#' [mfrmr_methods_reference] for choosing among these targets.
+#' Computes pairwise rater agreement on matched contexts (`pairs` and one-row
+#' `summary`). Model-implied expected exact agreement is
+#' \eqn{\sum_k P_{r1}(X=k)P_{r2}(X=k)} evaluated conditionally at saved Person
+#' point estimates (including MML EAPs) and structural parameters, without
+#' posterior integration or calibration-uncertainty propagation. Nonfinite
+#' primary estimates, repeated rater-context cells (whose observed scores are
+#' weight-averaged), or unavailable GPCM slopes set `ExpectedExact = NA` with
+#' explicit `ExpectedReason` (`primary_estimate_unavailable`,
+#' `repeated_ratings`, `fitted_probabilities_unavailable`, or
+#' `no_matched_scores`).
 #'
-#' Within a pair, every matched context with two finite scores contributes
-#' one opportunity, after any within-cell averaging. Observation weights
-#' affect that averaging, not the weight assigned to the resulting context.
-#' Overall exact/adjacent agreement divides the corresponding counts by the
-#' total opportunities across pairs. A context with finite compared scores
-#' from m judges contributes m(m-1)/2 opportunities, so this is not equal weighting of distinct contexts
-#' or independent evidence from that many people. Pairwise correlation is
-#' computed from the matched scores, and `MeanCorr` weights each available
-#' correlation by its pair's matched-context count. It is not a panel ICC.
-#'
-#' @section Interpreting output:
-#' - `summary`: overall agreement level, number/share of flagged pairs.
-#' - `pairs`: pairwise exact agreement, correlation, and direction/size gaps.
-#' - `settings`: applied facet matching and warning thresholds.
-#'
-#' Flags indicate configured review thresholds, not rater quality, fairness
-#' or an automatic training priority. A missing rule remains unavailable;
-#' a known cutoff crossing still flags the pair. Overall flag rates require
-#' complete classification. Expected agreement is withheld if any matched
-#' context lacks valid category probabilities; availability counts are retained.
-#' Recreate older agreement/network results from the existing fit and matching
-#' diagnostics with the original settings, then regenerate plots and exports.
-#'
-#' @section Typical workflow:
-#' 1. Run with explicit `rater_facet` (and `context_facets` if needed).
-#' 2. Review `summary(ir)` and top flagged rows in `ir$pairs`.
-#' 3. Visualize with [plot(x, type = "agreement")][plot.mfrm_fit].
-#'
-#' @section Output columns:
-#' The `pairs` data.frame contains:
-#' \describe{
-#'   \item{Rater1, Rater2}{Rater pair identifiers.}
-#'   \item{N, OpportunityCount}{Number of matched contexts with two finite
-#'     scores for this pair, after any repeated-cell averaging.}
-#'   \item{Exact}{Proportion of exact score agreements.}
-#'   \item{ExpectedExact}{Model-implied expected exact agreement from the two
-#'     raters' fitted category-probability vectors. `NA` when those probabilities
-#'     are unavailable.}
-#'   \item{Adjacent}{Proportion whose absolute compared-score difference is
-#'     at most 1, including exact agreements.}
-#'   \item{MeanDiff}{Signed mean score difference (Rater1 - Rater2).}
-#'   \item{MAD}{Mean absolute score difference.}
-#'   \item{Corr}{Pearson correlation between paired scores.}
-#'   \item{Flag}{Logical; `TRUE` when Exact < `exact_warn` or Corr < `corr_warn`.}
-#'   \item{ExactCount, AdjacentCount}{Observed counts behind the proportions.}
-#'   \item{ExpectedExactCount}{Sum of model-implied exact-agreement
-#'     probabilities over matched contexts; it may be fractional. Unavailable
-#'     if any such context lacks valid probabilities.}
-#'   \item{ExpectedAvailableContexts, ExpectedUnavailableContexts}{Counts of
-#'     matched contexts with and without valid fitted probabilities.}
-#'   \item{ExpectedReason}{`available`, or semicolon-separated reasons:
-#'     `primary_estimate_unavailable`, `repeated_ratings`,
-#'     `fitted_probabilities_unavailable`, or `no_matched_scores`.}
-#' }
-#'
-#' The `summary` data.frame contains:
-#' \describe{
-#'   \item{RaterFacet}{Name of the rater facet analyzed.}
-#'   \item{Pairs, AvailablePairs, UnavailablePairs}{All candidate rater pairs,
-#'     those with matched scores, and those without.}
-#'   \item{TotalPairs, OpportunityCount}{Total matched-context opportunities
-#'     across rater pairs, not the number of distinct people or contexts.}
-#'   \item{Contexts}{Distinct contexts with at least two finite compared scores.}
-#'   \item{ExactAgreement}{Exact agreements divided by all matched-context
-#'     opportunities.}
-#'   \item{AgreementMinusExpected}{Observed exact agreement minus expected exact
-#'     agreement.}
-#'   \item{MeanCorr}{Mean available pairwise correlation weighted by each
-#'     pair's matched-context count; unavailable correlations are excluded.}
-#'   \item{FlaggedPairs, FlaggedShare}{Known flagged pairs and their share of
-#'     all pairs; the share is unavailable if classification is incomplete.}
-#'   \item{ClassifiedPairs, UnclassifiedPairs}{Available and unavailable combined
-#'     flag decisions. Correlation availability is recorded separately.}
-#'   \item{RaterSeparation, RaterReliability}{Severity-spread indices for the
-#'     rater facet, reported separately from agreement.}
-#' }
+#' Each matched context with two finite scores contributes one opportunity per
+#' rater pair (\eqn{m} judges on one context contribute \eqn{m(m-1)/2}
+#' opportunities). `Exact`, `Adjacent` (\eqn{|d| \le 1}), `MeanDiff`
+#' (`Rater1 - Rater2`), `MAD`, and `Corr` summarize matched pairs; `MeanCorr`
+#' weights pairwise correlations by `N`. `Flag` marks configured `exact_warn` /
+#' `corr_warn` thresholds (`FlaggedShare = NA` when classification is
+#' incomplete). For two-way ICCs, kappa, AC2, or Krippendorff's alpha without an
+#' MFRM fit, see [pairwise_icc_table()] and [mfrmr_methods_reference].
 #'
 #' @return An `mfrm_interrater` bundle (a named list) with:
 #' - `summary`: one-row inter-rater summary
@@ -140,7 +54,7 @@
 #'   [pairwise_icc_table()], [pairwise_kappa_table()], [gwet_ac2_table()],
 #'   [krippendorff_alpha_table()], [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("interrater_agreement_table", run.dontrun = TRUE)
 #' \dontrun{
 #' library(mfrmr)
@@ -281,14 +195,14 @@ interrater_agreement_table <- function(fit,
   as_mfrm_bundle(out, "mfrm_interrater")
 }
 
-#' Build facet variability diagnostics with fixed/random reference tests
+#' Review facet variability with chi-square reference screens
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()].
 #'   Must match this fitted analysis; see [mfrmr_compatibility_layer] for
 #'   migration of saved diagnostics.
-#' @param fixed_p_max Warning cutoff for fixed-effect chi-square p-values.
-#' @param random_p_max Warning cutoff for random-effect chi-square p-values.
+#' @param fixed_p_max Cutoff for the fixed-effect reference tail area.
+#' @param random_p_max Cutoff for the random-spread reference tail area.
 #' @param top_n Optional maximum number of facet rows to keep.
 #'
 #' @details
@@ -315,15 +229,17 @@ interrater_agreement_table <- function(fit,
 #'   \item{Facet}{Facet name.}
 #'   \item{Levels}{Number of estimated levels in this facet.}
 #'   \item{MeanMeasure, SD}{Mean and standard deviation of level measures.}
-#'   \item{FixedChiSq, FixedDF, FixedProb}{Fixed-effect chi-square test
-#'     (null hypothesis: all levels equal). Significant result means the
-#'     facet elements differ more than measurement error alone.}
+#'   \item{FixedChiSq, FixedDF, FixedProb}{Sum of squared deviations from
+#'     the inverse-SE-squared weighted mean, weighted by inverse SE squared,
+#'     with a chi-square reference using eligible-level count minus one.
+#'     Cross-level covariance is omitted; this is a heterogeneity screen,
+#'     not a generally calibrated joint test of equal facet locations.}
 #'   \item{RandomChiSq, RandomDF, RandomProb, RandomVar}{FACETS-form random
 #'     spread index and reference tail area. It does not establish normality
 #'     or random sampling: with equal SEs and positive adjusted variance the
 #'     statistic is identically eligible-level count minus one, regardless of
 #'     distributional shape. Full covariance is not propagated.}
-#'   \item{FixedFlag, RandomFlag}{Logical flags for significance.}
+#'   \item{FixedFlag, RandomFlag}{Logical flags for the requested reference-tail cutoffs.}
 #' }
 #'
 #' @return A named list with:
@@ -333,7 +249,7 @@ interrater_agreement_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [interrater_agreement_table()], [plot(x, type = "facets_chisq")][plot.mfrm_fit]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("facets_chisq_table", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -343,8 +259,9 @@ interrater_agreement_table <- function(fit,
 #' chi <- facets_chisq_table(fit)
 #' summary(chi)
 #' p_chi <- plot(chi, draw = FALSE)
-#' p_chi$data$plot
+#' plot_data(p_chi, "plot")
 #' }
+#' @rdname facets_fit_review
 #' @export
 facets_chisq_table <- function(fit,
                                diagnostics = NULL,
@@ -485,7 +402,7 @@ facets_chisq_table <- function(fit,
 #'   \item{EvaluatedObservations, UnavailableObservations}{Responses whose
 #'     rule outcome is determined or unavailable.}
 #'   \item{AbsZThreshold, ProbThreshold}{Applied cutoff values.}
-#'   \item{Rule}{"either" or "both".}
+#'   \item{Rule}{"residual", "either", or "both".}
 #' }
 #'
 #' @return A named list with:
@@ -496,7 +413,7 @@ facets_chisq_table <- function(fit,
 #' @seealso [diagnose_mfrm()], [displacement_table()], [fair_average_table()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("unexpected_response_table", run.dontrun = TRUE)
 #' \dontrun{
 #' library(mfrmr)
@@ -630,154 +547,34 @@ validate_unexpected_coverage <- function(x) {
 #'   plots. Direct FairM/FairZ plotting is unavailable for this result.
 #'
 #' @details
-#' This function wraps the package's adjusted-score calculations and returns
-#' both facet-wise and stacked tables. Historical display columns such as
-#' `Fair(M) Average` and `Fair(Z) Average` are retained for compatibility, and
-#' package-native aliases such as `AdjustedAverage`,
-#' `StandardizedAdjustedAverage`, `ModelBasedSE`, and `FitAdjustedSE` are
-#' appended to the formatted outputs.
+#' Computes model-adjusted reference averages in score units across `by_facet`,
+#' `stacked`, and unformatted `raw_by_facet` (`Level` key). `RSM` uses the
+#' shared scale; `PCM` converts each observation's reference predictor using its
+#' administered step profile before weight-averaging (`Fair(M)` /
+#' `AdjustedAverage` sets other facets to their finite means; `Fair(Z)` /
+#' `StandardizedAdjustedAverage` sets them to zero, which is an expected score
+#' at zero reference rather than a z-score).
 #'
-#' `RSM` fair scores use the shared scale. `PCM` retains each observation's
-#' step profile, converts the reference predictor to an expected score, then
-#' averages with rating weights. Averaging thresholds before conversion is
-#' not equivalent. FairM replaces other element locations by their means;
-#' FairZ replaces them by zero. The PCM scale exposure is retained, so fair
-#' scores can still depend on which scales were administered.
-#' The Person reference excludes nonfinite primary estimates and records
-#' eligible/excluded counts. With no finite Person reference, non-Person
-#' FairM is unavailable. FairZ does not need a Person mean. Neither target
-#' integrates over Person ability; these are expected scores, not z-scores.
+#' **Extreme-score handling (`xtreme > 0`)**: `PrimaryMeasure` retains the
+#' original fitted measure. `"display"` inverts an endpoint-shifted average for
+#' `Measure` only (`Model S.E.` is `NA`; fair averages are unchanged). For
+#' ordinary additive RSM/PCM JML without group-mean anchors, `"facets"` shifts
+#' the eligible weighted total inward by `xtreme` times the smallest positive
+#' weight (retaining finite direct anchors unless paired with an unanchored
+#' extreme), solves the conditional score equation, and reports conditional
+#' reciprocal-sqrt-information SE (`MeasureBasis`, `MeasureSEBasis`,
+#' `ExtremeAdjustment`). Fair-score CIs remain unavailable when `xtreme > 0`.
 #'
-#' With `xtreme > 0`, `PrimaryMeasure` retains the fitted measure, including
-#' infinite JML estimates and fixed anchors, on the requested reporting scale.
-#' Fixed anchors retain their measure in both columns. With
-#' `xtreme_method = "display"`, an expected average that is `xtreme` from the
-#' endpoint is inverted. Measure SEs are unavailable on replaced rows and
-#' fair-score calculations do not use that replacement.
-#' For ordinary additive RSM/PCM JML, a directly anchored element is not
-#' classified as an unanchored extreme for row exclusion. Its observations
-#' remain eligible when `totalscore = FALSE`, unless another unanchored extreme
-#' element requires their exclusion. This rule also preserves the PCM scale
-#' mixture used in fair scores and does not depend on the display adjustment.
-#' Recreate older affected fair-score tables and plots from the saved fit and
-#' matching diagnostics; refitting the calibration is unnecessary.
-#'
-#' With `xtreme_method = "facets"`, the weighted total is moved inward by
-#' `xtreme` times the smallest positive weight among that element's eligible
-#' observations. Responses involving another unanchored extreme element are
-#' excluded. The resulting weighted score equation is solved using the actual
-#' administered calibration and PCM scales. Its reciprocal square-root
-#' conditional information supplies the reporting SE. The replacement enters
-#' that element's FairM/FairZ, while reference locations retain their original
-#' basis. `ExtremeAdjustment` records a weighted-total correction in this mode,
-#' versus an average-score correction in `"display"` mode. `MeasureBasis` and
-#' `MeasureSEBasis` identify the reported quantities. These are finite reporting
-#' values and conditional SEs at an adjusted total, not finite MLEs or SEs for
-#' the original extreme response pattern. Fair-score intervals remain
-#' unavailable when `xtreme > 0`.
-#'
-#' Binary unit/replication-weight examples and a fixed-scale PCM kernel were
-#' checked against FACETS 4.5.0. This is not whole-program equivalence: partial
-#' anchor examples can leave native score residuals and shifted final measures,
-#' which this conditional calculation does not reproduce. Group-mean anchors,
-#' fitted interactions, corrected JML, MML and GPCM are outside this route.
-#' Recompute older diagnostics and recreate saved tables from the existing
-#' fit before summarizing or plotting them; no model refit is needed.
-#' With an extreme fixed Person plus an informative interior Person anchor,
-#' matched RSM/PCM examples also agree for conditional fair scores at the
-#' reported native calibration. Main estimates can still differ and native
-#' iteration limits or nonzero free-element score residuals must not be
-#' interpreted as calibration agreement.
-#'
-#' `GPCM` fits are supported under a slope-aware
-#' element-conditional construction. For each slope-facet element
-#' \eqn{j^\star} the per-row fair-average is the GPCM expected score
-#' \deqn{\mathrm{FA}_{p, j^\star} = \sum_k k \cdot P_{GPCM}(X = k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}
-#' computed at that element's own discrimination \eqn{a_{j^\star}}
-#' and threshold structure. Rows for non-slope facets (Person, Rater,
-#' \ldots) use the geometric-mean-one slope by the GPCM
-#' identification convention and average the threshold profiles before score
-#' conversion. At unit slope the conversion reduces to the PCM kernel, but
-#' this aggregation need not equal PCM's average of administered-scale
-#' expectations for non-step-facet rows.
-#' This is an identification-based reporting convention for the package's
-#' `GPCM` route, not a unique free-discrimination score-side analogue
-#' to FACETS fair averages. Do not report it as FACETS score-side equivalence
-#' or as an operational scoring rule unless that convention is substantively
-#' justified.
-#'
-#' Standard errors on the fair-average value itself are opt-in for MML
-#' `GPCM` fits via `fair_se = TRUE`. The
-#' `Model S.E.`, `ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE` columns
-#' retain the same meaning as for PCM (scaled facet-measure SEs); fair-average
-#' uncertainty is reported under distinct columns such as `Fair(M) S.E.`,
-#' `Fair(M) CI Lower`, and `AdjustedAverageSE`.
-#'
-#' @section Interpreting output:
-#' - `stacked`: cross-facet table for global comparison.
-#' - `by_facet`: per-facet formatted tables for reporting.
-#' - `raw_by_facet`: unformatted values for custom analyses/plots; identifiers
-#'   use the column `Level`.
-#' - `settings`: scoring-transformation and filtering options used.
-#'
-#' Observed-vs-fair gaps also reflect person mix and assignment. They are
-#' descriptive follow-up prompts, not standalone evidence of rater bias.
-#' Ordinary additive RSM/PCM JML tables also retain `PTMEAExpected` and its
-#' availability metadata when present in the matching diagnostics. This is a
-#' conditional reference for observed `PtMea Corr`, not an inferential cutoff;
-#' see [diagnose_mfrm()] for its finite-count correction and weighting basis.
-#'
-#' @section Typical workflow:
-#' 1. Run `fair_average_table(fit, ...)`.
-#' 2. Inspect `summary(t12)` and `t12$stacked`.
-#' 3. Visualize with [plot(x, type = "fair_average")][plot.mfrm_fit].
-#'
-#' @section Output columns:
-#' The `stacked` data.frame contains the following columns, selected by
-#' `reference`, `label_style`, and `fair_se`:
-#' \describe{
-#'   \item{Facet}{Facet name for this row.}
-#'   \item{Element}{Element label within the facet.}
-#'   \item{Obsvd Average}{Observed raw-score average.}
-#'   \item{Fair(M) Average}{Model-adjusted reference average on the reported score scale.}
-#'   \item{Fair(Z) Average}{Expected score at a zero reference environment, not a z-score.}
-#'   \item{ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage}{Package-native aliases for the three average columns above.}
-#'   \item{AdjustedAverageSE, AdjustedAverageCI_Lower, AdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for `AdjustedAverage` when `fair_se = TRUE` and available.}
-#'   \item{StandardizedAdjustedAverageSE, StandardizedAdjustedAverageCI_Lower, StandardizedAdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for `StandardizedAdjustedAverage` when `fair_se = TRUE` and available.}
-#'   \item{Measure}{Displayed facet measure, transformed by `umean` and `uscale`; may be replaced when `xtreme > 0`.}
-#'   \item{PrimaryMeasure}{Original fitted measure on the same reporting scale, including infinite JML estimates.}
-#'   \item{MeasureBasis, ExtremeAdjustment}{Whether the displayed measure was replaced and the replacement amount in score units.}
-#'   \item{MeasureSEBasis}{In `raw_by_facet`, distinguishes conditional information at a corrected total from fitted-measure uncertainty.}
-#'   \item{FairMReference}{The mean reference used for FairM, or why that reference is unavailable.}
-#'   \item{ModelBasedSE, FitAdjustedSE}{Package-native aliases for `Model S.E.` and `Real S.E.`.}
-#'   \item{Infit MnSq, Outfit MnSq}{Fit statistics for this level.}
-#' }
-#'
-#' @section Standard-error caveat (read before quoting CIs):
-#' The `Model S.E.`, `ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE`
-#' columns in this table are the **measure-level** standard errors of the
-#' underlying facet element, rescaled by `abs(uscale)` to the reported Measure units.
-#' Fair scores remain on the fitted internal score scale. They are **not** delta-method standard errors of the fair-average
-#' values themselves. When `fair_se = TRUE`, the distinct `Fair(M) S.E.` /
-#' `Fair(Z) S.E.` columns are computed by
-#' propagating the joint covariance of the relevant facet element, the
-#' threshold parameters, and the slope parameters through the gradient of
-#' \eqn{\mathrm{E}[X \mid \theta_p, j^\star]}. This is a structural
-#' covariance calculation: MML person EAP estimates are conditioned on rather
-#' than included in the Hessian, so person rows receive unavailable fair-average
-#' SEs. **Do not use the measure-level `ModelBasedSE` / `Model S.E.` columns as
-#' \eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
-#' fair-average value.**
-#' `FairCIEligible` is `FALSE` for these diagnostic intervals; numerical
-#' availability (`ok` or `regularized`) does not establish inferential validity.
-#' `FairCIReportingUse` distinguishes diagnostic-only and unavailable rows.
-#' Full-refit coverage remains unverified. For RSM/PCM, this table does not
-#' supply fair-score SEs; [plot(x, type = "fair_average")][plot.mfrm_fit] can compute a conditional
-#' interval from a fitted model by propagating only the focal measure SE.
-#' Summaries identify `FairMetric`: FairM for mean/both reference tables, FairZ
-#' for zero-reference tables, with matching score/SE column names.
-#' Export `stacked` or the summary's `summary` / `preview` data.frames with
-#' [utils::write.csv()]. [export_summary_appendix()] does not accept this bundle.
+#' **GPCM and SE caveat**: For slope-facet element \eqn{j^\star},
+#' \deqn{\mathrm{FA}_{p, j^\star} = \sum_k k \cdot P_{GPCM}(X = k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star});}
+#' non-slope facets use unit geometric-mean slope and average threshold profiles
+#' before conversion (a package reporting convention, not FACETS score-side
+#' equivalence). `Model S.E.` / `ModelBasedSE` and `Real S.E.` / `FitAdjustedSE`
+#' are **measure-level** SEs rescaled by `abs(uscale)` -- never use them as
+#' \eqn{\pm 1.96\,\mathrm{SE}} bounds on fair scores. When `fair_se = TRUE` on
+#' MML GPCM fits, structural delta-method `Fair(M) S.E.` / `AdjustedAverageSE`
+#' columns are added for non-Person facets (`Person` rows stay `NA`;
+#' `FairCIEligible = FALSE`, diagnostic use only).
 #'
 #' @return A named list with:
 #' - `by_facet`: named list of formatted data.frames
@@ -964,17 +761,30 @@ fair_average_table <- function(fit,
 #' @param top_n Optional maximum number of rows to keep after sorting.
 #'
 #' @details
-#' Displacement is computed as a one-step Newton update:
-#' `sum(residual) / sum(information)` for each facet level.
-#' This approximates how much a level would move if constraints were relaxed.
+#' Displacement is the facet sign times the weighted sum of observation score
+#' derivatives divided by weighted score information. For unit-discrimination
+#' RSM/PCM these reduce to observed-minus-expected residuals and conditional
+#' score variances. The Person sign is positive; default severity/difficulty
+#' signs are negative. GPCM uses its slope-aware derivatives and information.
+#' This is a conditional one-step location adjustment with other fitted
+#' quantities held fixed, not a joint unconstrained refit. `DisplacementSE`
+#' is inverse square-root information; it excludes cross-parameter and
+#' source-anchor uncertainty. Nonpositive information gives unavailable values.
 #'
 #' @section Interpreting output:
-#' - `table`: level-wise displacement and flag indicators.
-#' - `summary`: count/share of flagged levels.
-#' - `thresholds`: displacement and t-value cutoffs.
+#' `Displacement` is the proposed change in the fitted location coordinate.
+#' For a default negatively oriented Rater facet, a positive displacement
+#' means greater severity and lower predicted scores, holding other terms
+#' fixed. This is the opposite score direction to positive `Bias Size` in
+#' [estimate_bias()], which is added directly to the score predictor.
 #'
-#' Large absolute displacement in anchored levels suggests potential instability
-#' in anchor assumptions.
+#' `ReleasedEstimate = Estimate + Displacement` is only a one-step projection;
+#' no anchor is actually released or model refitted. `AnchorGap` subtracts
+#' the directly supplied `AnchorValue` from this projection. A large gap
+#' suggests tension with the fitted baseline, not proof that the anchor changed.
+#' `DisplacementT` is a conditional screening ratio, not a calibrated test.
+#' Inspect finite displacement/information before reading `Flag`: a missing
+#' calculation cannot cross its cutoff and therefore need not produce a flag.
 #'
 #' @section Typical workflow:
 #' 1. Run `displacement_table(fit, anchored_only = TRUE)` for anchor checks.
@@ -985,13 +795,20 @@ fair_average_table <- function(fit,
 #' The `table` data.frame contains:
 #' \describe{
 #'   \item{Facet, Level}{Facet name and element label.}
-#'   \item{Displacement}{One-step Newton displacement estimate (logits).}
-#'   \item{DisplacementSE}{Standard error of the displacement.}
-#'   \item{DisplacementT}{Displacement / SE ratio.}
-#'   \item{Estimate, SE}{Current measure estimate and its standard error.}
-#'   \item{N}{Number of observations involving this level.}
+#'   \item{Displacement}{One-step location change in native ability units;
+#'     adjacent-logit units for RSM/PCM. GPCM's score effect also depends on slopes.}
+#'   \item{DisplacementSE}{Inverse square-root conditional information;
+#'     excludes uncertainty in the other fitted parameters and anchor source.}
+#'   \item{DisplacementT}{`Displacement / DisplacementSE`.}
+#'   \item{Estimate, SE}{Current measure and its diagnostic uncertainty;
+#'     MML Person SEs are posterior SDs. See [diagnose_mfrm()].}
+#'   \item{N, WeightedN}{Summed response weights for this level in native
+#'     diagnostics, equal to the row count with unit weights; not independent Persons.}
+#'   \item{ReleasedEstimate, AnchorGap}{One-step projected location and its
+#'     difference from a directly supplied anchor, when available.}
 #'   \item{AnchorValue, AnchorStatus, AnchorType}{Anchor metadata.}
-#'   \item{Flag}{Logical; `TRUE` when displacement exceeds thresholds.}
+#'   \item{Flag}{TRUE when either finite absolute displacement or its
+#'     absolute screening ratio reaches the corresponding cutoff.}
 #' }
 #'
 #' @return A named list with:
@@ -1001,7 +818,7 @@ fair_average_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [fair_average_table()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("displacement_table", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -1011,7 +828,7 @@ fair_average_table <- function(fit,
 #' disp <- displacement_table(fit, anchored_only = FALSE)
 #' summary(disp)
 #' p_disp <- plot(disp, draw = FALSE)
-#' p_disp$data$plot
+#' plot_data(p_disp, "plot")
 #' }
 #' @section Saved-result reuse:
 #' The returned `fit_identity` records the fitted analysis for reuse with
@@ -1094,10 +911,22 @@ displacement_table <- function(fit,
 #' `"subset_observations"`).
 #'
 #' @section Interpreting output:
-#' - `summary`: overall measurable design status.
-#' - `facet_coverage`: spread/precision by facet.
-#' - `category_stats`: category usage and fit context.
-#' - `subsets`: connectivity diagnostics (fragmented subsets reduce comparability).
+#' `summary` describes the retained analysis; it is not a sample-size adequacy
+#' decision. `LargestSubsetPct` concerns rating rows, not independent Persons
+#' or the proportion of planned assignments completed. A connected design
+#' alone does not establish parameter precision or identify every model term.
+#'
+#' `facet_coverage` summarizes the supplied diagnostic rows. `MeanSE` is the
+#' unweighted mean of available element SEs, not the SE of the facet mean or
+#' the RMS error used for separation reliability. For MML Persons these SEs
+#' are posterior SDs. Means omit missing values separately for each column;
+#' they can describe different subsets of levels. An all-missing mean is
+#' `NaN`, not zero error. Inspect `diagnostics$measures` for missing values and
+#' their reasons before comparing facets; see [diagnose_mfrm()].
+#'
+#' `category_stats` describes observed category usage and plug-in expectations.
+#' It does not certify category adequacy. See [rating_scale_table()] for the
+#' meaning of expected counts, residual summaries and step offsets.
 #'
 #' @section Typical workflow:
 #' 1. Run `measurable_summary_table(fit)`.
@@ -1112,30 +941,37 @@ displacement_table <- function(fit,
 #' @section Output columns:
 #' The `summary` data.frame (one row) contains:
 #' \describe{
-#'   \item{Observations, TotalWeight}{Total observations and summed weight.}
-#'   \item{Persons, Facets, Categories}{Design dimensions.}
+#'   \item{Observations, TotalWeight}{Retained rating-row count and summed
+#'     response weight, respectively. Neither is an independent-Person count.}
+#'   \item{Persons, Facets, Categories}{Retained Persons, non-Person facets
+#'     and declared score categories (including unused categories).}
 #'   \item{ConnectedSubsets}{Number of connected subsets.}
-#'   \item{LargestSubsetObs, LargestSubsetPct}{Largest subset coverage.}
+#'   \item{LargestSubsetObs, LargestSubsetPct}{Rows in the largest connected
+#'     subset and `100 * LargestSubsetObs / Observations`.}
 #' }
 #'
 #' The `facet_coverage` data.frame contains:
 #' \describe{
 #'   \item{Facet}{Facet name.}
-#'   \item{Levels}{Number of estimated levels.}
-#'   \item{MeanSE}{Mean standard error across levels.}
-#'   \item{MeanInfit, MeanOutfit}{Mean fit statistics across levels.}
-#'   \item{MinEstimate, MaxEstimate}{Measure range for this facet.}
+#'   \item{Levels}{Number of diagnostic rows, including levels with missing SEs.}
+#'   \item{MeanSE}{Arithmetic mean of available element SEs; see interpretation above.}
+#'   \item{MeanInfit, MeanOutfit}{Unweighted means of available level-specific
+#'     mean squares, not pooled response-level Infit/Outfit.}
+#'   \item{MinEstimate, MaxEstimate}{Native-scale measure range, omitting
+#'     missing values but retaining infinite estimates.}
 #' }
 #'
 #' The `category_stats` data.frame contains:
 #' \describe{
 #'   \item{Category}{Score category value.}
-#'   \item{Count, Percent}{Observed count and percentage.}
+#'   \item{Count, Percent}{Sum of response weights for the category and its
+#'     percentage of total weight; raw counts with unit weights.}
 #'   \item{Infit, Outfit}{Descriptive category residual mean squares.}
 #'   \item{InfitZSTD, OutfitZSTD}{Unavailable (NA); conditioning on the observed
 #'     category does not preserve a universal unit-residual reference.}
-#'   \item{ExpectedCount, DiffCount, LowCount}{Expected-observed comparison
-#'     and low-count flag.}
+#'   \item{ExpectedCount, DiffCount, LowCount}{Plug-in expected weighted count,
+#'     observed minus expected count, and `Count < 10` review flag. This cutoff
+#'     is not a universal minimum independent sample size.}
 #' }
 #'
 #' @return A named list with:
@@ -1147,7 +983,7 @@ displacement_table <- function(fit,
 #' @seealso [diagnose_mfrm()], [rating_scale_table()], [describe_mfrm_data()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("measurable_summary_table", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -1157,7 +993,7 @@ displacement_table <- function(fit,
 #' t5 <- measurable_summary_table(fit)
 #' summary(t5)
 #' p_t5 <- plot(t5, draw = FALSE)
-#' p_t5$data$plot
+#' plot_data(p_t5, "plot")
 #' }
 #' @export
 measurable_summary_table <- function(fit, diagnostics = NULL) {
@@ -1231,131 +1067,21 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'   unavailable counts remain visible, and score-support caveats are retained.
 #'
 #' @details
-#' This helper provides category usage/fit statistics and threshold summaries
-#' for reviewing score-category functioning.
-#' `category_table` is a global observed-score screen. `owner_category_table`
-#' retains every declared category within each level of the fitted `step_facet`
-#' (or one `Common` family for RSM). Its percentages use that owner's total
-#' weight. These are observed ratings, not independent Persons or planned
-#' assignments. Missing categories alone cannot establish structural absence.
-#' `drop_unused` only filters the global display; owner counts stay complete.
+#' Summarizes observed category usage (`category_table`, `category_usage`, and
+#' per-step-owner `owner_category_table`) and centered step estimates
+#' (`threshold_table`, `threshold_coverage`). In `category_table`, `Count` sums
+#' observation weights, `AvgMeasure` / `ExpectedMeasure` summarize the oriented
+#' predictor (distinct from `AvgPersonMeasure` and `ExpectedAverage`), and
+#' `InfitZSTD`, `OutfitZSTD`, and fit flags are `NA` because conditioning on the
+#' observed outcome removes a unit-residual reference.
 #'
-#' Typical checks:
-#' - sparse category usage (`Count`, `ExpectedCount`)
-#' - category fit (`Infit`, `Outfit`, `ZStd`)
-#' - threshold ordering within each `StepFacet`
-#'   (`threshold_table$Estimate`, `GapFromPrev`)
-#'
-#' @section Interpreting output:
-#' Start with `summary`:
-#' - `UsedCategories` close to total `Categories` suggests that most score
-#'   categories are represented in the observed data.
-#' - very small `MinCategoryCount` indicates potential instability.
-#' - `ThresholdMonotonic = FALSE` indicates disordered thresholds within at
-#'   least one threshold set. In PCM fits, inspect `threshold_table` by
-#'   `StepFacet` before drawing scale-wide conclusions.
-#'
-#' Then inspect:
-#' - `category_table` for global category-level misfit/sparsity.
-#' - `threshold_table` for adjacent-step gaps and ordering within each
-#'   `StepFacet`.
-#'
-#' Stored `diagnostics$parameter_uncertainty$steps` are matched by threshold
-#' family and step, with fitted estimates and source identity checked. Inspect
-#' `SE_Status`, `CIEligible`, `CIUse` and `UncertaintySourceStatus`. Missing rows
-#' remain unavailable; duplicate or mismatched keys are rejected. Older
-#' diagnostics without a verifiable fitted-calibration identity must be
-#' regenerated with `diagnose_mfrm(fit, ...)`; model refitting is not required.
-#' Reordering stored step rows does not change their keyed correspondence.
-#' A bare fit supplies
-#' step points with `SE_Status = "not_supplied"`. A binary centered step has
-#' no free within-owner contrast (`fixed_by_step_centering`).
-#'
-#' Native thresholds here are centered step offsets. They are not full
-#' ability-axis crossings, cumulative-50% boundaries or decision cuts. An SE
-#' for a step does not include the covariance required for a crossing or an
-#' adjacent-step difference. Threshold disorder is descriptive, not an
-#' automatic category-merging rule. Two-family GPCM diagnostics remain
-#' unsupported by this helper; use its dedicated response/curve routes.
-#'
-#' @section Typical workflow:
-#' 1. Fit model: [fit_mfrm()].
-#' 2. Build diagnostics: [diagnose_mfrm()].
-#' 3. Run `rating_scale_table()` and review `summary()`.
-#' 4. Use `plot()` to visualize category profile quickly.
-#'
-#' Save the complete result to retain owner counts, uncertainty status and
-#' notes. `plot(out, type = "counts")` shows global counts; use
-#' `plot(out, type = "thresholds")` for the stored step points. Both support
-#' [as_ggplot()] without recalculating values. Step figures do not draw stored
-#' SEs as crossing, gap or curve intervals; inspect `threshold_table` separately.
-#'
-#' @section Further guidance:
-#' For a plot-selection guide and a longer walkthrough, see
-#' [mfrmr_visual_diagnostics] and
-#' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
-#'
-#' @section Output columns:
-#' The `category_table` data.frame contains:
-#' \describe{
-#'   \item{Category}{Score category value.}
-#'   \item{Count, Percent}{Observed count and percentage of total. With observation
-#'     weights, counts are sums of weights, not independent sample sizes. Missing
-#'     or invalid scores/weights make the usage counts unavailable.}
-#'   \item{AvgMeasure, ExpectedMeasure}{Observed-category mean oriented predictor
-#'     and its model expectation, weighted by category probabilities across
-#'     all retained observations.}
-#'   \item{AvgPersonMeasure}{Mean person measure for respondents in this
-#'     category; distinct from the oriented predictor.}
-#'   \item{ExpectedAverage}{Mean predicted score among observations in this
-#'     observed category; distinct from the expected generating measure.}
-#'   \item{Infit, Outfit}{Descriptive category residual mean squares.}
-#'   \item{InfitZSTD, OutfitZSTD}{Unavailable (NA); conditioning on the observed
-#'     category does not preserve a universal unit-residual reference.}
-#'   \item{ExpectedCount, DiffCount}{Expected count and observed-expected
-#'     difference.}
-#'   \item{LowCount}{Logical; `TRUE` if count is below minimum threshold.}
-#'   \item{InfitFlag, OutfitFlag, ZSTDFlag}{Unavailable (NA). Outcome-selected
-#'     residual summaries do not have a universal unit baseline or calibrated
-#'     ZSTD reference. Low-count and generating-measure warnings remain descriptive.}
-#'   \item{ZeroCount, UnusedCategoryType, WeaklyIdentified, CategoryCaveat}{
-#'     Structured score-support caveats for retained zero-count categories.}
-#' }
-#'
-#' The `owner_category_table` contains `StepOwner` (facet name), `StepFacet`
-#' (level), `Category` (model score), `CategoryLabel` (original score), raw and
-#' weighted counts (`RawCount`, `Count`), denominators (`OwnerRatings`,
-#' `OwnerWeight`), `Percent`, `ZeroCount` and `UsageStatus`. Status distinguishes
-#' observed, not observed, zero weight, no exposure and unavailable counts.
-#' No-exposure counts are zero but percentages are unavailable.
-#'
-#' The `threshold_table` data.frame contains:
-#' \describe{
-#'   \item{Step}{Step label (e.g., `Step_1`, `Step_2`). Use `LowerCategory`
-#'     and `UpperCategory` to identify the corresponding score transition.}
-#'   \item{Estimate}{Estimated threshold/step difficulty (logits).}
-#'   \item{StepOwner}{Name of the facet owning the steps, or `Common` for RSM.}
-#'   \item{StepFacet}{Threshold family identifier when the fit uses facet-specific
-#'     threshold sets.}
-#'   \item{SE, CI_Lower, CI_Upper, SE_Status, CIEligible, CIUse}{Stored
-#'     step uncertainty and reporting status, without new inference.}
-#'   \item{LowerCategoryLabel, UpperCategoryLabel}{Original scores at the transition.}
-#'   \item{LowerOwnerCount, UpperOwnerCount, OwnerSupportStatus}{Weighted
-#'     counts and support within this threshold owner, not pooled frequencies.}
-#'   \item{GapFromPrev}{Difference between adjacent numbered thresholds within
-#'     the same `StepFacet`. Missing thresholds are not skipped to form a gap.
-#'     No automatic category-merging rule is applied.}
-#'   \item{ThresholdMonotonic}{Logical flag repeated within each threshold set.
-#'     `FALSE` records at least one decreasing adjacent pair; `TRUE` requires
-#'     every expected pair to be available and nondecreasing, allowing numerical
-#'     differences up to `sqrt(.Machine$double.eps)`. Equal thresholds meet this
-#'     descriptive condition. Otherwise the flag is `NA`. A binary scale has
-#'     only one threshold and no applicable ordering comparison. This is a
-#'     statement about point estimates, not a test of category adequacy.}
-#'   \item{LowerCategory, UpperCategory, WeaklyIdentified, ThresholdCaveat}{
-#'     Adjacent score-category support metadata. Thresholds adjacent to retained
-#'     zero-count categories are flagged for cautious interpretation.}
-#' }
+#' In `threshold_table`, stored `diagnostics$parameter_uncertainty$steps` are
+#' keyed by `StepOwner`, `StepFacet`, and `Step` (`SE_Status`, `CIEligible`,
+#' `CIUse`); `GapFromPrev` reports adjacent differences without skipping missing
+#' steps, and `ThresholdMonotonic` checks nondecreasing point estimates within
+#' `sqrt(.Machine$double.eps)` (`NA` for binary scales or missing pairs). Step
+#' SEs describe centered step offsets, not curve crossings or adjacent gaps, and
+#' threshold disorder is descriptive rather than an automatic merging rule.
 #'
 #' @return A named list with:
 #' - `category_table`: counts, generating measures and descriptive residuals.
@@ -1599,7 +1325,7 @@ rating_scale_table <- function(fit,
 #' @seealso [estimate_bias()], [unexpected_after_bias_table()], [build_fixed_reports()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("bias_count_table", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
@@ -1624,6 +1350,7 @@ rating_scale_table <- function(fit,
 #'   )
 #' }
 #' }
+#' @rdname estimate_bias
 #' @export
 bias_count_table <- function(bias_results,
                              min_count_warn = 10,
@@ -1824,7 +1551,7 @@ bias_count_table <- function(bias_results,
 #' @seealso [estimate_bias()], [unexpected_response_table()], [bias_count_table()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("unexpected_after_bias_table", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
@@ -1836,13 +1563,14 @@ bias_count_table <- function(bias_results,
 #' t10 <- unexpected_after_bias_table(fit, bias, diagnostics = diag, top_n = 20)
 #' summary(t10)
 #' p_t10 <- plot(t10, draw = FALSE)
-#' p_t10$data$plot
+#' plot_data(p_t10, "plot")
 #' }
 #' @section Saved-result reuse:
 #' The returned `fit_identity` records the fitted analysis for reuse with
 #' reports and exports. Recreate older results from the saved fit and matching
 #' diagnostics using the original screening options; no model refit is needed.
 #' See [mfrmr_compatibility_layer] for migration instructions.
+#' @rdname unexpected_response_table
 #' @export
 unexpected_after_bias_table <- function(fit,
                                         bias_results,
@@ -2126,7 +1854,7 @@ as_mfrm_bundle <- function(x, class_name) {
 #' This helper assembles those settings from a fitted object.
 #'
 #' @section Lifecycle:
-#' Soft-deprecated. Prefer [specifications_report()].
+#' Soft-deprecated. Prefer [mfrm_report_specifications].
 #'
 #' @section Output columns:
 #' The `header` data.frame contains:
@@ -2151,11 +1879,11 @@ as_mfrm_bundle <- function(x, class_name) {
 #' - `anchor_summary`: anchor/group-anchor summary by facet
 #' - `fixed`: fixed-width report text (when `include_fixed = TRUE`)
 #'
-#' @seealso [fit_mfrm()], [data_quality_report()], [estimation_iteration_report()]
+#' @seealso [fit_mfrm()], [mfrm_report_data_quality], [mfrm_report_iterations]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' t1 <- specifications_report(fit, title = "Toy run")
+#' t1 <- mfrm_report(type = "specifications", fit, title = "Toy run")
 #' @keywords internal
 #' @noRd
 table1_specifications <- function(fit,
@@ -2165,8 +1893,8 @@ table1_specifications <- function(fit,
                                   include_fixed = FALSE) {
   signal_legacy_name_deprecation(
     old_name = "table1_specifications",
-    new_name = "specifications_report",
-    suppress_if_called_from = "specifications_report"
+    new_name = "mfrm_report",
+    suppress_if_called_from = "mfrm_report"
   )
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
@@ -2314,7 +2042,7 @@ table1_specifications <- function(fit,
 #' and reports dropped rows in a legacy-compatible Table 2 layout.
 #'
 #' @section Lifecycle:
-#' Soft-deprecated. Prefer [data_quality_report()].
+#' Soft-deprecated. Prefer [mfrm_report_data_quality].
 #'
 #' @section Output columns:
 #' The `summary` data.frame contains:
@@ -2348,11 +2076,11 @@ table1_specifications <- function(fit,
 #' - `caveats`: user-facing score-support warnings
 #' - `fixed`: fixed-width report text (when `include_fixed = TRUE`)
 #'
-#' @seealso [fit_mfrm()], [specifications_report()], [describe_mfrm_data()]
+#' @seealso [fit_mfrm()], [mfrm_report_specifications], [describe_mfrm_data()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' t2 <- data_quality_report(
+#' t2 <- mfrm_report(type = "data_quality", 
 #'   fit, data = toy, person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score"
@@ -2370,8 +2098,8 @@ table2_data_summary <- function(fit,
                                 include_fixed = FALSE) {
   signal_legacy_name_deprecation(
     old_name = "table2_data_summary",
-    new_name = "data_quality_report",
-    suppress_if_called_from = "data_quality_report"
+    new_name = "mfrm_report",
+    suppress_if_called_from = "mfrm_report"
   )
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
@@ -2677,7 +2405,7 @@ table2_data_summary <- function(fit,
 #' repeatedly running one-iteration updates from the current parameter vector.
 #'
 #' @section Lifecycle:
-#' Soft-deprecated. Prefer [estimation_iteration_report()].
+#' Soft-deprecated. Prefer [mfrm_report_iterations].
 #'
 #' @section Output columns:
 #' The `table` data.frame contains:
@@ -2702,11 +2430,11 @@ table2_data_summary <- function(fit,
 #' - `settings`: replay settings used
 #' - `fixed`: fixed-width report text (when `include_fixed = TRUE`)
 #'
-#' @seealso [fit_mfrm()], [specifications_report()], [data_quality_report()]
+#' @seealso [fit_mfrm()], [mfrm_report_specifications], [mfrm_report_data_quality]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' t3 <- estimation_iteration_report(fit, max_iter = 5)
+#' t3 <- mfrm_report(type = "iterations", fit, max_iter = 5)
 #' @keywords internal
 #' @noRd
 table3_iteration_report <- function(fit,
@@ -2716,8 +2444,8 @@ table3_iteration_report <- function(fit,
                                     include_fixed = FALSE) {
   signal_legacy_name_deprecation(
     old_name = "table3_iteration_report",
-    new_name = "estimation_iteration_report",
-    suppress_if_called_from = "estimation_iteration_report"
+    new_name = "mfrm_report",
+    suppress_if_called_from = "mfrm_report"
   )
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
@@ -2891,7 +2619,7 @@ table3_iteration_report <- function(fit,
 #' - `nodes`: node-level table from subset detection
 #' - `settings`: applied filters and flags
 #'
-#' @seealso [diagnose_mfrm()], [measurable_summary_table()], [data_quality_report()]
+#' @seealso [diagnose_mfrm()], [measurable_summary_table()], [mfrm_report_data_quality]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -2899,7 +2627,6 @@ table3_iteration_report <- function(fit,
 #' @keywords internal
 #' @noRd
 NULL
-
 
 #' Build a legacy-compatible Table 6.2 facet-statistics graphic summary
 #'
@@ -2919,7 +2646,7 @@ NULL
 #' Rulers for a given metric share the same min/max scale across facets.
 #'
 #' @section Lifecycle:
-#' Soft-deprecated. Prefer [facet_statistics_report()].
+#' Soft-deprecated. Prefer [mfrm_report_facet_statistics].
 #'
 #' @section Output columns:
 #' The `table` data.frame contains:
@@ -2942,7 +2669,7 @@ NULL
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' t62 <- facet_statistics_report(fit)
+#' t62 <- mfrm_report(type = "facet_statistics", fit)
 #' @keywords internal
 #' @noRd
 table6_2_facet_statistics <- function(fit,
@@ -2951,8 +2678,8 @@ table6_2_facet_statistics <- function(fit,
                                       ruler_width = 41) {
   signal_legacy_name_deprecation(
     old_name = "table6_2_facet_statistics",
-    new_name = "facet_statistics_report",
-    suppress_if_called_from = "facet_statistics_report"
+    new_name = "mfrm_report",
+    suppress_if_called_from = ".mfrm_report_facet_statistics"
   )
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
@@ -2964,7 +2691,7 @@ table6_2_facet_statistics <- function(fit,
     stop("`diagnostics$measures` is empty. Run diagnose_mfrm() first.")
   }
   mfrm_results_validate_diagnostics_identity(fit, diagnostics,
-                                             helper = "facet_statistics_report()")
+                                             helper = "mfrm_report(fit, type = 'facet_statistics')")
 
   measure_tbl <- as.data.frame(diagnostics$measures, stringsAsFactors = FALSE)
   if (!"Facet" %in% names(measure_tbl)) {
@@ -3468,28 +3195,11 @@ build_data_quality_facet_category_summary <- function(category_usage_by_facet) {
   out
 }
 
-empty_data_quality_facet_response_patterns <- function() {
-  data.frame(
-    Facet = character(0),
-    Level = character(0),
-    Responses = integer(0),
-    WeightedResponses = numeric(0),
-    Categories = integer(0),
-    ObservedCategories = integer(0),
-    CategoryCoverageRate = numeric(0),
-    DominantScore = integer(0),
-    DominantCount = integer(0),
-    DominantWeightedCount = numeric(0),
-    DominantPercent = numeric(0),
-    SingleCategoryUse = logical(0),
-    DominantCategoryUse = logical(0),
-    BoundaryOnlyUse = logical(0),
-    PatternStatus = character(0),
-    PatternLabel = character(0),
-    PatternCaveat = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+empty_data_quality_facet_response_patterns <- .mfrmr_empty_table(c(Facet = "character", Level = "character", Responses = "integer", WeightedResponses = "double",
+    Categories = "integer", ObservedCategories = "integer", CategoryCoverageRate = "double",
+    DominantScore = "integer", DominantCount = "integer", DominantWeightedCount = "double",
+    DominantPercent = "double", SingleCategoryUse = "logical", DominantCategoryUse = "logical",
+    BoundaryOnlyUse = "logical", PatternStatus = "character", PatternLabel = "character", PatternCaveat = "character"))
 
 build_data_quality_facet_response_patterns <- function(category_usage_by_facet,
                                                        dominant_category_cutoff = 0.95) {
@@ -3502,7 +3212,7 @@ build_data_quality_facet_response_patterns <- function(category_usage_by_facet,
   }
   required <- c("Facet", "Level", "Score", "Count", "WeightedCount", "CategoryPosition")
   if (nrow(tbl) == 0L || !all(required %in% names(tbl))) {
-    return(empty_data_quality_facet_response_patterns())
+    return(empty_data_quality_facet_response_patterns)
   }
   tbl$Count <- suppressWarnings(as.numeric(tbl$Count))
   tbl$WeightedCount <- suppressWarnings(as.numeric(tbl$WeightedCount))
@@ -3594,7 +3304,7 @@ build_data_quality_facet_response_patterns <- function(category_usage_by_facet,
     )
   })
   out <- do.call(rbind, rows)
-  if (is.null(out)) return(empty_data_quality_facet_response_patterns())
+  if (is.null(out)) return(empty_data_quality_facet_response_patterns)
   out <- out[order(
     match(out$PatternStatus, c("high", "review", "ok")),
     -out$DominantPercent,
@@ -3605,18 +3315,8 @@ build_data_quality_facet_response_patterns <- function(category_usage_by_facet,
   out
 }
 
-empty_data_quality_quality_flags <- function() {
-  data.frame(
-    Area = character(0),
-    Severity = character(0),
-    Flag = character(0),
-    Count = integer(0),
-    Unit = character(0),
-    PercentOfData = numeric(0),
-    Action = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+empty_data_quality_quality_flags <- .mfrmr_empty_table(c(Area = "character", Severity = "character", Flag = "character", Count = "integer",
+    Unit = "character", PercentOfData = "double", Action = "character"))
 
 build_data_quality_quality_flags <- function(summary_tbl,
                                              row_review = NULL,
@@ -3809,7 +3509,7 @@ build_data_quality_quality_flags <- function(summary_tbl,
     )
   }
 
-  if (length(rows) == 0L) return(empty_data_quality_quality_flags())
+  if (length(rows) == 0L) return(empty_data_quality_quality_flags)
   out <- do.call(rbind, rows)
   severity_order <- c(high = 1L, review = 2L, notice = 3L)
   out$SeverityRank <- unname(severity_order[tolower(as.character(out$Severity))])
@@ -4051,19 +3751,8 @@ build_data_quality_quality_overview <- function(summary_tbl,
   out
 }
 
-empty_mfrm_caveats <- function() {
-  data.frame(
-    Area = character(0),
-    Severity = character(0),
-    Condition = character(0),
-    Categories = character(0),
-    CategoryType = character(0),
-    Message = character(0),
-    RecommendedAction = character(0),
-    Details = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+empty_mfrm_caveats <- .mfrmr_empty_table(c(Area = "character", Severity = "character", Condition = "character", Categories = "character",
+    CategoryType = "character", Message = "character", RecommendedAction = "character", Details = "character"))
 
 collect_mfrm_caveats <- function(fit = NULL,
                                  prep = NULL,
@@ -4075,7 +3764,7 @@ collect_mfrm_caveats <- function(fit = NULL,
     prep <- fit$prep %||% NULL
   }
   profile <- score_category_support_profile(prep = prep, score_distribution = score_distribution)
-  out <- empty_mfrm_caveats()
+  out <- empty_mfrm_caveats
   support_phrase <- if (identical(context, "data")) "prepared score support" else "fitted score support"
 
   add_caveat <- function(severity, condition, categories, category_type, message, action) {
@@ -4406,7 +4095,7 @@ augment_category_table_with_marginal_fit <- function(category_table, diagnostics
 #' - mean half-score transition points
 #'
 #' @section Lifecycle:
-#' Soft-deprecated. Prefer [category_structure_report()].
+#' Soft-deprecated. Prefer [mfrm_report_category_structure].
 #'
 #' @return A named list with:
 #' - `category_table`: observed/expected category counts and fit
@@ -4420,11 +4109,11 @@ augment_category_table_with_marginal_fit <- function(category_table, diagnostics
 #' - `fixed`: fixed-width report text (when `include_fixed = TRUE`)
 #' - `settings`: applied options
 #'
-#' @seealso [rating_scale_table()], [category_curves_report()], [plot.mfrm_fit()]
+#' @seealso [rating_scale_table()], [mfrm_report_category_curves], [plot.mfrm_fit()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' t8b <- category_structure_report(fit)
+#' t8b <- mfrm_report(type = "category_structure", fit)
 #' @keywords internal
 #' @noRd
 table8_barchart_export <- function(fit,
@@ -4436,15 +4125,15 @@ table8_barchart_export <- function(fit,
                                    fixed_max_rows = 200) {
   signal_legacy_name_deprecation(
     old_name = "table8_barchart_export",
-    new_name = "category_structure_report",
-    suppress_if_called_from = "category_structure_report"
+    new_name = "mfrm_report",
+    suppress_if_called_from = "mfrm_report"
   )
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
-  stop_if_product_slopes(fit, "category_structure_report()")
+  stop_if_product_slopes(fit, "mfrm_report(fit, type = 'category_structure')")
   if (!is.null(diagnostics)) {
-    mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "category_structure_report()")
+    mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "mfrm_report(fit, type = 'category_structure')")
   }
   obs_tbl <- if (is.null(diagnostics)) compute_obs_table(fit) else diagnostics$obs
   if (is.null(obs_tbl) || nrow(obs_tbl) == 0) {
@@ -4592,7 +4281,7 @@ table8_barchart_export <- function(fit,
 #' information as data frames ready for CSV export.
 #'
 #' @section Lifecycle:
-#' Soft-deprecated. Prefer [category_curves_report()].
+#' Soft-deprecated. Prefer [mfrm_report_category_curves].
 #'
 #' @return A named list with:
 #' - `graphfile`: wide table with `Scale, Measure, Expected, ExpCat, Prob:*`
@@ -4611,11 +4300,11 @@ table8_barchart_export <- function(fit,
 #' zero. `CurveBasis` and `PredictorOffset` record this condition explicitly;
 #' the output is not an arbitrary observed-cell conditional curve.
 #'
-#' @seealso [category_structure_report()], [rating_scale_table()], [plot.mfrm_fit()]
+#' @seealso [mfrm_report_category_structure], [rating_scale_table()], [plot.mfrm_fit()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' t8c <- category_curves_report(fit, theta_points = 101)
+#' t8c <- mfrm_report(type = "category_curves", fit, theta_points = 101)
 #' @keywords internal
 #' @noRd
 table8_curves_export <- function(fit,
@@ -4627,13 +4316,13 @@ table8_curves_export <- function(fit,
                                  newdata = NULL) {
   signal_legacy_name_deprecation(
     old_name = "table8_curves_export",
-    new_name = "category_curves_report",
-    suppress_if_called_from = c("category_curves_report", "facets_output_file_bundle")
+    new_name = "mfrm_report",
+    suppress_if_called_from = c("mfrm_report", "facets_output_file_bundle")
   )
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
-  if (is.null(newdata)) stop_if_product_slopes(fit, "category_curves_report()")
+  if (is.null(newdata)) stop_if_product_slopes(fit, "mfrm_report(fit, type = 'category_curves')")
   if (!is.null(newdata) && (!is.numeric(theta_points) || length(theta_points) != 1L ||
       !is.finite(theta_points) || theta_points < 2 || theta_points > .Machine$integer.max)) {
     stop("`theta_points` must be a finite number of at least two points.", call. = FALSE)
@@ -5008,8 +4697,8 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' `written_files` in run logs.
 #'
 #' @section Preferred route for new analyses:
-#' For new scripts, prefer [category_curves_report()] or
-#' [category_structure_report()] for scale outputs, then use
+#' For new scripts, prefer [mfrm_report_category_curves] or
+#' [mfrm_report_category_structure] for scale outputs, then use
 #' [export_mfrm_bundle()] for file handoff. Use
 #' `facets_output_file_bundle()` for its native graph/observation-row contract.
 #' Its score file is not the element-level FACETS Scorefile format; use
@@ -5047,7 +4736,7 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' - `written_files` when `write_files = TRUE`
 #' - `settings`: applied options
 #'
-#' @seealso [category_curves_report()], [diagnose_mfrm()], [unexpected_response_table()],
+#' @seealso [mfrm_report_category_curves], [diagnose_mfrm()], [unexpected_response_table()],
 #'   [export_mfrm_bundle()], [mfrmr_reports_and_tables],
 #'   [mfrmr_compatibility_layer]
 #' @examples
@@ -5061,8 +4750,9 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
 #' summary(out)
 #' p_out <- plot(out, draw = FALSE)
-#' p_out$data$plot
+#' plot_data(p_out, "plot")
 #' }
+#' @rdname facets_fit_review
 #' @export
 facets_output_file_bundle <- function(fit,
                                       diagnostics = NULL,
@@ -5555,8 +5245,9 @@ write_mfrm_residual_file <- function(fit,
 #' links `Person` and all modeled facet levels that co-occur in an observation.
 #' A single co-observation graph component does not prove common-scale
 #' identification; shared other facets can conceal confounded panels. Consult
-#' the fitted estimability audit. Multiple graph subsets require external
-#' anchoring or a deliberate separate-calibration design justifies it.
+#' the fitted estimability audit. Disconnected graphs need an explicit
+#' linking justification, such as defensible anchors or population assumptions,
+#' or separate calibrations. The graph alone does not assess those assumptions.
 #'
 #' @return A bundle with `table`, `nodes`, `summary`, `written_files`, and
 #'   `settings`.
@@ -5575,6 +5266,7 @@ write_mfrm_residual_file <- function(fit,
 #'   File = basename(out$written_files$Path)
 #' )
 #' # Full paths remain in out$written_files$Path.
+#' @rdname write_mfrm_residual_file
 #' @export
 write_mfrm_subset_file <- function(fit,
                                    diagnostics = NULL,
@@ -6019,131 +5711,22 @@ infer_facet_names <- function(diagnostics) {
 #'   diagnostics. See Model-generated reference below for restrictions.
 #' @param seed Optional integer seed for reproducible simulation. When supplied,
 #'   the caller's random-number state is restored after the calculation.
-#' @details The function works on standardized residual structures derived from
-#' [diagnose_mfrm()]. When a fitted object from [fit_mfrm()] is supplied,
-#' diagnostics are computed internally.
+#' @details
+#' Performs exploratory eigenvalue/loading PCA on pairwise-complete standardized
+#' residual correlation matrices (`overall` Person-by-combined-facet and/or
+#' `facet` Person-by-facet-level). Undefined pairwise correlations or non-PSD
+#' matrices are recorded in `errors` without zero-filling or smoothing.
 #'
-#' Conceptually, this follows the Rasch residual-PCA tradition of examining
-#' structure in model residuals after the primary Rasch dimension has been
-#' extracted. In `mfrmr`, however, the implementation is an **exploratory
-#' many-facet adaptation**: it works on standardized residual matrices built as
-#' person x combined-facet or person x facet-level layouts, rather than
-#' reproducing FACETS/Winsteps residual-contrast tables one-to-one.
+#' With `parallel = TRUE`, `"residual_permutation"` permutes standardized
+#' residuals within columns; `"model_bootstrap"` simulates conditionally
+#' independent ratings and refits unanchored unit-weight RSM/PCM MML models with
+#' fixed `N(0, 1)` ability, retaining all attempted replicates in
+#' `bootstrap_trials` and withholding cutoffs (`ParallelMean`, `ParallelCutoff`,
+#' `ExcessOverParallelCutoff`, `ExceedsParallelCutoff`) if any replicate fails.
+#' Reference quantiles are exploratory componentwise screens rather than
+#' multiplicity-calibrated dimensionality tests; pass `residual_pca = "none"` to
+#' [diagnose_mfrm()] when calling `analyze_residual_pca()` separately.
 #'
-#' Residual PCA should therefore be reported as residual-structure evidence,
-#' not as a formal proof of unidimensionality. It also should not be described
-#' as DIMTEST or UNIDIM: those essential-unidimensionality tests require a
-#' separate item-response-layer definition that is not uniquely determined by a
-#' many-facet long data set. In applied MFRM reporting, residual PCA is best
-#' triangulated with global residual fit, element fit, and Q3-style
-#' local-dependence screens.
-#'
-#' Correlations use persons with observed residuals for each pair. Every column
-#' and pair must have defined correlations, and the resulting matrix must be
-#' positive semidefinite (allowing numerical roundoff). Missing correlations
-#' are not set to zero, and invalid matrices are not smoothed. Unavailable
-#' analyses retain an explanation in `errors`. Older stored PCA calculations
-#' are recomputed from the supplied observations when this function is called.
-#'
-#' Output tables use:
-#' - `Component`: principal-component index (1, 2, ...)
-#' - `Eigenvalue`: eigenvalue for each component
-#' - `Proportion`: component variance proportion
-#' - `Cumulative`: cumulative variance proportion
-#'
-#' When `parallel = TRUE`, the variance tables additionally include
-#' reference summaries (the method is retained in `ParallelMethod`):
-#' - `ParallelMean`: mean reference eigenvalue
-#' - `ParallelCutoff`: `parallel_quantile` cutoff of reference eigenvalues
-#' - `ExcessOverParallelCutoff`: observed eigenvalue minus the cutoff
-#' - `ExceedsParallelCutoff`: whether the observed eigenvalue exceeds the
-#'   selected reference cutoff
-#'
-#' With `parallel_method = "residual_permutation"`, the comparison conditions
-#' on the fitted residuals and missingness pattern;
-#' it does not simulate responses or refit the model. It does not account for
-#' fitted-parameter uncertainty and is not a calibrated dimensionality test.
-#' If any requested permutation has unavailable or invalid correlations, the
-#' comparison is withheld rather than conditioning on successful permutations.
-#' `parallel_status` retains the successful count and the reason.
-#' More permutations improve numerical stability of the reference quantile,
-#' but do not establish error-rate control for the fitted model.
-#'
-#' For `mode = "facet"` or `"both"`, `by_facet_table` additionally includes
-#' a `Facet` column.
-#'
-#' `summary(pca)` is supported through `summary()`.
-#' `plot(pca)` dispatches on class `mfrm_residual_pca`. Use
-#' `type = "scree"`, `"parallel_scree"`, `"parallel_excess"` or `"loadings"`,
-#' with `mode = "overall"` or `mode = "facet", facet = "Criterion"`.
-#' Existing prefixed spellings such as `"facet_scree"` remain supported.
-#' Plotting a saved PCA does not generate or refit a parallel reference.
-#' Save the complete result with [base::saveRDS()], including `errors`,
-#' `warnings`, `parallel_status` and any `bootstrap_trials`; export the
-#' desired tables separately with [utils::write.csv()]. [as_ggplot()] converts
-#' a saved plot payload without redoing PCA. A blank unavailable plot is not
-#' evidence of an absence of residual structure.
-#' @section Interpreting output:
-#' Use `overall_table` first:
-#' - early components with noticeably larger eigenvalues or proportions
-#'   suggest residual structure that may deserve follow-up. Small early
-#'   components do not establish unidimensionality; inspect the residual
-#'   aggregation, available person overlaps, fit and local-dependence screens.
-#'
-#' Then inspect `by_facet_table`:
-#' - describes patterns within each facet-level residual matrix. Different
-#'   numbers of columns, aggregation and overlaps prevent treating eigenvalues
-#'   across facets as a ranking of their contributions to a single decomposition.
-#'
-#' Finally, inspect loadings via [plot(x, type = "residual_pca")][plot.mfrm_fit] to identify which
-#' variables/elements drive each component.
-#' @section Model-generated reference:
-#' `parallel_method = "model_bootstrap"` is an exploratory parametric-bootstrap
-#' reference for native RSM/PCM MML fits with a fixed standard-normal population,
-#' fixed quadrature, additive facets and unit weights. Anchors, dummy/positive
-#' facets, shrinkage, estimated population models, GPCM, JML and extended
-#' testlet/shared-rater models are not supported by this reference yet.
-#'
-#' Each replicate draws one independent standard-normal ability per Person and
-#' shares it across that Person's retained rating rows. Fitted facet and step
-#' parameters generate conditionally independent ratings. The model is refitted
-#' with the original identification, category map, quadrature and optimization
-#' settings. Standardized residuals use the same scoring and aggregation as the
-#' observed analysis. One refit supplies every requested PCA scope.
-#'
-#' The reference conditions on the analyzed assignment and observation pattern:
-#' it does not fill unassigned or missing ratings or simulate informative
-#' missingness. Sparse designs remain usable only when the required residual
-#' correlations are defined and their matrix is positive semidefinite.
-#' Source and refitted models must pass numerical convergence checks. The
-#' observed PCA itself can be unavailable despite successful fitting, for
-#' example because the assignment lacks shared-Person pairs. This is reported
-#' separately from refit failure. Every planned replicate is retained in `bootstrap_trials`, including warnings and
-#' failures. An affected scope has no reference cutoff if any replicate fails;
-#' successful replicates are not substituted or selected to form its reference.
-#' Raw eigenvalue draws, with missing rows for failures, are stored under each
-#' PCA bundle's `parallel$draws`.
-#'
-#' Refitting includes variation from parameter estimation under the fitted null;
-#' generating parameters themselves are plug-in estimates, not posterior draws.
-#' Cutoffs are componentwise reference quantiles, not multiplicity-adjusted
-#' tests. Scanning every component does not preserve the nominal false-flag
-#' probability of one component. Absence of a flag is not evidence that all
-#' model assumptions hold. Few replicates give unstable tail quantiles. Neither a fixed number of
-#' replicates nor this algorithm establishes calibrated false-flag rates or
-#' proves unidimensionality. Inspect convergence, quadrature sensitivity,
-#' overlap and competing dependence explanations before substantive use.
-#' @section Dimensionality and network follow-up:
-#' Checking a one-dimensional model does not require fitting a multidimensional
-#' alternative first. Residual structure can also reflect testlet, rater or
-#' assignment effects; neither the component count nor the count plus one is
-#' an estimated number of substantive abilities. Combine the screen with
-#' [q3_statistic()], marginal-fit review and substantive task/criterion evidence.
-#' The current permutation reference does not replace a fitted-model parametric
-#' bootstrap. No native residual-network/EGA or calibrated dimensionality
-#' decision is supplied here. Residual communities would describe remaining
-#' associations, not automatically latent dimensions. See
-#' `vignette("mfrmr-visual-diagnostics")` for alternatives and their scope.
 #' @references The residual-PCA idea follows the Rasch residual-structure literature,
 #' especially Linacre's discussions of principal components of Rasch residuals.
 #' The current `mfrmr` implementation should be interpreted as an exploratory
@@ -6177,28 +5760,11 @@ infer_facet_names <- function(diagnostics) {
 #' - Linacre, J. M. (1998). *Detecting multidimensionality: Which residual
 #'   data-type works best?* Journal of Outcome Measurement, 2(3), 266-283.
 #'
-#' Applications and broader measurement discussions below provide context;
-#' they do not validate this implementation's residual aggregation, reference
-#' cutoffs or automatic dimensionality decisions:
+#' @section Fitting before a separate PCA:
+#' Use `diagnose_mfrm(fit, residual_pca = "none")` when PCA will be requested
+#' separately with `analyze_residual_pca(..., mode = "both")`, avoiding duplicate
+#' PCA calculation. Inspect the tables/plots above with the model's fit diagnostics.
 #'
-#' - Eckes, T. (2005). Examining rater effects in TestDaF writing and speaking
-#'   performance assessments: A many-facet Rasch analysis. *Language Assessment
-#'   Quarterly*, 2(3), 197-221.
-#' - Yamashita, T. (2024). An application of many-facet Rasch measurement to
-#'   evaluate automated essay scoring: A case of ChatGPT-4.0. *Research Methods
-#'   in Applied Linguistics*, 3(3), 100133.
-#' - Uto, M. (2021). A multidimensional generalized many-facet Rasch model for
-#'   rubric-based performance assessment. *Behaviormetrika*, 48(2), 425-457.
-#' - Aryadoust, V., Ng, L. Y., & Sayama, H. (2021). A comprehensive review of
-#'   Rasch measurement in language assessment: Recommendations and guidelines
-#'   for research. *Language Testing*, 38(1), 6-40.
-#' - Tseng, W.-T. (2016). Measuring English vocabulary size via computerized
-#'   adaptive testing. *Computers & Education*, 97, 69-85.
-#' @section Typical workflow:
-#' 1. Fit model and run [diagnose_mfrm()] with `residual_pca = "none"` or `"both"`.
-#' 2. Call `analyze_residual_pca(..., mode = "both")`.
-#' 3. Review `summary(pca)`, then plot scree/loadings.
-#' 4. Cross-check with fit/misfit diagnostics before conclusions.
 #' @return A named list with:
 #' - `mode`: resolved mode used for computation
 #' - `facet_names`: facets analyzed
@@ -6225,13 +5791,12 @@ infer_facet_names <- function(diagnostics) {
 #' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
-#' diag <- diagnose_mfrm(fit, residual_pca = "both")
+#' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' pca <- analyze_residual_pca(diag, mode = "both")
-#' pca2 <- analyze_residual_pca(fit, mode = "both")
+#' # A fitted model is also accepted: analyze_residual_pca(fit, mode = "both").
 #' summary(pca)
-#' p <- plot(pca, type = "residual_pca", mode = "overall", view = "scree", draw = FALSE)
-#' p$data$plot
-#' head(p$data)
+#' p <- plot(pca, type = "scree", mode = "overall", draw = FALSE)
+#' head(plot_data(p, "data"))
 #' # Optional permutation reference repeats the PCA calculation.
 #' # example("analyze_residual_pca", run.dontrun = TRUE)
 #' \dontrun{
@@ -6563,7 +6128,7 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -6795,266 +6360,68 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
   )
 }
 
-#' Estimate bias and interaction screening terms
+#' Screen facet combinations for departures from a fitted model
 #'
-#' @param fit Output from [fit_mfrm()].
-#' @param diagnostics Output from [diagnose_mfrm()].
-#'   Must match this fitted analysis; see [mfrmr_compatibility_layer] for
-#'   migration of saved diagnostics.
-#' @param facet_a First facet name. Provide together with `facet_b` for the
-#'   classic pairwise 2-way interaction. Ignored when `interaction_facets`
-#'   is supplied. The canonical `"Person"` role is accepted explicitly.
-#' @param facet_b Second facet name. See `facet_a`.
-#' @param interaction_facets Character vector of two or more facets to model as
-#'   one interaction effect. When supplied, this takes precedence over
-#'   `facet_a`/`facet_b`. Use this form (rather than `facet_a`/`facet_b`)
-#'   whenever you want 3+ way interactions, since `facet_a/facet_b` is
-#'   restricted to the pairwise case. The canonical `"Person"` role may be
-#'   supplied explicitly; see the Person-screening boundary below.
-#' @param max_abs Bound for absolute bias size.
-#' @param omit_extreme Omit extreme-only elements. In ordinary additive RSM/PCM
-#'   JML, directly fixed finite anchors are retained even with all-low/all-high
-#'   responses. Their cell bias may still have no finite unconstrained optimum.
-#' @param max_iter Maximum number of repeated cell-estimation passes recorded
-#'   in `iteration`; the baseline calibration stays fixed throughout.
-#' @param tol Between-pass change tolerance for the iteration log. This does
-#'   not control the tolerance of the bounded scalar likelihood optimizer.
-#' @param xtreme Default `0` retains bounded extreme-cell estimates with SEs
-#'   withheld. A positive correction (usually `.5` for FACETS bias reporting)
-#'   requests finite total-score extrapolation for ordinary additive RSM/PCM
-#'   JML without group-mean anchors; it must be smaller than the score range.
+#' @description
+#' Estimate conditional plug-in interaction shifts \eqn{b_{jc}} within
+#' `[-max_abs, max_abs]` holding a fitted `RSM`, `PCM`, or one-family `GPCM`
+#' baseline calibration and Person measures fixed (FACETS Table 13 screen; for
+#' jointly estimated interactions use `facet_interactions` in [fit_mfrm()] and
+#' [mfrm_facet_intervals()]).
+#'
+#' @param fit Matching [fit_mfrm()] and [diagnose_mfrm()] outputs.
+#' @param diagnostics Matching [fit_mfrm()] and [diagnose_mfrm()] outputs.
+#' @param facet_a Two facet names (`facet_a`,
+#'   `facet_b`) or a character vector of `>= 2` facets (`interaction_facets`
+#'   supports 3+ way screens and explicit `"Person"` plug-in screens).
+#' @param facet_b Two facet names (`facet_a`,
+#'   `facet_b`) or a character vector of `>= 2` facets (`interaction_facets`
+#'   supports 3+ way screens and explicit `"Person"` plug-in screens).
+#' @param interaction_facets Two facet names (`facet_a`,
+#'   `facet_b`) or a character vector of `>= 2` facets (`interaction_facets`
+#'   supports 3+ way screens and explicit `"Person"` plug-in screens).
+#' @param max_abs Search bound on `|Bias Size|`,
+#'   extreme-element exclusion toggle, iteration-pass log ceiling and tolerance,
+#'   and optional inward extreme-cell total adjustment (`0` default withholds
+#'   boundary SE/tails; `.5` gives `BiasStatus = "extreme_adjusted"` in additive
+#'   RSM/PCM JML without group anchors).
+#' @param omit_extreme Search bound on `|Bias Size|`,
+#'   extreme-element exclusion toggle, iteration-pass log ceiling and tolerance,
+#'   and optional inward extreme-cell total adjustment (`0` default withholds
+#'   boundary SE/tails; `.5` gives `BiasStatus = "extreme_adjusted"` in additive
+#'   RSM/PCM JML without group anchors).
+#' @param max_iter Search bound on `|Bias Size|`,
+#'   extreme-element exclusion toggle, iteration-pass log ceiling and tolerance,
+#'   and optional inward extreme-cell total adjustment (`0` default withholds
+#'   boundary SE/tails; `.5` gives `BiasStatus = "extreme_adjusted"` in additive
+#'   RSM/PCM JML without group anchors).
+#' @param tol Search bound on `|Bias Size|`,
+#'   extreme-element exclusion toggle, iteration-pass log ceiling and tolerance,
+#'   and optional inward extreme-cell total adjustment (`0` default withholds
+#'   boundary SE/tails; `.5` gives `BiasStatus = "extreme_adjusted"` in additive
+#'   RSM/PCM JML without group anchors).
+#' @param xtreme Search bound on `|Bias Size|`,
+#'   extreme-element exclusion toggle, iteration-pass log ceiling and tolerance,
+#'   and optional inward extreme-cell total adjustment (`0` default withholds
+#'   boundary SE/tails; `.5` gives `BiasStatus = "extreme_adjusted"` in additive
+#'   RSM/PCM JML without group anchors).
 #'
 #' @details
-#' This helper supports `RSM`, `PCM`, and one-slope-family `GPCM` fits.
-#' Two-slope-family `GPCM` fits are not currently supported.
-#' It estimates an additional cell shift relative to the fitted baseline,
-#' holding that baseline fixed. For joint estimation of main effects and
-#' a two-facet interaction in `RSM` / `PCM`, use the `facet_interactions`
-#' argument of [fit_mfrm()]. For the supported fixed-population RSM/PCM MML
-#' route, [mfrm_facet_intervals()] with `interaction = "FacetA:FacetB"` returns
-#' joint-information cell intervals. They estimate a different target and
-#' do not replace or relabel this fixed-baseline screening result.
+#' For additive predictor \eqn{\eta_{njc} = \theta_n - \delta_j - \beta_c +
+#' b_{jc}}, interior solutions solve \eqn{\sum_n w_{njc}\{X_{njc} -
+#' E_{njc}(b_{jc})\} = 0} with conditional SE
+#' \eqn{[\sum_n w_{njc}\mathrm{Var}_{njc}(\hat b)]^{-1/2}} (including slope
+#' factors and conditional LR/profile columns in one-family GPCM). Screening `t`
+#' tails use continuous Student `df = weighted_count - 1` (`ProbabilityStatus`,
+#' `ScreenStatus`); calibration uncertainty is not propagated.
 #'
-#' **Bias (interaction) in an additive MFRM** refers to a systematic departure
-#' from the main-effects model: a specific rater-criterion (or higher-order)
-#' combination produces scores that are consistently higher or lower than
-#' predicted by the main effects alone.  For example, Rater A might be
-#' unexpectedly severe on Criterion 2 despite being lenient overall.
-#'
-#' Mathematically, the bias term \eqn{b_{jc}} for rater \eqn{j} on
-#' criterion \eqn{c} modifies the linear predictor:
-#'
-#' \deqn{\eta_{njc} = \theta_n - \delta_j - \beta_c + b_{jc}}
-#'
-#' Here the example uses negatively oriented rater and criterion facets.
-#' The returned `Bias Size` is always an additive shift in the score predictor:
-#' positive values increase expected scores; negative values decrease them.
-#' If the fitted model already contains `facet_interactions`, those fitted
-#' interactions remain part of the fixed baseline. The new shift is a
-#' residual departure from that model, not a re-estimate of its interaction.
-#' Each cell's shift is estimated by maximizing its conditional likelihood
-#' within `[-max_abs, max_abs]`, holding fitted person measures, facet values,
-#' steps and slopes fixed. For `RSM` / `PCM`, an interior solution satisfies
-#' the weighted score equation:
-#'
-#' \deqn{\sum_n w_{njc} \{X_{njc} - E_{njc}(b_{jc})\} = 0.}
-#'
-#' With unit weights, \eqn{w_{njc}=1}. The conditional information gives
-#' \eqn{\mathrm{SE}(\hat b) = [\sum_n w_{njc}
-#' \mathrm{Var}_{njc}(\hat b)]^{-1/2}}. For `GPCM`, the score and information
-#' include the observation's slope and squared slope, respectively, and
-#' conditional profile-likelihood columns are also returned. `Bias Size`
-#' is in the model's native ability units: in `RSM` / `PCM` it equals the
-#' change in adjacent-category log odds, whereas in `GPCM` that change is
-#' \eqn{a b} for an observation with slope \eqn{a}. The same bias value can
-#' therefore imply different probability changes across observations.
-#' All these
-#' quantities are plug-in screening evidence: JML person measures or MML EAP
-#' scores and the calibration parameters are treated as known. Their estimation
-#' uncertainty, including uncertainty in supplied anchors, is not propagated.
-#' A fixed rater severity can therefore have a nonzero cell bias and positive
-#' bias SE: the fixed severity and the cell's additional shift are different
-#' quantities. `BiasStatus` identifies an interior solution or an optimum at
-#' either search bound. A bounded point remains available, but its `S.E.`,
-#' `t`, `Prob.` and GPCM profile-inference columns are withheld at a boundary.
-#' Inspect `ScreenStatus` and `ScreenReason`: a bound can mean an insufficient
-#' search range or an all-low/all-high cell with no finite unconstrained
-#' optimum. Increasing the range does not resolve the latter.
-#'
-#' With `xtreme > 0`, an all-low/all-high cell's weighted total is moved inward
-#' by `xtreme` times its smallest positive weight. A root strictly inside
-#' `[-max_abs, max_abs]` yields `BiasStatus = "extreme_adjusted"`, finite
-#' `Bias Size` and conditional information SE; `PrimaryBias` retains the
-#' infinite cell MLE and `ExtremeAdjustment` records the total correction.
-#' Otherwise the boundary remains unavailable for screening. Observations
-#' involving any unanchored extreme main-effect element are excluded in this
-#' route even when `omit_extreme = FALSE`; finite fixed anchors remain usable.
-#' This prevents main-effect display replacements from becoming calibration.
-#' The default `xtreme = 0` also retains directly fixed finite anchors in ordinary
-#' additive RSM/PCM JML; extreme cells then keep bounded points with screening
-#' SEs and tail areas withheld. Group-mean constraints are not direct anchors.
-#' The native FACETS `Xtreme = main,bias` has two separate corrections: this
-#' function's `xtreme` corresponds to the second value (normally `.5`), not
-#' the first (normally `.3`). Executed FACETS 4.5.0 Person-by-Rater examples
-#' retain fixed extreme Persons and agree with the conditional cell calculation
-#' on the same main calibration. This does not establish main-calibration parity.
-#' If a low cell's baseline expectation is already below the inward correction,
-#' its adjusted bias can be positive despite a negative observed-minus-expected
-#' score difference (and conversely at the upper endpoint). Inspect `PrimaryBias`,
-#' `ExtremeAdjustment` and `Obs-Exp Average` together; the adjusted sign describes
-#' the amended total, not a reversal of the observed departure.
-#' Extrapolated tail areas, summaries and pairwise contrasts are reporting
-#' conventions, not regular-MLE inference, coverage guarantees or fairness tests.
-#'
-#' `ConditionalInformation` uses every cell row, including small positive
-#' conditional variances; the residual-screening cutoff does not remove their
-#' information. Incomplete/nonpositive information withholds the SE and
-#' screening statistic while retaining a computed point. Infit/Outfit retain
-#' the legacy variance cutoff (`1e-10`) and require all contributing rows;
-#' `FitResponseRows`, `FitAvailableRows`, `FitUnavailableRows`, `FitStatus`
-#' and `FitReason` explain withheld complete-cell fit summaries.
-#'
-#' - For two-way mode, use `facet_a` and `facet_b` (or `interaction_facets`
-#'   with length 2).
-#' - For higher-order mode, provide `interaction_facets` with length >= 3.
-#' - A Person-involving result is a conditional plug-in likelihood screen. It
-#'   holds fitted JML person measures or MML EAP scores and the other fitted
-#'   parameters fixed; it is not a jointly fitted Person-by-facet interaction
-#'   and does not support formal inference or a cell-level fairness decision.
-#'   The function emits a classed warning when `"Person"` is requested.
-#'
-#' @section What this screening means:
-#' `estimate_bias()` summarizes additional cell departures from the fitted MFRM.
-#' It is best read as a targeted screening tool for potentially noteworthy
-#' cells or facet combinations that may merit substantive review.
-#'
-#' @section What this screening does not justify:
-#' - `t` and `Prob.` are screening metrics, not formal inferential quantities.
-#' - A flagged interaction cell is not, by itself, proof of rater bias or
-#'   construct-irrelevant variance.
-#' - Non-flagged cells should not be over-read as evidence that interaction
-#'   effects are absent.
-#'
-#' @section Interpreting output:
-#' Use `summary` for global magnitude, then inspect `table` for cell-level
-#' interaction effects.
-#'
-#' Prioritize rows with:
-#' - larger `|Bias Size|`, assessed against a substantively chosen threshold
-#'   in native ability units and its effect on expected scores, rather than
-#'   a universal small/large-effect rule
-#' - larger `|t|` among the screening metrics (the default review rule is
-#'   \eqn{|t| \ge 2}, not a validated fairness decision)
-#' - smaller `Prob.` among the screening metrics
-#'
-#' Use `Bias Size` for the direction of the departure from the baseline model.
-#' `Expctd Score` and `Obs-Exp Average` use the main-analysis expectations,
-#' before adding the cell shift. `AfterBiasExpectedScore` and
-#' `AfterBiasObsExpAverage` retain the remaining discrepancy after fitting it.
-#' Cell t reference df uses weighted count minus 1. This matches the executed
-#' FACETS 4.5.0 equal-count binary example; a manual count-minus-2 description
-#' is a distinct convention and does not establish version-wide equivalence.
-#' `DFUnrounded` retains count minus one, including nonpositive values.
-#' A nonpositive value withholds `d.f.`, `DFDisplay` and `Prob.`; a finite point
-#' and conditional information SE can remain available. For positive df,
-#' `DFDisplay` rounds to the nearest integer (halves upward) for RSM/PCM display
-#' comparison only. `d.f.` and `Prob.` use the continuous reference.
-#' `ProbabilityReference`, `ProbabilityStatus` and `ProbabilityReason` identify
-#' the reference distribution and distinguish available conditional or
-#' extreme-adjusted tails from unavailable df, statistics or numerical results.
-#' These fields describe `Prob.`, not the separate GPCM likelihood-ratio tail.
-#'
-#' Checked FACETS 4.5.0 fractional-count tails are reproduced by extending an
-#' integer-df finite-sum formula to fractional df. That extension is not the
-#' continuous-df Student distribution and can change a 0.05 screening flag.
-#' mfrmr retains the continuous Student tail, independently checked by density
-#' integration. This explains the checked output behavior without claiming
-#' access to the executable's implementation or general finite-sample validity.
-#' The all-zero `chi_sq` screen sums squared bias/SE ratios without centering;
-#' its df is the number of cells. It requires at least two cells and complete
-#' cell estimates and SEs. Otherwise its statistic, degrees of freedom and
-#' tail area are missing, with available-cell counts and a reason.
-#'
-#' `summary()` reports available and unavailable screening tail-area counts.
-#' With none available, screen-positive counts are `NA`, not zero.
-#' Bonferroni/Holm summaries use the full number of retained cells in this
-#' interaction, including unavailable cells; they do not include omitted or
-#' unobserved cells or other interactions from [estimate_all_bias()].
-#' Adjustment does not validate the underlying plug-in tail areas or establish
-#' formal family-wise error control.
-#'
-#' `iteration` records changes between repeated estimates of the same
-#' conditional cell problems. These passes do not refit person or facet
-#' parameters, and increasing `max_iter` does not turn this screen into a
-#' jointly fitted interaction model.
-#'
-#' @section Typical workflow:
-#' 1. Fit and diagnose model.
-#' 2. Run `estimate_bias(...)` for target interaction facets.
-#' 3. Review `summary(bias)` and `bias$table`.
-#' 4. Visualize/report via [plot(x, type = "bias")][plot.mfrm_fit] and [build_fixed_reports()].
-#'
-#' @section Interpreting key output columns:
-#' In `bias$table`, the most-used columns are:
-#' - `Bias Size`: estimated additional cell shift \eqn{b_{jc}} in native
-#'   ability units; in `GPCM`, adjacent log odds change by \eqn{a b_{jc}}
-#' - `t` and `Prob.`: screening metrics, not formal inferential quantities
-#' - `S.E.`: conditional information-based SE of the cell shift, with the
-#'   calibration held fixed
-#' - `Obs-Exp Average`: observed-minus-baseline-expected average on the
-#'   raw-score metric
-#' - for `GPCM`, `LR ChiSq`, `LR Prob.`, and `Profile CI Lower` /
-#'   `Profile CI Upper`: conditional profile-likelihood checks for a single
-#'   additive bias shift, holding the fitted person, facet, step, and slope
-#'   estimates fixed. Calibration uncertainty is not propagated. Check
-#'   `Profile CI Status`: `limited by search range` marks a retained search
-#'   limit, not a computed likelihood-ratio endpoint. These are screening
-#'   approximations, not formal fairness tests.
-#'
-#' The `chi_sq` element screens whether all interaction cells equal zero,
-#' using diagonal conditional SEs. It is not a full covariance test.
-#' Recreate older bias results with current diagnostics and `estimate_bias()`;
-#' saved old expected-score and chi-square definitions are not relabeled.
-#'
-#' @section Recommended next step:
-#' Use [plot(x, type = "bias")][plot.mfrm_fit] to inspect the flagged cells visually, then
-#' integrate the result with DFF, linking, or substantive scoring review before
-#' making formal claims about fairness or invariance.
-#' Save the `mfrm_bias` object for repeat use. [bias_interaction_report()] adds
-#' explicit screening rules without refitting; plotting the saved report keeps
-#' those rules. [mfrm_results()] has a separate bias-screen collection route;
-#' saving a standalone bias result does not automatically attach it there.
-#'
-#' @return
-#' An object of class `mfrm_bias` with:
-#' - `table`: interaction rows with effect size, SE, screening t/p metadata,
-#'   reporting-use flags, fit columns, and `GPCM`
-#'   profile-likelihood columns when available
-#' - `summary`: compact summary statistics
-#' - `chi_sq`: fixed-effect chi-square style screening summary
-#' - `facet_a`, `facet_b`: first two analyzed facet names (legacy compatibility)
-#' - `interaction_facets`, `interaction_order`, `interaction_mode`: full
-#'   interaction metadata
-#' - `person_interaction`, `person_source_column`, `person_interaction_note`:
-#'   Person-screening provenance and interpretation metadata
-#' - `iteration`: iteration history/metadata
-#' - `orientation_review`: facet-orientation sign-consistency review table
-#' - `mixed_sign`: logical flag indicating whether bias-size signs flip
-#'   across facets in a way that complicates direction interpretation
-#' - `direction_note`: one-line interpretive note describing the
-#'   dominant bias direction (empty when not applicable)
-#' - `recommended_action`: one-line recommended-action label routing
-#'   the user to the appropriate follow-up helper
-#' - `inference_tier`: summary label indicating that the bias rows are
-#'   intended for screening and follow-up review
-#' - `optimization_failures`: per-cell record of any inner-loop
-#'   optimizer failures encountered while estimating the bias
-#'   parameters; empty when every cell converged cleanly
-#'
-#' @seealso [interaction_effect_table()], [build_fixed_reports()],
-#'   [build_apa_outputs()]
+#' @return An `mfrm_bias` list with `table`, `summary`, `chi_sq`,
+#'   `interaction_facets`, `iteration`, `orientation_review`, `mixed_sign`,
+#'   `direction_note`, `recommended_action`, `inference_tier`, and
+#'   `optimization_failures`.
+#' @seealso [estimate_all_bias()], [interaction_effect_table()], [analyze_dff()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("estimate_bias", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
@@ -7077,7 +6444,7 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' #   establish statistical reliability;
 #' #   inspect cell counts, uncertainty and substantive consequences.
 #' p_bias <- plot(bias, type = "bias", draw = FALSE)
-#' p_bias$data$plot
+#' plot_data(p_bias, "plot")
 #' # Optional finite reporting for extreme cells; this does not refit calibration
 #' extreme_bias <- estimate_bias(fit, diag, "Rater", "Criterion", xtreme = .5)
 #' head(extreme_bias$table[, c("Bias Size", "PrimaryBias", "BiasStatus", "SEBasis")])
@@ -7099,13 +6466,11 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' - Myford, C. M., & Wolfe, E. W. (2004). Detecting and measuring
 #'   rater effects using many-facet Rasch measurement: Part II.
 #'   *Journal of Applied Measurement, 5*(2), 189-227.
-#' @section Saved-result reuse:
-#' The returned `fit_identity` records the fitted analysis for reuse with
-#' reports and exports. Recreate older results from the saved fit and matching
-#' diagnostics using the original screening options; no model refit is needed.
-#' See [mfrmr_compatibility_layer] for migration instructions.
 #' @export
 #' @order 1
+#' @concept bias screening
+#' @concept confidence intervals
+#' @concept visual diagnostics
 estimate_bias <- function(fit,
                           diagnostics,
                           facet_a = NULL,
@@ -7244,45 +6609,19 @@ estimate_bias <- function(fit,
 #'   integer part, matching FACETS 4.5.0) or `"classical"` (former continuous df).
 #'
 #' @section Pairwise calculation:
-#' For each target element, compare its local measure in two contexts.
-#' If the target has predictor sign `s`, its local measure is
-#' `target + bias/s`; the contrast is Context1 minus Context2. A negatively
-#' oriented rater therefore has local severity `severity - bias`.
-#' `TargetSign` comes from the saved bias result's `orientation_review`.
-#' Missing orientation withholds local measures, contrasts and tail areas;
-#' it is not inferred from a facet name.
-#'
-#' `SE1` and `SE2` are conditional cell-information SEs with baseline
-#' calibration held fixed. The contrast SE is `sqrt(SE1^2 + SE2^2)` under
-#' conditional independence of the two cells. Calibration uncertainty and
-#' cross-cell covariance are not propagated. `Target S.E.` describes the
-#' original target estimate separately and is not added to the conditional
-#' local SE; a fixed target can still have uncertain local bias.
-#'
-#' The default `df_method = "facets"` uses the modified Rasch-Welch formula
-#' described in the FACETS t-statistics manual (von Davier, 2025). Writing
-#' `v1 = SE1^2`, `v2 = SE2^2` and `n1`, `n2` for weighted counts, its df is
-#' `(v1+v2)^2 * (n1+n2-2) / ((n1+n2+2) * (v1^2/(n1+1)+v2^2/(n2+1)))`.
-#' The tail area uses its integer part, matching executed FACETS 4.5.0
-#' unequal-count examples. Values are stabilized to ten decimal places before
-#' truncation to avoid numerical noise at integer boundaries. `DFUnrounded`
-#' retains the original continuous value.
-#' `df_method = "classical"` retains the former Welch-Satterthwaite reference
-#' with `n1-1`, `n2-1` and no integer truncation. `DFMethod` and `DFBasis`
-#' identify the choice; equal counts alone cannot distinguish the formulas.
-#' `ObsN1` and `ObsN2` are raw row counts. Both weighted counts must exceed
-#' one, both SEs must be positive and finite, and the final df must be positive.
-#' Otherwise the screen remains unavailable. Fractional weights follow the
-#' same rule but are outside the executed comparison. These are conditional
-#' screens, not calibrated fairness tests or general FACETS equivalence.
+#' Local contrasts are Context1 minus Context2 using the saved target-facet
+#' orientation. Their SEs condition on baseline calibration and omit calibration
+#' uncertainty and cross-cell covariance; these remain screening statistics.
+#' Unavailable orientation or precision leaves comparisons unavailable.
+#' See "Pairwise calculation" in [mfrm_report_bias_pairwise] for the local-measure
+#' and SE formulas, weighted-count df conventions, availability conditions and
+#' the scope of the FACETS comparison.
 #'
 #' @section Saved pairwise results:
-#' Current tables carry `CalculationVersion = 3`. Recreate older fixed or
-#' pairwise reports using [build_fixed_reports()] or [bias_pairwise_report()].
-#' If the bias bundle predates baseline-score corrections or lacks orientation,
-#' recreate [estimate_bias()] from the saved fit and current diagnostics first.
-#' No main calibration refit is needed. Keep historical values separately;
-#' summaries and fixed-report plots reject older pairwise calculations.
+#' Current tables use `CalculationVersion = 3`. Older tables must be rebuilt,
+#' not relabelled. See "Saved pairwise results" in [mfrm_report_bias_pairwise] for
+#' when the underlying bias result also needs regeneration; no main calibration
+#' refit is required.
 #'
 #' @section Interpreting output:
 #' - `bias_fixed`: fixed-width table of interaction effects.
@@ -7296,7 +6635,7 @@ estimate_bias <- function(fit,
 #' 3. Use `summary()`/`plot()` for quick checks, then export text blocks.
 #'
 #' @section Preferred route for new analyses:
-#' For new reporting workflows, prefer [bias_interaction_report()] and
+#' For new reporting workflows, prefer [mfrm_report_bias_interaction] and
 #' [build_apa_outputs()]. Use `build_fixed_reports()` when a fixed-width text
 #' artifact is specifically required for a compatibility handoff.
 #'
@@ -7317,10 +6656,10 @@ estimate_bias <- function(fit,
 #'   used as the target facet for pairwise contrasts; `NA` when no
 #'   pairwise contrasts were requested or available
 #'
-#' @seealso [estimate_bias()], [build_apa_outputs()], [bias_interaction_report()],
+#' @seealso [estimate_bias()], [build_apa_outputs()], [mfrm_report_bias_interaction],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("build_fixed_reports", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
@@ -7701,7 +7040,7 @@ normalize_bias_plot_input <- function(x,
 #' - summary and threshold metadata
 #'
 #' @section Lifecycle:
-#' Soft-deprecated. Prefer [bias_interaction_report()].
+#' Soft-deprecated. Prefer [mfrm_report_bias_interaction].
 #'
 #' @return A named list with:
 #' - `ranked_table`: top-ranked bias rows with flags
@@ -7723,7 +7062,7 @@ normalize_bias_plot_input <- function(x,
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
-#' t13 <- bias_interaction_report(bias, top_n = 10)
+#' t13 <- mfrm_report(type = "bias_interaction", bias, top_n = 10)
 #' @keywords internal
 #' @noRd
 table13_bias_plot_export <- function(x,
@@ -7742,8 +7081,8 @@ table13_bias_plot_export <- function(x,
                                      sort_by = c("abs_t", "abs_bias", "prob")) {
   signal_legacy_name_deprecation(
     old_name = "table13_bias_plot_export",
-    new_name = "bias_interaction_report",
-    suppress_if_called_from = c("bias_interaction_report", "plot_table13_bias", "plot_bias_interaction")
+    new_name = "mfrm_report",
+    suppress_if_called_from = c("mfrm_report", "plot_table13_bias", "plot_bias_interaction")
   )
   sort_by <- match.arg(tolower(sort_by), c("abs_t", "abs_bias", "prob"))
   top_n <- max(1L, as.integer(top_n))
@@ -7902,7 +7241,7 @@ table13_bias_plot_export <- function(x,
   )
 
   list(
-    notes = data.frame(Type = "uncertainty", Text = mfrm_bias_uncertainty_note()),
+    notes = data.frame(Type = "uncertainty", Text = .mfrmr_const_mfrm_bias_uncertainty_note),
     ranked_table = as.data.frame(ranked, stringsAsFactors = FALSE),
     scatter_data = as.data.frame(scatter, stringsAsFactors = FALSE),
     facet_profile = as.data.frame(facet_profile, stringsAsFactors = FALSE),
@@ -7928,7 +7267,7 @@ table13_bias_plot_export <- function(x,
 
 #' Plot interaction-bias diagnostics using base R
 #'
-#' @param x Output from [bias_interaction_report()], [estimate_bias()], or [fit_mfrm()].
+#' @param x Output from [mfrm_report_bias_interaction], [estimate_bias()], or [fit_mfrm()].
 #' @param plot Plot type: `"scatter"`, `"ranked"`, `"heatmap"`,
 #'   `"abs_t_hist"`, or `"facet_profile"`.
 #' @param diagnostics Optional output from [diagnose_mfrm()] when `x` is fit.
@@ -7952,7 +7291,7 @@ table13_bias_plot_export <- function(x,
 #' Soft-deprecated. Prefer [plot(x, type = "bias")][plot.mfrm_fit].
 #'
 #' @return A plotting-data object of class `mfrm_plot_data`.
-#' @seealso [bias_interaction_report()], [estimate_bias()], [plot(x, type = "displacement")][plot.mfrm_fit]
+#' @seealso [mfrm_report_bias_interaction], [estimate_bias()], [plot(x, type = "displacement")][plot.mfrm_fit]
 #' @examples
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -8291,13 +7630,6 @@ build_bias_flag_summary <- function(scatter) {
   )
 }
 
-mfrm_bias_uncertainty_note <- function() {
-  paste(
-    "Bias uncertainty is conditional on the fitted person, facet, step and slope values; calibration uncertainty is not propagated.",
-    "These intervals and tail areas are screening summaries, not formal fairness tests.",
-    "Check Profile CI Status: search limits are not likelihood-ratio endpoints, and missing bounds do not mean infinity.")
-}
-
 plot_table13_bias <- function(x,
                               plot = c("scatter", "ranked", "heatmap", "abs_t_hist", "facet_profile"),
                               diagnostics = NULL,
@@ -8433,7 +7765,7 @@ plot_table13_bias <- function(x,
   ranked <- add_ci_status(ranked); scatter <- add_ci_status(scatter)
   ci_available <- ci_requested && (any(is.finite(ranked$CI_Lower) & is.finite(ranked$CI_Upper)) ||
     any(is.finite(scatter$CI_Lower) & is.finite(scatter$CI_Upper)))
-  ci_notes <- paste(mfrm_bias_uncertainty_note(),
+  ci_notes <- paste(.mfrmr_const_mfrm_bias_uncertainty_note,
     "Dashed whiskers retain search-limited or unverified profile bounds; missing bounds remain in the tables.")
   plot_title <- switch(
     plot,

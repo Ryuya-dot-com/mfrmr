@@ -22,7 +22,10 @@
 #'   appended facet fields are separated from the element label. Headerless,
 #'   element-first and selected-field fixed layouts are rejected. Use named
 #'   delimited columns for those layouts and for non-ASCII labels.
-#' @param facet_col,level_col Optional explicit column names for delimited
+#' @param facet_col Optional explicit column names for delimited
+#'   tables when automatic detection is not sufficient. For score files,
+#'   `level_col` can override the column immediately before `F-Number`.
+#' @param level_col Optional explicit column names for delimited
 #'   tables when automatic detection is not sufficient. For score files,
 #'   `level_col` can override the column immediately before `F-Number`.
 #' @param delimiter Optional delimiter for delimited tables. If omitted, comma,
@@ -113,7 +116,7 @@
 #'   remain unknown rather than inheriting element `measure_units`.
 #'   `summary()` counts available rows by facet. `AnchorFlagged` counts
 #'   `SourceStatus = "anchored"` rows, not individually fixed parameters; it
-#'   replaces the earlier candidate's ambiguous `Anchored` summary column.
+#'   replaces the ambiguous `Anchored` summary column in older saved results.
 #'   `as.data.frame()` exports the
 #'   element table. Use `component = "curves"` with either method to inspect
 #'   Graphfile curves. Use `saveRDS()` to retain the full object.
@@ -370,7 +373,9 @@ as.data.frame.mfrm_facets_results <- function(x, row.names = NULL, optional = FA
 #'   to element plots.
 #' @param statistic `"infit"` or `"outfit"`, used for `type = "fit"`.
 #' @param draw Logical; print the `ggplot` figure when true.
-#' @param show_title,show_notes Logical; show title/interpretation notes in the
+#' @param show_title Logical; show title/interpretation notes in the
+#'   plot, off by default. Notes always remain in the returned data.
+#' @param show_notes Logical; show title/interpretation notes in the
 #'   plot, off by default. Notes always remain in the returned data.
 #' @param show_legend Logical; display the source-status symbol key or category
 #'   curve key below the panels. Defaults to true.
@@ -425,7 +430,7 @@ as.data.frame.mfrm_facets_results <- function(x, row.names = NULL, optional = FA
 #' For curves, `plot_data(p, "data")` holds the raw Graphfile table,
 #' `plot_data(p, "plot_data")` the selected long rows, and
 #' `plot_data(p, "diagnostics")` the probability-sum checks.
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' @examples # Optional workflow; run the example explicitly as shown below.
 #' # example("plot.mfrm_facets_results", run.dontrun = TRUE)
 #' \dontrun{
 #' path <- system.file("extdata", "facets-example", package = "mfrmr")

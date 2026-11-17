@@ -48,13 +48,26 @@ in the returned \code{contexts} table.}
 (one row per supplied context/ability). Information is per rating, not a
 sum over all observed exposures as in \code{\link[=compute_information]{compute_information()}}.}
 
-\item{method, clusters, adjust, level, simultaneous}{As in \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}.}
+\item{method}{As in \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}.}
 
-\item{object, x}{A saved \code{mfrm_curve_intervals} result.}
+\item{clusters}{As in \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}.}
+
+\item{adjust}{As in \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}.}
+
+\item{level}{As in \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}.}
+
+\item{simultaneous}{As in \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}.}
+
+\item{object}{A saved \code{mfrm_curve_intervals} result.}
 
 \item{...}{Unused.}
 
-\item{title, subtitle}{Optional returned text; NULL removes it. Figure text
+\item{x}{A saved \code{mfrm_curve_intervals} result.}
+
+\item{title}{Optional returned text; NULL removes it. Figure text
+is not drawn. Use \code{plot_data(p, "title")} and \code{plot_data(p, "notes")}.}
+
+\item{subtitle}{Optional returned text; NULL removes it. Figure text
 is not drawn. Use \code{plot_data(p, "title")} and \code{plot_data(p, "notes")}.}
 
 \item{palette}{Optional vector of colors, one per category/series. Line
@@ -75,7 +88,7 @@ A \code{mfrm_curve_intervals} list with \code{table}, \code{settings}, and the e
 unobserved combination of fitted facet levels (\code{ObservedContext}). This
 records the retained rating design, not statistical identification or
 interval reliability. Its plot method returns a ggplot with the plotted data available
-in \code{plot$data}; descriptions and cautions are available through
+through \code{plot_data(p)}; descriptions and cautions are available through
 \code{plot_data(p, "notes")}, separately from the figure.
 \code{summary()} returns settings, the complete interval table, contexts,
 numerical cautions and the anchor note without recalculating information.
@@ -137,17 +150,22 @@ depends on the joint-information and numerical checks described above.
 \section{Two slope families}{
 
 For a two-family fit, the two component slopes are multiplied in each
-specified context. The shared evaluator returns provisional fitted values,
-including after numerical nonconvergence; it does not certify their
-reliability. \code{SE}, \code{Lower} and \code{Upper} remain missing and \code{CIEligible} is
+specified context. Curves reuse the saved fitted values and may also be
+available for a review-only or nonconverged fit. Inspect the source's
+parameter/readiness status: curve availability does not promote those
+values to qualified point estimates. \code{SE}, \code{Lower} and \code{Upper} remain missing and \code{CIEligible} is
 false. Printing and default plot text identify this scope without claiming
 nominal intervals. Sandwich and simultaneous adjustments are not available.
 The existing plot, saved-data, report and export routes preserve these values
 and missing intervals. A slope value of one is not a rater-quality threshold.
+Endpoint limiting fits also return point-only curves: original score labels
+are restored, and the removed endpoint is shown with probability zero and
+\code{CategoryBasis = "zero_probability_limit"}. This is a boundary-model value,
+not evidence that the category cannot occur. Ordinary intervals are unavailable.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("mfrm_curve_intervals", run.dontrun = TRUE)
 \dontrun{
 # How do category probabilities vary with ability in one rating context?
@@ -174,5 +192,5 @@ saved$settings
 }
 }
 \seealso{
-\code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}, \code{\link[=category_curves_report]{category_curves_report()}}, \code{\link[=compute_information]{compute_information()}}
+\code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}, \link{mfrm_report_category_curves}, \code{\link[=compute_information]{compute_information()}}
 }

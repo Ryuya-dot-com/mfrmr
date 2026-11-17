@@ -1,4 +1,206 @@
-# mfrmr 0.3.0 (development)
+# mfrmr 0.3.0
+
+- Consolidate related S3 method and `mfrm_report()` component help pages into
+  shared reference topics while preserving all help aliases, formulas, scale
+  and identification notes, unavailable-result states and runnable examples.
+  Extended historical and benchmark discussions move to website articles.
+
+- Reuse matching PCA-free diagnostics in optional diagnostic-screening reports.
+  Report audit fields and optimization replay remain unchanged; report work
+  remains outside the replicate's `ElapsedSec` value.
+
+- Return a typed, zero-row component index for empty saved plot data instead
+  of failing in `plot_data_components()`. Existing plot data remain unchanged.
+
+- Use `score_comparison_table(..., screen = "williamson2012")` instead of the
+  former `automated_scoring_table()` interface. The generic default still
+  applies no thresholds. Score/reference column names replace the earlier
+  automated/human names; see `mfrmr_api_migration_030` for argument and output
+  mappings. Earlier saved result lists remain readable.
+
+- Consolidate facet statistics, precision, bias iteration/pairwise, DFF,
+  checklist and reference-review reports in `mfrm_report(x, type = ...)`.
+  Their dedicated entry functions are removed; specialized help and old help
+  aliases remain. Result classes, calculation defaults and saved-result methods
+  are retained. Use complete named component options; unsupported or duplicate
+  options are rejected, including options formerly ignored by `dif_report()`.
+  See `mfrmr_api_migration_030` for the seven replacement calls.
+
+- Use `mfrm_report(..., type = "iterations")` for replayed estimation diagnostics
+  and `type = "bias_interaction"` for ranked interaction-bias reports. The former
+  dedicated entries are removed. Replay still runs optimization; saved bias
+  estimates can be reported without recalibration. Result classes and methods
+  remain available.
+
+- Compare D-study plans through `compare_mfrm(d, assumption = "normal", ...)`.
+  The former `mfrm_multivariate_d_compare()` entry is removed; result classes,
+  paired covariance, inference scope and saved-result methods are retained.
+
+- Prevent integer overflow when comparing large future rating counts.
+  Integer- and double-stored counts now yield the same comparison calculations.
+
+- Consolidate specification, data-quality, category-structure and category-curve
+  reports in `mfrm_report(fit, type = ...)`. Their dedicated entry functions are
+  removed; see `mfrmr_api_migration_030` for replacements. Named component options,
+  defaults, result classes, summaries and plots retain their meanings.
+  Collected-result reports continue to use `mfrm_report(res)`.
+
+- Make `mfrmr_output_guide()` show the five central analysis routes by default.
+  Use `scope = "all"` for the full specialist catalogue. Explicit scopes,
+  including the six-row `"public"` and `"beginner"` routes, keep their meanings.
+
+- Share standard summary-table assembly and printing while preserving table order, conversion rules, reporting roles, descriptions and console output.
+
+- Retain both series and their colours in appendix-role plot legends and
+  correct their ggplot conversion, including older saved plot data. Keep
+  appendix preset names separate from visual style settings. Older plot data
+  with only one recorded colour use the default for the missing series;
+  recreate the plot from its original bundle and palette for both custom colours.
+
+- Keep posterior contrasts with different parameter quantities or scales out
+  of a shared plot axis. Mixed summaries and reports remain available;
+  select a common quantity and scale for each figure. Label slope contrasts
+  and log-slope contrasts separately from location contrasts. Recreate plots
+  from saved posterior results; no new sampling is required.
+
+- Correct unavailable-plot status and missing uncertainty reasons when
+  corrected JML finds no supported point solution. Valid points remain
+  available when only RootSE is unavailable. Recreate results and reports
+  from a saved fit to update the status; refitting is unnecessary.
+
+- Speed up two-family GPCM EM fitting by omitting unused reporting tables
+  during likelihood evaluations. Numerical controls and returned results
+  are unchanged.
+
+- Update imputed-feature validation tests for the logical-class restoration
+  in `mice` 3.20.0. Clustering behavior and input validation are unchanged.
+
+- Connect rating-plan comparisons with rater feedback and saved results in
+  the visual tour. Clarify uncertainty and draft-completeness messages while
+  preserving estimates, availability decisions and saved field names.
+  Decision text is consistent in tables, print and HTML, including redisplayed
+  older saved decisions. Rating-plan links open the comparison directly.
+  The G-theory saving example retains resource reviews, report context and
+  edited ggplot figures alongside the corresponding studies.
+
+- Allow `compute_information()` to evaluate an explicit per-Person rating
+  plan for supported additive MML fits, using fitted facet levels and rating
+  counts. Saved plots retain the plan, its fixed-calibration interpretation
+  and any use of exploratory GPCM coordinates. The default observed-exposure
+  calculation is unchanged.
+
+- Add separate limiting-likelihood point estimates for supported one- and
+  two-family GPCM MML fits with one globally unused endpoint category.
+  Original data and full-model boundary status are retained. Available slopes,
+  original category labels, reduced-coordinate tables and numerical failures
+  are carried through summaries and reports. Limiting curves include the
+  unused endpoint at probability zero; ordinary intervals remain unavailable.
+  Displaying an old saved fit does not trigger a refit.
+
+- Correct MML boundary reporting for unpenalized RSM/PCM and GPCM fits with provable
+  improving likelihood paths from extreme free facet levels or unused endpoint categories,
+  including centered facets with a free compensating location or population mean.
+  Finite Person EAPs no longer label these full models as having a finite maximum.
+  Saved-fit summaries explain retained optimizer coordinates, and ordinary
+  structural intervals are withheld on boundary evidence. Likelihood calculations
+  and category recoding defaults are unchanged.
+  Two-family GPCM no longer reports endpoint-boundary optimizer values as
+  primary point estimates. Rebuild affected saved result collections from
+  their saved fits; model refitting is unnecessary for this reporting correction.
+  Boundary optimizer values are not used for fitted curves or rater estimates.
+
+- Label empty exact-F confidence sets explicitly in D-study interval plots,
+  distinguishing them from numerical unavailability and an estimate of zero.
+  Estimates and interval calculations are unchanged.
+
+- Clarify the inputs, returned objects and first tables to read for model
+  summaries, diagnostics, result collection, reports and bias screening.
+  Consolidate repeated explanations while retaining uncertainty and
+  availability conditions. Explain estimate direction, posterior SD versus
+  structural SE, fit-adjusted reliability and GPCM working versus primary
+  values. Clarify one-step displacement, diagnostic averaging, cumulative-logit
+  coefficient direction and observed-score covariance units. Numerical
+  calculations are unchanged.
+
+- Shorten the `fit_mfrm()` entry help around inputs, results and a first
+  analysis. Detailed argument definitions, equations and estimator-specific
+  conditions remain available in the installed `fit_mfrm_technical_details`
+  reference. Fitting behavior and defaults are unchanged.
+
+- Refine the shared plotting theme with a white canvas, lighter grids and
+  more spacing. Axis and legend text now scale with ordinary ggplot theme
+  edits. Existing presets and palettes remain available; saved statistical
+  plot data are unchanged. The visual guide explains customization, export
+  dimensions and saving edited ggplot objects.
+
+- Wright-map group distributions now use a common, adjustable density bandwidth
+  and retain Person-level rug marks, empirical CDF values, counts and exclusion
+  reasons. Conflicting group labels are rejected, and the main map's Person
+  exclusions also apply to the group display. These are descriptive distributions
+  of fitted estimates, not latent population densities or DIF/DFF tests.
+
+- Correct unified report text and exported figure descriptions that labelled
+  saved profile-likelihood intervals as normal intervals. Mixed-method reports
+  retain each interval's method and distinguish source estimates from
+  reoptimized profile centers; estimates, bounds and availability are unchanged.
+
+- `ordinal_logistic_table()` now accepts two or more groups, retaining the
+  existing two-group results. It separates omnibus uniform, nonuniform and
+  joint tests from reference/focal point odds ratios, and records each group's
+  counts and ranges. All groups must share a positive-width matching range;
+  repeated Person-target ratings remain unsupported. The extension does not
+  establish small-sample error rates or account for matching-score uncertainty.
+
+- `mantel_haenszel_table()` now offers explicit `method = "gmh"` for matched
+  multi-category and multi-group association tests. It retains declared
+  categories, group counts, excluded responses and unavailable tests; binary
+  MH defaults are unchanged. GMH requires asymptotic inference and independent
+  Persons within each target, and does not estimate a severity difference or
+  a common odds ratio.
+
+- `mfrm_facet_intervals()` now supports native-scale main effects and contrasts
+  in RSM/PCM MML models with one fitted two-facet interaction. Intervals use
+  full joint covariance, retain dependent levels and numerical refusals, and
+  distinguish equal-level average severity differences from criterion-specific
+  differences. This does not establish small-sample coverage.
+
+- Simplify package and reference help around analysis questions, inputs and
+  results. Keep worked procedures in existing tutorials and calculation/uncertainty
+  specifications in specialist help. Consolidate data review, screening, plotting,
+  intervals, reporting and saved-analysis guidance, preserving model conditions.
+  Remove development-stage language from comparison guidance; clarify CML scope,
+  diagnostic screening, conditional uncertainty and displacement calculations.
+  Repair PCA and workflow plot-data examples. Align plotting and saved-posterior
+  instructions with the current interface. Measurement, observed-score planning
+  and rater feedback remain optional analysis branches.
+
+- Reject diagnostics from a differently sized fitted dataset with the intended
+  mismatch message, without unrelated factor-comparison warnings.
+
+- Speed up continuous Person intervals in fitted-object and portable-calibration
+  scoring by reusing integrated probability masses to bracket the endpoints.
+  Integration tolerances, tail checks and scoring qualification are unchanged.
+
+- Speed up `score_mfrm_persons()` for ordinary RSM fits by reusing the native
+  response-likelihood calculation. Continuous integration, interval checks,
+  cut-score probabilities and calibration-conditional uncertainty are retained.
+
+- Refresh the bundled example diagnostics with the affected-response counts
+  used by the ZSTD safeguards, retaining their fitted models.
+
+- Consolidate plotting documentation around public `plot()` methods and the
+  migration guide. Internal renderer topics no longer appear in installed help;
+  view controls, interpretation and available result tables remain documented.
+- Use reproducible saved synthetic fits in centrality and Person-scoring examples
+  so readers can focus on the reported quantities without recalibrating models.
+
+- Direct RSM/PCM MML with an intercept-only normal population and direct
+  anchors on the noncentered facet can now estimate population SD. Fixed or
+  adaptive integration is supported. Model-based facet/population intervals
+  can include supplied independent-source anchor covariance, including its
+  contribution to estimated log variance. Shared Persons, drift, source-to-new
+  population mean contrasts and profile/sandwich extensions remain outside
+  this route; numerical checks do not guarantee interval coverage.
 
 ## Migration from 0.2.4
 
@@ -15,8 +217,8 @@
   exportable. Detailed equations, identification rules and return-object
   provenance are in `?fit_mfrm_technical_details`.
 
-Because this development series removes 28 overlapping public entry points in
-favor of arguments and standard S3 methods, the next release is versioned as
+Because this development series removes 35 overlapping public entry points in
+favor of arguments and standard S3 methods, this interface-changing release is versioned as
 `0.3.0`. Update scripts using the former names before upgrading:
 
 - Use `mfrm_cluster(x, k, method = "pam")`, choosing `"pam"`,
@@ -61,6 +263,112 @@ statistical targets or inference eligibility.
 
 ## New capabilities and fixes
 
+- Withhold standardized Infit/Outfit (ZSTD) when a diagnostic scope contains
+  finite JML optimizer proxies for infinite primary Person estimates, or when
+  the selected standardization has fewer than one degree of freedom. Such
+  values could otherwise become spuriously large and positive. Mean squares,
+  row counts and point estimates retain their existing definitions; affected
+  summaries explain the missing ZSTD. Recompute diagnostics from saved fits
+  without refitting before reusing affected older reports.
+
+- Adaptive quadrature uses the original R calculation if the native posterior-mode
+  search cannot bracket a root or converge. An unfinished search no longer returns
+  a finite endpoint as a successful mode; non-finite evaluations remain explicit errors.
+
+- Numerical regression checks now allow explicitly bounded floating-point
+  differences when adaptive moments or sampling covariances are recomputed
+  with alternative BLAS/LAPACK implementations. Diagnostic decisions and
+  saved-object identity remain checked separately; estimation algorithms and
+  convergence criteria are unchanged by this portability fix.
+
+- A website-only ICNALE GRA essay-rating workflow connects licensed-data
+  preprocessing, RSM/PCM and GPCM comparisons, local rater feedback and a
+  fixed-CAF observed-score assessment plan. It includes common-scale location
+  and descriptive Pathway plots, and bounded TAM/ConQuest comparisons.
+  The source repository supplies code;
+  corpus data and individual results are not redistributed or run during
+  package checks or website builds.
+
+- Direct RSM/PCM and GPCM MML can now use a bounded curvature restart for
+  up to 200 free parameters, including adaptive integration and estimated
+  normal populations. This addresses relative-likelihood stopping before
+  the gradient criterion is met. Positive curvature, objective and gradient
+  checks remain required; numerical accuracy thresholds are unchanged.
+
+- RSM/PCM location intervals no longer reject every target solely because
+  individual raters leave categories unused. All categories must remain
+  supported in each fitted step scope, and the full joint information,
+  stationarity, boundary and finer-quadrature checks must still pass.
+  Local sparse-category warnings remain visible; available Wald intervals
+  are model-based approximations, not a finite-sample coverage guarantee.
+
+- Individual two-family GPCM rater sheets now distinguish saved limiting
+  estimates from full-model working values when no finite maximum exists.
+  Unidentified or unevaluated targets are shown as unavailable; binary step
+  offsets fixed by constraint remain zero. Sheets retain the limiting location
+  reference, distinguish original and retained exposure, and do not transfer
+  full-model intervals or residuals to the limiting analysis. Recreate older
+  sheets from their saved results to obtain the corrected reporting.
+
+- D-Study plan differences from `confint(..., method = "mean_square_region",
+  reference = ...)` now retain shared error-component cancellations. Bounds
+  can be narrower under the same normal-model simultaneous confidence region;
+  point estimates and individual-plan intervals are unchanged. Diagnostics
+  retain the refinement and any reason for using the preceding enclosure.
+
+- Joint RSM/PCM interaction-cell intervals now support direct MML with an
+  estimated normal population (including latent regression) and adaptive
+  integration. Full-information covariance includes estimated population
+  parameters. Existing fixed-standard-normal EM/hybrid support is retained;
+  numerical eligibility does not establish small-sample coverage or rater bias.
+
+- `mfrm_facet_intervals(..., method = "profile")` adds an experimental,
+  explicitly requested pairwise contrast for direct RSM/PCM MML with an
+  estimated normal ability population. Residual variance may reach zero and
+  is reoptimized throughout the interval. Source and profile estimates remain
+  separate; quadrature retries, refusals and unqualified coverage follow
+  saved plots and reports. Adaptive integration handles concentrated Person
+  likelihoods, while weighted matrix products reduce repeated curvature work;
+  the zero-variance calculation and numerical acceptance criteria are retained. This does not replace the default Wald procedure
+  or supply a general small-sample correction.
+
+- Two-family GPCM `confint(fit, parm = "steps")` now supplies experimental
+  pointwise intervals for sum-zero step offsets using full joint marginal
+  information. Dependent steps retain cross-covariances; binary fixed steps
+  have zero SE by constraint and no inferential interval. Numerical refusals,
+  coverage qualifications and step identities persist in plots, reports and
+  exports. These are not location-inclusive category boundaries or ordering tests.
+
+- Two-family GPCM summaries and reports now distinguish numerical interval
+  availability from unestablished coverage, and identify Person posterior SDs
+  as conditional on fitted calibration. The scope guide explains target-specific
+  uncertainty and the constraint transformation used for step intervals. This
+  clarification does not change existing estimates or intervals.
+
+- Facet count reviews now separate distinct persons from rating rows and show
+  per-person exposure, marginal facet crossings and category counts, including
+  unused categories. Numeric count bands replace qualitative console/plot
+  labels; existing `N`, `SampleCategory` and threshold names remain supported.
+  Two-family GPCM summaries and reports expose the same descriptive counts,
+  separately for full-model and limiting-fit data. Counts do not certify
+  precision or a sufficient sample size.
+- Two-family GPCM reports point estimates separately from SE and interval
+  eligibility. Converged finite solutions populate `PrimaryEstimate` with
+  their numerical status; automatic integration checks no longer require
+  a full covariance matrix and do not certify local curvature. All-low or
+  all-high levels of any facet identify a sufficient condition for no finite
+  joint maximum, independently of location centering. Supported boundary cases
+  retain separately fitted limiting estimates for the remaining targets,
+  including rater-owned steps and an extreme criterion without slopes.
+  The reduction requires one affected facet outside the reference slope family,
+  at least two remaining levels and retention of all other facet levels.
+  When the affected facet owns steps or has no slopes, full-model optimization is skipped;
+  unidentified slopes/steps of removed levels and binary steps fixed at zero have distinct
+  status in summaries and saved reports. Deliberately skipped optimization is
+  reported as `not_run`, separately from numerical failure. Boundary summaries
+  direct curves to an available limiting fit and retain unavailable intervals. Numerical
+  failures retain optimizer traces. Summaries, result tables and reports
+  preserve these distinctions; older saved fits are not silently upgraded.
 - Experimental two-family GPCM MML now accepts two slope facets among
   additional fixed additive facets. In `spec`, `slope_reference` names the
   geometric-mean-one family, independently of `step_facet` and

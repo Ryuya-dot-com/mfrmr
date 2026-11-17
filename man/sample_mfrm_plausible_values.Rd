@@ -206,7 +206,7 @@ values without refitting the calibration. See \link{mfrmr_compatibility_layer}.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("sample_mfrm_plausible_values", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_core")
@@ -227,7 +227,7 @@ new_units <- data.frame(
 pv <- sample_mfrm_plausible_values(toy_fit, new_units, n_draws = 3, seed = 1)
 summary(pv)$draw_summary
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("summary.mfrm_plausible_values", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_core")

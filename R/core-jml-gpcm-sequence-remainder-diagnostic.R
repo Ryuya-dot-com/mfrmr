@@ -15,28 +15,12 @@ mfrmr_jml_gpcm_sequence_remainder_contract_version <- function() {
   "mfrmr-jml-gpcm-sequence-remainder-diagnostic-0.2.3-v1"
 }
 
-mfrmr_jml_gpcm_sequence_empty_stage_table <- function() {
-  data.frame(
-    Stage = integer(0),
-    SingularValue = numeric(0),
-    DisplacementEnergyFraction = numeric(0),
-    FinalScale = numeric(0),
-    TailScaleMonotone = logical(0),
-    EstimatedPowerExponent = numeric(0),
-    PowerFitRSquared = numeric(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_gpcm_sequence_empty_stage_table <- .mfrmr_empty_table(c(Stage = "integer", SingularValue = "double", DisplacementEnergyFraction = "double",
+    FinalScale = "double", TailScaleMonotone = "logical", EstimatedPowerExponent = "double",
+    PowerFitRSquared = "double"))
 
-mfrmr_jml_gpcm_sequence_empty_direction_table <- function() {
-  data.frame(
-    Stage = integer(0),
-    OptimizerIndex = integer(0),
-    Coordinate = character(0),
-    Loading = numeric(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_gpcm_sequence_empty_direction_table <- .mfrmr_empty_table(c(Stage = "integer", OptimizerIndex = "integer", Coordinate = "character",
+    Loading = "double"))
 
 mfrmr_jml_gpcm_finite_sequence_diagnostic <- function(
     parameter_sequence,
@@ -47,8 +31,8 @@ mfrmr_jml_gpcm_finite_sequence_diagnostic <- function(
     tail_points = 4L,
     reconstruction_tolerance = 0.05,
     max_elements = 2e6) {
-  empty_stages <- mfrmr_jml_gpcm_sequence_empty_stage_table()
-  empty_directions <- mfrmr_jml_gpcm_sequence_empty_direction_table()
+  empty_stages <- mfrmr_jml_gpcm_sequence_empty_stage_table
+  empty_directions <- mfrmr_jml_gpcm_sequence_empty_direction_table
   sequence <- tryCatch(
     matrix(
       as.numeric(parameter_sequence),

@@ -96,7 +96,7 @@
 #' theory. *Journal of Multivariate Analysis, 1*, 257--275.
 #' \doi{10.1016/0047-259X(71)90001-7}.
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("vcov.mfrm_multivariate_gstudy", run.dontrun = TRUE)
 #' \dontrun{
 #' data("mfrmr_example_gtheory_crossed", package = "mfrmr")
@@ -125,6 +125,7 @@
 #' # source(system.file("examples", "gstudy-sampling.R", package = "mfrmr"))
 #' # incomplete <- gstudy_sampling_example()
 #' }
+#' @rdname confint.mfrm_multivariate_gstudy
 #' @export
 vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL,
                                          assumption, ...) {

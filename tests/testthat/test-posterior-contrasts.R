@@ -269,3 +269,40 @@ test_that("summary-only bundles, tampered files, single-chain runs and invalid c
   expect_true(all(is.finite(cx1$contrasts$rhat[cx1$contrasts$value_role == "estimated"])))
   expect_true(all(cx1$contrasts$sampling_review == "sampling_review_required"))
 })
+
+test_that("posterior contrast plots keep one quantity and scale on each axis", {
+  x <- posterior_draws_example()
+  p <- x$parameters
+  slope_owner <- unique(p$facet[p$quantity == "slope"])
+  slope_levels <- p$level[p$quantity == "slope"]
+  location_levels <- p$level[p$facet == "Rater" & p$quantity == "location"]
+  spec <- data.frame(facet=c("Rater",slope_owner), quantity=c("location","slope"),
+    lhs=c(location_levels[1],slope_levels[1]), rhs=c(location_levels[2],slope_levels[2]),
+    scale=c("difference","ratio"))
+  mixed <- summary(x,contrasts=spec,level=.9)
+  expect_identical(mfrm_report(mixed)$tables$contrasts,mixed$contrasts)
+  for(view in c("intervals","draws"))
+    expect_error(plot(mixed,quantity="contrast",view=view,draw=FALSE),"one parameter quantity and one scale")
+  selected <- plot(mixed,quantity="contrast",facet="Rater",draw=FALSE)
+  expect_identical(plot_data(selected,"table")[names(mixed$contrasts)],
+    mixed$contrasts[mixed$contrasts$facet=="Rater",])
+  same_quantity <- spec[rep(2L,2L),]
+  same_quantity$scale <- c("difference","ratio")
+  mixed_scale <- summary(x,contrasts=same_quantity)
+  expect_error(plot(mixed_scale,quantity="contrast",draw=FALSE),"one parameter quantity and one scale")
+  for(quantity in c("slope","log_slope")) {
+    current <- spec[2L,]
+    current$quantity <- quantity
+    current$scale <- "difference"
+    result <- summary(x,contrasts=current,level=.9)
+    graphic <- plot(result,quantity="contrast",draw=FALSE)
+    expect_identical(plot_data(graphic,"xlab"),if(quantity=="slope")
+      "Posterior slope contrast" else "Posterior log-slope contrast")
+    expect_identical(plot_data(graphic,"reference"),0)
+    expect_identical(plot_data(graphic,"table")$lower,result$contrasts$lower)
+    expect_identical(plot_data(graphic,"table")$upper,result$contrasts$upper)
+  }
+  ratio <- plot(x,contrasts=spec[2L,],quantity="contrast",level=.9,draw=FALSE)
+  expect_identical(plot_data(ratio,"xlab"),"Posterior slope ratio")
+  expect_identical(plot_data(ratio,"reference"),1)
+})

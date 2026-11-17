@@ -66,7 +66,7 @@ test_that("empty typed anchors reduce exactly to existing step coordinates", {
     original <- mfrmr:::expand_params(original_start, original_sizes, config)
 
     applied <- .mfrmr_research$mfrmr_apply_typed_anchors(
-      config, mfrmr:::mfrmr_calibration_anchor_template()
+      config, mfrmr:::mfrmr_calibration_anchor_template
     )$config
     reduced_sizes <- mfrmr:::build_param_sizes(applied)
     reduced_start <- mfrmr:::build_initial_param_vector(applied, reduced_sizes)

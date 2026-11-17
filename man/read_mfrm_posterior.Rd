@@ -64,7 +64,10 @@ Also for \code{print()} and \code{as.data.frame()}: A saved \code{mfrm_posterior
 \code{"ability"}, \code{"step_offset"}, \code{"slope"}, \code{"log_slope"}, \code{"population_mean"},
 \code{"population_sd"}, or \code{"contrast"}. Population quantities require an
 estimated-population export; \code{"contrast"} requires attached or supplied
-\code{contrasts}. Quantities with different units are not mixed.}
+\code{contrasts}. Contrast plots require one parameter quantity and one scale
+per axis. For a mixed result, supply a matching subset of the original
+\code{contrasts} specification, or select one \code{facet} when that isolates a
+common scale.}
 
 \item{facet}{Optional facet/owner names to retain; \code{NULL} retains all for
 the selected quantity. Step rows use \code{facet = "Step owner"}, or the named
@@ -100,7 +103,13 @@ quality.}
 
 \item{show_legend}{Logical; show interval/fixed-value symbols.}
 
-\item{title, subtitle, caption}{Optional returned text. Defaults omit it.
+\item{title}{Optional returned text. Defaults omit it.
+Text is not drawn by default; retrieve it with \code{\link[=plot_data]{plot_data()}}.}
+
+\item{subtitle}{Optional returned text. Defaults omit it.
+Text is not drawn by default; retrieve it with \code{\link[=plot_data]{plot_data()}}.}
+
+\item{caption}{Optional returned text. Defaults omit it.
 Text is not drawn by default; retrieve it with \code{\link[=plot_data]{plot_data()}}.}
 
 \item{...}{Unused.}
@@ -226,6 +235,21 @@ joint_post <- read_mfrm_posterior(system.file(
 pc <- plot(joint_post, contrasts = "Rater", level = 0.90,
            view = "draws", draw = FALSE)
 plot_data(pc, "table")[, c("label", "value_role", "mean", "lower", "upper")]
+}
+\references{
+Vehtari, A., Gelman, A., Simpson, D., Carpenter, B., & Burkner, P.-C. (2021).
+Rank-normalization, folding, and localization: An improved R-hat for
+assessing convergence of MCMC. \emph{Bayesian Analysis, 16}(2), 667--718.
+\doi{10.1214/20-BA1221}
+
+Carpenter, B., Gelman, A., Hoffman, M. D., Lee, D., Goodrich, B.,
+Betancourt, M., Brubaker, M., Guo, J., Li, P., & Riddell, A. (2017). Stan:
+A probabilistic programming language. \emph{Journal of Statistical Software,
+76}(1), 1--32. \doi{10.18637/jss.v076.i01}
+
+Burkner, P.-C. (2017). brms: An R package for Bayesian multilevel models
+using Stan. \emph{Journal of Statistical Software, 80}(1), 1--28.
+\doi{10.18637/jss.v080.i01}
 }
 \seealso{
 \code{\link[=export_mfrm_model]{export_mfrm_model()}}, \code{\link[=predict.mfrm_posterior_summary]{predict.mfrm_posterior_summary()}},

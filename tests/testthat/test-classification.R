@@ -22,8 +22,12 @@ test_that("the public RSM route preserves shared polytomous thresholds", {
     fit <- fit_mfrm(d, "Person", "Item", "Score", method = method)
     # All-low/all-high patterns are excluded by JML calibration. Preserve
     # that source restriction while checking the conditional arithmetic.
+    # Without the suggested lpSolve the finite-MLE check cannot run, so the
+    # readiness gate reports an unevaluated boundary rather than exclusions.
     if (method == "JML") expect_error(classification_table(fit,
-      data.frame(Item = c("A", "C")), 0, 2, c(-1, 0, 1)), "boundary_not_scoring_ready:has_exclusions")
+      data.frame(Item = c("A", "C")), 0, 2, c(-1, 0, 1)),
+      paste0("boundary_not_scoring_ready:",
+        if (requireNamespace("lpSolve", quietly = TRUE)) "has_exclusions" else "not_evaluated"))
     x <- classification_table(fit, data.frame(Item = c("A", "C")), 0, 2, c(-1, 0, 1),
       readiness_policy = if (method == "JML") "review" else "error")
     expect_identical(x$source$ready, method == "MML")

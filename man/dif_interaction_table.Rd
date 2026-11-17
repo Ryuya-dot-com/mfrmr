@@ -145,6 +145,14 @@ older saved tables with this function using the fitted model; no refit is needed
 }
 }
 
+\section{Heatmap appearance}{
+
+For \code{show_values}, \code{value_digits}, \code{flag_threshold}, \code{flag_color} and
+\code{scale_limit}, see "Heatmap appearance" in \code{\link[=plot.mfrm_dif]{plot.mfrm_dif()}} for defaults
+and valid values. These controls change labels, outlines and color limits,
+not the saved residuals or their interpretation.
+}
+
 \section{Interpretation}{
 
 For \code{plot()}:
@@ -156,19 +164,8 @@ calibrated test or p-value. Color and optional threshold outlines are
 descriptive; an unavailable cell is not a zero residual.
 }
 
-\section{Heatmap appearance}{
-
-\itemize{
-\item \code{show_values = TRUE} labels cells; \code{value_digits = 2} controls rounding.
-\item \code{flag_threshold = NULL} adds no flags. A non-negative value outlines
-cells at or above that absolute value; \code{flag_color = "black"} sets the border.
-\item \code{scale_limit = NULL} uses the observed range. A positive value fixes
-symmetric color limits for comparing plots. It does not change saved values.
-}
-}
-
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("dif_interaction_table", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_bias")
@@ -181,7 +178,7 @@ int <- dif_interaction_table(fit, diag, facet = "Rater",
 int$summary
 head(int$table[, c("Level", "GroupValue", "ObsExpAvg", "flag_bias")])
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_dif_interaction", run.dontrun = TRUE)
 \dontrun{
 ratings <- load_mfrmr_data("example_bias")
@@ -198,7 +195,7 @@ dim(plot_data(heat, "matrix"))
 }
 }
 \seealso{
-\code{\link[=analyze_dff]{analyze_dff()}}, \link[=plot.mfrm_dif]{plot(x, type = "heatmap")}, \code{\link[=dif_report]{dif_report()}},
+\code{\link[=analyze_dff]{analyze_dff()}}, \link[=plot.mfrm_dif]{plot(x, type = "heatmap")}, \link{mfrm_report_dff},
 \code{\link[=estimate_bias]{estimate_bias()}}
 
 \code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=plot.mfrm_dif]{plot.mfrm_dif()}}, \link{mfrmr_plot_migration}

@@ -566,12 +566,92 @@
   },
   {
     "file": "test-gmfrm-roles.R",
-    "scope": "extended roles retain joint information, posterior scoring and portable identity",
-    "reason": "Independent Hessian and scoring/portable combinations run in the full suite; live three-facet fitting, independent response/gradient checks and reporting remain on CRAN."
+    "scope": "whole file",
+    "reason": "Three- and five-facet two-family role permutations, extended-role posterior contrasts and fresh-process rater-feedback combinations run in NOT_CRAN=true; gmfrm-public-workflow, gmfrm-em and gpcm-endpoint-boundary remain on CRAN."
   },
   {
-    "file": "test-gmfrm-roles.R",
-    "scope": "a saved extended fit produces rater feedback in a fresh installed session",
-    "reason": "Fresh-process installed-package regression runs in the full suite; in-session live fitting, saved-result equivalence and rater-report value/role checks remain on CRAN."
+    "file": "test-population-identification.R",
+    "scope": "whole file",
+    "reason": "Repeated large-N normal-population rank-audit permutations run in NOT_CRAN=true; preparation-invariants, category-boundary and cran-smoke remain on CRAN."
+  },
+  {
+    "file": "test-native-profile.R",
+    "scope": "whole file",
+    "reason": "Experimental profile-interval boundary optimizations and continuous-integration oracle sweeps run in NOT_CRAN=true; standard facet/step/interaction intervals remain on CRAN."
+  },
+  {
+    "file": "test-adaptive-quadrature-review.R",
+    "scope": "whole file",
+    "reason": "Moving-node finite-difference and multi-grid sensitivity combinations run in NOT_CRAN=true; adaptive-native and calibration-public-api remain on CRAN."
+  },
+  {
+    "file": "test-source-posterior-numerics.R",
+    "scope": "whole file",
+    "reason": "Auxiliary source-posterior coordinate transforms run in NOT_CRAN=true; posterior-summary, posterior-contrasts, posterior-scoring and model-export remain on CRAN."
+  },
+  {
+    "file": "test-results-csv-encoding.R",
+    "scope": "whole file",
+    "reason": "Additional CSV byte-encoding variants run in NOT_CRAN=true; cran-smoke export checks and facets-results CP932/UTF-8 encoding checks remain on CRAN."
+  },
+  {
+    "file": "test-random-rater-profile.R",
+    "scope": "whole file",
+    "reason": "Random-rater profile combinations run in NOT_CRAN=true; random-rater fitting, covariance and prediction checks remain on CRAN."
+  },
+  {
+    "file": "test-gauss-hermite-weights.R",
+    "scope": "whole file",
+    "reason": "Standalone quadrature-node identity checks run in NOT_CRAN=true; mml-cpp11-backend, adaptive-native and likelihood-numerics exercise quadrature rules on CRAN."
+  },
+  {
+    "file": "test-gstudy-example-replay.R",
+    "scope": "whole file",
+    "reason": "Supplementary G-Study example replay runs in NOT_CRAN=true; multivariate-gtheory, gstudy-sampling-vcov and automatic G-Study/D-Study help examples remain on CRAN."
+  },
+  {
+    "file": "test-dstudy-region-contrast.R",
+    "scope": "whole file",
+    "reason": "Shared-region D-Study contrast combinations run in NOT_CRAN=true; dstudy-delta, multivariate-gtheory and finite-plan-review remain on CRAN."
+  },
+  {
+    "file": "test-multivariate-nested-gtheory.R",
+    "scope": "whole file",
+    "reason": "Nested multivariate G-theory design variants run in NOT_CRAN=true; multivariate-gtheory, generalizability-missing and gstudy-sampling-vcov remain on CRAN."
+  },
+  {
+    "file": "test-bundle-summary-privacy.R",
+    "scope": "whole file",
+    "reason": "Detailed bundle-privacy permutations run in NOT_CRAN=true; cran-smoke and static-table-isolation remain on CRAN."
+  },
+  {
+    "file": "test-gpcm-ic-eligibility.R",
+    "scope": "whole file",
+    "reason": "Detailed GPCM information-criterion eligibility combinations run in NOT_CRAN=true; gpcm-uncertainty-readiness and gpcm-inference-extensions remain on CRAN."
+  },
+  {
+    "file": "test-gpcm-lrt.R",
+    "scope": "whole file",
+    "reason": "Nested GPCM likelihood-ratio combinations run in NOT_CRAN=true; gpcm-inference-extensions and cran-smoke compare_mfrm checks remain on CRAN."
+  },
+  {
+    "file": "test-gpcm-pattern-cache.R",
+    "scope": "whole file",
+    "reason": "Pattern-bundle cache permutations run in NOT_CRAN=true; mml-cpp11-backend and likelihood-numerics verify C++/pure-R likelihood parity on CRAN."
+  },
+  {
+    "file": "test-shared-step-intervals.R",
+    "scope": "whole file",
+    "reason": "Auxiliary shared-step interval permutations run in NOT_CRAN=true; step-interval covariance checks in gpcm-inference-extensions and cran-smoke remain on CRAN."
+  },
+  {
+    "file": "test-gpcm-endpoint-boundary.R",
+    "scope": "global endpoint refits preserve targets, category labels and inference limits",
+    "reason": "1000-iteration direct auto-quadrature limiting refits run in NOT_CRAN=true; one-family and two-family endpoint non-existence detection, probability-shift identities and saved-result protections remain on CRAN."
+  },
+  {
+    "file": "test-posterior-scoring.R",
+    "scope": "high-slope multi-item narrow-posterior GPCM maintains C++ / pure-R parity and 63-vs-31 grid convergence",
+    "reason": "16-item narrow-posterior pure-R 8-panel stress test runs in NOT_CRAN=true; full 120-draw C++/pure-R parity (< 1e-12), total-variance identities, predictive-precision checks and joint-draw stats::integrate + uniroot oracle checks remain on CRAN."
   }
 ]

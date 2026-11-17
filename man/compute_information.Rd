@@ -5,7 +5,12 @@
 \alias{plot.mfrm_information}
 \title{Compute design-weighted precision curves for ordered many-facet fits}
 \usage{
-compute_information(fit, theta_range = c(-6, 6), theta_points = 201L)
+compute_information(
+  fit,
+  theta_range = c(-6, 6),
+  theta_points = 201L,
+  rating_plan = NULL
+)
 
 \method{plot}{mfrm_information}(
   x,
@@ -23,6 +28,13 @@ values. Default \code{c(-6, 6)}.}
 
 \item{theta_points}{Integer number of points at which to evaluate
 information. Default \code{201}.}
+
+\item{rating_plan}{Optional data frame with every non-Person facet column
+and \code{Count}: a positive integer number of conditionally independent
+ratings in each unique context for one Person. Use fitted facet levels;
+omit Person IDs, responses and estimation weights. \code{NULL} retains the
+observed-exposure calculation. \code{Count} and \code{ObservedContext} are reserved
+names and cannot name facets in this mode.}
 
 \item{x}{Output from \code{\link[=compute_information]{compute_information()}}.}
 
@@ -44,9 +56,12 @@ An object of class \code{mfrm_information} (named list) with:
 \item \code{tif}: tibble with columns \code{Theta}, \code{Information}, \code{SE}. The
 \code{Information} column stores the design-weighted precision value.
 \item \code{iif}: tibble with columns \code{Theta}, \code{Facet}, \code{Level}, \code{Information},
-and \code{Exposure}. Here too, \code{Information} stores a design-weighted
-contribution value retained under that column name for compatibility.
-\item \code{theta_range}: the evaluated theta range.
+and \code{Exposure} (observed weight or planned rating count).
+\item \code{conditional_sem}, \code{information_long}, \code{summary}: plotting series and
+grid-specific extrema. \code{theta_range} records the evaluated range.
+\item With an explicit plan, \code{rating_plan}, \code{settings} and \code{notes} retain its
+counts, observed/unobserved crossings and interpretation limits. These
+are also available from the returned plot via \code{\link[=plot_data]{plot_data()}}.
 }
 
 For \code{plot()}:
@@ -58,213 +73,81 @@ Calculates design-weighted score-variance curves across the latent
 trait (theta) for a fitted ordered-category \code{RSM}, \code{PCM}, or
 \code{GPCM} model. Returns both an overall precision curve (\verb{$tif}) and
 per-facet-level contribution curves (\verb{$iif}) based on the realized
-observation pattern.
+observation pattern, or an explicit rating plan for one Person.
 }
 \details{
-For \code{RSM} / \code{PCM}, the score variance at theta for one observed design cell
-is:
-\deqn{I(\theta) = \sum_{k=0}^{K} P_k(\theta) \left(k - E(\theta)\right)^2}
-where \eqn{P_k} is the category probability and \eqn{E(\theta)} is the
-expected score at theta. In \code{mfrmr}, these cell-level variances are then
-aggregated with weights taken from the realized observation counts in
-\code{fit$prep$data}.
-The sum includes observations from all Persons. With calibration fixed,
-duplicating those exposures doubles the total curve without improving any
-individual's rating plan. It is not per-Person test information; its
-reciprocal square root is not a Person's EAP posterior SD. A per-Person
-test information function requires an explicit task/criterion/rater roster
-and conditional independence of the contributing ratings.
-
-The resulting total curve is therefore a design-weighted precision screen
-rather than a pure textbook test-information function for an abstract fixed
-item set. The associated standard error summary is still
-\eqn{SE(\theta) = 1 / \sqrt{I(\theta)}} for positive information values.
-
-In an ordered Rasch-family model, category discrimination is fixed at 1, so
-this score-variance representation is the natural conditional information
-identity rather than a separate approximation. For binary data it reduces to
-the familiar \eqn{p(\theta)\{1 - p(\theta)\}} form. For \code{PCM}, the package
-evaluates each observed design cell using the threshold vector associated
-with that cell's realized \code{step_facet} level. For \code{GPCM}, the
-same design-weighted score variance is scaled by the squared discrimination
-attached to the realized \code{slope_facet} level, which is the
-\eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} item-information identity that
-Muraki (1993, Equation 10) derives by applying Samejima's (1974)
-polytomous information formula to the GPCM kernel of Muraki (1992).
+For a rating context, information is
+\deqn{I(\theta) = a^2 \sum_{k=0}^{K} P_k(\theta)\{k-E(K\mid\theta)\}^2.}
+Here \eqn{a=1} for RSM/PCM; one-family GPCM uses the fitted
+\code{slope_facet} discrimination. PCM/GPCM use the context's \code{step_facet}
+thresholds. This is Muraki's (1993, Equation 10) conditional information
+identity, with logistic scaling constant 1. For binary Rasch responses it
+reduces to \eqn{p(1-p)}. Variance is computed about the category mean to
+avoid cancellation near endpoints; floating-point underflow remains possible.
 
 \code{plot()} method: Plot design-weighted information or conditional precision
 
 Plot a saved \code{\link[=compute_information]{compute_information()}} result to see where the observed
 assessment design provides more or less precision across ability.
 }
-\section{What \code{tif} and \code{iif} mean here}{
+\section{Observed exposure or one Person's plan}{
 
-In \code{mfrmr}, this helper supports ordered-category \code{RSM}, \code{PCM}, and the
-current \code{GPCM} fit. The total curve (\verb{$tif}) is the sum of
-design-weighted cell contributions across all non-person facet levels in the
-fitted model. The facet-level contribution curves (\verb{$iif}) keep those
-weighted contributions separated, so you can see which observed rater
-levels, criteria, or other facet levels are driving precision at different
-parts of the scale. For \code{PCM}, step-facet-specific thresholds are respected
-when each observed design cell is evaluated. For \code{GPCM}, those
-same cell-level variances are additionally scaled by the squared
-discrimination associated with the realized \code{slope_facet} level.
+With \code{rating_plan = NULL}, each context is weighted by its total observed
+response weight in \code{fit$prep$data}, across all Persons. Duplicating that
+dataset doubles information at fixed calibration. This is an observed-design
+precision screen, not one Person's test information or EAP uncertainty.
+
+With an explicit \code{rating_plan}, each context is weighted by \code{Count} for
+one Person. Supported sources are converged native additive MML RSM/PCM
+and one-family GPCM fits without known nonfinite maxima or limiting-model
+reductions. Unknown facet levels are refused; unobserved crossings of known
+levels have \code{ObservedContext = FALSE} and represent model extrapolation.
+Zero-weight rows do not qualify a context as observed in calibration.
+\code{Count} assumes conditionally independent ratings: copying a response, or
+adding correlated ratings, does not provide this amount of information.
+
+Compare plans on the same calibration and ability scale. Equal rating counts
+need not provide equal information across ability. GPCM working coordinates
+remain usable for conditional exploration when primary slope estimates are
+unavailable; \code{settings$ParameterBasis} and \code{notes} identify this limitation.
+A finite curve does not certify identification, model fit or plan suitability.
 }
 
-\section{What this quantity does not justify}{
+\section{Interpretation and limits}{
 
 \itemize{
-\item It is not a textbook many-facet test-information function for an abstract
-fixed item set.
-\item It should not be used as if it were design-free evidence about a form's
-precision independent of the realized observation pattern.
-\item It does not currently extend beyond the ordered-category \code{RSM} / \code{PCM} /
-\code{GPCM} family implemented by \code{\link[=fit_mfrm]{fit_mfrm()}}.
+\item \verb{$tif} sums context information. Within each facet, \verb{$iif} contributions
+sum to that total; summing across facets counts responses repeatedly.
+\item \code{SE} is \eqn{1/\sqrt{I(\theta)}} when information is positive; otherwise
+it is \code{NA}. It is a conditional information-based SEM, not an EAP
+posterior SD or a finite-sample confidence interval. Calibration uncertainty
+is not propagated.
+\item The calculation uses additive facet locations. In the default
+observed-exposure mode, interaction fits give an additive reference profile,
+not information under the full predictor; explicit plans refuse them.
+Two-family GPCM is unsupported in both modes.
+\item G-Study/D-Study targets observed-score G/Phi. Neither that target nor an
+optimal allocation follows from this conditional information calculation.
 }
-}
-
-\section{When to use this}{
-
-Use \code{compute_information()} when you want a design-weighted precision screen
-for an \code{RSM}, \code{PCM}, or \code{GPCM} fit along the latent
-continuum. In practice:
-\itemize{
-\item start with the total precision curve for overall targeting across the
-realized observation pattern
-\item inspect facet-level contribution curves when you want to see which raters,
-criteria, or other facet levels account for more of that design-weighted
-precision
-\item widen \code{theta_range} if you expect extreme measures and want to inspect the
-tails explicitly
-}
-}
-
-\section{Choosing the theta grid}{
-
-The defaults (\code{theta_range = c(-6, 6)}, \code{theta_points = 201}) work well for
-routine inspection. Expand the range if person or facet measures extend into
-the tails, and increase \code{theta_points} only when you need a smoother grid
-for reporting or custom graphics.
 }
 
 \section{References}{
 
-The ordered-category probability structures come from Andrich's \code{RSM}
-formulation and Masters' \code{PCM}. The \code{GPCM} information identity
-\eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} is derived in Muraki
-(1993, Equation 10) by applying Samejima's (1974) general polytomous
-information formula \eqn{I_j(\theta) = \sum_k P_{jk}(\theta)
-[-\partial^2 \ln P_{jk} / \partial \theta^2]} to the GPCM probability
-kernel of Muraki (1992). For the integer scoring function
-\eqn{T_k = k} used by \code{mfrmr}, this reduces to
-\eqn{a_j^2 \cdot \mathrm{Var}(K \mid \theta)}. In \code{mfrmr}, those formulas
-are applied to the realized many-facet observation design, so the output
-should be read as a design-weighted precision summary rather than as a
-design-free abstract test function.
 \itemize{
-\item Andrich, D. (1978). \emph{A rating formulation for ordered response
-categories}. Psychometrika, 43(4), 561-573.
-\item Masters, G. N. (1982). \emph{A Rasch model for partial credit scoring}.
-Psychometrika, 47(2), 149-174.
-\item Muraki, E. (1992). \emph{A generalized partial credit model: Application
-of an EM algorithm}. Applied Psychological Measurement, 16(2),
-159-176. \doi{10.1177/014662169201600206} (See Equations 6, 10, and
-13 for the probability kernel and the
-\eqn{\partial P_k / \partial \theta = a_j P_k (k - E[K])}
-derivative used by all GPCM helpers in \code{mfrmr}.)
-\item Muraki, E. (1993). \emph{Information functions of the generalized
-partial credit model}. Applied Psychological Measurement, 17(4),
-351-363. \doi{10.1177/014662169301700403} (Equation 10 derives the
-item information function for the GPCM,
-\eqn{I_j(\theta) = D^2 a_j^2 \mathrm{Var}(T \mid \theta)}, by
-applying Samejima's (1974) polytomous information formula to the
-GPCM kernel; this is the canonical reference for \code{compute_information()}
-under \code{GPCM}.)
-\item Samejima, F. (1974). \emph{Normal ogive model on the continuous
-response level in the multidimensional latent space}.
-Psychometrika, 39, 111-121. (Source for the general polytomous
-information formula that Muraki 1993 specializes to the GPCM.)
+\item Andrich, D. (1978). A rating formulation for ordered response categories.
+Psychometrika, 43, 561-573.
+\item Masters, G. N. (1982). A Rasch model for partial credit scoring.
+Psychometrika, 47, 149-174.
+\item Muraki, E. (1992). A generalized partial credit model: Application of an
+EM algorithm. Applied Psychological Measurement, 16, 159-176.
+\doi{10.1177/014662169201600206}. Probability kernel and score derivative.
+\item Muraki, E. (1993). Information functions of the generalized partial
+credit model. Applied Psychological Measurement, 17, 351-363.
+\doi{10.1177/014662169301700403}. Equation 10 gives the information identity.
+\item Samejima, F. (1974). Normal ogive model on the continuous response level
+in the multidimensional latent space. Psychometrika, 39, 111-121.
+General information formula specialized to GPCM by Muraki (1993).
 }
-}
-
-\section{Interpreting output}{
-
-Category variance is computed from squared deviations about its mean to
-retain small positive information near an endpoint category. This avoids
-cancellation in raw second moments; it does not eliminate floating-point
-underflow or account for calibration uncertainty.
-\itemize{
-\item \verb{$tif}: design-weighted precision curve data with theta, Information, and SE.
-\item \verb{$iif}: design-weighted facet-level contribution curves for the fitted
-non-person facets.
-\item Higher information implies more precise measurement at that theta.
-\item SE is inversely related to information.
-\item Peaks in the total curve show the trait region where the realized
-calibration is most informative.
-\item Facet-level curves help explain \emph{which observed facet levels} contribute
-to those peaks; they are not standalone item-information curves and should
-be read as design contributions.
-}
-
-
-\itemize{
-\item The total curve peaks where the realized design is most precise.
-\item Conditional SEM is derived as \code{1 / sqrt(precision)}; lower is better.
-\item Facet-level curves show which facet levels contribute most to that
-realized precision at each theta.
-\item For \code{GPCM}, those contributions include the squared
-discrimination scaling implied by the fitted \code{slope_facet}.
-\item If the precision peak sits far from the bulk of person measures, the
-realized design may be poorly targeted.
-}
-}
-
-\section{How to read the main columns}{
-
-\itemize{
-\item \code{Theta}: point on the latent continuum where the curve is evaluated.
-\item \code{Information}: design-weighted precision value at that theta.
-\item \code{SE}: approximate \code{1 / sqrt(Information)} summary for positive values.
-\item \code{Exposure}: total realized observation weight contributing to a facet-level
-curve in \verb{$iif}.
-}
-}
-
-\section{Recommended next step}{
-
-Compare the precision peak with person/facet locations from a Wright map or
-related diagnostics. If you need to decide how strongly SE/CI language can
-be used in reporting, follow with \code{\link[=precision_review_report]{precision_review_report()}}.
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
-\item Run \code{compute_information(fit)}.
-\item Plot with \code{plot(info, type = "tif")}.
-\item If needed, inspect facet contributions with
-\code{plot(info, type = "iif", facet = "Rater")}.
-}
-
-
-\enumerate{
-\item Compute information with \code{\link[=compute_information]{compute_information()}}.
-\item Plot with \code{plot(info)} for the total precision curve.
-\item Use \code{plot(info, type = "iif", facet = "Rater")} for
-facet-level contributions.
-\item Use \code{draw = FALSE} when you want reusable plot data for custom graphics
-or reporting helpers.
-}
-}
-
-\section{Returned data when draw = FALSE}{
-
-\code{draw = FALSE} returns the reusable \code{ggplot} without printing it.
-\code{plot_data(p)} exposes the underlying \code{plot}, \code{information_long},
-\code{conditional_sem}, \code{summary} and \code{settings} payloads.
-The overall curve comes from \code{x$tif}; facet contributions come from
-\code{x$iif} filtered to the selected facet.
 }
 
 \section{Plot types}{
@@ -278,20 +161,19 @@ supported \code{RSM}, \code{PCM}, or \code{GPCM} fit.
 }
 }
 
-\section{Which type should I use?}{
+\section{Returned data when draw = FALSE}{
 
-\itemize{
-\item Use \code{"tif"} for a quick overall read on precision.
-\item Use \code{"sem"} or \code{"csem"} when standard-error language is easier to
-communicate than precision.
-\item Use \code{"both"} when you want both views in one figure.
-\item Use \code{"iif"} when you want to see which facet levels are shaping the total
-precision curve.
-}
+\code{draw = FALSE} returns the reusable \code{ggplot} without printing it.
+\code{plot_data(p)} exposes the underlying \code{plot}, \code{information_long},
+\code{conditional_sem}, \code{summary} and \code{settings} payloads.
+The overall curve comes from \code{x$tif}; facet contributions come from
+\code{x$iif} filtered to the selected facet.
+For an explicit plan, \code{rating_plan}, \code{plan_settings} and \code{notes} retain
+its counts, calibration basis and interpretation limits.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("compute_information", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_operational")
@@ -302,7 +184,14 @@ info <- compute_information(fit)
 head(info$tif)
 info$tif$Theta[which.max(info$tif$Information)]
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# One rating per selected rater and criterion, using a saved calibration.
+fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))$fit
+plan <- unique(fit$prep$data[c("Rater", "Criterion")])
+plan$Count <- 1L
+planned <- compute_information(fit, rating_plan = plan)
+head(planned$tif)
+plot(planned, type = "both", draw = FALSE)
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_information", run.dontrun = TRUE)
 \dontrun{
 ratings <- load_mfrmr_data("example_operational")

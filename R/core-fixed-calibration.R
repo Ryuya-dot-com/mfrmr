@@ -6,16 +6,10 @@
 # Version 5 stores corrected GPCM JML with its own equation-based source checks.
 # Version 6 stores two-family GPCM MML on the fixed N(0,1) scale.
 
-mfrmr_calibration_schema_id <- function() "mfrmr.fixed_calibration"
-
 mfrmr_calibration_schema_version <- function(model = NULL, method = "MML") {
   if (identical(method, "JML")) {
     if (identical(model, "GPCM")) 4L else 3L
   } else if (identical(model, "GPCM")) 2L else 1L
-}
-
-mfrmr_calibration_semantic_identity_version <- function() {
-  "mfrmr-calibration-semantic-identity-v1"
 }
 
 mfrmr_calibration_now_utc <- function() {
@@ -41,10 +35,6 @@ mfrmr_calibration_refusal <- function(code, field_path, detail) {
     Severity = rep("error", n),
     stringsAsFactors = FALSE
   )
-}
-
-mfrmr_calibration_empty_refusals <- function() {
-  mfrmr_calibration_refusal(character(0), character(0), character(0))
 }
 
 mfrmr_calibration_abort <- function(code, field_path, detail,
@@ -85,49 +75,18 @@ mfrmr_calibration_bind_rows <- function(rows, template) {
   out
 }
 
-mfrmr_calibration_coordinate_template <- function() {
-  data.frame(
-    CoordinateKey = character(0),
-    ParameterClass = character(0),
-    OwnerFacet = character(0),
-    Level = character(0),
-    Step = character(0),
-    InteractionId = character(0),
-    Value = numeric(0),
-    OrderIndex = integer(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_calibration_coordinate_template <- .mfrmr_empty_table(c(CoordinateKey = "character", ParameterClass = "character", OwnerFacet = "character",
+    Level = "character", Step = "character", InteractionId = "character", Value = "double",
+    OrderIndex = "integer"))
 
-mfrmr_calibration_anchor_template <- function() {
-  data.frame(
-    AnchorId = character(0),
-    AnchorType = character(0),
-    ParameterClass = character(0),
-    OwnerFacet = character(0),
-    Level = character(0),
-    Step = character(0),
-    GroupId = character(0),
-    Value = numeric(0),
-    CoordinateSystem = character(0),
-    DeclarationOrder = integer(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_calibration_anchor_template <- .mfrmr_empty_table(c(AnchorId = "character", AnchorType = "character", ParameterClass = "character",
+    OwnerFacet = "character", Level = "character", Step = "character", GroupId = "character",
+    Value = "double", CoordinateSystem = "character", DeclarationOrder = "integer"))
 
-mfrmr_typed_anchor_note_template <- function() {
-  data.frame(
-    Code = character(0),
-    Selector = character(0),
-    Count = integer(0),
-    Detail = character(0),
-    stringsAsFactors = FALSE
-  )
-}
-
+mfrmr_typed_anchor_note_template <- .mfrmr_empty_table(c(Code = "character", Selector = "character", Count = "integer", Detail = "character"))
 
 mfrmr_normalize_typed_anchors <- function(config, anchors) {
-  expected <- names(mfrmr_calibration_anchor_template())
+  expected <- names(mfrmr_calibration_anchor_template)
   if (!is.data.frame(anchors) || !identical(names(anchors), expected)) {
     mfrmr_calibration_abort(
       "ANCHOR_DECLARATION_INVALID", "constraints.anchors",
@@ -136,8 +95,8 @@ mfrmr_normalize_typed_anchors <- function(config, anchors) {
   }
   if (nrow(anchors) == 0L) {
     return(list(
-      anchors = mfrmr_calibration_anchor_template(),
-      notes = mfrmr_typed_anchor_note_template()
+      anchors = mfrmr_calibration_anchor_template,
+      notes = mfrmr_typed_anchor_note_template
     ))
   }
   character_columns <- setdiff(expected, c("Value", "DeclarationOrder"))
@@ -317,7 +276,7 @@ mfrmr_normalize_typed_anchors <- function(config, anchors) {
   duplicate_groups <- split(seq_len(nrow(anchors)), semantic_key)
   duplicate_groups <- duplicate_groups[lengths(duplicate_groups) > 1L]
   notes <- if (length(duplicate_groups) == 0L) {
-    mfrmr_typed_anchor_note_template()
+    mfrmr_typed_anchor_note_template
   } else {
     do.call(rbind, lapply(names(duplicate_groups), function(selector) {
       data.frame(
@@ -396,56 +355,19 @@ mfrmr_typed_anchors_from_config <- function(config) {
       }
     }
   }
-  mfrmr_calibration_bind_rows(rows, mfrmr_calibration_anchor_template())
+  mfrmr_calibration_bind_rows(rows, mfrmr_calibration_anchor_template)
 }
 
+mfrmr_calibration_interaction_template <- .mfrmr_empty_table(c(InteractionId = "character", FacetA = "character", FacetB = "character",
+    LevelCountA = "integer", LevelCountB = "integer", Identification = "character", CoordinateKeys = "character"))
 
-mfrmr_calibration_interaction_template <- function() {
-  data.frame(
-    InteractionId = character(0),
-    FacetA = character(0),
-    FacetB = character(0),
-    LevelCountA = integer(0),
-    LevelCountB = integer(0),
-    Identification = character(0),
-    CoordinateKeys = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_calibration_identification_template <- .mfrmr_empty_table(c(ConstraintId = "character", ParameterClass = "character", OwnerFacet = "character",
+    ConstraintType = "character", Target = "character", Value = "double", FreeDimension = "integer"))
 
-mfrmr_calibration_identification_template <- function() {
-  data.frame(
-    ConstraintId = character(0),
-    ParameterClass = character(0),
-    OwnerFacet = character(0),
-    ConstraintType = character(0),
-    Target = character(0),
-    Value = numeric(0),
-    FreeDimension = integer(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_calibration_event_template <- .mfrmr_empty_table(c(Revision = "integer", Operation = "character", From = "character", To = "character",
+    AtUTC = "character", ParentId = "character"))
 
-mfrmr_calibration_event_template <- function() {
-  data.frame(
-    Revision = integer(0),
-    Operation = character(0),
-    From = character(0),
-    To = character(0),
-    AtUTC = character(0),
-    ParentId = character(0),
-    stringsAsFactors = FALSE
-  )
-}
-
-mfrmr_calibration_parameter_status_template <- function() {
-  data.frame(
-    ParameterClass = character(0),
-    Status = character(0),
-    EvidenceCode = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_calibration_parameter_status_template <- .mfrmr_empty_table(c(ParameterClass = "character", Status = "character", EvidenceCode = "character"))
 
 mfrmr_calibration_default_id <- function(model, method, created_at) {
   stamp <- gsub("[^0-9]", "", as.character(created_at[1]))
@@ -558,12 +480,12 @@ mfrmr_calibration_extract_coordinates <- function(fit, params) {
     }
   }
 
-  mfrmr_calibration_bind_rows(rows, mfrmr_calibration_coordinate_template())
+  mfrmr_calibration_bind_rows(rows, mfrmr_calibration_coordinate_template)
 }
 
 mfrmr_calibration_extract_interactions <- function(fit, coordinates) {
   specs <- fit$config$interaction_specs %||% list()
-  if (length(specs) == 0L) return(mfrmr_calibration_interaction_template())
+  if (length(specs) == 0L) return(mfrmr_calibration_interaction_template)
   rows <- lapply(seq_along(specs), function(i) {
     spec <- specs[[i]]
     interaction_id <- names(specs)[i]
@@ -582,7 +504,7 @@ mfrmr_calibration_extract_interactions <- function(fit, coordinates) {
       stringsAsFactors = FALSE
     )
   })
-  mfrmr_calibration_bind_rows(rows, mfrmr_calibration_interaction_template())
+  mfrmr_calibration_bind_rows(rows, mfrmr_calibration_interaction_template)
 }
 
 mfrmr_calibration_extract_anchors <- function(fit) {
@@ -672,7 +594,7 @@ mfrmr_calibration_extract_identification <- function(fit) {
     )
   }
 
-  mfrmr_calibration_bind_rows(rows, mfrmr_calibration_identification_template())
+  mfrmr_calibration_bind_rows(rows, mfrmr_calibration_identification_template)
 }
 
 mfrmr_calibration_product_identification <- function(owners, levels, n_steps,
@@ -1091,11 +1013,11 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   )
   x <- list(
     header = list(
-      schema_id = mfrmr_calibration_schema_id(),
+      schema_id = .mfrmr_const_mfrmr_calibration_schema_id,
       schema_version = if (product) product_version else if (!is.null(adjusted)) 5L else mfrmr_calibration_schema_version(model, method),
       object_class = "mfrm_calibration",
       calibration_id = calibration_id,
-      semantic_identity_version = mfrmr_calibration_semantic_identity_version()
+      semantic_identity_version = .mfrmr_const_mfrmr_calibration_semantic_identity_version
     ),
     model = list(
       family = model,
@@ -1152,7 +1074,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
     validation = list(
       schema_valid = FALSE,
       semantic_valid = FALSE,
-      refusals = mfrmr_calibration_empty_refusals(),
+      refusals = .mfrmr_const_mfrmr_calibration_empty_refusals,
       validated_at_utc = NULL
     ),
     lifecycle = list(
@@ -1295,7 +1217,7 @@ mfrmr_calibration_anchor_review_config <- function(x) {
 }
 
 mfrmr_review_calibration <- function(x) {
-  refusals <- mfrmr_calibration_empty_refusals()
+  refusals <- .mfrmr_const_mfrmr_calibration_empty_refusals
   add <- function(code, field, detail) {
     refusals <<- rbind(
       refusals, mfrmr_calibration_refusal(code, field, detail)
@@ -1363,7 +1285,7 @@ mfrmr_review_calibration <- function(x) {
   if (!inherits(x, "mfrm_calibration")) {
     add("SCHEMA_CLASS_INVALID", "header.object_class", "object must inherit from mfrm_calibration")
   }
-  if (!identical(x$header$schema_id, mfrmr_calibration_schema_id())) {
+  if (!identical(x$header$schema_id, .mfrmr_const_mfrmr_calibration_schema_id)) {
     add("SCHEMA_ID_UNKNOWN", "header.schema_id", "schema identifier is not registered")
   }
   if (!identical(x$header$object_class, "mfrm_calibration")) {
@@ -1374,7 +1296,7 @@ mfrmr_review_calibration <- function(x) {
   }
   if (!identical(
     x$header$semantic_identity_version,
-    mfrmr_calibration_semantic_identity_version()
+    .mfrmr_const_mfrmr_calibration_semantic_identity_version
   )) {
     add("IDENTITY_VERSION_UNKNOWN", "header.semantic_identity_version", "identity algorithm is not registered")
   }
@@ -1427,7 +1349,7 @@ mfrmr_review_calibration <- function(x) {
     add("IDENTIFICATION_CONTRACT_INVALID", "model.step_owner", "PCM step owner must be one declared facet")
   }
   interactions <- x$model$interactions
-  interaction_columns <- names(mfrmr_calibration_interaction_template())
+  interaction_columns <- names(mfrmr_calibration_interaction_template)
   if (!is.data.frame(interactions) || !identical(names(interactions), interaction_columns) ||
       anyDuplicated(interactions$InteractionId)) {
     add("MODEL_INTERACTION_INVALID", "model.interactions", "interaction map must use the registered typed columns and unique IDs")
@@ -1470,7 +1392,7 @@ mfrmr_review_calibration <- function(x) {
   }
 
   coordinates <- x$parameters$coordinates
-  coordinate_columns <- names(mfrmr_calibration_coordinate_template())
+  coordinate_columns <- names(mfrmr_calibration_coordinate_template)
   if (!is.data.frame(coordinates) || !identical(names(coordinates), coordinate_columns) ||
       nrow(coordinates) == 0L) {
     add("PARAMETER_COORDINATE_INVALID", "parameters.coordinates", "expanded coordinate table is absent or malformed")
@@ -1497,14 +1419,14 @@ mfrmr_review_calibration <- function(x) {
   }
 
   identification <- x$constraints$identification
-  identification_columns <- names(mfrmr_calibration_identification_template())
+  identification_columns <- names(mfrmr_calibration_identification_template)
   if (!is.data.frame(identification) ||
       !identical(names(identification), identification_columns) ||
       nrow(identification) == 0L || anyDuplicated(identification$ConstraintId)) {
     add("IDENTIFICATION_CONTRACT_INVALID", "constraints.identification", "identification table is absent, malformed, or duplicated")
   }
   anchors <- x$constraints$anchors
-  anchor_columns <- names(mfrmr_calibration_anchor_template())
+  anchor_columns <- names(mfrmr_calibration_anchor_template)
   if (!is.data.frame(anchors) || !identical(names(anchors), anchor_columns) ||
       anyDuplicated(anchors$AnchorId)) {
     add("ANCHOR_DECLARATION_INVALID", "constraints.anchors", "anchor table is malformed or duplicated")
@@ -1748,7 +1670,7 @@ mfrmr_review_calibration <- function(x) {
   }
   parameter_status <- x$eligibility$parameter_class_status
   if (!is.data.frame(parameter_status) ||
-      !identical(names(parameter_status), names(mfrmr_calibration_parameter_status_template())) ||
+      !identical(names(parameter_status), names(mfrmr_calibration_parameter_status_template)) ||
       nrow(parameter_status) == 0L || any(parameter_status$Status != expected_status)) {
     add("PARAMETER_CLASS_INELIGIBLE", "eligibility.parameter_class_status", "every stored parameter class must be eligible")
   }
@@ -1759,7 +1681,7 @@ mfrmr_review_calibration <- function(x) {
     add("LIFECYCLE_STATE_INVALID", "lifecycle.state", "state is not registered")
   }
   events <- x$lifecycle$events
-  event_columns <- names(mfrmr_calibration_event_template())
+  event_columns <- names(mfrmr_calibration_event_template)
   if (!is.data.frame(events) || !identical(names(events), event_columns) ||
       nrow(events) == 0L ||
       !identical(as.integer(events$Revision), seq_len(nrow(events))) ||
@@ -1781,7 +1703,7 @@ mfrmr_review_calibration <- function(x) {
     }
   }
 
-  refusal_columns <- names(mfrmr_calibration_empty_refusals())
+  refusal_columns <- names(.mfrmr_const_mfrmr_calibration_empty_refusals)
   if (!is.data.frame(x$validation$refusals) ||
       !identical(names(x$validation$refusals), refusal_columns) ||
       any(!x$validation$refusals$Severity %in% "error")) {
@@ -1937,7 +1859,7 @@ mfrmr_validate_calibration_draft <- function(x, validated_at_utc = NULL) {
   out <- x
   out$validation$schema_valid <- TRUE
   out$validation$semantic_valid <- TRUE
-  out$validation$refusals <- mfrmr_calibration_empty_refusals()
+  out$validation$refusals <- .mfrmr_const_mfrmr_calibration_empty_refusals
   out$validation$validated_at_utc <- at_utc
   out <- mfrmr_calibration_transition(out, "validate", "draft", "validated", at_utc)
   final_review <- mfrmr_review_calibration(out)
@@ -2341,18 +2263,6 @@ mfrmr_calibration_grid_quantile <- function(nodes, probabilities, probability) {
   nodes[hit]
 }
 
-mfrmr_calibration_operational_scoring_policy <- function() {
-  list(
-    contract_id = "mfrmr_operational_scoring_v1",
-    missing_response_policies = c("error", "omit"),
-    very_sparse_max_responses = 1L,
-    quadrature_edge_mass_threshold = 0.05,
-    estimate_basis = "posterior_eap_fixed_calibration",
-    uncertainty_basis = "conditional_on_frozen_point_calibration",
-    prior_sensitivity_status = "not_evaluated_fixed_basis"
-  )
-}
-
 mfrmr_score_calibration <- function(calibration,
                                     new_data,
                                     person = NULL,
@@ -2430,7 +2340,7 @@ mfrmr_score_calibration <- function(calibration,
       "must be one finite number strictly between zero and one"
     )
   }
-  scoring_policy <- mfrmr_calibration_operational_scoring_policy()
+  scoring_policy <- .mfrmr_const_mfrmr_calibration_operational_scoring_policy
   if (!is.character(missing_response) || length(missing_response) != 1L ||
       is.na(missing_response) ||
       !missing_response %in% scoring_policy$missing_response_policies) {
@@ -3006,7 +2916,7 @@ mfrmr_score_calibration <- function(calibration,
     out$settings$adaptive_quad_points <- adaptive_quad_points
     out$notes <- c(out$notes, if (check_scores) {
       "Reported EAP and SD passed per-person adaptive reference-order checks under the actual scoring prior; these checks do not validate that prior for a new cohort."
-    } else mfrmr_adaptive_quadrature_note())
+    } else .mfrmr_const_mfrmr_adaptive_quadrature_note)
   }
   if (check_scores) {
     out$estimates$PriorSource <- rep(if (is.null(scoring_prior)) "retained" else "user_supplied", nrow(estimates))
@@ -3108,17 +3018,21 @@ mfrmr_validate_calibration_summary <- function(x) {
 #' batches with [mfrm_calibration_score_methods] instead; inspect
 #' `calibration$parameters$coordinates` when auditing stored point coordinates.
 #'
-#' @param object,x An `mfrm_calibration` returned by the portable calibration
+#' @param object An `mfrm_calibration` returned by the portable calibration
+#'   workflow.
+#' @param x An `mfrm_calibration` returned by the portable calibration
 #'   workflow.
 #' @param ... Reserved for generic compatibility.
 #'
 #' @return `summary()` returns a `summary.mfrm_calibration`. `print()` returns
 #'   its input invisibly.
 #' @seealso [mfrm_calibration_workflow], [mfrm_calibration_score_methods]
+#' @aliases mfrm_calibration_methods
+#' @rdname mfrm_calibration_workflow
 #' @name mfrm_calibration_methods
 NULL
 
-#' @rdname mfrm_calibration_methods
+#' @rdname mfrm_calibration_workflow
 #' @method summary mfrm_calibration
 #' @export
 summary.mfrm_calibration <- function(object, ...) {
@@ -3146,7 +3060,7 @@ summary.mfrm_calibration <- function(object, ...) {
   out
 }
 
-#' @rdname mfrm_calibration_methods
+#' @rdname mfrm_calibration_workflow
 #' @method print mfrm_calibration
 #' @export
 print.mfrm_calibration <- function(x, ...) {
@@ -3166,7 +3080,7 @@ print.mfrm_calibration <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname mfrm_calibration_methods
+#' @rdname mfrm_calibration_workflow
 #' @method print summary.mfrm_calibration
 #' @export
 print.summary.mfrm_calibration <- function(x, ...) {

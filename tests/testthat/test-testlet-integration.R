@@ -84,5 +84,5 @@ test_that("the model guide distinguishes prediction targets and preserves the be
   expect_match(guide$DecisionBoundary[3], "exclude calibration uncertainty")
   expect_identical(guide$Lifecycle, c("stable", "advanced", "advanced"))
   expect_equal(nrow(mfrmr_output_guide("beginner")), 6)
-  expect_true(all(guide$Question %in% mfrmr_output_guide()$Question))
+  expect_true(all(guide$Question %in% mfrmr_output_guide("all")$Question))
 })

@@ -29,11 +29,35 @@ test_that("ICC ratios and availability survive score-unit changes without roundi
   data$Score <- data$Score * 1e-4
   small_boot <- compute_facet_icc(data, c("Rater", "Criterion"), "Score", "Person",
                                  ci_method = "boot", ci_boot_reps = 4, ci_boot_seed = 2026)
+  for (boot in list(base_boot, small_boot)) {
+    draws <- attr(boot, "icc_ci")$bootstrap$draws
+    expect_true(is.matrix(draws))
+    expect_identical(dim(draws), c(4L, 4L))
+    expect_identical(boot$ICC_CI_NRequested, rep(4L, 4L))
+    expect_identical(boot$ICC_CI_NReps, rep(4L, 4L))
+    expect_identical(boot$ICC_CI_Status, rep("Available", 4L))
+    expect_true(all(is.finite(as.matrix(boot[c("ICC_CI_Lower", "ICC_CI_Upper")]))))
+  }
   expect_identical(small_boot$ICC_CI_Status, base_boot$ICC_CI_Status)
   expect_equal(attr(small_boot, "icc_ci")$bootstrap$draws,
                attr(base_boot, "icc_ci")$bootstrap$draws, tolerance = 1e-5)
   expect_equal(small_boot$ICC_CI_Lower, base_boot$ICC_CI_Lower, tolerance = 1e-4)
   expect_equal(small_boot$ICC_CI_Upper, base_boot$ICC_CI_Upper, tolerance = 1e-4)
+})
+
+test_that("bootstrap backend failures retain point estimates and unavailable intervals", {
+  testthat::local_mocked_bindings(.mfrm_boot_mer = function(...) stop("Deliberate bootstrap failure"),
+    .package = "mfrmr")
+  data <- load_mfrmr_data("example_core")
+  expect_message(out <- compute_facet_icc(data, c("Rater", "Criterion"), "Score", "Person",
+    ci_method = "boot", ci_boot_reps = 4, ci_boot_seed = 2026), "bootstrap failed: Deliberate bootstrap failure")
+  expect_true(all(is.finite(as.matrix(out[c("Variance", "ICC")]))))
+  expect_identical(out$ICC_CI_Status, rep("Bootstrap failed", 4L))
+  expect_identical(out$ICC_CI_NReps, rep(NA_integer_, 4L))
+  expect_identical(out$ICC_CI_NUnavailable, rep(NA_integer_, 4L))
+  expect_true(all(is.na(as.matrix(out[c("ICC_CI_Lower", "ICC_CI_Upper")]))))
+  expect_null(attr(out, "icc_ci")$bootstrap)
+  expect_identical(attr(out, "icc_ci")$error, "Deliberate bootstrap failure")
 })
 
 test_that("constant retained scores remain unidentified at zero and nonzero values", {

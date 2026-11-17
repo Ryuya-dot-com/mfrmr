@@ -1,3 +1,22 @@
+test_that("diagnostic provenance rejects different data shapes without recycling", {
+  example <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+  fit <- example$fit
+  dg <- diagnose_mfrm(fit, residual_pca = "none")
+  result <- mfrm_results(fit, diagnostics = dg, include = "fit", compute = "never")
+  expect_identical(result$diagnostics, dg)
+  for (change in c("shorter", "longer", "same_shape")) {
+    bad <- dg
+    d <- bad$parameter_uncertainty$source$source$data
+    if (change == "shorter") d <- d[-1L, , drop = FALSE]
+    if (change == "longer") d <- rbind(d, d[1L, , drop = FALSE])
+    if (change == "same_shape") d$Score[1] <- d$Score[1] + 1
+    bad$parameter_uncertainty$source$source$data <- d
+    expect_warning(expect_error(
+      mfrm_results(fit, diagnostics = bad, include = "fit", compute = "never"),
+      "fit/diagnostics mismatch", fixed = TRUE), NA)
+  }
+})
+
 test_that("CSV export omits undefined tables and preserves defined empty tables", {
   res <- structure(list(tables = list(
     undefined = data.frame(),

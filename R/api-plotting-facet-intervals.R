@@ -1,6 +1,8 @@
 #' @rdname mfrm_facet_intervals
 #' @details `plot()` method: Plot fixed-facet interval methods
-#' @param x Output from [mfrm_facet_intervals()].
+#' @param x Output from [mfrm_facet_intervals()] or two-family
+#'   `confint(fit, parm = "steps")`. The latter displays within-level step offsets.
+#'   See [confint.mfrm_fit()] for the target and qualification.
 #'
 #' Also for `print()`: An object returned by `mfrm_facet_intervals()`.
 #' @param comparison Logical. With a sandwich result, also show its ordinary
@@ -8,7 +10,15 @@
 #'   conditional-on-anchors interval. Both use the same point estimate.
 #' @param draw Logical; `FALSE` returns exact plotted data without opening a device.
 #' @param preset A package plot preset, for example `"standard"` or `"monochrome"`.
-#' @param title,subtitle,caption Optional returned text; `NULL` omits it.
+#' @param title Optional returned text; `NULL` omits it.
+#'   Defaults describe the facet, exact confidence level, method and
+#'   fixed/unavailable symbols. This text is not drawn; use
+#'   `plot_data(p, "notes")` and `plot_data(p, "title")` to retrieve it.
+#' @param subtitle Optional returned text; `NULL` omits it.
+#'   Defaults describe the facet, exact confidence level, method and
+#'   fixed/unavailable symbols. This text is not drawn; use
+#'   `plot_data(p, "notes")` and `plot_data(p, "title")` to retrieve it.
+#' @param caption Optional returned text; `NULL` omits it.
 #'   Defaults describe the facet, exact confidence level, method and
 #'   fixed/unavailable symbols. This text is not drawn; use
 #'   `plot_data(p, "notes")` and `plot_data(p, "title")` to retrieve it.
@@ -30,7 +40,7 @@
 #'   default subtitle. Custom or omitted subtitles change display only.
 #'   For experimental two-family GPCM locations, the axis uses fixed-N(0,1)
 #'   ability units and the default subtitle states the location reference and
-#'   unqualified coverage, with a deficient Person-score rank caution when
+#'   the lack of established coverage, with a deficient Person-score rank caution when
 #'   applicable. These are not uniform expected-rating differences.
 #'   Standardized contrast axes use population SD units; returned notes identify
 #'   whether SD uncertainty is estimated or the known SD is one. Reviewed
@@ -54,9 +64,10 @@
 #' @export
 plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
                                       preset = "standard",
-    title = paste(x$settings$facet, "estimates and contrasts"),
+    title = paste(x$settings$facet, if (identical(x$settings$target, "category_step_offsets")) "step offsets" else "estimates and contrasts"),
     subtitle = paste0(format(100 * x$settings$level, trim = TRUE),
-      "% pointwise normal intervals | ",
+      if (identical(x$settings$method, "profile")) "% connected profile interval | " else "% pointwise normal intervals | ",
+      if (identical(x$settings$method, "profile")) "Profile likelihood" else
       if (x$settings$method == "sandwich") paste0("Sandwich | ", x$settings$clusters,
         " independent clusters assumed") else if (
           identical(x$settings$procedure, "cml_conditional_information"))
@@ -71,20 +82,25 @@ plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
   default_subtitle <- missing(subtitle)
+  steps <- identical(x$settings$target, "category_step_offsets")
+  profile <- identical(x$settings$method, "profile")
   native <- identical(x$settings$procedure, "mml_native_location_model_v1")
   joint <- identical(x$settings$procedure, "mml_joint_interaction_model_v1")
   interaction <- !is.null(x$comparison_review)
   standardized <- identical(x$settings$scale, "standardized_population_sd")
   conditional <- identical(x$settings$procedure, "cml_conditional_information")
   if (default_subtitle && length(x$cautions)) subtitle <- paste(subtitle,
+    if (profile) "Reoptimized center; chi-square(1) reference, boundary and finite-sample coverage unqualified." else
     if (standardized) "Population-SD-standardized contrasts; coverage unqualified." else
     if (conditional) "Conditional likelihood; asymptotic intervals, no population SD estimated." else
+    if (steps) "Experimental two-family step offsets; coverage unqualified." else
     if (isTRUE(x$settings$two_family)) "Experimental two-family locations; coverage unqualified." else
       if (joint) "Joint interaction effects; pointwise intervals, coverage unqualified." else
       if (interaction) "Model-based interaction contrasts; coverage unqualified." else
       if (native) "Native locations: asymptotic Wald intervals; finite-sample coverage not guaranteed." else
       "Weak information: review interval reliability.", sep = "\n")
   if (default_subtitle && isTRUE(x$settings$two_family) && !standardized) subtitle <- paste(subtitle,
+    if (steps) "Steps sum to zero within each owner level; these are not location-inclusive category boundaries." else
     if (x$settings$location_reference == "sum_to_zero_across_levels")
       "Locations sum to zero across this family's levels." else
       "Uncentered locations on the fixed N(0,1) ability scale.", sep = "\n")
@@ -96,7 +112,9 @@ plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
       if (identical(x$settings$uncertainty, "independent_anchor_delta"))
         "Anchored locations in native ability units; independent source uncertainty included." else
         "Anchored locations in native ability units; conditional on supplied anchors." else
-      "Centered locations in native ability units; not divided by population SD.", sep = "\n")
+      if (identical(x$settings$location_reference, "uncentered_on_fixed_N01"))
+        "Uncentered locations on the fixed N(0,1) ability scale." else
+        "Centered locations in native ability units; not divided by population SD.", sep = "\n")
   if (default_subtitle && interaction) subtitle <- paste(subtitle,
     "Facet-by-origin interaction differences with the declared group order and panel weights.", sep = "\n")
   if (default_subtitle && joint) subtitle <- paste(subtitle,
@@ -129,8 +147,6 @@ plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
   labels <- ifelse(is.finite(tab$Estimate), labels, paste0(labels, " (not estimated)"))
   propagated <- identical(x$settings$uncertainty, "independent_anchor_delta")
   show_model <- comparison && (x$settings$method == "sandwich" || propagated)
-  selected_label <- if (propagated) "Information + anchor source" else if (conditional) "Conditional information" else
-    if (x$settings$method == "sandwich") "Sandwich" else "Observed information"
   out <- new_mfrm_plot_data("facet_interval_methods", list(table = tab,
     contrasts = x$contrasts, settings = x$settings, comparison = show_model,
     anchor_uncertainty = x$anchor_uncertainty,
@@ -138,7 +154,7 @@ plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
     interaction_cells = x$interaction_cells, fit_checks = x$fit_checks,
     cautions = x$cautions, information_review = x$information_review,
     title = title, subtitle = subtitle, caption = caption, reference = reference,
-    show_legend = show_legend, xlab = if (joint) "Interaction effect / contrast (fixed N(0,1) units)" else if (standardized) "Contrast (population SD units)" else if (isTRUE(x$settings$two_family))
+    show_legend = show_legend, xlab = if (steps) "Step offset (fixed N(0,1) scale)" else if (joint) "Interaction effect / contrast (fixed N(0,1) units)" else if (standardized) "Contrast (population SD units)" else if (isTRUE(x$settings$two_family))
       "Location / contrast (fixed N(0,1) scale)" else if (interaction) "Interaction contrast (native ability units)" else if (native)
       "Location / contrast (native ability units)" else "Estimate (logits)", preset = style$name))
   .mfrm_finalize_ggplot(out, draw = draw)
@@ -151,7 +167,7 @@ mfrm_gg_facet_intervals <- function(x) {
   style <- resolve_plot_preset(d$preset %||% "standard")
   propagated <- identical(d$settings$uncertainty, "independent_anchor_delta")
   selected <- if (propagated) "Information + anchor source" else if (identical(d$settings$procedure, "cml_conditional_information"))
-    "Conditional information" else if (d$settings$method == "sandwich") "Sandwich" else "Observed information"
+    "Conditional information" else if (d$settings$method == "profile") "Profile likelihood" else if (d$settings$method == "sandwich") "Sandwich" else "Observed information"
   offset <- if (isTRUE(d$comparison)) .1 else 0
   rows <- tab
   rows$Y <- rev(seq_len(nrow(tab))) + offset
@@ -180,15 +196,17 @@ mfrm_gg_facet_intervals <- function(x) {
     ggplot2::scale_color_manual(limits = unique(rows$Method),
       values = c("Information + anchor source" = style$accent_primary, "Conditional on anchors" = "grey45",
       Sandwich = style$accent_primary, "Conditional information" = style$accent_primary,
+      "Profile likelihood" = style$accent_primary,
       "Observed information" = if (selected == "Sandwich") "grey45" else style$accent_primary)) +
     ggplot2::scale_linetype_manual(limits = unique(rows$Method),
-      values = c("Information + anchor source" = "solid", "Conditional on anchors" = "dashed",
+      values = c("Information + anchor source" = "solid", "Conditional on anchors" = "dashed", "Profile likelihood" = "solid",
         Sandwich = "solid", "Observed information" = "dashed", "Conditional information" = "solid")) +
     ggplot2::scale_y_continuous(breaks = rev(seq_len(nrow(tab))),
       labels = d$target_labels %||% tab$Target,
       limits = if (any(!is.finite(tab$Estimate))) c(.5, nrow(tab) + .5) else NULL) +
     ggplot2::labs(color = "Method", linetype = "Method", shape = "Interval",
-      alt = "Fixed-facet estimates and pointwise normal intervals. Method comparisons use vertical offsets and line types. Open diamonds mark fixed targets and crosses mark estimated points with unavailable intervals. Rows labeled not estimated have no point or interval; no missing estimate is replaced by zero.") +
+      alt = if (d$settings$method == "profile") "Pairwise facet contrast and connected profile interval. The center is reoptimized; source estimates and unqualified boundary coverage are retained in the data. A cross marks a finite estimate with unavailable bounds." else
+        "Fixed-facet estimates and pointwise normal intervals. Method comparisons use vertical offsets and line types. Open diamonds mark fixed targets and crosses mark estimated points with unavailable intervals. Rows labeled not estimated have no point or interval; no missing estimate is replaced by zero.") +
     .mfrmr_gg_theme()
   if (!is.null(d$reference)) p <- p + ggplot2::geom_vline(xintercept = d$reference,
     linetype = "dashed", color = "grey60")

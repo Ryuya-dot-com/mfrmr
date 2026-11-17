@@ -177,88 +177,27 @@ print_gtheory_data_usage <- function(usage) {
 #'     `GStudyDataSource` identifies the scope of those counts.}
 #' }
 #'
-#' @section Interpretation:
-#' - `G` is appropriate for **relative** decisions (rank-ordering
-#'   persons): `G = sigma2(p) / (sigma2(p) + sigma2(Residual))`.
-#' - The reported `Phi` describes dependability for **absolute** decisions:
-#'   `Phi = sigma2(p) / (sigma2(p) + sigma2(facet
-#'   main effects) + sigma2(Residual))`, before D-study scaling.
-#'   It does not estimate the probability of correct classification at a
-#'   particular cut score.
-#' - Use [mfrm_d_study()] to project `G` / `Phi` under planned numbers of
-#'   raters, items, criteria, or other random measurement facets.
-#' - Values of 0.70 and 0.80 are displayed as familiar planning references,
-#'   not as universal decision rules. Required dependability depends on the
-#'   decision, consequences, population, and evidence beyond a single
-#'   coefficient.
-#' - For ordered categories, `Score` is treated as a numeric observed response
-#'   in a Gaussian linear mixed model; thresholding is not modeled.
+#' @details
+#' Fits the main-effects Gaussian linear mixed model
+#' `Score ~ 1 + (1 | Person) + (1 | Facet1) + ... + Residual` (`G = sigma2(p) /
+#' (sigma2(p) + sigma2(Residual))`; `Phi` adds facet main-effect variances
+#' before D-study scaling). Person-by-facet and facet-by-facet interactions are
+#' omitted and absorbed into `Residual` (use [mfrm_g_study()] when interaction
+#' components are required).
 #'
-#' @section Component identification and boundary estimates:
-#' A zero variance estimate can be a valid constrained ML/REML solution.
-#' It is distinct from a design that cannot separate two variance components.
-#' For example, if every rater identifier always corresponds to the same
-#' task identifier, their main-effect covariance kernels coincide. Their
-#' sum may be identified while the individual allocations are not.
-#' `isSingular()` alone does not test this design property.
-#'
-#' The design check uses linear independence of the observation covariance
-#' kernels (after projecting out the intercept for REML). Only variance
-#' combinations orthogonal to the numerical null space enter coefficients.
-#' Thus an identified sum can still supply Phi, while a future plan assigning
-#' unequal weights to its confounded components cannot. Individual fitted
-#' allocations remain available with `Identified = FALSE` for diagnosis.
-#' A full numerical rank does not establish correct model assumptions,
-#' optimizer accuracy or finite-sample precision.
-#' This is a linear design check; fitted boundary zeros are not used to
-#' resolve otherwise confounded components.
-#'
-#' If object variance is zero and the relevant error variance is positive,
-#' G or Phi equals zero and is retained with boundary diagnostics. A zero
-#' total variance gives an undefined ratio and `zero_total_variance`.
-#' The historical `IdentificationStatus` field summarizes design and fit
-#' cautions; inspect `design$component_identification` and `design$fit_status`
-#' to distinguish them. This function does not supply coefficient intervals.
-#'
-#' @section Limitations:
-#' This helper formulates the random-effects model with main effects
-#' only (`Score ~ 1 + (1|Person) + (1|Facet1) + ... + Residual`); no
-#' explicit `(1 | Person:Rater)`, `(1 | Person:Criterion)`, or
-#' `(1 | Rater:Criterion)` interaction terms are estimated. All
-#' interactions are omitted. The residual combines unexplained variation;
-#' omitted interactions may also affect the fitted main-effect components.
-#' Their separate variances and correct averaging rates are not recovered. This function reports the
-#' one-observation-per-cell baseline. [mfrm_d_study()] applies D-study
-#' scaling, including residual-scaling sensitivity checks, to the same
-#' simplified variance-component decomposition.
-#' Because person-by-facet interaction terms are not estimated separately,
-#' D-study projections remain practical planning evidence rather than a
-#' replacement for a fully specified G-theory design. Counts held constant in
-#' a D-study do not turn a random facet into a fixed-facet universe. Variance
-#' estimation uncertainty is not propagated to G/Phi. Component values and G/Phi are
-#' stored at full precision; rounding is only for display. Recreate older
-#' G/D results from the existing MFRM fit before reuse.
-#' Boundary or singular `lme4` fits are retained as diagnostic evidence but are
-#' not treated as decision-ready G/D-study evidence.
-#' New results record component separation explicitly. Earlier saved G-studies
-#' without this record can still supply conditional D-study calculations,
-#' with `ComponentIdentificationChecked = FALSE`; recreate the G-study from
-#' the original ratings to obtain the check. This needs no MFRM refit.
-#'
-#' Omission does not correct missing-data bias or identify why ratings are
-#' absent. Entirely absent assignments are not reconstructed. Review the
-#' rating design and missingness assumptions before interpreting G/D results.
-#' Earlier versions silently omitted incomplete rows and unparseable scores.
-#' To reproduce complete-row selection, clean invalid labels explicitly and
-#' choose `missing = "omit"`. Older saved results remain usable when their
-#' calculation version is current, but unavailable row counts are not guessed;
-#' rerun the G-study with the original data to obtain row accounting.
+#' **Component identification and boundaries**: Linear independence of
+#' observation covariance kernels (after REML intercept projection) determines
+#' `Identified` in `variance_components` and `design$component_identification`
+#' separately from `lme4::isSingular()` (`design$fit_status`). Identified sums
+#' can still supply `Phi` when individual confounded allocations cannot support
+#' unequal future D-study counts (`GStatus`, `PhiStatus`,
+#' `IdentificationStatus`; zero total variance gives `zero_total_variance`).
 #'
 #' @references
 #' Bates, D., Maechler, M., Bolker, B., & Walker, S. (2015). Fitting linear
 #' mixed-effects models using lme4. *Journal of Statistical Software, 67*(1),
 #' 1--48. \doi{10.18637/jss.v067.i01}. Gaussian ML/REML model and optimization.
-#' See also \url{https://lme4.github.io/lme4/reference/isSingular.html} for
+#' See also [lme4::isSingular()] for
 #' the meaning of a singular fitted covariance matrix.
 #'
 #' Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.
@@ -347,44 +286,12 @@ mfrm_generalizability <- function(fit,
          paste(missing_cols, collapse = ", "), ".", call. = FALSE)
   }
 
-  for (col in c(object_facet, random_facets)) {
-    value <- data[[col]]
-    if (!is.null(dim(value)) || !(is.factor(value) || (!is.object(value) &&
-        (is.character(value) || is.logical(value) || (is.numeric(value) && !is.complex(value))))) ||
-        (is.numeric(value) && any(is.infinite(value)))) {
-      stop("Facet '", col, "' must contain finite numeric, character, factor, or logical labels, or NA.", call. = FALSE)
-    }
-    if (any(!is.na(value) & !nzchar(trimws(as.character(value))))) {
-      stop("Facet '", col, "' contains blank labels; use NA for missing values.", call. = FALSE)
-    }
-    if (!is.factor(data[[col]])) {
-      labels <- as.character(value)
-      labels[is.na(value)] <- NA_character_
-      data[[col]] <- as.factor(labels)
-    }
-  }
-  score <- data$Score
-  if (!is.null(dim(score)) || !(is.factor(score) || (!is.object(score) &&
-      (is.character(score) || (is.numeric(score) && !is.complex(score)))))) {
-    stop("`Score` must be numeric or numeric character/factor labels, with NA for missing values.", call. = FALSE)
-  }
-  data$Score <- suppressWarnings(as.numeric(if (is.factor(score)) as.character(score) else score))
-  if (any(!is.na(score) & !is.finite(data$Score))) {
-    stop("`Score` contains nonnumeric or infinite values; correct them explicitly and use NA for missing values.", call. = FALSE)
-  }
-  absent <- is.na(data[, needed_cols, drop = FALSE])
-  keep <- rowSums(absent) == 0L
-  cells <- which(absent, arr.ind = TRUE)
-  data_usage <- list(source = data_source, missing = missing,
-    counts = c(InputRows = nrow(data), UsedRows = sum(keep), ExcludedRows = sum(!keep)),
-    excluded_rows = which(!keep),
-    missing_cells = data.frame(InputRow = cells[, 1L], Column = needed_cols[cells[, 2L]],
-                               row.names = NULL))
-  if (any(!keep) && missing == "error") {
-    stop(sum(!keep), " row(s) have missing Score or selected facet values. Review the data or choose missing = 'omit' explicitly.", call. = FALSE)
-  }
-  if (!any(keep)) stop("No complete rows remain for the G-study.", call. = FALSE)
-  data <- data[keep, , drop = FALSE]
+  prepared <- mfrm_prepare_variance_data(
+    data, c(object_facet, random_facets), "Score", needed_cols,
+    missing, source = data_source, gstudy = TRUE
+  )
+  data <- prepared$data
+  data_usage <- prepared$data_usage
 
   random_terms <- c(object_facet, random_facets)
   formula_str <- paste0(
@@ -525,7 +432,9 @@ mfrm_generalizability <- function(fit,
 #'   Counts must be positive integers. When `NULL`, one row using
 #'   the observed number of levels is
 #'   returned.
-#' @param object_facet,random_facets Passed to [mfrm_generalizability()] when
+#' @param object_facet Passed to [mfrm_generalizability()] when
+#'   `x` is an `mfrm_fit`.
+#' @param random_facets Passed to [mfrm_generalizability()] when
 #'   `x` is an `mfrm_fit`.
 #' @param residual_scaling How the collapsed residual variance should be scaled
 #'   when planned facet counts increase. `"highest_order"` treats the residual
@@ -641,7 +550,8 @@ mfrm_generalizability <- function(fit,
 #'   # If IdentificationStatus is not "identified", even large G/Phi
 #'   # values remain identification warnings, not decision-ready evidence.
 #' }
-#' @name mfrm_d_study_main_effects
+#' @aliases mfrm_d_study_main_effects
+#' @rdname mfrm_generalizability
 #' @method mfrm_d_study mfrm_generalizability
 #' @export
 mfrm_d_study.mfrm_generalizability <- function(x,
@@ -801,7 +711,10 @@ print.mfrm_d_study <- function(x, ...) {
 #'   variance curves, or `"heatmap"`, `"contour"`, or `"surface3d"` for one
 #'   metric over two facet counts. Error variance is in squared score units,
 #'   not SEM. Lower error variance is better.
-#' @param x_var,y_var Planned-count columns such as `"n_Rater"`. The default
+#' @param x_var Planned-count columns such as `"n_Rater"`. The default
+#'   horizontal axis is the first count column; surface plots use the next
+#'   column on the other axis. The two axes must differ.
+#' @param y_var Planned-count columns such as `"n_Rater"`. The default
 #'   horizontal axis is the first count column; surface plots use the next
 #'   column on the other axis. The two axes must differ.
 #' @param group_var Optional additional column distinguishing curves. All
@@ -854,6 +767,7 @@ print.mfrm_d_study <- function(x, ...) {
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
 #' @md
+#' @rdname mfrm_generalizability
 #' @export
 plot.mfrm_d_study <- function(x,
                               y = NULL,
@@ -886,7 +800,6 @@ plot.mfrm_d_study <- function(x,
   column_labels <- function(nm, data) {
     if (nm %in% n_cols) paste(sub("^n_", "", nm), "=", data[[nm]]) else as.character(data[[nm]])
   }
-  axis_label <- function(nm) paste(sub("^n_", "", nm), "count")
   if (length(n_cols) == 0L) {
     stop("D-study table does not contain planned-count columns.", call. = FALSE)
   }

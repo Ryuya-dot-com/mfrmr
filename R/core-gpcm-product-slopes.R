@@ -5,12 +5,343 @@ mfrm_has_product_slopes <- function(fit) {
   is.list(fit) && is.list(fit$config) && !is.null(fit$config$gpcm_spec$component_levels)
 }
 
+# This sufficient boundary condition is independent of optimizer convergence.
+# For a centered F with L levels, move b_j by -t(1-1/L), other F levels
+# by t/L and every uncentered location by -t/L. Only rows at j change.
+# Thus d log p_K / dt = A(K-EY)>0; reverse the path for all-low ratings.
+# Absence of this pattern does not certify a finite maximum.
+mfrm_gmfrm_point_review <- function(prep, config, opt) {
+  d <- prep$data
+  config$category_support_audit <- config$category_support_audit %||%
+    audit_mfrm_category_support(prep, config, build_param_sizes(config))
+  endpoint_reasons <- mfrmr_mml_additive_boundary_evidence(config)
+  endpoint_reasons <- endpoint_reasons[startsWith(endpoint_reasons, "mml_unobserved_")]
+  boundary <- data.frame(Facet=character(), Level=character(), Ratings=integer(),
+    ObservedScore=integer(), LocationDirection=character())
+  for (facet in config$facet_names) {
+    scores <- split(d$Score, d[[facet]], drop=TRUE)
+    for (level in names(scores)) {
+      y <- scores[[level]]
+      if (length(y) && (all(y == 0L) || all(y == config$n_cat - 1L))) {
+        boundary <- rbind(boundary, data.frame(Facet=facet, Level=level,
+          Ratings=length(y), ObservedScore=y[1],
+          LocationDirection=if (y[1] == 0L) "+Inf" else "-Inf"))
+      }
+    }
+  }
+  slopes <- tryCatch(mfrm_gpcm_product_slope_targets(opt$par, config)$components$estimate,
+    error=function(e) numeric())
+  numerical <- length(slopes) > 0L && all(is.finite(slopes) & slopes > 0) &&
+    identical(opt$convergence, 0L) &&
+    identical(mfrmr_readiness_numerical_component(opt)$State, "ready") &&
+    length(opt$par) > 0L && all(is.finite(opt$par)) &&
+    length(opt$value) == 1L && is.finite(opt$value)
+  absent <- nrow(boundary) > 0L || length(endpoint_reasons) > 0L
+  status <- if (absent) "finite_maximum_absent" else
+    if (numerical) "finite_numerical_solution" else "numerical_unresolved"
+  detail <- switch(status,
+    finite_maximum_absent = paste(if (length(endpoint_reasons))
+      "An unused endpoint category admits a constraint-preserving step/location path." else
+      "A facet level has only lowest or only highest ratings.",
+      "A constraint-preserving path strictly improves the marginal likelihood at finite coordinates; the full unpenalized model has no finite maximum.",
+      "Inspect target-specific limiting estimates separately; retained full-model values are optimizer traces."),
+    finite_numerical_solution = paste("Finite point estimates met the optimizer and gradient checks at the chosen integration rule.",
+      "Integration accuracy and local curvature were not separately qualified. Global optimality and sampling accuracy are not established."),
+    numerical_unresolved = "The finite-parameter, optimizer or gradient checks were not met. Retained values are optimizer traces.")
+  if (identical(opt$value_basis, "neutral_boundary_reference")) detail <- paste(
+    "An extreme facet level certifies that the full model has no finite maximum.",
+    "Full-model optimization was not run; its retained values are neutral reference values, not estimates.",
+    "Inspect target-specific limiting estimates separately.")
+  list(overview=data.frame(Status=status,
+    PrimaryAvailable=identical(status, "finite_numerical_solution"),
+    AvailableSlopeComponents=if (identical(status,"finite_numerical_solution")) length(slopes) else 0L,
+    PrimaryScope="full_component_set",
+    IntegrationReview="not_evaluated", LocalMaximumReview="not_evaluated",
+    BoundaryReview=if (absent) "nonfinite_maximum_certified" else "no_extreme_location_path_found",
+    Detail=detail), boundary=boundary, endpoint_reasons=endpoint_reasons)
+}
+
+# Downgrade affected saved points on a copy; do not refit or promote old fits.
+mfrm_gmfrm_refresh_boundary <- function(fit) {
+  mfrm_gpcm_validate_endpoint_limit(fit)
+  if (mfrm_has_product_slopes(fit) &&
+      !identical(fit$config$gpcm_point_estimation$overview$Status, "finite_maximum_absent") &&
+      length(mfrmr_mml_additive_boundary_evidence(fit$config)))
+    fit <- mfrm_gmfrm_apply_point_review(fit)
+  fit
+}
+
+# Update the point-estimate contract without changing the optimization or the
+# separate SE/CI qualification. Also used after automatic accuracy refinement.
+mfrm_gmfrm_apply_point_review <- function(fit, integration_checked = FALSE) {
+  if (!mfrm_has_product_slopes(fit)) stop("Point review requires a two-family GPCM fit.", call. = FALSE)
+  review <- mfrm_gmfrm_point_review(fit$prep, fit$config, fit$opt)
+  if (isTRUE(integration_checked) && isTRUE(review$overview$PrimaryAvailable)) {
+    review$overview$IntegrationReview <- "passed"
+    review$overview$Detail <- paste("Finite point estimates passed likelihood, gradient and integration checks.",
+      "Local curvature, global optimality and sampling accuracy are not established; SEs and intervals are checked separately.")
+  }
+  if (!is.null(fit$point_limit)) {
+    review$overview$Detail <- paste(review$overview$Detail, fit$point_limit$overview$Detail)
+    review$slope_targets <- fit$point_limit$targets
+    review$overview$AvailableSlopeComponents <- sum(is.finite(fit$point_limit$targets$PrimaryEstimate))
+    review$overview$PrimaryScope <- "target_specific_likelihood_limit"
+  }
+  fit$config$gpcm_point_estimation <- review
+  fit$readiness <- build_mfrm_readiness_record(fit$prep, fit$data_review,
+    fit$config, fit$opt, fit$slopes)
+  fit$slopes <- apply_mfrm_slope_readiness(fit$slopes, fit$readiness)
+  fit$facets$person <- apply_mfrm_person_source_readiness(fit$facets$person, fit$readiness)
+  fit$summary$BoundaryState <- fit$readiness$fit$BoundaryState
+  fit$summary$FitReadiness <- fit$readiness$fit$FitReadiness
+  fit$summary$InferenceReady <- fit$readiness$fit$InferenceReady
+  fit$summary$ReadinessReasonCodes <- fit$readiness$fit$ReasonCodes
+  fit$summary$BoundaryReasonCodes <- fit$readiness$components$ReasonCodes[
+    fit$readiness$components$Component == "boundary"]
+  fit$summary$PointEstimateStatus <- review$overview$Status
+  fit
+}
+
+# Removing extreme levels from one non-reference facet leaves the slope
+# reference unchanged; the affected likelihood factors tend to one.
+mfrm_gmfrm_limit_points <- function(fit) {
+  boundary <- fit$config$gpcm_point_estimation$boundary
+  if (!nrow(boundary)) return(fit)
+  cfg <- fit$config; spec <- fit$gmfrm$specification
+  owner <- cfg$slope_facet[2L]
+  targets <- data.frame(Facet=fit$slopes$SlopeOwner, Level=fit$slopes$SlopeFacet,
+    PrimaryEstimate=NA_real_, ParameterStatus="limit_not_evaluated")
+  steps <- data.frame(StepFacet=fit$steps$StepFacet, Step=fit$steps$Step,
+    PrimaryEstimate=if (cfg$n_cat == 2L) 0 else NA_real_,
+    ParameterStatus=if (cfg$n_cat == 2L) "fixed_by_constraint" else "limit_not_evaluated")
+  limit <- list(overview=data.frame(Status="not_evaluated", RemovedRows=0L,
+    RetainedRows=nrow(fit$prep$data), RetainedPersons=length(fit$prep$levels$Person),
+    NoncenterFacet=owner, Detail="Target-specific limiting estimates were not evaluated."),
+    targets=targets, step_targets=steps, fit=NULL)
+  finish <- function(detail, status="not_evaluated") {
+    limit$overview$Status <- status
+    limit$overview$Detail <- detail
+    fit$point_limit <- limit
+    mfrm_gmfrm_apply_point_review(fit)
+  }
+  boundary_facet <- unique(boundary$Facet)
+  if (length(boundary_facet) != 1L || boundary_facet == cfg$slope_facet[1L]) return(finish(paste(
+    "Limiting refits require extreme levels in one facet other than the reference slope family.",
+    "No target is declared unidentified solely because this reduction is unsupported.")))
+  affected <- targets$Facet == boundary_facet & targets$Level %in% boundary$Level
+  limit$targets$ParameterStatus[affected] <- "unidentified_likelihood_limit"
+  if (boundary_facet == cfg$step_facet && cfg$n_cat > 2L)
+    limit$step_targets$ParameterStatus[steps$StepFacet %in% boundary$Level] <- "unidentified_likelihood_limit"
+  data <- spec$data
+  keep <- !as.character(data[[boundary_facet]]) %in% boundary$Level
+  data <- data[keep, , drop=FALSE]
+  limit$overview$RemovedRows <- sum(!keep)
+  limit$overview$RetainedRows <- nrow(data)
+  limit$overview$RetainedPersons <- length(unique(data[[spec$person]]))
+  if (length(unique(data[[boundary_facet]])) < 2L || any(vapply(setdiff(cfg$facet_names,boundary_facet),
+      function(f) !setequal(as.character(data[[f]]), fit$prep$levels[[f]]), TRUE)))
+    return(finish("The limiting model loses another facet level or leaves fewer than two levels in the reduced facet; its remaining targets require a separate identification review."))
+  problem <- tryCatch(mfrm_gmfrm_problem(data, cfg$n_cat-1L,
+    gauss_hermite_normal(cfg$estimation_control$quad_points), cfg$slope_facet,
+    spec$person, spec$score, cfg$facet_names, cfg$step_facet, owner, cfg$slope_facet[1L]),
+    error=identity)
+  if (inherits(problem,"error")) return(finish(paste("Limiting model:",conditionMessage(problem))))
+  remaining <- mfrm_gmfrm_point_review(problem$common$prep,problem$common$config,fit$opt)
+  if (nrow(remaining$boundary))
+    return(finish("Additional extreme levels appear in the limiting data; no recursive reduction was applied."))
+  if (length(remaining$endpoint_reasons))
+    return(finish("Unused endpoint categories leave a nonfinite maximum in the limiting data; no further boundary reduction was applied."))
+  start <- problem$start
+  shared <- intersect(names(start),names(fit$opt$par)); start[shared] <- fit$opt$par[shared]
+  # Express retained locations with the free slope owner uncentered. Location
+  # contrasts and all retained predictors are invariant to the original choice.
+  locations <- fit$facets$others; shift <- 0
+  for (facet in setdiff(cfg$facet_names,owner)) {
+    rows <- locations[locations$Facet==facet & locations$Level %in% problem$levels[[facet]],]
+    center <- mean(rows$Estimate); shift <- shift+center
+    ids <- paste0("location:",facet,":",rows$Level)
+    free <- ids %in% names(start)
+    start[ids[free]] <- rows$Estimate[free]-center
+  }
+  rows <- locations[locations$Facet==owner & locations$Level %in% problem$levels[[owner]],]
+  start[paste0("location:",owner,":",rows$Level)] <- rows$Estimate+shift
+  control <- list(mml_engine=cfg$estimation_control$mml_engine_used,
+    mml_integration="auto", quad_points=cfg$estimation_control$quad_points,
+    maxit=cfg$estimation_control$maxit)
+  if (control$mml_engine == "direct") {
+    control$reltol <- fit$gmfrm$controls$reltol
+    control$gpcm_mml_start <- list(retained=start, neutral=problem$start)
+  } else control$em_score_tol <- fit$gmfrm$controls$score_tol
+  model <- list(person=spec$person, facets=cfg$facet_names, score=spec$score,
+    rating_min=0L, rating_max=cfg$n_cat-1L, category_policy="preserve",
+    model="GPCM", method="MML", slope_facet=cfg$slope_facet,
+    slope_reference=cfg$slope_facet[1L], step_facet=cfg$step_facet,
+    noncenter_facet=owner, gpcm_mml_identification="fixed_standard_normal")
+  candidate <- tryCatch(fit_mfrm(data,spec=model,control=control),error=identity)
+  if (inherits(candidate,"error")) {
+    limit$failure <- list(message=conditionMessage(candidate), history=candidate$history,
+      last_candidate=candidate$last_candidate)
+    return(finish(paste("Limiting refit did not pass point-estimate checks:",
+      conditionMessage(candidate)),"numerical_unresolved"))
+  }
+  limit$fit <- candidate
+  if (!identical(candidate$config$gpcm_point_estimation$overview$IntegrationReview,"passed"))
+    return(finish("The retained limiting fit has no accuracy-qualified points.","numerical_unresolved"))
+  candidate$config$gpcm_limit_source <- list(boundary=boundary,
+    removed_rows=sum(!keep), original_rows=nrow(fit$prep$data))
+  candidate$config$gpcm_point_estimation$overview$Detail <- paste(
+    candidate$config$gpcm_point_estimation$overview$Detail,
+    "These are limiting-likelihood point estimates after a data-dependent boundary reduction; ordinary intervals are not qualified.")
+  limit$fit <- candidate
+  for (facet in unique(targets$Facet)) {
+    src <- candidate$slopes[candidate$slopes$SlopeOwner==facet,]
+    dst <- which(targets$Facet==facet & targets$Level %in% src$SlopeFacet)
+    limit$targets$PrimaryEstimate[dst] <- src$PrimaryEstimate[match(targets$Level[dst],src$SlopeFacet)]
+    limit$targets$ParameterStatus[dst] <- "finite_likelihood_limit"
+  }
+  if (cfg$n_cat > 2L) for (i in seq_len(nrow(candidate$steps))) {
+    src <- candidate$steps[i,]
+    dst <- steps$StepFacet == src$StepFacet & steps$Step == src$Step
+    limit$step_targets$PrimaryEstimate[dst] <- src$Estimate
+    limit$step_targets$ParameterStatus[dst] <- "finite_likelihood_limit"
+  }
+  finish(paste("Remaining component slopes were fitted to the limiting likelihood with point-estimate integration checks.",
+    "Any slopes or free steps owned by removed levels are unidentified in this limit.",
+    "Inspect point_limit for step targets, retained data and the location convention; full-model SEs remain unavailable."),
+    "partial_points_available")
+}
+
+# A globally unused endpoint changes the category ladder, not the retained
+# rows. Only slopes transfer to the original parameterization.
+mfrm_gpcm_endpoint_limit <- function(fit) {
+  cfg <- fit$config
+  if (!identical(cfg$model, "GPCM") || !identical(cfg$method, "MML") ||
+      !is.null(fit$point_limit) || !"mml_unobserved_global_endpoint" %in%
+        mfrmr_mml_additive_boundary_evidence(cfg)) return(fit)
+  y <- fit$prep$data$score_k; K <- cfg$n_cat-1L
+  counts <- tabulate(y+1L,nbins=K+1L)
+  missing <- which(counts==0L)-1L
+  owners <- if (mfrm_has_product_slopes(fit)) fit$slopes$SlopeOwner else
+    rep(cfg$slope_facet,nrow(fit$slopes))
+  limit <- list(overview=data.frame(Status="not_evaluated",RemovedRows=0L,
+    RetainedRows=length(y),RetainedPersons=length(fit$prep$levels$Person),
+    NoncenterFacet=cfg$noncenter_facet,Reduction="global_endpoint",
+    Detail="Endpoint limiting estimates were not evaluated."),
+    targets=data.frame(Facet=owners,Level=fit$slopes$SlopeFacet,
+      PrimaryEstimate=NA_real_,ParameterStatus="limit_not_evaluated"),
+    step_targets=data.frame(StepFacet=fit$steps$StepFacet,Step=fit$steps$Step,
+      PrimaryEstimate=NA_real_,ParameterStatus="different_limiting_parameterization"),fit=NULL)
+  finish <- function(detail,status="not_evaluated") {
+    limit$overview$Status <- status; limit$overview$Detail <- detail
+    fit$point_limit <- limit
+    if (mfrm_has_product_slopes(fit)) return(mfrm_gmfrm_apply_point_review(fit))
+    fit$config$gpcm_point_estimation <- list(overview=data.frame(
+      Status="finite_maximum_absent",PrimaryAvailable=FALSE,
+      AvailableSlopeComponents=sum(is.finite(limit$targets$PrimaryEstimate)),
+      PrimaryScope="target_specific_likelihood_limit",IntegrationReview="not_applicable",
+      LocalMaximumReview="not_evaluated",BoundaryReview="nonfinite_maximum_certified",
+      Detail=paste("The full model has no finite maximum.",detail)),slope_targets=limit$targets)
+    fit$readiness <- build_mfrm_readiness_record(fit$prep,fit$data_review,fit$config,fit$opt,fit$slopes)
+    fit$slopes <- apply_mfrm_slope_readiness(fit$slopes,fit$readiness)
+    # The original population mean can diverge. Standardize with the saved
+    # limiting population SD, never the full-model optimizer's population SD.
+    fit$slopes$PrimaryPopulationSD <- if (!is.null(limit$fit))
+      if (isTRUE(limit$fit$population$active)) sqrt(limit$fit$population$sigma2) else 1 else NA_real_
+    fit$slopes$FixedLatentSDPrimaryEstimate <- fit$slopes$PrimaryEstimate*fit$slopes$PrimaryPopulationSD
+    fit$slopes$FixedLatentSDPrimaryBasis <- "limiting_population_sd_times_relative_slope"
+    fit$summary$PointEstimateStatus <- "finite_maximum_absent"
+    fit
+  }
+  free <- function(s) all(is.na(s$anchors)) && all(is.na(s$groups))
+  if (K<2L || length(missing)!=1L || !missing %in% c(0L,K) ||
+      any(fit$prep$data$Weight!=1) || length(cfg$interaction_specs) ||
+      any(cfg$facet_signs[cfg$facet_names]!=-1) ||
+      !all(vapply(cfg$facet_specs,free,TRUE)) || !all(vapply(cfg$step_specs,free,TRUE)) ||
+      length(cfg$dummy_facets) ||
+      (isTRUE(fit$population$active) && !identical(fit$population$source,"gpcm_mml_default_identification")))
+    return(finish("Endpoint refits require exactly one globally unused endpoint, free steps and locations, unit weights, no interactions or dummy facets, and a fixed normal or default intercept-only population."))
+  shift <- as.integer(missing==0L)
+  local <- split(y,fit$prep$data[[cfg$step_facet]],drop=TRUE)
+  retained <- setdiff(0:K,missing)
+  if (any(vapply(local,function(v) !all(retained %in% v),TRUE)))
+    return(finish("Additional owner-specific category gaps remain; no recursive category reduction was applied."))
+  map <- fit$prep$score_map
+  original <- map$OriginalScore[match((0:K)+fit$prep$rating_min,map$InternalScore)]
+  limit$category_map <- data.frame(OriginalScore=original,OriginalCategory=0:K,
+    ReducedCategory=ifelse(0:K==missing,NA_integer_,0:K-shift),
+    Status=ifelse(0:K==missing,"zero_probability_limit","retained"))
+  data <- fit$prep$data[c("Person",cfg$facet_names)]
+  data$Score <- as.integer(y-shift)
+  args <- cfg$replay_inputs
+  args[c("package_version","mml_starts")] <- NULL
+  # Full-dimensional coordinates cannot initialize a smaller step ladder.
+  if (is.list(args$gpcm_mml_start)) args$gpcm_mml_start <- "both"
+  args$data <- data; args$person <- "Person"; args$score <- "Score"
+  args$rating_min <- 0L; args$rating_max <- K-1L
+  args$keep_original <- TRUE; args$category_policy <- "preserve"
+  args$missing_codes <- numeric(); args$attach_diagnostics <- FALSE
+  if (mfrm_has_product_slopes(fit)) args[c("missing_codes","attach_diagnostics")] <- NULL
+  args$mml_integration <- "auto"
+  candidate <- tryCatch(do.call(fit_mfrm,args),error=identity)
+  if (inherits(candidate,"error")) {
+    limit$failure <- list(message=conditionMessage(candidate),history=candidate$history,
+      last_candidate=candidate$last_candidate)
+    return(finish(paste("Endpoint limiting refit failed:",conditionMessage(candidate)),"numerical_unresolved"))
+  }
+  if (!identical(candidate$summary$MMLAccuracyStatus,"criteria_met") ||
+      !isTRUE(candidate$summary$Converged) ||
+      length(mfrmr_mml_additive_boundary_evidence(candidate$config)) ||
+      any(!is.finite(candidate$slopes$Estimate) | candidate$slopes$Estimate<=0))
+    return(finish("The endpoint limiting fit did not pass its numerical point-estimate checks.","numerical_unresolved"))
+  candidate$config$gpcm_limit_source <- list(kind="global_endpoint",category_map=limit$category_map,
+    removed_rows=0L,original_rows=length(y),original_categories=cfg$n_cat)
+  limit$fit <- candidate
+  limit$targets$PrimaryEstimate <- candidate$slopes$Estimate
+  limit$targets$ParameterStatus <- "finite_likelihood_limit"
+  finish(paste("Component slopes use a separately fitted endpoint limiting likelihood; inspect category_map for original score labels.",
+    "Locations, centered steps and the population mean belong to the reduced-category convention and do not replace original coordinates.",
+    "Global optimality and ordinary intervals after this data-dependent reduction are not qualified."),"partial_points_available")
+}
+
+mfrm_gpcm_validate_endpoint_limit <- function(fit) {
+  limit <- fit$point_limit
+  if (!identical(limit$overview$Reduction,"global_endpoint") || is.null(limit$fit)) return(invisible(NULL))
+  reduced <- limit$fit; cfg <- fit$config; map <- limit$category_map
+  refuse <- function() stop("The saved endpoint limiting fit does not match its source ratings, category mapping or slope targets.",call.=FALSE)
+  y <- fit$prep$data$score_k
+  absent <- which(tabulate(y+1L,nbins=cfg$n_cat)==0L)-1L
+  if (length(absent)!=1L || !absent %in% c(0L,cfg$n_cat-1L) ||
+      !is.data.frame(map) || nrow(map)!=cfg$n_cat ||
+      !identical(map$OriginalCategory,seq_len(cfg$n_cat)-1L) ||
+      !identical(map$OriginalScore,fit$prep$score_map$OriginalScore[match(
+        map$OriginalCategory+fit$prep$rating_min,fit$prep$score_map$InternalScore)]) ||
+      !isTRUE(all.equal(map$ReducedCategory,ifelse(map$OriginalCategory==absent,NA_integer_,
+        map$OriginalCategory-as.integer(absent==0L)),check.attributes=FALSE)) ||
+      !identical(reduced$config$gpcm_limit_source$category_map,map) ||
+      !identical(reduced$config$n_cat,cfg$n_cat-1L) ||
+      !identical(reduced$prep$data$score_k,as.integer(y-as.integer(absent==0L)))) refuse()
+  for (field in c("facet_names","slope_facet","step_facet","noncenter_facet","gpcm_mml_identification"))
+    if (!identical(reduced$config[[field]],cfg[[field]])) refuse()
+  for (field in c("Person",cfg$facet_names,"Weight"))
+    if (!identical(as.character(fit$prep$data[[field]]),as.character(reduced$prep$data[[field]]))) refuse()
+  owner <- reduced$slopes[["SlopeOwner"]] %||% rep(cfg$slope_facet,nrow(reduced$slopes))
+  if (!identical(limit$targets$Facet,owner) || !identical(limit$targets$Level,reduced$slopes$SlopeFacet) ||
+      !identical(limit$targets$PrimaryEstimate,reduced$slopes$Estimate) ||
+      !identical(fit$slopes$PrimaryEstimate,limit$targets$PrimaryEstimate) ||
+      !all(is.na(limit$step_targets$PrimaryEstimate))) refuse()
+  values <- if (mfrm_has_product_slopes(reduced))
+    mfrm_gpcm_product_slope_targets(reduced$opt$par,reduced$config)$components$estimate else
+    expand_params(reduced$opt$par,build_param_sizes(reduced$config),reduced$config)$slopes
+  if (!isTRUE(all.equal(unname(values),unname(reduced$slopes$Estimate),tolerance=1e-10))) refuse()
+  invisible(NULL)
+}
+
 stop_if_product_slopes <- function(fit, helper) {
   stop_if_jml_adjustment(fit, helper)
   if (mfrm_has_product_slopes(fit)) {
     stop(new_gpcm_scope_error(paste0("`", helper, "` is not available for two slope families. ",
       "Use summary(fit) and mfrm_curve_intervals(fit, newdata) for fitted curves without intervals; ",
-      "category_curves_report(fit, newdata = contexts) supplies full-context curves and cumulative thresholds without intervals. ",
+      "mfrm_report(type = 'category_curves', fit, newdata = contexts) supplies full-context curves and cumulative thresholds without intervals. ",
       "confint(fit, parm = 'slopes') separately checks experimental component log-Wald intervals. ",
       "mfrm_response_diagnostics(fit) supplies descriptive posterior residuals with the fitted integration method. ",
       "An explicit method = 'profile' call can separately review one named component slope. ",
@@ -221,8 +552,6 @@ mfrm_gmfrm_common_setup <- function(data, max_score,
 # sampling-coverage certificate. Reuse the full marginal information: frozen-Q
 # curvature and the inverse slope block are not the covariance of joint estimates.
 mfrm_gpcm_product_inference <- function(fit) {
-  reused <- mfrmr_gmfrm_inference_reuse(fit)
-  if (!is.null(reused)) return(reused)
   checks <- data.frame(Check = character(), Passed = logical(), Detail = character())
   out <- list(covariance = NULL, information = NULL, checks = checks,
     check = list(eligible = FALSE, review = "Two-family inference was not evaluated."))
@@ -233,6 +562,11 @@ mfrm_gpcm_product_inference <- function(fit) {
   refuse <- function() {
     out$check$review <- paste(out$checks$Detail[!out$checks$Passed], collapse=" ")
     out
+  }
+  if (!is.null(fit$config$gpcm_limit_source)) {
+    record("Limiting likelihood", FALSE,
+      "This fit supplies limiting point estimates after a data-dependent boundary reduction; ordinary interval theory has not been qualified.")
+    return(refuse())
   }
   config <- fit$config
   adaptive <- mfrmr_adaptive_integration(config)
@@ -271,6 +605,11 @@ mfrm_gpcm_product_inference <- function(fit) {
       length(index) == nrow(fit$slopes) && !anyNA(index) &&
       isTRUE(all.equal(target$estimate, unname(fit$slopes$Estimate[index]), tolerance=1e-10)),
       "Slope owners, levels, scale constraints and retained estimates must agree.")) return(refuse())
+  point <- mfrm_gmfrm_point_review(fit$prep, config, fit$opt)
+  if (identical(point$overview$Status, "finite_maximum_absent")) {
+    record("Finite maximum", FALSE, point$overview$Detail)
+    return(refuse())
+  }
   if (adaptive) {
     if (!record("Direct convergence", isTRUE(fit$summary$Converged) &&
         identical(fit$opt$convergence, 0L) &&

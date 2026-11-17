@@ -7,10 +7,6 @@
 # identity is part of the result because penalized JML, finite-box JML, and MML
 # can select different finite points even on the same response model.
 
-mfrmr_jml_gpcm_boundary_classification_contract_version <- function() {
-  "mfrmr-jml-gpcm-fixed-objective-boundary-0.2.3-v2"
-}
-
 mfrmr_jml_gpcm_boundary_audit_objective_finite <- function(audit) {
   retained <- suppressWarnings(as.numeric(
     audit$retained_log_likelihood %||% NA_real_
@@ -65,7 +61,7 @@ mfrmr_classify_jml_gpcm_fixed_objective_boundary <- function(
 
   base <- list(
     contract_version =
-      mfrmr_jml_gpcm_boundary_classification_contract_version(),
+      .mfrmr_const_mfrmr_jml_gpcm_boundary_classification_contract_version,
     method = method,
     model = model,
     estimator_identity = "unpenalized_fixed_effects_jml_no_finite_box",

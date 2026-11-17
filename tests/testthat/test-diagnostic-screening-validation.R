@@ -143,6 +143,15 @@ test_that("evaluate_mfrm_diagnostic_screening supports step-structure misspecifi
 })
 
 test_that("evaluate_mfrm_diagnostic_screening can retain report-index review signals", {
+  diagnose <- mfrmr::diagnose_mfrm
+  diagnostic_calls <- list()
+  testthat::local_mocked_bindings(
+    diagnose_mfrm = function(fit, ...) {
+      diagnostic_calls[[length(diagnostic_calls) + 1L]] <<- list(...)
+      diagnose(fit, ...)
+    },
+    .package = "mfrmr"
+  )
   diag_eval <- suppressWarnings(mfrmr::evaluate_mfrm_diagnostic_screening(
     design = list(person = 14, rater = 3, criterion = 3, assignment = 3),
     reps = 1,
@@ -155,6 +164,8 @@ test_that("evaluate_mfrm_diagnostic_screening can retain report-index review sig
     seed = 20260409
   ))
 
+  expect_length(diagnostic_calls, 1L)
+  expect_identical(diagnostic_calls[[1L]]$fit_df_method, "facets")
   expect_s3_class(diag_eval, "mfrm_diagnostic_screening")
   expect_true(all(c(
     "ReportIndexAvailable", "ReportFitReadiness", "ReportFitReviewSignalCount",
@@ -225,4 +236,80 @@ test_that("evaluate_mfrm_diagnostic_screening supports caveated GPCM screening o
   diag_plot <- plot(diag_eval, type = "overview", metric = "rate", draw = FALSE)
   expect_s3_class(diag_plot, "ggplot")
   expect_true(nrow(mfrmr::plot_data(diag_plot, "gpcm_boundary")) > 0L)
+})
+
+test_that("screening report reuse is limited to matching PCA-free diagnostics", {
+  bundle <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+  supplied <- list()
+  modes <- character()
+  fit_failure <- diagnostic_failure <- report_failure <- FALSE
+  index <- data.frame(
+    Area = c("Fit", "Precision", "Misfit / pathway", "Other"),
+    Readiness = c("review", "ready", "request_if_needed", NA_character_),
+    ReviewSignalCount = c(2, 0, NA_real_, NA_real_)
+  )
+  testthat::local_mocked_bindings(
+    fit_mfrm = function(...) {
+      if (fit_failure) stop("fit failed", call. = FALSE)
+      bundle$fit
+    },
+    diagnose_mfrm = function(fit, residual_pca, ...) {
+      if (diagnostic_failure) stop("diagnostics failed", call. = FALSE)
+      modes <<- c(modes, residual_pca)
+      bundle$diagnostics
+    },
+    mfrm_results = function(fit, include, diagnostics = NULL, ...) {
+      supplied[[length(supplied) + 1L]] <<- list(diagnostics = diagnostics)
+      list()
+    },
+    mfrm_report = function(...) {
+      if (report_failure) stop("report failed", call. = FALSE)
+      list(report_index = index)
+    },
+    .package = "mfrmr"
+  )
+  run <- function(pca = "none", include = TRUE) {
+    evaluate_mfrm_diagnostic_screening(
+      design = list(person = 6, rater = 2, criterion = 2, assignment = 2),
+      reps = 1, scenarios = "well_specified", residual_pca = pca,
+      include_report = include, seed = 123
+    )
+  }
+  expected <- list(
+    ReportIndexAvailable = TRUE, ReportAuditError = NA_character_,
+    ReportReviewAreas = 1L, ReportReadyAreas = 1L,
+    ReportRequestIfNeededAreas = 1L, ReportFitReadiness = "review",
+    ReportFitReviewSignalCount = 2, ReportPrecisionReadiness = "ready",
+    ReportPrecisionReviewSignalCount = 0,
+    ReportMisfitReadiness = "request_if_needed",
+    ReportMisfitReviewSignalCount = NA_real_
+  )
+  for (pca in c("none", "overall", "facet", "both")) {
+    result <- run(pca)
+    expect_identical(as.list(result$results[1, names(expected)]), expected)
+    expect_identical(tail(supplied, 1)[[1]]$diagnostics,
+                     if (pca == "none") bundle$diagnostics else NULL)
+  }
+  expect_identical(modes, c("none", "overall", "facet", "both"))
+  expect_true(run(include = FALSE)$results$RunOK)
+  expect_length(supplied, 4L)
+
+  report_failure <- TRUE
+  failed_report <- run()$results
+  expect_true(failed_report$RunOK)
+  expect_false(failed_report$ReportIndexAvailable)
+  expect_identical(failed_report$ReportAuditError, "report failed")
+  expect_true(is.na(failed_report$ReportFitReviewSignalCount))
+
+  diagnostic_failure <- TRUE
+  failed_diagnostic <- run()$results
+  expect_false(failed_diagnostic$RunOK)
+  expect_identical(failed_diagnostic$Error, "diagnostics failed")
+  expect_length(supplied, 5L)
+
+  fit_failure <- TRUE
+  failed_fit <- run()$results
+  expect_false(failed_fit$RunOK)
+  expect_identical(failed_fit$Error, "fit failed")
+  expect_length(supplied, 5L)
 })

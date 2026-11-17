@@ -95,19 +95,14 @@ For \code{summary()}: An object of class \code{summary.mfrm_network_review}.
 Build an MFRM network review
 }
 \details{
-\code{build_mfrm_network_review()} is a synthesis layer over
-\code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}. It keeps the measurement model and graph view in
-separate sections: MFRM estimates remain the measurement results, while the
-network review summarizes co-observation connectedness and linking
-vulnerability in the observed design. This is especially useful for sparse
-or incomplete rater-mediated designs, where common-person links, connected
-subsets, articulation points, and bridge edges can explain why an otherwise
-estimable model depends on fragile design links.
+Combines MFRM estimates with a separate review of assignment connectivity
+and fragile links. See "Reading the graph" in \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}} for
+components, articulation points, bridges and betweenness.
 
-The review status is deliberately conservative and descriptive. It is not a
-literature-derived adequacy cut point for fit, separation, recovery, or
-rater quality. Use it to decide which design links, anchors, or additional
-observations need inspection before making common-scale claims.
+Review status is a conservative descriptive screen, not a literature-derived
+cutoff for fit, separation, recovery or rater quality. Use it to prioritize
+inspection of links, anchors or additional observations before common-scale
+claims; the graph does not replace the measurement results.
 
 \code{summary()} method: Summarize an MFRM network review
 }
@@ -129,20 +124,16 @@ NCME presentation.
 
 \section{Before fitting}{
 
-Supply \code{data}, \code{person}, \code{facets} and \code{score} instead of \code{fit}. Known levels
-from incomplete/unscored rows remain as nodes, including isolates. A planned
-assignment roster can be examined with \code{basis = "planned"}; absent assignments
-cannot be reconstructed from an observed-only file. \code{row_usage} records each
-input row's inclusion and first exclusion reason. With a fit, only its retained
-rows are available here; review original missing assignments before fitting.
-No prefit result supplies an identification audit or model-readiness decision.
-\code{settings$is_disjoint} describes the source graph, even when subset filters
-omit components; compare source/retained subset counts. Filters do not establish
-linking. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} for a panel example.
+Supply \code{data}, \code{person}, \code{facets} and \code{score} for a prefit graph, or use
+\code{basis = "planned"} for an assignment roster. Observed-only data cannot reveal
+absent assignments; a fit supplies only retained rows. Graph connectivity is
+not full model identification, and filtering does not establish linking.
+See "Before fitting" in \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} for unscored/isolate
+rows, the inclusion audit and source versus retained component counts.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("build_mfrm_network_review", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.

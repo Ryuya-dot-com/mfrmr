@@ -745,7 +745,7 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' identification, anchor, interaction, optimizer, and population settings.
 #'
 #' @param fit An RSM, PCM, or GPCM MML `mfrm_fit` returned by
-#'   [fit_mfrm()]. [mml_quadrature_sensitivity()] accepts only GPCM fits.
+#'   [fit_mfrm()].
 #' @param data The original response data.frame used to create `fit`. Prepared
 #'   response rows are compared semantically after refitting; row order may
 #'   differ, but changed observations fail closed.
@@ -819,8 +819,9 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' integration grid retains the original N(0,1) density and its Jacobian.
 #' This does not provide adaptive EM, update estimates or repair their intervals.
 #'
-#' More quadrature points improve the numerical approximation, not the amount
-#' of observed information. In a sparse design, a small group of candidates
+#' More quadrature points refine the integration rule, not the amount of
+#' observed information. Accuracy need not improve monotonically; compare
+#' the resulting estimates and numerical diagnostics. In a sparse design, a small group of candidates
 #' rated many times may need a finer grid than candidates with few ratings.
 #' Inspect interval availability and measured changes; no fixed point count
 #' is guaranteed to be adequate for every design. See the GPCM scope vignette
@@ -1085,7 +1086,7 @@ mfrmr_gqs_run <- function(
     }))
     rownames(out$quadrature_review) <- NULL
     out$settings$adaptive_quad_points <- adaptive_quad_points
-    out$notes <- c(out$notes, mfrmr_adaptive_quadrature_note())
+    out$notes <- c(out$notes, .mfrmr_const_mfrmr_adaptive_quadrature_note)
   }
   class(out) <- c("mfrm_quadrature_sensitivity", "list")
   out

@@ -119,6 +119,33 @@ test_that("curvature scaling changes search coordinates without changing the obj
   expect_equal(unname(large$counts),c(0L,0L))
 })
 
+test_that("moderate adaptive MML gets a bounded curvature restart", {
+  n <- 92L
+  h <- seq(900, 15000, length.out = n)
+  fn <- function(p) 66000 + sum(h * p^2)/2
+  gr <- function(p) h * p
+  local_mocked_bindings(
+    make_param_cache = function(...) list(),
+    make_mfrm_direct_evaluator = function(...) list(value=fn, gradient=gr,
+      diagnostics=function() list()),
+    optim = function(par, fn, ...) list(par=par, value=fn(par), convergence=0L,
+      counts=c('function'=1L, 'gradient'=1L)), .package="mfrmr")
+  for (model in c("RSM", "PCM", "GPCM")) {
+    out <- run_mfrm_direct_optimization(rep(4e-7,n), "MML", list(),
+      list(model=model, population_spec=list(active=TRUE),
+        estimation_control=list(mml_integration="adaptive")), list(),
+      quad_points=3, maxit=20, reltol=1e-9)
+    expect_lt(max(abs(gr(out$par))), 1e-8)
+    expect_equal(out$value, fn(out$par))
+    expect_identical(out$optimizer_diagnostics$ConvergenceSeverity, "pass")
+    expect_true("curvature_restart" %in% out$optimizer_polish$Stages$StageLabel)
+  }
+  expect_null(mfrm_optimizer_curvature_proposal(rep(0,201),
+    function(p) stop("must not evaluate"), identity, max_parameters=200L)$par)
+  expect_null(mfrm_optimizer_curvature_proposal(rep(1,92),
+    function(p) -sum(p^2), function(p) -2*p, max_parameters=200L)$par)
+})
+
 test_that("a small raw gradient cannot hide recoverable negative curvature", {
   fn <- function(p) (1e-6 * p[1]^2 - 1)^2 + p[2]^2
   gr <- function(p) c(4e-6 * p[1] * (1e-6 * p[1]^2 - 1), 2*p[2])
@@ -181,7 +208,7 @@ test_that("unsafe curvature proposals do not replace the retained point", {
   }
   too_large <- mfrm_optimizer_curvature_proposal(rep(1,65),function(p) stop("evaluated"),identity)
   expect_equal(unname(too_large$counts),c(0L,0L))
-  expect_match(too_large$error,"1-64",fixed=TRUE)
+  expect_match(too_large$error,"free-parameter limit",fixed=TRUE)
 })
 
 test_that("a stalled optimizer restarts only from a safe curvature proposal", {
@@ -240,10 +267,11 @@ test_that("a stalled optimizer restarts only from a safe curvature proposal", {
   expect_identical(fixed_gpcm$optimizer_diagnostics$ConvergenceSeverity, "pass")
   expect_identical(fixed_gpcm$optimizer_polish$Stages$StageLabel[
     fixed_gpcm$optimizer_polish$Stages$Selected], "curvature_restart")
+  adaptive_population <- run(model="GPCM", integration="adaptive", population=TRUE)
+  expect_identical(adaptive_population$optimizer_diagnostics$ConvergenceSeverity, "pass")
+  expect_lt(adaptive_population$optimizer_diagnostics$TerminalGradientSupNorm, 1e-10)
   for (x in list(run(code=1L),run(method="JML"),
-                run(model="GPCM", integration="adaptive", population=TRUE),
-                run(model="GPCM", integration="adaptive", reltol=1e-6),
-                run(integration="adaptive"))) {
+                run(model="GPCM", integration="adaptive", reltol=1e-6))) {
     expect_false("curvature_restart" %in% x$optimizer_polish$Stages$StageLabel)
   }
 })

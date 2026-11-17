@@ -1,26 +1,3 @@
-# Only the latest automatic fit owns reusable qualification in this R session.
-# The full fit and numerical settings must agree; nothing is serialized in the fit.
-mfrmr_gmfrm_inference_reuse <- local({
-  source <- value <- settings <- NULL
-  function(fit, qualified = NULL) {
-    budget <- getOption("mfrmr.max_information_bytes", 256 * 1024^2)
-    current <- list(budget = budget,
-      cpp11 = getOption("mfrmr.use_cpp11_backend", TRUE))
-    if (is.null(qualified) && !is.null(value) &&
-        identical(fit, source) && identical(current, settings)) return(value)
-    source <<- value <<- settings <<- NULL
-    if (!is.null(qualified) && isTRUE(qualified$check$eligible) &&
-        is.numeric(budget) && !is.complex(budget) && length(budget) == 1L &&
-        is.finite(budget) && budget > 0 &&
-        as.double(utils::object.size(fit)) + as.double(utils::object.size(qualified)) <= budget) {
-      source <<- fit
-      value <<- qualified
-      settings <<- current
-    }
-    NULL
-  }
-})
-
 # Preserve each two-family engine and start policy while refining its rule.
 mfrmr_gmfrm_accuracy_control <- function(control = NULL) {
   defaults <- list(max_points = 241L, loglik_tol = 1e-7, posterior_tol = 1e-6)
@@ -28,7 +5,7 @@ mfrmr_gmfrm_accuracy_control <- function(control = NULL) {
     if (!is.list(control) || (length(control) && (is.null(names(control)) ||
         anyNA(names(control)) || anyDuplicated(names(control)) ||
         any(!names(control) %in% names(defaults)))))
-      stop("Two-family `mml_accuracy_control` accepts max_points, loglik_tol and posterior_tol; its stationarity and information checks are unchanged.", call. = FALSE)
+      stop("Two-family `mml_accuracy_control` accepts max_points, loglik_tol and posterior_tol; point-estimate checks are separate from covariance qualification.", call. = FALSE)
     defaults[names(control)] <- control
   }
   mfrmr_mml_accuracy_orders(defaults$max_points, offset = -1L)
@@ -59,18 +36,21 @@ mfrmr_gmfrm_rule_moments <- function(fit, order, setup) {
 }
 
 mfrmr_gmfrm_accuracy_check <- function(fit, control) {
-  inference <- mfrm_gpcm_product_inference(fit)
-  failed <- inference$checks$Check[!inference$checks$Passed]
-  result <- list(passed = FALSE, retry = FALSE, inference = inference,
+  # Reuse the covariance-free calibration check, including source identity,
+  # a fresh score and the finer-rule objective/score comparison.
+  q <- fit$config$estimation_control$quad_points
+  point <- prediction_gmfrm_scoring_readiness(fit,
+    comparison_order=2L*q-1L)$local_calibration_review
+  checks <- data.frame(Check = "Point calibration", Passed = isTRUE(point$eligible),
+    Detail = point$review)
+  result <- list(passed = FALSE, retry = !is.null(point$integration),
+    checks = checks, numerical_checks = point$integration,
     per_person = NULL, metrics = c(MaxLogMarginalDifference = NA_real_,
       MaxEAPDifference = NA_real_, MaxPosteriorSDDifference = NA_real_),
-    detail = inference$check$review)
-  # Retry only the sensitivity or moment comparisons. An earlier failed
-  # check does not identify its cause or establish a boundary.
-  if (length(failed) && !identical(failed, "Quadrature sensitivity")) return(result)
+    detail = point$review)
+  if (is.null(point$integration)) return(result)
   setup <- do.call(mfrm_gmfrm_common_setup,
     fit$gmfrm$specification[setdiff(names(fit$gmfrm$specification), "quadrature")])
-  q <- fit$config$estimation_control$quad_points
   low <- mfrmr_gmfrm_rule_moments(fit, q, setup)
   high <- mfrmr_gmfrm_rule_moments(fit, 2L*q-1L, setup)
   low <- low[order(low$PersonIndex), ]; high <- high[order(high$PersonIndex), ]
@@ -85,16 +65,17 @@ mfrmr_gmfrm_accuracy_check <- function(fit, control) {
   result$metrics[] <- vapply(difference, max, 0)
   moments_pass <- result$metrics[1] <= control$loglik_tol &&
     max(result$metrics[-1]) <= control$posterior_tol
-  result$passed <- !length(failed) && moments_pass
+  result$checks <- rbind(checks, data.frame(Check = "Person integration",
+    Passed = isTRUE(moments_pass), Detail = "Compare per-Person log likelihood, EAP and posterior SD at q and 2q-1 points."))
+  result$passed <- isTRUE(point$eligible) && moments_pass
   result$retry <- !result$passed
-  result$detail <- if (result$passed) "Integration and local information checks passed; sampling coverage remains unqualified." else
-    paste(if (length(failed)) inference$check$review else "",
+  result$detail <- if (result$passed) "Point-estimate integration and score checks passed; curvature and intervals require separate checks." else
+    paste(if (!isTRUE(point$eligible)) point$review else "",
       if (!moments_pass) "Person likelihood or posterior moments require a finer rule." else "")
   result
 }
 
 mfrm_fit_product_slopes_auto <- function(args, supplied) {
-  mfrmr_gmfrm_inference_reuse(NULL)
   control <- args$mml_accuracy_control
   orders <- mfrmr_mml_accuracy_orders(control$max_points, args$quad_points, -1L)
   resolved <- if (args$mml_engine == "em") "fixed" else "adaptive"
@@ -129,12 +110,20 @@ mfrm_fit_product_slopes_auto <- function(args, supplied) {
       row$FailurePhase <- "optimization"; row$Detail <- conditionMessage(fit)
       history[[stage]] <- row; fail(row$Detail)
     }
+    if (identical(fit$summary$PointEstimateStatus, "finite_maximum_absent")) {
+      fit$config$mml_accuracy <- list(status = "full_maximum_absent",
+        scope = "Full-model accuracy is unavailable; inspect point_limit for target-specific estimates.")
+      fit$config$estimation_control$mml_integration_requested <- "auto"
+      fit$config$estimation_control$quad_points_requested <- as.integer(args$quad_points)
+      fit$config$replay_inputs$mml_integration <- "auto"
+      fit$config$replay_inputs$mml_accuracy_control <- control
+      fit$summary$MMLAccuracyStatus <- "full_maximum_absent"
+      return(fit)
+    }
     row$LogLik <- -fit$opt$value
-    mfrmr_fit_progress(sprintf("Automatic stage %d/%d: information and precision checks, q=%d/%d",
+    mfrmr_fit_progress(sprintf("Automatic stage %d/%d: point-estimate integration checks, q=%d/%d",
       stage, length(orders), q, 2L*q-1L))
-    check_warned <- FALSE
-    checked <- tryCatch(withCallingHandlers(mfrmr_gmfrm_accuracy_check(fit, control),
-      warning = function(w) check_warned <<- TRUE), error = identity)
+    checked <- tryCatch(mfrmr_gmfrm_accuracy_check(fit, control), error = identity)
     if (inherits(checked, "error")) {
       row$FailurePhase <- "accuracy_check"; row$Detail <- conditionMessage(checked)
     } else {
@@ -149,21 +138,21 @@ mfrm_fit_product_slopes_auto <- function(args, supplied) {
       parameter_names = mfrm_checkpoint_parameter_names(sizes), parameter_sizes = sizes,
       config = fit$config, diagnostics = row,
       accuracy = if (inherits(checked, "error")) NULL else list(
-        checks = checked$inference$checks, numerical_checks = checked$inference$numerical_checks,
+        checks = checked$checks, numerical_checks = checked$numerical_checks,
         per_person = checked$per_person))
     if (inherits(checked, "error")) fail(row$Detail)
     if (checked$passed) {
       fit$config$mml_accuracy <- list(status = "criteria_met", control = control,
         history = do.call(rbind, history), per_person = checked$per_person,
-        checks = checked$inference$checks, numerical_checks = checked$inference$numerical_checks,
-        scope = "two_family_integration_and_local_information; coverage_unqualified")
+        checks = checked$checks, numerical_checks = checked$numerical_checks,
+        scope = "two_family_point_integration_and_score; curvature_and_coverage_unqualified")
       fit$config$estimation_control$mml_integration_requested <- "auto"
       fit$config$estimation_control$quad_points_requested <- as.integer(args$quad_points)
       fit$config$replay_inputs$mml_integration <- "auto"
       fit$config$replay_inputs$mml_accuracy_control <- control
       fit$config$replay_inputs$quad_points <- as.integer(args$quad_points)
       fit$summary$MMLAccuracyStatus <- "criteria_met"
-      if (!check_warned) mfrmr_gmfrm_inference_reuse(fit, checked$inference)
+      fit <- mfrm_gmfrm_apply_point_review(fit, integration_checked = TRUE)
       return(fit)
     }
     if (!checked$retry) fail(row$Detail)

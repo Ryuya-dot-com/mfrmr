@@ -11,10 +11,14 @@
 #' @param null_fit Optional PCM MML fit accepted by [compare_mfrm()] with
 #'   `nested = TRUE`. This changes the target to an equal-slope LRT; its draws
 #'   must not be used as confidence intervals around the alternative GPCM fit.
-#' @param object,x A saved `mfrm_gpcm_bootstrap` result.
+#' @param object A saved `mfrm_gpcm_bootstrap` result.
+#' @param x A saved `mfrm_gpcm_bootstrap` result.
 #' @param parm Must be `"slopes"`.
 #' @param level Nominal confidence level.
-#' @param scale,contrasts,contrast_scale,simultaneous As in [confint.mfrm_fit()].
+#' @param scale As in [confint.mfrm_fit()].
+#' @param contrasts As in [confint.mfrm_fit()].
+#' @param contrast_scale As in [confint.mfrm_fit()].
+#' @param simultaneous As in [confint.mfrm_fit()].
 #' @param ... Unused.
 #'
 #' @details One ability is drawn per Person from the fitted conditional-normal
@@ -64,9 +68,9 @@
 #'
 #'   `checks` separates `BootstrapEligible` from `WaldEligible` and retains
 #'   `BootstrapCaution`. Accepted singleton or weak-information cases produce an aggregate warning;
-#'   cautions also follow `confint()`, its printed output, default plot subtitle,
+#'   cautions also follow `confint()`, its printed output, returned plot notes,
 #'   APA tables and reports. A custom subtitle (including NULL) overrides the
-#'   plot text, not the saved diagnostics. `source_checks` records the source
+#'   plot metadata, not the saved diagnostics. `source_checks` records the source
 #'   decision. Use `apa_table(result, which = "checks")` to inspect refits.
 #'   `InformationRefinementVerified`, `InformationRelativeChange`,
 #'   `InformationInverseResidual` and `InformationScaledGradient` record a

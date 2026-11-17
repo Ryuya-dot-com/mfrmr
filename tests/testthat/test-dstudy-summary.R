@@ -138,7 +138,7 @@ test_that("G/D print methods honor display options without calculation or mutati
   s <- summary(d, intervals = TRUE, parm = "G", assumption = "normal")
   g_crossed <- mfrm_g_study(mfrmr_example_gtheory_crossed, c("Content", "Organization"))
   d_crossed <- mfrm_d_study(g_crossed, data.frame(Raters = c(2,3), Tasks = c(6,4)))
-  comparison <- mfrm_multivariate_d_compare(d_crossed, reference = 1, assumption = "normal")
+  comparison <- compare_mfrm(d_crossed, reference = 1, assumption = "normal")
   local_mocked_bindings(confint.mfrm_multivariate_d_study = function(...) stop("Unexpected interval calculation"),
     mfrm_g_study = function(...) stop("Unexpected G-study"),
     mfrm_d_study = function(...) stop("Unexpected D-study"))

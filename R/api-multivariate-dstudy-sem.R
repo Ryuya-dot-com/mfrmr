@@ -71,13 +71,12 @@
   for (i in seq_len(nrow(tab))) {
     counts <- as.numeric(d$design_grid[i, ])
     persons <- g$design$counts[1L]
+    w <- unname(.mfrm_mvgt_profile_error(d, i, metric, counts))
     if (!is.null(g$design$nesting)) {
       # Component order follows parent then child, independently of the
       # user's facet-column order; child counts mean children per parent.
       child <- counts[match(g$design$count_columns[[names(g$design$nesting)]], names(d$design_grid))]
       parent <- counts[match(g$design$count_columns[[unname(g$design$nesting)]], names(d$design_grid))]
-      w <- c(0, 0, 0, 1/parent, 1/(child*parent))
-      if (absolute) w <- w + c(0, 1/parent, 1/(child*parent), 0, 0)
       observed_child <- g$design$child_counts[1L]
       main <- 1/(observed_child*parent)
       remainder <- (observed_child-child)/(observed_child*child*parent)
@@ -85,11 +84,8 @@
         (persons-1)*main/persons, (persons-1)*remainder/persons) else
           c(0, 0, 0, main, remainder)
     } else if (length(counts) == 1L) {
-      w <- c(0, as.integer(absolute), 1)/counts[1L]
       a <- if (absolute) c(0, 1/persons, (persons-1)/persons)/counts[1L] else w
     } else {
-      w <- c(0, 0, 0, 1/counts[1L], 1/counts[2L], 0, 1/prod(counts))
-      if (absolute) w <- w + c(0, 1/counts[1L], 1/counts[2L], 0, 0, 1/prod(counts), 0)
       observed <- as.numeric(g$design$counts[-1L])
       first <- 1/(observed[2L]*counts[1L]); second <- 1/(observed[1L]*counts[2L])
       remainder <- (prod(observed)-observed[1L]*counts[2L]-observed[2L]*counts[1L]) /

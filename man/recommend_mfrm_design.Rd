@@ -36,9 +36,11 @@ recommend_mfrm_design(
 }
 \arguments{
 \item{x}{For \code{recommend_mfrm_design()}: Output from \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}},
-\code{\link[=summary.mfrm_design_evaluation]{summary.mfrm_design_evaluation()}}, or \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}.
+\code{\link[=summary.mfrm_design_evaluation]{summary.mfrm_design_evaluation()}}, or \link{mfrm_d_study_comparison}.
 The last input reviews observed-score D-study plans with their saved paired
-uncertainty; it does not use the simulation-screening defaults.
+delta uncertainty; it does not use the simulation-screening defaults.
+Other D-study interval methods retain their own results through
+\code{\link[=summary.mfrm_multivariate_d_study]{summary.mfrm_multivariate_d_study()}} and are not inputs to this helper.
 
 For \code{plot()}: A simulation-based result from \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}.}
 
@@ -113,7 +115,7 @@ separate \code{LinkReviewStatus} / \code{LinkReviewReason} explain structural ch
 \item \code{thresholds}: thresholds used in the recommendation
 \item \code{design_variable_aliases}: accepted public aliases for design variables
 \item \code{design_descriptor}: role-based design-variable metadata
-\item \code{planning_scope}: explicit record of the current planning contract
+\item \code{planning_scope}: supported facets and planning assumptions
 \item \code{planning_constraints}: explicit record of mutable/locked design variables
 \item \code{planning_schema}: structured planning metadata
 \item \code{caveats}: fixed-effects and connectivity interpretations and suggested
@@ -137,75 +139,20 @@ For \code{plot()}: An invisible \code{ggplot} object whose underlying payload
 Review assessment plans against declared planning criteria
 }
 \details{
-For simulation inputs, this helper screens designs under user-chosen planning criteria.
-The default targets non-Person facet calibration: high separation reliability
-means that facet-level differences can be distinguished, not that raters
-agree. Use \code{facets = "Person"} to target Person differentiation instead.
-Neither use establishes classification accuracy or a universal sample size.
-Inspect \code{summary(result)$target} and \verb{$thresholds} before interpreting the
-recommendation. Defaults are planning choices, not validated standards.
-\code{\link[=summary.mfrm_design_recommendation]{summary.mfrm_design_recommendation()}} explains the criterion outcomes;
-\code{\link[=plot.mfrm_design_recommendation]{plot.mfrm_design_recommendation()}} and \code{\link[=mfrm_report]{mfrm_report()}} preserve them without
-repeating the simulation. No plan-selection confidence interval is computed.
+\strong{Simulation inputs}: Marks a design recommended when every requested facet
+simultaneously meets unrounded separation, reliability, \code{SeverityRMSE},
+misfit, convergence (across all attempted replications), workload maxima
+(\code{max_ratings}, \code{max_ratings_per_rater} across all replications), and
+assignment connectivity (\code{ConnectivityStatus == "connected"} when
+\code{require_connected = TRUE}; sparse \code{LinkReviewStatus} is reported separately
+without altering \code{Pass}), then ranks passing designs by \code{prefer}.
 
-A design is marked as recommended when all requested facets satisfy all
-selected thresholds simultaneously.
-Each design must have results for every requested facet. Missing facets
-are reported in \code{FacetsMissing} and prevent that design from passing;
-\code{FacetsRequired} always counts the requested facets, not the available rows.
-Designs with none of the requested facets have no facet-check rows and
-cannot be recommended. A requested facet absent from the entire summary
-produces an error.
-If multiple designs pass, the helper returns the smallest one according to
-\code{prefer} (by default: fewer persons first, then fewer ratings per person,
-then fewer raters, then fewer criteria).
-The convergence threshold uses all recorded replications, including
-failures that returned no facet metrics, as summarized by
-\code{\link[=summary.mfrm_design_evaluation]{summary.mfrm_design_evaluation()}}.
-Threshold checks use unrounded metrics. Summaries saved by earlier
-versions may contain only rounded values; rebuild them with
-\code{summary(original_evaluation)} before requesting a recommendation.
-The original evaluation can be reused without generating or fitting new data.
-Summaries also need the current recovery-coordinate review. Rebuilding an
-old PCM/GPCM summary can leave its recovery fields unavailable, preventing a
-recommendation; a new evaluation is needed for corrected severity recovery.
-An unavailable group minimum/maximum is \code{NA}, not infinite apparent success.
-
-The connectivity screen uses generated assignments, including failed fits
-and diagnostic runs. \code{ConnectivityStatus} is \code{"disconnected"} if any
-recorded graph is disconnected, \code{"connected"} if both graphs are connected
-in every replication, and \code{"not_assessed"} otherwise. With the default
-\code{require_connected = TRUE}, only \code{"connected"} passes. Older saved objects
-without component counts cannot pass this screen; re-summarizing alone
-cannot recover the missing assignment evidence.
-
-This is a conservative screen for comparisons supported by shared-person
-assignments, not a test of full model identification or adequate precision.
-MML population assumptions can supply information beyond these connections;
-disabling the screen does not validate that assumption-based comparison.
-Connections may be indirect, so a rater pair without common persons is
-not by itself evidence of a disconnected design. \code{LinkReviewStatus} and
-\code{LinkReviewReason} carry the separate sparse-design overlap review:
-\code{"review"} flags a missing overlap count, a pair without common persons,
-or a pair below its recorded target; \code{"ok"} means those recorded checks
-pass, and \code{"not_assessed"}
-means no sparse overlap target was assessed. They do not change \code{Pass};
-overlap counts alone do not establish precision or a universal minimum.
-
-Workload limits apply to the maxima across all recorded replications,
-including failed fits and diagnostic runs. One rating is one generated
-person-rater-criterion row, not a bundle of criteria or a weighted count.
-For example, two raters each scoring three criteria for ten persons use
-60 ratings, with 30 per rater. Counts use the actual assignment, including
-linking persons and uneven or incomplete skeletons. A design cannot pass
-an active limit when its corresponding count is missing. Older evaluation
-objects can be re-summarized for total counts, but per-rater counts require
-an evaluation that recorded \code{MaxRatingsPerRater}.
-
-These checks describe the evaluated assignments. With randomized
-assignments, an observed maximum does not guarantee that future assignments
-will respect the same limit. The limits constrain workload, not monetary
-cost or scoring time. Ranking among passing designs still follows \code{prefer}.
+\strong{Observed-score D-study comparison inputs}: Attaches a \code{planning} review
+(\code{summary(result, planning = TRUE)}) combining user-supplied \code{costs},
+\code{limits} (\code{Feasibility}), point \code{targets} (\code{TargetStatus}), and paired-delta
+\code{differences$Direction} (\code{improved}, \code{worse}, \code{inconclusive},
+\code{identical_plan}, \code{unavailable}) without refitting or selecting a single
+winner.
 
 \code{summary()} method: Review a simulation-based design recommendation
 
@@ -235,52 +182,6 @@ For custom ggplot/raincloud graphics, use \code{plot_data(x, "table")} or obtain
 full design metrics with \code{plot_data(x, "designs", format = "long", value_cols = c("MinReliability", "MaxRatings"))}. These aggregate metrics
 are not replication-level distributions for a raincloud plot.
 }
-\section{Observed-score plans with paired uncertainty}{
-
-Pass a saved \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} result to connect finite
-prespecified plans, costs, limits and point targets without refitting or
-calculating new intervals. Its two-crossed-random-facet, raw-component and
-normal-effects scope is unchanged. All plans, including the reference,
-infeasible plans and unavailable values, remain present in original order.
-Explicit simulation-only arguments (such as \code{min_reliability} or \code{prefer})
-are rejected for this route. Separation reliability and observed-score
-G/Phi are different targets.
-
-The returned comparison retains its class and original numeric results.
-\code{summary(result, planning = TRUE)} returns \code{plans}, \code{costs}, \code{checks},
-\code{differences}, \code{basis} and \code{notes}. \code{plans$Feasibility} concerns only requested
-resource limits; \code{plans$TargetStatus} concerns point estimates only.
-\code{differences$Direction} is \code{improved} or \code{worse} only when the saved paired
-interval excludes zero in the corresponding direction (larger G/Phi or
-smaller SEM). It is \code{inconclusive} when zero is included, \code{identical_plan}
-for the same facet counts, and \code{unavailable} without a usable interval.
-These labels do not establish equivalence or a practically important effect.
-
-\code{ReviewRequired} retains non-PSD component/sampling-covariance concerns;
-calculable points and bounds are not removed or repaired. Passing point
-targets does not establish population target attainment. The function does
-not select a winner, optimize costs, combine incompatible objectives, or
-adjust for searching among plans. Pointwise intervals cannot support a
-post-selection guarantee. Use \code{\link[=mfrm_report]{mfrm_report()}} with \code{study_context} to record
-the intended score, sampled universe, resource units and decision criteria.
-\code{plot(result)} and \code{plot(result, view = "differences")} retain planning
-tables and cautions through \code{\link[=plot_data]{plot_data()}}. Save the complete object with
-\code{saveRDS()}; a single CSV loses source, weights and assumptions.
-
-This route concerns observed-score means under a common G-study. It is
-not a latent-ability or Bayesian future-plan prediction. The posterior
-scoring API does not yet provide a paired future-plan comparison.
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Run \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}.
-\item Review \code{\link[=summary.mfrm_design_evaluation]{summary.mfrm_design_evaluation()}} and \code{\link[=plot.mfrm_design_evaluation]{plot.mfrm_design_evaluation()}}.
-\item Use \code{recommend_mfrm_design(...)} to identify the smallest acceptable design.
-}
-}
-
 \examples{
 # One saved replication illustrates output structure, not precise rates.
 # Regeneration recipe: examples/simulation-results.R in the package.
@@ -298,7 +199,7 @@ data("mfrmr_example_gtheory_crossed", package = "mfrmr")
 g <- mfrm_g_study(mfrmr_example_gtheory_crossed, c("Content", "Organization"))
 d <- mfrm_d_study(g, data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3)),
   weights = c(Content = .5, Organization = .5))
-comparison <- mfrm_multivariate_d_compare(d, assumption = "normal")
+comparison <- compare_mfrm(d, assumption = "normal")
 # Illustrative operational hours for the same future cohort, supplied by the user
 costs <- data.frame(Scenario = 1:3, RaterHours = c(40, 44, 48),
   TaskHours = c(12, 8, 6))
@@ -321,7 +222,7 @@ head(plot_data(rec, "table"))
 }
 \seealso{
 \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \link{summary.mfrm_design_evaluation}, \link{plot.mfrm_design_evaluation},
-\code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}
+\link{mfrm_d_study_comparison}
 
 \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}, \code{\link[=plot.mfrm_design_recommendation]{plot.mfrm_design_recommendation()}},
 \code{\link[=mfrm_report]{mfrm_report()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}}

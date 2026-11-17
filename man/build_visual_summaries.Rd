@@ -126,7 +126,7 @@ vis_facets$branch
 summary(vis)
 p <- plot(vis, type = "comparison", draw = FALSE)
 p2 <- plot(vis, type = "warning_counts", draw = FALSE)
-vis$plot_payloads$comparison$data$plot
+plot_data(vis$plot_payloads$comparison, "plot")
 vis$public_plot_routes[, c("Visual", "PlotHelper", "DrawFreeRoute")]
 if (interactive()) {
   plot(

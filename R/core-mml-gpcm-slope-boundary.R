@@ -16,25 +16,10 @@
 # finite maximum, and no continuous-integral or joint additive/slope result is
 # inferred.
 
-mfrmr_mml_gpcm_slope_empty_group_table <- function() {
-  data.frame(
-    SlopeFacet = character(0),
-    Level = character(0),
-    SlopeIndex = integer(0),
-    LogSlopeEstimate = numeric(0),
-    SlopeEstimate = numeric(0),
-    EffectiveObservations = integer(0),
-    EffectiveWeight = numeric(0),
-    QuadratureNodes = integer(0),
-    MaxCompatible = logical(0),
-    MinCompatible = logical(0),
-    MaxSupportMargin = numeric(0),
-    MinSupportMargin = numeric(0),
-    StrictMaxRows = integer(0),
-    StrictMinRows = integer(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_mml_gpcm_slope_empty_group_table <- .mfrmr_empty_table(c(SlopeFacet = "character", Level = "character", SlopeIndex = "integer",
+    LogSlopeEstimate = "double", SlopeEstimate = "double", EffectiveObservations = "integer",
+    EffectiveWeight = "double", QuadratureNodes = "integer", MaxCompatible = "logical", MinCompatible = "logical",
+    MaxSupportMargin = "double", MinSupportMargin = "double", StrictMaxRows = "integer", StrictMinRows = "integer"))
 
 audit_mfrm_mml_gpcm_slope_boundary <- function(
     prep,
@@ -53,10 +38,10 @@ audit_mfrm_mml_gpcm_slope_boundary <- function(
   method <- as.character(config$method %||% NA_character_)
   model <- as.character(config$model %||% NA_character_)
   slope_facet <- as.character(config$slope_facet %||% NA_character_)
-  empty_groups <- mfrmr_mml_gpcm_slope_empty_group_table()
-  empty_targets <- mfrmr_jml_gpcm_slope_empty_target_table()
-  empty_pairs <- mfrmr_jml_gpcm_slope_empty_pair_table()
-  empty_loadings <- mfrmr_jml_gpcm_slope_empty_loading_table()
+  empty_groups <- mfrmr_mml_gpcm_slope_empty_group_table
+  empty_targets <- mfrmr_jml_gpcm_slope_empty_target_table
+  empty_pairs <- mfrmr_jml_gpcm_slope_empty_pair_table
+  empty_loadings <- mfrmr_jml_gpcm_slope_empty_loading_table
 
   finish <- function(state, complete, scope_complete, detail,
                      target_status = empty_targets,

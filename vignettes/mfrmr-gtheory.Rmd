@@ -278,7 +278,7 @@ independent. For this two-crossed-facet example, the existing paired delta
 method gives approximate intervals for G/Phi and SEM differences.
 
 ```{r crossed-comparison}
-comparison <- mfrm_multivariate_d_compare(d, reference = 1,
+comparison <- compare_mfrm(d, reference = 1,
   assumption = "normal")
 print(comparison, digits = 3)
 ```
@@ -300,7 +300,9 @@ component boundaries, nonnormal effects and uneven assignments can impair
 the approximation. Selecting a winner after inspecting many plans is not
 protected by these intervals. This paired delta method does not apply to
 one-facet or nested designs; see the branches below and the
-[comparison help](../reference/mfrm_multivariate_d_compare.html).
+[comparison help](../reference/compare_mfrm.html).
+For a conservative joint-region alternative, see
+[Compare plan differences under another interval method](#compare-plan-differences-under-another-interval-method).
 
 ## Connect the comparison to resources and targets
 
@@ -353,6 +355,9 @@ comparison, and it does not broaden the scope of the interval procedure.
 
 ## Save the result and know which operation to use
 
+<div role="region" aria-label="Result operations" tabindex="0" style="overflow-x: auto;">
+<div style="min-width: 36rem;">
+
 | Operation | What it does | Does it calculate new intervals? |
 | --- | --- | --- |
 | `print(d)` | Displays source/future counts, score weights and point projections; returns `d` invisibly | No |
@@ -360,9 +365,12 @@ comparison, and it does not broaden the scope of the interval procedure.
 | `summary(d, intervals = TRUE, assumption = "normal")` | Collects supported intervals, methods, context and notes | Yes, explicitly |
 | `confint(d, parm = "Phi", assumption = "normal")` | Returns one metric's interval table with method attributes | Yes |
 | `print(s)` or `s$table` | Displays the saved summary or accesses its full data frame | No |
-| `plot(d)` | Draws point projections; returns plot data invisibly | No, unless `intervals = TRUE` is requested |
+| `plot(d)` | Returns an editable ggplot of point projections | No, unless `intervals = TRUE` is requested |
 | `plot(s$intervals$Phi)` | Draws a forest from the saved Phi intervals | No |
 | `saveRDS()` / `readRDS()` | Saves/reopens complete objects, including notes and diagnostics | No |
+
+</div>
+</div>
 
 `print(..., digits = 3)` changes display precision, not stored estimates.
 A summary list is not a new plotting input: use the D-study or its saved
@@ -376,7 +384,10 @@ storage location. The temporary path below keeps this example runnable;
 replace it with a file in your project for lasting storage.
 
 ```{r save-and-reopen}
-analysis <- list(study = d, summary = s, comparison = comparison, plot = p,
+edited_plot <- p + ggplot2::labs(x = "Tasks per person")
+analysis <- list(study = d, summary = s, comparison = comparison,
+  resource_review = review, resource_report = planning_report,
+  curve_study = d_grid, plot = edited_plot,
   decisions = list(score = "Equal-weight Content/Organization mean",
     comparison = "Twelve ratings per person; task burden and costs differ",
     assumption = "Independent normal random effects"))
@@ -384,10 +395,15 @@ result_file <- tempfile(fileext = ".rds")
 saveRDS(analysis, result_file)
 reopened <- readRDS(result_file)
 identical(reopened$summary, s)  # TRUE: the full summary was preserved.
+summary(reopened$resource_review, planning = TRUE)$plans
+print(reopened$plot)
 ```
 
-In another session, load `mfrmr` and read that file. Reuse the plot's stored
-values with `as_ggplot(reopened$plot)` if ggplot2 is installed. A CSV of
+In another session, load `mfrmr` and read that file. `print(reopened$plot)`
+redraws the saved figure with its edits; `plot_data(reopened$plot)` retrieves
+its stored values and notes. `curve_study` preserves the grid behind that
+figure, while `study` holds the three equal-rating-count plans. The resource
+review and report retain all candidates, costs, limits and decision context. A CSV of
 `s$table` is useful for a report, but loses the separate weights, notes and
 numerical diagnostics. Changing future counts requires a new D-study;
 changing the source data or model requires a new G-study.
@@ -402,7 +418,7 @@ Use a compact Methods/Results structure, retaining the full analysis above:
 | Source design | Population of persons and random conditions, crossing/nesting, planned and retained counts, missingness, estimator and negative-component policy | `g$design`, `g$data_usage`, `g$estimation`, component diagnostics |
 | Sources of variation | Relevant variances and cross-score covariances, uncertainty and combined residual terms | `g$components`, `plot(g)` and eligible `confint(g)` |
 | Future plans | Specified counts, score, G/Phi and relative/absolute SEM; assumptions and interval qualifications | `summary(d)` or saved `s$table`; planning and error-component plots |
-| Answer | Magnitude and uncertainty of the prespecified plan difference; workload/cost tradeoff and limits | Saved `mfrm_multivariate_d_compare()` result and the substantive interpretation |
+| Answer | Magnitude and uncertainty of the prespecified plan difference; workload/cost tradeoff and limits | Saved `compare_mfrm()` result and the substantive interpretation |
 
 For example: "For [defined score and population], increasing [raters/tasks]
 from [a] to [b] changed projected [metric] by [estimate], with [method/level]
@@ -656,6 +672,45 @@ automatically preferable. The *Choosing a two-facet method* section of
 [`confint(d)`](../reference/confint.mfrm_multivariate_d_study.html) gives the
 mathematical assumptions, finite-sample evaluations and their limitations.
 
+### Compare plan differences under another interval method
+
+For this complete balanced source, `method = "mean_square_region"` uses one
+normal-model confidence region for the components. Projecting the same region
+onto plan differences gives conservative joint protection across the plans
+for this fixed score. This differs from the approximate pointwise paired
+delta intervals above. Choose the method for its assumptions and intended
+claim, before examining which result is narrower or excludes zero.
+
+```{r crossed-region-comparison}
+if (requireNamespace("lpSolve", quietly = TRUE)) {
+  joint <- summary(d, intervals = TRUE, parm = c("G", "Phi"),
+    reference = 1, method = "mean_square_region", assumption = "normal")
+  # Attach only resource and point-target checks, matched by Scenario.
+  joint_planning <- merge(joint$table,
+    planning$plans[c("Scenario", "Feasibility", "TargetStatus")],
+    by = "Scenario", all.x = TRUE, sort = FALSE)
+  print(joint_planning[c("Scenario", "Metric", "Estimate", "Lower", "Upper",
+                         "Feasibility", "TargetStatus")], digits = 3, row.names = FALSE)
+}
+```
+
+The G difference is about 0.034 with a region enclosure of [0.006, 0.079]
+for three raters and four tasks. For four raters and three tasks, the G
+enclosure is [-0.004, 0.107]: its direction remains uncertain, although the
+paired delta interval excludes zero. Both Phi enclosures include zero.
+Neither agreement nor disagreement between methods establishes coverage or
+identifies the best plan. These are model-dependent statements, not robust
+guarantees for arbitrary observed scores or a minimum source sample size.
+
+`recommend_mfrm_design()` accepts the saved paired delta comparison, not
+`joint` or its interval objects. The join above reuses only resource and
+point-target checks; it does not transfer the delta interval's direction.
+The four-rater plan remains infeasible under the illustrative hour limit.
+Preserve `joint` with `saveRDS()` for its method notes, source and diagnostics;
+`plot(joint$intervals$G)` uses the saved interval without recalculation.
+See [the interval help](../reference/confint.mfrm_multivariate_d_study.html#differences-from-a-shared-mean-square-region)
+for the shared-region construction and numerical failure states.
+
 ### Incomplete data or unavailable results
 
 Use `method = "minque0"` explicitly for a supported identifiable incomplete
@@ -774,7 +829,7 @@ Important design and interpretation limits still apply at the point of use.
 | Coefficient/SEM intervals, boundary states, method comparisons and coverage evidence | [`confint(d)`](../reference/confint.mfrm_multivariate_d_study.html), the named design/method sections |
 | Variance and signed covariance intervals | [`confint(g)`](../reference/confint.mfrm_multivariate_gstudy.html) |
 | Sampling covariance and component SEs | [`vcov(g)`](../reference/vcov.mfrm_multivariate_gstudy.html) |
-| Paired delta approximation and its applicability | [`mfrm_multivariate_d_compare()`](../reference/mfrm_multivariate_d_compare.html), *Calculation and source of the approximation* |
+| Paired delta approximation and its applicability | [D-study plan comparison](../reference/mfrm_d_study_comparison.html), *Calculation and source of the approximation* |
 
 The help pages retain formulas, full methodological references and numerical
 qualifications. The G/D framework follows Brennan (2001), *Generalizability

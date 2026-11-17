@@ -1,4 +1,4 @@
-#' @rdname mfrm_multivariate_d_compare
+#' @rdname mfrm_d_study_comparison
 #' @details `plot()` method: Plot prespecified D-study plans and their differences
 #'
 #' Show G/Phi or SEM for every plan, including the reference. Use
@@ -8,7 +8,7 @@
 #' establish equivalence. Positive G/Phi differences or negative SEM differences
 #' favor the comparison plan. The method requires normal random effects.
 #' @param type `"coefficients"` for G/Phi or `"sem"` for SEM.
-#' @param draw Draw the figure; `FALSE` returns its data only.
+#' @param draw Print the figure; `FALSE` returns the ggplot without drawing it.
 #' @param preset Plot style: `"standard"`, `"publication"`, `"compact"`, or
 #'   `"monochrome"`.
 #' @param view `"plans"` (default) shows point projections on their original
@@ -41,7 +41,7 @@
 #'   comparison `table`, point-projection `series` (including the reference),
 #'   `unavailable` rows for the selected view, `interval_unavailable` rows,
 #'   `design_grid`, `reference`, `weights`, title and labels.
-#' @seealso [mfrm_multivariate_d_compare()]
+#' @seealso [mfrm_d_study_comparison]
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.

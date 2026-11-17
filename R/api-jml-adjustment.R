@@ -9,17 +9,16 @@ mfrm_jml_point_label <- function(status) switch(status,
   multiple_roots="Different local solutions were found; none selected",
   "No supported local solution was found")
 
+mfrm_jml_covariance_reason <- function(result) {
+  if (!isTRUE(result$point$available)) return(mfrm_jml_point_label(result$point$status))
+  result$covariance$reason
+}
+
 stop_if_jml_adjustment <- function(fit, helper) {
   if (mfrm_has_jml_adjustment(fit)) stop("`", helper,
     "` is not available for corrected JML. Use summary(), plot(), mfrm_results() and mfrm_report() for its saved estimates and uncertainty interpretation.", call. = FALSE)
   invisible(NULL)
 }
-
-mfrm_jml_note <- function() paste(
-  "Experimental profile-score-adjusted JML. RootSE describes local variation around the adjusted-equation solution; residual bias may remain.",
-  "Method qualification is incomplete; numerical availability does not establish statistical accuracy.",
-  "It is not a standard error with established coverage for the true structural parameter. Person profiles condition on the adjusted calibration.",
-  "No confidence intervals for structural parameters, ordinary fit tests, likelihood ranking or rater-quality classifications are supplied.")
 
 mfrm_fit_adjusted_jml <- function(args, supplied) {
   if (!identical(args$model, "GPCM") || !identical(args$method, "JML") ||
@@ -54,6 +53,7 @@ mfrm_fit_adjusted_jml <- function(args, supplied) {
     "score_k", args$step_facet, prep$rating_max-prep$rating_min)
   result <- mfrm_jml_adjustment_fit(problem, args$jml_correction_order,
     maxit=args$maxit, sampling=args$jml_correction_sampling)
+  result$covariance$reason <- mfrm_jml_covariance_reason(result)
   # Failed fits retain the whole attempted calculation and labelled missing estimates.
   display <- result
   if (!isTRUE(result$point$available)) {
@@ -106,6 +106,9 @@ mfrm_jml_summary <- function(fit, digits=3, include_person=FALSE) {
     stop("`include_person` must be TRUE or FALSE.",call.=FALSE)
   z <- fit$jml_adjustment
   state <- mfrm_jml_point_label(z$point$status)
+  # Older saved fits may have no covariance reason when the point failed.
+  covariance_reason <- mfrm_jml_covariance_reason(z)
+  fit$summary$CovarianceReason <- covariance_reason
   decision <- data.frame(Interpretation=state, FormalInference="Not established",
     Why="Numerical solution and statistical bias are separate questions.",
     NextAction="Inspect the estimates, correction order and uncertainty basis before interpretation.")
@@ -122,11 +125,11 @@ mfrm_jml_summary <- function(fit, digits=3, include_person=FALSE) {
         "New independent Persons and their assignment patterns from the same joint population",
       AbilityDistribution="Unspecified and allowed to differ between assignment patterns",
       SamePersonReassessment="Not estimated: holding each Person's ability fixed defines a different variance",
-      Target=z$estimator$target, Reason=z$covariance$reason),
-    interpretation_notes=data.frame(Note=mfrm_jml_note()))
+      Target=z$estimator$target, Reason=covariance_reason),
+    interpretation_notes=data.frame(Note=.mfrmr_const_mfrm_jml_note))
   if (include_person) tables$persons <- fit$facets$person
   structure(list(jml_adjustment=TRUE, overview=fit$summary, decision=decision,
-    tables=tables, attempts=attempts, digits=digits, estimation_note=mfrm_jml_note()),
+    tables=tables, attempts=attempts, digits=digits, estimation_note=.mfrmr_const_mfrm_jml_note),
     class="summary.mfrm_fit")
 }
 
@@ -154,12 +157,17 @@ mfrm_jml_results <- function(fit, include, response_diagnostics=NULL) {
       "This output is not available for corrected JML; nothing was computed.")))
   if (!isTRUE(fit$jml_adjustment$covariance$available)) {
     status$Status[status$Section=="precision"] <- "not_available"
-    status$Detail[status$Section=="precision"] <- fit$jml_adjustment$covariance$reason
+    status$Detail[status$Section=="precision"] <- s$tables$uncertainty$Reason
   }
   plot_map <- data.frame(Type=c("slopes","locations","steps"),
     Available=isTRUE(fit$jml_adjustment$point$available) & "plots" %in% include,
     RequiredArtifact=FALSE, Route=paste0('plot(res, type = "',c("slopes","locations","steps"),'")'),
     Detail="Point estimates without confidence intervals; no rater-quality cutoffs.")
+  if (!isTRUE(fit$jml_adjustment$point$available)) {
+    status$Status[status$Section=="plots"] <- "not_available"
+    status$Detail[status$Section=="plots"] <- s$decision$Interpretation
+    plot_map$Detail <- s$decision$Interpretation
+  }
   tables <- s$tables; components <- list(fit=fit)
   if (!is.null(response_diagnostics)) {
     mfrm_validate_response_diagnostics(fit,response_diagnostics)
@@ -174,16 +182,16 @@ mfrm_jml_results <- function(fit, include, response_diagnostics=NULL) {
   structure(list(fit=fit, include=include, tables=tables,
     table_index=mfrm_results_table_index(tables), plot_map=plot_map,
     components=components, response_diagnostics=response_diagnostics, summaries=list(fit=s), status=status,
-    decision=s$decision, notes=mfrm_jml_note(),
+    decision=s$decision, notes=.mfrmr_const_mfrm_jml_note,
     input=list(mode="corrected_jml",reproducible_code=mfrm_results_saved_replay_code())), class="mfrm_results")
 }
 
 mfrm_jml_results_summary <- function(x, digits, top_n, view) {
-  structure(list(model_family="Corrected JML",overview=x$fit$summary, decision=x$decision, status=x$status,
+  structure(list(model_family="Corrected JML",overview=x$tables$overview, decision=x$decision, status=x$status,
     component_index=data.frame(Component=names(x$components),
       Class=vapply(x$components,mfrm_results_component_class,character(1))),
     table_index=utils::head(x$table_index,top_n),plot_map=x$plot_map,
-    triage=data.frame(Area="Interpretation",Severity="Review",Detail=mfrm_jml_note()),
+    triage=data.frame(Area="Interpretation",Severity="Review",Detail=.mfrmr_const_mfrm_jml_note),
     next_actions=data.frame(Priority=1L,Area="Interpretation",Action=x$decision$NextAction,
       Route="summary(fit)$tables"),
     reproducible_code=mfrm_results_code_table(mfrm_results_saved_replay_code()),
@@ -195,11 +203,11 @@ mfrm_jml_results_summary <- function(x, digits, top_n, view) {
 mfrm_jml_report <- function(x, style) {
   out <- structure(list(title="mfrmr Corrected JML Report",style=style,source_include=x$include,
     decision=x$decision,first_screen=data.frame(Area="Interpretation",Status="review",
-      Readiness="Experimental",MainIssue=mfrm_jml_note(),NextAction=x$decision$NextAction),
+      Readiness="Experimental",MainIssue=.mfrmr_const_mfrm_jml_note,NextAction=x$decision$NextAction),
     report_index=data.frame(Area=names(x$tables),PrimaryTable=paste0("report$tables$",names(x$tables))),
     template_index=data.frame(),claim_readiness=data.frame(Claim="Structural confidence intervals",Readiness="Not established"),
     tables=x$tables,source=x),class="mfrm_report")
-  out$markdown <- paste(c(paste0("# ",out$title),mfrm_jml_note(),
+  out$markdown <- paste(c(paste0("# ",out$title),.mfrmr_const_mfrm_jml_note,
     unlist(lapply(names(x$tables),function(nm)c(paste0("## ",gsub("_"," ",nm)),
       mfrm_report_markdown_table(x$tables[[nm]]),
       if(nrow(x$tables[[nm]])>20) "First 20 rows shown; complete data are retained in report$tables.")))),collapse="\n\n")

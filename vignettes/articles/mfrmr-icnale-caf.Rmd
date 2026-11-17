@@ -1,0 +1,526 @@
+---
+title: "From ICNALE essay ratings to rater feedback and assessment planning"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{From ICNALE essay ratings to rater feedback and assessment planning}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+# Licensed inputs and individual outputs must never enter a website build.
+knitr::opts_chunk$set(eval = FALSE, collapse = TRUE, comment = "#>")
+```
+
+An assessment team has several raters score the same essays. It wants to
+understand differences in rater severity, inspect ratings that merit discussion,
+and consider how many raters to use next time. These are related questions,
+but they do not have the same outcome: a many-facet model describes ratings
+on a latent scale, whereas a G-Study and D-Study describe error in a specified
+observed-score composite.
+
+This worked workflow uses the **human Written ratings in ICNALE GRA v2.1**.
+It covers preprocessing, RSM/PCM and GPCM comparisons, local rater feedback,
+and planning for a fixed complexity–accuracy–fluency (CAF) composite. It uses the development
+API for the forthcoming mfrmr 0.3.0; install the package and obtain the workflow
+scripts from the **same source checkout** as this article. It is not a complete
+reproduction of Yamashita (2024), and it does not evaluate AI ratings.
+
+## Obtain the data yourself
+
+Register with the [official ICNALE download service](https://language.sakura.ne.jp/icnale/download.html)
+and obtain the GRA v2.1 workbook under its
+[terms of use](https://language.sakura.ne.jp/icnale/index.html).
+The corpus, cleaned ratings and individual fitted results are **not distributed
+with mfrmr or this website**. Keep your workbook, audit tables, fit objects and
+rater sheets in a private directory outside any published repository. Removing
+names or saving an RDS file does not turn those objects into redistributable data.
+Check the corpus terms before sharing any derived result.
+
+The code below runs on your computer. The website only displays it; neither
+pkgdown nor CRAN checks read the workbook or rerun this analysis. Start R in
+your matching mfrmr source checkout, with `mfrmr` and `readxl` installed.
+
+```{r input}
+library(mfrmr)
+source("scripts/icnale-caf/preprocess.R")
+source("scripts/icnale-caf/analyse.R")
+
+workbook <- file.choose() # Select ICNALE GRA 2_1.xlsx.
+local_dir <- file.path(path.expand("~"), "mfrmr-icnale-local")
+dir.create(local_dir, recursive = TRUE, showWarnings = FALSE)
+input <- read_icnale_caf(workbook)
+input$counts
+input$category_counts
+saveRDS(input, file.path(local_dir, "input.rds"))
+```
+
+The reader checks workbook layout, unique rating keys, the essay-rater code
+crosswalk and the verification sheet. It stops on a disagreement. Essay ratings
+use `W_` identifiers in one sheet and `E_` in another; this crosswalk **does not**
+identify spoken raters with the same numerical suffix.
+
+## Define the sample before fitting
+
+The target is **136 L2 writers, 80 raters and three fixed CAF criteria**. Four
+English native-speaker benchmark essays are excluded. Every writer produced
+one essay on the same topic. The three criteria are not three tasks, and the
+data do not separate a writer effect from performance on that single task.
+
+| Quantity | Count |
+|:--|--:|
+| Candidate writer–rater pairs | 10,880 |
+| Pairs excluded by the CAF rule | 118 |
+| Retained writer–rater pairs | 10,762 |
+| Retained criterion ratings | 32,286 |
+
+Scores must be integers from **0 through 10**; zero is a valid category. For
+this subset, a missing, fractional or otherwise invalid score excludes all
+three CAF ratings from that writer–rater pair. The source has 161 fractional
+CAF scores and one missing CAF score among the candidate pairs; pairwise
+exclusion also removes 192 otherwise valid scores. The audit retains both the
+original issue and the reason for excluding each cell. No score is rounded,
+imputed, or silently collapsed into another category.
+
+This rule makes the three dimensions share the same retained pairs and follows
+the selected human CAF subset. It is **a declared analysis choice**, not a
+universal cleaning rule for the corpus. Inspect `input$audit` locally. Exclusion
+can be informative; preserving a record of it does not establish missingness at
+random. The 32,286 ratings are not 32,286 independent writers.
+
+**How large is this design in language-assessment research?** The retained
+136 writers and 80 raters form a dense rating design: 10,762 of 10,880 possible
+writer–rater pairs remain (98.9%). This should not be described as an
+inadequate sample merely because there are fewer writers than ratings.
+For context, Nakamura (2002, Research design and method) analysed 32 writers
+with four raters, two raters per essay and seven criteria. Schaefer (2008,
+§III.3) selected 40 essays from 121 collected essays and had 40 raters assess
+them on six criteria. Ahmadi Shirazi (2019, Method) studied 20 writers, each
+writing two essays, with eight raters. These are examples of actual research
+designs, not a survey establishing a typical sample size or a universal
+minimum. The writer count, rater count, crossings, category support and target
+precision describe different aspects of a design; none alone supplies a
+reason to withhold all intervals. Here we estimate intervals and inspect
+their width and model-specific numerical checks.
+
+## Calibrate the ratings and read the numerical review
+
+The RSM uses one shared step structure; the PCM permits a separate step
+structure for each criterion. Both models use a single Person dimension,
+additive rater severity and criterion difficulty, and unit discrimination.
+Rater and criterion locations and each step ladder are centered. An
+intercept-only normal Person population has an **estimated mean and SD**;
+this is not the package's fixed-standard-normal default.
+
+```{r calibration}
+rsm <- icnale_fit(input, "RSM", local_dir)
+pcm <- icnale_fit(input, "PCM", local_dir)
+summary(rsm, compute = "never")
+summary(pcm, compute = "never")
+rsm$data_review$category_support
+pcm$data_review$category_support
+```
+
+`icnale_fit()` calls `fit_mfrm()` with explicit `spec` and `control` lists;
+read `scripts/icnale-caf/analyse.R` to see or adapt those choices. It uses
+accuracy-controlled direct MML: the retained rule is checked against finer
+adaptive integration for likelihood, posterior moments and gradients. If the
+criteria fail, it saves the failure locally and stops without returning a fit.
+Do not interpret an optimizer's zero convergence code alone as numerical
+adequacy. Stored fits are reused only when the input, model, controls and
+installed package code match; use a new output directory after changing them.
+
+Sparse categories within individual raters remain visible in the category
+review even though the full data contain all eleven categories. A numerical
+pass does not remove a category warning or certify the sampling properties of
+an interval. Read the fit's review together with the result-specific checks.
+
+CAF can have different substantive meanings and residual associations. Better
+fit of the PCM would describe the benefit of separate step structures within
+this model family; it would not prove a single CAF ability dimension or local
+independence. One corpus cannot establish the model's coverage across sample
+sizes or assessment settings.
+
+## Review a rater locally
+
+Choose a rater identifier from your own data after inspecting the whole fit.
+The first identifier below is only an example of selecting a sheet, not a
+data-driven flag for poor performance.
+
+```{r feedback}
+chosen_rater <- sort(unique(input$ratings$Rater))[1]
+feedback <- icnale_feedback(rsm, local_dir, rater = chosen_rater)
+summary(feedback$results)
+browseURL(file.path(local_dir, "rater-sheet.html"))
+```
+
+The sheet combines the fitted severity, available uncertainty and diagnostics.
+Positive severity means lower expected ratings, conditional on the fitted
+writer and criterion effects. A difference from zero is relative to the
+centering constraint, not an external standard of correct scoring. An interval
+or fit statistic does not establish unfairness or rater incompetence. Keep
+unavailable uncertainty and its reason visible; do not replace it with zero.
+Use the sheet to select concrete rubric and scoring questions for discussion.
+The example suppresses individual rating cases in the HTML with `max_cases = 0`;
+the local result objects still contain data and must remain private.
+
+**What happened in this example:** both calibrations passed their integration
+and stationarity criteria, and both provide pointwise 95% Wald intervals for
+all 80 rater severities. RSM SEs range from 0.0253 to 0.0348 native logits;
+PCM SEs are almost the same. Each interval uses the full joint marginal
+information, including uncertainty in the estimated normal population.
+All eleven categories are supported in each fitted step scope. An individual
+rater need not use every category of the shared RSM step ladder. Sparse local
+counts remain visible as a diagnostic, rather than automatically disqualifying
+every interval. Inspect both the interval table and its numerical checks:
+
+```{r interval-status}
+feedback$results$facet_intervals$raters$checks
+table(feedback$results$facet_intervals$raters$table$Status)
+```
+
+The RSM's full covariance is stable when adaptive integration increases from
+31 to 61 points (standardized matrix change below `2e-12`). This establishes
+numerical stability for the fitted model, not empirical coverage of 95%.
+The intervals assume the declared model and conditional independence; they
+do not cover arbitrary rater-by-writer dependence or generalization to new
+tasks. Do not change models just to obtain intervals or replace missing
+bounds with zero.
+
+## Compare PCM and one- or two-family GPCM
+
+These are different response models, not four different estimation methods.
+First hold the estimation method (MML), retained ratings and normal population
+family constant. For score `k`, the adjacent-category log odds are
+`a[c] * b[r] * (theta[p] - severity[r] - difficulty[c] - step[c,k])`.
+RSM and PCM fix both slopes to one; RSM additionally shares its step ladder
+across criteria. The one-family GPCM estimates criterion slopes `a[c]`.
+The two-family GPCM also estimates rater slopes `b[r]`. This full-predictor
+product model must not be confused with every model called a rater GPCM.
+
+```{r gpcm-calibration}
+gpcm1 <- icnale_fit(input, "GPCM1", local_dir)
+gpcm2 <- icnale_fit(input, "GPCM2", local_dir)
+fits <- list(RSM = rsm, PCM = pcm, GPCM1 = gpcm1, GPCM2 = gpcm2)
+summary(gpcm1, compute = "never")
+summary(gpcm2, compute = "never")
+```
+
+The one-family model centers the relative criterion slopes at geometric mean
+one and estimates the normal population mean/SD. The two-family model fixes
+the population to N(0,1), centers the criterion slope family at geometric mean
+one, leaves rater slopes free, and places the location origin in Criterion.
+This allocates the overall unit to the rater slope family instead of the
+population SD. Raw coefficients across these parameterizations are not directly
+comparable. In particular, a two-family rater slope below one is not itself
+evidence of poor consistency relative to another model's unit slope.
+
+| Model | Free parameters | Marginal log likelihood |
+| --- | ---: | ---: |
+| RSM | 92 | -66,174.3655 |
+| PCM | 110 | -66,133.3957 |
+| Criterion-slope GPCM | 112 | -66,129.1013 |
+| Criterion-by-rater-slope GPCM | 191 | -64,677.0617 |
+
+All four fits pass their numerical point-estimation criteria. The two-family
+fit also reaches the same likelihood from retained and perturbed starting
+coordinates. This is evidence about these numerical solutions, not proof of a
+global maximum or out-of-sample superiority. Adding 79 rater-slope coordinates
+improves the in-sample likelihood substantially; it also allows the model to
+absorb differences previously visible as rater misfit. Do not select a model
+solely because its Pathway points move toward one.
+
+### Compare locations, category boundaries and Pathway plots
+
+```{r model-comparison-plots}
+source("scripts/icnale-caf/compare.R")
+comparison <- icnale_comparison_plots(fits)
+comparison$plots$wright
+comparison$plots$thresholds
+comparison$plots$pathway
+comparison$plots$expected
+saveRDS(comparison, file.path(local_dir, "model-comparison.rds"))
+```
+
+These are local workflow figures, with their numerical tables saved alongside
+them. The Wright-type location display uses `z = (theta - mu) / sigma`.
+Rater offsets are divided by `sigma`; the origin shift is assigned to
+Criterion, whose locations become `(difficulty - mu) / sigma`. Step offsets
+are divided by `sigma`. Subtracting `mu` separately from every facet would
+change the predictor. The boundary plot shows adjacent-category equality
+points at zero rater location, not Thurstonian cumulative-probability
+thresholds. The expected-score plot averages equally across the same 80
+raters at each standardized ability and criterion.
+
+The Pathway-type plot puts conditional EAP plug-in Infit MnSq on the horizontal
+axis and standardized rater location vertically. Its numerator is the sum
+of squared residuals; its denominator is the sum of conditional rating
+variances. Both are recalculated under each fitted response model. It is a
+descriptive comparison without a calibrated acceptance band, ZSTD test or
+automatic rater classification. In particular it is not a posterior-predictive
+residual summary. The ordinary `plot(fit, type = "fit_pathway")` and
+`plot(fit, type = "wright")` routes retain their documented support; this
+workflow does not silently make those methods available for two-family GPCM.
+`type = "pathway"` in the ordinary API instead draws expected-score pathways.
+
+In this example, standardized rater locations barely change from RSM to PCM
+(maximum change 0.00059 population SD), change by at most 0.0196 under the
+criterion-slope GPCM, and by at most 0.304 under the two-family GPCM. Person
+EAP correlations with RSM are above 0.99999 for PCM and one-family GPCM and
+0.9956 for two-family GPCM. Rater Infit spans approximately 0.51–2.01 in the
+first three models and 0.78–1.31 in the two-family model. These results locate
+the practical change in this dataset: allowing different rater slopes matters
+more than allowing different criterion slopes. They do not establish which
+model measures the intended construct best.
+
+Keep native-scale interval plots separate from this point comparison:
+
+```{r model-intervals}
+ci_rsm <- feedback$results$facet_intervals$raters # Reuse the qualified result.
+ci_pcm <- mfrm_facet_intervals(pcm, "Rater")
+ci_gpcm1 <- mfrm_facet_intervals(gpcm1, "Rater")
+ci_gpcm2 <- mfrm_facet_intervals(gpcm2, "Rater")
+plot(ci_rsm)
+plot(ci_pcm)
+plot(ci_gpcm1)
+plot(ci_gpcm2)
+saveRDS(list(RSM = ci_rsm, PCM = ci_pcm, GPCM1 = ci_gpcm1, GPCM2 = ci_gpcm2),
+  file.path(local_dir, "rater-intervals.rds"))
+```
+
+All 80 location intervals are available for each of these four fits after
+their model-specific checks. Simply dividing interval endpoints by an
+estimated SD would omit that SD's uncertainty. Use the supported standardized
+interval API when that is the inferential target; the workflow's location
+figures deliberately display points without implying transformed confidence
+intervals. The two-family results retain their experimental qualification and
+saved diagnostics. In this fit, all 83 component
+slope intervals pass the local numerical checks. The observed Person-score
+rank is 135 for 191 free parameters: a full-parameter empirical sandwich
+covariance is unavailable, but the full observed Hessian is positive definite.
+The model-based intervals use that observed information; a rule requiring
+more writers than free parameters would incorrectly conflate the two
+information matrices. This does not establish robustness to model
+misspecification or finite-sample coverage.
+
+## A bounded comparison with TAM
+
+The RSM was also checked with TAM 4.3-25 using the same retained CAF pairs,
+`formulaA = ~ item + rater + step`, and `constraint = "cases"`. Crucially,
+`pid = input$wide$Person` keeps repeated rows within the same writer; omitting
+it changes the model to one Person per writer–rater row. Both models estimate
+normal population variance. TAM fixes the population mean at zero and leaves
+the mean criterion location free; the mfrmr parameterization above centers
+criterion locations and estimates the population mean. Compare centered
+criterion locations and the corresponding shifted population origin.
+
+After convergence, refining TAM's grid over [-6, 6] from 481 to 961 points
+changed its log likelihood by less than 10^-9. Against mfrmr's adaptive result,
+the absolute log-likelihood difference was below 10^-8, and the largest
+differences in rater locations and centered steps were below 10^-6. This is
+an implementation check for **RSM point estimates in this dataset**, not a
+comparison of interval coverage, a PCM cross-check, or a validation of the
+single-dimension model. Equal node counts alone are not an accuracy match.
+TAM's initial unaccelerated fit reached its iteration limit; only the
+converged continuation and finer-grid results were used in this comparison.
+
+To set up your own comparison, the essential call is below. Follow the
+[TAM manual](https://cran.r-project.org/web/packages/TAM/TAM.pdf) to inspect
+convergence and repeat with a finer grid before interpreting differences.
+Keep these data-bearing objects local too.
+
+```{r tam-setup}
+tam <- TAM::tam.mml.mfr(
+  resp = as.matrix(input$wide[c("Complexity", "Accuracy", "Fluency")]),
+  facets = data.frame(rater = input$wide$Rater),
+  pid = input$wide$Person,
+  formulaA = ~ item + rater + step, constraint = "cases",
+  control = list(nodes = seq(-6, 6, length.out = 241), snodes = 0,
+    xsi.start0 = TRUE, maxiter = 1000, conv = 1e-8, convD = 1e-8,
+    convM = 1e-8, progress = FALSE), verbose = FALSE
+)
+tam$iter # Reaching maxiter is not evidence of convergence.
+
+# Continue from the saved candidate, then refine the grid. Each result must
+# converge; an iteration limit never counts as a successful comparison.
+for (points in c(241L, 481L, 961L)) {
+  previous <- tam
+  tam <- TAM::tam.mml.mfr(
+    resp = as.matrix(input$wide[c("Complexity", "Accuracy", "Fluency")]),
+    facets = data.frame(rater = input$wide$Rater), pid = input$wide$Person,
+    formulaA = ~ item + rater + step, constraint = "cases",
+    xsi.inits = cbind(seq_len(nrow(previous$xsi)), previous$xsi$xsi),
+    variance.inits = previous$variance,
+    control = list(nodes = seq(-6, 6, length.out = points), snodes = 0,
+      acceleration = "Ramsay", maxiter = 1000, conv = 1e-8, convD = 1e-8,
+      convM = 1e-8, progress = FALSE), verbose = FALSE
+  )
+  stopifnot(tam$iter < 1000)
+}
+c(logLik_change = abs(tam$deviance - previous$deviance) / 2,
+  parameter_change = max(abs(tam$xsi$xsi - previous$xsi$xsi)))
+saveRDS(tam, file.path(local_dir, "tam-rsm.rds"))
+```
+
+## A bounded comparison with ConQuest
+
+The local comparison uses **ConQuest 5.47.5, Standard Version**. The
+[Standard licence](https://vpol.acer.edu.au/au/conquest/conquest-faq) permits
+100 items. In this wide-format design each rater–criterion combination is a
+generalized item, so the complete 80 × 3 design has 240 items. We therefore
+compare a declared subset of 32 raters, selected by evenly spaced positions
+in the sorted identifier list before estimation. Both programs use the same
+136 writers and 12,813 retained ratings. This is a software comparison on
+a subset, not a replacement for the full-sample analysis or a random sample
+of the rater population.
+
+```{r conquest-export}
+source("scripts/icnale-caf/conquest.R")
+raters <- sort(unique(input$ratings$Rater))[
+  unique(round(seq(1, 80, length.out = 32)))]
+conquest_dir <- file.path(local_dir, "conquest-comparison")
+manifest <- icnale_conquest(input, raters, conquest_dir)
+
+subset_input <- input
+subset_input$ratings <- input$ratings[input$ratings$Rater %in% raters, ]
+subset_rsm <- icnale_fit(subset_input, "RSM", conquest_dir)
+subset_pcm <- icnale_fit(subset_input, "PCM", conquest_dir)
+```
+
+Open ConQuest in that local output directory and submit `rsm.cqc`, then
+`pcm.cqc`. On a Mac with the default installation, the executable is
+`/Applications/ConQuest/ConQuest`. Use a fresh directory for another run;
+existing output files trigger interactive overwrite prompts. The generated
+models are `criteria + rater + step` for RSM and
+`criteria + rater + criteria*step` for PCM. Each writer occupies one physical
+record with 96 response columns, preserving one ability per writer.
+
+The exporter preserves the declared **0–10 category ladder for every
+generalized item**. It appends 11 support records with weight exactly zero
+and uses `skipwtzero=no`; real writer records have weight one. These support
+records contribute zero to the marginal log likelihood. ConQuest nevertheless
+includes them in some displayed case counts. Do not interpret those counts,
+its printed BIC or fit summaries as results for additional writers. This
+comparison uses the actual 136 writers, the marginal likelihood, aligned
+coefficients and model-based SEs. See the
+[command reference](https://conquestmanual.acer.org/s4-00.html) for `caseweight`,
+`score`, `skipwtzero` and `estimate`.
+
+Both programs estimate the normal population variance. ConQuest fixes its
+mean to zero and leaves the criterion origin free. To align it with the
+native fit, retain the centered rater locations and step offsets and compare
+ConQuest criterion locations with `native difficulty - native population mean`.
+Refine the exported 481-point grid over [-6, 6] to 961 points after convergence,
+using the exported parameter and population-variance files as starts. The
+finer point-estimate run can use `stderr=none, fit=no`; the earlier SE results
+remain separate evidence. An iteration limit is not a convergence certificate.
+
+For both RSM and PCM, the aligned location and step differences are below
+`1e-5`; all 32 rater SE differences are below `0.0005`, half the rounding unit of the printed
+three-decimal SEs. The finer grid preserves the reported deviance. These are
+implementation comparisons at the available output precision, not evidence
+that either program's intervals attain nominal coverage. ConQuest's ordinary
+GPCM with a free slope per generalized item is not the same restriction as
+the criterion-by-rater product slope model above, and is not reported as a
+like-for-like two-family comparison.
+
+## Plan ratings for a fixed observed-score composite
+
+Now change the question: how variable would the **equal-weight average of
+the three CAF scores** be under a specified future rater design? This uses
+the original 0–10 observed scores, not model-adjusted abilities or MML posterior
+SDs. CAF are fixed score dimensions; Rater is the one random facet. The
+multivariate MINQUE(0) G-Study allows the incomplete retained Person × Rater
+table and estimates covariances between the dimensions.
+
+```{r planning}
+planning <- icnale_planning(input)
+summary(planning$g)
+summary(planning$d)
+plot(planning$d)
+saveRDS(planning, file.path(local_dir, "planning.rds"))
+```
+
+The D-Study considers 1, 2, 3, 4, 6 and 8 **common random raters** for every
+writer and all three scores, with equal weights of 1/3. It projects complete
+balanced future designs; it does not reproduce the missing assignments in
+the source data. `G` concerns relative comparisons among writers; `Phi` also
+counts rater-level shifts as error for absolute decisions. SEM stays on the
+observed composite scale. In the checked v2.1 subset the equal-weight composite
+gives these point projections (rounded):
+
+| Common raters | G | Phi | Absolute SEM |
+|--:|--:|--:|--:|
+| 1 | 0.308 | 0.298 | 1.810 |
+| 2 | 0.471 | 0.459 | 1.280 |
+| 3 | 0.571 | 0.560 | 1.045 |
+| 4 | 0.640 | 0.629 | 0.905 |
+| 6 | 0.727 | 0.718 | 0.739 |
+| 8 | 0.781 | 0.773 | 0.640 |
+
+These numbers show the modeled improvement as rater replication increases,
+not an empirically validated guarantee for a new assessment. The projections condition on estimated covariance
+components and supply no confidence intervals here. They are not a guaranteed
+minimum-rater recommendation, and they do not cover independent rater panels
+for different writers or a new population of tasks.
+
+## Save and return in a new R session
+
+```{r reload}
+library(mfrmr)
+local_dir <- file.path(path.expand("~"), "mfrmr-icnale-local")
+rsm <- readRDS(file.path(local_dir, "rsm-fit.rds"))$fit
+results <- readRDS(file.path(local_dir, "results.rds"))
+planning <- readRDS(file.path(local_dir, "planning.rds"))
+summary(rsm, compute = "never")
+summary(results)
+summary(planning$d)
+```
+
+Keep the source checkout, R/package versions and workbook version with your
+local analysis. The saved-fit bundle records settings, input identity and
+session information. Reloading preserves an analysis; it does not upgrade
+the evidence or make private data public.
+
+## What this example can and cannot establish
+
+Ishikawa (2024, §§2.1–2.2) describes the task and the rating instructions.
+Raters were instructed to aim for analytic score means of 4–6 and SDs of 2–3
+on the ten-point range. Those are instructions, not evidence that every rater
+complied. The observed spread and severity are therefore not an unrestricted
+sample of ordinary classroom rating behavior. Language-background contrasts,
+causal training effects, population-wide fairness, and generalization over new
+tasks require their own designs. Do not mistake rater demographic variables
+for writer demographics.
+
+The value of this example is a traceable route from licensed source ratings
+to explicit analysis choices, diagnostics and a conditional assessment plan.
+Synthetic simulations remain necessary for claims about bias, interval
+coverage or minimum sample sizes, because the true abilities and severities
+are unknown in these data.
+
+## Sources
+
+- Ishikawa, S. (2024). The ICNALE Global Rating Archives: A New Assessment
+  Dataset for Learner Corpus Studies. *Learner Corpus Studies in Asia and
+  the World*, 6, 13–38.
+  See the [version of record](https://da.lib.kobe-u.ac.jp/da/kernel/0100487713/0100487713.pdf),
+  especially §§2.1–2.4, for tasks, ratings and raters.
+- Yamashita (2024), [article DOI](https://doi.org/10.1016/j.rmal.2024.100133).
+  This example isolates human CAF ratings; it does not reproduce the full
+  study or its AI comparisons.
+- Nakamura, Y. (2002). [An application of a many-faceted Rasch model to
+  writing test analysis (Part 1)](https://pansig.org/publications/pansig/2002/HTML/Nakamura.htm).
+  See Research design and method and the category SEs in Table 1.
+- Schaefer, E. (2008). [Rater bias patterns in an EFL writing
+  assessment](https://doi.org/10.1177/0265532208094273). *Language Testing*.
+  The data-collection section distinguishes the 121 collected essays from
+  the 40 actually rated.
+- Ahmadi Shirazi, M. (2019). [For a Greater Good: Bias Analysis in Writing
+  Assessment](https://doi.org/10.1177/2158244018822377). *SAGE Open*.
+  Method distinguishes 20 writers from their 40 essays.
+- [ICNALE corpus modules](https://language.sakura.ne.jp/icnale/modules.html),
+  [access instructions](https://language.sakura.ne.jp/icnale/download.html),
+  and [terms of use](https://language.sakura.ne.jp/icnale/index.html).
+- For model equations and inference scope, see `?fit_mfrm_technical_details`,
+  `?mfrm_facet_intervals` and `?mfrm_g_study` in the matching installed version.

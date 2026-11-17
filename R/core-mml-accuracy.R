@@ -179,6 +179,12 @@ mfrmr_optimize_accuracy_mml <- function(start, idx, config, sizes, labels,
     }
     row$OptimizerConvergence <- opt$convergence
     row$LogLik <- -opt$value
+    if (identical(config$model,"GPCM") && "mml_unobserved_global_endpoint" %in%
+        mfrmr_mml_additive_boundary_evidence(config)) {
+      config$mml_accuracy <- list(status="full_maximum_absent",
+        scope="Full-model accuracy is unavailable; inspect the separate endpoint limiting fit.")
+      return(list(opt=opt,config=config))
+    }
     row$ParameterChange <- if (stage == 1L) NA_real_ else max(abs(opt$par - last_par), 0)
     last_par <- opt$par
     checked <- tryCatch(mfrmr_check_mml_accuracy(opt, idx, config, sizes, labels,

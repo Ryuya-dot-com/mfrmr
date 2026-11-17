@@ -7,7 +7,7 @@
 \alias{print.mfrm_cml_fit}
 \alias{print.mfrm_comparison_fit}
 \alias{summary.mfrm_comparison_fit}
-\title{Fit many-facet ordered-response models with a flexible number of facets}
+\title{Fit many-facet models to ordered ratings}
 \usage{
 fit_mfrm(
   data,
@@ -77,8 +77,13 @@ first slope facet); \code{step_facet} and \code{noncenter_facet} select their ro
 independently among declared non-Person facets. See
 \link{fit_mfrm_technical_details}.}
 
-\item{rating_min, rating_max}{Optional intended minimum and maximum category
-scores. Supply together (often with \code{spec = list(category_policy = "preserve")}) when boundary categories may be unobserved.}
+\item{rating_min}{Optional intended minimum category score (supply together
+with \code{rating_max} and \code{category_policy = "preserve"} when boundary
+categories may be unobserved).}
+
+\item{rating_max}{Optional intended maximum category score (supply together
+with \code{rating_min} and \code{category_policy = "preserve"} when boundary
+categories may be unobserved).}
 
 \item{weight}{Optional column name of positive observation weights.}
 
@@ -99,268 +104,141 @@ covariates referenced by \code{population_formula}.}
 \item{facet_interactions}{Optional confirmatory two-way non-Person
 interaction terms (e.g., \code{"Rater:Criterion"}) for \code{RSM} and \code{PCM}.}
 
-\item{spec}{Optional named \code{list} of measurement-model, data-scale, and
-identification settings (see \strong{Reusable model
-specification (\code{spec})} below). Explicit top-level arguments override
-matching entries in \code{spec}, so a shared \code{base_spec} can be reused across
-\code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}, and
-\code{\link[=export_mfrm_model]{export_mfrm_model()}} or varied across candidate models.}
+\item{spec}{Optional named list for reusing model, data and identification
+settings. Explicit top-level arguments override matching entries.
+See the specification entries in \link{fit_mfrm_technical_details}.}
 
-\item{control}{Named \code{list} of numerical integration, optimizer, JML
-adjustment, post-fit shrinkage, and subfit controls (21 supported keys;
-see \strong{Numerical and post-fit controls (\code{control})} below).}
+\item{control}{Named list of numerical and post-fit settings; for example,
+\code{list(quad_points = 31, maxit = 400)}. Supported entries and conditions
+are listed in \link{fit_mfrm_technical_details}.}
 
 \item{...}{Fully named legacy flat arguments from the supported \code{spec} and
 \code{control} settings. Unnamed arguments, abbreviated or unknown
 names, and duplicate specifications across \code{spec}/\code{control} and \code{...}
 fail immediately. Unused by the CML and comparison-fit summary/print methods.}
 
-\item{object, x}{A fitted CML result for its summary, print, covariance and
+\item{object}{A fitted CML result for its summary, print, covariance and
+log-likelihood methods, or a comparison-only result for its summary and
+print methods.}
+
+\item{x}{A fitted CML result for its summary, print, covariance and
 log-likelihood methods, or a comparison-only result for its summary and
 print methods.}
 }
 \value{
+Ordinary MML/JML returns an \code{mfrm_fit} (a named list). Start with
+\code{results <- summary(fit)}:
 \itemize{
-\item Ordinary \code{MML} / \code{JML} (\code{fit_scope = "full"}, \code{jml_penalty = "none"}):
-an object of class \code{mfrm_fit} containing \code{summary}, \code{facets$person},
-\code{facets$others}, \code{steps}, \code{slopes} (for \code{GPCM}), \code{readiness},
-\code{interactions}, \code{population}, \code{data_review}, \code{config}, \code{prep}, and \code{opt}.
-Always inspect \code{summary(fit)$decision} and parameter eligibility columns
-(\code{EstimateUse}, \code{SEEligible}, \code{CIEligible}) before substantive reporting.
-\item \verb{method = "JML", control = list(jml_penalty = "jeffreys")}: a separate
-\code{mfrm_jeffreys_fit} point-estimate object (\code{\link[=summary.mfrm_jeffreys_fit]{summary.mfrm_jeffreys_fit()}}).
-\item \code{method = "CML"} (\code{fit_scope = "full"}): an \code{mfrm_cml_fit} object for
-structural locations/steps and \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} contrasts.
-\item \code{control = list(fit_scope = "comparisons", comparison_review = ...)}: an
-\code{mfrm_comparison_fit} object extracted with \code{\link[=interaction_effect_table]{interaction_effect_table()}}.
+\item \code{results$person_overview} summarizes Person ability estimates.
+\item \code{results$facet_overview} summarizes each non-Person facet.
+\item \code{results$decision} reports interpretation limits and suggested actions.
 }
 
-See \strong{Detailed return-object provenance} in \link{fit_mfrm_technical_details} for
-every column, boundary-audit record, and replay metadata field.
+Individual estimates are in \code{fit$facets$person}, \code{fit$facets$others},
+\code{fit$steps} and, for GPCM, \code{fit$slopes}. Check \code{EstimateUse} or
+\code{ParameterStatus} for points, and \code{CIEligible} with its accompanying reason
+for intervals, where provided. Unavailable uncertainty is not zero.
+See \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}} and \link{mfrm_fit_extractors} for extraction.
+
+CML returns an \code{mfrm_cml_fit}: \code{summary(fit)$locations} and \verb{$steps} contain
+structural estimates. Jeffreys-penalized JML returns an \code{mfrm_jeffreys_fit}
+(\code{\link[=summary.mfrm_jeffreys_fit]{summary.mfrm_jeffreys_fit()}}); comparison-only fitting returns an
+\code{mfrm_comparison_fit} (\code{\link[=interaction_effect_table]{interaction_effect_table()}}). These classes have
+different supported outputs. Full field descriptions are in
+\link{fit_mfrm_technical_details}.
 }
 \description{
-Estimate effects on ordered ratings—such as rater severity, task or criterion
-difficulty, category thresholds, and supported discriminations—together with
-Person abilities where the estimator supplies them. Each row of \code{data} is one
-observed rating event.
+Estimate rater severity, task or criterion difficulty, and category thresholds
+from a rating table. Person abilities are also returned when supported by the
+estimator. Supply your column names through \code{person}, \code{facets} and \code{score};
+the Examples show one RSM analysis from data to results.
 }
 \details{
-Use the named arguments for a first analysis. A reusable
-\code{spec = list(...)} groups model and identification choices across
-\code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}, and
-\code{\link[=export_mfrm_model]{export_mfrm_model()}}; \code{control = list(...)} groups estimation and
-post-fit settings. Historical
-flat arguments remain supported when their full names are supplied, including
-through \code{do.call()}. Only the first four positional arguments (\code{data},
-\code{person}, \code{facets}, \code{score}) retain their old positions. Use full names for
-later arguments; abbreviations of names routed through \code{...} are rejected.
-See \link{mfrmr_api_migration_030} for before/after calls and export scope limits.
+Each row represents one rating. Ordinary fitting omits rows missing required
+model values; review \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} before fitting your own data. Repeated
+Person-by-facet cells are retained and flagged for review. Declaring them
+independent does not establish conditional independence.
 
-For help choosing an analysis, read the bundled guide with
-\code{vignette("mfrmr-model-choice", package = "mfrmr")}. For exact specification
-keys, estimator assumptions and numerical checks, use
-\link{fit_mfrm_technical_details}; both guides are available offline in a standard
-package installation.
+Choose the intended category ladder explicitly. The default can collapse gaps
+in observed categories, changing the fitted steps. The example preserves a
+1--4 rubric; a preserved, unobserved internal category prevents ordinary fitting.
 }
-\section{Core five-step workflow}{
+\section{Model and inference choices}{
 
-New analyses can reach the package's three pillars—measurement, G-theory
-planning, and rater feedback—through five entry points:
-\enumerate{
-\item \strong{Check the data and rubric:} \code{describe_mfrm_data(ratings, spec = spec)}
-(and \code{review_mfrm_anchors(ratings, spec = spec)} when anchoring).
-\item \strong{Fit the measurement model:} \code{fit <- fit_mfrm(ratings, spec = spec)}.
-\item \strong{Audit response fit and rater behavior:} \code{diag <- diagnose_mfrm(fit)}
-(followed by \code{\link[=estimate_bias]{estimate_bias()}} or \code{\link[=analyze_dff]{analyze_dff()}} when needed).
-\item \strong{Evaluate rating-plan generalizability:} \code{\link[=mfrm_g_study]{mfrm_g_study()}} and
-\code{\link[=mfrm_d_study]{mfrm_d_study()}} on observed scores.
-\item \strong{Visualize and report:} \code{plot(fit)} / \code{plot(res)} and
-\code{mfrm_report(mfrm_results(fit, diagnostics = diag))} (or
-\code{mfrmr_output_guide("core_workflow")} for the route map).
-}
-}
+\code{RSM} shares category thresholds; \code{PCM} gives each level of \code{step_facet} its own
+ladder. \code{GPCM} also estimates relative discriminations for \code{slope_facet}.
+The default RSM/PCM MML model fixes the Person distribution to N(0,1).
+Together with centered non-Person facets and steps, this fixes the overall
+ability-to-difficulty location as well as the population SD. These are
+substantive assumptions, not just a reporting scale. To estimate the mean and
+SD, use \code{population_formula = ~ 1} and matching \code{person_data} (one row per
+Person). One-family GPCM MML estimates them by default; two-family GPCM
+requires different explicit settings. See \link{fit_mfrm_technical_details} for
+population, anchoring and slope constraints before comparing models.
 
-\section{Choose a model and its population}{
+MML assumes the specified population distribution. JML estimates Person and
+structural effects jointly; many Persons do not remove incidental-parameter
+bias when each has few ratings. CML conditions on Person totals and returns
+structural effects without Person abilities. Its supported RSM/PCM route
+requires unit weights and preserved categories.
 
-For the \code{Rater} and \code{Criterion} columns in the Examples, the model choices
-are below. A slope family gives one discrimination per level of its owner;
-"two families" does not mean two ability dimensions or just two slopes.
-No Q matrix is required or accepted by this unidimensional API.\tabular{llll}{
-   Model \tab Step owner \tab Slope owner \tab MML population \cr
-   \code{RSM} \tab Shared \tab Fixed at one \tab Fixed N(0,1) \cr
-   \code{PCM} \tab \code{Criterion} \tab Fixed at one \tab Fixed N(0,1) \cr
-   One-family \code{GPCM} \tab \code{Criterion} \tab \code{Criterion} \tab Estimated mean and SD \cr
-   Two-family \code{GPCM} \tab \code{Rater} \tab \code{Criterion}, then \code{Rater} \tab Explicit fixed N(0,1) \cr
-}
-
-
-Supply these owner names through \code{step_facet} and \code{slope_facet}; for two
-families use \code{slope_facet = c("Criterion", "Rater")}. The first three rows
-show their default MML populations. Two-family settings must be chosen
-explicitly; see "Two slope families" in \link{fit_mfrm_technical_details}.
-One-family slopes are relative.
-
-Changing only \code{model} therefore need not hold the population assumptions
-constant. For RSM/PCM, estimating its mean and SD requires
-\code{population_formula = ~ 1} and \code{person_data = unique(ratings["Person"])}.
-This is a model choice, not a universal recommendation. Fixing both the
-population SD and the one-family GPCM slope geometric mean to one is a
-narrower model, not just an alternative reporting scale.
-
-In ordinary RSM/PCM, fixed N(0,1) together with the default
-\code{noncenter_facet = "Person"} centers all non-Person locations and every
-step ladder. Without anchors changing these constraints, this also fixes
-the overall ability-to-difficulty location; it is not merely identification.
-For a complete binary two-rater by two-item design, symmetry forces the
-average model-implied population success probability to 0.5. Unit Rasch
-slopes already set the logit scale, so fixing the population SD to one is
-an additional distributional assumption. For ordinary cohort calibration,
-explicitly estimate the mean and SD using \code{population_formula = ~1} and
-matching \code{person_data}; inspect the reported inference limits. To estimate
-only the mean, additionally set \code{population_sd = 1} in supported direct MML.
-Alternatively, a non-Person \code{noncenter_facet} permits an overall difficulty
-location while retaining fixed N(0,1). These choices are different models.
-Existing defaults remain for compatibility. Ordinary RSM/PCM export currently
-requires a fixed N(0,1) population and rejects estimated-population fits;
-do not drop \code{population_formula} to make an export run.
-
-Start with the complete RSM Examples. For PCM, add \code{step_facet} and change
-\code{model}; for one-family GPCM, also explicitly choose \code{slope_facet} and
-read the population choice above. Keep the data-column and rubric arguments.
-The complete two-family call and its narrower output workflow are in
-\href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-gpcm-scope.html#a-provisional-two-family-workflow}{online two-family workflow}.
-Its zero-based scores and ordered owners require
-the explicit preparation described there; changing \code{slope_facet} alone
-is insufficient.
-}
-
-\section{Choose an estimator and the result you need}{
-
-The ordinary worked example uses RSM/MML. Choose the model and estimation
-assumptions for your question before choosing a table or figure.
-\itemize{
-\item \strong{Abilities, a population model or GPCM inference:} use \code{method = "MML"}
-and inspect \code{summary(fit)$decision}. Its interpretation depends on the
-declared ability distribution. Ordinary RSM/PCM fixes N(0,1) by default;
-\code{population_formula = ~ 1} instead estimates its mean and SD. GPCM
-estimates them by default for one slope family; two families use fixed
-N(0,1). See "Choose a model and its population" above.
-\item \strong{RSM/PCM structural effects without an ability distribution:} use
-\verb{method = "CML", category_policy = "preserve"}. Read
-\code{summary(fit)$locations} and \verb{$steps}, then \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}.
-CML returns no Person abilities or population SD; ordinary diagnostics
-and consolidated reports do not apply. See "Conditional maximum likelihood"
-in \link{fit_mfrm_technical_details} for assumptions and supported outputs.
-\item \strong{Joint point estimates or FACETS comparisons:} explicitly select JML
-when that estimand is intended. With few ratings per Person, adding
-Persons does not remove incidental-parameter bias. Stored structural
-SEs or corrected-JML root uncertainty are not automatically truth intervals.
-}
-
-Facet names are your column names, not fixed roles imposed by the package.
-For example, \code{facets = c("Judge", "Task")} uses those two columns; it does
-not require columns called Rater or Criterion. Supply the same names to
-follow-up functions and use the fitted level labels for contrasts or curves.
-Begin with the Examples section, then use the technical reference map below
-for your selected model. \link{mfrmr_methods_reference} separates measurement,
-G-theory assessment planning and observed-score agreement questions.
-}
-
-\section{Reusable model specification (\code{spec})}{
-
-A single named \code{spec} list can be shared across \code{\link[=describe_mfrm_data]{describe_mfrm_data()}},
-\code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}, and \code{\link[=export_mfrm_model]{export_mfrm_model()}} (note that
-\code{\link[=export_mfrm_model]{export_mfrm_model()}} defaults omitted \code{anchor_policy} to \code{"error"} before
-writing files, whereas \code{\link[=fit_mfrm]{fit_mfrm()}} defaults to \code{"warn"}):\tabular{ll}{
-   Group \tab Supported \code{spec} keys (34 total) \cr
-   Data & category ladder (10) \tab \code{person}, \code{facets}, \code{score}, \code{weight}, \code{rating_min}, \code{rating_max}, \code{category_policy} (\code{"collapse"} or \code{"preserve"}), \code{keep_original}, \code{missing_codes}, \code{repeated_ratings} (\code{"review"} or \code{"independent"}) \cr
-   Model & slope/step owners (6) \tab \code{model} (\code{"RSM"}, \code{"PCM"}, \code{"GPCM"}), \code{method} (\code{"MML"}, \code{"JML"}, \code{"CML"}), \code{step_facet}, \code{slope_facet}, \code{slope_reference}, \code{gpcm_mml_identification} (\code{"free_population"} or \code{"fixed_standard_normal"}) \cr
-   Anchors, orientation & centering (10) \tab \code{anchors}, \code{group_anchors}, \code{anchor_policy} (\code{"warn"}, \code{"error"}, \code{"silent"}), \code{min_common_anchors}, \code{min_obs_per_element}, \code{min_obs_per_category}, \code{noncenter_facet}, \code{centering_scope} (\code{"facet"}, \code{"remainder"}, \code{"anchor_origin"}), \code{positive_facets}, \code{dummy_facets} \cr
-   Interactions & latent regression (8) \tab \code{facet_interactions}, \code{min_obs_per_interaction}, \code{interaction_policy}, \code{population_formula}, \code{person_data}, \code{person_id}, \code{population_policy} (\code{"error"} or \code{"omit"}), \code{population_sd} \cr
-}
-}
-
-\section{Numerical and post-fit controls (\code{control})}{
-
-Pass computational and post-processing controls in \code{control = list(...)}
-using the groups below. Numerical accuracy settings differ from choices
-that change the estimator or output, such as JML penalties, shrinkage and
-comparison-only fitting; choose those for the intended analysis.\tabular{ll}{
-   Group \tab Supported \code{control} keys (21 total) \cr
-   MML quadrature & engine (8) \tab \code{quad_points} (\code{31}), \code{mml_engine} (\code{"direct"}, \code{"em"}, \code{"hybrid"}), \code{mml_integration} (\code{"fixed"}, \code{"adaptive"}, \code{"auto"}), \code{mml_accuracy_control}, \code{mml_starts}, \code{gpcm_mml_start}, \code{em_score_tol}, \code{checkpoint} \cr
-   Optimizer & console (4) \tab \code{maxit} (\code{400}), \code{reltol} (\code{1e-9}), \code{optimizer} (\code{"auto"}, \code{"BFGS"}, \code{"L-BFGS-B"}), \code{progress} (\code{FALSE}) \cr
-   JML penalty & bias adjustment (3) \tab \code{jml_penalty} (\code{"none"}, \code{"jeffreys"}), \code{jml_correction_order}, \code{jml_correction_sampling} (\code{"fixed_rosters"}, \code{"random_rosters"}) \cr
-   Post-fit shrinkage & diagnostics (4) \tab \code{facet_shrinkage} (\code{"none"}, \code{"empirical_bayes"}, \code{"laplace"}), \code{facet_prior_sd}, \code{shrink_person} (\code{FALSE}), \code{attach_diagnostics} (\code{FALSE}) \cr
-   Comparison-only subfit (2) \tab \code{fit_scope} (\code{"full"}, \code{"comparisons"}), \code{comparison_review} \cr
-}
-}
-
-\section{Technical reference map}{
-
-Every specialist mathematical and algorithmic section is preserved in full in
-\link{fit_mfrm_technical_details}:
-\itemize{
-\item \strong{Scale & response equations:} \emph{Model}, \emph{Logistic metric (D = 1)},
-\emph{Weighting policy}, \emph{Input requirements}, \emph{Facet effects and rating counts}.
-\item \strong{MML & GPCM identification / quadrature:} \emph{GPCM model and inference},
-\emph{Two slope families}, \emph{MML integration workflow}, \emph{MML inference conditions},
-\emph{Information-criterion contract}.
-\item \strong{JML, Jeffreys & CML estimators:} \emph{Estimator choice and the JML
-incidental-parameter caveat}, \emph{Corrected JML}, \emph{Jeffreys-penalized JML},
-\emph{Conditional maximum likelihood}, \emph{All-minimum and all-maximum Persons}.
-\item \strong{Anchors, interactions, latent regression & subfits:} \emph{Anchors and
-scale constraints}, \emph{Anchor origin and cohort means}, \emph{Model-estimated
-facet interactions}, \emph{Comparison-only estimation}, \emph{Latent-regression
-workflow}, \emph{Latent-regression standard-error caveat}, \emph{References}.
-}
+Point estimates and intervals have separate availability checks. Failure to
+obtain an interval does not by itself invalidate an available point estimate;
+inspect the reported status and reason. A finite optimizer value is not
+automatically an interpretable estimate, and a finite SE does not establish
+interval coverage. \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} documents structural intervals;
+\link{fit_mfrm_technical_details} gives estimator-specific conditions and references.
 }
 
 \examples{
+# Load the package
 library(mfrmr)
+
+# Load example ratings and look at the first six rows
 ratings <- load_mfrmr_data("example_operational")
 head(ratings)
 
-# 1. Reusable specification shared from data check to model fitting
-spec <- list(
+# RSM with a preserved 1--4 rubric and fixed N(0,1) Person distribution
+fit <- fit_mfrm(
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
-  category_policy = "preserve",
-  model = "RSM",
-  method = "MML"
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
+  method = "MML",
+  model = "RSM"
 )
-data_check <- describe_mfrm_data(ratings, spec = spec)
-data_check$row_retention
 
-fit <- fit_mfrm(ratings, spec = spec, control = list(quad_points = 31))
+# Wright map: Person abilities, facet effects and thresholds
 plot(fit)
 
+# Save the summary, then display its tables
 results <- summary(fit)
-results$person_overview
-results$facet_overview
+results$person_overview # One row summarizing person ability estimates
+results$facet_overview  # One row per facet: number of levels, mean, SD, range
+
+# Check the interpretation status and recommended next step
 results$decision
 
-# 2. Direct top-level override on the same shared spec (e.g., PCM)
-fit_pcm <- fit_mfrm(
-  ratings, spec = spec, model = "PCM", step_facet = "Criterion",
-  control = list(quad_points = 15, maxit = 120)
-)
-summary(fit_pcm, profile = "fit", detail = "brief")
-
-\dontrun{
-# Optional repeated fitting: compare specified starting values via control
-reviewed <- fit_mfrm(
-  ratings, spec = spec,
-  control = list(mml_starts = c(0, 0.5, -0.5))
-)
-summary(reviewed)$starting_values
 }
+\references{
+Andrich, D. (1978). A rating formulation for ordered response categories.
+\emph{Psychometrika, 43}(4), 561--573. \doi{10.1007/BF02293814}
+
+Masters, G. N. (1982). A Rasch model for partial credit scoring.
+\emph{Psychometrika, 47}(2), 149--174. \doi{10.1007/BF02296272}
+
+Muraki, E. (1992). A generalized partial credit model: Application of an EM
+algorithm. \emph{Applied Psychological Measurement, 16}(2), 159--176.
+\doi{10.1177/014662169201600206}
+
+Andersen, E. B. (1973). Conditional inference for multiple-choice
+questionnaires. \emph{British Journal of Mathematical and Statistical Psychology,
+26}(1), 31--44. \doi{10.1111/j.2044-8317.1973.tb00504.x}
+
+Linacre, J. M. (1989). \emph{Many-Facet Rasch Measurement}. MESA Press.
 }
 \seealso{
 \link{fit_mfrm_technical_details}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}},
-\code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, \code{\link[=export_mfrm_model]{export_mfrm_model()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}},
-\code{\link[=mfrm_results]{mfrm_results()}}, \code{\link[=mfrm_report]{mfrm_report()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
-\link{mfrmr_gpcm_scope}, \link{mfrmr_workflow_methods}
+\code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}
 }

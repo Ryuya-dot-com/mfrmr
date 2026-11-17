@@ -1,9 +1,46 @@
 # Saved GPCM inference is displayed and exported without refitting or changing
 # the ordinary fit diagnostics. Tables always retain the requested target/method.
-mfrm_gpcm_product_note <- function() paste(
-  "Method qualification is incomplete (experimental two-family GPCM).",
-  "Numerical convergence and available bounds do not establish general interval coverage or rater-quality decisions.",
-  "Inspect the saved numerical checks and target-specific restrictions; curve/step intervals and ordinary fit/bias tests remain unavailable.")
+
+# Reporting follows the recorded existence verdict; failure to converge alone
+# must never be recast as proof of a boundary or as a usable limiting solution.
+mfrm_gpcm_boundary_guidance <- function(fit) {
+  fit <- mfrm_gmfrm_refresh_boundary(fit)
+  if ((!mfrm_has_product_slopes(fit) && is.null(fit$point_limit)) || !identical(
+      fit$config$gpcm_point_estimation$overview$Status, "finite_maximum_absent")) return(NULL)
+  skipped <- identical(fit$opt$value_basis, "neutral_boundary_reference")
+  limit <- fit$point_limit$overview
+  partial <- identical(limit$Status, "partial_points_available") &&
+    inherits(fit$point_limit$fit, "mfrm_fit")
+  issue <- paste("The full model has no finite maximum.", if (skipped)
+    "Full-model optimization was deliberately not run; its stored values are neutral references." else
+    "Full-model optimizer values are traces, regardless of numerical convergence.")
+  limit_issue <- if (partial) {
+    "Only targets marked finite_likelihood_limit have estimated limiting values; unidentified targets and fixed steps retain their separate status."
+  } else if (identical(limit$Status, "numerical_unresolved")) {
+    "The separate limiting refit failed its numerical checks; limiting estimates remain unavailable."
+  } else "Limiting estimates were not evaluated for this reduction; this does not establish that every target is unidentified."
+  actions <- c(
+    "Read summary(fit)$point_estimation, fit$config$gpcm_point_estimation$boundary and summary(fit)$point_targets / step_targets for the boundary and target-specific status.",
+    if (partial) paste("Use mfrm_curve_intervals(fit$point_limit$fit, newdata) only for retained rating contexts, without intervals.",
+      "Keep the limiting fit's location reference and data basis explicit.") else
+      "Inspect fit$point_limit$overview and any fit$point_limit$failure for the reduction's restriction or numerical failure; no qualified limiting curves are supplied.",
+    "Full-model and ordinary limiting-fit intervals are unavailable. Increasing full-model iterations or changing starting values cannot restore a finite maximum.")
+  list(skipped=skipped, partial=partial, issue=issue, limit_issue=limit_issue,
+    actions=actions, limit_status=limit$Status %||% "not_evaluated")
+}
+
+mfrm_gpcm_boundary_summary <- function(out, fit) {
+  boundary <- mfrm_gpcm_boundary_guidance(fit)
+  if (is.null(boundary)) return(out)
+  out$next_actions <- boundary$actions
+  out$decision$Interpretation <- if (boundary$partial) "Use only the recorded limiting estimates" else
+    "No finite full-model estimate; limiting estimates unavailable"
+  out$decision$FormalInference <- "No"
+  out$decision$Why <- paste(boundary$issue, boundary$limit_issue,
+    "Full-model formal inference remains unavailable.")
+  out$decision$NextAction <- boundary$actions[1L]
+  out
+}
 
 mfrm_slope_interval_display <- function(tab) {
   lower <- tab$CI_Lower; upper <- tab$CI_Upper
@@ -115,13 +152,17 @@ mfrm_gpcm_results_inputs <- function(fit, intervals) {
   names(intervals) <- tolower(names(intervals))
   source <- mfrm_gpcm_inference_source(fit)
   for (x in intervals) {
+    steps <- inherits(x, "mfrm_facet_intervals") &&
+      identical(x$settings$procedure, "gmfrm_step_model_v1")
     native <- inherits(x, "mfrm_facet_intervals") &&
       identical(x$settings$procedure, "mml_native_location_model_v1")
     if (inherits(x, "mfrm_facet_intervals") && !isTRUE(x$settings$two_family) && !native)
       stop("Attach native location intervals with a declared procedure and source identity.", call. = FALSE)
     saved <- if (inherits(x, "mfrm_slope_intervals")) attr(x, "source") else
       if (inherits(x, "mfrm_gpcm_bootstrap")) mfrm_gpcm_inference_source(x$source) else x$source
-    expected <- if (native) mfrm_native_location_identity(fit) else source
+    expected <- if (steps) mfrm_gpcm_step_source(fit) else if (native) mfrm_native_location_identity(fit) else source
+    if (steps && (is.null(x$fit) || !identical(saved, mfrm_gpcm_step_source(x$fit))))
+      stop("Saved step intervals must match their retained calibration, step constraints and qualification records.", call. = FALSE)
     if (!identical(expected, saved)) stop(
       "Saved GPCM inference must match the fitted parameters, data, population and integration settings. Recompute older intervals without source metadata.", call. = FALSE)
   }
@@ -294,8 +335,14 @@ mfrm_gpcm_results_validate_scores <- function(x) {
 }
 
 mfrm_gpcm_product_point_tables <- function(fit) {
-  list(
-    fitted_slopes = data.frame(Facet = fit$slopes$SlopeOwner, Level = fit$slopes$SlopeFacet,
+  fit <- mfrm_gmfrm_refresh_boundary(fit)
+  point <- fit$config$gpcm_point_estimation
+  overview <- point$overview %||% data.frame(Status="legacy_not_reviewed",
+    PrimaryAvailable=FALSE, IntegrationReview="not_recorded",
+    LocalMaximumReview="not_recorded", BoundaryReview="not_recorded",
+    Detail="This saved fit predates the point-estimate review. Its numerical values are retained without upgrading their status.")
+  tables <- list(
+    fitted_slopes = data.frame(Facet = fit$slopes[["SlopeOwner"]] %||% rep(fit$config$slope_facet,nrow(fit$slopes)), Level = fit$slopes$SlopeFacet,
       FittedSlope = fit$slopes$OptimizerEstimate,
       Interval = "See attached slope-interval tables, if requested"),
     fitted_locations = data.frame(Facet = fit$facets$others$Facet,
@@ -305,13 +352,60 @@ mfrm_gpcm_product_point_tables <- function(fit) {
       Interval = "See attached location-interval tables, if requested"),
     fitted_steps = data.frame(StepOwner = fit$config$step_facet,
       StepLevel = fit$steps$StepFacet, Step = fit$steps$Step,
-      FittedStep = fit$steps$Estimate, Interval = "Not available"))
+      FittedStep = fit$steps$Estimate, Interval = "See attached step-interval tables, if requested"))
+  for (name in names(tables)) tables[[name]]$PointEstimateStatus <- overview$Status
+  if (identical(overview$Status, "finite_maximum_absent"))
+    for (name in names(tables)) {
+      tables[[name]]$Interval <- "Unavailable: no finite full-model maximum"
+      tables[[name]]$ValueBasis <- "optimizer_trace"
+    }
+  if (identical(fit$opt$value_basis, "neutral_boundary_reference"))
+    for (name in names(tables)) tables[[name]]$ValueBasis <- "neutral_boundary_reference"
+  tables$fitted_slopes$PrimaryEstimate <- fit$slopes$PrimaryEstimate
+  tables$fitted_slopes$ParameterStatus <- fit$slopes$ParameterStatus
+  tables$point_estimation <- overview
+  support <- mfrm_facet_rating_support(fit)
+  if (!is.null(fit$point_limit$fit)) {
+    reduced_support <- mfrm_facet_rating_support(fit$point_limit$fit)
+    for (name in c("table","crossings","categories"))
+      support[[name]] <- dplyr::bind_rows(support[[name]],reduced_support[[name]])
+    support$notes <- unique(c(support$notes,reduced_support$notes))
+  }
+  tables$rating_support <- support$table
+  tables$rating_crossings <- support$crossings
+  tables$rating_categories <- support$categories
+  tables$rating_support_notes <- data.frame(Note=support$notes)
+  if (!is.null(fit$point_limit)) {
+    tables$point_limit <- fit$point_limit$overview
+    tables$point_targets <- fit$point_limit$targets
+    if (!is.null(fit$point_limit$step_targets)) tables$step_targets <- fit$point_limit$step_targets
+    if (!is.null(fit$point_limit$category_map)) tables$category_map <- fit$point_limit$category_map
+    reduced <- fit$point_limit$fit
+    if (!is.null(reduced)) {
+      basis <- if (identical(fit$point_limit$overview$Reduction,"global_endpoint"))
+        "reduced_category_convention" else "limiting_likelihood"
+      tables$limit_locations <- data.frame(reduced$facets$others[c("Facet","Level","Estimate")],
+        NoncenterFacet=reduced$config$noncenter_facet, Basis=basis)
+      tables$limit_steps <- data.frame(reduced$steps[c("StepFacet","Step","Estimate")],
+        Basis=basis)
+      if (isTRUE(reduced$population$active)) tables$limit_population <- data.frame(
+        Mean=unname(reduced$population$coefficients[1]),SD=sqrt(reduced$population$sigma2),Basis=basis)
+    }
+  }
+  if (nrow(point$boundary %||% data.frame())) tables$point_boundary <- point$boundary
+  tables
 }
 
 mfrm_gpcm_results_attach <- function(out, inputs) {
+  if (!mfrm_has_product_slopes(out$fit) && !is.null(out$fit$point_limit)) {
+    points <- mfrm_gpcm_product_point_tables(out$fit)
+    names(points) <- paste0("gpcm_",names(points))
+    out$tables <- c(out$tables,points)
+    out$table_index <- mfrm_results_table_index(out$tables)
+  }
   if (mfrm_has_product_slopes(out$fit)) {
-    out$tables$gpcm_interpretation_notes <- data.frame(Note = mfrm_gpcm_product_note())
-    out$notes <- unique(c(out$notes, mfrm_gpcm_product_note()))
+    out$tables$gpcm_interpretation_notes <- data.frame(Note = .mfrmr_const_mfrm_gpcm_product_note)
+    out$notes <- unique(c(out$notes, .mfrmr_const_mfrm_gpcm_product_note))
     if ("fit" %in% out$include) {
       points <- mfrm_gpcm_product_point_tables(out$fit)
       names(points) <- paste0("gpcm_", names(points))
@@ -352,6 +446,9 @@ mfrm_gpcm_results_attach <- function(out, inputs) {
 
 # Keep the ordinary fit-report templates from recommending unsupported outputs.
 mfrm_gpcm_product_report <- function(x, style) {
+  revised <- mfrm_gmfrm_refresh_boundary(x$fit)
+  if (!identical(revised$config$gpcm_point_estimation, x$fit$config$gpcm_point_estimation))
+    stop("Saved results predate the endpoint-boundary review. Rebuild mfrm_results() from the saved fit before reporting; no model refit is required.", call. = FALSE)
   mfrm_gpcm_results_validate_scores(x)
   points <- mfrm_gpcm_product_point_tables(x$fit)
   adaptive <- mfrmr_adaptive_integration(x$fit$config)
@@ -362,16 +459,27 @@ mfrm_gpcm_product_report <- function(x, style) {
   interval_note <- if (length(intervals)) paste(n_intervals,
     "experimental slope intervals are available; inspect the saved checks and unavailable rows. Curve intervals remain unavailable.") else
     "No slope intervals were attached. Curve intervals are unavailable. Use confint(fit, parm = 'slopes') for the separately checked experimental slope approximation."
-  locations <- Filter(function(z) inherits(z, "mfrm_facet_intervals"), x$gpcm_inference %||% list())
+  steps <- Filter(function(z) inherits(z, "mfrm_facet_intervals") &&
+    identical(z$settings$target, "category_step_offsets"), x$gpcm_inference %||% list())
+  n_steps <- sum(vapply(steps, function(z) sum(z$table$CIEligible), integer(1)))
+  locations <- Filter(function(z) inherits(z, "mfrm_facet_intervals") &&
+    !identical(z$settings$target, "category_step_offsets"), x$gpcm_inference %||% list())
   n_locations <- sum(vapply(locations, function(z) sum(z$table$CIEligible), integer(1)))
   interval_note <- paste(interval_note, if (length(locations)) paste(n_locations,
     "experimental location/contrast intervals are available; inspect their fixed-scale references and saved checks.") else
     "No location intervals were attached; use mfrm_facet_intervals() for the separately checked experimental approximation.")
+  interval_note <- paste(interval_note, if (length(steps)) paste(n_steps,
+    "experimental step-offset intervals are available; constraint-fixed steps have no inferential interval.") else
+    "No step intervals were attached; use confint(fit, parm = 'steps') for the separately checked experimental approximation.")
+  boundary <- mfrm_gpcm_boundary_guidance(x$fit)
+  if (!is.null(boundary)) interval_note <- paste(
+    "No finite full-model maximum exists. Full-model intervals and ordinary intervals after the limiting reduction are unavailable.",
+    "Finite limiting point estimates, when recorded, do not qualify those intervals.")
   first_screen <- data.frame(
     Area = c("Overall", "Numerical fit", "Calibration intervals", "Other outputs"),
-    Status = c("review", if (numerical) "ok" else "review", if (n_intervals + n_locations) "caveat" else "unavailable", "unavailable"),
+    Status = c("review", if (numerical) "ok" else "review", if (n_intervals + n_locations + n_steps) "caveat" else "unavailable", "unavailable"),
     Readiness = c("Provisional analysis", "Numerical only", "Output-specific checks", "Not supported"),
-    MainIssue = c(mfrm_gpcm_product_note(),
+    MainIssue = c(.mfrmr_const_mfrm_gpcm_product_note,
       if (adaptive) {
         if (numerical) "Direct adaptive MML met its optimizer and gradient checks." else
           "Direct adaptive MML did not pass its numerical convergence checks."
@@ -386,6 +494,25 @@ mfrm_gpcm_product_report <- function(x, style) {
       "Conditional new-Person EAP is separately available through predict_mfrm_units() or the portable calibration workflow with source/batch checks. Attach matching saved output through scores in mfrm_results()."),
     PrimaryRoute = c("report$tables$fit_summary_settings_overview", "report$tables$fit_summary_readiness",
       "report$tables", "mfrmr_output_guide(\"gpcm_capabilities\")"))
+  if (!is.null(boundary)) {
+    first_screen$MainIssue[1:2] <- boundary$issue
+    first_screen$Readiness[1:2] <- c("No finite full-model maximum",
+      if (boundary$skipped) "Optimization not run" else "Optimizer trace only")
+    first_screen$Status[2] <- if (boundary$skipped) "not_run" else if (numerical) "ok" else "review"
+    first_screen$NextAction <- c(boundary$actions[1], boundary$limit_issue,
+      boundary$actions[3], boundary$actions[2])
+    first_screen$PrimaryRoute[1:2] <- "report$tables$point_estimation"
+  }
+  first_screen <- rbind(first_screen, data.frame(Area="Point estimates",
+    Status=if (isTRUE(points$point_estimation$PrimaryAvailable)) "caveat" else "review",
+    Readiness=points$point_estimation$Status, MainIssue=points$point_estimation$Detail,
+    NextAction="Read the point-estimate status separately from SEs and intervals; inspect point_boundary when present.",
+    PrimaryRoute="report$tables$point_estimation"))
+  first_screen <- rbind(first_screen, data.frame(Area="Rating design",
+    Status="caveat", Readiness="Descriptive counts",
+    MainIssue="Distinct persons, rating rows, per-person exposure and category use describe the data behind each facet level. Counts do not establish precision.",
+    NextAction="Read DataBasis separately for the full model and any limiting fit; inspect rating_crossings and rating_categories for allocation and unused categories.",
+    PrimaryRoute="report$tables$rating_support"))
   selected <- c("fit_summary_overview", "fit_summary_settings_overview", "fit_summary_readiness",
     "fit_summary_decision", "fit_summary_slope_overview", "fit_summary_caveats")
   tables <- c(x$tables[intersect(selected, names(x$tables))],
@@ -426,8 +553,15 @@ mfrm_gpcm_product_report <- function(x, style) {
     Value = c(fit$config$estimation_control$gpcm_mml_start %||% "neutral (legacy)",
       fit$opt$mml_initialization$selected %||% "neutral",
       fit$opt$mml_initialization$total_seconds %||% NA_real_)))
-  tables <- c(list(model_settings = settings), points, tables)
-  tables$gpcm_interpretation_notes <- data.frame(Note = mfrm_gpcm_product_note())
+  if (!is.null(boundary) && boundary$skipped) {
+    no_run <- settings$Setting %in% c("Optimizer stages (selected start)", "EM iterations",
+      "Numerically converged", "Maximum total gradient", "Maximum per-Person marginal score",
+      "Stopping tolerance", "Initialization", "Selected start", "Initialization and optimization seconds")
+    settings$Value[no_run] <- "Not run (known boundary)"
+  }
+  tables <- c(list(model_settings = settings, first_screen = first_screen,
+    numerical_review = .mfrm_numerical_review(fit)), points, tables)
+  tables$gpcm_interpretation_notes <- data.frame(Note = .mfrmr_const_mfrm_gpcm_product_note)
   out <- structure(list(title = "mfrmr Two-family GPCM Report", style = style,
     source_include = x$include, decision = x$tables$fit_summary_decision,
     fit_readiness = x$fit_readiness, fit_readiness_components = x$fit_readiness_components,
@@ -443,8 +577,10 @@ mfrm_gpcm_product_report <- function(x, style) {
     interval_note,
     "Calibration intervals are unavailable for the response curves. Experimental slope and location intervals do not establish general coverage. Numerical convergence and curve shape do not qualify rater-quality decisions.",
     "The two fitted slopes multiply each other and the complete adjacent-category predictor. A large slope is not evidence of assessor competence or scoring accuracy.",
-    "Fitted locations and category steps are provisional numerical values on the fixed standard-normal ability scale. Separately requested location intervals retain their own checks; step intervals remain unavailable. Location differences do not imply uniform differences in expected ratings when slopes or steps differ. Step values are offsets centered to sum to zero within each step-owner level, not standalone category thresholds. An adjacent-category threshold also includes both facet locations.",
-    unlist(lapply(c("model_settings", names(points), intersect("gpcm_initialization", names(tables)),
+    if (!is.null(boundary)) paste(boundary$issue, boundary$limit_issue,
+      "Use limit_locations and limit_steps only when available, with their recorded location reference.") else
+      "Fitted locations and category steps are provisional numerical values on the fixed standard-normal ability scale. Separately requested location and step intervals retain their own checks. Location differences do not imply uniform differences in expected ratings when slopes or steps differ. Step values are offsets centered to sum to zero within each step-owner level, not standalone category thresholds. An adjacent-category threshold also includes the sum of the relevant facet locations.",
+    unlist(lapply(c("model_settings", "numerical_review", names(points), intersect("gpcm_initialization", names(tables)),
       names(tables)[grepl("^gpcm_.*_(curves|contexts|intervals|contrasts|profile_endpoints)$", names(tables))],
       intersect(c("response_overview", "response_diagnostic_settings", "response_measures", "scoring_overview",
         "scoring_settings", "scoring_source_checks", "scoring_source_audits", "scoring_integration",
@@ -466,7 +602,13 @@ mfrm_gpcm_product_report <- function(x, style) {
 #' agreement, quality or recommended scoring weights.
 #' @param x Saved [confint.mfrm_fit()] output from `parm = "slopes"`, or
 #'   [bootstrap_mfrm_gpcm()] output.
-#' @param title,subtitle Optional returned metadata; NULL removes it. The interval
+#' @param title Optional returned metadata; NULL removes it. The interval
+#'   description defaults to the saved target, method, confidence level and any
+#'   saved numerical or bootstrap cautions. Custom text overrides this default, while the
+#'   diagnostics remain in the plot data and interval tables. Titles and notes
+#'   are not drawn. Use `plot_data(p, "notes")` for descriptions and cautions,
+#'   and `plot_data(p, "title")` for the suggested figure title.
+#' @param subtitle Optional returned metadata; NULL removes it. The interval
 #'   description defaults to the saved target, method, confidence level and any
 #'   saved numerical or bootstrap cautions. Custom text overrides this default, while the
 #'   diagnostics remain in the plot data and interval tables. Titles and notes
@@ -516,6 +658,7 @@ mfrm_gpcm_product_report <- function(x, style) {
 #' # plot(ci, title = NULL)
 #' # apa_table(ci)
 #' # plot_data(ci, "table")
+#' @rdname bootstrap_mfrm_gpcm
 #' @export
 plot.mfrm_slope_intervals <- function(x, title = "GPCM slope uncertainty",
     subtitle = paste(attr(x, "target"), attr(x, "method"),
@@ -599,7 +742,7 @@ plot.mfrm_slope_intervals <- function(x, title = "GPCM slope uncertainty",
   invisible(p)
 }
 
-#' @rdname plot.mfrm_slope_intervals
+#' @rdname bootstrap_mfrm_gpcm
 #' @export
 plot.mfrm_gpcm_bootstrap <- function(x, title = "GPCM bootstrap inference",
     subtitle = "Fitted-model parametric bootstrap; unresolved refits retained", draw = TRUE, ...) {
@@ -663,7 +806,6 @@ as_ggplot.mfrm_results <- function(x, type = NULL, component = NULL, ...) {
   }
   NextMethod()
 }
-
 
 mfrm_gg_gpcm_profile <- function(x) {
   .require_mfrmr_ggplot2()

@@ -24,7 +24,6 @@ mfrmr_jml_gpcm_parameter_sequence_flag_contract_version <- function() {
   "mfrmr-jml-gpcm-parameter-sequence-flag-0.2.3-v1"
 }
 
-
 audit_mfrm_jml_gpcm_parameter_sequence_flag_scope <- function(
     config,
     sizes,
@@ -51,7 +50,7 @@ audit_mfrm_jml_gpcm_parameter_sequence_flag_scope <- function(
     is.finite(categories) && categories >= 2 && categories == floor(categories)
   compactification_matches <- identical(
     as.character(compactification$contract_version %||% "")[1],
-    mfrmr_jml_gpcm_boundary_compactification_contract_version()
+    .mfrmr_const_mfrmr_jml_gpcm_boundary_compactification_contract_version
   )
   sequence_diagnostic_matches <- identical(
     as.character(sequence_diagnostic$contract_version %||% "")[1],

@@ -32,9 +32,7 @@ mfrm_pca(
 )
 }
 \arguments{
-\item{x}{For \code{mfrm_pca()}: A table reviewed with \code{\link[=mfrm_features]{mfrm_features()}}. For \code{mfrm_cluster(..., method = "kmeans")},
-a result from \code{mfrm_pca()} is also accepted.
-
+\item{x}{For \code{mfrm_pca()}: A table reviewed with \code{\link[=mfrm_features]{mfrm_features()}}.
 For \code{plot()}: A result from \code{\link[=mfrm_pca]{mfrm_pca()}}.}
 
 \item{components}{For \code{mfrm_pca()}: Number of leading principal components to retain. \code{NULL}
@@ -50,13 +48,12 @@ deviations (\code{TRUE}, default). With \code{FALSE}, distances retain the origi
 feature units. Numeric coding must have a meaningful Euclidean interpretation;
 factors, ordered factors, characters and logical features are refused.}
 
-\item{weights}{Optional named, strictly positive finite numeric vector with
-one weight per selected feature. Defaults to equal weights. Names, not
-vector order, identify features. Remove a feature to exclude it.}
+\item{weights}{As in \code{\link[=mfrm_cluster]{mfrm_cluster()}}. The same choices apply to every
+imputation.}
 
-\item{missing}{Either \code{"error"} (default) or \code{"omit"}. The latter excludes
-incomplete entities explicitly, retaining their IDs, reasons, and missing
-group membership in the result. No values are imputed.}
+\item{missing}{Either \code{"error"} (default) or \code{"omit"}, applied to missing
+features remaining after imputation. Explicit omission retains excluded
+IDs with unavailable memberships and pairwise proportions.}
 
 \item{...}{For \code{print()}: Reserved for method compatibility.
 For \code{plot()}: Reserved for future use; additional arguments are rejected.}
@@ -71,9 +68,9 @@ the view; they do not refit PCA or imply separation on every component.
 Groups use both colour and point shape, including monochrome output.
 Shapes repeat after six groups; inspect the ID-aligned table for crowded views.}
 
-\item{labels}{Whether to display entity IDs on silhouettes or heatmaps.
-The default displays them for at most 50 entities. No entities are sampled
-when labels are hidden. Profile plots always label groups and levels.}
+\item{labels}{Show entity IDs in scores plots; \code{NULL} labels at most
+50 included entities. Loading plots label features and scree plots label
+components. Hiding entity labels does not omit observations.}
 
 \item{marginal}{Marginal histogram display for \code{type = "scores"}:
 \code{"auto"} (default; displayed when at least 8 finite score pairs are plotted),
@@ -163,7 +160,7 @@ pca$loadings
 groups <- mfrm_cluster(method = "kmeans", pca, k = 2, seed = 17, silhouette = FALSE)
 plot(pca, type = "scores", groups = groups)
 plot(groups, type = "profile", feature = "ExperienceYears")
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_pca", run.dontrun = TRUE)
 \dontrun{
 attributes <- data.frame(ID = letters[1:6],

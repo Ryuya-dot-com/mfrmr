@@ -64,142 +64,113 @@ Paired Wright/CCC payloads from \link[=plot.mfrm_fit]{plot(reference, comparison
 comparison or difference view, group selection and monochrome panel policy.
 }
 \description{
-\code{as_ggplot()} is an optional renderer for an \code{mfrm_plot_data} object or an
-object whose \code{plot()} method supports \code{draw = FALSE}. Base graphics remain
-the default; the returned \code{ggplot} can be restyled or composed downstream.
+\code{plot()} returns a \code{ggplot} object that can be restyled or composed directly.
+Use \code{as_ggplot()} to convert saved \code{mfrm_plot_data} or to select a supported
+display from an analysis object. Passing an existing \code{ggplot} without extra
+controls returns it unchanged, including user edits.
 }
 \details{
-Bubble conversion uses the saved radii, facet colours, facet order and
-reference lines. It preserves relative circle radii, rather than replacing
-them with equal-sized points. Base circles use plot units; ggplot point
-sizes use physical units, so absolute sizes need not match across devices. Payloads lacking matching saved radii
-or facet colours must be recreated with \link[=plot.mfrm_fit]{plot(x, type = "bubble")}.
+Saved plot conversion retains the selected view, values, intervals, missing states,
+display settings and interpretation. It does not refit, rescore, recompute
+diagnostics or change interval qualifications. Use \code{\link[=plot_data]{plot_data()}} for other
+tables; choosing a component does not authorize a different statistic.
 
-Dedicated conversions are provided for Wright maps, theta-to-expected-score
-pathways, fit-statistic-to-measure pathways, category characteristic curves,
-bubble charts, DIF/DFF summaries and heatmaps, portable-calibration
-score review plots, testlet calibration, shared-rater severity and bootstrap
-intervals, conditional Person scores, and
-multivariate D-study comparisons. Matched ordinary/extended facet comparisons
-preserve centered effects, paired/difference views, excluded rows, display
-controls and alternative text; see \code{\link[=plot.mfrm_extended_comparison]{plot.mfrm_extended_comparison()}}.
-Portable-calibration score views preserve their selected axes, stored
-endpoints, review symbols and unplotted dispositions with either the default
-or \code{component = "data"}. Use \code{\link[=plot_data]{plot_data()}} for other components; conversion
-does not rescore Persons or change their interval level.
-Agreement conversions retain the selected exact/correlation/difference
-metric, saved pair ordering and review thresholds, model-expected overlay,
-and missing comparisons. Agreement heatmaps use the saved facet labels and
-palette with a fixed metric scale. Use \code{plot_data()} for other tables in
-an agreement payload; automatic conversion does not guess a different
-statistic from the first numeric column.
-Linking conversions preserve the selected drift, wave estimates and stored
-interval endpoints, cumulative offsets, or common-element counts. Missing
-offsets do not become zero or connect a line across an unavailable link.
-Drift heatmaps use their saved residual matrix. Use \code{\link[=plot_data]{plot_data()}} for other
-tables; conversion does not recompute offsets or their uncertainty.
-Threshold-sensitivity tile and curve payloads also preserve their selected
-view, display controls and text alternatives; see
-\code{\link[=plot.mfrm_screening_sensitivity]{plot.mfrm_screening_sensitivity()}}.
-Response residual displays preserve their posterior or conditional plug-in
-probability definition and lack of reference cutoffs. Paired views retain
-available Infit when Outfit is undefined; see \code{\link[=plot.mfrm_response_diagnostics]{plot.mfrm_response_diagnostics()}}.
-Testlet conversions retain unavailable
-rows, prior-only symbols and the conditional-interval note; they do not
-estimate diagnostics or add calibration uncertainty. Extended-model interval,
-precision and empirical-distribution views preserve display settings, data
-exclusions and text alternatives; see \code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}}. Bootstrap
-conversion retains infinite endpoints as arrows and ordinary intervals as
-a dashed comparison. D-study conversions
-preserve G/Phi or SEM panels, fixed-count groups, score units, and unavailable
-estimates. They retain supplied D-study coefficient ribbons and interval
-gaps. Converting a saved plot object does not refit models or calculate
-intervals. G-study component conversions retain raw negative points,
-component intervals and square outlines for unavailable intervals.
-For a G-study or D-study input, \code{intervals = TRUE} is forwarded to its
-plot method and computes intervals before conversion; also supply
-\code{assumption = "normal"}.
-For multivariate D-study plots, an explicit \code{component = "series"} keeps
-this dedicated conversion; use \code{\link[=plot_data]{plot_data()}} for other tables.
-Difference-interval plots from \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} return
+\strong{Model and diagnostic views.} Dedicated converters cover Wright maps,
+expected-score/fit pathways, CCCs, bubbles, DIF/DFF, portable scores, testlet
+and shared-rater results, conditional Person scores and multivariate D-studies.
+\itemize{
+\item Bubbles keep radii, colours, facet order and reference lines. Relative
+radii are preserved; base plot units and ggplot physical sizes need not
+match across devices. Recreate payloads lacking radii/colours with
+\link[=plot.mfrm_fit]{plot(x, type = "bubble")}.
+\item Matched ordinary/extended comparisons retain centered effects, paired or
+difference views, exclusions and alternative text; see
+\code{\link[=plot.mfrm_extended_comparison]{plot.mfrm_extended_comparison()}}.
+\item Portable scores use the default or \code{component = "data"}, preserving axes,
+endpoints, review symbols and unplotted dispositions.
+\item Agreement keeps the chosen exact/correlation/difference metric, pair order,
+cutoffs, expected overlay and missing pairs. Heatmaps use saved labels,
+palette and fixed metric scales.
+\item Linking keeps drift/wave intervals, cumulative offsets or common counts;
+unavailable offsets neither become zero nor connect lines across gaps.
+Drift heatmaps use saved residuals.
+\item Threshold sensitivity retains tile/curve views and text alternatives;
+see \code{\link[=plot.mfrm_screening_sensitivity]{plot.mfrm_screening_sensitivity()}}. Response residuals retain their
+posterior/plug-in probability target, absent reference cutoffs, and available
+Infit when Outfit is undefined; see \code{\link[=plot.mfrm_response_diagnostics]{plot.mfrm_response_diagnostics()}}.
+\item Testlet/extended score views keep unavailable/prior-only rows, conditional
+uncertainty, exclusions and alternative text; see \code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}}.
+Bootstrap views use arrows for infinite endpoints and dashed ordinary intervals.
+}
+
+\strong{G/D-study views.} D-studies retain G/Phi or SEM panels, fixed-count groups,
+units, unavailable estimates, supplied ribbons and gaps; \code{component = "series"}
+uses the same converter. G-studies retain negative points, component intervals
+and square outlines for unavailable intervals. With an analysis object,
+\verb{intervals = TRUE, assumption = "normal"} explicitly computes intervals in
+its plot method before conversion. Saved plot conversion only reuses them.
+
+Difference-interval plots from \link{mfrm_d_study_comparison} return
 \code{ggplot} objects via both \code{plot()} and \code{as_ggplot()}, with underlying tables
 accessible through \code{\link[=plot_data]{plot_data()}}.
-Severity profiles preserve their saved normal bounds,
-ordered levels, guide bands, fixed points, unavailable states and precision
-notes with the default or \code{component = "data"}. The word "profile" does not
-imply a likelihood-profile interval. Conversion does not recalculate bounds
-or qualify exploratory JML or fallback/regularized uncertainty for inference.
-Residual-PCA scree, reference, excess and loadings plots have dedicated
-conversions with the default or \code{component = "data"}. They preserve saved
-eigenvalues, reference cutoffs, signed loadings and display encodings; method
-identifiers are not inferred as plotted variables. No PCA is recomputed.
-External-feature PCA scree, scores and loadings views have dedicated
-conversions. They preserve selected axes, retained-component symbols,
-saved group colours and shapes, labels and transformation metadata.
-Scores retain equal axis units; loading coefficients are not correlations.
-The default and \code{component = "table"} use the same complete PCA view.
-Use \code{ggplot2::labs(title = NULL, subtitle = NULL)} to remove headings from
-the returned ggplot. No PCA or clustering is refitted.
-External-feature dendrogram conversion retains the stored merges, heights,
-leaf order and group boxes, including tied-height cuts. The default and
-\code{component = "tree"} use the same complete view. Labels follow the saved
-setting; no tree is refitted or partition selected. Source metadata remain
-available with \code{\link[=plot_data]{plot_data()}}. Heights are not significance or branch support.
-Imputation co-membership heatmaps have dedicated conversion with the default
-or \code{component = "matrix"}. Values retain their all-imputation denominator,
-selected ID order and fixed zero-to-one scale. Unavailable cells use grey
-fill and crosses; zero is a valid fraction. The saved legend, labels and
-imputation count are reused, without recomputing or pooling partitions.
-Silhouette conversion preserves widths on a fixed minus-one-to-one scale,
-their saved order and overall-mean line. Numeric profiles preserve
-original-unit means, medians and counts, using separate symbols with slight
-vertical offsets. Categorical profiles preserve the category order, unused
-levels, group counts and within-group proportions on a zero-to-one scale.
-The default and \code{component = "table"} keep the full selected view;
-categorical profiles also accept \code{component = "matrix"}. These summaries
+
+\strong{Profiles and exploratory structure.} The default and the listed \code{component}
+selectors keep the complete view:
+\itemize{
+\item Severity (\code{"data"}): ordered levels, normal bounds, guide bands, fixed/
+unavailable states and precision notes. "Profile" does not mean likelihood
+profiling or qualify exploratory JML/fallback/regularized uncertainty.
+\item Residual PCA (\code{"data"}): scree/reference/excess/loadings, saved eigenvalues,
+cutoffs, signed loadings and encodings; method IDs are not plotted variables.
+\item External-feature PCA (\code{"table"}): selected axes, retained-component symbols,
+group colours/shapes, labels and transformations. Score axes have equal units;
+loadings are coefficients, not correlations.
+\item Dendrograms (\code{"tree"}): merges, heights, leaf order, labels and group boxes,
+including tied-height cuts. Heights are not significance or branch support.
+\item Imputation co-membership (\code{"matrix"}): all-imputation denominator, ID order,
+fixed \verb{[0,1]} scale, legend/labels and imputation count. Gray crossed cells
+are unavailable; zero is a valid fraction. Partitions are not pooled.
+\item Silhouettes (\code{"table"}): widths on \verb{[-1,1]}, saved order and overall mean.
+Numeric profiles keep original-unit means/medians/counts with offset symbols;
+categorical profiles keep category order, unused levels, counts and
+within-group proportions on \verb{[0,1]} (\code{"table"} or \code{"matrix"}). These summaries
 do not estimate uncertainty, rater quality or sampling stability.
-For main-effects \code{mfrm_d_study} results, use the base \code{plot()} method or
-\code{\link[=plot_data]{plot_data()}} for custom graphics; automatic conversion is refused because
-generic column selection does not preserve those design comparisons.
-Fit-measure \code{measure_ci} plots retain each facet/level row and its saved
-normal-band endpoints, including exploratory JML bands. Open diamonds mark
-fixed values and crosses mark estimates without intervals. Conversion does
-not recompute bounds or change their inferential qualification. The default
-and \code{component = "table"} preserve the complete view and its returned notes.
-Pooled fixed-facet MI intervals have dedicated conversion with the default
-or \code{component = "table"}. Saved t-interval endpoints, degrees of freedom,
-contrasts and complete-data information cautions are retained, with no
-repooling or interval recalculation. Open diamonds mark fixed targets without
-intervals, crosses mark missing intervals, and arrows mark infinite bounds.
-Arrow tips are plotting limits, not replacement finite confidence limits.
-Selecting \code{component} does not enable unsupported conversions: it cannot
-preserve D-study differences through generic column selection. Use \code{\link[=plot_data]{plot_data()}} to extract the table
-and specify the axes, intervals and grouping explicitly in custom graphics.
-Residual Q-Q plots require the base renderer or explicitly specified custom
-quantile axes; automatic conversion is unavailable, even with \code{component}.
-Residual-correlation heatmaps retain the selected facet on both
-axes, a fixed -1 to 1 colour scale, and grey unavailable cells; their pair
-table and notes retain overlap counts and interpretation qualifications.
-Saved rating-scale counts and thresholds, and category-structure counts,
-retain the selected values, missing outcomes, expected-count overlay and
-saved palette. Use the default or the matching \code{category_table} /
-\code{threshold_table} component. Threshold figures show point estimates; stored
-SEs and CI-use flags remain in the payload, not as curve or gap intervals.
+}
+
+Main-effects \code{mfrm_d_study} plots retain the selected design comparison
+through their dedicated conversion; use \code{\link[=plot_data]{plot_data()}} for its tables.
+
+\strong{Interval displays.} Fit-measure \code{measure_ci} views keep facet/level rows,
+saved normal endpoints (including exploratory JML), notes, open diamonds for
+fixed targets and crosses for unavailable intervals (\code{component = "table"}).
+Pooled fixed-facet MI uses the same selector, retaining t endpoints, df,
+contrasts and complete-data information cautions. It additionally marks
+infinite bounds with arrows; arrow tips are display limits, not finite bounds.
+
+Selecting \code{component} must preserve the selected view. Use \code{\link[=plot_data]{plot_data()}}
+to extract other tables and specify their axes and grouping in custom
+graphics. Residual Q-Q conversion retains the saved quantile axes with
+the default or \code{component = "data"}; it adds no normality test.
+Residual-correlation heatmaps keep the same facet on both axes, scale \verb{[-1,1]},
+gray unavailable cells, overlap counts and interpretation notes. Rating-scale
+and category-structure displays keep selected counts/thresholds, missing
+outcomes, expected-count overlay and palette; use the default or matching
+\code{category_table}/\code{threshold_table}. Thresholds are points; stored SEs/CI-use
+flags do not become curve or gap intervals.
+
 Category-curve bundles (including their overview), category-structure
-boundary views and threshold ladders require their base renderer or custom
-graphics from \code{\link[=plot_data]{plot_data()}}; automatic conversion is unavailable even with
-\code{component}. Generic column selection would mix distinct curve targets or
-lose the selected view. Fitted CCC plots from
+boundary views and threshold ladders also use dedicated conversion to
+retain their distinct curve targets and selected view. Fitted CCC plots from
 \link[=plot.mfrm_fit]{plot(fit, type = "ccc")} retain their dedicated conversion.
 
 Bias scatter/ranked views preserve their axes, saved review rules and
 conditional interval bounds, including dashed search-limited bounds.
-Bias heatmaps, histograms and facet profiles require base/custom graphics;
-the generic converter cannot combine their distinct layouts safely.
+Bias heatmaps, histograms and facet profiles have dedicated conversions
+that retain the selected layout and screening settings.
 Halo distributions, selected per-rater summaries and signed retained-edge
 matrices preserve the selected metric, missing comparisons and caveats.
-Halo network conversion is unavailable. Save the complete analysis result
-and recreate its plot to obtain current interpretation notes.
+Halo network conversion retains the saved graph layout and edges. Save
+the complete analysis result and recreate its plot for current notes.
 
 Shrinkage plots from \link[=plot.mfrm_fit]{plot(fit, type = "shrinkage")}
 preserve both estimates for each facet level, their adjustment direction

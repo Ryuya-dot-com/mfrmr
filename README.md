@@ -17,47 +17,48 @@ For speaking performances, essays and other rated work, `mfrmr` helps you:
 - **Explain results:** examine agreement and prepare tables, figures and reports
   for researchers or raters.
 
+`mfrmr_output_guide()` lists the five central workflows. Use `summary()` and
+`plot()` on the resulting objects; interval methods are documented with each
+result class. `mfrmr_output_guide("all")` lists specialist tools.
+
 [![Three ggplot examples: rater severity with intervals, task/rater planning curves, and score-category probabilities. All use synthetic data.](man/figures/visual-gallery.png)](https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html)
 
-**[Explore the published interactive gallery (0.2.4)](https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html)**:
+**[Explore the interactive visual gallery](https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html)**:
 inspect values, compare rating plans, and reuse the ggplot2 code in your report.
 
-## Install and choose matching documentation
+## Install and open tutorials
 
-**The CRAN release is 0.2.4 (published 2026-10-30).** Install it with:
+Install `mfrmr` from CRAN and open its five core offline tutorials (workflow,
+model choice, G-theory planning, visual diagnostics and reporting):
 
 ```r
 install.packages("mfrmr")
 browseVignettes("mfrmr")
 ```
 
-The [published documentation website](https://ryuya-dot-com.github.io/mfrmr/)
-currently describes **0.2.4**. Use those tutorials with that release.
+When updating scripts written for `0.2.x`, open `help("mfrmr_api_migration_030")`
+for replacement calls and argument mappings. Extended articles and worked examples
+are available on the [documentation website](https://ryuya-dot-com.github.io/mfrmr/).
 
-**The examples below describe development toward 0.3.0 (`0.2.4.9000`).**
-To install this development revision from a source checkout, follow the
-[source-build steps](CONTRIBUTING.md#building-from-a-checkout-with-retained-research-results)
-to produce `mfrmr_0.2.4.9000.tar.gz`, including the five core tutorials.
-Building tutorials requires R Markdown and Pandoc. Then, from the directory
-containing that archive, install it in R:
+To build from a repository checkout that retains local research directories, follow the
+[source-build steps](https://github.com/Ryuya-dot-com/mfrmr/blob/main/CONTRIBUTING.md#building-from-a-checkout-with-retained-research-results)
+to stage and build `mfrmr_0.3.0.tar.gz` (requires R build tools, R Markdown and
+Pandoc), then install the archive in a fresh R session:
 
 ```r
-install.packages("mfrmr_0.2.4.9000.tar.gz", repos = NULL, type = "source")
+install.packages("mfrmr_0.3.0.tar.gz", repos = NULL, type = "source")
 ```
-
-Source installation requires R build tools. Check `packageVersion("mfrmr")`
-in a fresh R session before following the examples. Before updating existing
-scripts, open `help("mfrmr_api_migration_030")`.
-The development source includes five core offline tutorials: workflow, model
-choice, G theory, visual diagnostics and reporting. Use the
-[development documentation](https://ryuya-dot-com.github.io/mfrmr/dev/) with
-this development version, and the stable website with CRAN 0.2.4.
 
 **[Start the interactive tour](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html)**
 to follow one assessment from rating data to diagnostics, rater feedback,
 assessment planning and a saved report. You can explore the figures before
 running R. To start with your own data, follow the
 [data and design section](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr.html#look-at-data).
+
+For an external-data example, the ICNALE essay-rating workflow (`vignettes/articles/mfrmr-icnale-caf.Rmd` in the [source repository](https://github.com/Ryuya-dot-com/mfrmr))
+starts with a workbook you obtain yourself and connects cleaning, calibration,
+local rater feedback and assessment planning. Corpus data and individual results
+are not included; the website displays code for local execution.
 
 ## Try one assessment
 
@@ -190,7 +191,7 @@ and follow [NEWS](NEWS.md) and `help("mfrmr_api_migration_030")` for the
 Native measurement models use one ordered score scale and one latent person
 dimension. Two-family GPCM and other experimental routes have separate limits
 in the model guides. G/D studies concern variation in defined observed scores.
-The [roadmap](ROADMAP.md) separates current capabilities from future work.
+The [roadmap](https://github.com/Ryuya-dot-com/mfrmr/blob/main/ROADMAP.md) separates current capabilities from future work.
 
 Use `citation("mfrmr")` and the methodological references in the relevant help.
 For reproducible numerical checks, historical results and their limits, see
@@ -199,5 +200,4 @@ test is distinct from a repeated-sampling coverage study.
 Licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 `mfrmr` has benefited from discussion and methodological input from
-[Dr. Atsushi Mizumoto](https://mizumot.com/) and
-[Dr. Taichi Yamashita](https://kugakujo.kansai-u.ac.jp/html/100000882_en.html).
+Dr. Atsushi Mizumoto and Dr. Taichi Yamashita.

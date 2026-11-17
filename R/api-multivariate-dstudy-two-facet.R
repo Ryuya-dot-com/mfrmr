@@ -6,20 +6,8 @@
     .mfrm_mvgt_ms_region_setup(p$design, level) else NULL
   sem <- metric %in% c("RelativeSEM", "AbsoluteSEM")
   nesting <- d$gstudy$design$nesting
-  errors <- lapply(seq_len(nrow(tab)), function(i) {
-    counts <- as.numeric(d$design_grid[i, ])
-    if (is.null(nesting)) {
-      error <- c(0, 0, 0, 1/counts[1L], 1/counts[2L], 0, 1/prod(counts))
-      extra <- c(0, 1/counts[1L], 1/counts[2L], 0, 0, 1/prod(counts), 0)
-    } else {
-      child <- counts[match(d$gstudy$design$count_columns[[names(nesting)]], names(d$design_grid))]
-      parent <- counts[match(d$gstudy$design$count_columns[[unname(nesting)]], names(d$design_grid))]
-      error <- c(0, 0, 0, 1/parent, 1/(child*parent))
-      extra <- c(0, 1/parent, 1/(child*parent), 0, 0)
-    }
-    if (metric %in% c("Phi", "AbsoluteSEM")) error <- error + extra
-    error
-  })
+  errors <- lapply(seq_len(nrow(tab)), function(i)
+    unname(.mfrm_mvgt_profile_error(d, i, metric)))
   rows <- diagnostics <- list()
   for (method in methods) for (i in seq_len(nrow(tab))) {
     error <- errors[[i]]
@@ -80,6 +68,14 @@
     status <- out$Status
     if (!all(is.finite(c(out$Lower[reference], out$Upper[reference]))))
       status[] <- paste("Reference interval unavailable:", out$Status[reference])
+    # Linear projections retain cancellations between plans on this same region.
+    linear <- vector("list", length(errors)); universe <- NULL
+    if (any(available & seq_along(errors) != reference)) {
+      for (i in which(available)) linear[[i]] <- if (sem) diagnostics[[i]] else
+        .mfrm_mvgt_ms_region(p$ms, setup, errors[[i]], ratio = FALSE)
+      if (!sem) universe <- .mfrm_mvgt_ms_region(p$ms, setup,
+        c(1, rep(0, length(p$ms)-1L)), ratio = FALSE)
+    }
     for (i in which(available)) {
       delta_error <- errors[[i]]-errors[[reference]]
       lower_sign <- if (sem) all(delta_error >= 0) else all(delta_error <= 0)
@@ -89,6 +85,29 @@
       if (!sem) {
         lower[i] <- max(lower[i], feasible[i, 1L])
         upper[i] <- min(upper[i], feasible[i, 2L])
+      }
+      if (i != reference && any(delta_error != 0)) {
+        delta <- .mfrm_mvgt_ms_region(p$ms, setup,
+          if (sem) delta_error else -delta_error, ratio = FALSE)
+        shared <- .mfrm_mvgt_shared_difference(linear[[reference]]$bounds,
+          linear[[i]]$bounds, delta$bounds, if (!sem) universe$bounds)
+        shared$linear_projections <- list(reference = linear[[reference]],
+          comparison = linear[[i]], difference = delta, universe = universe)
+        candidate <- shared$bounds * if (sem) sqrt(p$restore) else 1
+        if (all(is.finite(shared$bounds)) &&
+            (any(!is.finite(candidate)) ||
+             any(candidate == 0 & shared$bounds != 0) ||
+             (diff(shared$bounds) > 0 && diff(candidate) == 0))) {
+          candidate[] <- NA_real_; shared$status <- "Unrepresentable difference endpoints"
+        }
+        shared$bounds <- candidate
+        shared$previous_bounds <- c(lower[i], upper[i])
+        shared$used <- all(is.finite(candidate))
+        if (shared$used) {
+          lower[i] <- max(lower[i], candidate[1L])
+          upper[i] <- min(upper[i], candidate[2L])
+        }
+        diagnostics[[i]]$shared_difference <- shared
       }
       status[i] <- if (all(delta_error == 0)) "Identical error weights" else "Conservative joint-region enclosure"
       if (lower[i] > upper[i]) {
@@ -109,11 +128,43 @@
     attr(out, "diagnostics") <- diagnostics[-reference]
     attr(out, "notes") <- c(attr(out, "notes"),
       "Differences are comparison minus reference. Individual projections share one simultaneous mean-square region. Their endpoint differences form a conservative enclosure, not the tight image of the difference and not subtraction of independent or marginal confidence intervals.",
+      "Shared error-variance differences and bounds on their nonnegative multiplying factor can further narrow this enclosure on the same region. Each comparison's shared_difference diagnostic records the candidate and linear projections; an unavailable refinement retains the preceding enclosure. This is not a tight nonlinear projection or a change in confidence level.",
       "Known componentwise ordering of error weights restricts the sign; identical error weights give [0,0] only when the shared region projections are available. Negative SEM differences and positive G/Phi differences favor the comparison plan.",
       if (!sem) "G/Phi difference enclosures are also intersected with the analytic population range FeasibleLower/Upper implied by the two error-weight vectors and nonnegative variance components. This removes impossible values without adding source information or altering the common-event coverage argument. Original ANOVA points are not clipped to this range.",
       "Under the positive-mean-square normal model the same source-region event protects the returned comparisons jointly for this fixed score/composite. Enclosures can be wide; individual_intervals and reference retain projections and diagnostics. No paired-delta SE is implied.")
   }
   .mfrm_mvgt_interval_result(out, d, p, out$MethodCode)
+}
+
+# Bounds for delta times a nonnegative factor; all inputs refer to one region.
+# For coefficients delta = error_a-error_b; for SEM delta = error_b-error_a.
+.mfrm_mvgt_shared_difference <- function(a, b, delta, u = NULL) {
+  ans <- list(bounds = c(NA_real_, NA_real_), status = "Shared linear projection unavailable")
+  if (any(!is.finite(c(a, b, delta, u)))) return(ans)
+  ans$status <- "Unrepresentable shared difference factor"
+  scale <- max(a, b, u)
+  if (scale <= 0 || any(c(a, b) <= 0) ||
+      any(vapply(list(a, b, delta, u), function(z) length(z) > 1L && diff(z) < 0, logical(1))) ||
+      (!is.null(u) && any(u < 0))) return(ans)
+  original <- c(a, b, delta, u)
+  a <- a/scale; b <- b/scale; delta <- delta/scale; u <- u/scale
+  if (any(c(a, b, delta, u) == 0 & original != 0)) return(ans)
+  if (length(u)) {
+    f <- function(x, aa, bb) (x/(x+aa))/(x+bb)
+    peak <- max(u[1L], min(u[2L], sqrt(a[1L])*sqrt(b[1L])))
+    factor <- c(min(f(u, a[2L], b[2L])), f(peak, a[1L], b[1L]))
+  } else factor <- c(1/(sqrt(a[2L])+sqrt(b[2L])),
+    1/(sqrt(a[1L])+sqrt(b[1L])))
+  ans$factor <- factor; ans$scale <- scale
+  if (length(u) && any(factor == 0 & u > 0)) return(ans)
+  products <- outer(delta, factor)
+  if (any(!is.finite(c(factor, products))) ||
+      any(products == 0 & outer(delta != 0, factor != 0, "&"))) return(ans)
+  bounds <- range(products) * if (length(u)) 1 else sqrt(scale)
+  if (any(!is.finite(bounds)) || any(bounds == 0 & range(products) != 0) ||
+      (diff(range(products)) > 0 && diff(bounds) == 0)) return(ans)
+  ans$bounds <- bounds; ans$status <- "Computed shared-difference enclosure"
+  ans
 }
 
 .mfrm_mvgt_approximate_f <- function(ms, map, error, level) {
@@ -207,8 +258,9 @@
     directions <- c(rep("<=", 2L*length(ms)), "=")
     objective <- c(u, 0)
   } else {
-    # A linear error variance uses the original component polytope.
-    objective <- error/setup$units; scale <- max(objective)
+    # Linear error variances and signed contrasts use the component polytope.
+    objective <- error/setup$units; scale <- max(abs(objective))
+    if (scale == 0) scale <- 1
     objective <- objective/scale
     C <- rbind(setup$B, -setup$B); rhs <- c(hi, -lo)
     directions <- rep("<=", length(rhs))
@@ -230,14 +282,17 @@
       abs((got-rhs)[directions == "="]), abs(sum(objective*f$solution) - f$objval))
   }, numeric(1))
   tol <- 1e-7
+  nonnegative <- ratio || all(error >= 0)
   if (any(!is.finite(c(bounds, ans$residual))) || any(ans$residual > tol) ||
-      bounds[1L] < -tol || (ratio && bounds[2L] > 1+tol) || bounds[1L] > bounds[2L] ||
+      (nonnegative && bounds[1L] < -tol) || (ratio && bounds[2L] > 1+tol) || bounds[1L] > bounds[2L] ||
       (ratio && any(vapply(fits, function(f) tail(f$solution, 1L) <= 0, logical(1))))) {
     ans$status <- "Linear-program numerical check failed"; return(ans)
   }
-  ans$bounds <- if (ratio) pmin(1, pmax(0, bounds)) else pmax(0, bounds)*scale*ms_scale
-  if (any(!is.finite(ans$bounds))) {
-    ans$bounds[] <- NA_real_; ans$status <- "Unrepresentable error-variance endpoints"; return(ans)
+  ans$bounds <- if (ratio) pmin(1, pmax(0, bounds)) else
+    (if (nonnegative) pmax(0, bounds) else bounds)*scale*ms_scale
+  if (any(!is.finite(ans$bounds)) ||
+      (!ratio && any(ans$bounds == 0 & bounds != 0 & (!nonnegative | bounds > 0)))) {
+    ans$bounds[] <- NA_real_; ans$status <- "Unrepresentable linear projection endpoints"; return(ans)
   }
   ans$status <- "Computed conservative interval"
   ans

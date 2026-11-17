@@ -446,6 +446,7 @@ format_reporting_marginal_pair_label <- function(pair_row) {
 #' old <- options(mfrmr.misfit_lower = 0.7, mfrmr.misfit_upper = 1.3)
 #' mfrm_misfit_thresholds()
 #' options(old)
+#' @rdname mfrm_threshold_profiles
 #' @export
 mfrm_misfit_thresholds <- function(lower = NULL, upper = NULL) {
   lo <- if (is.null(lower)) {
@@ -520,67 +521,9 @@ fit_screening_note <- function(row) {
 #   - pca_first_eigen_warn: Linacre-style residual-PCA heuristic band; use only as exploratory screening, not direct proof of multidimensionality.
 #   - pca_first_prop_warn: Smith (2002), unexplained variance > 5-10% merits investigation.
 #   - pca_reference_bands: uncalibrated descriptive reference values only.
-warning_threshold_profiles <- function() {
-  list(
-    profiles = list(
-      strict = list(
-        n_obs_min = 200,
-        n_person_min = 50,
-        low_cat_min = 15,
-        min_facet_levels = 4,
-        misfit_ratio_warn = 0.08,
-        missing_fit_ratio_warn = 0.15,
-        zstd2_ratio_warn = 0.08,
-        zstd3_ratio_warn = 0.03,
-        expected_var_min = 0.30,
-        pca_first_eigen_warn = 1.5,
-        pca_first_prop_warn = 0.10
-      ),
-      standard = list(
-        n_obs_min = 100,
-        n_person_min = 30,
-        low_cat_min = 10,
-        min_facet_levels = 3,
-        misfit_ratio_warn = 0.10,
-        missing_fit_ratio_warn = 0.20,
-        zstd2_ratio_warn = 0.10,
-        zstd3_ratio_warn = 0.05,
-        expected_var_min = 0.20,
-        pca_first_eigen_warn = 2.0,
-        pca_first_prop_warn = 0.10
-      ),
-      lenient = list(
-        n_obs_min = 60,
-        n_person_min = 20,
-        low_cat_min = 5,
-        min_facet_levels = 2,
-        misfit_ratio_warn = 0.15,
-        missing_fit_ratio_warn = 0.30,
-        zstd2_ratio_warn = 0.15,
-        zstd3_ratio_warn = 0.08,
-        expected_var_min = 0.10,
-        pca_first_eigen_warn = 3.0,
-        pca_first_prop_warn = 0.20
-      )
-    ),
-    pca_reference_bands = list(
-      eigenvalue = c(
-        critical_minimum = 1.4,
-        caution = 1.5,
-        common = 2.0,
-        strong = 3.0
-      ),
-      proportion = c(
-        minor = 0.05,
-        caution = 0.10,
-        strong = 0.20
-      )
-    )
-  )
-}
 
 resolve_warning_thresholds <- function(thresholds = NULL, threshold_profile = "standard") {
-  refs <- warning_threshold_profiles()
+  refs <- .mfrmr_const_warning_threshold_profiles
   profile_name <- tolower(as.character(threshold_profile %||% "standard"))
   if (!profile_name %in% names(refs$profiles)) profile_name <- "standard"
   active <- refs$profiles[[profile_name]]
@@ -772,7 +715,7 @@ summarize_convergence_metrics <- function(summary_row) {
   contract_current <- "ICContractVersion" %in% names(summary_row) &&
     identical(
       as.character(summary_row$ICContractVersion[1]),
-      mfrm_ic_contract_version()
+      .mfrmr_const_mfrm_ic_contract_version
     )
   ic_eligible <- contract_current && "ICEligible" %in% names(summary_row) &&
     isTRUE(as.logical(summary_row$ICEligible[1]))
@@ -1222,7 +1165,7 @@ build_apa_note_map_from_contract <- function(contract) {
       "Note. Bias contrasts are in logits and represent observed minus expected scores with main effects held fixed. ",
       "The reported t and probability columns are screening metrics based on conditional plug-in information, not formal hypothesis tests. ",
       "Rows with screening tail area below .05 = ", fmt_count(summaries$bias_sig_n), ". ",
-      mfrm_bias_uncertainty_note()
+      .mfrmr_const_mfrm_bias_uncertainty_note
     )
   } else {
     note_map$table4 <- paste0(
@@ -1481,19 +1424,6 @@ build_apa_report_text_from_contract <- function(contract) {
   method_text <- paste0("Method.\n\n", render_sections(method_keys))
   results_text <- paste0("Results.\n\n", render_sections(results_keys))
   paste0(method_text, "\n\n", results_text)
-}
-
-mfrm_separation_interpretation <- function() {
-  paste(
-    "Separation reliability describes differences among facet locations relative to their estimation errors.",
-    "High Person values indicate distinguishable abilities; high rater values indicate distinguishable severities, not inter-rater agreement.",
-    "Low rater values can also reflect imprecision and do not establish agreement.",
-    "The index does not test every rater pair or quantify the practical size of severity differences.",
-    "Reliability, separation and Strata are approximate compatibility indices using marginal SEs; joint-information SEs do not validate this variance decomposition.",
-    "They do not account for covariance among estimates. EAP-based separation is not posterior-variance EAP reliability.",
-    "Model and fit-adjusted values are companion indices, not confidence limits. Strata describes hypothetical distinguishable strata, not discovered groups.",
-    "Facet heterogeneity chi-square summaries use diagonal SE weights, not full-covariance joint tests."
-  )
 }
 
 reporting_interrater_text <- function(diagnostics) {
@@ -1941,7 +1871,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       row <- rel_tbl[i, , drop = FALSE]
       paste0(row$Facet, " ", reliability_label, " = ", fmt_num(row$Reliability), " (separation = ", fmt_num(row$Separation), ").")
     }, character(1))
-    reliability_basis_sentence <- mfrm_separation_interpretation()
+    reliability_basis_sentence <- .mfrmr_const_mfrm_separation_interpretation
     person_reliability_note <- if (identical(method, "MML") &&
                                    any(rel_tbl$Facet == "Person", na.rm = TRUE)) {
       paste0(
@@ -2011,7 +1941,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   pca_facet_1 <- extract_facet_pca_first(pca_obj)
   pca_overall_error <- extract_overall_pca_error(pca_obj)
   pca_facet_errors <- extract_facet_pca_errors(pca_obj)
-  pca_reference_text <- build_pca_reference_text(warning_threshold_profiles()$pca_reference_bands)
+  pca_reference_text <- build_pca_reference_text(.mfrmr_const_warning_threshold_profiles$pca_reference_bands)
   marginal_state <- extract_strict_marginal_visual_state(diagnostics)
 
   if (!is.null(pca_overall_1)) {
@@ -2180,7 +2110,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       ),
       parameters = as.data.frame(
         fit_readiness_record$parameters %||%
-          mfrmr_readiness_empty_parameter_table(),
+          mfrmr_readiness_empty_parameter_table,
         stringsAsFactors = FALSE
       )
     ),
@@ -2325,10 +2255,6 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   class(contract) <- c("mfrm_apa_contract", "list")
   contract
 }
-
-
-
-
 
 build_visual_warning_map <- function(res,
                                      diagnostics,

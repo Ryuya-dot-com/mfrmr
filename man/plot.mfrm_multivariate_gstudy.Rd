@@ -103,8 +103,7 @@ Covariance interval plots have \code{kind = "Covariance"}, one forest panel,
 and the original pair in \code{score}. The full interval table retains covariance
 units, assumptions, numerical bands and SE/interval diagnostics.
 Save the result with \code{saveRDS()} for later \code{as_ggplot()} conversion,
-without recalculating intervals, or save the G-study to redraw it with
-base graphics.
+without recalculating intervals, or save the G-study to redraw it.
 }
 \description{
 Plot raw variance components for selected scores or one prespecified weighted
@@ -112,112 +111,25 @@ score, or inspect the component covariance matrices. Then use \code{\link[=mfrm_
 how changing the measurement conditions affects G, Phi and SEM.
 }
 \details{
-Each point is a variance-component estimate in squared score units.
-For weights \eqn{w}, the component is \eqn{w' \Sigma_s w}, including
-between-score covariances. Multiplying all weights by a constant multiplies
-each component by its square. Components describe the source model at the
-individual rating level; they have not been divided by future facet counts.
-They are not percentages, measurement-error shares for a future mean score,
-or MFRM severity estimates. A larger Person component describes greater
-person variation, not a defect in the assessment. A large rater component
-does not by itself identify which rater should receive feedback.
+Plots raw individual-rating variance components in squared score units (or
+\eqn{w' \Sigma_s w} for composite \code{weights}, without future-count division).
+Nonnegative estimates use filled circles; unconstrained negative estimates
+remain unclipped to the left of zero as open circles, and \code{ComponentPSD}
+tracks full-matrix positive semidefiniteness. The last source (\code{Residual})
+combines the highest-order interaction and within-cell error; D-study
+relative/absolute error instead aggregates across multiple components (see
+\code{\link[=mfrm_d_study]{mfrm_d_study()}}).
 
-Negative estimates remain to the left of zero as open circles; nonnegative
-estimates use filled circles. An unconstrained negative estimate is not a
-negative population variance. Inspect the data/design and component
-diagnostics before interpreting it. No component is clipped, normalized
-or removed. A covariance matrix can be non-positive-semidefinite even when
-its projection for the selected score is positive; this is retained in the
-returned table and notes.
-
-With \code{intervals = TRUE}, horizontal bars replace the stems from zero.
-They show the nonnegative-space intervals from
-\code{\link[=confint.mfrm_multivariate_gstudy]{confint.mfrm_multivariate_gstudy()}}: approximate Ting MLS intervals for
-components and chi-square intervals for the combined residual. They are
-pointwise, not simultaneous across components or scores. Negative point
-estimates can lie outside their nonnegative-space intervals. Square
-outlines mark estimates without an interval; consult \code{IntervalStatus}
-and \code{unavailable_intervals} for the reason. An empty interval or degenerate
-mean squares do not mean zero uncertainty. Raw endpoints, SEs and the full
-interval tables remain in the returned data. These intervals concern
-source variances, not future mean-score errors, G/Phi or off-diagonal
-covariance elements. With \code{intervals = FALSE}, stems run from zero to
-the estimate and do not represent uncertainty.
-
-With \code{method = "reml_profile"}, the bars instead show approximate
-restricted-likelihood component intervals. The points remain the original
-ANOVA/MINQUE estimates; the separate \code{IntervalCenter} is retained in the
-table. Profile \code{SE} and inapplicable MLS \code{RawLower/RawUpper} columns are
-\code{NA}; \code{SEStatus} explains this. Numerical availability does not establish
-coverage, especially near zero variances. The interval surrounds the REML
-center but does not enumerate remote disconnected accepted regions.
-
-With \code{method = "residual_contrast"}, only Residual receives a bar, based
-on a projection that removes all nonresidual effects. Points still show
-original ANOVA/MINQUE components; \code{IntervalCenter} records the projected
-residual estimate. No remaining residual degrees of freedom or numerically
-unresolved residual variation means unavailable limits. Exact variance
-coverage and conservative covariance coverage require the normal residual
-model at a fixed observed assignment; they do not extend to other sources
-or nonrandom omissions. See \emph{Residual contrasts} in the interval help.
-
-Multiple-score component panels share axes. Compare their magnitudes only
-when the score units are comparable. Covariance heatmaps show the selected
-submatrix for every source, with variances on the diagonal and covariances
-off the diagonal. Covariance units are the product of the two score units;
-these are not correlations. All panels share a color scale centered at zero
-and include signed numeric labels. Color presets use a diverging palette;
-\code{"monochrome"} uses a gray scale. Values are neither standardized nor
-converted to correlations. A negative covariance can be legitimate; a
-negative variance is an unconstrained estimate, not a population variance.
-\code{ComponentPSD} and returned notes describe the full source matrix even if
-only a subset of scores is shown. A large covariance alone does not diagnose
-halo. Cell labels are rounded for display; the table keeps exact values.
-
-With \verb{type = "covariance", intervals = TRUE}, select exactly two scores
-and an explicit method. A single horizontal interval plot across sources
-replaces the heatmaps. Covariance endpoints remain signed, including
-negative values. \code{"gci"} has approximate coverage and separate Monte Carlo
-endpoint bands; \code{"regression_region"} has conservative normal-model
-coverage but may be very wide. Square outlines retain unavailable intervals.
-\code{SEStatus} is separate: a one-df block can prevent an SE while still
-permitting a conservative interval. Open circles mark negative covariances,
-which can be legitimate. Explicit \code{"reml_profile"} instead fits a joint
-normal model, also for incomplete sources, and retains its separate
-\code{IntervalCenter} and full numerical diagnostics. Its chi-square calibration
-is experimental and can under-cover with few facet levels; no sampling SE
-is supplied. None of these methods is a correlation interval.
-
-All estimated interactions are shown. The table preserves the original
-\code{Source} identifiers and adds a readable \code{Label}. For a crossed Person,
-Rater and Task design, the last label is "Person x Rater x Task + residual".
-Its \code{Source} remains \code{Residual}: with one observation per cell, the
-highest-order interaction and other residual variation cannot be estimated
-separately. A one-facet design instead shows "Person x Task + residual"
-(or the declared facet name); a nested design shows, for example,
-"Person x Rater(Task) + residual". No extra independent error component
-should be added to these combined estimates.
-
-Measurement error is not synonymous with the component called \code{Residual}.
-For the supported random-facet mean-score projections, relative error
-includes the person-by-condition interactions and combined residual;
-absolute error additionally includes condition main effects and interactions
-without Person. The D-study divides each component by its applicable future
-counts, then adds these terms. Use \code{plot(d, type = "sem")} to view the square
-roots of the two error variances. Neither SEM nor a residual-component point
-is a sampling confidence interval. See \code{\link[=mfrm_d_study]{mfrm_d_study()}} for
-the formulas and assumptions, and \code{vignette("mfrmr-gtheory")} for a worked
-source-to-error example.
-
-This plot reads stored component estimates and preserves missing-data rules.
-Explicit REML intervals fit a separate model without replacing those points;
-other interval methods use the saved summaries.
-Titles and explanations are returned separately from the figure. Use
-\code{plot_data(p, "notes")} and keep them when sharing a figure. Both base R
-graphics and optional \code{\link[=as_ggplot]{as_ggplot()}} conversion are supported.
+With \code{intervals = TRUE}, horizontal bars show pointwise intervals from
+\code{\link[=confint.mfrm_multivariate_gstudy]{confint.mfrm_multivariate_gstudy()}} (square outlines mark unavailable rows
+recorded in \code{unavailable_intervals}; \code{"reml_profile"} and
+\code{"residual_contrast"} retain original points alongside \code{IntervalCenter}).
+\code{type = "covariance"} displays unstandardized variance-covariance heatmaps
+centered at zero, or a two-score signed interval forest plot when
+\code{intervals = TRUE} with an explicit method.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_multivariate_gstudy", run.dontrun = TRUE)
 \dontrun{
 tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))

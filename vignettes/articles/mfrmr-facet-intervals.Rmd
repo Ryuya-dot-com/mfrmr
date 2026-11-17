@@ -57,8 +57,9 @@ review of the actual joint information, convergence and finer quadrature while
 retaining `InferenceReady = FALSE` in the source fit. Read the interval object's
 `CIEligible`, `checks` and `InferenceCaution`. This supplies an asymptotic
 approximation with a small-sample caution; it does not establish coverage or
-make other analyses available. Empty categories and identification/numerical
-failures are not waived. There is no ten-rating-row minimum; precision and
+make other analyses available. Empty categories in a fitted step scope and identification/numerical
+failures are not waived. A local rater need not use every category of a shared
+step ladder when full-information and quadrature checks pass. There is no ten-rating-row minimum; precision and
 identification depend on the model and response patterns, not a row count alone.
 
 Full RSM/PCM calibration also admits one Person for JML, CML and fixed-population
@@ -105,6 +106,60 @@ same horizontal coordinate. The zero line denotes no difference; it is not a
 threshold of practical importance or a rater-quality rule. Use the size of the
 difference, interval, rubric and shared rating examples together when giving
 feedback.
+
+## Compare raters when their criterion effects differ
+
+A prespecified Rater × Criterion interaction allows a rater to be relatively
+severe on one criterion and lenient on another. The rater main effect then
+describes severity **averaged equally over the declared criteria**. It does not
+weight criteria by their observed counts or estimate a difference in mean ratings.
+
+<details>
+<summary>Fit the joint model and obtain the rater main-effect interval</summary>
+
+```{r joint-main-effects, eval=FALSE}
+ratings <- load_mfrmr_data("example_core")
+persons <- unique(ratings["Person"])
+joint_fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  model = "RSM",
+  spec = list(facet_interactions = "Rater:Criterion", population_formula = ~1,
+              person_data = persons),
+  control = list(mml_engine = "direct", quad_points = 121, maxit = 400,
+                 reltol = 1e-11))
+C <- matrix(c(1, -1, 0, 0), nrow = 1,
+  dimnames = list("R01 minus R02", c("R01", "R02", "R03", "R04")))
+main_interval <- mfrm_facet_intervals(joint_fit, facet = "Rater", contrasts = C)
+main_interval$table
+main_interval$checks
+plot(main_interval, comparison = FALSE)
+results <- mfrm_results(joint_fit, intervals = list(rater = main_interval),
+                       compute = "never")
+saveRDS(results, "joint-rater-results.rds")
+mfrm_report(readRDS("joint-rater-results.rds"))
+```
+
+`persons` supplies one row per Person for the estimated population model.
+This longer calibration is explicit code to run locally. For criterion-owned
+steps, use `model = "PCM", step_facet = "Criterion"` in the same call.
+
+</details>
+
+Omitting `contrasts` returns every rater level, including the dependent last
+level with its uncertainty. The interval uses the full joint covariance,
+including estimation of interaction effects, steps and the ability population.
+Only the model-information method on the native scale is supported here, with
+one fitted interaction and the same source and numerical checks as joint-cell
+intervals. Read `Status`, `CIEligible` and `InferenceReview`; withheld SE and
+bounds remain missing even when the point is finite. Numerical availability
+does not guarantee small-sample coverage.
+
+To inspect the interaction itself, use
+`mfrm_facet_intervals(joint_fit, interaction = "Rater:Criterion")`.
+Its positive coefficients increase the score predictor. At criterion c, the
+rater severity difference is `(r1 - r2) - (gamma1c - gamma2c)`; averaging this
+equally over criteria gives the main-effect difference because interaction
+margins sum to zero. Criterion-specific or unequal-weighted combined intervals
+are outside the main-effect route. Neither result alone establishes unfairness.
 
 ## Estimate a rater difference without an ability population model
 
@@ -237,6 +292,88 @@ scores is not a substitute. Fixed-standard-normal MML uses a fixed SD of one;
 it should not be described as estimating the standardizer. Conditional-normal
 latent regression has a residual SD, which is a different estimand and is not
 accepted by this population-SD transformation.
+
+## Profile a difference with an estimated ability population
+
+If the assessment model estimates an ability population rather than fixing it,
+a small residual variance can make ordinary covariance-based intervals
+unavailable. An explicit `method = "profile"` instead fixes the requested
+difference in turn and reoptimizes the remaining parameters, including
+nonnegative residual variance. Even when the center has zero residual variance,
+the endpoints can have positive variance.
+
+This experimental route accepts one named pairwise contrast for native direct
+RSM/PCM MML, an estimated normal population, unit weights and unanchored centered
+facets and steps. It excludes interactions, shrinkage, fixed population SD,
+GPCM and standardized or simultaneous contrasts. The calculation can be
+substantially slower than displaying a saved interval. Run the following code
+explicitly; it is not evaluated during article construction.
+
+```{r estimated-population-profile, eval=FALSE}
+ratings <- load_mfrmr_data("example_core")
+people <- unique(ratings["Person"])
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  spec = list(model = "PCM", method = "MML", population_formula = ~1,
+    person_data = people, person_id = "Person"))
+facet_levels <- unique(as.character(ratings$Criterion))
+contrast <- matrix(0, 1, length(facet_levels),
+  dimnames = list("first_minus_second", facet_levels))
+contrast[1, 1:2] <- c(1, -1)
+ci <- mfrm_facet_intervals(fit, "Criterion", contrast, method = "profile")
+summary(ci)
+plot(ci)
+results <- mfrm_results(fit, intervals = list(criterion = ci), compute = "never")
+saveRDS(results, "profile-results.rds")
+mfrm_report(readRDS("profile-results.rds"))
+```
+
+Read `SourceEstimate` and `ProfileEstimate` together. The source fit is retained
+unchanged; the plotted `Estimate` uses the numerically checked profile center
+when available. The table records its basis and likelihood improvement.
+`SE` and the returned covariance are missing because this is not a Wald
+interval. `profile` records evaluated differences, likelihood ratios and the
+residual variance along the curve; numerical attempts and refused lower-order
+calculations remain in `profile_attempts`. Missing bounds mean an unresolved
+search, not zero uncertainty or proof of an infinite interval.
+
+Check numerical integration separately from sample size. More ratings per
+Person can concentrate that Person's likelihood enough to require finer
+integration, even when the number of Persons is small. The native `method =
+"model"` route can use a fit obtained with
+`control = list(mml_engine = "direct", mml_integration = "adaptive")`,
+within its documented scope. This changes the integration calculation, not
+the assumed population distribution. The profile calculation also uses
+Person-specific adaptive integration at positive residual variance, irrespective
+of the source fit's integration setting. At zero variance it evaluates the
+collapsed likelihood exactly, retaining the one-sided variance derivatives.
+Adaptive integration shifts and scales the quadrature rule to the integrand;
+see [Bilodeau, Stringer and Tang (2022, section 2.3)](https://arxiv.org/abs/2102.06801).
+This numerical change does not alter the likelihood-ratio cutoff.
+Inspect `numerical_checks` or `profile_attempts` and retain unavailable bounds
+when verification fails. Increasing the grid alone need not resolve the
+optimization. Numerical availability does not establish sampling coverage,
+and a high descriptive reliability does not override an interval refusal.
+
+The likelihood-ratio construction follows the definition discussed by
+[Fischer and Lewis (2021, section 1.1)](https://doi.org/10.1007/s11222-021-10012-y).
+It uses a chi-square(1) reference approximation, whose applicability must be
+distinguished from calculating the profile correctly. A nuisance parameter
+on a boundary can change the reference distribution; see
+[Self and Liang (1987, section 3)](https://doi.org/10.1080/01621459.1987.10478472).
+This implementation does not switch to a 50:50 mixture or select a cutoff
+after inspecting the estimated variance.
+
+A bounded saved study used a normal regression population, three fixed raters,
+two fixed tasks and three categories. At 80 Persons with two ratings each and
+residual variance 0.175, Task-difference interval availability increased from
+158/199 to 199/199 for RSM and from 150/199 to 199/199 for PCM. Profile coverage
+was 188/199 and 186/199, with exact Monte Carlo 95% intervals of 90.3--97.2%
+and 89.1--96.5%. Coverage did not improve consistently on the inputs where
+both procedures returned intervals. These are exploratory, condition-specific
+results, not evidence that profile intervals always improve inference.
+`CIEligible` describes numerical availability and `CoverageQualified` remains
+`FALSE`; the method does not establish a minimum sample size or random-task
+generalization. Its defaults leave the existing model-based method unchanged.
 
 ## Read fixed values and group constraints correctly
 
@@ -569,8 +706,10 @@ EAP person-score uncertainty and multiple-imputation pooling require their own
 methods. In particular, `pool_mfrm_imputed()` continues to use its documented
 within-imputation model covariance; this helper does not change that workflow.
 
-Review quadrature sensitivity separately. The interval helper reuses the
-fitted integration grid and does not refit the model.
+For model and sandwich intervals, review quadrature sensitivity separately:
+these methods reuse the fitted integration grid without refitting. The profile
+method described above reoptimizes nuisance parameters and checks integration
+throughout the profile.
 
 ## What the bounded simulation showed
 
@@ -607,6 +746,335 @@ is about 1.54 percentage points. These results do not demonstrate uniform
 improvement or a guarantee of nominal coverage. Schools, few independent
 clusters, shared random raters, informative assignment and nonresponse were
 not evaluated by this simulation.
+
+## Sample-size stability
+
+**Plan for a target and an acceptable error, then choose the number of people
+and their rating assignments.** A count by itself cannot establish stability.
+The guidance below defines what to assess and gives a bounded worked example;
+it does not yet establish recommended minimum sizes for classroom designs.
+
+### State what needs to be stable
+
+| Intended use | Target to assess | Design information to retain |
+| --- | --- | --- |
+| Discuss a difference between two raters | Their severity contrast, with its covariance | Distinct persons per rater, shared performances, categories and assignment pattern |
+| Score an individual | Ability or a specified expected score | That person's tasks and raters, targeting, and whether calibration uncertainty is included |
+| Compare cohorts or link years | A cohort contrast on a declared common scale | Persons per cohort, common recordings, anchor uncertainty and drift assumptions |
+| Plan future assessments | A specified G/Phi or observed-score precision target | Random versus fixed facets, task/rater pools and the intended generalization universe |
+
+Keep **Persons, performances, tasks, criteria, rater pool size, raters per
+performance and score rows** separate. Twenty writers producing two essays
+are twenty writers with repeated performances. Seven criteria do not become
+seven independent tasks. `facet_small_sample_review()` describes retained
+rating counts and distinct recorded Person IDs. Its default 10/30/50 count
+bands are screening choices, not sample-size recommendations or precision
+qualifications.
+
+Use the following dimensions together:
+
+1. **Numerical availability:** identify which points and intervals the method
+   can provide, and why others are unavailable. A finite number or optimizer
+   convergence is not evidence of small sampling error.
+2. **Point accuracy:** assess bias, RMSE and the proportion of estimates within
+   a prespecified error of the generating target. Relative bias is unsuitable
+   when the target is zero or near zero. In empirical data the truth is unknown;
+   sensitivity checks do not directly measure this error.
+3. **Interval precision and calibration:** assess both interval width and
+   coverage. A narrow interval can miss too often; a very wide interval can
+   cover well while providing little practical precision.
+4. **Sensitivity:** examine plausible ability distributions, severity spreads,
+   rare categories, incomplete assignments and dependence between ratings.
+   Larger samples do not repair confounding or a misspecified response model.
+
+For a two-sided interval, define its radius around the reported estimate as
+`max(Estimate - Lower, Upper - Estimate)`. This also handles asymmetric
+intervals. A legitimate one-sided or unbounded interval can be available
+while failing a finite-radius target; distinguish it from an unresolved
+numerical calculation. Preserve all attempted datasets in the availability
+and precision denominators. Also report coverage among available intervals
+and the proportion of all attempts that both provide an interval and cover.
+
+Choose acceptable error and radius in relation to the decision, before
+evaluating a proposed design. For example, a team could examine a 0.5-logit
+radius for a severity difference and ask for an available interval this
+narrow in at least 90% of repeated samples. **Both numbers are illustrative
+planning choices, not validated mfrmr defaults.** Translate the contrast to
+expected-score differences for a stated rubric and ability range when that
+makes the consequence easier to judge. Separate the desired precision of a
+point estimate from the desired width of its confidence interval.
+
+### What existing evidence can tell us
+
+[Linacre's Rasch guidance](https://www.rasch.org/rmt/rmt74m.htm) relates
+precision to targeting and SE: its approximate 95% examples use 16–36
+respondents for item calibration within 1 logit, and 64–144 within 0.5 logits.
+These are not guarantees for a many-facet contrast, a discrimination
+parameter, or arbitrary partial-credit category use. Counting every criterion
+rating as another independent respondent would misapply the guidance.
+[Schroeders and Gnambs (2025)](https://doi.org/10.1177/25152459251314798)
+instead show how IRT sample planning can be tailored to the target, response
+model and assignment/missingness design. This is the approach used here.
+
+An earlier RSM/PCM study illustrates why the target and assignment matter.
+The following is an **exploratory reanalysis of saved results**, with the
+0.5-logit radius selected for illustration after that study. It is not an
+independent confirmation of a sample-size recommendation.
+
+<details>
+<summary>View the design-specific results and their limits</summary>
+
+Each model/design had 200 simulated datasets. The target was the fixed
+R1-minus-R2 severity contrast, truly 0.4 logits. Ratings used categories 0–2;
+the RSM shared steps and the PCM used task-specific steps. Direct MML
+estimated a correctly specified normal ability regression with true mean
+`0.2 + 0.5 * X` and residual variance 0.7. Raters and tasks were fixed effects,
+and ratings were conditionally independent. The intervals below are ordinary
+joint-information Wald intervals, not the newer profile intervals.
+
+"Narrow" means available with radius at most 0.5 logits, divided by **all
+200 attempts**. Coverage counts use the separately stated available denominator.
+
+| Persons | Rater pool | Task pool | Ratings/person | Narrow, RSM / PCM | Covered/available, RSM / PCM |
+| ---: | ---: | ---: | ---: | --- | --- |
+| 80 | 3 | 2 | 6 | 200/200 / 200/200 | 190/200 / 189/200 |
+| 240 | 3 | 2 | 6 | 200/200 / 200/200 | 190/200 / 195/200 |
+| 80 | 3 | 2 | 2 | 0/200 / 0/200 | 195/198 / 182/195 |
+| 240 | 3 | 2 | 2 | 200/200 / 200/200 | 187/200 / 192/200 |
+| 80 | 6 | 2 | 6 | 94/200 / 117/200 | 191/200 / 190/200 |
+| 80 | 3 | 4 | 6 | 200/200 / 200/200 | 188/200 / 189/200 |
+| 80 | 6 | 2 | 12 | 200/200 / 200/200 | 192/200 / 191/200 |
+| 80 | 3 | 4 | 12 | 200/200 / 200/200 | 191/200 / 191/200 |
+| 160 | 3 | 2 | 6 | 200/200 / 200/200 | 183/200 / 190/200 |
+
+The six-rating, three-rater design crosses all raters and tasks. The
+two-rating design assigns one rater to each task in a connected cyclic
+pattern. At six ratings per person, the six-rater design assigns three raters
+to both tasks, and the four-task design assigns all three raters to two tasks.
+The twelve-rating designs are fully crossed.
+
+For 80 persons, moving from six to two ratings reduced the number of narrow
+intervals from 200 to zero in both models. Holding persons and total ratings
+fixed while expanding the rater pool from three to six reduced the narrow
+fraction to 47.0% for RSM and 58.5% for PCM. Their pointwise 95% Monte Carlo
+intervals are 39.9–54.2% and 51.3–65.4%. These are simulation-uncertainty
+intervals, not intervals for the severity contrast.
+
+Even perfect observed width attainment does not qualify coverage. For example,
+the 160-person RSM condition produced 200 narrow intervals but covered in
+183/200 datasets: 91.5%, with a 95% Monte Carlo interval of 86.7–95.0%
+(upper endpoint before rounding: 94.9704%). The result is retained alongside
+the more favorable conditions. There is no monotonic coverage guarantee as
+person count increases.
+
+Point accuracy answers another question. In the 80-person, two-rating design,
+finite estimates were within 0.5 logits of truth in 181/200 RSM datasets and
+170/200 PCM datasets, although no interval met the 0.5-logit radius target.
+Finite points include cases with unavailable covariance; this count does not
+requalify their uncertainty or prove numerical admissibility.
+
+The counts can be used to reproduce the reported Monte Carlo limits:
+
+```{r sample-guidance-mc, eval=FALSE}
+binom.test(94, 200)$conf.int   # RSM: available and narrow
+binom.test(117, 200)$conf.int  # PCM: available and narrow
+binom.test(183, 200)$conf.int  # RSM: coverage in the 160-person design
+```
+
+This recalculates uncertainty from reported counts; it does not reproduce
+the underlying fits. Each comparison concerns one prespecified contrast,
+not simultaneous accuracy of every rater. These results do not establish
+Person-score coverage, random-rater generalization, or adequacy for a
+20–40-person classroom with seven correlated criteria. Equal score-row
+counts also need not imply equal total assessment costs.
+
+</details>
+
+### More facets, fit screening and reliability
+
+Adding a facet, increasing its number of levels, and adding an interaction
+change different parts of an assessment. Report all three separately. The
+number of facet types alone is not a multiplier for the required sample size.
+Also distinguish adding model parameters to existing ratings from collecting
+additional tasks or rating occasions.
+
+<details>
+<summary>How these choices extend the sample-size guide</summary>
+
+**Facet structure.** Consider 32 writers, each producing two essays, four
+raters with two assigned to each essay, and seven criteria: 896 score rows.
+Counterbalance the two tasks across two occasions to separate their effects.
+The following are algebraic counts for ordinary additive models with four
+categories, centered non-Person locations and steps, and an estimated normal
+population mean and variance. PCM steps belong to Criterion. Person ability
+is integrated out, so these MML counts do not include 32 individual abilities.
+
+| Model facets, including Person | Free RSM parameters | Free PCM parameters |
+| --- | ---: | ---: |
+| Person, Rater, Criterion | 13 | 25 |
+| Add two-level Task | 14 | 26 |
+| Also add two-level Occasion | 15 | 27 |
+| Same five facets, plus Rater × Criterion interaction | 33 | 45 |
+
+These are parameter counts, not minimum sample sizes or fitted performance.
+Omitting a task or occasion with a nonzero effect can bias the simpler model;
+fewer parameters alone do not make it preferable. With four raters and seven
+criteria, the interaction adds `(4 - 1) * (7 - 1) = 18` contrasts, although
+the number of facet types stays five. Conversely, increasing Criterion from
+seven to fourteen levels changes a facet's size rather than creating seven
+new facets. Counts for fixed-population MML, JML, CML or slope models differ.
+
+If Task 1 is always on Occasion 1 and Task 2 always on Occasion 2, their main
+effects are confounded. The synthetic assignment's conditional additive
+design has rank 42 rather than 43; counterbalancing gives rank 43. Adding
+writers with the same confounding cannot fix this. Full rank itself does not
+prove marginal identification, finite-MLE existence or adequate precision.
+Likewise, a training-group effect cannot be separated from unrestricted
+individual-rater effects when each rater belongs to exactly one group without
+additional constraints or a different hierarchical estimand.
+
+**Infit and Outfit.** These assess residual patterns relative to a model;
+they do not directly measure the precision of a severity estimate. Infit
+weights squared standardized residuals by response information. Outfit is
+more affected by unexpected responses where model variance is small. Means
+near one are reference values, not proof that a sample is adequate. The
+distribution after fitting parameters must be distinguished from a calculation
+at known parameters.
+
+[Smith et al. (2008)](https://doi.org/10.1186/1471-2288-8-33) found relatively
+stable average mean squares but strongly sample-sensitive standardized
+statistics in resampled polytomous questionnaire data. This does not establish
+universal false-flag rates. [Müller (2020)](https://doi.org/10.1186/s40488-020-00108-7)
+shows that residual construction, sample size and test length affect the
+distribution in dichotomous Rasch models. Neither result directly calibrates
+all many-facet MML diagnostics.
+
+For a diagnostic recommendation, evaluate:
+
+- False flags for each unaffected rater and the probability of at least one
+  false flag across the declared comparison family.
+- Detection of specified departures, such as Person × Rater dependence,
+  inappropriate category use or a response pattern outside the fitted model.
+- Missing diagnostics, category support and the effect of any selection,
+  exclusion or refitting included in the actual procedure.
+
+A constant severity difference is not itself misfit. A slope difference that
+violates RSM can be part of a specified GPCM; detection targets must name the
+model. A fixed 0.7–1.3 MnSq band or `abs(ZSTD) > 2` is not automatically a
+calibrated test at every sample size. Freeze the residual basis, estimation
+method, degrees-of-freedom convention and transformation before comparison.
+[Guo and Wind (2021)](https://doi.org/10.1177/01466216211013105) investigate
+parametric-bootstrap alternatives specifically for rater fit; this makes
+design-specific calibration a candidate, not a blanket justification for
+automatic rater removal or for transferring their cutoffs to another model.
+
+The existing `mfrm_screening_performance()` accepts planned simulation targets
+and observed flags and keeps unavailable outcomes and family-level events.
+It can summarize the required operating characteristics without treating
+correlated raters as independent simulation replications. It does not generate
+calibrated flags. `evaluate_mfrm_diagnostic_screening()` supplies exploratory
+scenario comparisons, not already-established inferential power.
+
+**Reliability.** Name the coefficient and its intended population before
+setting a target such as 0.8 or 0.9.
+
+| Quantity | Interpretation and sample-size concern |
+| --- | --- |
+| Person separation reliability | Distinguishability relative to the spread of estimated abilities; a restricted ability range can lower it even with the same absolute SE |
+| Rater separation reliability | Distinguishability of severities; a high value does not mean high agreement, and a low value can reflect imprecision |
+| Inter-rater agreement | Agreement of scores under a declared design; it is not a separation coefficient |
+| Posterior-variance EAP reliability | A distinct population/scoring quantity; do not substitute the separation formula applied to EAP estimates |
+| G/Phi | Observed-score generalization under a declared G-Study/D-Study design; task/rater universes and relative/absolute decisions matter |
+
+The separation/agreement distinction is also explicit in the
+[FACETS manual](https://www.winsteps.com/facetman64/reliability.htm).
+For ordinary mfrmr diagnostics, the separation index is
+`max(s^2 - mean(SE^2), 0) / s^2`, where `s^2` is the sample variance of the
+included finite estimates and every included level must have a valid SE.
+Zero observed variance, incomplete uncertainty or fixed anchors can make the
+index unavailable. This approximate calculation does not propagate covariance
+among estimates and does not supply a formal confidence interval.
+
+An algebraic illustration, checked against the calculation used by the package,
+holds the RMS SE at 0.30 and varies the **observed estimate SD**:
+
+| Observed estimate SD | RMS SE | Separation reliability |
+| ---: | ---: | ---: |
+| 0.40 | 0.30 | 0.4375 |
+| 0.80 | 0.30 | 0.8594 |
+| 1.20 | 0.30 | 0.9375 |
+
+These are not simulation results or different sample sizes. They show why a
+higher coefficient cannot, by itself, establish better absolute precision.
+Do not select a broader sample merely to raise reliability. In a performance
+study, retain the intended ability range and report score RMSE/SE and relevant
+classification errors alongside the coefficient and its sampling variation.
+For only four or eight raters, also distinguish a descriptive spread of those
+fixed raters from inference about a population of future raters.
+
+mfrmr's fit-adjusted `RealSE` multiplies `ModelSE` by
+`sqrt(max(Infit, 1))`. Its corresponding reliability and the model index are
+companion summaries, not confidence limits or independent corroboration of
+fit. Person rows using EAP and posterior SD retain the separation-index
+limitation. Ordinary reliability plotting does not support corrected JML or
+two-family GPCM. Inspect the applicable method rather than borrowing another
+model's coefficient.
+
+For a supported ordinary fit, the existing workflow is:
+
+```{r sample-guidance-diagnostics, eval=FALSE}
+diagnostics <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
+diagnostics$measures
+diagnostics$reliability
+reliability_plot <- plot(fit, type = "reliability", draw = FALSE)
+plot_data(reliability_plot, "table")
+plot_data(reliability_plot, "notes")
+```
+
+The next classroom evaluations can reuse the same simulated data and eligible
+fits for precision, screening and reliability summaries. Their success criteria
+remain distinct. Existing severity-interval coverage results do not establish
+Infit false-flag rates or reliability-interval coverage.
+
+</details>
+
+### How a recommendation will be qualified
+
+For anchors and bias/DFF, the required resources differ again: distinguish
+the source-calibration sample, independent linking performances, the receiving
+sample, and independent Persons within each target cell or group. Conditional
+precision with fixed anchors, propagation of estimated-anchor error, and
+sensitivity to anchor drift answer different questions. Likewise, a
+fixed-calibration bias screen is not a jointly estimated interaction interval.
+Use the [linking and DFF guide](mfrmr-linking-and-dff.html#which-uncertainty-is-available-with-anchors)
+to select the supported route before applying the planning criteria below.
+
+A useful recommendation states the model and estimator, target and scale,
+assignment, precision goal, evaluated sensitivity range, and Monte Carlo
+uncertainty. It should distinguish **evidence supporting the declared goal**,
+**evidence that the goal is not met**, **inconclusive evidence**, and
+**conditions outside the evaluated scope**. These are interpretations of a
+study, not new fit-status fields or count-based rejection rules.
+
+In particular, observing approximately 95% coverage is insufficient to
+establish calibration. Declare a tolerance around the nominal level and
+check whether the Monte Carlo interval lies within it; overlapping a boundary
+can leave the conclusion unresolved. Similarly, a precision-attainment rate
+near its required minimum needs its Monte Carlo uncertainty. With 200
+replications, the approximate 95% Monte Carlo half-width near 95% coverage is
+3 percentage points. About 2,000 *available* replications reduce it to roughly
+1 point, but other rates, multiple targets and unavailable intervals can
+require more. Follow the performance-measure and simulation-precision
+principles in [Morris, White and Crowther (2019)](https://doi.org/10.1002/sim.8086).
+
+The classroom extension starts with the published example of 32 writers,
+four raters, two raters per essay and seven criteria in
+[Nakamura (2002)](https://pansig.org/publications/pansig/2002/HTML/Nakamura.htm).
+Comparisons vary writers, ratings per essay and rater pool separately, retain
+a larger-sample reference, and examine dependence and category support.
+Selecting a promising design in exploratory results and independently
+confirming its performance are separate steps. Until that evidence exists,
+32 persons is a realistic study scenario, not a recommended minimum.
 
 ## Save the analysis and use the plotted data
 

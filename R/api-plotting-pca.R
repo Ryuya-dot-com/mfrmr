@@ -13,6 +13,9 @@
 #'   `"auto"` (default; displayed when at least 8 finite score pairs are plotted),
 #'   `"histogram"`, or `"none"`.
 #' @inheritParams plot.mfrm_clusters
+#' @param labels Show entity IDs in scores plots; `NULL` labels at most
+#'   50 included entities. Loading plots label features and scree plots label
+#'   components. Hiding entity labels does not omit observations.
 #' @return For `plot()`: Invisibly, a `ggplot` object carrying the underlying
 #'   `mfrm_plot_data` payload (accessible via [plot_data()]) with the exact plotted table,
 #'   selected components, group colour/shape encoding, excluded IDs and axis meanings. Scree data retain the
@@ -32,7 +35,7 @@
 #'   other directions, so apparent overlap or separation is only a projection.
 #'   No confidence region, group validity or rater-quality judgment is implied.
 #' @seealso [mfrm_pca()], [k-means details][mfrm_cluster_kmeans]
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' @examples # Optional workflow; run the example explicitly as shown below.
 #' # example("plot.mfrm_pca", run.dontrun = TRUE)
 #' \dontrun{
 #' attributes <- data.frame(ID = letters[1:6],

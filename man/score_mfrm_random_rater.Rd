@@ -77,10 +77,16 @@ order. Sorting is descriptive, not a test of differences.}
 \item{palette}{\code{"accessible"} uses blue and dark orange with filled/open
 symbols; \code{"mono"} uses dark grey with the same symbol distinctions.}
 
-\item{title, caption}{\code{NULL} uses the default text; a string replaces it;
+\item{title}{\code{NULL} uses the default text; a string replaces it;
 \code{""} removes it. Interpretation notes remain in the saved plot data.}
 
-\item{show_title, show_notes}{Show the title and caption, respectively.
+\item{caption}{\code{NULL} uses the default text; a string replaces it;
+\code{""} removes it. Interpretation notes remain in the saved plot data.}
+
+\item{show_title}{Show the title and caption, respectively.
+\code{FALSE} hides text without deleting its metadata.}
+
+\item{show_notes}{Show the title and caption, respectively.
 \code{FALSE} hides text without deleting its metadata.}
 
 \item{show_labels}{Show IDs on interval and precision plots. Distribution

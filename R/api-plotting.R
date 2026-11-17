@@ -169,12 +169,6 @@ new_mfrm_plot_data <- function(name, data) {
     Text = text, stringsAsFactors = FALSE)
 }
 
-.mfrm_step_interpretation_note <- function() {
-  paste("A Step describes the transition between adjacent score categories, not a learning stage or a pass/fail cut.",
-    "At the corresponding predictor value, the two categories have equal probability, not necessarily probability 0.5 each.",
-    "Stored step offsets and full ability-axis crossings differ when other facet effects or interactions are included; check the reference profile and step owner.")
-}
-
 #' @export
 print.mfrm_plot_data <- function(x, ...) {
   data <- x$data %||% list()
@@ -406,14 +400,15 @@ plot_component_note <- function(name, role) {
 #' data/status symbols remain in the figure. Removing figure text does not
 #' remove numerical warnings or strengthen the interpretation of a result.
 #'
-#' @param x An `mfrm_plot_data` object, or a fitted/report/review object with a
+#' @param x An `mfrm_plot_data` object, an mfrmr-generated ggplot retaining
+#'   its plot metadata, or a fitted/report/review object with a
 #'   `plot(..., draw = FALSE)` method.
 #' @param component Optional single component name inside the reusable plot
 #'   data. When `NULL`, the full plot-data list is returned.
 #' @param type Optional plot type passed to `plot()` when `x` is not already an
-#'   `mfrm_plot_data` object.
+#'   saved mfrmr plot object.
 #' @param ... Additional arguments passed to `plot(..., draw = FALSE)` when
-#'   `x` is not already an `mfrm_plot_data` object.
+#'   `x` is not already a saved mfrmr plot object.
 #'
 #' @return The full reusable plot-data list, or the selected component.
 #' @examples
@@ -512,12 +507,13 @@ plot_data <- function(x, component = NULL, type = NULL, ...,
 #' what shape they have, and which ones are most useful for custom graphics,
 #' dashboards, or report assembly.
 #'
-#' @param x An `mfrm_plot_data` object, or a fitted/report/review object with a
+#' @param x An `mfrm_plot_data` object, an mfrmr-generated ggplot retaining
+#'   its plot metadata, or a fitted/report/review object with a
 #'   `plot(..., draw = FALSE)` method.
 #' @param type Optional plot type passed to `plot()` when `x` is not already an
-#'   `mfrm_plot_data` object.
+#'   saved mfrmr plot object.
 #' @param ... Additional arguments passed to `plot(..., draw = FALSE)` when
-#'   `x` is not already an `mfrm_plot_data` object.
+#'   `x` is not already a saved mfrmr plot object.
 #'
 #' @return A data frame with one row per reusable plot-data component.
 #' @examples
@@ -537,6 +533,7 @@ plot_data <- function(x, component = NULL, type = NULL, ...,
 #'
 #' # A different plot type has different reusable tables
 #' plot_data_components(fit, type = "ccc")
+#' @rdname plot_data
 #' @export
 plot_data_components <- function(x, type = NULL, ...) {
   plot_obj <- as_mfrm_plot_data_object(x, type = type, ...)
@@ -545,7 +542,7 @@ plot_data_components <- function(x, type = NULL, ...) {
   component_names <- component_names[!is.na(component_names) & nzchar(component_names)]
   if (length(component_names) == 0L) {
     return(data.frame(
-      PlotName = as.character(plot_obj$name %||% NA_character_),
+      PlotName = character(),
       Component = character(),
       Role = character(),
       ObjectType = character(),
@@ -609,7 +606,6 @@ truncate_axis_label <- function(x, width = 28L) {
   labels[match(x, values)]
 }
 
-
 resolve_palette <- function(palette = NULL, defaults = character(0)) {
   defaults <- stats::setNames(as.character(defaults), names(defaults))
   if (length(defaults) == 0) return(defaults)
@@ -635,11 +631,11 @@ resolve_plot_preset <- function(preset = c("standard", "publication", "compact",
     standard = list(
       name = "standard",
       background = "#FFFFFF",
-      panel_background = "#F8FAFC",
-      strip_background = "#EEF2F7",
+      panel_background = "#FFFFFF",
+      strip_background = "#F4F6F8",
       foreground = "#17344B",
       axis = "#334155",
-      grid = "#DCE3EB",
+      grid = "#E7ECF0",
       fill_soft = "#DBEAFE",
       fill_muted = "#D6EEF2",
       fill_warm = "#FEE8D6",
@@ -687,8 +683,8 @@ resolve_plot_preset <- function(preset = c("standard", "publication", "compact",
     compact = list(
       name = "compact",
       background = "#FFFFFF",
-      panel_background = "#F8FAFC",
-      strip_background = "#EEF2F7",
+      panel_background = "#FFFFFF",
+      strip_background = "#F4F6F8",
       foreground = "#17344B",
       axis = "#334155",
       grid = "#E2E8F0",
@@ -738,8 +734,6 @@ resolve_plot_preset <- function(preset = c("standard", "publication", "compact",
     )
   )
 }
-
-
 
 stack_fair_raw_tables <- function(raw_by_facet) {
   if (is.null(raw_by_facet) || length(raw_by_facet) == 0) return(data.frame())
@@ -1125,7 +1119,7 @@ format_marginal_pair_label <- function(facet, level1, level2) {
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -1339,7 +1333,7 @@ plot_marginal_fit <- function(x,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -1539,7 +1533,7 @@ plot_marginal_pairwise <- function(x,
 #' @seealso [unexpected_response_table()], [plot(x, type = "fair_average")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit],
 #'   [plot(x, type = "qc")][plot.mfrm_fit], [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_unexpected", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -1558,7 +1552,7 @@ plot_marginal_pairwise <- function(x,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -1748,7 +1742,7 @@ plot_unexpected <- function(x,
 #' @concept visual diagnostics
 #' @concept fair averages
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_fair_average", run.dontrun = TRUE)
 #' \dontrun{
 #' library(mfrmr)
@@ -1773,7 +1767,7 @@ plot_unexpected <- function(x,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -2028,7 +2022,7 @@ plot_fair_average <- function(x,
 #' @concept visual diagnostics
 #' @concept displacement
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_displacement", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -2043,7 +2037,7 @@ plot_fair_average <- function(x,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -2257,7 +2251,7 @@ plot_displacement <- function(x,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -2443,7 +2437,7 @@ plot_interrater_agreement <- function(x,
 #'   reusable plotting data and notes.
 #' @seealso [facets_chisq_table()], [plot(x, type = "agreement")][plot.mfrm_fit], [plot(x, type = "qc")][plot.mfrm_fit]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_facets_chisq", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -2461,7 +2455,7 @@ plot_interrater_agreement <- function(x,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -2631,7 +2625,7 @@ plot_facets_chisq <- function(x,
 #'   reusable plotting data and notes.
 #' @seealso [plot(x, type = "unexpected")][plot.mfrm_fit], [plot(x, type = "fair_average")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit], [plot(x, type = "agreement")][plot.mfrm_fit], [plot(x, type = "facets_chisq")][plot.mfrm_fit], [build_visual_summaries()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_qc_dashboard", run.dontrun = TRUE)
 #' \dontrun{
 #' library(mfrmr)
@@ -2658,7 +2652,7 @@ plot_facets_chisq <- function(x,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -2720,7 +2714,7 @@ plot_qc_dashboard <- function(fit,
       available = FALSE,
       status = "available_direct_only",
       direct_route = "fair_average_table(fit, diagnostics = diagnostics)",
-      reason = gpcm_fair_average_rationale()
+      reason = .mfrmr_const_gpcm_fair_average_rationale
     )
   } else {
     fair_average_table(fit = fit, diagnostics = diagnostics)
@@ -2889,7 +2883,7 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' @seealso \code{\link{diagnose_mfrm}}, \code{\link{plot_unexpected}},
 #'   \code{\link{plot_fair_average}}
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_bubble", run.dontrun = TRUE)
 #' \dontrun{
 #' library(mfrmr)
@@ -2914,7 +2908,7 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -3311,20 +3305,33 @@ export_mfrm_tables <- function(fit,
 #' @param ... Additional arguments (ignored).
 #'
 #' @details
-#' This method returns four columns (\code{Facet}, \code{Level},
-#' \code{Estimate}, \code{Extreme}) so that the result is easy to
-#' inspect, join, or write to disk.
+#' `Facet` and `Level` jointly identify a row; `Facet = "Person"` identifies
+#' ability estimates. Use both keys when joining diagnostics: the same level
+#' label can occur in different facets. This compact table omits uncertainty
+#' and estimate-use restrictions; retain the source fit and read `summary(fit)`.
 #'
-#' @section Interpreting output:
-#' Person estimates are returned with \code{Facet = "Person"}.
-#' All non-person facets are stacked underneath in the same schema.
+#' @section Interpreting estimates:
+#' `Estimate` is on the fitted latent scale, not the raw rating scale. With
+#' default orientation, larger Person values indicate higher ability, larger
+#' Rater values greater severity, and larger task/criterion values greater
+#' difficulty. Non-Person facets in `positive_facets` have the opposite score
+#' direction. Interpret values relative to the fitted centering/anchors;
+#' zero is a scale reference, not absence of ability or severity.
 #'
-#' @section Typical workflow:
-#' \enumerate{
-#' \item Fit a model with \code{\link{fit_mfrm}()}.
-#' \item Convert with \code{as.data.frame(fit)} for a compact long-format export.
-#' \item Join additional diagnostics later if you need SE or fit statistics.
-#' }
+#' In an additive RSM/PCM with default signs, a Rater difference of 0.5 lowers
+#' adjacent-category odds by a factor `exp(-0.5)` for the same Person and other
+#' facet levels. It does not subtract 0.5 raw-score points. GPCM slopes and
+#' fitted interactions modify that comparison; use [predict.mfrm_fit()] for
+#' response-scale predictions at specified facet combinations.
+#'
+#' Person `Estimate` is an EAP under MML, conditional on fitted calibration
+#' and the specified population model; under ordinary JML it is the fitted
+#' Person parameter. EAP shrinkage affects the spread of these estimates, so
+#' their empirical SD is not the fitted population SD. `Extreme` describes
+#' observed all-minimum/all-maximum scores, not a statistical outlier test.
+#' An extreme score need not give an infinite MML EAP. For uncertainty use
+#' [diagnose_mfrm()] and, for supported structural contrasts,
+#' [mfrm_facet_intervals()]; a missing interval does not erase an available point.
 #'
 #' @return A data.frame with columns \code{Facet}, \code{Level},
 #'   \code{Estimate}, and \code{Extreme}. The \code{Extreme} column
@@ -3337,10 +3344,10 @@ export_mfrm_tables <- function(fit,
 #'   \code{"low"} / \code{"high"} / \code{"none"}. The \code{estimation_note}
 #'   attribute explains the local-root uncertainty and remaining bias. Ordinary
 #'   diagnostic attachments do not apply to this estimator; see the Corrected
-#'   JML section of \code{\link{fit_mfrm}}.
+#'   JML section of [fit_mfrm_technical_details].
 #' @seealso \code{\link{fit_mfrm}}, \code{\link{export_mfrm_tables}}
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("as.data.frame.mfrm_fit", run.dontrun = TRUE)
 #' \dontrun{
 #' library(mfrmr)
@@ -3356,6 +3363,7 @@ export_mfrm_tables <- function(fit,
 #' subset(estimates, Facet == "Rater")       # All raters
 #' subset(estimates, Facet == "Criterion")   # All criteria
 #' }
+#' @rdname mfrm_fit_extractors
 #' @export
 as.data.frame.mfrm_fit <- function(x, row.names = NULL, optional = FALSE, ...) {
   if (mfrm_has_jml_adjustment(x)) {
@@ -3365,7 +3373,7 @@ as.data.frame.mfrm_fit <- function(x, row.names = NULL, optional = FALSE, ...) {
     person$Person <- person$SE <- NULL
     out <- as.data.frame(dplyr::bind_rows(person,x$facets$others),row.names=row.names,
       optional=optional)
-    attr(out,"estimation_note") <- mfrm_jml_note()
+    attr(out,"estimation_note") <- .mfrmr_const_mfrm_jml_note
     return(out)
   }
   # Carry forward the Extreme flag from build_person_table().

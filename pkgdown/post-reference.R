@@ -340,6 +340,17 @@ local({
       "posterior Infit. Labels identify raters. No acceptable-fit bands,",
       "expectation-one line or quality classifications are supplied."))
 
+  descriptions$mfrm_cluster <- descriptions$plot.mfrm_clusters
+  descriptions$mfrm_screening_performance <- list(
+    `1` = descriptions$mfrm_screening_performance,
+    `2` = c(descriptions$mfrm_screening_performance, descriptions$mfrm_screening_sensitivity))
+  descriptions$confint.mfrm_multivariate_d_study <- list(
+    `1` = descriptions$confint.mfrm_multivariate_d_study,
+    `2` = c(descriptions$confint.mfrm_multivariate_d_study, descriptions$plot.mfrm_dstudy_intervals))
+  descriptions$fit_mfrm_testlet <- list(
+    `1` = descriptions$fit_mfrm_testlet,
+    `2` = c(descriptions$predict.mfrm_testlet, descriptions$fit_mfrm_testlet))
+
   # Only example plots are targeted; logos and existing authored alt text stay.
   for (page in list.files(pattern = "[.]html$")) {
     html <- xml2::read_html(page)

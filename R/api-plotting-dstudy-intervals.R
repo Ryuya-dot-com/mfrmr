@@ -51,7 +51,7 @@
 #'   together does not make the original sampling SE an adjusted-estimator SE.
 #'   Unresolved numerical candidates are retained in the source object but
 #'   are not drawn as accepted confidence bounds.
-#'   For score and MLS intervals, an empty confidence set is labeled
+#'   For exact-F, score and MLS intervals, an empty confidence set is labeled
 #'   `"Empty set"`; it is distinct from an estimated coefficient of zero.
 #'   MLS rows with `FormulaComplete = FALSE` retain candidate values where
 #'   a squared width is undefined. Their conservative bounds are drawn, while
@@ -61,7 +61,7 @@
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot.mfrm_dstudy_intervals", run.dontrun = TRUE)
 #' \dontrun{
 #' tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
@@ -72,6 +72,7 @@
 #' plot_data(p, "notes")
 #' if (requireNamespace("ggplot2", quietly = TRUE)) as_ggplot(p)
 #' }
+#' @rdname confint.mfrm_multivariate_d_study
 #' @export
 plot.mfrm_dstudy_intervals <- function(x, draw = TRUE, preset = "standard",
                                       ncol = 2L, layout = c("combined", "panels"), ...) {
@@ -120,8 +121,9 @@ plot.mfrm_dstudy_intervals <- function(x, draw = TRUE, preset = "standard",
     xrange[1] + .02*diff(xrange))
   tab$StatusLabel <- ifelse(is.finite(tab$Estimate), "CI unavailable",
     paste0(tab$Method, ": unavailable"))
-  if ("Empty" %in% names(tab))
-    tab$StatusLabel[!is.na(tab$Empty) & tab$Empty & !tab$Available] <- "Empty set"
+  empty <- tab$Status %in% "Empty parameter-space interval"
+  if ("Empty" %in% names(tab)) empty <- empty | (!is.na(tab$Empty) & tab$Empty)
+  tab$StatusLabel[empty & !tab$Available] <- "Empty set"
   notes <- c(attr(x, "notes"),
     if (!is.null(attr(x, "reference"))) paste0("Reference plan: ",
       labels[attr(x, "reference")$scenario], "; differences are comparison minus reference."),

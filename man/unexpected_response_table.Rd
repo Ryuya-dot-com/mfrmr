@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{unexpected_response_table}
 \alias{unexpected_response_table}
+\alias{unexpected_after_bias_table}
 \title{Build an unexpected-response screening report}
 \usage{
 unexpected_response_table(
@@ -12,21 +13,34 @@ unexpected_response_table(
   top_n = 100,
   rule = c("residual", "either", "both")
 )
+
+unexpected_after_bias_table(
+  fit,
+  bias_results,
+  diagnostics = NULL,
+  abs_z_min = 3,
+  prob_max = 0.3,
+  top_n = 100,
+  rule = c("residual", "either", "both")
+)
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
+\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for baseline comparison.}
 
 \item{abs_z_min}{Absolute standardized-residual cutoff.}
 
 \item{prob_max}{Maximum observed-category probability cutoff.}
 
 \item{top_n}{Maximum number of ranked rows to return in \code{table}.
-Summary counts and percentages always use all flagged observations.}
+Summary counts, percentages, and before/after comparisons use all flagged
+observations, regardless of this display limit.}
 
-\item{rule}{\code{"residual"} (default) uses only the absolute residual cutoff;
-\code{"either"} and \code{"both"} also use the category-probability cutoff.}
+\item{rule}{\code{"residual"} (default), \code{"either"}, or \code{"both"}; see
+\code{\link[=unexpected_response_table]{unexpected_response_table()}} for the same baseline/after-bias rule.}
+
+\item{bias_results}{Output from \code{\link[=estimate_bias]{estimate_bias()}}.}
 }
 \value{
 A named list with:
@@ -35,9 +49,20 @@ A named list with:
 \item \code{summary}: one-row overview
 \item \code{thresholds}: applied thresholds
 }
+
+A named list with:
+\itemize{
+\item \code{table}: unexpected responses after bias adjustment
+\item \code{summary}: one-row summary (includes baseline-vs-after counts)
+\item \code{thresholds}: applied thresholds
+\item \code{facets}: analyzed bias facet pair
+\item \code{gpcm_boundary}: \code{GPCM} interpretation guidance when applicable
+}
 }
 \description{
 Build an unexpected-response screening report
+
+Build an unexpected-after-adjustment screening report
 }
 \details{
 The default is the FACETS Table 4 absolute residual rule, with cutoff 3.
@@ -56,6 +81,18 @@ full-sample percentage is withheld if any outcome is unavailable.
 The table includes row-level observed/expected values, residuals,
 observed-category probability, most-likely category, and a composite
 severity score for sorting.
+
+This helper recomputes expected values and residuals after interaction
+adjustments from \code{\link[=estimate_bias]{estimate_bias()}} have been introduced.
+Screening coverage is retained separately before and after adjustment.
+Reduction counts, percentages and the comparison plot are unavailable if
+either screen leaves responses unclassified. Recreate older saved results
+with the original settings; the MFRM fit does not need re-estimation.
+
+\code{summary(t10)} is supported through \code{summary()}.
+\code{plot(t10)} is dispatched through \code{plot()} for class
+\code{mfrm_unexpected_after_bias} (\code{type = "scatter"}, \code{"severity"},
+\code{"comparison"}).
 }
 \section{Interpreting output}{
 
@@ -68,6 +105,20 @@ before limiting the displayed rows with \code{top_n}.
 
 Compare results across \code{rule = "either"} and \code{rule = "both"} to assess how
 conservative your screening should be.
+
+
+\itemize{
+\item \code{summary}: before/after unexpected counts and reduction metrics.
+\item \code{table}: residual unexpected responses after bias adjustment.
+\item \code{thresholds}: screening settings used in this comparison.
+}
+
+Lower after-adjustment counts describe an in-sample change in flags; they do
+not show that bias has been removed or establish fairness. For
+\code{GPCM}, both the bias estimate and the post-adjustment comparison use the
+fitted slope-aware probability kernel while holding the other fitted
+quantities fixed. Read the returned \code{gpcm_boundary} before reporting the
+comparison.
 }
 
 \section{Typical workflow}{
@@ -78,9 +129,21 @@ case-review aid, not a tail probability or calibrated false-alarm rate.
 \item Re-run with \code{rule = "both"} for strict subset.
 \item Inspect top rows and visualize with \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}.
 }
+
+
+\enumerate{
+\item Run \code{\link[=unexpected_response_table]{unexpected_response_table()}} as baseline.
+\item Estimate bias via \code{\link[=estimate_bias]{estimate_bias()}}.
+\item Run \code{unexpected_after_bias_table(...)} and compare reductions.
+}
 }
 
 \section{Further guidance}{
+
+For a plot-selection guide and a longer walkthrough, see
+\link{mfrmr_visual_diagnostics} and
+\code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+
 
 For a plot-selection guide and a longer walkthrough, see
 \link{mfrmr_visual_diagnostics} and
@@ -115,7 +178,21 @@ unknown; the count is unavailable when no response can be evaluated.}
 \item{EvaluatedObservations, UnavailableObservations}{Responses whose
 rule outcome is determined or unavailable.}
 \item{AbsZThreshold, ProbThreshold}{Applied cutoff values.}
-\item{Rule}{"either" or "both".}
+\item{Rule}{"residual", "either", or "both".}
+}
+
+
+The \code{table} data.frame has the same structure as
+\code{\link[=unexpected_response_table]{unexpected_response_table()}} output, with an additional
+\code{BiasAdjustment} column showing the bias correction applied to each
+observation's expected value.
+
+The \code{summary} data.frame contains:
+\describe{
+\item{TotalObservations}{Total observations analyzed.}
+\item{BaselineUnexpectedN}{Unexpected count before bias adjustment.}
+\item{AfterBiasUnexpectedN}{Unexpected count after adjustment.}
+\item{ReducedBy, ReducedPercent}{Reduction in unexpected count.}
 }
 }
 
@@ -125,10 +202,16 @@ The returned \code{fit_identity} records the fitted analysis for reuse with
 reports and exports. Recreate older results from the saved fit and matching
 diagnostics using the original screening options; no model refit is needed.
 See \link{mfrmr_compatibility_layer} for migration instructions.
+
+
+The returned \code{fit_identity} records the fitted analysis for reuse with
+reports and exports. Recreate older results from the saved fit and matching
+diagnostics using the original screening options; no model refit is needed.
+See \link{mfrmr_compatibility_layer} for migration instructions.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("unexpected_response_table", run.dontrun = TRUE)
 \dontrun{
 library(mfrmr)
@@ -145,8 +228,25 @@ unexpected$table   # Only the five highest-ranked cases
 plot(unexpected)
 # The rule is exploratory: inspect the scoring context before changing a rating
 }
+# Optional workflow; run the example explicitly as shown below.
+# example("unexpected_after_bias_table", run.dontrun = TRUE)
+\dontrun{
+# Saved synthetic JML/RSM analysis of example_bias.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
+t10 <- unexpected_after_bias_table(fit, bias, diagnostics = diag, top_n = 20)
+summary(t10)
+p_t10 <- plot(t10, draw = FALSE)
+plot_data(p_t10, "plot")
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=fair_average_table]{fair_average_table()}},
+\link{mfrmr_visual_diagnostics}
+
+\code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=bias_count_table]{bias_count_table()}},
 \link{mfrmr_visual_diagnostics}
 }

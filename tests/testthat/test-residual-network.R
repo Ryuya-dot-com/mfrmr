@@ -109,7 +109,11 @@ test_that("missing associations and constant levels are not replaced by zero", {
 test_that("saved plots and report exports retain residual evidence", {
   z <- residual_network_fixture()
   n <- mfrm_residual_network(z$fit, z$diagnostics, facet = "Criterion", missing = "complete", clusters = 2)
-  path <- tempfile(); saveRDS(n, path); saved <- readRDS(path)
+  path <- tempfile()
+  pdf <- tempfile(fileext = ".pdf")
+  out <- tempfile()
+  on.exit(unlink(c(path, pdf, out), recursive = TRUE), add = TRUE)
+  saveRDS(n, path); saved <- readRDS(path)
   for (type in c("network", "matrix", "dendrogram")) {
     fig <- plot(saved, type = type, draw = FALSE)
     expect_s3_class(fig, "ggplot")
@@ -117,7 +121,7 @@ test_that("saved plots and report exports retain residual evidence", {
     expect_identical(plot_data(fig, "matrix"), n$matrix)
     expect_identical(plot_data(fig, "clustering"), n$clustering)
   }
-  pdf <- tempfile(fileext = ".pdf"); grDevices::pdf(pdf)
+  grDevices::pdf(pdf)
   tryCatch(for (type in c("network", "matrix", "dendrogram")) plot(saved, type = type),
     finally = grDevices::dev.off())
   expect_true(file.info(pdf)$size > 0)
@@ -131,7 +135,7 @@ test_that("saved plots and report exports retain residual evidence", {
   expect_identical(build_summary_table_bundle(r)$tables$nodes, n$nodes)
   expect_identical(build_summary_table_bundle(saved)$tables$pairs, n$pairs)
   expect_s3_class(apa_table(r, which = "pairs"), "apa_table")
-  out <- tempfile(); dir.create(out)
+  dir.create(out)
   expect_silent(export_summary_appendix(r, output_dir = out))
 })
 

@@ -15,7 +15,7 @@ if (any(private)) stop("Private maintainer files are tracked or not ignored: ",
 # Research scripts can bind original protocol paths as archived input identities.
 # Public prose must not link to private plans; text must not contain personal
 # machine paths. This is not a general secrets scanner.
-public <- tracked[grepl("^(README[.]md|NEWS[.]md|ROADMAP[.]md|CONTRIBUTING[.]md|_pkgdown[.]yml)$|^(R/.*[.]R|man/.*[.]Rd|vignettes/.*[.]Rmd|inst/(doc|examples|extdata|model-export)/.*[.](R|Rmd|md|txt|html|csv|json|yaml|yml))$", tracked)]
+public <- tracked[grepl("^(README[.]md|NEWS[.]md|ROADMAP[.]md|CONTRIBUTING[.]md|_pkgdown[.]yml)$|^(R/.*[.]R|scripts/icnale-caf/.*[.]R|man/.*[.]Rd|vignettes/.*[.]Rmd|inst/(doc|examples|extdata|model-export)/.*[.](R|Rmd|md|txt|html|csv|json|yaml|yml))$", tracked)]
 public <- public[file.exists(public)]
 research <- tracked[grepl("^inst/validation/.*[.](R|Rmd|md|txt|csv|json|py|yaml|yml)$", tracked)]
 research <- research[file.exists(research)]

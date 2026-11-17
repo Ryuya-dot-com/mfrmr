@@ -1,12 +1,4 @@
-.mfrm_study_report_classes <- function() c("mfrm_multivariate_gstudy",
-  "mfrm_design_recommendation", "mfrm_d_study",
-  "mfrm_multivariate_d_study", "mfrm_multivariate_d_comparison", "mfrm_residual_network",
-  "mfrm_rater_network", "mfrm_halo_network", "mfrm_network_ergm",
-  "mfrm_posterior_summary", "mfrm_posterior_scores", "mfrm_bias_collection",
-  .mfrm_review_report_classes())
 
-.mfrm_review_report_classes <- function() c("mfrm_bias", "mfrm_anchor_review",
-  "mfrm_linking_review", "mfrm_model_choice_review")
 
 .mfrm_report_context <- function(report, context) {
   if (is.null(context)) return(report)
@@ -198,7 +190,7 @@
     issue <- "State the exploration scope, score direction, conditional uncertainty and substantive follow-up; retain failed interactions and unavailable cells."
     route <- "plot(x); report$tables$overview; report$tables$bias_cells"
     title_route <- "estimate_all_bias()"
-  } else if (inherits(x, .mfrm_review_report_classes())) {
+  } else if (inherits(x, .mfrmr_const_.mfrm_review_report_classes)) {
     # Keep the established summary/export route, with full source tables below.
     b <- build_summary_table_bundle(x, include_empty = TRUE,
       top_n = .Machine$integer.max)
@@ -214,7 +206,7 @@
       notes <- c(notes, "Positive Bias Size increases expected coded scores; substantive benefit depends on rubric direction.",
         "Screening tail areas and multiplicity summaries remain conditional plug-in screens, not evidence of unfairness. No new adjustment is applied by this report.")
       title_route <- "estimate_bias()"
-      route <- "plot(bias_interaction_report(x)); report$tables$bias_cells"
+      route <- "plot(mfrm_report(type = 'bias_interaction', x)); report$tables$bias_cells"
       issue <- "Name the prespecified interaction, cell family, score direction, uncertainty basis and substantive follow-up."
     } else if (inherits(x, "mfrm_anchor_review")) {
       add("anchors", x$anchors %||% data.frame(), "study_design", "Direct anchors supplied to the receiving-data review")

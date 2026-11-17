@@ -195,3 +195,162 @@ test_that("double-precision MH agrees with the standard numeric-table backend", 
     }
   }
 })
+
+gmh_rows <- function(tables, groups = LETTERS[seq_len(nrow(tables[[1]]))],
+                     categories = seq_len(ncol(tables[[1]])) - 1, name = "Item") {
+  do.call(rbind, lapply(seq_along(tables), function(k) {
+    cells <- expand.grid(Group = groups, Score = categories, stringsAsFactors = FALSE)
+    d <- cells[rep(seq_len(nrow(cells)), as.vector(tables[[k]])), , drop = FALSE]
+    d$Person <- paste(name, k, seq_len(nrow(d)), sep = "_")
+    d$Target <- name; d$Match <- k
+    rownames(d) <- NULL
+    d
+  }))
+}
+
+gmh_call <- function(d, groups = c("A", "B"), categories = 0:2, ...) {
+  mantel_haenszel_table(d, "Person", "Target", "Score", "Group", "Match",
+    groups, method = "gmh", categories = categories, inference = "asymptotic", ...)
+}
+
+# Enumerate category assignments to labelled Persons under fixed margins.
+# The equally likely assignments supply the null moments, not an asymptotic p-value.
+gmh_null_moments <- function(z) {
+  ng <- nrow(z); nc <- ncol(z)
+  assignments <- as.matrix(expand.grid(rep(list(seq_len(nc)), sum(z))))
+  keep <- Reduce(`&`, lapply(seq_len(nc), function(k)
+    rowSums(assignments == k) == colSums(z)[k]))
+  assignments <- assignments[keep, , drop = FALSE]
+  persons <- rep(seq_len(ng), rowSums(z))
+  cells <- t(apply(assignments, 1, function(y) {
+    tab <- table(factor(persons, levels = seq_len(ng)), factor(y, levels = seq_len(nc)))
+    as.vector(tab[-ng, -nc, drop = FALSE])
+  }))
+  mean <- colMeans(cells)
+  centered <- sweep(cells, 2, mean)
+  list(mean = mean, covariance = crossprod(centered) / nrow(cells))
+}
+
+test_that("GMH agrees with independently enumerated fixed-margin null moments", {
+  for (tables in list(
+    list(matrix(c(2, 0, 0, 1, 1, 2), 2), matrix(c(0, 2, 1, 1, 2, 0), 2)),
+    list(matrix(c(1, 0, 1, 1, 1, 0, 0, 1, 1), 3)))) {
+    ng <- nrow(tables[[1]]); nc <- ncol(tables[[1]])
+    moments <- lapply(tables, gmh_null_moments)
+    delta <- Reduce(`+`, lapply(seq_along(tables), function(k)
+      as.vector(tables[[k]][-ng, -nc, drop = FALSE]) - moments[[k]]$mean))
+    covariance <- Reduce(`+`, lapply(moments, `[[`, "covariance"))
+    statistic <- drop(crossprod(delta, solve(covariance, delta)))
+    x <- gmh_call(gmh_rows(tables), groups = LETTERS[seq_len(ng)])
+    expect_equal(x$table$ChiSquared, statistic, tolerance = 1e-12)
+    expect_equal(x$table$DF, (ng - 1) * (nc - 1))
+    expect_equal(x$table$PValue, pchisq(statistic, (ng - 1) * (nc - 1), lower.tail = FALSE))
+    expect_identical(x$table$Status, "available")
+    expect_true(all(x$cases$Included))
+    expect_false(any(c("OddsRatio", "Lower", "Upper") %in% names(x$table)))
+  }
+})
+
+test_that("GMH handles binary multigroup and polytomous multigroup tables", {
+  for (nc in c(2L, 4L)) {
+    a <- array(as.double(seq_len(3 * nc * 2)), c(3, nc, 2))
+    d <- gmh_rows(list(a[, , 1], a[, , 2]))
+    x <- gmh_call(d, groups = LETTERS[1:3], categories = seq_len(nc) - 1)
+    ref <- stats::mantelhaen.test(a)
+    expect_equal(x$table$ChiSquared, unname(ref$statistic), tolerance = 1e-12)
+    expect_equal(x$table$PValue, ref$p.value, tolerance = 1e-12)
+    expect_equal(x$table$DF, 2 * (nc - 1))
+    expect_equal(sum(x$group_counts$IncludedRows), nrow(d))
+    expect_equal(sum(x$counts$Observed), nrow(d))
+  }
+  binary <- mh_rows(list(matrix(c(3, 1, 2, 4), 2)))
+  old <- mh_call(binary, inference = "asymptotic", correct = FALSE)$table
+  new <- gmh_call(binary, groups = c("R", "F"), categories = 0:1)$table
+  expect_equal(new[c("ChiSquared", "DF", "PValue")], old[c("ChiSquared", "DF", "PValue")])
+})
+
+test_that("GMH retains independent hand-counted margins, exclusions and adjustment family", {
+  z <- matrix(c(3, 1, 1, 2, 2, 3), 2)
+  d <- gmh_rows(list(z))
+  extras <- data.frame(Group = c("A", "B", "A", "B", "A"), Score = c(0, 0, 2, NA, 1),
+    Person = paste0("X", 1:5), Target = "Item", Match = c(2, 2, 3, 4, NA))
+  x <- gmh_call(rbind(d, extras))
+  expect_identical(tail(x$cases$Reason, 5), c("constant_response", "constant_response",
+    "no_group_overlap", "missing_score", "missing_matching"))
+  expect_equal(x$table$ExcludedRows, 5)
+  expect_equal(x$table$PValue, gmh_call(d)$table$PValue)
+  cells <- x$counts[x$counts$Stratum == 1, ]
+  expect_equal(cells$Observed, c(3, 1, 1, 2, 2, 3))
+  expect_equal(cells$Expected, c(2, 2, 1.5, 1.5, 2.5, 2.5))
+  expect_equal(cells$Proportion, c(3, 1, 1, 2, 2, 3) / 6)
+  expect_equal(x$group_counts$InputRows, c(9, 8))
+  expect_equal(x$group_counts$CompleteRows, c(8, 7))
+  expect_equal(x$group_counts$IncludedRows, c(6, 6))
+  other <- transform(extras, Target = "Unavailable", Match = NA_real_)
+  all <- gmh_call(rbind(d, other))
+  expect_equal(all$table$PAdjusted[1], min(1, 2 * all$table$PValue[1]))
+  expect_true(is.na(all$table$PValue[2]))
+  empty <- gmh_call(other)
+  expect_equal(nrow(empty$strata), 0)
+  expect_equal(nrow(empty$counts), 0)
+  expect_identical(empty$table$Status, "no_informative_strata")
+})
+
+test_that("GMH preserves the declared question when support or covariance is deficient", {
+  binary <- gmh_rows(list(matrix(c(3, 1, 1, 3), 2)))
+  missing_category <- gmh_call(binary)
+  expect_identical(missing_category$table$Status, "incomplete_category_support")
+  expect_equal(missing_category$table$NominalDF, 2)
+  expect_true(is.na(missing_category$table$PValue))
+  missing_group <- gmh_call(binary, groups = LETTERS[1:3], categories = 0:1)
+  expect_identical(missing_group$table$Status, "incomplete_group_support")
+  expect_equal(missing_group$group_counts$IncludedRows, c(4, 4, 0))
+  a <- rbind(c(2, 1, 0), c(1, 2, 0), c(0, 0, 0))
+  b <- rbind(c(0, 0, 0), c(0, 2, 1), c(0, 1, 2))
+  singular <- gmh_call(gmh_rows(list(a, b)), groups = LETTERS[1:3])
+  expect_identical(singular$table$Status, "computation_failed")
+  expect_true(nzchar(singular$table$Message))
+  expect_true(is.na(singular$table$PValue))
+  expect_equal(singular$table$NominalDF, 4)
+  # Partial group support within strata can still identify the full question jointly.
+  a <- rbind(c(2, 1, 2), c(1, 2, 1), c(0, 0, 0))
+  b <- a[c(3, 1, 2), ]; c <- a[c(1, 3, 2), ]
+  connected <- gmh_call(gmh_rows(list(a, b, c)), groups = LETTERS[1:3])
+  expect_identical(connected$table$Status, "available")
+  expect_equal(connected$table$DF, 4)
+  expect_equal(connected$strata$GroupsObserved, rep(2, 3))
+})
+
+test_that("GMH is invariant to nominal coding and retains opposing-stratum cancellation", {
+  a <- matrix(c(8, 2, 4, 7, 2, 6, 5, 3, 7), 3)
+  d <- gmh_rows(list(a, a + 2))
+  x <- gmh_call(d, groups = LETTERS[1:3])
+  shuffled <- d[rev(seq_len(nrow(d))), ]
+  shuffled$Score <- c(-20, .5, 900)[shuffled$Score + 1]
+  y <- gmh_call(shuffled, groups = rev(LETTERS[1:3]), categories = c(900, -20, .5))
+  expect_equal(x$table, y$table, tolerance = 1e-12)
+  z <- rbind(c(20, 10, 5), c(5, 10, 20))
+  crossing <- gmh_call(gmh_rows(list(z, z[2:1, ])))
+  expect_equal(crossing$table$ChiSquared, 0, tolerance = 1e-12)
+  expect_equal(crossing$table$PValue, 1)
+  expect_false(isTRUE(all.equal(crossing$counts$Proportion[1:6], crossing$counts$Proportion[7:12])))
+})
+
+test_that("GMH rejects implicit method changes, recoding and repeated-Person pooling", {
+  d <- gmh_rows(list(matrix(c(3, 1, 1, 2, 2, 3), 2)))
+  expect_error(mantel_haenszel_table(d, "Person", "Target", "Score", "Group", "Match",
+    c("A", "B"), method = "gmh", categories = 0:2), "explicit.*asymptotic")
+  expect_error(gmh_call(d, categories = 0:1), "declared categories")
+  expect_error(gmh_call(d, categories = c(0, 0, 1)), "distinct finite")
+  expect_error(gmh_call(d, categories = c(0, 1, Inf)), "distinct finite")
+  expect_error(gmh_call(d, groups = c("A", "A")), "distinct nonblank")
+  expect_error(gmh_call(rbind(d, transform(d[1, ], Score = NA_real_))), "Duplicate Person-target")
+  other <- transform(d, Target = "Other", Group = ifelse(Group == "A", "B", "A"))
+  expect_error(gmh_call(rbind(d, other)), "exactly one group")
+  expect_error(mh_call(mh_rows(list(matrix(c(3, 1, 1, 3), 2))), categories = 1:2), "Binary MH")
+  path <- tempfile(fileext = ".rds")
+  on.exit(unlink(path))
+  x <- gmh_call(d)
+  saveRDS(x, path)
+  expect_identical(readRDS(path), x)
+})

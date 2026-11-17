@@ -101,7 +101,12 @@ visual diagnostics and reporting. Specialized guides and the interactive gallery
 live in `vignettes/articles/` and are built by pkgdown. Keep their published
 article names stable. When linking from an installed tutorial to a website-only
 article, use its full website URL rather than `vignette()` or a local HTML path.
-All specialized calculations remain part of the evaluated website build.
+Specialized calculations normally remain part of the evaluated website build.
+Articles using licensed external data, such as the ICNALE CAF workflow, display
+code for local execution instead: disable evaluation explicitly, verify that
+code locally with authorized data, and keep inputs and individual outputs out
+of both the repository and generated site. Do not rely on `NOT_CRAN` to prevent
+website execution; pkgdown sets it to true.
 
 Keep each reference page focused on its question, minimal runnable use,
 arguments, output and essential interpretation limits. Link detailed
@@ -173,6 +178,15 @@ successful full suite with such skips does not satisfy the live release check.
 
 - Add or update tests for every user-visible change.
 - Keep tests deterministic (fixed seeds, no network calls).
+- Use explicit numerical tolerances for independent or repeated floating-point
+  calculations whose reduction order can differ across BLAS/LAPACK libraries.
+  Choose the bound from the calculation's scale and required accuracy; include
+  an absolute allowance near zero and a coordinatewise check where every
+  derivative matters. Do not round results or relax convergence criteria to
+  make a comparison pass. Keep independent formula or derivative checks, and
+  compare diagnostic decisions, unavailable states, names and dimensions
+  exactly. Reserve exact numerical equality for contracts that require it,
+  such as unchanged cached values and same-session serialization replay.
 - Avoid writing plot files during tests (use `draw = FALSE` unless plotting is under test).
 - Use `on.exit(..., add = TRUE)` or `withr::defer()` for cleanup. Replacing exit
   handlers can discard mock or option restoration and contaminate later tests,

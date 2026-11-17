@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-plotting.R
 \name{plot_data}
 \alias{plot_data}
+\alias{plot_data_components}
 \title{Extract reusable data from an mfrmr plot object}
 \usage{
 plot_data(
@@ -12,19 +13,22 @@ plot_data(
   format = c("native", "long"),
   value_cols = NULL
 )
+
+plot_data_components(x, type = NULL, ...)
 }
 \arguments{
-\item{x}{An \code{mfrm_plot_data} object, or a fitted/report/review object with a
+\item{x}{An \code{mfrm_plot_data} object, an mfrmr-generated ggplot retaining
+its plot metadata, or a fitted/report/review object with a
 \code{plot(..., draw = FALSE)} method.}
 
 \item{component}{Optional single component name inside the reusable plot
 data. When \code{NULL}, the full plot-data list is returned.}
 
 \item{type}{Optional plot type passed to \code{plot()} when \code{x} is not already an
-\code{mfrm_plot_data} object.}
+saved mfrmr plot object.}
 
 \item{...}{Additional arguments passed to \code{plot(..., draw = FALSE)} when
-\code{x} is not already an \code{mfrm_plot_data} object.}
+\code{x} is not already a saved mfrmr plot object.}
 
 \item{format}{\code{"native"} (default) returns the saved component unchanged.
 \code{"long"} reshapes a selected table or matrix without dropping missing cells.}
@@ -39,6 +43,8 @@ indices retaining identity even if labels repeat. Already-long tables
 }
 \value{
 The full reusable plot-data list, or the selected component.
+
+A data frame with one row per reusable plot-data component.
 }
 \description{
 \code{plot_data()} is a small accessor for users who want to build custom
@@ -56,6 +62,11 @@ including after \code{saveRDS()}/\code{readRDS()}. Printing an \code{mfrm_plot_d
 also displays its notes in the console. Axes, legends, panel headings and
 data/status symbols remain in the figure. Removing figure text does not
 remove numerical warnings or strengthen the interpretation of a result.
+
+\code{plot_data_components()} is a companion to \code{\link[=plot_data]{plot_data()}}. It returns a
+compact table that tells users which plot-data components are available,
+what shape they have, and which ones are most useful for custom graphics,
+dashboards, or report assembly.
 }
 \section{Custom distribution plots}{
 
@@ -88,4 +99,20 @@ head(locations)
 # For table extraction alone, no graphics device is needed
 locations_only <- plot_data(fit, component = "locations")
 head(locations_only)
+library(mfrmr)
+
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+
+# Discover which tables the default Wright map provides without drawing it
+plot_data_components(fit)
+
+# Extract one of the listed components
+locations <- plot_data(fit, component = "locations")
+head(locations)
+
+# A different plot type has different reusable tables
+plot_data_components(fit, type = "ccc")
 }

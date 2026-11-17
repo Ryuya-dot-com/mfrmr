@@ -599,7 +599,7 @@ print.summary.mfrm_response_time_review <- function(x, ...) {
 #' @return Invisibly, a `ggplot` object carrying reusable tables, thresholds,
 #'   overview, and interpretation notes accessible via [plot_data()].
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_response_time_review", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -618,7 +618,7 @@ print.summary.mfrm_response_time_review <- function(x, ...) {
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -701,8 +701,14 @@ plot_response_time_review <- function(x,
 
 #' @rdname response_time_review
 #' @details `plot()` method: Plot a saved response-time review
-#' @inheritParams plot_response_time_review
-#' @param ... For `plot()`: View-specific controls from [plot_response_time_review()].
+#' @param x A `mfrm_response_time_review` object.
+#' @param type Plot type: `"distribution"`, `"person"`, `"facet"`, or
+#'   `"score"`.
+#' @param ... For `plot()`: `facet` selects a facet for `type = "facet"`;
+#'   `top_n = 25` limits person/facet rows; `preset` selects appearance;
+#'   `draw = FALSE` returns plot data without drawing. The returned payload
+#'   retains thresholds, overview and interpretation notes. These descriptive
+#'   views do not fit a joint response-time model.
 #'
 #' For `summary()`: Unused.
 #' @return For `plot()`: Invisibly, a `ggplot` object (reusable tables and notes via [plot_data()]). These are descriptive timing summaries.

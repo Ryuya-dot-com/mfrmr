@@ -158,7 +158,7 @@ test_that("reporting_checklist has a shrinkage item", {
   diag <- suppressMessages(suppressWarnings(
     diagnose_mfrm(fit, residual_pca = "none")
   ))
-  chk <- reporting_checklist(fit, diagnostics = diag)
+  chk <- mfrm_report(x = fit, diagnostics = diag, type = "checklist")
   hit <- grepl("shrinkage", chk$checklist$Item, ignore.case = TRUE)
   expect_true(any(hit))
 })

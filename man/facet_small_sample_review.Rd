@@ -48,8 +48,12 @@ A list of class \code{mfrm_facet_sample_review} with:
 \itemize{
 \item \code{table}: one row per \verb{(Facet, Level)} with \code{N}, \code{Estimate}, \code{SE},
 \code{Infit}, \code{Outfit}, and \code{SampleCategory}.
+Added columns give \code{Ratings}, \code{Persons}, per-person rating counts,
+observed/declared category counts, \code{DataBasis} and \code{RatingCountBand}.
 \item \code{summary}: counts of levels in each sample-size category, by facet.
 \item \code{facet_summary}: count range and lowest count band per facet.
+\item \code{crossings}: per-level observed/retained counts of other facet levels.
+\item \code{categories}: per-level original-score counts, including unused categories.
 \item \code{thresholds}: the applied count bands.
 \item \code{notes}: count definition and interpretation limits, also shown by
 \code{print()} and \code{summary()}.
@@ -72,6 +76,13 @@ examinees; for a person it counts that person's ratings. Repeated or
 dependent ratings need not supply independent information. Review the
 counts alongside targeting, connectedness, category use, the estimation
 method, and available uncertainty estimates before drawing conclusions.
+\code{Ratings} repeats \code{N} with an explicit unit; \code{Persons} counts distinct
+recorded Person IDs. \code{MinRatingsPerPerson}, \code{MedianRatingsPerPerson}, and
+\code{MaxRatingsPerPerson} describe each person's retained rows at that level.
+\code{crossings} counts the observed levels of each other facet separately;
+\code{categories} reports every declared score, including zero counts.
+Missing stored category coding produces unavailable counts, not zeros.
+These are descriptive counts, not effective sample sizes or rank checks.
 
 \code{plot()} method: Plot a facet sample-size review
 
@@ -90,6 +101,12 @@ With the default thresholds, the four labels mean only \code{N < 10},
 Neither \code{"standard"} nor \code{"strong"} guarantees narrow intervals, correct
 coverage, good targeting, or suitability for publication. Do not pool or
 discard levels solely because of a count label.
+The existing \code{SampleCategory} and threshold names remain for compatibility.
+Console and plot labels use numeric rating-count bands. \code{DataBasis} identifies
+full-model data or the retained data of a limiting-likelihood fit.
+Location \code{Estimate}/\code{SE} values come from the fitted facet tables, not slope
+estimates. If full-model optimization was skipped, \code{EstimateBasis} marks
+neutral reference values that must not be interpreted as estimates.
 
 Linacre (1994) relates Rasch item/person precision to sample size under
 targeting and model assumptions. Those guidelines do not establish a
@@ -148,7 +165,7 @@ PMID: 29894984.
 \seealso{
 \code{\link[=detect_facet_nesting]{detect_facet_nesting()}}, \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}},
 \code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}},
-\code{\link[=reporting_checklist]{reporting_checklist()}}.
+\link{mfrm_report_checklist}.
 
 \code{\link[=facet_small_sample_review]{facet_small_sample_review()}}.
 }

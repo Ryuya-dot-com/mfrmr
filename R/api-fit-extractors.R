@@ -7,7 +7,8 @@
 #'   results use their documented summaries and model-specific methods.
 #' @param type For `coef()`, `"free"` (default) returns the independent fitted
 #'   coordinates; `"locations"`, `"steps"`, `"slopes"` or `"persons"` returns
-#'   the corresponding saved primary estimates. For `nobs()`, `"likelihood"`
+#'   the corresponding saved `Estimate` column (see the GPCM distinction below).
+#'   For `nobs()`, `"likelihood"`
 #'   (default) counts Persons for MML/CML and retained response rows for JML;
 #'   `"persons"` and `"ratings"` request those counts explicitly.
 #' @param k Penalty per free parameter for single-fit `AIC()`; default 2.
@@ -37,7 +38,17 @@
 #' Person estimates. Free-coordinate extraction refuses corrected or penalized
 #' JML and any fit whose primary estimates are nonfinite: finite optimizer
 #' proxies must not replace primary boundary values. Explicit component
-#' extraction preserves the saved infinite or missing primary estimates.
+#' extraction preserves infinite or missing values in the selected column.
+#'
+#' **GPCM slope columns.** `coef(fit, type = "slopes")` returns the saved
+#' `fit$slopes$Estimate`, which retains working values for compatibility; it
+#' does not select `PrimaryEstimate` or attach status columns. Read
+#' `fit$slopes` before reporting: `PrimaryEstimate` is the target's primary
+#' value under `ParameterStatus` and `PrimaryEstimateBasis`, whereas
+#' `OptimizerEstimate` records the numerical value even when no primary
+#' estimate is available. The distinction matters at boundaries and for
+#' limiting fits. Neither a finite working value nor an available primary
+#' value establishes interval eligibility. See [fit_mfrm_technical_details].
 #'
 #' **Covariance.** MML `vcov()` reuses the same qualified full joint covariance
 #' as [mfrm_facet_intervals()], including its model/design restrictions and
@@ -50,6 +61,12 @@
 #' one dense `NA` matrix exceeds `mfrmr.max_information_bytes`, `vcov()` errors
 #' with that reason; use the smaller target-level [mfrm_facet_intervals()] result.
 #' Other MML routes retain their separate qualification checks and error rules.
+#' For two-family GPCM, the checked covariance includes free location, step
+#' and log-slope coordinates. Use `confint(fit, parm = "steps")` for
+#' separately checked intervals for the expanded step offsets.
+#' Dependent centered steps require their constraint transformation; diagonal
+#' entries alone do not describe all displayed steps. Nominal coverage across
+#' designs has not been established; see [mfrmr_gpcm_scope].
 #' RSM/PCM singleton-category fits can pass the interval-specific information
 #' review while retaining `InferenceReady = FALSE`; returned `cautions` and
 #' checks explain the small-sample limitation. No count label alone certifies
@@ -232,7 +249,7 @@ vcov.mfrm_comparison_fit <- function(object, ...) {
 mfrm_coefficient_intervals <- function(object, parm, level) {
   mfrm_extractor_native(object)
   if (mfrm_has_product_slopes(object))
-    stop("Free-coordinate intervals are not supplied for two-family GPCM; use parm = 'slopes' for its separately checked experimental component intervals.", call. = FALSE)
+    stop("Free-coordinate intervals are not supplied for two-family GPCM; use parm = 'slopes' or parm = 'steps' for separately checked experimental component intervals, or mfrm_facet_intervals() for locations.", call. = FALSE)
   b <- coef(object)
   labels <- names(b)
   if (!length(b) || length(labels) != length(b) || anyNA(labels) ||

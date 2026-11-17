@@ -41,6 +41,136 @@ test_that("information plots select the requested series and preserve numerical 
   expect_equal(doubled$tif$SE, info$tif$SE / sqrt(2))
 })
 
+test_that("per-Person rating plans agree with independent category-score derivatives", {
+  fits <- list(
+    RSM = readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))$fit,
+    PCM = readRDS(test_path("fixtures", "ordinary-score-integration.rds"))$fits[[1L]],
+    GPCM = readRDS(test_path("fixtures", "native-location-fixed-gpcm.rds")))
+  # Separate ownership at specified fixed coordinates also tests the mapping;
+  # it is a conditional-probability witness, not another estimation result.
+  fits$GPCM_separate <- fits$GPCM
+  fits$GPCM_separate$config$slope_facet <- "Rater"
+  for (fit in fits) {
+    facets <- fit$config$facet_names
+    plan <- unique(fit$prep$data[facets])
+    plan$Count <- rep(1:3, length.out = nrow(plan))
+    info <- compute_information(fit, theta_range = c(-3, 3), theta_points = 13,
+      rating_plan = plan)
+    # Independent normalized adjacent logits and finite differences of log P.
+    expected <- vapply(info$tif$Theta, function(theta) {
+      sum(vapply(seq_len(nrow(plan)), function(i) {
+        offset <- sum(vapply(facets, function(f) {
+          rows <- fit$facets$others
+          fit$config$facet_signs[[f]] * rows$Estimate[rows$Facet == f & rows$Level == plan[[f]][i]]
+        }, 0))
+        steps <- if (fit$config$model == "RSM") fit$steps$Estimate else {
+          z <- subset(fit$steps, StepFacet == plan[[fit$config$step_facet]][i])
+          z$Estimate[order(as.integer(sub("Step_", "", z$Step)))]
+        }
+        slope <- if (fit$config$model == "GPCM")
+          fit$slopes$Estimate[fit$slopes$SlopeFacet == plan[[fit$config$slope_facet]][i]] else 1
+        logp <- function(t) {
+          u <- c(0, cumsum(slope * (t + offset - steps)))
+          u - max(u) - log(sum(exp(u - max(u))))
+        }
+        score <- (logp(theta + 1e-5) - logp(theta - 1e-5)) / 2e-5
+        plan$Count[i] * sum(exp(logp(theta)) * score^2)
+      }, 0))
+    }, 0)
+    expect_equal(info$tif$Information, expected, tolerance = 1e-8)
+    doubled_plan <- plan; doubled_plan$Count <- 2 * plan$Count
+    doubled <- compute_information(fit, c(-3, 3), 13, doubled_plan)
+    expect_equal(doubled$tif$Information, 2 * info$tif$Information)
+    expect_equal(doubled$tif$SE, info$tif$SE / sqrt(2))
+    for (f in facets)
+      expect_equal(as.numeric(tapply(subset(info$iif, Facet == f)$Information,
+        subset(info$iif, Facet == f)$Theta, sum)), info$tif$Information)
+    duplicated <- fit; duplicated$prep$data <- rbind(fit$prep$data, fit$prep$data)
+    expect_identical(compute_information(duplicated, c(-3, 3), 13, plan), info)
+    expect_equal(info$settings$RatingsPerPerson, sum(plan$Count))
+    if (fit$config$model == "GPCM") {
+      expect_equal(info$settings$ParameterBasis, "working_GPCM_coordinates")
+      expect_match(paste(info$notes$Text, collapse = " "), "primary slope estimates are unavailable")
+    }
+  }
+  # Closed-form binary limit, with a deliberately specified fixed calibration.
+  fit <- fits$RSM; fit$steps <- fit$steps[1, ]; fit$steps$Estimate <- 0
+  fit$facets$others$Estimate <- 0
+  plan <- unique(fit$prep$data[fit$config$facet_names])[1, ]; plan$Count <- 3L
+  info <- compute_information(fit, c(-2, 2), 5, plan)
+  expect_equal(info$tif$Information, 3 * plogis(-2:2) * (1 - plogis(-2:2)))
+})
+
+test_that("rating-plan scope and malformed counts cannot be silently reinterpreted", {
+  fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))$fit
+  plan <- unique(fit$prep$data[fit$config$facet_names]); plan$Count <- 1L
+  for (bad in list(0, -1, 1.5, NA_real_, Inf, "1", 1 + 1i)) {
+    p <- plan; p$Count[1] <- bad
+    expect_error(compute_information(fit, rating_plan = p), "positive finite integers")
+  }
+  for (p in list(plan[FALSE, ], plan[setdiff(names(plan), "Rater")],
+      transform(plan, Person = "P1"), transform(plan, Weight = 1)))
+    expect_error(compute_information(fit, rating_plan = p), "every non-Person facet")
+  expect_error(compute_information(fit, rating_plan = rbind(plan, plan[1, ])), "combined in Count")
+  p <- plan; p$Rater <- as.character(p$Rater); p$Rater[1] <- "unfitted-rater"
+  expect_error(compute_information(fit, rating_plan = p), "Unknown or missing")
+  p$Rater[1] <- NA_character_
+  expect_error(compute_information(fit, rating_plan = p), "Unknown or missing")
+  f <- fit; f$config$facet_names[1] <- "ObservedContext"
+  f$prep$data$ObservedContext <- f$prep$data$Rater
+  expect_error(compute_information(f, rating_plan = plan), "reserved")
+  for (field in c("nonconverged", "JML", "interaction", "limiting", "imported")) {
+    f <- fit
+    if (field == "nonconverged") f$summary$Converged <- FALSE
+    if (field == "JML") f$config$method <- "JML"
+    if (field == "interaction") f$config$interaction_specs <- list(list())
+    if (field == "limiting") f$config$gpcm_limit_source <- list(model = "GPCM")
+    if (field == "imported") class(f) <- c("mfrm_imported_fit", class(f))
+    expect_error(compute_information(f, rating_plan = plan), "converged native additive MML")
+  }
+  f <- fit; f$facets$others$Estimate[1] <- Inf
+  expect_error(compute_information(f, rating_plan = plan), "finite fitted locations")
+  # A source-data audit proving a free endpoint recession overrides convergence.
+  local_mocked_bindings(mfrmr_mml_additive_boundary_evidence = function(config)
+    "mml_unobserved_global_endpoint", .package = "mfrmr")
+  expect_error(compute_information(fit, rating_plan = plan), "no finite maximum")
+})
+
+test_that("rating plans preserve extrapolation and interpretation through saved plot data", {
+  fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))$fit
+  plan <- unique(fit$prep$data[fit$config$facet_names]); plan$Count <- 1L
+  p1 <- subset(plan, Rater %in% c("R01", "R02"))
+  p2 <- subset(plan, Rater %in% c("R03", "R06"))
+  one <- compute_information(fit, rating_plan = p1)
+  two <- compute_information(fit, rating_plan = p2)
+  expect_equal(sum(p1$Count), sum(p2$Count))
+  expect_gt(max(abs(one$tif$Information - two$tif$Information)), 0.01)
+  sparse <- fit
+  sparse$prep$data <- subset(fit$prep$data, !(Rater == p1$Rater[1] & Criterion == p1$Criterion[1]))
+  info <- compute_information(sparse, rating_plan = p1)
+  expect_identical(info$rating_plan$ObservedContext, c(FALSE, rep(TRUE, nrow(p1) - 1L)))
+  expect_identical(info$tif, one$tif)
+  zero_weight <- fit
+  zero_weight$prep$data$Weight[fit$prep$data$Rater == p1$Rater[1] &
+    fit$prep$data$Criterion == p1$Criterion[1]] <- 0
+  expect_identical(compute_information(zero_weight, rating_plan = p1)$rating_plan,
+    info$rating_plan)
+  expect_match(paste(info$notes$Text, collapse = " "), "Calibration uncertainty is not propagated")
+  for (kind in c("tif", "sem", "both", "iif")) {
+    p <- plot(info, type = kind, facet = "Rater", draw = FALSE)
+    expect_equal(plot_data(p, "rating_plan"), info$rating_plan)
+    expect_equal(plot_data(p, "plan_settings"), info$settings)
+    expect_equal(subset(plot_data(p, "notes"), Type == "Interpretation"), info$notes)
+    if (kind == "tif") expect_equal(p$labels$y, "Information per Person")
+    saved <- tempfile(fileext = ".rds")
+    saveRDS(attr(p, "mfrmr_plot_data"), saved)
+    restored <- as_ggplot(readRDS(saved)); unlink(saved)
+    expect_identical(plot_data(restored, "rating_plan"), info$rating_plan)
+    expect_equal(restored$data, p$data)
+    expect_s3_class(ggplot2::ggplot_build(restored), "ggplot_built")
+  }
+})
+
 test_that("only data accessors retain the public plot_ prefix", {
   expect_setequal(grep("^plot_", getNamespaceExports("mfrmr"), value = TRUE),
     c("plot_data", "plot_data_components"))

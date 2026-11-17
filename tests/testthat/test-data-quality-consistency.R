@@ -10,14 +10,8 @@ make_qc_score_gap_case <- function(keep_original = TRUE, maxit = 8) {
       keep_original = keep_original
     )
   )
-  dq <- data_quality_report(
-    fit,
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    min_category_count = 10
-  )
+  dq <- mfrm_report(x = fit, data = d, person = "Person", facets = c("Rater", "Task", "Criterion"),
+    score = "Score", min_category_count = 10, type = "data_quality")
   list(data = d, fit = fit, dq = dq)
 }
 
@@ -32,13 +26,8 @@ make_qc_response_pattern_case <- function(maxit = 8) {
       keep_original = TRUE
     )
   )
-  dq <- data_quality_report(
-    fit,
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score"
-  )
+  dq <- mfrm_report(x = fit, data = d, person = "Person", facets = c("Rater", "Task", "Criterion"),
+    score = "Score", type = "data_quality")
   list(data = d, fit = fit, dq = dq)
 }
 
@@ -171,14 +160,8 @@ test_that("facet category usage plot data follows category-usage summary orderin
       keep_original = TRUE
     )
   )
-  dq <- data_quality_report(
-    fit,
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    min_category_count = 10
-  )
+  dq <- mfrm_report(x = fit, data = d, person = "Person", facets = c("Rater", "Task", "Criterion"),
+    score = "Score", min_category_count = 10, type = "data_quality")
   usage <- as.data.frame(dq$category_usage_summary, stringsAsFactors = FALSE)
   expected <- usage |>
     dplyr::arrange(

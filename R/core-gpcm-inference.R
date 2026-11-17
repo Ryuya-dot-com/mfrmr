@@ -2,6 +2,10 @@
 # Prediction may combine known levels absent from the estimation design; it
 # does not add such crossings to the fitted slope design or certify inference.
 mfrm_gpcm_response_evaluator <- function(prep, config, newdata) {
+  if (identical(config$estimation_control$optimization_status, "not_run_boundary"))
+    stop("The full model was not optimized because no finite maximum exists. Its neutral reference values cannot supply fitted curves. Use fit$point_limit$fit, when available, for retained rating contexts.", call. = FALSE)
+  if (length(mfrmr_mml_additive_boundary_evidence(config)))
+    stop("The full model has no finite maximum along a free location or endpoint path. Optimizer values cannot supply fitted curves. Use a separately supported limiting fit when available.", call. = FALSE)
   facets <- config$facet_names
   required <- c("Theta", facets)
   if ("Theta" %in% facets || !is.data.frame(newdata) || !nrow(newdata) ||
@@ -63,11 +67,14 @@ mfrm_gpcm_anchor_note <- function(fit) {
 
 # Joint information and transformations shared by slope/curve inference.
 mfrm_gpcm_inference_source <- function(fit) {
-  list(signature = normalize_compare_signature(fit), parameters = fit$opt$par,
+  out <- list(signature = normalize_compare_signature(fit), parameters = fit$opt$par,
     objective = fit$opt$value, convergence = fit$opt$convergence,
     data = fit$prep$data, levels = fit$prep$levels,
     population = mfrm_population_design(fit),
     integration = fit$config$estimation_control[c("quad_points", "mml_integration")])
+  if (identical(fit$config$gpcm_limit_source$kind,"global_endpoint"))
+    out$limiting_source <- fit$config$gpcm_limit_source
+  out
 }
 
 mfrm_gpcm_inference <- function(fit, method = "model", clusters = NULL, adjust = FALSE) {
@@ -78,13 +85,15 @@ mfrm_gpcm_inference <- function(fit, method = "model", clusters = NULL, adjust =
   method <- match.arg(method, c("model", "sandwich"))
   if (!is.logical(adjust) || length(adjust) != 1L || is.na(adjust)) stop("`adjust` must be TRUE or FALSE.", call. = FALSE)
   if (method == "model" && (!is.null(clusters) || adjust)) stop("`clusters` and `adjust` require method = 'sandwich'.", call. = FALSE)
-  if (mfrm_has_product_slopes(fit)) {
+  if (mfrm_has_product_slopes(fit) || !is.null(fit$config$gpcm_limit_source)) {
     if (method != "model" || !is.null(clusters) || adjust) {
       stop("Two-family curves do not yet support covariance methods or uncertainty adjustments.", call. = FALSE)
     }
     return(list(covariance = NULL, information = NULL, method = method, clusters = NULL,
       check = list(eligible = FALSE, review = paste(
-        "Provisional two-family fitted values; curve intervals are not available.",
+        if (!is.null(fit$config$gpcm_limit_source))
+          "Limiting-likelihood fitted values; ordinary intervals after a data-dependent reduction are not qualified." else
+          "Provisional two-family fitted values; curve intervals are not available.",
         "Numerical convergence does not establish identification or inferential reliability."))))
   }
   information <- compute_mml_parameter_covariance(fit)
@@ -205,6 +214,81 @@ mfrm_gpcm_slope_target <- function(fit, scale, contrasts, contrast_scale) {
     contrasts = coefficients, scale = scale,
     target = paste(if (is.null(contrasts)) paste(scale, "GPCM slopes") else
       paste(scale, "GPCM slope", if (log_scale) "ratios" else "differences")))
+}
+
+# Internal reuse accepts an already qualified covariance for this same fit.
+# The public confint() route always performs a fresh qualification.
+mfrm_gpcm_step_source <- function(fit) {
+  list(calibration = mfrm_gpcm_inference_source(fit), steps = fit$steps,
+    constraints = mfrmr_step_specs(fit$config), limiting_source = fit$config$gpcm_limit_source,
+    converged = fit$summary$Converged, optimizer_review = fit$opt$optimizer_diagnostics)
+}
+
+mfrm_gpcm_step_intervals <- function(fit, level = .95, inference = NULL) {
+  if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit") ||
+      !mfrm_has_product_slopes(fit) || !identical(fit$config$method, "MML"))
+    stop("Step intervals require a native two-family GPCM MML fit.", call. = FALSE)
+  cfg <- fit$config
+  if (!identical(mfrmr_step_specs(cfg), mfrmr_default_step_specs(cfg)))
+    stop("Two-family step intervals require the fitted unanchored sum-zero step constraints.", call. = FALSE)
+  sizes <- build_param_sizes(cfg)
+  expected <- build_step_table(cfg, fit$prep, expand_params(fit$opt$par, sizes, cfg))
+  if (!isTRUE(all.equal(fit$steps[c("StepFacet", "Step", "Estimate")], expected,
+      tolerance = 1e-10, check.attributes = FALSE)))
+    stop("Saved steps must match the fitted two-family parameters and level order.", call. = FALSE)
+  if (is.null(inference)) inference <- mfrm_gpcm_product_inference(fit)
+  n <- nrow(expected)
+  labels <- make.unique(paste(cfg$step_facet, expected$StepFacet, expected$Step, sep = " = "))
+  J <- matrix(0, n, length(fit$opt$par),
+    dimnames = list(labels, mfrm_checkpoint_parameter_names(sizes)))
+  slice <- build_param_slices(sizes)$steps
+  if (length(slice)) J[, slice] <- as.matrix(mfrmr_step_jacobian_sparse(cfg, sizes)$jacobian)
+  fixed <- rowSums(abs(J)) == 0
+  V <- inference$covariance
+  covariance <- if (isTRUE(inference$check$eligible))
+    symmetrize_matrix(J %*% V %*% t(J)) else matrix(NA_real_, n, n)
+  covariance[fixed, ] <- covariance[, fixed] <- 0
+  dimnames(covariance) <- list(labels, labels)
+  se <- covariance_diag_se(covariance)
+  eligible <- isTRUE(inference$check$eligible) & is.finite(se) & se > 0 & !fixed
+  estimate <- expected$Estimate
+  point <- mfrm_gmfrm_point_review(fit$prep, cfg, fit$opt)$overview
+  no_maximum <- identical(point$Status, "finite_maximum_absent")
+  if (no_maximum) estimate[!fixed] <- NA_real_
+  lower <- estimate - stats::qnorm((1 + level) / 2) * se
+  upper <- estimate + stats::qnorm((1 + level) / 2) * se
+  eligible <- eligible & is.finite(lower) & is.finite(upper) & !no_maximum
+  status <- ifelse(fixed, "fixed", ifelse(eligible, "available",
+    if (isTRUE(inference$check$eligible)) "nonpositive_variance_or_nonfinite_bounds" else "numerical_review_failed"))
+  if (no_maximum) status[!fixed] <- "finite_maximum_absent"
+  lower[!eligible] <- upper[!eligible] <- NA_real_
+  se[!eligible & !fixed] <- NA_real_
+  review <- rep(inference$check$review, n)
+  review[fixed] <- "Constraint-fixed step; SE is zero by construction, not empirical precision. No inferential interval."
+  review[status == "nonpositive_variance_or_nonfinite_bounds"] <- "The target requires finite positive variance and finite normal bounds."
+  caution <- unique(c(inference$check$caution,
+    "Experimental two-family step intervals: offsets sum to zero within each step-owner level; they are not category boundaries including facet locations. Sampling coverage is unqualified."))
+  tab <- data.frame(Target = labels, StepOwner = cfg$step_facet,
+    StepLevel = expected$StepFacet, Step = expected$Step, Estimate = estimate,
+    OptimizerEstimate = expected$Estimate, PointEstimateStatus = point$Status,
+    SE = se, Lower = lower, Upper = upper, Status = status,
+    SEEligible = eligible, CIEligible = eligible, CoverageQualified = FALSE,
+    CIUse = ifelse(fixed, "fixed_by_constraint", ifelse(eligible, "approximate_pointwise", "unavailable")),
+    ScaleReference = "within_level_sum_zero_fixed_N01", InferenceReview = review)
+  out <- structure(list(table = tab, covariance = covariance, model_covariance = covariance,
+    parameter_covariance = V, model_parameter_covariance = V,
+    contrasts = diag(1, n, n, names = FALSE), target_jacobian = J,
+    settings = list(facet = cfg$step_facet, target = "category_step_offsets",
+      procedure = "gmfrm_step_model_v1", method = "model", level = level,
+      two_family = TRUE, scale = "fixed_standard_normal", location_reference = "within_level_sum_zero",
+      integration = if (mfrmr_adaptive_integration(cfg)) "adaptive" else "fixed",
+      quad_points = cfg$estimation_control$quad_points),
+    checks = inference$checks, numerical_checks = inference$numerical_checks,
+    score_rank = inference$score_rank, cautions = caution, source = mfrm_gpcm_step_source(fit),
+    fit = fit), class = "mfrm_facet_intervals")
+  dimnames(out$contrasts) <- list(labels, labels)
+  if (!is.null(inference$check$caution)) warning(inference$check$caution, call. = FALSE)
+  out
 }
 
 mfrm_gpcm_interval_result <- function(tab, level, method, target, simultaneous = "none", covariance = NULL) {

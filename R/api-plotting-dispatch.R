@@ -107,21 +107,34 @@
 #'
 #' Plot a saved [compute_information()] result to see where the observed
 #' assessment design provides more or less precision across ability.
-#' @inheritParams plot_information
+#' @param x Output from [compute_information()].
+#' @param type `"tif"` for the overall precision curve (default), `"iif"` for
+#'   facet-level contribution curves, `"se"` / `"sem"` / `"csem"` for the
+#'   conditional standard error of measurement implied by that curve, or
+#'   `"both"` for precision and conditional SEM in separate panels.
+#' @param facet For `type = "iif"`, which facet to plot. If `NULL`,
+#'   the first facet is used.
+#' @param draw If `TRUE` (default), draw the plot. If `FALSE`, return
+#'   the `ggplot` object invisibly without printing.
 #' @param draw If `TRUE`, print the plot. Otherwise return it without drawing.
 #' @param ... Additional arguments for the selected view.
-#' @inheritSection plot_information Plot types
-#' @inheritSection plot_information Which type should I use?
-#' @inheritSection plot_information Interpreting output
+#' @section Plot types:
+#' - `"tif"`: overall design-weighted precision across theta.
+#' - `"se"` / `"sem"` / `"csem"`: conditional SEM across theta.
+#' - `"both"`: precision and conditional SEM together, useful for presentations.
+#' - `"iif"`: facet-level contribution curves for one selected facet in a
+#'   supported `RSM`, `PCM`, or `GPCM` fit.
+#'
 #' @section Returned data when draw = FALSE:
 #' `draw = FALSE` returns the reusable `ggplot` without printing it.
 #' `plot_data(p)` exposes the underlying `plot`, `information_long`,
 #' `conditional_sem`, `summary` and `settings` payloads.
 #' The overall curve comes from `x$tif`; facet contributions come from
 #' `x$iif` filtered to the selected facet.
-#' @inheritSection plot_information Typical workflow
+#' For an explicit plan, `rating_plan`, `plan_settings` and `notes` retain
+#' its counts, calibration basis and interpretation limits.
 #' @seealso [compute_information()], [mfrmr_plot_migration]
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' @examples # Optional workflow; run the example explicitly as shown below.
 #' # example("plot.mfrm_information", run.dontrun = TRUE)
 #' \dontrun{
 #' ratings <- load_mfrmr_data("example_operational")
@@ -175,7 +188,15 @@ plot.mfrm_information <- function(x, type = c("tif", "iif", "se", "sem", "csem",
 #'   cells at or above that absolute value; `flag_color = "black"` sets the border.
 #' - `scale_limit = NULL` uses the observed range. A positive value fixes
 #'   symmetric color limits for comparing plots. It does not change saved values.
-#' @inheritSection plot_dif_summary Interpreting output
+#' @section Interpreting output:
+#' Bars are anchored at zero. Width corresponds to effect size on the
+#' contrast's native scale. For `method = "residual"`, this is the
+#' observed-minus-expected average difference between groups, in score units. For
+#' `method = "refit"`, this is the subgroup parameter difference on the
+#' fitted logit scale when linking support allows a comparable contrast.
+#' Residual differences do not isolate differential functioning. Linked refit
+#' intervals omit estimated-anchor uncertainty and cross-refit covariance.
+#'
 #' @section Read the figure with its source table:
 #' Summary labels follow `Level | Group1 | Group2`. Both summary bars and
 #' contrast heatmaps use **Group1 minus Group2**. A positive residual contrast
@@ -215,7 +236,7 @@ plot.mfrm_information <- function(x, type = c("tif", "iif", "se", "sem", "csem",
 #'   unavailable values when exporting; a plot does not qualify new inference.
 #' @seealso [analyze_dff()], [dif_interaction_table()], [mfrmr_plot_migration]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot.mfrm_dif", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
@@ -237,7 +258,11 @@ plot.mfrm_information <- function(x, type = c("tif", "iif", "se", "sem", "csem",
 #' p_scatter <- plot(dff, type = "scatter", draw = FALSE)
 #' head(plot_data(p_scatter, "data"))
 #' }
+#' @rdname analyze_dff
 #' @export
+#' @concept DFF DIF
+#' @concept confidence intervals
+#' @concept visual diagnostics
 plot.mfrm_dif <- function(x, type = c("summary", "heatmap", "scatter"), ...) {
   type <- match.arg(type)
   target <- switch(
@@ -259,7 +284,11 @@ plot.mfrm_dif <- function(x, type = c("summary", "heatmap", "scatter"), ...) {
 #' @param ... Heatmap controls below, plus `draw = FALSE` to return data
 #'   without drawing. This input accepts `metric = "obs_exp"` or `"t"`;
 #'   `"contrast"` requires a result from [analyze_dff()].
-#' @inheritSection plot.mfrm_dif Heatmap appearance
+#' @section Heatmap appearance:
+#' For `show_values`, `value_digits`, `flag_threshold`, `flag_color` and
+#' `scale_limit`, see "Heatmap appearance" in [plot.mfrm_dif()] for defaults
+#' and valid values. These controls change labels, outlines and color limits,
+#' not the saved residuals or their interpretation.
 #' @section Interpretation:
 #' For `plot()`:
 #'
@@ -272,7 +301,7 @@ plot.mfrm_dif <- function(x, type = c("summary", "heatmap", "scatter"), ...) {
 #'   selected metric and retained interpretation notes. Use
 #'   `plot_data(p, "matrix")` to extract the matrix from a saved plot `p`.
 #' @seealso [dif_interaction_table()], [plot.mfrm_dif()], [mfrmr_plot_migration]
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' @examples # Optional workflow; run the example explicitly as shown below.
 #' # example("plot.mfrm_dif_interaction", run.dontrun = TRUE)
 #' \dontrun{
 #' ratings <- load_mfrmr_data("example_bias")
@@ -296,19 +325,14 @@ plot.mfrm_dif_interaction <- function(x, type = "heatmap", ...) {
 #' @rdname detect_anchor_drift
 #' @details `plot()` method: Plot a saved anchor-drift review
 #'
-#' Inspect relative changes after the common-element offset used by
-#' [detect_anchor_drift()]. Read `summary(x)` and link support alongside the plot.
 #' @param type `"drift"` for relative changes with screening flags,
 #'   `"heatmap"` for wave-by-element patterns, or `"forest"` for per-wave
 #'   estimates with approximate normal whiskers. A linking chain is a different
 #'   result: use `plot(chain, type = "chain")` after [build_equating_chain()].
-#' @section Interpretation:
-#' For `plot()`:
-#'
-#' Drift and heatmap views show the saved relative drift. Flags use the
-#' screening rules chosen during analysis; changing the display does not
-#' recalibrate these rules. Subtracting the common-element offset can remove
-#' a panel-wide shift, so unflagged elements do not establish absence of annual drift.
+#' @section Reading drift plots:
+#' Drift and heatmap views reuse saved residuals and screening rules; changing
+#' the display does not recalibrate them. Interpret with the offset and support
+#' review above: unflagged elements do not establish absence of panel-wide change.
 #'
 #' Forest whiskers describe individual wave estimates, not uncertainty in
 #' their differences. They do not include linking-offset uncertainty or
@@ -354,10 +378,25 @@ plot.mfrm_anchor_drift <- function(x, type = c("drift", "heatmap", "forest"), ..
 #'
 #' Display the checks already returned by [run_qc_pipeline()]. Use the colored
 #' verdicts for triage, then read the returned detail for the reason and next review.
-#' @inheritParams plot_qc_pipeline
+#' @param x Output from [run_qc_pipeline()].
+#' @param type Plot type: `"traffic_light"` (default) or `"detail"`.
+#' @param draw If `FALSE`, return plot data invisibly without drawing.
 #' @param ... Additional plotting arguments for the selected view.
-#' @inherit plot_qc_pipeline details return
-#' @inheritSection plot_qc_pipeline Interpretation
+#' @section Interpretation:
+#' The rows are the actual checks returned by [run_qc_pipeline()]: convergence,
+#' global fit, selected-facet reliability and separation, element misfit,
+#' unexpected responses, category structure, connectivity, inter-rater
+#' agreement, and the functioning/bias screen. Element misfit uses the
+#' configured mean-square band; it is not a ZSTD test. PCA and displacement
+#' are separate diagnostics and are not checks in this pipeline.
+#'
+#' Green (Pass), amber (Warn), and red (Fail) describe the selected screening
+#' rules. Grey (Skip) marks unrequested or unavailable checks; `AffectsOverall`
+#' in the returned data distinguishes their contribution to the overall result.
+#' A missing result is not evidence of acceptable fit. High rater separation
+#' is not high agreement, and no colour establishes statistical validity or
+#' justifies deleting raters or collapsing categories without further review.
+#'
 #' @seealso [run_qc_pipeline()], [mfrmr_plot_migration]
 #' @examples # Long-running workflow; run explicitly when needed.
 #' # example("plot.mfrm_qc_pipeline", run.dontrun = TRUE)
@@ -418,18 +457,42 @@ plot.mfrm_qc_pipeline <- function(x, type = c("traffic_light", "detail"), draw =
 #'   `"monochrome"`; `palette` overrides named colors (`normal`, `flag`,
 #'   `hist`, `profile`); `label_angle` controls label rotation. `title` sets
 #'   title metadata (`main` is a compatibility alias; supply only one).
-#' @inherit plot_bias_interaction details
-#' @inheritSection plot_bias_interaction Plot types
-#' @inheritSection plot_bias_interaction Interpreting output
+#' @section Plot types:
+#' \describe{
+#'   \item{`"scatter"` (default)}{Observed-minus-expected score average (x)
+#'     versus conditional bias size in logits (y). Points use the saved flag
+#'     status; horizontal guides show the saved absolute-bias threshold and
+#'     zero, with a vertical guide at zero score difference.}
+#'   \item{`"ranked"`}{Conditional bias size (x) for up to `top_n` saved
+#'     ranked interactions (y). Points are colored by flag status; optional
+#'     whiskers retain the conditional uncertainty and incomplete-bound status.
+#'     A saved report retains the ranking chosen when it was constructed.}
+#'   \item{`"heatmap"`}{Facet A by facet B matrix of signed bias size.
+#'     Cells retain reusable matrix and flag tables for dashboards. This is
+#'     a Table 13 follow-up display: it supports pattern recognition but does
+#'     not turn screening rows into confirmatory tests.}
+#'   \item{`"abs_t_hist"`}{Histogram of absolute screening t-statistics across all
+#'     interaction cells.  Dashed reference line at `abs_t_warn`.  Use for
+#'     assessing the overall distribution of interaction effect sizes.}
+#'   \item{`"facet_profile"`}{Per-facet-level aggregation showing mean
+#'     absolute bias and flag rate.  Useful for identifying which
+#'     individual facet levels drive systematic interaction patterns.}
+#' }
+#'
+#' @section Reading bias plots:
+#' Use scatter/ranked views to locate cells, then histogram/facet profiles for
+#' pattern summaries. They reuse the same estimates and flags, not independent
+#' evidence. Review exposure, calibration uncertainty and substantive explanations.
+#'
 #' @return For `plot()`: Invisibly, a `ggplot` object carrying view-specific tables, retained
 #'   screening rules and interpretation notes accessible via [plot_data()]. Plot agreement across views
 #'   is not independent evidence of bias.
 #'   Use `plot_data(p, "notes")` for the interaction definition,
 #'   score-direction caveat, magnitude-only facet-profile interpretation and
 #'   conditional uncertainty qualifications outside the figure.
-#' @seealso [estimate_bias()], [bias_interaction_report()], [mfrmr_plot_migration],
+#' @seealso [estimate_bias()], [mfrm_report_bias_interaction], [mfrmr_plot_migration],
 #'   [mfrmr_visual_diagnostics]
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' @examples # Optional workflow; run the example explicitly as shown below.
 #' # example("plot.mfrm_bias", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_bias.
@@ -444,14 +507,14 @@ plot.mfrm_qc_pipeline <- function(x, type = c("traffic_light", "detail"), draw =
 #' }
 #' @export
 #' @details For \code{plot()}:
-#' Visualization front-end for \code{\link[=bias_interaction_report]{bias_interaction_report()}} with multiple views.
+#' Visualization front-end for \link{mfrm_report_bias_interaction} with multiple views.
 #' With \code{draw = FALSE}, \code{plot_data(p)} includes \code{plot_long},
 #' \code{plot_annotations}, \code{flag_summary}, and \code{plot_settings} in addition to the
 #' view-specific \code{ranked_table}, \code{scatter_data}, \code{facet_profile}, and heatmap
 #' components. Use these fields when rebuilding the same screening view in
 #' plotly, Quarto, or a dashboard.
 #' Saved report thresholds determine flags, reference lines and returned notes;
-#' recreate \code{\link[=bias_interaction_report]{bias_interaction_report()}} from the saved bias object to change
+#' recreate \link{mfrm_report_bias_interaction} from the saved bias object to change
 #' them. Scatter views attach aligned marginal histograms when
 #' \code{marginal = "auto"} (with \eqn{n \ge 8}) or \code{"histogram"}. Conditional bounds and their status
 #' remain separate from calibration-inclusive uncertainty.
@@ -475,26 +538,17 @@ plot.mfrm_bias <- function(x, type = c("scatter", "ranked", "heatmap", "abs_t_hi
 #'   available facet); `component = 1` selects a loading component; `top_n = 20`
 #'   limits displayed loadings. `preset` is `"standard"`, `"publication"`,
 #'   `"compact"`, or `"monochrome"`; `draw = FALSE` returns data without drawing.
-#' @section Interpretation:
-#' For `plot()`:
+#' @section Reading PCA plots:
+#' Start with overall mode, then facet views. `"scree"` shows eigenvalues;
+#' `"parallel_scree"` adds saved means/cutoffs, and `"parallel_excess"` plots
+#' observed-minus-cutoff. First compute references with `parallel = TRUE`;
+#' inspect `parallel_status`/`bootstrap_trials` and distinguish permutation from
+#' refitted bootstrap. `"loadings"` selects largest absolute loadings; read both
+#' signs and magnitudes. These reuse the exploratory evidence described above;
+#' multiple views neither provide independent evidence nor prove dimensionality.
 #'
-#' - `"scree"` shows component eigenvalues. A dominant early component is
-#'   exploratory evidence of residual structure, not a standalone test of
-#'   unidimensionality.
-#' - `"parallel_scree"` shows the observed eigenvalues and saved reference
-#'   mean/cutoff; `"parallel_excess"` shows the observed-minus-cutoff difference.
-#'   Compute these references with `parallel = TRUE` in [analyze_residual_pca()]
-#'   first. Exceeding a cutoff suggests follow-up, not proof of multidimensionality.
-#'   Inspect `parallel_status` and `bootstrap_trials` for unavailable comparisons
-#'   and distinguish residual permutation from refitted model bootstrap.
-#' - `"loadings"` shows the largest absolute loadings; inspect both signs
-#'   and magnitudes to identify the contributing variables or elements.
-#'
-#' Use overall mode before locating patterns within individual facets. Repeated
-#' plots of a saved result reuse the same PCA and do not provide independent evidence.
-#' @inherit plot_residual_pca return
 #' @seealso [analyze_residual_pca()], [mfrmr_plot_migration]
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' @examples # Optional workflow; run the example explicitly as shown below.
 #' # example("plot.mfrm_residual_pca", run.dontrun = TRUE)
 #' \dontrun{
 #' ratings_all <- load_mfrmr_data("example_core")
@@ -585,7 +639,7 @@ plot.mfrm_residual_pca <- function(x, type = "scree", mode = "overall", ...) {
 #' `plot()` method. Parallel-reference generation remains an analysis step.
 #' @return For `plot()`: Invisibly, a `ggplot` object. Use [plot_data()] to inspect its tables
 #'   and notes. The plot does not add unavailable diagnostics or qualify intervals.
-#' @seealso [diagnose_mfrm()], [plot.mfrm_residual_pca()], [mfrmr_plot_migration]
+#' @seealso [plot.mfrm_residual_pca()], [mfrmr_plot_migration]
 #' @export
 plot.mfrm_diagnostics <- function(x, type = c("marginal_fit", "marginal_pairwise", "bubble", "residual_pca"),
                                   view = NULL, ...) {

@@ -1,6 +1,6 @@
 # Explicit rating contexts use the same free-coordinate predictor as curve inference.
 category_context_curve_spec <- function(fit, newdata) {
-  stop_if_jml_adjustment(fit, "category_curves_report")
+  stop_if_jml_adjustment(fit, "mfrm_report")
   if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit") ||
       !identical(fit$config$model, "GPCM") || !identical(fit$config$method, "MML")) {
     stop("Explicit `newdata` requires a native GPCM MML fit.", call. = FALSE)

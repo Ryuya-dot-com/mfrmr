@@ -13,61 +13,68 @@
   outer_margin <- if (identical(style$name, "compact")) {
     ggplot2::margin(6, 10, 6, 8)
   } else {
-    ggplot2::margin(10, 14, 10, 10)
+    ggplot2::margin(12, 16, 12, 12)
   }
   ggplot2::theme_minimal(base_size = base_size) +
     ggplot2::theme(
       plot.background = ggplot2::element_rect(fill = style$background, colour = NA),
       panel.background = ggplot2::element_rect(fill = style$panel_background, colour = NA),
       panel.border = ggplot2::element_blank(),
-      panel.grid.major = ggplot2::element_line(colour = style$grid, linewidth = 0.35),
+      panel.grid.major = ggplot2::element_line(colour = style$grid, linewidth = 0.25),
       panel.grid.minor = ggplot2::element_blank(),
-      axis.line = ggplot2::element_line(colour = style$axis, linewidth = 0.45, lineend = "square"),
-      axis.ticks = ggplot2::element_line(colour = style$axis, linewidth = 0.4),
-      axis.ticks.length = grid::unit(3, "pt"),
+      axis.line = ggplot2::element_line(colour = style$axis, linewidth = 0.35, lineend = "square"),
+      axis.ticks = ggplot2::element_line(colour = style$axis, linewidth = 0.3),
+      axis.ticks.length = grid::unit(2.5, "pt"),
       axis.title = ggplot2::element_text(
         colour = style$foreground,
-        size = base_size * style$label_cex
+        size = ggplot2::rel(style$label_cex)
       ),
+      axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 7)),
+      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 7)),
       axis.text = ggplot2::element_text(
         colour = style$axis,
-        size = base_size * style$axis_cex
+        size = ggplot2::rel(style$axis_cex)
       ),
       plot.title = ggplot2::element_text(
         colour = style$foreground,
         face = "bold",
-        size = base_size * 1.1,
+        size = ggplot2::rel(1.1),
         margin = ggplot2::margin(b = 4)
       ),
       plot.subtitle = ggplot2::element_text(
         colour = style$neutral,
-        size = base_size * 0.92,
+        size = ggplot2::rel(0.92),
         margin = ggplot2::margin(b = 6)
       ),
       plot.caption = ggplot2::element_text(
         colour = style$neutral,
-        size = base_size * 0.84,
+        size = ggplot2::rel(0.84),
         hjust = 0,
         margin = ggplot2::margin(t = 6)
       ),
       plot.title.position = "plot",
       plot.caption.position = "plot",
+      panel.spacing = grid::unit(1, "lines"),
       strip.background = ggplot2::element_rect(fill = style$strip_background, colour = NA),
       strip.text = ggplot2::element_text(
         colour = style$foreground,
         face = "bold",
-        size = base_size * 0.92
+        size = ggplot2::rel(0.92)
       ),
+      legend.key.width = grid::unit(1.4, "lines"),
+      legend.key.height = grid::unit(1.1, "lines"),
+      legend.box.spacing = grid::unit(10, "pt"),
+      legend.box = "vertical",
       legend.background = ggplot2::element_blank(),
       legend.key = ggplot2::element_blank(),
       legend.title = ggplot2::element_text(
         colour = style$foreground,
         face = "bold",
-        size = base_size * 0.9
+        size = ggplot2::rel(0.9)
       ),
       legend.text = ggplot2::element_text(
         colour = style$axis,
-        size = base_size * 0.88
+        size = ggplot2::rel(0.88)
       ),
       plot.margin = outer_margin
     )

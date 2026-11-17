@@ -30,7 +30,13 @@ model/method combinations.}
 at least one \code{RSM}/\code{PCM} reference plus one \code{GPCM} fit, also run
 \code{\link[=build_weighting_review]{build_weighting_review()}} for the first such pair.}
 
-\item{theta_range, theta_points, top_n}{Passed to \code{\link[=build_weighting_review]{build_weighting_review()}} when
+\item{theta_range}{Passed to \code{\link[=build_weighting_review]{build_weighting_review()}} when
+\code{run_weighting_review = TRUE}.}
+
+\item{theta_points}{Passed to \code{\link[=build_weighting_review]{build_weighting_review()}} when
+\code{run_weighting_review = TRUE}.}
+
+\item{top_n}{Passed to \code{\link[=build_weighting_review]{build_weighting_review()}} when
 \code{run_weighting_review = TRUE}.}
 
 \item{warn_constraints}{Passed to \code{\link[=compare_mfrm]{compare_mfrm()}}.}
@@ -48,8 +54,8 @@ For \code{summary()}: An object of class \code{summary.mfrm_model_choice_review}
 Build a model-choice review across RSM, PCM, and GPCM fits
 }
 \details{
-\code{build_model_choice_review()} is a user-facing synthesis helper. It does not
-estimate new models. It bundles:
+\code{build_model_choice_review()} synthesizes saved model fits without
+estimating new models. It bundles:
 \itemize{
 \item \code{\link[=compare_mfrm]{compare_mfrm()}} for verified AIC/Person-BIC/SABIC/log-likelihood
 comparison;

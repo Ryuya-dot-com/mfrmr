@@ -98,7 +98,7 @@ change the underlying ICC estimates.
 \description{
 One-stop review that combines the nesting, cross-tabulation, ICC, and
 design-effect reports into a single object. Its summary feeds into
-\code{\link[=reporting_checklist]{reporting_checklist()}} after checking the reviewed data against the fit.
+\link{mfrm_report_checklist} after checking the reviewed data against the fit.
 }
 \section{Interpreting output}{
 
@@ -113,9 +113,10 @@ one per facet pair. Plot via \code{plot(x, type = "crosstab", pair = "FacetA__Fa
 \item \code{design_effect}: per-facet design-effect approximations and descriptive
 equivalent row counts; not precision estimates for the full design.
 \item \code{connectivity}: number of bipartite components linking
-Person x facet levels. A single component is required for a
-common measurement scale; multiple components indicate a
-disconnected design.
+Person x facet levels. Multiple components indicate no observed
+links between those parts of the design. Their comparison may rely on
+external anchors or population assumptions. A single component alone
+does not establish identification of the full many-facet model.
 }
 }
 
@@ -125,7 +126,7 @@ disconnected design.
 \item Optional: fit the MFRM with \code{fit_mfrm()}.
 \item Call \code{analyze_hierarchical_structure(fit)} (or on the raw data).
 \item Read \code{summary(x)} for the condensed view.
-\item Pass it as \code{hierarchical_structure} to \code{\link[=reporting_checklist]{reporting_checklist()}} and
+\item Pass it as \code{hierarchical_structure} to \link{mfrm_report_checklist} and
 save the review with \code{saveRDS()} when its full tables are needed later.
 \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}} records a separate fit-level rating-count
 review; it does not accept or archive this structural-review object.
@@ -151,7 +152,7 @@ See \link{mfrmr_compatibility_layer}.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("analyze_hierarchical_structure", run.dontrun = TRUE)
 \dontrun{
 toy <- load_mfrmr_data("example_core")
@@ -188,7 +189,7 @@ research. \emph{Journal of Chiropractic Medicine, 15}(2), 155-163.
 \seealso{
 \code{\link[=detect_facet_nesting]{detect_facet_nesting()}}, \code{\link[=facet_small_sample_review]{facet_small_sample_review()}},
 \code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}},
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}.
+\link{mfrm_report_checklist}, \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}.
 }
 \concept{confidence intervals}
 \concept{hierarchical structure}

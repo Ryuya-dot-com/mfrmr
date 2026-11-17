@@ -10,9 +10,10 @@
 #' @param facet Optional facet name. When `NULL`, the function tries to infer
 #'   a rater-like facet and otherwise falls back to the first modeled facet.
 #' @param bias_results Optional output from [estimate_bias()] or a named list
-#'   of such outputs. Non-matching bundles are skipped quietly.
-#' @param severity_warn Absolute estimate cutoff used to flag severity
-#'   outliers.
+#'   of such outputs. Supplied results must match the fitted analysis;
+#'   incompatible identity metadata is refused.
+#' @param severity_warn Absolute location cutoff relative to the fitted origin,
+#'   in the fitted location units. It is a screening choice, not a quality standard.
 #' @param misfit_warn `NULL` (default) uses both bounds returned by
 #'   [mfrm_misfit_thresholds()], including any session options. A numeric value
 #'   instead uses that upper cutoff and its reciprocal as the lower cutoff;
@@ -21,7 +22,7 @@
 #' @param central_tendency_max Legacy opt-in absolute estimate cutoff for
 #'   marking facet estimates near the fitted origin. The default `NULL`
 #'   disables this flag because origin proximity is not evidence that a rater
-#'   avoids extreme score categories. Use [data_quality_report()] for observed
+#'   avoids extreme score categories. Use [mfrm_report_data_quality] for observed
 #'   category-use screening and [rater_centrality_table()] for model-based
 #'   indirect centrality indices.
 #' @param bias_count_warn Minimum flagged-bias row count required to flag a
@@ -38,7 +39,10 @@
 #' complementary criteria:
 #'
 #' - **Severity**: elements with \eqn{|\mathrm{Estimate}| >}
-#'   `severity_warn` logits are flagged as unusually severe or lenient.
+#'   `severity_warn` are flagged relative to the fitted origin. This is rater
+#'   severity only for a rater facet; other facets retain their own meanings.
+#'   Changing the origin changes this flag without changing fit. For GPCM,
+#'   interpret native location units together with the fitted discriminations.
 #' - **Misfit**: elements with Infit or Outfit MnSq outside the
 #'   configured heuristic review band are flagged. The band defaults to the package
 #'   pair returned by [mfrm_misfit_thresholds()] (Linacre 0.5-1.5);
@@ -50,14 +54,15 @@
 #'   \eqn{|\mathrm{Estimate}| <} `central_tendency_max` logits are marked.
 #'   This only describes proximity to the fitted origin and must not be
 #'   interpreted as central-category use or restriction of range. Those are
-#'   response-pattern questions; see [data_quality_report()] and
+#'   response-pattern questions; see [mfrm_report_data_quality] and
 #'   [rater_centrality_table()] for their distinct descriptive indices.
 #' - **Bias**: elements involved in \eqn{\ge} `bias_count_warn`
 #'   screen-positive interaction cells (from [estimate_bias()]) are flagged.
 #'
 #' A **flag density** score counts how many enabled criteria each element
-#' triggers. Elements flagged on multiple criteria warrant priority
-#' review and may motivate training or a documented data-quality review; the
+#' triggers. The criteria can be dependent; their count is not independent
+#' evidence of a problem or a calibrated quality score. Review the actual
+#' ratings and assignment before recommending training or other action; the
 #' dashboard does not justify automatic row, person, or rater exclusion.
 #'
 #' Default thresholds are screening heuristics. Prespecify and justify any
@@ -71,7 +76,7 @@
 #' describe supplied results only, not tests of absence of bias.
 #' Fit-readiness restrictions are retained in `fit_readiness`,
 #' `interpretation_status` and `notes`. Review overlap with
-#' [subset_connectivity_report()] and category use with [data_quality_report()]
+#' [subset_connectivity_report()] and category use with [mfrm_report_data_quality]
 #' before interpreting between-rater differences.
 #'
 #' @return An object of class `mfrm_facet_dashboard` (also inheriting from
@@ -107,7 +112,7 @@
 #'
 #' @seealso [diagnose_mfrm()], [estimate_bias()], [plot(x, type = "qc")][plot.mfrm_fit]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("facet_quality_dashboard", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -333,7 +338,7 @@ facet_quality_dashboard <- function(fit,
     if (isTRUE(central_tendency_enabled)) {
       paste(
         "Legacy CentralTendencyFlag is an origin-proximity marker only;",
-        "use data_quality_report() for observed category avoidance or range restriction."
+        "use mfrm_report(fit, type = 'data_quality') for observed category avoidance or range restriction."
       )
     } else {
       paste(
@@ -375,7 +380,6 @@ facet_quality_dashboard <- function(fit,
   class(out) <- c("mfrm_facet_dashboard", "mfrm_bundle", "list")
   out
 }
-
 
 dashboard_round_numeric_df <- function(df, digits = 3L) {
   if (!is.data.frame(df) || nrow(df) == 0) return(df)
@@ -558,73 +562,6 @@ numeric_or_na <- function(tbl, candidates) {
   rep(NA_real_, nrow(tbl))
 }
 
-dashboard_draw_plot <- function(tbl,
-                                plot_type,
-                                facet,
-                                thresholds,
-                                main = NULL,
-                                palette = NULL,
-                                label_angle = 45) {
-  pal <- stats::setNames(
-    c("#2b8cbe", "#cb181d", "#756bb1", "#bdbdbd", "#238b45"),
-    c("neutral", "flag", "bias", "central", "misfit")
-  )
-  if (!is.null(palette) && length(palette) > 0) {
-    nm <- intersect(names(palette), names(pal))
-    pal[nm] <- as.character(palette[nm])
-  }
-
-  labels <- utils::head(as.character(tbl$Level), n = nrow(tbl))
-  if (plot_type == "severity") {
-    ord <- order(abs(tbl$Estimate), decreasing = TRUE, na.last = NA)
-    tbl <- tbl[ord, , drop = FALSE]
-    labels <- utils::head(as.character(tbl$Level), n = nrow(tbl))
-    cols <- rep(unname(pal["neutral"]), nrow(tbl))
-    cols[tbl$CentralTendencyFlag %in% TRUE] <- unname(pal["central"])
-    cols[tbl$MisfitFlag %in% TRUE] <- unname(pal["misfit"])
-    cols[tbl$SeverityFlag %in% TRUE] <- unname(pal["flag"])
-    y <- rev(seq_len(nrow(tbl)))
-    plot(
-      x = rev(tbl$Estimate),
-      y = y,
-      type = "n",
-      yaxt = "n",
-      xlab = "Estimate (logits)",
-      ylab = "",
-      main = ""
-    )
-    segments(0, y, rev(tbl$Estimate), y, col = "gray70")
-    points(rev(tbl$Estimate), y, pch = 16, col = rev(cols))
-    axis(side = 2, at = y, labels = rev(labels), las = 2, cex.axis = 0.75)
-    abline(v = c(-abs(thresholds$severity_warn[1]), 0, abs(thresholds$severity_warn[1])),
-                     lty = c(2, 1, 2), col = c("gray45", "gray30", "gray45"))
-    return(invisible(NULL))
-  }
-
-  tbl <- tbl[tbl$AnyFlag %in% TRUE, , drop = FALSE]
-  if (nrow(tbl) == 0) {
-    plot.new()
-    text(0.5, 0.5, "No observed flags; inspect missing diagnostics and notes")
-    return(invisible(NULL))
-  }
-  ord <- order(tbl$FlagCount, abs(tbl$Estimate), decreasing = TRUE, na.last = TRUE)
-  tbl <- tbl[ord, , drop = FALSE]
-  labels <- utils::head(as.character(tbl$Level), n = nrow(tbl))
-  cols <- ifelse(tbl$BiasFlag %in% TRUE, pal["bias"], pal["flag"])
-  bp <- barplot(
-    height = tbl$FlagCount,
-    names.arg = labels,
-    col = cols,
-    las = if (isTRUE(label_angle >= 45)) 2 else 1,
-    main = "",
-    ylab = "Flag count"
-  )
-  abline(h = 0, col = "gray60")
-  invisible(bp)
-}
-
-`%||%` <- function(x, y) if (is.null(x)) y else x
-
 #' @rdname facet_quality_dashboard
 #' @details `summary()` method: Summarize a facet-quality dashboard
 #' @param object Output from [facet_quality_dashboard()].
@@ -632,7 +569,7 @@ dashboard_draw_plot <- function(tbl,
 #' @param top_n Number of flagged levels to preview.
 #' @return For `summary()`: An object of class `summary.mfrm_facet_dashboard`.
 #' @seealso [facet_quality_dashboard()], [plot(x, type = "facet_dashboard")][plot.mfrm_fit]
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' @examples # Optional workflow; run the example explicitly as shown below.
 #' # example("summary.mfrm_facet_dashboard", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -694,10 +631,7 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
     cat("\nBias sources\n")
     print(dashboard_round_numeric_df(as.data.frame(x$bias_sources), digits = digits), row.names = FALSE)
   }
-  if (!is.null(x$settings) && nrow(x$settings) > 0) {
-    cat("\nSettings\n")
-    print(as.data.frame(x$settings), row.names = FALSE)
-  }
+  print_summary_sections(x, .mfrmr_summary_print_sections[["print.summary.mfrm_facet_dashboard_01"]])
   if (length(x$notes) > 0) {
     cat("\nNotes\n")
     for (line in x$notes) cat(" - ", line, "\n", sep = "")
@@ -711,12 +645,12 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' @param diagnostics Optional output from [diagnose_mfrm()] when `x` is a fit.
 #' @param facet Optional facet name.
 #' @param bias_results Optional bias bundle or list of bundles.
-#' @param severity_warn Absolute estimate cutoff used to flag severity
-#'   outliers.
+#' @param severity_warn Absolute location cutoff relative to the fitted origin,
+#'   in the fitted location units. It is a screening choice, not a quality standard.
 #' @param misfit_warn Mean-square cutoff used to flag misfit.
 #' @param central_tendency_max Legacy opt-in absolute estimate cutoff for
 #'   marking facet estimates near the fitted origin. Default `NULL`; use
-#'   [data_quality_report()] for observed category-use screening or
+#'   [mfrm_report_data_quality] for observed category-use screening or
 #'   [rater_centrality_table()] for indirect centrality indices.
 #' @param bias_count_warn Minimum flagged-bias row count required to flag a
 #'   level.
@@ -743,7 +677,7 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #'   reusable plotting data and notes.
 #' @seealso [facet_quality_dashboard()], [summary.mfrm_facet_dashboard()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_facet_quality_dashboard", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -754,7 +688,7 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' p <- plot(fit, type = "facet_dashboard", diagnostics = diag, draw = FALSE)
 #' plot_data(p, "plot")
 #' }
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -860,7 +794,13 @@ plot_facet_quality_dashboard <- function(x,
 #' @param x A result from [facet_quality_dashboard()].
 #' @param y Ignored; present for generic compatibility.
 #' @param type `"severity"` or `"flags"`.
-#' @param ... For `plot()`: Display controls from [plot_facet_quality_dashboard()].
+#' @param ... For `plot()`: `top_n = 20`, `draw = TRUE`, `palette`,
+#'   `label_angle = 45`, and `title`. Use either `title` or the compatibility
+#'   name `main`, never both. `type = "severity"` shows estimates;
+#'   `type = "flags"` shows the saved screening flags. Fit inputs additionally
+#'   accept the dashboard's analysis controls documented above; saved dashboard
+#'   inputs reuse their existing results. Near-zero severity is not evidence
+#'   of centrality, and screening flags are not automatic exclusion rules.
 #'
 #' For `summary()`: Reserved for generic compatibility.
 #' @return For `plot()`: Invisibly, a `ggplot` object carrying the dashboard

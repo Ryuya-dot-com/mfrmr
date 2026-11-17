@@ -138,7 +138,8 @@ mfrm_features <- function(data, id, features, missing_reasons = NULL) {
 }
 
 #' @rdname mfrm_features
-#' @param x,object An object returned by the corresponding function.
+#' @param x An object returned by the corresponding function.
+#' @param object An object returned by the corresponding function.
 #' @param ... Reserved for method compatibility.
 #' @export
 print.mfrm_features <- function(x, ...) {
@@ -154,15 +155,16 @@ print.mfrm_features <- function(x, ...) {
 #' @export
 summary.mfrm_features <- function(object, ...) object$feature_summary
 
-#' Group mixed external features using Gower distances and PAM
+#' Group external features with an explicitly chosen clustering method
 #'
-#' Partition an entity-level feature table using Gower dissimilarities and
-#' partitioning around medoids (PAM) from the optional `cluster` package.
+#' Group an entity-level feature table using PAM, hierarchical clustering
+#' or numeric k-means. Gower-based methods use the optional `cluster` package.
 #' Use `mfrm_cluster()` and select `method = "pam"` (the default),
 #' `"hierarchical"`, or `"kmeans"`. Each method retains its own geometry,
 #' settings and result class; the method is never selected from the data.
 #'
-#' @param x An object returned by [mfrm_features()].
+#' @param x An object returned by [mfrm_features()], or an [mfrm_pca()]
+#'   result for `method = "kmeans"`.
 #' @param k Number of groups, an integer from 2 to one less than the number of
 #'   included entities, and no greater than their number of distinct profiles.
 #'   The number is chosen by the user, not optimized automatically.
@@ -180,7 +182,7 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'   clustering; `scale`, `nstart`, `iter.max`, `seed` and `silhouette` for k-means.
 #'   Inapplicable controls are rejected. For PCA input set weights, scaling and
 #'   missingness at the PCA stage; do not respecify them here.
-#' @return An `mfrm_clusters` object containing `membership` (ID, Cluster,
+#' @return PAM returns an `mfrm_clusters` object containing `membership` (ID, Cluster,
 #'   Medoid, Silhouette), `cluster_summary`, numeric and categorical `profiles`,
 #'   `medoids`, the reviewed `feature_data`, and `settings`. Silhouette values
 #'   describe within-sample separation, not membership probabilities or
@@ -189,77 +191,42 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'   feature units. SD is `NA` for a one-entity group and zero for identical
 #'   values in a group with at least two entities. A singleton's silhouette is
 #'   zero by convention; it is not evidence of group separation.
-#' @details Numeric differences are divided by the feature range among included
-#'   entities; nominal features use match/mismatch and logical features use
-#'   symmetric binary differences. Ordered factors use equally spaced integer
-#'   codes in their declared level order, divided by the observed code range.
-#'   Unused intermediate levels retain their spacing. The Gower dissimilarity
-#'   is the weighted mean of these feature contributions, dividing by the sum
-#'   of the selected weights. Weights apply to features, not entities.
-#'   Numeric 0/1 features are treated as numeric, not asymmetric presence/absence.
-#'   Every selected feature must vary among included entities. Gower scaling,
-#'   feature types, weights, omission policy, and numeric ranges are retained.
-#'   Numeric ranges and relative weights must be representable without overflow
-#'   or underflow; rescale features or revise extreme weight ratios if refused.
+#'   Hierarchical and k-means results retain their respective subclasses and
+#'   method-specific tree/center components; see their linked help.
+#' @details
+#' **PAM Gower clustering (`method = "pam"`, default)**: Numeric differences are
+#' divided by included-entity ranges, nominal features use match/mismatch,
+#' logical features use symmetric binary differences, and ordered factors use
+#' equally spaced declared-level ranks divided by observed rank range; feature
+#' contributions are combined by `weights / sum(weights)` in `[0, 1]`. Every
+#' selected feature must vary, and included entities are capped at 5,000
+#' (quadratic pairwise memory). PAM uses deterministic BUILD/SWAP
+#' initialization ([cluster::daisy()], [cluster::pam()]).
 #'
-#'   PAM uses deterministic BUILD/SWAP initialization; tied distances may admit
-#'   alternative partitions. Group numbers are arbitrary labels. These are
-#'   exploratory groups, not latent classes, ability estimates, or assessments
-#'   of rater quality. No inference, uncertainty propagation, new-entity
-#'   classification, or resampling stability is provided. Omission may change
-#'   both the sample and numeric ranges and does not correct missing-data bias.
-#'
-#'   Pairwise distances require quadratic memory. This interface is limited
-#'   to 5,000 included entities. It does not silently sample larger inputs.
-#'   This input limit does not guarantee low memory use or acceptable run time.
-#'
-#'   For feature selection, missingness review, and multiple-imputation examples,
-#'   see [online feature-analysis guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html).
-#' @section Reading clustering metrics:
-#' For entity i, a(i) is its mean dissimilarity to other members of its own
-#' group; b(i) is the smallest mean dissimilarity to any other group.
-#' Silhouette = (b - a) / max(a, b), between -1 and 1. Values near 1 indicate
-#' compact, separated placement in this fitted geometry; near zero indicates
-#' a boundary; negative values indicate closer average proximity to another
-#' group. A singleton receives 0 by convention; zero does not establish overlap.
-#' A zero denominator also receives 0. Overall means weight entities equally;
-#' cluster means use that cluster's included entities. Excluded IDs have NA.
-#' A silhouette is neither a membership probability nor evidence of stability.
-#'
-#' Gower distance is unitless in `[0, 1]` here: numeric absolute differences
-#' divided by included-sample ranges, nominal/binary mismatches, and ordinal
-#' rank differences are combined using the specified feature weights.
-#' The PAM medoid is an actual included entity minimizing within-group total
-#' dissimilarity; it is not a feature-wise mean. Profile Mean/Median/SD retain
-#' original units; categorical Proportion uses included group size as denominator.
-#' A large group or a high silhouette is not a better-performing group.
-#' Compare partitions under a fixed feature/distance definition; changing the
-#' sample, weights or scaling changes what these numbers measure.
-#' See [cluster::silhouette()] and Rousseeuw (1987),
-#' \doi{10.1016/0377-0427(87)90125-7}, for the silhouette definition.
-#' @seealso [mfrm_features()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
-#'   [hierarchical clustering details][mfrm_cluster_hierarchical], [plot.mfrm_clusters()], [cluster::daisy()], [cluster::pam()]
+#' **Silhouette and scope**: For entity \eqn{i}, \eqn{s(i) = (b(i) - a(i)) /
+#' \max(a(i), b(i)) \in [-1, 1]} ([cluster::silhouette()], Rousseeuw, 1987,
+#' \doi{10.1016/0377-0427(87)90125-7}); singletons and zero denominators receive
+#' `0` by convention, and excluded IDs receive `NA`. Partitions are exploratory
+#' descriptions of external attributes, without latent-ability or rater-quality
+#' inference; see the [online feature-analysis guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html).
+#' @seealso [mfrm_features()], [mfrm_pca()], [cluster::daisy()], [cluster::pam()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
-#' # example("mfrm_cluster", run.dontrun = TRUE)
+#' # Optional workflow; run explicitly with example("mfrm_cluster", run.dontrun = TRUE)
 #' \dontrun{
 #' if (requireNamespace("cluster", quietly = TRUE)) {
-#'   # Fictional raters; R2 has unrecorded experience, not zero years.
 #'   raters <- data.frame(Rater = paste0("R", 1:6),
 #'     ExperienceYears = c(1, NA, 3, 12, 13, 14),
 #'     Specialty = rep(c("Language", "Science"), each = 3))
 #'   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
-#'   # The default stops on missing features. Here omission is explicit.
 #'   groups <- mfrm_cluster(method = "pam", features, k = 2,
 #'     weights = c(ExperienceYears = 2, Specialty = 1), missing = "omit")
-#'   groups$membership  # R2 remains present with unavailable membership.
+#'   groups$membership
 #'   summary(groups)
-#'   groups$profiles
-#'   groups$medoids
 #' }
 #' }
 #' @name mfrm_cluster
 #' @rdname mfrm_cluster
+#' @order 1
 #' @export
 mfrm_cluster <- function(x, k, weights = NULL, missing = c("error", "omit"),
                           method = c("pam", "hierarchical", "kmeans"), ...) {
@@ -401,7 +368,11 @@ cluster_feature_profiles <- function(values, labels) {
 
 #' @rdname mfrm_cluster
 #' @param object An object returned by [mfrm_cluster()].
-#' @param ... Reserved for method compatibility.
+#' @param ... For `mfrm_cluster()`: Named controls for the selected method:
+#'   `linkage` for hierarchical clustering; `scale`, `nstart`, `iter.max`,
+#'   `seed` and `silhouette` for k-means. Inapplicable controls are refused.
+#'   For PCA input, specify weights, scaling and missingness at the PCA stage.
+#'   For `print()` and `summary()`: Reserved for method compatibility.
 #' @export
 print.mfrm_clusters <- function(x, ...) {
   cat(sprintf("Exploratory feature groups (%s distance, %s%s)\n", x$settings$distance, x$settings$method,
@@ -436,7 +407,9 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   If all selected features are already complete, supply the empty
 #'   `x$missing` table. This retains one partition per imputation so the result
 #'   can be compared with other feature selections from the same model.
-#' @param k,weights As in [mfrm_cluster()]. The same choices apply to every
+#' @param k As in [mfrm_cluster()]. The same choices apply to every
+#'   imputation.
+#' @param weights As in [mfrm_cluster()]. The same choices apply to every
 #'   imputation.
 #' @param missing Either `"error"` (default) or `"omit"`, applied to missing
 #'   features remaining after imputation. Explicit omission retains excluded
@@ -449,7 +422,23 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #' @param components For k-means, `NULL` uses numeric features directly. An integer
 #'   fits PCA separately in each completion and uses that many leading components.
 #'   No whitening, pooled PCA basis or component-sign matching is performed.
-#' @param scale,nstart,iter.max,seed,silhouette For `method = "kmeans"`, as in
+#' @param scale For `method = "kmeans"`, as in
+#'   [k-means details][mfrm_cluster_kmeans]. These arguments must not be supplied for other methods.
+#'   The same seed and settings are used for every completion; sensitivity still
+#'   includes possible changes in local optima. Review alternative seeds separately.
+#' @param nstart For `method = "kmeans"`, as in
+#'   [k-means details][mfrm_cluster_kmeans]. These arguments must not be supplied for other methods.
+#'   The same seed and settings are used for every completion; sensitivity still
+#'   includes possible changes in local optima. Review alternative seeds separately.
+#' @param iter.max For `method = "kmeans"`, as in
+#'   [k-means details][mfrm_cluster_kmeans]. These arguments must not be supplied for other methods.
+#'   The same seed and settings are used for every completion; sensitivity still
+#'   includes possible changes in local optima. Review alternative seeds separately.
+#' @param seed For `method = "kmeans"`, as in
+#'   [k-means details][mfrm_cluster_kmeans]. These arguments must not be supplied for other methods.
+#'   The same seed and settings are used for every completion; sensitivity still
+#'   includes possible changes in local optima. Review alternative seeds separately.
+#' @param silhouette For `method = "kmeans"`, as in
 #'   [k-means details][mfrm_cluster_kmeans]. These arguments must not be supplied for other methods.
 #'   The same seed and settings are used for every completion; sensitivity still
 #'   includes possible changes in local optima. Review alternative seeds separately.
@@ -463,55 +452,16 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   silhouette widths. Numeric ranges are retained in each analysis.
 #'   Hierarchical partitions inherit from `mfrm_clusters` and retain their
 #'   trees. Method and linkage are retained in `settings`.
-#' @details Fit and review the imputation model using [mice::mice()] before
-#'   calling this function. Choose methods, predictors (including relevant
-#'   auxiliary variables), iteration count, and number of imputations for the
-#'   intended analysis. Exclude the identifier from imputation and prediction.
-#'   Inspect model diagnostics, including `loggedEvents` and chain behavior;
-#'   this adapter checks data consistency, not convergence or model adequacy.
-#'   The original model and its diagnostics remain available in the result.
-#'
-#'   Missing reasons do not identify a statistical missing-data mechanism.
-#'   Do not impute structurally undefined attributes such as "not applicable".
-#'   Specify eligible cells through `where` when fitting `mice` and list the
-#'   same cells in `impute`. An incomplete predictor that is not imputed can
-#'   prevent imputation of other variables; configure predictors accordingly.
-#'   Assumptions about nonresponse require substantive justification; this
-#'   function does not correct bias automatically or impute rating responses.
-#'   Nonresponse related to unobserved values needs separate sensitivity
-#'   assumptions; observed-data checks cannot establish their adequacy.
-#'
-#'   IDs, observed feature values, feature types, and factor levels/order must
-#'   be preserved. Numeric 0/1 completions of originally logical features are
-#'   restored to logical values. Row order is restored by ID. Every selected
-#'   cell must be completed in every imputation. Any invalid completion or failed clustering
-#'   stops the comparison with its imputation number; no failures are discarded.
-#'   Remaining missingness, and thus the included sample, is the same across
-#'   imputations. Gower numeric ranges are recalculated in each completed sample;
-#'   differences may reflect changes in both feature values and scaling.
-#'   Numeric k-means likewise recalculates centers, standard deviations and, when
-#'   requested, the PCA basis in each completion. Only partitions are compared;
-#'   component scores/loadings and group labels are not averaged or Rubin-pooled.
-#'   Hierarchical trees belong to individual completions; no pooled tree,
-#'   consensus hierarchy, or branch-support estimate is returned.
-#'
-#'   Co-membership proportions are invariant to arbitrary group numbering.
-#'   They describe sensitivity to the supplied imputations, conditional on the
-#'   imputation model, features, weights, and group count. They are not posterior
-#'   membership probabilities, sampling stability, or Rubin-pooled estimates.
-#'   No consensus partition, confidence interval, or automatic group selection
-#'   is produced. Both the full ID-indexed matrix and pairwise distances require
-#'   quadratic memory, so this comparison is limited to 5,000 total entities.
-#'   This input limit is not a memory or run-time guarantee. Retaining all
-#'   completed analyses also increases memory use with the imputation count.
-#'
-#'   The short example below illustrates the interface using `mice::nhanes2`.
-#'   For a complete example with fictional rater attributes, explicit missingness
-#'   reasons, imputation diagnostics, and comparisons of group counts and weights,
-#'   see [online feature-analysis guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html).
-#' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_compare()],
-#'   [hierarchical clustering details][mfrm_cluster_hierarchical], [plot.mfrm_clusters()],
-#'   [mice::mice()], [mice::complete()]
+#' @details
+#' Fit and diagnose the imputation model in [mice::mice()] first (excluding the
+#' ID column from imputation/predictors and declaring eligible cells via
+#' `where` and `impute`). Observed values, types, and factor levels must match
+#' `x` by ID; any invalid completion or failed clustering stops with its
+#' imputation index. Gower ranges, k-means standardization, and per-completion
+#' PCA bases are recomputed within each completed sample (capped at 5,000
+#' entities). Pairwise `co_membership` proportions are label-invariant
+#' sensitivity summaries across the supplied completions, not Rubin-pooled
+#' estimates or posterior membership probabilities.
 #' @examples
 #' # Optional integration example (loads additional modelling or rendering packages).
 #' # example("mfrm_cluster_imputed", run.dontrun = TRUE)
@@ -537,6 +487,7 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   result$imputation_model$loggedEvents
 #' }
 #' }
+#' @rdname mfrm_cluster
 #' @export
 mfrm_cluster_imputed <- function(x, imputed, impute, k, weights = NULL,
                                  missing = c("error", "omit"),
@@ -695,7 +646,7 @@ mfrm_cluster_imputed <- function(x, imputed, impute, k, weights = NULL,
   out
 }
 
-#' @rdname mfrm_cluster_imputed
+#' @rdname mfrm_cluster
 #' @param object An object returned by [mfrm_cluster_imputed()].
 #' @param ... Reserved for method compatibility.
 #' @export
@@ -711,11 +662,12 @@ print.mfrm_imputed_clusters <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname mfrm_cluster_imputed
-#' @name summary.mfrm_imputed_clusters
+#' @rdname mfrm_cluster
+#' @aliases mfrm_cluster_imputed
 #' @aliases summary.mfrm_imputed_clusters
 #' @usage \method{summary}{mfrm_imputed_clusters}(object, ...)
 #' @rawNamespace S3method(summary,mfrm_imputed_clusters,summary.mfrm_imputed_fits)
+#' @name mfrm_cluster_imputed
 NULL
 
 mean_available_silhouette <- function(x) {

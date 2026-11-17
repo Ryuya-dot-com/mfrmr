@@ -2,6 +2,7 @@
 % Please edit documentation in R/facets_mode_api.R, R/facets_mode_methods.R
 \name{run_mfrm_facets}
 \alias{run_mfrm_facets}
+\alias{summary.mfrm_facets_run}
 \alias{plot.mfrm_facets_run}
 \title{Run a legacy-compatible estimation workflow wrapper}
 \usage{
@@ -29,6 +30,8 @@ run_mfrm_facets(
   mml_integration = c("fixed", "adaptive"),
   centering_scope = c("facet", "remainder", "anchor_origin")
 )
+
+\method{summary}{mfrm_facets_run}(object, digits = 3, top_n = 10, ...)
 
 \method{plot}{mfrm_facets_run}(x, y = NULL, type = c("fit", "qc"), ...)
 }
@@ -86,29 +89,38 @@ direct MML engine.}
 direct/group-anchor-origin centering for ordinary additive RSM/PCM JML;
 passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
+\item{object}{Output from \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}.}
+
+\item{digits}{Number of digits for numeric rounding in summaries.}
+
+\item{top_n}{Maximum rows shown in nested preview tables.}
+
+\item{...}{Additional arguments passed to the selected plot function.}
+
 \item{x}{A \code{mfrm_facets_run} object from \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}.}
 
 \item{y}{Unused.}
 
 \item{type}{Plot route: \code{"fit"} delegates to \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} and \code{"qc"}
 delegates to \link[=plot.mfrm_fit]{plot(x, type = "qc")}.}
-
-\item{...}{Additional arguments passed to the selected plot function.}
 }
 \value{
 A list with components:
 \itemize{
 \item \code{fit}: \code{\link[=fit_mfrm]{fit_mfrm()}} result
 \item \code{diagnostics}: \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} result
-\item \code{iteration}: \code{\link[=estimation_iteration_report]{estimation_iteration_report()}} result
+\item \code{iteration}: \link{mfrm_report_iterations} result
 \item \code{fair_average}: \code{\link[=fair_average_table]{fair_average_table()}} result
 \item \code{rating_scale}: \code{\link[=rating_scale_table]{rating_scale_table()}} result
 \item \code{run_info}: run metadata table
 \item \code{mapping}: resolved column mapping
 }
 
-For \code{plot()}: A \code{ggplot} object (or \code{mfrm_plot_bundle} of \code{ggplot}
-objects when \code{type = "fit"} delegates to \code{type = "bundle"}).
+An object of class \code{summary.mfrm_facets_run}.
+
+For \code{plot()}: A \code{ggplot} object. The \code{"fit"} route composes Wright,
+pathway and category curves; \code{plot_data(p, "wright_map")} extracts the
+saved Wright payload, whose \code{locations} component contains facet points.
 }
 \description{
 This workflow uses legacy-compatible defaults (\code{model = "RSM"}, \code{method = "JML"}), while allowing
@@ -118,6 +130,14 @@ users to choose compatible estimation options.
 \code{run_mfrm_facets()} is intended as a one-shot workflow helper:
 fit -> diagnostics -> key report tables.
 Returned objects can be inspected with \code{summary()} and \code{plot()}.
+
+This method returns a compact cross-object summary that combines:
+\itemize{
+\item model overview (\code{object$fit$summary})
+\item resolved column mapping
+\item run settings (\code{run_info})
+\item nested summaries of \code{fit} and \code{diagnostics}
+}
 
 \code{plot()} method: Plot outputs from a legacy-compatible workflow run
 
@@ -134,9 +154,10 @@ result:
 \item \code{method = "JML"} (default): legacy-compatible joint estimation
 route; the default preserves the FACETS-style output continuity
 that existing one-shot scripts expect. For new analysis scripts,
-prefer \code{fit_mfrm(..., method = "MML")} -- MML is the package-wide
-recommended route because person parameters are integrated out
-under an N(0, 1) prior and per-person posterior SEs are available.
+use \code{\link[=fit_mfrm]{fit_mfrm()}} and select the estimator for its assumptions and target.
+MML integrates abilities under a specified population model; JML treats
+them as fixed parameters and has incidental-parameter limitations.
+Availability of posterior SDs alone does not justify choosing MML.
 \item \code{method = "JMLE"}: backward-compatible input alias for the JML route;
 fitted objects and generated outputs use the canonical \code{"JML"} label.
 \item \code{method = "MML"}: marginal maximum likelihood route using
@@ -174,6 +195,14 @@ Then inspect:
 }
 
 
+\itemize{
+\item \code{overview}: convergence, scale size, and the canonical/legacy
+information-criterion contract status.
+\item \code{mapping}: sanity check for auto/explicit column mapping.
+\item \code{fit} / \code{diagnostics}: drill-down summaries for reporting decisions.
+}
+
+
 For \code{plot()}:
 
 Returns the plotting object produced by the delegated route:
@@ -190,6 +219,13 @@ Returns the plotting object produced by the delegated route:
 }
 
 
+\enumerate{
+\item Run \code{\link[=run_mfrm_facets]{run_mfrm_facets()}} to execute a one-shot pipeline.
+\item Inspect with \code{summary(out)} for mapping and convergence checks.
+\item Review nested objects (\code{out$fit}, \code{out$diagnostics}) as needed.
+}
+
+
 For \code{plot()}:
 \enumerate{
 \item Run \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}.
@@ -201,7 +237,7 @@ For \code{plot()}:
 \section{Preferred route for new analyses}{
 
 For new scripts, prefer the package-native route:
-\code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=reporting_checklist]{reporting_checklist()}} ->
+\code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \link{mfrm_report_checklist} ->
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
 Use \code{run_mfrm_facets()} when you specifically need the legacy-compatible
 one-shot wrapper.
@@ -226,7 +262,7 @@ out$fit$summary[, c("Model", "Method", "MethodUsed")]
 s <- summary(out)
 s$overview[, c("Model", "Method", "Converged")]
 p_fit <- plot(out, type = "fit", draw = FALSE)
-p_fit$wright_map$data$plot
+plot_data(plot_data(p_fit, "wright_map"), "locations")
 
 # Optional: MML route
 if (interactive()) {
@@ -242,6 +278,22 @@ if (interactive()) {
   out_mml$fit$summary[, c("Model", "Method", "MethodUsed")]
 }
 }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_facets_run", run.dontrun = TRUE)
+\dontrun{
+toy <- load_mfrmr_data("example_core")
+toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:8], , drop = FALSE]
+out <- run_mfrm_facets(
+  data = toy_small,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  maxit = 30
+)
+s <- summary(out)
+s$overview[, c("Model", "Method", "Converged")]
+s$mapping
+}
 # Long-running workflow; run explicitly when needed.
 # example("plot.mfrm_facets_run", run.dontrun = TRUE)
 \dontrun{
@@ -255,16 +307,19 @@ out <- run_mfrm_facets(
   maxit = 30
 )
 p_fit <- plot(out, type = "fit", draw = FALSE)
-plot_data(p_fit$wright_map)$plot
+plot_data(plot_data(p_fit, "wright_map"), "locations")
 p_qc <- plot(out, type = "qc", draw = FALSE)
 plot_data(p_qc)$plot
 
 }
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimation_iteration_report]{estimation_iteration_report()}},
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \link{mfrm_report_iterations},
 \code{\link[=fair_average_table]{fair_average_table()}}, \code{\link[=rating_scale_table]{rating_scale_table()}}, \link{mfrmr_visual_diagnostics},
 \link{mfrmr_workflow_methods}, \link{mfrmr_compatibility_layer}
+
+\code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \link{mfrmr_workflow_methods},
+\code{summary()}
 
 \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \link[=plot.mfrm_fit]{plot(x, type = "qc")},
 \link{mfrmr_visual_diagnostics}, \link{mfrmr_workflow_methods}

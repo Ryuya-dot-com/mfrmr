@@ -171,3 +171,103 @@ test_that("input guards precede exclusions and avoid silent category recoding", 
   d$Match <- factor(d$Match)
   expect_error(ol_call(d), "finite numeric")
 })
+
+ol_multigroup_data <- function(binary = FALSE, groups = c("A", "B", "C")) {
+  cells <- expand.grid(Match = c(-1, 0, 1), Group = groups, stringsAsFactors = FALSE)
+  do.call(rbind, lapply(seq_len(nrow(cells)), function(i) {
+    h <- match(cells$Group[i], groups) - 1
+    eta <- .7 * cells$Match[i] + .2 * h + .3 * h * cells$Match[i]
+    prob <- diff(c(0, plogis((if (binary) 0 else c(-.8, .9)) - eta), 1))
+    y <- rep(seq_along(prob) - 1L, pmax(1, round(35 * prob)))
+    data.frame(Person = paste(i, seq_along(y), sep = "_"), Item = "A",
+      Match = cells$Match[i], Group = cells$Group[i], Score = y)
+  }))
+}
+
+test_that("multi-group binary tests and contrasts match binomial likelihoods", {
+  skip_if_not_installed("ordinal")
+  for (groups in list(c("A", "B", "C"), c("ref value", "g:2", "z", "four"))) {
+    d <- ol_multigroup_data(TRUE, groups)
+    a <- ol_call(d, 0:1, groups)
+    d$g <- factor(d$Group, levels = groups)
+    f <- lapply(list(Score ~ Match, Score ~ Match + g, Score ~ Match * g),
+      function(form) glm(form, d, family = binomial()))
+    ll <- vapply(f, function(z) as.numeric(logLik(z)), 0)
+    expect_true(all(a$table$Status == "available"))
+    expect_equal(a$table$ChiSquared, 2 * c(ll[2]-ll[1], ll[3]-ll[2], ll[3]-ll[1]), tolerance = 1e-8)
+    expect_equal(a$table$DF, (length(groups)-1) * c(1, 1, 2))
+    c <- a$contrasts
+    ref <- predict(f[[3]], data.frame(Match = c$Matching, g = groups[1]))
+    focal <- predict(f[[3]], data.frame(Match = c$Matching, g = c$Focal))
+    expect_equal(c$LogOddsRatio, unname(ref - focal), tolerance = 1e-7)
+    expect_equal(a$matching$NReference + sum(a$matching$NFocal), rep(nrow(d), length(groups)-1))
+    expect_equal(a$settings$adjustment_family_size, 3L)
+    expect_identical(a$proportional_odds$Status, "not_applicable_binary")
+  }
+})
+
+test_that("multi-group ordinal likelihood agrees with an independent optimizer", {
+  skip_if_not_installed("ordinal")
+  d <- ol_multigroup_data(); a <- ol_call(d, groups = c("A", "B", "C"))
+  X <- cbind(d$Match, d$Group == "B", d$Group == "C",
+             d$Match * (d$Group == "B"), d$Match * (d$Group == "C"))
+  ll <- vapply(c(1, 3, 5), function(n) {
+    objective <- function(par) {
+      cuts <- c(par[1], par[1] + exp(par[2]))
+      eta <- drop(X[,seq_len(n),drop=FALSE] %*% par[-(1:2)])
+      f <- plogis(outer(eta, cuts, function(e, c) c-e))
+      p <- cbind(f[,1], f[,2]-f[,1], 1-f[,2])
+      -sum(log(p[cbind(seq_len(nrow(d)), d$Score+1L)]))
+    }
+    fit <- optim(c(-.8, log(1.7), rep(0, n)), objective, method = "BFGS",
+      control = list(reltol = 1e-12, maxit = 2000))
+    expect_identical(fit$convergence, 0L)
+    -fit$value
+  }, 0)
+  expect_true(all(a$table$Status == "available"))
+  expect_equal(a$models$LogLik[1:3], ll, tolerance = 1e-9)
+  expect_equal(a$table$ChiSquared, 2 * c(ll[2]-ll[1], ll[3]-ll[2], ll[3]-ll[1]), tolerance = 1e-8)
+  expect_equal(a$proportional_odds$DF, 5)
+  # With two matching levels per group, the non-PO model is saturated.
+  d <- subset(d, Match != 0); a <- ol_call(d, groups = c("A", "B", "C"))
+  counts <- xtabs(~ Match + Group + Score, d)
+  saturated <- sum(apply(counts, c(1, 2), function(v) sum(v * log(v / sum(v)))))
+  expect_equal(a$models$LogLik[a$models$Model == "NonPO"], saturated, tolerance = 1e-9)
+  expect_equal(a$proportional_odds$ChiSquared, 2 * (saturated-a$models$LogLik[3]), tolerance = 1e-8)
+})
+
+test_that("multi-group coding is stable under reference changes and R contrast options", {
+  skip_if_not_installed("ordinal")
+  d <- ol_multigroup_data(); a <- ol_call(d, groups = c("A", "B", "C"))
+  b <- ol_call(d, groups = c("B", "C", "A"))
+  expect_equal(a$table$ChiSquared, b$table$ChiSquared, tolerance = 1e-8)
+  expect_equal(a$contrasts$LogOddsRatio[a$contrasts$Focal == "B"],
+    -b$contrasts$LogOddsRatio[b$contrasts$Focal == "A"], tolerance = 1e-7)
+  opts <- options(contrasts = c("contr.sum", "contr.poly")); on.exit(options(opts))
+  expect_identical(ol_call(d, groups = c("A", "B", "C")), a)
+  reverse <- ol_call(d, categories = 2:0, groups = c("A", "B", "C"))
+  expect_equal(reverse$table$ChiSquared, a$table$ChiSquared, tolerance = 1e-8)
+  expect_equal(reverse$contrasts$LogOddsRatio, -a$contrasts$LogOddsRatio, tolerance = 1e-7)
+})
+
+test_that("multi-group exclusions, common overlap and unavailable tests stay explicit", {
+  skip_if_not_installed("ordinal")
+  d <- ol_multigroup_data(); groups <- c("A", "B", "C")
+  a <- ol_call(d, groups = groups)
+  missing <- d[1, ]; missing$Score <- NA; missing$Person <- "missing"
+  bad <- subset(d, Group != "C"); bad$Item <- "incomplete"
+  b <- ol_call(rbind(d, missing, bad), groups = groups)
+  expect_equal(b$table$ChiSquared[1:3], a$table$ChiSquared)
+  expect_true(all(is.na(b$table$PValue[4:6])))
+  expect_equal(b$table$PAdjusted, p.adjust(b$table$PValue, n = 6))
+  expect_true(all(b$matching$Status[b$matching$Target == "incomplete"] == "missing_group"))
+  expect_identical(b$cases$Reason[nrow(d)+1L], "missing_score")
+  # Chain overlap is not all-group overlap. Availability must not depend on reference.
+  d$Match <- d$Match + match(d$Group, groups) - 1
+  for (g in list(groups, rev(groups), c("B", "A", "C")))
+    expect_true(all(ol_call(d, groups = g)$matching$Status == "no_matching_range_overlap"))
+  d <- ol_multigroup_data(TRUE); d$Score <- as.integer(d$Group == "C")
+  b <- ol_call(d, 0:1, groups)
+  expect_true(all(is.na(b$table$PValue)))
+  expect_true(all(is.na(b$contrasts$OddsRatio)))
+})

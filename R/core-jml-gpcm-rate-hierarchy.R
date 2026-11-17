@@ -22,7 +22,6 @@ mfrmr_jml_gpcm_rate_hierarchy_contract_version <- function() {
   "mfrmr-jml-gpcm-rate-hierarchy-0.2.3-v1"
 }
 
-
 audit_mfrm_jml_gpcm_rate_hierarchy_scope <- function(
     config,
     sizes,
@@ -46,7 +45,7 @@ audit_mfrm_jml_gpcm_rate_hierarchy_scope <- function(
     free_log_slopes == max(n_levels - 1L, 0L)
   source_matches <- identical(
     as.character(compactification$contract_version %||% "")[1],
-    mfrmr_jml_gpcm_boundary_compactification_contract_version()
+    .mfrmr_const_mfrmr_jml_gpcm_boundary_compactification_contract_version
   ) && identical(
     as.character(compactification$objective_identity %||% "")[1],
     "identified_conditional_joint_log_likelihood"

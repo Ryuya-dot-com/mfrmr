@@ -74,7 +74,8 @@ table and optional \code{cut_scores} decisions), \code{"both"} (ability table pl
 row-level posterior predictive score distributions), or \code{"predictive"}
 (ability table plus row-level posterior predictive score distributions,
 defaulting \code{as.data.frame()} and \code{plot()} to predictive outputs when
-inspected).}
+inspected). For \code{plot()} the choices are \code{"intervals"}, \code{"variance"},
+or \code{"predictive"}; the last requires saved predictive results.}
 
 \item{conditioning}{Calibration conditioning mode:
 \describe{
@@ -139,12 +140,42 @@ SD, and log marginal likelihood across the calibration draws.}
 
 \item{...}{Unused; checked to be empty.}
 
-\item{x, parm, row.names, optional, digits, draw, reference, preset, show_legend, title, subtitle, caption}{Arguments for \code{print()}, \code{summary()}, \code{confint()}, \code{as.data.frame()}, and
-\code{plot()} methods on \code{mfrm_posterior_scores}.}
+\item{x}{A saved \code{mfrm_posterior_scores} result for display or extraction.}
+
+\item{digits}{Numeric display precision; stored results are unchanged.}
+
+\item{parm}{Person IDs or distinct positive row indices selected by \code{confint()};
+\code{NULL} retains all scored Persons. It reuses the stored interval level;
+request another level by repeating \code{predict()}, not by scaling its SD.}
+
+\item{row.names}{Passed to \code{\link[base:as.data.frame]{base::as.data.frame()}}.}
+
+\item{optional}{Passed to \code{\link[base:as.data.frame]{base::as.data.frame()}}.}
 
 \item{what}{Table component for \code{as.data.frame()}: \code{"estimates"} (default,
 or \code{"predictive"} when \code{x$settings$type == "predictive"}), \code{"predictive"},
 \code{"decisions"}, \code{"person_draws"}, or \code{"dispositions"}.}
+
+\item{draw}{Print the returned ggplot when \code{TRUE}; \code{FALSE} constructs it only.}
+
+\item{reference}{Optional finite numeric reference line in ability units.}
+
+\item{preset}{Appearance preset: \code{"standard"}, \code{"publication"},
+\code{"compact"}, or \code{"monochrome"}.}
+
+\item{show_legend}{Logical; display the plot legend.}
+
+\item{title}{Optional plot annotation metadata. \code{NULL} retains
+the generated text; use \code{\link[=plot_data]{plot_data()}} to read cautions and customize the
+returned ggplot to display them as needed.}
+
+\item{subtitle}{Optional plot annotation metadata. \code{NULL} retains
+the generated text; use \code{\link[=plot_data]{plot_data()}} to read cautions and customize the
+returned ggplot to display them as needed.}
+
+\item{caption}{Optional plot annotation metadata. \code{NULL} retains
+the generated text; use \code{\link[=plot_data]{plot_data()}} to read cautions and customize the
+returned ggplot to display them as needed.}
 }
 \value{
 An \code{mfrm_posterior_scores} object with:
@@ -157,7 +188,16 @@ An \code{mfrm_posterior_scores} object with:
 \item{\code{predictive}}{Row-level posterior predictive expected scores,
 \code{PredictiveSD}, \code{ExpectedMeanSD}, \code{Residual}, \code{ModalScore}, and category
 probabilities when \code{type} is \code{"both"} or \code{"predictive"} (\code{NULL}
-otherwise). \code{IntegrationMaxDiff} compares category probabilities and
+otherwise). \code{ExpectedScore} averages category scores using those
+probabilities; \code{PredictiveSD} describes variation in a replicate rating
+under that row's conditions, including response variability and the
+ability/calibration uncertainty propagated by \code{conditioning}. Both are
+in score units, not ability units.
+\code{ExpectedMeanSD} is the SD across calibration draws of each draw's
+ability-integrated expected score. It describes how that mean varies
+with calibration, not the total predictive SD or an SE for a sample
+mean. \code{Residual} is observed minus expected score, without
+standardization. \code{IntegrationMaxDiff} compares category probabilities and
 \code{ExpectedMeanSD} between quadrature orders for each row. \code{Status} and
 \code{Reason} describe predictive availability; \code{PersonStatus} describes the
 separate ability result. Failed predictive checks withhold probabilities
@@ -166,7 +206,11 @@ including \code{prior_only}. The \code{IntegrationMaxDiff} in \code{estimates} c
 ability summaries, log likelihood and cut-score probabilities/SDs only.}
 \item{\code{decisions}}{Long cut-score probability table (\code{above_cut} and
 \code{ability_band}) with \code{Probability} and \code{ProbabilityBetweenSD} when
-\code{cut_scores} is supplied (\code{NULL} otherwise).}
+\code{cut_scores} is supplied (\code{NULL} otherwise). \code{Probability} is the
+mixture probability of the stated ability event; \code{ProbabilityBetweenSD}
+measures variation in that probability across calibration draws.
+Like \code{ExpectedMeanSD}, it uses the number of draws as its variance
+denominator, is not a Monte Carlo SE, and is \code{NA} for \code{plugin_mean}.}
 \item{\code{person_draws}}{Optional per-draw conditional moments when
 \code{keep_person_draws = TRUE}.}
 \item{\code{source}, \code{posterior_decision}, \code{categories}, \code{data_usage}, \code{omitted_rows}, \code{settings}, \code{notes}}{ Provenance, row accounting, and interpretation notes.}
@@ -206,7 +250,7 @@ scored in the same batch. By the law of total variance on the equal-weight
 decomposing total posterior variance into conditional measurement
 variance (\code{WithinSD^2}) and calibration posterior variance
 (\code{BetweenSD^2}, share \code{CalibrationVarShare}). \code{Median}, \code{Lower}, and
-\code{Upper} invert the exact continuous mixture CDF
+\code{Upper} numerically invert the continuous mixture CDF
 \eqn{F_p(x) = M^{-1}\sum_{m=1}^{M} F_{p,m}(x)}.
 \item \strong{Posterior-mean plug-in (\code{conditioning = "plugin_mean"})}:
 evaluates \eqn{p(\theta_{\mathrm{new}, p} \mid y_{\mathrm{new}, p}, \hat{\psi})}
@@ -223,7 +267,7 @@ the combined data with \code{\link[=export_mfrm_model]{export_mfrm_model()}}.
 \subsection{Out-of-sample person likelihood vs \code{predictive-draws.rds}}{
 
 Existing-Person \code{log_lik} arrays saved in \code{predictive-draws.rds} condition on
-sampled calibration abilities \eqn{\theta_j^{(m)}} and therefore validate
+sampled calibration abilities \eqn{\theta_j^{(m)}} and can be used to check
 conditional observation fit rather than leave-one-Person-out prediction. For
 genuinely new Persons (\code{CalibrationMember == FALSE}),
 \code{PersonLogMarginalLikelihood} integrates \eqn{\theta_{\mathrm{new}, p}} over

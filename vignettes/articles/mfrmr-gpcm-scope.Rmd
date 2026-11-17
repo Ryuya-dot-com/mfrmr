@@ -482,13 +482,114 @@ provide intervals for two families**: SEs and bounds are missing and
 Known facet levels not observed together are labelled in `curves$contexts`;
 this label is not evidence that extrapolation is reliable. The first and
 second family's numerical slopes are retained separately in `fit_joint$slopes`;
-`OptimizerEstimate` is the numerical solution. `PrimaryEstimate` remains
-unavailable because the finite-optimum and boundary review is incomplete,
-not simply because interval coverage is unqualified. A positive local
-information matrix does not establish a unique global optimum.
+`OptimizerEstimate` retains the numerical solution. Read
+`summary(fit_joint)$point_estimation` alongside `PrimaryEstimate`:
+
+- `finite_numerical_solution`: finite points passed optimizer and gradient
+  checks. `IntegrationReview = "passed"` additionally records automatic
+  likelihood and posterior-moment accuracy checks. Local curvature remains
+  unreviewed until a separate information check is requested.
+- `numerical_unresolved`: the numerical checks did not pass. Primary values are
+  unavailable; optimizer traces remain accessible.
+- `finite_maximum_absent`: an all-low or all-high facet level supplies a
+  constraint-preserving location path with no finite joint maximum.
+  `gpcm_point_boundary` names the level and direction. This does not establish
+  that every target is unestimable.
+
+When extreme levels occur only in one facet other than the reference slope family, the
+likelihood factors for those ratings approach
+one along the certified location path. The remaining likelihood can be fitted
+separately while preserving the reference family's geometric-mean-one scale.
+If the remaining design retains all other facet levels, at least two levels
+of the affected facet, and no additional extreme facet levels, mfrmr attempts
+this refit with the same engine and automatic point-integration checks.
+
+For example, suppose task and rater own slopes but criterion owns steps, and
+every rating on one criterion is the highest category. That criterion need
+not prevent estimation for the other criteria, tasks and raters. Its location
+has no finite estimate and its free steps are unidentified in the limit, but
+all task and rater slopes can remain estimable. The reference slope family is
+unchanged; retained criterion locations are recentered and the uncentered
+location facet absorbs that shift. This preserves retained rating predictors.
+The same reduction applies to an all-low criterion or an additive occasion
+without slopes. Removal from the reference slope family and reductions across
+multiple extreme facets remain unsupported.
+
+This also covers rater-owned steps in the task-by-rater model. Each rater's
+step constraint is separate, so the remaining raters' steps stay in the
+likelihood. This follows from the response equation and per-rater constraints
+in [Uto and Ueno (2020), Section 6](https://link.springer.com/article/10.1007/s41237-020-00115-7):
+with finite steps and positive finite slopes, sending an all-high rater's
+location to negative infinity makes those observed probabilities approach one
+(reverse the direction for all-low ratings). The likelihood reduction is a
+consequence of that equation. The nonslope-criterion case follows from the
+implemented additive extension of the equation; it is not a reduction theorem
+or a finite-sample inference guarantee supplied by the paper.
+
+Read `summary(fit_joint)$point_targets`: `finite_likelihood_limit` marks
+numerical estimates from the limiting fit; `unidentified_likelihood_limit`
+marks slopes of extreme levels whose likelihood factors have disappeared.
+`limit_not_evaluated` does not declare a target unidentified. Unsupported or
+failed refits retain a reason. The original data are preserved; available
+limiting slopes populate `PrimaryEstimate`. When the extreme facet owns
+steps or has no slopes, full-model optimization is skipped because no finite joint maximum
+exists. Its saved full-model working values are marked
+`neutral_boundary_reference` and must not be interpreted as estimates.
+`summary(fit_joint)$step_targets` distinguishes the remaining numerical step
+estimates from the extreme rater's steps, which are unidentified in the limit.
+For binary responses the sole step is fixed at zero by its sum-zero constraint;
+`fixed_by_constraint` distinguishes this fixed value from an estimated or
+unidentified parameter. Missing internal categories at non-extreme step-owner
+levels still prevent fitting.
+`fit_joint$point_limit$fit`, when present and qualified, is a separate fit to
+the retained ratings. Its location convention uses the free slope owner as
+the uncentered facet, so its absolute locations must not be mixed with the
+original fit's differently centered coordinates. The `gpcm_point_limit`,
+`gpcm_point_targets`, `gpcm_step_targets`, `gpcm_limit_locations` and `gpcm_limit_steps` result tables
+preserve the count, target and coordinate distinctions. Curves and intervals
+requested from the original fit do not silently substitute the limiting fit.
+When full-model optimization was skipped, its curves are refused. Use the
+limiting fit with retained rating contexts to draw estimated curves.
+The numerical status is then `not_run`, rather than a convergence failure.
+The summary decision and `numerical_review` distinguish the known full-model
+boundary from the separate limiting refit's success, failure or unevaluated
+status. More full-model iterations cannot restore a finite maximum. Ordinary
+intervals remain unavailable after this data-dependent reduction.
+
+Read `summary(fit_joint)$rating_support` alongside these estimates. `Persons`
+counts distinct recorded Person IDs; `Ratings` counts retained rows without
+weighting. The minimum, median and maximum ratings per Person describe
+exposure at each named facet level. A large total sample can still leave an
+individual rater with very few persons. `rating_crossings` describes the
+observed levels of each other facet separately, and `rating_categories`
+includes zero counts for unused declared scores. Neither marginal crossing
+counts nor count bands establish identification or precision.
+
+`DataBasis` distinguishes the full-model data from a limiting fit's retained
+data. Use the latter when describing a limiting estimate. The same tables
+are available in `mfrm_results()` with a `gpcm_` prefix and in reports without
+that prefix. `facet_small_sample_review(fit_joint)` also supplies Person-level
+counts and configurable numeric rating-count bands; its legacy
+`SampleCategory` values are retained for compatibility, not precision grades.
+
+Point availability is separate from `SEEligible`, `CIEligible` and
+`InferenceReady`. In particular, a limiting refit does not qualify full-model
+Wald intervals. Older saved fits retain their recorded point and accuracy
+scope; displaying them does not rerun or upgrade their numerical checks.
+
+The boundary screen is a sufficient condition, not a complete classification.
+For a positive effective slope $A$ and a location with only maximum scores $K$,
+$\partial\log P(Y=K\mid\theta)/\partial b=-A\{K-E(Y\mid\theta)\}<0$.
+For a centered facet with $L$ levels, decrease the extreme level by
+$t(1-1/L)$, increase its other levels by $t/L$, and decrease every location
+in the uncentered facet by $t/L$. The sum-zero constraint is preserved;
+only the extreme level's rows change, and their likelihood increases.
+All-low scores give the reverse direction. This argument applies to the
+unanchored fixed-additive model, not extreme-Person EAPs, fixed anchors or
+penalized estimates. Failure to find this path does not exclude other paths.
 
 For complete probability curves and cumulative 50% thresholds at chosen rating
-contexts, use `category_curves_report(fit_joint, newdata = contexts)`, where
+contexts, use `mfrm_report(type = "category_curves", fit_joint, newdata = contexts)`, where
 `contexts` contains each non-Person facet and no `Theta` column. The same call
 supports a one-family GPCM MML fit. Each row identifies a separate curve; the
 returned `curve_profiles$InputRow` links it to the saved context. Facet locations,
@@ -551,6 +652,140 @@ information has an independent reference based on
 Numerical agreement with that reference checks the calculation, not its
 finite-sample coverage. A different interval method is not automatically
 required whenever an approximate method has a documented limitation.
+
+### An unused endpoint is a different limiting model
+
+If scores 1–4 occur but score 5 is unused throughout the data, a finite
+five-category MML maximum need not exist. With free step offsets, unanchored
+owner locations, and a location or population-intercept shift respecting the identification
+constraints, its likelihood supremum equals that of the corresponding
+four-category GPCM. The same argument applies to an unused lowest category,
+after explicitly relabelling the retained scores. It holds for one positive
+slope family and for the product of two positive slope families, using the
+response equation in [Uto and Ueno (2020), Sections 4.1 and 6](https://doi.org/10.1007/s41237-020-00115-7).
+This limiting-likelihood argument is a consequence of the equation, not an
+MML existence theorem supplied by that Bayesian study.
+
+A separate reduced-category fit can therefore provide numerical slope and
+retained-category probability estimates. It still needs its own convergence
+and integration checks; another boundary or weak identification can remain.
+The missing endpoint is not evidence that the category can never occur.
+
+| Quantity | Interpretation after removing a globally unused endpoint |
+| --- | --- |
+| Component discriminations | Retain their meaning under the same slope and population-scale constraints; a finite solution must still be checked. |
+| Retained-category probabilities | Describe the limiting model, whose missing-category probability is zero. Keep the original score labels. |
+| Step-owner severity and centered step offsets | Use the reduced-category convention. Do not substitute them into the original five-category tables, or assume its severity contrasts are recovered. Different owner-specific divergence paths can give the same limiting probabilities. |
+| SEs and confidence intervals | A separate fit's ordinary intervals do not qualify inference after selecting this boundary reduction. |
+
+New MML fits save this separate analysis in `fit$point_limit`, with the
+original data and full-model boundary status retained. It requires one
+globally unused endpoint, every retained category within every step owner,
+unit weights, free locations/steps and no interactions. Fixed-normal models
+and the default one-family intercept-only population are supported.
+`summary(fit)$category_map` records the score mapping; `point_targets` records
+slopes that passed the separate numerical checks. Original location and step
+estimates are not replaced. One-family standardized primary slopes use
+`PrimaryPopulationSD` from the limiting fit, not the full-model optimizer's SD.
+The selected engine and numerical tolerances are retained, using automatic
+integration checks for the limiting fit. A failed refit is saved with its
+reason and does not supply primary points. When available, use
+`mfrm_curve_intervals(fit$point_limit$fit, contexts)` to plot the limiting
+probabilities, including zero for the unused endpoint under its original
+label. For an estimated population, `Theta` uses the limiting fit's scale;
+do not reuse the original full-model EAPs. These curves have no intervals.
+Full-model starting-coordinate vectors are not reused for the smaller ladder.
+Old saved fits are not refitted on
+display; refit the original data to request the new limiting analysis.
+
+Anchors and other restrictions can invalidate the reduction. The argument
+also does not justify deleting an unused **internal** category: crossing that
+gap combines two adjacent logits, so renumbering the scores generally changes
+the GPCM response equation. Different missing categories across raters require
+a separate model specification.
+
+### Which uncertainty does each output describe?
+
+Start with the quantity needed for the assessment decision. A rater's severity,
+a category step and a new Person's ability do not have the same uncertainty.
+For ordinary finite two-family fits, the current routes are:
+
+| Target | Output and uncertainty included | What remains outside that output |
+| --- | --- | --- |
+| Component discrimination | `confint(fit, parm = "slopes")`: log-Wald, or an explicitly requested profile for one component; locations, steps and other slopes remain estimated nuisance parameters. | Uncertainty about the fixed N(0,1) population assumption; general small-sample coverage. |
+| Facet location or prespecified within-facet contrast | `mfrm_facet_intervals(fit, facet)`: normal approximation using the inverse **full** marginal information and the fitted location constraints. A facet need not own slopes. | Random sampling of new rater/task levels; uniform differences in expected ratings when slopes or steps differ. |
+| Category step | `confint(fit, parm = "steps")`: normal intervals for offsets expanded under within-level sum-zero constraints, using full joint information. | Absolute category boundaries including facet locations, simultaneous ordering tests and general small-sample coverage. Binary fixed steps have no inferential interval. |
+| Person ability | Saved training EAPs and posterior SDs, or separately checked new-Person EAP/intervals through `predict_mfrm_units()`. | Calibration estimation uncertainty. These conditional posterior SDs are not sampling SEs of structural coefficients; a posterior interval is not automatically a frequentist confidence interval. |
+| Category probability or information at a supplied rating context | `mfrm_curve_intervals()` returns fitted values for two-family models. | Curve intervals and uncertainty in the supplied ability are not provided. |
+
+For a structural target with free-coordinate derivative row vector $J$, the
+local variance is $J V J^T$, where $V$ is the inverse full observed marginal
+information. In particular, a location contrast uses all cross-covariances;
+adding squared printed SEs treats correlated estimates as independent.
+Steps and centered locations must be expanded from their free coordinates
+before calculating this variance. A step fixed at zero in a binary model has
+no free variation **by constraint**, not perfect empirical precision.
+The marginal information accounts for latent-Person uncertainty through
+integration; replacing it with the EM complete-data objective's curvature
+would omit missing information ([Louis, 1982](https://doi.org/10.1111/j.2517-6161.1982.tb01203.x)).
+
+Use the existing interval workflow for steps:
+
+```{r two-family-step-intervals, eval=FALSE}
+step_ci <- confint(fit_joint, parm = "steps", level = .95)
+summary(step_ci)$table
+plot(step_ci)
+res <- mfrm_results(fit_joint, intervals = list(steps = step_ci), compute = "never")
+report <- mfrm_report(res)
+saveRDS(res, "assessment-with-step-intervals.rds")
+```
+
+The result uses the shared `mfrm_facet_intervals` class, with
+`settings$target = "category_step_offsets"`. `StepOwner`, `StepLevel` and
+`Step` identify the target separately; display labels are not identity keys.
+The final step in a ladder depends on the other steps. Its variance includes
+their covariance, rather than just adding their variances. `Status = "fixed"`
+marks binary constraint-fixed zeros with `SE = 0` and missing bounds.
+Nonfixed numerical refusals keep their reasons and missing intervals. If the
+full model has no finite maximum, nonfixed `Estimate` values are missing and
+`OptimizerEstimate` retains the working values; inspect the separate limiting
+point tables. Ordinary intervals after that reduction remain unavailable.
+These pointwise step intervals do not test simultaneous ordering or justify
+merging categories by overlapping intervals.
+
+The numerical and statistical questions also require different remedies:
+
+| Condition | Consequence for estimates and intervals | Appropriate response and limit |
+| --- | --- | --- |
+| Inadequate integration, differentiation or optimization | Changes the computed point, curvature, SE or endpoints. | Inspect the saved score, inverse and refined-quadrature checks; refine and refit when required. More Persons do not repair a numerical approximation. |
+| Few informative Persons per facet level, sparse crossings or poor category use | Weak directions can make points unstable and intervals wide or asymmetric. The total number of ratings can conceal this. | Inspect `rating_support`, crossings, category counts and target uncertainty. Structural aliasing requires a different design or identifiable target; no universal Person-count threshold is supplied. |
+| Finite-sample skewness, bias or nonquadratic likelihood | An accurately computed SE need not yield nominal Wald coverage. | An explicit profile examines likelihood shape but retains an asymptotic cutoff. The saved study below does not justify a uniform SE multiplier or automatic profile replacement. |
+| Wrong ability-distribution shape, dependence or informative assignment | Both the estimated target and its model-based SE can be affected. | Match the response/population and assignment assumptions to the application. More quadrature points do not repair misspecification; two-family sandwich intervals are not implemented. |
+| Calibration treated as fixed during Person scoring | Posterior spread omits calibration uncertainty even when numerical scoring checks pass. | Joint posterior integration or a justified calibration-error propagation method would address this different target. The existing two-family conditional scoring route does not perform either. |
+| Boundary solution or data-dependent limiting reduction | Ordinary interior approximations may not describe the target's distribution. | Keep target-specific point availability separate; the limiting-fit route does not acquire ordinary intervals from this finite-fit discussion. |
+
+Changing a normal ability SD and transforming all corresponding model parameters
+is a scale comparison. It does not test robustness to a nonnormal population.
+Similarly, uncertainty over sampled rater/task populations is a different model
+from estimating the fixed levels present in this calibration.
+
+Nonparametric resampling is not a universal small-sample correction. Under an
+independent-Person sampling design, resampling would need to preserve each
+Person's rating block and relabel duplicated Persons, rather than treat their
+ratings as independent. Sparse samples may lose facet levels, crossings or
+category support in a resample; such failures and their denominator must be
+retained. Other sampling designs require their own resampling units and target.
+No two-family bootstrap interval is currently supplied. Choosing one would
+require a defined sampling scheme and evidence for the intended target, not
+just more bootstrap draws.
+
+In saved interval tables, `CIEligible` describes numerical availability and
+`CoverageQualified = FALSE` means coverage remains unestablished. It does not
+mean zero coverage or numerical failure. `summary(fit)` describes the fit;
+request and attach the chosen intervals to `mfrm_results()` to preserve their
+own checks in reports and exports. The limited coverage study below concerns
+four specific targets; it does not validate every entry of `vcov(fit)` or
+every available Person interval.
 
 ### Point estimates: numerical accuracy and sampling error
 
@@ -662,6 +897,34 @@ correction available to an analyst. The resampling interval describes uncertaint
 across the 200 simulation replications, not a bootstrap interval for assessment
 data. These results do not identify a uniform SE deficit or establish a
 cause that would justify automatic SE inflation or bias correction.
+
+The same 800 fits and their full marginal covariance matrices were reused to
+evaluate the new step-offset intervals; no datasets were generated or refitted.
+The true centered steps were (-0.4, 0.4) for Criterion c1 and (-0.7, 0.7) for
+c2. All four step intervals were available in every fit. Within a criterion,
+the two steps are exact negatives by the sum-zero constraint, so they have
+identical coverage and width. The table reports each pair once, rather than
+counting the dependent steps as independent evidence.
+
+| Persons | Ratings per Person | c1 step covered | c2 step covered | Mean width, c1 | Mean width, c2 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 60 | 4 | 191/200 (95.5%) | 193/200 (96.5%) | 0.730 | 0.749 |
+| 60 | 8 | 189/200 (94.5%) | 193/200 (96.5%) | 0.530 | 0.566 |
+| 240 | 4 | 191/200 (95.5%) | 190/200 (95.0%) | 0.361 | 0.371 |
+| 240 | 8 | 191/200 (95.5%) | 193/200 (96.5%) | 0.263 | 0.280 |
+
+These are 95% pointwise Wald intervals on the fixed ability-SD-one scale.
+All pointwise exact binomial Monte Carlo intervals include 95%; for example,
+189/200 has bounds 90.37--97.22%, and 193/200 has bounds 92.92--98.58%.
+At 60 Persons and four ratings, Step 1 biases were -0.0197 (MCSE 0.0143) for
+c1 and -0.0190 (0.0127) for c2. At 240 Persons and eight ratings they were
+-0.0020 (0.0045) and -0.0052 (0.0050), respectively; Step 2 biases have
+opposite signs. More observations narrowed intervals in this design, but
+these results from one true parameter configuration and 200 shared response
+banks do not establish general coverage or a minimum sample size. They support
+retaining the experimental intervals and their qualifications, without an
+automatic SE or bias correction. `CoverageQualified` therefore remains
+`FALSE`, including when a particular simulated coverage proportion is near 95%.
 
 The existing `method = "profile"` route was also checked for Task t1 in the
 first replication of each condition. All eight endpoints agreed with independent
@@ -1437,7 +1700,7 @@ The current mfrmr routes are:
 | --- | --- |
 | Public RSM / PCM | MML is the default; JML is also available. MML uses direct optimization by default. EM and hybrid support additive and jointly fitted two-facet interaction models with a fixed population and fixed integration (`population = NULL`). |
 | Public one-slope-family GPCM | MML uses direct optimization. Requests for EM or hybrid currently fall back to direct and record the choice in `fit$summary`. JML is available within its separate restrictions. |
-| Provisional two-slope-family GMFRM | Explicit fixed-standard-normal MML with generalized EM or adaptive direct fitting. Summaries, conditional curves, experimental component-slope and location/contrast intervals, and separately checked fitted-object/portable conditional EAP are available. Coverage remains unqualified; curve/step intervals and model ranking remain unavailable. |
+| Provisional two-slope-family GMFRM | Explicit fixed-standard-normal MML with generalized EM or adaptive direct fitting. Summaries, conditional curves, experimental component-slope, step-offset and location/contrast intervals, and separately checked fitted-object/portable conditional EAP are available. Coverage remains unqualified; curve intervals and model ranking remain unavailable. |
 
 Muraki (1992) derives an EM estimation route for GPCM; this does not make EM
 a defining property of the response model. The
@@ -2796,7 +3059,7 @@ do not create two score dimensions or estimate their G-study covariances.
 | How do category responses and rater effects vary with ability? | `fit_mfrm()` and its response/diagnostic outputs | A latent response model; the provisional two-family route has a narrower output scope than one-family GPCM. |
 | How much observed-score variation comes from persons, raters, tasks and their interactions across criteria? | `mfrm_g_study()` | Score-specific variance and between-score covariance components. |
 | What changes when the assessment uses more raters/tasks or different prespecified score weights? | `mfrm_d_study()` and `plot()` | G, Phi and SEM for the declared future design. |
-| How uncertain is the difference between two prespecified plans? | `mfrm_multivariate_d_compare()` | Approximate paired intervals under explicit normal random-effect assumptions for two common crossed facets. |
+| How uncertain is the difference between two prespecified plans? | `compare_mfrm()` | Approximate paired intervals under explicit normal random-effect assumptions for two common crossed facets. |
 
 Start the G-study from numeric score columns and the declared design, not a
 matrix of GPCM parameter estimates. The current G-study supports one or two
@@ -2823,6 +3086,11 @@ The two-family sheet separates location, component slope, category use and
 assignment exposure. Its saved component-slope intervals and same-data posterior
 residuals retain their own limitations. Missing intervals and unresolved response
 rows remain visible; location and step intervals are not displayed in this sheet.
+When no finite full-model maximum exists, the sheet uses a matching saved
+limiting fit for retained levels, labels its reference, and separates original
+from limiting-analysis exposure. It withholds full-model working values and
+distinguishes unidentified, unevaluated and constraint-fixed targets. Full-model
+intervals and residuals are not transferred; category counts remain descriptive.
 Separately requested location/contrast intervals belong in the analyst report. The standalone
 sheet excludes source identifiers and the fitted object. Review it before
 distribution; the full results RDS remains an analyst artifact. One-family
@@ -3002,7 +3270,7 @@ evidence rather than as an automatic replacement.
 
 Category avoidance is a separate decision. For example, a rater who uses only
 3--8 on a declared 1--10 scale shows local restriction of range if the omitted
-categories are used elsewhere. Start with `data_quality_report()` and inspect
+categories are used elsewhere. Start with `mfrm_report(fit, type = "data_quality")` and inspect
 `category_usage_by_facet` and `category_usage_summary`; also examine assignment
 and case mix, fit, and unexpected responses. Do not move to `GPCM` merely
 because a rater avoids extreme categories. A rater-owned PCM/GPCM may expose
@@ -3302,7 +3570,7 @@ family is recorded as a candidate, but `ParameterStatus` remains
 `not_evaluated` and the primary value remains unavailable: this sufficient
 path result does not determine the global maximum of the non-concave GPCM
 likelihood. Failure to find such a path is equally limited to that family.
-Under MML, Persons are integrated out, so neither conditional JML result is
+Under one-family MML, Persons are integrated out, so neither conditional JML result is
 reused as marginal-likelihood evidence. The MML branch records a separate
 sufficient-path check for the fitted finite-quadrature objective, but that
 check is not a complete analysis of the continuous marginal likelihood.
@@ -3585,8 +3853,8 @@ stated constraints:
   `sample_mfrm_plausible_values()`, `compute_information()`, and
   `plot()`.
 - **Curve and category views** via `plot(fit, type = c("wright",
-  "pathway", "ccc", "ccc_surface"))`, `category_structure_report()`, and
-  `category_curves_report()`.
+  "pathway", "ccc", "ccc_surface"))`, `mfrm_report(fit, type = "category_structure")`, and
+  `mfrm_report(fit, type = "category_curves")`.
 - **Slope-aware simulation specifications** via `build_mfrm_sim_spec()`
   and `simulate_mfrm_data()`.
 - **Direct recovery checks** via `simulate_mfrm_recovery()` and
@@ -3604,7 +3872,7 @@ screens rather than as Rasch-style invariance evidence:
   `interrater_agreement_table()`, `facet_quality_dashboard()`,
   `plot()`, `plot()`,
   `plot()`.
-- `reporting_checklist()` and `precision_review_report()` route to the
+- `mfrm_report(fit, type = "checklist")` and `mfrm_report(fit, type = "precision")` route to the
   supported direct tables and plots. The broader APA/QC/export family is
   available as caveated sensitivity-reporting output with explicit
   `gpcm_boundary` rows.
@@ -3616,11 +3884,11 @@ screens rather than as Rasch-style invariance evidence:
   tests. `unexpected_after_bias_table()` provides a descriptive in-sample
   before/after flag comparison; a lower flag count does not show that bias has
   been removed.
-- `estimation_iteration_report()` provides a slope-aware reconstructed
+- `mfrm_report(fit, type = "iterations")` provides a slope-aware reconstructed
   optimization trajectory. It is a diagnostic replay, not the exact optimizer
   history or an additional convergence test.
 - `analyze_dff()`, `dif_interaction_table()`,
-  `dif_report()`, `plot()`, and `plot()` provide
+  `mfrm_report(dif, type = "dff")`, `plot()`, and `plot()` provide
   GPCM DFF/DIF screening and reporting surfaces with explicit
   `gpcm_boundary` rows.
 - `build_apa_outputs()`, `build_visual_summaries()`, `run_qc_pipeline()`,

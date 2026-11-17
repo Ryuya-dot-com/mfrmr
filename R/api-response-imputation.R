@@ -6,8 +6,7 @@
 #' No person-by-facet grid is constructed. This function validates supplied
 #' imputations; it does not choose or fit an imputation model.
 #' Start with `review_mfrm_imputations()`, then use [fit_mfrm_imputed()] and
-#' [pool_mfrm_imputed()] for eligible fixed-facet analyses. The older name
-#' The former `mfrm_response_imputations()` name has been removed; use
+#' [pool_mfrm_imputed()] for eligible fixed-facet analyses. The former `mfrm_response_imputations()` name has been removed; use
 #' `review_mfrm_imputations()` with `impute_ids` for the selected event IDs.
 #'
 #' @param data Original long-format rating roster, including missing scores.
@@ -15,7 +14,11 @@
 #'   object from [mice::mice()] fitted to the long-format roster. Each completion
 #'   must contain all original columns and rows. Row order may differ; rows
 #'   are matched by `event_id`.
-#' @param person,score,event_id Column names. `event_id` uniquely identifies a
+#' @param person Column names. `event_id` uniquely identifies a
+#'   rating event, including repeated ratings of the same person and facets.
+#' @param score Column names. `event_id` uniquely identifies a
+#'   rating event, including repeated ratings of the same person and facets.
+#' @param event_id Column names. `event_id` uniquely identifies a
 #'   rating event, including repeated ratings of the same person and facets.
 #' @param facets Nonempty character vector of facet column names.
 #' @param impute_ids Character vector of event IDs explicitly selecting missing
@@ -243,8 +246,8 @@ review_mfrm_imputations <- function(data, completed, person, facets, score,
 #' @rdname mfrm_response_imputations
 #' @description Use [review_mfrm_imputations()] to review supplied completions,
 #'   with `impute_ids` naming the selected event IDs. The former
-#'   `mfrm_response_imputations()` name is no longer exported. Neither route
-#'   fits an imputation model or generates completed ratings.
+#'   `mfrm_response_imputations()` name is no longer exported. This review
+#'   does not fit an imputation model or generate completed ratings.
 #' @usage NULL
 #' @name mfrm_response_imputations
 NULL
@@ -262,8 +265,8 @@ response_imputation_scores <- function(x, categories) {
 }
 
 #' @rdname mfrm_response_imputations
-#' @param x,object An object returned by [review_mfrm_imputations()] or its
-#'   entry point [review_mfrm_imputations()].
+#' @param x An object returned by [review_mfrm_imputations()].
+#' @param object An object returned by [review_mfrm_imputations()].
 #' @param ... Unused for print and summary methods.
 #' @export
 print.mfrm_response_imputations <- function(x, ...) {

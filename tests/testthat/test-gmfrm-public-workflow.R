@@ -22,6 +22,10 @@ test_that("public two-family dispatch preserves its explicit likelihood and repl
   expect_false(fit$summary$Converged)
   expect_false(fit$summary$InferenceReady)
   expect_false(fit$summary$ICEligible)
+  review <- summary(fit)
+  expect_match(review$decision$Why, "Numerical convergence failed")
+  expect_identical(review$numerical_review$Status[review$numerical_review$Area=='Optimization'], 'fail')
+  expect_null(mfrm_gpcm_boundary_guidance(fit))
   problem <- do.call(mfrm_gmfrm_problem, fit$gmfrm$specification)
   reference <- mfrm_gmfrm_em(problem, maxit = 1L)
   expect_identical(fit$opt$par, reference$par)
@@ -149,7 +153,7 @@ test_that("public conditional curves match the product equation and retain unava
   expect_identical(report$tables$fitted_steps$StepLevel, fit$steps$StepFacet)
   expect_identical(report$tables$fitted_steps$Step, fit$steps$Step)
   expect_true(all(report$tables$fitted_locations$Interval == "See attached location-interval tables, if requested"))
-  expect_true(all(report$tables$fitted_steps$Interval == "Not available"))
+  expect_true(all(report$tables$fitted_steps$Interval == "See attached step-interval tables, if requested"))
   expect_identical(report$tables$fitted_locations$Constraint,
     rep(c("Sum to zero across levels", "Uncentered; fixed N(0,1) ability"), c(3,2)))
   expect_match(report$markdown, "## fitted locations", fixed=TRUE)
@@ -185,7 +189,12 @@ test_that("public conditional curves match the product equation and retain unava
     for (prefix in c("table_gpcm_", "report_")) {
       path <- exported$written_files$Path[exported$written_files$Component == paste0(prefix,name)]
       expect_length(path, 1L)
-      expect_equal(read.csv(path, encoding="UTF-8", check.names=FALSE), report$tables[[name]], tolerance=1e-12)
+      # CSV has no column schema: an entirely missing numeric target otherwise
+      # reads as logical. Retain its declared numeric type when reading it back.
+      classes <- if ("PrimaryEstimate" %in% names(report$tables[[name]]))
+        c(PrimaryEstimate="numeric") else NA_character_
+      expect_equal(read.csv(path, encoding="UTF-8", check.names=FALSE, colClasses=classes),
+        report$tables[[name]], tolerance=1e-12)
     }
   }
   index <- readLines(file.path(export_dir,"index.html"),warn=FALSE)

@@ -62,7 +62,7 @@ contract.
 | Output | Tables 0-30 plus graphic files | Returned R objects with `summary()` and `plot()` methods |
 | Anchoring | Element/group anchors, rating-scale calibration, and reusable starting values | Element and group anchors; no general threshold/scale anchors or fixed-calibration starting-value bundle |
 | Repeated cells | Multiple observations may be represented within a design cell | Exact Person-by-facet duplicates are retained but force Data review; distinguish legitimate repeats with an event/occasion facet |
-| Bias / interaction | Table 13 cell effects; Table 14 pairwise comparisons | `estimate_bias()` and `bias_interaction_report()`; conditional screens with the differences below |
+| Bias / interaction | Table 13 cell effects; Table 14 pairwise comparisons | `estimate_bias()` and `mfrm_report(fit, type = "bias_interaction")`; conditional screens with the differences below |
 | Wright map / variable map | Graphic variable-map output | `plot(fit, type = "wright")` and `plot()` |
 | Fair average | Table 7 fair-M average | `fair_average_table()` |
 | Reproducibility | Specification, input data, FACETS version, and recorded run environment/settings | `build_mfrm_manifest()` plus `build_mfrm_replay_script()` |
@@ -286,7 +286,7 @@ integer truncation for the tail area. `DFUnrounded` and `DFMethod` retain
 that choice; `df_method = "classical"` reproduces the earlier reference.
 
 Corrected pairwise tables carry `CalculationVersion = 3`. Recreate
-`build_fixed_reports()` and `bias_pairwise_report()` from the current bias
+`build_fixed_reports()` and `mfrm_report(bias, type = "bias_pairwise")` from the current bias
 bundle. First recreate old bias bundles from the saved fit and current
 diagnostics; no main calibration refit is needed. Historical report values
 are not automatically corrected by reloading them.
@@ -312,7 +312,7 @@ descriptive: conditioning on the observed category removes the universal
 unit baseline, so category ZSTD and its flags are unavailable. This does not
 turn a missing fit flag into evidence that the category functions well.
 
-In `category_structure_report()`, `MedianThreshold` now means a cumulative
+In `mfrm_report(fit, type = "category_structure")`, `MedianThreshold` now means a cumulative
 50% boundary; `AndrichThreshold` retains the adjacent-category step. Recreate
 saved structure reports. Half-score crossings outside `theta_range` stay
 missing, and modal peaks describe only the requested grid. The random
@@ -1110,16 +1110,16 @@ reporting workflow extends the analysis with:
   a cross-form or cross-wave link.
 - `diagnose_mfrm(diagnostic_mode = "both")` for the strict marginal screen
   alongside the residual stack.
-- `rating_scale_table()`, `category_structure_report()`, and
-  `category_curves_report()` for category-functioning evidence.
+- `rating_scale_table()`, `mfrm_report(fit, type = "category_structure")`, and
+  `mfrm_report(fit, type = "category_curves")` for category-functioning evidence.
 - `fair_average_table()` when FACETS Table 7 fair-average review is
   needed.
 - `plot(fit, type = "wright")` or `plot()` for a variable-map
   view of targeting and threshold placement.
-- `estimate_bias()`, `bias_interaction_report()`, and
-  `bias_pairwise_report()` when FACETS Table 14-style local interaction
+- `estimate_bias()`, `mfrm_report(fit, type = "bias_interaction")`, and
+  `mfrm_report(bias, type = "bias_pairwise")` when FACETS Table 14-style local interaction
   screening is substantively relevant.
-- `reporting_checklist()` for a manuscript-readiness summary.
+- `mfrm_report(fit, type = "checklist")` for a manuscript-readiness summary.
 - `build_apa_outputs()` for Method and Results paragraphs and APA tables.
 - `build_mfrm_manifest()` and `build_mfrm_replay_script()` for the
   reproducibility bundle alongside the FACETS-style handoff

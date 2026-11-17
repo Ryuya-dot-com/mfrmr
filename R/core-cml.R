@@ -387,7 +387,10 @@ mfrmr_cml_facet_intervals <- function(fit, facet, contrasts, method, clusters, a
 }
 
 #' @rdname fit_mfrm
-#' @param object,x A fitted CML result for its summary, print, covariance and
+#' @param object A fitted CML result for its summary, print, covariance and
+#'   log-likelihood methods, or a comparison-only result for its summary and
+#'   print methods.
+#' @param x A fitted CML result for its summary, print, covariance and
 #'   log-likelihood methods, or a comparison-only result for its summary and
 #'   print methods.
 #' @export

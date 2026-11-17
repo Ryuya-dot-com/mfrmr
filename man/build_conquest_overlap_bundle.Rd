@@ -2,6 +2,10 @@
 % Please edit documentation in R/api-export-bundles.R
 \name{build_conquest_overlap_bundle}
 \alias{build_conquest_overlap_bundle}
+\alias{normalize_conquest_overlap_tables}
+\alias{normalize_conquest_overlap_exports}
+\alias{normalize_conquest_overlap_files}
+\alias{review_conquest_overlap}
 \title{Build a scoped ConQuest-overlap bundle}
 \usage{
 build_conquest_overlap_bundle(
@@ -14,6 +18,51 @@ build_conquest_overlap_bundle(
   maxit = 40L,
   reltol = 1e-09,
   conquest_control = list()
+)
+
+normalize_conquest_overlap_tables(
+  conquest_population,
+  conquest_item_estimates,
+  conquest_case_eap,
+  conquest_population_term = "auto",
+  conquest_population_estimate = "auto",
+  conquest_item_id = "auto",
+  conquest_item_estimate = "auto",
+  conquest_case_person = "auto",
+  conquest_case_estimate = "auto",
+  keep_extra_columns = TRUE,
+  input = c("tables", "files"),
+  population_delimiter = "auto",
+  item_delimiter = "auto",
+  case_delimiter = "auto"
+)
+
+normalize_conquest_overlap_exports(
+  bundle,
+  parameter_file,
+  regression_file,
+  covariance_file,
+  case_file,
+  delimiter = c("auto", "comma", "tab", "semicolon", ",", "\\t", ";"),
+  conquest_version = NULL,
+  conquest_edition = NULL,
+  run_date = NULL,
+  report_file = NULL
+)
+
+review_conquest_overlap(
+  bundle,
+  conquest_population = NULL,
+  conquest_item_estimates = NULL,
+  conquest_case_eap = NULL,
+  conquest_population_term = "auto",
+  conquest_population_estimate = "auto",
+  conquest_item_id = "auto",
+  conquest_item_estimate = "auto",
+  item_id_source = c("auto", "response_var", "level"),
+  conquest_case_person = "auto",
+  conquest_case_estimate = "auto",
+  conquest_location_shift = NULL
 )
 }
 \arguments{
@@ -47,12 +96,119 @@ returned summary and settings.}
 \code{seed = 2L}, \code{convergence = 1e-8}, \code{deviance_change = 1e-10}, and
 \code{iterations = 2000L}. These do not change the native fit. Nodes/range
 control calibration; \code{p_nodes} and \code{seed} control posterior approximation.}
+
+\item{conquest_population}{Normalized ConQuest population-parameter table as a
+data.frame, or output from \code{normalize_conquest_overlap_exports()},
+\code{\link[=normalize_conquest_overlap_files]{normalize_conquest_overlap_files()}}, or
+\code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}}.}
+
+\item{conquest_item_estimates}{Normalized ConQuest item-estimate table as a
+data.frame. Leave \code{NULL} when \code{conquest_population} is an object from
+one of the ConQuest normalization helpers.}
+
+\item{conquest_case_eap}{Normalized ConQuest case-level EAP table as a
+data.frame. Leave \code{NULL} when \code{conquest_population} is an object from
+one of the ConQuest normalization helpers.}
+
+\item{conquest_population_term}{Column in \code{conquest_population} that stores
+parameter names. \code{"auto"} tries conservative aliases such as \code{Parameter}
+and \code{Term}.}
+
+\item{conquest_population_estimate}{Column in \code{conquest_population} that
+stores parameter estimates. \code{"auto"} tries aliases such as \code{Estimate} and
+\code{Est}.}
+
+\item{conquest_item_id}{Column in \code{conquest_item_estimates} that stores the
+item identifier. This may be the exported response variable (for example
+\code{I001}) or the original item/facet level. \code{"auto"} tries aliases such as
+\code{ResponseVar}, \code{ItemID}, \code{Item}, and \code{Label}.}
+
+\item{conquest_item_estimate}{Column in \code{conquest_item_estimates} that stores
+the item estimate. \code{"auto"} tries \code{Estimate} and \code{Est}. Other columns must
+be specified explicitly and converted to difficulty logits before review.}
+
+\item{conquest_case_person}{Column in \code{conquest_case_eap} that stores person
+IDs. \code{"auto"} tries conservative aliases such as \code{Person}, \code{PID}, and
+\verb{Sequence ID}.}
+
+\item{conquest_case_estimate}{Column in \code{conquest_case_eap} that stores case
+EAP estimates. \code{"auto"} tries conservative aliases such as \code{Estimate},
+\code{EAP_1}, and \code{EAP}.}
+
+\item{keep_extra_columns}{If \code{TRUE}, keep all remaining columns after the
+standardized identifier and estimate columns.}
+
+\item{input}{\code{"tables"} for data frames (the default), or \code{"files"} for
+extracted CSV/TSV/TXT paths supplied through the same three input arguments.
+This does not parse raw ConQuest parameter/report exports; those retain
+their separate bundle-dependent \code{\link[=normalize_conquest_overlap_exports]{normalize_conquest_overlap_exports()}} route.}
+
+\item{population_delimiter}{File delimiters
+used only with \code{input = "files"}: \code{"auto"}, \code{"comma"}, \code{"tab"},
+\code{"semicolon"}, or the corresponding literal separator.}
+
+\item{item_delimiter}{File delimiters
+used only with \code{input = "files"}: \code{"auto"}, \code{"comma"}, \code{"tab"},
+\code{"semicolon"}, or the corresponding literal separator.}
+
+\item{case_delimiter}{File delimiters
+used only with \code{input = "files"}: \code{"auto"}, \code{"comma"}, \code{"tab"},
+\code{"semicolon"}, or the corresponding literal separator.}
+
+\item{bundle}{Output from \code{\link[=build_conquest_overlap_bundle]{build_conquest_overlap_bundle()}}.}
+
+\item{parameter_file}{Path to the ConQuest \verb{export parameters} CSV.}
+
+\item{regression_file}{Path to the ConQuest \verb{export reg_coefficients} CSV.}
+
+\item{covariance_file}{Path to the ConQuest \verb{export covariance} CSV.}
+
+\item{case_file}{Path to the ConQuest \verb{show cases} EAP CSV.}
+
+\item{delimiter}{Delimiter used by all four files. The default, \code{"auto"},
+detects comma-, tab-, or semicolon-delimited files.}
+
+\item{conquest_version}{Optional ConQuest version recorded for provenance.}
+
+\item{conquest_edition}{Optional edition label, such as \code{"demo/free"},
+recorded for provenance.}
+
+\item{run_date}{Optional external-run date coercible to \code{Date}. Supply the
+date of the ConQuest run, not the normalization date.}
+
+\item{report_file}{Optional generated English \verb{show parameters} review text.
+The estimation summary supplies stopping status and checks the person
+count, item model, covariate and ITEMS constraint. Missing reports leave
+external convergence unknown. This is not a general report parser.}
+
+\item{item_id_source}{How \code{conquest_item_id} should be matched. \code{"auto"}
+chooses the larger overlap between exported response variables and original
+item levels, with ties resolved toward exported response variables.}
+
+\item{conquest_location_shift}{Known additive location offset, ConQuest
+minus mfrmr. Use \code{0} only after confirming a common origin. \code{NULL} uses
+zero when the supplied generated report confirms the common ITEMS
+constraint; otherwise aligned EAP/intercept comparisons are unavailable.
+This argument does not change scale units or reverse the item sign.}
 }
 \value{
 A named list with class \code{mfrm_conquest_overlap_bundle}.
+
+A named list with class \code{mfrm_conquest_overlap_tables}.
+
+An object of class \code{mfrm_conquest_overlap_tables} with normalized
+population, item, and case-EAP tables.
+
+A named list with class \code{mfrm_conquest_overlap_review}.
 }
 \description{
 Build a scoped ConQuest-overlap bundle
+
+Normalize extracted ConQuest overlap tables to the \code{mfrmr} review contract
+
+Normalize the CSV exports generated by the ConQuest overlap template
+
+Review a ConQuest comparison within the documented \code{mfrmr} overlap scope
 }
 \details{
 This helper prepares a narrow ConQuest comparison bundle for an \code{RSM} / \code{PCM}
@@ -110,7 +266,7 @@ normalized review table.
 Use \code{normalize_conquest_overlap_exports()} for the parameter, regression,
 covariance, and case-EAP CSV files requested by the generated command. The
 additional matrixout history CSV retains the objective trajectory and an
-independent estimated-parameter dimension for release verification; it is not
+independently reported number of estimated parameters for comparison; it is not
 parsed as a free-form report. \code{\link[=normalize_conquest_overlap_files]{normalize_conquest_overlap_files()}} and
 \code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}} remain available for already-extracted
 custom tables. Then use \code{\link[=review_conquest_overlap]{review_conquest_overlap()}} only after the matching
@@ -123,6 +279,89 @@ the person-data file contains identifiers and covariates; and case-EAP files
 contain identifiers and person-level estimates. When files are written, the
 helper emits a warning and writes an artifact-level privacy notice. Apply the
 study's data-handling policy before sharing or moving any bundle file.
+
+This helper does not parse raw ConQuest text output. It standardizes already
+extracted tables to the contract used by \code{\link[=review_conquest_overlap]{review_conquest_overlap()}}:
+\itemize{
+\item population parameters become columns \code{Parameter}, \code{Estimate}, and
+\code{EstimateNonNumeric};
+\item item estimates become columns \code{ItemID}, \code{Estimate}, and
+\code{EstimateNonNumeric};
+\item case summaries become columns \code{Person}, \code{Estimate}, and
+\code{EstimateNonNumeric}.
+}
+
+The resulting object is intentionally conservative. It does not infer
+whether item IDs correspond to exported response variables or original item
+levels; that matching step remains part of \code{\link[=review_conquest_overlap]{review_conquest_overlap()}}, where
+the standardized ConQuest tables are compared against a concrete overlap
+bundle.
+
+This helper is intentionally limited to the native CSV files requested by
+the command template from \code{\link[=build_conquest_overlap_bundle]{build_conquest_overlap_bundle()}}. It maps the
+exported regression rows to the bundle's intercept and covariate, maps the
+unidimensional covariance row to \code{sigma2}, trims padded person identifiers,
+and reconstructs the final item location under ConQuest's default
+sum-to-zero item constraint. It does not parse arbitrary ConQuest reports.
+
+After normalization, pass the returned object directly to
+\code{\link[=review_conquest_overlap]{review_conquest_overlap()}}.
+Parameter and regressor indices must be unique integers in the generated
+model's coordinate range; row order may differ. Present dimension columns
+must identify dimension 1. Population variance must be finite and nonnegative;
+a zero boundary value is retained for descriptive review, not accepted as
+evidence of regular inference. Malformed exports are rejected before labels
+are assigned. This validation does not establish successful estimation.
+Present item labels must agree with the item map. IDs are read as text,
+including leading zeros, long integers and the literal ID \code{NA}. New bundle
+aliases are restored through \code{person_map}; unknown aliases are rejected.
+Keep all files from the same run: checks cannot establish that response
+cells or covariate values were unchanged. \code{criterion_met} describes the
+reported stopping rule, not integration accuracy or inferential readiness.
+
+\strong{File-input normalization (\code{normalize_conquest_overlap_tables(..., input = "files")})}:
+Reads already extracted CSV/TSV/TXT tables (\code{conquest_population},
+\code{conquest_item_estimates}, \code{conquest_case_eap}) rather than raw ConQuest
+report text. Delimiters (\code{population_delimiter}, \code{item_delimiter},
+\code{case_delimiter}) default to \code{"auto"}. Note that ConQuest \code{Facility} is not
+an automatic alias for \code{conquest_item_estimate}: convert easiness or raw
+proportions to logit difficulty before review. Inspect
+\code{summary(normalized)$normalization_scope} before calling
+\code{\link[=review_conquest_overlap]{review_conquest_overlap()}}. The former unexported \code{normalize_conquest_overlap_files()}
+helper is retained internally and documented here as an alias.
+
+This helper compares normalized ConQuest output tables against the exact-
+overlap bundle produced by \code{\link[=build_conquest_overlap_bundle]{build_conquest_overlap_bundle()}}. It is
+intentionally conservative:
+\itemize{
+\item it does \strong{not} parse raw ConQuest text output automatically;
+\item its primary route expects output from
+\code{normalize_conquest_overlap_exports()}, which reads the four native
+comparison CSV files requested by the generated command; the additional
+matrixout-history CSV is retained for a separate objective/free-dimension
+verification; custom extracted tables may use
+\code{\link[=normalize_conquest_overlap_files]{normalize_conquest_overlap_files()}} or
+\code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}};
+\item and it reports numerical differences and missing elements without claiming
+that any fixed tolerance implies software equivalence.
+}
+
+This is the package's external-table review path. It is distinct from
+\code{reference_case_benchmark(cases = "synthetic_conquest_overlap_dry_run")},
+which only round-trips package-native tables through the same normalization
+and review contract without executing ConQuest.
+
+The intended workflow is:
+\enumerate{
+\item export a bundle for the documented comparison scope with
+\code{\link[=build_conquest_overlap_bundle]{build_conquest_overlap_bundle()}};
+\item run the narrow matching case in ConQuest;
+\item normalize the four comparison CSV files with
+\code{normalize_conquest_overlap_exports()}, supplying the generated review
+text as \code{report_file} for stopping/model metadata;
+\item pass those tables here to inspect direct differences, centered item
+agreement, and case-level EAP agreement.
+}
 }
 \section{Running ConQuest locally}{
 
@@ -190,10 +429,84 @@ optimizer-control, and convergence-review fields
 and convergence state
 \item \code{notes}: interpretation notes
 }
+
+
+The returned object has class \code{mfrm_conquest_overlap_tables} and includes:
+\itemize{
+\item \code{summary}: one-row normalization summary
+\item \code{conquest_population}: standardized population table
+\item \code{conquest_item_estimates}: standardized item table
+\item \code{conquest_case_eap}: standardized case table
+\item \code{settings}: source-column metadata
+\item \code{notes}: interpretation notes
+}
+
+Read \code{summary(normalized)$normalization_scope} before review to confirm
+that the object contains extracted tabular inputs, not parsed raw ConQuest
+report text, and to check duplicate-ID / non-numeric-estimate pre-review
+flags.
+
+
+The returned object has class \code{mfrm_conquest_overlap_review} and includes:
+\itemize{
+\item \code{overall}: one-row comparison summary with missing/duplicate/non-numeric
+attention-item counts and worst-row labels
+\item \code{population_comparison}: parameter-by-parameter comparison table
+\item \code{item_comparison}: centered item-estimate comparison table
+\item \code{case_comparison}: case-level EAP comparison table
+\item \code{attention_items}: missing, malformed, or unmatched elements
+\item \code{settings}: review settings
+\item \code{notes}: interpretation notes
+}
+}
+
+\section{Interpretation}{
+
+\itemize{
+\item Read \code{summary(review)$review_scope} first to confirm that the result is a
+supplied-table review, not raw ConQuest text parsing or a software-
+equivalence claim.
+\item Population slopes and \code{sigma2} are intended for direct comparison.
+\item Both item tables are centered using the same matched finite items.
+\code{MfrmrCentered} is this comparison coordinate; \code{CenteredEstimate} retains
+the native bundle's original full-set coordinate. \code{ItemCenteringRows}
+records the reference-set size. At least two items are needed; otherwise
+centered differences and summary metrics are unavailable. Missing items
+remain flagged, and partial-set agreement does not imply full-set agreement.
+Recompute older reviews from the saved bundle and external tables to apply
+this common reference set; printing an old review does not change its values.
+\item Case estimates are posterior EAP summaries under the fitted population
+model. \code{Difference} retains the raw external-minus-native value;
+\code{AlignedDifference} subtracts the declared location shift. \code{CaseMae} and
+\code{CaseMaxAbsDifference} use aligned differences and are unavailable when
+the origin is unknown. \code{CaseRawMae} and \code{CaseRawMaxAbsDifference} remain
+descriptive. Do not infer a common origin from partial centered items.
+\item Population summary errors cover slopes and variance; the intercept has
+separate \code{InterceptCompared} and \code{InterceptAlignedDifference} fields.
+\item \code{ExternalEstimationStatus} is unknown without a supplied report.
+\code{criterion_met} does not certify precision; \code{ExternalPrecisionStatus}
+remains \code{not_assessed}. Failed stopping and surplus external IDs are
+attention items. Recreate old reviews to apply these rules.
+\item The \code{overall} table reports both mean and maximum absolute differences for
+compared population, centered item, and case rows. The
+\code{PopulationMaxAbsParameter}, \code{ItemCenteredMaxAbsItem}, and
+\code{CaseMaxAbsPerson} columns identify the row where each maximum absolute
+difference occurs.
+\item Missing or non-numeric rows in \code{attention_items} indicate that the external
+tables do not align cleanly with the exported overlap bundle.
+Non-finite estimates also use the existing \code{NonNumericInConQuest} status
+and are excluded from comparison metrics.
+\item This review does not compare MnSq, ZSTD, threshold crossings or full
+parameter covariance. Native MML row residuals evaluated at EAP are not
+ConQuest parameter-fit statistics: those aggregate through the response
+design and average over posterior distributions. Adjacent step parameters
+are not ConQuest cumulative-probability (Thurstonian) thresholds.
+See the \href{https://conquestmanual.acer.org/s3-00.html}{ConQuest technical manual}.
+}
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("build_conquest_overlap_bundle", run.dontrun = TRUE)
 \dontrun{
 # Synthetic latent-regression fit; the full regeneration recipe is
@@ -207,10 +520,66 @@ summary(bundle)$conquest_command_scope
 summary(bundle)$conquest_output_contract
 cat(substr(bundle$conquest_command, 1, 120))
 }
+normalized <- normalize_conquest_overlap_tables(
+  conquest_population = data.frame(
+    Term = c("(Intercept)", "GroupB", "sigma2"),
+    Est = c(0, 0.2, 1)
+  ),
+  conquest_item_estimates = data.frame(
+    Item = c("I1", "I2"),
+    Est = c(-0.2, 0.2)
+  ),
+  conquest_case_eap = data.frame(
+    PID = c("P001", "P002"),
+    EAP = c(-0.1, 0.1)
+  ),
+  conquest_population_term = "Term",
+  conquest_population_estimate = "Est",
+  conquest_item_id = "Item",
+  conquest_item_estimate = "Est",
+  conquest_case_person = "PID",
+  conquest_case_estimate = "EAP"
+)
+summary(normalized)$normalization_scope
+\dontrun{
+bundle <- build_conquest_overlap_bundle(output_dir = "conquest-overlap")
+# Run bundle$conquest_command in ConQuest, then:
+cq <- normalize_conquest_overlap_exports(
+  bundle,
+  "conquest-overlap/conquest_overlap_conquest_parameters.csv",
+  "conquest-overlap/conquest_overlap_conquest_reg_coefficients.csv",
+  "conquest-overlap/conquest_overlap_conquest_covariance.csv",
+  "conquest-overlap/conquest_overlap_conquest_cases_eap.csv",
+  report_file = "conquest-overlap/conquest_overlap_conquest_parameters_review.txt"
+)
+review_conquest_overlap(bundle, cq)
+}
+\dontrun{
+bundle <- build_conquest_overlap_bundle()
+normalized <- normalize_conquest_overlap_exports(
+  bundle,
+  parameter_file = "conquest_overlap_conquest_parameters.csv",
+  regression_file = "conquest_overlap_conquest_reg_coefficients.csv",
+  covariance_file = "conquest_overlap_conquest_covariance.csv",
+  case_file = "conquest_overlap_conquest_cases_eap.csv",
+  report_file = "conquest_overlap_conquest_parameters_review.txt"
+)
+review <- review_conquest_overlap(bundle, normalized)
+summary(review)$summary
+}
 }
 \seealso{
 \code{\link[=normalize_conquest_overlap_files]{normalize_conquest_overlap_files()}}, \code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}},
 \code{\link[=review_conquest_overlap]{review_conquest_overlap()}},
 \code{\link[=reference_case_benchmark]{reference_case_benchmark()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}},
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}
+
+\code{\link[=build_conquest_overlap_bundle]{build_conquest_overlap_bundle()}}, \code{\link[=review_conquest_overlap]{review_conquest_overlap()}}
+
+\code{\link[=normalize_conquest_overlap_files]{normalize_conquest_overlap_files()}},
+\code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}}, \code{\link[=review_conquest_overlap]{review_conquest_overlap()}}
+
+\code{\link[=build_conquest_overlap_bundle]{build_conquest_overlap_bundle()}},
+\code{\link[=normalize_conquest_overlap_files]{normalize_conquest_overlap_files()}}, \code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}},
+\code{\link[=reference_case_benchmark]{reference_case_benchmark()}}
 }

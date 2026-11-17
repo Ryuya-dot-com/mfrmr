@@ -511,7 +511,7 @@
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -650,7 +650,7 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
 #'
 #' @seealso [run_qc_pipeline()], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [build_visual_summaries()], [mfrmr_visual_diagnostics]
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.

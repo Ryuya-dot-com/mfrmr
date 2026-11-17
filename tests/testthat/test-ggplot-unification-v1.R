@@ -9,6 +9,38 @@
 #    #CBD5E1 missing-cell palette, formerly unavailable views, and long ID labels
 # 5. 0.2.x saved plot-data / plot-bundle RDS round-trip backward compatibility
 
+test_that("appendix-role ggplots retain series colours and read older single-row legends", {
+  data <- data.frame(Person = c("p1", "p2"), Rater = c("r1", "r1"), Score = 0:1)
+  bundle <- build_summary_table_bundle(describe_mfrm_data(data,
+    person = "Person", facets = "Rater", score = "Score"))
+  p <- plot(bundle, type = "appendix_roles", draw = FALSE,
+    palette = c(appendix_role_recommended = "#112233", appendix_role_compact = "#445566"))
+  expect_no_warning(ggplot2::ggplot_build(p))
+  expect_identical(p$scales$get_scales("fill")$palette(2),
+    c(Recommended = "#112233", Compact = "#445566"))
+  legacy <- attr(p, "mfrmr_plot_data")
+  legacy$data$legend <- legacy$data$legend[1L, , drop = FALSE]
+  legacy <- unserialize(serialize(legacy, NULL))
+  restored <- as_ggplot(legacy)
+  expect_no_warning(ggplot2::ggplot_build(restored))
+  expect_identical(restored$scales$get_scales("fill")$palette(2),
+    c(Recommended = "#112233", Compact = "#8d99ae"))
+  expect_identical(plot_data(restored)$recommended_tables, plot_data(p)$recommended_tables)
+  expect_identical(plot_data(restored)$compact_tables, plot_data(p)$compact_tables)
+})
+
+test_that("appendix preset labels remain data when rendering a ggplot", {
+  data <- data.frame(Person = c("p1", "p2"), Rater = c("r1", "r1"), Score = 0:1)
+  bundle <- build_summary_table_bundle(describe_mfrm_data(data,
+    person = "Person", facets = "Rater", score = "Score"))
+  p <- plot(bundle, type = "appendix_presets", draw = FALSE)
+  expect_s3_class(p, "ggplot")
+  expect_no_warning(built <- ggplot2::ggplot_build(p))
+  expect_identical(plot_data(p)$preset,
+    c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting"))
+  expect_equal(built$data[[2L]]$y, plot_data(p)$tables)
+})
+
 v1_fixture <- local({
   saved <- NULL
   function() {
@@ -65,7 +97,7 @@ test_that("all 63 plot.* S3 methods exist and representative routes render witho
   expect_identical(p_drawn, p_no_draw)
 
   # Formerly unavailable as_ggplot() views now build valid grobs directly from plot()
-  cc <- category_curves_report(fit, theta_points = 41)
+  cc <- mfrm_report(x = fit, theta_points = 41, type = "category_curves")
   p_cc <- plot(cc, draw = FALSE)
   expect_s3_class(p_cc, "ggplot")
   expect_silent(ggplot2::ggplotGrob(p_cc))
@@ -306,7 +338,7 @@ test_that("marginal = c('auto', 'histogram', 'none') obeys n >= 8, single-panel 
 
   # 6. Bias interaction scatterplot
   bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
-  t13 <- bias_interaction_report(bias, top_n = 50)
+  t13 <- mfrm_report(x = bias, top_n = 50, type = "bias_interaction")
   p_bias_hist <- plot(t13, type = "bias", view = "scatter", marginal = "histogram", draw = FALSE)
   p_bias_none <- plot(t13, type = "bias", view = "scatter", marginal = "none", draw = FALSE)
   expect_true(.has_marginal_grobs(p_bias_hist))
@@ -352,11 +384,11 @@ test_that("theme presets, default title/caption suppression, #CBD5E1 missing cel
   expect_true(nzchar(p_annotated$labels$title %||% ""))
   expect_true(nzchar(p_annotated$labels$subtitle %||% ""))
 
-  # Style presets match Python-application palette contract
+  # White scientific canvas; semantic colours and missing-value distinction remain
   st_std <- mfrmr:::resolve_plot_preset("standard")
   st_pub <- mfrmr:::resolve_plot_preset("publication")
   st_mono <- mfrmr:::resolve_plot_preset("monochrome")
-  expect_identical(st_std$panel_background, "#F8FAFC")
+  expect_identical(st_std$panel_background, "#FFFFFF")
   expect_identical(st_std$axis, "#334155")
   expect_identical(st_std$hist_fill, "#309B92")
   expect_identical(st_std$missing, "#CBD5E1")
@@ -425,4 +457,122 @@ test_that("saved 0.2.x mfrm_plot_data, design_evaluation, signal_detection, and 
   expect_s3_class(reloaded_bundle, "mfrm_plot_bundle")
   out_txt <- capture.output(print(reloaded_bundle))
   expect_true(any(grepl("mfrm plot bundle", out_txt, fixed = TRUE)))
+})
+
+test_that("shared theme text scales and edited plots retain data and local settings", {
+  fit <- v1_fixture()$fit
+  global <- ggplot2::theme_get()
+  p <- suppressWarnings(plot(fit, type = "ccc", draw = FALSE))
+  original_theme <- p$theme
+  p_theme <- ggplot2::ggplot_build(p)$plot$theme
+  edited <- p + ggplot2::theme(text = ggplot2::element_text(size = 18),
+                              legend.position = "bottom") +
+    ggplot2::labs(y = "Category probability")
+  edited_theme <- ggplot2::ggplot_build(edited)$plot$theme
+  components <- c("axis.text", "axis.title", "legend.text", "strip.text")
+  sizes <- function(theme) vapply(components, function(n)
+    ggplot2::calc_element(n, theme)$size, numeric(1))
+  ratio <- ggplot2::calc_element("text", edited_theme)$size /
+    ggplot2::calc_element("text", p_theme)$size
+  expect_equal(sizes(edited_theme), sizes(p_theme) * ratio)
+  expect_identical(p$theme, original_theme)
+  expect_identical(ggplot2::theme_get(), global)
+  expect_identical(plot_data(edited), plot_data(p))
+  expect_identical(as_ggplot(edited), edited)
+  expect_identical(edited$labels$y, "Category probability")
+  expect_identical(edited$theme$legend.position, "bottom")
+  path <- tempfile(fileext = ".rds")
+  on.exit(unlink(path))
+  saveRDS(edited, path)
+  saved <- readRDS(path)
+  expect_identical(plot_data(saved), plot_data(p))
+  expect_equal(ggplot2::ggplot_build(saved)$data, ggplot2::ggplot_build(edited)$data)
+})
+
+
+test_that("specialist views retain exact saved metadata through the public converter", {
+  matrix_plot <- structure(list(name = "facet_nesting", data = list(
+    matrix = matrix(c(1, 0, NA, .5), 2), notes = "Retain unavailable cells")),
+    class = c("mfrm_plot_data", "list"), saved_source = "original")
+  empty <- matrix_plot
+  empty$data$matrix <- matrix(numeric(), 0, 0)
+  bars <- structure(list(name = "data_description", data = list(
+    plot = "score_distribution", table = data.frame(Score = 0:2, WeightedN = c(0, 3, NA)))),
+    class = c("mfrm_plot_data", "list"), saved_source = "original")
+  composite <- structure(list(name = "fit_plot_bundle", data = list(
+    wright_map = matrix_plot, pathway_map = bars, category_characteristic_curves = empty)),
+    class = c("mfrm_plot_data", "list"), saved_source = "original")
+  fallback <- structure(list(name = "custom_table", data = list(
+    table = data.frame(ID = c("A", "B"), Estimate = c(0, NA_real_)))),
+    class = c("mfrm_plot_data", "list"), saved_source = "original")
+  path <- tempfile(fileext = ".rds")
+  on.exit(unlink(path), add = TRUE)
+  for (x in list(matrix_plot, empty, bars, composite, fallback)) {
+    before <- serialize(x, NULL)
+    p <- as_ggplot(x)
+    expect_s3_class(p, "ggplot")
+    expect_identical(attr(p, "mfrmr_plot_data", exact = TRUE), x)
+    expect_identical(plot_data(p), x$data)
+    expect_identical(plot_data_components(p), plot_data_components(x))
+    saveRDS(list(data = x, plot = p), path)
+    saved <- readRDS(path)
+    expect_identical(attr(saved$plot, "mfrmr_plot_data", exact = TRUE), x)
+    expect_identical(plot_data(as_ggplot(saved$data)), x$data)
+    expect_identical(serialize(x, NULL), before)
+  }
+})
+
+
+test_that("network and D-study conversion share guards without changing renderer selection", {
+  events <- character()
+  available <- TRUE
+  mock_renderer <- function(name) {
+    force(name)
+    function(x) {
+      events <<- c(events, paste0("renderer:", name))
+      name
+    }
+  }
+  testthat::local_mocked_bindings(
+    .require_mfrmr_ggplot2 = function() {
+      events <<- c(events, "require")
+      if (!available) stop("ggplot unavailable", call. = FALSE)
+    },
+    .mfrmr_gg_tabular = function(component, payload) {
+      value <- component$value
+      events <<- c(events, "table")
+      value
+    },
+    .mfrmr_gg_network_ergm = mock_renderer("network_ergm"),
+    .mfrmr_gg_rater_network = mock_renderer("rater_network"),
+    .mfrmr_gg_subset_connectivity = mock_renderer("subset_connectivity"),
+    .mfrmr_gg_residual_network = mock_renderer("residual_network"),
+    .mfrmr_gg_multivariate_d_comparison = mock_renderer("multivariate_d_comparison"),
+    .mfrmr_gg_d_study = mock_renderer("d_study"), .package = "mfrmr")
+  table <- data.frame(Label = c("observed", "unavailable"), Value = c(0, NA_real_))
+  for (name in c("network_ergm", "rater_network", "subset_connectivity",
+                 "residual_network", "multivariate_d_comparison", "d_study")) {
+    x <- structure(list(name = name, data = list(table = table)), class = "mfrm_plot_data")
+    available <- TRUE
+    events <- character()
+    expect_identical(as_ggplot(x), name)
+    expect_identical(events, c("require", paste0("renderer:", name)))
+    events <- character()
+    expect_identical(as_ggplot(x, component = "table"), table)
+    expect_identical(events, c("require", "table"))
+    events <- character()
+    expect_error(as_ggplot(x, component = "missing"), "component")
+    expect_identical(events, "require")
+    events <- character()
+    expect_error(as_ggplot(x, extra = TRUE), "must be empty")
+    expect_length(events, 0L)
+    expect_error(as_ggplot(x, type = "other", extra = TRUE), "already selects a view")
+    expect_length(events, 0L)
+    available <- FALSE
+    expect_error(as_ggplot(x, component = "missing"), "ggplot unavailable")
+    expect_identical(events, "require")
+    events <- character()
+    expect_error(as_ggplot(x, extra = TRUE), "must be empty")
+    expect_length(events, 0L)
+  }
 })

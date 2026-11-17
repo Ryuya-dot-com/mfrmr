@@ -1,16 +1,37 @@
 #' Fewer public entry points and unified ggplot2 graphics in 0.3.0
 #'
 #' Related operations now use arguments or standard S3 methods, and all `plot()`
-#' methods render and return `ggplot2` objects directly. Because 28 overlapping
+#' methods render and return `ggplot2` objects directly. Because overlapping
 #' entry points are no longer exported and `plot()` returns a `ggplot` object
-#' rather than `mfrm_plot_data` / base graphics, the target release is
-#' versioned as 0.3.0 under semantic versioning: update old scripts before
-#' installing this development version. Existing saved result classes retain
+#' rather than `mfrm_plot_data` / base graphics, version 0.3.0 uses a
+#' minor-version increment under semantic versioning: review existing 0.2.x
+#' scripts when updating to 0.3.0. Existing saved result classes retain
 #' their `summary()`, `plot()`, `plot_data()`, and `as_ggplot()` methods.
+#'
+#' @section Default route guide:
+#' [mfrmr_output_guide()] now returns the five central routes, matching
+#' `scope = "core_workflow"`. Use `mfrmr_output_guide("all")` where a script
+#' needs the former full catalogue. Explicit scopes, including the six-row
+#' `"public"` and `"beginner"` routes, retain their meanings and columns.
 #'
 #' @section Replacements:
 #' | Former entry | Current call |
 #' | --- | --- |
+#' | `automated_scoring_table(automated, human, ...)` | `score_comparison_table(scores, reference, ..., screen = "williamson2012")` |
+#' | `facet_statistics_report(fit, ...)` | `mfrm_report(fit, type = "facet_statistics", ...)` |
+#' | `precision_review_report(fit, ...)` | `mfrm_report(fit, type = "precision", ...)` |
+#' | `bias_iteration_report(x, ...)` | `mfrm_report(x, type = "bias_iterations", ...)` |
+#' | `bias_pairwise_report(x, ...)` | `mfrm_report(x, type = "bias_pairwise", ...)` |
+#' | `dif_report(dif_result)` | `mfrm_report(dif_result, type = "dff")` |
+#' | `reporting_checklist(fit, ...)` | `mfrm_report(fit, type = "checklist", ...)` |
+#' | `reference_case_review(fit, ...)` | `mfrm_report(fit, type = "reference_review", ...)` |
+#' | `estimation_iteration_report(fit, ...)` | `mfrm_report(fit, type = "iterations", ...)` |
+#' | `bias_interaction_report(x, ...)` | `mfrm_report(x, type = "bias_interaction", ...)` |
+#' | `mfrm_multivariate_d_compare(d, ...)` | `compare_mfrm(d, ...)` |
+#' | `specifications_report(fit, ...)` | `mfrm_report(fit, type = "specifications", ...)` |
+#' | `data_quality_report(fit, ...)` | `mfrm_report(fit, type = "data_quality", ...)` |
+#' | `category_structure_report(fit, ...)` | `mfrm_report(fit, type = "category_structure", ...)` |
+#' | `category_curves_report(fit, ...)` | `mfrm_report(fit, type = "category_curves", ...)` |
 #' | `facets_positioning_guide()` | `facets_guide("positioning")` |
 #' | `facets_term_crosswalk()` | `facets_guide("terms")` |
 #' | `facets_visual_contract()` | `facets_guide("visuals")` |
@@ -36,34 +57,46 @@
 #' | `gpcm_capability_matrix(status, view)` | `mfrmr_output_guide("gpcm_capabilities", status = status, view = view)` |
 #' | `mfrm_calibration_capabilities()` | `mfrmr_output_guide("calibration_capabilities")` |
 #' | `anchor_review(fit)` | `fit$config$anchor_review` or `review_mfrm_anchors(...)` |
-#' | `precision_review(diagnostics)` | `diagnostics$precision_review` or `precision_review_report(fit, diagnostics)` |
+#' | `precision_review(diagnostics)` | `diagnostics$precision_review` or `mfrm_report(type = "precision", fit, diagnostics = diagnostics)` |
 #' | `analyze_dif(...)` | `analyze_dff(...)` |
 #' | `mfrm_response_imputations(..., impute = ids)` | `review_mfrm_imputations(..., impute_ids = ids)` |
 #'
-#' Keep named clustering controls such as `linkage` or `seed`. They apply only
-#' to the chosen method; unsupported controls fail instead of being ignored.
-#' The default is still PAM, including the original third and fourth positional
-#' arguments `weights` and `missing`. For PCA k-means input, set scaling,
-#' weights and missingness when constructing the PCA, as before.
+#' Argument and saved-result migration notes:
+#' - **Reports (`mfrm_report()`)**: Rename `fit`/`dif_result` to `x` and pass
+#'   full `type` names (`"iterations"` vs `"bias_iterations"`).
+#' - **Clustering (`mfrm_cluster()`)**: Pass method-specific controls (`linkage`,
+#'   `seed`, etc.) by name; unsupported controls fail closed.
+#' - **Calibration (`update()`)**: Rename `calibration` to `object` and
+#'   state-specific timestamps to `at_utc` (`validated` -> `frozen`; `superseded` /
+#'   `retired` require a distinct `record_id`).
+#' - **ConQuest files (`normalize_conquest_overlap_tables(..., input = "files")`)**:
+#'   Rename `population_file`, `item_file`, and `case_file` to
+#'   `conquest_population`, `conquest_item_estimates`, and `conquest_case_eap`.
 #'
-#' For calibration transitions, rename a named `calibration` argument to
-#' `object` and the state-specific timestamp argument to `at_utc`. Transitions
-#' still return a new object; they do not edit the input or a saved file.
-#' A draft must be validated before it can be frozen. Superseding or retiring
-#' requires a distinct `record_id`; `update()` cannot thaw or rewrite a frozen
-#' calibration. [review_mfrm_calibration()] remains a non-mutating review.
+#' @section Score-comparison columns:
+#' The former automated-scoring interface now uses [score_comparison_table()].
+#' Keep `categories`, supply continuous scores' explicit `score_categories`,
+#' and choose `screen = "williamson2012"` to retain the earlier thresholds.
+#' Without that choice the generic default applies no thresholds. Rename
+#' `smd = "human"` to `smd = "reference"`, including `SMDBasis` and
+#' `settings$smd`; the corresponding `criteria$Basis` suffix is now
+#' `_smd_reference`. These are naming changes, not different denominators.
 #'
-#' For file normalization, rename named `population_file`, `item_file` and
-#' `case_file` to `conquest_population`, `conquest_item_estimates` and
-#' `conquest_case_eap`. Keep delimiter and column-mapping controls by name.
-#' Raw ConQuest exports remain a separate bundle-dependent contract, handled
-#' by [normalize_conquest_overlap_exports()]. Do not feed them to the extracted
-#' table route. The common quadrature-sensitivity entry also accepts RSM/PCM;
-#' code that specifically requires GPCM should check the model it supplies.
+#' | Former table column | Current table column |
+#' | --- | --- |
+#' | `HumanReferenceSupplied` | `Reference2Supplied` |
+#' | `MeanAutomated`, `MeanHuman` | `MeanScore`, `MeanReference` |
+#' | `SDAutomated`, `SDHuman` | `SDScore`, `SDReference` |
+#' | `HumanQWK`, `HumanCorrelation` | `ReferenceQWK`, `ReferenceCorrelation` |
+#' | `SMDHuman` | `SMDReference` |
 #'
-#' Imputation pooling, comparison of partitions, model fitting and result
-#' extraction remain distinct operations. Similar names do not imply the same
-#' statistical target.
+#' In `cases`, rename `MissingAutomated` to `MissingScore`, `MissingHuman`
+#' to `MissingReference`, `MissingAutomatedCategory` to `MissingScoreCategory`,
+#' and `MissingHumanReference` to `MissingReference2`.
+#' In `counts`, rename `automated_human`/`human_human`
+#' to `scores_reference`/`reference2_reference`; the second dimension is now
+#' named `Reference` rather than `Human`. Saved earlier lists keep their
+#' original names and can be reopened with `readRDS()` without a model refit.
 #'
 #' @section Unified ggplot2 return contract:
 #' All `plot()` S3 methods now render with `ggplot2` (`ggplot2 (>= 3.4.0)` in
@@ -115,7 +148,7 @@
 #' - **Technical reference page**: Specialist equations, identification rules,
 #'   JML polish-ladder details, and return-object provenance now live in
 #'   [fit_mfrm_technical_details] (linked from [fit_mfrm()]). Use
-#'   `mfrmr_output_guide("core_workflow")` for the five-step onboarding map.
+#'   `mfrmr_output_guide("core_workflow")` for the purpose-based analysis map.
 #'
 #' For an existing rating table `ratings` with scores 1--4, these calls show how to
 #' migrate partial names and positional arguments. Run only the current form:
@@ -145,6 +178,6 @@
 #' @aliases import_mirt_fit import_tam_fit import_erm_fit
 #' @aliases mfrmr_interval_guide visual_reporting_template
 #' @aliases gpcm_capability_matrix mfrm_calibration_capabilities
-#' @aliases anchor_review precision_review review_accessors
+#' @aliases anchor_review precision_review review_accessors mfrmRFacets
 #' @name mfrmr_api_migration_030
 NULL

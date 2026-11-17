@@ -313,6 +313,7 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
   double high = 1.0;
   double z = 0.0;
   AdaptivePointMoments cur = m0;
+  bool bracketed = false;
 
   if (m0.score > 0.0) {
     low = 0.0;
@@ -325,7 +326,7 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
         out.error_message = "Non-finite adaptive posterior score or information.";
         return out;
       }
-      if (mh.score <= 0.0) break;
+      if (mh.score <= 0.0) { bracketed = true; break; }
       low = high;
       step *= 2.0;
       high += step;
@@ -341,11 +342,19 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
         out.error_message = "Non-finite adaptive posterior score or information.";
         return out;
       }
-      if (ml.score >= 0.0) break;
+      if (ml.score >= 0.0) { bracketed = true; break; }
       high = low;
       step *= 2.0;
       low -= step;
     }
+  }
+
+  // Preserve the R solver as a fallback when the native search cannot certify
+  // a bracket or termination; a finite endpoint is not a posterior mode.
+  if (!bracketed) {
+    out.error_code = 5;
+    out.error_message = "Unable to bracket adaptive posterior mode.";
+    return out;
   }
 
   // Start Newton from the initial step at z = 0, safeguarded inside (low, high)
@@ -355,6 +364,7 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
   }
   z = z_next;
 
+  bool converged = false;
   for (int iter = 0; iter < 80; ++iter) {
     cur = eval_z(z);
     if (!cur.finite_ok) {
@@ -363,6 +373,7 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
       return out;
     }
     if (std::abs(cur.score) <= 1e-14) {
+      converged = true;
       break;
     }
     if (cur.score > 0.0) {
@@ -372,6 +383,7 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
     }
     const double scale_z = std::max(1.0, std::abs(z));
     if ((high - low) <= 4.0 * std::numeric_limits<double>::epsilon() * scale_z) {
+      converged = true;
       break;
     }
     double cand = z + cur.score / cur.information;
@@ -387,8 +399,15 @@ inline AdaptiveModeResult find_adaptive_posterior_mode(
         out.error_message = "Non-finite adaptive posterior score or information.";
         return out;
       }
+      converged = true;
       break;
     }
+  }
+
+  if (!converged) {
+    out.error_code = 5;
+    out.error_message = "Adaptive posterior mode did not converge.";
+    return out;
   }
 
   const double sc = 1.0 / std::sqrt(cur.information);

@@ -182,6 +182,7 @@ mfrm_rater_feedback <- function(x, facet, rater, audience, label, max_cases, int
 # Two-family sheets use the same recipient boundary and renderer, with their
 # own targets. No ordinary fit reference or location interval is transferred.
 mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_cases, interval) {
+  mfrm_gpcm_validate_endpoint_limit(x$fit)
   fit <- x$fit; cfg <- fit$config
   if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit") ||
       !identical(cfg$model, "GPCM") || !identical(cfg$method, "MML") ||
@@ -193,6 +194,49 @@ mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_case
   roles <- mfrm_gpcm_slope_roles(cfg)
   if (!facet %in% roles$SlopeOwner) stop("`facet` must name a fitted non-Person slope facet.", call. = FALSE)
   if (!rater %in% cfg$facet_levels[[facet]]) stop("`rater` must select exactly one level of `facet`.", call. = FALSE)
+  point <- mfrm_gmfrm_point_review(fit$prep, cfg, fit$opt)
+  boundary <- point$boundary
+  no_finite <- identical(point$overview$Status, "finite_maximum_absent") ||
+    identical(fit$opt$value_basis, "neutral_boundary_reference")
+  reduced <- fit$point_limit$fit
+  if (no_finite && identical(fit$point_limit$overview$Status, "partial_points_available") &&
+      !identical(fit$point_limit$overview$Reduction,"global_endpoint") &&
+      inherits(reduced, "mfrm_fit") && rater %in% reduced$config$facet_levels[[facet]]) {
+    # Bind the saved limiting fit to these retained ratings before reusing it.
+    source <- fit$prep$data; reduced_data <- reduced$prep$data
+    owner <- unique(boundary$Facet)
+    if (length(owner) != 1L) stop("The saved limiting fit does not match the source boundary.", call. = FALSE)
+    keep <- !as.character(source[[owner]]) %in% boundary$Level
+    fields <- c("Person", cfg$facet_names, "Score", "Weight")
+    if (!all(fields %in% names(reduced_data)) ||
+        !identical(reduced$config$slope_facet, cfg$slope_facet) ||
+        !identical(reduced$config$step_facet, cfg$step_facet) ||
+        !identical(reduced$config$facet_names, cfg$facet_names) ||
+        !identical(reduced$config$n_cat, cfg$n_cat) ||
+        is.null(reduced$config$gpcm_limit_source) ||
+        identical(mfrm_gmfrm_point_review(reduced$prep, reduced$config, reduced$opt)$overview$Status,
+          "finite_maximum_absent") ||
+        !all(vapply(fields, function(name) identical(as.character(source[[name]][keep]),
+          as.character(reduced_data[[name]])), logical(1))))
+      stop("The saved limiting fit does not match the retained source ratings and model.", call. = FALSE)
+    if (!is.null(interval)) stop("Full-model intervals cannot be transferred to a limiting-likelihood sheet.", call. = FALSE)
+    out <- mfrm_gmfrm_rater_feedback(list(fit = reduced), facet, rater, audience, label, max_cases, NULL)
+    take <- as.character(source[[facet]]) == rater
+    other <- setdiff(cfg$slope_facet, facet)
+    original <- data.frame(RatingRows = sum(take), Persons = length(unique(source$Person[take])),
+      ObservedCounterpartLevels = length(unique(source[[other]][take])),
+      FittedCounterpartLevels = length(cfg$facet_levels[[other]]))
+    out$tables$exposure <- rbind(cbind(Basis = "Original ratings", original),
+      cbind(Basis = "Limiting analysis", out$tables$exposure))
+    out$notes["exposure"] <- paste("The two rows distinguish the original ratings from those retained for the limiting analysis.",
+      "Counts are not effective sample sizes or evidence of comparable assignments.")
+    out$notes["categories"] <- paste(out$notes["categories"], "Category use below refers to the limiting analysis.")
+    out$notes["uncertainty"] <- "Full-model intervals are not transferred to this limiting analysis. Ordinary confidence intervals are not qualified. No interval is calculated here."
+    out$notes["residuals"] <- "Full-model response diagnostics are not transferred to the limiting analysis; no residuals are calculated here."
+    out$notes["cases"] <- "No rating cases are transferred from the full model."
+    out$markdown <- mfrm_rater_feedback_render(out, html = FALSE)
+    return(out)
+  }
   params <- expand_params(fit$opt$par, build_param_sizes(cfg), cfg)
   expected <- list(locations = build_other_facet_table(cfg, fit$prep, params),
     steps = build_step_table(cfg, fit$prep, params), slopes = build_slope_table(cfg, fit$prep, params))
@@ -208,7 +252,7 @@ mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_case
   }
   location <- as.numeric(params$facets[[facet]][match(rater, cfg$facet_levels[[facet]])])
   slope <- as.numeric(params$slope_components[[facet]]$Slope[match(rater, cfg$facet_levels[[facet]])])
-  if (any(!is.finite(c(location, slope))) || slope <= 0)
+  if (!no_finite && (any(!is.finite(c(location, slope))) || slope <= 0))
     stop("The selected two-family point estimates are unavailable.", call. = FALSE)
   first <- identical(facet, cfg$slope_facet[1L])
   owns_steps <- identical(facet, cfg$step_facet)
@@ -251,7 +295,9 @@ mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_case
     categories = "Percentages describe this rater's retained assignments on the fitted category scale. Unequal use or an unused category alone does not establish a rubric or rater problem.",
     residuals = "No saved posterior response diagnostics were supplied. Ordinary Infit/Outfit reference values, cutoffs and tests are unavailable for this model.",
     cases = "No saved posterior response diagnostics were supplied; rating cases are not calculated for this sheet.")
-  intervals <- mfrm_gpcm_results_inputs(fit, x$gpcm_inference)
+  if (no_finite && !is.null(interval))
+    stop("The full model has no finite estimate; its intervals cannot supply a rater sheet.", call. = FALSE)
+  intervals <- if (no_finite) list() else mfrm_gpcm_results_inputs(fit, x$gpcm_inference)
   candidates <- lapply(intervals, function(ci) {
     if (!inherits(ci, "mfrm_slope_intervals")) return(integer(0))
     tab <- attr(ci, "diagnostics")
@@ -295,7 +341,7 @@ mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_case
       "It does not describe uncertainty in location or category steps. Coverage is not established; this is not a test of rater quality or a comparison with another rater.",
       if (adjustment == "bonferroni") "The saved Bonferroni adjustment retains the original family of targets; selecting one recipient does not change it.")
   }
-  diagnostics <- x$response_diagnostics
+  diagnostics <- if (no_finite) NULL else x$response_diagnostics
   if (!is.null(diagnostics)) {
     mfrm_validate_response_diagnostics(fit, diagnostics)
     tab <- diagnostics$rows
@@ -328,8 +374,61 @@ mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_case
   }
   numerical <- isTRUE(fit$summary$Converged) && identical(fit$opt$convergence, 0L) &&
     identical(fit$opt$optimizer_diagnostics$ConvergenceSeverity, "pass")
+  limiting <- !is.null(cfg$gpcm_limit_source)
+  if (no_finite) {
+    tables$severity$Location[] <- NA_real_; tables$slope$ComponentSlope[] <- NA_real_
+    tables$exposure <- cbind(Basis = "Original ratings", tables$exposure)
+    if (nrow(tables$steps)) tables$steps$Offset[] <- if (cfg$n_cat == 2L) 0 else NA_real_
+    target <- fit$point_limit$targets
+    unidentified <- is.data.frame(target) && any(target$Facet == facet & target$Level == rater &
+      target$ParameterStatus == "unidentified_likelihood_limit")
+    step_target <- fit$point_limit$step_targets
+    step_unidentified <- owns_steps && is.data.frame(step_target) &&
+      any(step_target$StepFacet == rater & step_target$ParameterStatus == "unidentified_likelihood_limit")
+    tables$point_status <- data.frame(Quantity = c("Location", "Component slope", if (owns_steps) "Category-step offsets"),
+      Status = c("No finite full-model estimate", if (unidentified) "Not identified in this likelihood limit" else "Not evaluated",
+        if (owns_steps) if (cfg$n_cat == 2L) "Fixed at zero by constraint" else
+          if (step_unidentified) "Not identified in this likelihood limit" else "Not evaluated"))
+    notes["point_status"] <- "No finite solution exists for the full model. Missing values are not zero and are not estimates of poor scoring quality."
+    notes["severity"] <- "No finite full-model location estimate is supplied. Numerical working values are not shown as estimates."
+    notes["exposure"] <- paste(notes["exposure"], "These counts refer to the original ratings, not a limiting analysis.")
+    notes["slope"] <- if (unidentified) "The component slope is not identified in this likelihood limit; it is not fixed at one." else
+      "No qualified limiting estimate of this component slope is available. An unsupported reduction does not prove that the target is unidentified."
+    if (owns_steps) notes["steps"] <- if (cfg$n_cat == 2L) "The single step offset is fixed at zero by the model constraint, not estimated from these ratings." else
+      if (step_unidentified) "These free category-step offsets are not identified in this likelihood limit." else "Limiting estimates of these category-step offsets have not been qualified."
+    notes["uncertainty"] <- "Full-model confidence intervals are unavailable; no interval is calculated here."
+    notes["residuals"] <- "Response diagnostics based on full-model working values are not displayed."
+    notes["cases"] <- "Rating cases based on full-model working values are not displayed."
+    if (identical(fit$point_limit$overview$Reduction,"global_endpoint")) {
+      row <- which(target$Facet==facet & target$Level==rater)
+      if (length(row)==1L && is.finite(target$PrimaryEstimate[row])) {
+        tables$slope$ComponentSlope[] <- target$PrimaryEstimate[row]
+        tables$point_status$Status[2L] <- "Limiting-likelihood estimate"
+        notes["slope"] <- "This component slope uses the saved endpoint limiting fit; original severity and centered steps are not recovered."
+      }
+      if (!is.null(fit$point_limit$category_map)) {
+        map <- fit$point_limit$category_map
+        tables$category_map <- data.frame(Score=map$OriginalScore,
+          Interpretation=ifelse(is.na(map$ReducedCategory),"Zero probability in limiting model","Retained category"))
+        notes["category_map"] <- "An unused score has zero probability in this limiting analysis; this does not mean that it cannot occur in future ratings."
+      }
+    }
+  } else if (limiting) {
+    tables$point_status <- data.frame(Quantity = c("Location", "Component slope", if (owns_steps) "Category-step offsets"),
+      Status = c(rep(if (numerical) "Limiting-likelihood estimate" else "Provisional numerical value", 2),
+        if (owns_steps) if (cfg$n_cat == 2L) "Fixed at zero by constraint" else
+          if (numerical) "Limiting-likelihood estimate" else "Provisional numerical value"))
+    notes["point_status"] <- "Values use a saved fit to the limiting likelihood after a data-dependent boundary reduction. Ordinary confidence intervals are not qualified."
+    notes["severity"] <- paste(notes["severity"], "The location reference belongs to this limiting analysis, not the original full model.")
+    notes["exposure"] <- paste(notes["exposure"], "These counts refer to retained ratings in the limiting analysis.")
+  }
+  if (!is.null(tables$point_status))
+    tables <- tables[c("point_status", setdiff(names(tables), "point_status"))]
   out <- structure(list(title = "Two-family GPCM rater feedback", label = label, audience = audience,
-    review = paste(if (numerical) "Experimental descriptive feedback; numerical convergence does not establish model adequacy or reliable inference." else
+    review = paste(if (no_finite) "The full model has no finite maximum. Use the estimate-status table; numerical working values are not reported as estimates." else
+      if (limiting) paste("These values describe the saved limiting analysis, not a finite solution for the full model. Ordinary confidence intervals are not qualified.",
+        if (!numerical) "Numerical convergence is unresolved; the displayed values are provisional.") else
+      if (numerical) "Experimental descriptive feedback; numerical convergence does not establish model adequacy or reliable inference." else
       "The source fit needs review: numerical convergence is unresolved. Treat all displayed estimates as provisional.",
       if (isTRUE(tables$residuals$Unavailable > 0))
         "Saved response diagnostics contain unresolved rows; residual averages are unavailable.",
@@ -399,7 +498,8 @@ mfrm_rater_feedback_render <- function(x, html = TRUE) {
     uncertainty = "Uncertainty in scoring tendency", fit = "Consistency with the model",
     categories = "Category use", cases = "Ratings to discuss", slope = "Response sensitivity",
     steps = "Category-step offsets", residuals = "Saved response residuals",
-    study_context = "Study and score meaning")
+    study_context = "Study and score meaning", point_status = "Estimate status",
+    category_map = "Category interpretation")
   product <- "slope" %in% names(x$tables)
   if (product) headings["uncertainty"] <- "Uncertainty in the component slope"
   headings <- headings[setdiff(names(x$tables), "interpretation_notes")]
@@ -410,7 +510,8 @@ mfrm_rater_feedback_render <- function(x, html = TRUE) {
     tab
   })
   names(display$severity) <- if (product) "Location" else c("Severity", "Model reference")
-  names(display$exposure) <- if (product) c("Rating rows", "People rated", "Observed counterpart levels", "Fitted counterpart levels") else
+  names(display$exposure) <- if (product) c(if ("Basis" %in% names(display$exposure)) "Data basis",
+    "Rating rows", "People rated", "Observed counterpart levels", "Fitted counterpart levels") else
     c("Rating rows", "People rated", "Weight total")
   if (nrow(display$uncertainty)) {
     # The same reason is shown beside the table and retained in its CSV fields.
@@ -470,6 +571,7 @@ mfrm_rater_feedback_render <- function(x, html = TRUE) {
 #' @export
 print.mfrm_rater_feedback <- function(x, ...) {
   cat(x$title, "\n", x$label, "\n", x$review, "\n", sep = "")
+  if (!is.null(x$tables$point_status)) print(x$tables$point_status, row.names = FALSE)
   print(x$tables$severity, row.names = FALSE)
   cat("\n", x$notes[["uncertainty"]], "\n", sep = "")
   if (nrow(x$tables$uncertainty)) print(x$tables$uncertainty, row.names = FALSE)

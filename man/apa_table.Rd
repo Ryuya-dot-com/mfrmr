@@ -84,7 +84,7 @@ metadata for fit-based tables.}
 
 \item{label_angle}{Axis-label rotation angle for bar-type plots.}
 
-\item{draw}{If \code{TRUE}, draw using base graphics.}
+\item{draw}{If \code{TRUE}, display the returned ggplot.}
 }
 \value{
 A list of class \code{apa_table} with fields:
@@ -106,12 +106,10 @@ payload accessible via \code{\link[=plot_data]{plot_data()}}.
 Build an APA-oriented table handoff using base R structures
 }
 \details{
-This helper avoids styling dependencies and returns a reproducible base
-\code{data.frame} plus manuscript-oriented metadata. It does not claim complete
-APA 7 or JARS compliance: outside the saved \code{decisions} table, \code{digits}
-applies the same rounding rule to every numeric column, so statistic-specific formatting (for example, exact
-\emph{p}-value, confidence-interval, and effect-size conventions) and the target
-journal's final typography still require human review.
+Returns a base \code{data.frame} with a caption and note, without requiring styling
+packages. Except for saved \code{decisions}, \code{digits} rounds every numeric column
+uniformly. Review statistic-specific formatting (p-values, intervals and effect
+sizes) and journal typography; this is not complete APA 7 or JARS compliance.
 
 Supported \code{which} values:
 \itemize{
@@ -141,11 +139,11 @@ Target and method columns are preserved.
 
 For \code{summary()}: Compact summary helper for QA of table data before manuscript export.
 
-\code{plot()} method: Plot an APA/FACETS table object using base R
+\code{plot()} method: Preview numeric columns of an APA/FACETS table
 
-For \code{plot()}: Quick visualization helper for numeric columns in \code{\link[=apa_table]{apa_table()}} output.
-It is intended for table QA and exploratory checks, not final publication
-graphics.
+For \code{plot()}: \code{"numeric_profile"} shows column means for checking
+scales and centering; \code{"first_numeric"} shows the first numeric column's
+distribution. Interpret means in their respective column units.
 }
 \section{Interpreting output}{
 
@@ -154,11 +152,10 @@ with cut probabilities support \code{which = "decisions"}. Numeric probabilities
 cut boundaries and priors are retained without decimal rounding in the table.
 They condition on calibration and the scoring prior; the cut labels do not
 establish CEFR alignment or a decision rule.
-\itemize{
-\item \code{table}: plain data.frame ready for export or further formatting.
-\item \code{which}: source component that produced the table.
-\item \code{caption}/\code{note}: manuscript-oriented metadata stored with the table.
-}
+
+Inspect \code{summary(tbl)} and the selected \code{tbl$table}; \code{which} records its source,
+and \code{caption}/\code{note} accompany the table for formatting or export. The numeric
+preview from \code{plot(tbl)} supports data checks, not final publication graphics.
 
 
 For \code{summary()}:
@@ -166,38 +163,6 @@ For \code{summary()}:
 \item \code{overview}: table size/composition and missingness.
 \item \code{numeric_profile}: quick distribution summary of numeric columns.
 \item \code{caption}/\code{note}: text metadata readiness.
-}
-
-
-For \code{plot()}:
-\itemize{
-\item \code{"numeric_profile"}: compares column means to spot scale/centering mismatches.
-\item \code{"first_numeric"}: checks distribution shape of the first numeric column.
-}
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Build table object with \code{apa_table(...)}.
-\item Inspect quickly with \code{summary(tbl)}.
-\item Render base preview via \code{plot(tbl, ...)} or export \code{tbl$table}.
-}
-
-
-For \code{summary()}:
-\enumerate{
-\item Build table with \code{\link[=apa_table]{apa_table()}}.
-\item Run \code{summary(tbl)} and inspect \code{overview}.
-\item Use \code{\link[=plot.apa_table]{plot.apa_table()}} for quick numeric checks if needed.
-}
-
-
-For \code{plot()}:
-\enumerate{
-\item Build table with \code{\link[=apa_table]{apa_table()}}.
-\item Run \code{summary(tbl)} for metadata.
-\item Use \code{plot(tbl, type = "numeric_profile")} for quick numeric QC.
 }
 }
 
@@ -218,7 +183,7 @@ tbl # Prints the table, caption, and note
 # Extract the ordinary data frame for further formatting or export
 tbl$table
 # This table summarizes facets; use as.data.frame(fit) for individual estimates
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("summary.apa_table", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
@@ -228,7 +193,7 @@ fit <- example_fit$fit
 tbl <- apa_table(fit, which = "summary")
 summary(tbl)
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.apa_table", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
@@ -251,7 +216,7 @@ if (interactive()) {
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \link{mfrmr_reporting_and_apa}, \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}
+\link{mfrm_report_checklist}, \link{mfrmr_reporting_and_apa}, \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}
 
 \code{\link[=apa_table]{apa_table()}}, \code{\link[=plot]{plot()}}
 

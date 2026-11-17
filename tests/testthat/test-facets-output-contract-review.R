@@ -128,11 +128,7 @@ test_that("reference_case_review exposes package-native review wording", {
   )
   diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
 
-  review <- mfrmr::reference_case_review(
-    fit = fit,
-    diagnostics = diag,
-    reference_profile = "core"
-  )
+  review <- mfrmr::mfrm_report(x = fit, diagnostics = diag, reference_profile = "core", type = "reference_review")
 
   expect_s3_class(review, "mfrm_reference_review")
   expect_true(all(c(

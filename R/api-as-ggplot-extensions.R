@@ -1225,9 +1225,13 @@
 }
 
 .mfrmr_gg_specialized_views <- function(x) {
+  # The caller attaches the complete original plot data to the selected view.
   nm <- as.character(x$name %||% "")[1L]
   payload <- x$data %||% list()
-  style <- resolve_plot_preset(payload$preset %||% "standard")
+  # This view stores appendix category labels in `preset`, not a visual style.
+  preset <- if (identical(nm, "summary_table_bundle") &&
+    identical(payload$plot, "appendix_presets")) "standard" else payload$preset %||% "standard"
+  style <- resolve_plot_preset(preset)
 
   if (nm %in% c("information_tif", "information_se", "information_sem",
                  "information_tif_se", "information_iif")) {
@@ -1243,6 +1247,8 @@
         ggplot2::geom_line(na.rm = TRUE) + .mfrmr_gg_theme_styled(style$name)
       ylab <- if (nm %in% c("information_se", "information_sem"))
         "Conditional SEM" else "Observed-design information"
+      if (!is.null(payload$rating_plan) && !nm %in% c("information_se", "information_sem"))
+        ylab <- "Information per Person"
       if (identical(nm, "information_tif_se")) {
         # Information and its inverse square root have different units.
         p <- p + ggplot2::facet_grid(Series ~ ., scales = "free_y")
@@ -1254,7 +1260,6 @@
         p <- p + ggplot2::labs(colour = "Facet level")
       }
       p <- .mfrmr_gg_labs(p, payload, x = "Ability (logits)", y = ylab)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
   }
@@ -1266,7 +1271,6 @@
     })
     plots <- plots[vapply(plots, inherits, logical(1), "ggplot")]
     p <- .mfrm_compose_ggplots(plots, ncol = 3L, payload = payload, preset = style$name)
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -1294,7 +1298,6 @@
       ) +
       ggplot2::labs(x = NULL, y = NULL)
     p <- .mfrm_compose_ggplots(list(g_w, g_s, g_t, g_txt), ncol = 2L, payload = payload, preset = style$name)
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -1342,7 +1345,6 @@
     p5 <- make_bar(disp_tbl, "Elem", "Displacement", "Displacement", h_ref = 0)
     p6 <- make_bar(payload$reliability, "Facet", "Separation", "Separation by facet", h_ref = 1)
     p <- .mfrm_compose_ggplots(list(p1, p2, p3, p4, p5, p6), ncol = 2L, payload = payload, preset = style$name)
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -1350,7 +1352,6 @@
     vt <- as.data.frame(payload$verdicts %||% payload$table %||% data.frame(), stringsAsFactors = FALSE)
     if (!nrow(vt)) {
       p <- .mfrmr_empty_ggplot("No QC verdicts available.", payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     vt$Row <- seq_len(nrow(vt))
@@ -1399,7 +1400,6 @@
         ggplot2::theme(axis.line = ggplot2::element_blank(), panel.grid.major = ggplot2::element_blank())
     }
     p <- .mfrmr_gg_labs(p, payload, x = NULL, y = NULL)
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -1407,7 +1407,6 @@
     df <- as.data.frame(payload$data %||% data.frame(), stringsAsFactors = FALSE)
     if (!nrow(df)) {
       p <- .mfrmr_empty_ggplot("No facet equivalence rows available.", payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     if (identical(payload$type, "rope")) {
@@ -1460,7 +1459,6 @@
         .mfrmr_gg_theme_styled(style$name)
       p <- .mfrmr_gg_labs(p, payload, x = "Deviation from facet mean (logits)", y = NULL)
     }
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -1468,7 +1466,6 @@
     df <- as.data.frame(payload$table %||% payload$data %||% data.frame(), stringsAsFactors = FALSE)
     if (!nrow(df)) {
       p <- .mfrmr_empty_ggplot("Review table empty.", payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     df$Row <- seq_len(nrow(df))
@@ -1480,7 +1477,7 @@
       )
     } else {
       c(
-        sparse = "#D73027", marginal = "#FDAE61", standard = "#66BD63", strong = "#1A9850",
+        sparse = "#DEEBF7", marginal = "#9ECAE1", standard = "#4292C6", strong = "#08519C",
         `<10` = style$fail, `10-29` = style$warn, `>=30` = style$accent_primary
       )
     }
@@ -1489,14 +1486,18 @@
     thr_vals <- thr_vals[is.finite(thr_vals)]
     p <- ggplot2::ggplot(df[is.finite(df$N), , drop = FALSE], ggplot2::aes(x = .data$N, y = .data$Row, fill = .data$SampleCategory)) +
       ggplot2::geom_col(orientation = "y", width = 0.7) +
-      ggplot2::scale_fill_manual(values = cols, name = "Sample band", na.value = style$neutral) +
+      ggplot2::scale_fill_manual(values = cols, name = "Rating rows",
+        breaks = function(x) intersect(c("sparse","marginal","standard","strong",x),x),
+        labels = function(breaks) {
+          labels <- .ha_sample_band_labels(thr)[breaks]
+          ifelse(is.na(labels),breaks,unname(labels))
+        }, na.value = style$neutral) +
       ggplot2::scale_y_reverse(breaks = df$Row, labels = df$Label) +
       .mfrmr_gg_theme_styled(style$name)
     if (length(thr_vals) > 0L) {
       p <- p + ggplot2::geom_vline(xintercept = thr_vals, linetype = "dashed", colour = style$neutral)
     }
     p <- .mfrmr_gg_labs(p, payload, x = "Retained rating rows per level", y = NULL)
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -1504,11 +1505,9 @@
     mat <- payload$matrix
     if (!is.matrix(mat) || length(mat) == 0L) {
       p <- .mfrmr_empty_ggplot("At least two facets required for nesting matrix.", payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     p <- .mfrmr_gg_matrix(mat, payload, show_values = TRUE, value_digits = 2L)
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -1517,7 +1516,6 @@
       icc_df <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
       if (!nrow(icc_df) || !all(c("Facet", "ICC") %in% names(icc_df))) {
         p <- .mfrmr_empty_ggplot("No ICC estimates available.", payload = payload, preset = style$name)
-        attr(p, "mfrmr_plot_data") <- x
         return(p)
       }
       icc_df$Row <- seq_len(nrow(icc_df))
@@ -1549,7 +1547,6 @@
         .mfrmr_empty_ggplot("No cross-tabulation matrix available.", payload = payload, preset = style$name)
       }
     }
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -1560,7 +1557,6 @@
       rows <- as.data.frame(d$removal %||% data.frame(), stringsAsFactors = FALSE)
       if (!nrow(rows)) {
         p <- .mfrmr_empty_ggplot("No common elements to remove.", payload = payload, preset = style$name)
-        attr(p, "mfrmr_plot_data") <- x
         return(p)
       }
       rows <- rows[order(signif(rows$MaxAbsCumulativeChange, 3), decreasing = TRUE, na.last = TRUE), , drop = FALSE]
@@ -1589,14 +1585,12 @@
         ggplot2::scale_y_reverse(breaks = rows$Row, labels = rows$Label) +
         .mfrmr_gg_theme_styled(style$name)
       p <- .mfrmr_gg_labs(p, payload, x = "Max. absolute cumulative offset change (logits)", y = NULL)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     if (identical(nm, "equating_chain_anchor_removal")) {
       rows <- as.data.frame(d$removal %||% data.frame(), stringsAsFactors = FALSE)
       if (!nrow(rows)) {
         p <- .mfrmr_empty_ggplot("No common elements to remove.", payload = payload, preset = style$name)
-        attr(p, "mfrmr_plot_data") <- x
         return(p)
       }
       rows <- rows[order(rows$NewlyDisconnectedPairs, decreasing = TRUE), , drop = FALSE]
@@ -1612,7 +1606,6 @@
         ggplot2::scale_y_reverse(breaks = rows$Row, labels = rows$Label) +
         .mfrmr_gg_theme_styled(style$name)
       p <- .mfrmr_gg_labs(p, payload, x = "Newly disconnected wave pairs", y = NULL)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     if (identical(nm, "equating_chain_links")) {
@@ -1655,7 +1648,6 @@
         ggplot2::theme(axis.line = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank(),
                        axis.text = ggplot2::element_blank(), panel.grid.major = ggplot2::element_blank())
       p <- .mfrmr_gg_labs(p, payload, x = NULL, y = NULL)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     # equating_chain_graph
@@ -1710,7 +1702,6 @@
       .mfrmr_gg_theme_styled(style$name) +
       ggplot2::theme(axis.line = ggplot2::element_blank(), panel.grid.major = ggplot2::element_blank())
     p <- .mfrmr_gg_labs(p, payload, x = NULL, y = NULL)
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -1720,14 +1711,12 @@
     show_leg <- isTRUE(payload$display$show_legend %||% TRUE)
     if (!nrow(d)) {
       p <- .mfrmr_empty_ggplot("No imported FACETS rows available.", payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     if (view_type %in% c("ccc", "expected")) {
       fin <- d[d$Available %in% TRUE & is.finite(d$X) & is.finite(d$Y), , drop = FALSE]
       if (!nrow(fin)) {
         p <- .mfrmr_empty_ggplot("No available coordinates.", payload = payload, preset = style$name)
-        attr(p, "mfrmr_plot_data") <- x
         return(p)
       }
       s_levels <- unique(as.character(fin$Series))
@@ -1772,7 +1761,6 @@
         p <- p + ggplot2::theme(legend.position = "none")
       }
       p <- .mfrmr_gg_labs(p, payload, x = payload$xlab, y = payload$ylab)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
 
@@ -1784,7 +1772,6 @@
     fin <- d[avail_vec & is.finite(d$XVal) & is.finite(d$YVal), , drop = FALSE]
     if (!nrow(fin) && view_type != "measure") {
       p <- .mfrmr_empty_ggplot("No available points.", payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     sym_labels <- c(
@@ -1900,7 +1887,6 @@
     }
     if (!show_leg) p <- p + ggplot2::theme(legend.position = "none")
     p <- .mfrmr_gg_labs(p, payload, x = payload$xlab, y = payload$ylab)
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -1908,7 +1894,6 @@
     pd <- as.data.frame(payload$plot_data %||% data.frame(), stringsAsFactors = FALSE)
     if (!nrow(pd)) {
       p <- .mfrmr_empty_ggplot("No common-plan interval rows available.", payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     ci_ok <- is.finite(pd$Lower) & is.finite(pd$Upper)
@@ -1944,7 +1929,6 @@
       ggplot2::scale_y_continuous(breaks = pd$Y, labels = pd$Label) +
       .mfrmr_gg_theme_styled(style$name)
     p <- .mfrmr_gg_labs(p, payload, x = payload$xlab %||% "Expected score", y = NULL)
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -1961,7 +1945,6 @@
       if (identical(view_kind, "scatter")) {
         p <- .mfrmr_attach_marginal_histograms(p, x = fin$X, y = fin$Y, marginal = payload$marginal %||% "auto", preset = style$name)
       }
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
   }
@@ -1998,7 +1981,6 @@
         p <- .mfrmr_gg_add_references(p, payload$reference_lines)
         p <- .mfrmr_gg_labs(p, payload, x = "Displacement (logits)", y = NULL)
       }
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
   }
@@ -2028,7 +2010,6 @@
         marginal = payload$marginal %||% "auto",
         preset = style$name
       )
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     if (nrow(pt) > 0L && all(c("ErrorForPlot", "PlotGroup") %in% names(pt))) {
@@ -2039,7 +2020,6 @@
         .mfrmr_gg_theme_styled(style$name) +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 30, hjust = 1))
       p <- .mfrmr_gg_labs(p, payload, x = NULL, y = payload$metric_label %||% "Estimation error")
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     if (nrow(pt) > 0L && all(c("Status", "Reps") %in% names(pt))) {
@@ -2053,7 +2033,6 @@
         ggplot2::scale_x_continuous(breaks = pt$Pos, labels = pt$Status) +
         .mfrmr_gg_theme_styled(style$name)
       p <- .mfrmr_gg_labs(p, payload, x = NULL, y = "Replications")
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     if (nrow(pt) > 0L && all(c("PlotGroup", "Value") %in% names(pt))) {
@@ -2069,7 +2048,6 @@
       }
       p <- .mfrmr_gg_add_references(p, payload$reference_lines)
       p <- .mfrmr_gg_labs(p, payload, x = NULL, y = payload$metric_label %||% "Value")
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
   }
@@ -2090,7 +2068,6 @@
           .mfrmr_gg_theme_styled(style$name)
         p <- .mfrmr_gg_labs(p, payload, x = NULL, y = "Checklist checks")
       }
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     pt <- as.data.frame(payload$plot_table %||% data.frame(), stringsAsFactors = FALSE)
@@ -2109,7 +2086,6 @@
       p <- .mfrmr_gg_add_references(p, payload$reference_lines)
       p <- .mfrmr_gg_labs(p, payload, x = NULL, y = payload$metric_label %||% "Value")
     }
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -2118,7 +2094,6 @@
     x_var <- as.character(payload$x_var %||% "")[1L]
     if (!nrow(pt) || !nzchar(x_var) || !x_var %in% names(pt) || !"Value" %in% names(pt)) {
       p <- .mfrmr_empty_ggplot("No finite diagnostic-screening values available.", payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     pt$.mfrmr_x <- suppressWarnings(as.numeric(pt[[x_var]]))
@@ -2143,7 +2118,6 @@
         y = paste("Diagnostic-screening", as.character(payload$metric %||% "value")[1L])
       )
     }
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -2172,13 +2146,11 @@
         p <- p + .mfrmr_gg_theme_styled(style$name)
         p <- .mfrmr_gg_labs(p, payload, x = paste0("log response time (", unit, ")"), y = "Count")
       }
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     med <- suppressWarnings(as.numeric(tbl$MedianTime))
     if (!nrow(tbl) || !any(is.finite(med))) {
       p <- .mfrmr_empty_ggplot("No valid times are available for these groups.", payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     if (identical(vtype, "score")) {
@@ -2197,7 +2169,6 @@
       }
       p <- p + .mfrmr_gg_theme_styled(style$name)
       p <- .mfrmr_gg_labs(p, payload, x = "Score", y = paste0("Median time (", unit, ")"))
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     label_col <- if (identical(vtype, "person")) "Person" else "Level"
@@ -2215,7 +2186,6 @@
     }
     p <- p + .mfrmr_gg_theme_styled(style$name)
     p <- .mfrmr_gg_labs(p, payload, x = paste0("Median time (", unit, ")"), y = NULL)
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -2250,7 +2220,6 @@
     df <- df[is.finite(df$Value) & nzchar(df$Label), , drop = FALSE]
     if (!nrow(df)) {
       p <- .mfrmr_empty_ggplot("No finite structural-design values available.", payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     df$Pos <- seq_len(nrow(df))
@@ -2266,7 +2235,6 @@
       .mfrmr_gg_theme_styled(style$name) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 35, hjust = 1))
     p <- .mfrmr_gg_labs(p, payload, x = NULL, y = payload$ylab %||% payload$legend$label[1L] %||% "Value")
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -2276,7 +2244,6 @@
     if (!nrow(tbl)) {
       msg <- if (identical(plot_kind, "flags")) "No flagged facet levels." else "No finite severity estimates available."
       p <- .mfrmr_empty_ggplot(msg, payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     lbl_col <- intersect(c("Level", "Element"), names(tbl))[1L]
@@ -2306,7 +2273,6 @@
         .mfrmr_gg_theme_styled(style$name)
       p <- .mfrmr_gg_labs(p, payload, x = "Estimate (logits)", y = NULL)
     }
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -2329,7 +2295,6 @@
           .mfrmr_gg_theme_styled(style$name)
         p <- .mfrmr_gg_labs(p, payload, x = as.character(payload$column %||% "Value")[1L], y = "Count")
       }
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     if (identical(p_kind, "appendix_roles")) {
@@ -2344,11 +2309,10 @@
       long$RoleFactor <- factor(long$Role, levels = unique(roles))
       long$GroupFactor <- factor(long$Group, levels = c("Recommended", "Compact"))
       cols_ar <- c(Recommended = "#2a9d8f", Compact = "#8d99ae")
-      if (is.list(payload$legend) && length(payload$legend) >= 2L) {
-        c1 <- payload$legend[[1L]]$value[1L]
-        c2 <- payload$legend[[2L]]$value[1L]
-        if (!is.null(c1) && !is.null(c2)) cols_ar <- c(Recommended = as.character(c1), Compact = as.character(c2))
-      }
+      legend <- normalize_plot_legend(payload$legend)
+      at <- match(names(cols_ar), legend$label)
+      keep <- !is.na(at)
+      cols_ar[keep] <- legend$value[at[keep]]
       p <- ggplot2::ggplot(long, ggplot2::aes(x = .data$RoleFactor, y = .data$Tables, fill = .data$GroupFactor)) +
         ggplot2::geom_hline(yintercept = 0, linetype = "dashed", colour = style$ref_line) +
         ggplot2::geom_col(position = ggplot2::position_dodge(width = 0.75), width = 0.68) +
@@ -2356,7 +2320,6 @@
         .mfrmr_gg_theme_styled(style$name) +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 35, hjust = 1))
       p <- .mfrmr_gg_labs(p, payload, x = NULL, y = "Tables")
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     labels <- switch(
@@ -2411,7 +2374,6 @@
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 35, hjust = 1))
       p <- .mfrmr_gg_labs(p, payload, x = NULL, y = ylab)
     }
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -2447,7 +2409,6 @@
       vals <- c(suppressWarnings(as.numeric(payload$baseline)), suppressWarnings(as.numeric(payload$after)))
       p <- bar_helper(c("Baseline", "After bias"), vals, ylab = "Unexpected responses",
                       fill = c(style$accent_secondary, style$accent_primary))
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     tbl <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
@@ -2465,12 +2426,10 @@
         ggplot2::scale_colour_manual(values = c(`Higher than expected` = style$warn, `Lower than expected` = style$accent_primary), name = NULL) +
         .mfrmr_gg_theme_styled(style$name)
       p <- .mfrmr_gg_labs(p, payload, x = "Standardized residual", y = "-log10(P_obs)")
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     lbls <- if ("Row" %in% names(tbl)) paste0("Row ", tbl$Row) else paste0("Case ", seq_len(nrow(tbl)))
     p <- bar_helper(lbls, tbl$Severity, ylab = "Severity")
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -2491,7 +2450,6 @@
         .mfrmr_gg_theme_styled(style$name)
       if (length(grps) <= 1L) p <- p + ggplot2::guides(colour = "none")
       p <- .mfrmr_gg_labs(p, payload, x = "Theta / Logit", y = "Expected score")
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     vals <- suppressWarnings(as.numeric(payload$values))
@@ -2509,7 +2467,6 @@
       }
       p <- .mfrmr_gg_labs(p, payload, x = xlab, y = "Count")
     }
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -2538,49 +2495,14 @@
         .mfrmr_gg_theme_styled(style$name) +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 35, hjust = 1))
       p <- .mfrmr_gg_labs(p, payload, x = NULL, y = "Levels")
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
-    if (identical(p_kind, "convergence")) {
-      p <- bar_helper(tbl$Setting, tbl$Value, ylab = "Value")
-    } else if (identical(p_kind, "facet_elements")) {
-      p <- bar_helper(tbl$Facet, tbl$Elements, ylab = "Elements")
-    } else if (identical(p_kind, "issue_counts")) {
-      p <- bar_helper(tbl$Issue, tbl$N, ylab = "Rows", fill = style$fail)
-    } else {
+    if (!(p_kind %in% c("convergence", "facet_elements", "issue_counts"))) {
       rec <- suppressWarnings(as.numeric(tbl$RecommendedMinObs))
       rec <- rec[is.finite(rec)]
-      p <- bar_helper(tbl$Facet, tbl$MinObsPerLevel, ylab = "Min observations",
-                      h_ref = if (length(rec)) unique(rec)[1L] else NULL)
+      return(bar_helper(tbl$Facet, tbl$MinObsPerLevel, ylab = "Min observations",
+                        h_ref = if (length(rec)) unique(rec)[1L] else NULL))
     }
-    attr(p, "mfrmr_plot_data") <- x
-    return(p)
-  }
-
-  if (identical(nm, "data_description")) {
-    p_kind <- as.character(payload$plot %||% "score_distribution")[1L]
-    tbl <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
-    p <- switch(
-      p_kind,
-      facet_levels = bar_helper(tbl$Facet, tbl$Levels, ylab = "Levels", fill = style$success),
-      missing = bar_helper(tbl$Column, tbl$Missing, ylab = "Missing", fill = style$accent_tertiary),
-      bar_helper(tbl$Score, tbl$WeightedN, ylab = "Weighted N", fill = style$accent_primary)
-    )
-    attr(p, "mfrmr_plot_data") <- x
-    return(p)
-  }
-
-  if (identical(nm, "measurable")) {
-    p_kind <- as.character(payload$plot %||% "facet_coverage")[1L]
-    tbl <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
-    p <- switch(
-      p_kind,
-      category_counts = bar_helper(tbl$Category, tbl$Count, ylab = "Count", fill = style$success),
-      subset_observations = bar_helper(paste0("Subset ", tbl$Subset), tbl$Observations, ylab = "Observations", fill = style$accent_tertiary),
-      bar_helper(tbl$Facet, tbl$Levels, ylab = "Levels", fill = style$accent_primary)
-    )
-    attr(p, "mfrmr_plot_data") <- x
-    return(p)
   }
 
   if (identical(nm, "export_bundle")) {
@@ -2608,7 +2530,6 @@
       as.character(payload$legend$value[1L])
     } else style$accent_primary
     p <- bar_helper(lbls, vals, ylab = num_c %||% "Files", fill = bar_c)
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -2638,7 +2559,6 @@
       p3 <- mk_panel(fcu, "Elem", "IssueCategories", "Facet category use", "No facet category summary")
       p4 <- mk_panel(payload$missing_rows, "Field", "Count", "Missing/invalid rows", "No row-count fields")
       p <- .mfrm_compose_ggplots(list(p1, p2, p3, p4), ncol = 2L, payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     tbl <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
@@ -2649,7 +2569,6 @@
         fills <- ifelse((tbl$HighSeverityFlags %||% 0) > 0, style$fail, style$warn)
         p <- bar_helper(tbl$Area, tbl$Flags, ylab = "Flags", fill = fills)
       }
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
     if (identical(p_kind, "score_map")) {
@@ -2666,36 +2585,18 @@
         .mfrmr_gg_theme_styled(style$name)
       if (!any(tbl$MappingStatus == "recoded", na.rm = TRUE)) p <- p + ggplot2::guides(colour = "none")
       p <- .mfrmr_gg_labs(p, payload, x = "Original score", y = "Internal score")
-      attr(p, "mfrmr_plot_data") <- x
       return(p)
     }
-    p <- switch(
-      p_kind,
-      row_review = bar_helper(tbl$Status, tbl$N, ylab = "Rows"),
-      facet_category_usage = bar_helper(paste(tbl$Facet, tbl$Level, sep = ": "), tbl$IssueCategories, ylab = "Zero or sparse categories"),
-      facet_response_patterns = bar_helper(paste(tbl$Facet, tbl$Level, sep = ": "), 100 * suppressWarnings(as.numeric(tbl$DominantPercent)), ylab = "Dominant score (%)", h_ref = 95),
-      missing_rows = bar_helper(tbl$Field, tbl$Count, ylab = "Rows", fill = style$accent_secondary),
-      bar_helper(tbl$Score, tbl$Count, ylab = "Count", fill = style$accent_tertiary)
-    )
-    attr(p, "mfrmr_plot_data") <- x
-    return(p)
   }
 
   if (identical(nm, "fit_measures")) {
     p_kind <- as.character(payload$plot %||% "status")[1L]
     tbl <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
-    if (identical(p_kind, "status")) {
-      p <- bar_helper(tbl$FitStatus, tbl$Rows, ylab = "Rows")
-      attr(p, "mfrmr_plot_data") <- x
-      return(p)
-    }
     if (identical(p_kind, "df_sensitivity")) {
       lbls <- paste(tbl$Facet, tbl$Level, sep = ": ")
       thr_v <- suppressWarnings(as.numeric(payload$thresholds))
       thr_v <- thr_v[is.finite(thr_v)]
-      p <- bar_helper(lbls, tbl$MaxAbsZSTDDiff_FACETS_vs_ENGINE, ylab = "Max |ZSTD difference|", h_ref = thr_v)
-      attr(p, "mfrmr_plot_data") <- x
-      return(p)
+      return(bar_helper(lbls, tbl$MaxAbsZSTDDiff_FACETS_vs_ENGINE, ylab = "Max |ZSTD difference|", h_ref = thr_v))
     }
     if (identical(p_kind, "infit_outfit")) {
       tbl$InfitVal <- suppressWarnings(as.numeric(tbl$Infit))
@@ -2707,9 +2608,7 @@
         ggplot2::geom_hline(yintercept = c(fr[1L], 1, fr[2L]), linetype = c("dotted", "dashed", "dotted"), colour = style$ref_line) +
         ggplot2::geom_point(size = 2.5, alpha = 0.86) +
         .mfrmr_gg_theme_styled(style$name)
-      p <- .mfrmr_gg_labs(p, payload, x = "Infit MnSq", y = "Outfit MnSq")
-      attr(p, "mfrmr_plot_data") <- x
-      return(p)
+      return(.mfrmr_gg_labs(p, payload, x = "Infit MnSq", y = "Outfit MnSq"))
     }
   }
 
@@ -2744,7 +2643,6 @@
       ylab_i <- if (identical(p_kind, "residual")) "Residual metric" else "Max absolute change"
       p <- .mfrmr_gg_labs(p, payload, x = "Iteration", y = ylab_i)
     }
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -2752,41 +2650,30 @@
     tbl <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
     metric <- as.character(payload$metric %||% "Betweenness")[1L]
     lbls <- if (all(c("Facet", "Level") %in% names(tbl))) paste(tbl$Facet, tbl$Level, sep = ":") else as.character(tbl$Facet)
-    p <- bar_helper(lbls, tbl[[metric]], ylab = metric,
-                    fill = if (identical(payload$plot, "facet_summary")) style$accent_secondary else style$accent_primary)
-    attr(p, "mfrmr_plot_data") <- x
-    return(p)
+    return(bar_helper(lbls, tbl[[metric]], ylab = metric,
+                      fill = if (identical(payload$plot, "facet_summary")) style$accent_secondary else style$accent_primary))
   }
 
-  if (identical(nm, "facet_statistics")) {
-    p_kind <- as.character(payload$plot %||% "means")[1L]
+  if (identical(nm, "facet_statistics") && identical(as.character(payload$plot %||% "means")[1L], "ranges")) {
     tbl <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
-    if (identical(p_kind, "ranges")) {
-      tbl$Row <- seq_len(nrow(tbl))
-      tbl$MinV <- suppressWarnings(as.numeric(tbl$Min))
-      tbl$MaxV <- suppressWarnings(as.numeric(tbl$Max))
-      tbl$MeanV <- suppressWarnings(as.numeric(tbl$Mean))
-      p <- ggplot2::ggplot(tbl, ggplot2::aes(y = .data$Row)) +
-        ggplot2::geom_segment(
-          data = tbl[is.finite(tbl$MinV) & is.finite(tbl$MaxV), , drop = FALSE],
-          ggplot2::aes(x = .data$MinV, xend = .data$MaxV, yend = .data$Row),
-          colour = style$accent_secondary, linewidth = 1.0
-        ) +
-        ggplot2::geom_point(
-          data = tbl[is.finite(tbl$MeanV), , drop = FALSE],
-          ggplot2::aes(x = .data$MeanV),
-          colour = style$accent_primary, size = 2.8
-        ) +
-        ggplot2::scale_y_continuous(breaks = tbl$Row, labels = as.character(tbl$Facet)) +
-        .mfrmr_gg_theme_styled(style$name)
-      p <- .mfrmr_gg_labs(p, payload, x = as.character(payload$metric %||% "Value")[1L], y = NULL)
-    } else if (identical(p_kind, "sds")) {
-      p <- bar_helper(tbl$Facet, tbl$SD, ylab = "SD", fill = style$accent_tertiary)
-    } else {
-      p <- bar_helper(tbl$Facet, tbl$Mean, ylab = "Mean", fill = style$accent_primary)
-    }
-    attr(p, "mfrmr_plot_data") <- x
-    return(p)
+    tbl$Row <- seq_len(nrow(tbl))
+    tbl$MinV <- suppressWarnings(as.numeric(tbl$Min))
+    tbl$MaxV <- suppressWarnings(as.numeric(tbl$Max))
+    tbl$MeanV <- suppressWarnings(as.numeric(tbl$Mean))
+    p <- ggplot2::ggplot(tbl, ggplot2::aes(y = .data$Row)) +
+      ggplot2::geom_segment(
+        data = tbl[is.finite(tbl$MinV) & is.finite(tbl$MaxV), , drop = FALSE],
+        ggplot2::aes(x = .data$MinV, xend = .data$MaxV, yend = .data$Row),
+        colour = style$accent_secondary, linewidth = 1.0
+      ) +
+      ggplot2::geom_point(
+        data = tbl[is.finite(tbl$MeanV), , drop = FALSE],
+        ggplot2::aes(x = .data$MeanV),
+        colour = style$accent_primary, size = 2.8
+      ) +
+      ggplot2::scale_y_continuous(breaks = tbl$Row, labels = as.character(tbl$Facet)) +
+      .mfrmr_gg_theme_styled(style$name)
+    return(.mfrmr_gg_labs(p, payload, x = as.character(payload$metric %||% "Value")[1L], y = NULL))
   }
 
   if (identical(nm, "facets_contract_review")) {
@@ -2815,7 +2702,6 @@
         bar_helper(tbl$Table, vals, ylab = "Pass rate", fill = style$accent_tertiary, h_ref = 1)
       }
     )
-    attr(p, "mfrmr_plot_data") <- x
     return(p)
   }
 
@@ -2824,70 +2710,75 @@
     tbl <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
     lbls <- as.character(payload$labels %||% seq_len(nrow(tbl)))
     if (identical(p_kind, "lowcount_by_facet")) {
-      p <- bar_helper(lbls, tbl$LowCountRate, ylab = "Low-count rate", fill = style$accent_tertiary, h_ref = 0)
-    } else {
-      fills <- ifelse(tbl$LowCountFlag %in% TRUE, style$fail, style$accent_primary)
-      p <- bar_helper(lbls, tbl$Count, ylab = "Observed count", fill = fills)
+      return(bar_helper(lbls, tbl$LowCountRate, ylab = "Low-count rate", fill = style$accent_tertiary, h_ref = 0))
     }
-    attr(p, "mfrmr_plot_data") <- x
-    return(p)
+    fills <- ifelse(tbl$LowCountFlag %in% TRUE, style$fail, style$accent_primary)
+    return(bar_helper(lbls, tbl$Count, ylab = "Observed count", fill = fills))
   }
 
   if (identical(nm, "fixed_reports")) {
     if (!is.null(payload$message)) {
-      p <- .mfrmr_empty_ggplot("No data", payload = payload, preset = style$name)
-      attr(p, "mfrmr_plot_data") <- x
-      return(p)
+      return(.mfrmr_empty_ggplot("No data", payload = payload, preset = style$name))
     }
     p_kind <- as.character(payload$plot %||% "contrast")[1L]
     if (identical(p_kind, "pvalue")) {
       p_vals <- suppressWarnings(as.numeric(payload$p_values))
       p_vals <- p_vals[is.finite(p_vals)]
       if (!length(p_vals)) {
-        p <- .mfrmr_empty_ggplot("No data", payload = payload, preset = style$name)
-      } else {
-        n_bins <- min(20L, max(5L, as.integer(sqrt(length(p_vals)))))
-        p <- ggplot2::ggplot(data.frame(P = p_vals), ggplot2::aes(x = .data$P)) +
-          ggplot2::geom_histogram(bins = n_bins, fill = style$accent_tertiary, colour = "#FFFFFF", alpha = 0.88) +
-          ggplot2::geom_vline(xintercept = 0.05, linetype = "dashed", colour = style$ref_line) +
-          .mfrmr_gg_theme_styled(style$name)
-        p <- .mfrmr_gg_labs(p, payload, x = "p-value", y = "Count")
+        return(.mfrmr_empty_ggplot("No data", payload = payload, preset = style$name))
       }
-      attr(p, "mfrmr_plot_data") <- x
-      return(p)
+      n_bins <- min(20L, max(5L, as.integer(sqrt(length(p_vals)))))
+      p <- ggplot2::ggplot(data.frame(P = p_vals), ggplot2::aes(x = .data$P)) +
+        ggplot2::geom_histogram(bins = n_bins, fill = style$accent_tertiary, colour = "#FFFFFF", alpha = 0.88) +
+        ggplot2::geom_vline(xintercept = 0.05, linetype = "dashed", colour = style$ref_line) +
+        .mfrmr_gg_theme_styled(style$name)
+      return(.mfrmr_gg_labs(p, payload, x = "p-value", y = "Count"))
     }
     tbl <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
     lbls <- as.character(payload$labels %||% seq_len(nrow(tbl)))
     fills <- ifelse(suppressWarnings(as.numeric(tbl$Contrast)) >= 0, style$success, style$warn)
-    p <- bar_helper(lbls, tbl$Contrast, ylab = "Contrast (logit)", fill = fills, h_ref = 0, empty_msg = "No data")
-    attr(p, "mfrmr_plot_data") <- x
-    return(p)
+    return(bar_helper(lbls, tbl$Contrast, ylab = "Contrast (logit)", fill = fills, h_ref = 0, empty_msg = "No data"))
   }
 
-  if (identical(nm, "visual_summaries")) {
-    p_kind <- as.character(payload$plot %||% "comparison")[1L]
-    if (identical(p_kind, "comparison") && is.matrix(payload$matrix)) {
-      mat <- payload$matrix
-      vis <- as.character(payload$visuals %||% colnames(mat))
-      long <- rbind(
-        data.frame(Visual = vis, Type = "Warning", Messages = suppressWarnings(as.numeric(mat[1L, ])), stringsAsFactors = FALSE),
-        data.frame(Visual = vis, Type = "Summary", Messages = suppressWarnings(as.numeric(mat[2L, ])), stringsAsFactors = FALSE)
+  if (identical(nm, "visual_summaries") && identical(as.character(payload$plot %||% "comparison")[1L], "comparison") && is.matrix(payload$matrix)) {
+    mat <- payload$matrix
+    vis <- as.character(payload$visuals %||% colnames(mat))
+    long <- rbind(
+      data.frame(Visual = vis, Type = "Warning", Messages = suppressWarnings(as.numeric(mat[1L, ])), stringsAsFactors = FALSE),
+      data.frame(Visual = vis, Type = "Summary", Messages = suppressWarnings(as.numeric(mat[2L, ])), stringsAsFactors = FALSE)
+    )
+    long$VisualFactor <- factor(long$Visual, levels = unique(vis))
+    long$TypeFactor <- factor(long$Type, levels = c("Warning", "Summary"))
+    p <- ggplot2::ggplot(long[is.finite(long$Messages), , drop = FALSE], ggplot2::aes(x = .data$VisualFactor, y = .data$Messages, fill = .data$TypeFactor)) +
+      ggplot2::geom_col(position = ggplot2::position_dodge(width = 0.75), width = 0.68) +
+      ggplot2::scale_fill_manual(values = c(Warning = style$fail, Summary = style$accent_primary), name = NULL) +
+      .mfrmr_gg_theme_styled(style$name) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 35, hjust = 1))
+    return(.mfrmr_gg_labs(p, payload, x = NULL, y = "Messages"))
+  }
+
+  bar_specs <- .mfrmr_gg_bar_view_specs[.mfrmr_gg_bar_view_specs$nm == nm, , drop = FALSE]
+  if (nrow(bar_specs) > 0L) {
+    p_kind <- as.character(payload$plot %||% if (identical(nm, "fit_measures")) "status" else "")[1L]
+    idx <- which(bar_specs$p_kind == p_kind)
+    if (!length(idx)) idx <- which(bar_specs$p_kind == "*")
+    if (length(idx)) {
+      spec_row <- bar_specs[idx[1L], , drop = FALSE]
+      tbl <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
+      lbls <- switch(
+        spec_row$label_mode,
+        subset_prefix = paste0("Subset ", tbl[[spec_row$label_col]]),
+        facet_level = paste(tbl$Facet, tbl$Level, sep = ": "),
+        tbl[[spec_row$label_col]]
       )
-      long$VisualFactor <- factor(long$Visual, levels = unique(vis))
-      long$TypeFactor <- factor(long$Type, levels = c("Warning", "Summary"))
-      p <- ggplot2::ggplot(long[is.finite(long$Messages), , drop = FALSE], ggplot2::aes(x = .data$VisualFactor, y = .data$Messages, fill = .data$TypeFactor)) +
-        ggplot2::geom_col(position = ggplot2::position_dodge(width = 0.75), width = 0.68) +
-        ggplot2::scale_fill_manual(values = c(Warning = style$fail, Summary = style$accent_primary), name = NULL) +
-        .mfrmr_gg_theme_styled(style$name) +
-        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 35, hjust = 1))
-      p <- .mfrmr_gg_labs(p, payload, x = NULL, y = "Messages")
-      attr(p, "mfrmr_plot_data") <- x
-      return(p)
+      vals <- if (spec_row$val_scale == 1) {
+        tbl[[spec_row$val_col]]
+      } else {
+        spec_row$val_scale * suppressWarnings(as.numeric(tbl[[spec_row$val_col]]))
+      }
+      href <- if (is.na(spec_row$h_ref)) NULL else spec_row$h_ref
+      return(bar_helper(lbls, vals, ylab = spec_row$ylab, fill = style[[spec_row$fill_key]], h_ref = href))
     }
-    tbl <- as.data.frame(payload$table %||% data.frame(), stringsAsFactors = FALSE)
-    p <- bar_helper(tbl$Visual, tbl$Messages, ylab = "Messages", fill = style$accent_tertiary)
-    attr(p, "mfrmr_plot_data") <- x
-    return(p)
   }
 
   NULL

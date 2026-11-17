@@ -47,11 +47,12 @@
 .mce-note{font-weight:400;font-size:.87rem;color:var(--bs-secondary-color,#6c757d);flex:1 1 220px}
 .mce-reset{margin-left:auto;padding:.15rem .55rem;font-size:.8rem;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.35rem;background:transparent;color:var(--bs-body-color,#212529);cursor:pointer}
 .mce-reset:hover{border-color:#1f6f8b;color:#1f6f8b}
-.mce-panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:1rem}
+.mce-panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(265px,100%),1fr));gap:1rem}
 .mce-title{font-weight:600;margin-bottom:.15rem}
 .mce svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair}
 .mce-readout{font-size:.8rem;font-variant-numeric:tabular-nums;color:var(--bs-secondary-color,#6c757d);min-height:1.25rem;margin:.15rem 0 .35rem}
-.mce-panel label{display:grid;grid-template-columns:8.8rem 1fr 2.8rem;align-items:center;gap:.5rem;font-size:.86rem;margin:.18rem 0}
+.mce-panel label{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 2.8rem;align-items:center;gap:.5rem;font-size:.86rem;margin:.18rem 0}
+.mce-panel input[type=range]{width:100%;min-width:0}
 .mce-panel label.mce-locked{opacity:.48}
 .mce-panel output{font-variant-numeric:tabular-nums;text-align:right}
 .mce-legend{display:flex;flex-wrap:wrap;gap:.45rem .9rem;font-size:.83rem;margin-top:.55rem;align-items:center}

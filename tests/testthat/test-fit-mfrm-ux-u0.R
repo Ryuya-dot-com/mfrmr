@@ -45,9 +45,9 @@ test_that("fit_mfrm exposes the 19-argument U0 signature and disjoint model/cont
   expect_identical(prefixes, matrix(FALSE, nrow(prefixes), ncol(prefixes),
                                     dimnames = dimnames(prefixes)))
 
-  # Top-level NAMESPACE export count remains strictly 163; technical reference is non-exported.
+  # Component reports and score comparison share consolidated entries; the technical reference is non-exported.
   exports <- getNamespaceExports("mfrmr")
-  expect_length(exports, 163L)
+  expect_length(exports, 148L)
   expect_false("fit_mfrm_technical_details" %in% exports)
 })
 
@@ -614,7 +614,7 @@ test_that("spec, control, ..., and fit_mfrm_imputed fail closed on invalid or du
   )
 })
 
-test_that("technical-details help preserves verbatim specs and output guide exposes core_workflow", {
+test_that("technical help retains specs and entry help links public next steps", {
   rd_db <- tools::Rd_db("mfrmr")
   expect_true("fit_mfrm.Rd" %in% names(rd_db))
   expect_true("fit_mfrm_technical_details.Rd" %in% names(rd_db))
@@ -628,9 +628,10 @@ test_that("technical-details help preserves verbatim specs and output guide expo
     collapse = "\n"
   )
 
-  # Concise primary help links to technical reference and core_workflow
+  # Entry help links to the technical reference and the next public operations.
   expect_match(fit_txt, "fit_mfrm_technical_details", fixed = TRUE)
-  expect_match(fit_txt, "core_workflow", fixed = TRUE)
+  for (entry in c("summary.mfrm_fit", "diagnose_mfrm", "plot.mfrm_fit"))
+    expect_match(fit_txt, entry, fixed = TRUE)
 
   # Technical reference retains specialist mathematics, identification, polish ladder, and provenance
   for (marker in c(

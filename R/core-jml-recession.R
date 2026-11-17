@@ -53,48 +53,16 @@ mfrmr_check_extreme_person_anchor_origin <- function(prep, config) {
        "do not supply an ordinary JML solution.", call. = FALSE)
 }
 
-mfrmr_jml_recession_empty_target_table <- function() {
-  data.frame(
-    ParameterId = character(0),
-    ParameterClass = character(0),
-    Facet = character(0),
-    Level = character(0),
-    OptimizerEstimate = numeric(0),
-    PositiveRecession = logical(0),
-    NegativeRecession = logical(0),
-    CandidateStatus = character(0),
-    EvaluationState = character(0),
-    ReasonCodes = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_recession_empty_target_table <- .mfrmr_empty_table(c(ParameterId = "character", ParameterClass = "character", Facet = "character",
+    Level = "character", OptimizerEstimate = "double", PositiveRecession = "logical", NegativeRecession = "logical",
+    CandidateStatus = "character", EvaluationState = "character", ReasonCodes = "character"))
 
-mfrmr_jml_recession_empty_certificate_table <- function() {
-  data.frame(
-    ParameterId = character(0),
-    RequestedDirection = character(0),
-    SolverStatus = integer(0),
-    TargetCapacity = numeric(0),
-    TargetChange = numeric(0),
-    MinimumContrastMargin = numeric(0),
-    PositiveContrastMargin = numeric(0),
-    StrictContrastRows = integer(0),
-    DirectionL1 = numeric(0),
-    Certified = logical(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_recession_empty_certificate_table <- .mfrmr_empty_table(c(ParameterId = "character", RequestedDirection = "character", SolverStatus = "integer",
+    TargetCapacity = "double", TargetChange = "double", MinimumContrastMargin = "double", PositiveContrastMargin = "double",
+    StrictContrastRows = "integer", DirectionL1 = "double", Certified = "logical"))
 
-mfrmr_jml_recession_empty_loading_table <- function() {
-  data.frame(
-    ParameterId = character(0),
-    RequestedDirection = character(0),
-    OptimizerIndex = integer(0),
-    Coordinate = character(0),
-    Loading = numeric(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_recession_empty_loading_table <- .mfrmr_empty_table(c(ParameterId = "character", RequestedDirection = "character", OptimizerIndex = "integer",
+    Coordinate = "character", Loading = "double"))
 
 mfrmr_jml_observed_contrast_design <- function(adjacent_design,
                                                 score_k,
@@ -343,7 +311,7 @@ mfrmr_jml_structural_target_system <- function(config, sizes, params,
   )
 
   metadata <- if (length(target_rows) == 0L) {
-    mfrmr_jml_recession_empty_target_table()[, c(
+    mfrmr_jml_recession_empty_target_table[, c(
       "ParameterId", "ParameterClass", "Facet", "Level",
       "OptimizerEstimate"
     )]
@@ -521,24 +489,13 @@ mfrmr_jml_recession_shared_geometry <- function(prep, idx, config, sizes,
   )
 }
 
-mfrmr_jml_recession_fit_policy <- function() {
-  list(
-    contract_version = "mfrmr-jml-recession-fit-policy-v1",
-    scope = "additive_structural_and_joint_recession",
-    native_timeout_seconds = 10L,
-    attempts_per_stage = 1L,
-    retry_after_unaccepted = FALSE,
-    maximum_native_seconds_per_positive_target = 20L
-  )
-}
-
 mfrmr_jml_recession_run_lp <- function(lp_base,
                                         objective,
                                         extra_constraint = NULL,
                                         extra_direction = NULL,
                                         extra_rhs = NULL,
                                         timeout = (
-                                          mfrmr_jml_recession_fit_policy()$
+                                          .mfrmr_const_mfrmr_jml_recession_fit_policy$
                                             native_timeout_seconds
                                         )) {
   objective <- as.numeric(objective)
@@ -594,7 +551,7 @@ mfrmr_jml_recession_target_lp <- function(lp_base,
                                            objective_tolerance = 1e-7,
                                            certificate_tolerance = 1e-7,
                                            timeout = (
-                                             mfrmr_jml_recession_fit_policy()$
+                                             .mfrmr_const_mfrmr_jml_recession_fit_policy$
                                                native_timeout_seconds
                                            )) {
   target <- as.numeric(target)
@@ -899,7 +856,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
                                                max_additive_coordinates = 750L,
                                                max_target_directions = 200L,
                                                lp_timeout = (
-                                                 mfrmr_jml_recession_fit_policy()$
+                                                 .mfrmr_const_mfrmr_jml_recession_fit_policy$
                                                    native_timeout_seconds
                                                ),
                                                cone_objective_tolerance = 1e-10,
@@ -924,9 +881,9 @@ audit_mfrm_jml_additive_recession <- function(prep,
   ]
   method <- as.character(config$method %||% NA_character_)
   model <- as.character(config$model %||% NA_character_)
-  empty_targets <- mfrmr_jml_recession_empty_target_table()
-  empty_certificates <- mfrmr_jml_recession_empty_certificate_table()
-  empty_loadings <- mfrmr_jml_recession_empty_loading_table()
+  empty_targets <- mfrmr_jml_recession_empty_target_table
+  empty_certificates <- mfrmr_jml_recession_empty_certificate_table
+  empty_loadings <- mfrmr_jml_recession_empty_loading_table
   prescreen <- list(
     contract_version = "mfrmr-jml-global-cone-prescreen-v1",
     requested = isTRUE(screen_global_cone),

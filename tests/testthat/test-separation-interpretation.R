@@ -1,6 +1,6 @@
 test_that("reliability wording survives report, APA and console routes", {
   fit <- make_toy_fit(); diagnostics <- make_toy_diagnostics(fit)
-  precision <- precision_review_report(fit, diagnostics = diagnostics)
+  precision <- mfrm_report(x = fit, diagnostics = diagnostics, type = "precision")
   results <- mfrm_results(fit, include = c("fit", "precision"), diagnostics = diagnostics)
   report <- mfrm_report(results)
   apa <- build_apa_reporting_contract(fit, diagnostics)$report_text

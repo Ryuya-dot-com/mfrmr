@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-prediction.R
 \name{predict_mfrm_population}
 \alias{predict_mfrm_population}
+\alias{summary.mfrm_population_prediction}
 \title{Forecast population-level MFRM operating characteristics for one future design}
 \usage{
 predict_mfrm_population(
@@ -20,6 +21,8 @@ predict_mfrm_population(
   residual_pca = c("none", "overall", "facet", "both"),
   seed = NULL
 )
+
+\method{summary}{mfrm_population_prediction}(object, digits = 3, ...)
 }
 \arguments{
 \item{fit}{Optional output from \code{\link[=fit_mfrm]{fit_mfrm()}} used to derive a fit-based
@@ -67,6 +70,12 @@ Defaults to the model recorded in the base simulation specification.}
 \item{residual_pca}{Residual PCA mode passed to \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
 
 \item{seed}{Optional seed for reproducible replications.}
+
+\item{object}{Output from \code{\link[=predict_mfrm_population]{predict_mfrm_population()}}.}
+
+\item{digits}{Number of digits used in numeric summaries.}
+
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 An object of class \code{mfrm_population_prediction} with components:
@@ -95,9 +104,30 @@ used
 \item \code{ademp}: simulation-study metadata
 \item \code{notes}: interpretation notes
 }
+
+An object of class \code{summary.mfrm_population_prediction} with:
+\itemize{
+\item \code{design}: requested future design
+\item \code{overview}: run-level overview
+\item \code{forecast}: facet-level forecast table
+\item \code{facet_names}: public non-person facet names used in the forecast
+\item \code{design_variable_aliases}: public aliases for design variables
+\item \code{design_descriptor}: role-based description of design variables
+\item \code{planning_scope}: explicit record of the current planning contract
+\item \code{planning_constraints}: explicit record of mutable/locked design variables
+\item \code{planning_schema}: structured planning metadata
+\item \code{gpcm_boundary}: \code{GPCM} caveat row when present
+\item \code{structural_design_review}: deterministic structural review of the
+named-facet design grid; it is not
+a forecast-uncertainty result
+\item \code{ademp}: simulation-study metadata
+\item \code{notes}: interpretation notes
+}
 }
 \description{
 Forecast population-level MFRM operating characteristics for one future design
+
+Summarize a population-level design forecast
 }
 \details{
 \code{predict_mfrm_population()} is a \strong{scenario-level forecasting helper} built
@@ -215,8 +245,23 @@ pred <- predict_mfrm_population(
 s_pred <- summary(pred)
 s_pred$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
 }
+# Optional workflow; run the example explicitly as shown below.
+# example("summary.mfrm_population_prediction", run.dontrun = TRUE)
+\dontrun{
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-population.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+pred <- saved$result
+s <- summary(pred)
+s$overview
+s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
+}
 }
 \seealso{
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}},
 \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \link{summary.mfrm_population_prediction}
+
+\code{\link[=predict_mfrm_population]{predict_mfrm_population()}}
 }

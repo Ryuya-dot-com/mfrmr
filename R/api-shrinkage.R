@@ -588,19 +588,36 @@ apply_empirical_bayes_shrinkage <- function(fit,
 }
 
 
-#' Extract the shrinkage report from a fitted mfrm_fit
+#' Inspect shrinkage by facet
 #'
-#' Lightweight accessor that returns the per-facet empirical-Bayes
-#' shrinkage table stored on a fit when `facet_shrinkage != "none"`.
-#' Returns `NULL` (with a message) when no shrinkage has been applied
-#' so callers can probe without error.
+#' Summarize how much an optional empirical-Bayes adjustment moves facet
+#' estimates toward zero. The report is available after
+#' [apply_empirical_bayes_shrinkage()] or
+#' `fit_mfrm(..., facet_shrinkage = "empirical_bayes")`.
 #'
 #' @param fit An `mfrm_fit` object.
+#' @details
+#' `MeanShrinkage` averages available shrinkage fractions: 0 leaves an
+#' estimate unchanged; 1 pools it at zero. `EffectiveDF` sums retained weights
+#' conditional on the prior variance; it is not a test or AIC degrees of freedom.
+#'
+#' `NLevels` counts all levels; `NLevelsUsed` counts finite estimate/positive-SE
+#' pairs. `Tau2` is the selected prior variance in squared parameter units;
+#' `PriorSource` identifies empirical moments or a supplied prior.
+#' `MeanSE2` averages squared input SEs. Below three eligible levels no
+#' adjustment is applied, `Tau2` is unavailable and shrinkage is zero for
+#' eligible levels; inspect `Note`.
+#'
+#' `SupportsFormalInference` is false. Full pooling's zero plug-in SE does
+#' not establish perfect precision. [apply_empirical_bayes_shrinkage()]
+#' defines the calculation and omitted uncertainty; original MFRM estimates
+#' remain unchanged.
+#'
 #' @return A data.frame with one row per facet (and optionally
 #'   `"Person"`) or `NULL` when shrinkage has not been applied.
 #' @seealso [apply_empirical_bayes_shrinkage()], [fit_mfrm()].
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("shrinkage_report", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -609,6 +626,7 @@ apply_empirical_bayes_shrinkage <- function(fit,
 #'                 facet_shrinkage = "empirical_bayes")
 #' shrinkage_report(fit)
 #' }
+#' @rdname apply_empirical_bayes_shrinkage
 #' @export
 shrinkage_report <- function(fit) {
   if (!inherits(fit, "mfrm_fit")) {

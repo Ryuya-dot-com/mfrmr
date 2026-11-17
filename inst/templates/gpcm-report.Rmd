@@ -278,7 +278,7 @@ knitr::kable(report$first_screen[, c("Area", "Status", "MainIssue", "NextAction"
 
 The full draft and table/figure wording are saved with the analysis. Review
 them against the study context rather than copying every generated sentence.
-Use `reporting_checklist()` for the manuscript coverage map and
+Use `mfrm_report(fit, type = "checklist")` for the manuscript coverage map and
 `mfrmr_output_guide("visual_templates")` for figure-caption starters.
 
 ## Files and references

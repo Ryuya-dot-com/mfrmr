@@ -269,6 +269,7 @@ NULL
 #' # Choose one dataset
 #' ratings <- load_mfrmr_data("example_operational")
 #' head(ratings)
+#' @rdname load_mfrmr_data
 #' @export
 list_mfrmr_data <- function(details = FALSE) {
   if (!is.logical(details) || length(details) != 1L || is.na(details)) {
@@ -445,7 +446,7 @@ load_mfrmr_data <- function(name = c(
 #'   G-study help example (seed 2027). Their unchanged generation recipes are
 #'   retained in `data-raw/make-teaching-data.R` in the source repository.
 #' @seealso [mfrm_g_study()], [mfrm_d_study()],
-#'   [mfrm_multivariate_d_compare()], [load_mfrmr_data()]
+#'   [mfrm_d_study_comparison], [load_mfrmr_data()]
 #' @examples
 #' data("mfrmr_example_gtheory_crossed", package = "mfrmr")
 #' ratings <- mfrmr_example_gtheory_crossed

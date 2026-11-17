@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-resampling.R
 \name{build_mfrm_resampling_spec}
 \alias{build_mfrm_resampling_spec}
+\alias{draw_mfrm_resamples}
 \title{Build an observed-data resampling specification}
 \usage{
 build_mfrm_resampling_spec(
@@ -20,6 +21,8 @@ build_mfrm_resampling_spec(
   min_per_stratum = 1,
   topup_preserve_facets = TRUE
 )
+
+draw_mfrm_resamples(spec, keep_data = TRUE)
 }
 \arguments{
 \item{data}{A long-format observed MFRM data set with distinct column names.
@@ -70,14 +73,38 @@ replacement is \code{FALSE} for \code{"stratified_subsample"} and \code{TRUE} fo
 when possible to recover missing levels of \code{preserve_facets}. This changes
 the sampling distribution and can increase stratum sizes; it is not an
 ordinary bootstrap. Set \code{FALSE} for ordinary cluster-bootstrap draws.}
+
+\item{spec}{Output from \code{\link[=build_mfrm_resampling_spec]{build_mfrm_resampling_spec()}}.}
+
+\item{keep_data}{Logical; if \code{TRUE}, return a list of replicate data frames.
+If \code{FALSE}, return manifest tables only.}
 }
 \value{
 An object of class \code{mfrm_resampling_spec} containing the input data,
 columns, target plan, person/stratum rosters, \code{sampling_scheme} and
 interpretation in \code{terminology}.
+
+An object of class \code{mfrm_resamples} with:
+\itemize{
+\item \code{samples}: replicate data frames with original Person, draw-unit, stratum
+and top-up metadata, or an empty list when \code{keep_data = FALSE}.
+\item \code{manifest}: replicate seeds, sampling scheme, base/added/final cluster
+counts, original Person counts, rating-row counts and coverage checks.
+\item \code{stratum_manifest}: \code{BasePersonClusters} before top-up,
+\code{TopupPersonClusters}, final \code{SelectedPersonClusters} and
+\code{SelectedOriginalPersons}, and final \code{Rows} for each stratum.
+\item \code{preserve_manifest}: observed coverage of requested facet levels.
+\item \code{spec} and \code{terminology}: inputs, sampling assumptions and interpretation.
+\code{summary()} retains full manifests as well as compact tables. For older
+results with top-up, pre-top-up stratum counts are retained as base counts;
+unrecorded final cluster counts are \code{NA}, with a note, while final row counts
+remain available. This does not redraw old samples.
+}
 }
 \description{
 Build an observed-data resampling specification
+
+Draw observed-data MFRM resamples
 }
 \details{
 This helper defines a resampling design for observed-data stability checks.
@@ -91,6 +118,11 @@ The design is person-clustered: all rows for a selected person are kept
 together. For bootstrap draws, duplicated person clusters are re-keyed in the
 returned data while the original identifier is retained in
 \code{.mfrm_original_person}.
+
+See \code{\link[=build_mfrm_resampling_spec]{build_mfrm_resampling_spec()}} for sampling assumptions,
+top-up, label handling and saved-specification compatibility. Sampling
+keeps each selected Person's entire rating cluster and re-keys every
+instance when drawing with replacement. Other facet labels are retained.
 }
 \section{Sampling assumptions and interpretation}{
 
@@ -144,6 +176,16 @@ spec <- build_mfrm_resampling_spec(
 draws <- draw_mfrm_resamples(spec)
 summary(draws)$overview
 draws$stratum_manifest  # Base, top-up and final Person-cluster counts.
+# Same-size Person-cluster bootstrap within the observed Group strata.
+ratings <- load_mfrmr_data("example_operational")
+spec <- build_mfrm_resampling_spec(
+  ratings, person = "Person", facets = c("Rater", "Criterion"),
+  score = "Score", strata = "Group", reps = 2,
+  design = "stratified_bootstrap", sample_fraction = 1,
+  topup_preserve_facets = FALSE, seed = 99
+)
+draws <- draw_mfrm_resamples(spec, keep_data = FALSE)
+summary(draws)$overview
 }
 \references{
 Owen, A. B. and Eckles, D. (2012). Bootstrapping data arrays of arbitrary
@@ -153,4 +195,6 @@ it is not the method implemented by this Person-cluster helper.
 }
 \seealso{
 \code{\link[=draw_mfrm_resamples]{draw_mfrm_resamples()}}, \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}
+
+\code{\link[=build_mfrm_resampling_spec]{build_mfrm_resampling_spec()}}
 }

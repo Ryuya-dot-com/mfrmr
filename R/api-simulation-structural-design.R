@@ -2541,29 +2541,6 @@ simulation_structural_design_report_consume <- function(x,
   )
 }
 
-simulation_structural_design_report_mode_registry <- function(x) {
-  cached <- if (is.list(x)) x$report_mode_registry %||% NULL else NULL
-  if (is.list(cached) || (is.data.frame(cached) && nrow(cached) >= 0L)) {
-    return(cached)
-  }
-
-  tibble::tibble(
-    mode = c("brief", "snapshot", "operation"),
-    payload_contract = c(
-      "arbitrary_facet_design_report_brief",
-      "arbitrary_facet_design_report_snapshot",
-      "arbitrary_facet_design_report_operation"
-    ),
-    default_surface = "digest",
-    carries_nested_graph = c(FALSE, FALSE, TRUE),
-    note = c(
-      "Selected surface plus headline table and surface index.",
-      "Compact headline metadata plus one selected surface.",
-      "Full compact report operation with selected surface and nested registry."
-    )
-  )
-}
-
 simulation_structural_design_compact_review <- function(x,
                                            design = NULL,
                                            prefer = NULL,
@@ -2671,205 +2648,104 @@ simulation_structural_design_compact_review <- function(x,
   )
 }
 
-simulation_structural_design_compact_review_summary <- function(x,
-                                                   design = NULL,
-                                                   prefer = NULL,
-                                                   view = c("public", "canonical", "design"),
-                                                   mode = c("brief", "snapshot", "operation"),
-                                                   surface = c("digest", "catalog", "metrics", "axes", "components"),
-                                                   x_var = NULL,
-                                                   group_var = NULL,
-                                                   id_prefix = NULL) {
-  cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "compact_review_summary",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+simulation_structural_design_compact_review_part <- function(x,
+                                                     part = c("summary", "table", "plot"),
+                                                     component = c("grid", "report", "surface_index"),
+                                                     design = NULL,
+                                                     prefer = NULL,
+                                                     view = c("public", "canonical", "design"),
+                                                     mode = c("brief", "snapshot", "operation"),
+                                                     surface = c("digest", "catalog", "metrics", "axes", "components"),
+                                                     x_var = NULL,
+                                                     group_var = NULL,
+                                                     id_prefix = NULL) {
+  part <- match.arg(part)
+  field <- paste0("compact_review_", part)
+  cached <- if (identical(part, "table")) {
+    simulation_structural_design_cached_default(
+      x = x, field = field, design = design, prefer = prefer,
+      view = view, view_default = "public", mode = mode, mode_default = "brief",
+      surface = surface, surface_default = "digest",
+      component = component, component_default = "grid",
+      x_var = x_var, group_var = group_var, id_prefix = id_prefix
+    )
+  } else {
+    simulation_structural_design_cached_default(
+      x = x, field = field, design = design, prefer = prefer,
+      view = view, view_default = "public", mode = mode, mode_default = "brief",
+      surface = surface, surface_default = "digest",
+      x_var = x_var, group_var = group_var, id_prefix = id_prefix
+    )
+  }
+  if (!is.null(cached)) return(cached)
+
+  if (identical(part, "table")) component <- match.arg(component)
+  review <- simulation_structural_design_compact_review(
+    x = x, design = design, prefer = prefer, view = view,
+    mode = mode, surface = surface, x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-  if (!is.null(cached)) {
-    return(cached)
+  stage <- as.character(review$review_stage %||% "deterministic_review")
+  p_contract <- as.character(review$planner_contract %||% "named_facet_structural_review")
+  avail <- isTRUE(review$review_available)
+
+  if (identical(part, "summary")) {
+    headline_table <- tibble::tibble(
+      review_available = avail,
+      n_designs = as.integer(review$n_designs %||% 0L),
+      recommended_design_id = as.character(review$recommended_design_id %||% NA_character_),
+      view = as.character(review$view %||% NA_character_),
+      mode = as.character(review$mode %||% NA_character_),
+      surface = as.character(review$surface %||% NA_character_),
+      grid_rows = if (is.data.frame(review$grid_table)) nrow(review$grid_table) else 0L,
+      plot_available = isTRUE(review$plot_payload$data$plot_available %||% FALSE),
+      report_payload_contract = as.character(review$report_consumer$payload_contract %||% NA_character_)
+    )
+    return(list(
+      compact_review_summary_contract = "arbitrary_facet_planning_compact_review_summary",
+      review_stage = stage,
+      planner_contract = p_contract,
+      review_available = avail,
+      reason = as.character(review$reason %||% "No deterministic structural-design review summary is currently available."),
+      headline_table = headline_table,
+      review = review,
+      note = paste(
+        "Compact summary for the deterministic structural-design review, exposing one",
+        "headline table over the current grid and report layer without implying",
+        "an active performance-based arbitrary-facet planner."
+      )
+    ))
   }
 
-  review <- simulation_structural_design_compact_review(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-
-  headline_table <- tibble::tibble(
-    review_available = isTRUE(review$review_available),
-    n_designs = as.integer(review$n_designs %||% 0L),
-    recommended_design_id = as.character(review$recommended_design_id %||% NA_character_),
-    view = as.character(review$view %||% NA_character_),
-    mode = as.character(review$mode %||% NA_character_),
-    surface = as.character(review$surface %||% NA_character_),
-    grid_rows = if (is.data.frame(review$grid_table)) nrow(review$grid_table) else 0L,
-    plot_available = isTRUE(review$plot_payload$data$plot_available %||% FALSE),
-    report_payload_contract = as.character(
-      review$report_consumer$payload_contract %||% NA_character_
+  if (identical(part, "table")) {
+    tbl <- switch(
+      component,
+      grid = tibble::as_tibble(review$grid_table %||% tibble::tibble()),
+      report = tibble::as_tibble(review$report_consumer$selected_table %||% tibble::tibble()),
+      surface_index = tibble::as_tibble(review$report_consumer$surface_index %||% tibble::tibble())
     )
-  )
-
-  list(
-    compact_review_summary_contract = "arbitrary_facet_planning_compact_review_summary",
-    review_stage = as.character(review$review_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      review$planner_contract %||% "named_facet_structural_review"
-    ),
-    review_available = isTRUE(review$review_available),
-    reason = as.character(
-      review$reason %||%
-        "No deterministic structural-design review summary is currently available."
-    ),
-    headline_table = headline_table,
-    review = review,
-    note = paste(
-      "Compact summary for the deterministic structural-design review, exposing one",
-      "headline table over the current grid and report layer without implying",
-      "an active performance-based arbitrary-facet planner."
-    )
-  )
-}
-
-simulation_structural_design_compact_review_table <- function(x,
-                                                 component = c("grid", "report", "surface_index"),
-                                                 design = NULL,
-                                                 prefer = NULL,
-                                                 view = c("public", "canonical", "design"),
-                                                 mode = c("brief", "snapshot", "operation"),
-                                                 surface = c("digest", "catalog", "metrics", "axes", "components"),
-                                                 x_var = NULL,
-                                                 group_var = NULL,
-                                                 id_prefix = NULL) {
-  cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "compact_review_table",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    component = component,
-    component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-  if (!is.null(cached)) {
-    return(cached)
+    return(list(
+      compact_review_table_contract = "arbitrary_facet_planning_compact_review_table",
+      review_stage = stage,
+      planner_contract = p_contract,
+      review_available = avail,
+      reason = as.character(review$reason %||% "No deterministic structural-design review table is currently available."),
+      component = component,
+      table = tbl,
+      review = review,
+      note = paste(
+        "Selected table view from the deterministic structural-design review.",
+        "This exposes either the grid table, the selected report table, or",
+        "the compact surface index from the current review layer."
+      )
+    ))
   }
-
-  component <- match.arg(component)
-  review <- simulation_structural_design_compact_review(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-
-  table <- switch(
-    component,
-    grid = tibble::as_tibble(review$grid_table %||% tibble::tibble()),
-    report = tibble::as_tibble(review$report_consumer$selected_table %||% tibble::tibble()),
-    surface_index = tibble::as_tibble(review$report_consumer$surface_index %||% tibble::tibble())
-  )
-
-  list(
-    compact_review_table_contract = "arbitrary_facet_planning_compact_review_table",
-    review_stage = as.character(review$review_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      review$planner_contract %||% "named_facet_structural_review"
-    ),
-    review_available = isTRUE(review$review_available),
-    reason = as.character(
-      review$reason %||%
-        "No deterministic structural-design review table is currently available."
-    ),
-    component = component,
-    table = table,
-    review = review,
-    note = paste(
-      "Selected table view from the deterministic structural-design review.",
-      "This exposes either the grid table, the selected report table, or",
-      "the compact surface index from the current review layer."
-    )
-  )
-}
-
-simulation_structural_design_compact_review_plot <- function(x,
-                                                design = NULL,
-                                                prefer = NULL,
-                                                view = c("public", "canonical", "design"),
-                                                mode = c("brief", "snapshot", "operation"),
-                                                surface = c("digest", "catalog", "metrics", "axes", "components"),
-                                                x_var = NULL,
-                                                group_var = NULL,
-                                                id_prefix = NULL) {
-  cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "compact_review_plot",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-  if (!is.null(cached)) {
-    return(cached)
-  }
-
-  review <- simulation_structural_design_compact_review(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
 
   list(
     compact_review_plot_contract = "arbitrary_facet_planning_compact_review_plot",
-    review_stage = as.character(review$review_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      review$planner_contract %||% "named_facet_structural_review"
-    ),
-    review_available = isTRUE(review$review_available),
-    reason = as.character(
-      review$reason %||%
-        "No deterministic structural-design review plot is currently available."
-    ),
+    review_stage = stage,
+    planner_contract = p_contract,
+    review_available = avail,
+    reason = as.character(review$reason %||% "No deterministic structural-design review plot is currently available."),
     plot = review$plot_payload,
     review = review,
     note = paste(
@@ -2921,39 +2797,17 @@ simulation_structural_design_review <- function(x,
   surface <- match.arg(surface)
   table_component <- match.arg(table_component)
 
-  compact_review_summary <- simulation_structural_design_compact_review_summary(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+  compact_review_summary <- simulation_structural_design_compact_review_part(
+    x = x, part = "summary", design = design, prefer = prefer,
+    view = view, mode = mode, surface = surface, x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-  compact_review_table <- simulation_structural_design_compact_review_table(
-    x = x,
-    component = table_component,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+  compact_review_table <- simulation_structural_design_compact_review_part(
+    x = x, part = "table", component = table_component, design = design, prefer = prefer,
+    view = view, mode = mode, surface = surface, x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-  compact_review_plot <- simulation_structural_design_compact_review_plot(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+  compact_review_plot <- simulation_structural_design_compact_review_part(
+    x = x, part = "plot", design = design, prefer = prefer,
+    view = view, mode = mode, surface = surface, x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
 
   review_available <- isTRUE(compact_review_summary$review_available) &&
@@ -3005,131 +2859,27 @@ simulation_structural_design_review <- function(x,
   ), class = c("mfrm_structural_design_review", "list"))
 }
 
-simulation_structural_design_review_canonical_grid <- function(branch) {
-  candidates <- list(
-    branch$canonical_grid,
-    branch$summary$review$grid_summary$canonical,
-    branch$table$review$grid_summary$canonical,
-    branch$plot$review$grid_summary$canonical
-  )
-
-  for (candidate in candidates) {
-    if (is.data.frame(candidate) && nrow(candidate) > 0L) {
-      return(tibble::as_tibble(candidate))
-    }
+simulation_summarize_design_metrics <- function(registry, key_col, tbl) {
+  keys <- as.character(registry[[key_col]])
+  n_k <- length(keys)
+  mins <- numeric(n_k)
+  maxs <- numeric(n_k)
+  means <- numeric(n_k)
+  recs <- numeric(n_k)
+  rec_row <- tbl[tbl$recommended %in% TRUE, , drop = FALSE]
+  has_rec <- nrow(rec_row) > 0L
+  for (i in seq_len(n_k)) {
+    v <- tbl[[keys[i]]]
+    mins[i] <- min(v, na.rm = TRUE)
+    maxs[i] <- max(v, na.rm = TRUE)
+    means[i] <- mean(v, na.rm = TRUE)
+    recs[i] <- if (has_rec) as.numeric(rec_row[[keys[i]]][[1]]) else NA_real_
   }
-
-  tibble::tibble()
-}
-
-simulation_structural_design_review_metric_registry <- function() {
-  tibble::tibble(
-    metric = c(
-      "total_observations",
-      "observations_per_person",
-      "observations_per_criterion",
-      "expected_observations_per_rater",
-      "assignment_fraction"
-    ),
-    basis_class = c(
-      "exact_identity",
-      "exact_identity",
-      "exact_identity",
-      "balanced_expectation",
-      "density_ratio"
-    ),
-    formula = c(
-      "n_person * raters_per_person * n_criterion",
-      "raters_per_person * n_criterion",
-      "n_person * raters_per_person",
-      "(n_person * raters_per_person * n_criterion) / n_rater",
-      "raters_per_person / n_rater"
-    ),
-    interpretation = c(
-      "Total number of scored observations implied by the current design row.",
-      "Number of scored observations contributed by one person under the current design row.",
-      "Number of scored observations contributed to one criterion across persons.",
-      "Average expected rater load under balanced assignment, not a guaranteed realized count.",
-      "Fraction of available raters assigned to each person."
-    ),
-    psychometric = FALSE
-  )
-}
-
-simulation_structural_design_review_load_balance_registry <- function() {
-  tibble::tibble(
-    metric = c(
-      "expected_observations_per_rater",
-      "expected_person_assignments_per_rater",
-      "observation_load_floor",
-      "observation_load_ceiling",
-      "observation_load_remainder",
-      "perfect_integer_observation_balance"
-    ),
-    basis_class = c(
-      "balanced_expectation",
-      "balanced_expectation",
-      "integer_balance_bound",
-      "integer_balance_bound",
-      "exact_identity",
-      "exact_identity"
-    ),
-    formula = c(
-      "(n_person * raters_per_person * n_criterion) / n_rater",
-      "(n_person * raters_per_person) / n_rater",
-      "floor((n_person * raters_per_person * n_criterion) / n_rater)",
-      "ceiling((n_person * raters_per_person * n_criterion) / n_rater)",
-      "(n_person * raters_per_person * n_criterion) %% n_rater",
-      "as.integer(((n_person * raters_per_person * n_criterion) %% n_rater) == 0)"
-    ),
-    interpretation = c(
-      "Average observation load per rater under balanced assignment, not a guaranteed realized count.",
-      "Average person-assignment load per rater under balanced assignment, not a guaranteed realized count.",
-      "Lower integer observation count per rater under the most even observation-level split implied by the current design row.",
-      "Upper integer observation count per rater under the most even observation-level split implied by the current design row.",
-      "Number of observations left over after equal integer splitting across raters.",
-      "Indicator that the total observation count is divisible by the number of raters."
-    ),
-    psychometric = FALSE
-  )
-}
-
-simulation_structural_design_review_coverage_registry <- function() {
-  tibble::tibble(
-    metric = c(
-      "person_criterion_cells",
-      "criterion_replications_per_person",
-      "rater_pair_overlap_per_cell",
-      "total_rater_pair_overlaps",
-      "pair_coverage_fraction_per_cell",
-      "redundant_scoring"
-    ),
-    basis_class = c(
-      "exact_identity",
-      "exact_identity",
-      "exact_identity",
-      "exact_identity",
-      "exact_ratio",
-      "exact_identity"
-    ),
-    formula = c(
-      "n_person * n_criterion",
-      "raters_per_person",
-      "choose(raters_per_person, 2)",
-      "n_person * n_criterion * choose(raters_per_person, 2)",
-      "ifelse(choose(n_rater, 2) > 0, choose(raters_per_person, 2) / choose(n_rater, 2), 0)",
-      "as.integer(raters_per_person > 1)"
-    ),
-    interpretation = c(
-      "Number of person-by-criterion cells implied by the current design row.",
-      "Number of ratings attached to each person-by-criterion cell.",
-      "Number of distinct rater pairs overlapping within one scored cell.",
-      "Total number of rater-pair overlaps implied across all person-by-criterion cells.",
-      "Fraction of available rater pairs represented within one scored cell; set to 0 when fewer than two raters are available.",
-      "Indicator that the design uses more than one rater per scored cell."
-    ),
-    psychometric = FALSE
-  )
+  registry$min <- stats::setNames(mins, keys)
+  registry$max <- stats::setNames(maxs, keys)
+  registry$mean <- stats::setNames(means, keys)
+  registry$recommended_value <- stats::setNames(recs, keys)
+  registry
 }
 
 simulation_structural_design_review_profile <- function(x,
@@ -3143,54 +2893,41 @@ simulation_structural_design_review_profile <- function(x,
                                                            group_var = NULL,
                                                            id_prefix = NULL) {
   cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_profile",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, field = "design_review_profile", design = design, prefer = prefer,
+    view = view, view_default = "public", mode = mode, mode_default = "brief",
+    surface = surface, surface_default = "digest",
+    table_component = table_component, table_component_default = "grid",
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-  if (!is.null(cached)) {
-    return(cached)
-  }
+  if (!is.null(cached)) return(cached)
 
   branch <- simulation_structural_design_review(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, design = design, prefer = prefer, view = view,
+    mode = mode, surface = surface, table_component = table_component,
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-
-  canonical <- simulation_structural_design_review_canonical_grid(branch)
+  canonical <- tibble::tibble()
+  for (cand in list(
+    branch$canonical_grid,
+    branch$summary$review$grid_summary$canonical,
+    branch$table$review$grid_summary$canonical,
+    branch$plot$review$grid_summary$canonical
+  )) {
+    if (is.data.frame(cand) && nrow(cand) > 0L) {
+      canonical <- tibble::as_tibble(cand)
+      break
+    }
+  }
+  metric_registry <- simulation_structural_design_review_metric_registry
 
   if (!isTRUE(branch$review_available) || nrow(canonical) == 0L) {
     return(list(
       profile_contract = "arbitrary_facet_planning_design_review_profile",
       profile_stage = as.character(branch$review_stage %||% "deterministic_review"),
-      planner_contract = as.character(
-        branch$planner_contract %||% "named_facet_structural_review"
-      ),
+      planner_contract = as.character(branch$planner_contract %||% "named_facet_structural_review"),
       review_available = FALSE,
-      reason = as.character(
-        branch$reason %||%
-          "No deterministic structural-design profile is currently available."
-      ),
-      metric_registry = simulation_structural_design_review_metric_registry(),
+      reason = as.character(branch$reason %||% "No deterministic structural-design profile is currently available."),
+      metric_registry = metric_registry,
       profile_summary_table = tibble::tibble(),
       profile_table = tibble::tibble(),
       design_review = branch,
@@ -3201,45 +2938,23 @@ simulation_structural_design_review_profile <- function(x,
     ))
   }
 
-  profile_table <- canonical |>
-    dplyr::mutate(
-      total_observations = as.numeric(.data$n_person) * as.numeric(.data$raters_per_person) * as.numeric(.data$n_criterion),
-      observations_per_person = as.numeric(.data$raters_per_person) * as.numeric(.data$n_criterion),
-      observations_per_criterion = as.numeric(.data$n_person) * as.numeric(.data$raters_per_person),
-      expected_observations_per_rater = .data$total_observations / as.numeric(.data$n_rater),
-      assignment_fraction = as.numeric(.data$raters_per_person) / as.numeric(.data$n_rater),
-      recommended = .data$design_id == as.character(branch$recommended_design_id %||% NA_character_)
-    )
-  metric_registry <- simulation_structural_design_review_metric_registry()
-  recommended_row <- profile_table[profile_table$recommended %in% TRUE, , drop = FALSE]
-  profile_summary_table <- metric_registry |>
-    dplyr::mutate(
-      min = vapply(.data$metric, function(metric) {
-        min(profile_table[[metric]], na.rm = TRUE)
-      }, numeric(1)),
-      max = vapply(.data$metric, function(metric) {
-        max(profile_table[[metric]], na.rm = TRUE)
-      }, numeric(1)),
-      mean = vapply(.data$metric, function(metric) {
-        mean(profile_table[[metric]], na.rm = TRUE)
-      }, numeric(1)),
-      recommended_value = vapply(.data$metric, function(metric) {
-        if (nrow(recommended_row) == 0L) return(NA_real_)
-        as.numeric(recommended_row[[metric]][[1]])
-      }, numeric(1))
-    )
+  profile_table <- dplyr::mutate(
+    canonical,
+    total_observations = as.numeric(.data$n_person) * as.numeric(.data$raters_per_person) * as.numeric(.data$n_criterion),
+    observations_per_person = as.numeric(.data$raters_per_person) * as.numeric(.data$n_criterion),
+    observations_per_criterion = as.numeric(.data$n_person) * as.numeric(.data$raters_per_person),
+    expected_observations_per_rater = .data$total_observations / as.numeric(.data$n_rater),
+    assignment_fraction = as.numeric(.data$raters_per_person) / as.numeric(.data$n_rater),
+    recommended = .data$design_id == as.character(branch$recommended_design_id %||% NA_character_)
+  )
+  profile_summary_table <- simulation_summarize_design_metrics(metric_registry, "metric", profile_table)
 
   list(
     profile_contract = "arbitrary_facet_planning_design_review_profile",
     profile_stage = as.character(branch$review_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      branch$planner_contract %||% "named_facet_structural_review"
-    ),
+    planner_contract = as.character(branch$planner_contract %||% "named_facet_structural_review"),
     review_available = TRUE,
-    reason = as.character(
-      branch$reason %||%
-        "Deterministic structural-design profile is materialized."
-    ),
+    reason = as.character(branch$reason %||% "Deterministic structural-design profile is materialized."),
     metric_registry = metric_registry,
     profile_summary_table = profile_summary_table,
     profile_table = profile_table,
@@ -3263,54 +2978,29 @@ simulation_structural_design_review_load_balance <- function(x,
                                                                 group_var = NULL,
                                                                 id_prefix = NULL) {
   cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_load_balance",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, field = "design_review_load_balance", design = design, prefer = prefer,
+    view = view, view_default = "public", mode = mode, mode_default = "brief",
+    surface = surface, surface_default = "digest",
+    table_component = table_component, table_component_default = "grid",
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-  if (!is.null(cached)) {
-    return(cached)
-  }
+  if (!is.null(cached)) return(cached)
 
   profile <- simulation_structural_design_review_profile(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, design = design, prefer = prefer, view = view,
+    mode = mode, surface = surface, table_component = table_component,
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-
   profile_table <- tibble::as_tibble(profile$profile_table %||% tibble::tibble())
-  metric_registry <- simulation_structural_design_review_load_balance_registry()
+  metric_registry <- simulation_structural_design_review_load_balance_registry
 
   if (!isTRUE(profile$review_available) || nrow(profile_table) == 0L) {
     return(list(
       diagnostics_contract = "arbitrary_facet_planning_design_review_load_balance",
       diagnostics_stage = as.character(profile$profile_stage %||% "deterministic_review"),
-      planner_contract = as.character(
-        profile$planner_contract %||% "named_facet_structural_review"
-      ),
+      planner_contract = as.character(profile$planner_contract %||% "named_facet_structural_review"),
       review_available = FALSE,
-      reason = as.character(
-        profile$reason %||%
-          "No deterministic structural-design load/balance diagnostics are currently available."
-      ),
+      reason = as.character(profile$reason %||% "No deterministic structural-design load/balance diagnostics are currently available."),
       metric_registry = metric_registry,
       diagnostic_summary_table = tibble::tibble(),
       diagnostic_table = tibble::tibble(),
@@ -3322,43 +3012,22 @@ simulation_structural_design_review_load_balance <- function(x,
     ))
   }
 
-  diagnostic_table <- profile_table |>
-    dplyr::mutate(
-      expected_person_assignments_per_rater = (as.numeric(.data$n_person) * as.numeric(.data$raters_per_person)) / as.numeric(.data$n_rater),
-      observation_load_floor = floor(as.numeric(.data$total_observations) / as.numeric(.data$n_rater)),
-      observation_load_ceiling = ceiling(as.numeric(.data$total_observations) / as.numeric(.data$n_rater)),
-      observation_load_remainder = as.numeric(.data$total_observations) %% as.numeric(.data$n_rater),
-      perfect_integer_observation_balance = as.integer(.data$observation_load_remainder == 0)
-    )
-  recommended_row <- diagnostic_table[diagnostic_table$recommended %in% TRUE, , drop = FALSE]
-  diagnostic_summary_table <- metric_registry |>
-    dplyr::mutate(
-      min = vapply(.data$metric, function(metric) {
-        min(diagnostic_table[[metric]], na.rm = TRUE)
-      }, numeric(1)),
-      max = vapply(.data$metric, function(metric) {
-        max(diagnostic_table[[metric]], na.rm = TRUE)
-      }, numeric(1)),
-      mean = vapply(.data$metric, function(metric) {
-        mean(diagnostic_table[[metric]], na.rm = TRUE)
-      }, numeric(1)),
-      recommended_value = vapply(.data$metric, function(metric) {
-        if (nrow(recommended_row) == 0L) return(NA_real_)
-        as.numeric(recommended_row[[metric]][[1]])
-      }, numeric(1))
-    )
+  diagnostic_table <- dplyr::mutate(
+    profile_table,
+    expected_person_assignments_per_rater = (as.numeric(.data$n_person) * as.numeric(.data$raters_per_person)) / as.numeric(.data$n_rater),
+    observation_load_floor = floor(as.numeric(.data$total_observations) / as.numeric(.data$n_rater)),
+    observation_load_ceiling = ceiling(as.numeric(.data$total_observations) / as.numeric(.data$n_rater)),
+    observation_load_remainder = as.numeric(.data$total_observations) %% as.numeric(.data$n_rater),
+    perfect_integer_observation_balance = as.integer(.data$observation_load_remainder == 0)
+  )
+  diagnostic_summary_table <- simulation_summarize_design_metrics(metric_registry, "metric", diagnostic_table)
 
   list(
     diagnostics_contract = "arbitrary_facet_planning_design_review_load_balance",
     diagnostics_stage = as.character(profile$profile_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      profile$planner_contract %||% "named_facet_structural_review"
-    ),
+    planner_contract = as.character(profile$planner_contract %||% "named_facet_structural_review"),
     review_available = TRUE,
-    reason = as.character(
-      profile$reason %||%
-        "Deterministic structural-design load/balance diagnostics are materialized."
-    ),
+    reason = as.character(profile$reason %||% "Deterministic structural-design load/balance diagnostics are materialized."),
     metric_registry = metric_registry,
     diagnostic_summary_table = diagnostic_summary_table,
     diagnostic_table = diagnostic_table,
@@ -3368,189 +3037,6 @@ simulation_structural_design_review_load_balance <- function(x,
       "review layer. Balanced-load quantities are labeled as expectations, while",
       "integer split diagnostics are exact combinatorial summaries of the",
       "current observation counts."
-    )
-  )
-}
-
-simulation_structural_design_review_overview <- function(x,
-                                                            design = NULL,
-                                                            prefer = NULL,
-                                                            view = c("public", "canonical", "design"),
-                                                            mode = c("brief", "snapshot", "operation"),
-                                                            surface = c("digest", "catalog", "metrics", "axes", "components"),
-                                                            table_component = c("grid", "report", "surface_index"),
-                                                            x_var = NULL,
-                                                            group_var = NULL,
-                                                            id_prefix = NULL) {
-  cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_overview",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-  if (!is.null(cached)) {
-    return(cached)
-  }
-
-  branch <- simulation_structural_design_review(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-  profile <- simulation_structural_design_review_profile(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-
-  headline_table <- tibble::tibble(
-    review_available = isTRUE(branch$review_available),
-    n_designs = as.integer(branch$n_designs %||% 0L),
-    recommended_design_id = as.character(branch$recommended_design_id %||% NA_character_),
-    view = as.character(branch$view %||% NA_character_),
-    mode = as.character(branch$mode %||% NA_character_),
-    surface = as.character(branch$surface %||% NA_character_),
-    table_component = as.character(branch$table_component %||% NA_character_),
-    selected_table_rows = if (is.data.frame(branch$table$table)) nrow(branch$table$table) else 0L,
-    plot_available = isTRUE(branch$plot$plot$data$plot_available %||% FALSE),
-    n_metrics = if (is.data.frame(profile$metric_registry)) nrow(profile$metric_registry) else 0L
-  )
-
-  list(
-    overview_contract = "arbitrary_facet_planning_design_review_overview",
-    overview_stage = as.character(branch$review_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      branch$planner_contract %||% "named_facet_structural_review"
-    ),
-    review_available = isTRUE(branch$review_available) && isTRUE(profile$review_available),
-    reason = as.character(
-      branch$reason %||%
-        profile$reason %||%
-        "No structural-design overview is currently available."
-    ),
-    headline_table = headline_table,
-    metric_registry = tibble::as_tibble(profile$metric_registry %||% tibble::tibble()),
-    metric_summary_table = tibble::as_tibble(profile$profile_summary_table %||% tibble::tibble()),
-    design_review = branch,
-    design_review_profile = profile,
-    note = paste(
-      "Compact overview for the structural-design review layer, combining the",
-      "branch headline with metric-basis-aware deterministic design summaries."
-    )
-  )
-}
-
-simulation_structural_design_review_load_balance_overview <- function(x,
-                                                                         design = NULL,
-                                                                         prefer = NULL,
-                                                                         view = c("public", "canonical", "design"),
-                                                                         mode = c("brief", "snapshot", "operation"),
-                                                                         surface = c("digest", "catalog", "metrics", "axes", "components"),
-                                                                         table_component = c("grid", "report", "surface_index"),
-                                                                         x_var = NULL,
-                                                                         group_var = NULL,
-                                                                         id_prefix = NULL) {
-  cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_load_balance_overview",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-  if (!is.null(cached)) {
-    return(cached)
-  }
-
-  diagnostics <- simulation_structural_design_review_load_balance(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-
-  diagnostic_table <- tibble::as_tibble(diagnostics$diagnostic_table %||% tibble::tibble())
-  headline_table <- tibble::tibble(
-    review_available = isTRUE(diagnostics$review_available),
-    n_designs = nrow(diagnostic_table),
-    n_metrics = if (is.data.frame(diagnostics$metric_registry)) nrow(diagnostics$metric_registry) else 0L,
-    recommended_design_id = if ("design_id" %in% names(diagnostic_table) &&
-                                any(diagnostic_table$recommended %in% TRUE)) {
-      as.character(diagnostic_table$design_id[which(diagnostic_table$recommended %in% TRUE)[1]])
-    } else {
-      NA_character_
-    },
-    n_perfect_integer_balance = if ("perfect_integer_observation_balance" %in% names(diagnostic_table)) {
-      sum(diagnostic_table$perfect_integer_observation_balance %in% 1L, na.rm = TRUE)
-    } else {
-      0L
-    },
-    n_nondivisible_designs = if ("perfect_integer_observation_balance" %in% names(diagnostic_table)) {
-      sum(diagnostic_table$perfect_integer_observation_balance %in% 0L, na.rm = TRUE)
-    } else {
-      0L
-    }
-  )
-
-  list(
-    overview_contract = "arbitrary_facet_planning_design_review_load_balance_overview",
-    overview_stage = as.character(diagnostics$diagnostics_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      diagnostics$planner_contract %||% "named_facet_structural_review"
-    ),
-    review_available = isTRUE(diagnostics$review_available),
-    reason = as.character(
-      diagnostics$reason %||%
-        "No structural-design load/balance overview is currently available."
-    ),
-    headline_table = headline_table,
-    metric_registry = tibble::as_tibble(diagnostics$metric_registry %||% tibble::tibble()),
-    diagnostic_summary_table = tibble::as_tibble(diagnostics$diagnostic_summary_table %||% tibble::tibble()),
-    design_review_load_balance = diagnostics,
-    note = paste(
-      "Compact load/balance overview for the structural-design review layer,",
-      "combining a one-row divisibility headline with basis-aware deterministic",
-      "observation-load diagnostics."
     )
   )
 }
@@ -3566,54 +3052,29 @@ simulation_structural_design_review_coverage <- function(x,
                                                             group_var = NULL,
                                                             id_prefix = NULL) {
   cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_coverage",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, field = "design_review_coverage", design = design, prefer = prefer,
+    view = view, view_default = "public", mode = mode, mode_default = "brief",
+    surface = surface, surface_default = "digest",
+    table_component = table_component, table_component_default = "grid",
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-  if (!is.null(cached)) {
-    return(cached)
-  }
+  if (!is.null(cached)) return(cached)
 
   profile <- simulation_structural_design_review_profile(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, design = design, prefer = prefer, view = view,
+    mode = mode, surface = surface, table_component = table_component,
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-
   profile_table <- tibble::as_tibble(profile$profile_table %||% tibble::tibble())
-  metric_registry <- simulation_structural_design_review_coverage_registry()
+  metric_registry <- simulation_structural_design_review_coverage_registry
 
   if (!isTRUE(profile$review_available) || nrow(profile_table) == 0L) {
     return(list(
       diagnostics_contract = "arbitrary_facet_planning_design_review_coverage",
       diagnostics_stage = as.character(profile$profile_stage %||% "deterministic_review"),
-      planner_contract = as.character(
-        profile$planner_contract %||% "named_facet_structural_review"
-      ),
+      planner_contract = as.character(profile$planner_contract %||% "named_facet_structural_review"),
       review_available = FALSE,
-      reason = as.character(
-        profile$reason %||%
-          "No deterministic structural-design coverage/connectivity diagnostics are currently available."
-      ),
+      reason = as.character(profile$reason %||% "No deterministic structural-design coverage/connectivity diagnostics are currently available."),
       metric_registry = metric_registry,
       diagnostic_summary_table = tibble::tibble(),
       diagnostic_table = tibble::tibble(),
@@ -3640,36 +3101,14 @@ simulation_structural_design_review_coverage <- function(x,
       redundant_scoring = as.integer(as.numeric(.data$raters_per_person) > 1)
     ) |>
     dplyr::select(-"available_rater_pairs")
-
-  recommended_row <- diagnostic_table[diagnostic_table$recommended %in% TRUE, , drop = FALSE]
-  diagnostic_summary_table <- metric_registry |>
-    dplyr::mutate(
-      min = vapply(.data$metric, function(metric) {
-        min(diagnostic_table[[metric]], na.rm = TRUE)
-      }, numeric(1)),
-      max = vapply(.data$metric, function(metric) {
-        max(diagnostic_table[[metric]], na.rm = TRUE)
-      }, numeric(1)),
-      mean = vapply(.data$metric, function(metric) {
-        mean(diagnostic_table[[metric]], na.rm = TRUE)
-      }, numeric(1)),
-      recommended_value = vapply(.data$metric, function(metric) {
-        if (nrow(recommended_row) == 0L) return(NA_real_)
-        as.numeric(recommended_row[[metric]][[1]])
-      }, numeric(1))
-    )
+  diagnostic_summary_table <- simulation_summarize_design_metrics(metric_registry, "metric", diagnostic_table)
 
   list(
     diagnostics_contract = "arbitrary_facet_planning_design_review_coverage",
     diagnostics_stage = as.character(profile$profile_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      profile$planner_contract %||% "named_facet_structural_review"
-    ),
+    planner_contract = as.character(profile$planner_contract %||% "named_facet_structural_review"),
     review_available = TRUE,
-    reason = as.character(
-      profile$reason %||%
-        "Deterministic structural-design coverage/connectivity diagnostics are materialized."
-    ),
+    reason = as.character(profile$reason %||% "Deterministic structural-design coverage/connectivity diagnostics are materialized."),
     metric_registry = metric_registry,
     diagnostic_summary_table = diagnostic_summary_table,
     diagnostic_table = diagnostic_table,
@@ -3679,136 +3118,6 @@ simulation_structural_design_review_coverage <- function(x,
       "review layer. These quantities summarize scored-cell counts and rater-pair",
       "overlap identities without implying psychometric performance."
     )
-  )
-}
-
-simulation_structural_design_review_coverage_overview <- function(x,
-                                                                     design = NULL,
-                                                                     prefer = NULL,
-                                                                     view = c("public", "canonical", "design"),
-                                                                     mode = c("brief", "snapshot", "operation"),
-                                                                     surface = c("digest", "catalog", "metrics", "axes", "components"),
-                                                                     table_component = c("grid", "report", "surface_index"),
-                                                                     x_var = NULL,
-                                                                     group_var = NULL,
-                                                                     id_prefix = NULL) {
-  cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_coverage_overview",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-  if (!is.null(cached)) {
-    return(cached)
-  }
-
-  diagnostics <- simulation_structural_design_review_coverage(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-
-  diagnostic_table <- tibble::as_tibble(diagnostics$diagnostic_table %||% tibble::tibble())
-  headline_table <- tibble::tibble(
-    review_available = isTRUE(diagnostics$review_available),
-    n_designs = nrow(diagnostic_table),
-    n_metrics = if (is.data.frame(diagnostics$metric_registry)) nrow(diagnostics$metric_registry) else 0L,
-    recommended_design_id = if ("design_id" %in% names(diagnostic_table) &&
-                                any(diagnostic_table$recommended %in% TRUE)) {
-      as.character(diagnostic_table$design_id[which(diagnostic_table$recommended %in% TRUE)[1]])
-    } else {
-      NA_character_
-    },
-    n_redundant_designs = if ("redundant_scoring" %in% names(diagnostic_table)) {
-      sum(diagnostic_table$redundant_scoring %in% 1L, na.rm = TRUE)
-    } else {
-      0L
-    },
-    n_single_rater_designs = if ("redundant_scoring" %in% names(diagnostic_table)) {
-      sum(diagnostic_table$redundant_scoring %in% 0L, na.rm = TRUE)
-    } else {
-      0L
-    },
-    n_pair_connected_designs = if ("rater_pair_overlap_per_cell" %in% names(diagnostic_table)) {
-      sum(diagnostic_table$rater_pair_overlap_per_cell > 0, na.rm = TRUE)
-    } else {
-      0L
-    },
-    n_zero_pair_overlap_designs = if ("rater_pair_overlap_per_cell" %in% names(diagnostic_table)) {
-      sum(diagnostic_table$rater_pair_overlap_per_cell <= 0, na.rm = TRUE)
-    } else {
-      0L
-    }
-  )
-
-  list(
-    overview_contract = "arbitrary_facet_planning_design_review_coverage_overview",
-    overview_stage = as.character(diagnostics$diagnostics_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      diagnostics$planner_contract %||% "named_facet_structural_review"
-    ),
-    review_available = isTRUE(diagnostics$review_available),
-    reason = as.character(
-      diagnostics$reason %||%
-        "No structural-design coverage/connectivity overview is currently available."
-    ),
-    headline_table = headline_table,
-    metric_registry = tibble::as_tibble(diagnostics$metric_registry %||% tibble::tibble()),
-    diagnostic_summary_table = tibble::as_tibble(diagnostics$diagnostic_summary_table %||% tibble::tibble()),
-    design_review_coverage = diagnostics,
-    note = paste(
-      "Compact coverage/connectivity overview for the structural-design review",
-      "review layer, combining a one-row redundancy headline with basis-aware",
-      "deterministic rater-overlap diagnostics."
-    )
-  )
-}
-
-simulation_structural_design_review_guardrail_registry <- function() {
-  tibble::tibble(
-    guardrail = c(
-      "rater_linking_regime",
-      "pair_coverage_regime",
-      "integer_balance_regime",
-      "redundancy_regime"
-    ),
-    basis_class = c(
-      "exact_classification",
-      "exact_classification",
-      "exact_classification",
-      "exact_classification"
-    ),
-    rule = c(
-      "ifelse(raters_per_person <= 1, 'single_rater', ifelse(raters_per_person >= n_rater, 'fully_crossed', 'partial_overlap'))",
-      "ifelse(pair_coverage_fraction_per_cell <= 0, 'no_pair_coverage', ifelse(pair_coverage_fraction_per_cell >= 1, 'full_pair_coverage', 'partial_pair_coverage'))",
-      "ifelse(perfect_integer_observation_balance == 1, 'integer_balanced', 'integer_unbalanced')",
-      "ifelse(redundant_scoring == 1, 'redundant', 'single_rater_only')"
-    ),
-    interpretation = c(
-      "Exact cell-level linking regime implied by the current assignments-per-person relative to the available rater count.",
-      "Exact pair-coverage regime implied by the current within-cell rater overlap fraction.",
-      "Exact integer-balance regime induced by the current total observation count and rater count.",
-      "Exact indicator of whether each scored cell uses more than one rater."
-    ),
-    psychometric = FALSE
   )
 }
 
@@ -3823,73 +3132,37 @@ simulation_structural_design_review_guardrails <- function(x,
                                                               group_var = NULL,
                                                               id_prefix = NULL) {
   cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_guardrails",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, field = "design_review_guardrails", design = design, prefer = prefer,
+    view = view, view_default = "public", mode = mode, mode_default = "brief",
+    surface = surface, surface_default = "digest",
+    table_component = table_component, table_component_default = "grid",
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-  if (!is.null(cached)) {
-    return(cached)
-  }
+  if (!is.null(cached)) return(cached)
 
   coverage <- simulation_structural_design_review_coverage(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, design = design, prefer = prefer, view = view,
+    mode = mode, surface = surface, table_component = table_component,
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
   load_balance <- simulation_structural_design_review_load_balance(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, design = design, prefer = prefer, view = view,
+    mode = mode, surface = surface, table_component = table_component,
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
 
   coverage_table <- tibble::as_tibble(coverage$diagnostic_table %||% tibble::tibble())
   load_balance_table <- tibble::as_tibble(load_balance$diagnostic_table %||% tibble::tibble())
-  guardrail_registry <- simulation_structural_design_review_guardrail_registry()
+  guardrail_registry <- simulation_structural_design_review_guardrail_registry
 
   if (!isTRUE(coverage$review_available) || nrow(coverage_table) == 0L ||
       !isTRUE(load_balance$review_available) || nrow(load_balance_table) == 0L) {
     return(list(
       guardrail_contract = "arbitrary_facet_planning_design_review_guardrails",
-      guardrail_stage = as.character(
-        coverage$diagnostics_stage %||% load_balance$diagnostics_stage %||% "deterministic_review"
-      ),
-      planner_contract = as.character(
-        coverage$planner_contract %||%
-          load_balance$planner_contract %||%
-          "named_facet_structural_review"
-      ),
+      guardrail_stage = as.character(coverage$diagnostics_stage %||% load_balance$diagnostics_stage %||% "deterministic_review"),
+      planner_contract = as.character(coverage$planner_contract %||% load_balance$planner_contract %||% "named_facet_structural_review"),
       review_available = FALSE,
-      reason = as.character(
-        coverage$reason %||%
-          load_balance$reason %||%
-          "No deterministic structural-design guardrail classifications are currently available."
-      ),
+      reason = as.character(coverage$reason %||% load_balance$reason %||% "No deterministic structural-design guardrail classifications are currently available."),
       guardrail_registry = guardrail_registry,
       guardrail_summary_table = tibble::tibble(),
       guardrail_table = tibble::tibble(),
@@ -3909,52 +3182,50 @@ simulation_structural_design_review_guardrails <- function(x,
     by = join_cols
   )
 
-  guardrail_table <- joined |>
-    dplyr::mutate(
-      rater_linking_regime = dplyr::case_when(
-        as.numeric(.data$criterion_replications_per_person) <= 1 ~ "single_rater",
-        as.numeric(.data$criterion_replications_per_person) >= as.numeric(.data$n_rater) ~ "fully_crossed",
-        TRUE ~ "partial_overlap"
-      ),
-      pair_coverage_regime = dplyr::case_when(
-        as.numeric(.data$pair_coverage_fraction_per_cell) <= 0 ~ "no_pair_coverage",
-        as.numeric(.data$pair_coverage_fraction_per_cell) >= 1 ~ "full_pair_coverage",
-        TRUE ~ "partial_pair_coverage"
-      ),
-      integer_balance_regime = dplyr::if_else(
-        as.integer(.data$perfect_integer_observation_balance) == 1L,
-        "integer_balanced",
-        "integer_unbalanced"
-      ),
-      redundancy_regime = dplyr::if_else(
-        as.integer(.data$redundant_scoring) == 1L,
-        "redundant",
-        "single_rater_only"
-      )
+  guardrail_table <- dplyr::mutate(
+    joined,
+    rater_linking_regime = dplyr::case_when(
+      as.numeric(.data$criterion_replications_per_person) <= 1 ~ "single_rater",
+      as.numeric(.data$criterion_replications_per_person) >= as.numeric(.data$n_rater) ~ "fully_crossed",
+      TRUE ~ "partial_overlap"
+    ),
+    pair_coverage_regime = dplyr::case_when(
+      as.numeric(.data$pair_coverage_fraction_per_cell) <= 0 ~ "no_pair_coverage",
+      as.numeric(.data$pair_coverage_fraction_per_cell) >= 1 ~ "full_pair_coverage",
+      TRUE ~ "partial_pair_coverage"
+    ),
+    integer_balance_regime = dplyr::if_else(
+      as.integer(.data$perfect_integer_observation_balance) == 1L,
+      "integer_balanced",
+      "integer_unbalanced"
+    ),
+    redundancy_regime = dplyr::if_else(
+      as.integer(.data$redundant_scoring) == 1L,
+      "redundant",
+      "single_rater_only"
     )
+  )
 
-  guardrail_summary_table <- guardrail_registry |>
-    dplyr::rowwise() |>
-    dplyr::mutate(
-      n_levels = dplyr::n_distinct(guardrail_table[[.data$guardrail]]),
-      recommended_level = {
-        row <- guardrail_table[guardrail_table$recommended %in% TRUE, , drop = FALSE]
-        if (nrow(row) == 0L) NA_character_ else as.character(row[[.data$guardrail]][[1]])
-      },
-      observed_levels = paste(sort(unique(as.character(guardrail_table[[.data$guardrail]]))), collapse = ", ")
-    ) |>
-    dplyr::ungroup()
+  g_keys <- as.character(guardrail_registry$guardrail)
+  rec_row <- guardrail_table[guardrail_table$recommended %in% TRUE, , drop = FALSE]
+  n_lev <- integer(length(g_keys))
+  rec_lev <- character(length(g_keys))
+  obs_lev <- character(length(g_keys))
+  for (i in seq_along(g_keys)) {
+    col_v <- as.character(guardrail_table[[g_keys[i]]])
+    n_lev[i] <- dplyr::n_distinct(guardrail_table[[g_keys[i]]])
+    rec_lev[i] <- if (nrow(rec_row) == 0L) NA_character_ else as.character(rec_row[[g_keys[i]]][[1]])
+    obs_lev[i] <- paste(sort(unique(col_v)), collapse = ", ")
+  }
+  guardrail_summary_table <- guardrail_registry
+  guardrail_summary_table$n_levels <- n_lev
+  guardrail_summary_table$recommended_level <- rec_lev
+  guardrail_summary_table$observed_levels <- obs_lev
 
   list(
     guardrail_contract = "arbitrary_facet_planning_design_review_guardrails",
-    guardrail_stage = as.character(
-      coverage$diagnostics_stage %||% load_balance$diagnostics_stage %||% "deterministic_review"
-    ),
-    planner_contract = as.character(
-      coverage$planner_contract %||%
-        load_balance$planner_contract %||%
-        "named_facet_structural_review"
-    ),
+    guardrail_stage = as.character(coverage$diagnostics_stage %||% load_balance$diagnostics_stage %||% "deterministic_review"),
+    planner_contract = as.character(coverage$planner_contract %||% load_balance$planner_contract %||% "named_facet_structural_review"),
     review_available = TRUE,
     reason = "Deterministic structural-design guardrail classifications are materialized.",
     guardrail_registry = guardrail_registry,
@@ -3970,135 +3241,6 @@ simulation_structural_design_review_guardrails <- function(x,
   )
 }
 
-simulation_structural_design_review_guardrail_overview <- function(x,
-                                                                      design = NULL,
-                                                                      prefer = NULL,
-                                                                      view = c("public", "canonical", "design"),
-                                                                      mode = c("brief", "snapshot", "operation"),
-                                                                      surface = c("digest", "catalog", "metrics", "axes", "components"),
-                                                                      table_component = c("grid", "report", "surface_index"),
-                                                                      x_var = NULL,
-                                                                      group_var = NULL,
-                                                                      id_prefix = NULL) {
-  cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_guardrail_overview",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-  if (!is.null(cached)) {
-    return(cached)
-  }
-
-  guardrails <- simulation_structural_design_review_guardrails(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-
-  guardrail_table <- tibble::as_tibble(guardrails$guardrail_table %||% tibble::tibble())
-  headline_table <- tibble::tibble(
-    review_available = isTRUE(guardrails$review_available),
-    n_designs = nrow(guardrail_table),
-    n_guardrails = if (is.data.frame(guardrails$guardrail_registry)) nrow(guardrails$guardrail_registry) else 0L,
-    recommended_design_id = if ("design_id" %in% names(guardrail_table) &&
-                                any(guardrail_table$recommended %in% TRUE)) {
-      as.character(guardrail_table$design_id[which(guardrail_table$recommended %in% TRUE)[1]])
-    } else {
-      NA_character_
-    },
-    n_single_rater_designs = if ("rater_linking_regime" %in% names(guardrail_table)) {
-      sum(guardrail_table$rater_linking_regime %in% "single_rater", na.rm = TRUE)
-    } else {
-      0L
-    },
-    n_partial_overlap_designs = if ("rater_linking_regime" %in% names(guardrail_table)) {
-      sum(guardrail_table$rater_linking_regime %in% "partial_overlap", na.rm = TRUE)
-    } else {
-      0L
-    },
-    n_fully_crossed_designs = if ("rater_linking_regime" %in% names(guardrail_table)) {
-      sum(guardrail_table$rater_linking_regime %in% "fully_crossed", na.rm = TRUE)
-    } else {
-      0L
-    },
-    n_integer_balanced_designs = if ("integer_balance_regime" %in% names(guardrail_table)) {
-      sum(guardrail_table$integer_balance_regime %in% "integer_balanced", na.rm = TRUE)
-    } else {
-      0L
-    }
-  )
-
-  list(
-    overview_contract = "arbitrary_facet_planning_design_review_guardrail_overview",
-    overview_stage = as.character(guardrails$guardrail_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      guardrails$planner_contract %||% "named_facet_structural_review"
-    ),
-    review_available = isTRUE(guardrails$review_available),
-    reason = as.character(
-      guardrails$reason %||%
-        "No structural-design guardrail overview is currently available."
-    ),
-    headline_table = headline_table,
-    guardrail_registry = tibble::as_tibble(guardrails$guardrail_registry %||% tibble::tibble()),
-    guardrail_summary_table = tibble::as_tibble(guardrails$guardrail_summary_table %||% tibble::tibble()),
-    design_review_guardrails = guardrails,
-    note = paste(
-      "Compact guardrail overview for the structural-design review layer,",
-      "combining exact design-regime counts with a basis-aware guardrail index."
-    )
-  )
-}
-
-simulation_structural_design_review_readiness_registry <- function() {
-  tibble::tibble(
-    indicator = c(
-      "supports_multi_rater_cells",
-      "supports_pair_overlap",
-      "supports_integer_balanced_load",
-      "supports_full_pair_coverage"
-    ),
-    basis_class = c(
-      "exact_indicator",
-      "exact_indicator",
-      "exact_indicator",
-      "exact_indicator"
-    ),
-    rule = c(
-      "as.integer(redundancy_regime == 'redundant')",
-      "as.integer(pair_coverage_regime != 'no_pair_coverage')",
-      "as.integer(integer_balance_regime == 'integer_balanced')",
-      "as.integer(pair_coverage_regime == 'full_pair_coverage')"
-    ),
-    interpretation = c(
-      "Exact indicator that each scored cell uses more than one rater.",
-      "Exact indicator that the current design yields at least one within-cell rater pair overlap.",
-      "Exact indicator that the total observation count is evenly divisible across raters.",
-      "Exact indicator that every available rater pair is represented within each scored cell."
-    ),
-    psychometric = FALSE
-  )
-}
-
 simulation_structural_design_review_readiness <- function(x,
                                                              design = NULL,
                                                              prefer = NULL,
@@ -4110,54 +3252,29 @@ simulation_structural_design_review_readiness <- function(x,
                                                              group_var = NULL,
                                                              id_prefix = NULL) {
   cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_readiness",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, field = "design_review_readiness", design = design, prefer = prefer,
+    view = view, view_default = "public", mode = mode, mode_default = "brief",
+    surface = surface, surface_default = "digest",
+    table_component = table_component, table_component_default = "grid",
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-  if (!is.null(cached)) {
-    return(cached)
-  }
+  if (!is.null(cached)) return(cached)
 
   guardrails <- simulation_structural_design_review_guardrails(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, design = design, prefer = prefer, view = view,
+    mode = mode, surface = surface, table_component = table_component,
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-
   guardrail_table <- tibble::as_tibble(guardrails$guardrail_table %||% tibble::tibble())
-  indicator_registry <- simulation_structural_design_review_readiness_registry()
+  indicator_registry <- simulation_structural_design_review_readiness_registry
 
   if (!isTRUE(guardrails$review_available) || nrow(guardrail_table) == 0L) {
     return(list(
       readiness_contract = "arbitrary_facet_planning_design_review_readiness",
       readiness_stage = as.character(guardrails$guardrail_stage %||% "deterministic_review"),
-      planner_contract = as.character(
-        guardrails$planner_contract %||% "named_facet_structural_review"
-      ),
+      planner_contract = as.character(guardrails$planner_contract %||% "named_facet_structural_review"),
       review_available = FALSE,
-      reason = as.character(
-        guardrails$reason %||%
-          "No deterministic structural-design structural readiness summary is currently available."
-      ),
+      reason = as.character(guardrails$reason %||% "No deterministic structural-design structural readiness summary is currently available."),
       indicator_registry = indicator_registry,
       readiness_summary_table = tibble::tibble(),
       readiness_table = tibble::tibble(),
@@ -4169,45 +3286,26 @@ simulation_structural_design_review_readiness <- function(x,
     ))
   }
 
-  readiness_table <- guardrail_table |>
-    dplyr::mutate(
-      supports_multi_rater_cells = as.integer(.data$redundancy_regime == "redundant"),
-      supports_pair_overlap = as.integer(.data$pair_coverage_regime != "no_pair_coverage"),
-      supports_integer_balanced_load = as.integer(.data$integer_balance_regime == "integer_balanced"),
-      supports_full_pair_coverage = as.integer(.data$pair_coverage_regime == "full_pair_coverage"),
-      structural_tier = dplyr::case_when(
-        .data$supports_pair_overlap <= 0 ~ "single_rater_only",
-        .data$supports_full_pair_coverage >= 1 & .data$supports_integer_balanced_load >= 1 ~ "full_overlap_balanced",
-        .data$supports_full_pair_coverage >= 1 ~ "full_overlap_unbalanced",
-        .data$supports_integer_balanced_load >= 1 ~ "partial_overlap_balanced",
-        TRUE ~ "partial_overlap_unbalanced"
-      )
+  readiness_table <- dplyr::mutate(
+    guardrail_table,
+    supports_multi_rater_cells = as.integer(.data$redundancy_regime == "redundant"),
+    supports_pair_overlap = as.integer(.data$pair_coverage_regime != "no_pair_coverage"),
+    supports_integer_balanced_load = as.integer(.data$integer_balance_regime == "integer_balanced"),
+    supports_full_pair_coverage = as.integer(.data$pair_coverage_regime == "full_pair_coverage"),
+    structural_tier = dplyr::case_when(
+      .data$supports_pair_overlap <= 0 ~ "single_rater_only",
+      .data$supports_full_pair_coverage >= 1 & .data$supports_integer_balanced_load >= 1 ~ "full_overlap_balanced",
+      .data$supports_full_pair_coverage >= 1 ~ "full_overlap_unbalanced",
+      .data$supports_integer_balanced_load >= 1 ~ "partial_overlap_balanced",
+      TRUE ~ "partial_overlap_unbalanced"
     )
-
-  recommended_row <- readiness_table[readiness_table$recommended %in% TRUE, , drop = FALSE]
-  readiness_summary_table <- indicator_registry |>
-    dplyr::mutate(
-      min = vapply(.data$indicator, function(indicator) {
-        min(readiness_table[[indicator]], na.rm = TRUE)
-      }, numeric(1)),
-      max = vapply(.data$indicator, function(indicator) {
-        max(readiness_table[[indicator]], na.rm = TRUE)
-      }, numeric(1)),
-      mean = vapply(.data$indicator, function(indicator) {
-        mean(readiness_table[[indicator]], na.rm = TRUE)
-      }, numeric(1)),
-      recommended_value = vapply(.data$indicator, function(indicator) {
-        if (nrow(recommended_row) == 0L) return(NA_real_)
-        as.numeric(recommended_row[[indicator]][[1]])
-      }, numeric(1))
-    )
+  )
+  readiness_summary_table <- simulation_summarize_design_metrics(indicator_registry, "indicator", readiness_table)
 
   list(
     readiness_contract = "arbitrary_facet_planning_design_review_readiness",
     readiness_stage = as.character(guardrails$guardrail_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      guardrails$planner_contract %||% "named_facet_structural_review"
-    ),
+    planner_contract = as.character(guardrails$planner_contract %||% "named_facet_structural_review"),
     review_available = TRUE,
     reason = "Deterministic structural-design structural readiness summary is materialized.",
     indicator_registry = indicator_registry,
@@ -4218,106 +3316,6 @@ simulation_structural_design_review_readiness <- function(x,
       "Deterministic structural readiness indicators for the structural-design review",
       "review layer. These summarize exact overlap and balance preconditions only;",
       "they do not estimate psychometric performance."
-    )
-  )
-}
-
-simulation_structural_design_review_readiness_overview <- function(x,
-                                                                      design = NULL,
-                                                                      prefer = NULL,
-                                                                      view = c("public", "canonical", "design"),
-                                                                      mode = c("brief", "snapshot", "operation"),
-                                                                      surface = c("digest", "catalog", "metrics", "axes", "components"),
-                                                                      table_component = c("grid", "report", "surface_index"),
-                                                                      x_var = NULL,
-                                                                      group_var = NULL,
-                                                                      id_prefix = NULL) {
-  cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_readiness_overview",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-  if (!is.null(cached)) {
-    return(cached)
-  }
-
-  readiness <- simulation_structural_design_review_readiness(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
-  )
-
-  readiness_table <- tibble::as_tibble(readiness$readiness_table %||% tibble::tibble())
-  headline_table <- tibble::tibble(
-    review_available = isTRUE(readiness$review_available),
-    n_designs = nrow(readiness_table),
-    n_indicators = if (is.data.frame(readiness$indicator_registry)) nrow(readiness$indicator_registry) else 0L,
-    recommended_design_id = if ("design_id" %in% names(readiness_table) &&
-                                any(readiness_table$recommended %in% TRUE)) {
-      as.character(readiness_table$design_id[which(readiness_table$recommended %in% TRUE)[1]])
-    } else {
-      NA_character_
-    },
-    n_single_rater_only_tiers = if ("structural_tier" %in% names(readiness_table)) {
-      sum(readiness_table$structural_tier %in% "single_rater_only", na.rm = TRUE)
-    } else {
-      0L
-    },
-    n_partial_overlap_balanced_tiers = if ("structural_tier" %in% names(readiness_table)) {
-      sum(readiness_table$structural_tier %in% "partial_overlap_balanced", na.rm = TRUE)
-    } else {
-      0L
-    },
-    n_partial_overlap_unbalanced_tiers = if ("structural_tier" %in% names(readiness_table)) {
-      sum(readiness_table$structural_tier %in% "partial_overlap_unbalanced", na.rm = TRUE)
-    } else {
-      0L
-    },
-    n_full_overlap_tiers = if ("structural_tier" %in% names(readiness_table)) {
-      sum(readiness_table$structural_tier %in% c("full_overlap_balanced", "full_overlap_unbalanced"), na.rm = TRUE)
-    } else {
-      0L
-    }
-  )
-
-  list(
-    overview_contract = "arbitrary_facet_planning_design_review_readiness_overview",
-    overview_stage = as.character(readiness$readiness_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      readiness$planner_contract %||% "named_facet_structural_review"
-    ),
-    review_available = isTRUE(readiness$review_available),
-    reason = as.character(
-      readiness$reason %||%
-        "No structural-design structural readiness overview is currently available."
-    ),
-    headline_table = headline_table,
-    indicator_registry = tibble::as_tibble(readiness$indicator_registry %||% tibble::tibble()),
-    readiness_summary_table = tibble::as_tibble(readiness$readiness_summary_table %||% tibble::tibble()),
-    design_review_readiness = readiness,
-    note = paste(
-      "Compact structural readiness overview for the structural-design review",
-      "review layer, combining exact overlap/balance tiers with a basis-aware",
-      "indicator index."
     )
   )
 }
@@ -4333,49 +3331,23 @@ simulation_structural_design_review_recommendation <- function(x,
                                                                   group_var = NULL,
                                                                   id_prefix = NULL) {
   cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_recommendation",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, field = "design_review_recommendation", design = design, prefer = prefer,
+    view = view, view_default = "public", mode = mode, mode_default = "brief",
+    surface = surface, surface_default = "digest",
+    table_component = table_component, table_component_default = "grid",
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-  if (!is.null(cached)) {
-    return(cached)
-  }
+  if (!is.null(cached)) return(cached)
 
   readiness <- simulation_structural_design_review_readiness(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, design = design, prefer = prefer, view = view,
+    mode = mode, surface = surface, table_component = table_component,
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
   profile <- simulation_structural_design_review_profile(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, design = design, prefer = prefer, view = view,
+    mode = mode, surface = surface, table_component = table_component,
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
 
   readiness_table <- tibble::as_tibble(readiness$readiness_table %||% tibble::tibble())
@@ -4385,20 +3357,10 @@ simulation_structural_design_review_recommendation <- function(x,
       !isTRUE(profile$review_available) || nrow(profile_table) == 0L) {
     return(list(
       recommendation_contract = "arbitrary_facet_planning_design_review_recommendation",
-      recommendation_stage = as.character(
-        readiness$readiness_stage %||% profile$profile_stage %||% "deterministic_review"
-      ),
-      planner_contract = as.character(
-        readiness$planner_contract %||%
-          profile$planner_contract %||%
-          "named_facet_structural_review"
-      ),
+      recommendation_stage = as.character(readiness$readiness_stage %||% profile$profile_stage %||% "deterministic_review"),
+      planner_contract = as.character(readiness$planner_contract %||% profile$planner_contract %||% "named_facet_structural_review"),
       recommendation_available = FALSE,
-      reason = as.character(
-        readiness$reason %||%
-          profile$reason %||%
-          "No deterministic structural-design structural recommendation is currently available."
-      ),
+      reason = as.character(readiness$reason %||% profile$reason %||% "No deterministic structural-design structural recommendation is currently available."),
       ranking_rule = paste(
         "Unavailable because the structural-design readiness review and profile",
         "contracts are not both materialized."
@@ -4424,9 +3386,7 @@ simulation_structural_design_review_recommendation <- function(x,
   )
 
   recommendation_table <- readiness_table
-  required_profile_cols <- c(
-    "total_observations", "n_person", "n_rater", "n_criterion", "raters_per_person"
-  )
+  required_profile_cols <- c("total_observations", "n_person", "n_rater", "n_criterion", "raters_per_person")
   missing_profile_cols <- setdiff(required_profile_cols, names(recommendation_table))
   if (length(missing_profile_cols) > 0L) {
     recommendation_table <- dplyr::left_join(
@@ -4458,14 +3418,8 @@ simulation_structural_design_review_recommendation <- function(x,
 
   list(
     recommendation_contract = "arbitrary_facet_planning_design_review_recommendation",
-    recommendation_stage = as.character(
-      readiness$readiness_stage %||% profile$profile_stage %||% "deterministic_review"
-    ),
-    planner_contract = as.character(
-      readiness$planner_contract %||%
-        profile$planner_contract %||%
-        "named_facet_structural_review"
-    ),
+    recommendation_stage = as.character(readiness$readiness_stage %||% profile$profile_stage %||% "deterministic_review"),
+    planner_contract = as.character(readiness$planner_contract %||% profile$planner_contract %||% "named_facet_structural_review"),
     recommendation_available = TRUE,
     reason = paste(
       "Structural recommendation is available from the structural-design review",
@@ -4490,77 +3444,252 @@ simulation_structural_design_review_recommendation <- function(x,
   )
 }
 
-simulation_structural_design_review_recommendation_overview <- function(x,
-                                                                           design = NULL,
-                                                                           prefer = NULL,
-                                                                           view = c("public", "canonical", "design"),
-                                                                           mode = c("brief", "snapshot", "operation"),
-                                                                           surface = c("digest", "catalog", "metrics", "axes", "components"),
-                                                                           table_component = c("grid", "report", "surface_index"),
-                                                                           x_var = NULL,
-                                                                           group_var = NULL,
-                                                                           id_prefix = NULL) {
+simulation_structural_design_review_stage_overview <- function(x,
+                                                                 stage_kind = c("overview", "load_balance", "coverage", "guardrail", "readiness", "recommendation"),
+                                                                 design = NULL,
+                                                                 prefer = NULL,
+                                                                 view = c("public", "canonical", "design"),
+                                                                 mode = c("brief", "snapshot", "operation"),
+                                                                 surface = c("digest", "catalog", "metrics", "axes", "components"),
+                                                                 table_component = c("grid", "report", "surface_index"),
+                                                                 x_var = NULL,
+                                                                 group_var = NULL,
+                                                                 id_prefix = NULL) {
+  stage_kind <- match.arg(stage_kind)
+  cache_field <- if (identical(stage_kind, "overview")) {
+    "design_review_overview"
+  } else {
+    paste0("design_review_", stage_kind, "_overview")
+  }
   cached <- simulation_structural_design_cached_default(
-    x = x,
-    field = "design_review_recommendation_overview",
-    design = design,
-    prefer = prefer,
-    view = view,
-    view_default = "public",
-    mode = mode,
-    mode_default = "brief",
-    surface = surface,
-    surface_default = "digest",
-    table_component = table_component,
-    table_component_default = "grid",
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, field = cache_field, design = design, prefer = prefer,
+    view = view, view_default = "public", mode = mode, mode_default = "brief",
+    surface = surface, surface_default = "digest",
+    table_component = table_component, table_component_default = "grid",
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-  if (!is.null(cached)) {
-    return(cached)
+  if (!is.null(cached)) return(cached)
+
+  if (identical(stage_kind, "overview")) {
+    branch <- simulation_structural_design_review(
+      x = x, design = design, prefer = prefer, view = view,
+      mode = mode, surface = surface, table_component = table_component,
+      x_var = x_var, group_var = group_var, id_prefix = id_prefix
+    )
+    profile <- simulation_structural_design_review_profile(
+      x = x, design = design, prefer = prefer, view = view,
+      mode = mode, surface = surface, table_component = table_component,
+      x_var = x_var, group_var = group_var, id_prefix = id_prefix
+    )
+    headline_table <- tibble::tibble(
+      review_available = isTRUE(branch$review_available),
+      n_designs = as.integer(branch$n_designs %||% 0L),
+      recommended_design_id = as.character(branch$recommended_design_id %||% NA_character_),
+      view = as.character(branch$view %||% NA_character_),
+      mode = as.character(branch$mode %||% NA_character_),
+      surface = as.character(branch$surface %||% NA_character_),
+      table_component = as.character(branch$table_component %||% NA_character_),
+      selected_table_rows = if (is.data.frame(branch$table$table)) nrow(branch$table$table) else 0L,
+      plot_available = isTRUE(branch$plot$plot$data$plot_available %||% FALSE),
+      n_metrics = if (is.data.frame(profile$metric_registry)) nrow(profile$metric_registry) else 0L
+    )
+    return(list(
+      overview_contract = "arbitrary_facet_planning_design_review_overview",
+      overview_stage = as.character(branch$review_stage %||% "deterministic_review"),
+      planner_contract = as.character(branch$planner_contract %||% "named_facet_structural_review"),
+      review_available = isTRUE(branch$review_available) && isTRUE(profile$review_available),
+      reason = as.character(branch$reason %||% profile$reason %||% "No structural-design overview is currently available."),
+      headline_table = headline_table,
+      metric_registry = tibble::as_tibble(profile$metric_registry %||% tibble::tibble()),
+      metric_summary_table = tibble::as_tibble(profile$profile_summary_table %||% tibble::tibble()),
+      design_review = branch,
+      design_review_profile = profile,
+      note = paste(
+        "Compact overview for the structural-design review layer, combining the",
+        "branch headline with metric-basis-aware deterministic design summaries."
+      )
+    ))
+  }
+
+  if (identical(stage_kind, "load_balance")) {
+    diagnostics <- simulation_structural_design_review_load_balance(
+      x = x, design = design, prefer = prefer, view = view,
+      mode = mode, surface = surface, table_component = table_component,
+      x_var = x_var, group_var = group_var, id_prefix = id_prefix
+    )
+    dt <- tibble::as_tibble(diagnostics$diagnostic_table %||% tibble::tibble())
+    rec_id <- if ("design_id" %in% names(dt) && any(dt$recommended %in% TRUE)) {
+      as.character(dt$design_id[which(dt$recommended %in% TRUE)[1]])
+    } else NA_character_
+    has_pib <- "perfect_integer_observation_balance" %in% names(dt)
+    headline_table <- tibble::tibble(
+      review_available = isTRUE(diagnostics$review_available),
+      n_designs = nrow(dt),
+      n_metrics = if (is.data.frame(diagnostics$metric_registry)) nrow(diagnostics$metric_registry) else 0L,
+      recommended_design_id = rec_id,
+      n_perfect_integer_balance = if (has_pib) sum(dt$perfect_integer_observation_balance %in% 1L, na.rm = TRUE) else 0L,
+      n_nondivisible_designs = if (has_pib) sum(dt$perfect_integer_observation_balance %in% 0L, na.rm = TRUE) else 0L
+    )
+    return(list(
+      overview_contract = "arbitrary_facet_planning_design_review_load_balance_overview",
+      overview_stage = as.character(diagnostics$diagnostics_stage %||% "deterministic_review"),
+      planner_contract = as.character(diagnostics$planner_contract %||% "named_facet_structural_review"),
+      review_available = isTRUE(diagnostics$review_available),
+      reason = as.character(diagnostics$reason %||% "No structural-design load/balance overview is currently available."),
+      headline_table = headline_table,
+      metric_registry = tibble::as_tibble(diagnostics$metric_registry %||% tibble::tibble()),
+      diagnostic_summary_table = tibble::as_tibble(diagnostics$diagnostic_summary_table %||% tibble::tibble()),
+      design_review_load_balance = diagnostics,
+      note = paste(
+        "Compact load/balance overview for the structural-design review layer,",
+        "combining a one-row divisibility headline with basis-aware deterministic",
+        "observation-load diagnostics."
+      )
+    ))
+  }
+
+  if (identical(stage_kind, "coverage")) {
+    diagnostics <- simulation_structural_design_review_coverage(
+      x = x, design = design, prefer = prefer, view = view,
+      mode = mode, surface = surface, table_component = table_component,
+      x_var = x_var, group_var = group_var, id_prefix = id_prefix
+    )
+    dt <- tibble::as_tibble(diagnostics$diagnostic_table %||% tibble::tibble())
+    rec_id <- if ("design_id" %in% names(dt) && any(dt$recommended %in% TRUE)) {
+      as.character(dt$design_id[which(dt$recommended %in% TRUE)[1]])
+    } else NA_character_
+    has_rs <- "redundant_scoring" %in% names(dt)
+    has_rpo <- "rater_pair_overlap_per_cell" %in% names(dt)
+    headline_table <- tibble::tibble(
+      review_available = isTRUE(diagnostics$review_available),
+      n_designs = nrow(dt),
+      n_metrics = if (is.data.frame(diagnostics$metric_registry)) nrow(diagnostics$metric_registry) else 0L,
+      recommended_design_id = rec_id,
+      n_redundant_designs = if (has_rs) sum(dt$redundant_scoring %in% 1L, na.rm = TRUE) else 0L,
+      n_single_rater_designs = if (has_rs) sum(dt$redundant_scoring %in% 0L, na.rm = TRUE) else 0L,
+      n_pair_connected_designs = if (has_rpo) sum(dt$rater_pair_overlap_per_cell > 0, na.rm = TRUE) else 0L,
+      n_zero_pair_overlap_designs = if (has_rpo) sum(dt$rater_pair_overlap_per_cell <= 0, na.rm = TRUE) else 0L
+    )
+    return(list(
+      overview_contract = "arbitrary_facet_planning_design_review_coverage_overview",
+      overview_stage = as.character(diagnostics$diagnostics_stage %||% "deterministic_review"),
+      planner_contract = as.character(diagnostics$planner_contract %||% "named_facet_structural_review"),
+      review_available = isTRUE(diagnostics$review_available),
+      reason = as.character(diagnostics$reason %||% "No structural-design coverage/connectivity overview is currently available."),
+      headline_table = headline_table,
+      metric_registry = tibble::as_tibble(diagnostics$metric_registry %||% tibble::tibble()),
+      diagnostic_summary_table = tibble::as_tibble(diagnostics$diagnostic_summary_table %||% tibble::tibble()),
+      design_review_coverage = diagnostics,
+      note = paste(
+        "Compact coverage/connectivity overview for the structural-design review",
+        "review layer, combining a one-row redundancy headline with basis-aware",
+        "deterministic rater-overlap diagnostics."
+      )
+    ))
+  }
+
+  if (identical(stage_kind, "guardrail")) {
+    guardrails <- simulation_structural_design_review_guardrails(
+      x = x, design = design, prefer = prefer, view = view,
+      mode = mode, surface = surface, table_component = table_component,
+      x_var = x_var, group_var = group_var, id_prefix = id_prefix
+    )
+    gt <- tibble::as_tibble(guardrails$guardrail_table %||% tibble::tibble())
+    rec_id <- if ("design_id" %in% names(gt) && any(gt$recommended %in% TRUE)) {
+      as.character(gt$design_id[which(gt$recommended %in% TRUE)[1]])
+    } else NA_character_
+    has_rlr <- "rater_linking_regime" %in% names(gt)
+    has_ibr <- "integer_balance_regime" %in% names(gt)
+    headline_table <- tibble::tibble(
+      review_available = isTRUE(guardrails$review_available),
+      n_designs = nrow(gt),
+      n_guardrails = if (is.data.frame(guardrails$guardrail_registry)) nrow(guardrails$guardrail_registry) else 0L,
+      recommended_design_id = rec_id,
+      n_single_rater_designs = if (has_rlr) sum(gt$rater_linking_regime %in% "single_rater", na.rm = TRUE) else 0L,
+      n_partial_overlap_designs = if (has_rlr) sum(gt$rater_linking_regime %in% "partial_overlap", na.rm = TRUE) else 0L,
+      n_fully_crossed_designs = if (has_rlr) sum(gt$rater_linking_regime %in% "fully_crossed", na.rm = TRUE) else 0L,
+      n_integer_balanced_designs = if (has_ibr) sum(gt$integer_balance_regime %in% "integer_balanced", na.rm = TRUE) else 0L
+    )
+    return(list(
+      overview_contract = "arbitrary_facet_planning_design_review_guardrail_overview",
+      overview_stage = as.character(guardrails$guardrail_stage %||% "deterministic_review"),
+      planner_contract = as.character(guardrails$planner_contract %||% "named_facet_structural_review"),
+      review_available = isTRUE(guardrails$review_available),
+      reason = as.character(guardrails$reason %||% "No structural-design guardrail overview is currently available."),
+      headline_table = headline_table,
+      guardrail_registry = tibble::as_tibble(guardrails$guardrail_registry %||% tibble::tibble()),
+      guardrail_summary_table = tibble::as_tibble(guardrails$guardrail_summary_table %||% tibble::tibble()),
+      design_review_guardrails = guardrails,
+      note = paste(
+        "Compact guardrail overview for the structural-design review layer,",
+        "combining exact design-regime counts with a basis-aware guardrail index."
+      )
+    ))
+  }
+
+  if (identical(stage_kind, "readiness")) {
+    readiness <- simulation_structural_design_review_readiness(
+      x = x, design = design, prefer = prefer, view = view,
+      mode = mode, surface = surface, table_component = table_component,
+      x_var = x_var, group_var = group_var, id_prefix = id_prefix
+    )
+    rt <- tibble::as_tibble(readiness$readiness_table %||% tibble::tibble())
+    rec_id <- if ("design_id" %in% names(rt) && any(rt$recommended %in% TRUE)) {
+      as.character(rt$design_id[which(rt$recommended %in% TRUE)[1]])
+    } else NA_character_
+    has_st <- "structural_tier" %in% names(rt)
+    headline_table <- tibble::tibble(
+      review_available = isTRUE(readiness$review_available),
+      n_designs = nrow(rt),
+      n_indicators = if (is.data.frame(readiness$indicator_registry)) nrow(readiness$indicator_registry) else 0L,
+      recommended_design_id = rec_id,
+      n_single_rater_only_tiers = if (has_st) sum(rt$structural_tier %in% "single_rater_only", na.rm = TRUE) else 0L,
+      n_partial_overlap_balanced_tiers = if (has_st) sum(rt$structural_tier %in% "partial_overlap_balanced", na.rm = TRUE) else 0L,
+      n_partial_overlap_unbalanced_tiers = if (has_st) sum(rt$structural_tier %in% "partial_overlap_unbalanced", na.rm = TRUE) else 0L,
+      n_full_overlap_tiers = if (has_st) sum(rt$structural_tier %in% c("full_overlap_balanced", "full_overlap_unbalanced"), na.rm = TRUE) else 0L
+    )
+    return(list(
+      overview_contract = "arbitrary_facet_planning_design_review_readiness_overview",
+      overview_stage = as.character(readiness$readiness_stage %||% "deterministic_review"),
+      planner_contract = as.character(readiness$planner_contract %||% "named_facet_structural_review"),
+      review_available = isTRUE(readiness$review_available),
+      reason = as.character(readiness$reason %||% "No structural-design structural readiness overview is currently available."),
+      headline_table = headline_table,
+      indicator_registry = tibble::as_tibble(readiness$indicator_registry %||% tibble::tibble()),
+      readiness_summary_table = tibble::as_tibble(readiness$readiness_summary_table %||% tibble::tibble()),
+      design_review_readiness = readiness,
+      note = paste(
+        "Compact structural readiness overview for the structural-design review",
+        "review layer, combining exact overlap/balance tiers with a basis-aware",
+        "indicator index."
+      )
+    ))
   }
 
   recommendation <- simulation_structural_design_review_recommendation(
-    x = x,
-    design = design,
-    prefer = prefer,
-    view = view,
-    mode = mode,
-    surface = surface,
-    table_component = table_component,
-    x_var = x_var,
-    group_var = group_var,
-    id_prefix = id_prefix
+    x = x, design = design, prefer = prefer, view = view,
+    mode = mode, surface = surface, table_component = table_component,
+    x_var = x_var, group_var = group_var, id_prefix = id_prefix
   )
-
-  recommendation_table <- tibble::as_tibble(recommendation$recommendation_table %||% tibble::tibble())
+  rect <- tibble::as_tibble(recommendation$recommendation_table %||% tibble::tibble())
   headline_table <- tibble::tibble(
     recommendation_available = isTRUE(recommendation$recommendation_available),
-    n_designs = nrow(recommendation_table),
+    n_designs = nrow(rect),
     recommended_design_id = as.character(recommendation$recommended_design_id %||% NA_character_),
     recommended_tier = as.character(recommendation$recommended_tier %||% NA_character_),
-    n_top_tier_candidates = if ("structural_priority" %in% names(recommendation_table)) {
-      min_priority <- min(recommendation_table$structural_priority, na.rm = TRUE)
-      sum(recommendation_table$structural_priority == min_priority, na.rm = TRUE)
-    } else {
-      0L
-    }
+    n_top_tier_candidates = if ("structural_priority" %in% names(rect)) {
+      min_priority <- min(rect$structural_priority, na.rm = TRUE)
+      sum(rect$structural_priority == min_priority, na.rm = TRUE)
+    } else 0L
   )
-
   list(
     overview_contract = "arbitrary_facet_planning_design_review_recommendation_overview",
     overview_stage = as.character(recommendation$recommendation_stage %||% "deterministic_review"),
-    planner_contract = as.character(
-      recommendation$planner_contract %||% "named_facet_structural_review"
-    ),
+    planner_contract = as.character(recommendation$planner_contract %||% "named_facet_structural_review"),
     recommendation_available = isTRUE(recommendation$recommendation_available),
-    reason = as.character(
-      recommendation$reason %||%
-        "No structural-design structural recommendation overview is currently available."
-    ),
+    reason = as.character(recommendation$reason %||% "No structural-design structural recommendation overview is currently available."),
     headline_table = headline_table,
-    recommendation_table = recommendation_table,
+    recommendation_table = rect,
     design_review_recommendation = recommendation,
     note = paste(
       "Compact structural recommendation overview for the structural-design review",
@@ -4569,167 +3698,52 @@ simulation_structural_design_review_recommendation_overview <- function(x,
   )
 }
 
-structural_design_review_table_index <- function(active,
-                                             overview,
-                                             load_balance,
-                                             coverage,
-                                             guardrails,
-                                             readiness,
-                                             recommendation) {
-  rows_or_zero <- function(tbl) {
-    if (!is.data.frame(tbl)) return(0L)
-    as.integer(nrow(tbl))
-  }
-
-  tibble::tibble(
-    Table = c(
-      "overview",
-      "profile_summary",
-      "load_balance_summary",
-      "coverage_summary",
-      "guardrail_summary",
-      "readiness_summary",
-      "recommendation_table"
-    ),
-    Rows = c(
-      rows_or_zero(overview$headline_table),
-      rows_or_zero(overview$metric_summary_table),
-      rows_or_zero(load_balance$diagnostic_summary_table),
-      rows_or_zero(coverage$diagnostic_summary_table),
-      rows_or_zero(guardrails$guardrail_summary_table),
-      rows_or_zero(readiness$readiness_summary_table),
-      rows_or_zero(recommendation$recommendation_table)
-    ),
-    Role = c(
-      "overview",
-      "profile",
-      "load_balance",
-      "coverage",
-      "guardrails",
-      "readiness",
-      "recommendation"
-    ),
-    Description = c(
-      "Headline active-branch configuration and selected branch surface.",
-      "Deterministic observation/load profile for the current design grid.",
-      "Balanced-expectation and integer split summaries.",
-      "Coverage/connectivity summaries implied by the current design grid.",
-      "Exact overlap/balance regime summaries.",
-      "Exact structural readiness indicators and tier summaries.",
-      "Conservative deterministic recommendation ranking."
-    ),
-    stringsAsFactors = FALSE
-  )
-}
-
-structural_design_appendix_selection_tables <- function(bundle,
-                                                    label = "structural_design_review",
-                                                    presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
-  presets <- unique(as.character(presets))
-  original_bundles <- stats::setNames(list(bundle), label)
-
-  bind_tables <- function(parts) {
-    keep <- vapply(parts, function(df) is.data.frame(df) && nrow(df) > 0L, logical(1))
-    parts <- parts[keep]
-    if (length(parts) == 0L) {
-      return(data.frame())
-    }
-    out <- do.call(rbind, parts)
-    rownames(out) <- NULL
-    out
-  }
-
-  selection_catalog <- bind_tables(lapply(presets, function(preset) {
-    selected <- export_select_summary_table_bundles_for_appendix(
-      original_bundles,
-      preset = preset
-    )
-    export_summary_table_selection_catalog(
-      original_bundles = original_bundles,
-      selected_bundles = selected,
-      preset = preset
-    )
-  }))
-
-  list(
-    selection_catalog = selection_catalog,
-    selection_summary = bind_tables(lapply(presets, function(preset) {
-      export_summary_table_selection_summary(selection_catalog, preset = preset)
-    })),
-    selection_role_summary = bind_tables(lapply(presets, function(preset) {
-      export_summary_table_selection_role_summary(selection_catalog, preset = preset)
-    })),
-    selection_section_summary = bind_tables(lapply(presets, function(preset) {
-      export_summary_table_selection_section_summary(selection_catalog, preset = preset)
-    }))
-  )
-}
-
 structural_design_selection_table_summary <- function(selection_catalog,
-                                                  preset = NULL) {
+                                                      preset = NULL) {
   tbl <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
-  if (nrow(tbl) == 0L) {
-    return(data.frame())
-  }
-
+  if (nrow(tbl) == 0L) return(data.frame())
   if (!is.null(preset)) {
     tbl <- tbl[as.character(tbl$Preset %||% "") %in% unique(as.character(preset)), , drop = FALSE]
   }
   tbl <- tbl[tbl$Selected %in% TRUE, , drop = FALSE]
-  if (nrow(tbl) == 0L || !"Table" %in% names(tbl)) {
-    return(data.frame())
-  }
-
-  compact_unique <- function(x, max_n = 4L) {
-    summary_table_bundle_compact_labels(unique(as.character(x %||% character(0))), max_n = max_n)
-  }
-  first_non_missing <- function(x, default = NA_character_) {
-    x <- as.character(x %||% character(0))
-    x <- x[!is.na(x) & nzchar(x)]
-    if (length(x) == 0L) {
-      return(default)
-    }
-    x[[1]]
-  }
-  first_numeric <- function(x, default = NA_real_) {
-    x <- suppressWarnings(as.numeric(x))
-    x <- x[is.finite(x)]
-    if (length(x) == 0L) {
-      return(default)
-    }
-    x[[1]]
-  }
+  if (nrow(tbl) == 0L || !"Table" %in% names(tbl)) return(data.frame())
 
   split_tbl <- split(tbl, as.character(tbl$Table))
-  out <- do.call(
-    rbind,
-    lapply(names(split_tbl), function(table_nm) {
-      part <- split_tbl[[table_nm]]
-      data.frame(
-        Table = as.character(table_nm),
-        PresetsSelected = length(unique(as.character(part$Preset %||% ""))),
-        Presets = compact_unique(part$Preset, max_n = 7L),
-        Rows = as.integer(first_numeric(part$Rows, default = 0)),
-        Role = first_non_missing(part$Role),
-        AppendixSection = first_non_missing(part$AppendixSection),
-        PreferredAppendixOrder = as.integer(first_numeric(part$PreferredAppendixOrder, default = 9999)),
-        PlotReady = any(part$PlotReady %in% TRUE, na.rm = TRUE),
-        ExportReady = any(part$ExportReady %in% TRUE, na.rm = TRUE),
-        ApaTableReady = any(part$ApaTableReady %in% TRUE, na.rm = TRUE),
-        stringsAsFactors = FALSE
-      )
-    })
-  )
+  t_nms <- names(split_tbl)
+  rows <- vector("list", length(t_nms))
+  for (i in seq_along(t_nms)) {
+    part <- split_tbl[[i]]
+    r_num <- suppressWarnings(as.numeric(part$Rows))
+    r_num <- r_num[is.finite(r_num)]
+    ord_num <- suppressWarnings(as.numeric(part$PreferredAppendixOrder))
+    ord_num <- ord_num[is.finite(ord_num)]
+    role_v <- as.character(part$Role %||% character(0))
+    role_v <- role_v[!is.na(role_v) & nzchar(role_v)]
+    sec_v <- as.character(part$AppendixSection %||% character(0))
+    sec_v <- sec_v[!is.na(sec_v) & nzchar(sec_v)]
+    rows[[i]] <- data.frame(
+      Table = as.character(t_nms[i]),
+      PresetsSelected = length(unique(as.character(part$Preset %||% ""))),
+      Presets = summary_table_bundle_compact_labels(unique(as.character(part$Preset %||% character(0))), max_n = 7L),
+      Rows = as.integer(if (length(r_num)) r_num[[1]] else 0),
+      Role = if (length(role_v)) role_v[[1]] else NA_character_,
+      AppendixSection = if (length(sec_v)) sec_v[[1]] else NA_character_,
+      PreferredAppendixOrder = as.integer(if (length(ord_num)) ord_num[[1]] else 9999),
+      PlotReady = any(part$PlotReady %in% TRUE, na.rm = TRUE),
+      ExportReady = any(part$ExportReady %in% TRUE, na.rm = TRUE),
+      ApaTableReady = any(part$ApaTableReady %in% TRUE, na.rm = TRUE),
+      stringsAsFactors = FALSE
+    )
+  }
+  out <- do.call(rbind, rows)
   rownames(out) <- NULL
   out[order(out$PreferredAppendixOrder, out$Table, na.last = TRUE), , drop = FALSE]
 }
 
-
-
 structural_design_selection_by_preset <- function(selection_catalog, summarize,
-    presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
+    presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting"), ...) {
   parts <- lapply(unique(as.character(presets)), function(preset) {
-    summarize(selection_catalog = selection_catalog, preset = preset)
+    summarize(selection_catalog = selection_catalog, preset = preset, ...)
   })
   parts <- parts[vapply(parts, function(x) is.data.frame(x) && nrow(x) > 0L, logical(1))]
   if (!length(parts)) return(data.frame())
@@ -4738,128 +3752,7 @@ structural_design_selection_by_preset <- function(selection_catalog, summarize,
   out
 }
 
-structural_design_selection_handoff_summary <- function(selection_catalog,
-                                                    presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
-  tbl <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
-  if (nrow(tbl) == 0L) {
-    return(data.frame())
-  }
-
-  presets <- unique(as.character(presets))
-  tbl <- tbl[tbl$Selected %in% TRUE & as.character(tbl$Preset %||% "") %in% presets, , drop = FALSE]
-  if (nrow(tbl) == 0L || !"AppendixSection" %in% names(tbl)) {
-    return(data.frame())
-  }
-
-  compact_unique <- function(x, max_n = 4L) {
-    summary_table_bundle_compact_labels(unique(as.character(x %||% character(0))), max_n = max_n)
-  }
-
-  split_tbl <- split(tbl, paste(as.character(tbl$Preset), as.character(tbl$AppendixSection), sep = "\r"))
-  out <- do.call(
-    rbind,
-    lapply(split_tbl, function(part) {
-      tables <- nrow(part)
-      plot_ready <- sum(part$PlotReady %in% TRUE, na.rm = TRUE)
-      numeric_tables <- sum(suppressWarnings(as.numeric(part$NumericColumns)) > 0, na.rm = TRUE)
-      data.frame(
-        Preset = as.character(part$Preset[[1]] %||% ""),
-        AppendixSection = as.character(part$AppendixSection[[1]] %||% ""),
-        Tables = tables,
-        PlotReadyTables = plot_ready,
-        PlotReadyFraction = export_exact_fraction(plot_ready, tables),
-        NumericTables = numeric_tables,
-        NumericFraction = export_exact_fraction(numeric_tables, tables),
-        RolesCovered = compact_unique(part$Role, max_n = 4L),
-        KeyTables = compact_unique(part$Table, max_n = 4L),
-        stringsAsFactors = FALSE
-      )
-    })
-  )
-  rownames(out) <- NULL
-  out[order(out$Preset, out$AppendixSection), , drop = FALSE]
-}
-
-
-
-
-
-structural_design_review_plot_index_from_bundle <- function(plot_index) {
-  idx <- as.data.frame(plot_index %||% data.frame(), stringsAsFactors = FALSE)
-  if (nrow(idx) == 0L) {
-    return(idx)
-  }
-  if (!all(c("Table", "DefaultPlotTypes") %in% names(idx))) {
-    return(idx)
-  }
-
-  direct_routes <- c(
-    structural_design_profile = "profile_metrics",
-    structural_design_load_balance = "load_balance",
-    structural_design_coverage = "coverage",
-    structural_design_readiness = "readiness_tiers",
-    structural_design_appendix_roles = "appendix_roles",
-    structural_design_appendix_sections = "appendix_sections",
-    structural_design_appendix_presets = "appendix_presets",
-    structural_design_selection_table_presets = "selection_tables",
-    structural_design_selection_handoff_presets = "selection_handoff_presets",
-    structural_design_selection_handoff = "selection_handoff",
-    structural_design_selection_handoff_bundles = "selection_handoff_bundles",
-    structural_design_selection_handoff_roles = "selection_handoff_roles",
-    structural_design_selection_handoff_role_sections = "selection_handoff_role_sections",
-    structural_design_selection_tables = "selection_tables",
-    structural_design_selection_summary = "selection_bundles",
-    structural_design_selection_roles = "selection_roles",
-    structural_design_selection_sections = "selection_sections"
-  )
-
-  idx$DefaultPlotTypes <- vapply(seq_len(nrow(idx)), function(i) {
-    tbl <- as.character(idx$Table[i] %||% "")
-    base_types <- strsplit(as.character(idx$DefaultPlotTypes[i] %||% ""), ",", fixed = TRUE)[[1]]
-    base_types <- trimws(base_types)
-    base_types <- base_types[nzchar(base_types)]
-    extra <- unname(direct_routes[tbl])
-    extra <- extra[!is.na(extra) & nzchar(extra)]
-    paste(unique(c(extra, base_types)), collapse = ", ")
-  }, character(1))
-
-  idx
-}
-
-#' Summarize a deterministic named-facet design review
-#'
-#' @param object The structural design-review object stored in the
-#'   normalized `planning_schema$structural_design_review` field.
-#' @param digits Number of digits used in numeric summaries.
-#' @param top_n Maximum number of recommendation rows to print in the preview.
-#' @param detail Console detail: `"brief"` (default) prints the design overview,
-#'   readiness, and recommendation; `"full"` prints all supporting tables.
-#' @param ... Reserved for generic compatibility.
-#'
-#' @details
-#' This summary is intentionally conservative. It aggregates deterministic
-#' design quantities: observation bookkeeping, load/balance, coverage,
-#' structural checks, and a conservative recommendation ranking.
-#' It also exposes the same manuscript-facing table/appendix metadata used by
-#' [build_summary_table_bundle()] so the design review can be inspected directly
-#' without first routing through planning summaries. In addition to bundle-level
-#' appendix presets and section counts, it includes export-like appendix
-#' selection summaries by preset, reporting role, manuscript section,
-#' bundle-aware handoff summaries, preset-specific table surface, and a
-#' table-level handoff crosswalk, plus direct `role_summary` / `table_profile`
-#' surfaces for table-shape review.
-#' It does not report psychometric recovery or Monte Carlo performance.
-#'
-#' @return An object of class `summary.mfrm_structural_design_review`.
-#' @seealso [summary.mfrm_design_evaluation()]
 #' @noRd
-#' @examples
-#' spec <- build_mfrm_sim_spec(
-#'   design = list(person = 16, rater = 3, criterion = 2, assignment = 2),
-#'   assignment = "rotating"
-#' )
-#' active <- spec$planning_schema$structural_design_review
-#' summary(active)
 #' @export
 summary.mfrm_structural_design_review <- function(object,
                                                      digits = 3,
@@ -4867,12 +3760,12 @@ summary.mfrm_structural_design_review <- function(object,
                                                      detail = c("brief", "full"),
                                                      ...) {
   active <- simulation_structural_design_review(object)
-  overview <- simulation_structural_design_review_overview(active)
-  load_balance <- simulation_structural_design_review_load_balance_overview(active)
-  coverage <- simulation_structural_design_review_coverage_overview(active)
-  guardrails <- simulation_structural_design_review_guardrail_overview(active)
-  readiness <- simulation_structural_design_review_readiness_overview(active)
-  recommendation <- simulation_structural_design_review_recommendation_overview(active)
+  overview <- simulation_structural_design_review_stage_overview(active, "overview")
+  load_balance <- simulation_structural_design_review_stage_overview(active, "load_balance")
+  coverage <- simulation_structural_design_review_stage_overview(active, "coverage")
+  guardrails <- simulation_structural_design_review_stage_overview(active, "guardrail")
+  readiness <- simulation_structural_design_review_stage_overview(active, "readiness")
+  recommendation <- simulation_structural_design_review_stage_overview(active, "recommendation")
 
   digits <- max(0L, as.integer(digits[1]))
   top_n <- max(1L, as.integer(top_n[1]))
@@ -4911,17 +3804,31 @@ summary.mfrm_structural_design_review <- function(object,
     )
   )
 
+  idx_base <- .mfrmr_table_structural_design_table_index_base
+  src_tbls <- list(
+    overview$headline_table,
+    overview$metric_summary_table,
+    load_balance$diagnostic_summary_table,
+    coverage$diagnostic_summary_table,
+    guardrails$guardrail_summary_table,
+    readiness$readiness_summary_table,
+    recommendation$recommendation_table
+  )
+  idx_rows <- integer(length(src_tbls))
+  for (i in seq_along(src_tbls)) {
+    idx_rows[i] <- if (is.data.frame(src_tbls[[i]])) as.integer(nrow(src_tbls[[i]])) else 0L
+  }
+  init_table_index <- tibble::tibble(
+    Table = idx_base$Table,
+    Rows = idx_rows,
+    Role = idx_base$Role,
+    Description = idx_base$Description,
+    stringsAsFactors = FALSE
+  )
+
   out <- list(
     overview = round_df(headline),
-    table_index = structural_design_review_table_index(
-      active = active,
-      overview = overview,
-      load_balance = load_balance,
-      coverage = coverage,
-      guardrails = guardrails,
-      readiness = readiness,
-      recommendation = recommendation
-    ),
+    table_index = init_table_index,
     profile_summary = round_df(tibble::as_tibble(overview$metric_summary_table %||% tibble::tibble())),
     load_balance_summary = round_df(tibble::as_tibble(load_balance$diagnostic_summary_table %||% tibble::tibble())),
     coverage_summary = round_df(tibble::as_tibble(coverage$diagnostic_summary_table %||% tibble::tibble())),
@@ -4935,72 +3842,131 @@ summary.mfrm_structural_design_review <- function(object,
   temp_core <- out
   class(temp_core) <- "summary.mfrm_structural_design_review"
   bundle_core <- build_summary_table_bundle(temp_core, include_empty = TRUE)
-  selection_tables <- structural_design_appendix_selection_tables(bundle_core)
-  out$selection_table_summary <- structural_design_selection_table_summary(
-    selection_catalog = selection_tables$selection_catalog
-  )
+
+  presets_all <- c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")
+  original_bundles <- list(structural_design_review = bundle_core)
+  cat_parts <- list()
+  for (pr in presets_all) {
+    sel_b <- export_select_summary_table_bundles_for_appendix(original_bundles, preset = pr)
+    part_df <- export_summary_table_selection_catalog(
+      original_bundles = original_bundles, selected_bundles = sel_b, preset = pr
+    )
+    if (is.data.frame(part_df) && nrow(part_df) > 0L) cat_parts[[length(cat_parts) + 1L]] <- part_df
+  }
+  selection_catalog <- if (length(cat_parts)) {
+    res_df <- do.call(rbind, cat_parts)
+    rownames(res_df) <- NULL
+    res_df
+  } else data.frame()
+
+  sel_tbl <- as.data.frame(selection_catalog, stringsAsFactors = FALSE)
+  sel_true <- if (nrow(sel_tbl) > 0L) sel_tbl[sel_tbl$Selected %in% TRUE, , drop = FALSE] else data.frame()
+
+  out$selection_table_summary <- structural_design_selection_table_summary(selection_catalog)
+
   out$selection_table_preset_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_table_summary, selection_catalog = selection_tables$selection_catalog
+    summarize = export_summary_table_selection_table_summary, selection_catalog = selection_catalog
   )
   out$selection_handoff_table_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_handoff_table_summary, selection_catalog = selection_tables$selection_catalog
+    summarize = export_summary_table_selection_handoff_table_summary, selection_catalog = selection_catalog
   )
   out$selection_handoff_preset_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_handoff_preset_summary, selection_catalog = selection_tables$selection_catalog
+    selection_catalog = selection_catalog, summarize = export_summary_table_selection_counts, view = "preset"
   )
-  out$selection_handoff_summary <- structural_design_selection_handoff_summary(
-    selection_catalog = selection_tables$selection_catalog
-  )
+
+  sh_sub <- if (nrow(sel_true) > 0L) sel_true[as.character(sel_true$Preset %||% "") %in% presets_all, , drop = FALSE] else data.frame()
+  if (nrow(sh_sub) == 0L || !"AppendixSection" %in% names(sh_sub)) {
+    out$selection_handoff_summary <- data.frame()
+  } else {
+    split_sh <- split(sh_sub, paste(as.character(sh_sub$Preset), as.character(sh_sub$AppendixSection), sep = "\r"))
+    sh_rows <- vector("list", length(split_sh))
+    for (i in seq_along(split_sh)) {
+      part <- split_sh[[i]]
+      n_t <- nrow(part)
+      p_r <- sum(part$PlotReady %in% TRUE, na.rm = TRUE)
+      n_num <- sum(suppressWarnings(as.numeric(part$NumericColumns)) > 0, na.rm = TRUE)
+      sh_rows[[i]] <- data.frame(
+        Preset = as.character(part$Preset[[1]] %||% ""),
+        AppendixSection = as.character(part$AppendixSection[[1]] %||% ""),
+        Tables = n_t,
+        PlotReadyTables = p_r,
+        PlotReadyFraction = export_exact_fraction(p_r, n_t),
+        NumericTables = n_num,
+        NumericFraction = export_exact_fraction(n_num, n_t),
+        RolesCovered = summary_table_bundle_compact_labels(unique(as.character(part$Role %||% character(0))), max_n = 4L),
+        KeyTables = summary_table_bundle_compact_labels(unique(as.character(part$Table %||% character(0))), max_n = 4L),
+        stringsAsFactors = FALSE
+      )
+    }
+    sh_df <- do.call(rbind, sh_rows)
+    rownames(sh_df) <- NULL
+    out$selection_handoff_summary <- sh_df[order(sh_df$Preset, sh_df$AppendixSection), , drop = FALSE]
+  }
+
   out$selection_handoff_bundle_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_handoff_bundle_summary, selection_catalog = selection_tables$selection_catalog
+    selection_catalog = selection_catalog, summarize = export_summary_table_selection_counts, view = "section_bundle"
   )
   out$selection_handoff_role_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_handoff_role_summary, selection_catalog = selection_tables$selection_catalog
+    selection_catalog = selection_catalog, summarize = export_summary_table_selection_counts, view = "role"
   )
   out$selection_handoff_role_section_summary <- structural_design_selection_by_preset(
-    summarize = export_summary_table_selection_handoff_role_section_summary, selection_catalog = selection_tables$selection_catalog
+    selection_catalog = selection_catalog, summarize = export_summary_table_selection_counts, view = "role_section"
   )
-  out$selection_summary <- selection_tables$selection_summary
-  out$selection_role_summary <- selection_tables$selection_role_summary
-  out$selection_section_summary <- selection_tables$selection_section_summary
-  out$selection_catalog <- selection_tables$selection_catalog
+  out$selection_summary <- structural_design_selection_by_preset(
+    selection_catalog = selection_catalog, summarize = export_summary_table_selection_summary
+  )
+  out$selection_role_summary <- structural_design_selection_by_preset(
+    selection_catalog = selection_catalog, summarize = export_summary_table_selection_counts, view = "appendix_role"
+  )
+  out$selection_section_summary <- structural_design_selection_by_preset(
+    selection_catalog = selection_catalog, summarize = export_summary_table_selection_counts, view = "appendix_section"
+  )
+  out$selection_catalog <- selection_catalog
 
   temp_final <- out
   class(temp_final) <- "summary.mfrm_structural_design_review"
   bundle_final <- build_summary_table_bundle(temp_final, include_empty = TRUE)
   out$table_index <- as.data.frame(bundle_final$table_index %||% data.frame(), stringsAsFactors = FALSE)
-  out$plot_index <- structural_design_review_plot_index_from_bundle(
-    as.data.frame(bundle_final$plot_index %||% data.frame(), stringsAsFactors = FALSE)
-  )
+  p_idx <- as.data.frame(bundle_final$plot_index %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(p_idx) > 0L && all(c("Table", "DefaultPlotTypes") %in% names(p_idx))) {
+    droutes <- .mfrmr_map_structural_design_direct_routes
+    new_dpt <- character(nrow(p_idx))
+    for (i in seq_len(nrow(p_idx))) {
+      tnm <- as.character(p_idx$Table[i] %||% "")
+      btypes <- trimws(strsplit(as.character(p_idx$DefaultPlotTypes[i] %||% ""), ",", fixed = TRUE)[[1]])
+      btypes <- btypes[nzchar(btypes)]
+      extra <- unname(droutes[tnm])
+      extra <- extra[!is.na(extra) & nzchar(extra)]
+      new_dpt[i] <- paste(unique(c(extra, btypes)), collapse = ", ")
+    }
+    p_idx$DefaultPlotTypes <- new_dpt
+  }
+  out$plot_index <- p_idx
   out$table_catalog <- summary_table_bundle_catalog(bundle_final)
   out$table_profile <- summary_table_bundle_profile(bundle_final)
   if (nrow(out$table_profile) > 0L) {
     ord <- order(out$table_profile$Rows, out$table_profile$Cols, decreasing = TRUE, na.last = TRUE)
-    out$table_profile <- out$table_profile[ord, , drop = FALSE]
-    out$table_profile <- utils::head(out$table_profile, n = top_n)
+    out$table_profile <- utils::head(out$table_profile[ord, , drop = FALSE], n = top_n)
   }
   out$role_summary <- data.frame()
   if (nrow(out$table_index) > 0L && "Role" %in% names(out$table_index)) {
     roles <- split(out$table_index, out$table_index$Role %||% "")
-    out$role_summary <- do.call(
-      rbind,
-      lapply(names(roles), function(role_nm) {
-        part <- roles[[role_nm]]
-        data.frame(
-          Role = as.character(role_nm),
-          Tables = nrow(part),
-          TotalRows = sum(suppressWarnings(as.numeric(part$Rows)), na.rm = TRUE),
-          TotalCols = sum(suppressWarnings(as.numeric(part$Cols)), na.rm = TRUE),
-          stringsAsFactors = FALSE
-        )
-      })
-    )
-    out$role_summary <- out$role_summary[
-      order(out$role_summary$Tables, out$role_summary$Role, decreasing = TRUE),
-      ,
-      drop = FALSE
-    ]
-    rownames(out$role_summary) <- NULL
+    r_nms <- names(roles)
+    r_rows <- vector("list", length(r_nms))
+    for (i in seq_along(r_nms)) {
+      part <- roles[[i]]
+      r_rows[[i]] <- data.frame(
+        Role = as.character(r_nms[i]),
+        Tables = nrow(part),
+        TotalRows = sum(suppressWarnings(as.numeric(part$Rows)), na.rm = TRUE),
+        TotalCols = sum(suppressWarnings(as.numeric(part$Cols)), na.rm = TRUE),
+        stringsAsFactors = FALSE
+      )
+    }
+    rs_df <- do.call(rbind, r_rows)
+    rs_df <- rs_df[order(rs_df$Tables, rs_df$Role, decreasing = TRUE), , drop = FALSE]
+    rownames(rs_df) <- NULL
+    out$role_summary <- rs_df
   }
   out$appendix_presets <- summary_table_bundle_appendix_presets(out$table_catalog)
   out$appendix_role_summary <- summary_table_bundle_appendix_role_summary(out$table_catalog)
@@ -5020,19 +3986,11 @@ print.summary.mfrm_structural_design_review <- function(x, ...) {
   digits <- max(0L, as.integer(x$digits %||% 3L))
 
   cat("mfrmr Structural Design Review\n")
-  if (!is.null(x$overview) && nrow(x$overview) > 0L) {
-    cat("\nOverview\n")
-    print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
-  }
+  print_summary_sections(x, .mfrmr_summary_print_sections[["print.summary.mfrm_structural_design_review_01"]], 
+      digits = digits)
   if (identical(as.character(x$detail %||% "brief"), "brief")) {
-    if (!is.null(x$readiness_summary) && nrow(x$readiness_summary) > 0L) {
-      cat("\nReadiness summary\n")
-      print(round_numeric_df(as.data.frame(x$readiness_summary), digits = digits), row.names = FALSE)
-    }
-    if (!is.null(x$recommendation_table) && nrow(x$recommendation_table) > 0L) {
-      cat("\nRecommendation table\n")
-      print(round_numeric_df(as.data.frame(x$recommendation_table), digits = digits), row.names = FALSE)
-    }
+    print_summary_sections(x, .mfrmr_summary_print_sections[["print.summary.mfrm_structural_design_review_02"]], 
+        digits = digits)
     if (length(x$notes %||% character(0)) > 0L) {
       cat("\nNotes\n")
       for (line in x$notes) cat(" - ", line, "\n", sep = "")
@@ -5040,110 +3998,8 @@ print.summary.mfrm_structural_design_review <- function(x, ...) {
     cat("\nAdditional design tables remain in the structured summary; use `detail = \"full\"` to print them.\n")
     return(invisible(x))
   }
-  if (!is.null(x$table_index) && nrow(x$table_index) > 0L) {
-    cat("\nTable index\n")
-    print(as.data.frame(x$table_index), row.names = FALSE)
-  }
-  if (!is.null(x$plot_index) && nrow(x$plot_index) > 0L) {
-    cat("\nPlot index\n")
-    print(as.data.frame(x$plot_index), row.names = FALSE)
-  }
-  if (!is.null(x$table_catalog) && nrow(x$table_catalog) > 0L) {
-    cat("\nTable catalog\n")
-    print(round_numeric_df(as.data.frame(x$table_catalog), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$role_summary) && nrow(x$role_summary) > 0L) {
-    cat("\nRole summary\n")
-    print(round_numeric_df(as.data.frame(x$role_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$table_profile) && nrow(x$table_profile) > 0L) {
-    cat("\nTable profile\n")
-    print(round_numeric_df(as.data.frame(x$table_profile), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$profile_summary) && nrow(x$profile_summary) > 0L) {
-    cat("\nProfile summary\n")
-    print(round_numeric_df(as.data.frame(x$profile_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$load_balance_summary) && nrow(x$load_balance_summary) > 0L) {
-    cat("\nLoad/balance summary\n")
-    print(round_numeric_df(as.data.frame(x$load_balance_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$coverage_summary) && nrow(x$coverage_summary) > 0L) {
-    cat("\nCoverage summary\n")
-    print(round_numeric_df(as.data.frame(x$coverage_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$guardrail_summary) && nrow(x$guardrail_summary) > 0L) {
-    cat("\nGuardrail summary\n")
-    print(round_numeric_df(as.data.frame(x$guardrail_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$readiness_summary) && nrow(x$readiness_summary) > 0L) {
-    cat("\nReadiness summary\n")
-    print(round_numeric_df(as.data.frame(x$readiness_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$recommendation_table) && nrow(x$recommendation_table) > 0L) {
-    cat("\nRecommendation table\n")
-    print(round_numeric_df(as.data.frame(x$recommendation_table), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$appendix_presets) && nrow(x$appendix_presets) > 0L) {
-    cat("\nAppendix presets\n")
-    print(round_numeric_df(as.data.frame(x$appendix_presets), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$appendix_role_summary) && nrow(x$appendix_role_summary) > 0L) {
-    cat("\nAppendix role summary\n")
-    print(round_numeric_df(as.data.frame(x$appendix_role_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$appendix_section_summary) && nrow(x$appendix_section_summary) > 0L) {
-    cat("\nAppendix section summary\n")
-    print(round_numeric_df(as.data.frame(x$appendix_section_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$selection_summary) && nrow(x$selection_summary) > 0L) {
-    cat("\nSelection summary\n")
-    print(round_numeric_df(as.data.frame(x$selection_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$selection_table_summary) && nrow(x$selection_table_summary) > 0L) {
-    cat("\nSelection table summary\n")
-    print(round_numeric_df(as.data.frame(x$selection_table_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$selection_table_preset_summary) && nrow(x$selection_table_preset_summary) > 0L) {
-    cat("\nSelection table preset summary\n")
-    print(round_numeric_df(as.data.frame(x$selection_table_preset_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$selection_handoff_table_summary) && nrow(x$selection_handoff_table_summary) > 0L) {
-    cat("\nSelection handoff table summary\n")
-    print(round_numeric_df(as.data.frame(x$selection_handoff_table_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$selection_handoff_preset_summary) && nrow(x$selection_handoff_preset_summary) > 0L) {
-    cat("\nSelection handoff preset summary\n")
-    print(round_numeric_df(as.data.frame(x$selection_handoff_preset_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$selection_handoff_summary) && nrow(x$selection_handoff_summary) > 0L) {
-    cat("\nSelection handoff summary\n")
-    print(round_numeric_df(as.data.frame(x$selection_handoff_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$selection_handoff_bundle_summary) && nrow(x$selection_handoff_bundle_summary) > 0L) {
-    cat("\nSelection handoff bundle summary\n")
-    print(round_numeric_df(as.data.frame(x$selection_handoff_bundle_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$selection_handoff_role_summary) && nrow(x$selection_handoff_role_summary) > 0L) {
-    cat("\nSelection handoff role summary\n")
-    print(round_numeric_df(as.data.frame(x$selection_handoff_role_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$selection_handoff_role_section_summary) && nrow(x$selection_handoff_role_section_summary) > 0L) {
-    cat("\nSelection handoff role-section summary\n")
-    print(round_numeric_df(as.data.frame(x$selection_handoff_role_section_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$selection_role_summary) && nrow(x$selection_role_summary) > 0L) {
-    cat("\nSelection role summary\n")
-    print(round_numeric_df(as.data.frame(x$selection_role_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$selection_section_summary) && nrow(x$selection_section_summary) > 0L) {
-    cat("\nSelection section summary\n")
-    print(round_numeric_df(as.data.frame(x$selection_section_summary), digits = digits), row.names = FALSE)
-  }
-  if (!is.null(x$reporting_map) && nrow(x$reporting_map) > 0L) {
-    cat("\nReporting map\n")
-    print(as.data.frame(x$reporting_map), row.names = FALSE)
-  }
+  print_summary_sections(x, .mfrmr_summary_print_sections[["print.summary.mfrm_structural_design_review_03"]], 
+      digits = digits)
   if (length(x$notes %||% character(0)) > 0L) {
     cat("\nNotes\n")
     for (line in x$notes) cat(" - ", line, "\n", sep = "")
@@ -5156,32 +4012,19 @@ simulation_compact_structural_design_review_summary <- function(x,
                                                             top_n = 6L) {
   planning_schema <- simulation_object_planning_schema(x)
   design_review <- planning_schema$structural_design_review %||% NULL
-  if (!is.list(design_review)) {
-    return(NULL)
-  }
-
+  if (!is.list(design_review)) return(NULL)
   out <- tryCatch(
-    summary.mfrm_structural_design_review(
-      design_review,
-      digits = digits,
-      top_n = top_n
-    ),
+    summary.mfrm_structural_design_review(design_review, digits = digits, top_n = top_n),
     error = function(e) NULL
   )
-  if (!inherits(out, "summary.mfrm_structural_design_review")) {
-    return(NULL)
-  }
-
+  if (!inherits(out, "summary.mfrm_structural_design_review")) return(NULL)
   out
 }
 
 print_compact_structural_design_review_summary <- function(x,
                                                        digits = 3,
                                                        heading = "Structural design review") {
-  if (!inherits(x, "summary.mfrm_structural_design_review")) {
-    return(invisible(NULL))
-  }
-
+  if (!inherits(x, "summary.mfrm_structural_design_review")) return(invisible(NULL))
   cat("\n", heading, "\n", sep = "")
   if (!is.null(x$overview) && nrow(x$overview) > 0L) {
     print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
@@ -5194,53 +4037,10 @@ print_compact_structural_design_review_summary <- function(x,
     cat("\nRecommendation table\n")
     print(round_numeric_df(as.data.frame(x$recommendation_table), digits = digits), row.names = FALSE)
   }
-
   invisible(x)
 }
 
-#' Plot a deterministic named-facet design review
-#'
-#' @param x The structural design-review object stored in the
-#'   normalized `planning_schema$structural_design_review` field.
-#' @param y Unused placeholder for generic compatibility.
-#' @param type Plot type: `"profile_metrics"` for recommended deterministic
-#'   profile values by metric, `"load_balance"` for recommended load/balance
-#'   values by metric, `"coverage"` for recommended coverage/connectivity values
-#'   by metric, `"readiness_tiers"` for counts of structural tiers across the
-#'   current design grid, `"table_rows"` / `"role_tables"` /
-#'   `"appendix_roles"` for summary-table bundle QC,
-#'   `"appendix_sections"` / `"appendix_presets"` for manuscript-facing
-#'   appendix selection counts, `"selection_handoff_presets"` for preset-level
-#'   appendix handoff counts, `"selection_tables"` for appendix-selected
-#'   design-review tables ranked by row count within a preset,
-#'   `"selection_handoff"` for section-aware plot-ready appendix handoff counts,
-#'   `"selection_handoff_bundles"` for section-and-bundle plot-ready appendix
-#'   handoff counts,
-#'   `"selection_handoff_roles"` for role-aware plot-ready appendix handoff
-#'   counts, `"selection_handoff_role_sections"` for role-by-section plot-ready
-#'   appendix handoff counts,
-#'   or `"selection_bundles"` / `"selection_roles"` / `"selection_sections"`
-#'   for preset-filtered appendix selection summaries.
-#' @param appendix_preset Appendix preset used for `selection_*` plot types.
-#' @param selection_value For `selection_*` plot types, whether to plot exact
-#'   counts (`"count"`) or the matching exact fraction (`"fraction"`) when that
-#'   surface exposes one. `selection_tables` remains count-only because it
-#'   represents table row counts rather than a normalized selection surface.
-#' @param draw If `TRUE`, draw with base graphics; otherwise return plotting data.
-#' @param main Optional title override.
-#' @param palette Optional named color overrides.
-#' @param label_angle Axis-label rotation angle.
-#' @param ... Reserved for generic compatibility.
-#'
-#' @return Invisibly, a `ggplot` object carrying reusable structural-design tables via [plot_data()].
 #' @noRd
-#' @examples
-#' spec <- build_mfrm_sim_spec(
-#'   design = list(person = 16, rater = 3, criterion = 2, assignment = 2),
-#'   assignment = "rotating"
-#' )
-#' active <- spec$planning_schema$structural_design_review
-#' plot(active, type = "readiness_tiers", draw = FALSE)
 #' @export
 plot.mfrm_structural_design_review <- function(x,
                                                   y = NULL,
@@ -5263,217 +4063,65 @@ plot.mfrm_structural_design_review <- function(x,
   if (type %in% c("table_rows", "role_tables", "appendix_roles", "appendix_sections", "appendix_presets")) {
     bundle <- build_summary_table_bundle(active)
     return(plot.mfrm_summary_table_bundle(
-      bundle,
-      type = type,
-      selection_value = selection_value,
-      main = main,
-      palette = palette,
-      label_angle = label_angle,
-      draw = draw,
-      ...
+      bundle, type = type, selection_value = selection_value,
+      main = main, palette = palette, label_angle = label_angle, draw = draw, ...
     ))
   }
 
   if (type %in% c("selection_handoff_presets", "selection_tables", "selection_handoff", "selection_handoff_bundles", "selection_handoff_roles", "selection_handoff_role_sections", "selection_bundles", "selection_roles", "selection_sections")) {
     sx <- summary.mfrm_structural_design_review(active)
-    if (type == "selection_handoff_presets") {
-      tbl <- as.data.frame(sx$selection_handoff_preset_summary %||% data.frame(), stringsAsFactors = FALSE)
-      tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
-      if (nrow(tbl) == 0L || !all(c("Preset", "PlotReadyTables") %in% names(tbl))) {
-        stop("No structural-design appendix handoff-preset summary is available for preset `", appendix_preset, "`.", call. = FALSE)
-      }
-      labels <- as.character(tbl$Preset)
-      measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
-      values <- measure$values
-      subtitle <- paste0("Plot-ready appendix handoff by preset for `", appendix_preset, "`")
-      default_palette <- c(selection_handoff_presets = "#f4a261", grid = "#ececec")
-      plot_name <- "selection_handoff_presets"
-      legend_label <- measure$legend_label
-      ylab <- measure$ylab
-    } else if (type == "selection_tables") {
-      tbl <- structural_design_selection_table_summary(
-        selection_catalog = sx$selection_catalog,
-        preset = appendix_preset
-      )
-      if (nrow(tbl) == 0L || !all(c("Table", "Rows") %in% names(tbl))) {
-        stop("No structural-design appendix table selection is available for preset `", appendix_preset, "`.", call. = FALSE)
-      }
-      labels <- as.character(tbl$Table)
-      measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
-      values <- measure$values
-      subtitle <- paste0("Selected appendix tables for preset `", appendix_preset, "`")
-      default_palette <- c(selection_tables = "#e76f51", grid = "#ececec")
-      plot_name <- "selection_tables"
-      legend_label <- measure$legend_label
-      ylab <- measure$ylab
-    } else if (type == "selection_handoff") {
-      tbl <- as.data.frame(sx$selection_handoff_summary %||% data.frame(), stringsAsFactors = FALSE)
-      tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
-      if (nrow(tbl) == 0L || !all(c("AppendixSection", "PlotReadyTables") %in% names(tbl))) {
-        stop("No structural-design appendix handoff summary is available for preset `", appendix_preset, "`.", call. = FALSE)
-      }
-      labels <- as.character(tbl$AppendixSection)
-      measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
-      values <- measure$values
-      subtitle <- paste0("Plot-ready appendix handoff by section for preset `", appendix_preset, "`")
-      default_palette <- c(selection_handoff = "#ff9f1c", grid = "#ececec")
-      plot_name <- "selection_handoff"
-      legend_label <- measure$legend_label
-      ylab <- measure$ylab
-    } else if (type == "selection_handoff_bundles") {
-      tbl <- as.data.frame(sx$selection_handoff_bundle_summary %||% data.frame(), stringsAsFactors = FALSE)
-      tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
-      if (nrow(tbl) == 0L || !all(c("AppendixSection", "Bundle", "PlotReadyTables") %in% names(tbl))) {
-        stop("No structural-design appendix handoff-bundle summary is available for preset `", appendix_preset, "`.", call. = FALSE)
-      }
-      labels <- paste0(as.character(tbl$AppendixSection), " :: ", as.character(tbl$Bundle))
-      measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
-      values <- measure$values
-      subtitle <- paste0("Plot-ready appendix handoff by section and bundle for preset `", appendix_preset, "`")
-      default_palette <- c(selection_handoff_bundles = "#5c677d", grid = "#ececec")
-      plot_name <- "selection_handoff_bundles"
-      legend_label <- measure$legend_label
-      ylab <- measure$ylab
-    } else if (type == "selection_handoff_roles") {
-      tbl <- as.data.frame(sx$selection_handoff_role_summary %||% data.frame(), stringsAsFactors = FALSE)
-      tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
-      if (nrow(tbl) == 0L || !all(c("Role", "PlotReadyTables") %in% names(tbl))) {
-        stop("No structural-design appendix handoff-role summary is available for preset `", appendix_preset, "`.", call. = FALSE)
-      }
-      labels <- as.character(tbl$Role)
-      measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
-      values <- measure$values
-      subtitle <- paste0("Plot-ready appendix handoff by role for preset `", appendix_preset, "`")
-      default_palette <- c(selection_handoff_roles = "#9c6644", grid = "#ececec")
-      plot_name <- "selection_handoff_roles"
-      legend_label <- measure$legend_label
-      ylab <- measure$ylab
-    } else if (type == "selection_handoff_role_sections") {
-      tbl <- as.data.frame(sx$selection_handoff_role_section_summary %||% data.frame(), stringsAsFactors = FALSE)
-      tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
-      if (nrow(tbl) == 0L || !all(c("AppendixSection", "Role", "PlotReadyTables") %in% names(tbl))) {
-        stop("No structural-design appendix handoff role-section summary is available for preset `", appendix_preset, "`.", call. = FALSE)
-      }
-      labels <- paste0(as.character(tbl$AppendixSection), " :: ", as.character(tbl$Role))
-      measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
-      values <- measure$values
-      subtitle <- paste0("Plot-ready appendix handoff by section and role for preset `", appendix_preset, "`")
-      default_palette <- c(selection_handoff_role_sections = "#7f5539", grid = "#ececec")
-      plot_name <- "selection_handoff_role_sections"
-      legend_label <- measure$legend_label
-      ylab <- measure$ylab
-    } else if (type == "selection_bundles") {
-      tbl <- as.data.frame(sx$selection_summary %||% data.frame(), stringsAsFactors = FALSE)
-      tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
-      if (nrow(tbl) == 0L || !all(c("Bundle", "TablesSelected") %in% names(tbl))) {
-        stop("No structural-design appendix selection summary is available for preset `", appendix_preset, "`.", call. = FALSE)
-      }
-      labels <- as.character(tbl$Bundle)
-      measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
-      values <- measure$values
-      subtitle <- paste0("Appendix tables by bundle for preset `", appendix_preset, "`")
-      default_palette <- c(selection_bundles = "#54a24b", grid = "#ececec")
-      plot_name <- "selection_bundles"
-      legend_label <- measure$legend_label
-      ylab <- measure$ylab
-    } else if (type == "selection_roles") {
-      tbl <- as.data.frame(sx$selection_role_summary %||% data.frame(), stringsAsFactors = FALSE)
-      tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
-      if (nrow(tbl) == 0L || !all(c("Role", "Tables") %in% names(tbl))) {
-        stop("No structural-design appendix role summary is available for preset `", appendix_preset, "`.", call. = FALSE)
-      }
-      labels <- as.character(tbl$Role)
-      measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
-      values <- measure$values
-      subtitle <- paste0("Selected appendix roles for preset `", appendix_preset, "`")
-      default_palette <- c(selection_roles = "#b279a2", grid = "#ececec")
-      plot_name <- "selection_roles"
-      legend_label <- measure$legend_label
-      ylab <- measure$ylab
-    } else {
-      tbl <- as.data.frame(sx$selection_section_summary %||% data.frame(), stringsAsFactors = FALSE)
-      tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
-      if (nrow(tbl) == 0L || !all(c("AppendixSection", "Tables") %in% names(tbl))) {
-        stop("No structural-design appendix section summary is available for preset `", appendix_preset, "`.", call. = FALSE)
-      }
-      labels <- as.character(tbl$AppendixSection)
-      measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
-      values <- measure$values
-      subtitle <- paste0("Selected appendix sections for preset `", appendix_preset, "`")
-      default_palette <- c(selection_sections = "#2a9d8f", grid = "#ececec")
-      plot_name <- "selection_sections"
-      legend_label <- measure$legend_label
-      ylab <- measure$ylab
-    }
-
+    input <- resolve_selection_plot_inputs(sx, type, selection_value, appendix_preset, context = "structural")
+    tbl <- input$table
+    labels <- input$labels
+    measure <- input$measure
+    values <- measure$values
     keep <- is.finite(values) & nzchar(labels)
-    if (!any(keep)) {
-      stop("Selected structural-design appendix plot has no finite values to display.", call. = FALSE)
-    }
-    labels <- labels[keep]
-    values <- values[keep]
-    tbl <- tbl[keep, , drop = FALSE]
+    if (!any(keep)) stop("Selected structural-design appendix plot has no finite values to display.", call. = FALSE)
+    default_palette <- c(stats::setNames(input$colour, type), grid = "#ececec")
     pal <- resolve_palette(palette = palette, defaults = default_palette)
-    plot_title <- if (is.null(main)) paste("Structural design review:", gsub("_", " ", plot_name)) else as.character(main[1])
-
-    out <- new_mfrm_plot_data(
-      "structural_design_review",
-      list(
-        plot = plot_name,
-        selection_value = measure$selection_value,
-        appendix_preset = appendix_preset,
-        table = tbl,
-        label = labels,
-        value = values,
-        ylab = ylab,
-        title = plot_title,
-        subtitle = subtitle,
-        legend = new_plot_legend(legend_label, "structural_design", "bar", pal[plot_name]),
-        reference_lines = new_reference_lines("h", 0, "Zero-table reference", "dashed", "reference")
-      )
-    )
+    plot_title <- if (is.null(main)) paste("Structural design review:", gsub("_", " ", type)) else as.character(main[1])
+    out <- new_mfrm_plot_data("structural_design_review", list(
+      plot = type, selection_value = measure$selection_value, appendix_preset = appendix_preset,
+      table = tbl[keep, , drop = FALSE], label = labels[keep], value = values[keep],
+      ylab = measure$ylab, title = plot_title, subtitle = input$subtitle,
+      legend = new_plot_legend(measure$legend_label, "structural_design", "bar", pal[type]),
+      reference_lines = new_reference_lines("h", 0, "Zero-table reference", "dashed", "reference")
+    ))
     return(.mfrm_finalize_ggplot(out, draw = draw))
   }
 
-  if (type == "profile_metrics") {
-    tbl <- simulation_structural_design_review_profile(active)$profile_summary_table
-    tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
-    if (nrow(tbl) == 0L || !all(c("metric", "recommended_value") %in% names(tbl))) {
-      stop("No structural-design profile metrics are available for plotting.", call. = FALSE)
-    }
+  if (type %in% c("profile_metrics", "load_balance", "coverage")) {
+    meta <- switch(
+      type,
+      profile_metrics = list(
+        tbl = simulation_structural_design_review_profile(active)$profile_summary_table,
+        err = "No structural-design profile metrics are available for plotting.",
+        sub = "Recommended deterministic profile values",
+        col = "#3a7ca5"
+      ),
+      load_balance = list(
+        tbl = simulation_structural_design_review_load_balance(active)$diagnostic_summary_table,
+        err = "No structural-design load/balance metrics are available for plotting.",
+        sub = "Recommended deterministic load/balance values",
+        col = "#2a9d8f"
+      ),
+      coverage = list(
+        tbl = simulation_structural_design_review_coverage(active)$diagnostic_summary_table,
+        err = "No structural-design coverage metrics are available for plotting.",
+        sub = "Recommended deterministic coverage/connectivity values",
+        col = "#f4a261"
+      )
+    )
+    tbl <- tibble::as_tibble(meta$tbl %||% tibble::tibble())
+    if (nrow(tbl) == 0L || !all(c("metric", "recommended_value") %in% names(tbl))) stop(meta$err, call. = FALSE)
     labels <- as.character(tbl$metric)
     values <- suppressWarnings(as.numeric(tbl$recommended_value))
-    subtitle <- "Recommended deterministic profile values"
-    default_palette <- c(profile_metrics = "#3a7ca5", grid = "#ececec")
-    plot_name <- "profile_metrics"
-    legend_label <- "Recommended value"
-  } else if (type == "load_balance") {
-    tbl <- simulation_structural_design_review_load_balance(active)$diagnostic_summary_table
-    tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
-    if (nrow(tbl) == 0L || !all(c("metric", "recommended_value") %in% names(tbl))) {
-      stop("No structural-design load/balance metrics are available for plotting.", call. = FALSE)
-    }
-    labels <- as.character(tbl$metric)
-    values <- suppressWarnings(as.numeric(tbl$recommended_value))
-    subtitle <- "Recommended deterministic load/balance values"
-    default_palette <- c(load_balance = "#2a9d8f", grid = "#ececec")
-    plot_name <- "load_balance"
-    legend_label <- "Recommended value"
-  } else if (type == "coverage") {
-    tbl <- simulation_structural_design_review_coverage(active)$diagnostic_summary_table
-    tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
-    if (nrow(tbl) == 0L || !all(c("metric", "recommended_value") %in% names(tbl))) {
-      stop("No structural-design coverage metrics are available for plotting.", call. = FALSE)
-    }
-    labels <- as.character(tbl$metric)
-    values <- suppressWarnings(as.numeric(tbl$recommended_value))
-    subtitle <- "Recommended deterministic coverage/connectivity values"
-    default_palette <- c(coverage = "#f4a261", grid = "#ececec")
-    plot_name <- "coverage"
+    subtitle <- meta$sub
+    default_palette <- c(stats::setNames(meta$col, type), grid = "#ececec")
+    plot_name <- type
     legend_label <- "Recommended value"
   } else {
-    tbl <- simulation_structural_design_review_readiness(active)$readiness_table
-    tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
+    tbl <- tibble::as_tibble(simulation_structural_design_review_readiness(active)$readiness_table %||% tibble::tibble())
     if (nrow(tbl) == 0L || !"structural_tier" %in% names(tbl)) {
       stop("No structural-design readiness tiers are available for plotting.", call. = FALSE)
     }
@@ -5487,29 +4135,18 @@ plot.mfrm_structural_design_review <- function(x,
   }
 
   keep <- is.finite(values) & nzchar(labels)
-  if (!any(keep)) {
-    stop("Selected structural-design plot has no finite values to display.", call. = FALSE)
-  }
-  labels <- labels[keep]
-  values <- values[keep]
+  if (!any(keep)) stop("Selected structural-design plot has no finite values to display.", call. = FALSE)
   pal <- resolve_palette(palette = palette, defaults = default_palette)
   color_name <- names(default_palette)[1]
   plot_title <- if (is.null(main)) "Structural design review" else as.character(main[1])
 
-  out <- new_mfrm_plot_data(
-    "structural_design_review",
-    list(
-      plot = plot_name,
-      label = labels,
-      value = values,
-      ylab = legend_label,
-      title = plot_title,
-      subtitle = subtitle,
-      recommended_design_id = as.character(active$recommended_design_id %||% NA_character_),
-      legend = new_plot_legend(legend_label, "structural_design", "bar", pal[color_name]),
-      reference_lines = new_reference_lines("h", 0, "Zero reference", "dashed", "reference")
-    )
-  )
+  out <- new_mfrm_plot_data("structural_design_review", list(
+    plot = plot_name, label = labels[keep], value = values[keep], ylab = legend_label,
+    title = plot_title, subtitle = subtitle,
+    recommended_design_id = as.character(active$recommended_design_id %||% NA_character_),
+    legend = new_plot_legend(legend_label, "structural_design", "bar", pal[color_name]),
+    reference_lines = new_reference_lines("h", 0, "Zero reference", "dashed", "reference")
+  ))
   .mfrm_finalize_ggplot(out, draw = draw)
 }
 
@@ -5517,84 +4154,17 @@ simulation_compact_structural_design_report_cache <- function(x) {
   if (!is.list(x) || is.data.frame(x) || inherits(x, "mfrm_plot_data") || inherits(x, "ggplot")) {
     return(x)
   }
-
   nested_report_fields <- c(
-    "report_bundle",
-    "report_summary",
-    "report_overview",
-    "report_catalog",
-    "report_surface_registry",
-    "report_panel",
-    "source_object",
-    "registry",
-    "selected_surface"
+    "report_bundle", "report_summary", "report_overview", "report_catalog",
+    "report_surface_registry", "report_panel", "source_object", "registry", "selected_surface"
   )
   x[intersect(names(x), nested_report_fields)] <- NULL
-
   for (nm in names(x)) {
     if (is.list(x[[nm]]) && !is.data.frame(x[[nm]]) && !inherits(x[[nm]], "mfrm_plot_data") && !inherits(x[[nm]], "ggplot")) {
       x[[nm]] <- simulation_compact_structural_design_report_cache(x[[nm]])
     }
   }
-
   x
-}
-
-simulation_compact_structural_design_schema_report_cache <- function(branch_schema) {
-  report_fields <- c(
-    "report_summary",
-    "report_overview_table",
-    "report_catalog",
-    "report_digest",
-    "report_surface_registry",
-    "report_panel",
-    "report_operation",
-    "report_snapshot",
-    "report_brief",
-    "report_consumer"
-  )
-  for (nm in intersect(report_fields, names(branch_schema))) {
-    branch_schema[[nm]] <- simulation_compact_structural_design_report_cache(branch_schema[[nm]])
-  }
-  branch_schema
-}
-
-simulation_compact_structural_design_schema_active_cache <- function(branch_schema) {
-  if (is.list(branch_schema$design_review)) {
-    if (is.list(branch_schema$design_review$summary)) {
-      branch_schema$design_review$summary$review <- NULL
-    }
-    if (is.list(branch_schema$design_review$table)) {
-      branch_schema$design_review$table$review <- NULL
-    }
-    if (is.list(branch_schema$design_review$plot)) {
-      branch_schema$design_review$plot$review <- NULL
-    }
-  }
-
-  drop_map <- list(
-    compact_review_summary = "review",
-    compact_review_table = "review",
-    compact_review_plot = "review",
-    design_review_profile = "design_review",
-    design_review_load_balance = "design_review_profile",
-    design_review_overview = c("design_review", "design_review_profile"),
-    design_review_load_balance_overview = "design_review_load_balance",
-    design_review_coverage = "design_review_profile",
-    design_review_coverage_overview = "design_review_coverage",
-    design_review_guardrails = c("design_review_coverage", "design_review_load_balance"),
-    design_review_guardrail_overview = "design_review_guardrails",
-    design_review_readiness = "design_review_guardrails",
-    design_review_readiness_overview = "design_review_readiness",
-    design_review_recommendation = c("design_review_readiness", "design_review_profile"),
-    design_review_recommendation_overview = "design_review_recommendation"
-  )
-
-  for (nm in intersect(names(drop_map), names(branch_schema))) {
-    branch_schema[[nm]][intersect(drop_map[[nm]], names(branch_schema[[nm]]))] <- NULL
-  }
-
-  branch_schema
 }
 
 simulation_structural_design_schema <- function(sim_spec = NULL, facet_names = NULL) {
@@ -5607,10 +4177,9 @@ simulation_structural_design_schema <- function(sim_spec = NULL, facet_names = N
     as.list(unname(structural_facet_table$level_count %||% rep(NA_integer_, nrow(structural_facet_table)))),
     as.character(structural_facet_table$structural_facet_key)
   )
-  assignment_value <- NA_integer_
-  if (is.null(facet_names) && !is.null(sim_spec)) {
-    assignment_value <- as.integer(sim_spec$raters_per_person %||% NA_integer_)
-  }
+  assignment_value <- if (is.null(facet_names) && !is.null(sim_spec)) {
+    as.integer(sim_spec$raters_per_person %||% NA_integer_)
+  } else NA_integer_
   structural_design_template <- list(
     facets = facet_counts,
     assignment = assignment_value,
@@ -5623,22 +4192,20 @@ simulation_structural_design_schema <- function(sim_spec = NULL, facet_names = N
     sim_spec
   } else if (!is.null(facet_names)) {
     list(facet_names = simulation_validate_output_facet_names(facet_names))
-  } else {
-    NULL
-  }
+  } else NULL
 
-  facet_axes <- structural_facet_table |>
-    dplyr::transmute(
-      input_key = .data$structural_facet_key,
-      facet = .data$facet,
-      facet_kind = .data$facet_kind,
-      axis_class = .data$design_axis_class,
-      level_count = .data$level_count,
-      canonical_design_variable = .data$current_planning_count_variable,
-      public_design_alias = .data$current_planning_count_alias,
-      current_planner_role_supported = .data$current_planner_role_supported,
-      arbitrary_facet_design_candidate = .data$arbitrary_facet_design_candidate
-    )
+  facet_axes <- dplyr::transmute(
+    structural_facet_table,
+    input_key = .data$structural_facet_key,
+    facet = .data$facet,
+    facet_kind = .data$facet_kind,
+    axis_class = .data$design_axis_class,
+    level_count = .data$level_count,
+    canonical_design_variable = .data$current_planning_count_variable,
+    public_design_alias = .data$current_planning_count_alias,
+    current_planner_role_supported = .data$current_planner_role_supported,
+    arbitrary_facet_design_candidate = .data$arbitrary_facet_design_candidate
+  )
 
   assignment_axis <- list(
     current_planning_count_variable = "raters_per_person",
@@ -5654,7 +4221,7 @@ simulation_structural_design_schema <- function(sim_spec = NULL, facet_names = N
     )
   )
 
-  design_schema <- list(
+  design_schema <- simulation_coerce_structural_design_schema(list(
     schema_contract = "arbitrary_facet_design_schema",
     schema_stage = "deterministic_review",
     facet_axes = facet_axes,
@@ -5670,8 +4237,7 @@ simulation_structural_design_schema <- function(sim_spec = NULL, facet_names = N
       "bundling stable facet-count axes and the assignment axis in one",
       "machine-readable contract."
     )
-  )
-  design_schema <- simulation_coerce_structural_design_schema(design_schema)
+  ))
   branch_schema <- list(
     design_review_contract = "structural_design_review",
     design_review_stage = "supported",
@@ -5703,30 +4269,44 @@ simulation_structural_design_schema <- function(sim_spec = NULL, facet_names = N
   branch_schema$report_operation <- simulation_structural_design_report_operation(branch_schema)
   branch_schema$report_snapshot <- simulation_structural_design_report_snapshot(branch_schema)
   branch_schema$report_brief <- simulation_structural_design_report_brief(branch_schema)
-  branch_schema$report_mode_registry <- simulation_structural_design_report_mode_registry(branch_schema)
+  branch_schema$report_mode_registry <- .mfrmr_table_sim_report_mode_registry
   branch_schema$report_consumer <- simulation_structural_design_report_consume(branch_schema)
   branch_schema$review <- simulation_structural_design_compact_review(branch_schema)
-  branch_schema$compact_review_summary <- simulation_structural_design_compact_review_summary(branch_schema)
-  branch_schema$compact_review_table <- simulation_structural_design_compact_review_table(branch_schema)
-  branch_schema$compact_review_plot <- simulation_structural_design_compact_review_plot(branch_schema)
+  branch_schema$compact_review_summary <- simulation_structural_design_compact_review_part(branch_schema, "summary")
+  branch_schema$compact_review_table <- simulation_structural_design_compact_review_part(branch_schema, "table")
+  branch_schema$compact_review_plot <- simulation_structural_design_compact_review_part(branch_schema, "plot")
   branch_schema$design_review <- simulation_structural_design_review(branch_schema)
   branch_schema$design_review_profile <- simulation_structural_design_review_profile(branch_schema)
   branch_schema$design_review_load_balance <- simulation_structural_design_review_load_balance(branch_schema)
-  branch_schema$design_review_overview <- simulation_structural_design_review_overview(branch_schema)
-  branch_schema$design_review_load_balance_overview <- simulation_structural_design_review_load_balance_overview(branch_schema)
+  branch_schema$design_review_overview <- simulation_structural_design_review_stage_overview(branch_schema, "overview")
+  branch_schema$design_review_load_balance_overview <- simulation_structural_design_review_stage_overview(branch_schema, "load_balance")
   branch_schema$design_review_coverage <- simulation_structural_design_review_coverage(branch_schema)
-  branch_schema$design_review_coverage_overview <- simulation_structural_design_review_coverage_overview(branch_schema)
+  branch_schema$design_review_coverage_overview <- simulation_structural_design_review_stage_overview(branch_schema, "coverage")
   branch_schema$design_review_guardrails <- simulation_structural_design_review_guardrails(branch_schema)
-  branch_schema$design_review_guardrail_overview <- simulation_structural_design_review_guardrail_overview(branch_schema)
+  branch_schema$design_review_guardrail_overview <- simulation_structural_design_review_stage_overview(branch_schema, "guardrail")
   branch_schema$design_review_readiness <- simulation_structural_design_review_readiness(branch_schema)
-  branch_schema$design_review_readiness_overview <- simulation_structural_design_review_readiness_overview(branch_schema)
+  branch_schema$design_review_readiness_overview <- simulation_structural_design_review_stage_overview(branch_schema, "readiness")
   branch_schema$design_review_recommendation <- simulation_structural_design_review_recommendation(branch_schema)
-  branch_schema$design_review_recommendation_overview <- simulation_structural_design_review_recommendation_overview(branch_schema)
-  branch_schema <- simulation_compact_structural_design_schema_report_cache(branch_schema)
-  branch_schema <- simulation_compact_structural_design_schema_active_cache(branch_schema)
+  branch_schema$design_review_recommendation_overview <- simulation_structural_design_review_stage_overview(branch_schema, "recommendation")
+
+  report_fields <- c(
+    "report_summary", "report_overview_table", "report_catalog", "report_digest",
+    "report_surface_registry", "report_panel", "report_operation",
+    "report_snapshot", "report_brief", "report_consumer"
+  )
+  for (nm in intersect(report_fields, names(branch_schema))) {
+    branch_schema[[nm]] <- simulation_compact_structural_design_report_cache(branch_schema[[nm]])
+  }
+  if (is.list(branch_schema$design_review)) {
+    if (is.list(branch_schema$design_review$summary)) branch_schema$design_review$summary$review <- NULL
+    if (is.list(branch_schema$design_review$table)) branch_schema$design_review$table$review <- NULL
+    if (is.list(branch_schema$design_review$plot)) branch_schema$design_review$plot$review <- NULL
+  }
+  for (nm in intersect(names(.mfrmr_sim_schema_drop_map), names(branch_schema))) {
+    branch_schema[[nm]][intersect(.mfrmr_sim_schema_drop_map[[nm]], names(branch_schema[[nm]]))] <- NULL
+  }
   branch_schema
 }
-
 simulation_planning_scope <- function(sim_spec = NULL, facet_names = NULL) {
   if (is.null(facet_names)) {
     facet_names <- simulation_spec_output_facet_names(sim_spec)
@@ -5762,9 +4342,9 @@ simulation_planning_scope <- function(sim_spec = NULL, facet_names = NULL) {
   )
 }
 
-simulation_planning_scope_note <- function(scope) {
-  if (is.list(scope) && is.character(scope$note) && length(scope$note) > 0L) {
-    note <- as.character(scope$note[1])
+simulation_planning_note <- function(x) {
+  if (is.list(x) && is.character(x$note) && length(x$note) > 0L) {
+    note <- as.character(x$note[1])
     if (nzchar(note)) {
       return(note)
     }
@@ -5856,15 +4436,7 @@ simulation_planning_constraints <- function(sim_spec = NULL) {
   )
 }
 
-simulation_planning_constraints_note <- function(constraints) {
-  if (is.list(constraints) && is.character(constraints$note) && length(constraints$note) > 0L) {
-    note <- as.character(constraints$note[1])
-    if (nzchar(note)) {
-      return(note)
-    }
-  }
-  character(0)
-}
+
 
 simulation_planning_schema <- function(sim_spec = NULL, facet_names = NULL) {
   descriptor <- if (is.null(facet_names)) {
@@ -5960,15 +4532,7 @@ simulation_planning_schema <- function(sim_spec = NULL, facet_names = NULL) {
   )
 }
 
-simulation_planning_schema_note <- function(schema) {
-  if (is.list(schema) && is.character(schema$note) && length(schema$note) > 0L) {
-    note <- as.character(schema$note[1])
-    if (nzchar(note)) {
-      return(note)
-    }
-  }
-  character(0)
-}
+
 
 simulation_object_design_variable_aliases <- function(x) {
   aliases <- x$design_variable_aliases %||% x$settings$design_variable_aliases %||% NULL

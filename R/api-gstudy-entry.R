@@ -10,7 +10,7 @@ mfrm_d_study.default <- function(x, design_grid = NULL, ...) {
   stop("`x` must be a G-study from mfrm_g_study(), a main-effects result from mfrm_generalizability(), or an mfrm_fit object.", call. = FALSE)
 }
 
-#' @rdname mfrm_d_study_main_effects
+#' @rdname mfrm_generalizability
 #' @export
 mfrm_d_study.mfrm_fit <- function(x, design_grid = NULL,
     object_facet = "Person", random_facets = NULL,
@@ -21,7 +21,7 @@ mfrm_d_study.mfrm_fit <- function(x, design_grid = NULL,
   mfrm_d_study(g, design_grid, residual_scaling = residual_scaling)
 }
 
-#' @rdname mfrm_d_study_main_effects
+#' @rdname mfrm_generalizability
 #' @param object A main-effects D-study result.
 #' @export
 summary.mfrm_d_study <- function(object, ...) {

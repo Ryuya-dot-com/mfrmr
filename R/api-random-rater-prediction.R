@@ -42,6 +42,7 @@
 #'   Supplying a score column in `newdata` does not update rater distributions
 #'   or estimate abilities. Use the scoring function and its complete-roster
 #'   rules when the input is a new batch of observed responses.
+#' @rdname fit_mfrm_random_rater
 #' @export
 predict.mfrm_random_rater <- function(object, newdata, ability,
                                       rater = c("observed", "new"), quad_points = 41L, ...) {

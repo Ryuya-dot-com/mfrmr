@@ -14,9 +14,16 @@
 #' @param type `"probability"` (one row per category) or `"information"`
 #'   (one row per supplied context/ability). Information is per rating, not a
 #'   sum over all observed exposures as in [compute_information()].
-#' @param method,clusters,adjust,level,simultaneous As in [confint.mfrm_fit()].
-#' @param object,x A saved `mfrm_curve_intervals` result.
-#' @param title,subtitle Optional returned text; NULL removes it. Figure text
+#' @param method As in [confint.mfrm_fit()].
+#' @param clusters As in [confint.mfrm_fit()].
+#' @param adjust As in [confint.mfrm_fit()].
+#' @param level As in [confint.mfrm_fit()].
+#' @param simultaneous As in [confint.mfrm_fit()].
+#' @param object A saved `mfrm_curve_intervals` result.
+#' @param x A saved `mfrm_curve_intervals` result.
+#' @param title Optional returned text; NULL removes it. Figure text
+#'   is not drawn. Use `plot_data(p, "title")` and `plot_data(p, "notes")`.
+#' @param subtitle Optional returned text; NULL removes it. Figure text
 #'   is not drawn. Use `plot_data(p, "title")` and `plot_data(p, "notes")`.
 #' @param palette Optional vector of colors, one per category/series. Line
 #'   types distinguish series in addition to color. The default is colorblind friendly.
@@ -68,24 +75,29 @@
 #'
 #' @section Two slope families:
 #' For a two-family fit, the two component slopes are multiplied in each
-#' specified context. The shared evaluator returns provisional fitted values,
-#' including after numerical nonconvergence; it does not certify their
-#' reliability. `SE`, `Lower` and `Upper` remain missing and `CIEligible` is
+#' specified context. Curves reuse the saved fitted values and may also be
+#' available for a review-only or nonconverged fit. Inspect the source's
+#' parameter/readiness status: curve availability does not promote those
+#' values to qualified point estimates. `SE`, `Lower` and `Upper` remain missing and `CIEligible` is
 #' false. Printing and default plot text identify this scope without claiming
 #' nominal intervals. Sandwich and simultaneous adjustments are not available.
 #' The existing plot, saved-data, report and export routes preserve these values
 #' and missing intervals. A slope value of one is not a rater-quality threshold.
+#' Endpoint limiting fits also return point-only curves: original score labels
+#' are restored, and the removed endpoint is shown with probability zero and
+#' `CategoryBasis = "zero_probability_limit"`. This is a boundary-model value,
+#' not evidence that the category cannot occur. Ordinary intervals are unavailable.
 #'
 #' @return A `mfrm_curve_intervals` list with `table`, `settings`, and the exact
 #'   `newdata`, plus `contexts` identifying each `InputRow` as an observed or
 #'   unobserved combination of fitted facet levels (`ObservedContext`). This
 #'   records the retained rating design, not statistical identification or
 #'   interval reliability. Its plot method returns a ggplot with the plotted data available
-#'   in `plot$data`; descriptions and cautions are available through
+#'   through `plot_data(p)`; descriptions and cautions are available through
 #'   `plot_data(p, "notes")`, separately from the figure.
 #'   `summary()` returns settings, the complete interval table, contexts,
 #'   numerical cautions and the anchor note without recalculating information.
-#' @seealso [confint.mfrm_fit()], [category_curves_report()], [compute_information()]
+#' @seealso [confint.mfrm_fit()], [mfrm_report_category_curves], [compute_information()]
 #' @details A numerically verified but ill-conditioned information inverse can
 #'   supply intervals with a warning, as described in [confint.mfrm_fit()].
 #'   The warning is saved in `cautions` and the table's `InferenceReview`, and
@@ -97,7 +109,7 @@
 #'   not fix its slope, thresholds or whole response curve. Availability still
 #'   depends on the joint-information and numerical checks described above.
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("mfrm_curve_intervals", run.dontrun = TRUE)
 #' \dontrun{
 #' # How do category probabilities vary with ability in one rating context?
@@ -129,9 +141,9 @@ mfrm_curve_intervals <- function(fit, newdata, type = c("probability", "informat
   stop_if_jml_adjustment(fit, "mfrm_curve_intervals")
   type <- match.arg(type); method <- match.arg(method); simultaneous <- match.arg(simultaneous)
   mfrm_random_rater_interval_level(level)
-  point_only <- mfrm_has_product_slopes(fit)
+  point_only <- mfrm_has_product_slopes(fit) || !is.null(fit$config$gpcm_limit_source)
   if (point_only && simultaneous != "none") {
-    stop("Two-family curve intervals are unavailable; simultaneous adjustment is not supported.", call. = FALSE)
+    stop("Point-only curves have no intervals; simultaneous adjustment is not supported.", call. = FALSE)
   }
   inference <- mfrm_gpcm_inference(fit, method, clusters, adjust)
   if (!is.null(inference$check$caution)) warning(inference$check$caution, call. = FALSE)
@@ -178,10 +190,23 @@ mfrm_curve_intervals <- function(fit, newdata, type = c("probability", "informat
   tab$InputRow <- rep(seq_len(nrow(newdata)), each = k)
   tab$Category <- if (type == "probability") rep(fit$prep$score_map$OriginalScore[
     match(seq_len(k)-1L+fit$prep$rating_min, fit$prep$score_map$InternalScore)], nrow(newdata)) else NA_real_
+  category_map <- fit$config$gpcm_limit_source$category_map
+  if (type=="probability" && !is.null(category_map))
+    tab$Category <- category_map$OriginalScore[match(tab$Category,category_map$ReducedCategory)]
   tab$Estimate <- estimate; tab$SE <- se; tab$Lower <- low; tab$Upper <- high
   tab$CIEligible <- usable; tab$InferenceReview <- reason
+  if (type=="probability" && !is.null(category_map)) {
+    tab$CategoryBasis <- "retained_category_limit"
+    zero <- tab[!duplicated(tab$InputRow),,drop=FALSE]
+    zero$Category <- category_map$OriginalScore[is.na(category_map$ReducedCategory)]
+    zero$Estimate <- 0; zero$SE <- zero$Lower <- zero$Upper <- NA_real_
+    zero$CIEligible <- FALSE; zero$CategoryBasis <- "zero_probability_limit"
+    zero$InferenceReview <- "Zero probability in the limiting model, not evidence that this category cannot occur. Ordinary intervals are not qualified."
+    tab <- rbind(tab,zero)
+    tab <- tab[order(tab$InputRow,match(tab$Category,category_map$OriginalScore)),,drop=FALSE]
+  }
   rownames(tab) <- NULL
-  structure(list(table = tab, newdata = newdata, contexts = response$contexts,
+  out <- structure(list(table = tab, newdata = newdata, contexts = response$contexts,
     cautions = inference$check$caution,
     anchor_note = inference$check$anchor_note,
     source = mfrm_gpcm_inference_source(fit),
@@ -191,6 +216,8 @@ mfrm_curve_intervals <- function(fit, newdata, type = c("probability", "informat
       target = if (point_only) "Provisional fitted curves at fixed ability and rating context; intervals unavailable" else
         "Calibration uncertainty at fixed native-scale ability and rating context")),
     class = "mfrm_curve_intervals")
+  if (!is.null(fit$config$gpcm_limit_source)) out$settings$limiting_likelihood <- TRUE
+  out
 }
 
 #' @rdname mfrm_curve_intervals
@@ -204,7 +231,8 @@ summary.mfrm_curve_intervals <- function(object, ...) {
 #' @export
 print.mfrm_curve_intervals <- function(x, ...) {
   if (isTRUE(x$settings$point_only)) {
-    cat("Two-family GPCM", x$settings$type, "curves: provisional fitted values; intervals unavailable\n")
+    cat(if (isTRUE(x$settings$limiting_likelihood)) "Limiting GPCM" else "Two-family GPCM",
+      x$settings$type, "curves: provisional fitted values; intervals unavailable\n")
   } else cat("GPCM", x$settings$type, "curve intervals:", x$settings$method, "covariance\n")
   print(x$table[setdiff(names(x$table), "InferenceReview")], row.names = FALSE)
   cat("Available intervals:", sum(x$table$CIEligible), "of", nrow(x$table),
@@ -242,7 +270,9 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
   tab <- x$table
   automatic_caption <- missing(caption)
   if (automatic_caption && point_only) {
-    caption <- "Fitted curves only; calibration intervals are unavailable for two-family GPCM."
+    caption <- if (isTRUE(x$settings$limiting_likelihood))
+      "Limiting fitted curves only; ordinary intervals after the boundary reduction are unavailable." else
+      "Fitted curves only; calibration intervals are unavailable for two-family GPCM."
   } else if (automatic_caption && any(!tab$CIEligible)) caption <- paste(
       "Intervals unavailable at", sum(!tab$CIEligible), "of", nrow(tab),
       "points. Crosses mark retained estimates; see the result table for reasons.")
@@ -283,7 +313,7 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
       color = if (x$settings$type == "probability") "Category" else "Series",
       fill = if (x$settings$type == "probability") "Category" else "Series",
       linetype = if (x$settings$type == "probability") "Category" else "Series",
-      alt = if (point_only) paste("Two-family GPCM", x$settings$type,
+      alt = if (point_only) paste(if (isTRUE(x$settings$limiting_likelihood)) "Limiting GPCM" else "Two-family GPCM", x$settings$type,
         "provisional fitted curves. Calibration intervals are unavailable for the entire plot.",
         "Contexts with only one supplied ability value retain colored points.") else
         paste("GPCM", x$settings$type, "curves with", 100*x$settings$level,

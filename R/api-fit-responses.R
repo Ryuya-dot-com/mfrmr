@@ -89,8 +89,10 @@
 #' head(attr(expected, "diagnostics")) # Check unavailable and zero-variance rows
 #' attr(expected, "settings")         # Read the target and interpretation limits
 #' head(fitted(fit, type = "prob"))    # One column per modeled score category
-#' @name mfrm_fit_responses
+#' @aliases mfrm_fit_responses
+#' @rdname mfrm_fit_extractors
 #' @importFrom stats fitted residuals predict
+#' @name mfrm_fit_responses
 NULL
 
 mfrm_fit_response_values <- function(object, type, residual = FALSE) {
@@ -173,21 +175,21 @@ mfrm_fit_response_values <- function(object, type, residual = FALSE) {
   out
 }
 
-#' @rdname mfrm_fit_responses
+#' @rdname mfrm_fit_extractors
 #' @export
 fitted.mfrm_fit <- function(object, type = c("response", "prob"), ...) {
   rlang::check_dots_empty()
   mfrm_fit_response_values(object, match.arg(type))
 }
 
-#' @rdname mfrm_fit_responses
+#' @rdname mfrm_fit_extractors
 #' @export
 residuals.mfrm_fit <- function(object, type = c("response", "pearson"), ...) {
   rlang::check_dots_empty()
   mfrm_fit_response_values(object, match.arg(type), residual = TRUE)
 }
 
-#' @rdname mfrm_fit_responses
+#' @rdname mfrm_fit_extractors
 #' @export
 predict.mfrm_fit <- function(object, newdata = NULL, type = c("response", "prob"), ...) {
   rlang::check_dots_empty()
@@ -195,39 +197,45 @@ predict.mfrm_fit <- function(object, newdata = NULL, type = c("response", "prob"
   fitted(object, type = match.arg(type))
 }
 
-#' @rdname mfrm_fit_responses
-#' @name fitted.mfrm_cml_fit
+#' @rdname mfrm_fit_extractors
+#' @aliases mfrm_fit_responses
 #' @aliases fitted.mfrm_cml_fit
 #' @usage \method{fitted}{mfrm_cml_fit}(object, type = c("response", "prob"), ...)
 #' @rawNamespace S3method(fitted,mfrm_cml_fit,fitted.mfrm_fit)
+#' @name mfrm_fit_responses
 NULL
-#' @rdname mfrm_fit_responses
-#' @name fitted.mfrm_comparison_fit
+#' @rdname mfrm_fit_extractors
+#' @aliases mfrm_fit_responses
 #' @aliases fitted.mfrm_comparison_fit
 #' @usage \method{fitted}{mfrm_comparison_fit}(object, type = c("response", "prob"), ...)
 #' @rawNamespace S3method(fitted,mfrm_comparison_fit,fitted.mfrm_fit)
+#' @name mfrm_fit_responses
 NULL
-#' @rdname mfrm_fit_responses
-#' @name residuals.mfrm_cml_fit
+#' @rdname mfrm_fit_extractors
+#' @aliases mfrm_fit_responses
 #' @aliases residuals.mfrm_cml_fit
 #' @usage \method{residuals}{mfrm_cml_fit}(object, type = c("response", "pearson"), ...)
 #' @rawNamespace S3method(residuals,mfrm_cml_fit,residuals.mfrm_fit)
+#' @name mfrm_fit_responses
 NULL
-#' @rdname mfrm_fit_responses
-#' @name residuals.mfrm_comparison_fit
+#' @rdname mfrm_fit_extractors
+#' @aliases mfrm_fit_responses
 #' @aliases residuals.mfrm_comparison_fit
 #' @usage \method{residuals}{mfrm_comparison_fit}(object, type = c("response", "pearson"), ...)
 #' @rawNamespace S3method(residuals,mfrm_comparison_fit,residuals.mfrm_fit)
+#' @name mfrm_fit_responses
 NULL
-#' @rdname mfrm_fit_responses
-#' @name predict.mfrm_cml_fit
+#' @rdname mfrm_fit_extractors
+#' @aliases mfrm_fit_responses
 #' @aliases predict.mfrm_cml_fit
 #' @usage \method{predict}{mfrm_cml_fit}(object, newdata = NULL, type = c("response", "prob"), ...)
 #' @rawNamespace S3method(predict,mfrm_cml_fit,predict.mfrm_fit)
+#' @name mfrm_fit_responses
 NULL
-#' @rdname mfrm_fit_responses
-#' @name predict.mfrm_comparison_fit
+#' @rdname mfrm_fit_extractors
+#' @aliases mfrm_fit_responses
 #' @aliases predict.mfrm_comparison_fit
 #' @usage \method{predict}{mfrm_comparison_fit}(object, newdata = NULL, type = c("response", "prob"), ...)
 #' @rawNamespace S3method(predict,mfrm_comparison_fit,predict.mfrm_fit)
+#' @name mfrm_fit_responses
 NULL

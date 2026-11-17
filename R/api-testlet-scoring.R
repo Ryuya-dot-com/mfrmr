@@ -72,7 +72,7 @@
 #' @param persons Distinct Person IDs to return, or `NULL` for all. This
 #'   selects outputs while retaining the complete supplied scoring roster.
 #' @seealso [fit_mfrm_testlet()], [plot.mfrm_testlet_scores()], [mfrm_results()]
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
+#' @examples # Optional workflow; run the example explicitly as shown below.
 #' # example("predict.mfrm_testlet", run.dontrun = TRUE)
 #' \dontrun{
 #' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
@@ -85,6 +85,7 @@
 #' scores$table
 #' plot(scores)
 #' }
+#' @rdname fit_mfrm_testlet
 #' @export
 #' @order 1
 predict.mfrm_testlet <- function(object, newdata = NULL, level = .95,
@@ -228,7 +229,7 @@ mfrm_person_posterior_interval <- function(loglikelihood, person_sd, level, cut_
   answer
 }
 
-#' @rdname predict.mfrm_testlet
+#' @rdname fit_mfrm_testlet
 #' @export
 summary.mfrm_testlet_scores <- function(object, ...) {
   list(scores = object$table, status_counts = table(factor(object$table$Status,
@@ -236,7 +237,7 @@ summary.mfrm_testlet_scores <- function(object, ...) {
     data_usage = object$data_usage, settings = object$settings)
 }
 
-#' @rdname predict.mfrm_testlet
+#' @rdname fit_mfrm_testlet
 #' @export
 print.mfrm_testlet_scores <- function(x, ...) {
   cat("Conditional Person scores from a fixed testlet calibration\n")
@@ -247,7 +248,6 @@ print.mfrm_testlet_scores <- function(x, ...) {
 
 #' @rdname fit_mfrm_testlet
 #' @details `plot()` method: Plot testlet-model fixed-facet estimates
-#' @inheritParams plot.mfrm_testlet_scores
 #' @param x An object from [fit_mfrm_testlet()].
 #'
 #' Also for `fit_mfrm_testlet()`: An `mfrm_testlet` result.
@@ -286,7 +286,7 @@ plot.mfrm_testlet <- function(x, facet = x$input$columns$facets[1], draw = TRUE,
     reference = reference, text_scale = text_scale, point_size = point_size)
 }
 
-#' @rdname predict.mfrm_testlet
+#' @rdname fit_mfrm_testlet
 #' @details `plot()` method: Plot conditional Person scores from a testlet model
 #' @param style `"interval"` keeps every labeled row; `"precision"` plots
 #'   estimates against interval width (upper minus lower bound); `"distribution"`
@@ -297,9 +297,13 @@ plot.mfrm_testlet <- function(x, facet = x$input$columns$facets[1], draw = TRUE,
 #'   order. Sorting is descriptive, not a test of differences.
 #' @param palette `"accessible"` uses blue and dark orange with filled/open
 #'   symbols; `"mono"` uses dark grey with the same symbol distinctions.
-#' @param title,caption `NULL` uses the default text; a string replaces it;
+#' @param title `NULL` uses the default text; a string replaces it;
 #'   `""` removes it. Interpretation notes remain in the saved plot data.
-#' @param show_title,show_notes Show the title and caption, respectively.
+#' @param caption `NULL` uses the default text; a string replaces it;
+#'   `""` removes it. Interpretation notes remain in the saved plot data.
+#' @param show_title Show the title and caption, respectively.
+#'   `FALSE` hides text without deleting its metadata.
+#' @param show_notes Show the title and caption, respectively.
 #'   `FALSE` hides text without deleting its metadata.
 #' @param show_labels Show IDs on interval and precision plots. Distribution
 #'   plots summarize estimates and do not label individual IDs. For crowded

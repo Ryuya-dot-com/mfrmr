@@ -138,7 +138,7 @@
 #' Psychological Measurement, 37*(3), 226-241. \doi{10.1177/0146621612471888}.
 #' @seealso [predict_mfrm_units()], [score_comparison_table()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("classification_table", run.dontrun = TRUE)
 #' \dontrun{
 #' ratings <- load_mfrmr_data("example_operational")

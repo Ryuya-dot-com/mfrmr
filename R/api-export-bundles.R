@@ -435,14 +435,10 @@ validate_bias_results_input <- function(bias_results,
 #' anchoring information, and which downstream outputs are currently available.
 #'
 #' @section When to use this:
-#' Use `build_mfrm_manifest()` when you want a compact, machine-readable record
-#' of how an analysis was run. Compared with related helpers:
-#' - [export_mfrm_tables()] writes analysis tables only.
-#' - `build_mfrm_manifest()` records settings and available outputs.
-#' - [build_mfrm_replay_script()] creates an executable R script.
-#' - [export_mfrm_bundle()] writes a project-folder reproducibility bundle;
-#'   review every included artifact for person-level or sensitive data before
-#'   sharing it.
+#' Use this machine-readable record to document settings and available outputs.
+#' See "Choose a save or export route" in [export_mfrm_bundle()] for saving
+#' results, writing files or generating a refitting script. Review exported
+#' artifacts for person-level or sensitive data before sharing.
 #'
 #' @section Output:
 #' The returned bundle has class `mfrm_manifest` and includes:
@@ -470,10 +466,11 @@ validate_bias_results_input <- function(bias_results,
 #' - `settings`: manifest build settings
 #'
 #' @section Interpreting output:
-#' The `summary` table is the direct place to confirm that you are looking at
-#' the intended analysis. The `model_settings`, `source_columns`, and
-#' `estimation_control` tables are designed for reproducibility records and
-#' method write-up.
+#' Read `summary` to identify the analysis, then `available_outputs` for existing
+#' diagnostics/bias/PCA/predictions and `anchors` for fixed constraints.
+#' `model_settings`, `source_columns` and `estimation_control` support the
+#' methods write-up.
+#'
 #' `Converged` records the optimizer return-code decision; `InferenceReady`
 #' records whether the fit passes the additional numerical checks required for
 #' inference. They need not agree; passing these checks does not establish model
@@ -487,19 +484,10 @@ validate_bias_results_input <- function(bias_results,
 #' background variables are expanded through `stats::model.matrix()`,
 #' `population_xlevel_variables` and `population_contrast_variables` identify
 #' the variables whose fitted coding must be preserved for replay/scoring.
-#' The `available_outputs` table is especially useful before building bundles,
-#' because it tells you whether residual PCA, anchors, bias results, or
-#' prediction-side artifacts are already available. A practical reading order is
-#' `summary` first, `available_outputs` second, and `anchors` last when
-#' reproducibility depends on fixed constraints.
-#'
 #' @section Typical workflow:
-#' 1. Fit a model with [fit_mfrm()] or [run_mfrm_facets()].
-#' 2. Compute diagnostics once with [diagnose_mfrm()] if you want explicit
-#'    control over residual PCA.
-#' 3. Build a manifest and inspect `summary` plus `available_outputs`.
-#' 4. If you need files on disk, pass the same objects to
-#'    [export_mfrm_bundle()].
+#' Build from a fit and reuse its diagnostics. To control residual PCA,
+#' call [diagnose_mfrm()] first. [export_mfrm_bundle()] writes the manifest
+#' and selected analysis files to disk.
 #'
 #' For `GPCM` fits, the manifest is available with an explicit
 #' `gpcm_boundary` table. It records supported direct diagnostics/reporting
@@ -508,9 +496,9 @@ validate_bias_results_input <- function(bias_results,
 #'
 #' @return A named list with class `mfrm_manifest`.
 #' @seealso [export_mfrm_bundle()], [build_mfrm_replay_script()],
-#'   [make_anchor_table()], [reporting_checklist()]
+#'   [make_anchor_table()], [mfrm_report_checklist]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("build_mfrm_manifest", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -523,13 +511,12 @@ validate_bias_results_input <- function(bias_results,
 #' manifest$available_outputs[, c("Component", "Available")]
 #' }
 #' @section Saved-result reuse:
-#' Supplied screening results must describe this fitted analysis. Results from
-#' another fit or older results without identity metadata are refused. See
-#' [mfrmr_compatibility_layer] to recreate them from the saved fit and matching
-#' diagnostics without refitting the model.
-#' Supplied unit scores, plausible values and fit-derived forecasts must also
-#' match this calibration. A forecast created with `sim_spec` remains a separate
-#' scenario; its source is recorded without asserting a match to the fit.
+#' Supplied screening results must match this analysis; older ones without
+#' identity metadata are refused. See "Saved-result reuse" in
+#' [export_mfrm_bundle()] for calibration checks, separate scenario forecasts and
+#' recreating compatible results without refitting.
+#'
+#' @rdname export_mfrm_bundle
 #' @export
 build_mfrm_manifest <- function(fit,
                                 diagnostics = NULL,
@@ -982,7 +969,7 @@ mfrm_readiness_export_tables <- function(fit) {
       record$components %||% data.frame(), stringsAsFactors = FALSE
     ),
     parameters = as.data.frame(
-      record$parameters %||% mfrmr_readiness_empty_parameter_table(),
+      record$parameters %||% mfrmr_readiness_empty_parameter_table,
       stringsAsFactors = FALSE
     )
   )
@@ -1202,11 +1189,9 @@ build_mfrm_session_info_table <- function() {
 #' through [predict_mfrm_population()] as a separate caveated helper route.
 #'
 #' @section When to use this:
-#' Use `build_mfrm_replay_script()` when you want a package-native recipe that
-#' another analyst can rerun later. Compared with related helpers:
-#' - [build_mfrm_manifest()] records settings but does not run anything.
-#' - `build_mfrm_replay_script()` produces executable R code.
-#' - [export_mfrm_bundle()] can optionally write the replay script to disk.
+#' Use this recipe to refit from `data_file` with the installed package.
+#' For reopening saved results or writing an analysis folder, see
+#' "Choose a save or export route" in [export_mfrm_bundle()].
 #'
 #' @section Interpreting output:
 #' The returned object contains:
@@ -1228,10 +1213,6 @@ build_mfrm_session_info_table <- function() {
 #' selection or PCA limits, so rerun [diagnose_mfrm()] before exporting them
 #' when those settings matter.
 #'
-#' If `ScriptMode` is `"facets"`, the script replays the higher-level
-#' [run_mfrm_facets()] workflow. If it is `"fit"`, the script uses
-#' [fit_mfrm()] directly.
-#'
 #' @section Mode guide:
 #' - `"auto"` is the safest default and follows the structure of the supplied
 #'   object.
@@ -1250,7 +1231,7 @@ build_mfrm_session_info_table <- function() {
 #' @return A named list with class `mfrm_replay_script`.
 #' @seealso [build_mfrm_manifest()], [export_mfrm_bundle()], [run_mfrm_facets()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("build_mfrm_replay_script", run.dontrun = TRUE)
 #' \dontrun{
 #' library(mfrmr)
@@ -1263,13 +1244,12 @@ build_mfrm_session_info_table <- function() {
 #' cat(substr(replay$script, 1, 120))
 #' }
 #' @section Saved-result reuse:
-#' Supplied screening results must describe this fitted analysis. Results from
-#' another fit or older results without identity metadata are refused. See
-#' [mfrmr_compatibility_layer] to recreate them from the saved fit and matching
-#' diagnostics without refitting the model.
-#' Supplied unit scores, plausible values and fit-derived forecasts must also
-#' match this calibration. A forecast created with `sim_spec` remains a separate
-#' scenario; its source is recorded without asserting a match to the fit.
+#' Supplied screening results must match this analysis; older ones without
+#' identity metadata are refused. See "Saved-result reuse" in
+#' [export_mfrm_bundle()] for calibration checks, separate scenario forecasts and
+#' recreating compatible results without refitting.
+#'
+#' @rdname export_mfrm_bundle
 #' @export
 build_mfrm_replay_script <- function(fit,
                                      diagnostics = NULL,
@@ -2561,7 +2541,7 @@ conquest_overlap_component_sensitivity <- function(component) {
 #' Use `normalize_conquest_overlap_exports()` for the parameter, regression,
 #' covariance, and case-EAP CSV files requested by the generated command. The
 #' additional matrixout history CSV retains the objective trajectory and an
-#' independent estimated-parameter dimension for release verification; it is not
+#' independently reported number of estimated parameters for comparison; it is not
 #' parsed as a free-form report. [normalize_conquest_overlap_files()] and
 #' [normalize_conquest_overlap_tables()] remain available for already-extracted
 #' custom tables. Then use [review_conquest_overlap()] only after the matching
@@ -2641,7 +2621,7 @@ conquest_overlap_component_sensitivity <- function(component) {
 #'   [reference_case_benchmark()], [build_mfrm_replay_script()],
 #'   [export_mfrm_bundle()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("build_conquest_overlap_bundle", run.dontrun = TRUE)
 #' \dontrun{
 #' # Synthetic latent-regression fit; the full regeneration recipe is
@@ -3254,7 +3234,13 @@ max_abs_conquest_overlap_label <- function(x, label) {
 #'   extracted CSV/TSV/TXT paths supplied through the same three input arguments.
 #'   This does not parse raw ConQuest parameter/report exports; those retain
 #'   their separate bundle-dependent [normalize_conquest_overlap_exports()] route.
-#' @param population_delimiter,item_delimiter,case_delimiter File delimiters
+#' @param population_delimiter File delimiters
+#'   used only with `input = "files"`: `"auto"`, `"comma"`, `"tab"`,
+#'   `"semicolon"`, or the corresponding literal separator.
+#' @param item_delimiter File delimiters
+#'   used only with `input = "files"`: `"auto"`, `"comma"`, `"tab"`,
+#'   `"semicolon"`, or the corresponding literal separator.
+#' @param case_delimiter File delimiters
 #'   used only with `input = "files"`: `"auto"`, `"comma"`, `"tab"`,
 #'   `"semicolon"`, or the corresponding literal separator.
 #' @param conquest_population Extracted ConQuest population-parameter table as a
@@ -3339,6 +3325,7 @@ max_abs_conquest_overlap_label <- function(x, label) {
 #'   conquest_case_estimate = "EAP"
 #' )
 #' summary(normalized)$normalization_scope
+#' @rdname build_conquest_overlap_bundle
 #' @export
 normalize_conquest_overlap_tables <- function(conquest_population,
                                               conquest_item_estimates,
@@ -3532,6 +3519,7 @@ read_conquest_overlap_report <- function(path, bundle) {
 #' )
 #' review_conquest_overlap(bundle, cq)
 #' }
+#' @rdname build_conquest_overlap_bundle
 #' @export
 normalize_conquest_overlap_exports <- function(bundle,
                                                 parameter_file,
@@ -3763,113 +3751,20 @@ normalize_conquest_overlap_exports <- function(bundle,
   out
 }
 
-#' Normalize extracted ConQuest overlap files to the `mfrmr` review contract
-#'
-#' @param population_file Path to an extracted ConQuest population-parameter
-#'   table in CSV/TSV/TXT form.
-#' @param item_file Path to an extracted ConQuest item-estimate table in
-#'   CSV/TSV/TXT form.
-#' @param case_file Path to an extracted ConQuest case-level EAP table in
-#'   CSV/TSV/TXT form.
-#' @param population_delimiter Delimiter for `population_file`. `"auto"`
-#'   chooses comma, tab, or semicolon from the file extension/header line.
-#' @param item_delimiter Delimiter for `item_file`. `"auto"` chooses from the
-#'   file extension/header line.
-#' @param case_delimiter Delimiter for `case_file`. `"auto"` chooses from the
-#'   file extension/header line.
-#' @param conquest_population_term Column in `population_file` that stores
-#'   parameter names. `"auto"` tries conservative aliases such as `Parameter`
-#'   and `Term`.
-#' @param conquest_population_estimate Column in `population_file` that stores
-#'   parameter estimates. `"auto"` tries aliases such as `Estimate` and `Est`.
-#' @param conquest_item_id Column in `item_file` that stores the item
-#'   identifier as extracted by the user. `"auto"` tries aliases such as
-#'   `ResponseVar`, `ItemID`, `Item`, and `Label`.
-#' @param conquest_item_estimate Column in `item_file` that stores item
-#'   estimates. `"auto"` tries `Estimate` and `Est`. `Facility` is not an
-#'   automatic alias: establish whether it is a difficulty, easiness, or raw
-#'   proportion and convert it to the required logit difficulty before review.
-#' @param conquest_case_person Column in `case_file` that stores person IDs.
-#'   `"auto"` tries conservative aliases such as `Person`, `PID`, and
-#'   `Sequence ID`.
-#' @param conquest_case_estimate Column in `case_file` that stores case EAP
-#'   estimates. `"auto"` tries conservative aliases such as `Estimate`,
-#'   `EAP_1`, and `EAP`.
-#' @param keep_extra_columns If `TRUE`, keep all remaining columns after the
-#'   standardized identifier and estimate columns.
-#'
 #' @details
-#' The file-input route of [normalize_conquest_overlap_tables()] reads these formats.
-#' It is intentionally limited to already extracted tabular files and does not
-#' parse raw ConQuest report text.
-#'
-#' The recommended workflow is:
-#'
-#' 1. export a bundle for the documented comparison scope with
-#'    [build_conquest_overlap_bundle()];
-#' 2. extract the relevant ConQuest tables to CSV/TSV/TXT files;
-#' 3. call `normalize_conquest_overlap_tables(..., input = "files")`; 
-#' 4. pass the result to [review_conquest_overlap()].
-#'
-#' Read `summary(normalized)$normalization_scope` before review to confirm
-#' that the files were treated as extracted tables, not raw ConQuest report
-#' text, and to check duplicate-ID / non-numeric-estimate pre-review flags.
-#'
-#' @return A named list with class `mfrm_conquest_overlap_tables`.
-#' @seealso [normalize_conquest_overlap_tables()], [review_conquest_overlap()]
-#' @examples
-#' # Reuse the synthetic fit; normalize the extracted tables below.
-#' # Regeneration recipe: examples/measurement-fits.R in the package.
-#' fit <- readRDS(system.file("examples", "measurement-fits.rds",
-#'   package = "mfrmr", mustWork = TRUE))$conquest_quick
-#' bundle <- build_conquest_overlap_bundle(fit = fit)
-#' tmp_dir <- tempdir()
-#' pop_path <- file.path(tmp_dir, "cq_pop.csv")
-#' item_path <- file.path(tmp_dir, "cq_item.tsv")
-#' case_path <- file.path(tmp_dir, "cq_case.csv")
-#' utils::write.csv(
-#'   data.frame(
-#'     Term = bundle$mfrmr_population$Parameter,
-#'     Est = bundle$mfrmr_population$Estimate
-#'   ),
-#'   pop_path,
-#'   row.names = FALSE
-#' )
-#' utils::write.table(
-#'   data.frame(
-#'     Item = bundle$mfrmr_item_estimates$ResponseVar,
-#'     Est = bundle$mfrmr_item_estimates$Estimate
-#'   ),
-#'   item_path,
-#'   sep = "\t",
-#'   row.names = FALSE
-#' )
-#' utils::write.csv(
-#'   data.frame(
-#'     PID = bundle$mfrmr_case_eap$Person,
-#'     EAP = bundle$mfrmr_case_eap$Estimate
-#'   ),
-#'   case_path,
-#'   row.names = FALSE
-#' )
-#' normalized <- normalize_conquest_overlap_tables(input = "files", 
-#'   conquest_population = pop_path,
-#'   conquest_item_estimates = item_path,
-#'   conquest_case_eap = case_path,
-#'   conquest_population_term = "Term",
-#'   conquest_population_estimate = "Est",
-#'   conquest_item_id = "Item",
-#'   conquest_item_estimate = "Est",
-#'   conquest_case_person = "PID",
-#'   conquest_case_estimate = "EAP"
-#' )
-#' summary(normalized)$normalization_scope
-#' review <- review_conquest_overlap(bundle, normalized)
-#' summary(review)$summary
-#' @description Use `normalize_conquest_overlap_tables(..., input = "files")`.
-#'   The former file-specific entry is no longer exported. This guide retains
-#'   its file format and provenance details.
+#' **File-input normalization (`normalize_conquest_overlap_tables(..., input = "files")`)**:
+#' Reads already extracted CSV/TSV/TXT tables (`conquest_population`,
+#' `conquest_item_estimates`, `conquest_case_eap`) rather than raw ConQuest
+#' report text. Delimiters (`population_delimiter`, `item_delimiter`,
+#' `case_delimiter`) default to `"auto"`. Note that ConQuest `Facility` is not
+#' an automatic alias for `conquest_item_estimate`: convert easiness or raw
+#' proportions to logit difficulty before review. Inspect
+#' `summary(normalized)$normalization_scope` before calling
+#' [review_conquest_overlap()]. The former unexported `normalize_conquest_overlap_files()`
+#' helper is retained internally and documented here as an alias.
+#' @aliases normalize_conquest_overlap_files
 #' @usage NULL
+#' @rdname build_conquest_overlap_bundle
 normalize_conquest_overlap_files <- function(population_file,
                                              item_file,
                                              case_file,
@@ -4072,7 +3967,7 @@ normalize_conquest_overlap_files <- function(population_file,
 #' review <- review_conquest_overlap(bundle, normalized)
 #' summary(review)$summary
 #' }
-#' @name review_conquest_overlap
+#' @rdname build_conquest_overlap_bundle
 #' @export
 review_conquest_overlap <- function(bundle,
                                     conquest_population = NULL,
@@ -4493,10 +4388,10 @@ review_conquest_overlap <- function(bundle,
 #'   be normalized through [build_summary_table_bundle()].
 #'
 #' @details
-#' This helper is the narrow public bridge from documented `summary()` surfaces
-#' to manuscript appendix artifacts. It accepts the same reporting objects that
-#' [build_summary_table_bundle()] supports, exports their table bundles as CSV,
-#' and optionally assembles a lightweight HTML appendix page.
+#' Export the tables selected by [build_summary_table_bundle()] as CSV and
+#' optional HTML. Pass a supported object, its summary, a prebuilt bundle or
+#' a named list; a fitted model is not required. Presets select from tables
+#' already available in the source, not additional analyses.
 #'
 #' Inspect `written_files` for the actual file paths. An analysis table whose
 #' name conflicts with bundle metadata (for example, `overview`) is retained
@@ -4510,40 +4405,20 @@ review_conquest_overlap <- function(bundle,
 #' ZIP is retained, `summary$ZipWritten` is zero and `notes` explains the
 #' failure. Other files in the destination folder are left in place.
 #'
-#' Fit-level caveats are exported through the `analysis_caveats` role, and
-#' pre-fit score-support caveats are exported through the
-#' `score_category_caveats` role. Both roles are classified as diagnostics, so
-#' they remain available under `"recommended"` and `"diagnostics"` presets when
-#' the source summary contains caveat rows.
+#' @section Retained reporting evidence:
+#' `analysis_caveats` and `score_category_caveats` remain in `"recommended"`
+#' and `"diagnostics"` selections when supplied. Precision-review tables retain
+#' `fit_separation_basis`; fit-measure and FACETS review tables retain df/ZSTD
+#' sensitivity and optional external matching. These distinguish fit, ZSTD,
+#' separation/reliability/strata and review thresholds from recovery criteria;
+#' see [build_summary_table_bundle()] for roles and reading order.
 #'
-#' Precision-review summaries keep `fit_separation_basis` in the exported
-#' precision-review role so fit, ZSTD, separation/reliability/strata, and
-#' package review thresholds can be reported without turning them into
-#' universal recovery criteria.
-#' Fit-measure and FACETS fit-review summaries keep df/ZSTD sensitivity and
-#' optional external FACETS matching tables in the same precision-review section.
-#'
-#' Parameter-recovery studies can be exported by passing
-#' [simulate_mfrm_recovery()] or [assess_mfrm_recovery()] output directly. The
-#' exported bundle keeps the ADEMP-style simulation basis, recovery metrics,
-#' replication status, adequacy checklist, thresholds, and next actions in
-#' separate appendix-ready tables.
-#'
-#' A compatible precomputed recovery-evidence summary can also be exported,
-#' including its case assessments, condition
-#' notes, diagnostic notes, and domain assessments.
-#'
-#' Unlike [export_mfrm_bundle()], this helper does not require a fitted model.
-#' It is intended for the stage where compact reporting summaries already exist
-#' and the task is to hand off appendix-ready tables, catalogs, and reporting
-#' maps.
-#'
-#' @section Typical workflow:
-#' 1. Build `summary(...)` objects from fit, diagnostics, data description,
-#'    reporting checklist, or APA outputs.
-#' 2. Call `export_summary_appendix(...)` on one object or a named list.
-#' 3. Hand off the written CSV/HTML appendix artifacts to manuscript or QA
-#'    workflows.
+#' [simulate_mfrm_recovery()] and [assess_mfrm_recovery()] outputs retain the
+#' ADEMP simulation basis, recovery metrics, replication status, adequacy
+#' checklist, thresholds and next actions as separate tables. Compatible
+#' precomputed recovery summaries retain case and domain assessments plus
+#' condition and diagnostic notes. Review those notes before using the exported
+#' tables in a manuscript.
 #'
 #' @return A named list of class `mfrm_summary_appendix_export` with:
 #' - `summary`
@@ -4566,7 +4441,7 @@ review_conquest_overlap <- function(bundle,
 #' @seealso [build_summary_table_bundle()], [export_mfrm_bundle()],
 #'   [apa_table()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("export_summary_appendix", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -4645,34 +4520,20 @@ export_summary_appendix <- function(x,
     selection_catalog = selection_catalog,
     preset = preset
   )
-  selection_handoff_preset_summary <- export_summary_table_selection_handoff_preset_summary(
-    selection_catalog = selection_catalog,
-    preset = preset
-  )
-  selection_handoff_summary <- export_summary_table_selection_handoff_summary(
-    selection_catalog = selection_catalog,
-    preset = preset
-  )
-  selection_handoff_bundle_summary <- export_summary_table_selection_handoff_bundle_summary(
-    selection_catalog = selection_catalog,
-    preset = preset
-  )
-  selection_handoff_role_summary <- export_summary_table_selection_handoff_role_summary(
-    selection_catalog = selection_catalog,
-    preset = preset
-  )
-  selection_handoff_role_section_summary <- export_summary_table_selection_handoff_role_section_summary(
-    selection_catalog = selection_catalog,
-    preset = preset
-  )
-  selection_role_summary <- export_summary_table_selection_role_summary(
-    selection_catalog = selection_catalog,
-    preset = preset
-  )
-  selection_section_summary <- export_summary_table_selection_section_summary(
-    selection_catalog = selection_catalog,
-    preset = preset
-  )
+  selection_handoff_preset_summary <- export_summary_table_selection_counts(
+    selection_catalog, preset = preset, view = "preset")
+  selection_handoff_summary <- export_summary_table_selection_counts(
+    selection_catalog, preset = preset, view = "section")
+  selection_handoff_bundle_summary <- export_summary_table_selection_counts(
+    selection_catalog, preset = preset, view = "section_bundle")
+  selection_handoff_role_summary <- export_summary_table_selection_counts(
+    selection_catalog, preset = preset, view = "role")
+  selection_handoff_role_section_summary <- export_summary_table_selection_counts(
+    selection_catalog, preset = preset, view = "role_section")
+  selection_role_summary <- export_summary_table_selection_counts(
+    selection_catalog, preset = preset, view = "appendix_role")
+  selection_section_summary <- export_summary_table_selection_counts(
+    selection_catalog, preset = preset, view = "appendix_section")
 
   emitted <- export_write_summary_table_bundles(
     summary_table_bundles = summary_table_bundles,
@@ -4680,216 +4541,26 @@ export_summary_appendix <- function(x,
     prefix = prefix,
     overwrite = overwrite,
     html_tables = list(),
-    html_text = list()
+    html_text = list(),
+    extra_tables = list(
+      appendix_selection_summary = selection_summary,
+      appendix_selection_table_summary = selection_table_summary,
+      appendix_selection_section_table_summary = selection_section_table_summary,
+      appendix_selection_handoff_table_summary = selection_handoff_table_summary,
+      appendix_selection_handoff_preset_summary = selection_handoff_preset_summary,
+      appendix_selection_handoff_summary = selection_handoff_summary,
+      appendix_selection_handoff_bundle_summary = selection_handoff_bundle_summary,
+      appendix_selection_handoff_role_summary = selection_handoff_role_summary,
+      appendix_selection_handoff_role_section_summary = selection_handoff_role_section_summary,
+      appendix_selection_catalog = selection_catalog,
+      appendix_selection_role_summary = selection_role_summary,
+      appendix_selection_section_summary = selection_section_summary
+    )
   )
 
   written_files <- emitted$written_files
   html_tables <- emitted$html_tables
   html_text <- emitted$html_text
-  if (nrow(selection_summary) > 0L) {
-    selection_summary_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_summary.csv"))
-    if (file.exists(selection_summary_path) && !overwrite) {
-      stop("File already exists: ", selection_summary_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_summary, file = selection_summary_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_summary",
-        Format = "csv",
-        Path = normalizePath(selection_summary_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_summary"]] <- selection_summary
-  }
-  if (nrow(selection_table_summary) > 0L) {
-    selection_table_summary_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_table_summary.csv"))
-    if (file.exists(selection_table_summary_path) && !overwrite) {
-      stop("File already exists: ", selection_table_summary_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_table_summary, file = selection_table_summary_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_table_summary",
-        Format = "csv",
-        Path = normalizePath(selection_table_summary_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_table_summary"]] <- selection_table_summary
-  }
-  if (nrow(selection_section_table_summary) > 0L) {
-    selection_section_table_summary_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_section_table_summary.csv"))
-    if (file.exists(selection_section_table_summary_path) && !overwrite) {
-      stop("File already exists: ", selection_section_table_summary_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_section_table_summary, file = selection_section_table_summary_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_section_table_summary",
-        Format = "csv",
-        Path = normalizePath(selection_section_table_summary_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_section_table_summary"]] <- selection_section_table_summary
-  }
-  if (nrow(selection_handoff_table_summary) > 0L) {
-    selection_handoff_table_summary_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_handoff_table_summary.csv"))
-    if (file.exists(selection_handoff_table_summary_path) && !overwrite) {
-      stop("File already exists: ", selection_handoff_table_summary_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_handoff_table_summary, file = selection_handoff_table_summary_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_handoff_table_summary",
-        Format = "csv",
-        Path = normalizePath(selection_handoff_table_summary_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_handoff_table_summary"]] <- selection_handoff_table_summary
-  }
-  if (nrow(selection_handoff_preset_summary) > 0L) {
-    selection_handoff_preset_summary_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_handoff_preset_summary.csv"))
-    if (file.exists(selection_handoff_preset_summary_path) && !overwrite) {
-      stop("File already exists: ", selection_handoff_preset_summary_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_handoff_preset_summary, file = selection_handoff_preset_summary_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_handoff_preset_summary",
-        Format = "csv",
-        Path = normalizePath(selection_handoff_preset_summary_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_handoff_preset_summary"]] <- selection_handoff_preset_summary
-  }
-  if (nrow(selection_handoff_summary) > 0L) {
-    selection_handoff_summary_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_handoff_summary.csv"))
-    if (file.exists(selection_handoff_summary_path) && !overwrite) {
-      stop("File already exists: ", selection_handoff_summary_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_handoff_summary, file = selection_handoff_summary_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_handoff_summary",
-        Format = "csv",
-        Path = normalizePath(selection_handoff_summary_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_handoff_summary"]] <- selection_handoff_summary
-  }
-  if (nrow(selection_handoff_bundle_summary) > 0L) {
-    selection_handoff_bundle_summary_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_handoff_bundle_summary.csv"))
-    if (file.exists(selection_handoff_bundle_summary_path) && !overwrite) {
-      stop("File already exists: ", selection_handoff_bundle_summary_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_handoff_bundle_summary, file = selection_handoff_bundle_summary_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_handoff_bundle_summary",
-        Format = "csv",
-        Path = normalizePath(selection_handoff_bundle_summary_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_handoff_bundle_summary"]] <- selection_handoff_bundle_summary
-  }
-  if (nrow(selection_handoff_role_summary) > 0L) {
-    selection_handoff_role_summary_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_handoff_role_summary.csv"))
-    if (file.exists(selection_handoff_role_summary_path) && !overwrite) {
-      stop("File already exists: ", selection_handoff_role_summary_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_handoff_role_summary, file = selection_handoff_role_summary_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_handoff_role_summary",
-        Format = "csv",
-        Path = normalizePath(selection_handoff_role_summary_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_handoff_role_summary"]] <- selection_handoff_role_summary
-  }
-  if (nrow(selection_handoff_role_section_summary) > 0L) {
-    selection_handoff_role_section_summary_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_handoff_role_section_summary.csv"))
-    if (file.exists(selection_handoff_role_section_summary_path) && !overwrite) {
-      stop("File already exists: ", selection_handoff_role_section_summary_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_handoff_role_section_summary, file = selection_handoff_role_section_summary_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_handoff_role_section_summary",
-        Format = "csv",
-        Path = normalizePath(selection_handoff_role_section_summary_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_handoff_role_section_summary"]] <- selection_handoff_role_section_summary
-  }
-  if (nrow(selection_catalog) > 0L) {
-    selection_catalog_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_catalog.csv"))
-    if (file.exists(selection_catalog_path) && !overwrite) {
-      stop("File already exists: ", selection_catalog_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_catalog, file = selection_catalog_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_catalog",
-        Format = "csv",
-        Path = normalizePath(selection_catalog_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_catalog"]] <- selection_catalog
-  }
-  if (nrow(selection_role_summary) > 0L) {
-    selection_role_summary_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_role_summary.csv"))
-    if (file.exists(selection_role_summary_path) && !overwrite) {
-      stop("File already exists: ", selection_role_summary_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_role_summary, file = selection_role_summary_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_role_summary",
-        Format = "csv",
-        Path = normalizePath(selection_role_summary_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_role_summary"]] <- selection_role_summary
-  }
-  if (nrow(selection_section_summary) > 0L) {
-    selection_section_summary_path <- file.path(output_dir, paste0(prefix, "_appendix_selection_section_summary.csv"))
-    if (file.exists(selection_section_summary_path) && !overwrite) {
-      stop("File already exists: ", selection_section_summary_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    utils::write.csv(selection_section_summary, file = selection_section_summary_path, row.names = FALSE, na = "")
-    written_files <- rbind(
-      written_files,
-      data.frame(
-        Component = "appendix_selection_section_summary",
-        Format = "csv",
-        Path = normalizePath(selection_section_summary_path, winslash = "/", mustWork = FALSE),
-        stringsAsFactors = FALSE
-      )
-    )
-    html_tables[["appendix_selection_section_summary"]] <- selection_section_summary
-  }
 
   if (isTRUE(include_html)) {
     html_path <- file.path(output_dir, paste0(prefix, "_appendix.html"))
@@ -5013,7 +4684,7 @@ export_summary_appendix <- function(x,
 #'   [build_summary_table_bundle()] output, any object supported by
 #'   `build_summary_table_bundle()`, or a named list of such objects. When
 #'   `NULL` and `"summary_tables"` is requested in `include`, a default set is
-#'   built from `fit`, `diagnostics`, [reporting_checklist()], and
+#'   built from `fit`, `diagnostics`, [mfrm_report_checklist], and
 #'   [build_apa_outputs()]. Compatible precomputed recovery-evidence summaries
 #'   can be supplied here to co-locate their appendix tables with a fit-based
 #'   export bundle.
@@ -5046,18 +4717,10 @@ export_summary_appendix <- function(x,
 #'   `NULL` falls back to the legacy `your_data.csv` placeholder path.
 #'
 #' @details
-#' This function is the one-call fit-level archive and HTML route. It reuses
-#' `mfrmr` functions for estimation and diagnostics.
-#' When `diagnostics = NULL`,
-#' the exporter computes the diagnostics it needs, then writes the requested
-#' CSV/text/replay artifacts and a lightweight HTML page from the fitted object.
-#' Use [mfrm_results()] and [mfrm_report()] first when you want to inspect a
-#' results object before writing files; use `export_mfrm_bundle()` when the
-#' goal is a project-folder bundle from `fit`.
-#' For only the core CSV tables without automatic diagnostics, use
-#' [export_mfrm_tables()]. For a complete saved R result that reloads without
-#' refitting, use [export_mfrm_results()]. The optional `"script"` component
-#' here is a refitting recipe, not a copy of the fitted R object.
+#' Write selected CSV/text/script/HTML artifacts from a fitted analysis.
+#' With `diagnostics = NULL`, compute the diagnostics needed for the export.
+#' To inspect results before writing files, use [mfrm_results()] and
+#' [mfrm_report()].
 #'
 #' The returned `written_files` and optional ZIP include only files written
 #' by this call. With `overwrite = TRUE`, the ZIP is built afresh and checked
@@ -5072,19 +4735,17 @@ export_summary_appendix <- function(x,
 #' Review and transform every file under the applicable data-handling policy
 #' before sharing it.
 #'
-#' @section Choosing exports:
-#' The `include` argument lets you assemble a bundle for different audiences:
-#' - `"core_tables"` for analysts who mainly want CSV output.
-#' - `"manifest"` for a compact analysis record.
-#' - `"script"` for reproducibility and reruns. For latent-regression fits,
-#'   this also writes the fit-level replay person-data sidecar when available.
-#' - `"html"` for a lightweight summary page. This is not a deidentification
-#'   guarantee. When replay sidecars are present, the HTML shows an artifact
-#'   index for them rather than embedding the raw person-level replay table.
-#' - `"summary_tables"` for manuscript-facing CSV exports of documented
-#'   `summary()` surfaces and their compact indexes.
-#' - `"visual_summaries"` when you want warning maps or residual PCA summaries
-#'   to travel with the bundle.
+#' @section Choose a save or export route:
+#' - **Reopen without refitting:** [base::saveRDS()] / [base::readRDS()] preserves
+#'   an R object. For an existing [mfrm_results()] bundle,
+#'   [export_mfrm_results()] includes the RDS and a reload script by default.
+#' - **Write tables or an analysis folder:** [export_mfrm_tables()] writes core
+#'   CSVs without automatic diagnostics. `export_mfrm_bundle()` writes the
+#'   selected artifacts below; [build_mfrm_manifest()] records settings and
+#'   available outputs.
+#' - **Rerun the analysis:** [build_mfrm_replay_script()] generates R code for
+#'   a new fit. The `"script"` component here writes that recipe, not the fitted
+#'   R object. Generating the script does not execute it.
 #'
 #' @section Recommended presets:
 #' Common starting points are:
@@ -5095,65 +4756,36 @@ export_summary_appendix <- function(x,
 #'   "visual_summaries", "html")`
 #'
 #' @section Written outputs:
-#' Depending on `include`, the exporter can write:
-#' - core CSV tables via [export_mfrm_tables()]
-#' - checklist CSVs via [reporting_checklist()]
-#' - facet-dashboard CSVs and interpretation notes via [facet_quality_dashboard()],
-#'   including screening settings in CSV and HTML; HTML tables show every
-#'   level's estimates and unavailable diagnostics, while CSVs retain full detail
-#' - APA text files via [build_apa_outputs()]
-#' - manuscript-summary CSVs via [build_summary_table_bundle()]
-#' - anchor CSV via [make_anchor_table()]
-#' - manifest CSV/TXT via [build_mfrm_manifest()]
-#' - exact source-fit readiness CSVs with fit, component, and parameter scope
-#' - visual warning/summary artifacts via [build_visual_summaries()]
-#' - prediction/forecast CSVs via [predict_mfrm_population()],
-#'   [predict_mfrm_units()], and [sample_mfrm_plausible_values()]
-#' - a package-native replay script via [build_mfrm_replay_script()]
-#' - replay-source readiness CSVs retained as provenance; the replayed fit
-#'   recomputes its own readiness
-#' - for latent-regression fits, a replay-side person-data CSV paired with the
-#'   replay script
-#' - a lightweight HTML report that bundles the exported tables/text and, for
-#'   replay sidecars, an artifact summary instead of raw person-level rows
+#' `include` selects these components:
+#' - `"core_tables"`: CSVs from [export_mfrm_tables()].
+#' - `"checklist"`: CSVs from [mfrm_report_checklist].
+#' - `"dashboard"`: [facet_quality_dashboard()] tables and interpretation notes.
+#'   CSV/HTML retain screening settings; HTML shows every level's estimates and
+#'   unavailable diagnostics, while CSV retains full detail.
+#' - `"apa"`: text from [build_apa_outputs()].
+#' - `"summary_tables"`: manuscript CSVs and indexes from [build_summary_table_bundle()].
+#' - `"anchors"`: CSV from [make_anchor_table()].
+#' - `"manifest"`: CSV/TXT from [build_mfrm_manifest()].
+#' - `"visual_summaries"`: warnings/residual PCA summaries from [build_visual_summaries()].
+#' - `"predictions"`: CSVs for supplied [predict_mfrm_population()],
+#'   [predict_mfrm_units()] or [sample_mfrm_plausible_values()] results.
+#' - `"script"`: code from [build_mfrm_replay_script()] and, when available,
+#'   the latent-regression replay person-data CSV.
+#' - `"html"`: exported tables/text and a replay-sidecar artifact index;
+#'   raw person-level replay rows are not embedded. This is not deidentification.
 #'
-#' For latent-regression fits, prediction-side artifacts can carry the fitted
-#' population-model scoring basis when you explicitly supply the corresponding
-#' prediction objects. [predict_mfrm_population()] remains the scenario-level
-#' forecast helper, whereas [predict_mfrm_units()] and
-#' [sample_mfrm_plausible_values()] are the scoring layer.
-#' To keep exports and replay scripts practical, large structural-design schemas
-#' from scenario-level population predictions are not flattened into
-#' `*_population_prediction_settings.csv` or ADeMP CSVs; the compact simulation
-#' specification files carry the replay-relevant settings instead.
-#'
-#' For `GPCM`, this exporter is available as a caveated partial bundle
-#' over supported diagnostics, report text, visual summaries, manifests, and
-#' replay scripts. The returned object and manifest include `gpcm_boundary`.
-#' Package-native `GPCM` scorefile export is available with caveats,
-#' while full FACETS-style score-side contract review and design forecasting
-#' remain outside this bundle contract.
-#'
-#' @section Interpreting output:
-#' The returned object reports both high-level bundle status and the exact files
-#' written. In practice, `bundle$summary` is the direct status check, while
-#' `bundle$written_files` is the file inventory to inspect or hand off to other
-#' tools.
-#'
-#' @section Typical workflow:
-#' 1. Fit a model and compute diagnostics once.
-#' 2. Decide whether the audience needs tables only, or also a manifest,
-#'    replay script, and HTML summary.
-#' 3. Call `export_mfrm_bundle()` with a dedicated output directory.
-#' 4. Inspect `bundle$written_files` or open the generated HTML file.
-#'
+#' Readiness CSVs preserve source-fit checks, latent-regression exports retain
+#' replay `sim_spec` metadata when predictions are supplied, and `GPCM` bundles
+#' record `gpcm_boundary`. Supplied diagnostics, screening tables, unit scores,
+#' and plausible values must match `fit`'s calibration identity; inspect
+#' `bundle$summary` and `bundle$written_files`.
 #' @return A named list with class `mfrm_export_bundle`.
 #' @seealso [fit_mfrm()], [mfrm_results()], [mfrm_report()],
 #'   [export_mfrm_results()], [build_mfrm_manifest()],
 #'   [build_mfrm_replay_script()], [export_mfrm_tables()],
-#'   [reporting_checklist()], [export_summary_appendix()]
+#'   [mfrm_report_checklist], [export_summary_appendix()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("export_mfrm_bundle", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -5324,23 +4956,13 @@ export_mfrm_bundle <- function(fit,
     invisible(path)
   }
 
-  write_text <- function(text, filename, component) {
+  write_text <- function(text, filename, component, format = "txt") {
     path <- file.path(output_dir, filename)
     if (file.exists(path) && !overwrite) {
       stop("File already exists: ", path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
     }
     writeLines(enc2utf8(as.character(text)), con = path, useBytes = TRUE)
-    add_written(component, "txt", path)
-    invisible(path)
-  }
-
-  write_script <- function(text, filename, component) {
-    path <- file.path(output_dir, filename)
-    if (file.exists(path) && !overwrite) {
-      stop("File already exists: ", path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
-    }
-    writeLines(enc2utf8(as.character(text)), con = path, useBytes = TRUE)
-    add_written(component, "r", path)
+    add_written(component, format, path)
     invisible(path)
   }
 
@@ -5381,7 +5003,7 @@ export_mfrm_bundle <- function(fit,
 
   get_checklist_obj <- function() {
     if (is.null(checklist_obj)) {
-      checklist_obj <<- reporting_checklist(
+      checklist_obj <<- .mfrm_report_checklist(
         fit = fit,
         diagnostics = diagnostics,
         bias_results = if (inherits(bias_results, "mfrm_bias_collection")) bias_results else bias_inputs
@@ -5905,7 +5527,7 @@ export_mfrm_bundle <- function(fit,
       paste0(prefix, "_replay_source_readiness_parameters.csv"),
       "replay_source_readiness_parameters"
     )
-    write_script(replay$script, paste0(prefix, "_replay.R"), "replay_script")
+    write_text(replay$script, paste0(prefix, "_replay.R"), "replay_script", format = "r")
     html_text$replay_script <- replay$script
     replay_artifacts <- data.frame(
       Artifact = "replay_script",
@@ -6174,7 +5796,7 @@ export_normalize_summary_table_inputs <- function(summary_tables,
                                                   preview_chars = 160) {
   if (is.null(summary_tables)) return(list())
 
-  if (inherits(summary_tables, c("mfrm_report", .mfrm_study_report_classes()))) {
+  if (inherits(summary_tables, c("mfrm_report", .mfrmr_const_.mfrm_study_report_classes))) {
     one <- export_as_summary_table_bundle(summary_tables, digits = digits,
       top_n = top_n, preview_chars = preview_chars)
     return(stats::setNames(list(one$bundle), one$label))
@@ -6532,9 +6154,11 @@ export_summary_table_selection_section_table_summary <- function(selection_catal
   out[order(out$Preset, out$AppendixSection, out$Table), , drop = FALSE]
 }
 
-export_summary_table_selection_handoff_summary <- function(selection_catalog,
-                                                           preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
+export_summary_table_selection_counts <- function(selection_catalog,
+    preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting"),
+    view = c("section", "section_bundle", "preset", "role", "role_section", "appendix_role", "appendix_section")) {
   preset <- match.arg(preset)
+  view <- match.arg(view)
   selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
   if ("Preset" %in% names(selection_catalog)) {
     selection_catalog <- selection_catalog[
@@ -6542,284 +6166,60 @@ export_summary_table_selection_handoff_summary <- function(selection_catalog,
     ]
   }
   selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
-  if (nrow(selection_catalog) == 0L || !"AppendixSection" %in% names(selection_catalog)) {
+  keys <- switch(view, section = "AppendixSection", section_bundle = c("AppendixSection", "Bundle"),
+    preset = character(), role = "Role", role_section = c("AppendixSection", "Role"),
+    appendix_role = "Role", appendix_section = "AppendixSection")
+  if (nrow(selection_catalog) == 0L || !all(keys %in% names(selection_catalog))) {
     return(data.frame())
   }
-
-  split_tbl <- split(selection_catalog, as.character(selection_catalog$AppendixSection %||% ""))
-  out <- do.call(
-    rbind,
-    lapply(names(split_tbl), function(section_nm) {
-      part <- split_tbl[[section_nm]]
-      tables <- nrow(part)
-      plot_ready <- sum(part$PlotReady %in% TRUE, na.rm = TRUE)
-      numeric_tables <- sum(suppressWarnings(as.numeric(part$NumericColumns)) > 0, na.rm = TRUE)
-      data.frame(
-        Preset = preset,
-        AppendixSection = as.character(section_nm),
-        Tables = tables,
-        PlotReadyTables = plot_ready,
-        PlotReadyFraction = export_exact_fraction(plot_ready, tables),
-        NumericTables = numeric_tables,
-        NumericFraction = export_exact_fraction(numeric_tables, tables),
-        RolesCovered = summary_table_bundle_compact_labels(unique(as.character(part$Role)), max_n = 4L),
-        KeyTables = summary_table_bundle_compact_labels(as.character(part$Table), max_n = 4L),
-        stringsAsFactors = FALSE
-      )
-    })
-  )
-  rownames(out) <- NULL
-  out[order(out$Preset, out$AppendixSection), , drop = FALSE]
-}
-
-export_summary_table_selection_handoff_bundle_summary <- function(selection_catalog,
-                                                                  preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
-  preset <- match.arg(preset)
-  selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
-  if ("Preset" %in% names(selection_catalog)) {
-    selection_catalog <- selection_catalog[
-      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
-    ]
+  parts <- if (!length(keys)) list(selection_catalog) else {
+    groups <- lapply(selection_catalog[keys], as.character)
+    split(selection_catalog, if (length(keys) == 1L) groups[[1L]] else
+      do.call(paste, c(groups, list(sep = "\r"))))
   }
-  selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
-  if (nrow(selection_catalog) == 0L ||
-      !"AppendixSection" %in% names(selection_catalog) ||
-      !"Bundle" %in% names(selection_catalog)) {
-    return(data.frame())
-  }
-
-  split_tbl <- split(
-    selection_catalog,
-    paste(
-      as.character(selection_catalog$AppendixSection %||% ""),
-      as.character(selection_catalog$Bundle %||% ""),
-      sep = "\r"
+  out <- do.call(rbind, lapply(parts, function(part) {
+    tables <- nrow(part)
+    plot_ready <- sum(part$PlotReady %in% TRUE, na.rm = TRUE)
+    numeric_tables <- sum(suppressWarnings(as.numeric(part$NumericColumns)) > 0, na.rm = TRUE)
+    row <- data.frame(
+      Preset = preset,
+      Tables = tables,
+      PlotReadyTables = plot_ready,
+      PlotReadyFraction = export_exact_fraction(plot_ready, tables),
+      NumericTables = numeric_tables,
+      NumericFraction = export_exact_fraction(numeric_tables, tables),
+      stringsAsFactors = FALSE
     )
-  )
-  out <- do.call(
-    rbind,
-    lapply(split_tbl, function(part) {
-      tables <- nrow(part)
-      plot_ready <- sum(part$PlotReady %in% TRUE, na.rm = TRUE)
-      numeric_tables <- sum(suppressWarnings(as.numeric(part$NumericColumns)) > 0, na.rm = TRUE)
-      data.frame(
-        Preset = preset,
-        AppendixSection = as.character(part$AppendixSection[[1]] %||% ""),
-        Bundle = as.character(part$Bundle[[1]] %||% ""),
-        Tables = tables,
-        PlotReadyTables = plot_ready,
-        PlotReadyFraction = export_exact_fraction(plot_ready, tables),
-        NumericTables = numeric_tables,
-        NumericFraction = export_exact_fraction(numeric_tables, tables),
-        RolesCovered = summary_table_bundle_compact_labels(unique(as.character(part$Role)), max_n = 4L),
-        KeyTables = summary_table_bundle_compact_labels(as.character(part$Table), max_n = 4L),
-        stringsAsFactors = FALSE
-      )
-    })
-  )
+    for (key in keys) row[[key]] <- as.character(part[[key]][[1L]] %||% "")
+    row <- row[c("Preset", keys, "Tables", "PlotReadyTables", "PlotReadyFraction",
+      "NumericTables", "NumericFraction")]
+    if (view %in% c("preset", "appendix_role", "appendix_section")) {
+      row$BundlesCovered <- length(unique(as.character(
+        if (view == "preset") part$Bundle %||% "" else part$Bundle)))
+    }
+    if (view == "preset") {
+      row$SectionsCovered <- length(unique(as.character(part$AppendixSection %||% "")))
+    }
+    if (view %in% c("section", "section_bundle", "preset", "appendix_section")) {
+      row$RolesCovered <- summary_table_bundle_compact_labels(unique(as.character(part$Role)), max_n = 4L)
+    }
+    if (view == "preset") {
+      row$KeySections <- summary_table_bundle_compact_labels(unique(as.character(part$AppendixSection)), max_n = 4L)
+    }
+    if (view %in% c("role", "appendix_role")) {
+      row$SectionsCovered <- summary_table_bundle_compact_labels(unique(as.character(part$AppendixSection)), max_n = 4L)
+    }
+    row$KeyTables <- summary_table_bundle_compact_labels(as.character(part$Table), max_n = 4L)
+    row
+  }))
   rownames(out) <- NULL
-  out[order(out$Preset, out$AppendixSection, out$Bundle), , drop = FALSE]
-}
-
-export_summary_table_selection_handoff_preset_summary <- function(selection_catalog,
-                                                                  preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
-  preset <- match.arg(preset)
-  selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
-  if ("Preset" %in% names(selection_catalog)) {
-    selection_catalog <- selection_catalog[
-      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
-    ]
-  }
-  selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
-  if (nrow(selection_catalog) == 0L) {
-    return(data.frame())
-  }
-
-  tables <- nrow(selection_catalog)
-  plot_ready <- sum(selection_catalog$PlotReady %in% TRUE, na.rm = TRUE)
-  numeric_tables <- sum(suppressWarnings(as.numeric(selection_catalog$NumericColumns)) > 0, na.rm = TRUE)
-  data.frame(
-    Preset = preset,
-    Tables = tables,
-    PlotReadyTables = plot_ready,
-    PlotReadyFraction = export_exact_fraction(plot_ready, tables),
-    NumericTables = numeric_tables,
-    NumericFraction = export_exact_fraction(numeric_tables, tables),
-    BundlesCovered = length(unique(as.character(selection_catalog$Bundle %||% ""))),
-    SectionsCovered = length(unique(as.character(selection_catalog$AppendixSection %||% ""))),
-    RolesCovered = summary_table_bundle_compact_labels(unique(as.character(selection_catalog$Role)), max_n = 4L),
-    KeySections = summary_table_bundle_compact_labels(unique(as.character(selection_catalog$AppendixSection)), max_n = 4L),
-    KeyTables = summary_table_bundle_compact_labels(as.character(selection_catalog$Table), max_n = 4L),
-    stringsAsFactors = FALSE
-  )
-}
-
-export_summary_table_selection_handoff_role_summary <- function(selection_catalog,
-                                                                preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
-  preset <- match.arg(preset)
-  selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
-  if ("Preset" %in% names(selection_catalog)) {
-    selection_catalog <- selection_catalog[
-      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
-    ]
-  }
-  selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
-  if (nrow(selection_catalog) == 0L || !"Role" %in% names(selection_catalog)) {
-    return(data.frame())
-  }
-
-  split_tbl <- split(selection_catalog, as.character(selection_catalog$Role %||% ""))
-  out <- do.call(
-    rbind,
-    lapply(names(split_tbl), function(role_nm) {
-      part <- split_tbl[[role_nm]]
-      tables <- nrow(part)
-      plot_ready <- sum(part$PlotReady %in% TRUE, na.rm = TRUE)
-      numeric_tables <- sum(suppressWarnings(as.numeric(part$NumericColumns)) > 0, na.rm = TRUE)
-      data.frame(
-        Preset = preset,
-        Role = as.character(role_nm),
-        Tables = tables,
-        PlotReadyTables = plot_ready,
-        PlotReadyFraction = export_exact_fraction(plot_ready, tables),
-        NumericTables = numeric_tables,
-        NumericFraction = export_exact_fraction(numeric_tables, tables),
-        SectionsCovered = summary_table_bundle_compact_labels(unique(as.character(part$AppendixSection)), max_n = 4L),
-        KeyTables = summary_table_bundle_compact_labels(as.character(part$Table), max_n = 4L),
-        stringsAsFactors = FALSE
-      )
-    })
-  )
-  rownames(out) <- NULL
-  out[order(out$Preset, out$Tables, out$Role, decreasing = TRUE), , drop = FALSE]
-}
-
-export_summary_table_selection_handoff_role_section_summary <- function(selection_catalog,
-                                                                        preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
-  preset <- match.arg(preset)
-  selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
-  if ("Preset" %in% names(selection_catalog)) {
-    selection_catalog <- selection_catalog[
-      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
-    ]
-  }
-  selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
-  if (nrow(selection_catalog) == 0L ||
-      !"Role" %in% names(selection_catalog) ||
-      !"AppendixSection" %in% names(selection_catalog)) {
-    return(data.frame())
-  }
-
-  split_tbl <- split(
-    selection_catalog,
-    paste(as.character(selection_catalog$AppendixSection %||% ""),
-          as.character(selection_catalog$Role %||% ""),
-          sep = "\r")
-  )
-  out <- do.call(
-    rbind,
-    lapply(split_tbl, function(part) {
-      tables <- nrow(part)
-      plot_ready <- sum(part$PlotReady %in% TRUE, na.rm = TRUE)
-      numeric_tables <- sum(suppressWarnings(as.numeric(part$NumericColumns)) > 0, na.rm = TRUE)
-      data.frame(
-        Preset = preset,
-        AppendixSection = as.character(part$AppendixSection[[1]] %||% ""),
-        Role = as.character(part$Role[[1]] %||% ""),
-        Tables = tables,
-        PlotReadyTables = plot_ready,
-        PlotReadyFraction = export_exact_fraction(plot_ready, tables),
-        NumericTables = numeric_tables,
-        NumericFraction = export_exact_fraction(numeric_tables, tables),
-        KeyTables = summary_table_bundle_compact_labels(as.character(part$Table), max_n = 4L),
-        stringsAsFactors = FALSE
-      )
-    })
-  )
-  rownames(out) <- NULL
-  out[order(out$Preset, out$AppendixSection, out$Role), , drop = FALSE]
-}
-
-export_summary_table_selection_role_summary <- function(selection_catalog,
-                                                        preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
-  preset <- match.arg(preset)
-  selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
-  if ("Preset" %in% names(selection_catalog)) {
-    selection_catalog <- selection_catalog[
-      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
-    ]
-  }
-  selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
-  if (nrow(selection_catalog) == 0L || !"Role" %in% names(selection_catalog)) {
-    return(data.frame())
-  }
-
-  split_tbl <- split(selection_catalog, as.character(selection_catalog$Role %||% ""))
-  out <- do.call(
-    rbind,
-    lapply(names(split_tbl), function(role_nm) {
-      part <- split_tbl[[role_nm]]
-      tables <- nrow(part)
-      plot_ready <- sum(part$PlotReady %in% TRUE, na.rm = TRUE)
-      numeric_tables <- sum(suppressWarnings(as.numeric(part$NumericColumns)) > 0, na.rm = TRUE)
-      data.frame(
-        Preset = preset,
-        Role = as.character(role_nm),
-        Tables = tables,
-        PlotReadyTables = plot_ready,
-        PlotReadyFraction = export_exact_fraction(plot_ready, tables),
-        NumericTables = numeric_tables,
-        NumericFraction = export_exact_fraction(numeric_tables, tables),
-        BundlesCovered = length(unique(as.character(part$Bundle))),
-        SectionsCovered = summary_table_bundle_compact_labels(unique(as.character(part$AppendixSection)), max_n = 4L),
-        KeyTables = summary_table_bundle_compact_labels(as.character(part$Table), max_n = 4L),
-        stringsAsFactors = FALSE
-      )
-    })
-  )
-  rownames(out) <- NULL
-  out[order(out$Tables, out$Role, decreasing = TRUE), , drop = FALSE]
-}
-
-export_summary_table_selection_section_summary <- function(selection_catalog,
-                                                           preset = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
-  preset <- match.arg(preset)
-  selection_catalog <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
-  if ("Preset" %in% names(selection_catalog)) {
-    selection_catalog <- selection_catalog[
-      as.character(selection_catalog$Preset) %in% preset, , drop = FALSE
-    ]
-  }
-  selection_catalog <- selection_catalog[selection_catalog$Selected %in% TRUE, , drop = FALSE]
-  if (nrow(selection_catalog) == 0L || !"AppendixSection" %in% names(selection_catalog)) {
-    return(data.frame())
-  }
-
-  split_tbl <- split(selection_catalog, as.character(selection_catalog$AppendixSection %||% ""))
-  out <- do.call(
-    rbind,
-    lapply(names(split_tbl), function(section_nm) {
-      part <- split_tbl[[section_nm]]
-      tables <- nrow(part)
-      plot_ready <- sum(part$PlotReady %in% TRUE, na.rm = TRUE)
-      numeric_tables <- sum(suppressWarnings(as.numeric(part$NumericColumns)) > 0, na.rm = TRUE)
-      data.frame(
-        Preset = preset,
-        AppendixSection = as.character(section_nm),
-        Tables = tables,
-        PlotReadyTables = plot_ready,
-        PlotReadyFraction = export_exact_fraction(plot_ready, tables),
-        NumericTables = numeric_tables,
-        NumericFraction = export_exact_fraction(numeric_tables, tables),
-        BundlesCovered = length(unique(as.character(part$Bundle))),
-        RolesCovered = summary_table_bundle_compact_labels(unique(as.character(part$Role)), max_n = 4L),
-        KeyTables = summary_table_bundle_compact_labels(as.character(part$Table), max_n = 4L),
-        stringsAsFactors = FALSE
-      )
-    })
-  )
-  rownames(out) <- NULL
-  out[order(out$Tables, out$AppendixSection, decreasing = TRUE), , drop = FALSE]
+  if (view == "preset") return(out)
+  order_by <- switch(view, section = c("Preset", "AppendixSection"),
+    section_bundle = c("Preset", "AppendixSection", "Bundle"),
+    role = c("Preset", "Tables", "Role"), role_section = c("Preset", "AppendixSection", "Role"),
+    appendix_role = c("Tables", "Role"), appendix_section = c("Tables", "AppendixSection"))
+  out[do.call(order, c(lapply(order_by, function(key) out[[key]]),
+    list(decreasing = view %in% c("role", "appendix_role", "appendix_section")))), , drop = FALSE]
 }
 
 export_write_summary_table_bundles <- function(summary_table_bundles,
@@ -6827,7 +6227,8 @@ export_write_summary_table_bundles <- function(summary_table_bundles,
                                                prefix,
                                                overwrite = FALSE,
                                                html_tables = list(),
-                                               html_text = list()) {
+                                               html_text = list(),
+                                               extra_tables = list()) {
   written_files <- data.frame(
     Component = character(0),
     Format = character(0),
@@ -6928,6 +6329,14 @@ export_write_summary_table_bundles <- function(summary_table_bundles,
         paste0("summary_", label, "_notes")
       )
       html_text[[paste0("summary_", label, "_notes")]] <- note_text
+    }
+  }
+
+  for (component in names(extra_tables)) {
+    tbl <- extra_tables[[component]]
+    if (nrow(tbl) > 0L) {
+      write_csv_local(tbl, paste0(prefix, "_", component, ".csv"), component)
+      html_tables[[component]] <- tbl
     }
   }
 

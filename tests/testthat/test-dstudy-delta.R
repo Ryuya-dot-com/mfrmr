@@ -192,3 +192,25 @@ test_that("delta is explicit, composes with other methods and checks source iden
   expect_error(summary(d, intervals = bad), "source ratings")
   expect_error(plot(d, metric = "Phi", intervals = bad, draw = FALSE), "source ratings")
 })
+
+
+test_that("exact-F plots distinguish empty sets from unavailable numerical intervals", {
+  data <- expand.grid(Person = 1:3, Task = 1:3)
+  data$Score <- as.vector(outer(c(-1, 0, 1), c(-1, 0, 1)))
+  empty <- confint(mfrm_d_study(mfrm_g_study(data, "Score", rater = NULL)),
+    method = "exact_f", assumption = "normal")
+  expect_identical(empty$Status, "Empty parameter-space interval")
+  plotted <- plot_data(plot(empty, draw = FALSE), "table")
+  expect_identical(plotted$StatusLabel, "Empty set")
+  expect_true(is.na(plotted$Estimate) && is.na(plotted$Lower) && is.na(plotted$Upper))
+  expect_identical(plotted$Status, empty$Status)
+
+  data$Score <- data$Person
+  unresolved <- confint(mfrm_d_study(mfrm_g_study(data, "Score", rater = NULL)),
+    method = "exact_f", assumption = "normal")
+  expect_identical(unresolved$Status, "Zero residual mean square")
+  plotted <- plot_data(plot(unresolved, draw = FALSE), "table")
+  expect_identical(plotted$StatusLabel, "CI unavailable")
+  expect_equal(plotted$Estimate, 1)
+  expect_true(is.na(plotted$Lower) && is.na(plotted$Upper))
+})

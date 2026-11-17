@@ -292,9 +292,9 @@
   ans
 }
 
-.mfrm_mvgt_profile_error <- function(d, i, metric) {
+.mfrm_mvgt_profile_error <- function(d, i, metric, counts = d$design_grid[i, ]) {
   g <- d$gstudy
-  counts <- as.numeric(d$design_grid[i, ])
+  counts <- as.numeric(counts)
   if (!is.null(g$design$nesting)) {
     child <- counts[match(g$design$count_columns[[names(g$design$nesting)]], names(d$design_grid))]
     parent <- counts[match(g$design$count_columns[[unname(g$design$nesting)]], names(d$design_grid))]

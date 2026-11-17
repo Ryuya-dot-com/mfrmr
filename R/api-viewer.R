@@ -129,9 +129,7 @@ mfrm_results_viewer_tab_statuses <- function(x) {
   )
 }
 
-mfrm_results_viewer_response_time_boundary <- function() {
-  .mfrmr_table_mfrm_results_viewer_response_time_boundary_data
-}
+mfrm_results_viewer_response_time_boundary <- .mfrmr_table_mfrm_results_viewer_response_time_boundary_data
 
 mfrm_results_viewer_payload <- function(x, top_n = 100L) {
   if (!inherits(x, "mfrm_results")) {
@@ -194,7 +192,7 @@ mfrm_results_viewer_payload <- function(x, top_n = 100L) {
     report_table_names = names(report_tables),
     response_time_tables = response_time_tables,
     response_time_table_names = names(response_time_tables),
-    response_time_boundary = mfrm_results_viewer_response_time_boundary(),
+    response_time_boundary = mfrm_results_viewer_response_time_boundary,
     report_text = report_text,
     report_notes = report_notes,
     report_captions = report_captions,
@@ -249,8 +247,8 @@ mfrm_results_viewer_bias_guidance <- function(x) {
     ),
     Route = c(
       "diagnose_mfrm(fit)$bias or estimate_bias(fit)",
-      "estimate_bias(fit, facet1 = ..., facet2 = ...) -> bias_interaction_report()",
-      "Use reporting_checklist() and substantive review before fairness claims."
+      "estimate_bias(fit, facet1 = ..., facet2 = ...) -> mfrm_report(fit, type = 'bias_interaction')",
+      "Use mfrm_report(fit, type = 'checklist') and substantive review before fairness claims."
     ),
     Detail = c(
       if (has_bias) "A bias table is available for this result object." else "No bias table is stored in this result object.",

@@ -31,9 +31,11 @@ must be selected columns. Reasons for observed or unknown cells are refused.
 Unannotated missing cells are labelled "Not supplied". Reasons are supplied
 by the user, not inferred missing-data mechanisms.}
 
-\item{x, object}{An object returned by the corresponding function.}
+\item{x}{An object returned by the corresponding function.}
 
 \item{...}{Reserved for method compatibility.}
+
+\item{object}{An object returned by the corresponding function.}
 }
 \value{
 An \code{mfrm_features} object containing \code{data}, \code{id}, \code{features}, a

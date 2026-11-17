@@ -91,6 +91,7 @@
 #' agreement$unit_summary # Each response needs at least two observed ratings.
 #' agreement$notes
 #' # Ordinal alpha uses category ordering; it is not quadratic weighted kappa.
+#' @rdname interrater_agreement_table
 #' @export
 krippendorff_alpha_table <- function(data, rater, unit, score,
                                      level = c("nominal", "ordinal", "interval", "ratio"),

@@ -43,11 +43,11 @@
 #' plot payload. The saved [rating_scale_table()] threshold view is also
 #' available as a separate plot route.
 #'
-#' @seealso [category_structure_report()], [category_curves_report()],
+#' @seealso [mfrm_report_category_structure], [mfrm_report_category_curves],
 #'   [plot.mfrm_fit()] (`type = "ccc"`).
 #'
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_threshold_ladder", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_operational")
@@ -59,7 +59,7 @@
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -164,7 +164,7 @@ plot_threshold_ladder <- function(fit,
 #'   [build_misfit_casebook()].
 #'
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_person_fit", run.dontrun = TRUE)
 #' \dontrun{
 #' library(mfrmr)
@@ -185,7 +185,7 @@ plot_threshold_ladder <- function(fit,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -510,7 +510,7 @@ plot_person_fit <- function(fit,
 #' @concept rater severity
 #'
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_rater_severity_profile", run.dontrun = TRUE)
 #' \dontrun{
 #' library(mfrmr)
@@ -532,7 +532,7 @@ plot_person_fit <- function(fit,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -718,7 +718,7 @@ plot_rater_severity_profile <- function(fit,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -951,7 +951,7 @@ plot_dif_summary <- function(x,
 #' @concept visual diagnostics
 #'
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_apa_figure_one", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -964,7 +964,7 @@ plot_dif_summary <- function(x,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.

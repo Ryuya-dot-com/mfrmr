@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-reports.R
 \name{build_apa_outputs}
 \alias{build_apa_outputs}
+\alias{print.mfrm_apa_text}
 \alias{summary.mfrm_apa_outputs}
 \title{Build APA text outputs from model results}
 \usage{
@@ -12,6 +13,8 @@ build_apa_outputs(
   context = list(),
   whexact = FALSE
 )
+
+\method{print}{mfrm_apa_text}(x, ...)
 
 \method{summary}{mfrm_apa_outputs}(object, top_n = 3, preview_chars = 160, ...)
 }
@@ -26,46 +29,50 @@ build_apa_outputs(
 
 \item{whexact}{Use exact ZSTD transformation.}
 
+\item{x}{Character text object from \code{build_apa_outputs()$report_text}.}
+
+\item{...}{Reserved for generic compatibility.}
+
 \item{object}{Output from \code{\link[=build_apa_outputs]{build_apa_outputs()}}.}
 
 \item{top_n}{Maximum non-empty lines shown in each component preview.}
 
 \item{preview_chars}{Maximum characters shown in each preview cell.}
-
-\item{...}{Reserved for generic compatibility.}
 }
 \value{
 An object of class \code{mfrm_apa_outputs} with:
 \itemize{
 \item \code{report_text}: APA-oriented Method/Results draft prose
 \item \code{decision}: plain-language source-fit interpretation plus the separate
-precision-contract decision; \code{FormalInference} is \code{"Yes"} only when both
+uncertainty assessment; \code{FormalInference} is \code{"Yes"} only when both
 fit readiness and \code{contract$precision$supports_formal_inference} support it
 \item \code{fit_readiness}, \code{fit_readiness_components}, and
 \code{fit_readiness_parameters}: exact source-fit readiness provenance
 \item \code{table_figure_notes}: consolidated draft notes for tables/visuals
 \item \code{table_figure_captions}: draft caption candidates without figure numbering
 \item \code{section_map}: package-native section table for manuscript assembly
-\item \code{contract}: structured APA reporting contract used for downstream checks
+\item \code{contract}: draft content, uncertainty basis and source-fit checks
 }
+
+The input object (invisibly).
 
 For \code{summary()}: An object of class \code{summary.mfrm_apa_outputs}.
 }
 \description{
 Build APA text outputs from model results
+
+Print APA narrative text with preserved line breaks
 }
 \details{
-\code{context} is an optional named list for narrative customization.
-Frequently used fields include:
+Use \code{context} to supply study information for the draft:
 \itemize{
-\item \code{assessment}, \code{setting}, \code{scale_desc}
-\item \code{rater_training}, \code{raters_per_response}
-\item \code{rater_facet} (used for targeted reliability note text)
-\item \code{line_width} (optional text wrapping width for \code{report_text}; default = 92)
+\item \code{assessment}, \code{setting}, \code{scale_desc}: assessment name, administration
+context and score scale.
+\item \code{rater_training}, \code{raters_per_response}: training and assignment details.
+\item \code{rater_facet}: facet label for reliability wording, subject to the
+agreement-summary restriction below.
+\item \code{line_width}: text wrapping width for \code{report_text} (default 92).
 }
-
-Output text includes residual-PCA screening commentary if PCA diagnostics are
-available in \code{diagnostics}.
 
 For \code{GPCM}, this helper returns a caveated partial reporting bundle
 over supported diagnostics, direct tables, and plots. It also includes a
@@ -101,86 +108,30 @@ opportunities without valid probabilities. An absent summary does not
 establish agreement. See \code{\link[=interrater_agreement_table]{interrater_agreement_table()}} for the matching,
 repeated-rating and denominator conventions.
 
+Prints APA narrative text with preserved paragraph breaks using \code{cat()}.
+This is preferred over bare \code{print()} when you want readable multi-line
+report output in the console.
+
 \code{summary()} method: Summarize APA report-output bundles
 
-For \code{summary()}: This summary is a diagnostics layer for APA text products, not a replacement
-for the full narrative.
-
-It reports component completeness, line/character volume, and a compact
-preview for quick QA before manuscript insertion.
+For \code{summary()}: Inspect component coverage, line/character counts
+and previews before reading the full draft.
 }
-\section{Interpreting output}{
+\section{Reviewing the draft}{
 
-\itemize{
-\item \code{report_text}: manuscript-draft narrative covering Method (model
-specification, estimation, convergence) and Results (global fit,
-facet separation/reliability, misfit triage, category diagnostics,
-residual-PCA screening, bias screening), organized as an APA-oriented,
-third-person Method/Results draft. It is
-intended for human review and is not a claim of complete APA 7 or JARS
-compliance.
-\item \code{table_figure_notes}: reusable draft note blocks for table/figure appendices.
-\item \code{table_figure_captions}: draft caption candidates aligned to generated outputs.
-\item active latent-regression fits add a population-model section and Table 5
-notes/captions that distinguish conditional-normal coefficient reporting
-from post hoc regression on EAP/MLE scores.
-}
+\code{report_text} is a third-person Method/Results draft; \code{table_figure_notes}
+and \code{table_figure_captions} provide matching notes and captions. Review them
+against the study record before manuscript use; these are not certifications
+of APA 7 or JARS compliance. Active latent-regression fits add a population
+section and Table 5 notes/captions distinguishing conditional-normal
+coefficients from post hoc regression on EAP/MLE scores.
 
-When bias results or PCA diagnostics are not supplied, those sections
-are omitted from the narrative rather than producing placeholder text.
-Reporting reuses stored residual PCA results and does not compute omitted
-overall or facet-specific analyses. Request the intended scope with
-\code{diagnose_mfrm(..., residual_pca = "overall")}, \code{"facet"}, or \code{"both"} first.
-
-
-For \code{summary()}:
-\itemize{
-\item \code{overview}: total coverage across standard text components.
-\item \code{decision}: the source-fit decision shown before draft-completeness checks;
-text completeness cannot promote a review or blocked fit.
-\item \code{components}: per-component density and mention checks
-(including residual-PCA mentions).
-\item \code{sections}: package-native section coverage table.
-\item \code{content_checks}: contract-based alignment checks for APA drafting readiness.
-\item \code{overview$DraftContractPass}: the primary contract-completeness flag for
-draft text components.
-\item \code{overview$ReadyForAPA}: a backward-compatible alias of that contract flag,
-not a certification of inferential adequacy.
-\item \code{preview}: first non-empty lines for fast visual review.
-}
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Build diagnostics (and optional bias results). For \code{RSM} / \code{PCM}
-reporting runs, prefer an \code{MML} fit and
-\code{diagnose_mfrm(..., diagnostic_mode = "both")}.
-\item Run \code{build_apa_outputs(...)}.
-\item Check \code{summary(apa)} for completeness.
-\item Insert \code{apa$report_text} and note/caption fields into manuscript drafts
-after checking the listed cautions.
-}
-
-
-For \code{summary()}:
-\enumerate{
-\item Build outputs via \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
-\item Run \code{summary(apa)} to screen for empty/short components.
-\item Use \code{apa$report_text}, \code{apa$table_figure_notes},
-and \code{apa$table_figure_captions} as draft components for final-text review.
-}
-}
-
-\section{Context template}{
-
-A minimal \code{context} list can include fields such as:
-\itemize{
-\item \code{assessment}: name of the assessment task
-\item \code{setting}: administration context
-\item \code{scale_desc}: short description of the score scale
-\item \code{rater_facet}: rater facet label used in narrative reliability text
-}
+Missing bias or PCA inputs cause those sections to be omitted. Reporting
+does not compute omitted PCA analyses: choose \code{residual_pca = "overall"},
+\code{"facet"} or \code{"both"} in \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} first. For supported MML fits,
+\code{diagnostic_mode = "both"} retains plug-in and marginal diagnostics with
+different interpretations. Use \code{summary(apa)$content_checks} to check the
+draft against the supplied results, then read the full text.
 }
 
 \section{Input validation}{
@@ -200,8 +151,40 @@ another fit or older results without identity metadata are refused. See
 diagnostics without refitting the model.
 }
 
+\section{Interpreting output}{
+
+The printed text is the same content stored in
+\code{build_apa_outputs(...)$report_text}, but with explicit paragraph breaks.
+
+
+For \code{summary()}:
+\itemize{
+\item \code{overview}: total coverage across standard text components.
+\item \code{decision}: the source-fit decision shown before draft-completeness checks;
+text completeness cannot promote a review or blocked fit.
+\item \code{components}: per-component density and mention checks
+(including residual-PCA mentions).
+\item \code{sections}: package-native section coverage table.
+\item \code{content_checks}: checks that draft text agrees with the supplied results.
+\item \code{overview$DraftContractPass}: whether the expected information is present in
+draft text components.
+\item \code{overview$ReadyForAPA}: a backward-compatible alias of that completeness flag,
+not a certification of inferential adequacy.
+\item \code{preview}: first non-empty lines for fast visual review.
+}
+}
+
+\section{Typical workflow}{
+
+\enumerate{
+\item Generate \code{apa <- build_apa_outputs(...)}.
+\item Print readable narrative with \code{apa$report_text}.
+\item Use \code{summary(apa)} to check completeness before manuscript use.
+}
+}
+
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("build_apa_outputs", run.dontrun = TRUE)
 \dontrun{
 library(mfrmr)
@@ -232,7 +215,18 @@ apa_review$content_checks
 cat(apa$report_text)
 # Adapt the text to the study question, design, and evidence before using it
 }
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
+# example("print.mfrm_apa_text", run.dontrun = TRUE)
+\dontrun{
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
+example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- example_fit$fit
+diag <- example_fit$diagnostics
+apa <- build_apa_outputs(fit, diag)
+apa$report_text
+}
+# Optional workflow; run the example explicitly as shown below.
 # example("summary.mfrm_apa_outputs", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
@@ -246,7 +240,7 @@ summary(apa)
 }
 \seealso{
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=estimate_bias]{estimate_bias()}},
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \link{mfrmr_reporting_and_apa}
+\link{mfrm_report_checklist}, \link{mfrmr_reporting_and_apa}
 
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[base:summary]{base::summary()}}
 }

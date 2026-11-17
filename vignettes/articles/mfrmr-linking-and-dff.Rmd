@@ -147,10 +147,11 @@ when saving the analysis, so its fitted model and supplied anchors stay together
   fixed Person values or Person group means. Common Persons can be present in
   the design without being anchored. Choosing JML changes the estimator and
   should follow the analysis question, not merely avoid an error.
-- **Anchor uncertainty is conditional.** The new fit treats supplied values as
-  exact. It does not propagate their source estimation error; an unavailable
-  SE for a fixed value does not mean its source was perfectly known. Compare
-  defensible anchor sets when conclusions depend on that choice.
+- **Anchor uncertainty is conditional by default.** The new fit treats supplied
+  values as exact. A separate, scoped interval calculation can add independent
+  source-calibration uncertainty; see [the supported routes below](#which-uncertainty-is-available-with-anchors).
+  A fixed value is not therefore perfectly known in its source population.
+  Compare defensible anchor sets when conclusions depend on that choice.
 - **Locations are not the entire calibration.** To hold thresholds and other
   supported calibration components fixed while scoring, use
   `extract_mfrm_calibration()`, validate and freeze the saved calibration,
@@ -328,17 +329,41 @@ They condition on the supplied anchors. A fixed target has SE zero and no
 inferential bounds; this does not describe the uncertainty of its original
 calibration.
 
-If the population mean and variance are also estimated, anchored point
-estimation is supported, but the native location and population interval
-helpers currently exclude anchors and group constraints. Inspect
-`fit$readiness$fit`: `EstimabilityState = "not_evaluated"` means the
-identification review is incomplete, not that numerical optimization failed
-or the model was proved unidentified. The separate
-`fit$data_review$estimability$nonlinear_local_estimability` can pass its
-local-rank check while overall readiness remains under review. That local
-result alone does not authorize intervals or exporting anchors for reuse.
-Choose the population assumption for the assessment question, not simply
-because one configuration supplies intervals.
+The **anchor-origin** route estimates the receiving population mean and
+variance with direct RSM/PCM MML, `population_formula = ~1`, and direct anchors
+on the noncentered facet. Fixed and adaptive integration are supported.
+Specify `population_sd` only when a fixed population SD is substantively
+intended. Keep the model's origin distinct from its unit: fixing a Rater
+location identifies the origin in an otherwise identified design; the unit
+slopes of RSM/PCM set the logit unit without requiring population SD to equal one.
+
+Eligible free locations and population parameters can receive conditional
+model-information intervals. Supplying `anchor_covariance` and
+`independent_anchors = TRUE` to `mfrm_facet_intervals()` or
+`mfrm_population_intervals()` adds the source contribution by first-order
+sensitivity. Use the full anchor covariance, including correlations. Estimated
+variance retains its log-scale interval construction; an explicitly fixed
+variance still has no inferential interval. This route excludes population
+covariates, interactions and group constraints, and does not correct drift.
+See `help("mfrm_facet_intervals")` for an executable two-sample example.
+
+Independent source and receiving Persons are a sampling assumption, not a
+consequence of different IDs. The same recording rated again still represents
+the same performance. Shared Persons or clusters require cross-sample
+covariance or a joint model; they cannot be passed to the independent-source
+formula. Likewise, subtracting the source population mean from the receiving
+mean requires the source mean--anchor covariance. The new population interval
+alone is not an interval for that difference.
+
+For design planning, distinguish the source Person count, receiving Person
+count, independent linking performances, and each anchor rater's exposure.
+More receiving ratings cannot remove error in an externally calibrated scale.
+If all supplied rater anchors move by the same amount, the receiving mean and
+unanchored rater locations can move by that amount without changing fitted
+probabilities. Good fit therefore cannot rule out a shared anchor shift.
+Source-error propagation quantifies sampling uncertainty under invariance;
+it does not identify this drift. Neither numerical eligibility nor a single
+successful dataset establishes a minimum sample size or nominal coverage.
 
 For **one-family GPCM**, model-information and cluster-sandwich slope and
 curve intervals can include fixed facet anchors or group means when their
@@ -364,7 +389,7 @@ convert the statistical model.
 
 | Intended task | Required action | What changes? |
 | --- | --- | --- |
-| Reopen the original fit | `readRDS()`; inspect `summary(fit, compute = "never")` and `specifications_report(fit)` | No estimates or constraints. A native fit lacking convention metadata retains legacy remainder centering. |
+| Reopen the original fit | `readRDS()`; inspect `summary(fit, compute = "never")` and `mfrm_report(type = "specifications", fit)` | No estimates or constraints. A native fit lacking convention metadata retains legacy remainder centering. |
 | Repeat the original estimation | Generate `build_mfrm_replay_script()` and run it with the original data | A new fit under the original convention, with newly evaluated readiness. |
 | Adopt whole-facet centering | Refit with `centering_scope = "facet"`, preserving the intended other settings | The anchored constraints and potentially estimates, SEs and conclusions. |
 | Update interval explanations or fixed-contrast derivatives | Recompute the interval object from its unchanged source fit | Derived output; no model refit is needed solely for this update. |
@@ -391,7 +416,7 @@ fit_file <- tempfile(fileext = ".rds")
 saveRDS(legacy_fit, fit_file)
 restored_fit <- readRDS(fit_file)
 unlink(fit_file)
-spec <- specifications_report(restored_fit)$data_spec
+spec <- mfrm_report(type = "specifications", restored_fit)$data_spec
 spec[spec$Setting %in% c("NonCenteredFacet", "CenteringScope"), ]
 ```
 
@@ -751,6 +776,32 @@ is the observed-minus-expected average under the baseline calibration, before
 fitting the shift. `AfterBiasObsExpAverage` records the remaining discrepancy
 with that shift included. Both are on the score scale; `Bias Size` is in logits.
 
+For a prespecified Rater-by-Criterion interaction, a separate joint route uses
+`fit_mfrm(facet_interactions = "Rater:Criterion")` followed by
+`mfrm_facet_intervals(fit, interaction = "Rater:Criterion")`. Its cell and
+contrast intervals use the full joint information, including covariance with
+the main effects, thresholds and any estimated population coefficients and
+residual variance. Direct RSM/PCM MML supports fixed or adaptive integration
+with either a fixed standard-normal population or an estimated normal
+mean/regression and variance. The route retains one two-facet interaction,
+unit weights and no anchors; supplied fixed population SD is not supported.
+EM/hybrid require fixed-grid, fixed-standard-normal fits. The intervals do not
+supply simultaneous inference, prove fairness, or upgrade the conditional
+bias/refit screens above. Include relevant ability predictors through the
+supported population model and inspect identification; omitting group ability
+differences can confound their interpretation with differential functioning.
+See `help("mfrm_facet_intervals")` for all numerical and design restrictions.
+
+Define the contrast before inspecting the fitted cells. For example,
+`(R1,C1) - (R2,C1) - (R1,C2) + (R2,C2)` asks whether the R1-versus-R2
+predictor difference changes between C1 and C2. Under the joint model this
+cancels their main effects and compares four interaction cells. Its SE must
+use their covariance, not the sum of four squared cell SEs. A row or column
+sum constrained to zero has no inferential interval; it is not evidence of
+agreement. Cell rating counts, independent Persons and overlap between raters
+remain different design quantities. A numerically available interval does not
+establish the sample size needed to detect the chosen effect.
+
 Refits currently refuse baselines with user-specified active population
 models, fitted facet interactions, or group-anchor constraints because those
 structures cannot yet be replayed and linked completely within subgroups.
@@ -923,7 +974,7 @@ rater_screen <- analyze_dff(
 summary(rater_screen)$comparison_review$table
 support <- plot(rater_screen, draw = FALSE)
 plot_data(support, "comparison_review")$weights
-report <- dif_report(rater_screen)
+report <- mfrm_report(type = "dff", rater_screen)
 report$comparison_review$table
 saveRDS(rater_screen, file.path(tempdir(), "rater-screen-with-review.rds"))
 ```
@@ -1251,7 +1302,9 @@ and independent Persons; they are not a calibrated DFF classification.
 `mantel_haenszel_table()` now supplies a separate binary MH comparison with
 explicit matching strata and one response per Person and target. Its default
 conditional exact inference uses `stats::mantelhaen.test()`; an asymptotic
-option is also available. `analyze_dff()` retains its residual and refit routes.
+option is also available. Explicit `method = "gmh"` extends the comparison to
+multiple categories and groups using an asymptotic association test.
+`analyze_dff()` retains its residual and refit routes.
 `ordinal_logistic_table()` supplies the independent-Person cumulative-logit
 comparison through the optional `ordinal` package. Pooled repeated-rating
 comparisons remain planned work.
@@ -1262,6 +1315,7 @@ First specify what each result describes:
 | Residual DFF | Group difference in mean observed-minus-expected score; descriptive |
 | Linked refit DFF | Group difference in a facet parameter, conditional on baseline anchors |
 | Binary Mantel--Haenszel (MH) | A common group odds ratio conditional on declared matching strata |
+| Generalized CMH (GMH) | An omnibus group-by-category association conditional on declared matching strata; no scalar severity/odds-ratio estimate |
 | Cumulative ordinal logistic | Group and matching-by-group terms in a proportional-odds response model |
 
 First declare the intended response roster and rating plan before running the
@@ -1308,8 +1362,9 @@ matching plus group and their interaction (M3) to identical complete rows.
 Its `table` separates uniform (M2/M1), nonuniform (M3/M2) and joint (M3/M1)
 likelihood-ratio tests, with Holm adjustment across all three tests and targets.
 `DeltaNagelkerkeR2` names the pseudo-R-squared definition explicitly. The
-`contrasts` table reports M3's reference/focal upper-tail odds ratios at the
-endpoints and midpoint of the overlapping matching ranges; values above one
+`contrasts` table reports M3's reference/focal upper-tail odds ratios for each
+focal group at the endpoints and midpoint of the matching range shared by all
+declared groups; values above one
 favor higher reference scores. Fits use all complete responses. An interaction
 means this odds ratio changes with matching, so one constant group coefficient
 does not summarize the full difference.
@@ -1326,7 +1381,7 @@ asymptotic: convergence or a nonsignificant diagnostic does not establish
 adequate small-sample inference or proportional odds.
 
 A bounded known-model check illustrates this limit. With three categories,
-balanced groups, a fixed matching grid and total N=40, all 1,000 simulated
+two balanced groups, a fixed matching grid and total N=40, all 1,000 simulated
 data sets had computable group tests. Under no group difference and true
 proportional odds, the unadjusted joint test rejected in 65/1,000 cases
 (6.5%; 95% Monte Carlo Wilson interval 5.1%--8.2%). The proportional-odds
@@ -1383,6 +1438,138 @@ Zumbo, B. D. (1999). *A handbook on the theory and methods of differential
 item functioning (DIF): Logistic regression modeling as a unitary framework
 for binary and Likert-type (ordinal) item scores*. Ottawa, ON: Directorate of
 Human Resources Research and Evaluation, Department of National Defense.
+
+### Compare multiple categories or groups with GMH
+
+Use GMH when the question concerns the category distribution across declared
+groups within defensible matching strata. It treats response categories as
+nominal, so reordering or changing the spacing of their numeric labels does
+not change the test. This differs from a one-degree-of-freedom ordinal trend
+test. Multi-category GMH can detect some category-specific differences that a
+single location-shift comparison misses; it can still miss effects that cancel
+across matching strata. The comparison study by
+[Yesiltas and Paek (2020), GMH section](https://doi.org/10.1177/0013164419853000)
+does not establish performance for small, crossed rating designs.
+
+The following constructed count example illustrates the input and audit
+tables. Each expanded row represents a distinct Person with one response to
+one target, here a particular rater and criterion. The matching labels stand
+for prespecified comparable strata; constructing labels alone does not establish
+comparability. This is not a recommended sample size or a detection study.
+For your data, supply the corresponding Person, target, score, group and
+matching columns directly instead of expanding counts.
+
+<details>
+<summary>R code: a three-group, three-category matched comparison</summary>
+
+```{r dff-gmh-comparison}
+library(mfrmr)
+cells <- expand.grid(Group = c("A", "B", "C"), Score = 0:2,
+                     Matching = c("Low", "High"),
+                     KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE)
+cells$N <- c(12, 8, 4, 6, 8, 8, 2, 4, 8,
+              6, 4, 2, 8, 8, 6, 6, 8, 12)
+ratings <- cells[rep(seq_len(nrow(cells)), cells$N),
+                 c("Group", "Score", "Matching")]
+ratings$Person <- paste0("P", seq_len(nrow(ratings)))
+ratings$Target <- "Rater A: Content"
+
+gmh <- mantel_haenszel_table(
+  ratings, person = "Person", target = "Target", score = "Score",
+  group = "Group", strata = "Matching", groups = c("A", "B", "C"),
+  method = "gmh", categories = 0:2, inference = "asymptotic"
+)
+gmh$table        # Overall association, degrees of freedom and availability
+gmh$group_counts # Independent Persons contributing from each group
+gmh$counts       # Observed/expected counts and within-stratum group proportions
+```
+
+</details>
+
+The requested test has `(3 - 1) * (3 - 1) = 4` degrees of freedom. A small
+p-value concerns this overall association: it does not identify a particular
+group pair, measure rater severity or prove bias. Inspect the category
+distributions and substantive rating conditions. `Proportion` is an observed
+within-stratum group proportion, not a matched or model-adjusted effect.
+The result supplies no common odds ratio or confidence interval. Save the
+plain result with `saveRDS(gmh, "gmh.rds")`, or export its data frames with
+`write.csv()`; rereading does not rerun a test.
+
+Strata with fewer than two observed groups or categories do not contribute.
+All declared groups and categories must occur collectively in contributing
+strata, and the conditional covariance must be nonsingular. The function
+retains zero cells, exclusions and failures instead of silently dropping levels
+or testing a smaller question. Counts can be marked `Included` while the full
+target test is unavailable. Small expected counts warrant attention to the
+chi-squared approximation; numerical success is not evidence of calibrated
+small-sample inference. An exact request is rejected rather than silently
+converted to asymptotic inference. Binary two-group MH defaults are unchanged.
+
+If a rater scores several criteria or occasions for each Person, pooling those
+rows as independent Person-rater observations is not valid. A separate target
+for each rater-criterion combination can define one response per Person;
+an overall rater comparison requires a model or resampling method accounting
+for the repeated observations. Holm adjustment across valid target tests does
+not correct an invalid within-target independence assumption.
+
+### Compare multiple groups with logistic models
+
+The generalized logistic procedure of
+[Magis et al. (2011), pp. 368--373](https://doi.org/10.1080/15305058.2011.602810)
+extends binary-response logistic DIF to multiple groups, separating group
+intercepts from group-by-matching slopes. It is distinct from multi-category
+GMH and from a mixed-effects model. `ordinal_logistic_table()` accepts two or
+more groups with binary or ordered responses. Its binary tests correspond to
+this framework; the ordinal extension additionally assumes proportional odds
+across cumulative category cuts. Joint MFRM contrasts described above instead
+target declared model parameters and their uncertainty.
+
+With G declared groups, the uniform and nonuniform tests each have G-1 degrees
+of freedom and the joint test has 2(G-1). A significant omnibus test says that
+some group terms are needed; it does not identify a particular group pair.
+The `contrasts` table provides point effects against the first group, without
+pairwise p-values or simultaneous intervals. With K ordered categories, the
+separate proportional-odds diagnostic has (2G-1)(K-2) degrees of freedom.
+
+All declared groups must have varying matching values and share a
+positive-width matching range. This defines the supported comparison design;
+it is not a claim that other designs have no identifiable finite estimates.
+Models use all complete rows, not just rows inside the common range. Each
+`matching` row describes a reference/focal pair, so its repeated target-level
+`InputRows` and `CompleteRows` must not be summed across pairs.
+
+The code below reuses the constructed ratings in the preceding GMH example,
+explicitly assigning -1 and 1 to its two matching levels. For a continuous
+matching variable in real data, supply the justified original numeric values.
+Changing the reference group changes the reported contrasts, not the omnibus
+hypotheses. A three-group analysis is not three independent two-group analyses.
+
+<details>
+<summary>R code: omnibus tests and reference/focal effects for three groups</summary>
+
+```{r dff-multigroup-logistic}
+if (requireNamespace("ordinal", quietly = TRUE)) {
+  ratings$MatchingScore <- ifelse(ratings$Matching == "Low", -1, 1)
+  ol_groups <- ordinal_logistic_table(
+    ratings, person = "Person", target = "Target", score = "Score",
+    group = "Group", matching = "MatchingScore",
+    groups = c("A", "B", "C"), categories = 0:2)
+  ol_groups$table                 # Three omnibus tests for this target
+  ol_groups$contrasts             # A/B and A/C effects at common-range points
+  ol_groups$matching              # Group counts, ranges and eligibility
+  ol_groups$proportional_odds     # A separate model diagnostic
+  ol_groups$models                # Convergence and numerical availability
+  # Save the complete result, including cases and reasons, for later reporting:
+  # saveRDS(ol_groups, "ordinal-dff.rds")
+}
+```
+
+</details>
+
+This comparison still requires independent Persons within each target.
+It does not propagate matching-score estimation uncertainty or purify anchors
+automatically. Numerical agreement with another implementation does not
+establish false-positive rates or power for a sparse rating design.
 
 ### Compare an explicitly shared response roster
 
@@ -1542,7 +1729,7 @@ dit <- dif_interaction_table(
 
 head(dit$table)
 
-dr <- dif_report(dff_resid)
+dr <- mfrm_report(type = "dff", dff_resid)
 cat(dr$narrative)
 ```
 
@@ -1709,7 +1896,7 @@ For a compact linking route:
 3. `subset_connectivity_report()`
 4. `make_anchor_table()` or `review_mfrm_anchors()`
 5. `analyze_dff()`
-6. `dif_report()` and `plot()`
+6. `mfrm_report(dif, type = "dff")` and `plot()`
 7. `interaction_effect_table()` after a confirmatory `facet_interactions` fit
 8. `anchor_to_baseline()` / `detect_anchor_drift()` when working across waves
 

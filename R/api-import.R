@@ -1256,7 +1256,8 @@ print.mfrm_imported_fit <- function(x, ...) {
 }
 
 #' @rdname import_irt_fit
-#' @param object,x An imported measurement bundle.
+#' @param object An imported measurement bundle.
+#' @param x An imported measurement bundle.
 #' @param digits Number of digits for displayed estimates.
 #' @param ... Additional arguments (unused by imported summaries).
 #' @export

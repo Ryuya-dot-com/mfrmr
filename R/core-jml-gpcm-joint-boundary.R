@@ -25,72 +25,25 @@
 # MLE, and a positive candidate is not a global identification proof. Curved
 # or rate-nonconvergent paths remain outside the audit.
 
-mfrmr_jml_gpcm_joint_empty_pair_table <- function() {
-  data.frame(
-    PairId = character(0),
-    PositiveLevel = character(0),
-    NegativeLevel = character(0),
-    PositiveIndex = integer(0),
-    NegativeIndex = integer(0),
-    SolverStatus = integer(0),
-    MarginCapacity = numeric(0),
-    PositiveMinimumMargin = numeric(0),
-    NeutralMinimumMargin = numeric(0),
-    NegativeLeadingCoefficient = numeric(0),
-    AdditiveDirectionL1 = numeric(0),
-    CurrentLogLikelihood = numeric(0),
-    BoundaryLogLikelihood = numeric(0),
-    BoundaryImprovement = numeric(0),
-    AnalyticTailCertified = logical(0),
-    CompetitiveBoundary = logical(0),
-    Certified = logical(0),
-    EvaluationState = character(0),
-    ReasonCodes = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_gpcm_joint_empty_pair_table <- .mfrmr_empty_table(c(PairId = "character", PositiveLevel = "character", NegativeLevel = "character",
+    PositiveIndex = "integer", NegativeIndex = "integer", SolverStatus = "integer", MarginCapacity = "double",
+    PositiveMinimumMargin = "double", NeutralMinimumMargin = "double", NegativeLeadingCoefficient = "double",
+    AdditiveDirectionL1 = "double", CurrentLogLikelihood = "double", BoundaryLogLikelihood = "double",
+    BoundaryImprovement = "double", AnalyticTailCertified = "logical", CompetitiveBoundary = "logical",
+    Certified = "logical", EvaluationState = "character", ReasonCodes = "character"))
 
-mfrmr_jml_gpcm_joint_empty_target_table <- function() {
-  data.frame(
-    ParameterId = character(0),
-    ParameterClass = character(0),
-    Facet = character(0),
-    Level = character(0),
-    PositiveBoundaryCandidate = logical(0),
-    NegativeBoundaryCandidate = logical(0),
-    CandidateStatus = character(0),
-    EvaluationState = character(0),
-    ReasonCodes = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_gpcm_joint_empty_target_table <- .mfrmr_empty_table(c(ParameterId = "character", ParameterClass = "character", Facet = "character",
+    Level = "character", PositiveBoundaryCandidate = "logical", NegativeBoundaryCandidate = "logical",
+    CandidateStatus = "character", EvaluationState = "character", ReasonCodes = "character"))
 
 
-mfrmr_jml_gpcm_joint_empty_rate_table <- function() {
-  data.frame(
-    RateId = character(0),
-    PositiveLevels = character(0),
-    ZeroLevels = character(0),
-    LeadingNegativeLevels = character(0),
-    DeeperNegativeLevels = character(0),
-    ExpandedRates = character(0),
-    SolverStatus = integer(0),
-    MarginCapacity = numeric(0),
-    PositiveMinimumMargin = numeric(0),
-    ZeroMinimumMargin = numeric(0),
-    LeadingNegativeCoefficient = numeric(0),
-    AdditiveDirectionL1 = numeric(0),
-    CurrentLogLikelihood = numeric(0),
-    BoundaryLogLikelihood = numeric(0),
-    BoundaryImprovement = numeric(0),
-    AnalyticTailCertified = logical(0),
-    CompetitiveBoundary = logical(0),
-    Certified = logical(0),
-    EvaluationState = character(0),
-    ReasonCodes = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_gpcm_joint_empty_rate_table <- .mfrmr_empty_table(c(RateId = "character", PositiveLevels = "character", ZeroLevels = "character",
+    LeadingNegativeLevels = "character", DeeperNegativeLevels = "character", ExpandedRates = "character",
+    SolverStatus = "integer", MarginCapacity = "double", PositiveMinimumMargin = "double",
+    ZeroMinimumMargin = "double", LeadingNegativeCoefficient = "double", AdditiveDirectionL1 = "double",
+    CurrentLogLikelihood = "double", BoundaryLogLikelihood = "double", BoundaryImprovement = "double",
+    AnalyticTailCertified = "logical", CompetitiveBoundary = "logical", Certified = "logical",
+    EvaluationState = "character", ReasonCodes = "character"))
 
 mfrmr_jml_gpcm_joint_rate_candidate_count <- function(n_levels) {
   n_levels <- as.integer(n_levels)
@@ -143,7 +96,7 @@ mfrmr_jml_gpcm_joint_targets <- function(levels, slope_facet,
                                           reason = "no_joint_pair_path_certified") {
   levels <- as.character(levels)
   if (length(levels) == 0L) {
-    return(mfrmr_jml_gpcm_joint_empty_target_table())
+    return(mfrmr_jml_gpcm_joint_empty_target_table)
   }
   positive <- as.logical(positive %||% rep(FALSE, length(levels)))
   negative <- as.logical(negative %||% rep(FALSE, length(levels)))
@@ -495,10 +448,10 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
   method <- as.character(config$method %||% NA_character_)
   model <- as.character(config$model %||% NA_character_)
   slope_facet <- as.character(config$slope_facet %||% NA_character_)
-  empty_pairs <- mfrmr_jml_gpcm_joint_empty_pair_table()
-  empty_targets <- mfrmr_jml_gpcm_joint_empty_target_table()
-  empty_loadings <- mfrmr_jml_gpcm_slope_empty_loading_table()
-  empty_rates <- mfrmr_jml_gpcm_joint_empty_rate_table()
+  empty_pairs <- mfrmr_jml_gpcm_joint_empty_pair_table
+  empty_targets <- mfrmr_jml_gpcm_joint_empty_target_table
+  empty_loadings <- mfrmr_jml_gpcm_slope_empty_loading_table
+  empty_rates <- mfrmr_jml_gpcm_joint_empty_rate_table
 
   finish <- function(state, complete, scope_complete, detail,
                      target_status = empty_targets,

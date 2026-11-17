@@ -3,6 +3,8 @@
 \name{build_mfrm_sim_spec}
 \alias{build_mfrm_sim_spec}
 \alias{print.mfrm_sim_spec}
+\alias{build_peer_review_sim_spec}
+\alias{extract_mfrm_sim_spec}
 \title{Build an explicit simulation specification for MFRM design studies}
 \usage{
 build_mfrm_sim_spec(
@@ -42,13 +44,47 @@ build_mfrm_sim_spec(
 )
 
 \method{print}{mfrm_sim_spec}(x, ...)
+
+build_peer_review_sim_spec(
+  n_submission = 50,
+  n_criterion = 4,
+  reviewers_per_submission = 3,
+  anchor_fraction = 0.1,
+  anchor_submissions = NULL,
+  anchor_reviewers_per_submission = NULL,
+  avoid_self_review = TRUE,
+  assignment_mode = c("balanced", "random"),
+  seed = NULL,
+  score_levels = 4,
+  theta_sd = 1,
+  reviewer_sd = 0.45,
+  criterion_sd = 0.25,
+  noise_sd = 0,
+  step_span = 1.4,
+  model = c("RSM", "PCM", "GPCM"),
+  step_facet = "Criterion",
+  thresholds = NULL,
+  group_levels = NULL,
+  dif_effects = NULL,
+  interaction_effects = NULL
+)
+
+extract_mfrm_sim_spec(
+  fit,
+  assignment = c("auto", "crossed", "rotating", "resampled", "skeleton"),
+  latent_distribution = c("normal", "empirical"),
+  source_data = NULL,
+  person = NULL,
+  group = NULL,
+  population_assignment = c("matched", "independent")
+)
 }
 \arguments{
 \item{n_person}{Number of persons/respondents to generate.}
 
 \item{n_rater}{Number of rater facet levels to generate.}
 
-\item{n_criterion}{Number of criterion/item facet levels to generate.}
+\item{n_criterion}{Number of rubric criteria.}
 
 \item{raters_per_person}{Number of raters assigned to each person.}
 
@@ -62,29 +98,34 @@ public aliases implied by \code{facet_names} (for example \code{n_judge},
 accepted for the supported person/rater/criterion design. Do not specify the same
 variable through both \code{design} and the scalar count arguments.}
 
-\item{score_levels}{Number of ordered score categories.}
+\item{score_levels}{Generator settings passed to \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}. \code{reviewer_sd} maps
+to the standard MFRM rater-severity spread.}
 
-\item{theta_sd}{Standard deviation of simulated person measures.}
+\item{theta_sd}{Generator settings passed to \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}. \code{reviewer_sd} maps
+to the standard MFRM rater-severity spread.}
 
 \item{rater_sd}{Standard deviation of simulated rater severities.}
 
-\item{criterion_sd}{Standard deviation of simulated criterion difficulties.}
+\item{criterion_sd}{Generator settings passed to \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}. \code{reviewer_sd} maps
+to the standard MFRM rater-severity spread.}
 
-\item{noise_sd}{Optional observation-level noise added to the linear predictor.}
+\item{noise_sd}{Generator settings passed to \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}. \code{reviewer_sd} maps
+to the standard MFRM rater-severity spread.}
 
-\item{step_span}{Spread used to generate equally spaced thresholds when
-\code{thresholds = NULL}.}
+\item{step_span}{Generator settings passed to \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}. \code{reviewer_sd} maps
+to the standard MFRM rater-severity spread.}
 
-\item{thresholds}{Optional threshold specification. Use a numeric vector of
-common thresholds; a named list such as \code{list(C01 = c(-1, 0, 1))}; a
-numeric matrix with one row per \code{StepFacet} and one column per step; or a
-long data frame with columns \code{StepFacet}, \code{Step}/\code{StepIndex}, and
-\code{Estimate}.}
+\item{thresholds}{Measurement-model settings passed to
+\code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}. The first public facet is \code{Reviewer}; the second
+is \code{Criterion}.}
 
-\item{model}{Measurement model recorded in the simulation specification.}
+\item{model}{Measurement-model settings passed to
+\code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}. The first public facet is \code{Reviewer}; the second
+is \code{Criterion}.}
 
-\item{step_facet}{Step facet used when \code{model = "PCM"} and threshold values
-vary across levels.}
+\item{step_facet}{Measurement-model settings passed to
+\code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}. The first public facet is \code{Reviewer}; the second
+is \code{Criterion}.}
 
 \item{slope_facet}{Slope facet used when \code{model = "GPCM"}. The current
 \code{GPCM} branch requires \code{slope_facet == step_facet}.}
@@ -104,16 +145,15 @@ facet columns. Supply either an unnamed character vector of length 2
 in rater-like / criterion-like order, or a named vector with names
 \code{c("rater", "criterion")}.}
 
-\item{assignment}{Assignment design. \code{"crossed"} means every person sees
-every rater; \code{"rotating"} uses a balanced rotating subset;
-\code{"sparse_linked"} uses an incomplete rating design with optional linking
-persons; \code{"resampled"} reuses empirical person-level rater-assignment
-profiles; \code{"skeleton"} reuses an observed person-by-facet design skeleton.}
+\item{assignment}{Assignment design to record in the returned specification.
+Use \code{"resampled"} to reuse empirical person-level rater-assignment
+profiles from the fitted data, or \code{"skeleton"} to reuse the observed
+person-by-facet design skeleton from the fitted data.}
 
-\item{latent_distribution}{Latent-value generator. \code{"normal"} samples from
-centered normal distributions using the supplied standard deviations.
-\code{"empirical"} resamples centered support values from
-\code{empirical_person}/\code{empirical_rater}/\code{empirical_criterion}.}
+\item{latent_distribution}{Latent-value generator to record in the returned
+specification. \code{"normal"} stores spread summaries for parametric draws;
+\code{"empirical"} additionally activates centered empirical resampling from the
+fitted person/rater/criterion estimates.}
 
 \item{empirical_person}{Optional numeric support values used when
 \code{latent_distribution = "empirical"}.}
@@ -150,11 +190,14 @@ does not multiply the number of generated responses.}
 (\code{"balanced"} or \code{"random"}), and
 \code{min_common_persons_per_rater_pair} (diagnostic target, default \code{1}).}
 
-\item{group_levels}{Optional character vector of group labels.}
+\item{group_levels}{Optional signal settings
+passed to \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}.}
 
-\item{dif_effects}{Optional data frame of true group-linked DIF effects.}
+\item{dif_effects}{Optional signal settings
+passed to \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}.}
 
-\item{interaction_effects}{Optional data frame of true interaction effects.}
+\item{interaction_effects}{Optional signal settings
+passed to \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}.}
 
 \item{population_formula}{Optional one-sided formula describing a
 person-level latent-regression population model used when generating
@@ -194,112 +237,170 @@ Population-template \code{Group}, when present, supplies the response group;
 \item{x}{An \code{mfrm_sim_spec} object.}
 
 \item{...}{Reserved for generic compatibility.}
+
+\item{n_submission}{Number of submissions/authors to generate.}
+
+\item{reviewers_per_submission}{Number of peer reviewers assigned to each
+ordinary submission.}
+
+\item{anchor_fraction}{Fraction of submissions treated as common-link
+anchor submissions when \code{anchor_submissions} is not supplied.}
+
+\item{anchor_submissions}{Optional number of common-link anchor
+submissions. Anchor submissions receive
+\code{anchor_reviewers_per_submission} reviewers.}
+
+\item{anchor_reviewers_per_submission}{Number of reviewers assigned to each
+anchor submission. Defaults to all eligible peers when anchors are used
+and self-review is disallowed; recorded as 0 when no anchor submissions
+are requested.}
+
+\item{avoid_self_review}{Logical; if \code{TRUE}, a reviewer is never assigned to
+review their own submission.}
+
+\item{assignment_mode}{Assignment algorithm. \code{"balanced"} assigns reviewers
+with the lowest current load using deterministic rotating tie-breaks.
+\code{"random"} samples eligible reviewers without replacement.}
+
+\item{seed}{Optional seed used only for random peer-review assignment when
+\code{assignment_mode = "random"}.}
+
+\item{reviewer_sd}{Generator settings passed to \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}. \code{reviewer_sd} maps
+to the standard MFRM rater-severity spread.}
+
+\item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
+
+\item{source_data}{Optional original source data used to recover additional
+non-calibration columns, currently person-level \code{group} labels, when
+building a fit-derived observed response skeleton.}
+
+\item{person}{Optional person column name in \code{source_data}. Defaults to the
+person column recorded in \code{fit}.}
+
+\item{group}{Optional group column name in \code{source_data} to merge into the
+returned \code{design_skeleton} as person-level metadata.}
 }
 \value{
 An object of class \code{mfrm_sim_spec}.
 
 \code{x}, invisibly.
+
+An object of class \code{mfrm_sim_spec} with \code{peer_review} metadata and
+a fixed peer-review design skeleton.
+
+An object of class \code{mfrm_sim_spec}.
 }
 \description{
-Shows the model, design size, assignment, and latent-distribution settings
-needed to understand the specification without printing its complete
-machine-readable planning metadata.
+Define the response model, latent distributions and rating
+assignment for \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}. This creates a reusable specification;
+it does not draw responses or fit a model.
 }
 \details{
-\code{build_mfrm_sim_spec()} creates an explicit, portable simulation
-specification that can be passed to \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}. The goal is to
-make the data-generating mechanism inspectable and reusable rather than
-relying only on ad hoc scalar arguments.
+Records design counts, normal or empirical latent spreads, \code{threshold_table},
+optional \code{GPCM} \code{slope_table} (\code{slope_facet == step_facet}, unit geometric
+mean; Muraki, 1992, \doi{10.1177/014662169201600206}; validation labels in
+\code{slope_regime}), assignment settings (\code{"crossed"}, \code{"rotating"},
+\code{"sparse_linked"}, \code{"resampled"}, \code{"skeleton"}), optional DIF/interaction
+\code{signals}, role-based \code{planning_scope} / \code{planning_constraints} /
+\code{planning_schema} (\code{facet_names} renames the rater-like and criterion-like
+roles without enabling arbitrary-facet planning), and optional person
+latent-regression generator templates (\eqn{\theta_n = x_n^\top \beta +
+\varepsilon_n}, \eqn{\varepsilon_n \sim N(0, \sigma^2)}).
 
-The resulting object records:
+The \code{print()} method shows the model, design size, assignment
+and latent-distribution settings without printing all stored metadata.
+
+\code{build_peer_review_sim_spec()} creates a fixed person-by-reviewer-by-rubric
+skeleton for peer-assessment or peer-review studies. Submissions and peer
+reviewers share the same ID universe (\code{P001}, \code{P002}, ...), so
+self-review can be structurally excluded and checked in the generated data.
+The specification uses the existing \code{assignment = "skeleton"} generator and
+records peer-review metadata; it does not introduce a new measurement
+model. MFRM still estimates person/submission measures, reviewer severity,
+and criterion difficulty, while design-network review can inspect whether
+the peer-review graph is sufficiently linked.
+
+The common-link anchor controls follow the same logic used in sparse
+rater-mediated designs: when most submissions receive only a few peer
+reviews, assigning all or many reviewers to a small anchor set can strengthen
+links among reviewers. The helper labels these rows as design diagnostics,
+not universal adequacy thresholds for fit, separation, or recovery.
+
+\code{extract_mfrm_sim_spec()} uses a fitted model as a practical starting point
+for later simulation studies. It extracts:
 \itemize{
-\item design counts (\code{n_person}, \code{n_rater}, \code{n_criterion}, \code{raters_per_person})
-\item latent spread assumptions (\code{theta_sd}, \code{rater_sd}, \code{criterion_sd})
-\item optional empirical latent support values for semi-parametric simulation
-\item threshold structure (\code{threshold_table})
-\item optional discrimination structure for \code{GPCM} (\code{slope_table}) and
-its identified log-slope spread label (\code{slope_regime})
-\item assignment design (\code{assignment})
-\item optional sparse linked-design controls (\code{sparse_controls}) when
-\code{assignment = "sparse_linked"}
-\item optional empirical assignment profiles (\code{assignment_profiles}) with
-optional person-level \code{Group} labels
-\item optional observed response skeleton (\code{design_skeleton})
-with optional person-level \code{Group} labels and observation-level \code{Weight}
-values
-\item optional person-level latent-regression population metadata including
-\code{population_formula}, \code{population_coefficients}, \code{population_sigma2}, and
-a reusable template of person-level covariates, including model-matrix
-xlevel/contrast provenance for categorical covariates
-\item \code{planning_scope}, an explicit record that the current planning/forecasting
-helpers target the role-based person x rater-like x criterion-like
-design contract rather than a fully arbitrary-facet planner
-\item \code{planning_constraints}, an explicit record of which design variables can
-currently be changed from that specification without rebuilding it
-\item \code{planning_schema}, a combined structural contract containing the role
-descriptor, supported scope, mutability map, facet manifest, and the
-normalized named-facet design representation. Its \verb{structural_design_*}
-fields describe deterministic balance and connectivity reviews; they do
-not imply support for arbitrary-facet simulation.
-\item the \code{design$facets} parser normalizes named facet counts through the same
-design representation used by the planning helpers
-\item optional signal tables for DIF and interaction bias
+\item design counts from the fitted data
+\item empirical spread of person and facet estimates
+\item optional empirical support values for semi-parametric draws
+\item fitted threshold values
+\item either a simplified assignment summary (\code{"crossed"} / \code{"rotating"}),
+empirical resampled assignment profiles (\code{"resampled"}), or an observed
+response skeleton (\code{"skeleton"}, optionally carrying \code{Group}/\code{Weight})
+\item when the fit used the latent-regression branch, the fitted
+\code{population_formula}, coefficient vector, residual variance, and the
+stored person-level covariate table, including model-matrix xlevel and
+contrast provenance for categorical covariates
 }
 
-The current generator targets the package's standard person x rater x
-criterion workflow, but the public output names for those two facet roles
-can now be customized with \code{facet_names}. This naming layer improves public
-ergonomics; it does not provide a fully arbitrary-facet
-simulator. Internally, helper objects keep canonical role mappings so that
-planning functions can treat the first non-person facet as rater-like and
-the second as criterion-like. When threshold values are provided by
-\code{StepFacet}, the supported step facets are the generated levels of the
-chosen public rater-like or criterion-like column. For convenience,
-step-facet-specific thresholds can be supplied as a named list or as a
-numeric matrix whose row names are \code{StepFacet} labels.
-When \code{model = "GPCM"}, the same public facet naming rules apply to the
-slope table; the current bounded branch keeps \code{slope_facet} equal to
-\code{step_facet}.
-The \code{slope_regime} field summarizes the centered log-slope spread so
-recovery simulations can be read against the intended generator stress
-level. Its labels (\code{unit_slopes}, \code{near_flat}, \code{moderate}, and
-\code{high_dispersion}) are package validation labels; they are not model-fit
-decisions and should not be interpreted as literature-derived adequacy
-thresholds. The GPCM data-generating form follows Muraki (1992,
-doi:10.1177/014662169201600206), while information-function interpretation
-follows Muraki (1993, doi:10.1177/014662169301700403). The explicit
-simulation-specification metadata is intended to support ADEMP-style
-simulation reporting as described by Morris, White, and Crowther (2019,
-doi:10.1002/sim.8086).
+This is intended as a \strong{fit-derived parametric starting point}, not as a
+claim that the fitted object perfectly recovers the true data-generating
+mechanism. Users should review and, if necessary, edit the returned
+specification before using it for design planning.
+Observed skeleton rows retain repeated rating occasions. Remove accidental
+duplicate source rows before fitting; the generator cannot distinguish them
+from intentional repeated ratings. Covariates and assignment templates are
+linked by \code{TemplatePerson} under \code{population_assignment = "matched"}.
 
-The \code{assignment = "sparse_linked"} branch follows sparse
-rater-mediated assessment work in treating incomplete rater assignment as
-planned missingness rather than incidental nonresponse. Its \code{link_persons}
-and \code{link_raters_per_person} controls emulate a common linking set so users
-can inspect rater-pair common-person counts before using the generated data
-in recovery or design studies. This is a design generator and diagnostic
-metadata layer; it does not impose a universal minimum-linking cutoff.
-Sparse-design motivation follows Wind, Jones, and Grajeda (2023,
-doi:10.1177/01466216231182148), Wind and Jones (2018,
-doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
-(2023).
+Without an active population regression, \code{theta_sd} is the empirical SD of
+the reported Person estimates, including any shrinkage in those estimates.
+It is not an estimate of the latent population SD corrected for measurement
+error. The empirical option resamples centered estimates independently of
+their original IDs; it is not a draw from the source posterior. With an
+active population model, its coefficients, residual variance and fitted
+transformation basis replace this Person-spread approximation. Neither
+route propagates uncertainty in the source fit's generating parameters.
 
-If \code{population_formula} is supplied, the simulation specification carries a
-person-level latent-regression generator. This affects only the
-person distribution. The current implementation keeps the non-person facets
-in the existing many-facet Rasch generator and resamples rows from
-\code{population_covariates} to the requested design size before computing
-\eqn{\theta_n = x_n^\top \beta + \varepsilon_n} with
-\eqn{\varepsilon_n \sim N(0, \sigma^2)}.
+\code{GPCM} fits with the same slope and step owner are supported here for direct data generation
+and parameter-recovery checks, provided that the returned simulation
+specification stores both a threshold table and a parallel slope table.
+The same fit-derived specification can feed caveated role-based design
+evaluation, population forecasting, and fit-based report/export bundles.
+Diagnostic and signal-detection design screening is available with explicit
+caveats. This simulation-specification helper does not perform full FACETS
+score-side review, Bayesian posterior predictive checks or MCMC estimation.
+For supported Bayesian specifications, see \code{\link[=export_mfrm_model]{export_mfrm_model()}}; its
+scope is separate from this generator.
+
+If you want to carry person-level group labels into a fit-derived observed
+response skeleton, provide the original \code{source_data} together with
+\code{person} and \code{group}. Group labels are treated as person-level metadata and
+are checked for one-label-per-person consistency before being merged.
 }
+\section{References}{
+
+\itemize{
+\item Farrokhi, F., Esfandiari, R., & Schaefer, E. (2012). A many-facet Rasch
+measurement of differential rater severity/leniency in three types of
+assessment. \emph{JALT Journal}, 34(1), 79-102.
+doi:10.37546/JALTJJ34.1-3.
+\item Uto, M., & Ueno, M. (2020). A generalized many-facet Rasch model and its
+Bayesian estimation using Hamiltonian Monte Carlo. \emph{Behaviormetrika},
+47, 469-496. doi:10.1007/s41237-020-00115-7.
+\item DeMars, C. E., Shapovalov, Y. A., & Hathcoat, J. D. (2023).
+\emph{Many-Facet Rasch Designs: How Should Raters be Assigned to Examinees?}
+NCME presentation.
+}
+}
+
 \section{Interpreting output}{
 
-This object does not contain simulated data. It is a data-generating
-specification that tells \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} how to generate them.
+The returned object is a simulation specification, not a prediction about one
+future sample. It captures one convenient approximation to the observed
+design and estimated spread in the fitted run.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("build_mfrm_sim_spec", run.dontrun = TRUE)
 \dontrun{
 spec <- build_mfrm_sim_spec(
@@ -310,7 +411,30 @@ spec$model
 spec$assignment
 nrow(spec$threshold_table)
 }
+peer_spec <- build_peer_review_sim_spec(
+  n_submission = 12,
+  n_criterion = 3,
+  reviewers_per_submission = 2,
+  anchor_submissions = 2
+)
+peer_spec$peer_review$overview
+toy <- simulate_mfrm_data(
+  n_person = 8,
+  n_rater = 3,
+  n_criterion = 2,
+  seed = 123
+)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+spec <- extract_mfrm_sim_spec(fit, latent_distribution = "empirical")
+spec$assignment
+spec$model
+head(spec$threshold_table)
 }
 \seealso{
 \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}
+
+\code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}},
+\code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}
+
+\code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}
 }

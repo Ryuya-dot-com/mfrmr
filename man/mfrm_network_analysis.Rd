@@ -65,24 +65,24 @@ and cutpoint flags
 Analyze the MFRM design network
 }
 \details{
-\code{mfrm_network_analysis()} treats the person/facet-level observation design as
-an undirected weighted graph. Nodes are person or facet levels; edges connect
-levels that co-occur in at least one observed rating; edge weights are
-co-observation counts. The resulting network metrics are design diagnostics,
-not psychometric measures of person ability or rater quality. This is the
-package's assignment/co-observation network: unlike the score-relation
-networks returned by \code{\link[=rater_network_analysis]{rater_network_analysis()}} and
-\code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}}, it exposes disconnected co-observation
-components. Graph connectedness alone does not establish model identification.
+Nodes are Person or facet levels; undirected edges join levels appearing
+in the same rating, weighted by co-observation counts. This assignment
+graph reveals disconnected components, not ability or rater quality.
+Connectedness alone does not establish model identification.
+For score relationships instead, use \code{\link[=rater_network_analysis]{rater_network_analysis()}} or
+\code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}}.
+
 \code{SourceSubsets}, \code{RetainedSubsets} and \code{ScopeComplete} record whether subset
 filters retained the full observed design. Connectedness of selected subsets
 cannot be generalized to omitted subsets. Recreate older design reviews
 from the existing fit and matching diagnostics to record this coverage.
 \code{plot(net, type = "centrality")}, \code{plot(net, type = "facet_summary")}, and
 \code{plot(net, type = "network")} provide immediate visual checks; use
-\code{draw = FALSE} to extract reusable plot data.
+\code{draw = FALSE} to return a ggplot without drawing, then \code{\link[=plot_data]{plot_data()}}
+to extract its reusable data.
+}
+\section{Reading the graph}{
 
-The most useful review columns are:
 \itemize{
 \item \code{Components}: more than one component means separate co-observation
 regions, including known levels without observed links.
@@ -91,11 +91,8 @@ regions, including known levels without observed links.
 \item \code{Betweenness}: a routing-dependence indicator; high values identify levels
 that carry many shortest paths through the design graph.
 }
-
-In incomplete rater-mediated designs, these graph summaries help identify
-fragile linking structures before interpreting facet measures or planning
-additional data collection.
 }
+
 \section{References}{
 
 \itemize{
@@ -109,20 +106,16 @@ Muller, K. (2026). \emph{igraph: Network Analysis and Visualization}.
 
 \section{Before fitting}{
 
-Supply \code{data}, \code{person}, \code{facets} and \code{score} instead of \code{fit}. Known levels
-from incomplete/unscored rows remain as nodes, including isolates. A planned
-assignment roster can be examined with \code{basis = "planned"}; absent assignments
-cannot be reconstructed from an observed-only file. \code{row_usage} records each
-input row's inclusion and first exclusion reason. With a fit, only its retained
-rows are available here; review original missing assignments before fitting.
-No prefit result supplies an identification audit or model-readiness decision.
-\code{settings$is_disjoint} describes the source graph, even when subset filters
-omit components; compare source/retained subset counts. Filters do not establish
-linking. See \href{https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-networks-and-reporting.html}{online networks and reporting guide} for a panel example.
+Supply \code{data}, \code{person}, \code{facets} and \code{score} for a prefit graph, or use
+\code{basis = "planned"} for an assignment roster. Observed-only data cannot reveal
+absent assignments; a fit supplies only retained rows. Graph connectivity is
+not full model identification, and filtering does not establish linking.
+See "Before fitting" in \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} for unscored/isolate
+rows, the inclusion audit and source versus retained component counts.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("mfrm_network_analysis", run.dontrun = TRUE)
 \dontrun{
 ratings <- load_mfrmr_data("example_operational")

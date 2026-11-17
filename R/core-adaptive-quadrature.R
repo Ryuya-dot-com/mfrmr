@@ -75,17 +75,20 @@ mfrmr_adaptive_quadrature_basis <- function(idx, config, params, quad, base_eta,
       init_nodes = init_nodes,
       init_log_weights = init_log_weights
     )
-    if (res$error_code != 0L) {
+    if (res$error_code != 0L && res$error_code != 5L) {
       if (res$error_code == 3L) {
         stop(res$error_message, call. = FALSE)
       }
       stop(new_adaptive_quadrature_numeric_error(res$error_message))
     }
-    dimnames(res$nodes) <- dimnames(basis$nodes)
-    dimnames(res$log_weights) <- dimnames(basis$log_weights)
-    basis$nodes <- res$nodes
-    basis$log_weights <- res$log_weights
-    return(basis)
+    if (res$error_code == 0L) {
+      dimnames(res$nodes) <- dimnames(basis$nodes)
+      dimnames(res$log_weights) <- dimnames(basis$log_weights)
+      basis$nodes <- res$nodes
+      basis$log_weights <- res$log_weights
+      return(basis)
+    }
+    # An unbracketed or unfinished native mode search uses the original R path.
   }
   for (i in seq_along(groups)) {
     person <- persons[i]
@@ -292,16 +295,6 @@ mfrmr_adaptive_quadrature_review <- function(
   out
 }
 
-mfrmr_adaptive_quadrature_note <- function() {
-  paste(
-    "The quadrature_review table holds calibration parameters and the prior fixed",
-    "and compares a fixed-prior grid with mode/curvature-adapted grids.",
-    "Inspect both fixed/adaptive differences and changes between adaptive orders.",
-    "Computed rows are numerical diagnostics, not certified accuracy or revised scores;",
-    "unavailable rows retain the reason. Fit and score readiness are unchanged."
-  )
-}
-
 mfrmr_adaptive_quadrature_overview <- function(review) {
   if (is.null(review) || nrow(review) == 0L) return(data.frame())
   groups <- split(review, interaction(review$FixedNodes, review$AdaptiveNodes, drop = TRUE))
@@ -495,25 +488,28 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points,
         log_sigma2_col0 = log_sigma2_col0,
         include_person_summaries = isTRUE(include_person_summaries)
       )
-      if (res$error_code != 0L) {
+      if (res$error_code != 0L && res$error_code != 5L) {
         if (res$error_code == 3L) {
           stop(res$error_message, call. = FALSE)
         }
         stop(new_adaptive_quadrature_numeric_error(res$error_message))
       }
-      if (!is.finite(res$value) || any(!is.finite(res$gradient))) {
-        stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive MML objective or gradient."))
-      }
-      out <- list(value = res$value, gradient = res$gradient)
-      if (include_person_summaries) {
-        person_summaries <- res$pat_summaries[summary_pat_map, , drop = FALSE]
-        colnames(person_summaries) <- c("LogMarginal", "EAP", "PosteriorSD")
-        if (any(!is.finite(person_summaries))) {
-          stop(new_adaptive_quadrature_numeric_error("Non-finite posterior moments."))
+      if (res$error_code == 0L) {
+        if (!is.finite(res$value) || any(!is.finite(res$gradient))) {
+          stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive MML objective or gradient."))
         }
-        out$per_person <- data.frame(PersonIndex = patterns$person_ids, person_summaries)
+        out <- list(value = res$value, gradient = res$gradient)
+        if (include_person_summaries) {
+          person_summaries <- res$pat_summaries[summary_pat_map, , drop = FALSE]
+          colnames(person_summaries) <- c("LogMarginal", "EAP", "PosteriorSD")
+          if (any(!is.finite(person_summaries))) {
+            stop(new_adaptive_quadrature_numeric_error("Non-finite posterior moments."))
+          }
+          out$per_person <- data.frame(PersonIndex = patterns$person_ids, person_summaries)
+        }
+        return(out)
       }
-      return(out)
+      # Keep the independent R calculation when native mode search is unfinished.
     }
 
     value <- 0

@@ -225,3 +225,59 @@ test_that("regression priors and saved decision exports retain exact cuts withou
     expect_error(apa_table(broken,which="decisions"),"Saved decision probabilities")
   }
 })
+
+test_that("native ordinary scoring preserves continuous sparse and extreme posteriors", {
+  x <- decision_fixture(); input <- mfrm_ordinary_response_input(x$rsm)
+  ids <- unique(input$person)[1:3]
+  # One response, all minimum, and all maximum; retain the assigned roster.
+  keep <- which(input$person != ids[1] | seq_along(input$person) == match(ids[1],input$person))
+  input$data <- input$data[keep,,drop=FALSE]
+  for (key in c("person","offset","y")) input[[key]] <- input[[key]][keep]
+  input$y[input$person==ids[2]] <- 0L
+  input$y[input$person==ids[3]] <- length(input$steps)
+  input$mean <- .6
+  local_mocked_bindings(mfrm_ordinary_response_input=function(...) input,.package="mfrmr")
+  withr::local_options(mfrmr.use_cpp11_backend=TRUE)
+  cuts <- c(Low=-5,Middle=.25,High=5,Narrow=5.000001)
+  for (sd in c(.15,1,2.8)) {
+    input$sd <- sd
+    native <- score_mfrm_persons(x$rsm,persons=ids,level=.99,cut_scores=cuts)
+    reference <- withr::with_options(list(mfrmr.use_cpp11_backend=FALSE),
+      score_mfrm_persons(x$rsm,persons=ids,level=.99,cut_scores=cuts))
+    expect_identical(native$table$Status,rep("available_conditional",3))
+    expect_identical(native$table[c("Person","Observed","Status","Reason")],
+      reference$table[c("Person","Observed","Status","Reason")])
+    expect_equal(native$table,reference$table,tolerance=1e-10)
+    expect_equal(native$decisions,reference$decisions,tolerance=1e-10)
+  }
+})
+
+test_that("continuous bounds retain their mass when both quantiles lie on one side of the mode", {
+  for (model in c("PCM","GPCM")) for (y in c(0L,3L)) {
+    idx <- list(person=rep(1L,4),score_k=rep(y,4),weight=c(0,.5,1,2),
+      step_idx=c(1L,2L,1L,2L),slope_idx=c(1L,2L,1L,2L))
+    cfg <- list(model=model,n_cat=4L,n_person=1L)
+    params <- list(steps_mat=rbind(c(-1.2,.3,.9),c(-.4,-.1,.5)),slopes=c(.6,2.5))
+    base <- c(-.8,.6,.2,-.4)
+    cumulative <- t(apply(params$steps_mat[idx$step_idx,],1,function(x) c(0,cumsum(x))))
+    slope <- if(model=="GPCM") params$slopes[idx$slope_idx] else rep(1,4)
+    logd <- function(theta) vapply(theta,function(t) {
+      logits <- slope*(outer(t+base,0:3)-cumulative)
+      high <- apply(logits,1,max)
+      sum(idx$weight*(logits[cbind(1:4,idx$score_k+1L)]-high-log(rowSums(exp(logits-high)))))+
+        dnorm(t,log=TRUE)
+    },0)
+    mode <- optimize(logd,c(-12,12),maximum=TRUE)$maximum
+    peak <- logd(mode)
+    density <- function(t) exp(logd(t)-peak)
+    integral <- function(a,b) integrate(density,a,b,rel.tol=1e-11,abs.tol=0)$value
+    mass <- integral(-12,12)
+    for (level in c(.01,.95)) {
+      actual <- mfrmr_person_posterior_intervals(idx,cfg,params,base,"P",interval_level=level)
+      expected <- c((1-level)/2,(1+level)/2)
+      cdf <- vapply(actual,function(t) integral(-12,t)/mass,0)
+      expect_equal(unname(cdf),expected,tolerance=1e-8)
+      if(level==.01) expect_true(all(actual<mode) || all(actual>mode))
+    }
+  }
+})

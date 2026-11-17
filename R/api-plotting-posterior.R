@@ -7,7 +7,10 @@
 #'   `"ability"`, `"step_offset"`, `"slope"`, `"log_slope"`, `"population_mean"`,
 #'   `"population_sd"`, or `"contrast"`. Population quantities require an
 #'   estimated-population export; `"contrast"` requires attached or supplied
-#'   `contrasts`. Quantities with different units are not mixed.
+#'   `contrasts`. Contrast plots require one parameter quantity and one scale
+#'   per axis. For a mixed result, supply a matching subset of the original
+#'   `contrasts` specification, or select one `facet` when that isolates a
+#'   common scale.
 #' @param facet Optional facet/owner names to retain; `NULL` retains all for
 #'   the selected quantity. Step rows use `facet = "Step owner"`, or the named
 #'   step facet for an extended two-family bundle, and retain their owner
@@ -24,7 +27,11 @@
 #'   quality.
 #' @param preset A package plot preset, such as `"standard"` or `"monochrome"`.
 #' @param show_legend Logical; show interval/fixed-value symbols.
-#' @param title,subtitle,caption Optional returned text. Defaults omit it.
+#' @param title Optional returned text. Defaults omit it.
+#'   Text is not drawn by default; retrieve it with [plot_data()].
+#' @param subtitle Optional returned text. Defaults omit it.
+#'   Text is not drawn by default; retrieve it with [plot_data()].
+#' @param caption Optional returned text. Defaults omit it.
 #'   Text is not drawn by default; retrieve it with [plot_data()].
 #' @return For `plot()`: Invisibly, a `ggplot` object; [plot_data()] extracts the
 #'   exact long `table` (and `draws` when `view = "draws"`), source settings,
@@ -106,6 +113,8 @@ plot.mfrm_posterior_summary <- function(x,
       tab <- tab[tab$facet %in% facet, , drop = FALSE]
     }
     if (!nrow(tab)) stop("No saved contrasts match this plot selection.", call. = FALSE)
+    if (length(unique(tab$quantity)) != 1L || length(unique(tab$scale)) != 1L)
+      stop("Contrast plots require one parameter quantity and one scale. Supply a matching subset of the original contrasts specification, or select one facet; mixed tables remain available through summary() and mfrm_report().", call. = FALSE)
     if (ref_missing) {
       scales_u <- unique(tab$scale)
       if (length(scales_u) == 1L) {
@@ -121,6 +130,10 @@ plot.mfrm_posterior_summary <- function(x,
     metric_txt <- if (!is.null(x$population)) "native relative-slope metric" else "fixed N(0,1) ability units"
     xlab <- if (all(tab$scale == "ratio")) {
       "Posterior slope ratio"
+    } else if (identical(unique(tab$quantity), "slope")) {
+      "Posterior slope contrast"
+    } else if (identical(unique(tab$quantity), "log_slope")) {
+      "Posterior log-slope contrast"
     } else {
       paste0("Posterior contrast (", metric_txt, ")")
     }

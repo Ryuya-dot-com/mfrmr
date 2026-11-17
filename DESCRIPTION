@@ -1,8 +1,9 @@
 Package: mfrmr
 Type: Package
 Title: Estimation and Diagnostics for Many-Facet Measurement Models
-Version: 0.2.4.9000
-Config/mfrmr/release-status: development
+Version: 0.3.0
+Date: 2026-11-17
+Config/mfrmr/release-status: candidate
 Config/mfrmr/public-version: 0.2.4
 Authors@R:
     person(given = "Ryuya", family = "Komuro", role = c("aut", "cre", "cph"),
@@ -74,7 +75,6 @@ Suggests:
     callr,
     pkgload,
     withr,
-    covr,
     knitr,
     rmarkdown,
     svglite,

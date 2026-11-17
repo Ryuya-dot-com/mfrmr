@@ -300,7 +300,9 @@ mfrmr_calibration_score_overview <- function(x) {
 #' requires an explicit scoring call; conversion does not recompute intervals.
 #' Notes remain in the returned object and are not automatically drawn.
 #'
-#' @param object,x An `mfrm_calibration_score` returned by
+#' @param object An `mfrm_calibration_score` returned by
+#'   [score_mfrm_calibration()].
+#' @param x An `mfrm_calibration_score` returned by
 #'   [score_mfrm_calibration()].
 #' @param digits Number of decimal places in the summary.
 #' @param type One of `"interval"`, `"precision"`, or `"edge_mass"`.
@@ -334,7 +336,8 @@ mfrmr_calibration_score_overview <- function(x) {
 #'   [plot_data()], [plot_data_components()], [as_ggplot()], [apa_table()],
 #'   [build_summary_table_bundle()], [export_summary_appendix()],
 #'   [predict_mfrm_units()] for conditional-decision interpretation
-#' @name mfrm_calibration_score_methods
+#' @aliases mfrm_calibration_score_methods
+#' @rdname mfrm_calibration_workflow
 #'
 #' @examples
 #' # Long-running workflow; run explicitly when needed.
@@ -366,9 +369,10 @@ mfrmr_calibration_score_overview <- function(x) {
 #' plot(scores, type = "interval", draw = FALSE)
 #' plot(scores, type = "edge_mass", draw = FALSE)
 #' }
+#' @name mfrm_calibration_score_methods
 NULL
 
-#' @rdname mfrm_calibration_score_methods
+#' @rdname mfrm_calibration_workflow
 #' @method summary mfrm_calibration_score
 #' @export
 summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
@@ -471,7 +475,7 @@ summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
   out
 }
 
-#' @rdname mfrm_calibration_score_methods
+#' @rdname mfrm_calibration_workflow
 #' @method print mfrm_calibration_score
 #' @export
 print.mfrm_calibration_score <- function(x, ...) {
@@ -508,7 +512,7 @@ print.mfrm_calibration_score <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname mfrm_calibration_score_methods
+#' @rdname mfrm_calibration_workflow
 #' @method print summary.mfrm_calibration_score
 #' @export
 print.summary.mfrm_calibration_score <- function(x, ...) {
@@ -671,7 +675,7 @@ mfrmr_calibration_score_plot_table <- function(x, top_n, sort_by) {
   list(full = estimates, selected = selected_table)
 }
 
-#' @rdname mfrm_calibration_score_methods
+#' @rdname mfrm_calibration_workflow
 #' @method plot mfrm_calibration_score
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument

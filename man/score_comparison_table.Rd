@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-score-comparison.R
 \name{score_comparison_table}
 \alias{score_comparison_table}
+\alias{automated_scoring_table}
 \title{Compare aligned scores against reference ratings}
 \usage{
 score_comparison_table(
@@ -122,6 +123,19 @@ oriented so positive values imply lower expected ratings; its zero is the
 fitted model reference. Severity and Infit/Outfit do not measure criterion
 accuracy and receive no automatic quality threshold.
 }
+\section{Migration from automated_scoring_table}{
+
+The earlier callable interface is removed in 0.3.0. Use this function with
+\code{screen = "williamson2012"} to retain its default numerical screen.
+Rename \code{automated}/\code{human}/\code{human_reference} to \code{scores}/\code{reference}/\code{reference2},
+\code{automated_categories} to \code{score_categories}, and \code{automated_rater} to \code{rater}.
+Rename \code{smd = "human"} to \code{smd = "reference"}; the selected SD denominator
+is unchanged. Threshold overrides keep their names and meanings. The generic
+default remains \code{screen = "none"}. \link{mfrmr_api_migration_030} lists the output
+column and count-table key replacements. Earlier saved lists retain their
+original fields and can be reopened directly without recomputing anything.
+}
+
 \examples{
 comparison <- score_comparison_table(
   scores = c(0, 1, 2, 2, 3, 3), reference = c(0, 1, 1, 2, 3, 3),
@@ -144,6 +158,5 @@ and Practice, 31}(1), 2-13. \doi{10.1111/j.1745-3992.2011.00223.x}
 Especially pp. 7-10 and p. 12, notes 1 and 4.
 }
 \seealso{
-\code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=mfrm_report]{mfrm_report()}},
-\code{\link[=automated_scoring_table]{automated_scoring_table()}} for the earlier automated-scoring interface.
+\code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=mfrm_report]{mfrm_report()}}
 }

@@ -7,7 +7,11 @@
 #' local variance. For a rater effect shared across people instead, see
 #' [fit_mfrm_random_rater()].
 #' @param data Long-format ratings; each row is one assigned rating.
-#' @param person,score,testlet Column names. `testlet` identifies a group within
+#' @param person Column names. `testlet` identifies a group within
+#'   a Person and may also occur in `facets`, for example a fixed Rater effect.
+#' @param score Column names. `testlet` identifies a group within
+#'   a Person and may also occur in `facets`, for example a fixed Rater effect.
+#' @param testlet Column names. `testlet` identifies a group within
 #'   a Person and may also occur in `facets`, for example a fixed Rater effect.
 #' @param facets Fixed-facet column names; default none. A column used as
 #'   `testlet` is not automatically a fixed facet. For example,
@@ -29,122 +33,23 @@
 #'   16. A fit reaching this bound is not numerically ready.
 #' @param missing `"fail"` (default) refuses missing assigned scores;
 #'   `"omit"` analyzes observed rows and records the omissions.
-#' @details The adjacent-category logit is
-#'   \deqn{\log\{P(Y_{pbi}=k)/P(Y_{pbi}=k-1)\}
-#'      = \theta_p + \gamma_{pb} - x_{pbi}'\beta - \delta_k.}
-#'   Abilities are independent N(0,\eqn{\sigma_p^2}). Local effects are independent N(0,v),
-#'   independent of abilities and assignment. A label reused by another Person
-#'   represents a new local effect, not a shared random rater. Every row has one
-#'   non-overlapping membership. Fixed-facet effects sum to zero; free steps
-#'   determine overall location. There are no calibration priors.
+#' @details
+#' Fits the Person-specific testlet RSM
+#' \deqn{\log\{P(Y_{pbi}=k)/P(Y_{pbi}=k-1)\} = \theta_p + \gamma_{pb} - x_{pbi}'\beta - \delta_k,}
+#' with independent \eqn{\theta_p \sim N(0, \sigma_p^2)} and Person-block local
+#' effects \eqn{\gamma_{pb} \sim N(0, v)}, sum-to-zero fixed facets \eqn{\beta},
+#' and free steps \eqn{\delta_k} via nested Gaussian quadrature (unit weights,
+#' non-overlapping blocks, at least two multi-testlet Persons and two
+#' repeated-rating testlets). Zero-variance boundaries (one-sided variance
+#' scores), `[-20, 20]` parameter bounds, quadrature stability, gradient, and
+#' information are recorded in `checks`.
 #'
-#'   Frequentist MML uses nested one-dimensional Gaussian quadrature: integrate
-#'   each local effect conditional on ability, multiply its block likelihoods,
-#'   then integrate ability. Unequal block sizes and incomplete assignments are
-#'   supported. At least two Persons must have multiple observed testlets and
-#'   at least two Persons must have a testlet with repeated ratings. These
-#'   initial design requirements do not prove estimability. Unit weights, RSM,
-#'   additive fixed facets and one common variance are the supported scope;
-#'   overlapping memberships, PCM, correlated effects, random rater effects
-#'   shared across Persons, covariate-dependent ability means and nonnormal
-#'   ability populations are not included. Estimating one ability variance
-#'   does not establish homogeneous populations across assignment groups.
-#'   After integrating both random effects, different Persons are independent
-#'   under the model; ratings within a Person are not. Regular likelihood
-#'   inference requires an identified interior model and growing information
-#'   across independent Persons. The full calibration information includes
-#'   every estimated variance; treating an estimated variance as known would
-#'   omit nuisance-parameter uncertainty. A positive numerical Hessian alone
-#'   does not prove identification, and fixed-order quadrature agreement does
-#'   not establish an asymptotic approximation rate.
-#'
-#'   Zero is evaluated explicitly for both estimated variances using their
-#'   one-sided variance scores, including the joint-zero submodel. All
-#'   optimization starts are retained. Fixed coordinates are searched within
-#'   `[-20,20]`; reaching a bound withholds readiness. Integration differences,
-#'   the projected gradient and information are separate checks.
-#'   A converged start is preferred when its objective differs from the best
-#'   failed start only within floating-point rounding precision.
-#'   Increasing quadrature order may be necessary; no order is universally
-#'   sufficient.
-#'   Calibration tables retain estimates and approximate SEs but omit bounds
-#'   by default. `confint(fit, parm = "calibration", level = 0.95)` or
-#'   `summary(fit, calibration_intervals = "normal", level = 0.95)` explicitly
-#'   requests observed-information normal approximations. Their finite-sample
-#'   coverage is not established. Numerical/information failures and estimated
-#'   variance boundaries retain missing bounds. A regular variance interval is
-#'   not supplied. Rebuilding summaries or [mfrm_results()] from older saved
-#'   fits applies this policy without refitting or changing the source fit.
-#'   If estimated ability variance is zero, Person scoring returns unavailable
-#'   rows rather than degenerate zero-width intervals. Positive information for
-#'   the remaining fixed coordinates does not resolve variance-boundary inference.
-#'   [predict.mfrm_testlet()] supplies conditional Person scores and continuous
-#'   equal-tail intervals; these exclude calibration-estimation uncertainty.
-#'   Numerical agreement does not establish coverage or model fit.
-#'
-#' @section Model assumptions and related research:
-#' Wang and Wilson's Rasch testlet model (2005) motivates dependence within
-#' a Person-specific block. With `testlet = "Rater"` and a fixed Rater facet,
-#' the more direct reference is their random-effects facet model (2005,
-#' equations 14--15): usual rater severity is distinct from an effect shared
-#' only within a Person/rater pair. Here the local variance is common to all
-#' testlets; it cannot rank raters by individual inconsistency.
-#'
-#' Both papers allow ability variance to be estimated. This function estimates
-#' one normal ability variance by default while fixing its mean at zero and
-#' keeping free step location. This avoids adding a second location parameter.
-#' Unlike models with separate local variances, it retains a common testlet
-#' variance. The cited results do not guarantee coverage for a new assessment
-#' design or for this implementation.
-#'
-#' @section Relation to discrimination and shared rater effects:
-#' Discrimination changes response sensitivity; it is not a substitute for
-#' dependence within a performance. This function fits an RSM, not a GPCM
-#' with additional slopes. Its local effect is shared only within a
-#' Person/block pair. A Person/task block shared across assessors differs
-#' from a Person/task/assessor rating-occasion block. Select the identifier
-#' according to the assessment process; only one nonoverlapping membership
-#' is supported. A nonzero local variance does not by itself establish halo.
-#' For one rater effect shared across persons, see [fit_mfrm_random_rater()].
-#' The two models cannot currently be combined. See [mfrmr_gpcm_scope]
-#' for the relationship to fixed discrimination and local independence.
-#'
-#' @section Comparison with ordinary MFRM:
-#' Hold the observed events, categories, fixed facets, omissions and ability
-#' population constant. A known `testlet_variance = 0` removes local
-#' dependence while retaining the fixed Rater facet, if supplied. The
-#' corresponding ordinary model is an RSM MML with a matching normal
-#' population and location convention. For `person_sd = 1` this is the
-#' fixed N(0,1) model; estimated-population comparisons must also align location
-#' constraints rather than compare raw coefficients. An estimated zero
-#' variance lies on a boundary; ordinary
-#' chi-squared likelihood-ratio calibration cannot be assumed.
-#' [compare_mfrm()] checks matched events and compares centered facet effects
-#' with an ordinary RSM MML fit; it does not provide automatic ranking. Descriptive
-#' score or interval changes do not establish which model is better.
-#' @section Assessment applications:
-#' With `testlet = "Task"`, the local effect is shared by a Person's ratings
-#' on that task. [online testlet-applications guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlet-applications.html) provides runnable
-#' examples of allocating a fixed rating budget across tasks and comparing
-#' score sensitivity when tasks have unequal numbers of criteria. Its small
-#' enumeration reports model-conditional posterior precision and marginal EAP
-#' reliability while holding fitted calibration fixed; it is not a general
-#' design optimizer, a G/D study or a coverage guarantee. Ordinary MFRM does
-#' not generally assign equal information to arbitrary added criteria or tasks.
-#'
-#' A common local variance cannot identify halo, establish that criteria are
-#' indistinguishable, or rank tasks by dependence. Task-specific variances are
-#' not estimated by this API. Fitting tasks separately does not remedy this:
-#' with one local block per Person, ability and local variances are confounded.
-#' Unequal block sizes are handled through the likelihood, not by imposing equal
-#' task weights or removing every source of bias. Assignment, content and the
-#' origin of dependence require substantive review.
-#' @section Earlier saved results:
-#' Saved fits without an ability-variance parameter retain their original
-#' N(0,1) interpretation when scored or reported. Refitting now estimates
-#' ability variance unless `person_sd = 1` is supplied. Reprinting or
-#' rescoring does not refit a population. Save a new fit and regenerate its
-#' scores together when changing the population assumption.
+#' Calibration bounds are omitted by default and requested explicitly via
+#' `confint(fit, parm = "calibration")`; zero estimated ability variance leaves
+#' [predict.mfrm_testlet()] Person scores unavailable rather than zero-width.
+#' See [fit_mfrm_random_rater()] for raters shared across Persons and the
+#' [online testlet-applications guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-testlet-applications.html)
+#' for task-allocation examples.
 #' @return An `mfrm_testlet` object with calibration, covariance, calibration
 #'   table, checks, all optimization runs, input/omission accounting and settings.
 #'   It contains no native pointers; use `saveRDS()` and `readRDS()`.
@@ -164,7 +69,7 @@
 #' @seealso [predict.mfrm_testlet()], [plot.mfrm_testlet()], [mfrm_results()],
 #'   [mfrm_response_diagnostics()] for descriptive posterior predictive residuals.
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("fit_mfrm_testlet", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved fit for the synthetic example_core ratings.

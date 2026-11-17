@@ -38,8 +38,7 @@ test_that("generic names preserve baseline, missing-case and SMD meanings", {
   cat_scores <- c(0, 1, 1, 2, 3, 3)
   x <- score_comparison_table(scores, ref, ref2, categories = 0:3,
     score_categories = cat_scores, smd = "reference", screen = "williamson2012")
-  old <- automated_scoring_table(scores, ref, ref2, categories = 0:3,
-    automated_categories = cat_scores, smd = "human")
+  old <- readRDS(test_path("fixtures", "automated-scoring-legacy.rds"))$human_smd
   expect_equal(x$table$QWK, old$table$QWK)
   expect_equal(x$table$ReferenceQWK, old$table$HumanQWK)
   expect_equal(x$table$ReferenceCorrelation, old$table$HumanCorrelation)
@@ -49,17 +48,25 @@ test_that("generic names preserve baseline, missing-case and SMD meanings", {
   expect_equal(x$cases$Included, c(TRUE, TRUE, FALSE, TRUE, TRUE, FALSE))
   expect_equal(x$cases$MissingReference2, c(FALSE, FALSE, TRUE, FALSE, FALSE, FALSE))
   expect_equal(x$cases$MissingScore, c(rep(FALSE, 5), TRUE))
+  expect_named(old$cases, c("Row", "Included", "MissingAutomated", "MissingHuman",
+    "MissingAutomatedCategory", "MissingHumanReference"))
+  expect_named(x$cases, c("Row", "Included", "MissingScore", "MissingReference",
+    "MissingScoreCategory", "MissingReference2"))
+  old_cases <- old$cases
+  names(old_cases) <- c("Row", "Included", "MissingScore", "MissingReference",
+    "MissingScoreCategory", "MissingReference2")
+  expect_identical(x$cases, old_cases)
   expect_equal(x$table$QWKDegradation, x$table$ReferenceQWK - x$table$QWK)
 })
 
 test_that("generic comparisons attach the selected rater without refitting", {
-  fit <- make_toy_fit(); diagnostics <- make_toy_diagnostics(fit)
+  saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+  fit <- saved$fit; diagnostics <- saved$diagnostics
   local_mocked_bindings(fit_mfrm = function(...) stop("Unexpected fitting"),
     diagnose_mfrm = function(...) stop("Unexpected diagnostics"))
   x <- score_comparison_table(0:3, 0:3, categories = 0:3, fit = fit,
     diagnostics = diagnostics, rater_facet = "Rater", rater = "R01")
-  old <- automated_scoring_table(0:3, 0:3, categories = 0:3, fit = fit,
-    diagnostics = diagnostics, rater_facet = "Rater", automated_rater = "R01")
+  old <- readRDS(test_path("fixtures", "automated-scoring-legacy.rds"))$saved_mfrm
   cols <- startsWith(names(x$table), "MFRM")
   expect_identical(x$table[cols], old$table[cols])
   expect_identical(x$mfrm, old$mfrm)
@@ -73,4 +80,17 @@ test_that("QWK retains finite coefficients when finite category spans overflow",
   expect_equal(r$value, 2/3)
   expect_identical(r$reason, "")
   expect_equal(sum(r$counts), 4L)
+})
+
+test_that("the score-comparison entry replaces the earlier callable interface", {
+  expect_false("automated_scoring_table" %in% getNamespaceExports("mfrmr"))
+  expect_false(exists("automated_scoring_table", asNamespace("mfrmr"), inherits = FALSE))
+  old <- readRDS(test_path("fixtures", "automated-scoring-legacy.rds"))$human_smd
+  expect_identical(old$table$SMDBasis, "human")
+  expect_true("SMDHuman" %in% names(old$table))
+  expect_named(old$counts, c("automated_human", "human_human"))
+  path <- tempfile(fileext = ".rds")
+  on.exit(unlink(path), add = TRUE)
+  saveRDS(old, path)
+  expect_identical(readRDS(path), old)
 })

@@ -20,7 +20,6 @@
 # downstream code can re-render or export.
 # ==============================================================================
 
-
 #' Pairwise standardized-residual heatmap for local-dependence review
 #'
 #' Builds an N x N heatmap of pairwise standardized residuals between
@@ -57,7 +56,7 @@
 #' @seealso [plot(x, type = "marginal_pairwise")][plot.mfrm_fit], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_local_dependence_heatmap", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -72,7 +71,7 @@
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -108,7 +107,6 @@ plot_local_dependence_heatmap <- function(fit,
   .mfrm_finalize_ggplot(out, draw = draw)
 }
 
-
 #' Facet reliability and separation snapshot bar plot
 #'
 #' Compact facet-level visual of the Wright & Masters (1982)
@@ -133,7 +131,7 @@ plot_local_dependence_heatmap <- function(fit,
 #' role changes its interpretation. Person separation reliability is analogous
 #' to test reliability, not numerically identical to Cronbach's alpha; MML
 #' Person rows using EAP/posterior SD also have the limitations described in
-#' [mfrmr-package]. No universal adequate/strong reference lines are drawn.
+#' [diagnose_mfrm()]. No universal adequate/strong reference lines are drawn.
 #' Reliability, separation and Strata use approximate marginal-SE variance
 #' subtraction and do not propagate covariance among estimates, even when
 #' the SEs come from joint information. Model and fit-adjusted indices are
@@ -158,7 +156,7 @@ plot_local_dependence_heatmap <- function(fit,
 #'   and model-summary notes are retained alongside each plotted value.
 #' @seealso [diagnose_mfrm()], [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_reliability_snapshot", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -178,7 +176,7 @@ plot_local_dependence_heatmap <- function(fit,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -234,7 +232,7 @@ plot_reliability_snapshot <- function(fit,
   payload[precision] <- rel[precision]
   caption <- paste("Raters: severity differences, not agreement.",
                    "Persons: ability differences.", sep = "\n")
-  notes <- mfrm_separation_interpretation()
+  notes <- .mfrmr_const_mfrm_separation_interpretation
   if (isTRUE(fit$config$method %in% c("JML", "JMLE"))) {
     notes <- paste(notes, "Ordinary JML uses exploratory location precision; these indices are screening summaries, not structural confidence intervals.")
   }
@@ -255,7 +253,6 @@ plot_reliability_snapshot <- function(fit,
   )
   .mfrm_finalize_ggplot(out, draw = draw)
 }
-
 
 #' Person x facet-level standardized-residual matrix
 #'
@@ -282,7 +279,7 @@ plot_reliability_snapshot <- function(fit,
 #' @seealso [plot(x, type = "guttman")][plot.mfrm_fit], [plot(x, type = "unexpected")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_residual_matrix", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -300,7 +297,7 @@ plot_reliability_snapshot <- function(fit,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -384,7 +381,6 @@ plot_residual_matrix <- function(fit,
   .mfrm_finalize_ggplot(out, draw = draw)
 }
 
-
 #' Empirical-Bayes shrinkage funnel / caterpillar
 #'
 #' Visualizes empirical-Bayes shrinkage by drawing one row per facet
@@ -416,7 +412,7 @@ plot_residual_matrix <- function(fit,
 #' @seealso [apply_empirical_bayes_shrinkage()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_shrinkage_funnel", run.dontrun = TRUE)
 #' \dontrun{
 #' # Saved synthetic JML/RSM analysis of example_core.
@@ -435,7 +431,7 @@ plot_residual_matrix <- function(fit,
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.

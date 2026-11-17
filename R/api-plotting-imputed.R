@@ -1,10 +1,13 @@
-#' @rdname pool_mfrm_imputed
+#' @rdname mfrm_response_imputations
 #' @details `plot()` method: Plot pooled facet estimates or prespecified contrasts
 #' @param draw Logical. With `FALSE`, return the exact plot data without
 #'   opening a graphics device.
 #' @param preset A package plotting preset, such as `"standard"` or
 #'   `"monochrome"`.
-#' @param title,subtitle Optional text; `NULL` omits it. The default subtitle
+#' @param title Optional text; `NULL` omits it. The default subtitle
+#'   retains a notice when complete-data information is weak. Full cautions
+#'   remain in the returned plot data even with custom or omitted text.
+#' @param subtitle Optional text; `NULL` omits it. The default subtitle
 #'   retains a notice when complete-data information is weak. Full cautions
 #'   remain in the returned plot data even with custom or omitted text.
 #' @return For `plot()`: Invisibly, a `ggplot` object; [plot_data()] extracts the

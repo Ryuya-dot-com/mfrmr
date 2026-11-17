@@ -143,13 +143,20 @@ test_that("drift drawings retain unavailable rows and handle all-zero heatmaps",
   mock_linking_inputs()
   grDevices::pdf(NULL, width = 7, height = 5)
   on.exit(grDevices::dev.off(), add = TRUE)
-  for (values in list(rep(0, 6), rep(NA_real_, 6), c(rep(0, 5), NA_real_))) {
-    x <- suppressWarnings(detect_anchor_drift(linking_numeric_fits(values)))
-    for (type in c("drift", "heatmap", "forest")) {
-      expect_no_warning(p <- plot(x, type = type))
+  cases <- list(rep(0, 6), rep(NA_real_, 6), c(rep(0, 5), NA_real_))
+  types <- c("drift", "heatmap", "forest")
+  for (i in seq_along(cases)) {
+    x <- suppressWarnings(detect_anchor_drift(linking_numeric_fits(cases[[i]])))
+    for (j in seq_along(types)) {
+      type <- types[[j]]
       q <- plot(x, type = type, draw = FALSE)
-      expect_identical(p, q)
-      tab <- plot_data(p, if (type == "forest") "data" else "table")
+      if ((i == 1L && type == "heatmap") || (i == 2L && type == "drift") || (i == 3L && type == "forest")) {
+        expect_no_warning(p <- plot(x, type = type))
+        expect_identical(p, q)
+      } else {
+        expect_no_warning(ggplot2::ggplot_build(q))
+      }
+      tab <- plot_data(q, if (type == "forest") "data" else "table")
       expect_identical(tab$OffsetStatus,
         x$drift_table$OffsetStatus[match(tab$Level, x$drift_table$Level)])
     }

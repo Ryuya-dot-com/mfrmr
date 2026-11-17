@@ -161,8 +161,7 @@
 .mfrm_mvgt_score_table <- function(d, tab, p, level) {
   rows <- diagnostics <- vector("list", nrow(tab))
   for (i in seq_len(nrow(tab))) {
-    counts <- as.numeric(d$design_grid[i, ])
-    error <- c(0, 0, 0, 1/counts[1L], 1/counts[2L], 0, 1/prod(counts))
+    error <- unname(.mfrm_mvgt_profile_error(d, i, "G"))
     duplicate <- which(vapply(diagnostics[seq_len(i-1L)], function(x)
       identical(x$error_coefficients, error), logical(1)))
     ans <- if (length(duplicate)) diagnostics[[duplicate[1L]]] else

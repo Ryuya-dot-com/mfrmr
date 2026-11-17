@@ -90,8 +90,18 @@
 #' evaluation and use of automated scoring. *Educational Measurement: Issues
 #' and Practice, 31*(1), 2-13. \doi{10.1111/j.1745-3992.2011.00223.x}
 #' Especially pp. 7-10 and p. 12, notes 1 and 4.
-#' @seealso [interrater_agreement_table()], [mfrm_report()],
-#'   [automated_scoring_table()] for the earlier automated-scoring interface.
+#' @section Migration from automated_scoring_table:
+#' The earlier callable interface is removed in 0.3.0. Use this function with
+#' `screen = "williamson2012"` to retain its default numerical screen.
+#' Rename `automated`/`human`/`human_reference` to `scores`/`reference`/`reference2`,
+#' `automated_categories` to `score_categories`, and `automated_rater` to `rater`.
+#' Rename `smd = "human"` to `smd = "reference"`; the selected SD denominator
+#' is unchanged. Threshold overrides keep their names and meanings. The generic
+#' default remains `screen = "none"`. [mfrmr_api_migration_030] lists the output
+#' column and count-table key replacements. Earlier saved lists retain their
+#' original fields and can be reopened directly without recomputing anything.
+#' @seealso [interrater_agreement_table()], [mfrm_report()]
+#' @aliases automated_scoring_table
 #' @examples
 #' comparison <- score_comparison_table(
 #'   scores = c(0, 1, 2, 2, 3, 3), reference = c(0, 1, 1, 2, 3, 3),

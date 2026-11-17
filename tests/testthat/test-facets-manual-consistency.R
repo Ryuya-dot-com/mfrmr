@@ -138,7 +138,7 @@ test_that('unequal-count pairwise screens match executed FACETS modified integer
     maxit=1500,reltol=1e-12)
   d <- diagnose_mfrm(f,diagnostic_mode='legacy',residual_pca='none')
   b <- estimate_bias(f,d,facet_a='Rater',facet_b='Task')
-  report <- bias_pairwise_report(b,target_facet='Task',context_facet='Rater')
+  report <- mfrm_report(x = b, target_facet = "Task", context_facet = "Rater", type = "bias_pairwise")
   p <- report$table
   ref <- read.csv(test_path('fixtures','facets-450-pairwise.csv'))
   key <- function(z) paste(z$Target,z$Context1,z$Context2)
@@ -151,7 +151,8 @@ test_that('unequal-count pairwise screens match executed FACETS modified integer
   expect_true(all(p$DFMethod=='facets'))
   fixed <- build_fixed_reports(b,target_facet='Task')$pairwise_table
   expect_equal(unname(fixed$`Prob.`[match(key(p),key(fixed))]),p$`Prob.`)
-  old <- bias_pairwise_report(b,target_facet='Task',context_facet='Rater',df_method='classical')$table
+  old <- mfrm_report(x = b, target_facet = "Task", context_facet = "Rater", df_method = "classical",
+    type = "bias_pairwise")$table
   row <- old$Target=='1' & old$Context1=='1' & old$Context2=='2'
   expect_equal(old$`d.f.`[row],6.878172,tolerance=1e-6)
   expect_gt(abs(old$`Prob.`[row]-p$`Prob.`[key(p)=='1 1 2']),.0005)

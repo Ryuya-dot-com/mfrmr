@@ -36,7 +36,7 @@ title/notes CSV files, or use \code{"all"}.}
 
 \item{preset}{Optional reader-facing analysis-archive preset. \code{"starter"} adds the
 report and plot routes to the default files and writes \code{index.html} with
-the required Wright map for ordinary models, or the available model-specific
+the default Wright map for ordinary models, or the available model-specific
 figures for testlet and random-rater results.}
 
 \item{overwrite}{Logical; if \code{FALSE}, existing files stop the export.}
@@ -60,10 +60,9 @@ An \code{mfrm_results_export} object with \code{summary}, \code{written_files},
 \code{plot_errors}, and zip status fields.
 }
 \description{
-\code{export_mfrm_results()} writes the contents of an existing \code{\link[=mfrm_results]{mfrm_results()}}
-object to a compact analysis folder. It is a results-download helper for the
-comprehensive first-screen workflow, not a new estimation, diagnostics, or
-validation step. The folder is not deidentified or automatically shareable.
+Write an existing \code{\link[=mfrm_results]{mfrm_results()}} object and its selected outputs to an
+analysis folder. Exporting does not rerun or validate the analysis, and the
+folder is not deidentified or automatically shareable.
 }
 \details{
 The helper writes:
@@ -88,40 +87,31 @@ A multi-plot \code{fit} bundle produces one PNG/CSV pair per member, named
 \item a written-files manifest and compact export summary.
 }
 
-For every supported result type, replay reloads the exported RDS without
-reconstructing the analysis, refitting, rescoring or resampling. Requesting
-\code{"replay"} also includes \code{"rds"}; source-session variables such as \code{fit}
-and \code{diagnostics} are not required. Run the script with
-\code{source("path/to/prefix_replay.R", chdir = TRUE)}, replacing the path with
-the exported script's location, or run it from the exported folder.
-Use \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} for a separate refitting script.
-Result CSV files use UTF-8; when importing with base R, use
-\code{read.csv(path, encoding = "UTF-8", check.names = FALSE)} to preserve
-user-supplied names across locales.
+Replay reloads the complete RDS for every supported result type without
+refitting, rescoring or resampling; source-session variables are unnecessary.
+Run \code{source("path/to/prefix_replay.R", chdir = TRUE)} using the exported path,
+or run the script from its folder. \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} instead supplies
+a refitting script; \code{\link[=export_mfrm_tables]{export_mfrm_tables()}} exports only core fit tables.
 
-Use \code{\link[=export_mfrm_tables]{export_mfrm_tables()}} when only the fit's core CSV tables are needed.
+CSV files use UTF-8. With base R, import using
+\code{read.csv(path, encoding = "UTF-8", check.names = FALSE)} to preserve user names
+across locales.
+
 Stored prediction settings,
 unavailable rows, numerical checks and interval meanings travel with the
 result. A bootstrap interval may have infinite endpoints; exports retain
 them instead of substituting finite ordinary intervals.
 
-All presets, including \code{"starter"}, are analysis archives. In particular,
-the default \code{.rds} file retains the complete result object, and CSV, HTML,
-plot, and replay artifacts can retain direct identifiers or other sensitive
-study information. The manifest labels each file for review, but the helper
-does not pseudonymize, redact, or certify an export for sharing. Apply the
-study's data-governance process before moving the files outside the approved
-analysis environment.
+All presets retain potentially sensitive study information as described by
+\code{acknowledge_sensitive}. The manifest labels files for review, but supplies
+no redaction or sharing certification. Apply the study's data-governance
+process before moving files outside the approved analysis environment.
 
-Plot export is intentionally optional because some plot routes can be
-comparatively slow or require richer graphics devices. Plot failures are
-recorded in the returned \code{plot_errors} table rather than stopping the export.
-The \code{"starter"} preset is the recommended reader-oriented analysis archive
-because, for ordinary models, it
-requests the Wright map in addition to the result summary, report, replay
-script, and manifest. Its Infit pathway includes a bounded selection of
-person rows so person fit can be reviewed without replacing the required
-Wright-map first screen.
+Plotting is optional because it can be slow or require richer graphics
+devices. Failures go to \code{plot_errors} without stopping the export. The
+\code{"starter"} preset includes the model-appropriate figures described under
+\code{preset}. For ordinary models, its Infit pathway uses a bounded selection of
+Person rows for focused review alongside the Wright map.
 
 With \code{overwrite = TRUE}, a requested ZIP is rebuilt from files written by
 this call; members from an older archive are not retained. ZIP command or

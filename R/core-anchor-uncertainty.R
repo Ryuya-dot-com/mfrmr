@@ -11,13 +11,13 @@ mfrmr_anchor_uncertainty_request <- function(fit, covariance, independent) {
   cfg <- fit$config
   if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit") ||
       !cfg$model %in% c("RSM", "PCM") || !identical(cfg$method, "MML") ||
-      is.null(cfg$population_spec$fixed_sd) ||
+      !isTRUE(cfg$population_spec$active) ||
       !identical(cfg$population_spec$design_columns, "(Intercept)") ||
       identical(cfg$noncenter_facet, "Person") ||
       !identical(cfg$estimation_control$mml_engine_used, "direct") ||
-      mfrmr_adaptive_integration(cfg) || length(cfg$interaction_specs) ||
+      length(cfg$interaction_specs) ||
       length(cfg$dummy_facets) || !identical(cfg$facet_shrinkage, "none"))
-    stop("Anchor-source intervals require the direct fixed-grid RSM/PCM anchor-origin route, an intercept-only population with fixed SD, and no interactions or shrinkage.", call. = FALSE)
+    stop("Anchor-source intervals require the direct RSM/PCM anchor-origin route, an intercept-only population, and no interactions or shrinkage.", call. = FALSE)
   mfrm_native_location_source(fit)
   anchors <- extract_anchor_tables(cfg)$anchors
   if (!nrow(anchors) || any(anchors$Facet != cfg$noncenter_facet))
@@ -110,9 +110,12 @@ mfrmr_anchor_uncertainty_intervals <- function(out, request) {
   if (population) {
     J <- matrix(0, nrow(tab), length(fit$opt$par))
     beta <- slices$beta
+    population_at <- c(beta, slices$log_sigma2)
+    variance_row <- which(tab$Type == "residual_variance")
     J[seq_along(beta), beta] <- diag(length(beta))
     if (!is.null(out$contrasts))
       J[length(beta)+seq_len(nrow(out$contrasts)), beta] <- out$contrasts
+    if (length(slices$log_sigma2)) J[variance_row, slices$log_sigma2] <- 1
     direct <- matrix(0, nrow(tab), nrow(a$anchors))
   } else {
     J <- out$target_jacobian
@@ -145,35 +148,48 @@ mfrmr_anchor_uncertainty_intervals <- function(out, request) {
   }
   se <- sqrt(pmax(diag(selected), 0))
   fixed <- tab$ConditionalStatus == "fixed" & is.finite(se) & se == 0
-  if (population) fixed[tab$Type == "residual_variance"] <- TRUE
+  if (population && !length(slices$log_sigma2)) fixed[variance_row] <- TRUE
   available <- isTRUE(a$eligible) & is.finite(se) & se > 0 &
     tab$ConditionalStatus %in% c("available", "fixed")
   critical <- qnorm((1-out$settings$level)/2, lower.tail = FALSE)
   tab$SE <- ifelse(available, se, ifelse(fixed & !population, 0, NA_real_))
-  tab$Lower <- ifelse(available, tab$Estimate-critical*se, NA_real_)
-  tab$Upper <- ifelse(available, tab$Estimate+critical*se, NA_real_)
+  center <- if (population) tab$WorkingEstimate else tab$Estimate
+  tab$Lower <- ifelse(available, center-critical*se, NA_real_)
+  tab$Upper <- ifelse(available, center+critical*se, NA_real_)
   available <- available & is.finite(tab$Lower) & is.finite(tab$Upper)
   tab[!available & !fixed, c("SE", "Lower", "Upper")] <- NA_real_
   tab$Status <- ifelse(fixed, "fixed", ifelse(available, "available", "anchor_propagation_unavailable"))
   tab$CIEligible <- available
   tab$CoverageQualified <- FALSE
   note <- paste("First-order intervals include supplied anchor-source covariance under independent source and receiving samples.",
-    "Source-covariance validity, anchor invariance and fixed population SD are assumptions; drift, dependence and covariance-estimation uncertainty are not corrected. Coverage is not guaranteed.")
+    "Source-covariance validity and anchor invariance are assumptions; drift, dependence and covariance-estimation uncertainty are not corrected. Coverage is not guaranteed.")
   tab$InferenceReview <- ifelse(available, note, ifelse(fixed,
     "Fixed under the stated model and supplied covariance; no inferential interval.",
     "Source-error propagation is unavailable; finite points and conditional intervals remain separately recorded."))
   out$table <- tab
   if (population) {
     out$conditional_covariance <- out$covariance
-    out$covariance <- if (is.null(propagated)) matrix(NA_real_, length(beta), length(beta)) else
-      propagated[beta, beta, drop = FALSE]
+    out$covariance <- if (is.null(propagated))
+      matrix(NA_real_, length(population_at), length(population_at)) else
+      propagated[population_at, population_at, drop = FALSE]
     dimnames(out$covariance) <- dimnames(out$conditional_covariance)
     if (!is.null(out$contrasts)) out$contrast_covariance <-
-      out$contrasts %*% out$covariance %*% t(out$contrasts)
-    coefficient <- tab$Type != "residual_variance"
+      out$contrasts %*% out$covariance[seq_along(beta), seq_along(beta), drop = FALSE] %*%
+        t(out$contrasts)
+    out$table$AnchorSourceWorkingSE <- tab$AnchorSourceSE
     for (pair in list(c("WorkingSE", "SE"), c("WorkingLower", "Lower"), c("WorkingUpper", "Upper")))
-      out$table[coefficient, pair[1]] <- tab[coefficient, pair[2]]
-    out$table$NaturalScaleStatus[coefficient] <- ifelse(available[coefficient], "finite", "unavailable")
+      out$table[, pair[1]] <- tab[, pair[2]]
+    out$table$NaturalScaleStatus <- ifelse(available, "finite", "unavailable")
+    # Propagate in the optimizer's log-variance coordinate, then transform;
+    # applying a symmetric normal interval directly to variance changes the method.
+    out$table$SE[variance_row] <- tab$Estimate[variance_row] * tab$SE[variance_row]
+    out$table$AnchorSourceSE[variance_row] <- tab$Estimate[variance_row] * tab$AnchorSourceSE[variance_row]
+    out$table$Lower[variance_row] <- exp(tab$Lower[variance_row])
+    out$table$Upper[variance_row] <- exp(tab$Upper[variance_row])
+    if (available[variance_row] && (out$table$Lower[variance_row] == 0 ||
+        !is.finite(out$table$Upper[variance_row]) || !is.finite(out$table$SE[variance_row])))
+      out$table$NaturalScaleStatus[variance_row] <- "outside_floating_point_range"
+    if (fixed[variance_row]) out$table$NaturalScaleStatus[variance_row] <- "finite"
   } else {
     dimnames(selected) <- dimnames(out$covariance)
     out$covariance <- selected

@@ -5,7 +5,6 @@
 #' bands to saved Infit/Outfit values without refitting models. Keep underfit,
 #' overfit and their union separate. Here sensitivity analysis means comparing
 #' thresholds; the reported Sensitivity rate means detecting an affected target.
-#' @inheritParams mfrm_screening_performance
 #' @param measures Data frame with `Condition`, `Replicate`, `Target`, `Infit`
 #'   and `Outfit`. Include `InfitZSTD` and `OutfitZSTD` when requesting the
 #'   combined ZSTD rule. The selected statistic's columns are required;
@@ -62,6 +61,7 @@
 #' sensitivity <- mfrm_screening_sensitivity(roster, measures, bands,
 #'   rule = "Illustrative fixed-rater residual screen; no exclusion/refit")
 #' plot(sensitivity, direction = "overfit")
+#' @rdname mfrm_screening_performance
 #' @export
 #' @param draw For `plot()`: `FALSE` returns plot data without opening a device.
 #' @order 1
@@ -113,7 +113,7 @@ mfrm_screening_sensitivity <- function(roster, measures, thresholds, rule,
   structure(out, class = "mfrm_screening_sensitivity")
 }
 
-#' @rdname mfrm_screening_sensitivity
+#' @rdname mfrm_screening_performance
 #' @param object An `mfrm_screening_sensitivity` object.
 #' @param ... For `summary.mfrm_screening_sensitivity()`: Unused by print and summary.
 #'
@@ -123,7 +123,7 @@ summary.mfrm_screening_sensitivity <- function(object, ...) {
   list(by_family = object$by_family, by_target = object$by_target, settings = object$settings)
 }
 
-#' @rdname mfrm_screening_sensitivity
+#' @rdname mfrm_screening_performance
 #' @export
 print.mfrm_screening_sensitivity <- function(x, ...) {
   cat("Fit-screening threshold sensitivity\n", x$settings$rule, "\n")
@@ -131,7 +131,7 @@ print.mfrm_screening_sensitivity <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname mfrm_screening_sensitivity
+#' @rdname mfrm_screening_performance
 #' @details `plot()` method: Plot directional screening rates across threshold profiles
 #' @param x Output from [mfrm_screening_sensitivity()].
 #'

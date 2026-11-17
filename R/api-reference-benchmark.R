@@ -1,79 +1,25 @@
 # Package-native reference benchmark helpers
 
-reference_benchmark_dataset_specs <- function() {
-  tibble::tibble(
-    Dataset = c(
-      "example_core", "example_bias",
-      "study1", "study2", "combined",
-      "study1_itercal", "study2_itercal", "combined_itercal",
-      "synthetic_truth", "synthetic_latent_regression", "synthetic_latent_regression_omit", "synthetic_gpcm"
-    ),
-    Persons = c(48L, 48L, 307L, 206L, 307L, 307L, 206L, 307L, 36L, 60L, 60L, 600L),
-    Raters = c(4L, 4L, 18L, 12L, 18L, 18L, 12L, 18L, 3L, NA_integer_, NA_integer_, NA_integer_),
-    Criteria = c(4L, 4L, 3L, 9L, 12L, 3L, 9L, 12L, 3L, 6L, 6L, 4L),
-    Tasks = c(NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 4L, NA_integer_, NA_integer_, NA_integer_),
+reference_benchmark_dataset_specs <- tibble::tibble(Dataset = c("example_core", "example_bias", "study1", "study2", "combined",
+    "study1_itercal", "study2_itercal", "combined_itercal", "synthetic_truth", "synthetic_latent_regression",
+    "synthetic_latent_regression_omit", "synthetic_gpcm"), Persons = c(48L, 48L, 307L, 206L,
+    307L, 307L, 206L, 307L, 36L, 60L, 60L, 600L), Raters = c(4L, 4L, 18L, 12L, 18L, 18L, 12L,
+    18L, 3L, NA_integer_, NA_integer_, NA_integer_), Criteria = c(4L, 4L, 3L, 9L, 12L, 3L,
+    9L, 12L, 3L, 6L, 6L, 4L), Tasks = c(NA_integer_, NA_integer_, NA_integer_, NA_integer_,
+    NA_integer_, NA_integer_, NA_integer_, NA_integer_, 4L, NA_integer_, NA_integer_, NA_integer_),
     Rows = c(768L, 384L, 1842L, 3287L, 5129L, 1842L, 3341L, 5183L, 1296L, 360L, 360L, 2400L),
-    ScoreMin = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L, 0L),
-    ScoreMax = c(4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 5L, 1L, 1L, 3L)
-  )
-}
+    ScoreMin = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L, 0L), ScoreMax = c(4L, 4L, 4L,
+        4L, 4L, 4L, 4L, 4L, 5L, 1L, 1L, 3L))
 
-reference_benchmark_case_specs <- function() {
-  tibble::tibble(
-    Case = c(
-      "synthetic_truth",
-      "synthetic_latent_regression",
-      "synthetic_latent_regression_omit",
-      "synthetic_conquest_overlap_dry_run",
-      "synthetic_gpcm",
-      "synthetic_bias_contract",
-      "study1_itercal_pair",
-      "study2_itercal_pair",
-      "combined_itercal_pair"
-    ),
-    CaseType = c(
-      "truth_recovery",
-      "latent_recovery",
-      "latent_omission_contract",
-      "conquest_overlap_dry_run",
-      "gpcm_recovery",
-      "bias_contract",
-      "pair_stability",
-      "pair_stability",
-      "pair_stability"
-    ),
-    PrimaryDataset = c(
-      "synthetic_truth",
-      "synthetic_latent_regression",
-      "synthetic_latent_regression_omit",
-      "synthetic_latent_regression",
-      "synthetic_gpcm",
-      "synthetic_truth",
-      "study1",
-      "study2",
-      "combined"
-    ),
-    ReferenceDataset = c(
-      NA_character_,
-      NA_character_,
-      NA_character_,
-      NA_character_,
-      NA_character_,
-      NA_character_,
-      "study1_itercal",
-      "study2_itercal",
-      "combined_itercal"
-    )
-  )
-}
-
-synthetic_truth_targets <- function() {
-  list(
-    Rater = c(-0.4, 0, 0.4),
-    Task = seq(-0.5, 0.5, length.out = 4),
-    Criterion = c(-0.3, 0, 0.3)
-  )
-}
+reference_benchmark_case_specs <- tibble::tibble(Case = c("synthetic_truth", "synthetic_latent_regression", "synthetic_latent_regression_omit",
+    "synthetic_conquest_overlap_dry_run", "synthetic_gpcm", "synthetic_bias_contract", "study1_itercal_pair",
+    "study2_itercal_pair", "combined_itercal_pair"), CaseType = c("truth_recovery", "latent_recovery",
+    "latent_omission_contract", "conquest_overlap_dry_run", "gpcm_recovery", "bias_contract",
+    "pair_stability", "pair_stability", "pair_stability"), PrimaryDataset = c("synthetic_truth",
+    "synthetic_latent_regression", "synthetic_latent_regression_omit", "synthetic_latent_regression",
+    "synthetic_gpcm", "synthetic_truth", "study1", "study2", "combined"), ReferenceDataset = c(NA_character_,
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, "study1_itercal",
+    "study2_itercal", "combined_itercal"))
 
 sample_mfrm_latent_benchmark_data <- function(seed = 20240403) {
   with_preserved_rng_seed(seed, {
@@ -170,47 +116,22 @@ sample_mfrm_gpcm_benchmark_data <- function(seed = 20260404) {
   })
 }
 
-reference_benchmark_source_profile <- function() {
-  tibble::tibble(
-    RuleID = c(
-      "bias_obs_exp_average",
-      "bias_local_measure",
-      "bias_pairwise_welch",
-      "linking_common_elements",
-      "latent_population_omission_check",
-      "conquest_overlap_bundle_check",
-      "conquest_overlap_review_check"
-    ),
-    Domain = c("bias", "bias", "bias", "linking", "latent_regression", "conquest_overlap", "conquest_overlap"),
-    SourceLabel = c(
-      "Facets Tutorial 3",
-      "FACETS Table 14",
-      "FACETS Table 14 / change log",
-      "FACETS equating guidance",
-      "mfrmr population-policy check",
-      "ACER ConQuest Command Reference / mfrmr overlap boundary",
-      "ACER ConQuest show-cases workflow / mfrmr review workflow"
-    ),
-    SourceURL = c(
-      "https://www.winsteps.com/a/ftutorial3.pdf",
-      "https://www.winsteps.com/facetman/table14.htm",
-      "https://www.winsteps.com/facetman/table14.htm",
-      "https://www.winsteps.com/facetman/equating.htm",
-      NA_character_,
-      "https://conquestmanual.acer.org/s4-00.html",
-      "https://conquestmanual.acer.org/s4-00.html"
-    ),
-    Detail = c(
-      "Observed-minus-expected average should equal (Observed Score - Expected Score) / Observed Count.",
-      "Local target measure in a context should equal the target's overall measure plus the context-specific bias term.",
-      "Pairwise local contrasts are reported with a Rasch-Welch t statistic and approximate degrees of freedom.",
-      "A practical linking review should confirm at least 5 common elements per linking facet when equating forms or datasets.",
-      "Population-model complete-case omission should be explicit in fitted metadata, response-row counts, and active person estimates.",
-      "The ConQuest-overlap reference case checks bundle preparation, table normalization, and review setup without claiming that ConQuest was executed.",
-      "Case-level EAP and item/population tables must be normalized before numerical review within the documented comparison scope."
-    )
-  )
-}
+reference_benchmark_source_profile <- tibble::tibble(RuleID = c("bias_obs_exp_average", "bias_local_measure", "bias_pairwise_welch",
+    "linking_common_elements", "latent_population_omission_check", "conquest_overlap_bundle_check",
+    "conquest_overlap_review_check"), Domain = c("bias", "bias", "bias", "linking", "latent_regression",
+    "conquest_overlap", "conquest_overlap"), SourceLabel = c("Facets Tutorial 3", "FACETS Table 14",
+    "FACETS Table 14 / change log", "FACETS equating guidance", "mfrmr population-policy check",
+    "ACER ConQuest Command Reference / mfrmr overlap boundary", "ACER ConQuest show-cases workflow / mfrmr review workflow"),
+    SourceURL = c("https://www.winsteps.com/a/ftutorial3.pdf", "https://www.winsteps.com/facetman/table14.htm",
+        "https://www.winsteps.com/facetman/table14.htm", "https://www.winsteps.com/facetman/equating.htm",
+        NA_character_, "https://conquestmanual.acer.org/s4-00.html", "https://conquestmanual.acer.org/s4-00.html"),
+    Detail = c("Observed-minus-expected average should equal (Observed Score - Expected Score) / Observed Count.",
+        "Local target measure in a context should equal the target's overall measure plus the context-specific bias term.",
+        "Pairwise local contrasts are reported with a Rasch-Welch t statistic and approximate degrees of freedom.",
+        "A practical linking review should confirm at least 5 common elements per linking facet when equating forms or datasets.",
+        "Population-model complete-case omission should be explicit in fitted metadata, response-row counts, and active person estimates.",
+        "The ConQuest-overlap reference case checks bundle preparation, table normalization, and review setup without claiming that ConQuest was executed.",
+        "Case-level EAP and item/population tables must be normalized before numerical review within the documented comparison scope."))
 
 resolve_reference_benchmark_data <- function(dataset) {
   if (identical(dataset, "synthetic_truth")) {
@@ -410,7 +331,7 @@ collect_reference_fit_run <- function(case_id, fit_obj) {
 
 build_truth_recovery_checks <- function(case_id, fit_obj) {
   fit_tbl <- fit_obj$fit$facets$others
-  truth_targets <- synthetic_truth_targets()
+  truth_targets <- .mfrmr_const_synthetic_truth_targets
 
   rows <- lapply(names(truth_targets), function(facet_name) {
     truth <- truth_targets[[facet_name]]
@@ -826,7 +747,7 @@ build_bias_contract_checks <- function(case_id,
 
   bias_tbl <- as.data.frame(bias_obj$table, stringsAsFactors = FALSE)
   pair_tbl <- as.data.frame(
-    bias_pairwise_report(
+    .mfrm_report_bias_pairwise(
       bias_obj,
       target_facet = target_facet,
       context_facet = context_facet,
@@ -1356,10 +1277,10 @@ reference_case_benchmark <- function(cases = c(
                                      maxit = 40,
                                      reltol = 1e-6,
                                      mml_engine = c("direct", "em", "hybrid")) {
-  case_specs <- reference_benchmark_case_specs()
+  case_specs <- reference_benchmark_case_specs
   selected_cases <- match.arg(as.character(cases), choices = case_specs$Case, several.ok = TRUE)
   case_specs <- case_specs[match(selected_cases, case_specs$Case), , drop = FALSE]
-  dataset_specs <- reference_benchmark_dataset_specs()
+  dataset_specs <- reference_benchmark_dataset_specs
   mml_engine <- tolower(match.arg(mml_engine))
   if (any(case_specs$CaseType == "gpcm_recovery")) {
     if (!identical(toupper(as.character(model)), "GPCM")) {
@@ -1456,7 +1377,7 @@ reference_case_benchmark <- function(cases = c(
   linking_checks_tbl <- dplyr::bind_rows(linking_checks)
   conquest_overlap_checks_tbl <- dplyr::bind_rows(conquest_overlap_checks)
   population_policy_checks_tbl <- dplyr::bind_rows(population_policy_checks)
-  source_profile_tbl <- reference_benchmark_source_profile()
+  source_profile_tbl <- reference_benchmark_source_profile
 
   case_summary_tbl <- dplyr::bind_rows(lapply(seq_len(nrow(case_specs)), function(i) {
     summarize_reference_benchmark_case(

@@ -153,3 +153,25 @@
     stop("D-study results do not match the stored component treatment, components, weights and plans; recreate the result.", call. = FALSE)
   d
 }
+
+# One score/composite selection for interval and paired-plan calculations.
+.mfrm_mvds_interval_target <- function(d, score, composite, comparison = FALSE) {
+  g <- d$gstudy; tab <- d$coefficients
+  if (!is.null(score) && !is.null(composite)) stop("Choose either `score` or `composite`.", call. = FALSE)
+  if (is.null(score) && is.null(composite)) {
+    choices <- unique(tab$Score[tab$Kind == "Composite"])
+    if (length(choices) > 1L) stop(if (comparison)
+      "Select one `composite` or an original `score`." else
+      "Select one `composite` or original `score`.", call. = FALSE)
+    if (length(choices)) composite <- choices else score <- g$design$scores[1L]
+  }
+  kind <- if (is.null(composite)) "Score" else "Composite"
+  selected <- if (is.null(composite)) score else composite
+  if (!is.character(selected) || length(selected) != 1L || is.na(selected) ||
+      !any(tab$Kind == kind & tab$Score == selected))
+    stop("Select one score or composite present in the D-study.", call. = FALSE)
+  w <- if (kind == "Score") setNames(as.numeric(g$design$scores == selected), g$design$scores) else
+    if (is.matrix(d$weights)) d$weights[, selected] else d$weights
+  list(score = score, composite = composite, kind = kind, selected = selected, weights = w,
+    table = tab[tab$Kind == kind & tab$Score == selected, , drop = FALSE])
+}

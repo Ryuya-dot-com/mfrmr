@@ -13,25 +13,10 @@
 # values and change the limiting likelihood. Curved paths with nonconvergent
 # normalized rates also remain outside this audit.
 
-mfrmr_jml_gpcm_asymptotically_affine_contract_version <- function() {
-  "mfrmr-jml-gpcm-asymptotically-affine-transport-0.2.3-v1"
-}
-
-mfrmr_jml_gpcm_asymptotically_affine_empty_registry <- function() {
-  data.frame(
-    PathId = character(0),
-    SourceFamily = character(0),
-    SourceState = character(0),
-    BoundaryLogLikelihood = numeric(0),
-    BoundaryImprovement = numeric(0),
-    PositiveMinimumMargin = numeric(0),
-    LeadingNegativeCoefficient = numeric(0),
-    StrictCertificate = logical(0),
-    SourceComplete = logical(0),
-    TransportCertified = logical(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_jml_gpcm_asymptotically_affine_empty_registry <- .mfrmr_empty_table(c(PathId = "character", SourceFamily = "character", SourceState = "character",
+    BoundaryLogLikelihood = "double", BoundaryImprovement = "double", PositiveMinimumMargin = "double",
+    LeadingNegativeCoefficient = "double", StrictCertificate = "logical", SourceComplete = "logical",
+    TransportCertified = "logical"))
 
 mfrmr_jml_gpcm_asymptotically_affine_rows <- function(
     certificates,
@@ -45,7 +30,7 @@ mfrmr_jml_gpcm_asymptotically_affine_rows <- function(
   certificates <- as.data.frame(
     certificates %||% data.frame(), stringsAsFactors = FALSE
   )
-  empty <- mfrmr_jml_gpcm_asymptotically_affine_empty_registry()
+  empty <- mfrmr_jml_gpcm_asymptotically_affine_empty_registry
   if (nrow(certificates) == 0L ||
       !"Certified" %in% names(certificates)) {
     return(empty)
@@ -102,7 +87,7 @@ audit_mfrm_jml_gpcm_asymptotically_affine_transport <- function(
       config$boundary_audit$gpcm_fixed_objective_classification %||% list()) {
   method <- as.character(config$method %||% "unknown")[1]
   model <- as.character(config$model %||% "unknown")[1]
-  empty <- mfrmr_jml_gpcm_asymptotically_affine_empty_registry()
+  empty <- mfrmr_jml_gpcm_asymptotically_affine_empty_registry
   finish <- function(state, evaluated, detail, reason_codes,
                      registry = empty) {
     registry <- as.data.frame(registry, stringsAsFactors = FALSE)
@@ -113,7 +98,7 @@ audit_mfrm_jml_gpcm_asymptotically_affine_transport <- function(
     }
     list(
       contract_version =
-        mfrmr_jml_gpcm_asymptotically_affine_contract_version(),
+        .mfrmr_const_mfrmr_jml_gpcm_asymptotically_affine_contract_version,
       method = method,
       model = model,
       estimator_identity = "unpenalized_fixed_effects_jml_no_finite_box",
@@ -195,7 +180,7 @@ audit_mfrm_jml_gpcm_asymptotically_affine_transport <- function(
   }
   identity_matches <- identical(
     as.character(boundary_classification$contract_version %||% "")[1],
-    mfrmr_jml_gpcm_boundary_classification_contract_version()
+    .mfrmr_const_mfrmr_jml_gpcm_boundary_classification_contract_version
   ) && identical(
     as.character(boundary_classification$objective_identity %||% "")[1],
     "identified_conditional_joint_log_likelihood"

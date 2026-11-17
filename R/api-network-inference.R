@@ -303,8 +303,9 @@ print.mfrm_network_ergm <- function(x, ...) {
 #' @param object An `mfrm_network_ergm` result.
 #' @param ... For `summary.mfrm_network_ergm()`: Unused; unexpected arguments are rejected by extractors.
 #'
-#' For `plot()`: For GOF, arguments passed to ergm's `plot.gof`; for coefficients,
-#'   arguments passed to base [graphics::plot()].
+#' For `plot()`: `main` overrides the saved title. Both coefficient and GOF
+#'   views return ggplots from saved tables; edit the returned ggplot for
+#'   other display controls. Backend `plot.gof` controls are not forwarded.
 #' @export
 summary.mfrm_network_ergm <- function(object, ...) {
   object[c("settings", "coefficients", "diagnostics", "gof_table", "warnings", "notes")]

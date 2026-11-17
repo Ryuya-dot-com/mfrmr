@@ -92,7 +92,7 @@ test_that("signed components, incomplete source and paired comparisons retain th
   dat <- dat[-1, ]
   g <- mfrm_g_study(dat, c("V", "W"), rater = NULL, method = "minque0")
   expect_false(mfrm_report(g)$tables$source_design$Complete)
-  cmp <- mfrm_multivariate_d_compare(z$d, assumption = "normal")
+  cmp <- compare_mfrm(z$d, assumption = "normal")
   r <- mfrm_report(cmp)
   expect_identical(r$tables$comparisons, cmp$comparisons)
   expect_equal(r$tables$comparison_covariance$Estimate, as.vector(cmp$covariance))

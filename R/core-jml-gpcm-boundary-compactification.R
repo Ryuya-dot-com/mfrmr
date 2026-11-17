@@ -13,10 +13,6 @@
 # slope sector can do the same. Repeating the argument may therefore require a
 # secondary hierarchy which this audit deliberately does not classify.
 
-mfrmr_jml_gpcm_boundary_compactification_contract_version <- function() {
-  "mfrmr-jml-gpcm-boundary-compactification-0.2.3-v1"
-}
-
 mfrmr_jml_gpcm_primary_role_counts <- function(n_levels) {
   n_levels <- suppressWarnings(as.integer(n_levels)[1])
   if (!is.finite(n_levels) || n_levels < 2L) {
@@ -43,7 +39,6 @@ mfrmr_jml_gpcm_primary_role_counts <- function(n_levels) {
     stringsAsFactors = FALSE
   )
 }
-
 
 audit_mfrm_jml_gpcm_boundary_compactification <- function(
     config,
@@ -77,14 +72,14 @@ audit_mfrm_jml_gpcm_boundary_compactification <- function(
   tolerance_valid <- is.finite(tolerance) && tolerance >= 0
   source_contract_matches <- identical(
     as.character(boundary_classification$contract_version %||% "")[1],
-    mfrmr_jml_gpcm_boundary_classification_contract_version()
+    .mfrmr_const_mfrmr_jml_gpcm_boundary_classification_contract_version
   ) && identical(
     as.character(boundary_classification$objective_identity %||% "")[1],
     "identified_conditional_joint_log_likelihood"
   )
   transport_contract_matches <- identical(
     as.character(affine_transport$contract_version %||% "")[1],
-    mfrmr_jml_gpcm_asymptotically_affine_contract_version()
+    .mfrmr_const_mfrmr_jml_gpcm_asymptotically_affine_contract_version
   )
 
   finish <- function(state, evaluated, detail, reason_codes,
@@ -92,7 +87,7 @@ audit_mfrm_jml_gpcm_boundary_compactification <- function(
                      hierarchy_required = FALSE) {
     list(
       contract_version =
-        mfrmr_jml_gpcm_boundary_compactification_contract_version(),
+        .mfrmr_const_mfrmr_jml_gpcm_boundary_compactification_contract_version,
       method = method,
       model = model,
       estimator_identity = "unpenalized_fixed_effects_jml_no_finite_box",

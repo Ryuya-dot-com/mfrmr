@@ -64,7 +64,7 @@
 #' hierarchical analysis and its dendrogram.
 #' @seealso [mfrm_cluster()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot.mfrm_clusters", run.dontrun = TRUE)
 #' \dontrun{
 #' if (requireNamespace("cluster", quietly = TRUE)) {
@@ -80,10 +80,12 @@
 #'   values$table
 #' }
 #' }
+#' @aliases plot.mfrm_clusters
+#' @rdname mfrm_cluster
 #' @name plot.mfrm_clusters
 NULL
 
-#' @rdname plot.mfrm_clusters
+#' @rdname mfrm_cluster
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.
@@ -158,7 +160,7 @@ plot.mfrm_clusters <- function(x, type = c("silhouette", "profile"),
   .mfrm_finalize_ggplot(out, draw = draw)
 }
 
-#' @rdname plot.mfrm_clusters
+#' @rdname mfrm_cluster
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.

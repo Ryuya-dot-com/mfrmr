@@ -131,7 +131,29 @@ test_that("unresolved corrected roots remain reportable without optimizer placeh
   expect_true(all(is.na(fit$facets$person$Estimate)))
   expect_true(length(fit$jml_adjustment$attempts)>=2L)
   expect_false(fit$summary$Converged)
-  expect_false(any(mfrm_results(fit)$plot_map$Available))
+  res <- mfrm_results(fit)
+  expect_false(any(res$plot_map$Available))
+  expect_true(all(res$status$Status[res$status$Section %in% c("plots","precision")] == "not_available"))
+  expect_true(all(nzchar(res$status$Detail[res$status$Section %in% c("plots","precision")])))
+  expect_match(fit$summary$CovarianceReason,"No supported local solution")
+  expect_identical(summary(res)$overview$CovarianceReason,
+    summary(fit)$tables$uncertainty$Reason)
+  # Replay a saved pre-fix fit without changing its numerical record.
+  legacy <- fit
+  legacy$summary$CovarianceReason <- legacy$jml_adjustment$covariance$reason <- ""
+  legacy_bytes <- serialize(legacy,NULL)
+  legacy_res <- mfrm_results(legacy)
+  expect_identical(legacy_res$status,res$status)
+  expect_identical(summary(legacy_res)$overview$CovarianceReason,
+    summary(fit)$tables$uncertainty$Reason)
+  expect_identical(serialize(legacy,NULL),legacy_bytes)
+  for (state in c("no_local_root","multiple_roots")) {
+    legacy$jml_adjustment$point$status <- state
+    review <- summary(legacy)
+    expect_identical(review$tables$uncertainty$Reason,review$decision$Interpretation)
+    expect_identical(mfrm_results(legacy)$plot_map$Detail,
+      rep(review$decision$Interpretation,3L))
+  }
   expect_match(mfrm_report(mfrm_results(fit))$markdown,"No supported local solution")
   expect_error(plot(fit,draw=FALSE),"No unambiguous")
 })

@@ -43,11 +43,13 @@ for \code{eRm} imports.}
 \item{source}{Source package adapter: \code{"auto"} (default, detected from the
 class of \code{fit}), \code{"mirt"}, \code{"tam"}, or \code{"erm"}.}
 
-\item{object, x}{An imported measurement bundle.}
+\item{object}{An imported measurement bundle.}
 
 \item{digits}{Number of digits for displayed estimates.}
 
 \item{...}{Additional arguments (unused by imported summaries).}
+
+\item{x}{An imported measurement bundle.}
 }
 \value{
 An \code{mfrm_imported_fit} object. Slots:

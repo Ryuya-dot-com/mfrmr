@@ -33,6 +33,7 @@
 #'   standard errors for Rubin pooling.
 #'
 #' @seealso [review_mfrm_imputations()], [pool_mfrm_imputed()]
+#' @rdname mfrm_response_imputations
 #' @export
 fit_mfrm_imputed <- function(x, model = c("RSM", "PCM"), step_facet = NULL, ...) {
   model <- match.arg(model)
@@ -100,7 +101,7 @@ fit_mfrm_imputed <- function(x, model = c("RSM", "PCM"), step_facet = NULL, ...)
   out
 }
 
-#' @rdname fit_mfrm_imputed
+#' @rdname mfrm_response_imputations
 #' @export
 print.mfrm_imputed_fits <- function(x, ...) {
   cat("MFRM analyses of imputed assigned scores\n")
@@ -112,7 +113,7 @@ print.mfrm_imputed_fits <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname fit_mfrm_imputed
+#' @rdname mfrm_response_imputations
 #' @param object An object returned by `fit_mfrm_imputed()`.
 #' @export
 summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
@@ -231,6 +232,7 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #'   *Statistical Methods in Medical Research*, 29, 3533--3546.
 #'   \doi{10.1177/0962280220932189}.
 #' @seealso [mice::pool.scalar()], [review_mfrm_imputations()], [fit_mfrm_imputed()]
+#' @rdname mfrm_response_imputations
 #' @export
 #' @order 1
 pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
@@ -376,7 +378,7 @@ pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
   out
 }
 
-#' @rdname pool_mfrm_imputed
+#' @rdname mfrm_response_imputations
 #' @param ... Unused.
 #' @export
 print.mfrm_pooled <- function(x, ...) {
@@ -389,7 +391,7 @@ print.mfrm_pooled <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname pool_mfrm_imputed
+#' @rdname mfrm_response_imputations
 #' @param object An object returned by `pool_mfrm_imputed()`.
 #' @export
 summary.mfrm_pooled <- function(object, ...) object$table

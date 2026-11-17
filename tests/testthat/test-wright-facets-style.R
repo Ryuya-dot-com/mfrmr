@@ -662,3 +662,105 @@ test_that("FACETS-style Wright arguments are validated", {
     "renderer"
   )
 })
+
+test_that("group KDE retains denominators, ties, excluded rows and a common bandwidth", {
+  values <- c(-2, -1, 0, 0, 1, 2, Inf, NA, seq(-1, 1.5, .5), rep(0, 5), -1, 0, 1, 7)
+  groups <- c(rep("A", 8), rep("B", 6), rep("C", 5), rep("D", 3), NA)
+  fit <- list(facets = list(person = data.frame(Person = paste0("p", seq_along(values)), Estimate = values)))
+  omitted <- data.frame(Person = "p2", PlotExclusionReason = "blocked_source")
+  out <- .build_wright_group_density(fit, groups, bw = .5, person_exclusions = omitted)
+  expect_equal(out$summary$NTotal, c(8, 6, 5, 3, 1))
+  expect_equal(out$summary$NUsed, c(5, 6, 5, 3, 0))
+  expect_equal(out$summary$NExcluded, c(3, 0, 0, 0, 1))
+  expect_identical(out$summary$DensityStatus,
+    c("available", "available", "constant_estimates", "fewer_than_5_estimates", "missing_group"))
+  expect_identical(out$points$ExclusionReason[c(2, 7, 8, 23)],
+    c("blocked_source", "infinite_estimate", "missing_estimate", "missing_group"))
+  expect_equal(out$points$Estimate, values)
+  expect_equal(out$points$ECDF[c(1, 3:6)], c(.2, .6, .6, .8, 1))
+  expect_true(all(is.na(out$points$ECDF[!out$points$Included])))
+  a <- subset(out$curves, Group == "A")
+  b <- subset(out$curves, Group == "B")
+  expect_equal(a$Theta, b$Theta)
+  expect_equal(out$summary$Bandwidth[1:2], c(.5, .5))
+  # Independent Gaussian mixture: stats::density uses FFT binning/interpolation.
+  direct <- rowMeans(vapply(c(-2, 0, 0, 1, 2), function(z) dnorm(a$Theta, z, .5), numeric(nrow(a))))
+  expect_lt(max(abs(a$Density - direct)), 1e-3)
+  expect_equal(sum(diff(a$Theta) * (head(a$Density, -1) + tail(a$Density, -1)) / 2), 1, tolerance = 1e-3)
+  wide <- .build_wright_group_density(fit, groups, bw = .5, adjust = 2, person_exclusions = omitted)
+  expect_equal(wide$summary$Bandwidth[1:2], c(1, 1))
+  expect_identical(wide$points, out$points)
+  automatic <- .build_wright_group_density(fit, groups, person_exclusions = omitted)
+  expect_equal(automatic$settings$bandwidth, stats::bw.nrd0(values[out$points$Included]))
+})
+
+test_that("group membership is Person-based and ambiguous inputs are rejected", {
+  fit <- list(facets = list(person = data.frame(Person = letters[1:12], Estimate = seq(-1, 1, length.out = 12))))
+  lookup <- data.frame(Person = letters[12:1], Cohort = rep(c("B", "A"), each = 6))
+  repeated <- rbind(lookup, lookup, data.frame(Person = "a", Cohort = NA))
+  fit$prep <- list(data = repeated)
+  named <- .build_wright_group_density(fit, "Cohort")
+  positional <- .build_wright_group_density(fit, rep(c("A", "B"), each = 6))
+  expect_identical(named, positional)
+  expect_error(.build_wright_group_density(fit, "Cohort",
+    rbind(repeated, data.frame(Person = "a", Cohort = "B"))), "only one group")
+  expect_error(.build_wright_group_density(fit, "Cohort", data.frame(Person = "a")), "Group column not found")
+  expect_error(.build_wright_group_density(fit, rep("A", 12)), "at least two")
+  expect_error(.build_wright_group_density(fit, rep(c("A", "B"), 6), bw = 0), "density_bw")
+  expect_error(.build_wright_group_density(fit, rep(c("A", "B"), 6), adjust = NA_real_), "density_adjust")
+  fit$facets$person$Person[2] <- "a"
+  expect_error(.build_wright_group_density(fit, rep(c("A", "B"), 6)), "one estimate row")
+})
+
+test_that("Wright group distributions survive public plotting and saved conversion", {
+  fit <- make_wright_ready_fit()
+  original <- serialize(fit, NULL)
+  groups <- rep(c("Cohort A", "Cohort B"), length.out = nrow(fit$facets$person))
+  plain <- plot(fit, draw = FALSE)
+  expect_error(plot(fit, density_bw = .4, draw = FALSE), "with `group` supplied")
+  expect_error(plot(fit, type = "ccc", group = groups, density_adjust = 2, draw = FALSE), "native Wright map")
+  p <- plot(fit, group = groups, density_bw = .4, draw = FALSE)
+  info <- plot_data(p, "group_density")
+  expect_equal(info$settings$bandwidth, .4)
+  expect_equal(plot_data(p, "locations"), plot_data(plain, "locations"))
+  expect_identical(serialize(fit, NULL), original)
+  expect_match(paste(plot_data(p, "notes")$Text, collapse = " "), "not DIF/DFF tests")
+  expect_null(p$labels$title)
+  expect_null(p$labels$subtitle)
+  built <- ggplot2::ggplot_build(p)
+  rug <- which(vapply(p$layers, function(layer) inherits(layer$geom, "GeomRug"), logical(1)))
+  expect_equal(built$data[[rug]]$y, info$points$Estimate[info$points$Included])
+  path <- tempfile(fileext = ".rds")
+  on.exit(unlink(path))
+  saveRDS(p, path)
+  saved <- as_ggplot(readRDS(path))
+  expect_equal(plot_data(saved, "group_density"), info)
+  expect_equal(ggplot2::ggplot_build(saved)$data, built$data)
+  legacy <- plot_data(p)
+  legacy$group_density <- NULL
+  expect_s3_class(as_ggplot(new_mfrm_plot_data("wright_map", legacy)), "ggplot")
+  lookup <- data.frame(Person = fit$facets$person$Person, Cohort = groups)
+  expect_error(plot(fit, group = "Cohort", group_data = rbind(lookup,
+    data.frame(Person = lookup$Person[1], Cohort = "Other")), draw = FALSE), "only one group")
+
+  # Keep all estimates visible when every group is below the display threshold.
+  small <- plot(fit, group = rep(seq_len(ceiling(length(groups) / 3)), each = 3)[seq_along(groups)], draw = FALSE)
+  expect_equal(nrow(plot_data(small, "group")), 0L)
+  expect_equal(sum(plot_data(small, "group_density")$summary$NUsed), sum(is.finite(fit$facets$person$Estimate)))
+  expect_s3_class(ggplot2::ggplot_build(small), "ggplot_built")
+})
+
+test_that("group density honors the main map's blocked extreme exclusions", {
+  fit <- make_wright_ready_fit()
+  fit$readiness$fit$FitReadiness <- "blocked"
+  fit$summary$FitReadiness <- "blocked"
+  fit$facets$person$ReasonCodes <- ""
+  fit$facets$person$ReasonCodes[1] <- "mml_extreme_response_prior_regularized"
+  groups <- rep(c("A", "B"), length.out = nrow(fit$facets$person))
+  p <- suppressWarnings(plot(fit, group = groups, draw = FALSE))
+  excluded <- plot_data(p, "person_exclusions")
+  info <- plot_data(p, "group_density")
+  expect_equal(nrow(excluded), 1L)
+  expect_false(info$points$Included[1])
+  expect_identical(info$points$ExclusionReason[1], excluded$PlotExclusionReason[1])
+})

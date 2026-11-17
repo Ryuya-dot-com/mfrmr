@@ -2,9 +2,17 @@
 % Please edit documentation in R/api-hierarchical-audit.R
 \name{detect_facet_nesting}
 \alias{detect_facet_nesting}
+\alias{plot.mfrm_facet_nesting}
 \title{Detect nesting structure between facets}
 \usage{
 detect_facet_nesting(data, facets, person = NULL, weight_col = NULL)
+
+\method{plot}{mfrm_facet_nesting}(
+  x,
+  preset = c("standard", "publication", "compact", "monochrome"),
+  draw = TRUE,
+  ...
+)
 }
 \arguments{
 \item{data}{Data frame in long format (one row per rating).}
@@ -17,6 +25,14 @@ nesting matrix if supplied).}
 \item{weight_col}{Optional name of a numeric column of finite, nonnegative
 weights. Zero-weight rows are excluded; at least one weight must be positive.
 Weighted frequencies are used directly, without rounding or replicating rows.}
+
+\item{x}{An \code{mfrm_facet_nesting} object.}
+
+\item{preset}{Plot preset.}
+
+\item{draw}{Logical; print the \code{ggplot} figure when \code{TRUE}.}
+
+\item{...}{Reserved.}
 }
 \value{
 A list of class \code{mfrm_facet_nesting} with:
@@ -28,6 +44,9 @@ A list of class \code{mfrm_facet_nesting} with:
 any non-crossed structure was detected.
 \item \code{facets}: the facet vector that was reviewed.
 }
+
+Invisibly, a \code{ggplot} object. \code{\link[=plot_data]{plot_data()}} extracts the rendered
+nesting matrix and pairwise summary table.
 }
 \description{
 Classifies both directions of each pair of facets (optionally including \code{Person})
@@ -36,6 +55,13 @@ based on a conditional-entropy index:
 \deqn{\text{nesting\_index}(A \to B) = 1 - H(B \mid A) / H(B).}
 An index near 1 means that knowing the level of \code{A} essentially
 determines the level of \code{B} (A is nested in B).
+
+Renders the directed nesting index
+\eqn{1 - H(B \mid A)/H(B)} as a heatmap between facet pairs,
+with larger values indicating less conditional uncertainty about B given A.
+Exactly 1 means B is determined by A when H(B) is positive; near 1 is
+not exact nesting. Zero means empirical independence, not necessarily a
+completely crossed design. Undefined zero-entropy cases remain unavailable.
 }
 \details{
 This is a pure descriptive review of the observed design. It does not
@@ -51,8 +77,12 @@ effects.
 \item \code{"Crossed"}: index < 0.50.
 }
 
-The direction column records which facet is nested in which, or
-\code{"crossed"} when neither direction is above 0.95.
+These are package screening bands, not tests of exact nesting or full
+crossing. \code{Direction} is \code{"isomorphic"} when both indices are at least
+0.95, names a nesting direction when only that index is at least 0.95,
+and is \code{"crossed"} when both are below 0.95. Thus the direction can say
+\code{"crossed"} even when a classification is \code{"Partially nested"}.
+Zero-entropy cases have \code{Direction = "insufficient_data"}.
 }
 
 \section{Missing values and weights}{
@@ -70,18 +100,18 @@ the observed pattern represents the missing ratings.
 
 \section{Interpreting output}{
 
-A \code{Direction} value of \code{"Rater nested in Region"} means that every
-rater appears in exactly one region (or very close to it). For
-additive fixed-effects MFRM, this is a concern: the severity of a
-rater is confounded with region-level variance that the model cannot
-partition. Consider reporting the nesting direction explicitly and,
-when relevant, refitting without the nested facet or moving to a
-hierarchical estimation tool (e.g. \code{lme4::lmer}, \code{brms}, \code{TAM}) to
-separate the variance components.
+Exact nesting of Rater within Region confounds unrestricted additive
+rater and region effects. A near-nesting label instead signals limited
+overlap; inspect the actual cross-tabulation and model design. The index
+alone establishes neither rank deficiency nor identification.
 
-\code{Direction = "crossed"} is the most common reading when both nesting
-indices are below 0.5; the two facets largely co-occur at multiple
-combinations, which is the setting Linacre (1989) assumed.
+A hierarchical model can separate within- and between-group variation
+under additional distributional assumptions and adequate replication;
+switching software does not supply missing design information. Dropping
+a facet also changes the model and interpretation. Report the observed
+design and justify the chosen parameterization. A \code{"crossed"} label
+does not establish that every combination was observed or that the full
+many-facet design is connected.
 }
 
 \section{Typical workflow}{
@@ -92,8 +122,14 @@ combinations, which is the setting Linacre (1989) assumed.
 numeric index and the \code{LevelsA}/\code{LevelsB} counts.
 \item For downstream reporting, use \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}}
 to bundle this output with ICC and design-effect summaries, which
-\code{\link[=reporting_checklist]{reporting_checklist()}} can record as available report material.
+\link{mfrm_report_checklist} can record as available report material.
 }
+}
+
+\section{Session plot defaults}{
+
+See \link{mfrmr_visual_diagnostics} for \code{options(mfrmr.plot_preset)}, argument
+precedence, and appearance when saving or reusing a plot.
 }
 
 \examples{
@@ -130,4 +166,7 @@ Linacre, J. M. (1989). \emph{Many-facet Rasch measurement}. MESA Press.
 \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}}, \code{\link[=compute_facet_icc]{compute_facet_icc()}},
 \code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}}, \code{\link[=fit_mfrm]{fit_mfrm()}} (see "Fixed effects
 assumption" in its details).
+
+\code{\link[=detect_facet_nesting]{detect_facet_nesting()}},
+\code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}}.
 }

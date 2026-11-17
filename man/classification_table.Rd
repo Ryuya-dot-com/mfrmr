@@ -144,7 +144,7 @@ This is also distinct from posterior ability-band probabilities in
 the future plan or the normal approximation.
 }
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("classification_table", run.dontrun = TRUE)
 \dontrun{
 ratings <- load_mfrmr_data("example_operational")

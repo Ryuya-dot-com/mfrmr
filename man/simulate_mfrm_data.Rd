@@ -134,172 +134,24 @@ also included.
 Simulate long-format ordered many-facet data for design studies
 }
 \details{
-This function generates synthetic ordered many-facet data under \code{RSM},
-\code{PCM}, or the package's \code{GPCM} branch.
-The data-generating process is:
-\enumerate{
-\item Draw person abilities: \eqn{\theta_n \sim N(0, \texttt{theta\_sd}^2)}
-\item Draw rater severities: \eqn{\delta_j \sim N(0, \texttt{rater\_sd}^2)}
-\item Draw criterion difficulties: \eqn{\beta_i \sim N(0, \texttt{criterion\_sd}^2)}
-\item Unless thresholds are supplied, generate evenly spaced thresholds from
-\code{-step_span} to \code{step_span}; the single binary threshold is zero
-\item For each observation, compute the linear predictor
-\eqn{\eta = \theta_n - \delta_j - \beta_i + \epsilon} where
-\eqn{\epsilon \sim N(0, \texttt{noise\_sd}^2)} (optional)
-\item Compute category probabilities under the recorded measurement model
-(\code{RSM}, \code{PCM}, or \code{GPCM}) and sample the response
+Draws independent centered normal (or \code{sim_spec} empirical / latent-regression
+\code{population}) parameters \eqn{\theta_n}, \eqn{\delta_j}, \eqn{\beta_i}, forms
+\eqn{\eta = \theta_n - \delta_j - \beta_i + \epsilon} (plus optional
+\code{dif_effects} and \code{interaction_effects}, multiplied by slope in \code{GPCM} where
+\code{slope_facet == step_facet} is normalized to unit geometric mean), and
+samples ordered responses under \code{RSM}, \code{PCM}, or \code{GPCM}.
+
+Supports \code{"crossed"}, \code{"rotating"}, \code{"sparse_linked"} (retaining coverage and
+overlap counts in \code{attr(x, "mfrm_sparse_design")}; Wind et al., 2023,
+\doi{10.1177/01466216231182148}), \code{"resampled"}, and \code{"skeleton"} assignments
+(preserving row multiplicity as conditionally independent draws and passing
+\code{Weight} through). Returned attributes carry \code{mfrm_truth} (including
+\code{signals} and \code{slope_table}), \code{mfrm_simulation_spec}, and optional
+\code{mfrm_population_data} (preserving template \code{terms}, factor levels, and
+contrasts).
 }
-
-Latent-value generation is explicit:
-\itemize{
-\item \code{latent_distribution = "normal"} draws centered normal person/rater/
-criterion values using the supplied standard deviations. Values are assigned
-independently to level IDs, without sorting them by severity or difficulty;
-zero is the distribution mean, not a forced sample mean.
-\item \code{latent_distribution = "empirical"} resamples centered support values
-recorded in \code{sim_spec$empirical_support}
-\item if \code{sim_spec$population$active = TRUE}, person measures are generated from
-the stored latent-regression population model and template person
-covariates rather than from \code{theta_sd}
-}
-
-Latent-regression transformations and factor coding retain their template
-basis during generation and refitting. \code{mfrm_population_data$population_formula}
-is a formula-compatible \code{terms} object carrying this basis, factor levels and
-contrasts. Pass it together with the returned \code{person_data} when fitting
-generated data manually. Old specifications containing transformed predictors
-but no stored basis must be rebuilt from the original template or source fit.
-Previously saved generated data/results are not silently reinterpreted.
-
-Earlier versions sorted normal rater/criterion draws before assigning IDs,
-imposing an association with ID order and any ID-specific steps/slopes.
-Correcting that ordering changes seeded datasets. Preserve old generated
-data and results for historical reproduction; new runs use the corrected
-generator and a matching saved specification/software environment.
-
-When \code{dif_effects} is supplied, the specified linear-predictor shift is added to
-\eqn{\eta} for the focal group on the target facet level, creating a
-known DIF signal.  Similarly, \code{interaction_effects} injects a known
-bias into specific facet-level combinations.
-For RSM/PCM this is also the adjacent-category log-odds shift. For GPCM,
-the shift in adjacent-category log odds is the specified effect multiplied
-by the observation's discrimination. A common injected effect therefore
-need not imply equal response-probability changes across facet levels.
-
-The generator targets the common two-facet rating design (persons
-\eqn{\times} raters \eqn{\times} criteria).  \code{raters_per_person}
-controls the incomplete-block structure: when less than \code{n_rater},
-each person is assigned a rotating subset of raters to keep coverage
-balanced and reproducible.
-
-Threshold handling is intentionally explicit:
-\itemize{
-\item if \code{thresholds = NULL}, common equally spaced thresholds are generated
-from \code{step_span}
-\item if \code{thresholds} is a numeric vector, it is used as one common threshold set
-\item if \code{thresholds} is a named list, numeric matrix, or data frame, threshold
-values may vary by \code{StepFacet} (currently \code{Criterion} or \code{Rater})
-}
-
-For \code{GPCM}, the generator requires an explicit slope contract in
-parallel with the threshold table. The supported route keeps
-\code{slope_facet == step_facet}, normalizes supplied slopes to the same
-geometric-mean-one log-slope identification used by \code{\link[=fit_mfrm]{fit_mfrm()}}, and
-samples responses from the corresponding GPCM category probabilities.
-Independent arbitrary slope-facet planning is not supported by these
-design, population-forecasting, diagnostic-screening, or signal-detection
-helpers.
-
-Assignment handling is also explicit:
-\itemize{
-\item \code{"crossed"} uses the full person x rater x criterion design
-\item \code{"rotating"} assigns a deterministic rotating subset of raters per person
-\item \code{"sparse_linked"} assigns most persons to an incomplete rater subset and
-assigns a configurable set of linking persons to a larger rater set
-\item \code{"resampled"} reuses empirical person-level rater profiles stored in
-\code{sim_spec$assignment_profiles}, optionally carrying over person-level
-\code{Group}
-\item \code{"skeleton"} reuses an observed person-by-rater-by-criterion response
-skeleton stored in \code{sim_spec$design_skeleton}, optionally carrying over
-\code{Group} and \code{Weight}
-}
-
-With an active population model, \code{population_assignment = "matched"} in
-\code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} or \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} draws covariates and
-skeleton/profile assignments from the same template Person. Independent
-draws require \code{population_assignment = "independent"}. A population \code{Group}
-column supplies the response \code{Group}; it is not drawn a second time.
-Conflicting group labels or unmatched template IDs fail with an explanation.
-Stored specifications without \code{population_assignment} retain independent
-sampling; rebuild them to request matched sampling. The ambiguous case of
-independently drawn tables both defining \code{Group} now errors.
-
-Skeleton rows retain observation multiplicity. Repeated cells receive new,
-conditionally independent responses given the generated latent values and
-signals. Study runners declare this assumption via
-\code{repeated_ratings = "independent"} when refitting these generated data.
-This does not establish independence of repeated ratings in the source data,
-or simulate serial, occasion or peer-network dependence. \code{Weight} is passed
-through to fitting, not interpreted as additional independently generated rows.
-
-Sparse linked simulation is intended for planned-missing rating designs in
-which connectivity is maintained through common linking persons. The
-returned \code{mfrm_sparse_design} attribute summarizes design density, planned
-missingness, rater coverage, and rater-pair common-person counts. These
-summaries are design diagnostics, not model-fit statistics or universal
-adequacy thresholds. This branch follows sparse rater-mediated assessment
-design work by Wind, Jones, and Grajeda (2023,
-doi:10.1177/01466216231182148), Wind and Jones (2018,
-doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
-(2023).
-
-For more controlled workflows, build a reusable simulation specification
-first via \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} or derive one from an observed fit with
-\code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, then pass it through \code{sim_spec}.
-
-Returned data include attributes:
-\itemize{
-\item \code{mfrm_truth}: simulated true parameters (for parameter-recovery checks)
-\item \code{mfrm_truth$signals}: injected DIF and interaction signal tables
-\item \code{mfrm_truth$population$template_person} and
-\code{mfrm_truth$design$template_person}: source template IDs keyed by generated
-Person, where population or assignment templates are used
-\item \code{mfrm_truth$slope_table}: simulated discrimination table for
-\code{GPCM}
-\item \code{mfrm_population_data}: generated one-row-per-person background data when
-the simulation specification stores an active latent-regression generator,
-including model-matrix xlevel and contrast provenance for categorical
-covariates
-\item \code{mfrm_simulation_spec}: generation settings (for reproducibility)
-including the effective \code{population_assignment} (\code{"matched"},
-\code{"independent"} or \code{"none"}) and the conditional response-independence rule
-\item \code{mfrm_sparse_design}: sparse-design diagnostics when
-\code{assignment = "sparse_linked"}, including design density, planned missing
-rate, rater coverage, and rater-pair common-person counts
-}
-}
-\section{Interpreting output}{
-
-\itemize{
-\item Higher \code{theta} values in \code{mfrm_truth$person} indicate higher person measures.
-\item Higher values in \code{mfrm_truth$facets$Rater} indicate more severe raters.
-\item Higher values in \code{mfrm_truth$facets$Criterion} indicate more difficult criteria.
-\item \code{mfrm_truth$signals$dif_effects} and \code{mfrm_truth$signals$interaction_effects}
-record any injected detection targets.
-}
-}
-
-\section{Typical workflow}{
-
-\enumerate{
-\item Generate one design with \code{simulate_mfrm_data()}.
-\item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} and diagnose with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
-\item For repeated design studies, use \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}.
-}
-}
-
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("simulate_mfrm_data", run.dontrun = TRUE)
 \dontrun{
 sim <- simulate_mfrm_data(

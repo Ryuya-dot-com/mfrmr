@@ -70,7 +70,11 @@ appended facet fields are separated from the element label. Headerless,
 element-first and selected-field fixed layouts are rejected. Use named
 delimited columns for those layouts and for non-ASCII labels.}
 
-\item{facet_col, level_col}{Optional explicit column names for delimited
+\item{facet_col}{Optional explicit column names for delimited
+tables when automatic detection is not sufficient. For score files,
+\code{level_col} can override the column immediately before \code{F-Number}.}
+
+\item{level_col}{Optional explicit column names for delimited
 tables when automatic detection is not sufficient. For score files,
 \code{level_col} can override the column immediately before \code{F-Number}.}
 
@@ -121,7 +125,10 @@ Graphfile expected scores, each in separate scale panels.}
 
 \item{draw}{Logical; print the \code{ggplot} figure when true.}
 
-\item{show_title, show_notes}{Logical; show title/interpretation notes in the
+\item{show_title}{Logical; show title/interpretation notes in the
+plot, off by default. Notes always remain in the returned data.}
+
+\item{show_notes}{Logical; show title/interpretation notes in the
 plot, off by default. Notes always remain in the returned data.}
 
 \item{show_legend}{Logical; display the source-status symbol key or category
@@ -151,7 +158,7 @@ Graph \code{metadata} identifies its separate coordinate system; its units
 remain unknown rather than inheriting element \code{measure_units}.
 \code{summary()} counts available rows by facet. \code{AnchorFlagged} counts
 \code{SourceStatus = "anchored"} rows, not individually fixed parameters; it
-replaces the earlier candidate's ambiguous \code{Anchored} summary column.
+replaces the ambiguous \code{Anchored} summary column in older saved results.
 \code{as.data.frame()} exports the
 element table. Use \code{component = "curves"} with either method to inspect
 Graphfile curves. Use \code{saveRDS()} to retain the full object.
@@ -284,7 +291,7 @@ result <- read_facets_results(path,
 summary(result) # Availability, not a model-adequacy assessment.
 result$table[, c("Facet", "ElementID", "Label", "Estimate", "SourceStatus")]
 plot(result, type = "measure", facets = "Rater", draw = FALSE)
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("plot.mfrm_facets_results", run.dontrun = TRUE)
 \dontrun{
 path <- system.file("extdata", "facets-example", package = "mfrmr")

@@ -4,22 +4,20 @@
 #' the dependence between plans estimated from the same G-study. This first
 #' interval method requires two common random facets and an explicit normal
 #' random-effects assumption.
-#' @param x For `mfrm_multivariate_d_compare()`: A result from [mfrm_d_study()] with at least two plans.
-#'   It must retain `negative_components = "raw"`; this inference does not
-#'   describe GENOVA-adjusted component estimators.
-#'   For population plan-difference intervals alongside GENOVA-adjusted points,
-#'   use the supported `reference` methods in [confint.mfrm_multivariate_d_study()].
-#'
-#' For `plot()`: A result from [mfrm_multivariate_d_compare()].
-#' @param reference Row number of the reference plan in `x$design_grid`.
-#' @param score One original score name. With no selection, use the sole
-#'   composite, or the first original score if there is no composite.
-#' @param composite One named composite, or `"Composite"` for vector weights.
-#'   Select either `score` or `composite`. Several composites require selection.
-#' @param assumption Required: `"normal"` asserts independent, normally
-#'   distributed random-effect vectors with constant component covariances.
-#'   This assumption is not tested by the function.
-#' @param level Pointwise confidence level between zero and one, default .95.
+#' @description Create a comparison with
+#' `compare_mfrm(d, reference = 1, assumption = "normal")`.
+#' @param x A saved plan comparison, for `plot()` or `print()`.
+#' @section Input and options:
+#' Supply one [mfrm_d_study()] result with at least two plans and
+#' `negative_components = "raw"`. This inference does not describe
+#' GENOVA-adjusted component estimators; supported population differences
+#' alongside adjusted points use [confint.mfrm_multivariate_d_study()].
+#' `reference` selects a row of the stored design grid (default 1).
+#' Choose one original `score` or named `composite`; with neither supplied,
+#' use the sole composite or the first score when there are no composites.
+#' Several composites require selection. An explicit `assumption = "normal"`
+#' asserts independent normal random-effect vectors with constant component
+#' covariances; the assumption is not tested. `level` defaults to .95.
 #' @details Use this comparison when choosing between plans specified before inspecting
 #' their estimates. For example, compare two raters and six tasks with three
 #' raters and four tasks. A positive G/Phi difference favors the comparison
@@ -139,14 +137,14 @@
 #' Magnus, J. R. (1978). The moments of products of quadratic forms in normal
 #' variables. *Statistica Neerlandica, 32*(4), 201--210.
 #' \doi{10.1111/j.1467-9574.1978.tb01399.x}. Gaussian product moments;
-#' see p. 209. [Author's copy](https://www.janmagnus.nl/papers/JRM003.pdf).
+#' see p. 209.
 #'
 #' Oehlert, G. W. (1992). A note on the delta method.
 #' *The American Statistician, 46*(1), 27--29.
 #' \doi{10.1080/00031305.1992.10475842}. Taylor/moment approximation framework.
 #' @seealso [mfrm_d_study()], [plot.mfrm_multivariate_d_comparison()]
-#' @examples # Supplementary workflow: run explicitly to keep routine checks brief.
-#' # example("mfrm_multivariate_d_compare", run.dontrun = TRUE)
+#' @examples # Optional workflow; run the example explicitly as shown below.
+#' # example("mfrm_d_study_comparison", run.dontrun = TRUE)
 #' \dontrun{
 #' # Existing fictional ratings: one row per Person-Rater-Task, two scores.
 #' data("mfrmr_example_gtheory_crossed", package = "mfrmr")
@@ -156,115 +154,16 @@
 #' d <- mfrm_d_study(g,
 #'   data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3)),
 #'   weights = c(Content = .5, Organization = .5))
-#' comparison <- mfrm_multivariate_d_compare(d, reference = 1,
+#' comparison <- compare_mfrm(d, reference = 1,
 #'   assumption = "normal")
 #' summary(comparison)
 #' plot(comparison) # G/Phi for each plan, including the reference.
 #' plot(comparison, type = "sem")
 #' plot(comparison, view = "differences") # Paired difference intervals.
 #' }
-#' @export
-#' @order 1
-mfrm_multivariate_d_compare <- function(x, reference = 1L, score = NULL,
-                                       composite = NULL, assumption, level = .95) {
-  if (missing(assumption) || !identical(assumption, "normal")) {
-    stop("This approximation requires `assumption = 'normal'` for the random effects; it does not test that assumption.", call. = FALSE)
-  }
-  if (!inherits(x, "mfrm_multivariate_d_study")) {
-    stop("`x` must be a multivariate D-study result.", call. = FALSE)
-  }
-  .mfrm_mvds_require_raw(x)
-  d <- mfrm_d_study(x$gstudy, x$design_grid, x$weights)
-  g <- d$gstudy
-  if (length(g$design$counts) != 3L || !is.null(g$design$nesting)) {
-    stop("This interval method currently supports two common crossed random facets; nested-design intervals are not available.", call. = FALSE)
-  }
-  nplans <- nrow(d$design_grid)
-  if (nplans < 2L || !is.numeric(reference) || is.complex(reference) ||
-      is.object(reference) || !is.null(dim(reference)) || length(reference) != 1L ||
-      !is.finite(reference) || reference != floor(reference) || reference < 1L || reference > nplans) {
-    stop("Supply at least two plans and a valid reference row number.", call. = FALSE)
-  }
-  if (!is.numeric(level) || is.complex(level) || is.object(level) || !is.null(dim(level)) ||
-      length(level) != 1L || !is.finite(level) || level <= 0 || level >= 1) {
-    stop("`level` must be a number strictly between zero and one.", call. = FALSE)
-  }
-  tab <- d$coefficients
-  if (!is.null(score) && !is.null(composite)) stop("Choose either `score` or `composite`.", call. = FALSE)
-  if (is.null(score) && is.null(composite)) {
-    choices <- unique(tab$Score[tab$Kind == "Composite"])
-    if (length(choices) > 1L) stop("Select one `composite` or an original `score`.", call. = FALSE)
-    if (length(choices)) composite <- choices else score <- g$design$scores[1L]
-  }
-  kind <- if (is.null(composite)) "Score" else "Composite"
-  selected <- if (is.null(composite)) score else composite
-  if (!is.character(selected) || length(selected) != 1L || is.na(selected) ||
-      !any(tab$Kind == kind & tab$Score == selected)) {
-    stop("Select one score or composite present in the D-study.", call. = FALSE)
-  }
-  w <- if (kind == "Score") setNames(as.numeric(g$design$scores == selected), g$design$scores) else
-    if (is.matrix(d$weights)) d$weights[, selected] else d$weights
-  tab <- tab[tab$Kind == kind & tab$Score == selected, , drop = FALSE]
-  # Normalize before quadratic products, then restore SEM units in gradients.
-  weight_scale <- max(abs(w))
-  unit_w <- w / weight_scale
-  theta <- vapply(g$components, function(a) drop(crossprod(unit_w, a %*% unit_w)), numeric(1))
-  component_scale <- max(abs(theta))
-  if (component_scale == 0) component_scale <- 1
-  theta <- theta / component_scale
-  sem_scale <- sqrt(component_scale) * weight_scale
-  C <- .mfrm_mvgt_component_covariance(g, theta)
-  eigenvalues <- eigen(C, symmetric = TRUE, only.values = TRUE)$values
-  covariance_psd <- min(eigenvalues) >= -sqrt(.Machine$double.eps) * max(abs(eigenvalues))
-  metrics <- c("G", "Phi", "RelativeSEM", "AbsoluteSEM")
-  gradients <- lapply(seq_len(nplans), function(i) {
-    n1 <- d$design_grid[i, 1L]; n2 <- d$design_grid[i, 2L]
-    r <- c(0, 0, 0, 1/n1, 1/n2, 0, 1/(n1*n2))
-    a <- r + c(0, 1/n1, 1/n2, 0, 0, 1/(n1*n2), 0)
-    J <- matrix(NA_real_, 4, 7)
-    for (j in 1:2) {
-      c <- if (j == 1L) r else a
-      e <- sum(c * theta); u <- theta[1L]
-      if (u > 0 && e > 0) {
-        J[j, ] <- -u * c / (u + e)^2
-        J[j, 1L] <- e / (u + e)^2
-      }
-      if (e > 0) J[j + 2L, ] <- sem_scale * c / (2 * sqrt(e))
-    }
-    J
-  })
-  others <- setdiff(seq_len(nplans), reference)
-  J <- do.call(rbind, lapply(others, function(i) gradients[[i]] - gradients[[reference]]))
-  table <- do.call(rbind, lapply(others, function(i) data.frame(
-    Reference = reference, Scenario = i, Kind = kind, Score = selected, Metric = metrics,
-    ReferenceValue = as.numeric(tab[reference, metrics]), Value = as.numeric(tab[i, metrics]),
-    Difference = as.numeric(tab[i, metrics]) - as.numeric(tab[reference, metrics]),
-    Status = ifelse(is.finite(as.numeric(tab[i, metrics])) & is.finite(as.numeric(tab[reference, metrics])),
-      "Available", "Point projection unavailable"), row.names = NULL)))
-  identical_plan <- vapply(others, function(i)
-    all(d$design_grid[i, ] == d$design_grid[reference, ]), logical(1))
-  exact <- rep(identical_plan, each = 4L) & table$Status == "Available"
-  J[exact, ] <- 0
-  covariance <- J %*% C %*% t(J)
-  rownames(covariance) <- colnames(covariance) <- paste(table$Scenario, table$Metric, sep = "/")
-  variance <- diag(covariance)
-  boundary <- rowSums(!is.finite(J)) > 0
-  table$Status[table$Status == "Available" & boundary] <- "Interval unavailable at a boundary"
-  table$Status[table$Status == "Available" & (!is.finite(variance) | variance <= 0) & !exact] <-
-    "Nonpositive or nonfinite difference variance"
-  ok <- table$Status == "Available"
-  table$SE <- sqrt(ifelse(ok, variance, NA_real_))
-  critical <- stats::qnorm((1 - level) / 2, lower.tail = FALSE)
-  table$Lower <- table$Difference - critical * table$SE
-  table$Upper <- table$Difference + critical * table$SE
-  structure(list(comparisons = table, covariance = covariance, design_grid = d$design_grid,
-    reference = as.integer(reference), score = selected, kind = kind, weights = w,
-    level = level, method = "Normal-theory paired delta approximation",
-    source_design = g$design[c("method", "counts", "rows", "complete", "balanced",
-      "nesting", "score_convention")], source_rows = g$data_usage$counts,
-    component_diagnostics = d$component_diagnostics, sampling_covariance_psd = covariance_psd),
-    class = "mfrm_multivariate_d_comparison")
-}
+#' @name mfrm_d_study_comparison
+#' @aliases mfrm_multivariate_d_compare
+NULL
 
 .mfrm_mvgt_component_covariance <- function(g, theta) {
   n <- g$design$counts
@@ -321,8 +220,8 @@ mfrm_multivariate_d_compare <- function(x, reference = 1L, score = NULL,
   (C + t(C)) / 2
 }
 
-#' @rdname mfrm_multivariate_d_compare
-#' @param object A result from `mfrm_multivariate_d_compare()`.
+#' @rdname mfrm_d_study_comparison
+#' @param object A saved plan comparison from `compare_mfrm(d, ...)`.
 #' @param planning For `summary()`: `FALSE` returns the unchanged comparison
 #'   table. `TRUE` returns the planning review attached by
 #'   [recommend_mfrm_design()], without calculation.
@@ -343,7 +242,7 @@ summary.mfrm_multivariate_d_comparison <- function(object, ..., planning = FALSE
   object$comparisons
 }
 
-#' @rdname mfrm_multivariate_d_compare
+#' @rdname mfrm_d_study_comparison
 #' @inheritParams print.mfrm_multivariate_gstudy
 #' @export
 print.mfrm_multivariate_d_comparison <- function(x, digits = NULL, row.names = FALSE, ...) {

@@ -68,7 +68,11 @@ default 3.}
 
 \item{top_n}{Number of top groups to retain in summary previews.}
 
-\item{...}{For \code{plot()}: View-specific controls from \code{\link[=plot_response_time_review]{plot_response_time_review()}}.
+\item{...}{For \code{plot()}: \code{facet} selects a facet for \code{type = "facet"};
+\code{top_n = 25} limits person/facet rows; \code{preset} selects appearance;
+\code{draw = FALSE} returns plot data without drawing. The returned payload
+retains thresholds, overview and interpretation notes. These descriptive
+views do not fit a joint response-time model.
 
 For \code{summary()}: Unused.}
 

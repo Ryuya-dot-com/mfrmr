@@ -248,20 +248,10 @@ compute_person_fit_indices <- function(diagnostics, fit = NULL) {
                  "ReportIndex", "ReportValue", "ReportFlagLevel", "ReportFlag",
                  "ReviewStatus", "ReviewReason", "ReportCaveat"),
              drop = FALSE]
-  attr(out, "person_fit_thresholds") <- person_fit_threshold_table()
+  attr(out, "person_fit_thresholds") <- .mfrmr_const_person_fit_threshold_table
   attr(out, "person_fit_calculation_version") <- 2L
   class(out) <- c("mfrm_person_fit_indices", class(out))
   out
-}
-
-person_fit_threshold_table <- function() {
-  data.frame(
-    Threshold = c("5pct", "1pct"),
-    TwoSidedAlpha = c(0.05, 0.01),
-    AbsZ = c(stats::qnorm(0.975), stats::qnorm(0.995)),
-    Rule = c("|z| > 1.96", "|z| > 2.58"),
-    stringsAsFactors = FALSE
-  )
 }
 
 add_person_fit_reporting_columns <- function(out) {
@@ -499,7 +489,7 @@ summary.mfrm_person_fit_indices <- function(object,
 
   thresholds <- attr(object, "person_fit_thresholds", exact = TRUE)
   if (!is.data.frame(thresholds) || nrow(thresholds) == 0L) {
-    thresholds <- person_fit_threshold_table()
+    thresholds <- .mfrmr_const_person_fit_threshold_table
   }
 
   reporting_map <- data.frame(

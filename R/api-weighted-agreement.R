@@ -65,7 +65,7 @@
 #' @seealso [gwet_ac2_table()], [krippendorff_alpha_table()],
 #'   [pairwise_icc_table()], [score_comparison_table()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("pairwise_kappa_table", run.dontrun = TRUE)
 #' \dontrun{
 #' data("mfrmr_example_agreement", package = "mfrmr")
@@ -78,6 +78,7 @@
 #' # R2 gives every response one category more than R1: equal rankings do not
 #' # imply agreement. Do not treat two Tasks by the same Person as one response.
 #' }
+#' @rdname interrater_agreement_table
 #' @export
 pairwise_kappa_table <- function(data, rater, unit, score, categories,
                                  weights = c("quadratic", "linear", "unweighted")) {
@@ -142,7 +143,6 @@ pairwise_kappa_table <- function(data, rater, unit, score, categories,
 #' Compute observed-score agreement across two or more raters, with a declared
 #' category universe and quadratic, linear or unweighted agreement.
 #'
-#' @inheritParams pairwise_kappa_table
 #' @details
 #' Observed agreement is the equally weighted mean of within-unit weighted
 #' agreement over distinct ordered rating pairs, using only units with at least
@@ -190,7 +190,7 @@ pairwise_kappa_table <- function(data, rater, unit, score, categories,
 #' @seealso [pairwise_kappa_table()], [krippendorff_alpha_table()],
 #'   [pairwise_icc_table()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("gwet_ac2_table", run.dontrun = TRUE)
 #' \dontrun{
 #' data("mfrmr_example_agreement", package = "mfrmr")
@@ -201,6 +201,7 @@ pairwise_kappa_table <- function(data, rater, unit, score, categories,
 #' ac$unit_summary # Number of observed ratings and pairability for each response.
 #' ac$notes # Read the panel coefficient together with its assumptions.
 #' }
+#' @rdname interrater_agreement_table
 #' @export
 gwet_ac2_table <- function(data, rater, unit, score, categories,
                             weights = c("quadratic", "linear", "unweighted")) {

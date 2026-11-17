@@ -85,16 +85,14 @@ test_that("preset aggregation keeps separate denominators and drops empty groups
     Bundle = "one", AppendixSection = "results", Role = "fit",
     Table = letters[1:5], PlotReady = c(TRUE, FALSE, NA, TRUE, FALSE),
     NumericColumns = c(1, 0, NA, 2, 1))
-  result <- structural_design_selection_by_preset(catalog,
-    export_summary_table_selection_handoff_preset_summary,
-    presets = c("compact", "all", "compact", "methods"))
+  result <- structural_design_selection_by_preset(catalog, export_summary_table_selection_counts, presets = c("compact",
+    "all", "compact", "methods"), view = "preset")
   expect_identical(result$Preset, c("compact", "all"))
   expect_identical(result$Tables, c(1L, 3L))
   expect_equal(result$PlotReadyFraction, c(0, 1 / 3))
   expect_equal(result$NumericFraction, c(0, 2 / 3))
   expect_identical(rownames(result), c("1", "2"))
-  expect_identical(structural_design_selection_by_preset(catalog[FALSE, ],
-    export_summary_table_selection_handoff_preset_summary), data.frame())
+  expect_identical(structural_design_selection_by_preset(catalog[FALSE, ], export_summary_table_selection_counts, view = "preset"), data.frame())
 })
 
 test_that("table and file inputs retain ConQuest normalization and provenance", {
@@ -141,6 +139,24 @@ test_that("consolidated entry points replace redundant exports", {
   )
   expect_true(all(retired_025 %in% aliases$Alias))
   expect_true(all(aliases$Lifecycle[match(retired_025, aliases$Alias)] == "removed_export"))
+})
+
+test_that("the default output guide exposes central routes and preserves explicit catalogues", {
+  core <- mfrmr_output_guide()
+  expect_identical(core, mfrmr_output_guide("core_workflow"))
+  expect_identical(core, mfrmr_output_guide(NULL))
+  expect_equal(nrow(core), 5L)
+  expect_true(all(core$RecommendedEntry))
+  for (entry in c("describe_mfrm_data", "fit_mfrm", "diagnose_mfrm", "mfrm_g_study", "mfrm_d_study", "mfrm_report"))
+    expect_true(any(grepl(paste0(entry, "("), core$MainFunction, fixed = TRUE)))
+  catalogue <- mfrmr_output_guide("all")
+  expect_gt(nrow(catalogue), nrow(core))
+  expect_identical(catalogue[catalogue$Scope == "core_workflow", , drop = FALSE], core)
+  expect_identical(names(catalogue), names(core))
+  expect_true(all(mfrmr_output_guide("models")$Question %in% catalogue$Question))
+  expect_identical(mfrmr_output_guide("beginner"), mfrmr_output_guide("public"))
+  expect_equal(nrow(mfrmr_output_guide("beginner")), 6L)
+  expect_error(mfrmr_output_guide(extra = TRUE), "takes no additional arguments")
 })
 
 test_that("mfrmr_output_guide scopes preserve consolidated guides and capability matrices", {

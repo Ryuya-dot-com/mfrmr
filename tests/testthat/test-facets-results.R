@@ -1,12 +1,34 @@
-facets_result_example <- function(...) {
-  read_facets_results(system.file("extdata", "facets-example", package = "mfrmr"),
-    facet_map = c("Person", "Rater", "Task"), ...)
-}
+facets_result_example <- local({
+  cached <- NULL
+  function(...) {
+    if (length(list(...)) == 0L) {
+      if (is.null(cached)) {
+        cached <<- read_facets_results(
+          system.file("extdata", "facets-example", package = "mfrmr"),
+          facet_map = c("Person", "Rater", "Task")
+        )
+      }
+      return(cached)
+    }
+    read_facets_results(system.file("extdata", "facets-example", package = "mfrmr"),
+      facet_map = c("Person", "Rater", "Task"), ...)
+  }
+})
 
-facets_graph_example <- function(...) {
-  read_facets_results(graph_file = system.file("extdata", "facets-graph-example",
-    "graph.txt", package = "mfrmr"), ...)
-}
+facets_graph_example <- local({
+  cached <- NULL
+  function(...) {
+    if (length(list(...)) == 0L) {
+      if (is.null(cached)) {
+        cached <<- read_facets_results(graph_file = system.file("extdata",
+          "facets-graph-example", "graph.txt", package = "mfrmr"))
+      }
+      return(cached)
+    }
+    read_facets_results(graph_file = system.file("extdata", "facets-graph-example",
+      "graph.txt", package = "mfrmr"), ...)
+  }
+})
 
 facets_graph_test_file <- function(lines) {
   path <- tempfile(fileext = ".txt")
@@ -98,7 +120,12 @@ test_that("missing and invalid graph rows are retained and break curve segments"
 test_that("Graphfile rejects ambiguous identity, schema and grid order", {
   header <- 'Scale,Measure,Expected,ExpCat,Prob:0,Prob:1'
   good <- '1,0,.5,0,.5,.5'
-  read <- function(lines) read_facets_results(graph_file = facets_graph_test_file(lines))
+  shared_path <- tempfile(fileext = ".txt")
+  on.exit(unlink(shared_path), add = TRUE)
+  read <- function(lines) {
+    writeLines(lines, shared_path, useBytes = TRUE)
+    read_facets_results(graph_file = shared_path)
+  }
   expect_error(read(c(good, good)), "headings")
   expect_error(read(c(sub('Prob:1', 'Prob:0', header), good)), "unique")
   expect_error(read(c(header, good, good)), "Duplicate")

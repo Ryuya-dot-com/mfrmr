@@ -55,6 +55,21 @@
 #' attaching `$contrasts` when requested); printing is compact.
 #' The bundled synthetic examples use short chains and require sampling
 #' review; their numbers are workflow illustrations, not assessment findings.
+#' @references
+#' Vehtari, A., Gelman, A., Simpson, D., Carpenter, B., & Burkner, P.-C. (2021).
+#' Rank-normalization, folding, and localization: An improved R-hat for
+#' assessing convergence of MCMC. *Bayesian Analysis, 16*(2), 667--718.
+#' \doi{10.1214/20-BA1221}
+#'
+#' Carpenter, B., Gelman, A., Hoffman, M. D., Lee, D., Goodrich, B.,
+#' Betancourt, M., Brubaker, M., Guo, J., Li, P., & Riddell, A. (2017). Stan:
+#' A probabilistic programming language. *Journal of Statistical Software,
+#' 76*(1), 1--32. \doi{10.18637/jss.v076.i01}
+#'
+#' Burkner, P.-C. (2017). brms: An R package for Bayesian multilevel models
+#' using Stan. *Journal of Statistical Software, 80*(1), 1--28.
+#' \doi{10.18637/jss.v080.i01}
+#'
 #' @seealso [export_mfrm_model()], [predict.mfrm_posterior_summary()],
 #'   [plot.mfrm_posterior_summary()]
 #' @examples

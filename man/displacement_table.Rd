@@ -43,20 +43,31 @@ A named list with:
 Compute displacement diagnostics for facet levels
 }
 \details{
-Displacement is computed as a one-step Newton update:
-\code{sum(residual) / sum(information)} for each facet level.
-This approximates how much a level would move if constraints were relaxed.
+Displacement is the facet sign times the weighted sum of observation score
+derivatives divided by weighted score information. For unit-discrimination
+RSM/PCM these reduce to observed-minus-expected residuals and conditional
+score variances. The Person sign is positive; default severity/difficulty
+signs are negative. GPCM uses its slope-aware derivatives and information.
+This is a conditional one-step location adjustment with other fitted
+quantities held fixed, not a joint unconstrained refit. \code{DisplacementSE}
+is inverse square-root information; it excludes cross-parameter and
+source-anchor uncertainty. Nonpositive information gives unavailable values.
 }
 \section{Interpreting output}{
 
-\itemize{
-\item \code{table}: level-wise displacement and flag indicators.
-\item \code{summary}: count/share of flagged levels.
-\item \code{thresholds}: displacement and t-value cutoffs.
-}
+\code{Displacement} is the proposed change in the fitted location coordinate.
+For a default negatively oriented Rater facet, a positive displacement
+means greater severity and lower predicted scores, holding other terms
+fixed. This is the opposite score direction to positive \verb{Bias Size} in
+\code{\link[=estimate_bias]{estimate_bias()}}, which is added directly to the score predictor.
 
-Large absolute displacement in anchored levels suggests potential instability
-in anchor assumptions.
+\code{ReleasedEstimate = Estimate + Displacement} is only a one-step projection;
+no anchor is actually released or model refitted. \code{AnchorGap} subtracts
+the directly supplied \code{AnchorValue} from this projection. A large gap
+suggests tension with the fitted baseline, not proof that the anchor changed.
+\code{DisplacementT} is a conditional screening ratio, not a calibrated test.
+Inspect finite displacement/information before reading \code{Flag}: a missing
+calculation cannot cross its cutoff and therefore need not produce a flag.
 }
 
 \section{Typical workflow}{
@@ -73,13 +84,20 @@ in anchor assumptions.
 The \code{table} data.frame contains:
 \describe{
 \item{Facet, Level}{Facet name and element label.}
-\item{Displacement}{One-step Newton displacement estimate (logits).}
-\item{DisplacementSE}{Standard error of the displacement.}
-\item{DisplacementT}{Displacement / SE ratio.}
-\item{Estimate, SE}{Current measure estimate and its standard error.}
-\item{N}{Number of observations involving this level.}
+\item{Displacement}{One-step location change in native ability units;
+adjacent-logit units for RSM/PCM. GPCM's score effect also depends on slopes.}
+\item{DisplacementSE}{Inverse square-root conditional information;
+excludes uncertainty in the other fitted parameters and anchor source.}
+\item{DisplacementT}{\code{Displacement / DisplacementSE}.}
+\item{Estimate, SE}{Current measure and its diagnostic uncertainty;
+MML Person SEs are posterior SDs. See \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
+\item{N, WeightedN}{Summed response weights for this level in native
+diagnostics, equal to the row count with unit weights; not independent Persons.}
+\item{ReleasedEstimate, AnchorGap}{One-step projected location and its
+difference from a directly supplied anchor, when available.}
 \item{AnchorValue, AnchorStatus, AnchorType}{Anchor metadata.}
-\item{Flag}{Logical; \code{TRUE} when displacement exceeds thresholds.}
+\item{Flag}{TRUE when either finite absolute displacement or its
+absolute screening ratio reaches the corresponding cutoff.}
 }
 }
 
@@ -92,7 +110,7 @@ See \link{mfrmr_compatibility_layer} for migration instructions.
 }
 
 \examples{
-# Supplementary workflow: run explicitly to keep routine checks brief.
+# Optional workflow; run the example explicitly as shown below.
 # example("displacement_table", run.dontrun = TRUE)
 \dontrun{
 # Saved synthetic JML/RSM analysis of example_core.
@@ -102,7 +120,7 @@ fit <- example_fit$fit
 disp <- displacement_table(fit, anchored_only = FALSE)
 summary(disp)
 p_disp <- plot(disp, draw = FALSE)
-p_disp$data$plot
+plot_data(p_disp, "plot")
 }
 }
 \seealso{

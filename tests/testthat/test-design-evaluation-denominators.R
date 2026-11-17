@@ -2,7 +2,7 @@ design_evaluation_denominator_fixture <- local({
   planning_schema <- NULL
   function() {
     # Public evaluation shape with known outcomes; no simulated responses or fits.
-    prototype <- mfrmr:::design_eval_result_prototype()
+    prototype <- mfrmr:::design_eval_result_prototype
     available <- prototype[rep(NA_integer_, 2), ]
     for (name in names(available)) {
       available[[name]] <- if (is.character(prototype[[name]])) rep("", 2) else if (
@@ -80,7 +80,7 @@ test_that("design recommendations retain failed runs in convergence denominators
 
   x$rep_overview$Converged[2] <- NA
   expect_equal(summary(x)$design_summary$ConvergenceRate, c(.1, 1, .1, 1))
-  x$results <- mfrmr:::design_eval_result_prototype()
+  x$results <- mfrmr:::design_eval_result_prototype
   x$rep_overview <- runs[runs$design_id == "D3", ]
   failed <- summary(x)
   expect_equal(failed$overview$Replications, 10)

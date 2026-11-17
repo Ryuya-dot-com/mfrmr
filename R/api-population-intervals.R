@@ -4,8 +4,9 @@
 #' an estimated RSM/PCM MML population model. Coefficient intervals use a normal
 #' approximation; residual
 #' variance intervals exponentiate a normal interval for log residual variance.
-#' These experimental intervals have unqualified repeated-sample coverage.
-#' Method qualification is incomplete even when numerical checks pass.
+#' For these experimental intervals, nominal repeated-sample coverage has not
+#' been established across the supported designs. Passing numerical checks
+#' does not establish this statistical property.
 #' Saved cautions are also retained as an `interpretation_notes` table in
 #' [mfrm_results()], reports and table exports.
 #'
@@ -22,121 +23,23 @@
 #'   pointwise intervals. `NULL` retains the coefficient/variance-only output.
 #' @inheritParams mfrm_facet_intervals
 #' @details
-#' For the bounded fixed-SD anchor-origin route, `anchor_covariance` with
-#' `independent_anchors = TRUE` propagates an independently estimated anchor
-#' covariance into the population coefficients and contrasts. Alternatively,
-#' pass a saved facet-interval result already containing source propagation and
-#' omit both arguments; its sensitivity and conditional information are reused
-#' once. See [mfrm_facet_intervals()] for the formula, required independence,
-#' supported scope and complete bundled-data example. Point estimates are
-#' unchanged; conditional SE/bounds remain in separate `Conditional*` columns.
-#' `vcov()` then returns source-propagated coefficient covariance. The fixed
-#' population variance still has no SE or interval. Drift, source-estimate bias,
-#' dependent samples and uncertainty in the supplied SD are not corrected.
+#' For \eqn{\theta_i \mid X_i \sim N(X_i\beta, \sigma_e^2)}, extracts the
+#' inverse full joint observed information (including structural nuisance
+#' parameters) to form normal intervals on working coordinates (`beta` and, when
+#' estimated, `\log\sigma_e^2` in `WorkingEstimate`, `WorkingSE`,
+#' `WorkingLower`, `WorkingUpper`, exponentiated to natural variance with
+#' `NaturalScaleStatus`) plus optional linear contrasts \eqn{L\widehat\beta} with
+#' covariance \eqn{L V_\beta L^{\mathsf T}} (`contrast_covariance`). Explicit
+#' fixed `population_sd` retains `Status = "fixed"` and `CIEligible = FALSE`.
 #'
-#' The fitted model is \eqn{\theta_i\mid X_i\sim N(X_i\beta,\sigma_e^2)}.
-#' Residual variance is conditional on the fitted predictors; it is not the
-#' marginal variance of ability. Predictor transformations and coefficient
-#' coding are those retained by the fit. The covariance is taken from the
-#' inverse of the full information, including all structural nuisance terms.
-#' A contrast matrix \eqn{L} gives estimates \eqn{L\widehat\beta} and covariance
-#' \eqn{L V_\beta L^{\mathsf T}}, using the coefficient block of that inverse.
-#' Contrast rows are added to the interval table. These describe conditional
-#' population means or their linear combinations, not differences between two
-#' individual abilities or causal effects. For example, in `~ X`, weights
-#' `(0, 2)` compare the means at `X = 1` and `X = -1`. Interactions, factor
-#' reference levels and transformations must use the fitted coding. The helper
-#' accepts weights in coefficient coordinates; it does not infer raw covariate
-#' profiles or rebuild a transformation from a new sample.
-#'
-#' Use direct MML with fixed or adaptive integration, unit observation weights,
-#' full-rank population coding, centered additive facets and centered steps,
-#' without constraint groups or
-#' fitted interactions. The fixed-SD anchor-origin extension described below
-#' also admits supplied anchors. Source consistency, category
-#' support, local solution, full joint information and finer-integration checks
-#' must pass as in [mfrm_facet_intervals()]. The procedure can return eligible
-#' intervals while the source fit retains `InferenceReady = FALSE`; inspect
-#' the interval's `CIEligible`, `Status`, checks and cautions. This does not
-#' change overall fit readiness or qualify other inference procedures.
-#' A recorded identification or boundary failure prevents intervals. Failed numerical checks retain point
-#' estimates and reasons with unavailable uncertainty. This is an interior,
-#' model-based approximation: it does not handle a zero-variance boundary,
-#' misspecified populations, dependent Persons or informative assignment.
-#' Passing numerical checks does not prove global optimality or coverage.
-#' When residual variance is estimated, a zero-residual-variance candidate at the retained nuisance estimates is also
-#' compared with the fitted likelihood at both integration orders. A higher
-#' boundary likelihood beyond the numerical allowance prevents intervals.
-#' This inexpensive comparison does not optimize the boundary or rule out other
-#' better boundary candidates. Requests using saved facet inference also perform
-#' this likelihood comparison, without refitting or differentiating again.
-#' A fit with explicit `population_sd` conditions on that positive fixed SD;
-#' zero variance is not a feasible candidate. Its residual-variance row retains
-#' the supplied value with `Status = "fixed"`, missing SE/bounds and
-#' `CIEligible = FALSE`. Coefficients and their contrasts still have model-based
-#' intervals when numerical checks pass. With `population_formula = ~1`, direct
-#' anchors on the selected `noncenter_facet` can identify the population mean
-#' and free facet locations. By default, these intervals condition on the
-#' supplied anchors and SD. The optional `anchor_covariance` extension adds
-#' independent source-anchor uncertainty while still conditioning on the SD.
-#'
-#' \code{SE} is on the reported estimate scale (delta-method SE for variance).
-#' \code{WorkingEstimate} and \code{WorkingSE} use coefficient/log-variance
-#' coordinates. \code{WorkingLower} and \code{WorkingUpper} retain the interval
-#' on that scale. Exponentiation can give displayed variance bounds of zero or
-#' infinity outside floating-point range; \code{NaturalScaleStatus} identifies
-#' that representation limit while the finite log-scale interval is retained.
-#' \code{vcov()} returns their covariance, with explicit coordinate
-#' names; its final coordinate is log residual variance, not natural variance,
-#' when variance is estimated. A fixed variance has no free covariance coordinate.
-#' It remains the coefficient/log-variance covariance when contrasts are supplied;
-#' `contrast_covariance` separately contains the covariance of the requested rows.
-#' No multiplicity adjustment or automatic significance decision is made.
-#'
-#' Save the result directly, or attach it through
-#' \code{mfrm_results(fit, intervals = list(population = ci), compute = "never")}.
-#' Tables, reports and exports reuse saved intervals and numerical checks.
-#' Supplied contrast weights and their covariance are also exported. These
-#' tables prefix coordinate columns with `beta:`/`contrast:`
-#' to distinguish them from the `Target` identifier column.
-#' The saved result retains the unchanged fit, including its population formula, trained
-#' terms, factor levels and coding; save the raw reference profiles separately
-#' if you used them to construct the weights.
-#' The ordinary population summary remains a point-estimate table.
-#'
-#' @section Reading the result:
-#' Start with `summary(ci)`, then inspect `ci$checks`, `ci$numerical_checks`
-#' and `ci$cautions`. Keep these with the interval table when saving or sharing.
-#' [plot(ci)][plot.mfrm_population_intervals] displays saved coefficients;
-#' `plot(ci, type = "contrasts")` displays the supplied linear contrasts.
-#' Unavailable intervals remain visible, and [as_ggplot()] reuses the same data.
-#' - `Status = "available"` and `CIEligible = TRUE` mean that the numerical
-#'   checks permit the experimental interval. They do not certify nominal
-#'   coverage. `InferenceReview` records this distinction in each row.
-#' - `Status = "fixed"` retains a supplied residual variance without an
-#'   inferential interval; missing uncertainty is not an estimated zero SE.
-#' - `Status = "numerical_review_failed"` retains the point estimate and
-#'   failed-check reason, with unavailable SEs and bounds. `nonpositive_variance`
-#'   or `nonfinite_bounds` instead identifies an unusable target-specific
-#'   uncertainty calculation. Missing bounds are not infinite endpoints.
-#' - `NaturalScaleStatus = "outside_floating_point_range"` means the finite
-#'   log-variance interval cannot be fully represented after exponentiation.
-#'   Inspect `WorkingLower` and `WorkingUpper`; a displayed zero is not an
-#'   interval qualified for a zero-variance boundary.
-#'
-#' Coverage evidence is specific to the target, design and complete estimation
-#' procedure. In the retained RSM checks, mean-at-\eqn{X=1} and log-variance
-#' intervals at 20 Persons remain inconclusive under the prespecified practical
-#' criteria. The independent 240-Person slope/mean-difference confirmation
-#' supports those targets in its tested design; it does not establish a minimum
-#' sample size or qualify arbitrary regressions, PCM designs or all contrasts.
-#' All outputs from this helper therefore retain their experimental status.
-#'
-#' These intervals do not add calibration uncertainty to individual scoring.
-#' [predict_mfrm_units()] has separate source and scoring checks; its conditional
-#' posterior intervals hold the fitted calibration and population parameters
-#' fixed. Availability here does not authorize an otherwise refused scoring
-#' result. See `mfrmr_output_guide("intervals")` for the different uncertainty targets.
+#' Requires direct RSM/PCM MML (unit weights, full-rank coding, centered
+#' additive facets/steps, passing local/information/finer-quadrature and
+#' zero-residual-variance likelihood checks). For intercept-only anchor-origin
+#' fits, `anchor_covariance` with `independent_anchors = TRUE` (or a saved
+#' [mfrm_facet_intervals()] object) propagates independent source-anchor
+#' uncertainty (`AnchorSourceSE` vs `Conditional*` columns). Intervals remain
+#' experimental (`Status`, `CIEligible`, `InferenceReview`) and do not propagate
+#' calibration uncertainty into [predict_mfrm_units()].
 #' @return An \code{mfrm_population_intervals} object with the interval table,
 #'   working-coordinate covariance, full parameter covariance, numerical checks,
 #'   source identity and unchanged source fit. With `contrasts`, also contains

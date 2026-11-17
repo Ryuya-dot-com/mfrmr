@@ -423,6 +423,14 @@ gpcm_capability_boundary_table <- function(fit = NULL,
     "legacy_or_unresolved_review_required"
   } else if (all(slope_status == "fixed")) {
     "fixed_unit_slope_primary"
+  } else if (all(slope_status == "finite_local_solution")) {
+    "verified_local_point_estimate"
+  } else if (all(slope_status == "finite_numerical_solution")) {
+    "finite_numerical_point_estimate"
+  } else if (any(slope_status == "finite_likelihood_limit")) {
+    "partial_limiting_point_estimates"
+  } else if (identical(fit$config$gpcm_point_estimation$overview$Status, "finite_maximum_absent")) {
+    "no_finite_joint_maximum"
   } else if (any(slope_status %in%
                  c("unbounded_low", "unbounded_high", "unbounded_both"))) {
     "typed_extended_boundary_primary_only"
@@ -450,17 +458,6 @@ gpcm_capability_boundary_table <- function(fit = NULL,
     "model_conditional_discrimination_not_rater_consistency"
   rownames(out) <- NULL
   out
-}
-
-gpcm_fair_average_rationale <- function() {
-  paste0(
-    "The diagnostics/QC dashboard keeps the embedded fair-average panel ",
-    "disabled for `GPCM` fits so it does not present score-side ",
-    "adjustments as a FACETS-equivalent reporting surface. ",
-    "Use `fair_average_table()` directly for the supported slope-aware ",
-    "element-conditional GPCM fair averages, and keep its documented SE ",
-    "caveat in force."
-  )
 }
 
 # Gauss-Hermite nodes/weights for standard normal integration
@@ -647,10 +644,6 @@ expand_facet <- function(free, n_levels) {
 
 sum_zero_param_count <- function(n_levels) {
   max(as.integer(n_levels %||% 0L) - 1L, 0L)
-}
-
-expand_sum_zero_vector <- function(free, n_levels) {
-  expand_facet(as.numeric(free %||% numeric(0)), as.integer(n_levels %||% 0L))
 }
 
 build_step_constraint <- function(n_steps,
@@ -851,21 +844,6 @@ project_typed_step_gradient <- function(grad_step, config) {
   }), use.names = FALSE)
 }
 
-project_step_matrix_gradient <- function(grad_step_mat) {
-  if (!is.matrix(grad_step_mat)) {
-    grad_step_mat <- as.matrix(grad_step_mat)
-  }
-  if (nrow(grad_step_mat) == 0L || ncol(grad_step_mat) <= 1L) {
-    return(numeric(0))
-  }
-  unlist(
-    lapply(seq_len(nrow(grad_step_mat)), function(i) {
-      project_sum_zero_gradient(grad_step_mat[i, ])
-    }),
-    use.names = FALSE
-  )
-}
-
 build_gpcm_slope_spec <- function(levels,
                                   slope_facet,
                                   step_facet) {
@@ -883,7 +861,8 @@ build_gpcm_slope_spec <- function(levels,
 }
 
 expand_gpcm_log_slopes <- function(free,
-                                   spec) {
+                                   spec,
+                                   include_slope_components = TRUE) {
   if (!is.null(spec$log_slope_design)) {
     if (length(free) != spec$n_params || any(!is.finite(free))) {
       stop("Product slopes require a finite vector with one entry per free coordinate.")
@@ -892,6 +871,7 @@ expand_gpcm_log_slopes <- function(free,
     component_log <- list(expand_facet(free[seq_len(n[1] - 1L)], n[1]),
                           free[n[1] - 1L + seq_len(n[2])])
     components <- Map(function(x, labels) {
+      if (!include_slope_components) return(list(Slope = exp(as.numeric(x))))
       data.frame(Level = labels, LogSlope = as.numeric(x), Slope = exp(as.numeric(x)))
     }, component_log, spec$component_levels)
     names(components) <- names(spec$component_levels)
@@ -904,7 +884,7 @@ expand_gpcm_log_slopes <- function(free,
       stop(new_gpcm_slope_numeric_boundary_error(unlist(component_log)))
     }
     return(list(log_slopes = log_slopes, slopes = exp(log_slopes),
-                slope_components = components))
+                slope_components = if (include_slope_components) components else NULL))
   }
   n_levels <- length(spec$levels %||% character(0))
   if (n_levels == 0L) {
@@ -1643,7 +1623,7 @@ split_params <- function(par, sizes) {
   out
 }
 
-expand_params <- function(par, sizes, config) {
+expand_params <- function(par, sizes, config, include_slope_components = TRUE) {
   stop_if_jml_adjustment(list(config=config), "Ordinary likelihood parameter calculations")
   parts <- split_params(par, sizes)
   theta <- if (config$method == "JML") {
@@ -1677,7 +1657,8 @@ expand_params <- function(par, sizes, config) {
   log_slopes <- NULL
   slopes <- NULL
   if (identical(config$model, "GPCM")) {
-    gpcm_expanded <- expand_gpcm_log_slopes(parts[["log_slopes"]], config$gpcm_spec %||% list())
+    gpcm_expanded <- expand_gpcm_log_slopes(parts[["log_slopes"]], config$gpcm_spec %||% list(),
+      include_slope_components = include_slope_components)
     log_slopes <- gpcm_expanded$log_slopes
     slopes <- gpcm_expanded$slopes
     if (!all(is.finite(slopes)) || any(slopes <= 0)) {
@@ -1775,8 +1756,6 @@ collapse_expanded_params <- function(params, config) {
   }
   out
 }
-
-
 
 compute_base_eta <- function(idx, params, config) {
   eta <- rep(0, length(idx$score_k))
@@ -3080,7 +3059,6 @@ prepare_constraint_specs <- function(prep,
   )
 }
 
-
 resolve_step_and_slope_facets <- function(model,
                                           step_facet,
                                           slope_facet,
@@ -3181,7 +3159,6 @@ resolve_step_and_slope_facets <- function(model,
     step_facet_note = step_note
   )
 }
-
 
 sanitize_noncenter_facet <- function(noncenter_facet, facet_names) {
   if (is.null(noncenter_facet)) return("Person")
@@ -3726,7 +3703,6 @@ compute_hybrid_em_reltol <- function(reltol) {
   max(1e-3, sqrt(reltol))
 }
 
-
 build_person_table <- function(method, idx, config, params, prep, quad_points, quad = NULL) {
   # Flag extreme persons (all observed at rating_min or rating_max).
   # Under JML the corresponding theta diverges to +-Inf, so surfacing
@@ -3836,18 +3812,6 @@ build_slope_table <- function(config, prep, params) {
 
 # ---- Information-criterion contract -------------------------------------
 
-mfrm_ic_contract_version <- function() {
-  "mfrmr_ic_person_v2"
-}
-
-mfrm_ic_formula_identifiers <- function() {
-  c(
-    AIC = "aic_deviance_plus_2k",
-    BIC = "bic_person_count",
-    SABIC = "sclove_n_plus_2_over_24"
-  )
-}
-
 mfrm_ic_common_panel <- function(deviance, npar, persons) {
   deviance <- suppressWarnings(as.numeric(deviance)[1])
   npar_raw <- suppressWarnings(as.numeric(npar)[1])
@@ -3866,7 +3830,7 @@ mfrm_ic_common_panel <- function(deviance, npar, persons) {
   }
   npar <- as.integer(round(npar_raw))
   persons <- as.integer(round(persons_raw))
-  formula_ids <- mfrm_ic_formula_identifiers()
+  formula_ids <- .mfrmr_const_mfrm_ic_formula_identifiers
   list(
     Deviance = deviance,
     Npar = npar,
@@ -3898,7 +3862,7 @@ mfrm_ic_console_lines <- function(summary_row, digits = 3L) {
     formatC(value, format = "f", digits = digits)
   }
   contract_current <- "ICContractVersion" %in% names(row) &&
-    identical(as.character(row$ICContractVersion[1]), mfrm_ic_contract_version())
+    identical(as.character(row$ICContractVersion[1]), .mfrmr_const_mfrm_ic_contract_version)
   eligible <- contract_current && "ICEligible" %in% names(row) &&
     isTRUE(as.logical(row$ICEligible[1]))
   ic_selectable <- eligible && "ICSelectable" %in% names(row) &&
@@ -4177,13 +4141,13 @@ build_mfrm_ic_contract <- function(loglik, npar, prep, config, method) {
     bic <- common_panel$BIC
     sabic <- common_panel$SABIC
   }
-  formula_ids <- mfrm_ic_formula_identifiers()
+  formula_ids <- .mfrmr_const_mfrm_ic_formula_identifiers
   integration_policy <- mfrm_ic_integration_policy(method, config)
   ic_selectable <- isTRUE(structural_eligible) &&
     isTRUE(integration_policy$Selectable)
 
   list(
-    ICContractVersion = mfrm_ic_contract_version(),
+    ICContractVersion = .mfrmr_const_mfrm_ic_contract_version,
     N = legacy_n,
     ResponseRows = as.integer(response_rows),
     WeightedResponseTotal = as.numeric(weighted_response_total),
@@ -5394,7 +5358,6 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   )
 }
 
-
 compute_obs_table <- function(res) {
   prep <- res$prep
   config <- res$config
@@ -5980,8 +5943,6 @@ summarize_displacement_table <- function(displacement_tbl,
   )
 }
 
-
-
 fit_df_method_choices <- c("engine", "facets", "both")
 
 match_fit_df_method <- function(fit_df_method = "engine") {
@@ -6000,6 +5961,9 @@ mfrm_fit_observation_terms <- function(obs_df) {
   obs_df <- tibble::as_tibble(obs_df)
   w <- get_weights(obs_df)
   obs_df$.Weight <- w
+  primary <- obs_df[["PrimaryPersonMeasure"]] %||% rep(NA_real_, nrow(obs_df))
+  basis <- obs_df[["PersonMeasureBasis"]] %||% rep("", nrow(obs_df))
+  obs_df$.FitBoundaryProxy <- basis %in% "JML optimizer" & is.infinite(primary)
   obs_df$.FitAvailable <- is.finite(obs_df$StdSq) & obs_df$StdSq >= 0 &
     is.finite(obs_df$Var) & obs_df$Var > 0 & is.finite(w) & w > 0
   fourth <- obs_df[["FourthCentralMoment"]] %||% rep(NA_real_, nrow(obs_df))
@@ -6095,6 +6059,7 @@ mfrm_summarize_response_fit <- function(obs_df, whexact, fit_df_method, facets_z
       FitResponseRows = dplyr::n(),
       FitAvailableRows = sum(.data$.FitAvailable),
       FitUnavailableRows = sum(!.data$.FitAvailable),
+      FitBoundaryRows = sum(.data$.FitBoundaryProxy),
       .groups = "drop"
     )
   required <- c("Infit", "Outfit", "DF_Infit", "DF_Outfit")
@@ -6122,9 +6087,27 @@ mfrm_summarize_response_fit <- function(obs_df, whexact, fit_df_method, facets_z
     select(-all_of(c("FACETSDenom_Infit", "FACETSDenom_Outfit"))) |>
     dplyr::relocate(all_of(c("Infit", "Outfit", "InfitZSTD", "OutfitZSTD", "DF_Infit", "DF_Outfit",
       "DF_Infit_FACETS", "DF_Outfit_FACETS", "FitResponseRows", "FitAvailableRows",
-      "FitUnavailableRows", "FitStatus", "FitReason")))
-  apply_fit_df_method(out, fit_df_method = fit_df_method, whexact = whexact,
+      "FitUnavailableRows", "FitBoundaryRows", "FitStatus", "FitReason")))
+  out <- apply_fit_df_method(out, fit_df_method = fit_df_method, whexact = whexact,
     facets_zstd_cap = facets_zstd_cap)
+  boundary <- out$FitBoundaryRows > 0L
+  zstd <- grep("^(Infit|Outfit)ZSTD($|_)", names(out), value = TRUE)
+  out[boundary, zstd] <- NA_real_
+  out$FitReason[boundary] <- paste(out$FitReason[boundary],
+    "ZSTD is unavailable: this scope includes JML optimizer proxies for infinite primary Person estimates; no rows were excluded.")
+  for (stat in c("Infit", "Outfit")) {
+    df <- out[[paste0("DF_", stat)]]
+    small <- !boundary & is.finite(df) & df < 1
+    out$FitReason[small] <- paste(out$FitReason[small],
+      paste0(stat, " ZSTD is unavailable: the selected degrees of freedom are below 1."))
+    if (identical(fit_df_method, "both")) {
+      df <- out[[paste0("DF_", stat, "_FACETS")]]
+      small <- !boundary & is.finite(df) & df < 1
+      out$FitReason[small] <- paste(out$FitReason[small],
+        paste0(stat, " FACETS-style ZSTD is unavailable: its degrees of freedom are below 1."))
+    }
+  }
+  out
 }
 
 calc_overall_fit <- function(obs_df,
@@ -9244,7 +9227,6 @@ summarize_threshold_order <- function(step_order) {
     NotApplicable = all(groups$NotApplicable), ThresholdMonotonic = monotonic)
 }
 
-
 get_extreme_levels <- function(obs_df, facet_names, rating_min, rating_max) {
   out <- list()
   for (facet in facet_names) {
@@ -10118,7 +10100,7 @@ validate_bias_pairwise_table <- function(tbl) {
   if (nrow(tbl) > 0L && (!"CalculationVersion" %in% names(tbl) ||
       anyNA(tbl$CalculationVersion) || any(tbl$CalculationVersion != 3L))) {
     stop("This saved pairwise table predates corrected orientation, precision and df. ",
-         "Recreate build_fixed_reports() or bias_pairwise_report() from the saved bias result; ",
+         "Recreate build_fixed_reports() or mfrm_report(bias, type = 'bias_pairwise') from the saved bias result; ",
          "if orientation is missing, recreate estimate_bias() from the saved fit and matching diagnostics. ",
          "No calibration refit is needed.", call. = FALSE)
   }
@@ -11131,6 +11113,27 @@ build_facet_precision_summary <- function(measure_df, variability_tbl = NULL) {
     arrange(.data$Facet, .data$DistributionBasis, .data$SEMode)
 }
 
+validate_diagnostics_zstd <- function(diagnostics) {
+  measures <- diagnostics$measures
+  if (inherits(diagnostics, "mfrm_diagnostics") &&
+      !inherits(diagnostics, "mfrm_imported_diagnostics") && is.data.frame(measures)) {
+    stale_boundary <- !"FitBoundaryRows" %in% names(measures) &&
+      any(measures$Facet %in% "Person" & is.infinite(measures$Estimate))
+    stale_df <- FALSE
+    for (stat in c("Infit", "Outfit")) for (suffix in c("", "_FACETS", "_ENGINE")) {
+      df <- measures[[paste0("DF_", stat, suffix)]]
+      z <- measures[[paste0(stat, "ZSTD", suffix)]]
+      if (!is.null(df) && !is.null(z))
+        stale_df <- stale_df || any(is.finite(df) & df < 1 & is.finite(z))
+    }
+    if (stale_boundary || stale_df) stop(paste(
+      "These saved diagnostics predate the boundary/small-df ZSTD safeguards.",
+      "Recompute diagnose_mfrm(fit) from the existing fit; no model refit is needed."
+    ), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 validate_diagnostics_precision <- function(diagnostics) {
   if (inherits(diagnostics, "mfrm_imported_diagnostics") &&
       (!identical(diagnostics$metric_version, 1L) ||
@@ -11164,6 +11167,8 @@ validate_diagnostics_precision <- function(diagnostics) {
   }
   regularized <- identical(diagnostics$parameter_uncertainty$status, "regularized")
   measures <- diagnostics$measures
+  validate_diagnostics_zstd(diagnostics)
+
   if (inherits(diagnostics, "mfrm_diagnostics") &&
       !inherits(diagnostics, "mfrm_imported_diagnostics") &&
       is.list(diagnostics$fair_average)) {
@@ -11188,7 +11193,7 @@ validate_precision_review_profile <- function(profile) {
   if (!is.data.frame(profile) || !"HasRegularizedSE" %in% names(profile)) {
     stop(paste(
       "This saved precision report does not record whether standard errors were regularized.",
-      "Recreate it with precision_review_report(fit) using the existing fit."
+      "Recreate it with mfrm_report(type = 'precision', fit) using the existing fit."
     ), call. = FALSE)
   }
   invisible(TRUE)
@@ -11491,7 +11496,6 @@ calc_reliability <- function(measure_df) {
         model_stats$EstimateAvailable == nrow(.x) &&
         model_stats$SEAvailable == nrow(.x) && real_stats$SEAvailable == nrow(.x) &&
         is.finite(model_stats$Reliability) && is.finite(real_stats$Reliability)
-
 
       tibble(
         Levels = nrow(.x),
@@ -11897,7 +11901,7 @@ mfrm_diagnostics <- function(res,
       available = FALSE,
       status = "available_direct_only",
       direct_route = "fair_average_table(fit, diagnostics = diagnostics)",
-      reason = gpcm_fair_average_rationale()
+      reason = .mfrmr_const_gpcm_fair_average_rationale
     )
   } else {
     calc_fair_average_bundle(
@@ -12039,7 +12043,7 @@ mfrm_diagnostics <- function(res,
       stringsAsFactors = FALSE
     ),
     fit_readiness_parameters = mfrm_update_slope_readiness_parameters(
-      fit_readiness_record$parameters %||% mfrmr_readiness_empty_parameter_table(),
+      fit_readiness_record$parameters %||% mfrmr_readiness_empty_parameter_table,
       structural_uncertainty$slopes),
     overall_fit = overall_fit,
     measures = measures,

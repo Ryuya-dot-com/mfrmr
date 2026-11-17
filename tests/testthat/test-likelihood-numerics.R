@@ -166,7 +166,11 @@ test_that("batched adaptive nodes preserve scalar probabilities and posterior de
     batched <- evaluate(z, include_linear_part = TRUE)
     scalar <- lapply(z, evaluate, include_linear_part = TRUE)
     for (field in c("log_likelihood", "score", "information")) {
-      expect_identical(batched[[field]], vapply(scalar, `[[`, 0, field))
+      # Different matrix shapes can select different BLAS accumulation orders.
+      # Bound every coordinate, including near-zero scores, without rounding.
+      expected <- vapply(scalar, `[[`, 0, field)
+      expect_identical(attributes(batched[[field]]), attributes(expected))
+      expect_lte(max(abs(batched[[field]] - expected) / pmax(1, abs(expected))), 1e-12)
     }
     expect_identical(batched$prob_list, lapply(scalar, function(x) x$prob_list[[1L]]))
     expect_identical(batched$linear_part_list, lapply(scalar, function(x) x$linear_part_list[[1L]]))

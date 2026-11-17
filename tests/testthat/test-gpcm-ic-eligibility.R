@@ -191,6 +191,45 @@ test_that('bootstrap singleton exception checks fresh support without relaxing n
   expect_false(check()$eligible)
 })
 
+test_that("local empty categories do not reject supported shared Rasch steps", {
+  fit <- list(config=list(model='RSM',method='MML'),
+    opt=list(par=c(0,0),value=100,
+      optimizer_diagnostics=list(ConvergenceSeverity='pass',GradientReviewTolerance=1e-4)))
+  contract <- data.frame(StoredICConsistent=TRUE,ICSelectable=TRUE)
+  readiness <- data.frame(InputState='pass',CategoryState='weak_information',NumericalState='ready')
+  information <- list(status='evaluated_diagnostic_only',free_dimension=2L,
+    evaluation_summary=data.frame(ReevaluatedObjective=100,GradientMaxAbs=1e-6),
+    eigenvalue_summary=data.frame(Smallest=1,AbsoluteScale=10))
+  audit <- list(readiness=data.frame(Complete=TRUE,CategoryState='weak_information',
+      ReasonCodes='weak_category_information',UnsupportedStepCoordinates=0L,UnsupportedCategoryContrasts=0L),
+    category_table=data.frame(WithinScopeCount=c(10L,20L,12L)),
+    local_support=data.frame(MissingCategories=c('2',''),MinimumObservedCategoryCount=c(4L,8L)))
+  local_mocked_bindings(
+    mfrmr_get_readiness_record=function(...) list(fit=readiness),
+    mfrm_inference_ready=function(...) FALSE,
+    mfrm_fit_decision_summary=function(...) data.frame(Why='Category support requires review'),
+    build_param_sizes=function(...) list(),
+    audit_mfrm_category_support=function(...) audit, .package='mfrmr')
+  check <- function() mfrm_ic_fit_check(fit,contract,information,allow_singleton=TRUE)
+  for(model in c('RSM','PCM')) {
+    fit$config$model <- model
+    expect_true(check()$eligible)
+    expect_match(check()$caution,'fitted step scopes')
+    # The same empty category in an actual fitted step scope still fails.
+    audit$category_table$WithinScopeCount[3] <- 0L
+    expect_false(check()$eligible)
+    audit$category_table$WithinScopeCount[3] <- 12L
+    information$eigenvalue_summary$Smallest <- 0
+    expect_false(check()$eligible)
+    information$eigenvalue_summary$Smallest <- 1
+  }
+  fit$config$model <- 'GPCM'
+  expect_false(check()$eligible) # No expansion of the GPCM bootstrap exception.
+  fit$config$model <- 'RSM'
+  audit$local_support$MissingCategories[1] <- NA_character_
+  expect_false(check()$eligible)
+})
+
 test_that("local solution checks reject invalid points before Hessian evaluation", {
   fit <- list(config = list(model = "GPCM", method = "MML",
       estimation_control = list(quad_points = 15L)),

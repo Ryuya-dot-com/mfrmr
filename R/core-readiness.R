@@ -10,50 +10,6 @@ mfrmr_readiness_contract_version <- function() {
   "mfrmr-readiness-0.2.4-v1"
 }
 
-mfrmr_readiness_contract_states <- function() {
-  list(
-    ReadinessScope = c("fit", "parameter", "comparison"),
-    InputState = c("pass", "review", "blocked", "legacy_unknown"),
-    EstimabilityState = c(
-      "identified", "population_assumption_linked", "weak_information",
-      "structurally_unidentified", "not_evaluated", "legacy_unknown"
-    ),
-    CategoryState = c(
-      "adequate", "weak_information", "unsupported_coordinate",
-      "not_applicable", "not_evaluated", "legacy_unknown"
-    ),
-    BoundaryState = c(
-      "finite", "has_exclusions", "not_applicable", "not_evaluated",
-      "legacy_unknown"
-    ),
-    NumericalState = c(
-      "ready", "review", "failed", "not_run", "legacy_unknown"
-    ),
-    FitReadiness = c(
-      "ready", "ready_with_exclusions", "review", "blocked",
-      "legacy_unknown"
-    ),
-    ParameterStatus = c(
-      "estimable", "fixed", "weak_information", "unbounded_low",
-      "unbounded_high", "unbounded_both", "aliased", "unsupported",
-      "not_estimated", "not_evaluated", "legacy_unknown"
-    ),
-    ComparisonEligibility = c(
-      "eligible", "ineligible", "missing", "failed", "not_applicable"
-    ),
-    ExpectedAction = c(
-      "return_ready_fit", "return_review_fit", "return_partial_fit",
-      "return_blocked_diagnostic", "stop_before_fit", "retain_parameter",
-      "label_legacy", "include_metric", "exclude_metric", "report_missing",
-      "report_failed"
-    ),
-    EvidenceRole = c(
-      "unit_positive", "unit_negative", "migration",
-      "comparison_positive", "comparison_negative"
-    )
-  )
-}
-
 mfrmr_readiness_split_codes <- function(x) {
   x <- as.character(x %||% character(0))
   x <- x[!is.na(x) & nzchar(trimws(x))]
@@ -70,7 +26,7 @@ mfrmr_readiness_merge_codes <- function(...) {
 mfrmr_readiness_derive_fit <- function(InputState, EstimabilityState,
                                        CategoryState, BoundaryState,
                                        NumericalState) {
-  states <- mfrmr_readiness_contract_states()
+  states <- .mfrmr_const_mfrmr_readiness_contract_states
   values <- list(
     InputState = InputState,
     EstimabilityState = EstimabilityState,
@@ -107,7 +63,7 @@ mfrmr_readiness_derive_fit <- function(InputState, EstimabilityState,
       "population_assumption_linked", "weak_information", "not_evaluated"
     ) ||
     CategoryState %in% c("weak_information", "not_evaluated") ||
-    BoundaryState == "not_evaluated" ||
+    BoundaryState %in% c("not_evaluated", "nonfinite_maximum") ||
     NumericalState == "review"
   if (review) return("review")
 
@@ -118,7 +74,7 @@ mfrmr_readiness_derive_fit <- function(InputState, EstimabilityState,
 }
 
 mfrmr_readiness_inference_ready <- function(FitReadiness) {
-  states <- mfrmr_readiness_contract_states()$FitReadiness
+  states <- .mfrmr_const_mfrmr_readiness_contract_states$FitReadiness
   if (length(FitReadiness) != 1L || is.na(FitReadiness) ||
       !FitReadiness %in% states) {
     stop("`FitReadiness` must be one allowed scalar state.", call. = FALSE)
@@ -278,42 +234,24 @@ mfrmr_readiness_category_component <- function(config) {
   )
 }
 
-mfrmr_readiness_empty_parameter_table <- function() {
-  data.frame(
-    ReadinessContractVersion = character(0),
-    ReadinessScope = character(0),
-    ParameterId = character(0),
-    ParameterClass = character(0),
-    Facet = character(0),
-    Level = character(0),
-    OptimizerLogEstimate = numeric(0),
-    OptimizerEstimate = numeric(0),
-    PrimaryLogEstimate = numeric(0),
-    PrimaryEstimate = numeric(0),
-    ParameterStatus = character(0),
-    BoundaryDirection = character(0),
-    SEEligible = logical(0),
-    CIEligible = logical(0),
-    ComparisonEligibility = character(0),
-    PrimaryEstimateBasis = character(0),
-    OptimizerEstimateUse = character(0),
-    ReasonCodes = character(0),
-    AuditState = character(0),
-    AuditProvenance = character(0),
-    stringsAsFactors = FALSE
-  )
-}
+mfrmr_readiness_empty_parameter_table <- .mfrmr_empty_table(c(ReadinessContractVersion = "character", ReadinessScope = "character",
+    ParameterId = "character", ParameterClass = "character", Facet = "character", Level = "character",
+    OptimizerLogEstimate = "double", OptimizerEstimate = "double", PrimaryLogEstimate = "double",
+    PrimaryEstimate = "double", ParameterStatus = "character", BoundaryDirection = "character",
+    SEEligible = "logical", CIEligible = "logical", ComparisonEligibility = "character", PrimaryEstimateBasis = "character",
+    OptimizerEstimateUse = "character", ReasonCodes = "character", AuditState = "character",
+    AuditProvenance = "character"))
 
 mfrmr_readiness_gpcm_slope_parameters <- function(config,
                                                    slope_table = data.frame()) {
   if (!identical(as.character(config$model %||% ""), "GPCM")) {
-    return(mfrmr_readiness_empty_parameter_table())
+    return(mfrmr_readiness_empty_parameter_table)
   }
   product <- !is.null(config$gpcm_spec$component_levels)
   metadata <- if (product) mfrm_gpcm_product_metadata(config$gpcm_spec) else NULL
   levels <- if (product) metadata$Level else as.character(config$gpcm_spec$levels %||% character(0))
   if (length(levels) == 0L) {
-    return(mfrmr_readiness_empty_parameter_table())
+    return(mfrmr_readiness_empty_parameter_table)
   }
   slope_facet <- if (product) metadata$Owner else
     rep(as.character(config$slope_facet %||% NA_character_), length(levels))
@@ -453,6 +391,31 @@ mfrmr_readiness_gpcm_slope_parameters <- function(config,
       "certified_joint_nonlinear_boundary_candidate_global_status_open"
   }
 
+  point <- config$gpcm_point_estimation$overview
+  if (product && identical(method, "MML") && !is.null(point)) {
+    status[] <- point$Status
+    reason[] <- paste0("mml_gpcm_product_", point$Status)
+    basis[] <- point$Status
+    if (isTRUE(point$PrimaryAvailable) && all(is.finite(optimizer_slope) & optimizer_slope > 0)) {
+      primary_log <- optimizer_log
+      primary_slope <- optimizer_slope
+      optimizer_use[] <- "reported_point_estimate"
+    }
+  }
+  if (identical(method,"MML")) {
+    limit <- config$gpcm_point_estimation$slope_targets
+    if (!is.null(limit)) {
+      for (owner in unique(slope_facet)) {
+        rows <- which(slope_facet == owner)
+        source <- limit[limit$Facet == owner, ]
+        ix <- match(levels[rows], source$Level)
+        status[rows] <- source$ParameterStatus[ix]
+        primary_slope[rows] <- source$PrimaryEstimate[ix]
+        primary_log[rows] <- log(primary_slope[rows])
+        basis[rows] <- reason[rows] <- status[rows]
+      }
+    }
+  }
   comparison <- ifelse(
     status == "fixed", "not_applicable", "ineligible"
   )
@@ -618,6 +581,68 @@ mfrmr_readiness_additive_candidate_unpropagated <- function(
          c("unbounded_low", "unbounded_high"))
 }
 
+mfrmr_mml_additive_boundary_evidence <- function(config) {
+  centered_scope <- identical(config$centering_scope, "facet") ||
+    (!is.null(config$gpcm_spec$component_levels) && identical(config$centering_scope, "remainder"))
+  if (!identical(config$method, "MML") || !config$model %in% c("RSM", "PCM", "GPCM") ||
+      !identical(config$facet_shrinkage %||% "none", "none") ||
+      !centered_scope) return(character())
+  audit <- config$category_support_audit
+  local <- audit$local_support
+  categories <- audit$category_table
+  if (!is.data.frame(local) || !is.data.frame(categories)) return(character())
+  # A centered single-level shift needs an offset elsewhere in the predictor.
+  # A free population intercept can supply it without changing the residual SD.
+  unrestricted <- vapply(config$facet_specs, function(spec)
+    spec$n_params > 0L && all(is.na(spec$anchors)) &&
+      all(is.na(spec$groups)), logical(1))
+  common_location <- vapply(names(config$facet_specs), function(facet)
+    unrestricted[[facet]] && !isTRUE(config$facet_specs[[facet]]$centered) &&
+      is.finite(config$facet_signs[[facet]]) && config$facet_signs[[facet]] != 0,
+    logical(1))
+  pop <- config$population_spec
+  intercept <- match("(Intercept)", pop$design_columns)
+  common_mean <- isTRUE(pop$active) && !is.na(intercept) &&
+    is.matrix(pop$design_matrix) && nrow(pop$design_matrix) > 0L &&
+    isTRUE(all(pop$design_matrix[, intercept] == 1))
+  common_shift <- any(common_location) || common_mean
+  free <- lapply(names(config$facet_specs), function(facet) {
+    spec <- config$facet_specs[[facet]]
+    available <- (!isTRUE(spec$centered) ||
+      (unrestricted[[facet]] && common_shift)) && spec$n_params > 0L &&
+      is.finite(config$facet_signs[[facet]]) && config$facet_signs[[facet]] != 0
+    stats::setNames(available & is.na(spec$anchors) & is.na(spec$groups), spec$levels)
+  })
+  names(free) <- names(config$facet_specs)
+  reasons <- character()
+  # Positive GPCM slopes multiply the complete adjacent predictor. Holding
+  # them fixed preserves these location/step paths and their monotonicity.
+  for (i in seq_len(nrow(local))) {
+    facet <- as.character(local$Facet[i]); level <- as.character(local$Level[i])
+    extreme <- local$ObservedPositiveWeightCategories[i] %in%
+      as.character(c(config$rating_min, config$rating_max))
+    if (extreme && isTRUE(free[[facet]][level]))
+      reasons <- c(reasons, "mml_extreme_free_facet_location")
+  }
+  step_free <- vapply(config$step_specs, function(s)
+    s$n_params > 0L && all(is.na(s$anchors)), logical(1))
+  endpoint_zero <- categories$BoundaryCategory & categories$WithinScopeWeightedN <= 0
+  global_zero <- categories$BoundaryCategory & categories$GlobalWeightedN <= 0
+  # A common location shift compensates recentering all free step ladders.
+  if (common_shift && length(step_free) > 0L && all(step_free) && any(global_zero))
+    reasons <- c(reasons, "mml_unobserved_global_endpoint")
+  if (config$model %in% c("PCM", "GPCM")) {
+    owner <- config$step_facet
+    for (level in names(free[[owner]])) {
+      scope <- paste0(owner, "=", level)
+      if (isTRUE(free[[owner]][level]) && isTRUE(step_free[level]) &&
+          any(endpoint_zero & categories$StepScope == scope))
+        reasons <- c(reasons, "mml_unobserved_owner_endpoint")
+    }
+  }
+  unique(reasons)
+}
+
 mfrmr_readiness_boundary_component <- function(config) {
   audit <- config$boundary_audit %||% list()
   person <- as.data.frame(audit$readiness %||% data.frame(),
@@ -648,6 +673,20 @@ mfrmr_readiness_boundary_component <- function(config) {
                                  stringsAsFactors = FALSE)
 
   if (!identical(method, "JML")) {
+    additive <- mfrmr_mml_additive_boundary_evidence(config)
+    if (length(additive)) {
+      return(mfrmr_readiness_component_row("boundary", "nonfinite_maximum", FALSE,
+        c("mml_additive_finite_maximum_absent", additive),
+        "unpenalized_free_location_or_endpoint_path",
+        "mml_additive_support_path_v3"))
+    }
+    point <- config$gpcm_point_estimation$overview
+    if (!is.null(config$gpcm_spec$component_levels) &&
+        identical(point$Status, "finite_maximum_absent")) {
+      return(mfrmr_readiness_component_row("boundary", "nonfinite_maximum", FALSE,
+        "mml_gpcm_product_finite_maximum_absent", "extreme_facet_location",
+        "unpenalized_marginal_extreme_location_path_v1"))
+    }
     free_gpcm_slopes <- identical(model, "GPCM") &&
       as.integer(config$gpcm_spec$n_params %||% 0L) > 0L
     return(mfrmr_readiness_component_row(
@@ -777,6 +816,8 @@ mfrmr_readiness_boundary_component <- function(config) {
 
 mfrmr_readiness_numerical_component <- function(opt) {
   diagnostics <- opt$optimizer_diagnostics %||% list()
+  if (identical(opt$value_basis, "neutral_boundary_reference"))
+    diagnostics <- mfrm_gmfrm_not_run_diagnostics(diagnostics)
   severity <- tolower(as.character(
     diagnostics$ConvergenceSeverity %||% ""
   )[1])
@@ -786,7 +827,9 @@ mfrmr_readiness_numerical_component <- function(opt) {
   status <- tolower(as.character(
     diagnostics$ConvergenceStatus %||% ""
   )[1])
-  state <- if (severity %in% c("pass", "ok")) {
+  state <- if (identical(opt$value_basis, "neutral_boundary_reference")) {
+    "not_run"
+  } else if (severity %in% c("pass", "ok")) {
     "ready"
   } else if (severity %in% c("review", "warn", "warning")) {
     "review"
@@ -816,7 +859,8 @@ mfrmr_readiness_numerical_component <- function(opt) {
     "numerical", state, state != "not_run", reasons,
     audit_state = paste0("severity=", severity, ";status=", status,
                          ";reason=", reason),
-    provenance = "common_terminal_gradient_gate_v1"
+    provenance = if (identical(opt$value_basis, "neutral_boundary_reference"))
+      "known_boundary_optimization_not_run" else "common_terminal_gradient_gate_v1"
   )
 }
 
@@ -873,6 +917,7 @@ build_mfrm_readiness_record <- function(prep, data_review, config, opt,
 }
 
 mfrmr_get_readiness_record <- function(fit) {
+  fit <- mfrm_gmfrm_refresh_boundary(fit)
   # Detached diagnostic tables carry the same versioned record. Old records
   # predate the observation-weight gate and must not retain inference approval.
   if (is.data.frame(fit) || inherits(fit, "mfrm_diagnostics")) {
@@ -898,6 +943,35 @@ mfrmr_get_readiness_record <- function(fit) {
         as.character(stored_fit$ReadinessContractVersion[1]),
         mfrmr_readiness_contract_version()
       )) {
+    # Early development fits called this intentionally skipped optimization a
+    # failure. Correct only the explicit reference marker in a derived record;
+    # preserve the source object and never grant inference eligibility.
+    if (identical(fit$opt$value_basis, "neutral_boundary_reference") &&
+        !identical(stored_fit$NumericalState, "not_run")) {
+      numerical <- mfrmr_readiness_numerical_component(fit$opt)
+      old <- stored$components$Component == "numerical"
+      stored$components[old, ] <- numerical
+      stored$fit$NumericalState <- "not_run"
+      stored$fit$FitReadiness <- "blocked"
+      stored$fit$InferenceReady <- FALSE
+      stored$fit$ReasonCodes <- mfrmr_readiness_merge_codes(stored$components$ReasonCodes)
+      stored$fit$AuditProvenance <- paste0(stored$fit$AuditProvenance,
+        ";neutral_boundary_reference_not_run_display")
+    }
+    # Correct old Person-only boundary labels in a derived record. Retain the
+    # saved optimizer coordinates and never promote their inference status.
+    if (length(mfrmr_mml_additive_boundary_evidence(fit$config)) &&
+        !identical(stored$fit$BoundaryState, "nonfinite_maximum")) {
+      boundary <- mfrmr_readiness_boundary_component(fit$config)
+      stored$components[stored$components$Component == "boundary", ] <- boundary
+      stored$fit$BoundaryState <- "nonfinite_maximum"
+      if (!stored$fit$FitReadiness %in% c("blocked", "legacy_unknown"))
+        stored$fit$FitReadiness <- "review"
+      stored$fit$InferenceReady <- FALSE
+      stored$fit$ReasonCodes <- mfrmr_readiness_merge_codes(stored$components$ReasonCodes)
+      stored$fit$AuditProvenance <- paste0(stored$fit$AuditProvenance,
+        ";mml_additive_support_path_display")
+    }
     return(stored)
   }
 
@@ -928,7 +1002,7 @@ mfrmr_get_readiness_record <- function(fit) {
     contract_version = mfrmr_readiness_contract_version(),
     fit = legacy_fit,
     components = data.frame(),
-    parameters = mfrmr_readiness_empty_parameter_table()
+    parameters = mfrmr_readiness_empty_parameter_table
   )
   class(out) <- c("mfrmr_readiness_record", "list")
   out

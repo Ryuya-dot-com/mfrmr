@@ -43,8 +43,8 @@ precedence and emits a lifecycle deprecation warning.}
 \item{x}{A result from \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}}.}
 
 \item{...}{Use \code{type = "forest"} (default) for deviations and intervals or
-\code{type = "rope"} for normal confidence-distribution mass. Other controls
-are described in \code{\link[=plot_facet_equivalence]{plot_facet_equivalence()}}.}
+\code{type = "rope"} for normal confidence-distribution mass. \code{draw = FALSE}
+returns the data without drawing (default: \code{TRUE}).}
 }
 \value{
 A named list with class \code{mfrm_facet_equivalence}.
@@ -133,6 +133,12 @@ Start with \code{summary$Decision} and examine the corresponding \code{pairwise}
 differences, SEs and intervals. A negative result can reflect imprecision
 or a material difference. \code{chi_square} addresses exact equality, while
 \code{rope} and \code{forest} describe proximity to the facet mean.
+
+
+Both plots describe grand-mean proximity. Colors in the forest plot indicate
+whether the deviation interval is inside, outside, or overlaps the practical
+region. Neither plot establishes pairwise equivalence or a Bayesian
+probability. Read the pairwise TOST results for pair-specific conclusions.
 }
 
 \section{How to read the main outputs}{
@@ -172,7 +178,7 @@ desired decision.
 \item Fit and review an MML model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
 \item Prespecify the practical bound and run \code{analyze_facet_equivalence()}.
 \item Read \code{summary} and \code{pairwise}.
-\item Use \link[=plot.mfrm_fit]{plot(x, type = "facet_equivalence")} for descriptive grand-mean proximity.
+\item Use \link[=plot.mfrm_facet_equivalence]{plot(eq, type = "forest")} for descriptive grand-mean proximity.
 }
 }
 
@@ -181,6 +187,16 @@ desired decision.
 A bundle with \code{summary}, \code{chi_square}, \code{pairwise}, \code{rope}, \code{forest}, and
 \code{settings}. Older bundles without the current inference/covariance basis
 must be recomputed before using \code{summary()}, \code{print()}, or plotting.
+}
+
+\section{Plot types}{
+
+\itemize{
+\item \code{"forest"} shows each level's deviation from the equally weighted facet
+mean, with covariance-aware deviation intervals and the practical region
+around zero. The raw marginal measure intervals remain in the data table.
+\item \code{"rope"} shows the normal confidence-distribution mass within that region.
+}
 }
 
 \examples{
@@ -198,10 +214,11 @@ average bioavailability. \emph{Journal of Pharmacokinetics and
 Biopharmaceutics, 15}(6), 657-680.
 }
 \seealso{
-\code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "facet_equivalence")}
+\code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}, \link[=plot.mfrm_facet_equivalence]{plot(eq, type = "forest")}
 
 \link{mfrmr_plot_migration}
 }
 \concept{confidence intervals}
 \concept{facet equivalence}
 \concept{reporting workflow}
+\concept{visual diagnostics}

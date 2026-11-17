@@ -175,7 +175,7 @@ test_that("DFF tables, plots and reports retain a separately bound prospective r
       expect_identical(plot_data(as_ggplot(p),"comparison_review"), x$comparison_review)
     }
   }
-  report <- dif_report(x)
+  report <- mfrm_report(x = x, type = "dff")
   expect_identical(report$comparison_review, x$comparison_review)
   expect_identical(summary(report)$comparison_review, x$comparison_review)
   expect_match(report$narrative, "not to the residual or subgroup-refit")

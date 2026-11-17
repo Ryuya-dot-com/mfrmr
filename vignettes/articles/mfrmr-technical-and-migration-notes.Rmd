@@ -1,0 +1,196 @@
+---
+title: "Saved-analysis migration and finite-sample interval notes"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Saved-analysis migration and finite-sample interval notes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
+knitr::opts_chunk$set(
+  dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
+  fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
+  eval = !is_cran_check,
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This specialist guide archives two extended reference notes that accompany the
+installed help dictionary:
+
+1. **Updating saved analyses from 0.2.x to 0.3.0**: which saved objects can be
+   re-summarized or replotted directly, which derived objects require
+   recomputation from a saved fit, and which early numerical edge cases call
+   for refitting from original rating data.
+2. **Finite-sample normal-model interval evaluations**: bounded simulation and
+   exact-binomial summaries motivating the explicit status and
+   `CoverageQualified` flags in `confint.mfrm_multivariate_d_study()`,
+   `confint.mfrm_multivariate_gstudy()`, and `confint.mfrm_fair_average()`.
+
+For the 0.3.0 function and `plot()` migration tables, see
+`?mfrmr_api_migration_030` and `compatibility_alias_table()`. For model
+equations, `spec` and `control` keys, and return-object provenance, see
+`?fit_mfrm_technical_details`.
+
+## 1. Updating saved analyses from 0.2.x
+
+Installing an updated version of `mfrmr` does not recalculate tables, figures,
+or reports already stored on disk. Keep the original objects, data, and
+analysis settings:
+
+- **Native MFRM fits**: print `summary(fit)` first and inspect its
+  interpretation decision. If an early saved fit lacks current terminal-gradient
+  or category-support records, refit from the original data with the same
+  intended model, category coding, anchors, weights, and numerical controls.
+  Running `diagnose_mfrm()` alone cannot supply estimation checks absent from
+  the source fit.
+- **Diagnostics and QC**: recreate `diagnose_mfrm()` results with the original
+  diagnostic settings (`calculation_version = 2`) before rebuilding reliability,
+  precision, category, marginal-fit, person-fit, unexpected-response,
+  fair-score, and consolidated report outputs. To reproduce earlier conventions
+  explicitly, set `fit_df_method = "engine"`, `whexact = "legacy_linear"`,
+  `abs_z_min = 2, rule = "either"`, or pairwise `df_method = "classical"`.
+- **Model comparisons**: rerun `compare_mfrm()` on eligible fits to apply the
+  corrected RSM/PCM interaction-nesting check, then rebuild
+  `build_model_choice_review()` and `build_weighting_review()`.
+- **Group comparisons, drift, and equivalence**: recreate `analyze_dff()`,
+  `dif_interaction_table()`, `detect_anchor_drift()`, `build_equating_chain()`,
+  `estimate_bias()`, and `estimate_all_bias()` from the saved fits and original
+  grouping inputs (`method = "refit"` in `analyze_dff()` reruns subgroup
+  estimation to retain shared-Person and cell-count checks). Recompute
+  `analyze_facet_equivalence()` from an eligible MML fit with matching
+  diagnostics.
+- **ICC, nesting, and rating-count reviews**: rerun `compute_facet_icc()`,
+  `compute_facet_design_effect()`, `analyze_hierarchical_structure()`,
+  `detect_facet_nesting()`, and `facet_small_sample_review()` from the saved
+  fit or original data to record `data_identity`, weighted-frequency pair
+  accounting (`UsedRows` / `ExcludedRows`), and lowest-band `WorstCategory`
+  summaries. In `mfrm_report(fit, type = "checklist")`, the count screen item
+  is named `"Facet rating-count screening"`.
+- **G-Study and D-Study objects**: saved `0.2.x` G-Study and D-Study RDS
+  objects work directly with `mfrm_d_study()`, `summary()`, `plot()`, and
+  supported `confint()` methods. Rerun `mfrm_d_study()` from the saved G-Study
+  when metric-specific `G` / `Phi` / `SEM` availability flags or new composite
+  weights are needed; refit `mfrm_g_study()` only when changing the source data,
+  switching to an explicit `nesting` specification, or replacing early
+  single-score MINQUE(0) or period-containing interaction IDs.
+- **Shrinkage, scoring, plausible values, and multiple imputation**: reapply
+  `apply_empirical_bayes_shrinkage()` (`shrink_person = TRUE` applies only to
+  ordinary JML), rerun `predict_mfrm_units()`, `score_mfrm_calibration()`,
+  `score_mfrm_persons()`, or `sample_mfrm_plausible_values()` when continuous
+  centered-likelihood posterior intervals or `fit_identity` records are needed,
+  and rerun `pool_mfrm_imputed()` on saved `fit_mfrm_imputed()` objects to
+  attach `IntervalReason` notes without repeating imputations.
+- **Agreement and rater networks**: regenerate `diagnose_mfrm()`, then rebuild
+  `interrater_agreement_table()`, `rater_network_analysis()`,
+  `rater_halo_network_analysis()`, `build_mfrm_network_review()`, and
+  `mantel_haenszel_table()` so `ExpectedReason` and Person-repeat dependency
+  audits are recorded.
+
+## 2. Finite-sample interval notes for `G-Study` and `D-Study` plans
+
+The normal-model evaluations below summarize bounded numerical checks for the
+explicit methods in `?confint.mfrm_multivariate_d_study` and
+`?confint.mfrm_multivariate_gstudy`. Coverage figures count unavailable
+intervals in the planned denominator unless noted otherwise; they motivate
+explicit method selection and status inspection rather than certifying uniform
+finite-sample coverage across arbitrary designs or nonnormal ordinal scores.
+
+### Two-crossed-facet MLS null inversion (`method = "mls"`)
+
+- In a matched 400-source normal-model check with 60 Persons, 4 raters, 12
+  tasks, and variance components `(1, 0.2, 0.3, 0.3, 0.4, 0.1, 1)` (ordered
+  Person, Rater, Task, Person:Rater, Person:Task, Rater:Task, residual), the
+  source-plan `G` interval had mean width `0.0945` and coverage `0.950`; `Phi`
+  had mean width `0.3287` and coverage `0.970` (versus conservative
+  `mean_square_region` widths `0.1974` / `0.7249` and coverage `1.000`).
+- Across an eight-condition normal-model check (2,000 sources per condition;
+  5--80 Persons; `2 x 2` to `2 x 20` source facets; zero/near-zero Person
+  variance, dominant facets/interactions, and changed future counts),
+  all-attempt 95% inclusion ranged from `0.9505` to `0.9885` for `G` and
+  `0.948` to `1.000` for `Phi` (MC SE approx. `0.0049`), with small-source
+  `Phi` intervals spanning `[0, 1]` in over 90% of cases when source facet
+  degrees of freedom were minimal.
+
+### Extended-nuisance score inversion (`method = "score"`, crossed `G`)
+
+- Across six normal-model conditions and three future plans (360 independent
+  sources per condition), true-value score-test acceptance ranged from `93.1%`
+  to `97.8%` (MC SE `0.8`--`1.3` percentage points; lowest cell exact binomial
+  95% CI `89.9%`--`95.5%`). Extending the same score rule to `Phi` produced
+  very wide sets sensitive to few-df facet strata, so `"score"` is restricted
+  to balanced two-crossed-facet `G`.
+
+### Restricted-likelihood profiles (`method = "reml_profile"`)
+
+- Feasibility checks with 40 normal-model samples per assignment/population
+  condition showed true-value likelihood-ratio inclusion of `92.5%`--`100%` for
+  positive components and `82.5%`--`100%` in boundary populations (including
+  `SEM` and bivariate covariance profiles, MC SE up to `6.0` percentage
+  points). Asymptotic $\chi^2_1$ cutoffs can undercover near zero-variance
+  boundaries or few-level random facets, so `"reml_profile"` remains an
+  explicit experimental option.
+
+### Measurement SEM (`parm = "RelativeSEM"` / `"AbsoluteSEM"`, `method = "mls"`)
+
+- Across nine normal-model source conditions (2,000 replications each;
+  one-facet, crossed, and nested small/larger designs with three future plans)
+  covering 51 positive-error targets, nominal 95% coverage ranged from `93.45%`
+  to `99.00%` (MC SE `0.22`--`0.55` percentage points) with `99.75%`--`100%`
+  availability; the lowest cell (`93.45%`) occurred for `AbsoluteSEM` at 10
+  Persons, 2 raters, and 3 tasks projected to a `1 x 1` plan.
+
+### General nested approximate-F and region methods
+
+- Across three nested normal-model sources (2,000 samples each: `10 / 2 / 3`,
+  `60 / 4 / 8`, and a residual-only boundary `10 / 2 / 3` model for Persons /
+  children per parent / parents), interior approximate-F 95% coverage was
+  `93.55%`--`96.45%` (`98.9%`--`100%` available), whereas in the residual-only
+  boundary source projected to 4 children and 6 parents, all-attempt coverage
+  dropped to `62.85%` (`G`) and `61.95%` (`Phi`). A 200-sample
+  `mean_square_region` check maintained `99.5%`--`100%` availability with
+  conservative widths sometimes exceeding `0.99`.
+
+### Component-covariance delta intervals (`method = "delta"`)
+
+In 2,000 independent normal-model samples per incomplete source (retaining
+approx. `8/11` of cells; Person and residual variances `1.0`, other components
+`0.2`; all-attempt denominator), nominal 95% delta performance was:
+
+| Source Persons x measurement counts | `G` returned (%) | `G` covered (%) | `Phi` returned (%) | `Phi` covered (%) |
+| --- | ---: | ---: | ---: | ---: |
+| One facet: `10 x 3` | 92.00 | 83.55 | 92.60 | 83.60 |
+| One facet: `60 x 8` | 100.00 | 95.65 | 100.00 | 95.25 |
+| Crossed: `10 x 2 x 3` | 78.95 | 78.30 | 86.45 | 82.90 |
+| Crossed: `30 x 4 x 5` | 100.00 | 93.90 | 100.00 | 91.10 |
+| Nested: `10 x 2` within `3` | 97.30 | 86.40 | 97.85 | 87.10 |
+| Nested: `40 x 3` within `6` | 100.00 | 94.55 | 100.00 | 91.75 |
+
+### Between-score Wishart GCI (`confint.mfrm_multivariate_gstudy`, `method = "gci"`)
+
+- Across four 2,000-sample normal-model checks (8,000 pivotal draws each) for
+  one-facet residual (`10 x 2`), crossed residual and Task (`10 x 2 x 3`), and
+  crossed Rater (`60 x 4 x 8`) covariances, nominal 95% coverage was `94.65%`,
+  `94.80%`, `99.65%`, and `96.50%` (MC SE `0.13`--`0.50` percentage points);
+  blocks with 1 degree of freedom remain unavailable under Wishart GCI.
+
+## 3. Small-sample binomial benchmark for common-plan JML expected scores
+
+In `?confint.mfrm_fair_average`, `CIEligible` remains `FALSE` for experimental
+`"delta"` and `"refit"` methods because short per-Person exposure limits
+normal and basic-bootstrap calibration even when local derivatives are exact:
+
+- In the binary special case with $n = 6$ independent responses per Person, the
+  Jeffreys expected-score estimator is $(S + 0.5) / 7$ for $S \sim \mathrm{Bin}(6, p)$.
+- At $p = 0.5$, the plug-in 95% delta interval covers only for $S \in \{2, 3, 4\}$,
+  giving exact coverage $0.78125$ ($0.7844$ at $p = 0.25$).
+- Infinite-replication basic bootstrap refit quantiles for the same estimator
+  yield exact coverage $0.78125$ at $p = 0.5$ and $0.4527$ at $p = 0.10$
+  (for $S = 0$, the upper basic limit equals $0.5 / 7$ because replicate
+  estimates cannot fall below the estimator's floor).
+- By contrast, `method = "bounded"` applies Hoeffding's finite-sample
+  inequality directly to observed bounded responses on declared rubrics without
+  model extrapolation to unobserved plan cells.

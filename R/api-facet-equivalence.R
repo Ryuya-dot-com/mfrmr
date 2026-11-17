@@ -111,7 +111,7 @@
 #' 1. Fit and review an MML model with [fit_mfrm()].
 #' 2. Prespecify the practical bound and run `analyze_facet_equivalence()`.
 #' 3. Read `summary` and `pairwise`.
-#' 4. Use [plot(x, type = "facet_equivalence")][plot.mfrm_fit] for descriptive grand-mean proximity.
+#' 4. Use [plot(eq, type = "forest")][plot.mfrm_facet_equivalence] for descriptive grand-mean proximity.
 #'
 #' @section Output:
 #' A bundle with `summary`, `chi_square`, `pairwise`, `rope`, `forest`, and
@@ -119,7 +119,7 @@
 #' must be recomputed before using `summary()`, `print()`, or plotting.
 #'
 #' @return A named list with class `mfrm_facet_equivalence`.
-#' @seealso [facets_chisq_table()], [fair_average_table()], [plot(x, type = "facet_equivalence")][plot.mfrm_fit]
+#' @seealso [facets_chisq_table()], [fair_average_table()], [plot(eq, type = "forest")][plot.mfrm_facet_equivalence]
 #' @concept confidence intervals
 #' @concept facet equivalence
 #' @concept reporting workflow
@@ -137,6 +137,7 @@
 #' head(eq$pairwise[, c("ElementA", "ElementB", "Equivalent")])
 #' @export
 #' @order 1
+#' @concept visual diagnostics
 analyze_facet_equivalence <- function(fit,
                                       diagnostics = NULL,
                                       facet = NULL,
@@ -483,7 +484,7 @@ validate_facet_equivalence_bundle <- function(x) {
 #' @concept facet equivalence
 #' @concept visual diagnostics
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("plot_facet_equivalence", run.dontrun = TRUE)
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -494,7 +495,7 @@ validate_facet_equivalence_bundle <- function(x) {
 #' pdat <- plot_data(p)
 #' c(pdat$facet, pdat$type)
 #' }
-#' @keywords internal
+#' @noRd
 #' @section Migration in 0.2.4:
 #' This renderer is internal. Use the corresponding `plot()` route in
 #' [mfrmr_plot_migration]; the former exported name is no longer available.
@@ -551,11 +552,23 @@ plot_facet_equivalence <- function(x,
 }
 
 #' @rdname analyze_facet_equivalence
+#' @section Plot types:
+#' - `"forest"` shows each level's deviation from the equally weighted facet
+#'   mean, with covariance-aware deviation intervals and the practical region
+#'   around zero. The raw marginal measure intervals remain in the data table.
+#' - `"rope"` shows the normal confidence-distribution mass within that region.
+#'
+#' @section Interpreting output:
+#' Both plots describe grand-mean proximity. Colors in the forest plot indicate
+#' whether the deviation interval is inside, outside, or overlaps the practical
+#' region. Neither plot establishes pairwise equivalence or a Bayesian
+#' probability. Read the pairwise TOST results for pair-specific conclusions.
+#'
 #' @details `plot()` method: Plot a saved facet-equivalence analysis
 #' @param x A result from [analyze_facet_equivalence()].
 #' @param ... Use `type = "forest"` (default) for deviations and intervals or
-#'   `type = "rope"` for normal confidence-distribution mass. Other controls
-#'   are described in [plot_facet_equivalence()].
+#'   `type = "rope"` for normal confidence-distribution mass. `draw = FALSE`
+#'   returns the data without drawing (default: `TRUE`).
 #' @details For `plot()`: When an interval cannot be represented at the requested numeric precision,
 #' the forest retains its estimate as a grey point without a whisker. Inspect
 #' `plot_data(p)$data$DeviationCIReason` and `plot_data(p)$note` for the reason.

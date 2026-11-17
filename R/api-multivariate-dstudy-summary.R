@@ -51,8 +51,12 @@
 #'   A larger G/Phi or smaller SEM does not alone determine a worthwhile plan:
 #'   consider the intended decision, score meaning and task/rater burden.
 #'
-#'   `reference` requests the existing paired plan-difference procedure for
-#'   each metric. It does not subtract marginal interval endpoints. Positive
+#'   `reference` requests the selected method's shared-source plan differences
+#'   for each metric; this is not subtraction of independently constructed
+#'   marginal intervals. For a balanced two-facet source, explicitly select
+#'   `method = "mean_square_region"` for conservative joint-region enclosures.
+#'   This summary is not an input to [recommend_mfrm_design()], whose D-study
+#'   route uses [mfrm_d_study_comparison]. Positive
 #'   G/Phi differences and negative SEM differences favor the comparison plan,
 #'   conditional on the stated model. Individual-plan and difference results
 #'   remain explicitly labeled if both are supplied as saved results.
@@ -84,7 +88,7 @@
 #' @seealso [mfrm_d_study()], [confint.mfrm_multivariate_d_study()],
 #'   [plot.mfrm_multivariate_d_study()], [plot.mfrm_dstudy_intervals()]
 #' @examples
-#' # Supplementary workflow: run explicitly to keep routine checks brief.
+#' # Optional workflow; run the example explicitly as shown below.
 #' # example("summary.mfrm_multivariate_d_study", run.dontrun = TRUE)
 #' \dontrun{
 #' # Published synthetic data, not empirical speech-contest records.
@@ -102,6 +106,7 @@
 #' p <- plot(d, metric = "Phi", intervals = s$intervals$Phi, draw = FALSE)
 #' plot_data(p, "notes")
 #' }
+#' @rdname confint.mfrm_multivariate_d_study
 #' @export
 summary.mfrm_multivariate_d_study <- function(object, intervals = FALSE,
     parm = c("G", "Phi", "RelativeSEM", "AbsoluteSEM"), ...) {
@@ -232,7 +237,7 @@ summary.mfrm_multivariate_d_study <- function(object, intervals = FALSE,
   invisible(NULL)
 }
 
-#' @rdname summary.mfrm_multivariate_d_study
+#' @rdname confint.mfrm_multivariate_d_study
 #' @export
 print.summary.mfrm_multivariate_d_study <- function(x, digits = NULL, row.names = FALSE, ...) {
   cat("Assessment plans with source-study uncertainty\n")

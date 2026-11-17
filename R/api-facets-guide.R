@@ -17,10 +17,16 @@
 #'   fit-df guide is an `mfrm_facets_fit_df_guide` bundle with `summary`,
 #'   `formula_guide`, `column_guide`, `decision_guide`, `interpretation_guide`,
 #'   `references`, and `settings`; its existing summary/print methods apply.
-#' @details The full topic descriptions are available in
-#'   [facets_positioning_guide], [facets_term_crosswalk],
-#'   [facets_visual_contract], [facets_feature_coverage], and
-#'   [facets_fit_df_guide]. All topics are descriptive and require no fitting.
+#' @details All topics return static reference tables or guides and require no
+#'   model fitting. Choose `"positioning"` for scope comparisons, `"terms"` for
+#'   terminology mappings, `"visuals"` for table/plot counterparts, `"coverage"`
+#'   for FACETS 4.5.0 feature availability, or `"fit_df"` for standardized-fit
+#'   degrees-of-freedom formulas.
+#' @references
+#' Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
+#'
+#' Linacre, J. M. (2026). *A user's guide to Facets Rasch-model computer
+#' programs*. Winsteps.com.
 #' @seealso [read_facets_results()], [facets_fit_review()],
 #'   [mfrmr_api_migration_030]
 #' @examples

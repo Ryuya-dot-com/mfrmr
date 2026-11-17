@@ -1,100 +1,16 @@
-#' Hierarchical grouping of external features
-#'
-#' Build an agglomerative hierarchy from weighted Gower dissimilarities, cut
-#' it into a chosen number of groups, and inspect the retained dendrogram.
-#'
-#' @param x For clustering, a table reviewed with [mfrm_features()]. For plotting,
-#'   an `mfrm_hierarchical_clusters` result.
-#' @param type `"dendrogram"` (default), `"silhouette"`, or `"profile"`.
-#' @inheritParams plot.mfrm_clusters
-#' @param labels Whether to display entity IDs on dendrograms and silhouettes.
-#'   The default labels at most 50 included entities. Hiding labels does not
-#'   remove entities. Profile plots always label groups and levels.
-#' @param ... Reserved for future use; additional arguments are rejected.
-#' @return An `mfrm_hierarchical_clusters` object inheriting from `mfrm_clusters`.
-#'   It retains the `hclust` object in `tree`, ID-aligned `membership` (ID,
-#'   Cluster, Silhouette), `cluster_summary`, `profiles`, `feature_data`, and
-#'   `settings` including the linkage. Hierarchical clustering does not select
-#'   medoids; `medoids` is `NULL` and membership has no `Medoid` column.
-#'   `summary()` returns the size/silhouette table. `plot()` invisibly returns
-#'   a `ggplot` object; [plot_data()] extracts the tree, leaf order, memberships,
-#'   group count, and excluded IDs.
-#' @inheritSection mfrm_cluster Reading clustering metrics
 #' @details
-#' Call `mfrm_cluster(x, k, method = "hierarchical", linkage = "average")`.
-#' The `k`, `weights` and `missing` controls follow [mfrm_cluster()].
-#' `linkage` is `"average"` (default, UPGMA) or `"complete"`. Average linkage
-#' uses the mean dissimilarity over all cross-group pairs; complete linkage
-#' uses their maximum. Neither is selected automatically from the data.
-#'
-#' Uses [stats::hclust()] followed by [stats::cutree()] at the requested `k`.
-#' Feature types, scaling, weights, missingness handling, silhouette definition,
-#' and the 5,000-included-entity limit follow [mfrm_cluster()]. No distance
-#' transformation or automatic sampling is performed. This limit is not a
-#' memory or speed guarantee.
-#'
-#' Only average and complete linkage are supported. Ward's minimum-variance
-#' criterion requires an appropriate Euclidean geometry; this mixed-feature
-#' Gower interface does not define a Euclidean conversion or a Ward analysis.
-#' Clustering MFRM bias estimates is a separate methodological question from
-#' grouping the external attributes accepted here. Measurement uncertainty is
-#' not propagated.
-#'
-#' The tree is fitted independently of PAM. Its merge heights describe the
-#' selected linkage on Gower dissimilarities, not significance or branch support.
-#' Tied distances can produce alternative hierarchies and input order can affect
-#' their resolution. A cut at `k` uses merge order even when heights tie, so a
-#' horizontal height threshold need not uniquely identify that cut.
-#'
-#' The default plot draws this stored tree, with boxes marking the stored `k`
-#' groups. Labels are shown for at most 50 included entities by default; hiding
-#' labels does not sample or remove entities. Excluded entities have no leaves
-#' but remain in the result and plot data. Silhouette and feature-profile views
-#' reuse [plot.mfrm_clusters()]. Plots do not refit or choose groups.
-#' [as_ggplot()] converts the stored dendrogram without refitting. The default
-#' and `component = "tree"` retain the full tree and group boxes. Leaf order,
-#' heights, label settings and excluded IDs are preserved. Dashed boxes differ
-#' from the solid tree branches even in monochrome. Box widths and
-#' physical text sizes can differ from base graphics. Tied heights retain the
-#' merge-order partition; boxes do not imply a unique horizontal height cut.
-#' Use `ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)` to remove
-#' headings and annotations, and [plot_data()] to inspect the retained source
-#' evidence. Silhouette/profile conversions use the same dedicated summary
-#' renderers as [plot.mfrm_clusters()].
-#'
-#' Use [mfrm_cluster_compare()] to compare this partition with PAM or another
-#' linkage on the same data. For multiple imputations, use
-#' `mfrm_cluster_imputed(..., method = "hierarchical", linkage = "average")`.
-#' Each completion retains its own tree; no pooled tree or branch support is
-#' estimated. See [online feature-analysis guide](https://ryuya-dot-com.github.io/mfrmr/dev/articles/mfrmr-external-features.html).
-#' @references Murtagh, F. and Legendre, P. (2014). Ward's Hierarchical
-#'   Agglomerative Clustering Method: Which Algorithms Implement Ward's
-#'   Criterion? Journal of Classification, 31, 274--295.
-#'   \doi{10.1007/s00357-014-9161-z}.
-#' @seealso [mfrm_cluster()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
-#' @examples
-#' if (requireNamespace("cluster", quietly = TRUE)) {
-#'   # Fictional rater backgrounds; R7 has unrecorded experience.
-#'   raters <- data.frame(Rater = paste0("R", 1:7),
-#'     ExperienceYears = c(1, 2, 3, 12, 13, 14, NA),
-#'     Specialty = factor(c(rep("Language", 3), rep("Science", 4))))
-#'   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
-#'   hierarchy <- mfrm_cluster(method = "hierarchical", features, k = 2, missing = "omit")
-#'   plot(hierarchy)
-#'   plot(hierarchy, type = "silhouette")
-#'   plot(hierarchy, type = "profile", feature = "ExperienceYears")
-#'   comparison <- mfrm_cluster_compare(list(
-#'     PAM = mfrm_cluster(method = "pam", features, k = 2, missing = "omit"),
-#'     Average = hierarchy,
-#'     Complete = mfrm_cluster(method = "hierarchical", features, k = 2,
-#'       linkage = "complete", missing = "omit")))
-#'   comparison$analysis_summary
-#'   summary(comparison)
-#' }
-#' @description For new code use `mfrm_cluster(..., method = "hierarchical")`.
-#'   The former method-specific entry is no longer exported. This guide retains
-#'   its statistical details and saved-result plotting methods.
+#' **Hierarchical Gower clustering (`method = "hierarchical"`)**: Uses
+#' [stats::hclust()] and [stats::cutree()] at `k` with `linkage = "average"`
+#' (default, UPGMA) or `"complete"` (Ward linkage is unsupported for mixed
+#' Gower dissimilarities; Murtagh & Legendre, 2014,
+#' \doi{10.1007/s00357-014-9161-z}). Returns an `mfrm_hierarchical_clusters`
+#' subclass retaining `tree` (`medoids` is `NULL`). Tied merge heights use
+#' merge order at cut `k`. Default `plot()` draws the stored dendrogram with
+#' `k`-group boxes (`component = "tree"` in [plot_data()]); `"silhouette"` and
+#' `"profile"` views match `plot.mfrm_clusters()`.
+#' @aliases mfrm_cluster_hierarchical
 #' @usage NULL
+#' @rdname mfrm_cluster
 mfrm_cluster_hierarchical <- function(x, k, weights = NULL,
                                       missing = c("error", "omit"),
                                       linkage = c("average", "complete")) {
@@ -102,7 +18,7 @@ mfrm_cluster_hierarchical <- function(x, k, weights = NULL,
   cluster_external_features(x, k, weights, match.arg(missing), linkage)
 }
 
-#' @rdname mfrm_cluster_hierarchical
+#' @rdname mfrm_cluster
 #' @section Session plot defaults:
 #' See [mfrmr_visual_diagnostics] for `options(mfrmr.plot_preset)`, argument
 #' precedence, and appearance when saving or reusing a plot.

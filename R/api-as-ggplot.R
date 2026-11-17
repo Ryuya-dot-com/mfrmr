@@ -3,8 +3,7 @@
 .require_mfrmr_ggplot2 <- function() {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop(
-      "`as_ggplot()` requires the optional `ggplot2` package. ",
-      "Install ggplot2 or use the base-R renderer.",
+      "Plotting requires the `ggplot2` package. Install ggplot2 before drawing.",
       call. = FALSE
     )
   }
@@ -391,6 +390,7 @@
 }
 
 .mfrmr_gg_wright <- function(payload) {
+  style <- resolve_plot_preset(payload$preset %||% "standard")
   loc <- as.data.frame(payload$locations %||% data.frame(), stringsAsFactors = FALSE)
   required <- c("PlotType", "Group", "Label", "Estimate", "X")
   if (!all(required %in% names(loc))) {
@@ -448,7 +448,7 @@
         xmin = .data$xmin, xmax = .data$xmax,
         ymin = .data$ymin, ymax = .data$ymax
       ),
-      inherit.aes = FALSE, fill = "#EEF2F7", colour = NA, alpha = 0.55
+      inherit.aes = FALSE, fill = style$strip_background, colour = NA, alpha = 0.45
     )
   }
   if (nrow(hist_df) > 0L) {
@@ -458,11 +458,12 @@
         xmin = .data$xmin, xmax = .data$xmax,
         ymin = .data$ymin, ymax = .data$ymax
       ),
-      inherit.aes = FALSE, fill = "#94A3B8", colour = "white", alpha = 0.7
+      inherit.aes = FALSE, fill = style$missing, colour = style$background, alpha = 0.55
     )
   }
   density <- as.data.frame(payload$group %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(density) > 0L && all(c("Group", "Theta", "Density") %in% names(density))) {
+    density$Series <- paste0("Group: ", density$Group)
     density$Theta <- suppressWarnings(as.numeric(density$Theta))
     density$Density <- suppressWarnings(as.numeric(density$Density))
     density_max <- max(density$Density, na.rm = TRUE)
@@ -472,11 +473,19 @@
         data = density,
         ggplot2::aes(
           x = .data$DensityX, y = .data$Theta,
-          colour = .data$Group, linetype = .data$Group, group = .data$Group
+          colour = .data$Series, linetype = .data$Series, group = .data$Series
         ),
         inherit.aes = FALSE, linewidth = 0.7
       )
     }
+  }
+  group_points <- as.data.frame(payload$group_density$points %||% data.frame())
+  if (nrow(group_points) > 0L) {
+    group_points <- group_points[group_points$Included, , drop = FALSE]
+    group_points$Series <- paste0("Group: ", group_points$Group)
+    p <- p + ggplot2::geom_rug(data = group_points,
+      ggplot2::aes(y = .data$Estimate, colour = .data$Series),
+      sides = "l", inherit.aes = FALSE, alpha = 0.55)
   }
   summary_df <- as.data.frame(payload$group_summary %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(summary_df) > 0L &&
@@ -630,11 +639,25 @@
         inherit.aes = FALSE, size = 2.5, check_overlap = FALSE
       )
   }
-  density_groups <- unique(as.character(density$Group))
+  density_groups <- unique(c(as.character(density$Series), as.character(group_points$Series)))
   p <- p + ggplot2::scale_colour_manual(values = c(location_colors,
       .plot_series_colors(density_groups, payload$preset %||% "standard"))) +
     ggplot2::scale_linetype_manual(values = c(.plot_series_linetypes(density_groups),
       `Person mean` = "dotted", `Person median` = "dashed"))
+  if (length(density_groups)) {
+    # Show each group's colour and line type together, including rug-only groups.
+    colour_breaks <- c(names(location_colors), density_groups)
+    group_lines <- unname(.plot_series_linetypes(density_groups))
+    group_lines[!density_groups %in% density$Series] <- "solid"
+    colour_scale <- p$scales$get_scales("colour")
+    colour_scale$breaks <- colour_breaks
+    linetype_scale <- p$scales$get_scales("linetype")
+    linetype_scale$breaks <- c("Person mean", "Person median")
+    p <- p + ggplot2::guides(shape = "none",
+      colour = ggplot2::guide_legend(override.aes = list(
+        linetype = c("blank", "blank", group_lines),
+        shape = c(16, 17, rep(NA, length(density_groups))), alpha = 1)))
+  }
   .mfrmr_gg_labs(p, payload, x = NULL, y = payload$axis_label %||% "Logit scale", fallback = "Wright map")
 }
 
@@ -1649,141 +1672,108 @@
 
 #' Convert draw-free mfrmr plot data to ggplot2
 #'
-#' `as_ggplot()` is an optional renderer for an `mfrm_plot_data` object or an
-#' object whose `plot()` method supports `draw = FALSE`. Base graphics remain
-#' the default; the returned `ggplot` can be restyled or composed downstream.
+#' `plot()` returns a `ggplot` object that can be restyled or composed directly.
+#' Use `as_ggplot()` to convert saved `mfrm_plot_data` or to select a supported
+#' display from an analysis object. Passing an existing `ggplot` without extra
+#' controls returns it unchanged, including user edits.
 #'
-#' Bubble conversion uses the saved radii, facet colours, facet order and
-#' reference lines. It preserves relative circle radii, rather than replacing
-#' them with equal-sized points. Base circles use plot units; ggplot point
-#' sizes use physical units, so absolute sizes need not match across devices. Payloads lacking matching saved radii
-#' or facet colours must be recreated with [plot(x, type = "bubble")][plot.mfrm_fit].
+#' Saved plot conversion retains the selected view, values, intervals, missing states,
+#' display settings and interpretation. It does not refit, rescore, recompute
+#' diagnostics or change interval qualifications. Use [plot_data()] for other
+#' tables; choosing a component does not authorize a different statistic.
 #'
-#' Dedicated conversions are provided for Wright maps, theta-to-expected-score
-#' pathways, fit-statistic-to-measure pathways, category characteristic curves,
-#' bubble charts, DIF/DFF summaries and heatmaps, portable-calibration
-#' score review plots, testlet calibration, shared-rater severity and bootstrap
-#' intervals, conditional Person scores, and
-#' multivariate D-study comparisons. Matched ordinary/extended facet comparisons
-#' preserve centered effects, paired/difference views, excluded rows, display
-#' controls and alternative text; see [plot.mfrm_extended_comparison()].
-#' Portable-calibration score views preserve their selected axes, stored
-#' endpoints, review symbols and unplotted dispositions with either the default
-#' or `component = "data"`. Use [plot_data()] for other components; conversion
-#' does not rescore Persons or change their interval level.
-#' Agreement conversions retain the selected exact/correlation/difference
-#' metric, saved pair ordering and review thresholds, model-expected overlay,
-#' and missing comparisons. Agreement heatmaps use the saved facet labels and
-#' palette with a fixed metric scale. Use `plot_data()` for other tables in
-#' an agreement payload; automatic conversion does not guess a different
-#' statistic from the first numeric column.
-#' Linking conversions preserve the selected drift, wave estimates and stored
-#' interval endpoints, cumulative offsets, or common-element counts. Missing
-#' offsets do not become zero or connect a line across an unavailable link.
-#' Drift heatmaps use their saved residual matrix. Use [plot_data()] for other
-#' tables; conversion does not recompute offsets or their uncertainty.
-#' Threshold-sensitivity tile and curve payloads also preserve their selected
-#' view, display controls and text alternatives; see
-#' [plot.mfrm_screening_sensitivity()].
-#' Response residual displays preserve their posterior or conditional plug-in
-#' probability definition and lack of reference cutoffs. Paired views retain
-#' available Infit when Outfit is undefined; see [plot.mfrm_response_diagnostics()].
-#' Testlet conversions retain unavailable
-#' rows, prior-only symbols and the conditional-interval note; they do not
-#' estimate diagnostics or add calibration uncertainty. Extended-model interval,
-#' precision and empirical-distribution views preserve display settings, data
-#' exclusions and text alternatives; see [plot.mfrm_testlet_scores()]. Bootstrap
-#' conversion retains infinite endpoints as arrows and ordinary intervals as
-#' a dashed comparison. D-study conversions
-#' preserve G/Phi or SEM panels, fixed-count groups, score units, and unavailable
-#' estimates. They retain supplied D-study coefficient ribbons and interval
-#' gaps. Converting a saved plot object does not refit models or calculate
-#' intervals. G-study component conversions retain raw negative points,
-#' component intervals and square outlines for unavailable intervals.
-#' For a G-study or D-study input, `intervals = TRUE` is forwarded to its
-#' plot method and computes intervals before conversion; also supply
-#' `assumption = "normal"`.
-#' For multivariate D-study plots, an explicit `component = "series"` keeps
-#' this dedicated conversion; use [plot_data()] for other tables.
-#' Difference-interval plots from [mfrm_multivariate_d_compare()] return
+#' **Model and diagnostic views.** Dedicated converters cover Wright maps,
+#' expected-score/fit pathways, CCCs, bubbles, DIF/DFF, portable scores, testlet
+#' and shared-rater results, conditional Person scores and multivariate D-studies.
+#' - Bubbles keep radii, colours, facet order and reference lines. Relative
+#'   radii are preserved; base plot units and ggplot physical sizes need not
+#'   match across devices. Recreate payloads lacking radii/colours with
+#'   [plot(x, type = "bubble")][plot.mfrm_fit].
+#' - Matched ordinary/extended comparisons retain centered effects, paired or
+#'   difference views, exclusions and alternative text; see
+#'   [plot.mfrm_extended_comparison()].
+#' - Portable scores use the default or `component = "data"`, preserving axes,
+#'   endpoints, review symbols and unplotted dispositions.
+#' - Agreement keeps the chosen exact/correlation/difference metric, pair order,
+#'   cutoffs, expected overlay and missing pairs. Heatmaps use saved labels,
+#'   palette and fixed metric scales.
+#' - Linking keeps drift/wave intervals, cumulative offsets or common counts;
+#'   unavailable offsets neither become zero nor connect lines across gaps.
+#'   Drift heatmaps use saved residuals.
+#' - Threshold sensitivity retains tile/curve views and text alternatives;
+#'   see [plot.mfrm_screening_sensitivity()]. Response residuals retain their
+#'   posterior/plug-in probability target, absent reference cutoffs, and available
+#'   Infit when Outfit is undefined; see [plot.mfrm_response_diagnostics()].
+#' - Testlet/extended score views keep unavailable/prior-only rows, conditional
+#'   uncertainty, exclusions and alternative text; see [plot.mfrm_testlet_scores()].
+#'   Bootstrap views use arrows for infinite endpoints and dashed ordinary intervals.
+#'
+#' **G/D-study views.** D-studies retain G/Phi or SEM panels, fixed-count groups,
+#' units, unavailable estimates, supplied ribbons and gaps; `component = "series"`
+#' uses the same converter. G-studies retain negative points, component intervals
+#' and square outlines for unavailable intervals. With an analysis object,
+#' `intervals = TRUE, assumption = "normal"` explicitly computes intervals in
+#' its plot method before conversion. Saved plot conversion only reuses them.
+#'
+#' Difference-interval plots from [mfrm_d_study_comparison] return
 #' `ggplot` objects via both `plot()` and `as_ggplot()`, with underlying tables
 #' accessible through [plot_data()].
-#' Severity profiles preserve their saved normal bounds,
-#' ordered levels, guide bands, fixed points, unavailable states and precision
-#' notes with the default or `component = "data"`. The word "profile" does not
-#' imply a likelihood-profile interval. Conversion does not recalculate bounds
-#' or qualify exploratory JML or fallback/regularized uncertainty for inference.
-#' Residual-PCA scree, reference, excess and loadings plots have dedicated
-#' conversions with the default or `component = "data"`. They preserve saved
-#' eigenvalues, reference cutoffs, signed loadings and display encodings; method
-#' identifiers are not inferred as plotted variables. No PCA is recomputed.
-#' External-feature PCA scree, scores and loadings views have dedicated
-#' conversions. They preserve selected axes, retained-component symbols,
-#' saved group colours and shapes, labels and transformation metadata.
-#' Scores retain equal axis units; loading coefficients are not correlations.
-#' The default and `component = "table"` use the same complete PCA view.
-#' Use `ggplot2::labs(title = NULL, subtitle = NULL)` to remove headings from
-#' the returned ggplot. No PCA or clustering is refitted.
-#' External-feature dendrogram conversion retains the stored merges, heights,
-#' leaf order and group boxes, including tied-height cuts. The default and
-#' `component = "tree"` use the same complete view. Labels follow the saved
-#' setting; no tree is refitted or partition selected. Source metadata remain
-#' available with [plot_data()]. Heights are not significance or branch support.
-#' Imputation co-membership heatmaps have dedicated conversion with the default
-#' or `component = "matrix"`. Values retain their all-imputation denominator,
-#' selected ID order and fixed zero-to-one scale. Unavailable cells use grey
-#' fill and crosses; zero is a valid fraction. The saved legend, labels and
-#' imputation count are reused, without recomputing or pooling partitions.
-#' Silhouette conversion preserves widths on a fixed minus-one-to-one scale,
-#' their saved order and overall-mean line. Numeric profiles preserve
-#' original-unit means, medians and counts, using separate symbols with slight
-#' vertical offsets. Categorical profiles preserve the category order, unused
-#' levels, group counts and within-group proportions on a zero-to-one scale.
-#' The default and `component = "table"` keep the full selected view;
-#' categorical profiles also accept `component = "matrix"`. These summaries
-#' do not estimate uncertainty, rater quality or sampling stability.
-#' For main-effects `mfrm_d_study` results, use the base `plot()` method or
-#' [plot_data()] for custom graphics; automatic conversion is refused because
-#' generic column selection does not preserve those design comparisons.
-#' Fit-measure `measure_ci` plots retain each facet/level row and its saved
-#' normal-band endpoints, including exploratory JML bands. Open diamonds mark
-#' fixed values and crosses mark estimates without intervals. Conversion does
-#' not recompute bounds or change their inferential qualification. The default
-#' and `component = "table"` preserve the complete view and its returned notes.
-#' Pooled fixed-facet MI intervals have dedicated conversion with the default
-#' or `component = "table"`. Saved t-interval endpoints, degrees of freedom,
-#' contrasts and complete-data information cautions are retained, with no
-#' repooling or interval recalculation. Open diamonds mark fixed targets without
-#' intervals, crosses mark missing intervals, and arrows mark infinite bounds.
-#' Arrow tips are plotting limits, not replacement finite confidence limits.
-#' Selecting `component` does not enable unsupported conversions: it cannot
-#' preserve D-study differences through generic column selection. Use [plot_data()] to extract the table
-#' and specify the axes, intervals and grouping explicitly in custom graphics.
-#' Residual Q-Q plots require the base renderer or explicitly specified custom
-#' quantile axes; automatic conversion is unavailable, even with `component`.
-#' Residual-correlation heatmaps retain the selected facet on both
-#' axes, a fixed -1 to 1 colour scale, and grey unavailable cells; their pair
-#' table and notes retain overlap counts and interpretation qualifications.
-#' Saved rating-scale counts and thresholds, and category-structure counts,
-#' retain the selected values, missing outcomes, expected-count overlay and
-#' saved palette. Use the default or the matching `category_table` /
-#' `threshold_table` component. Threshold figures show point estimates; stored
-#' SEs and CI-use flags remain in the payload, not as curve or gap intervals.
+#'
+#' **Profiles and exploratory structure.** The default and the listed `component`
+#' selectors keep the complete view:
+#' - Severity (`"data"`): ordered levels, normal bounds, guide bands, fixed/
+#'   unavailable states and precision notes. "Profile" does not mean likelihood
+#'   profiling or qualify exploratory JML/fallback/regularized uncertainty.
+#' - Residual PCA (`"data"`): scree/reference/excess/loadings, saved eigenvalues,
+#'   cutoffs, signed loadings and encodings; method IDs are not plotted variables.
+#' - External-feature PCA (`"table"`): selected axes, retained-component symbols,
+#'   group colours/shapes, labels and transformations. Score axes have equal units;
+#'   loadings are coefficients, not correlations.
+#' - Dendrograms (`"tree"`): merges, heights, leaf order, labels and group boxes,
+#'   including tied-height cuts. Heights are not significance or branch support.
+#' - Imputation co-membership (`"matrix"`): all-imputation denominator, ID order,
+#'   fixed `[0,1]` scale, legend/labels and imputation count. Gray crossed cells
+#'   are unavailable; zero is a valid fraction. Partitions are not pooled.
+#' - Silhouettes (`"table"`): widths on `[-1,1]`, saved order and overall mean.
+#'   Numeric profiles keep original-unit means/medians/counts with offset symbols;
+#'   categorical profiles keep category order, unused levels, counts and
+#'   within-group proportions on `[0,1]` (`"table"` or `"matrix"`). These summaries
+#'   do not estimate uncertainty, rater quality or sampling stability.
+#'
+#' Main-effects `mfrm_d_study` plots retain the selected design comparison
+#' through their dedicated conversion; use [plot_data()] for its tables.
+#'
+#' **Interval displays.** Fit-measure `measure_ci` views keep facet/level rows,
+#' saved normal endpoints (including exploratory JML), notes, open diamonds for
+#' fixed targets and crosses for unavailable intervals (`component = "table"`).
+#' Pooled fixed-facet MI uses the same selector, retaining t endpoints, df,
+#' contrasts and complete-data information cautions. It additionally marks
+#' infinite bounds with arrows; arrow tips are display limits, not finite bounds.
+#'
+#' Selecting `component` must preserve the selected view. Use [plot_data()]
+#' to extract other tables and specify their axes and grouping in custom
+#' graphics. Residual Q-Q conversion retains the saved quantile axes with
+#' the default or `component = "data"`; it adds no normality test.
+#' Residual-correlation heatmaps keep the same facet on both axes, scale `[-1,1]`,
+#' gray unavailable cells, overlap counts and interpretation notes. Rating-scale
+#' and category-structure displays keep selected counts/thresholds, missing
+#' outcomes, expected-count overlay and palette; use the default or matching
+#' `category_table`/`threshold_table`. Thresholds are points; stored SEs/CI-use
+#' flags do not become curve or gap intervals.
+#'
 #' Category-curve bundles (including their overview), category-structure
-#' boundary views and threshold ladders require their base renderer or custom
-#' graphics from [plot_data()]; automatic conversion is unavailable even with
-#' `component`. Generic column selection would mix distinct curve targets or
-#' lose the selected view. Fitted CCC plots from
+#' boundary views and threshold ladders also use dedicated conversion to
+#' retain their distinct curve targets and selected view. Fitted CCC plots from
 #' [plot(fit, type = "ccc")][plot.mfrm_fit] retain their dedicated conversion.
 #'
 #' Bias scatter/ranked views preserve their axes, saved review rules and
 #' conditional interval bounds, including dashed search-limited bounds.
-#' Bias heatmaps, histograms and facet profiles require base/custom graphics;
-#' the generic converter cannot combine their distinct layouts safely.
+#' Bias heatmaps, histograms and facet profiles have dedicated conversions
+#' that retain the selected layout and screening settings.
 #' Halo distributions, selected per-rater summaries and signed retained-edge
 #' matrices preserve the selected metric, missing comparisons and caveats.
-#' Halo network conversion is unavailable. Save the complete analysis result
-#' and recreate its plot to obtain current interpretation notes.
+#' Halo network conversion retains the saved graph layout and edges. Save
+#' the complete analysis result and recreate its plot for current notes.
 #'
 #' Shrinkage plots from [plot(fit, type = "shrinkage")][plot.mfrm_fit]
 #' preserve both estimates for each facet level, their adjustment direction
@@ -1976,29 +1966,19 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     if (is.null(component)) attr(p_sim, "mfrmr_plot_data") <- x
     return(p_sim)
   }
-  if (identical(x$name, "network_ergm")) {
+  if (identical(x$name, "network_ergm") || identical(x$name, "rater_network") ||
+      identical(x$name, "subset_connectivity") || identical(x$name, "residual_network") ||
+      identical(x$name, "multivariate_d_comparison") || identical(x$name, "d_study")) {
     rlang::check_dots_empty()
     .require_mfrmr_ggplot2()
     if (!is.null(component)) return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
-    return(.mfrmr_gg_network_ergm(x))
-  }
-  if (identical(x$name, "rater_network")) {
-    rlang::check_dots_empty()
-    .require_mfrmr_ggplot2()
-    if (!is.null(component)) return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
-    return(.mfrmr_gg_rater_network(x))
-  }
-  if (identical(x$name, "subset_connectivity")) {
-    rlang::check_dots_empty()
-    .require_mfrmr_ggplot2()
-    if (!is.null(component)) return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
-    return(.mfrmr_gg_subset_connectivity(x))
-  }
-  if (identical(x$name, "residual_network")) {
-    rlang::check_dots_empty()
-    .require_mfrmr_ggplot2()
-    if (!is.null(component)) return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
-    return(.mfrmr_gg_residual_network(x))
+    return(switch(x$name,
+      network_ergm = .mfrmr_gg_network_ergm(x),
+      rater_network = .mfrmr_gg_rater_network(x),
+      subset_connectivity = .mfrmr_gg_subset_connectivity(x),
+      residual_network = .mfrmr_gg_residual_network(x),
+      multivariate_d_comparison = .mfrmr_gg_multivariate_d_comparison(x),
+      d_study = .mfrmr_gg_d_study(x)))
   }
   if (x$name %in% c("anchor_drift", "anchor_drift_forest", "equating_chain_common_anchors")) {
     rlang::check_dots_empty()
@@ -2182,14 +2162,6 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     }
     return(.mfrmr_gg_screening_performance(x))
   }
-  if (identical(x$name, "multivariate_d_comparison")) {
-    rlang::check_dots_empty()
-    .require_mfrmr_ggplot2()
-    if (!is.null(component)) {
-      return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
-    }
-    return(.mfrmr_gg_multivariate_d_comparison(x))
-  }
   if (x$name %in% c("cluster_silhouette", "cluster_profile")) {
     rlang::check_dots_empty()
     allowed <- if (identical(x$name, "cluster_profile") && !is.null(x$data$matrix)) c("table", "matrix") else "table"
@@ -2197,14 +2169,6 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
       stop("Use the default component for the complete cluster view, or plot_data() for other components.", call. = FALSE)
     }
     return(.mfrmr_gg_cluster_summary(x))
-  }
-  if (identical(x$name, "d_study")) {
-    rlang::check_dots_empty()
-    .require_mfrmr_ggplot2()
-    if (!is.null(component)) {
-      return(.mfrmr_gg_tabular(.mfrmr_gg_component(x$data %||% list(), component), x$data %||% list()))
-    }
-    return(.mfrmr_gg_d_study(x))
   }
   .require_mfrmr_ggplot2()
   payload <- x$data %||% list()
@@ -2414,7 +2378,10 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   }
   if (is.null(component)) {
     spec_p <- .mfrmr_gg_specialized_views(x)
-    if (!is.null(spec_p)) return(spec_p)
+    if (!is.null(spec_p)) {
+      attr(spec_p, "mfrmr_plot_data") <- x
+      return(spec_p)
+    }
   }
   p <- .mfrmr_gg_tabular(.mfrmr_gg_component(payload, component), payload)
   if (is.null(component)) attr(p, "mfrmr_plot_data") <- x

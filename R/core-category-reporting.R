@@ -122,7 +122,7 @@ category_threshold_table <- function(fit, diagnostics, usage) {
 
 category_owner_notes <- function(context) {
   c(paste0("Step owner: ", context$StepOwner, "; selection: ", context$StepSelection, "."),
-    .mfrm_step_interpretation_note(),
+    .mfrmr_const_.mfrm_step_interpretation_note,
     "Category counts are observed ratings, not independent Persons. Owner percentages use each owner's total weight; no-exposure percentages are unavailable.",
     "An unobserved category does not establish structural absence. Review the rating plan and rubric before merging categories.",
     "Step SEs describe the stored step offsets, not full ability-axis crossings, adjacent-step gaps or decision cuts. No additional covariance calculation is requested.",

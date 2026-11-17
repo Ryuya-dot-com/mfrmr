@@ -16,7 +16,7 @@ mml_quadrature_sensitivity(
 }
 \arguments{
 \item{fit}{An RSM, PCM, or GPCM MML \code{mfrm_fit} returned by
-\code{\link[=fit_mfrm]{fit_mfrm()}}. \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} accepts only GPCM fits.}
+\code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
 \item{data}{The original response data.frame used to create \code{fit}. Prepared
 response rows are compared semantically after refitting; row order may
@@ -132,8 +132,9 @@ The effective slope is the product of both facet slopes; moving the
 integration grid retains the original N(0,1) density and its Jacobian.
 This does not provide adaptive EM, update estimates or repair their intervals.
 
-More quadrature points improve the numerical approximation, not the amount
-of observed information. In a sparse design, a small group of candidates
+More quadrature points refine the integration rule, not the amount of
+observed information. Accuracy need not improve monotonically; compare
+the resulting estimates and numerical diagnostics. In a sparse design, a small group of candidates
 rated many times may need a finer grid than candidates with few ratings.
 Inspect interval availability and measured changes; no fixed point count
 is guaranteed to be adequate for every design. See the GPCM scope vignette
