@@ -1004,7 +1004,10 @@ interrater_agreement <- function(data,
                                  unit = NULL,
                                  categories = NULL,
                                  metric = c("all", "exact", "kappa", "gwet_ac2", "krippendorff_alpha", "icc"),
-                                 weights = c("quadratic", "linear", "unweighted")) {
+                                 weights = c("quadratic", "linear", "unweighted"),
+                                 model_expected = FALSE) {
+  if (isTRUE(model_expected) && !inherits(data, "mfrm_fast_fit"))
+    stop("model_expected requires a fitted unified-engine calibration.", call. = FALSE)
   metric <- match.arg(metric)
   weights <- match.arg(weights)
   if (!is.null(unit) && length(unit) >= 1L) {
@@ -1211,9 +1214,28 @@ interrater_agreement <- function(data,
     sum_tbl <- sum_tbl[sum_tbl$Metric %in% keep_m, , drop = FALSE]
   }
 
+  model_table <- NULL
+  if (isTRUE(model_expected)) {
+    ready <- .mfrm_fast_readiness(data)
+    eligible <- if (ready$ready) {
+      mfrm_cpp_expected_agreement(split(seq_along(y), u_idx), y, predict(data, type = "probs")[keep, , drop = FALSE])
+    } else rep(0, 6L)
+    used <- eligible[2L]
+    values <- if (used > 0) eligible[3L:6L] / used else rep(NA_real_, 4L)
+    kappa <- if (used > 0 && values[3L] < 1 - 1e-12) (values[1L] - values[3L]) / (1 - values[3L]) else NA_real_
+    model_table <- data.frame(
+      ObservedExact = values[1L], ObservedWithinOne = values[2L],
+      ExpectedExact = values[3L], ExpectedWithinOne = values[4L],
+      ModelBasedKappa = kappa, Units = eligible[1L], Pairs = used,
+      ObservedPairs = tot_pairs,
+      Status = if (!ready$ready) paste(ready$reason_codes, collapse = "; ") else
+        if (used == 0) "no_usable_model_pairs" else if (used < tot_pairs) "partially_available" else "available"
+    )
+  }
   structure(
     list(
       summary = sum_tbl,
+      model_expected = model_table,
       pairwise = pw_df,
       table = pw_df,
       settings = list(person = person, rater = rater, score = score,
@@ -1239,7 +1261,8 @@ print.mfrm_agreement <- function(x, ...) {
 # on `mfrm_fast_fit` / `mfrm_fast_gtheory`
 # ==============================================================================
 
-.mfrm_diagnose_fast_fit <- function(fit, residual_threshold = 2.0) {
+.mfrm_diagnose_fast_fit <- function(fit, residual_threshold = 2.0,
+                                   residual_pca = "none", pca_max_factors = 10L) {
   p_df <- fit$person
   f_df <- fit$facets
 
@@ -1324,6 +1347,17 @@ print.mfrm_agreement <- function(x, ...) {
     unexp_df <- unexp_df[order(-abs(unexp_df$StdResidual)), , drop = FALSE]
   }
 
+  pca_overall <- pca_by_facet <- NULL
+  if (residual_pca != "none") {
+    cols <- enc$base_facets
+    if (any(c("Person", "StdResidual") %in% cols)) {
+      stop("Person and StdResidual are reserved facet names for residual PCA.", call. = FALSE)
+    }
+    obs <- data.frame(Person = enc$person_levels[enc$person0 + 1L],
+                      enc$retained_data[cols], StdResidual = std_res, check.names = FALSE)
+    if (residual_pca %in% c("overall", "both")) pca_overall <- compute_pca_overall(obs, cols, pca_max_factors)
+    if (residual_pca %in% c("facet", "both")) pca_by_facet <- compute_pca_by_facet(obs, cols, pca_max_factors)
+  }
   structure(
     list(
       readiness = readiness,
@@ -1333,6 +1367,9 @@ print.mfrm_agreement <- function(x, ...) {
       steps = fit$steps,
       slopes = fit$slopes,
       connectivity = fit$connectivity,
+      residual_pca_mode = residual_pca,
+      residual_pca_overall = pca_overall,
+      residual_pca_by_facet = pca_by_facet,
       fit = fit
     ),
     class = c("mfrm_fast_diagnostics", "mfrm_diagnostics", "mfrm_bundle")
@@ -1379,6 +1416,8 @@ summary.mfrm_fast_diagnostics <- function(object, digits = 3L, top_n = 10L, incl
       steps = object$steps,
       slopes = object$slopes,
       connectivity = object$connectivity,
+      residual_pca_overall = object$residual_pca_overall,
+      residual_pca_by_facet = object$residual_pca_by_facet,
       digits = as.integer(digits)
     ),
     class = "summary.mfrm_fast_diagnostics"
@@ -1409,54 +1448,106 @@ print.summary.mfrm_fast_diagnostics <- function(x, ...) {
   invisible(x)
 }
 
-.mfrm_information_fast_fit <- function(fit, theta_range = c(-6, 6), theta_points = 201L) {
+.mfrm_information_fast_fit <- function(fit, theta_range, theta_points, rating_plan, exposure_basis) {
+  check <- summary(fit)$readiness
+  if (!check$ready) stop("Calibration is not ready for information: ",
+                         paste(check$reason_codes, collapse = ", "), ".", call. = FALSE)
+  if (!is.numeric(theta_range) || length(theta_range) != 2L ||
+      any(!is.finite(theta_range)) || theta_range[1L] >= theta_range[2L] ||
+      !is.numeric(theta_points) || length(theta_points) != 1L || !is.finite(theta_points) ||
+      theta_points < 2L || theta_points != floor(theta_points) || theta_points > .Machine$integer.max) {
+    stop("Supply increasing finite theta bounds and an integer theta_points of at least two.", call. = FALSE)
+  }
   th_grid <- seq(theta_range[1L], theta_range[2L], length.out = as.integer(theta_points))
   enc <- fit$encoding
   C <- enc$n_cat
   sform <- enc$slope_formula %||% 0L
-  # Average over unique observed facet combinations
-  f_combos <- unique(enc$facet_mat0)
-  n_comb <- nrow(f_combos)
-  comb_eta <- numeric(n_comb)
-  for (f in seq_along(enc$facets)) {
-    fnm <- enc$facets[f]
-    b_vec <- if (f <= length(enc$base_facets)) {
-      sub <- fit$facets[fit$facets$Facet == fnm, ]
-      sub$Estimate[match(enc$facet_levels[[f]], sub$Level)]
-    } else {
-      fit$interactions$Estimate[fit$interactions$Interaction == fnm]
+  facets <- enc$base_facets
+  used <- enc$weight > 0
+  observed <- enc$retained_data[used, facets, drop = FALSE]
+  if (!is.null(rating_plan)) {
+    if (identical(exposure_basis, "per_person_average")) {
+      stop("A rating_plan already specifies one person's rating counts.", call. = FALSE)
     }
-    comb_eta <- comb_eta + enc$facet_signs[f] * b_vec[f_combos[, f] + 1L]
+    if (any(c("Count", "ObservedContext") %in% facets) ||
+        !is.data.frame(rating_plan) || !nrow(rating_plan) || anyDuplicated(names(rating_plan)) ||
+        !setequal(names(rating_plan), c(facets, "Count"))) {
+      stop("rating_plan must contain every non-Person facet and Count.", call. = FALSE)
+    }
+    contexts <- rating_plan[facets]
+    counts <- rating_plan$Count
+    if (!is.numeric(counts) || !is.null(dim(counts)) ||
+        any(!is.finite(counts) | counts < 1 | counts != floor(counts)) || !is.finite(sum(counts))) {
+      stop("Rating-plan Count must be positive finite integers.", call. = FALSE)
+    }
+    for (f in facets) {
+      values <- contexts[[f]]
+      levels <- enc$facet_levels[[match(f, facets)]]
+      if (!is.atomic(values) || !is.null(dim(values)) || anyNA(values) ||
+          !all(as.character(values) %in% levels)) {
+        stop("Unknown or missing rating-plan level in facet ", f, ".", call. = FALSE)
+      }
+    }
+    if (anyDuplicated(contexts)) stop("Combine repeated rating-plan contexts in Count.", call. = FALSE)
+    exposure_basis <- "rating_plan"
+  } else if (identical(exposure_basis, "unique_contexts")) {
+    contexts <- unique(observed)
+    counts <- rep(1, nrow(contexts))
+  } else {
+    grouped <- stats::aggregate(list(Count = enc$weight[used]), by = observed, FUN = sum)
+    contexts <- grouped[seq_along(facets)]
+    counts <- grouped[[length(facets) + 1L]]
+    if (identical(exposure_basis, "per_person_average")) {
+      counts <- counts / length(unique(enc$person0[used]))
+    }
   }
-  comb_sg <- if (enc$model_code == 1L) f_combos[, enc$step_facet_idx + 1L] else integer(n_comb)
-  comb_alpha <- rep(1.0, n_comb)
-  if (!is.null(fit$slopes) && nrow(fit$slopes) > 0L) {
-    for (fnm_s in enc$slope_facets) {
-      fi <- match(fnm_s, enc$base_facets)
-      sl_sub <- fit$slopes[fit$slopes$Facet == fnm_s, ]
-      a_vec <- sl_sub$Estimate[match(enc$facet_levels[[fi]], sl_sub$Level)]
-      comb_alpha <- comb_alpha * a_vec[f_combos[, fi] + 1L]
-    }
+  observed_context <- rep(TRUE, nrow(contexts))
+  if (!is.null(rating_plan)) {
+    observed_context <- vapply(seq_len(nrow(contexts)), function(i) {
+      any(Reduce(`&`, lapply(facets, function(f) as.character(observed[[f]]) == as.character(contexts[[f]][i]))))
+    }, logical(1))
+  }
+  indexes <- lapply(facets, function(f) match(as.character(contexts[[f]]), enc$facet_levels[[f]]))
+  names(indexes) <- facets
+  comb_eta <- numeric(nrow(contexts))
+  for (f in seq_along(facets)) {
+    name <- facets[f]
+    tb <- fit$facets[fit$facets$Facet == name, , drop = FALSE]
+    values <- tb$Estimate[match(enc$facet_levels[[name]], tb$Level)]
+    comb_eta <- comb_eta + enc$facet_signs[f] * values[indexes[[name]]]
+  }
+  for (im in enc$interaction_meta) {
+    i <- (indexes[[im$facet_a]] - 1L) * length(enc$facet_levels[[im$facet_b]]) + indexes[[im$facet_b]]
+    tb <- fit$interactions[fit$interactions$Interaction == im$name, , drop = FALSE]
+    comb_eta <- comb_eta + enc$facet_signs[im$facet_idx] * tb$Estimate[i]
+  }
+  if (any(!is.finite(comb_eta))) stop("A rating context has unavailable facet locations.", call. = FALSE)
+  comb_sg <- if (enc$model_code == 1L) indexes[[enc$step_facet]] - 1L else integer(nrow(contexts))
+  comb_alpha <- rep(1, nrow(contexts))
+  for (f in enc$slope_facets) {
+    sl <- fit$slopes[fit$slopes$Facet == f, , drop = FALSE]
+    comb_alpha <- comb_alpha * sl$Estimate[match(as.character(contexts[[f]]), sl$Level)]
+  }
+  if (any(!is.finite(comb_alpha) | comb_alpha <= 0)) {
+    stop("Information requires finite positive discrimination in every context.", call. = FALSE)
   }
 
   test_info <- numeric(length(th_grid))
   exp_total <- numeric(length(th_grid))
   for (t_i in seq_along(th_grid)) {
-    th_val <- th_grid[t_i]
-    ev <- .mfrm_eval_row_predictions(
-      eta_vec = th_val + comb_eta,
-      step_cum = fit$step_cumulative,
-      step_group0 = comb_sg,
-      step_cat_min = enc$step_cat_min,
-      step_cat_max = enc$step_cat_max,
-      rating_min = enc$rating_min,
-      alpha_vec = if (!is.null(fit$slopes)) comb_alpha else NULL,
-      theta_vec = rep(th_val, n_comb),
-      base_eta_vec = comb_eta,
-      slope_formula = sform
-    )
-    test_info[t_i] <- sum((comb_alpha^2) * ev$variance, na.rm = TRUE)
-    exp_total[t_i] <- sum(ev$expected, na.rm = TRUE)
+    theta <- th_grid[t_i]
+    ev <- .mfrm_eval_row_predictions(theta + comb_eta, fit$step_cumulative, comb_sg,
+      enc$step_cat_min, enc$step_cat_max, enc$rating_min,
+      alpha_vec = if (length(enc$slope_facets)) comb_alpha else NULL,
+      theta_vec = rep(theta, nrow(contexts)), base_eta_vec = comb_eta, slope_formula = sform)
+    if (any(!is.finite(ev$variance) | !is.finite(ev$expected))) {
+      stop("Category probabilities are unavailable in an information context.", call. = FALSE)
+    }
+    test_info[t_i] <- sum(counts * comb_alpha^2 * ev$variance)
+    exp_total[t_i] <- sum(counts * ev$expected)
+  }
+  if (any(!is.finite(test_info) | !is.finite(exp_total))) {
+    stop("The combined rating exposures exceed the numerical range for information.", call. = FALSE)
   }
 
   # Reference category probability curve at base_eta = 0 for each step owner
@@ -1492,16 +1583,24 @@ print.summary.mfrm_fast_diagnostics <- function(x, ...) {
     }
   }
 
+  exposures <- data.frame(contexts, Count = counts, ObservedContext = observed_context, check.names = FALSE)
+  names(exposures) <- make.unique(names(exposures))
   structure(
     list(
       test_information = data.frame(
         Theta = th_grid,
         Information = test_info,
-        SE = ifelse(test_info > 1e-12, 1.0 / sqrt(test_info), NA_real_),
+        SE = ifelse(test_info > 0, 1.0 / sqrt(test_info), NA_real_),
         ExpectedScore = exp_total,
         stringsAsFactors = FALSE
       ),
-      category_curves = do.call(rbind, cpc_rows)
+      category_curves = do.call(rbind, cpc_rows),
+      exposure_basis = exposure_basis,
+      exposures = exposures,
+      notes = c("Conditional on fixed calibration and independent ratings.",
+                if (exposure_basis %in% c("observed_total", "per_person_average") && any(enc$weight != 1))
+                  "Observed exposures use calibration weights; conditional SE assumes frequency weights.",
+                if (any(!observed_context)) "Some planned combinations were not observed in calibration.")
     ),
     class = "mfrm_information"
   )

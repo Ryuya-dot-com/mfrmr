@@ -1123,7 +1123,8 @@ information_build_step_structure <- function(fit, model) {
 compute_information <- function(fit, theta_range = c(-6, 6), theta_points = 201L, rating_plan = NULL, 
     exposure_basis = c("observed_total", "per_person_average")) {
     if (inherits(fit, "mfrm_fast_fit")) {
-        return(.mfrm_information_fast_fit(fit, theta_range = theta_range, theta_points = theta_points))
+        basis <- if (missing(exposure_basis)) "unique_contexts" else match.arg(exposure_basis)
+        return(.mfrm_information_fast_fit(fit, theta_range, theta_points, rating_plan, basis))
     }
     stop_if_product_slopes(fit, "compute_information()")
     exposure_basis_supplied <- !missing(exposure_basis)
@@ -1513,41 +1514,100 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL, drift_t
         Flag = abs(.data$Drift) > 0.5 | (!is.na(.data$Drift_SE_Ratio) & .data$Drift_SE_Ratio > 2)), dplyr::desc(abs(.data$Drift)))
 }
 
-anchor_to_baseline <- function(new_data, baseline_fit, person, facets, score, anchor_facets = NULL, include_person = FALSE, 
-    weight = NULL, model = NULL, method = NULL, anchor_policy = "warn", mml_integration = NULL, centering_scope = NULL, 
-    ...) {
+anchor_to_baseline <- function(new_data, baseline_fit, person, facets, score, anchor_facets = NULL, include_person = FALSE,
+    weight = NULL, model = NULL, method = NULL, anchor_policy = "warn", mml_integration = NULL, centering_scope = NULL,
+    ..., drift_reference = NULL) {
     if (inherits(baseline_fit, "mfrm_fast_fit")) {
-        if (is.null(model)) model <- baseline_fit$model
-        if (is.null(method)) method <- baseline_fit$method
+        anchor_policy <- match.arg(anchor_policy, c("warn", "error", "silent"))
+        model <- toupper(model %||% baseline_fit$model)
+        method <- method %||% baseline_fit$method
         anchor_tbl <- as.data.frame(make_anchor_table(baseline_fit, facets = anchor_facets, include_person = include_person))
-        new_fit <- fit_mfrm(
-            new_data, person = person, facets = facets, score = score, weight = weight,
-            model = model, method = method, anchors = anchor_tbl, fast = TRUE, ...
-        )
-        unanc_fit <- fit_mfrm(
-            new_data, person = person, facets = facets, score = score, weight = weight,
-            model = model, method = method, fast = TRUE, warn_connectivity = FALSE, ...
-        )
-        m_idx <- match(paste0(anchor_tbl$Facet, ":", anchor_tbl$Level),
-                       paste0(unanc_fit$facets$Facet, ":", unanc_fit$facets$Level))
-        ok <- which(!is.na(m_idx))
-        drift_df <- data.frame(
-            Facet = anchor_tbl$Facet[ok],
-            Level = anchor_tbl$Level[ok],
-            Baseline = anchor_tbl$Anchor[ok],
-            NewFree = unanc_fit$facets$Estimate[m_idx[ok]],
-            SE_New = unanc_fit$facets$ModelSE[m_idx[ok]],
-            stringsAsFactors = FALSE
-        )
-        drift_df$Drift <- drift_df$NewFree - drift_df$Baseline
-        drift_df$SE_Diff <- drift_df$SE_New
-        drift_df$Drift_SE_Ratio <- ifelse(drift_df$SE_Diff > 0, abs(drift_df$Drift) / drift_df$SE_Diff, NA_real_)
-        drift_df$Flag <- abs(drift_df$Drift) > 0.5 | (!is.na(drift_df$Drift_SE_Ratio) & drift_df$Drift_SE_Ratio > 2.0)
+        if (!nrow(anchor_tbl)) stop("No anchors could be extracted from the baseline.", call. = FALSE)
+        args <- c(list(data = new_data, person = person, facets = facets, score = score,
+                       weight = weight, model = model, method = method, fast = TRUE), list(...))
+        if (is.null(args$step_facet) && identical(model, baseline_fit$model)) {
+            args$step_facet <- if (identical(model, "GPCM"))
+                baseline_fit$encoding$step_facet %||% "Common" else baseline_fit$encoding$step_facet
+        }
+        if (is.null(args$slope_facet) && identical(model, "GPCM")) {
+            args$slope_facet <- baseline_fit$encoding$slope_facets
+            args$spec$slope_reference <- args$spec$slope_reference %||% baseline_fit$encoding$slope_reference
+            args$spec$slope_type <- args$spec$slope_type %||% baseline_fit$encoding$slope_type
+        }
+        args$rating_min <- args$rating_min %||% baseline_fit$rating_min
+        args$rating_max <- args$rating_max %||% baseline_fit$rating_max
+        if (!is.null(centering_scope)) args$spec$centering_scope <- centering_scope
+        args$spec$centering_scope <- args$spec$centering_scope %||% "remainder"
+        if (!is.null(mml_integration)) args$control$mml_integration <- mml_integration
+        cols <- c(person, facets, score, weight)
+        if (any(!cols %in% names(new_data))) stop("Missing rating columns in new_data.", call. = FALSE)
+        keep <- is.finite(as.numeric(new_data[[score]])) & stats::complete.cases(new_data[cols])
+        if (!is.null(weight)) keep <- keep & is.finite(new_data[[weight]]) & new_data[[weight]] > 0
+        present <- vapply(seq_len(nrow(anchor_tbl)), function(i) {
+            f <- anchor_tbl$Facet[i]
+            f %in% facets && anchor_tbl$Level[i] %in% as.character(new_data[[f]][keep])
+        }, logical(1))
+        if (any(!present)) {
+            msg <- paste("Baseline anchor elements absent or unsupported in the retained ratings:",
+                         paste(paste(anchor_tbl$Facet[!present], anchor_tbl$Level[!present], sep = "/"), collapse = ", "))
+            if (anchor_policy == "error") stop(msg, call. = FALSE)
+            if (anchor_policy == "warn") warning(msg, call. = FALSE)
+        }
+        anchors_used <- anchor_tbl[present, , drop = FALSE]
+        if (!nrow(anchors_used)) stop("No baseline anchors are available in the retained ratings.", call. = FALSE)
+        new_fit <- do.call(fit_mfrm, c(args, list(anchors = anchors_used)))
+
+        drift_df <- data.frame(Facet = anchors_used$Facet, Level = anchors_used$Level, Baseline = anchors_used$Anchor,
+            NewFree = NA_real_, SE_New = NA_real_, Drift = NA_real_, SE_Diff = NA_real_,
+            Drift_SE_Ratio = NA_real_, Flag = NA,
+            Status = "independent_reference_required", stringsAsFactors = FALSE)
+        if (!is.null(drift_reference)) {
+            if (!is.data.frame(drift_reference) || !all(c("Facet", "Level") %in% names(drift_reference)) ||
+                !nrow(drift_reference) || anyNA(drift_reference[c("Facet", "Level")]) ||
+                anyDuplicated(drift_reference[c("Facet", "Level")])) {
+                stop("Supply unique Facet and Level rows in drift_reference.", call. = FALSE)
+            }
+            ref <- merge(drift_reference[c("Facet", "Level")], anchors_used[c("Facet", "Level", "Anchor")],
+                         by = c("Facet", "Level"))
+            if (nrow(ref) != nrow(drift_reference)) stop("Drift reference elements require retained baseline anchors.", call. = FALSE)
+            if (!identical(model, baseline_fit$model) || !identical(method, baseline_fit$method) ||
+                !model %in% c("RSM", "PCM") ||
+                length(baseline_fit$encoding$explanatory_meta) || length(baseline_fit$encoding$interaction_meta) ||
+                isTRUE(baseline_fit$encoding$pop_mode == 1L)) {
+                stop("Drift comparisons with reference anchors require the same additive RSM/PCM estimator and step structure.", call. = FALSE)
+            }
+            candidates <- match(paste(drift_df$Facet, drift_df$Level, sep = "/"),
+                                paste(ref$Facet, ref$Level, sep = "/"))
+            drift_df$Status[!is.na(candidates)] <- "reference_anchor"
+            compare <- is.na(candidates) & drift_df$Facet %in% ref$Facet
+            args$warn_connectivity <- FALSE
+            args$spec$noncenter_facet <- union(args$spec$noncenter_facet %||% "Person", ref$Facet)
+            reference_fit <- do.call(fit_mfrm, c(args, list(anchors = ref)))
+            if (any(compare) && .mfrm_fast_readiness(reference_fit)$ready && .mfrm_fast_readiness(baseline_fit)$ready &&
+                identical(reference_fit$encoding$step_facet, baseline_fit$encoding$step_facet) &&
+                identical(reference_fit$encoding$facet_signs, baseline_fit$encoding$facet_signs) &&
+                all(c(reference_fit$connectivity$n_subsets, baseline_fit$connectivity$n_subsets) == 1L)) {
+                idx <- match(paste(drift_df$Facet, drift_df$Level, sep = "/"),
+                             paste(reference_fit$facets$Facet, reference_fit$facets$Level, sep = "/"))
+                drift_df$NewFree[compare] <- reference_fit$facets$Estimate[idx[compare]]
+                drift_df$SE_New[compare] <- reference_fit$facets$ModelSE[idx[compare]]
+                drift_df$Drift[compare] <- drift_df$NewFree[compare] - drift_df$Baseline[compare]
+                drift_df$SE_Diff[compare] <- drift_df$SE_New[compare]
+                available <- compare & is.finite(drift_df$Drift) & is.finite(drift_df$SE_Diff) & drift_df$SE_Diff > 0
+                drift_df$Drift_SE_Ratio[available] <- abs(drift_df$Drift[available]) / drift_df$SE_Diff[available]
+                drift_df$Flag[available] <- abs(drift_df$Drift[available]) > 0.5 | drift_df$Drift_SE_Ratio[available] > 2
+                drift_df$Status[available] <- "conditional_on_baseline"
+                drift_df$Status[compare & !available] <- "comparison_unavailable"
+            } else {
+                drift_df$Status[compare] <- "comparison_unavailable"
+            }
+        }
         return(structure(
             list(fit = new_fit, diagnostics = diagnose_mfrm(new_fit), baseline_anchors = anchor_tbl, drift = drift_df),
             class = c("mfrm_anchored_fit", "list")
         ))
     }
+    if (!is.null(drift_reference)) stop("drift_reference requires the unified engine.", call. = FALSE)
     stopifnot(inherits(baseline_fit, "mfrm_fit"))
     if (is.null(model)) 
         model <- baseline_fit$config$model
@@ -1581,12 +1641,13 @@ summary.mfrm_anchored_fit <- function(object, ...) {
     drift <- object$drift
     n_anchored <- nrow(object$baseline_anchors)
     n_common <- nrow(drift)
-    n_flagged <- sum(drift$Flag, na.rm = TRUE)
+    n_available <- sum(!is.na(drift$Flag))
+    n_flagged <- if (n_available) sum(drift$Flag, na.rm = TRUE) else NA_integer_
     is_fast <- inherits(object$fit, "mfrm_fast_fit")
-    out <- list(n_anchored = n_anchored, n_common = n_common, n_flagged = n_flagged, drift_summary = if (n_common > 
-        0) {
-        dplyr::summarise(dplyr::group_by(drift, .data$Facet), N = dplyr::n(), Mean_Drift = mean(abs(.data$Drift)), 
-            Max_Drift = max(abs(.data$Drift)), N_Flagged = sum(.data$Flag, na.rm = TRUE), .groups = "drop")
+    out <- list(n_anchored = n_anchored, n_common = n_common, n_available = n_available, n_flagged = n_flagged, drift_summary = if (n_common > 0L) {
+        dplyr::summarise(dplyr::group_by(drift, .data$Facet), N = dplyr::n(), N_Available = sum(is.finite(.data$Drift)),
+            Mean_Drift = if (any(is.finite(.data$Drift))) mean(abs(.data$Drift), na.rm = TRUE) else NA_real_,
+            Max_Drift = if (any(is.finite(.data$Drift))) max(abs(.data$Drift), na.rm = TRUE) else NA_real_, N_Flagged = if (all(is.na(.data$Flag))) NA_integer_ else sum(.data$Flag, na.rm = TRUE), .groups = "drop")
     } else {
         tibble::tibble()
     }, flagged = dplyr::filter(drift, .data$Flag),

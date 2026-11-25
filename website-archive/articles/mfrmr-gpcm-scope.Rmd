@@ -1,14 +1,19 @@
 ---
-title: "GPCM scope and current limitations"
+title: "Archived (0.3.1 and earlier) — GMFRM and earlier GPCM terminology"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{GPCM scope and current limitations}
+  %\VignetteIndexEntry{Archived (0.3.1 and earlier) — GMFRM and earlier GPCM terminology}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+> **Version scope.** The examples below document mfrmr 0.3.1 and earlier.
+> Use the [current assessment guide](mfrmr-assessment.html) for 0.3.2.
+> Examples on this page run with the earlier APIs.
+
 ```{r, include = FALSE}
-is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
+run_legacy_examples <- utils::packageVersion("mfrmr") < "0.3.2" &&
+  isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
   dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
   fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
@@ -16,7 +21,7 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.width = 7,
   fig.height = 5,
-  eval = !is_cran_check
+  eval = run_legacy_examples
 )
 ```
 
@@ -25,8 +30,16 @@ For the choice between RSM, PCM, GPCM and dependence extensions, start with
 It explains which questions warrant additional complexity and compares JML,
 corrected JML, MML and CML. This article then supplies the GPCM-specific details.
 
-`mfrmr` includes a Generalized Partial Credit Model (GPCM; Muraki 1992) in which
-one selected facet supplies level-specific discriminations. MML permits a
+`mfrmr` uses **Generalized Many-Facet Rasch Model (GMFRM)** following the
+terminology of [Uto and Ueno (2020, Section 6)](https://doi.org/10.1007/s41237-020-00115-7).
+The ordinary many-facet Rasch model holds discrimination constant. The
+generalized model estimates discrimination using an adjacent-category
+response equation based on [Muraki (1992)](https://doi.org/10.1177/014662169201600206).
+The name covers many-facet GPCM with facet-specific steps and a rating-scale
+form with common steps (many-facet RS-GPCM). This article records the
+development of the earlier GPCM interfaces. Use `model = "GPCM"` and see
+`?fit_mfrm` for the 0.3.2 API.
+With one discrimination facet, MML permits a
 different facet to supply category steps; JML requires a shared owner. A
 provisional two-family MML route is described separately below; its fitted
 curves do not include intervals. For the one-family route, MML information
@@ -40,9 +53,8 @@ under free discrimination differ from the Rasch-family case. This vignette
 documents which helpers are available, which are not, and what to use as a
 substitute when a helper is restricted.
 
-We call this model **GPCM** and state its structural choices and output
-availability separately. Unidimensionality is not a reason to give GPCM a
-special restrictive name. The JML route uses an
+Report the GMFRM's discrimination facets, step facet, slope placement and
+ability scale with the estimation method. The JML route uses an
 unpenalized identified joint likelihood. A non-representable slope proposal can
 be rejected during line search for numerical safety, but that is not a
 statistical penalty. If the likelihood has a certified recession direction,
@@ -1713,7 +1725,13 @@ GMFRM is a family description, not a uniquely specified estimator.
 
 ## What happened to the name "bounded GPCM"?
 
-**Use GPCM as the model name, and state the actual restrictions.** The older
+In mfrmr 0.3.2, the display name is **Generalized Many-Facet Rasch Model
+(GMFRM)**, qualified by the facets carrying discrimination. The API selects the adjacent-category family with
+`model = "GPCM"`. The terms "one-family" and "two-family" in earlier work
+counted the facets with discrimination parameters. Both used a single
+latent ability. See `?fit_mfrm` for the current API.
+
+The older
 package label described a limited implementation scope; it should not suggest
 that unidimensional GPCM is a separate statistical model or that every estimated
 slope is truncated at an arbitrary finite upper bound.
@@ -1722,10 +1740,9 @@ Three different issues should not be conflated:
 
 - **Parameter range and identification.** Current slopes are positive and
   represented on a log scale. Public relative slopes have geometric mean one
-  to identify the scale. There is no additional user-facing finite slope box;
-  numerical overflow or underflow proposals are rejected, not clipped to an
-  acceptable estimate. These constraints do not disappear when the old label
-  is retired.
+  to identify the scale. In the C++ fit, proposals outside `abs(log(slope)) <= 12` for a component
+  or outside `(1e-8, 1e6]` for an observed product are rejected. These are
+  implementation limits on the numerical search.
 - **Available structure and outputs.** MML now allows different slope and step
   owners, approximate slope/curve inference, checked information-criterion and
   PCM/GPCM comparisons, and portable calibration within their documented
@@ -1738,8 +1755,8 @@ Three different issues should not be conflated:
   interval describe that data/model fit; removing the word "bounded" does not
   remove these possibilities or guarantee coverage.
 
-Prefer a concrete description such as "unidimensional many-facet GPCM,
-criterion slopes and rater steps, fitted by MML with direct optimization".
+For example, report "unidimensional GMFRM with criterion discrimination and
+rater steps, fitted by direct MML".
 Older NEWS entries retain historical terminology; they do not define the
 current parameter range or available workflows.
 

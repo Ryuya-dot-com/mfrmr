@@ -63,6 +63,25 @@ local({
       "effects; these do not guarantee exact coverage or simultaneous coverage across scores."))
 
   descriptions <- list(
+    analyze_dff = paste(
+      "Group B minus Group A contrasts and intervals for four criteria.",
+      "Accuracy has a positive flagged contrast and Language a negative",
+      "flagged contrast. Content and Organization are unflagged."),
+    compute_information = paste(
+      "Test information peaks near zero ability. Conditional standard error",
+      "is smallest there and increases toward either end of the ability scale."),
+    compute_person_fit_indices = paste(
+      "Person Outfit mean square against the standardized log-likelihood",
+      "index. One point exceeds the Outfit cutoff of 1.50 and none falls",
+      "below the log-likelihood cutoff of minus two."),
+    estimate_bias = paste(
+      "Local rater-by-criterion interaction estimates with 95 percent intervals.",
+      "R04 on Accuracy is the most positive estimate. No cell is flagged in",
+      "this example."),
+    fit_mfrm_drift = paste(
+      "Severity estimates for four raters across two rating occasions.",
+      "R03 and R04 increase from Day 1 to Day 2, R01 is nearly unchanged,",
+      "and R02 decreases slightly."),
     plot.mfrm_posterior_summary = paste(
       "Saved posterior means for three tasks and six raters on a fixed N(0,1)",
       "ability scale. Diamonds mark fixed Task t1 and Rater r1 values without",

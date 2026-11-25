@@ -166,6 +166,20 @@ extern "C" SEXP _mfrmr_mfrm_cpp_drift_mml_eval(SEXP tilde_psi, SEXP person_ptr, 
     return cpp11::as_sexp(mfrm_cpp_drift_mml_eval(cpp11::as_cpp<cpp11::decay_t<doubles>>(tilde_psi), cpp11::as_cpp<cpp11::decay_t<integers>>(person_ptr), cpp11::as_cpp<cpp11::decay_t<integers>>(r_obs0), cpp11::as_cpp<cpp11::decay_t<integers>>(x_obs0), cpp11::as_cpp<cpp11::decay_t<integers>>(loc_idx0), cpp11::as_cpp<cpp11::decay_t<int>>(n_loc_blocks), cpp11::as_cpp<cpp11::decay_t<int>>(R), cpp11::as_cpp<cpp11::decay_t<int>>(K), cpp11::as_cpp<cpp11::decay_t<int>>(u_tilde_offset), cpp11::as_cpp<cpp11::decay_t<bool>>(step_rater), cpp11::as_cpp<cpp11::decay_t<doubles>>(quad_nodes), cpp11::as_cpp<cpp11::decay_t<doubles>>(quad_weights), cpp11::as_cpp<cpp11::decay_t<double>>(D), cpp11::as_cpp<cpp11::decay_t<bool>>(need_hessian)));
   END_CPP11
 }
+// reporting.cpp
+writable::list mfrm_cpp_row_predictions(doubles eta, doubles_matrix<> steps, integers group, integers lower, integers upper, double rating_min, doubles alpha, doubles theta, doubles offset, bool ability_only);
+extern "C" SEXP _mfrmr_mfrm_cpp_row_predictions(SEXP eta, SEXP steps, SEXP group, SEXP lower, SEXP upper, SEXP rating_min, SEXP alpha, SEXP theta, SEXP offset, SEXP ability_only) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(mfrm_cpp_row_predictions(cpp11::as_cpp<cpp11::decay_t<doubles>>(eta), cpp11::as_cpp<cpp11::decay_t<doubles_matrix<>>>(steps), cpp11::as_cpp<cpp11::decay_t<integers>>(group), cpp11::as_cpp<cpp11::decay_t<integers>>(lower), cpp11::as_cpp<cpp11::decay_t<integers>>(upper), cpp11::as_cpp<cpp11::decay_t<double>>(rating_min), cpp11::as_cpp<cpp11::decay_t<doubles>>(alpha), cpp11::as_cpp<cpp11::decay_t<doubles>>(theta), cpp11::as_cpp<cpp11::decay_t<doubles>>(offset), cpp11::as_cpp<cpp11::decay_t<bool>>(ability_only)));
+  END_CPP11
+}
+// reporting.cpp
+writable::doubles mfrm_cpp_expected_agreement(list groups, doubles scores, doubles_matrix<> probs);
+extern "C" SEXP _mfrmr_mfrm_cpp_expected_agreement(SEXP groups, SEXP scores, SEXP probs) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(mfrm_cpp_expected_agreement(cpp11::as_cpp<cpp11::decay_t<list>>(groups), cpp11::as_cpp<cpp11::decay_t<doubles>>(scores), cpp11::as_cpp<cpp11::decay_t<doubles_matrix<>>>(probs)));
+  END_CPP11
+}
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
@@ -174,6 +188,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_mfrmr_mfrm_cpp_cml_esf",                        (DL_FUNC) &_mfrmr_mfrm_cpp_cml_esf,                         3},
     {"_mfrmr_mfrm_cpp_compute_p_geq",                  (DL_FUNC) &_mfrmr_mfrm_cpp_compute_p_geq,                   1},
     {"_mfrmr_mfrm_cpp_drift_mml_eval",                 (DL_FUNC) &_mfrmr_mfrm_cpp_drift_mml_eval,                 14},
+    {"_mfrmr_mfrm_cpp_expected_agreement",             (DL_FUNC) &_mfrmr_mfrm_cpp_expected_agreement,              3},
     {"_mfrmr_mfrm_cpp_expected_category_bundle",       (DL_FUNC) &_mfrmr_mfrm_cpp_expected_category_bundle,        3},
     {"_mfrmr_mfrm_cpp_fast_batch_list",                (DL_FUNC) &_mfrmr_mfrm_cpp_fast_batch_list,                 3},
     {"_mfrmr_mfrm_cpp_fast_batch_shared_design",       (DL_FUNC) &_mfrmr_mfrm_cpp_fast_batch_shared_design,        4},
@@ -190,6 +205,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_mfrmr_mfrm_cpp_pcm_logprob_bundle",             (DL_FUNC) &_mfrmr_mfrm_cpp_pcm_logprob_bundle,              7},
     {"_mfrmr_mfrm_cpp_posterior_person_score",         (DL_FUNC) &_mfrmr_mfrm_cpp_posterior_person_score,         20},
     {"_mfrmr_mfrm_cpp_raju_welch_df",                  (DL_FUNC) &_mfrmr_mfrm_cpp_raju_welch_df,                   5},
+    {"_mfrmr_mfrm_cpp_row_predictions",                (DL_FUNC) &_mfrmr_mfrm_cpp_row_predictions,                10},
     {"_mfrmr_mfrm_cpp_rsm_logprob_bundle",             (DL_FUNC) &_mfrmr_mfrm_cpp_rsm_logprob_bundle,              7},
     {"_mfrmr_mfrm_cpp_testlet_kernel",                 (DL_FUNC) &_mfrmr_mfrm_cpp_testlet_kernel,                 12},
     {NULL, NULL, 0}

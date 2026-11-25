@@ -2,8 +2,8 @@
 #'
 #' Extracts pairwise within-target bias contrasts (`type = "bias_pairwise"`) or
 #' ranked interaction cells (`type = "bias_interaction"`) from an [estimate_bias()]
-#' result or [fit_mfrm()] object. Full APA/HTML/Rater-Card narrative reporting is
-#' provided by the companion `tidymfrm` package.
+#' result or [fit_mfrm()] object. Use [render_mfrm_report()] for an analysis
+#' report with individual rater feedback.
 #'
 #' @param x An `mfrm_bias` object from [estimate_bias()] or an `mfrm_fit` object.
 #' @param type `"bias_pairwise"`, `"bias_interaction"`, or `"bias_iterations"`.
@@ -39,7 +39,7 @@ mfrm_report <- function(x,
     if (is.null(diagnostics)) diagnostics <- diagnose_mfrm(x)
     estimate_bias(x, diagnostics = diagnostics, facet_a = facet_a, facet_b = facet_b, ...)
   } else {
-    stop("`x` must be an `mfrm_bias` or `mfrm_fit` object. For full workflow reporting, see `tidymfrm`.", call. = FALSE)
+    stop("`x` must be an `mfrm_bias` or `mfrm_fit` object. For workflow reporting, see `render_mfrm_report()`.", call. = FALSE)
   }
 
   if (identical(type, "bias_iterations")) {

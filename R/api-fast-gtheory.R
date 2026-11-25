@@ -53,15 +53,19 @@ mfrm_gtheory_fast <- function(data,
     stop("Supply at least one score column name in `score` or `scores`.", call. = FALSE)
   }
   facets <- unname(as.character(facets))
-  if (!is.character(facets) || length(facets) < 1L || length(facets) > 4L ||
+  if (!is.character(facets) || length(facets) < 1L ||
       anyNA(facets) || any(!nzchar(trimws(facets))) || anyDuplicated(facets) ||
       person %in% facets || any(score_cols %in% c(person, facets))) {
-    stop("`facets` must name 1 to 4 distinct non-person columns disjoint from `person` and `scores`.", call. = FALSE)
+    stop("`facets` must name distinct non-person columns disjoint from `person` and `scores`.", call. = FALSE)
   }
   req <- unique(c(person, facets, score_cols))
   miss <- setdiff(req, names(data))
   if (length(miss) > 0L) {
     stop("Missing column(s) in `data`: ", paste(miss, collapse = ", "), ".", call. = FALSE)
+  }
+  if (length(facets) > 4L) {
+    stop(errorCondition("The G-Study supports up to four non-person facets. Supply a subset with `g_facets` in mfrm_analysis(), or with `facets` in mfrm_g_study().",
+                        class = "mfrm_gstudy_unavailable"))
   }
 
   # Validate optional nesting declarations c(Child = "Parent")

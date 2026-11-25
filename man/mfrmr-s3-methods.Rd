@@ -166,7 +166,9 @@ Standard R S3 methods (\code{predict}, \code{coef}, \code{vcov}, \code{confint},
     \code{"probs"} (alias \code{"prob"}) category probabilities,
     \code{"link"} the unscaled ability-plus-facet predictor,
     \code{"fair"} stored person FairM, and \code{"eap"}/\code{"wle"}
-    person score tables. New-data WLE requires person and score columns.
+    person score tables. EAP scores are retrieved from the fit with
+    \code{newdata = NULL}. New-data WLE requires a Person ID and a finite
+    integer score within the fitted category support on each row.
     For \code{coef()}, selects a parameter table; \code{"free"} returns
     the identified free coordinates.}
   \item{person_data,facet_data}{Optional covariate tables for unseen persons or

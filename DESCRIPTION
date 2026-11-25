@@ -2,7 +2,7 @@ Package: mfrmr
 Type: Package
 Title: Fast Estimation, Diagnostics, and Generalizability for Many-Facet Models
 Version: 0.3.2
-Date: 2026-11-25
+Date: 2026-11-26
 Config/mfrmr/release-status: candidate
 Config/mfrmr/public-version: 0.2.4
 Authors@R:
@@ -10,7 +10,7 @@ Authors@R:
            email = "ryuya.komuro.c4@tohoku.ac.jp",
            comment = c(ORCID = "0000-0001-9205-0926"))
 Description: Estimates many-facet ordered-response measurement models (Rating
-    Scale, Partial Credit, and Generalized Partial Credit) including step
+    Scale, Partial Credit, and Generalized Many-Facet Rasch Models) including step
     constraints, declarative category support, explanatory facet covariates, and
     joint interactions via high-speed C++ Joint Maximum Likelihood,
     Jeffreys-penalized Joint Maximum Likelihood with Block-Schur standard errors,
@@ -21,13 +21,15 @@ Description: Estimates many-facet ordered-response measurement models (Rating
     Fair(M), Real SE, RajuSA-Welch pairwise bias and parallel split-element
     differential facet functioning (DFF), color-vision-safe 'ggplot2' graphics,
     and Generalizability (G-Study) and Decision (D-Study) planning including fast
-    Henderson Method 1 (urGENOVA) estimation. See 'Andrich' (1978)
+    Henderson Method 1 (urGENOVA) estimation. Connects calibration, diagnostics,
+    visualizations, and Markdown, HTML, or Word report generation in one
+    analysis workflow. See 'Andrich' (1978)
     <doi:10.1007/BF02293814>, 'Masters' (1982) <doi:10.1007/BF02296272>,
     'Warm' (1989) <doi:10.1007/BF02294627>, 'Raju' (1990)
-    <doi:10.1007/BF02294433>, and 'Brennan' (2001)
+    <doi:10.1007/BF02294433>, 'Uto and Ueno' (2020)
+    <doi:10.1007/s41237-020-00115-7>, and 'Brennan' (2001)
     <doi:10.1007/978-1-4757-3456-0>.
-URL: https://ryuya-dot-com.github.io/mfrmr/,
-    https://github.com/Ryuya-dot-com/mfrmr
+URL: https://github.com/Ryuya-dot-com/mfrmr
 BugReports: https://github.com/Ryuya-dot-com/mfrmr/issues
 License: MIT + file LICENSE
 Language: en
@@ -42,6 +44,7 @@ Imports:
     ggplot2 (>= 3.5.0),
     grDevices,
     graphics,
+    grid,
     Matrix,
     methods,
     psych,
@@ -73,6 +76,7 @@ Suggests:
     pkgload,
     posterior,
     rmarkdown,
+    RSpectra,
     testthat (>= 3.0.0),
     withr
 Additional_repositories: https://stan-dev.r-universe.dev

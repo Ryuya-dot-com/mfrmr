@@ -91,3 +91,11 @@ mfrm_cpp_posterior_person_score <- function(n_cat, loc_draws, cum_step_draws, sl
 mfrm_cpp_drift_mml_eval <- function(tilde_psi, person_ptr, r_obs0, x_obs0, loc_idx0, n_loc_blocks, R, K, u_tilde_offset, step_rater, quad_nodes, quad_weights, D, need_hessian) {
   .Call(`_mfrmr_mfrm_cpp_drift_mml_eval`, tilde_psi, person_ptr, r_obs0, x_obs0, loc_idx0, n_loc_blocks, R, K, u_tilde_offset, step_rater, quad_nodes, quad_weights, D, need_hessian)
 }
+
+mfrm_cpp_row_predictions <- function(eta, steps, group, lower, upper, rating_min, alpha, theta, offset, ability_only) {
+  .Call(`_mfrmr_mfrm_cpp_row_predictions`, eta, steps, group, lower, upper, rating_min, alpha, theta, offset, ability_only)
+}
+
+mfrm_cpp_expected_agreement <- function(groups, scores, probs) {
+  .Call(`_mfrmr_mfrm_cpp_expected_agreement`, groups, scores, probs)
+}

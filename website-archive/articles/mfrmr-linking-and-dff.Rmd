@@ -1,14 +1,19 @@
 ---
-title: "mfrmr Linking and DFF"
+title: "Archived (0.3.1 and earlier) — mfrmr Linking and DFF"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{mfrmr Linking and DFF}
+  %\VignetteIndexEntry{Archived (0.3.1 and earlier) — mfrmr Linking and DFF}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+> **Version scope.** The examples below document mfrmr 0.3.1 and earlier.
+> Use the [current assessment guide](mfrmr-assessment.html) for 0.3.2.
+> Examples on this page run with the earlier APIs.
+
 ```{r, include = FALSE}
-is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
+run_legacy_examples <- utils::packageVersion("mfrmr") < "0.3.2" &&
+  isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
   dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
   fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
@@ -16,7 +21,7 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.width = 7,
   fig.height = 5,
-  eval = !is_cran_check
+  eval = run_legacy_examples
 )
 ```
 
@@ -1591,7 +1596,7 @@ logistic models instead assume a linear relationship with total on the logit
 scale. Even in this Rasch example, those are different matching models.
 The residual calculation uses the fitted Person and item parameters.
 
-```{r dff-comparison-input, eval = !is_cran_check && requireNamespace("ordinal", quietly = TRUE)}
+```{r dff-comparison-input, eval = run_legacy_examples && requireNamespace("ordinal", quietly = TRUE)}
 library(mfrmr)
 set.seed(241010)
 group_order <- c("Reference", "Focal")
@@ -1623,7 +1628,7 @@ table. It retains exclusions rather than choosing the intersection of the
 methods' retained rows. With one response per Person-item, the counts below
 are also distinct-Person counts within each item and group.
 
-```{r dff-comparison-audit, eval = !is_cran_check && requireNamespace("ordinal", quietly = TRUE)}
+```{r dff-comparison-audit, eval = run_legacy_examples && requireNamespace("ordinal", quietly = TRUE)}
 case_audit <- rbind(
   data.frame(Method = "Residual", Row = residual$cases$InputRow,
     Included = residual$cases$Included, Reason = residual$cases$Reason),
@@ -1648,7 +1653,7 @@ from the default exact analysis; the distinct MH estimator remains in
 `mh$table$MHOddsRatio`. Logistic values come from M3 and can change direction
 over total scores. Keep their matching values and numerical status visible.
 
-```{r dff-comparison-effects, eval = !is_cran_check && requireNamespace("ordinal", quietly = TRUE)}
+```{r dff-comparison-effects, eval = run_legacy_examples && requireNamespace("ordinal", quietly = TRUE)}
 r <- residual$dif_table
 stopifnot(all(r$Group1 == group_order[1]), all(r$Group2 == group_order[2]))
 effects <- data.frame(Target = r$Level, ResidualDifference = r$Contrast,

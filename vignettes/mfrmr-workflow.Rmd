@@ -15,20 +15,58 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6.5, fig.heig
 
 `mfrmr` provides high-speed C++ estimation, person scoring, diagnostics,
 `RajuSA-Welch` pairwise bias / DFF screening, color-vision-safe `ggplot2`
-visualizations, and generalizability analysis for Many-Facet Rasch Measurement
-(`RSM`, `PCM`, and 1-/2-family `GPCM`). For end-to-end tidy pipelines and APA /
-rater-feedback report generation, pair `mfrmr` with the companion `tidymfrm`
-package.
+visualizations, generalizability analysis, and APA-style and rater-feedback
+reports. Start with `mfrm_analysis()` to run these analyses together, or use
+`mfrm_workflow()` and the `step_mfrm_*()` functions to review each stage.
 
-## 1. Connectivity Audit and Fast C++ Estimation (`RSM`, `PCM`, and `GPCM`)
+The **Generalized Many-Facet Rasch Model (GMFRM)** estimates discrimination
+for one or two facets. The name follows [Uto and Ueno (2020, Section 6)](https://doi.org/10.1007/s41237-020-00115-7),
+who generalized the many-facet Rasch model, which holds discrimination
+constant. In `mfrmr`, GMFRM covers an adjacent-category many-facet GPCM with
+facet-specific steps and a rating-scale form (many-facet RS-GPCM) with common
+steps. Use `model = "GPCM"` for either form, with `step_facet = "Common"` for
+shared steps on a common rubric. See `?fit_mfrm` for supported specifications.
+
+## From ratings to a report
+
+Each row of the bundled data is one rater's score for one person on one
+rubric criterion. Check `glance()` for linkage and inference status before
+interpreting estimates. The Wright map places examinee ability, rater
+severity, and criterion difficulty on a common logit scale. The report also
+documents rater fit, observed and expected agreement, separation, observed-score
+G-Study and D-Study, and estimation notes. The report identifies results that
+cannot be interpreted with the fitted model or design.
+
+```{r}
+library(mfrmr)
+ratings <- load_mfrmr_data("example_core")
+wf <- mfrm_analysis(ratings, "Person", c("Rater", "Criterion"), "Score")
+glance(wf)[c("n_obs", "connected", "converged", "inference_status")]
+plot(wf, type = "wright")
+plan <- data.frame(Rater = c("R01", "R02"),
+                   Criterion = c("Content", "Organization"))
+report_file <- render_mfrm_report(
+  wf, file = tempfile(fileext = ".html"), format = "html", reference_plan = plan
+)
+feedback <- render_mfrm_report(wf, rater = "R01")
+```
+
+The Fair Average intervals above hold calibration and the common plan fixed.
+To reuse the tables without formatting them, use
+`summary(wf, reference_plan = plan)$report_tables`. To compare observed rater
+panels, supply a named rater-to-panel vector as `rater_panels`.
+
+Use `?mfrm_analysis` for input options and `?render_mfrm_report` for Markdown,
+HTML, and Word output. For a guide to the corresponding FACETS output and
+when to use each model, see the
+[assessment walkthrough](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/vignettes/articles/mfrmr-assessment.Rmd).
+
+## 1. Connectivity Audit and Fast C++ Estimation (RSM, PCM, and GMFRM)
 
 Each row of `example_core` represents one person's rating by a rater on an
 analytic rubric criterion (`Score` 1 to 4):
 
 ```{r}
-library(mfrmr)
-
-ratings <- load_mfrmr_data("example_core")
 head(ratings, 4)
 
 conn <- check_mfrm_connectivity(
@@ -44,7 +82,7 @@ conn$n_subsets
 An assessment team may ask whether the same category steps work for every
 criterion, and whether allowing different discrimination changes the fit.
 The RSM shares steps across criteria; the PCM gives each criterion its own
-steps; the GPCM additionally estimates criterion discrimination. Fit all three
+steps; the GMFRM additionally estimates criterion discrimination. Fit all three
 by marginal maximum likelihood (`MML`) to the same ratings, with the same
 fixed standard-normal ability distribution and 31-point integration rule.
 These common settings make their nested likelihood comparisons interpretable.
@@ -99,7 +137,7 @@ LRT table and explain the reason in `comparison$comparison_basis`.
 
 In this example, the RSM-to-PCM p-value is
 `r format.pval(comparison$lrt$pValue[1], digits = 3)`, whereas the
-PCM-to-GPCM p-value is `r format.pval(comparison$lrt$pValue[2], digits = 3)`.
+PCM-to-GMFRM p-value is `r format.pval(comparison$lrt$pValue[2], digits = 3)`.
 At an illustrative 5% threshold, the data support criterion-specific steps,
 with little evidence here for the additional discrimination parameters.
 This is a model-comparison result for these ratings, not a recommendation to

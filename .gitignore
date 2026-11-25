@@ -69,3 +69,6 @@ AGENTS.md
 /inst/validation/*.pdf
 /inst/validation/*.svg
 /inst/validation/*.patch
+/cran-comments.md
+
+/website-archive/examples/execution-policy.csv

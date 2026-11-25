@@ -10,24 +10,39 @@
 The same performance can receive different scores from different raters.
 For speaking assessments, essays, clinical OSCEs, and other rubric-scored work, `mfrmr` connects three tasks:
 
-1. **Measurement models (`fit_mfrm()`, `fit_mfrm_drift()`, `mfrm_batch_fit()`):** estimate examinee ability while accounting for rater severity, task or criterion difficulty, step thresholds (`RSM`, `PCM`, and constrained hybrids), element covariates, and 1- or 2-family discrimination slopes (`GPCM`) via high-speed C++ `MML` (`EAP` and Warm's `WLE`), `JML`, `JML_jeffreys`, and `CML`.
+1. **Measurement models (`fit_mfrm()`, `fit_mfrm_drift()`, `mfrm_batch_fit()`):** estimate examinee ability while accounting for rater severity, task or criterion difficulty, step thresholds (`RSM`, `PCM`, and constrained hybrids), element covariates, and facet-specific discrimination via high-speed C++ `MML` (`EAP` and Warm's `WLE`), `JML`, `JML_jeffreys`, and `CML`.
 2. **G-Study and D-Study planning (`mfrm_g_study()`, `mfrm_d_study()`):** decompose observed-score variance across crossed or nested facets and multivariate composites (`ANOVA`, `MINQUE(0)`, and non-iterative Henderson Method 1 `urGENOVA`) to project generalizability ($G$), dependability ($\Phi$), and standard errors across candidate designs.
 3. **Rater feedback and decision support (`diagnose_mfrm()`, `fair_average_table()`, `estimate_bias()`, `analyze_dff()`, `classification_table()`, `interrater_agreement()`):** inspect `Infit`/`Outfit` `MnSq` and `ZSTD`, `ModelSE` vs `RealSE`, rubric-scale `Fair(M)`, FACETS 4.5.3 `RajuSA-Welch` pairwise bias contrasts, parallel split-element DFF, and cut-score classification accuracy.
 
-For pipeable end-to-end workflows, `tidy()`/`glance()`/`augment()` extractors, and reproducible Markdown/HTML/Word APA & individual rater feedback reports, pair `mfrmr` with the companion **`tidymfrm`** package.
+Use `mfrm_analysis()` to move from ratings to calibration, diagnostics, G-Study,
+D-Study, plots, and APA-style or rater-feedback reports in one package. Use
+`tidy()`, `glance()`, and `augment()` to extract analysis results for your own
+tables and plots. See the workflow vignette for a complete example.
 
-[![Three ggplot examples: rater severity with intervals, task/rater planning curves, and score-category probabilities. All use synthetic data.](man/figures/visual-gallery.png)](https://ryuya-dot-com.github.io/mfrmr/)
+The **Generalized Many-Facet Rasch Model (GMFRM)** follows the terminology of
+[Uto and Ueno (2020)](https://doi.org/10.1007/s41237-020-00115-7). It extends
+the constant-discrimination many-facet Rasch model by estimating discrimination,
+with either facet-specific steps (many-facet GPCM) or shared steps on a common
+rubric (many-facet RS-GPCM). Select it with `model = "GPCM"`.
+
+[![Three ggplot examples: rater severity with intervals, task/rater planning curves, and score-category probabilities. All use synthetic data.](man/figures/visual-gallery.png)](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/vignettes/articles/mfrmr-assessment.Rmd)
 
 ## Install and open tutorials
 
+Download [mfrmr_0.3.2.tar.gz](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.3.2)
+from GitHub Releases. Install the package dependencies and ensure that your
+R package compiler toolchain works. Run the following from the folder containing the file.
+
 ```r
-install.packages("mfrmr")
+install.packages("mfrmr_0.3.2.tar.gz", repos = NULL, type = "source")
 browseVignettes("mfrmr")
 ```
 
-Core offline vignettes bundled with `mfrmr`:
+Read the [assessment guide](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/vignettes/articles/mfrmr-assessment.Rmd)
+on GitHub. Its examples complement the two offline vignettes bundled with
+`mfrmr`.
 
-- `vignette("mfrmr-workflow", package = "mfrmr")`: Connectivity audit, fast C++ `RSM`/`PCM`/`GPCM` estimation, `predict()`, CVD-safe `plot()`, and batch replications.
+- `vignette("mfrmr-workflow", package = "mfrmr")`: A first analysis from ratings to a report, connectivity audit, RSM, PCM and GMFRM estimation, prediction, plots, and batch replications.
 - `vignette("mfrmr-gtheory", package = "mfrmr")`: Crossed, nested, and multivariate `G-Study` / `D-Study` planning.
 
 ## Try one assessment
@@ -120,20 +135,22 @@ actual assignments and remain approximations; unidentified designs are rejected.
 See `?"mfrmr-s3-methods"` for these uncertainty definitions and `?fair_average_table`
 for comparisons under an explicit common reference panel.
 
-## Core 22-function public API
+## Public API
 
 | Pillar | Entry points |
 | --- | --- |
 | Data & connectivity | `load_mfrmr_data()`, `describe_mfrm_data()`, `check_mfrm_connectivity()`, `interrater_agreement()` |
-| Calibration, GPCM, & linking | `fit_mfrm()`, `mfrm_batch_fit()`, `fit_mfrm_drift()`, `compare_mfrm()`, `apply_empirical_bayes_shrinkage()`, `make_anchor_table()`, `anchor_to_baseline()`, `detect_anchor_drift()`, `read_mfrm_posterior()` |
+| Calibration, GMFRM, & linking | `fit_mfrm()`, `mfrm_batch_fit()`, `fit_mfrm_drift()`, `compare_mfrm()`, `apply_empirical_bayes_shrinkage()`, `make_anchor_table()`, `anchor_to_baseline()`, `detect_anchor_drift()`, `read_mfrm_posterior()` |
 | Diagnostics, bias, DFF, & cuts | `diagnose_mfrm()`, `fair_average_table()`, `compute_person_fit_indices()`, `compute_information()`, `classification_table()`, `estimate_bias()`, `analyze_dff()` |
 | G-Study & D-Study | `mfrm_g_study()`, `mfrm_d_study()` |
+| Analysis workflow | `mfrm_analysis()`, `mfrm_workflow()`, `step_mfrm_measure()`, `step_mfrm_gtheory()`, `step_mfrm_diagnose()` |
+| Tables & reporting | `tidy()`, `glance()`, `augment()`, `format_mfrm_table()`, `render_mfrm_report()` |
 | Standard S3 generics | `predict()`, `coef()`, `vcov()`, `confint()`, `anova()`, `plot()`, `summary()`, `print()`, `fitted()`, `residuals()`, `logLik()`, `AIC()`, `BIC()`, `nobs()`, `as.data.frame()` |
 
 ## Scope and citation
 
 Statistical fit indices (`Infit`/`Outfit`), severity estimates, and DFF contrasts support formative rater training, rubric clarification, and targeted second-scoring; they must not be used for automated high-stakes rater exclusion without qualitative review (Eckes, 2015). Observed-score $G$ and $\Phi$ decompose raw score variance (Brennan, 2001) and answer different questions from model-adjusted latent reliability.
 
-Use `citation("mfrmr")` and see [NEWS.md](NEWS.md) and [ROADMAP.md](ROADMAP.md). Licensed under the [MIT License](https://opensource.org/licenses/MIT).
+Use `citation("mfrmr")` and see [release notes](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.3.2) and [roadmap](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/ROADMAP.md). Licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 `mfrmr` has benefited from discussion and methodological input from Dr. Atsushi Mizumoto and Dr. Taichi Yamashita.

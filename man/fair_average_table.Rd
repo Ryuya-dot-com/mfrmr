@@ -24,7 +24,7 @@ fair_average_table(
   \item{label_style}{Column naming convention on legacy fits (\code{"both"}, \code{"native"}, or \code{"legacy"}).}
   \item{omit_unobserved}{Logical; whether to omit elements with zero observed ratings.}
   \item{xtreme}{Extreme-score adjustment for legacy \code{JML} display.}
-  \item{fair_se}{Logical; whether to compute delta-method standard errors for fair averages on legacy fits.}
+  \item{fair_se}{Logical; request uncertainty. For the unified engine supply a common \code{reference_plan}; on legacy fits this requests delta-method standard errors.}
   \item{ci_level}{Confidence level in \code{(0, 1)} when intervals are requested (default \code{0.95}).}
   \item{xtreme_method}{Extreme-score handling convention on legacy fits (\code{"display"} or \code{"facets"}).}
   \item{reference_plan}{Optional common rating plan \code{data.frame} containing exactly all fitted base facet columns plus optional \code{Weight}. Levels must be known, cells unique and weights finite and strictly positive. Weights are normalized to sum to one.}
@@ -41,11 +41,12 @@ on that person's primary ability estimate. It is on the original rubric scale
 (\code{Units = "original_score"}). The plan preserves the fitted locations,
 steps, interactions and slopes; its scores can therefore differ from FairM/FairZ.
 An EAP plug-in score is not the posterior mean of the transformed score.
-The unified engine does not compute posterior score moments or common-plan
-intervals: \code{Uncertainty = "not_computed"}. An unusable calibration returns
-\code{NA} with \code{Status = "unavailable_calibration"}.
-The table's \code{SE} is the latent measure SE, not a fair-score SE;
-\code{fair_se = TRUE} is rejected for the unified engine.
+With \code{fair_se = TRUE}, the unified engine transforms the endpoints of
+a normal interval for the primary person measure under the supplied plan. For
+EAP these are conditional normal posterior approximations. Calibration and plan
+weights are held fixed. The point estimate remains a plug-in expected score.
+Unavailable bounds remain \code{NA} with an uncertainty status. The \code{SE}
+column in the facet table stays on the latent measure scale.
 }
 \seealso{
 \code{\link{fit_mfrm}}, \code{\link{diagnose_mfrm}}

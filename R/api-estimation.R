@@ -1131,7 +1131,7 @@ summarize_duplicate_mfrm_cells <- function(df, facets) {
         1L) else 0L, HasDuplicates = nrow(detail) > 0L, stringsAsFactors = FALSE), detail = detail)
 }
 
-mfrm_bipartite_components <- function(cells, facet, basis, include_persons = FALSE) {
+mfrm_bipartite_components <- function(cells, facet, basis, include_persons = FALSE, include_membership = FALSE) {
     edges <- unique(as.data.frame(cells[, c("Person", facet), drop = FALSE], stringsAsFactors = FALSE))
     edges$Person <- as.character(edges$Person)
     edges[[facet]] <- as.character(edges[[facet]])
@@ -1139,6 +1139,7 @@ mfrm_bipartite_components <- function(cells, facet, basis, include_persons = FAL
     levels_to_persons <- split(edges$Person, edges[[facet]])
     unseen <- unique(edges$Person)
     components <- list()
+    membership <- if (include_membership) stats::setNames(integer(length(levels_to_persons)), names(levels_to_persons))
     while (length(unseen) > 0L) {
         component_persons <- unseen[1L]
         component_levels <- character(0)
@@ -1161,6 +1162,7 @@ mfrm_bipartite_components <- function(cells, facet, basis, include_persons = FAL
             else {
                 ""
             }, stringsAsFactors = FALSE)
+        if (include_membership) membership[component_levels] <- length(components)
         unseen <- setdiff(unseen, component_persons)
     }
     component_table <- do.call(rbind, components)
@@ -1170,7 +1172,7 @@ mfrm_bipartite_components <- function(cells, facet, basis, include_persons = FAL
         LargestComponentLevels = component_table$FacetLevels[largest_index], LargestComponentPercent = 100 * 
             component_table$Persons[largest_index]/length(unique(edges$Person)), Connected = nrow(component_table) == 
             1L, stringsAsFactors = FALSE)
-    list(summary = summary, components = component_table)
+    list(summary = summary, components = component_table, membership = membership)
 }
 
 audit_mfrm_connectivity <- function(df, expected_design, facets, include_persons = FALSE) {
@@ -2069,7 +2071,8 @@ diagnose_mfrm <- function(fit, interaction_pairs = NULL, top_n_interactions = 20
     diagnostic_mode = c("both", "legacy", "marginal_fit"), residual_pca = c("none", "overall", "facet", 
         "both"), pca_max_factors = 10L) {
     if (inherits(fit, "mfrm_fast_fit")) {
-        return(.mfrm_diagnose_fast_fit(fit))
+        return(.mfrm_diagnose_fast_fit(fit, residual_pca = match.arg(residual_pca),
+                                       pca_max_factors = pca_max_factors))
     }
     fit <- .mfrm_validate_diagnostic_fit(fit)
     fit_df_method <- match_fit_df_method(fit_df_method)

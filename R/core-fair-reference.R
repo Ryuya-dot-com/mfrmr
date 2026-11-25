@@ -81,19 +81,43 @@ mfrm_fair_eval_plan_score <- function(theta_vec, kernel, weights, rating_min) {
     }, 0)
 }
 
-mfrm_fair_reference_scores <- function(fit, plan) {
+mfrm_fair_reference_scores <- function(fit, plan, level = NULL) {
     if (inherits(fit, "mfrm_fast_fit")) {
         ready <- .mfrm_fast_readiness(fit)$ready
-        score <- vapply(fit$person$Estimate, function(theta) {
-            if (!ready || !is.finite(theta)) return(NA_real_)
-            nd <- plan[fit$encoding$base_facets]
-            nd$theta <- theta
-            sum(plan$NormalizedWeight * predict(fit, nd, type = "response"))
-        }, numeric(1))
-        return(data.frame(Person = fit$person$Person, Estimate = score,
+        nd <- plan[fit$encoding$base_facets]
+        # Bound temporary prediction matrices independently of the total number of persons.
+        eval_plan <- function(theta) {
+            out <- rep(NA_real_, length(theta))
+            ok <- which(is.finite(theta))
+            batch <- max(1L, as.integer(50000 / nrow(plan)))
+            starts <- if (length(ok)) seq.int(1L, length(ok), by = batch) else integer()
+            for (start in starts) {
+                ids <- ok[seq.int(start, min(length(ok), start + batch - 1L))]
+                block <- nd[rep(seq_len(nrow(plan)), length(ids)), , drop = FALSE]
+                block$theta <- rep(theta[ids], each = nrow(plan))
+                score <- matrix(predict(fit, block, type = "response"), nrow = nrow(plan))
+                out[ids] <- drop(crossprod(plan$NormalizedWeight, score))
+            }
+            out
+        }
+        score <- if (ready) eval_plan(fit$person$Estimate) else rep(NA_real_, nrow(fit$person))
+        out <- data.frame(Person = fit$person$Person, Estimate = score,
             Status = ifelse(is.finite(score), paste0(tolower(fit$score_method), "_plug_in_estimate"), "unavailable_calibration"),
             Target = "common_plan_expected_average", Units = "original_score", Uncertainty = "not_computed",
-            stringsAsFactors = FALSE))
+            stringsAsFactors = FALSE)
+        if (!is.null(level)) {
+            out$Lower <- out$Upper <- NA_real_
+            if (ready) {
+                ci <- confint(fit, component = "person", level = level)
+                out$Lower <- eval_plan(ci[, 1L])
+                out$Upper <- eval_plan(ci[, 2L])
+            }
+            out$Level <- level
+            basis <- if (identical(fit$score_method, "EAP"))
+                "conditional_normal_posterior_approximation" else "conditional_normal_ability_interval"
+            out$Uncertainty <- ifelse(is.finite(out$Lower) & is.finite(out$Upper), basis, "unavailable")
+        }
+        return(out)
     }
     mfrm_fair_reference_score_fit(fit)
     p <- fit$facets$person

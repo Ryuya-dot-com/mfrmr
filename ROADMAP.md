@@ -8,9 +8,9 @@
 
 An assessment team should be able to explain whose scores are comparable under a stated reference panel, how much precision a different rating plan would buy, and which original ratings warrant review. Each workflow can be used independently; see [NEWS](NEWS.md) for the consolidated `0.3.2` interface.
 
-## Public architecture in `mfrmr 0.3.2` and `tidymfrm 0.1.0`
+## Public architecture in `mfrmr 0.3.2`
 
-`mfrmr 0.3.2` provides **22 focused exported functions** plus standard R S3 generics (`predict()`, `coef()`, `vcov()`, `confint()`, `anova()`, `plot()`, `fitted()`, `residuals()`, `logLik()`, `AIC()`, `BIC()`, `nobs()`, `summary()`, and `print()`), backed by a unified C++ engine (`cpp11`):
+`mfrmr 0.3.2` provides direct numerical functions and standard R S3 generics (`predict()`, `coef()`, `vcov()`, `confint()`, `anova()`, `plot()`, `fitted()`, `residuals()`, `logLik()`, `AIC()`, `BIC()`, `nobs()`, `summary()`, and `print()`), backed by a unified C++ engine (`cpp11`):
 
 - **Design & connectivity:** `describe_mfrm_data()`, `check_mfrm_connectivity()`, `load_mfrmr_data()`
 - **Measurement & longitudinal drift:** `fit_mfrm()`, `fit_mfrm_drift()`, `mfrm_batch_fit()`, `compare_mfrm()`, `compute_information()`, `apply_empirical_bayes_shrinkage()`, `read_mfrm_posterior()`
@@ -18,9 +18,9 @@ An assessment team should be able to explain whose scores are comparable under a
 - **Equating & scale linking:** `make_anchor_table()`, `anchor_to_baseline()`, `detect_anchor_drift()`
 - **Generalizability & Decision Studies:** `mfrm_g_study()`, `mfrm_d_study()`
 
-The companion package **`tidymfrm`** calls exclusively exported `mfrmr` functions and provides:
+The same package provides:
 
-- Single-call (`tidymfrm()`) and pipeable (`mfrm_workflow()` |> `step_mfrm_measure()` |> `step_mfrm_gtheory()` |> `step_mfrm_diagnose()`) orchestration across all three pillars,
+- Single-call (`mfrm_analysis()`) and pipeable (`mfrm_workflow()` |> `step_mfrm_measure()` |> `step_mfrm_gtheory()` |> `step_mfrm_diagnose()`) orchestration across all three pillars,
 - `tidy()`, `glance()`, and `augment()` tibble extractors, and
 - Reproducible APA-style Markdown, HTML, and optional `docx` / `flextable` / `kableExtra` reports (`render_mfrm_report()`, `format_mfrm_table()`).
 
@@ -28,11 +28,17 @@ External-software wrapper functions (`TAM`, `ACER ConQuest`, and `FACETS` file i
 
 ## Supported measurement models and estimation paths (`0.3.2`)
 
+The **Generalized Many-Facet Rasch Model (GMFRM)** extends the ordinary
+many-facet Rasch model by estimating discrimination. Following Uto and
+Ueno (2020), `mfrmr` uses this name for the supported many-facet GPCM
+and its shared-step rating-scale form (many-facet RS-GPCM). Select
+`model = "GPCM"` and specify which facets carry discrimination and steps.
+
 | Response model | Supported estimators in `fit_mfrm()` | Scope and inferential notes |
 | --- | --- | --- |
 | Rating Scale (`RSM`) & Partial Credit (`PCM`) | `"MML"` (fixed or estimated normal population, `population_formula` latent regression, `EAP` and Warm's `WLE`), `"JML"`, `"JML_jeffreys"` (Jeffreys/Firth penalized JML with exact Block-Schur inverse-information `ModelSE` and `RealSE`), and `"CML"` (elementary symmetric polynomials with conditional covariance and `WLE`) | Supports fixed/group anchors (`anchors`, `group_anchors`), affine `step_constraints` (fixed values and shared thresholds with Wald, sandwich, and 1D profile `confint(..., se_type = "profile")` plus `anova()` LRTs), declarative `category_support`, and linear explanatory `facet_formulas` + `facet_data`. |
-| 1-family Generalized Partial Credit (`GPCM`) | `"MML"` and `"JML"` (`EAP` and Warm GPCM `WLE`) | One `slope_facet` with geometric-mean-one identification (`sum(log(alpha)) = 0`), optional log-normal regularization (`control = list(slope_prior_sd = ...)`), `"full_predictor"` or `"ability_only"` slope placement, observed and person-clustered sandwich SEs, and nested LRTs against `PCM`/`RSM` via `anova()`. |
-| 2-family Generalized Partial Credit (`GPCM`) | `"MML"` (`EAP` and Warm GPCM `WLE`) | Two named `slope_facet` columns with `spec = list(slope_reference = ...)` identifying geometric-mean-one constraints per slope family (`Uto & Ueno, 2020`). Verify local Hessian conditioning (`vcov()`) and category exposure before interpreting small-sample slope intervals. |
+| GMFRM with discrimination by one facet | `"MML"` and `"JML"` (`EAP` and Warm GPCM `WLE`) | One `slope_facet` with geometric-mean-one identification (`sum(log(alpha)) = 0`), optional log-normal regularization (`control = list(slope_prior_sd = ...)`), `"full_predictor"` or `"ability_only"` slope placement, observed and person-clustered sandwich SEs, and nested LRTs against `PCM`/`RSM` via `anova()`. |
+| GMFRM with discrimination by two facets | `"MML"` (`EAP` and Warm GPCM `WLE`) | Two named `slope_facet` columns with `spec = list(slope_reference = ...)` naming the reference facet whose slopes have geometric mean one (`Uto & Ueno, 2020`). Verify local Hessian conditioning (`vcov()`) and category exposure before interpreting small-sample slope intervals. |
 | Dynamic Markov rater-severity drift | `fit_mfrm_drift()` (`"PCM"` or `"RSM"`) | Non-Bayesian Laplace-marginalized Empirical Bayes (`Louis, 1982`; `Kass & Steffey, 1989`; adapted from `Uto, 2023`) across ordered rating occasions (`time`), propagating log-drift-SD uncertainty into `TotalSE` alongside `ConditionalSE`. |
 
 ## Assessment planning (`G-Study` and `D-Study`)
@@ -43,7 +49,9 @@ Henderson component covariance uses the actual assignment pattern and a Gaussian
 plug-in model; Satterthwaite and delta intervals are approximate, especially near
 variance boundaries. Unidentified component systems are rejected. Model inference
 readiness is reported separately from optimizer convergence, and weighted common
-reference-plan scores are conditional plug-in predictions without score intervals.
+reference-plan scores are conditional plug-in predictions. Use
+`fair_se = TRUE` for original-scale intervals conditional on the calibration
+and reference plan.
 
 | Planning question | Public route | What the comparison supports |
 | --- | --- | --- |
@@ -78,5 +86,5 @@ New model families are introduced only after identification rules, independent n
 - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
 - Raju, N. S. (1990). Determining the significance of estimated signed and unsigned areas between two item response functions. *Applied Psychological Measurement*, 14(2), 197-207.
 - Uto, M. (2023). A Bayesian many-facet Rasch model with Markov modeling for rater severity drift. *Behavior Research Methods*, 55, 3910-3928. https://doi.org/10.3758/s13428-022-01997-z
-- Uto, M., & Ueno, M. (2020). Empirical comparison of item response theory models with rater's parameters. *Behaviormetrika*, 47, 469-496. https://doi.org/10.1007/s41237-020-00115-7
+- Uto, M., & Ueno, M. (2020). A generalized many-facet Rasch model and its Bayesian estimation using Hamiltonian Monte Carlo. *Behaviormetrika*, 47, 469-496. https://doi.org/10.1007/s41237-020-00115-7
 - Warm, T. A. (1989). Weighted likelihood estimation of ability in item response theory. *Psychometrika*, 54(3), 427-450.

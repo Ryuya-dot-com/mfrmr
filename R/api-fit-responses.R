@@ -112,7 +112,8 @@ predict.mfrm_fit <- function(object, newdata = NULL,
         w_df <- score_mfrm_wle(object)
         return(data.frame(Person = w_df$Person, Estimate = w_df$WLE, SE = w_df$WLE_SE, stringsAsFactors = FALSE))
     }
-    if (identical(type, "eap") && is.null(newdata)) {
+    if (identical(type, "eap")) {
+        if (!is.null(newdata)) stop("EAP scoring of new ratings is unavailable. Omit `newdata` for fitted EAP scores.", call. = FALSE)
         p_tbl <- object$facets$person
         return(data.frame(Person = p_tbl$Person, Estimate = p_tbl$Estimate, SE = p_tbl$SD %||% NA_real_, stringsAsFactors = FALSE))
     }
@@ -152,20 +153,13 @@ predict.mfrm_fit <- function(object, newdata = NULL,
             integer(N_new)
         }
         if (identical(type, "wle")) {
-            sc_col <- intersect(c(enc$score_col, "Score", "score"), names(newdata))[1L]
-            p_col <- intersect(c(enc$person_col, "Person", "person"), names(newdata))[1L]
-            if (is.na(sc_col) || is.na(p_col)) {
-                stop("`newdata` must contain person and score columns when `type = 'wle'`.", call. = FALSE)
-            }
-            p_new_lv <- .mfrm_sort_levels(newdata[[p_col]])
-            p0_new <- match(as.character(newdata[[p_col]]), p_new_lv) - 1L
-            sc0_new <- as.integer(round(as.numeric(newdata[[sc_col]]) - enc$rating_min))
+            scoring <- .mfrm_wle_newdata(newdata, enc, sg0)
             ans <- mfrm_cpp_fast_wle(
-                as.integer(length(p_new_lv)), as.integer(enc$n_cat),
-                as.integer(p0_new), sc0_new, rep(1.0, N_new), as.double(base_eta),
+                as.integer(length(scoring$levels)), as.integer(enc$n_cat),
+                scoring$person0, scoring$score0, rep(1.0, N_new), as.double(base_eta),
                 st$step_cum, sg0, enc$step_cat_min, enc$step_cat_max
             )
-            return(data.frame(Person = p_new_lv, Estimate = ans$theta, SE = ans$se, stringsAsFactors = FALSE))
+            return(data.frame(Person = scoring$levels, Estimate = ans$theta, SE = ans$se, stringsAsFactors = FALSE))
         }
         if ("theta" %in% names(newdata)) {
             th_row <- as.numeric(newdata$theta)

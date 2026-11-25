@@ -6,7 +6,11 @@ fair_average_table <- function(fit, diagnostics = NULL, facets = NULL, totalscor
         "legacy"), omit_unobserved = FALSE, xtreme = 0, fair_se = FALSE, ci_level = 0.95, xtreme_method = c("display", 
         "facets"), reference_plan = NULL) {
     if (inherits(fit, "mfrm_fast_fit")) {
-        if (isTRUE(fair_se)) stop("Fair-average intervals are not implemented for the unified engine; measure SEs are not fair-score SEs.", call. = FALSE)
+        if (isTRUE(fair_se) && is.null(reference_plan))
+            stop("Fair-average intervals are not implemented without a reference_plan; measure SEs are not fair-score SEs.", call. = FALSE)
+        if (isTRUE(fair_se) && (length(ci_level) != 1L || !is.numeric(ci_level) ||
+            !is.finite(ci_level) || ci_level <= 0 || ci_level >= 1))
+            stop("ci_level must be between 0 and 1.", call. = FALSE)
         p_raw <- data.frame(
             Facet = "Person", Level = fit$person$Person,
             ObsCount = fit$person$ObsCount, ObsAvg = fit$person$ObsAvg,
@@ -31,7 +35,7 @@ fair_average_table <- function(fit, diagnostics = NULL, facets = NULL, totalscor
         bundle <- list(stacked = stacked, raw_by_facet = by_f)
         if (!is.null(reference_plan)) {
             plan <- mfrm_fair_reference_plan(fit, reference_plan)
-            bundle$reference_scores <- mfrm_fair_reference_scores(fit, plan)
+            bundle$reference_scores <- mfrm_fair_reference_scores(fit, plan, if (isTRUE(fair_se)) ci_level)
             bundle$reference_plan <- plan
             bundle$reference_fit <- fit
             bundle$settings <- list(reference_target = "common_plan_expected_average", score_method = fit$score_method)

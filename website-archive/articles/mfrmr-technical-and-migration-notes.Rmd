@@ -1,18 +1,23 @@
 ---
-title: "Saved-analysis migration and finite-sample interval notes"
+title: "Archived (0.3.1 and earlier) — Saved-analysis migration and finite-sample interval notes"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Saved-analysis migration and finite-sample interval notes}
+  %\VignetteIndexEntry{Archived (0.3.1 and earlier) — Saved-analysis migration and finite-sample interval notes}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+> **Version scope.** The examples below document mfrmr 0.3.1 and earlier.
+> Use the [current assessment guide](mfrmr-assessment.html) for 0.3.2.
+> Examples on this page run with the earlier APIs.
+
 ```{r setup, include=FALSE}
-is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
+run_legacy_examples <- utils::packageVersion("mfrmr") < "0.3.2" &&
+  isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
   dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
   fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
-  eval = !is_cran_check,
+  eval = run_legacy_examples,
   collapse = TRUE,
   comment = "#>"
 )

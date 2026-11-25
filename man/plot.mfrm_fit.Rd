@@ -21,7 +21,7 @@ Unified \pkg{ggplot2} \code{plot()} methods for fitted MFRM models, diagnostics,
 
 \method{plot}{mfrm_diagnostics}(
   x, facet = NULL, palette = c("okabe_ito", "viridis", "monochrome"),
-  base_size = 11, ...)
+  base_size = 11, ..., type = c("pathway", "residual_pca"))
 
 \method{plot}{mfrm_dff}(
   x, top_n = 25L, palette = c("okabe_ito", "viridis", "monochrome"),
@@ -36,7 +36,7 @@ Unified \pkg{ggplot2} \code{plot()} methods for fitted MFRM models, diagnostics,
   type = c("wright", "pathway", "steps", "category_curves", "persons",
     "raters", "person_fit", "residual_qq", "slopes", "qc"),
   palette = c("okabe_ito", "viridis", "monochrome"), facet = NULL,
-  base_size = 11, ...)
+  base_size = 11, ..., fit_statistic = c("infit", "outfit", "both"))
 
 \method{plot}{mfrm_fast_gtheory}(
   x, type = c("dstudy", "variance"),
@@ -65,8 +65,9 @@ Unified \pkg{ggplot2} \code{plot()} methods for fitted MFRM models, diagnostics,
 
 }
 \arguments{
+  \item{fit_statistic}{Horizontal mean-square statistic for a fast-fit pathway plot. Use \code{"both"} for separate Infit and Outfit panels on the same scale.}
   \item{x}{An \pkg{mfrmr} model, diagnostic, bias, DFF, information, drift, G/D-Study, or posterior summary object.}
-  \item{type}{Character string selecting the visualization panel: for fitted models, \code{"wright"}, \code{"pathway"}, \code{"steps"}, \code{"category_curves"}, \code{"persons"}, \code{"raters"}, \code{"person_fit"}, \code{"residual_qq"}, \code{"slopes"} (GPCM), or \code{"qc"}; for G-Studies, \code{"dstudy"} or \code{"variance"}; for bias, \code{"forest"} or \code{"pairwise"}; for information, \code{"information"} or \code{"ccc"}; for drift, \code{"trajectory"} or \code{"contrasts"}; for posterior summaries, \code{"intervals"} or \code{"diagnostics"}.}
+  \item{type}{Character string selecting the visualization panel: for diagnostic objects, \code{"pathway"} or \code{"residual_pca"} (first residual contrast); for fitted models, \code{"wright"}, \code{"pathway"}, \code{"steps"}, \code{"category_curves"}, \code{"persons"}, \code{"raters"}, \code{"person_fit"}, \code{"residual_qq"}, \code{"slopes"} (GPCM), or \code{"qc"}; for G-Studies, \code{"dstudy"} or \code{"variance"}; for bias, \code{"forest"} or \code{"pairwise"}; for information, \code{"information"} or \code{"ccc"}; for drift, \code{"trajectory"} or \code{"contrasts"}; for posterior summaries, \code{"intervals"} or \code{"diagnostics"}.}
   \item{top_n}{Maximum number of ranked bias cells or DFF elements to display.}
   \item{palette}{Color-vision-safe palette: \code{"okabe_ito"} (default), \code{"viridis"}, or strict \code{"monochrome"} grayscale.}
   \item{base_size}{Base font size in points (default \code{11}).}

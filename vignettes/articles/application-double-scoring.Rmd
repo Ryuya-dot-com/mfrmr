@@ -117,8 +117,7 @@ would therefore change the meaning of the data. The files may still inform
 agreement analysis and realistic exposure patterns.
 
 For a design with actual rater identities, continue with the
-[rating agreement guide](mfrmr-rating-agreement.html) and
-[model-choice guide](mfrmr-model-choice.html). Different maximum item scores and
+[assessment guide](mfrmr-assessment.html). Different maximum item scores and
 dependence between repeated scores require their own model decisions. No model
 fit or rater-severity result is claimed for the invented table above.
 

@@ -130,14 +130,22 @@
   p
 }
 
-.mfrm_gg_pathway <- function(facets_df, mnsq_range = c(0.70, 1.30), palette = "okabe_ito", base_size = 11) {
-  df <- facets_df[is.finite(facets_df$Estimate) & is.finite(facets_df$InfitMnSq), , drop = FALSE]
+.mfrm_gg_pathway <- function(facets_df, mnsq_range = c(0.70, 1.30), palette = "okabe_ito", base_size = 11,
+                             fit_statistic = c("infit", "outfit", "both")) {
+  fit_statistic <- match.arg(fit_statistic)
+  statistics <- if (fit_statistic == "both") c("Infit", "Outfit") else tools::toTitleCase(fit_statistic)
+  df <- do.call(rbind, lapply(statistics, function(statistic) {
+    vals <- facets_df[[paste0(statistic, "MnSq")]]
+    keep <- is.finite(facets_df$Estimate) & is.finite(vals)
+    data.frame(facets_df[keep, , drop = FALSE],
+               FitMnSq = vals[keep], Statistic = rep(statistic, sum(keep)))
+  }))
   se_use <- if ("RealSE" %in% names(df)) df$RealSE else df$ModelSE
   df$Low <- df$Estimate - 1.96 * se_use
   df$High <- df$Estimate + 1.96 * se_use
   df$FitBand <- ifelse(
-    df$InfitMnSq > mnsq_range[2L], "Underfit (MnSq > Upper)",
-    ifelse(df$InfitMnSq < mnsq_range[1L], "Overfit / Muted (MnSq < Lower)", "Acceptable")
+    df$FitMnSq > mnsq_range[2L], "Underfit (MnSq > Upper)",
+    ifelse(df$FitMnSq < mnsq_range[1L], "Overfit / Muted (MnSq < Lower)", "Acceptable")
   )
   bands <- c("Acceptable", "Overfit / Muted (MnSq < Lower)", "Underfit (MnSq > Upper)")
   df$FitBand <- factor(df$FitBand, levels = bands)
@@ -145,7 +153,7 @@
   shapes <- stats::setNames(c(16L, 15L, 17L), bands)
   ltypes <- stats::setNames(c("solid", "dashed", "dotdash"), bands)
 
-  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$InfitMnSq, y = .data$Estimate)) +
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$FitMnSq, y = .data$Estimate)) +
     ggplot2::geom_vline(xintercept = 1.0, linetype = "solid", colour = "#999999", linewidth = 0.35) +
     ggplot2::geom_vline(xintercept = mnsq_range, linetype = "dashed", colour = "#666666", linewidth = 0.4) +
     ggplot2::geom_hline(yintercept = 0.0, linetype = "dotted", colour = "#888888", linewidth = 0.35) +
@@ -159,20 +167,23 @@
     ) +
     ggplot2::geom_text(
       ggplot2::aes(label = .data$Level),
-      nudge_y = 0.04 * max(diff(range(df$Estimate, na.rm = TRUE)), 0.5),
+      nudge_y = 0.04 * if (nrow(df)) max(diff(range(df$Estimate)), 0.5) else 0.5,
       size = 2.9, colour = "#222222", check_overlap = TRUE
     ) +
     ggplot2::scale_colour_manual(values = cols, drop = FALSE, name = "Fit Screening") +
     ggplot2::scale_shape_manual(values = shapes, drop = FALSE, name = "Fit Screening") +
     ggplot2::scale_linetype_manual(values = ltypes, drop = FALSE, name = "Fit Screening") +
-    ggplot2::labs(x = "Infit Mean-Square (MnSq)", y = "Measure (Logits; 95% CI)") +
+    ggplot2::labs(x = if (length(statistics) == 1L) paste(statistics, "Mean-Square (MnSq)") else "Mean-Square (MnSq)",
+                  y = "Measure (Logits)") +
     .mfrm_gg_theme(base_size = base_size)
-  if (length(unique(df$Facet)) > 1L) {
+  if (fit_statistic == "both" && nrow(df)) {
+    p <- p + ggplot2::facet_grid(Facet ~ Statistic)
+  } else if (length(unique(df$Facet)) > 1L) {
     p <- p + ggplot2::facet_wrap(~ Facet)
   }
   attr(p, "mfrm_notes") <- c(
-    sprintf("Dashed vertical reference lines mark Infit MnSq bounds [%.2f, %.2f].", mnsq_range[1L], mnsq_range[2L]),
-    "Status is redundantly encoded via colour, point shape, and error-bar linetype."
+    sprintf("Dashed vertical reference lines mark the displayed MnSq bounds [%.2f, %.2f].", mnsq_range[1L], mnsq_range[2L]),
+    "Error bars show normal 95% intervals when available. The selected fit statistic determines the horizontal position."
   )
   p
 }
@@ -316,7 +327,7 @@
 
 .mfrm_gg_slopes <- function(slopes_df, palette = "okabe_ito", base_size = 11, intervals = NULL) {
   if (is.null(slopes_df) || nrow(slopes_df) == 0L) {
-    stop("`type = 'slopes'` requires a fitted `GPCM` model with estimated discrimination parameters.", call. = FALSE)
+    stop("`type = 'slopes'` requires a fitted GMFRM (`model = 'GPCM'`) with estimated discrimination parameters.", call. = FALSE)
   }
   keep <- is.finite(slopes_df$Estimate)
   df <- slopes_df[keep, , drop = FALSE]
@@ -425,6 +436,8 @@
 #' @param facet Optional facet name to filter `"pathway"` or `"raters"`.
 #' @param base_size Base font size in pts (default `11`).
 #' @param ... Additional plot-specific options (e.g., `top_n` for bias/DFF).
+#' @param fit_statistic Mean-square statistic displayed on the pathway plot.
+#'   Use `"both"` to display Infit and Outfit in separate panels.
 #' @return A `ggplot` object with interpretation notes in `attr(p, "mfrm_notes")`.
 #' @export
 plot.mfrm_fast_fit <- function(x,
@@ -433,7 +446,7 @@ plot.mfrm_fast_fit <- function(x,
                                palette = c("okabe_ito", "viridis", "monochrome"),
                                facet = NULL,
                                base_size = 11,
-                               ...) {
+                               ..., fit_statistic = c("infit", "outfit", "both")) {
   type <- match.arg(type)
   palette <- match.arg(palette)
   interval_ready <- TRUE
@@ -455,7 +468,8 @@ plot.mfrm_fast_fit <- function(x,
     p
   }
   if (identical(type, "wright")) {
-    return(.mfrm_gg_wright(x$person, x$facets, x$steps, x$model, palette = palette, base_size = base_size))
+    label <- .mfrm_model_label(x$model, unique(x$slopes$Facet))
+    return(.mfrm_gg_wright(x$person, x$facets, x$steps, label, palette = palette, base_size = base_size))
   }
   if (type %in% c("pathway", "raters")) {
     fc <- x$facets
@@ -464,7 +478,8 @@ plot.mfrm_fast_fit <- function(x,
       facet <- if (length(hit) > 0L) hit[1L] else unique(fc$Facet)[1L]
     }
     if (!is.null(facet)) fc <- fc[fc$Facet %in% facet, , drop = FALSE]
-    return(with_interval_notes(.mfrm_gg_pathway(fc, palette = palette, base_size = base_size)))
+    return(with_interval_notes(.mfrm_gg_pathway(fc, palette = palette, base_size = base_size,
+                                              fit_statistic = match.arg(fit_statistic))))
   }
   if (type %in% c("steps", "category_curves")) {
     return(.mfrm_gg_ccc(x$step_cumulative, x$steps, x$rating_min,
@@ -576,8 +591,31 @@ plot.mfrm_diagnostics <- function(x,
                                   facet = NULL,
                                   palette = c("okabe_ito", "viridis", "monochrome"),
                                   base_size = 11,
-                                  ...) {
+                                  ..., type = c("pathway", "residual_pca")) {
   palette <- match.arg(palette)
+  type <- match.arg(type)
+  if (type == "residual_pca") {
+    if (length(facet) > 1L) stop("Choose one facet for the residual PCA plot.", call. = FALSE)
+    result <- if (is.null(facet)) x$residual_pca_overall else x$residual_pca_by_facet[[facet]]
+    if (is.null(result)) stop("Request residual PCA in diagnose_mfrm() for the plotted grouping.", call. = FALSE)
+    if (!is.null(result$error)) stop(result$error, call. = FALSE)
+    loadings <- as.matrix(result$pca$loadings)
+    d <- data.frame(Level = rownames(loadings), Loading = loadings[, 1L])
+    d$Level <- stats::reorder(d$Level, d$Loading)
+    p <- ggplot2::ggplot(d, ggplot2::aes(x = .data$Loading, y = .data$Level)) +
+      ggplot2::geom_vline(xintercept = 0, color = "grey65") +
+      ggplot2::geom_point(shape = 16, color = .mfrm_cvd_palette(1L, palette), size = 2.8) +
+      ggplot2::labs(x = "Loading on first residual contrast", y = facet) +
+      .mfrm_gg_theme(base_size = base_size)
+    overlap <- crossprod(is.finite(as.matrix(result$residual_matrix)) * 1L)
+    attr(p, "mfrm_notes") <- c(
+      sprintf("First contrast eigenvalue: %.2f. Pairwise shared persons: %d\u2013%d.",
+              result$pca$values[1L], min(overlap[upper.tri(overlap)]), max(overlap[upper.tri(overlap)])),
+      "Exploratory PCA of averaged standardized residuals. Contrast signs are arbitrary.",
+      result$warning
+    )
+    return(p)
+  }
   readiness <- if (inherits(x$fit, "mfrm_fast_fit")) .mfrm_fast_readiness(x$fit) else list(ready = TRUE)
   ms <- as.data.frame(x$measures)
   if ("Infit" %in% names(ms) && !"InfitMnSq" %in% names(ms)) ms$InfitMnSq <- ms$Infit
@@ -823,9 +861,12 @@ plot.mfrm_information <- function(x,
     ggplot2::scale_colour_manual(values = cols, name = NULL) +
     ggplot2::scale_linetype_manual(values = c("solid", "dashed"), name = NULL) +
     ggplot2::scale_shape_manual(values = c(16L, 17L), name = NULL) +
-    ggplot2::labs(x = "Latent Ability Theta (Logits)", y = "Information / Conditional SE") +
+    ggplot2::facet_wrap(~ Curve, ncol = 1, scales = "free_y") +
+    ggplot2::labs(x = "Person ability (logits)", y = NULL) +
     .mfrm_gg_theme(base_size = base_size)
-  attr(p, "mfrm_notes") <- "Test information and conditional SE curves across latent ability."
+  attr(p, "mfrm_notes") <- c("Test information and conditional SE use separate vertical scales.",
+                             if (!is.null(x$exposure_basis)) paste("Exposure basis:", x$exposure_basis),
+                             x$notes)
   p
 }
 

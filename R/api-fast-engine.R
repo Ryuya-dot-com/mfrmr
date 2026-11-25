@@ -313,6 +313,15 @@
   list(q = as.integer(ncol(B)), d0 = as.double(d0), B = B, anchored_mask = as.integer(anchored_mask))
 }
 
+.mfrm_fast_unique_covariate_ids <- function(ids, source) {
+  ids <- as.character(ids)
+  duplicate <- anyDuplicated(ids)
+  if (duplicate) {
+    stop(source, " must have one row per ID. Duplicate ID: '", ids[duplicate], "'.", call. = FALSE)
+  }
+  ids
+}
+
 .mfrm_fast_encode_dataset <- function(data,
                                       person,
                                       facets,
@@ -357,6 +366,9 @@
     stop("Missing column(s) in `data`: ", paste(miss_cols, collapse = ", "), ".", call. = FALSE)
   }
 
+  if (is.factor(data[[score]])) {
+    stop("The score column must contain numeric rating values. Convert factor labels to numeric scores before calibration.", call. = FALSE)
+  }
   raw_y <- as.numeric(data[[score]])
   w_vec <- if (is.null(weight)) rep(1.0, nrow(data)) else as.numeric(data[[weight]])
   keep <- is.finite(raw_y) & !is.na(data[[person]]) & is.finite(w_vec) & (w_vec > 0)
@@ -529,7 +541,8 @@
       }
       id_col <- intersect(c(fnm, "Level", "Element"), names(fdf))[1L]
       if (!is.na(id_col)) {
-        m_idx <- match(lvs, as.character(fdf[[id_col]]))
+        m_idx <- match(lvs, .mfrm_fast_unique_covariate_ids(fdf[[id_col]],
+          paste0("`facet_data` for facet '", fnm, "'")))
       } else if (!is.null(rownames(fdf))) {
         m_idx <- match(lvs, rownames(fdf))
       } else {
@@ -852,7 +865,7 @@
       if (!pid_col %in% names(person_data)) {
         stop("`person_data` must contain person ID column '", pid_col, "'.", call. = FALSE)
       }
-      idx_m <- match(p_levels, as.character(person_data[[pid_col]]))
+      idx_m <- match(p_levels, .mfrm_fast_unique_covariate_ids(person_data[[pid_col]], "`person_data`"))
       if (anyNA(idx_m)) {
         stop("`person_data` is missing one or more observed Person IDs.", call. = FALSE)
       }
@@ -868,7 +881,7 @@
     pop_col_names <- colnames(mm)
   }
 
-  list(
+  enc <- list(
     person_col = person,
     score_col = score,
     weight_col = weight,
@@ -897,6 +910,7 @@
     slope_formula = as.integer(slope_formula_code),
     slope_type = slope_type,
     slope_facets = slope_facet_names,
+    slope_reference = if (length(slope_facet_names) > 1L) slope_reference,
     slope_facets0 = as.integer(slope_facets0),
     slope_q = as.integer(slope_q),
     slope_d0 = slope_d0,
@@ -936,6 +950,17 @@
     retained_data = data,
     n_obs = nrow(data)
   )
+  if (identical(toupper(method_in[1L]), "MML")) {
+    rank_check <- .mfrm_fast_population_location_rank(enc)
+    if (!is.null(rank_check) && rank_check$rank < rank_check$columns) {
+      stop(sprintf(paste(
+        "The MML population and facet location design is rank-deficient (rank %d of %d).",
+        "Population location and facet effects cannot be separated under the current constraints.",
+        "Review the population formula, rating assignments, and identifying anchors."
+      ), rank_check$rank, rank_check$columns), call. = FALSE)
+    }
+  }
+  enc
 }
 
 .mfrm_emit_connectivity_warning <- function(conn_info, warn_connectivity = TRUE) {
@@ -1405,6 +1430,9 @@
     class = c("mfrm_fast_fit", "mfrm_fit")
   )
   out$boundary_audit <- .mfrm_fast_structural_boundary(out)
+  if (identical(method_label, "MML")) {
+    out["population_location_rank"] <- list(.mfrm_fast_population_location_rank(enc))
+  }
   out$readiness <- .mfrm_fast_readiness(out)
   out$summary$InferenceReady <- out$readiness$ready
   out$summary$InferenceStatus <- out$readiness$status
@@ -1435,6 +1463,39 @@
 #' @return A list summarizing connectivity (`connected`, `n_subsets`,
 #'   `interior_categories_supported`, `person_summary`, `facet_subsets`).
 #' @export
+.mfrm_rater_linkage <- function(enc, facet, network = FALSE, rater_panels = NULL) {
+  j <- match(facet, enc$base_facets)
+  if (!length(j) || is.na(j)) return(NULL)
+  edges <- unique(data.frame(Person = enc$person_levels[enc$person0 + 1L],
+                             Rater = enc$facet_levels[[j]][enc$facet_mat0[, j] + 1L]))
+  audit <- mfrm_bipartite_components(edges, "Rater", "observed",
+                                     include_membership = !is.null(rater_panels))
+  n_components <- audit$summary$Components
+  bridge_persons <- character()
+  if (n_components == 1L) {
+    assigned <- split(match(edges$Rater, enc$facet_levels[[j]]), edges$Person)
+    key <- vapply(assigned, function(x) paste(sort(x), collapse = ","), character(1))
+    # Another person with the same assignment supplies every link in that assignment.
+    candidates <- names(assigned)[lengths(assigned) > 1L & !duplicated(key) & !duplicated(key, fromLast = TRUE)]
+    if (length(candidates)) {
+      stable <- edges[!edges$Person %in% candidates, , drop = FALSE]
+      stable_connected <- length(unique(stable$Rater)) == length(unique(edges$Rater)) &&
+        mfrm_bipartite_components(stable, "Rater", "observed")$summary$Connected
+      if (!stable_connected) {
+        bridge_persons <- candidates[vapply(candidates, function(p) {
+          without <- edges[edges$Person != p, , drop = FALSE]
+          nrow(without) > 0L && mfrm_bipartite_components(without, "Rater", "observed")$summary$Components > 1L
+        }, logical(1))]
+      }
+    }
+  }
+  audit$components$Facet <- facet
+  robustness <- if (isTRUE(network) || !is.null(rater_panels))
+    .mfrm_network_robustness(edges, audit, rater_panels)
+  list(facet = facet, n_components = n_components, components = audit$components,
+       bridge_persons = bridge_persons, robustness = robustness)
+}
+
 check_mfrm_connectivity <- function(data,
                                     person,
                                     facets,
@@ -1448,7 +1509,8 @@ check_mfrm_connectivity <- function(data,
                                     dummy_facets = NULL,
                                     category_support = NULL,
                                     facet_formulas = NULL,
-                                    facet_data = NULL) {
+                                    facet_data = NULL,
+                                    rater_facet = NULL, network = FALSE, rater_panels = NULL) {
   model <- match.arg(toupper(model[1L]), c("RSM", "PCM", "GPCM"))
   enc <- .mfrm_fast_encode_dataset(
     data = data, person = person, facets = facets, score = score,
@@ -1458,6 +1520,18 @@ check_mfrm_connectivity <- function(data,
     category_support = category_support,
     facet_formulas = facet_formulas, facet_data = facet_data
   )
+  if (!is.null(rater_facet) && (length(rater_facet) != 1L || !rater_facet %in% enc$base_facets)) {
+    stop("rater_facet must name one of the declared facets.", call. = FALSE)
+  }
+  rater_facet <- rater_facet %||% infer_default_rater_facet(enc$base_facets, fallback_first = FALSE)
+  if (is.null(rater_facet) && !is.null(rater_panels))
+    stop("Specify rater_facet when supplying rater_panels.", call. = FALSE)
+  c(.mfrm_fast_connectivity_summary(enc), list(
+    rater_linkage = .mfrm_rater_linkage(enc, rater_facet, network, rater_panels)
+  ))
+}
+
+.mfrm_fast_connectivity_summary <- function(enc) {
   raw <- mfrm_cpp_fast_connectivity_spec(enc)
   f_sub <- lapply(seq_along(enc$base_facets), function(f) {
     data.frame(
@@ -1544,6 +1618,25 @@ check_mfrm_connectivity <- function(data,
     B[unanc[length(unanc)], ] <- -1.0
   }
   B
+}
+
+.mfrm_fast_population_location_rank <- function(enc) {
+  # In RSM/PCM, a change in the population mean adds to the same predictor as
+  # a facet location change while steps and population variance stay fixed.
+  if (!identical(enc$pop_mode, 1L) || !enc$model %in% c("RSM", "PCM") ||
+      !ncol(enc$pop_X_mat)) return(NULL)
+
+  population <- enc$pop_X_mat[enc$person0 + 1L, , drop = FALSE]
+  rows <- !duplicated(cbind(enc$facet_mat0, population))
+  levels <- enc$facet_mat0[rows, , drop = FALSE]
+  facets <- lapply(seq_along(enc$facets), function(f) {
+    basis <- .mfrm_fast_facet_basis(enc, f)
+    enc$facet_signs[f] * basis[levels[, f] + 1L, , drop = FALSE]
+  })
+  design <- do.call(cbind, c(list(population[rows, , drop = FALSE]), facets))
+  scale <- apply(abs(design), 2L, max)
+  design <- sweep(design, 2L, ifelse(scale > 0, scale, 1), "/")
+  list(rank = qr(design, tol = 1e-10)$rank, columns = ncol(design))
 }
 
 .mfrm_fast_check_mml_population_boundary <- function(enc) {
@@ -1786,6 +1879,15 @@ fit_mfrm_fast <- function(data,
     .mfrm_emit_connectivity_warning(conn_pre, warn_connectivity = TRUE)
     if (isTRUE(conn_pre$connected)) {
       .mfrm_fast_check_design_rank(enc, warn_connectivity = TRUE)
+      linkage <- .mfrm_rater_linkage(enc, infer_default_rater_facet(enc$base_facets, fallback_first = FALSE))
+      if (!is.null(linkage) && linkage$n_components > 1L) {
+        warning("The Person-by-", linkage$facet, " graph has ", linkage$n_components,
+                " components with no shared persons between them. Cross-component comparisons rely on calibration assumptions or anchors.",
+                call. = FALSE)
+      } else if (length(linkage$bridge_persons)) {
+        warning("The Person-by-", linkage$facet, " graph loses connectivity if an individual linking person is removed: ",
+                paste(linkage$bridge_persons, collapse = ", "), ".", call. = FALSE)
+      }
     }
     if (identical(model, "GPCM") && is.null(category_support)) {
       obs_cats <- unique(enc$score0)
@@ -2123,52 +2225,44 @@ mfrm_batch_fit <- function(data,
 
 .mfrm_eval_row_predictions <- function(eta_vec, step_cum, step_group0, step_cat_min, step_cat_max, rating_min,
                                        alpha_vec = NULL, theta_vec = NULL, base_eta_vec = NULL, slope_formula = 0L) {
-  N <- length(eta_vec)
-  C <- ncol(step_cum)
-  cats <- rating_min + seq(0L, C - 1L)
-  probs <- matrix(NA_real_, nrow = N, ncol = C)
-  colnames(probs) <- as.character(cats)
-  exp_score <- rep(NA_real_, N)
-  var_score <- rep(NA_real_, N)
-  has_sl <- !is.null(alpha_vec)
+  out <- mfrm_cpp_row_predictions(
+    as.double(eta_vec), step_cum, as.integer(step_group0), as.integer(step_cat_min),
+    as.integer(step_cat_max), rating_min, as.double(alpha_vec),
+    as.double(theta_vec), as.double(base_eta_vec), slope_formula == 1L
+  )
+  colnames(out$probs) <- as.character(rating_min + seq_len(ncol(step_cum)) - 1L)
+  out$eta <- eta_vec
+  out
+}
 
-  for (i in seq_len(N)) {
-    eta <- eta_vec[i]
-    al <- if (has_sl) alpha_vec[i] else 1.0
-    sg <- step_group0[i] + 1L
-    a <- step_cat_min[sg]
-    b <- step_cat_max[sg]
-    if (is.na(eta) || !is.finite(al) || al <= 0.0) next
-    if (is.infinite(eta)) {
-      probs[i, ] <- 0.0
-      k_star <- if (eta > 0) (b + 1L) else (a + 1L)
-      probs[i, k_star] <- 1.0
-      exp_score[i] <- rating_min + (k_star - 1L)
-      var_score[i] <- 0.0
-      next
-    }
-    probs[i, ] <- 0.0
-    idx <- seq.int(a, b)
-    sc <- step_cum[sg, idx + 1L]
-    ok <- is.finite(sc)
-    if (!any(ok)) next
-    lp <- rep(-Inf, length(idx))
-    if (!has_sl || al == 1.0) {
-      lp[ok] <- (idx[ok] - a) * eta - sc[ok]
-    } else if (slope_formula == 1L && !is.null(theta_vec) && !is.null(base_eta_vec)) {
-      lp[ok] <- (idx[ok] - a) * (al * theta_vec[i] + base_eta_vec[i]) - sc[ok]
-    } else {
-      lp[ok] <- al * ((idx[ok] - a) * eta - sc[ok])
-    }
-    mx <- max(lp)
-    w <- exp(lp - mx)
-    p_sub <- w / sum(w)
-    probs[i, idx + 1L] <- p_sub
-    mu0 <- sum(idx * p_sub)
-    exp_score[i] <- rating_min + mu0
-    var_score[i] <- sum(((idx - mu0)^2) * p_sub)
+.mfrm_wle_newdata <- function(newdata, enc, step_group0) {
+  score_col <- intersect(c(enc$score_col, "Score", "score"), names(newdata))[1L]
+  person_col <- intersect(c(enc$person_col, "Person", "person"), names(newdata))[1L]
+  if (is.na(score_col) || is.na(person_col)) {
+    stop("`newdata` must contain person and score columns when `type = 'wle'`.", call. = FALSE)
   }
-  list(probs = probs, expected = exp_score, variance = var_score, eta = eta_vec)
+  persons <- as.character(newdata[[person_col]])
+  if (anyNA(persons) || any(!nzchar(trimws(persons)))) {
+    stop("New-data WLE requires a non-missing Person ID on every row.", call. = FALSE)
+  }
+  scores <- newdata[[score_col]]
+  if (is.factor(scores)) scores <- as.character(scores)
+  if (!is.null(dim(scores)) || !(is.character(scores) || is.numeric(scores)) || is.complex(scores)) {
+    stop("New-data WLE scores must be finite, integer-valued categories.", call. = FALSE)
+  }
+  scores <- suppressWarnings(as.numeric(scores))
+  if (any(!is.finite(scores)) || any(abs(scores - round(scores)) > 1e-8)) {
+    stop("New-data WLE scores must be finite, integer-valued categories.", call. = FALSE)
+  }
+  offset <- round(scores - enc$rating_min)
+  group <- step_group0 + 1L
+  invalid <- which(offset < enc$step_cat_min[group] | offset > enc$step_cat_max[group])
+  if (length(invalid)) {
+    stop(sprintf("New-data WLE score at row %d falls outside the fitted rubric or category support.",
+                 invalid[1L]), call. = FALSE)
+  }
+  levels <- .mfrm_sort_levels(newdata[[person_col]])
+  list(levels = levels, person0 = match(persons, levels) - 1L, score0 = as.integer(offset))
 }
 
 #' @export
@@ -2186,7 +2280,8 @@ predict.mfrm_fast_fit <- function(object,
   if (identical(type, "fair")) {
     return(stats::setNames(object$person$FairM, object$person$Person))
   }
-  if (identical(type, "eap") && is.null(newdata)) {
+  if (identical(type, "eap")) {
+    if (!is.null(newdata)) stop("EAP scoring of new ratings is unavailable. Omit `newdata` for fitted EAP scores.", call. = FALSE)
     return(data.frame(
       Person = object$person$Person,
       Estimate = object$person$EAP,
@@ -2246,7 +2341,8 @@ predict.mfrm_fast_fit <- function(object,
           fdf <- if (is.list(facet_data) && !is.data.frame(facet_data)) facet_data[[fnm]] else facet_data
           id_c <- intersect(c(fnm, "Level", "Element"), names(fdf))[1L]
           unseen <- which(is.na(m_old))
-          m_fd <- match(vals_chr[unseen], as.character(fdf[[id_c]]))
+          m_fd <- match(vals_chr[unseen], .mfrm_fast_unique_covariate_ids(fdf[[id_c]],
+            paste0("`facet_data` for facet '", fnm, "'")))
           if (anyNA(m_fd)) {
             stop("Unseen level(s) in `newdata[['", fnm, "']]` not found in `facet_data`: ",
                  paste(unique(vals_chr[unseen][is.na(m_fd)]), collapse = ", "), ".", call. = FALSE)
@@ -2303,14 +2399,10 @@ predict.mfrm_fast_fit <- function(object,
 
     # If scoring WLE on new observed ratings in newdata:
     if (identical(type, "wle")) {
-      sc_col <- intersect(c(enc$score_col, "Score", "score"), names(newdata))[1L]
-      p_col <- intersect(c(enc$person_col, "Person", "person"), names(newdata))[1L]
-      if (is.na(sc_col) || is.na(p_col)) {
-        stop("`newdata` must contain person and score columns when `type = 'wle'`.", call. = FALSE)
-      }
-      p_new_lv <- .mfrm_sort_levels(newdata[[p_col]])
-      p0_new <- match(as.character(newdata[[p_col]]), p_new_lv) - 1L
-      sc0_new <- as.integer(round(as.numeric(newdata[[sc_col]]) - enc$rating_min))
+      scoring <- .mfrm_wle_newdata(newdata, enc, sg0)
+      p_new_lv <- scoring$levels
+      p0_new <- scoring$person0
+      sc0_new <- scoring$score0
       if (is.null(alpha_new)) {
         ans <- mfrm_cpp_fast_wle(
           as.integer(length(p_new_lv)),
@@ -2396,7 +2488,8 @@ predict.mfrm_fast_fit <- function(object,
       if (anyNA(m_p)) {
         unseen_p <- which(is.na(m_p))
         if (enc$pop_mode == 1L && !is.null(person_data)) {
-          m_pd <- match(p_chr[unseen_p], as.character(person_data[[enc$person_id]]))
+          m_pd <- match(p_chr[unseen_p], .mfrm_fast_unique_covariate_ids(
+            person_data[[enc$person_id]], "`person_data`"))
           if (anyNA(m_pd)) {
             th_row[unseen_p] <- 0.0
           } else {
@@ -2922,11 +3015,18 @@ as.data.frame.mfrm_fast_fit <- function(x, row.names = NULL, optional = FALSE,
   x[[component]]
 }
 
+.mfrm_model_label <- function(model, slope_facets = character()) {
+  if (!identical(model, "GPCM")) return(model)
+  label <- "Generalized Many-Facet Rasch Model (GMFRM)"
+  if (!length(slope_facets)) return(label)
+  paste0(label, ", discrimination by ", paste(slope_facets, collapse = ", "))
+}
+
 #' @export
 print.mfrm_fast_fit <- function(x, ...) {
   cat(sprintf(
-    "Many-Facet Rasch Fit [%s / %s | Score: %s]\n",
-    x$method, x$model, x$score_method
+    "Many-Facet Measurement Fit [%s / %s | Score: %s]\n",
+    x$method, .mfrm_model_label(x$model, unique(x$slopes$Facet)), x$score_method
   ))
   cat(sprintf(
     "  Ratings: %d | Persons: %d | Free par: %d | Connected: %s (%d subset%s)\n",
@@ -2951,7 +3051,7 @@ print.mfrm_fast_fit <- function(x, ...) {
   }
   if (!is.null(x$slopes) && nrow(x$slopes) > 0L) {
     cat(sprintf(
-      "  GPCM Slopes (%s): %d element(s), range [%.3f, %.3f]\n",
+      "  GMFRM discrimination (%s): %d element(s), range [%.3f, %.3f]\n",
       paste(unique(x$slopes$Facet), collapse = ", "),
       nrow(x$slopes),
       min(x$slopes$Estimate, na.rm = TRUE),
@@ -2972,6 +3072,7 @@ summary.mfrm_fast_fit <- function(object, ...) {
   overview$InferenceStatus <- readiness$status
   list(
     overview = overview,
+    model_label = .mfrm_model_label(object$model, unique(object$slopes$Facet)),
     readiness = readiness,
     connectivity = object$connectivity,
     population = object$population,

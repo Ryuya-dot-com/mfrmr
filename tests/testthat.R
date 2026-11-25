@@ -9,6 +9,12 @@ is_cran_check <- local({
 cran_light_tests <- c(
   "fast-engine-032",
   "review-regressions-032",
+  "rating-design-display",
+  "tidymfrm",
+  "inference-display",
+  "model-planning-plots",
+  "workflow-design-display",
+  "report-statistics",
   "feedback-contracts-032",
   "posterior-summary",
   "mml-population-boundary",

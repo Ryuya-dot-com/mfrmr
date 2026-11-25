@@ -1,0 +1,605 @@
+---
+title: "From FACETS output to a first rating assessment in R"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{From FACETS output to a first rating assessment in R}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6.8, fig.height = 4.4)
+```
+
+Suppose a team has scored performances on a four-point rubric. Before the next
+round, the team wants to interpret rater severity, compare two ways to spend the
+same number of ratings, and pick score records to discuss in training.
+`mfrmr` combines these answers in one report. This walkthrough assumes
+you can run R code and have read FACETS output before.
+
+## Load the ratings and check the calibration
+
+The bundled synthetic data have one row per score for a `Person` from a `Rater`
+on a `Criterion`. A score of 4 indicates higher performance. Scores across
+criteria remain separate rows.
+
+```{r input}
+library(mfrmr)
+ratings <- load_mfrmr_data("example_core")
+head(ratings[c("Person", "Rater", "Criterion", "Score")], 3)
+
+wf <- mfrm_analysis(ratings, person = "Person", facets = c("Rater", "Criterion"),
+               score = "Score")
+glance(wf)[c("n_obs", "n_person", "connected", "converged", "inference_status")]
+```
+
+The default rating scale model (`RSM`) uses common category steps, and the
+default estimator is marginal maximum likelihood (`MML`). Check `connected`
+before comparing measures across rating subsets. `inference_status = "ready"`
+means the calibration passed numerical checks. Model fit and the rating design
+still matter when interpreting intervals. If the status is `review_required`,
+read the reason in `summary(wf)$readiness` or the report before using intervals.
+For choices beyond the default, see [Choose a method for your decision](#choose-a-method-for-your-decision).
+
+| If you start with the FACETS output | Start here in `mfrmr` |
+| --- | --- |
+| Table 7, measures and fit | `tidy(wf, "raters")` gives severity (`estimate`), `fair_m`, `std.error` (Model SE), `real.se` (Real SE), and Infit/Outfit. Use `tidy(wf, "persons")` for person measures. |
+| Wright or variable map | `plot(wf, type = "wright")` shows the measures on the logit scale. |
+| Table 4, unexpected responses | `augment(wf)` returns observed and expected scores, standardized residuals, and `.row_id` in the input. The report calls the row number `InputRow`. |
+| Table 14, pairwise bias | See **Top Pairwise Bias Contrasts** in the report for a screening comparison of a rater across criteria. |
+
+The [Table 7 manual](https://www.winsteps.com/facetman64/table7.htm),
+[Table 4 manual](https://www.winsteps.com/facetman64/table4.htm), and
+[Table 14 manual](https://www.winsteps.com/facetman64/table14.htm) describe the
+corresponding FACETS outputs. The table above maps reading tasks. For numerical
+comparisons, align the estimator, scale origin and direction, retained ratings,
+and uncertainty conventions. In particular, the MML example uses EAP person
+estimates by default, and the adjusted pairwise `pAdj` uses multiplicity
+correction.
+
+```{r rater-table}
+tidy(wf, "raters")[c("term", "estimate", "fair_m", "infit_mnsq", "outfit_mnsq", "flag")]
+```
+
+In this example, R04 has a higher severity estimate than R02 and a lower
+`Fair(M)`, the model-based average on the rubric scale under mean reference
+conditions. Read severity and fit separately. Severity describes a systematic
+level difference, while Infit and Outfit describe agreement with the fitted
+model. An `Acceptable` flag means the workflow's screening rule did not flag
+that rater. Use the original ratings and rubric to assess specific concerns.
+
+## Compare rating plans at the same workload
+
+For comparing people's relative standing, use the D-Study coefficient `G`.
+For decisions against a fixed standard on the rubric, use absolute dependability
+`Phi`, which also reflects variability due to the sampled rater or criterion
+levels themselves. Both project the reproducibility of observed scores under a
+specified design. FACETS separation reliability and `eap_reliability` in
+`glance(wf)` refer to measures on a calibrated scale and address other questions.
+
+```{r equal-rating-count}
+plans <- tidy(wf, "d_study")
+plans[plans$TotalRatingsPerPerson == 12L & plans$Rater %in% c(3L, 4L),
+      c("Rater", "Criterion", "TotalRatingsPerPerson", "G", "Phi")]
+```
+
+Four raters scoring three criteria and three raters scoring four criteria both
+require 12 ratings per person. Here their projected `Phi` values are about
+0.831 and 0.828. The point projections are close, so feasibility and the need
+to cover rubric criteria also matter. Targets such as 0.80 are examples. Choose
+your own for the intended decision. A plan may assume more exchangeable
+raters or criteria than are currently available. Check those assumptions and
+staffing costs before adopting it.
+
+## Review original ratings and save the report
+
+```{r review}
+rows <- augment(wf)
+unexpected <- rows[rows$UnexpectedFlag,
+                   c(".row_id", "Person", "Rater", "Criterion", "Observed", "Expected", "StdResidual")]
+unexpected <- unexpected[order(-abs(unexpected$StdResidual)), ]
+head(unexpected, 3)
+ratings[head(unexpected$.row_id, 3), c("Person", "Rater", "Criterion", "Score")]
+
+report_file <- tempfile(fileext = ".html")
+render_mfrm_report(wf, format = "html", file = report_file)
+rater_file <- tempfile(fileext = ".html")
+invisible(render_mfrm_report(wf, rater = "R04", format = "html", file = rater_file))
+```
+
+Use the row index to look up the score and review the original response and
+rubric. Large standardized residuals can prompt a data check or a second
+rating. The screening flag alone gives no basis for excluding a rater.
+After re-estimation, run `step_mfrm_diagnose()` again before producing
+rater feedback. `augment()` can reconstruct rating-level residuals from the
+current calibration when a saved diagnostic table belongs to an earlier fit.
+Open the report with `utils::browseURL(report_file)` in an interactive R
+session. Use `utils::browseURL(rater_file)` for the R04 feedback sheet. Supply
+your own file paths to keep the HTML.
+
+The [rater feedback guide](#tell-apart-location-bias-compression-and-halo)
+explains how to read the two screens in the R04 feedback sheet.
+
+## Use your own CSV and keep completed steps
+
+Export one row per observed rating from your spreadsheet. Use numeric integer
+scores. Leave missing ratings blank or omit their rows. The G-Study uses rows
+complete for its selected identifiers and score columns and reports how many
+it omits. Keep `0` for an actual score on a rubric that includes it.
+Set `rating_min` and `rating_max` from the
+rubric when some categories did not occur. Keep IDs with leading zeroes as
+character columns when importing. This example makes a CSV with different
+column names so you can run the same import and column mapping before using
+your own file.
+
+```{r csv}
+csv_file <- tempfile(fileext = ".csv")
+csv_example <- data.frame(Examinee = ratings$Person, Judge = ratings$Rater,
+                          Dimension = ratings$Criterion, Rating = ratings$Score)
+csv_example$Rating[2L] <- NA
+utils::write.csv(csv_example, csv_file, row.names = FALSE, na = "")
+own <- utils::read.csv(csv_file,
+  colClasses = c(Examinee = "character", Judge = "character", Dimension = "character"),
+  na.strings = c("", "NA"))
+
+spec <- mfrm_workflow(own, "Examinee", c("Judge", "Dimension"), "Rating",
+                      rater_facet = "Judge", rating_min = 1, rating_max = 4)
+calibrated <- step_mfrm_measure(spec)
+reviewed <- step_mfrm_diagnose(calibrated)
+planned <- step_mfrm_gtheory(reviewed)
+glance(planned)[c("n_obs", "connected", "inference_status", "phi_coef")]
+```
+
+Save the result of each step in a named object. A connected design can support
+calibration while supplying too little overlap to separate G-Study variance
+components. For example, keep only one criterion per examinee while the raters
+still connect the groups.
+
+```{r no-planning}
+criterion_levels <- unique(own$Dimension)
+assigned <- criterion_levels[(match(own$Examinee, unique(own$Examinee)) - 1L) %%
+                               length(criterion_levels) + 1L]
+limited <- own[own$Dimension == assigned, ]
+limited_fit <- mfrm_analysis(limited, "Examinee", c("Judge", "Dimension"), "Rating",
+                       rater_facet = "Judge", rating_min = 1, rating_max = 4)
+glance(limited_fit)[c("connected", "inference_status")]
+summary(limited_fit)$gtheory_reason
+limited_report <- tempfile(fileext = ".html")
+render_mfrm_report(limited_fit, format = "html", file = limited_report)
+```
+
+The warning and report give the reason planning is unavailable. The report
+retains calibration and rating review. To answer the planning question,
+revisit the observed overlaps and the crossed or nested design you intend to
+project. The G-Study uses all declared facets by default. Use `g_facets` to
+specify a subset for a different planning question or to select up to four
+facets in a workflow with more than four.
+
+## Choose a method for your decision
+
+Start by naming the decision and the quantity it depends on. A severity
+comparison, a decision about one person's score, and a recommendation to add
+raters each require different evidence.
+
+| Question | Starting analysis | What would change the analysis? |
+| --- | --- | --- |
+| How severe are the raters overall? | RSM with MML if a common set of category steps is plausible. Read severity estimates and intervals, then review Infit/Outfit and the original ratings. | Try PCM if criteria use category transitions differently after accounting for criterion difficulty. Compare on the same ratings. |
+| Do ratings from a rater or criterion distinguish performance more sharply along the ability scale? | Compare a fixed-slope model with a GPCM that frees slopes for the facet in question. Read slope intervals and predicted category curves in the relevant contexts. | Check whether the slopes are stable and change a substantive conclusion. Freeing a second slope family requires data that distinguish the two families and a reason to estimate both. |
+| Does a rater systematically score one criterion higher or lower than expected? | Screen with **Top Pairwise Bias Contrasts** and inspect the original ratings. | To quantify the average location difference, use `estimate_bias(wf$fit, interaction_facets = c("Rater", "Criterion"), method = "joint")`. |
+| Does a rater distinguish weaker and stronger performances within a particular domain? | Review the card's **Central tendency screen** and inspect residuals across expected score levels within that domain. | Check whether the pattern persists across performances and differs from that of other raters scoring the same performances. |
+| Do residuals on different criteria move together within a rater? | Review **Criterion halo screen** and its matched-person counts. | Compare residual associations across raters scoring the same performances before attributing the pattern to halo. |
+| Is a rubric subscore precise enough to report separately? | Start with domains defined by the rubric. Read [domain discrimination and dependability](#read-domain-discrimination-and-subscore-dependability) together. | Compare the precision of each subscore under the intended rating plan and examine how much the subscores vary together. |
+| How many ratings are needed for relative standing or a fixed standard? | Use G-Study/D-Study for the intended observed score and allocation. Read G for relative standing and Phi for a fixed standard. | Check whether the observed design identifies the required variance components and whether the proposed allocation matches the intended use. |
+
+### Choose the estimator and the person score separately
+
+- **MML** integrates over an ability population. Start with the default for
+  the walkthrough and check whether the population assumptions and scale are
+  suitable for your data. Specify the population consistently when comparing
+  models. With MML, EAP person scores shrink toward the fitted or specified
+  population. Use `person_score = "WLE"` when you want weighted-likelihood
+  person scoring after calibration, and record the choice.
+- **CML** conditions on person totals to calibrate supported RSM and PCM
+  models without specifying an ability distribution. Use it as a sensitivity
+  check for facet locations if that assumption matters. Person scoring is a
+  separate step.
+- **JML** estimates person and facet locations jointly. It is a useful
+  reference for a FACETS comparison when the scale, constraints and
+  extreme-score handling match. With few ratings per person, check the
+  sensitivity of person scores and rater measures. **Jeffreys-penalized JML**
+  is another sensitivity check for supported RSM and PCM fits, including
+  extreme scores.
+
+For example, compare MML and CML under the same RSM and use WLE in both.
+
+```{r estimator-sensitivity}
+sensitivity <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score") |>
+  step_mfrm_measure(person_score = "WLE", compare_methods = "CML")
+summary(sensitivity)$method_comparison[
+  c("Method", "ScoreMethod", "InferenceStatus", "PersonMAD", "RaterMaxDiff")]
+```
+
+`PersonMAD` is the median absolute difference in person measures from the
+primary fit. `RaterMaxDiff` is the largest absolute difference in rater
+measures. Check the specific people or raters whose interpretation could
+change. For example, compare the scores and uncertainty for people close to
+the rubric standard. If a defensible model answers the decision and a
+plausible alternative gives the same conclusion, retain the simpler model.
+If the decision changes, report which assumptions matter and identify
+where more rating overlap or a review of the original scores would help.
+
+### What the recovery studies found
+
+The simulations generated ratings from known parameters. Bias is the mean
+estimate minus the truth, RMSE summarizes the size of estimation errors, and
+95% interval coverage counts how often available intervals contain the
+truth. Coverage measures performance across repeated samples. Also check
+whether intervals were available and how wide they were.
+
+One mfrmr 0.3.2 development study used 6 raters, 4 criteria, 5 score
+categories (0 to 4), and 500 repetitions per condition (7,000 fits across
+14 conditions). The usual assignment was 3 raters by 4 criteria per person
+(12 ratings). The sparse assignment was 2 raters by 2 criteria (4 ratings),
+with connected overlaps assigned independently of ability. The comparisons
+below use 31-point MML and a fixed standard-normal ability population.
+The GPCM rows use one discrimination family on the criteria, with
+criterion-specific steps and slopes multiplying the full predictor.
+Every fit in the study passed the numerical readiness checks.
+
+| Scenario | Recovery result | Implication |
+| --- | --- | --- |
+| RSM with 30, 120 or 480 people and 4 or 12 ratings each | Model-SE coverage for the prespecified R6 minus R1 severity contrast (truth 1.30 logits) was 94.6% to 97.0% across the six conditions. At 120 people, reducing ratings from 12 to 4 raised person WLE RMSE from 0.341 to 0.590 logits and mean interval width from 1.31 to 2.35 logits. | Connected sparse ratings can support a calibrated rater contrast while person scores are substantially less precise. The person intervals hold the estimated calibration fixed. |
+| RSM with 120 people and one rarely used rater | R6 rated just 4 people on 2 criteria each, linked through the other raters. R6 severity RMSE was 0.292 logits, with 94.2% model-SE coverage and mean width 1.13 logits. | Check exposure and interval width for that rater. The design and scale constraints contribute to the result, so 8 ratings is a description of this condition. |
+| Correctly specified GPCM with 120 people | Reducing ratings from 12 to 4 raised RMSE for the C4 slope (truth 1.35) from 0.123 to 0.347 and bias from +0.017 to +0.043 on the slope scale. Log-scale model-SE intervals, transformed back to slopes, covered 96.4% and 91.6%, respectively. | Inspect slope uncertainty before using free slopes for scoring or rater feedback. |
+| RSM with 120 people and 12 ratings each, with local dependence | Ratings for the same person and rater shared an omitted random effect (SD 0.6). Bias for R6 minus R1 was −0.203 logits. Coverage fell to 54.4% with model SE and was 73.0% with person-clustered sandwich SE. | Investigate dependence in the assignment and scoring process. Changing the SE leaves the point estimate and its bias in place. |
+
+Each reported calibration interval was available in all 500 repetitions of
+its condition. With that denominator the Monte Carlo standard error near 95%
+coverage is about one percentage point. In the sparse GPCM condition, the C4
+slope covered in 458 of 500 repetitions (91.6%, with a 95% Monte Carlo
+interval of 88.8% to 93.7%). The table describes specific contrasts and
+slopes under these assignments. Coverage for a new design also depends on
+its overlaps, category use and model assumptions.
+
+Two earlier development studies address different choices:
+
+- **Estimators in a sparse RSM.** The same 1,000 datasets had 60 people,
+  6 raters, 4 criteria and 8 ratings per person (2 raters by 4 criteria).
+  Mean person RMSE in logits and Model-SE interval coverage were 0.535
+  and 92.0% for JML with extreme-score adjustment 0.3, 0.425 and 96.1% for
+  Jeffreys JML, 0.422 and 95.1% for MML/WLE with an estimated ability
+  population, and 0.435 and 94.5% for CML/WLE. Coverage was averaged across
+  datasets over people with usable intervals. These comparisons include the
+  person scoring step, so they motivate sensitivity analysis for this
+  design rather than a ranking of calibration estimators.
+- **Two discrimination families.** A separate GPCM study had two levels
+  each of task, rater and criterion, three score categories, and task and
+  rater slopes multiplying the full predictor. With 60 people, increasing
+  from 4 to 8 ratings per person reduced RMSE for a task slope with truth
+  0.80 from 0.191 to 0.097. Coverage was 183/200 and 194/200, respectively,
+  with all intervals available. This comparison uses a small, connected
+  design with two slope families. The one-family results above concern
+  criterion slopes.
+
+### Check what kind of sparsity or bias you have
+
+1. Count retained ratings and distinct people by rater and criterion, and
+   look at their overlaps. A few shared people can link a design while
+   leaving a particular contrast poorly supported. If subsets are
+   disconnected, establish a substantive link through shared ratings or
+   justified anchors before comparing their unanchored measures.
+2. Check category counts by criterion and by the levels whose slopes you
+   would estimate. Counts concentrated in one category or a missing
+   category transition can leave steps and slopes weakly identified. For a
+   design with little overlap or exposure, use common steps or fixed
+   slopes when defensible, or collect targeted ratings. Read the readiness
+   reasons and interval widths for the particular estimates you need.
+3. Check whether assignment and scoring make the model's assumptions
+   plausible. The sparse simulations used planned overlap and assignment
+   independent of ability. If people are assigned to raters based on
+   expected performance, or ratings from one person-rater pair share a
+   source of dependence, assess that mechanism before using calibrated
+   intervals for decisions.
+
+## Tell apart location bias, compression, and halo
+
+- **Location bias** changes the average observed-minus-expected score on a
+  criterion after accounting for the calibration. Use **Top Pairwise Bias
+  Contrasts** to screen for this pattern and a joint location contrast to
+  estimate its size.
+- **Compression** narrows the range of scores across performances. In the
+  rater card, a negative **Central tendency screen** correlation suggests low
+  expected scores may be scored up and high expected scores down. The card
+  summarizes the rater across criteria. To investigate one domain, use
+  `augment(wf)` to inspect observed-minus-expected scores by expected score
+  within that domain, then check how other raters scored the same performances.
+- **Halo** can make scores on different criteria move together within the
+  same performance. The card's **Criterion halo screen** gives the correlation
+  of standardized residuals for a criterion pair and the number of matched
+  persons. Shared features of the performance and calibration error can also
+  make residuals move together. A follow-up compares within-rater residual
+  associations with associations between raters scoring the same person and
+  task. This comparison needs co-ratings on the same performances. Retain
+  the matched counts and use the result as a screen for review.
+
+An average gap between two criteria can change with little change in overall
+fit. In a separate illustration with two rounds of 80 people
+each, all four raters scored all four criteria on a four-point scale. R04
+reduced the high-minus-low criterion difficulty gap from 1.80 to 0.45 logits,
+while every slope stayed at one. R04's Infit MnSq was 1.05 and 0.99 in the two
+rounds, both rated `Acceptable` by the report. The pairwise screen flagged the
+same criterion pair in both rounds (adjusted p-values about 0.0021 and
+0.00000009). The joint rater-by-criterion contrast, R04's gap minus the
+other raters' mean gap, was estimated as −1.09 and −1.77 logits (truth −1.35).
+Use the pairwise screen and original ratings to examine the repeated pattern,
+then estimate the specified interaction if the decision requires its size.
+The two rounds illustrate the diagnostic sequence, with detection probability
+and within-person halo sensitivity left unestimated.
+
+Infit and Outfit summarize residual fit, separation reliability summarizes
+separation of measures, and G/Phi summarize observed-score dependability for
+a specified design. The recovery figures above evaluate estimation error and
+intervals. Use each diagnostic for its own question when deciding what the
+data support.
+
+## Compare models on the same ratings
+
+Suppose you want to test whether the rubric needs criterion-specific steps,
+then whether raters differ in discrimination. Fit the shared-step RSM,
+criterion-step PCM, and rater-slope GPCM with the same ratings, MML estimator,
+31-point integration, and fixed standard-normal ability population. Request
+that population explicitly for the GPCM because its one-family default can
+estimate population parameters. The slope comparison leaves criterion steps
+free in both models.
+
+```{r model-comparison}
+common <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score")
+rsm <- step_mfrm_measure(common)
+pcm <- step_mfrm_measure(common, model = "PCM", step_facet = "Criterion")
+gpcm <- step_mfrm_measure(common, model = "GPCM", step_facet = "Criterion",
+                          slope_facet = "Rater", gpcm_mml_identification = "fixed_standard_normal")
+comparison <- anova(rsm, pcm, gpcm)
+comparison$table[c("Model", "LogLik", "FreeParams", "AIC", "BIC")]
+comparison$lrt
+```
+
+Read the first test as evidence about freeing the steps and the second about
+freeing the slopes. A likelihood-ratio test requires compatible, nested fits.
+If `lrt` is `NULL`, inspect `comparison$comparison_basis` and the warning.
+Compare AIC and BIC only for compatible likelihoods. To choose a model, also
+compare the result the decision depends on. For subscore reporting, compare
+domain scores on the same rubric scale under the same reference rating plan.
+For rater feedback, check whether the models identify the same patterns in
+ratings. If you have independent ratings, compare the predictions on those
+ratings as well. In a simulation with two raters per task, local dependence,
+and one rater compressing one domain, adding rater slopes to criterion slopes
+gave a slightly worse mean prediction on independent ratings. Its Monte Carlo
+interval included both improvement and worsening.
+
+When the question is how estimates change across estimation methods for the
+same model, see
+[the estimator sensitivity example](#choose-the-estimator-and-the-person-score-separately).
+
+### Compare scores and classifications under one reference plan
+
+For a decision on the original rubric scale, use the same people and the
+same reference rating cells and weights for each model. This example compares
+PCM with a GMFRM that estimates rater and criterion slopes. The reference
+plan equally weights each observed rater–criterion combination.
+
+```{r reference-plan-comparison}
+dual <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+                 model = "GPCM", step_facet = "Criterion",
+                 slope_facet = c("Rater", "Criterion"),
+                 spec = list(slope_reference = "Criterion",
+                             gpcm_mml_identification = "fixed_standard_normal"))
+anova(pcm$fit, dual)$comparison_basis$lrt_status
+plan <- unique(ratings[c("Rater", "Criterion")])
+plan_scores <- function(fit) {
+  fair_average_table(fit, reference_plan = plan)$reference_scores[c("Person", "Estimate")]
+}
+paired <- merge(plan_scores(pcm$fit), plan_scores(dual), by = "Person",
+                suffixes = c("_pcm", "_gmfrm"))
+paired <- paired[complete.cases(paired), ]
+paired$Change <- paired$Estimate_gmfrm - paired$Estimate_pcm
+summary(paired$Change)
+with(paired, table(PCM = Estimate_pcm >= 2.5, GMFRM = Estimate_gmfrm >= 2.5))
+```
+
+The cut of 2.5 is illustrative. The scores are model expectations evaluated
+at each person's primary ability estimate. Check how many people have
+available scores in both models before interpreting the table. It shows
+changes in the point decisions. It does not estimate error rates or
+attribute the changes to slopes alone, since both models recalibrate the
+other parameters.
+
+### Score new people with a saved fit
+
+In 0.3.2, keep the complete fit to score new people against the same
+calibration. Supply the original facet columns, known rubric levels, and
+observed category scores. The example gives a new ID to one rating pattern
+from the bundled data to demonstrate the input format.
+
+```{r saved-calibration-wle}
+fit_file <- tempfile(fileext = ".rds")
+saveRDS(dual, fit_file)
+new_ratings <- ratings[ratings$Person == ratings$Person[1L], ]
+new_ratings$Person <- "New-01"
+predict(readRDS(fit_file), newdata = new_ratings, type = "wle")
+```
+
+The WLE and its SE condition on the saved calibration. Before using them for
+a new cohort, check comparability of the rubric and the known levels and
+review anchor displacement where applicable. This use of a saved fit
+retains its original data. The 0.3.1 compact calibration file and its
+new-person EAP scoring API are described in the
+[archived calibration guide](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/website-archive/articles/mfrmr-portable-calibration.Rmd).
+
+## Read GMFRM discrimination and predicted responses
+
+The **Generalized Many-Facet Rasch Model (GMFRM)** extends the
+constant-discrimination many-facet Rasch model by estimating slopes, following
+the terminology of [Uto and Ueno (2020)](https://doi.org/10.1007/s41237-020-00115-7).
+Use `model = "GPCM"` and specify the discrimination facets in `slope_facet`.
+Choose a facet for its own category steps (many-facet GPCM) or
+`step_facet = "Common"` for a shared ladder on a common rubric (many-facet RS-GPCM).
+
+The slope plot shows each estimated slope relative to one, with intervals
+when calibration supports them. With two discrimination families, read the
+facets separately. The response model uses the product of the applicable
+slopes. The discrimination column of FACETS Table 7 is a diagnostic obtained
+after calibration. GPCM estimates slopes jointly with the other parameters.
+
+```{r fitted-contexts, fig.height=3.9}
+plot(gpcm, type = "slopes")
+plot(gpcm, type = "category_curves",
+     newdata = data.frame(Rater = c("R01", "R04"), Criterion = "Content"))
+```
+
+These category curves condition on the displayed rater and criterion. They
+use their fitted locations, steps and all applicable slopes. A change of
+context can change more than discrimination. For a GMFRM with discrimination by
+two facets, specify both names in `slope_facet` and use the same `newdata`
+interface. With rater and criterion slopes, the product gives every rater
+the same ratio of slopes for any two criteria. The rater slope estimates
+overall differences in discrimination. A rater who persistently distinguishes
+performances less well in one domain can require separate domain fits and a
+review of the original ratings.
+For a cohort comparison, specify `dff_group` with a suitable method. The default
+split likelihood test requires a supported RSM/PCM calibration. The fixed
+calibration `"raju_welch"` group screen can be requested explicitly for GPCM
+and answers a different question. See `?analyze_dff`.
+
+## See what additional ratings buy
+
+The conventional `plot(wf, type = "dstudy")` shows how a coefficient changes
+as one facet count increases. The frontier view uses total ratings per person
+on the horizontal axis so that allocations can be compared at equal workload.
+Restrict the candidate grid to plans under consideration. Here we consider
+one to five raters and two to four criteria.
+
+```{r frontier}
+planning <- step_mfrm_gtheory(common, target_g = 0.80, target_phi = 0.85,
+                             d_study_grid = expand.grid(Rater = 1:5, Criterion = 2:4))
+plot(planning, type = "dstudy_frontier")
+```
+
+Points show allocations. The step line rises whenever a higher point
+projection becomes achievable within the rating count. A label shows the
+allocation with the highest projection at the smallest count meeting the
+target in that panel. `tidy(planning, "d_study")` provides the full comparison.
+Treat small gaps as point estimates, and check staffing and rubric coverage
+before deciding. D-Study counts for nested facets are per parent level.
+
+## Read domain discrimination and subscore dependability
+
+Suppose a rubric reports two subscores, the mean of Content and Organization
+and the mean of Language and Accuracy. Define the domains from the rubric
+before looking at the slopes. In the bundled `example_core` data, each
+`Person`–`Rater` pair has one score on each of the four criteria. Keep those
+scores in separate rows for the GMFRM.
+
+```{r domain-slopes}
+domains <- list(ContentOrganization = c("Content", "Organization"),
+                LanguageAccuracy = c("Language", "Accuracy"))
+
+fit_criterion_slopes <- function(data, points = 31L) {
+  fit_mfrm(data, "Person", c("Rater", "Criterion"), "Score",
+           model = "GPCM", method = "MML", step_facet = "Common",
+           slope_facet = "Criterion",
+           spec = list(gpcm_mml_identification = "unconstrained_slopes",
+                       slope_type = "ability_only",
+                       noncenter_facet = c("Person", "Criterion")),
+           control = list(mml_integration = "adaptive", quad_points = points))
+}
+
+pooled <- fit_criterion_slopes(ratings)
+by_domain <- lapply(domains, function(criteria) {
+  fit_criterion_slopes(ratings[ratings$Criterion %in% criteria, ])
+})
+fits <- c(list(Pooled = pooled), by_domain)
+vapply(fits, function(fit) summary(fit)$readiness$status, character(1))
+lapply(fits, function(fit) fit$slopes[c("Level", "Estimate", "ModelSE")])
+```
+
+All three models use a fixed standard-normal ability distribution and allow
+criterion slopes to vary on that scale. The pooled fit estimates one ability
+for the full rubric. Each domain fit estimates ability using only the criteria
+assigned to it. If a calibration needs review, read the reasons in
+`summary(fit)$readiness` for that fit before interpreting its slopes.
+Interpret slopes in relation to the ability used in that fit.
+Separate fits have separate ability scales. Report a difference in subscores
+on the original rubric scale under a common reference rating plan when that
+difference is the quantity of interest.
+
+When a slope would change the decision, check sensitivity to the integration
+rule as well as the calibration status. For example, refit with more adaptive
+quadrature points and inspect how much the estimates change. One simulation
+dataset returned successful calibration status under both rules, yet the
+mean domain slope was 1.32 with 65 fixed points and 1.57 with 31 adaptive
+points. An independent integration check supported the adaptive result
+for that dataset.
+
+```{r domain-quadrature}
+pooled_finer <- fit_criterion_slopes(ratings, points = 55L)
+summary(pooled_finer)$readiness
+merge(pooled$slopes[c("Level", "Estimate")],
+      pooled_finer$slopes[c("Level", "Estimate")],
+      by = "Level", suffixes = c("_31_points", "_55_points"))
+max(abs(fitted(pooled, type = "probs") - fitted(pooled_finer, type = "probs")))
+```
+
+For the multivariate G-Study, compute the two observed subscores for each
+person–rater pair. The example uses a 60% and 40% composite. For other data,
+use your rubric's scoring rule for missing criteria. Here `rowMeans()`
+requires both scores in a domain, and the G-Study reports any incomplete
+rows it omits. Include the task in the pairing and G-Study design if the
+same person and rater contribute multiple tasks.
+
+```{r multivariate, fig.height=3.4, fig.alt="Generalizability and dependability of the two subscores and their weighted composite at the observed rating counts."}
+wide <- stats::reshape(ratings[c("Person", "Rater", "Criterion", "Score")],
+                       idvar = c("Person", "Rater"), timevar = "Criterion",
+                       direction = "wide")
+for (domain in names(domains)) {
+  wide[[domain]] <- rowMeans(wide[paste0("Score.", domains[[domain]])])
+}
+multivariate <- step_mfrm_gtheory(wf, g_data = wide, g_facets = "Rater",
+                                 g_scores = names(domains), g_weights = c(.6, .4))
+tables <- summary(multivariate)$report_tables
+tables[["Subscore generalizability"]][c("Score", "G", "Phi")]
+components <- tables[["Subscore variance-covariance components"]]
+person_components <- components[components$Component == "Person", ]
+person_components[c("ScoreA", "ScoreB", "Estimate", "CovarianceStatus")]
+plot(multivariate, type = "gstudy")
+```
+
+Read `G` for relative standing and `Phi` for a fixed standard under the
+declared design. The composite uses the covariance within each component, so
+its coefficients need not equal the weighted mean of the subscore
+coefficients. The person component describes how universe scores vary
+together. If its covariance matrix is valid and the two person variances
+are positive, use `stats::cov2cor(multivariate$gtheory$vcov_components[["Person"]])`
+for the person-component correlation. In these ratings the reported matrix
+is invalid, so the correlation is unavailable. The subscore coefficients
+are available and address the precision of each subscore. The full report
+shows both results through `render_mfrm_report(multivariate)`.
+
+In a simulation where a speaking rubric had a distinct pronunciation and
+fluency domain, its mean slope was about two-thirds of the content domain's
+slope on the pooled scale. The mean slopes were similar when estimated
+within their own domains, and the pronunciation and fluency `G` was about
+0.92 in the no-halo conditions. When the simulation instead lowered the
+true slopes on a shared ability, both the within-domain slopes and `G`
+were lower. A small pooled slope warrants review of domain precision and
+the intended construct before removing or downweighting a criterion.
+These patterns do not supply cutoffs for diagnosing multidimensionality.
+
+For planning the number of raters, `plot(multivariate, type = "dstudy_frontier")`
+projects dependability for the declared composite. For a particular subscore,
+run `step_mfrm_gtheory()` for that score on the same complete rating rows.
+
+## References
+
+- Brennan, R. L. (2001). *Generalizability Theory*. Springer. doi:10.1007/978-1-4757-3456-0
+- Eckes, T. (2015). *Introduction to Many-Facet Rasch Measurement*. Peter Lang. doi:10.1007/978-3-662-45601-5
+- Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.

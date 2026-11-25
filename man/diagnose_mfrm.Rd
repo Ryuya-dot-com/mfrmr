@@ -19,7 +19,7 @@ diagnose_mfrm(
   \item{whexact}{Logical; if \code{TRUE}, applies the exact Wilson-Hilferty cube-root transformation for \code{ZSTD} on legacy fits.}
   \item{fit_df_method}{Degrees-of-freedom convention for legacy fit standardization (default \code{"facets"}).}
   \item{diagnostic_mode}{Diagnostic mode for legacy \code{fast = FALSE} fits (\code{"both"}, \code{"legacy"}, or \code{"marginal_fit"}).}
-  \item{residual_pca}{Optional residual principal-components mode on legacy fits (\code{"none"}, \code{"overall"}, \code{"facet"}, or \code{"both"}).}
+  \item{residual_pca}{Optional residual principal-components mode (\code{"none"}, \code{"overall"}, \code{"facet"}, or \code{"both"}).}
   \item{pca_max_factors}{Maximum number of residual PCA factors extracted when \code{residual_pca != "none"}.}
 }
 \value{
@@ -35,6 +35,12 @@ omit interval bars; descriptive estimates and fit statistics remain available.
 Summary/print output and plot notes retain the reasons, including after saving
 and reloading the diagnostic object. Numerical readiness is not a guarantee
 of interval coverage or fit-screening accuracy.
+
+Residual PCA averages standardized residuals for each Person and selected facet
+level or joint context. Results are exploratory. Missing or non-positive
+semidefinite pairwise correlations are reported as unavailable. For example,
+use \code{plot(diagnose_mfrm(fit, residual_pca = "facet"), facet = "Criterion",
+type = "residual_pca")} to see the first contrast.
 
 For primary EAP person scores, model reliability is
 \eqn{v/(v+s)}, where \eqn{v} is the sample variance of finite EAP estimates

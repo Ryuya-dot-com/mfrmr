@@ -19,6 +19,7 @@
 ^\.gitignore$
 ^_pkgdown\.yml$
 ^pkgdown$
+^website-archive$
 ^vignettes/articles$
 ^CITATION\.cff$
 ^ROADMAP\.md$

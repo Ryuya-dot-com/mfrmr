@@ -1,5 +1,57 @@
 # mfrmr 0.3.2
 
+- Calibration and new-data prediction reject duplicate identifiers in the
+  person or facet covariate tables they use.
+- Workflow score bounds and extreme-score flags use the fitted calibration's
+  category support, including when an earlier saved workflow is reopened.
+- A G-Study above four non-person facets reports its limit and leaves the
+  calibration and diagnostics available in the one-call workflow.
+
+- The unified calibration and design check reject factor-valued score
+  columns before R can substitute their internal codes. Saved unified fits
+  with such inputs are marked for review.
+- Unified RSM and PCM MML detect rank deficiency in the joint design
+  for population means and free facet locations before estimation. Saved
+  fits are reviewed for the same issue when used for inference.
+
+- Re-estimating a workflow clears diagnostics and estimator comparisons from
+  the previous calibration. Saved diagnostics that disagree with the attached
+  calibration are withheld until diagnostics are run again.
+- New-data WLE checks person IDs and category support before scoring. EAP
+  prediction with supplied ratings now explains that this scoring path is
+  unavailable. Omit `newdata` to retrieve fitted EAP scores.
+
+- Fitted models with discrimination estimates display as Generalized
+  Many-Facet Rasch Model (GMFRM), with the facets carrying discrimination.
+  Following Uto and Ueno (2020), this name denotes an extension of the
+  constant-discrimination many-facet Rasch model. Use `model = "GPCM"`
+  in code. The display label is available as `summary(fit)$model_label`.
+
+- `mfrm_analysis()` connects calibration, diagnostics, G-Study and D-Study,
+  plots, and Markdown, HTML, and optional Word reporting in `mfrmr`.
+  The workflow steps, `tidy()`, `glance()`, `augment()`, and
+  `render_mfrm_report()` are available from the same package. Saved workflows
+  retain their class, and `tidymfrm()` is a compatibility alias.
+
+- Assessment reports share estimator notes, facet separation, agreement with
+  model expectations, extreme-score proportions, anchor displacement, and
+  multivariate G-Study covariance and effective weights across formats.
+  A common reference plan can include conditional original-scale intervals.
+  Select a rater for a focused feedback report. Connectivity audits can also
+  report algebraic connectivity and panel effective resistance.
+- Baseline drift screening uses declared stable reference anchors for linked
+  comparisons. Unqualified comparisons with separately centered estimates are
+  reported as unavailable. Anchor displacement is reported separately as a
+  conditional one-step diagnostic.
+
+- Rating plans now apply their counts to information curves for fast fits.
+  Observed exposure can also be reported per person. The original
+  one-per-context reference curve remains available by default.
+- The design check reports Person-by-rater components and individual linking
+  persons separately from the multi-facet graph.
+- Pathway plots can show Infit and Outfit side by side. Residual PCA is
+  available on request for fast fits, with a first-contrast plot.
+
 - Fits from a shared-design score matrix retain the ratings from their own
   replication for residuals, diagnostics, and reuse. The batch fitter checks
   every column against the common design and rubric.
@@ -44,11 +96,13 @@
   - Apply `missing_codes` before unified estimation, honor weighted common
     `reference_plan` scoring, and reject duplicate unit-rater ratings in
     agreement calculations. Common-plan unified scores are plug-in predictions;
-    posterior moments and intervals are not supplied.
+    request a conditional interval with `fair_se = TRUE`. The interval holds
+    the calibration and reference plan fixed. The point prediction is not a
+    posterior mean of the transformed score.
   - Document category support as `Level`, `Min`, `Max`, and add explicit S3
     method signatures, uncertainty definitions and eligibility conditions.
 
-- Consolidate the public API to 22 focused entry points plus standard R S3
+- Consolidate the public API around the analysis workflow and standard R S3
   methods (`predict()`, `coef()`, `vcov()`, `confint()`, `anova()`, `plot()`,
   `fitted()`, `residuals()`, `logLik()`, `AIC()`, `BIC()`, `nobs()`, `summary()`,
   and `print()`), removing external-software wrappers (`TAM`, `ConQuest`, and
@@ -60,9 +114,9 @@
     SEs), Marginal Maximum Likelihood (`"MML"` with observed and person-clustered
     sandwich covariances, `EAP`, and Warm's 1989 `WLE`), Conditional Maximum
     Likelihood (`"CML"` for `"RSM"` and `"PCM"` via elementary symmetric
-    polynomials with full conditional covariance and `WLE`), and 1-family and
-    2-family Generalized Partial Credit (`model = "GPCM"` across `"MML"` and
-    1-family `"JML"`, supporting both `"full_predictor"` and `"ability_only"`
+    polynomials with full conditional covariance and `WLE`), and GMFRM
+    (`model = "GPCM"`, `"MML"` for one or two discrimination facets and
+    `"JML"` for one discrimination facet, with `"full_predictor"` and `"ability_only"`
     slope parameterizations, `slope_prior_sd` log-normal regularization, Warm
     GPCM `WLE`, and 4-level nested affine LRTs).
   - Full C++ support for `group_anchors`, `facet_shrinkage` (`"empirical_bayes"`
@@ -98,10 +152,6 @@
   `"residual_qq"`, `"slopes"`, and `"qc"`) with color-vision-safe `"okabe_ito"`,
   `"viridis"`, and strict `R == G == B` `"monochrome"` palettes paired with
   redundant point `shape` and `linetype` encodings.
-- Pair with the companion package `tidymfrm` for pipeable end-to-end workflows
-  (including `GPCM` discrimination and dynamic Markov rater drift via `occasion`),
-  `tidy()`/`glance()`/`augment()` extractors, and APA-style Markdown, HTML, and
-  optional `officer`/`flextable`/`kableExtra` reports.
 
 # mfrmr 0.3.1
 
@@ -748,19 +798,19 @@ figures, tables and an editable report while keeping its assumptions visible.
   the shared reporting workflow. Editable templates help you write the Methods
   and Results, and exports keep the underlying tables and analysis. You can
   record what high scores mean alongside the results.
-  See [reporting examples](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-reporting-and-apa.html).
+  See [reporting examples](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.2.5/vignettes/mfrmr-reporting-and-apa.Rmd).
 - **Compare plans before collecting more ratings.** Examine how specified
   rater/task counts affect the precision of a score, weighted composite or
   difference. G/D-study reports connect sources of variation to plan tables,
   figures and supported intervals. Simulation recommendations now show their
   target, criteria and candidate outcomes in summaries, plots and reports.
-  See [assessment planning](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gtheory.html).
+  See [assessment planning](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.2.5/vignettes/mfrmr-gtheory.Rmd).
 - **Find rating patterns that need attention.** Check assignment links before
   fitting, examine observed agreement, and prepare supported rater feedback.
   Network and residual analyses connect to tables, plots and reports; their
   exploratory findings prompt investigation, not automatic rater exclusion.
-  See [agreement](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-rating-agreement.html)
-  and [networks and reporting](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html).
+  See [agreement](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/website-archive/articles/mfrmr-rating-agreement.Rmd)
+  and [networks and reporting](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/website-archive/articles/mfrmr-networks-and-reporting.Rmd).
 
 Continue a default single-family GPCM analysis in Stan while retaining its
 estimated normal population and supported fixed anchors. `export_mfrm_model()`
@@ -769,16 +819,16 @@ RSM/PCM and fixed-population single-family GPCM also support brms;
 two-family GPCM supports Stan. `read_mfrm_posterior()` brings saved summaries,
 including population mean/SD, back to figures and reports with credible
 intervals and sampling review. Population regression remains unsupported.
-See [model export](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.html).
+See [model export](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.2.5/man/export_mfrm_model.Rd).
 
 Supported MML models can show fitting progress and automatically increase
 numerical integration accuracy up to a user-set maximum. Two-family GPCM
 retains experimental inference limits.
-The [GPCM guide](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html)
+The [GPCM guide](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/website-archive/articles/mfrmr-gpcm-scope.Rmd)
 and [detailed changes](https://github.com/Ryuya-dot-com/mfrmr/blob/main/inst/NEWS-0.2.4-details.md) explain these features,
 calibration reuse, external-software comparisons and numerical improvements.
 
-The [visual gallery](https://ryuya-dot-com.github.io/mfrmr/articles/visual-gallery.html)
+The [visual gallery](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/website-archive/articles/visual-gallery.Rmd)
 adds ggplot2 examples with interactive Plotly views, static figures and the
 underlying values for rater feedback, assessment planning and score probabilities.
 

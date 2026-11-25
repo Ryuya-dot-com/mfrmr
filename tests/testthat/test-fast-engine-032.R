@@ -107,6 +107,21 @@ test_that("fit_mfrm(fast = TRUE) matches canonical JML, Jeffreys, MML, and CML a
   wle_new <- predict(f_fast_mml, newdata = nd_wle, type = "wle")
   expect_equal(nrow(wle_new), 2L)
   expect_gt(wle_new$Estimate[wle_new$Person == "NewP2"], wle_new$Estimate[wle_new$Person == "NewP1"])
+  labelled <- transform(nd_wle, Score = factor(Score, levels = 4:1))
+  expect_equal(predict(f_fast_mml, labelled, type = "wle"), wle_new)
+  for (bad_score in c(0, 99)) {
+    invalid <- nd_wle
+    invalid$Score[2L] <- bad_score
+    expect_error(predict(f_fast_mml, invalid, type = "wle"), "row 2.*outside")
+  }
+  for (bad_score in c(1.25, Inf, NA_real_)) {
+    invalid <- nd_wle
+    invalid$Score[2L] <- bad_score
+    expect_error(predict(f_fast_mml, invalid, type = "wle"), "finite, integer-valued")
+  }
+  expect_error(predict(f_fast_mml, transform(nd_wle, Person = " "), type = "wle"), "Person ID")
+  expect_error(predict(f_fast_mml, nd_wle, type = "eap"), "EAP scoring of new ratings is unavailable")
+  expect_equal(nrow(predict(f_fast_mml, type = "eap")), f_fast_mml$n_person)
 })
 
 test_that("step_constraints, declarative category_support, and explanatory RSM work with LRT and profile CIs", {
@@ -177,6 +192,8 @@ test_that("step_constraints, declarative category_support, and explanatory RSM w
              model = "PCM", step_facet = "Criterion", category_support = cs_df),
     "violates declared `category_support`"
   )
+  expect_error(predict(f_mix, d_bad[which(is_bin)[1L], ], type = "wle"), "category support")
+  expect_equal(nrow(predict(f_mix, d_mix[which(is_bin)[1L], ], type = "wle")), 1L)
 
   # 3. Explanatory RSM (facet_formulas + facet_data + unseen level prediction + nested LRT)
   set.seed(42)
@@ -414,4 +431,39 @@ test_that("shared-design batch fits retain each replication's ratings", {
   d$Person[1L] <- NA
   expect_error(mfrm_batch_fit(d, "Person", facets, "Score", score_matrix = scores),
                "complete Person and facet identifiers", fixed = TRUE)
+})
+test_that("factor score labels cannot become internal codes in unified rating inputs", {
+  ratings <- load_mfrmr_data("example_core")
+  d <- transform(ratings, Score = factor(Score, levels = 4:1))
+  expect_error(fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score"), "Convert factor labels")
+  expect_error(mfrm_analysis(d, "Person", c("Rater", "Criterion"), "Score"), "Convert factor labels")
+  expect_error(mfrm_batch_fit(list(d), "Person", c("Rater", "Criterion"), "Score"), "Convert factor labels")
+  fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score")
+  fit$encoding$retained_data$Score <- d$Score
+  expect_true("factor_score_input" %in% summary(fit)$readiness$reason_codes)
+  expect_error(confint(fit, component = "facets"), "factor_score_input")
+})
+
+test_that("free MML population means are checked jointly with constrained facet locations", {
+  d <- load_mfrmr_data("example_core")
+  p <- match(d$Person, unique(d$Person))
+  r <- match(d$Rater, unique(d$Rater))
+  d$Role <- ifelse(d$Rater == "R04", "Teacher", ifelse(p %% 3L + 1L == r, "Self", "Peer"))
+  facets <- c("Rater", "Criterion", "Role")
+  fit <- fit_mfrm(d, "Person", facets, "Score", method = "MML")
+  expect_true(summary(fit)$readiness$ready)
+  for (model in c("RSM", "PCM")) {
+    expect_error(fit_mfrm(d, "Person", facets, "Score", model = model, step_facet = "Criterion",
+                          population_formula = ~ 1, warn_connectivity = FALSE),
+                 "population and facet location design is rank-deficient")
+  }
+  expect_error(mfrm_batch_fit(list(d), "Person", facets, "Score", population_formula = ~ 1),
+               "population and facet location design is rank-deficient")
+  full_rank <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score", population_formula = ~ 1)
+  expect_true(summary(full_rank)$readiness$ready)
+  fit$encoding$pop_mode <- 1L
+  fit$encoding$pop_X_mat <- matrix(1, fit$n_person, 1)
+  fit$population_location_rank <- NULL
+  expect_true("population_location_rank_deficient" %in% summary(fit)$readiness$reason_codes)
+  expect_error(confint(fit, component = "facets"), "population_location_rank_deficient")
 })

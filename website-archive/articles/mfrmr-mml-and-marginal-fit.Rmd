@@ -1,20 +1,25 @@
 ---
-title: "MML estimation and marginal-fit diagnostics"
+title: "Archived (0.3.1 and earlier) — MML estimation and marginal-fit diagnostics"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{MML estimation and marginal-fit diagnostics}
+  %\VignetteIndexEntry{Archived (0.3.1 and earlier) — MML estimation and marginal-fit diagnostics}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+> **Version scope.** The examples below document mfrmr 0.3.1 and earlier.
+> Use the [current assessment guide](mfrmr-assessment.html) for 0.3.2.
+> Examples on this page run with the earlier APIs.
+
 ```{r, include = FALSE}
-is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
+run_legacy_examples <- utils::packageVersion("mfrmr") < "0.3.2" &&
+  isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
   dev = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "png",
   fig.ext = if (requireNamespace("svglite", quietly = TRUE)) "svg" else "png",
   collapse = TRUE,
   comment = "#>",
-  eval = !is_cran_check
+  eval = run_legacy_examples
 )
 ```
 

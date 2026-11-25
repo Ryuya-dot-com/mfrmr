@@ -26,8 +26,8 @@ it does not estimate a repeated-sampling coverage rate.
 | Does new-Person posterior integration agree with an independent calculation? | [posterior scoring tests](../../tests/testthat/test-posterior-scoring.R) | Independent adaptive integration, C++/R agreement, no/one/many responses, RSM/PCM/GPCM, and high-discrimination prediction. Ability and predictive precision have separate checks. These are deterministic numerical cases, not Bayesian calibration experiments. |
 | Does a direct exported model match the intended response equation? | [model specification tests](../../tests/testthat/test-model-export-spec.R) | Fit/specification equivalence, basis constraints and JSON transfer. Ordinary RSM/PCM export retains fixed N(0,1); native estimated-population fits are rejected. |
 | Do actual sampling, reload and scoring execute? | [required live gate](../../scripts/check-stan-live.R) | Short-chain CmdStan execution, source-file identity and zero skips. This does not establish adequate MCMC precision or posterior coverage in an assessment. |
-| Which model and precision conditions govern an inference flag? | [fit help](../../man/fit_mfrm.Rd), [technical details](../../man/fit_mfrm_technical_details.Rd), [extractors](../../man/mfrm_fit_extractors.Rd) | Model-specific restrictions, numerical readiness and interval eligibility; a `Yes` flag is not empirical validation of a dataset's assumptions. |
-| What has been checked for G-theory planning and saved calibration? | [G-theory tutorial](../../vignettes/mfrmr-gtheory.Rmd), [portable calibration](../../vignettes/articles/mfrmr-portable-calibration.Rmd) | Declared score targets, design assumptions and saved-result reuse. Neither establishes arbitrary-design or post-selection guarantees. |
+| Which model and precision conditions govern an inference flag? | [fit help](../../man/fit_mfrm.Rd), [supported extraction methods](../../man/mfrmr-s3-methods.Rd) | Model-specific restrictions, numerical readiness and interval eligibility; a `Yes` flag is not empirical validation of a dataset's assumptions. |
+| What has been checked for G-theory planning and saved calibration? | [G-theory tutorial](../../vignettes/mfrmr-gtheory.Rmd), [portable calibration in 0.3.1](../../website-archive/articles/mfrmr-portable-calibration.Rmd) | Declared score targets, design assumptions and saved-result reuse. Neither establishes arbitrary-design or post-selection guarantees. |
 
 ### Historical numerical evidence with explicit source identity
 
@@ -57,28 +57,10 @@ numbers; no simulation was rerun to prepare this guide.
   preflight results**. Inspect [run counts](evidence-20261031/population-coverage-preflight-runs-0.2.4.csv),
   [target summaries, including MC uncertainty](evidence-20261031/population-coverage-preflight-summary-0.2.4.csv)
   and [all 160 dataset/target rows](evidence-20261031/population-preflight-replicates.csv).
-  The [source bundle](evidence-20261031/population-preflight-source.rds) contains
-  the 90 original scientific source/protocol files, their MD5 manifest and
-  the original R session. All 90 reconstructed files were checked against
-  the retained hashes. The five-per-cell fractions are exploratory, not
-  calibrated coverage estimates; no larger planned repetition count is reported
-  as executed.
-
-To inspect the historical source bundle without modifying the current source:
-
-```r
-saved <- readRDS("inst/validation/evidence-20261031/population-preflight-source.rds")
-names(saved$Source)
-cat(saved$Source[["inst/validation/population-coverage-protocol-0.2.4.md"]], sep = "\n")
-saved$Payload  # named original source MD5 values
-saved$Session
-```
-
-The archived runner, independent generator and interval calculation are included
-as text in `saved$Source`. Restore them only into a separate directory with the
-recorded dependencies if replay is needed. No frozen source should be overwritten
-with the current package. The source snapshot is not an installable source
-package and does not include the original dependency binaries.
+  The source snapshot is held with the historical study. The published CSVs
+  allow inspection of the results and their source identity. They do not
+  contain the original source snapshot or dependency environment. The
+  five-per-cell fractions are exploratory.
 
 Other historical studies (including TAM/ConQuest and assigned-score imputation)
 remain in separately retained archives. Their absence from this checkout is a

@@ -33,7 +33,9 @@ print.mfrm_fit <- function(x, ...) {
         fit_summary <- tryCatch(summary(x), error = function(e) NULL)
         scale_contract <- tryCatch(mfrm_fit_scale_contract(x), error = function(e) tibble::tibble())
         cat("mfrm_fit object\n")
-        print_wrapped_line(sprintf("Model: %s | Method: %s", ov$Model %||% NA_character_, ov$Method %||% 
+        print_wrapped_line(sprintf("Model: %s | Method: %s",
+            .mfrm_model_label(as.character(ov$Model %||% NA_character_), x$config$slope_facet),
+            ov$Method %||%
             NA_character_))
         print_wrapped_line(sprintf("N: %s | Persons: %s | Facets: %s | Categories: %s", ov$N %||% NA, 
             ov$Persons %||% NA, ov$Facets %||% NA, ov$Categories %||% NA))

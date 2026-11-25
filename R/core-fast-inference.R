@@ -138,6 +138,17 @@
   reasons <- character()
   if (!isTRUE(fit$converged)) reasons <- c(reasons, "optimizer_not_converged")
   if (!isTRUE(fit$connectivity$connected)) reasons <- c(reasons, "disconnected_design")
+  score_col <- fit$encoding$score_col
+  if (!is.null(score_col) && is.factor(fit$encoding$retained_data[[score_col]])) {
+    reasons <- c(reasons, "factor_score_input")
+  }
+  if (identical(fit$method, "MML")) {
+    rank_check <- if ("population_location_rank" %in% names(fit)) fit$population_location_rank else
+      .mfrm_fast_population_location_rank(fit$encoding)
+    if (!is.null(rank_check) && rank_check$rank < rank_check$columns) {
+      reasons <- c(reasons, "population_location_rank_deficient")
+    }
+  }
   V <- fit$xi_covariance_model
   if (length(V) && (any(!is.finite(V)) ||
       inherits(try(chol(V), silent = TRUE), "try-error"))) {

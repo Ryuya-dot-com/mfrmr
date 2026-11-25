@@ -13,11 +13,18 @@ compute_information(
   \item{fit}{A fitted model object returned by \code{\link{fit_mfrm}}.}
   \item{theta_range}{Numeric vector of length 2 giving the lower and upper logit bounds of the \code{theta} grid (default \code{c(-6, 6)}).}
   \item{theta_points}{Integer number of evaluation points along \code{theta_range} (default \code{201L}).}
-  \item{rating_plan}{Optional \code{data.frame} specifying planned facet combinations and \code{Count} on legacy fits.}
-  \item{exposure_basis}{Exposure scaling convention on legacy fits (\code{"observed_total"} or \code{"per_person_average"}).}
+  \item{rating_plan}{Optional \code{data.frame} with every non-Person facet and positive integer \code{Count} for one person's planned ratings. Supply calibrated levels only and combine repeated combinations in \code{Count}.}
+  \item{exposure_basis}{With observed ratings, use \code{"observed_total"} for all retained exposure or \code{"per_person_average"} to divide by the number of retained persons. With the argument omitted, fast fits retain their original reference curve, counting each observed context once. Legacy fits default to observed total exposure.}
 }
 \value{
 An S3 object of class \code{"mfrm_information"} containing \code{test_information} (\code{Theta}, \code{Information}, \code{SE}, \code{ExpectedScore}) and \code{category_curves} (\code{ScaleLevel}, \code{Theta}, \code{Category}, \code{Probability}). Supports \code{\link{plot.mfrm_fit}}.
+}
+\details{
+Information is additive for conditionally independent ratings with fixed
+calibration. Conditional SE does not propagate calibration uncertainty.
+Fast fits report the exposure basis and counts and flag new combinations of
+calibrated levels in \code{exposures$ObservedContext}. An unsupported or
+numerically unready calibration cannot be used for a precision curve.
 }
 \seealso{
 \code{\link{fit_mfrm}}, \code{\link{classification_table}}, \code{\link{plot.mfrm_fit}}

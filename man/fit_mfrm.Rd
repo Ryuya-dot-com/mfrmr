@@ -1,8 +1,8 @@
 \name{fit_mfrm}
 \alias{fit_mfrm}
-\title{Estimate Many-Facet Ordered-Response Measurement Models (RSM, PCM, and GPCM)}
+\title{Estimate Many-Facet Ordered-Response Measurement Models (RSM, PCM, and GMFRM)}
 \description{
-Primary estimation entry point for Rating Scale (\code{"RSM"}), Partial Credit (\code{"PCM"}), and 1-family or 2-family Generalized Partial Credit (\code{"GPCM"}) measurement models across Marginal (\code{"MML"}), Joint (\code{"JML"}), Jeffreys-penalized Joint (\code{"JML_jeffreys"}), and Conditional (\code{"CML"}) Maximum Likelihood in C++. Supports element and group-mean anchors, fixed or shared \code{step_constraints}, declarative \code{category_support} for mixed binary/polytomous rubrics, explanatory \code{facet_formulas} with element covariates, joint \code{facet_interactions}, empirical Bayes or Laplace \code{facet_shrinkage}, Warm's (1989) \code{WLE} scoring, and automatic pre-estimation connectivity and identifiability checks.
+Primary estimation entry point for Rating Scale (\code{"RSM"}), Partial Credit (\code{"PCM"}), and Generalized Many-Facet Rasch Models (GMFRM, selected with \code{model = "GPCM"}) across Marginal (\code{"MML"}), Joint (\code{"JML"}), Jeffreys-penalized Joint (\code{"JML_jeffreys"}), and Conditional (\code{"CML"}) Maximum Likelihood in C++. Supports element and group-mean anchors, fixed or shared \code{step_constraints}, declarative \code{category_support} for mixed binary/polytomous rubrics, explanatory \code{facet_formulas} with element covariates, joint \code{facet_interactions}, empirical Bayes or Laplace \code{facet_shrinkage}, Warm's (1989) \code{WLE} scoring, and automatic pre-estimation connectivity and identifiability checks.
 }
 \usage{
 fit_mfrm(
@@ -20,27 +20,28 @@ fit_mfrm(
   \item{data}{A \code{data.frame} of observed ratings in long format (one row per observed rating; missing assignments are absent rows rather than zeros).}
   \item{person}{Character string naming the person (examinee/target) identifier column.}
   \item{facets}{Character vector naming one or more non-person facet columns (e.g., \code{c("Rater", "Criterion")}). By default, non-person facets carry negative sign (\code{Sign = -1}) so larger logit estimates represent higher rater severity or higher task/criterion difficulty.}
-  \item{score}{Character string naming the integer or numeric rubric score column.}
-  \item{model}{Measurement model family: \code{"RSM"} (shared step thresholds across elements), \code{"PCM"} (facet-specific step thresholds governed by \code{step_facet}), or \code{"GPCM"} (1-family or 2-family discrimination slopes governed by \code{slope_facet} and \code{step_facet}).}
+  \item{score}{Character string naming the integer or numeric rubric score column.
+    Convert factor labels to numeric rubric values before using the unified engine.}
+  \item{model}{Measurement model family: \code{"RSM"} (shared step thresholds across elements), \code{"PCM"} (facet-specific step thresholds governed by \code{step_facet}), or \code{"GPCM"} (GMFRM with facet-specific discrimination and steps governed by \code{slope_facet} and \code{step_facet}).}
   \item{method}{Estimation method: \code{"MML"} (Gauss-Hermite or Laplace-adaptive marginal ML), \code{"JML"} / \code{"JMLE"} (joint ML), \code{"JML_jeffreys"} (Jeffreys/Firth-penalized JML with finite extreme-score estimates and Block-Schur standard errors), or \code{"CML"} (conditional ML conditioning on person total scores for \code{"RSM"} and \code{"PCM"}).}
-  \item{step_facet}{Character string naming the facet in \code{facets} that owns category step thresholds when \code{model} is \code{"PCM"} or \code{"GPCM"}.}
-  \item{slope_facet}{Character vector of length 1 (1-family GPCM) or length 2 (2-family GPCM) naming the facet(s) in \code{facets} with element-specific discrimination slopes when \code{model = "GPCM"}.}
+  \item{step_facet}{Character string naming the facet in \code{facets} that owns category step thresholds when \code{model} is \code{"PCM"} or \code{"GPCM"}. For a GMFRM with common category steps on a common rubric, use \code{step_facet = "Common"}.}
+  \item{slope_facet}{Character vector of length 1 or 2 naming the facet(s) in \code{facets} with element-specific discrimination slopes when \code{model = "GPCM"}.}
   \item{rating_min}{Optional integer lower bound of the rubric scale. Inferred from observed scores if \code{NULL}.}
   \item{rating_max}{Optional integer upper bound of the rubric scale. Inferred from observed scores if \code{NULL}.}
   \item{weight}{Optional character string naming a nonnegative observation case-weight column in \code{data}.}
   \item{anchors}{Optional \code{data.frame} with columns \code{Facet}, \code{Level}, and \code{Anchor} fixing individual facet elements to known logit values (see \code{\link{make_anchor_table}}).}
   \item{group_anchors}{Optional \code{data.frame} with columns \code{Facet}, \code{Level}, \code{Group}, and \code{GroupValue} constraining subset means of facet elements.}
   \item{population_formula}{Optional one-sided latent-regression formula (e.g., \code{~ Group}) for person ability means under \code{method = "MML"}.}
-  \item{person_data}{Optional \code{data.frame} of person-level covariates keyed by \code{person} when \code{population_formula} is supplied.}
+  \item{person_data}{Optional \code{data.frame} of person-level covariates with one row per person ID when \code{population_formula} is supplied.}
   \item{facet_interactions}{Optional list of length-2 character vectors (e.g., \code{list(c("Rater", "Criterion"))}) estimating sum-to-zero 2-way interaction terms jointly with main effects.}
   \item{step_constraints}{Optional \code{data.frame} with columns \code{Level}, \code{From}, \code{To}, and \code{Value} or \code{Group} fixing or tying step transitions across levels while preserving within-ladder sum-to-zero identification.}
   \item{category_support}{Optional \code{data.frame} with columns \code{Level}, \code{Min}, and \code{Max} declaring inclusive per-level category bounds on the original rubric scale for mixed binary/polytomous rubrics.}
   \item{facet_formulas}{Optional named list of one-sided covariate formulas (e.g., \code{list(Rater = ~ Experience)}) decomposing facet locations via explanatory linear predictors.}
-  \item{facet_data}{Optional named list of element-level covariate \code{data.frame}s corresponding to \code{facet_formulas}.}
+  \item{facet_data}{Optional named list of element-level covariate \code{data.frame}s corresponding to \code{facet_formulas}, with one row per element ID in each table.}
   \item{person_score}{Primary person ability estimator stored in \code{fit$person$Estimate}: \code{"auto"} (\code{"EAP"} for \code{MML}, \code{"WLE"} for \code{CML}, \code{"JML"} for \code{JML}), \code{"EAP"}, or \code{"WLE"} (Warm, 1989).}
   \item{fast}{Logical; if \code{TRUE} (default), executes the unified C++ solver engine returning an \code{"mfrm_fast_fit"} object.}
   \item{warn_connectivity}{Logical; if \code{TRUE} (default), audits multi-facet graph connectivity, design rank, and interior category support prior to optimization and emits a warning if disconnected subsets or rank deficiencies are detected.}
-  \item{spec}{Optional named list of advanced model specification settings, including \code{slope_reference} (reference facet constrained to geometric mean 1 in 2-family GPCM), \code{slope_type} (\code{"full_predictor"} or \code{"ability_only"}), \code{gpcm_mml_identification} (\code{"free_population"}, \code{"fixed_standard_normal"}, or \code{"unconstrained_slopes"}), \code{noncenter_facet}, \code{positive_facets}, \code{dummy_facets}, and \code{centering_scope} (\code{"remainder"} or \code{"facet"}).}
+  \item{spec}{Optional named list of advanced model specification settings, including \code{slope_reference} (reference facet constrained to geometric mean 1 when two facets have discrimination parameters), \code{slope_type} (\code{"full_predictor"} or \code{"ability_only"}), \code{gpcm_mml_identification} (\code{"free_population"}, \code{"fixed_standard_normal"}, or \code{"unconstrained_slopes"}), \code{noncenter_facet}, \code{positive_facets}, \code{dummy_facets}, and \code{centering_scope} (\code{"remainder"} or \code{"facet"}).}
   \item{control}{Optional named list of numerical and regularization controls, including \code{quad_points} (default \code{31}), \code{mml_integration} (\code{"fixed"} or \code{"adaptive"}), \code{facet_shrinkage} (\code{"none"}, \code{"empirical_bayes"}, or \code{"laplace"}), \code{facet_prior_sd}, \code{slope_prior_sd}, \code{xtreme}, \code{whexact}, \code{maxit}, and \code{reltol}.}
   \item{...}{Additional canonical specification or control arguments passed by name for backward compatibility. In particular, \code{missing_codes} recodes specified values before retaining complete rating rows: an explicit vector applies to the score and identifier columns; \code{TRUE} or \code{"default"} applies the default codes (99, 999, -1, N, NA, n/a, period, blank) to scores only.}
 }
@@ -56,9 +57,29 @@ An object of class \code{c("mfrm_fast_fit", "mfrm_fit")} containing:
 Supports \code{summary()}, \code{plot()}, \code{predict()}, \code{coef()}, \code{vcov()}, \code{confint()}, \code{anova()}, \code{logLik()}, \code{AIC()}, \code{BIC()}, \code{fitted()}, and \code{residuals()}.
 }
 \details{
+The Generalized Many-Facet Rasch Model (GMFRM) is a unidimensional
+adjacent-category model that estimates discrimination. The name follows Uto
+and Ueno (2020), who use GMFRM for an extension of the many-facet Rasch model.
+In the ordinary many-facet Rasch model, discrimination is held constant.
+In this package, GMFRM covers a many-facet generalized partial credit model
+(GPCM; Muraki, 1992) with facet-specific category steps and a rating-scale
+form (many-facet RS-GPCM) with common category steps. These descriptions refer
+to the fitted step structure. The response equation depends on the step
+ownership and slope placement selected for the analysis.
+
+Reports name the facets that carry discrimination. When two facets
+carry discrimination, their slopes are multiplied. Report the step facet,
+slope placement, scale identification, and estimation method when
+describing the fitted model. \code{summary(fit)$model_label} gives the
+display label for a fast fit; the model code is \code{"GPCM"}.
+
 \code{Converged} reports the optimizer stopping condition. Separately,
 \code{summary$InferenceReady} and \code{readiness$reason_codes} report failed
 connectivity, convergence, finite-parameter, or positive-definite information checks.
+For unified RSM and PCM MML, the population location terms must be
+identifiable together with the constrained facet effects. A rank-deficient
+joint design cannot identify these effects separately. Recheck the rating
+assignments, fixed reference values and population formula.
 For unpenalized RSM/PCM MML, \code{boundary_audit} uses \pkg{lpSolve}, when installed,
 to seek a structural direction that improves every observed category probability
 without changing person ability. A certified direction implies no finite structural
@@ -72,8 +93,17 @@ diagnostics use the primary person score. Selecting MML \code{person_score = "WL
 therefore changes these derived quantities as well as \code{person$Estimate};
 the EAP and posterior SD remain available in separate columns.
 }
+\references{
+Muraki, E. (1992). A generalized partial credit model: Application of an EM
+algorithm. \emph{Applied Psychological Measurement, 16}(2), 159--176.
+\doi{10.1177/014662169201600206}.
+
+Uto, M., and Ueno, M. (2020). A generalized many-facet Rasch model and its
+Bayesian estimation using Hamiltonian Monte Carlo. \emph{Behaviormetrika, 47},
+469--496. \doi{10.1007/s41237-020-00115-7}.
+}
 \seealso{
-\code{\link{check_mfrm_connectivity}}, \code{\link{diagnose_mfrm}}, \code{\link{estimate_bias}}, \code{\link{analyze_dff}}, \code{\link{plot.mfrm_fit}}
+\code{\link{mfrm_analysis}}, \code{\link{check_mfrm_connectivity}}, \code{\link{diagnose_mfrm}}, \code{\link{estimate_bias}}, \code{\link{analyze_dff}}, \code{\link{plot.mfrm_fit}}
 }
 \examples{
 # Load bundled 4-rater x 4-criterion analytic rubric ratings (1 row = 1 rating)
@@ -91,7 +121,7 @@ fit_rsm <- fit_mfrm(
 )
 fit_rsm$facets[, c("Facet", "Level", "Estimate", "RealSE", "FairM", "InfitMnSq")]
 
-# 2. 1-family GPCM estimating criterion-specific discrimination slopes
+# 2. GMFRM with criterion-specific discrimination
 fit_gpcm <- fit_mfrm(
   ratings,
   person = "Person",
