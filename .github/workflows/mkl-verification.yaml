@@ -22,6 +22,10 @@ jobs:
         run: |
           echo 'c04517c8f09edbbd217677e552a51e4d2e782e982b4702ab002bba9ca6a6158f  .github/mkl-check-input/mfrmr_0.3.2.tar.gz' | sha256sum --check
           Rscript --vanilla -e 'sessionInfo(); blas <- extSoftVersion()[["BLAS"]]; stopifnot(grepl("mkl", blas, ignore.case = TRUE))'
+      - name: Configure the package's additional repository
+        run: |
+          printf '%s\n' 'options(repos = c(getOption("repos"), Stan = "https://stan-dev.r-universe.dev"))' >> "$HOME/.Rprofile"
+          Rscript -e 'stopifnot("https://stan-dev.r-universe.dev" %in% getOption("repos"))'
       - uses: r-hub/actions/setup-deps@v1
       - name: Check exact source archive
         run: |
