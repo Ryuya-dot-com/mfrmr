@@ -1,0 +1,33 @@
+name: R-hub MKL verification
+
+on:
+  push:
+    branches: [verify/mfrmr-0.3.2-mkl]
+
+permissions:
+  contents: read
+
+jobs:
+  mkl:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/r-hub/containers/mkl:latest
+    env:
+      _R_CHECK_CRAN_INCOMING_: 'false'
+      _R_CHECK_CRAN_INCOMING_REMOTE_: 'false'
+      _R_CHECK_SYSTEM_CLOCK_: 'false'
+    steps:
+      - uses: r-hub/actions/checkout@v1
+      - name: Verify source archive and BLAS
+        run: |
+          echo 'c04517c8f09edbbd217677e552a51e4d2e782e982b4702ab002bba9ca6a6158f  .github/mkl-check-input/mfrmr_0.3.2.tar.gz' | sha256sum --check
+          Rscript --vanilla -e 'sessionInfo(); blas <- extSoftVersion()[["BLAS"]]; stopifnot(grepl("mkl", blas, ignore.case = TRUE))'
+      - uses: r-hub/actions/setup-deps@v1
+      - name: Check exact source archive
+        run: |
+          Rscript --vanilla -e 'stopifnot(requireNamespace("ordinal", quietly = TRUE)); print(packageVersion("ordinal")); print(packageVersion("testthat"))'
+          R CMD check --as-cran --timings --no-manual .github/mkl-check-input/mfrmr_0.3.2.tar.gz
+      - name: Report test counts
+        if: always()
+        run: |
+          if [ -f mfrmr.Rcheck/tests/testthat.Rout ]; then tail -20 mfrmr.Rcheck/tests/testthat.Rout; fi

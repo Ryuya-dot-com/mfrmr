@@ -246,7 +246,8 @@ test_that("multi-group coding is stable under reference changes and R contrast o
   opts <- options(contrasts = c("contr.sum", "contr.poly")); on.exit(options(opts))
   other_options <- ol_call(d, groups = c("A", "B", "C"))
   expect_identical(other_options$settings, a$settings)
-  expect_equal(other_options, a, tolerance = 1e-12)
+  # Refitted numerical diagnostics can differ slightly across BLAS implementations.
+  expect_equal(other_options, a)
   reverse <- ol_call(d, categories = 2:0, groups = c("A", "B", "C"))
   expect_equal(reverse$table$ChiSquared, a$table$ChiSquared, tolerance = 1e-8)
   expect_equal(reverse$contrasts$LogOddsRatio, -a$contrasts$LogOddsRatio, tolerance = 1e-7)
