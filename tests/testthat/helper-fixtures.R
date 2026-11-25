@@ -85,7 +85,8 @@ make_toy_fit <- function(method = "JML",
              method = method,
              model = model,
              maxit = maxit,
-             attach_diagnostics = attach_diagnostics)
+             attach_diagnostics = attach_diagnostics,
+             fast = FALSE)
   ))
   assign(key, fit, envir = .mfrmr_test_cache)
   fit

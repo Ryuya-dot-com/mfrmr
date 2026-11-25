@@ -7,7 +7,7 @@ figures:
   bg: "transparent"
 
 development:
-  mode: auto
+  mode: devel
 
 articles:
   - title: "Start with a picture"
@@ -75,6 +75,7 @@ redirects:
   - [reference/plot.mfrm_design_recommendation.html, reference/recommend_mfrm_design.html]
   - [reference/plot.mfrm_diagnostics.html, reference/diagnose_mfrm.html]
   - [reference/plot.mfrm_dif_interaction.html, reference/dif_interaction_table.html]
+  - [reference/plot.mfrm_drift.html, reference/fit_mfrm_drift.html]
   - [reference/plot.mfrm_extended_comparison.html, reference/compare_mfrm.html]
   - [reference/plot.mfrm_facet_dashboard.html, reference/facet_quality_dashboard.html]
   - [reference/plot.mfrm_facet_equivalence.html, reference/analyze_facet_equivalence.html]
@@ -166,6 +167,7 @@ redirects:
   - [reference/build_peer_review_sim_spec.html, reference/build_mfrm_sim_spec.html]
   - [reference/compatibility_alias_table.html, reference/mfrmr_api_migration_030.html]
   - [reference/compute_facet_design_effect.html, reference/compute_facet_icc.html]
+  - [reference/confint.mfrm_drift.html, reference/fit_mfrm_drift.html]
   - [reference/confint.mfrm_fair_average.html, reference/fair_average_table.html]
   - [reference/confint.mfrm_random_rater.html, reference/fit_mfrm_random_rater.html]
   - [reference/confint.mfrm_testlet.html, reference/fit_mfrm_testlet.html]
@@ -234,6 +236,7 @@ redirects:
   - [reference/plot.mfrm_slope_intervals.html, reference/bootstrap_mfrm_gpcm.html]
   - [reference/plot_data_components.html, reference/plot_data.html]
   - [reference/pool_mfrm_imputed.html, reference/mfrm_response_imputations.html]
+  - [reference/predict.mfrm_drift.html, reference/fit_mfrm_drift.html]
   - [reference/predict.mfrm_random_rater.html, reference/fit_mfrm_random_rater.html]
   - [reference/predict.mfrm_testlet.html, reference/fit_mfrm_testlet.html]
   - [reference/print.mfrm_apa_text.html, reference/build_apa_outputs.html]
@@ -243,6 +246,7 @@ redirects:
   - [reference/summary.mfrm_design_evaluation.html, reference/evaluate_mfrm_design.html]
   - [reference/summary.mfrm_diagnostic_screening.html, reference/evaluate_mfrm_diagnostic_screening.html]
   - [reference/summary.mfrm_diagnostics.html, reference/diagnose_mfrm.html]
+  - [reference/summary.mfrm_drift.html, reference/fit_mfrm_drift.html]
   - [reference/summary.mfrm_facets_run.html, reference/run_mfrm_facets.html]
   - [reference/summary.mfrm_jeffreys_fit.html, reference/mfrm_fit_extractors.html]
   - [reference/summary.mfrm_multivariate_d_study.html, reference/confint.mfrm_multivariate_d_study.html]
@@ -432,11 +436,12 @@ reference:
       - build_mfrm_resampling_spec
 
   - title: "Linking, bias, and DFF screening"
-    desc: "Anchor review, linking synthesis, residual-bias screening, and differential-functioning review."
+    desc: "Anchor review, dynamic rater-severity drift, linking synthesis, residual-bias screening, and differential-functioning review."
     contents:
       - review_mfrm_anchors
       - anchor_to_baseline
       - detect_anchor_drift
+      - fit_mfrm_drift
       - build_equating_chain
       - build_linking_review
       - estimate_bias

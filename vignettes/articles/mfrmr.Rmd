@@ -136,9 +136,9 @@ cat('
 ')
 ```
 
-This tour uses the development interface for **0.3.0** (`0.2.4.9000`).
-The current CRAN release is **0.2.4**; use the matching source version to
-reproduce these calls, and consult `?mfrmr_api_migration_030` when updating.
+This tour uses the **0.3.0** interface. If you are updating scripts written for
+**0.2.4**, consult `?mfrmr_api_migration_030` for the updated argument and
+reporting conventions.
 
 Choose a path; you do not need to read every section:
 
@@ -150,6 +150,7 @@ Choose a path; you do not need to read every section:
   then [G-Study / D-Study](#g-and-d-studies).
 - **Rater feedback and reporting:** [review raters](#rater-feedback),
   then [prepare a report](#report-in-apa-style).
+- **Working with existing calibrations:** [import results or export a model](#other-measurement-workflows).
 - **Coming from regression or SEM:** [compare the model families](#mfrm-sem-ordinal).
 
 ## How the functions connect {#how-functions-connect}
@@ -613,9 +614,11 @@ resources <- do.call(rbind, lapply(names(plan_information), function(name) {
     WithinHourLimit = hours <= hour_limit)
 }))
 plan_curves <- do.call(rbind, lapply(names(plan_information), function(name) {
-  z <- plan_information[[name]]$conditional_sem; z$Plan <- name; z
+  transform(plan_information[[name]]$information_long, Plan = name)
 }))
 plan_curves$Plan <- factor(plan_curves$Plan, levels = names(panels))
+plan_curves$Metric <- factor(plan_curves$Metric, levels = c("Information", "Conditional SEM"),
+  labels = c("Information per person", "Conditional SEM (logits)"))
 # Save assumptions and all candidates, including those exceeding the budget.
 planning_result <- list(information = plan_information, resources = resources,
   assumptions = list(Persons = future_persons, MinutesPerRating = minutes_per_rating,
@@ -623,12 +626,15 @@ planning_result <- list(information = plan_information, resources = resources,
 # saveRDS(planning_result, "rating-plan-comparison.rds")
 ```
 
-```{r planned-rating-precision, echo = FALSE, fig.height = 3.8, fig.cap = apa_figure("Conditional SEM for Four Named Rater Panels"), fig.alt = "Four conditional SEM curves. Reassigning two raters shifts the precision profile; adding raters lowers conditional SEM at fixed calibration."}
-ggplot2::ggplot(plan_curves, ggplot2::aes(Theta, ConditionalSEM,
+```{r planned-rating-precision, echo = FALSE, fig.height = 5, fig.cap = apa_figure("Information and Conditional SEM for Four Rater Panels"), fig.alt = "Two panels share an ability axis. Additional independent ratings increase information and lower conditional SEM. Shading marks the ability range used in the workload comparison."}
+ggplot2::ggplot(plan_curves, ggplot2::aes(Theta, Value,
     colour = Plan, linetype = Plan)) +
+  ggplot2::annotate("rect", xmin = ability_window[1], xmax = ability_window[2],
+    ymin = -Inf, ymax = Inf, fill = "grey80", alpha = 0.25) +
   ggplot2::geom_line(linewidth = 0.8) +
+  ggplot2::facet_wrap(~ Metric, ncol = 1, scales = "free_y") +
   ggplot2::scale_colour_manual(values = c("#0072B2", "#D55E00", "#009E73", "#666666")) +
-  ggplot2::labs(x = "Person ability (logits)", y = "Conditional SEM") +
+  ggplot2::labs(x = "Person ability (logits)", y = NULL) +
   ggplot2::theme_minimal(base_size = 12) +
   ggplot2::theme(panel.grid.minor = ggplot2::element_blank(), legend.position = "bottom")
 ```
@@ -647,7 +653,7 @@ knitr::kable(resources, row.names = FALSE, digits = 3,
 
 </details>
 
-**Read precision and workload together.** At the illustrative rate of 1.5
+The shaded range supplies the maximum SEM in the table. At the illustrative rate of 1.5
 minutes per criterion rating for 60 future persons, these panels require
 9, 9, 13.5 and 18 rater-hours. Adding two raters exceeds the 15-hour limit and
 remains visible. Each retained rater still scores all 60 persons: their own
@@ -1251,6 +1257,17 @@ A screenshot or a CSV of estimates alone does not preserve those records.
 
 ## 9. mfrmr and other software {#other-software}
 
+### Use an existing calibration {#other-measurement-workflows}
+
+- Read a FACETS Scorefile with `read_facets_results()`, then inspect it with
+  `summary()` or `plot()`. See [Migrating from FACETS](mfrmr-facets-migration.html).
+- Import a supported unidimensional TAM, mirt or eRm fit with
+  `import_irt_fit()`. The imported summary retains the source scale.
+- Prepare binary latent-regression inputs and a command file for ACER ConQuest
+  with `build_conquest_overlap_bundle()`. After running ConQuest, inspect the
+  output with `review_conquest_overlap()`.
+- Export supported models to Stan or brms with `export_mfrm_model()`.
+
 ### How does MFRM relate to ordinal regression and SEM? {#mfrm-sem-ordinal}
 
 All three can connect an unobserved person ability to ordered ratings, but
@@ -1380,8 +1397,8 @@ not a test that their estimates or SEs are equal. For example, the fitted
 person variances are approximately 0.763 (WLSMV) and 0.671 (marginal ML)
 in this small dataset.
 
-These calls were checked with `mfrmr` 0.2.4 and its 0.2.4.9000 development
-interface, `ordinal` 2026.7.26 and `lavaan` 0.7.3. Retain the printed package versions and `sessionInfo()` with results.
+These calls were checked with `mfrmr` 0.3.0, `ordinal` 2026.7.26 and
+`lavaan` 0.7.3. Retain the printed package versions and `sessionInfo()` with results.
 
 </details>
 
@@ -1604,68 +1621,6 @@ The [figure-generation script](https://github.com/Ryuya-dot-com/mfrmr/blob/main/
 runs the same R code shown above; no data are fitted.
 
 </details>
-
-### Other many-facet measurement workflows {#other-measurement-workflows}
-
-FACETS, ACER ConQuest and the R package TAM are established tools for
-many-facet and Rasch-family measurement. Each fits a distinct workflow:
-
-| | mfrmr | FACETS | ConQuest | TAM |
-| --- | --- | --- | --- | --- |
-| Environment | R package, any platform | Windows program | Standalone program | R package, any platform |
-| License | Open source (MIT) | Commercial; free evaluation version | Commercial; trial available | Open source (GPL) |
-| Estimation | MML, CML and JML (with a bias-corrected GPCM JML option); Stan/brms export | JMLE (PMLE for some models) | MML, JML and Bayesian MCMC | MML and JML |
-| Dimensions | Unidimensional measurement models; multivariate observed-score G/D studies | Unidimensional | Unidimensional and multidimensional | Unidimensional and multidimensional |
-| Rating models | RSM, PCM, GPCM | Rasch rating-scale and partial-credit families | Wide family incl. multifaceted models | Rasch, 2PL, RSM, PCM, GPCM, facets |
-
-How `mfrmr` connects to existing workflows:
-
-- Existing FACETS results can be read with `read_facets_results()` and
-  inspected with `plot()` and `summary()` without refitting; supported fits
-  from `TAM`, `mirt` and `eRm` can be imported via `import_irt_fit()`
-  (including CML fits from `eRm`, not only MML fits), and
-  supported models can be exported to Stan or `brms` with `export_mfrm_model()`.
-- FACETS has decades of operational use. mfrmr reproduces many FACETS tables
-  and visual summaries as structured R objects, while making its own
-  statistical scope and remaining gaps explicit through `facets_guide("coverage")`:
-
-```{r facets-coverage-data}
-coverage <- facets_guide("coverage")
-table(coverage$Status)
-```
-
-```{r facets-coverage, echo = FALSE, fig.height = 2.6, fig.cap = apa_figure("Coverage of FACETS Features in mfrmr"), fig.alt = "Horizontal stacked bar chart of FACETS output features classified by their coverage status in mfrmr: implemented, supported with caveat, partial, not implemented and not targeted.", eval = has_ggplot2}
-status_levels <- c("implemented", "supported_with_caveat", "partial",
-  "not_implemented", "not_targeted")
-status_labels <- c("Implemented", "Supported with caveat", "Partial",
-  "Not implemented", "Not targeted")
-coverage$Status <- factor(coverage$Status,
-  levels = status_levels, labels = status_labels)
-
-ggplot(coverage, aes(y = "FACETS features", fill = Status)) +
-  geom_bar(position = position_stack(reverse = TRUE), width = 0.55) +
-  scale_fill_manual(
-    values = c("#1f6f8b", "#2a9d8f", "#d99b26", "#c8553d", "grey75"),
-    drop = FALSE) +
-  labs(x = "Number of FACETS features", y = NULL, fill = NULL) +
-  theme_minimal(base_size = 12) +
-  theme(legend.position = "bottom", panel.grid.major.y = element_blank())
-```
-
-<details class="mfrmr-code">
-<summary>Show ggplot2 code for the FACETS coverage bar</summary>
-
-```{r facets-coverage-code, ref.label = "facets-coverage", eval = FALSE}
-```
-
-</details>
-
-Software sources: [FACETS](https://www.winsteps.com/facets.htm) and its
-[online manual](https://www.winsteps.com/facetman64/index.htm),
-[ACER ConQuest](https://www.acer.org/au/conquest), and
-[TAM on CRAN](https://cran.r-project.org/package=TAM).
-
-More: [migrating from FACETS](../articles/mfrmr-facets-migration.html).
 
 ## Where to go next
 

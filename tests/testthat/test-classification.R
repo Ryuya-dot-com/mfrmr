@@ -19,7 +19,17 @@ test_that("the public RSM route preserves shared polytomous thresholds", {
   d <- data.frame(Person = rep(seq_len(nrow(patterns)), each = 3),
     Item = rep(c("A", "B", "C"), nrow(patterns)), Score = as.vector(t(patterns)))
   for (method in c("MML", "JML")) {
-    fit <- fit_mfrm(d, "Person", "Item", "Score", method = method)
+    fit <- fit_mfrm(d, "Person", "Item", "Score", method = method, fast = FALSE)
+    fit_fast <- fit_mfrm(d, "Person", "Item", "Score", method = method)
+    expect_s3_class(fit_fast, "mfrm_fast_fit")
+    if (method == "JML") {
+      expect_error(classification_table(fit_fast,
+        data.frame(Item = c("A", "C")), 0, 2, c(-1, 0, 1)),
+        "boundary_not_scoring_ready:has_exclusions")
+    }
+    x_fast <- classification_table(fit_fast, data.frame(Item = c("A", "C")), 0, 2, c(-1, 0, 1),
+      readiness_policy = if (method == "JML") "review" else "error")
+    expect_identical(x_fast$source$ready, method == "MML")
     # All-low/all-high patterns are excluded by JML calibration. Preserve
     # that source restriction while checking the conditional arithmetic.
     # Without the suggested lpSolve the finite-MLE check cannot run, so the

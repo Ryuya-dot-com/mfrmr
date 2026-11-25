@@ -7,7 +7,7 @@ adaptive_api_fixture <- local({
     fit <- fit_mfrm(data, "Person", c("Rater", "Criterion"), "Score",
       model = model, step_facet = if (model != "RSM") "Criterion" else NULL,
       slope_facet = if (model == "GPCM") "Criterion" else NULL,
-      mml_integration = "adaptive", quad_points = order, maxit = 200L, reltol = 1e-10)
+      mml_integration = "adaptive", quad_points = order, maxit = 200L, reltol = 1e-10, fast = FALSE)
     cache[[model]] <<- list(data = data, fit = fit)
     cache[[model]]
   }

@@ -40,7 +40,7 @@ tab <- as.data.frame(result)
 saveRDS(result, file.path(output, paste0(mode, "-results.rds")))
 write.csv(tab[setdiff(names(tab), "result")],
   file.path(output, paste0(mode, "-results.csv")), row.names = FALSE)
-counts <- colSums(tab[c("failed", "skipped", "warning", "passed")])
+counts <- colSums(tab[c("failed", "error", "skipped", "warning", "passed")])
 print(counts)
 cat("Mode:", mode, "\nTest files:", length(unique(tab$file)),
     "\nElapsed seconds:", elapsed, "\n")

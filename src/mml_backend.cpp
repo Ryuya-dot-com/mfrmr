@@ -3833,3 +3833,426 @@ writable::list mfrm_cpp_posterior_person_score(int n_cat,
     "draw_log_z"_nm = out_draw_log_z
   });
 }
+
+[[cpp11::register]]
+writable::list mfrm_cpp_drift_mml_eval(doubles tilde_psi,
+                                       integers person_ptr,
+                                       integers r_obs0,
+                                       integers x_obs0,
+                                       integers loc_idx0,
+                                       int n_loc_blocks,
+                                       int R,
+                                       int K,
+                                       int u_tilde_offset,
+                                       bool step_rater,
+                                       doubles quad_nodes,
+                                       doubles quad_weights,
+                                       double D,
+                                       bool need_hessian) {
+  const int n_tilde = tilde_psi.size();
+  const int J = person_ptr.size() - 1;
+  const int N = r_obs0.size();
+  const int M = quad_nodes.size();
+  const int n_u = K - 2;
+
+  if (J < 1 || N < 1 || M < 1 || K < 2 || R < 1 || n_loc_blocks < 1 ||
+      x_obs0.size() != N || quad_weights.size() != M ||
+      loc_idx0.size() != N * n_loc_blocks || person_ptr[0] != 0 ||
+      person_ptr[J] != N) {
+    stop("Invalid dimensions passed to `mfrm_cpp_drift_mml_eval()`.");
+  }
+
+  std::vector<double> psi_v(static_cast<size_t>(n_tilde));
+  for (int p = 0; p < n_tilde; ++p) {
+    psi_v[static_cast<size_t>(p)] = tilde_psi[p];
+  }
+
+  // Step cumulative sums g_mat (R x K)
+  std::vector<double> g_mat(static_cast<size_t>(R) * static_cast<size_t>(K), 0.0);
+  if (n_u > 0) {
+    if (step_rater) {
+      for (int r = 0; r < R; ++r) {
+        double u_sum = 0.0;
+        double cum = 0.0;
+        double* g_r = &g_mat[static_cast<size_t>(r) * static_cast<size_t>(K)];
+        for (int m = 0; m < n_u; ++m) {
+          const double u_rm = psi_v[static_cast<size_t>(u_tilde_offset + r * n_u + m)];
+          u_sum += u_rm;
+          cum += u_rm;
+          g_r[static_cast<size_t>(m + 1)] = cum;
+        }
+        g_r[static_cast<size_t>(K - 1)] = cum - u_sum;
+      }
+    } else {
+      std::vector<double> g_shared(static_cast<size_t>(K), 0.0);
+      double u_sum = 0.0;
+      double cum = 0.0;
+      for (int m = 0; m < n_u; ++m) {
+        const double u_m = psi_v[static_cast<size_t>(u_tilde_offset + m)];
+        u_sum += u_m;
+        cum += u_m;
+        g_shared[static_cast<size_t>(m + 1)] = cum;
+      }
+      g_shared[static_cast<size_t>(K - 1)] = cum - u_sum;
+      for (int r = 0; r < R; ++r) {
+        std::copy(g_shared.begin(), g_shared.end(),
+                  &g_mat[static_cast<size_t>(r) * static_cast<size_t>(K)]);
+      }
+    }
+  }
+
+  // Observation location linear predictors & contiguous index copies
+  std::vector<int> r_v(static_cast<size_t>(N));
+  std::vector<int> x_v(static_cast<size_t>(N));
+  std::vector<int> loc_v(static_cast<size_t>(N) * static_cast<size_t>(n_loc_blocks));
+  std::vector<double> eta_loc(static_cast<size_t>(N), 0.0);
+  for (int i = 0; i < N; ++i) {
+    r_v[static_cast<size_t>(i)] = r_obs0[i];
+    x_v[static_cast<size_t>(i)] = x_obs0[i];
+    double acc = 0.0;
+    const int base_l = i * n_loc_blocks;
+    for (int b = 0; b < n_loc_blocks; ++b) {
+      const int idx = loc_idx0[base_l + b];
+      loc_v[static_cast<size_t>(base_l + b)] = idx;
+      acc += psi_v[static_cast<size_t>(idx)];
+    }
+    eta_loc[static_cast<size_t>(i)] = acc;
+  }
+
+  std::vector<double> nodes_v(static_cast<size_t>(M));
+  std::vector<double> log_w(static_cast<size_t>(M));
+  for (int q = 0; q < M; ++q) {
+    nodes_v[static_cast<size_t>(q)] = quad_nodes[q];
+    log_w[static_cast<size_t>(q)] = std::log(quad_weights[q]);
+  }
+
+  int max_obs_j = 1;
+  for (int j = 0; j < J; ++j) {
+    const int cnt = person_ptr[j + 1] - person_ptr[j];
+    if (cnt > max_obs_j) max_obs_j = cnt;
+  }
+
+  double ll_mml = 0.0;
+  const double D2 = D * D;
+  std::vector<double> grad_tilde_v(static_cast<size_t>(n_tilde), 0.0);
+  writable::doubles_matrix<> out_pi_jm(J, M);
+  writable::doubles out_eap(J);
+  writable::doubles out_psd(J);
+
+  std::vector<double> p_buf(
+      static_cast<size_t>(max_obs_j) * static_cast<size_t>(M) * static_cast<size_t>(K), 0.0);
+  std::vector<double> log_L_j(static_cast<size_t>(M), 0.0);
+  std::vector<double> pi_j(static_cast<size_t>(M), 0.0);
+  std::vector<double> eta_k(static_cast<size_t>(K), 0.0);
+  std::vector<double> gm_acc(static_cast<size_t>(std::max(1, n_u)), 0.0);
+
+  const size_t mat_sz = need_hessian
+                            ? (static_cast<size_t>(n_tilde) * static_cast<size_t>(n_tilde))
+                            : 0u;
+  std::vector<double> H_comp_v(mat_sz, 0.0);
+  std::vector<double> H_miss_v(mat_sz, 0.0);
+  std::vector<int> active_map(need_hessian ? static_cast<size_t>(n_tilde) : 0u, -1);
+  std::vector<int> active_params;
+  if (need_hessian) active_params.reserve(static_cast<size_t>(n_tilde));
+  std::vector<double> S_j(
+      need_hessian ? (static_cast<size_t>(n_tilde) * static_cast<size_t>(M)) : 0u, 0.0);
+  std::vector<double> mu_vec(need_hessian ? static_cast<size_t>(n_tilde) : 0u, 0.0);
+  std::vector<double> cbar_q(need_hessian ? static_cast<size_t>(M) : 0u, 0.0);
+  std::vector<double> tail_qm(
+      need_hessian ? (static_cast<size_t>(std::max(1, n_u)) * static_cast<size_t>(M)) : 0u, 0.0);
+  std::vector<double> ctail_qm(
+      need_hessian ? (static_cast<size_t>(std::max(1, n_u)) * static_cast<size_t>(M)) : 0u, 0.0);
+  std::vector<int> loc_slots(static_cast<size_t>(n_loc_blocks), 0);
+  std::vector<int> u_slots(static_cast<size_t>(std::max(1, n_u)), 0);
+
+  auto get_active_slot = [&](int p) -> int {
+    int a = active_map[static_cast<size_t>(p)];
+    if (a < 0) {
+      a = static_cast<int>(active_params.size());
+      active_map[static_cast<size_t>(p)] = a;
+      active_params.push_back(p);
+      std::fill_n(&S_j[static_cast<size_t>(a) * static_cast<size_t>(M)], M, 0.0);
+    }
+    return a;
+  };
+
+  for (int j = 0; j < J; ++j) {
+    const int p_start = person_ptr[j];
+    const int p_end = person_ptr[j + 1];
+    const int n_obs_j = p_end - p_start;
+
+    std::copy(log_w.begin(), log_w.end(), log_L_j.begin());
+
+    for (int l = 0; l < n_obs_j; ++l) {
+      const int i = p_start + l;
+      const double eta_i = eta_loc[static_cast<size_t>(i)];
+      const int r_i = r_v[static_cast<size_t>(i)];
+      const int x_i = x_v[static_cast<size_t>(i)];
+      const double* g_r = &g_mat[static_cast<size_t>(r_i) * static_cast<size_t>(K)];
+
+      for (int q = 0; q < M; ++q) {
+        const double diff = nodes_v[static_cast<size_t>(q)] - eta_i;
+        eta_k[0] = 0.0;
+        double mx = 0.0;
+        for (int c = 1; c < K; ++c) {
+          const double ek = D * (static_cast<double>(c) * diff - g_r[static_cast<size_t>(c)]);
+          eta_k[static_cast<size_t>(c)] = ek;
+          if (ek > mx) mx = ek;
+        }
+        double denom = 0.0;
+        double* p_iq = &p_buf[(static_cast<size_t>(l) * static_cast<size_t>(M) +
+                               static_cast<size_t>(q)) * static_cast<size_t>(K)];
+        for (int c = 0; c < K; ++c) {
+          const double ex = std::exp(eta_k[static_cast<size_t>(c)] - mx);
+          p_iq[static_cast<size_t>(c)] = ex;
+          denom += ex;
+        }
+        const double log_denom = mx + std::log(denom);
+        const double inv_denom = 1.0 / denom;
+        for (int c = 0; c < K; ++c) {
+          p_iq[static_cast<size_t>(c)] *= inv_denom;
+        }
+        log_L_j[static_cast<size_t>(q)] += (eta_k[static_cast<size_t>(x_i)] - log_denom);
+      }
+    }
+
+    double row_max = log_L_j[0];
+    for (int q = 1; q < M; ++q) {
+      if (log_L_j[static_cast<size_t>(q)] > row_max) {
+        row_max = log_L_j[static_cast<size_t>(q)];
+      }
+    }
+    double row_sum = 0.0;
+    for (int q = 0; q < M; ++q) {
+      const double ex = std::exp(log_L_j[static_cast<size_t>(q)] - row_max);
+      pi_j[static_cast<size_t>(q)] = ex;
+      row_sum += ex;
+    }
+    ll_mml += row_max + std::log(row_sum);
+
+    const double inv_row_sum = 1.0 / row_sum;
+    double eap1 = 0.0;
+    double eap2 = 0.0;
+    for (int q = 0; q < M; ++q) {
+      const double w = pi_j[static_cast<size_t>(q)] * inv_row_sum;
+      pi_j[static_cast<size_t>(q)] = w;
+      out_pi_jm(j, q) = w;
+      const double th = nodes_v[static_cast<size_t>(q)];
+      eap1 += w * th;
+      eap2 += w * th * th;
+    }
+    out_eap[j] = eap1;
+    out_psd[j] = std::sqrt(std::max(0.0, eap2 - eap1 * eap1));
+
+    for (int l = 0; l < n_obs_j; ++l) {
+      const int i = p_start + l;
+      const int r_i = r_v[static_cast<size_t>(i)];
+      const int x_i = x_v[static_cast<size_t>(i)];
+      const double c_obs = static_cast<double>(x_i);
+      const size_t base_l = static_cast<size_t>(i) * static_cast<size_t>(n_loc_blocks);
+      const int u_base_i = step_rater ? (u_tilde_offset + r_i * n_u) : u_tilde_offset;
+
+      if (!need_hessian) {
+        double g_loc_i = 0.0;
+        if (n_u > 0) {
+          std::fill(gm_acc.begin(), gm_acc.begin() + n_u, 0.0);
+        }
+        for (int q = 0; q < M; ++q) {
+          const double* p_iq = &p_buf[(static_cast<size_t>(l) * static_cast<size_t>(M) +
+                                       static_cast<size_t>(q)) * static_cast<size_t>(K)];
+          const double wq = pi_j[static_cast<size_t>(q)];
+          double cbar = 0.0;
+          for (int c = 1; c < K; ++c) {
+            cbar += static_cast<double>(c) * p_iq[static_cast<size_t>(c)];
+          }
+          g_loc_i += wq * (-D * (c_obs - cbar));
+          if (n_u > 0) {
+            double acc_p = 0.0;
+            for (int m = n_u - 1; m >= 0; --m) {
+              const int c_add = m + 1;
+              acc_p += p_iq[static_cast<size_t>(c_add)];
+              const double ind = (x_i >= c_add && x_i <= (K - 2)) ? 1.0 : 0.0;
+              gm_acc[static_cast<size_t>(m)] += wq * (-D * (ind - acc_p));
+            }
+          }
+        }
+        for (int b = 0; b < n_loc_blocks; ++b) {
+          grad_tilde_v[static_cast<size_t>(loc_v[base_l + static_cast<size_t>(b)])] += g_loc_i;
+        }
+        for (int m = 0; m < n_u; ++m) {
+          grad_tilde_v[static_cast<size_t>(u_base_i + m)] += gm_acc[static_cast<size_t>(m)];
+        }
+      } else {
+        for (int b = 0; b < n_loc_blocks; ++b) {
+          loc_slots[static_cast<size_t>(b)] = get_active_slot(loc_v[base_l + static_cast<size_t>(b)]);
+        }
+        for (int m = 0; m < n_u; ++m) {
+          u_slots[static_cast<size_t>(m)] = get_active_slot(u_base_i + m);
+        }
+
+        double g_loc_i = 0.0;
+        double info_bb_i = 0.0;
+        for (int q = 0; q < M; ++q) {
+          const double* p_iq = &p_buf[(static_cast<size_t>(l) * static_cast<size_t>(M) +
+                                       static_cast<size_t>(q)) * static_cast<size_t>(K)];
+          const double wq = pi_j[static_cast<size_t>(q)];
+          double cbar = 0.0;
+          double cbar2 = 0.0;
+          for (int c = 1; c < K; ++c) {
+            const double cd = static_cast<double>(c);
+            const double pc = p_iq[static_cast<size_t>(c)];
+            cbar += cd * pc;
+            cbar2 += cd * cd * pc;
+          }
+          cbar_q[static_cast<size_t>(q)] = cbar;
+          const double var_c = std::max(0.0, cbar2 - cbar * cbar);
+          const double s_beta = -D * (c_obs - cbar);
+          g_loc_i += wq * s_beta;
+          info_bb_i += wq * var_c;
+
+          for (int b = 0; b < n_loc_blocks; ++b) {
+            S_j[static_cast<size_t>(loc_slots[static_cast<size_t>(b)]) * static_cast<size_t>(M) +
+                static_cast<size_t>(q)] += s_beta;
+          }
+
+          if (n_u > 0) {
+            double acc_p = 0.0;
+            double acc_cp = 0.0;
+            for (int m = n_u - 1; m >= 0; --m) {
+              const int c_add = m + 1;
+              const double pc = p_iq[static_cast<size_t>(c_add)];
+              acc_p += pc;
+              acc_cp += static_cast<double>(c_add) * pc;
+              tail_qm[static_cast<size_t>(m) * static_cast<size_t>(M) + static_cast<size_t>(q)] = acc_p;
+              ctail_qm[static_cast<size_t>(m) * static_cast<size_t>(M) + static_cast<size_t>(q)] = acc_cp;
+              const double ind = (x_i >= c_add && x_i <= (K - 2)) ? 1.0 : 0.0;
+              const double s_u = -D * (ind - acc_p);
+              S_j[static_cast<size_t>(u_slots[static_cast<size_t>(m)]) * static_cast<size_t>(M) +
+                  static_cast<size_t>(q)] += s_u;
+            }
+          }
+        }
+        info_bb_i *= D2;
+
+        const size_t nt = static_cast<size_t>(n_tilde);
+        for (int b1 = 0; b1 < n_loc_blocks; ++b1) {
+          const size_t g1 = static_cast<size_t>(loc_v[base_l + static_cast<size_t>(b1)]);
+          grad_tilde_v[g1] += g_loc_i;
+          H_comp_v[g1 + g1 * nt] += info_bb_i;
+          for (int b2 = b1 + 1; b2 < n_loc_blocks; ++b2) {
+            const size_t g2 = static_cast<size_t>(loc_v[base_l + static_cast<size_t>(b2)]);
+            H_comp_v[g1 + g2 * nt] += info_bb_i;
+            H_comp_v[g2 + g1 * nt] += info_bb_i;
+          }
+        }
+
+        for (int m = 0; m < n_u; ++m) {
+          const size_t ui = static_cast<size_t>(u_base_i + m);
+          const double* t_m = &tail_qm[static_cast<size_t>(m) * static_cast<size_t>(M)];
+          const double* ct_m = &ctail_qm[static_cast<size_t>(m) * static_cast<size_t>(M)];
+          const double ind_m = (x_i >= (m + 1) && x_i <= (K - 2)) ? 1.0 : 0.0;
+          double gm_i = 0.0;
+          double cov_bu = 0.0;
+          for (int q = 0; q < M; ++q) {
+            const double wq = pi_j[static_cast<size_t>(q)];
+            gm_i += wq * (-D * (ind_m - t_m[static_cast<size_t>(q)]));
+            cov_bu += wq * (ct_m[static_cast<size_t>(q)] -
+                            cbar_q[static_cast<size_t>(q)] * t_m[static_cast<size_t>(q)]);
+          }
+          cov_bu *= D2;
+          grad_tilde_v[ui] += gm_i;
+          for (int b = 0; b < n_loc_blocks; ++b) {
+            const size_t gb = static_cast<size_t>(loc_v[base_l + static_cast<size_t>(b)]);
+            H_comp_v[gb + ui * nt] += cov_bu;
+            H_comp_v[ui + gb * nt] += cov_bu;
+          }
+          for (int mp = m; mp < n_u; ++mp) {
+            const size_t ui2 = static_cast<size_t>(u_base_i + mp);
+            const double* t_mp = &tail_qm[static_cast<size_t>(mp) * static_cast<size_t>(M)];
+            double cov_uu = 0.0;
+            for (int q = 0; q < M; ++q) {
+              const double tmp = t_mp[static_cast<size_t>(q)];
+              cov_uu += pi_j[static_cast<size_t>(q)] * (tmp - t_m[static_cast<size_t>(q)] * tmp);
+            }
+            cov_uu *= D2;
+            H_comp_v[ui + ui2 * nt] += cov_uu;
+            if (mp != m) {
+              H_comp_v[ui2 + ui * nt] += cov_uu;
+            }
+          }
+        }
+      }
+    }
+
+    if (need_hessian) {
+      const size_t nt = static_cast<size_t>(n_tilde);
+      const int K_j = static_cast<int>(active_params.size());
+      for (int a = 0; a < K_j; ++a) {
+        const double* Sa = &S_j[static_cast<size_t>(a) * static_cast<size_t>(M)];
+        double mu = 0.0;
+        for (int q = 0; q < M; ++q) {
+          mu += pi_j[static_cast<size_t>(q)] * Sa[static_cast<size_t>(q)];
+        }
+        mu_vec[static_cast<size_t>(a)] = mu;
+      }
+      for (int a = 0; a < K_j; ++a) {
+        const size_t pa = static_cast<size_t>(active_params[static_cast<size_t>(a)]);
+        const double* Sa = &S_j[static_cast<size_t>(a) * static_cast<size_t>(M)];
+        const double mua = mu_vec[static_cast<size_t>(a)];
+        for (int b = a; b < K_j; ++b) {
+          const size_t pb = static_cast<size_t>(active_params[static_cast<size_t>(b)]);
+          const double* Sb = &S_j[static_cast<size_t>(b) * static_cast<size_t>(M)];
+          double e2 = 0.0;
+          for (int q = 0; q < M; ++q) {
+            e2 += pi_j[static_cast<size_t>(q)] * Sa[static_cast<size_t>(q)] * Sb[static_cast<size_t>(q)];
+          }
+          const double cov_ab = e2 - mua * mu_vec[static_cast<size_t>(b)];
+          H_miss_v[pa + pb * nt] += cov_ab;
+          if (b != a) {
+            H_miss_v[pb + pa * nt] += cov_ab;
+          }
+        }
+      }
+      for (int a = 0; a < K_j; ++a) {
+        active_map[static_cast<size_t>(active_params[static_cast<size_t>(a)])] = -1;
+      }
+      active_params.clear();
+    }
+  }
+
+  writable::doubles out_grad_tilde(n_tilde);
+  for (int p = 0; p < n_tilde; ++p) {
+    out_grad_tilde[p] = grad_tilde_v[static_cast<size_t>(p)];
+  }
+
+  if (!need_hessian) {
+    return writable::list({
+      "ll"_nm = ll_mml,
+      "grad_tilde"_nm = out_grad_tilde,
+      "pi_jm"_nm = out_pi_jm,
+      "person_eap"_nm = out_eap,
+      "person_psd"_nm = out_psd
+    });
+  }
+
+  writable::doubles_matrix<> out_H_mml_tilde(n_tilde, n_tilde);
+  const size_t nt = static_cast<size_t>(n_tilde);
+  for (int c = 0; c < n_tilde; ++c) {
+    const size_t cs = static_cast<size_t>(c);
+    for (int r = 0; r < n_tilde; ++r) {
+      const size_t rs = static_cast<size_t>(r);
+      const double v_rc = H_comp_v[rs + cs * nt] - H_miss_v[rs + cs * nt];
+      const double v_cr = H_comp_v[cs + rs * nt] - H_miss_v[cs + rs * nt];
+      out_H_mml_tilde(r, c) = 0.5 * (v_rc + v_cr);
+    }
+  }
+
+  return writable::list({
+    "ll"_nm = ll_mml,
+    "grad_tilde"_nm = out_grad_tilde,
+    "H_mml_tilde"_nm = out_H_mml_tilde,
+    "pi_jm"_nm = out_pi_jm,
+    "person_eap"_nm = out_eap,
+    "person_psd"_nm = out_psd
+  });
+}

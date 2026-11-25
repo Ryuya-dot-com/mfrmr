@@ -398,6 +398,9 @@ load_mfrmr_data <- function(name = c(
                             "study2_itercal",
                             "combined_itercal"
                           )) {
+  if (is.null(name) || (length(name) == 1L && identical(tolower(name), "list"))) {
+    return(list_mfrmr_data())
+  }
   key <- match.arg(tolower(name), choices = list_mfrmr_data())
 
   obj_name <- switch(
@@ -485,14 +488,13 @@ NULL
 #' @source Existing data from the rating-agreement tutorial. The deterministic
 #'   construction is retained in `data-raw/make-teaching-data.R` in the source
 #'   repository.
-#' @seealso [pairwise_kappa_table()], [krippendorff_alpha_table()],
-#'   [gwet_ac2_table()], [pairwise_icc_table()], [load_mfrmr_data()]
+#' @seealso [interrater_agreement()], [load_mfrmr_data()]
 #' @examples
 #' data("mfrmr_example_agreement", package = "mfrmr")
 #' ratings <- mfrmr_example_agreement
 #' head(ratings)
 #' with(ratings, table(Rater, Score, useNA = "ifany"))
-#' agreement <- pairwise_kappa_table(ratings, rater = "Rater",
+#' agreement <- interrater_agreement(ratings, rater = "Rater",
 #'   unit = c("Person", "Task"), score = "Score", categories = 0:3)
 #' agreement$table
 #' # Each pair uses its own shared responses; inspect its denominator as well.

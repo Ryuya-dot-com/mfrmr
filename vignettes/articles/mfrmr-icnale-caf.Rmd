@@ -21,8 +21,7 @@ observed-score composite.
 
 This worked workflow uses the **human Written ratings in ICNALE GRA v2.1**.
 It covers preprocessing, RSM/PCM and GPCM comparisons, local rater feedback,
-and planning for a fixed complexity–accuracy–fluency (CAF) composite. It uses the development
-API for the forthcoming mfrmr 0.3.0; install the package and obtain the workflow
+and planning for a fixed complexity–accuracy–fluency (CAF) composite. It uses the 0.3-series API. Install the package and obtain the workflow
 scripts from the **same source checkout** as this article. It is not a complete
 reproduction of Yamashita (2024), and it does not evaluate AI ratings.
 

@@ -1,3 +1,204 @@
+# mfrmr 0.3.2
+
+- Fits from a shared-design score matrix retain the ratings from their own
+  replication for residuals, diagnostics, and reuse. The batch fitter checks
+  every column against the common design and rubric.
+- An unidentified urGENOVA variance decomposition or too few complete
+  observations signals `mfrm_gstudy_unavailable` for callers that retain
+  results from other analyses.
+
+- Local GPCM bias calculations retain fitted discrimination products and slope
+  formulas. Joint bias refits preserve the source model specification and use
+  the common nested-likelihood checks. Unsupported split-DFF specifications are
+  rejected; supported refits retain weights, population covariates and controls.
+- Bias, DFF and diagnostic outputs distinguish unavailable inference from a
+  negative screen, including summaries, plots and reasons for missing values.
+  Split DFF checks both refits; fixed-calibration methods check the source.
+- G-Study and D-Study return NA with a reason for zero total variance or invalid
+  projected variance, preserving a defined zero coefficient where appropriate.
+  Saved G-Study displays recalculate these states from stored variances.
+
+- GPCM Wald slope intervals now use log-slope uncertainty and exponentiation,
+  matching their documentation and retaining positive endpoints. Model and
+  person-clustered sandwich intervals both use this construction.
+  Slope plots use these intervals too. Unified person, facet and slope plots
+  withhold interval bars when calibration is not ready, retaining descriptive
+  points and the reasons in plot notes.
+- The measurement tutorial uses matching 31-point integration for nested
+  RSM/PCM/GPCM comparisons. The G-Study tutorial explains equal-budget planning,
+  relative versus absolute decisions, and the limitations of interval and
+  design projections.
+
+- Correct uncertainty and validation in the unified engine:
+  - Reject unidentified G-Study designs; use the actual assignment pattern in
+    Gaussian plug-in component covariances, including unbalanced observations.
+    Honor `missing = "error"` and require positive integer D-Study counts.
+  - Require matching observations, weights, likelihood settings and eligible
+    fits for nested LRTs. Record optimizer convergence separately from inference
+    readiness; detected structural MML boundary directions prevent intervals
+    and ordinary classification.
+  - Use posterior variance decomposition for EAP reliability and recompute
+    diagnostics and fair scores from the selected primary EAP/WLE score.
+  - Include full structural covariance, steps, slopes and interactions in
+    conditional prediction SEs; person-score uncertainty remains excluded.
+  - Apply `missing_codes` before unified estimation, honor weighted common
+    `reference_plan` scoring, and reject duplicate unit-rater ratings in
+    agreement calculations. Common-plan unified scores are plug-in predictions;
+    posterior moments and intervals are not supplied.
+  - Document category support as `Level`, `Min`, `Max`, and add explicit S3
+    method signatures, uncertainty definitions and eligibility conditions.
+
+- Consolidate the public API to 22 focused entry points plus standard R S3
+  methods (`predict()`, `coef()`, `vcov()`, `confint()`, `anova()`, `plot()`,
+  `fitted()`, `residuals()`, `logLik()`, `AIC()`, `BIC()`, `nobs()`, `summary()`,
+  and `print()`), removing external-software wrappers (`TAM`, `ConQuest`, and
+  `FACETS` importers/crosswalk guides).
+- Upgrade `fit_mfrm()` (unified C++ fast engine as default `fast = TRUE`),
+  `check_mfrm_connectivity()`, and `mfrm_batch_fit()`:
+  - Native C++ solvers for Joint Maximum Likelihood (`"JML"`), Jeffreys/Firth
+    penalized JML (`"JML_jeffreys"` with exact Block-Schur inverse-information
+    SEs), Marginal Maximum Likelihood (`"MML"` with observed and person-clustered
+    sandwich covariances, `EAP`, and Warm's 1989 `WLE`), Conditional Maximum
+    Likelihood (`"CML"` for `"RSM"` and `"PCM"` via elementary symmetric
+    polynomials with full conditional covariance and `WLE`), and 1-family and
+    2-family Generalized Partial Credit (`model = "GPCM"` across `"MML"` and
+    1-family `"JML"`, supporting both `"full_predictor"` and `"ability_only"`
+    slope parameterizations, `slope_prior_sd` log-normal regularization, Warm
+    GPCM `WLE`, and 4-level nested affine LRTs).
+  - Full C++ support for `group_anchors`, `facet_shrinkage` (`"empirical_bayes"`
+    and `"laplace"`), multi-facet collinearity rank checks, and MML latent-regression
+    boundary separation checks (`lpSolve`).
+  - Automatic pre-estimation connectivity and interior-category support warnings
+    (`warn_connectivity = TRUE`).
+  - Extended `step_constraints` (fixed and shared thresholds across `MML` with
+    fixed or estimated normal populations, `CML`, `JML`, and `JML_jeffreys`,
+    with Wald, sandwich, and 1D profile-likelihood `confint(..., se_type = "profile")`
+    intervals and affine-subspace `anova()` / `compare_mfrm(nested = TRUE)` LRTs).
+  - Declarative `category_support` for mixed binary/polytomous criteria with
+    exact zero probability outside supported categories.
+  - Explanatory `RSM`/`PCM` (`facet_formulas` + `facet_data`) for linear
+    covariate decomposition of facet locations, including `predict()` on unseen
+    facet levels and nested LRTs.
+- Accelerate `estimate_bias()` and `analyze_dff()` in C++:
+  - `estimate_bias()` supports single-pair and `interaction_facets = "all"` C++
+    bias tables, defaulting to the FACETS 4.5.2/4.5.3 `RajuSA-Welch`
+    (von Davier, 2025; Raju, 1990) integer-truncated degrees of freedom
+    (`df_method = "facets"`, with `"classical"` Welch-Satterthwaite also
+    available), plus joint C++ interaction refits (`method = "joint"`).
+  - `analyze_dff()` adds warm-started parallel C++ split-element `"mml_lrt"`
+    (with latent-regression impact control and sandwich SEs), `"cml_lrt"`,
+    `"raju_welch"`, `"mh"`, and `"logistic"`.
+- Unify `mfrm_g_study()` (adding non-iterative Henderson Method 1
+  `method = "urgenova"` for crossed and nested multi-facet designs, multivariate
+  composite `weights`, and Satterthwaite/delta-method `confint()`) and
+  `interrater_agreement()` (exact/adjacent agreement, weighted kappa, Gwet's
+  `AC2`, Krippendorff's `alpha`, and `ICC`).
+- Unify all `plot()` S3 methods on `ggplot2` (including `"wright"`, `"pathway"`,
+  `"steps"`, `"category_curves"`, `"persons"`, `"raters"`, `"person_fit"`,
+  `"residual_qq"`, `"slopes"`, and `"qc"`) with color-vision-safe `"okabe_ito"`,
+  `"viridis"`, and strict `R == G == B` `"monochrome"` palettes paired with
+  redundant point `shape` and `linetype` encodings.
+- Pair with the companion package `tidymfrm` for pipeable end-to-end workflows
+  (including `GPCM` discrimination and dynamic Markov rater drift via `occasion`),
+  `tidy()`/`glance()`/`augment()` extractors, and APA-style Markdown, HTML, and
+  optional `officer`/`flextable`/`kableExtra` reports.
+
+# mfrmr 0.3.1
+
+- Add `fit_mfrm_drift()` (`"mfrm_drift"`) for non-Bayesian Markov
+  rater-severity drift modeling across ordered scoring waves, sessions, or days
+  without MCMC sampling (adapted and generalized from Uto, 2023). Examinee
+  abilities are integrated by normal quadrature, inner parameters use the exact
+  analytical Louis (1982) observed information matrix with optional sum-to-zero
+  fixed facets (`facets`) and shared (`"RSM"`) or rater-specific (`"PCM"`) steps,
+  and rater-specific log-drift SDs are estimated by Laplace-marginalized
+  Empirical Bayes with Kass-Steffey (1989) hyperparameter covariance propagation
+  (`TotalSE` vs `ConditionalSE`), cross-wave bridge-person checks, reference-wave
+  `FairM` prediction (`predict()`), and CVD-safe trajectory, contrast, and
+  drift-SD plots (`plot()`, `plot_data()`, `as_ggplot()`).
+
+- Supplying either rating bound now preserves the rubric by default. Use
+  `category_policy = "collapse"` to reproduce earlier fits with gaps. Facet
+  interval tables from MML fits carry the source fit and identification status.
+
+- ZSTD comparisons retain unavailable decisions. Design simulations count
+  exact values of -2 and 2 in the ZSTD screening rate. `fit_measures_table()`
+  shows both strict and inclusive ZSTD flags at the requested cutoff and
+  preserves the df convention of saved diagnostics. Rebuild older fit tables
+  from their diagnostics to update the companion columns.
+- Dashboard MnSq screening includes both endpoints in the review band. Rebuild
+  saved dashboards from the fit and diagnostics to update their flags.
+  Diagnostic summaries and misfit casebooks accept `lower` and `upper`.
+
+- Reject additive RSM/PCM MML fits when the observed ratings and latent
+  regression permit population or facet locations to diverge. Designs requiring
+  a numerical boundary check use the suggested package `lpSolve`. Recalculating
+  adjusted scores from an affected saved fit also reports the boundary.
+
+- Direct RSM and PCM MML fits support fixed and partially shared centered
+  step offsets through `spec$step_constraints`, including estimated normal
+  `population_formula` designs, affine step-subspace nested likelihood-ratio
+  tests in `compare_mfrm(..., nested = TRUE)`, and reuse in a new R session.
+- `diagnose_mfrm()` computes MML `Person` separation and reliability from the
+  Bayesian EAP posterior-variance decomposition
+  `Var(EAP) / (Var(EAP) + mean(SE^2))` rather than unshrunk variance
+  subtraction. Recreate saved MML diagnostics to update `Person` reliability.
+- `fair_average_table()` supports `reference_plan` on native additive RSM/PCM
+  MML fits (returning strictly monotone EAP plug-in scores plus conditional
+  quadrature `PosteriorExpectedScore` and `PosteriorScoreSD`) and records
+  `pcm_exposure_audit` when incomplete PCM step-scale exposure causes
+  measure-vs-fair rank inversions.
+- `compute_information()` adds `exposure_basis = "per_person_average"` to scale
+  observed context weights and `ConditionalSEM` to one active Person without
+  constructing a manual rating plan.
+- `plot(x, type = "fit_pathway", fit_scale = "zstd")` keeps dimensionless
+  FACETS fourth-moment df primary in its plot payload when
+  `zstd_method = "facets"`.
+- Upgrade `ggplot2` diagnostics and color-vision accessibility across presets:
+  - `standard`, `publication`, and `compact` use Okabe-Ito and Paul Tol
+    color-vision-safe palettes paired with redundant point shapes, line types,
+    and direct status markers; `monochrome` uses pure neutral grayscale with a
+    monotonic luminance ramp for diverging correlation and residual heatmaps.
+  - `plot(fit, type = "wright", renderer = "facets")` renders the FACETS Table
+    6 star, signed-facet, and scale-threshold layout directly as a `ggplot`
+    object, and native Wright maps show facet orientation polarity (`(+)` vs
+    `(-)`).
+  - Dedicated `ggplot2` converters replace generic tabular fallbacks for
+    `"facet"`, `"person"`, `"step"`, `"person_fit"` (both `"meansquare"`
+    Infit-vs-Outfit bubble scatters with marginal histograms and `"loglik"`
+    ranked `lz*`/`lz` lollipops), `"marginal_fit"`, `"marginal_pairwise"`,
+    `"unexpected"`, `"facets_chisq"`, `"guttman"`, `"residual_matrix"`,
+    `"trajectory"`, `"reliability"`, `"shrinkage"` (`view = "funnel"`), and
+    named-facet design grids.
+  - `plot(fit, type = "qc")` renders all nine documented diagnostic panels;
+    `plot(fit, type = "apa_summary")` adds a structured model-and-readiness
+    summary card; `plot(fit, type = "pathway")` places step markers on the
+    expected-score curve; `plot(fit, type = "thresholds")` offsets disordered
+    step crossings with dashed brackets and triangle markers;
+    `plot(fit, type = "residual_qq")` adds a 95% normal order-statistic
+    pointwise reference band; category-curve and `mfrm_d_study()` projections
+    pair colors with distinct line types and integer facet-count ticks;
+    `preset` is now accepted across `facet_equivalence`, `facet_dashboard`,
+    `run_qc_pipeline()`, `compute_information()`, and report bundles; and
+    composite dashboards suppress outer coordinate axes when restyled with
+    `ggplot2` themes.
+- D-study planning tables now show the facet counts for each scenario,
+  including comparisons saved with 0.3.0.
+- Peer-review design summaries count reciprocal pairs between distinct students.
+  For earlier summaries, rerun `review_peer_design()` on the saved simulation.
+- Casebook person views include person fit flags. Warnings and source counts
+  include element fit. Unexpected-response tables retain their columns when
+  no evaluated rows are flagged.
+- Data preparation shows why ratings were dropped. Fixed-facet reports show
+  the recorded reasons when intervals are unavailable.
+- Fit summaries point to identification and interval eligibility. `mfrm_report(...,
+  style = "rater")` now supports native additive one-family GPCM fits alongside
+  RSM/PCM and two-family GPCM, withholding working values when primary slope
+  estimates are unavailable.
+- Replace internal `stringr` helpers with base R equivalents and remove `stringr`
+  from `Imports`, avoiding runtime failures when optional `stringi` binaries are
+  unavailable.
+
 # mfrmr 0.3.0
 
 - Consolidate related S3 method and `mfrm_report()` component help pages into

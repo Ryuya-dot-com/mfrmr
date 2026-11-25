@@ -58,8 +58,14 @@ retaining `InferenceReady = FALSE` in the source fit. Read the interval object's
 `CIEligible`, `checks` and `InferenceCaution`. This supplies an asymptotic
 approximation with a small-sample caution; it does not establish coverage or
 make other analyses available. Empty categories in a fitted step scope and identification/numerical
-failures are not waived. A local rater need not use every category of a shared
-step ladder when full-information and quadrature checks pass. There is no ten-rating-row minimum; precision and
+failures are not waived. To distinguish an unused rubric category from a
+constant rater or criterion, supply the original score limits and
+`category_policy = "preserve"` to `describe_mfrm_data()`. Compare
+`score_distribution` with `MinScore` and `MaxScore` in `facet_level_summary`.
+For an unused middle category within one rater, inspect the full count table,
+here `table(ratings$Rater, factor(ratings$Score, levels = 1:4))`.
+A local rater need not use every category of a shared step ladder when
+full-information and quadrature checks pass. There is no ten-rating-row minimum; precision and
 identification depend on the model and response patterns, not a row count alone.
 
 Full RSM/PCM calibration also admits one Person for JML, CML and fixed-population
@@ -107,12 +113,52 @@ threshold of practical importance or a rater-quality rule. Use the size of the
 difference, interval, rubric and shared rating examples together when giving
 feedback.
 
+### Compare two scoring panels on shared essays
+
+Suppose R01 and R02 form panel A and R03 and R04 form panel B. Each person
+contributes one essay. Count essays scored by both panels before interpreting
+their mean severity difference. An essay scored twice within A links two
+raters but contributes no direct comparison with B.
+
+```{r two-scoring-panels}
+panel <- c(R01 = "A", R02 = "A", R03 = "B", R04 = "B")
+assigned <- ratings
+assigned$Panel <- unname(panel[as.character(assigned$Rater)])
+stopifnot(!anyNA(assigned$Panel))
+design <- describe_mfrm_data(assigned, "Person", c("Rater", "Criterion", "Panel"),
+                            "Score", rating_min = 1, rating_max = 4, include_agreement = FALSE)
+subset(design$linkage_summary, Facet %in% c("Rater", "Panel"),
+       select = c(Facet, Persons, LinkingPersons))
+
+weights <- matrix(c(-.5, -.5, .5, .5), nrow = 1,
+                  dimnames = list("Panel B minus A", names(panel)))
+panel_ci <- mfrm_facet_intervals(fit, "Rater", contrasts = weights)
+panel_ci$table[, c("Target", "Estimate", "SE", "Lower", "Upper", "CIEligible", "InferenceReview")]
+```
+
+Read `LinkingPersons` on the `Panel` row for the shared count. With zero
+shared essays, separating panel severity from differences between writer
+cohorts requires another justified link or population assumption. With one
+shared essay, all direct between-panel evidence comes from that essay. For
+repeated performances, count the same work rated by both panels using its
+performance ID.
+
+Panel membership is used here to describe assignments. The fitted model
+already estimates each rater's severity. For unequal panel sizes, give each
+member of A weight `-1/n_A` and each member of B weight `+1/n_B`.
+The reported SE uses the full rater covariance matrix. Report the shared
+essay count, interval width and eligibility together.
+
 ## Compare raters when their criterion effects differ
 
 A prespecified Rater × Criterion interaction allows a rater to be relatively
 severe on one criterion and lenient on another. The rater main effect then
 describes severity **averaged equally over the declared criteria**. It does not
 weight criteria by their observed counts or estimate a difference in mean ratings.
+Opposite departures on two criteria can leave a rater's overall Infit inside
+the review band. For a prespecified concern, inspect the counts and observed
+minus expected scores in `estimate_bias(fit, diagnose_mfrm(fit), "Rater", "Criterion")$table`
+alongside the original ratings.
 
 <details>
 <summary>Fit the joint model and obtain the rater main-effect interval</summary>

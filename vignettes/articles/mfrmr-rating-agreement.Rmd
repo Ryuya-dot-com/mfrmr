@@ -38,12 +38,60 @@ between observed agreement and model-based reporting, see
 [Reporting and APA](mfrmr-reporting-and-apa.html).
 
 The [methods guide](../reference/mfrmr_methods_reference.html#choose-an-agreement-target-and-keep-its-denominator)
-also distinguishes the denominators and saving routes. In particular,
-`interrater_agreement_table()` reports model-implied expected exact agreement
-from fitted category probabilities; this is not the chance-agreement term
-used by kappa or AC2. Residual association answers another question: whether
-departures from the fitted model vary together. Neither raw agreement nor
-residual association alone establishes the other.
+also distinguishes the denominators and saving routes. With
+`ir <- interrater_agreement_table(fit)`, read the shared-unit count (`N`)
+and observed exact agreement (`Exact`) in `ir$pairs`. When available,
+`ir$summary` includes `RaterSeparation`, `RaterReliability` and `RaterStrata`.
+Expected exact agreement in this report comes from fitted category
+probabilities. Kappa and AC2 each use their own chance-agreement model.
+Residual association describes how departures from the fitted model vary
+together. Raw agreement alone cannot establish that dependence.
+
+## Interpreting high agreement after rater training {#agreement-after-training}
+
+Use the first independent ratings of common, previously unseen performances.
+Keep consensus scores from the training discussion separate. Compare exact
+agreement and category use before and after training on comparable work.
+To assess accuracy, include independently established benchmark scores,
+especially on performances near the decision boundary. A panel can agree
+unanimously while scoring every performance one category above its benchmark.
+In a writing assessment, most raters became more consistent after training,
+while differences in severity persisted. [Weigle (1998)](https://doi.org/10.1177/026553229801500205).
+
+In these hypothetical examples, two raters score 100 performances on a
+five-category rubric and use only 4 and 5. The counts by score pair make
+the different agreement coefficients reproducible.
+
+| Counts for (4,4), (4,5), (5,4), (5,5) | Exact agreement | Unweighted Cohen's kappa | Nominal Krippendorff's alpha |
+| --- | ---: | ---: | ---: |
+| 48, 2, 2, 48 | 96% | 0.920 | 0.920 |
+| 96, 2, 2, 0 | 96% | −0.020 | −0.015 |
+| 100, 0, 0, 0 | 100% | Undefined | Undefined |
+
+In the second row each rater uses 4 on 98 performances, and the raters
+never agree on 5. Their margins alone predict 96.08% exact agreement.
+In the last row, expected disagreement is zero for both coefficients.
+[Feinstein and Cicchetti (1990)](https://pubmed.ncbi.nlm.nih.gov/2348207/).
+
+For a fitted ordinary model, read the Rater and Person rows of
+`diagnose_mfrm(fit)$reliability` separately. Rater separation compares
+the estimated spread in severity, after subtracting error variance, with
+its measurement error. Small separation with small severity differences
+and precise estimates is consistent with successful calibration. Sparse
+overlap and large SEs can also produce small separation. A separation of 2
+corresponds to a separation reliability of 0.80 and about three distinguishable
+levels of severity (strata). Use the severity estimates and their SEs
+to describe individual raters. Person separation concerns differences among
+examinees. For pass/fail decisions, also examine uncertainty near the cut.
+[Facets separation and strata](https://www.winsteps.com/facetman64/reliability.htm).
+
+In a five-category simulation, three of six raters scored each of 200 scripts.
+A median of 4 or 5 passed. Giving the three raters a 75% chance of sharing
+the same error on each script preserved each rater’s individual error distribution.
+Across 600 panels, pairwise exact agreement rose from 91.7% to 96.6%, while
+the share of benchmark-3 scripts incorrectly passed rose from 0.18% to 1.77%.
+Include benchmark scripts on both sides of the cut when checking whether
+agreement after training translates into accurate decisions.
 
 ## 1. Identify the rated unit
 

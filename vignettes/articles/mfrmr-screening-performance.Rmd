@@ -27,6 +27,18 @@ screening rules. It does not determine which rule is appropriate or label real
 raters as good or bad. In an actual assessment, unobserved rater quality cannot
 be supplied as known truth simply by accepting the screen's own verdict.
 
+For rater feedback, report upper and lower flags separately. In TestDaF writing,
+24.1% of raters had Infit below 0.7 and none had Infit below 0.5. Check how
+many performances the rater scored and compare the observed and expected
+ratings with the original work and rubric. [Eckes (2005), Table 4](https://doi.org/10.1207/s15434311laq0203_2).
+If trained raters agree closely, inspect their independent scores and category
+use alongside fit. [Interpreting high agreement after rater training](mfrmr-rating-agreement.html#agreement-after-training).
+
+For pass/fail decisions, check precision near the cut even when fit is within
+the band. Several ratings of the same performance can share error. Counting
+them as independent can understate uncertainty about the examinee's ability.
+[Bock, Brennan and Muraki (2002)](https://doi.org/10.1177/014662102237794).
+
 ## Keep failed and incomplete trials in the planned roster
 
 Declare the conditions, independent replications and targets before running
@@ -96,7 +108,7 @@ for (i in 1:6) {
     fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
                     model = "RSM", quad_points = 31, maxit = 200)
     observed$FitReady[rows] <- isTRUE(fit$summary$InferenceReady[1])
-    diagnostic <- diagnose_mfrm(fit, residual_pca = "none")
+    diagnostic <- diagnose_mfrm(fit, residual_pca = "none", fit_df_method = "facets")
     raters <- diagnostic$measures[diagnostic$measures$Facet == "Rater", ]
     raters <- raters[match(observed$Target[rows], raters$Level), ]
     observed[rows, c("Infit", "Outfit", "InfitZSTD", "OutfitZSTD")] <-
@@ -188,11 +200,18 @@ labels. It retains all ZSTD columns, flags additional ZSTD-only evidence in
 `ZSTDOnly`, and makes the earlier combined rule available explicitly:
 
 ```{r separate-zstd, eval=FALSE}
-review <- fit_measures_table(fit, flag_basis = "mnsq")
-combined_review <- fit_measures_table(fit, flag_basis = "mnsq_or_zstd")
+review <- fit_measures_table(diagnostic, facet = "Rater")
+with(review$table, table(ZSTDFlagStrict, ZSTDFlagInclusive, useNA = "ifany"))
+combined_review <- fit_measures_table(diagnostic, flag_basis = "mnsq_or_zstd")
 combined_study <- mfrm_screening_sensitivity(planned, observed, bands,
-  rule = "Same saved residuals; engine ZSTD; no exclusion/refit", zstd_cut = 2)
+  rule = "EAP residuals; FACETS-style df; inclusive ZSTD; no exclusion/refit", zstd_cut = 2)
 ```
+
+The cross-tabulation counts each rater once. A strict negative and inclusive
+positive means the largest absolute ZSTD equals the cutoff in the supplied
+values. A printed value of -2.00 can represent values on either side. For
+cross-software comparisons, record the residual definition, df convention and
+display precision, plus simulation draws and seed for stochastic diagnostics.
 
 Changing the mean-square band under the combined rule need not change a
 ZSTD-only warning. ZSTD depends on sample size and on the df convention.

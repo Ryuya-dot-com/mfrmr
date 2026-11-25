@@ -115,9 +115,9 @@ Core assumptions and unavailable states must remain understandable offline.
 Use rendered pkgdown pages for learning links; use GitHub links for source,
 issues and reproducible evidence. Relative repository paths in README can
 fail CRAN's installed-file URL check, so use a verified absolute source URL
-where a source link is intended. The website uses `development.mode: auto`:
-released documentation stays at the site root and development documentation
-is built under `dev/`. Check version labels and links before deployment.
+where a source link is intended. Use `development.mode: devel` for the
+development site under `dev/`. Use `unreleased` for candidate documentation
+at the site root and restore `auto` when that version is published on CRAN.
 Prepare development article links together with their matching `dev/` pages,
 and verify deployment before announcing those URLs as available. Until then,
 use the checkout's installed help and local article preview. When preparing a

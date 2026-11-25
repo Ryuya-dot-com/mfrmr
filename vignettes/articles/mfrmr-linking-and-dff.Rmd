@@ -591,6 +591,11 @@ Interpretation:
   severity-direction, or halo response networks, to assess empirical
   connectedness. Response-network correlations do not create a common scale.
 
+When two panels share a rubric, common criteria can connect the overall graph
+even if the panels score disjoint essays. Count the essays scored by both
+panels and inspect the Person–Rater components.
+[Worked panel comparison](mfrmr-facet-intervals.html#compare-two-scoring-panels-on-shared-essays).
+
 ## 2. Export anchor candidates
 
 `make_anchor_table()` mechanically exports fitted values in the direct-anchor
