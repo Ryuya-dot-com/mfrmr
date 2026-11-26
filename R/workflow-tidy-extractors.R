@@ -22,9 +22,11 @@
 #' @param ... Additional arguments (unused).
 #' @return A [tibble::tibble()].
 #' @examples
-#' utils::data("mfrmr_example_core", package = "mfrmr")
-#' wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
-#'   step_mfrm_measure() |>
+#' # Saved JML calibration of example_core; see fit_mfrm() for estimation.
+#' saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' ratings <- load_mfrmr_data(saved$dataset)
+#' wf <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score",
+#'                     fit = saved$fit) |>
 #'   step_mfrm_diagnose()
 #' tidy(wf, component = "raters")
 #' glance(wf)
@@ -45,9 +47,11 @@ generics::tidy
 #' @return A single-row [tibble::tibble()]. `model` is the API code and
 #'   `model_label` is the display name, including GMFRM discrimination facets.
 #' @examples
-#' utils::data("mfrmr_example_core", package = "mfrmr")
-#' wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
-#'   step_mfrm_measure()
+#' # Saved JML calibration of example_core; see fit_mfrm() for estimation.
+#' saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' ratings <- load_mfrmr_data(saved$dataset)
+#' wf <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score",
+#'                     fit = saved$fit)
 #' glance(wf)
 #' @name glance
 #' @importFrom generics glance
@@ -64,9 +68,11 @@ generics::glance
 #' @param ... Additional arguments (unused).
 #' @return A [tibble::tibble()] of observation-level expectations and residuals.
 #' @examples
-#' utils::data("mfrmr_example_core", package = "mfrmr")
-#' wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
-#'   step_mfrm_measure()
+#' # Saved JML calibration of example_core; see fit_mfrm() for estimation.
+#' saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' ratings <- load_mfrmr_data(saved$dataset)
+#' wf <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score",
+#'                     fit = saved$fit)
 #' head(augment(wf))
 #' @name augment
 #' @importFrom generics augment

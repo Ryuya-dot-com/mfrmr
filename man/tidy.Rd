@@ -58,9 +58,11 @@ G-Study tables include \code{conf.low}, \code{conf.high}, and
 and the reporting guard for degrees of freedom below one.
 }
 \examples{
-utils::data("mfrmr_example_core", package = "mfrmr")
-wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
-  step_mfrm_measure() |>
+# Saved JML calibration of example_core; see fit_mfrm() for estimation.
+saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+ratings <- load_mfrmr_data(saved$dataset)
+wf <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score",
+                    fit = saved$fit) |>
   step_mfrm_diagnose()
 tidy(wf, component = "raters")
 glance(wf)

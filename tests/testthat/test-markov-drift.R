@@ -73,6 +73,7 @@ simulate_drift_panel <- function(seed = 20261122L, J_per_wave = 25L, K = 4L,
 }
 
 test_that("analytical gradient and Louis observed Hessian match finite differences across facets, PCM/RSM, and K=2", {
+  skip_on_cran()
   sim <- simulate_drift_panel(seed = 101L, J_per_wave = 8L, K = 4L, with_facets = TRUE, D = 1.7)
   sim$data$Task <- ifelse(seq_len(nrow(sim$data)) %% 2L == 0L, "T1", "T2")
 
@@ -234,6 +235,7 @@ test_that("fit_mfrm_drift recovers heterogeneous drifting raters, fixed facets, 
 })
 
 test_that("Markov RW1 exactly interpolates unobserved rater-wave cells and flags disjoint cohorts", {
+  skip_on_cran()
   sim <- simulate_drift_panel(seed = 303L, J_per_wave = 18L, K = 3L, with_facets = FALSE, bridge_n = 0L)
   # Drop all Wave W2 ratings for Rater R2
   sub_df <- sim$data[!(sim$data$Rater == "R2" & sim$data$Wave == "W2"), , drop = FALSE]
@@ -263,6 +265,7 @@ test_that("Markov RW1 exactly interpolates unobserved rater-wave cells and flags
 })
 
 test_that("S3 extractors, reference-wave FairM prediction, RDS serialization, and CVD-safe plots obey contracts", {
+  skip_on_cran()
   sim <- simulate_drift_panel(seed = 404L, J_per_wave = 15L, K = 4L, with_facets = TRUE, bridge_n = 2L)
   fit <- fit_mfrm_drift(
     sim$data,
@@ -326,4 +329,26 @@ test_that("S3 extractors, reference-wave FairM prediction, RDS serialization, an
   saveRDS(fit, tf)
   fit_rds <- readRDS(tf)
   expect_equal(coef(fit_rds, "severity"), coef(fit, "severity"))
+})
+
+
+test_that("a small live Markov calibration preserves prediction and saved-result contracts", {
+  sim <- simulate_drift_panel(seed = 404L, J_per_wave = 8L, K = 3L,
+    with_facets = FALSE, bridge_n = 2L)
+  fit <- fit_mfrm_drift(sim$data, person = "Person", rater = "Rater",
+    time = "Wave", score = "Score", model = "RSM", quad_points = 31L)
+  expect_s3_class(fit, "mfrm_drift")
+  expect_equal(fit$checks$BridgePersons, 2L)
+  expect_equal(fit$checks$WaveComponents, 1L)
+  expect_false(fit$checks$StationaryCohortRequired)
+  expect_true(fit$checks$NumericalReady)
+  expect_length(coef(fit, "severity"), 24L)
+  nd <- sim$data[1:3, ]
+  probabilities <- predict(fit, newdata = nd, type = "probabilities")
+  expect_equal(unname(rowSums(probabilities)), rep(1, 3L), tolerance = 1e-10)
+  expected <- predict(fit, newdata = nd, type = "expected")$ExpectedScore
+  expect_equal(expected, as.numeric(probabilities %*% (1:3)), tolerance = 1e-10)
+  saved <- unserialize(serialize(fit, NULL))
+  expect_identical(coef(saved), coef(fit))
+  expect_identical(predict(saved, newdata = nd, type = "probabilities"), probabilities)
 })

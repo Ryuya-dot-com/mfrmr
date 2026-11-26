@@ -33,6 +33,9 @@ Split-likelihood tests support unified, unpenalized RSM/PCM calibrations without
 anchors, custom facet/step constraints, interactions or restricted category
 support. Unsupported specifications are rejected rather than dropped.
 Weights, facet signs and integration/optimizer controls are retained.
+The selected test method determines the refitting estimator. With
+\code{method = "mml_lrt"}, both models are refitted by MML even if the
+supplied calibration was estimated by JML.
 MML refits retain source population covariates and add person-level group
 impact when linearly independent; a fixed-normal source is explicitly extended
 to an estimated population. Both the baseline and split models use this same
@@ -58,17 +61,13 @@ ratings and weights; reordered rows are aligned before adding group labels.
 \code{\link{fit_mfrm}}, \code{\link{estimate_bias}}, \code{\link{plot.mfrm_fit}}
 }
 \examples{
-# Screen planted Group x Criterion DFF (Language criterion) in example_bias
-ratings <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(ratings, person = "Person", facets = c("Rater", "Criterion"), score = "Score")
-
-dff <- analyze_dff(
-  fit,
-  facet = "Criterion",
-  group = "Group",
-  data = ratings,
-  method = "mml_lrt"
-)
+# Saved JML calibration of example_bias, with planted Group x Criterion DFF.
+saved <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
+ratings <- load_mfrmr_data(saved$dataset)
+fit <- saved$fit
+# Fixed-calibration screen: no split-model refitting.
+dff <- analyze_dff(fit, facet = "Criterion", group = "Group", data = ratings,
+                   method = "raju_welch")
 summary(dff)
 plot(dff)
 }

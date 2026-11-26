@@ -12,10 +12,10 @@ expected <- t(vapply(seq_len(nrow(values)), function(i) {
   x <- values[i, ]
   cumulative_steps <- c(0, cumsum(c(-x$Spacing, 0, x$Spacing)))
   eta <- x$Theta - x$Delta
-  switch(x$Model,
-    RSM = as.numeric(kernels$category_prob_rsm(eta, cumulative_steps)),
-    PCM = as.numeric(kernels$category_prob_pcm(eta, matrix(cumulative_steps, 1), 1L)),
-    GPCM = as.numeric(kernels$category_prob_gpcm(eta, matrix(cumulative_steps, 1), 1L, x$Slope)))
+  step_cum <- if (x$Model == "RSM") cumulative_steps else matrix(cumulative_steps, 1L)
+  as.numeric(kernels$mfrm_jml_probability_bundle(
+    eta, score_k = 0L, model = x$Model, step_cum = step_cum,
+    criterion_idx = 1L, slopes = x$Slope, slope_idx = 1L)$probs)
 }, numeric(4)))
 error <- max(abs(expected - as.matrix(values[paste0("P", 0:3)])))
 stopifnot(is.finite(error), error < 2e-14)

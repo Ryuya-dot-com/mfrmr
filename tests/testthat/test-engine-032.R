@@ -122,6 +122,7 @@ test_that("JML diagnostics retain fitted estimates and all estimators support th
 })
 
 test_that("step_constraints, declarative category_support, and explanatory RSM work with LRT and profile CIs", {
+  skip_on_cran()
   ratings <- load_mfrmr_data("example_core")
   crit_lvls <- sort(unique(as.character(ratings$Criterion)))
 
@@ -237,7 +238,7 @@ test_that("step_constraints, declarative category_support, and explanatory RSM w
   expect_gt(pr_unseen[1L], pr_unseen[2L])
 })
 
-test_that("FACETS 4.5.3 RajuSA-Welch df, fast bias, fast DFF, agreement, and CVD ggplot2 plots work", {
+test_that("FACETS and classical RajuSA-Welch degrees of freedom match hand calculations", {
   # Exact numerical verification of FACETS 4.5.0-4.5.3 RajuSA-Welch df (von Davier 2025)
   # v1 = 1 (se1 = 1), v2 = 4 (se2 = 2), n1 = 3, n2 = 10:
   # num = 25; den = 1/4 + 16/11 = 75/44 -> (num/den)*(11/15) = (44/3)*(11/15) = 484/45 = 10.7555556 -> floor = 10
@@ -247,7 +248,10 @@ test_that("FACETS 4.5.3 RajuSA-Welch df, fast bias, fast DFF, agreement, and CVD
   expect_equal(rw_facets$df, 10)
   # Classical Welch-Satterthwaite: 25 / (1/2 + 16/9) = 25 / (41/18) = 450/41 = 10.97561
   expect_equal(rw_class$df, 450 / 41, tolerance = 1e-10)
+})
 
+test_that("bias and DFF methods and all plot palettes work together", {
+  skip_on_cran()
   ratings <- load_mfrmr_data("example_core")
   fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score", method = "MML")
 
@@ -292,6 +296,7 @@ test_that("FACETS 4.5.3 RajuSA-Welch df, fast bias, fast DFF, agreement, and CVD
 })
 
 test_that("unified default fit_mfrm(), 1/2-family GPCM, nested/multivariate G-Study, and diagnostic plots work", {
+  skip_on_cran()
   ratings <- load_mfrmr_data("example_core")
   d0 <- ratings
   d0$Score <- d0$Score - 1L
@@ -460,4 +465,21 @@ test_that("free MML population means are checked jointly with constrained facet 
   fit$population_location_rank <- NULL
   expect_true("population_location_rank_deficient" %in% summary(fit)$readiness$reason_codes)
   expect_error(confint(fit, component = "facets"), "population_location_rank_deficient")
+})
+
+
+test_that("live GMFRM estimation supports one and two discrimination facets", {
+  ratings <- load_mfrmr_data("example_core")
+  for (slopes in list("Criterion", c("Criterion", "Rater"))) {
+    fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+      model = "GMFRM", method = "MML", step_facet = "Criterion",
+      slope_facet = slopes, spec = list(slope_reference = "Criterion"), quad_points = 31L)
+    expect_true(summary(fit)$readiness$ready)
+    expect_equal(nrow(fit$slopes), 4L * length(slopes))
+    pr <- predict(fit, type = "probs")
+    expect_equal(unname(rowSums(pr)), rep(1, nrow(ratings)), tolerance = 1e-10)
+    expect_true(all(is.finite(confint(fit, component = "slopes"))))
+    reference <- fit$slopes$Estimate[fit$slopes$Facet == "Criterion"]
+    expect_equal(exp(mean(log(reference))), 1, tolerance = 1e-6)
+  }
 })

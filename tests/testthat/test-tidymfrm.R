@@ -1,10 +1,10 @@
-test_that("the compatibility alias runs the three-pillar workflow", {
+test_that("the compatibility alias runs the full comparison and bootstrap workflow", {
+  skip_on_cran()
   expect_identical(tidymfrm, mfrm_analysis)
   utils::data("mfrmr_example_core", package = "mfrmr")
 
-  on_cran <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
-  comparisons <- if (on_cran) "JML" else c("JML", "JML_jeffreys", "CML")
-  bootstrap_reps <- if (on_cran) 2L else 10L
+  comparisons <- c("JML", "JML_jeffreys", "CML")
+  bootstrap_reps <- 10L
   withr::local_seed(20261126L)
 
   wf_mml <- tidymfrm(
@@ -59,10 +59,23 @@ test_that("the compatibility alias runs the three-pillar workflow", {
   expect_gt(nrow(wf_mml$diagnostics$bias$pairwise), 0L)
 })
 
+test_that("live estimation, planning and reporting form a complete workflow", {
+  expect_identical(tidymfrm, mfrm_analysis)
+  wf <- make_core_workflow()
+  expect_true(summary(wf)$readiness$ready)
+  expect_identical(glance(wf)$n_obs, nrow(wf$data))
+  expect_true(all(is.finite(confint(wf))))
+  expect_true(all(is.finite(tidy(wf, "raters")$estimate)))
+  expect_equal(augment(wf)$Expected, as.numeric(predict(wf, type = "response")))
+  expect_true(is.finite(wf$gtheory$g_study_summary$G))
+  expect_gte(wf$gtheory$g_study_summary$G, wf$gtheory$g_study_summary$Phi - 1e-6)
+  expect_gt(nrow(wf$diagnostics$dff), 0L)
+  expect_match(render_mfrm_report(wf), "Inference readiness")
+})
+
 test_that("workflow recalibration ties the report and saved diagnostics to the current fit", {
   ratings <- load_mfrmr_data("example_core")
-  original <- mfrm_analysis(ratings, "Person", c("Rater", "Criterion"), "Score",
-                            compare_methods = "JML")
+  original <- make_core_workflow()
   refit <- step_mfrm_measure(original, model = "PCM", step_facet = "Criterion")
   expect_null(refit$diagnostics)
   expect_null(summary(refit)$method_comparison)
@@ -96,8 +109,10 @@ test_that("Directional sensitivity, step_constraints, and category_support work 
   idx <- d1$Rater == "R01"
   d1$Score[idx] <- pmax(1L, d1$Score[idx] - 1L)
 
-  wf0 <- tidymfrm(d0, "Person", c("Rater", "Criterion"), "Score", method = "JML_jeffreys")
-  wf1 <- tidymfrm(d1, "Person", c("Rater", "Criterion"), "Score", method = "JML_jeffreys")
+  measure <- function(d) mfrm_workflow(d, "Person", c("Rater", "Criterion"), "Score") |>
+    step_mfrm_measure(method = "JML_jeffreys") |> step_mfrm_diagnose()
+  wf0 <- measure(d0)
+  wf1 <- measure(d1)
 
   r0 <- tidy(wf0, "raters")
   r1 <- tidy(wf1, "raters")
@@ -107,6 +122,7 @@ test_that("Directional sensitivity, step_constraints, and category_support work 
 })
 
 test_that("Workflow plots render and monochrome colors have equal RGB channels", {
+  skip_on_cran()
   utils::data("mfrmr_example_core", package = "mfrmr")
   wf <- make_core_workflow()
 
@@ -117,9 +133,7 @@ test_that("Workflow plots render and monochrome colors have equal RGB channels",
     unlink(tmp_pdf)
   }, add = TRUE)
 
-  # All palettes are constructed in fast-engine-032; full rendering combinations
-  # are checked locally, while CRAN renders every type with the default palette.
-  palettes <- if (!isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) "okabe_ito" else c("okabe_ito", "viridis", "monochrome")
+  palettes <- c("okabe_ito", "viridis", "monochrome")
   for (pal in palettes) {
     for (tp in c("wright", "raters", "steps", "dstudy", "persons")) {
       p <- plot(wf, type = tp, palette = pal, draw = TRUE)
@@ -136,21 +150,13 @@ test_that("Workflow plots render and monochrome colors have equal RGB channels",
 })
 
 test_that("render_mfrm_report() and format_mfrm_table() respect Suggests and tempdir()", {
-  utils::data("mfrmr_example_core", package = "mfrmr")
-  wf <- make_core_workflow()
+  saved <- read_example_bundle()
+  wf <- mfrm_workflow(load_mfrmr_data(saved$dataset), "Person",
+    c("Rater", "Criterion"), "Score", fit = saved$fit) |> step_mfrm_diagnose()
 
   md_tbl <- format_mfrm_table(wf, component = "raters", engine = "markdown", digits = 2L)
   expect_type(md_tbl, "character")
   expect_match(md_tbl, "R01")
-
-  if (requireNamespace("kableExtra", quietly = TRUE) && requireNamespace("knitr", quietly = TRUE)) {
-    kb <- format_mfrm_table(wf, component = "raters", engine = "kableExtra", digits = 2L)
-    expect_true(!is.null(kb))
-  }
-  if (requireNamespace("flextable", quietly = TRUE)) {
-    ft <- format_mfrm_table(wf, component = "raters", engine = "flextable", digits = 2L)
-    expect_s3_class(ft, "flextable")
-  }
 
   tmp_html <- tempfile(tmpdir = tempdir(), fileext = ".html")
   on.exit(unlink(tmp_html), add = TRUE)
@@ -225,4 +231,19 @@ test_that("the workflow reports GMFRM discrimination and Markov rater drift", {
   expect_identical(glance(wf)$model_label, label)
   expect_identical(glance(wf)$model, "GPCM")
   expect_match(md_txt, "Dynamic Markov Rater Drift Summary", fixed = TRUE)
+})
+
+
+test_that("optional table renderers format rater summaries", {
+  skip_on_cran()
+  wf <- make_core_workflow()
+  if (requireNamespace("kableExtra", quietly = TRUE) && requireNamespace("knitr", quietly = TRUE)) {
+    kb <- format_mfrm_table(wf, component = "raters", engine = "kableExtra", digits = 2L)
+    expect_true(!is.null(kb))
+  }
+  if (requireNamespace("flextable", quietly = TRUE)) {
+    ft <- format_mfrm_table(wf, component = "raters", engine = "flextable", digits = 2L)
+    expect_s3_class(ft, "flextable")
+  }
+
 })

@@ -323,10 +323,3 @@ mfrmr_estimability_adjacent_design <- function(prep, idx, config, sizes, include
     list(design = methods::as(design, "dgCMatrix"), map = map, transition_rows = nrow(design), observation_rows = n_obs,
         transitions = n_steps)
 }
-
-mfrmr_empty_transformation_summary <- .mfrmr_empty_table(c(Block = "character", CoordinateSystem = "character",
-    FreeCoordinates = "integer", ExpandedCoordinates = "integer", ExpectedRank = "integer", LogCoordinateRank = "integer",
-    NaturalCoordinateRank = "integer", LogFullColumnRank = "logical", NaturalFullColumnRank = "logical",
-    NaturalMinimum = "double", NaturalMaximum = "double", InvariantResidual = "double", MaxAbsLogJacobianDifference = "double",
-    MaxAbsNaturalJacobianDifference = "double", MaxScaledNaturalJacobianDifference = "double", LogConditionIndex = "double",
-    NaturalConditionIndex = "double", Finite = "logical", Status = "character"))

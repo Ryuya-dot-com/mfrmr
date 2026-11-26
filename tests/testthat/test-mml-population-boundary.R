@@ -24,13 +24,6 @@ test_that("linked MML rejects separation with one or both directions of cross-ra
   separated <- rbind(one_way, reverse)
   expect_error(fit(one_way), "No finite maximum-likelihood.*Rater")
   expect_error(fit(separated, "PCM"), "No finite maximum-likelihood.*Rater")
-  persons$X <- rep(c(-1, 1, 1, -1), 6)
-  expect_error(fit(one_way, formula = ~ 0 + Pool + X),
-    "No finite maximum-likelihood.*Rater")
-  flipped <- separated
-  flipped$Score <- 5L - flipped$Score
-  expect_error(fit(flipped), "No finite maximum-likelihood.*Rater")
-
   balanced <- separated
   balanced$Score[c(1L, nrow(balanced))] <- c(4L, 1L)
   mixed <- separated
@@ -39,6 +32,15 @@ test_that("linked MML rejects separation with one or both directions of cross-ra
   fair_mixed <- fair_average_table(result_mixed, facets = "Person")$raw_by_facet$Person
   expect_equal(nrow(fair_mixed), nrow(persons))
   expect_true(all(is.finite(fair_mixed$FairM)))
+
+  # Additional covariates, signs and anchor combinations run in the full suite.
+  skip_on_cran()
+  persons$X <- rep(c(-1, 1, 1, -1), 6)
+  expect_error(fit(one_way, formula = ~ 0 + Pool + X),
+    "No finite maximum-likelihood.*Rater")
+  flipped <- separated
+  flipped$Score <- 5L - flipped$Score
+  expect_error(fit(flipped), "No finite maximum-likelihood.*Rater")
 
   third <- cells[cells$Id %in% 1:12, ]
   third$Person <- paste0("C", third$Person)
@@ -66,7 +68,6 @@ test_that("linked MML rejects separation with one or both directions of cross-ra
   expect_error(fit(links, "PCM", separate_home, three_people, group_anchors = group),
     "No finite maximum-likelihood.*Rater")
 
-  skip_on_cran()
   result_bal <- fit(balanced, "PCM")
   fair_bal <- fair_average_table(result_bal, facets = "Person")$raw_by_facet$Person
   expect_equal(nrow(fair_bal), nrow(persons))

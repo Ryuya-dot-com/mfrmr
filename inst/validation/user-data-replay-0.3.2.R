@@ -14,14 +14,16 @@ read_ratings <- function(path, score) {
   ratings
 }
 
-inspect_analysis <- function(wf, ratings, keys, score) {
+inspect_analysis <- function(wf, ratings, keys, score, expected_reasons = character()) {
   retained <- which(!is.na(ratings[[score]]))
   obs <- augment(wf)
   expected <- predict(wf, type = "response")
   stopifnot(glance(wf)$n_obs == length(retained), identical(obs$.row_id, retained),
             identical(obs$Observed, ratings[[score]][retained]),
-            isTRUE(all.equal(obs$Expected, as.numeric(expected), tolerance = 1e-12)),
-            isTRUE(summary(wf)$readiness$ready))
+            isTRUE(all.equal(obs$Expected, as.numeric(expected), tolerance = 1e-12)))
+  readiness <- summary(wf)$readiness
+  stopifnot(identical(readiness$ready, !length(expected_reasons)),
+            setequal(readiness$reason_codes, expected_reasons))
   for (key in keys) stopifnot(identical(obs[[key]], ratings[[key]][retained]))
   list(observations = obs, raters = tidy(wf, "raters"), coefficients = coef(wf))
 }
@@ -32,7 +34,8 @@ if (length(args) == 3L) {
   baseline <- readRDS(file.path(output, "reference.rds"))
   ratings <- read_ratings(file.path(output, "ratings.csv"), baseline$score)
   wf <- readRDS(file.path(output, "analysis.rds"))
-  actual <- inspect_analysis(wf, ratings, baseline$keys, baseline$score)
+  actual <- inspect_analysis(wf, ratings, baseline$keys, baseline$score,
+                             baseline$expected_reasons)
   stopifnot(identical(actual, baseline$result))
   html <- render_mfrm_report(wf, format = "html")
   if (baseline$check_escaping) {
@@ -69,7 +72,8 @@ people[["Group code"]] <- factor(people$Group, levels = rev(sort(unique(people$G
 contrasts(people[["Group code"]]) <- contr.sum(2)
 
 run_case <- function(name, data, fields = columns, fit_args = list(),
-                     diagnostic_args = list(), check_escaping = FALSE) {
+                     diagnostic_args = list(), check_escaping = FALSE,
+                     expected_reasons = character()) {
   names(data)[match(columns, names(data))] <- fields
   keys <- fields[1:3]
   score <- fields[[4L]]
@@ -92,9 +96,10 @@ run_case <- function(name, data, fields = columns, fit_args = list(),
   write.csv(input, path, row.names = FALSE, fileEncoding = "UTF-8")
   wf <- mfrm_workflow(input, keys[[1L]], keys[2:3], score, fit = fit)
   wf <- do.call(step_mfrm_diagnose, c(list(wf), diagnostic_args))
-  result <- inspect_analysis(wf, input, keys, score)
+  result <- inspect_analysis(wf, input, keys, score, expected_reasons)
   saveRDS(wf, file.path(folder, "analysis.rds"))
-  saveRDS(list(keys = keys, score = score, result = result, check_escaping = check_escaping),
+  saveRDS(list(keys = keys, score = score, result = result, check_escaping = check_escaping,
+               expected_reasons = expected_reasons),
           file.path(folder, "reference.rds"))
   moved <- file.path(output, paste0(name, " \u79fb\u52d5 folder"))
   stopifnot(file.rename(folder, moved))
@@ -116,7 +121,8 @@ run_case("pcm_varying_steps", pcm, fit_args = list(model = "PCM", step_facet = "
                                                   category_support = support))
 run_case("gpcm_varying_slopes", ratings, fit_args = list(model = "GPCM", step_facet = "Criterion",
                                                         slope_facet = "Criterion"))
-run_case("weighted_missing", weighted, fit_args = list(weight = "Weight"))
+run_case("weighted_missing", weighted, fit_args = list(weight = "Weight"),
+         expected_reasons = "nonunit_observation_weights_inference_unvalidated")
 run_case("latent_factor", literal, fit_args = list(population_formula = ~ `Group code`, person_data = people))
 run_case("diagnostic_options", ratings, diagnostic_args = list(cut_scores = 2.5))
 run_case("fixed_anchor", ratings, fit_args = list(

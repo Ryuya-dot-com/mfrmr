@@ -31,8 +31,9 @@ calibration cannot be used for a precision curve.
 \code{\link{fit_mfrm}}, \code{\link{classification_table}}, \code{\link{plot.mfrm_fit}}
 }
 \examples{
-ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(ratings, person = "Person", facets = c("Rater", "Criterion"), score = "Score")
+# Saved JML calibration of example_core; see fit_mfrm() for estimation.
+saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- saved$fit
 
 info <- compute_information(fit, theta_range = c(-4, 4), theta_points = 81L)
 head(info$test_information)

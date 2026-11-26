@@ -1,5 +1,10 @@
 # mfrmr 0.3.2
 
+- Loading mfrmr defers data-manipulation dependencies until they are needed.
+  Examples for extraction and display reuse supplied calibrations; estimation
+  examples continue to fit the supplied rating data.
+
+
 - Expand method abbreviations in the package description and correct the
   reference identifier for Raju (1990).
 

@@ -159,9 +159,11 @@
 #' @param digits Number of decimal places for numeric columns (default `3L`).
 #' @return A Markdown string, `kableExtra` object, or `flextable` object.
 #' @examples
-#' utils::data("mfrmr_example_core", package = "mfrmr")
-#' wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
-#'   step_mfrm_measure() |>
+#' # Saved JML calibration of example_core; see fit_mfrm() for estimation.
+#' saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' ratings <- load_mfrmr_data(saved$dataset)
+#' wf <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score",
+#'                     fit = saved$fit) |>
 #'   step_mfrm_diagnose()
 #' cat(format_mfrm_table(wf, component = "raters", engine = "markdown"))
 #' @export
@@ -266,14 +268,11 @@ format_mfrm_table <- function(x,
 #' @return Character string containing the formatted Markdown/HTML report, or
 #'   the output `.docx` file path (invisibly when `file` is supplied).
 #' @examples
-#' utils::data("mfrmr_example_core", package = "mfrmr")
-#' wf <- mfrm_workflow(
-#'   mfrmr_example_core,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score"
-#' ) |>
-#'   step_mfrm_measure() |>
+#' # Saved JML calibration of example_core; see fit_mfrm() for estimation.
+#' saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' ratings <- load_mfrmr_data(saved$dataset)
+#' wf <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score",
+#'                     fit = saved$fit) |>
 #'   step_mfrm_diagnose()
 #' md <- render_mfrm_report(wf, format = "markdown")
 #' tmp_html <- tempfile(tmpdir = tempdir(), fileext = ".html")

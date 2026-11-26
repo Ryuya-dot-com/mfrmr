@@ -254,14 +254,11 @@
 #' @return A `ggplot` object (with `attr(, "mfrm_notes")`), or for `type = "dashboard"`,
 #'   a `tidymfrm_dashboard` named list of four `ggplot` panels.
 #' @examples
-#' utils::data("mfrmr_example_core", package = "mfrmr")
-#' wf <- mfrm_workflow(
-#'   mfrmr_example_core,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score"
-#' ) |>
-#'   step_mfrm_measure() |>
+#' # Saved JML calibration of example_core; see fit_mfrm() for estimation.
+#' saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+#' ratings <- load_mfrmr_data(saved$dataset)
+#' wf <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score",
+#'                     fit = saved$fit) |>
 #'   step_mfrm_diagnose()
 #' p_wright <- plot(wf, type = "wright", palette = "okabe_ito", draw = FALSE)
 #' p_vir <- plot(wf, type = "raters", palette = "viridis", draw = FALSE)

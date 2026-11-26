@@ -1,4 +1,4 @@
-# Consolidated NAMESPACE for mfrmr 0.3.2 (22 core functions + standard S3 methods)
+# Public functions and standard S3 methods for mfrmr 0.3.2
 
 S3method(AIC,mfrm_fit)
 S3method(anova,mfrm_fit)
@@ -119,43 +119,6 @@ export(step_mfrm_measure)
 export(tidy)
 export(tidymfrm)
 
-importFrom(dplyr,
-  across,
-  all_of,
-  any_of,
-  arrange,
-  bind_cols,
-  bind_rows,
-  case_when,
-  coalesce,
-  count,
-  desc,
-  distinct,
-  everything,
-  filter,
-  group_by,
-  if_all,
-  inner_join,
-  lag,
-  last,
-  left_join,
-  mutate,
-  n,
-  n_distinct,
-  pull,
-  rename,
-  row_number,
-  rowwise,
-  select,
-  slice,
-  slice_head,
-  slice_tail,
-  starts_with,
-  summarise,
-  summarize,
-  transmute,
-  ungroup
-)
 importFrom(graphics,plot)
 importFrom(grid,grid.newpage)
 importFrom(rlang,.data)
@@ -190,18 +153,6 @@ importFrom(stats,
   uniroot,
   update,
   vcov
-)
-importFrom(tibble,
-  as_tibble,
-  column_to_rownames,
-  tibble
-)
-importFrom(tidyr,
-  drop_na,
-  expand_grid,
-  pivot_wider,
-  replace_na,
-  unite
 )
 importFrom(utils,
   combn,

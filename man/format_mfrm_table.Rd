@@ -33,9 +33,11 @@ formats it as GitHub-flavored Markdown, HTML (\code{kableExtra}), or Word/Office
 (\code{flextable}).
 }
 \examples{
-utils::data("mfrmr_example_core", package = "mfrmr")
-wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
-  step_mfrm_measure() |>
+# Saved JML calibration of example_core; see fit_mfrm() for estimation.
+saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+ratings <- load_mfrmr_data(saved$dataset)
+wf <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score",
+                    fit = saved$fit) |>
   step_mfrm_diagnose()
 cat(format_mfrm_table(wf, component = "raters", engine = "markdown"))
 }

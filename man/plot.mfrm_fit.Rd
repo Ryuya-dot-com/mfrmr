@@ -77,8 +77,9 @@ retained; \code{attr(p, "mfrm_notes")} records the reasons. Neither visible bars
 nor a ready status establish nominal finite-sample coverage.
 }
 \examples{
-ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score")
+# Saved JML calibration of example_core; see fit_mfrm() for estimation.
+saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+fit <- saved$fit
 p1 <- plot(fit, type = "wright", palette = "okabe_ito")
 p2 <- plot(fit, type = "category_curves", palette = "viridis")
 p3 <- plot(fit, type = "residual_qq", palette = "monochrome")

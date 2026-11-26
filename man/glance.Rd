@@ -28,8 +28,10 @@ information criteria, latent EAP reliability, observed-score \code{G} and \code{
 and flagged rater counts.
 }
 \examples{
-utils::data("mfrmr_example_core", package = "mfrmr")
-wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
-  step_mfrm_measure()
+# Saved JML calibration of example_core; see fit_mfrm() for estimation.
+saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+ratings <- load_mfrmr_data(saved$dataset)
+wf <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score",
+                    fit = saved$fit)
 glance(wf)
 }

@@ -76,13 +76,6 @@
 #'
 #' # Plot the results (Wright map) within the reported interpretation limits
 #' plot(fit)
-#' @importFrom dplyr across all_of any_of arrange bind_cols bind_rows
-#' @importFrom dplyr case_when coalesce count desc distinct everything filter group_by
-#' @importFrom dplyr if_all inner_join lag last left_join mutate n n_distinct pull rename
-#' @importFrom dplyr row_number rowwise select slice slice_head slice_tail summarise
-#' @importFrom dplyr starts_with summarize transmute ungroup
-#' @importFrom tidyr drop_na expand_grid pivot_wider replace_na unite
-#' @importFrom tibble as_tibble column_to_rownames tibble
 #' @importFrom utils combn data globalVariables head modifyList packageVersion
 #' @importFrom utils read.csv tail write.csv
 #' @importFrom graphics abline arrows axis barplot dotchart hist image legend lines mtext plot plot.new points rect segments text title

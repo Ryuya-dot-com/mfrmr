@@ -1,7 +1,7 @@
 test_that("agreement, common-plan scores and the focused card reuse fitted results", {
   ratings <- load_mfrmr_data("example_core")
   facets <- c("Rater", "Criterion")
-  wf <- mfrm_analysis(ratings, "Person", facets, "Score")
+  wf <- make_core_workflow()
   plan <- data.frame(Rater = c("R01", "R02"), Criterion = c("Content", "Organization"))
   out <- summary(wf, reference_plan = plan)
   ag <- out$report_tables[["Expected agreement and model-based kappa"]]
@@ -92,7 +92,8 @@ test_that("the sparse Fiedler solver accepts symmetric Matrix input", {
 test_that("constant observed ratings do not create halo or central tendency screens", {
   d <- load_mfrmr_data("example_core")
   d$Score[d$Rater == "R04"] <- 4
-  wf <- mfrm_analysis(d, "Person", c("Rater", "Criterion"), "Score", method = "JML_jeffreys")
+  wf <- mfrm_workflow(d, "Person", c("Rater", "Criterion"), "Score") |>
+    step_mfrm_measure(method = "JML_jeffreys") |> step_mfrm_diagnose()
   screen <- .mfrm_rater_card(wf, "R04", "Criterion", 3L)$tables
   expect_true(all(screen[["Central tendency screen"]]$Status == "no_observed_score_variation"))
   expect_true(all(screen[["Criterion halo screen"]]$Status == "no_observed_score_variation"))

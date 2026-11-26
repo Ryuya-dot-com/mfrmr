@@ -133,9 +133,9 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col, rating_mi
     if (!is.null(weight_col)) {
         cols <- c(cols, weight_col)
     }
-    df <- rename(select(data, all_of(cols)), Person = all_of(person_col), Score = all_of(score_col))
+    df <- dplyr::rename(dplyr::select(data, dplyr::all_of(cols)), Person = dplyr::all_of(person_col), Score = dplyr::all_of(score_col))
     if (!is.null(weight_col)) {
-        df <- rename(df, Weight = all_of(weight_col))
+        df <- dplyr::rename(df, Weight = dplyr::all_of(weight_col))
     }
     raw_score <- as.character(df$Score)
     raw_weight <- if ("Weight" %in% names(df))
@@ -186,7 +186,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col, rating_mi
     raw_person_id <- as.character(df$Person)
     raw_facet_id <- lapply(facet_cols, function(f) as.character(df[[f]]))
     names(raw_facet_id) <- facet_cols
-    df <- mutate(df, Person = enc2utf8(trimws(as.character(Person))), across(all_of(facet_cols), ~enc2utf8(trimws(as.character(.x)))),
+    df <- dplyr::mutate(df, Person = enc2utf8(trimws(as.character(Person))), dplyr::across(dplyr::all_of(facet_cols), ~enc2utf8(trimws(as.character(.x)))),
         Score = score_num)
     blank_person <- !is.na(df$Person) & !nzchar(df$Person)
     blank_facets <- vapply(facet_cols, function(facet) {
@@ -225,7 +225,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col, rating_mi
         }
     }
     if (!"Weight" %in% names(df)) {
-        df <- mutate(df, Weight = 1)
+        df <- dplyr::mutate(df, Weight = 1)
     }
     else {
         if (is.complex(df$Weight) || !is.null(dim(df$Weight))) {
@@ -249,13 +249,13 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col, rating_mi
                 count = bad_weight_n, affected = weight_col, message = bad_weight_msg, action = "Recode weights to positive numeric values or remove the weight column.")
             warning(bad_weight_msg, call. = FALSE)
         }
-        df <- mutate(df, Weight = weight_num)
+        df <- dplyr::mutate(df, Weight = weight_num)
     }
     rows_before_drop <- nrow(df)
     omitted <- !stats::complete.cases(df) | (!is.na(df$Weight) & df$Weight <= 0)
     omitted_data <- as.data.frame(df[omitted, , drop = FALSE])
     omitted_input_rows <- which(omitted)
-    df <- filter(tidyr::drop_na(df), Weight > 0)
+    df <- dplyr::filter(tidyr::drop_na(df), Weight > 0)
     rows_dropped <- rows_before_drop - nrow(df)
     row_retention <- data.frame(Stage = c("input_selected_columns", "after_missing_and_weight_filter"),
         Rows = c(input_rows, nrow(df)), DroppedRows = c(0L, rows_dropped), DroppedReason = c("", "missing values or non-positive weights"),
@@ -314,7 +314,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col, rating_mi
             count = rounded_n, affected = score_col, message = "Normalized retained scores within 1e-6 of an integer to the nearest category code.",
             action = "Inspect the source scores; genuine fractional responses require explicit recoding.")
     }
-    df <- mutate(df, Score = as.integer(round(Score)))
+    df <- dplyr::mutate(df, Score = as.integer(round(Score)))
     if (!is.finite(sum(df$Weight))) {
         stop("The sum of retained weights exceeds finite numeric range. Choose a representable weighting scheme explicitly; weights are not rescaled automatically.",
             call. = FALSE)
@@ -422,7 +422,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col, rating_mi
                   options(mfrmr._score_recode_announced = TRUE)
                 }
             }
-            df <- mutate(df, Score = match(Score, score_vals) + rating_min - 1)
+            df <- dplyr::mutate(df, Score = match(Score, score_vals) + rating_min - 1)
             rating_max <- rating_min + length(score_vals) - 1
             expected_vals <- seq(rating_min, rating_max)
         }
@@ -431,13 +431,13 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col, rating_mi
         }
     }
     if (isTRUE(preserve_score_support)) {
-        score_map <- tibble(OriginalScore = seq(rating_min, rating_max), InternalScore = seq(rating_min,
+        score_map <- tibble::tibble(OriginalScore = seq(rating_min, rating_max), InternalScore = seq(rating_min,
             rating_max))
     }
     else {
-        score_map <- tibble(OriginalScore = observed_score_values, InternalScore = seq(rating_min, rating_max))
+        score_map <- tibble::tibble(OriginalScore = observed_score_values, InternalScore = seq(rating_min, rating_max))
     }
-    df <- mutate(df, score_k = Score - rating_min)
+    df <- dplyr::mutate(df, score_k = Score - rating_min)
     unused_score_categories <- setdiff(seq(rating_min, rating_max), sort(unique(df$Score)))
     n_cat <- rating_max - rating_min + 1L
     bad_score_k <- !is.finite(df$score_k) | df$score_k < 0L | df$score_k >= n_cat
@@ -449,7 +449,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col, rating_mi
             else "", ". Check `rating_min`/`rating_max` or recode the score column before fitting.",
             call. = FALSE)
     }
-    df <- mutate(df, Person = factor(Person), across(all_of(facet_cols), ~factor(.x)))
+    df <- dplyr::mutate(df, Person = factor(Person), dplyr::across(dplyr::all_of(facet_cols), ~factor(.x)))
     facet_names <- facet_cols
     facet_levels <- lapply(facet_names, function(f) levels(df[[f]]))
     names(facet_levels) <- facet_names

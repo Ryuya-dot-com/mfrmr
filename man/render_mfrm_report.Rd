@@ -76,14 +76,11 @@ when the corresponding observed scores do not vary. Review the source rating rec
 before interpreting a screening result.
 }
 \examples{
-utils::data("mfrmr_example_core", package = "mfrmr")
-wf <- mfrm_workflow(
-  mfrmr_example_core,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score"
-) |>
-  step_mfrm_measure() |>
+# Saved JML calibration of example_core; see fit_mfrm() for estimation.
+saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
+ratings <- load_mfrmr_data(saved$dataset)
+wf <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score",
+                    fit = saved$fit) |>
   step_mfrm_diagnose()
 md <- render_mfrm_report(wf, format = "markdown")
 tmp_html <- tempfile(tmpdir = tempdir(), fileext = ".html")

@@ -1,7 +1,10 @@
 test_that("Fair Average prints the selected reference plan and native intervals", {
   d <- load_mfrmr_data("example_core")
-  for (method in c("MML", "JML", "JML_jeffreys")) {
-    f <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score", method = method)
+  fits <- list(read_example_bundle("operational-mml")$fit,
+    read_example_bundle()$fit,
+    fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score", method = "JML_jeffreys"))
+  for (f in fits) {
+    d <- f$encoding$retained_data
     fair <- fair_average_table(f, reference_plan = unique(d[c("Rater", "Criterion")]), fair_se = TRUE)
     output <- paste(capture.output(print(fair)), collapse = "\n")
     expect_match(output, "Common reference plan")
@@ -64,7 +67,8 @@ test_that("base descriptive statistics and residual principal components retain 
 
 test_that("reports reuse matching reliability and include current bias outputs", {
   d <- load_mfrmr_data("example_core")
-  wf <- step_mfrm_diagnose(step_mfrm_measure(mfrm_workflow(d, "Person", c("Rater", "Criterion"), "Score")))
+  wf <- step_mfrm_diagnose(mfrm_workflow(d, "Person", c("Rater", "Criterion"), "Score",
+    fit = read_example_bundle()$fit))
   expected <- wf$diagnostics$report_statistics$reliability
   testthat::local_mocked_bindings(diagnose_mfrm = function(...) stop("unexpected recomputation"))
   expect_equal(.mfrm_diagnostic_report_statistics(wf)$reliability, expected)
@@ -81,4 +85,25 @@ test_that("the explicit check-core limit caps workers without changing user opti
   expect_error(.mfrm_threads(1.5), "positive integer")
   expect_error(.mfrm_threads(NA_real_), "positive integer")
   expect_identical(options(), before)
+})
+
+
+test_that("ordinary saved calibrations agree with their generation recipes", {
+  skip_on_cran()
+  recipes <- new.env(parent = baseenv())
+  sys.source(system.file("examples", "ordinary-fits.R", package = "mfrmr",
+    mustWork = TRUE), envir = recipes)
+  regenerated <- recipes$ordinary_fit_examples()
+  for (name in names(regenerated)) {
+    saved <- read_example_bundle(name)
+    current <- regenerated[[name]]
+    expect_identical(saved$dataset, current$dataset)
+    expect_identical(saved$fit$schema_version, current$fit$schema_version)
+    expect_equal(coef(saved$fit), coef(current$fit), tolerance = 1e-6)
+    expect_equal(vcov(saved$fit), vcov(current$fit), tolerance = 1e-6)
+    expect_equal(predict(saved$fit, type = "probs"),
+      predict(current$fit, type = "probs"), tolerance = 1e-6)
+    expect_equal(saved$diagnostics$measures, current$diagnostics$measures,
+      tolerance = 1e-6)
+  }
 })

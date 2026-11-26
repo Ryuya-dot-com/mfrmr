@@ -482,7 +482,7 @@ prepare_constraint_specs <- function(prep, anchor_df = NULL, group_anchor_df = N
                 next
             }
             if (nrow(anchor_df) > 0) {
-                df <- filter(anchor_df, Facet == facet)
+                df <- dplyr::filter(anchor_df, Facet == facet)
                 if (nrow(df) > 0) {
                   anchors <- setNames(df$Anchor, df$Level)
                   anchors <- anchors[names(anchors) %in% levels]
@@ -491,13 +491,13 @@ prepare_constraint_specs <- function(prep, anchor_df = NULL, group_anchor_df = N
                 }
             }
             if (nrow(group_anchor_df) > 0) {
-                df <- filter(group_anchor_df, Facet == facet)
+                df <- dplyr::filter(group_anchor_df, Facet == facet)
                 if (nrow(df) > 0) {
                   groups <- setNames(df$Group, df$Level)
                   groups <- groups[names(groups) %in% levels]
                   if (length(groups) > 0)
                     group_map[[facet]] <- groups
-                  group_vals <- mutate(summarize(group_by(filter(distinct(select(df, Group, GroupValue)),
+                  group_vals <- dplyr::mutate(dplyr::summarize(dplyr::group_by(dplyr::filter(dplyr::distinct(dplyr::select(df, Group, GroupValue)),
                     !is.na(Group)), Group), GroupValue = {
                     vals <- GroupValue[!is.na(GroupValue)]
                     if (length(vals) == 0)
@@ -518,7 +518,7 @@ prepare_constraint_specs <- function(prep, anchor_df = NULL, group_anchor_df = N
             group_values = group_values[[facet]], centered = is_centered(facet), centering_scope = map_scope)
     })
     names(facet_specs) <- facet_names
-    anchor_summary <- tibble(Facet = all_facets, AnchoredLevels = vapply(anchor_map, function(x) length(x),
+    anchor_summary <- tibble::tibble(Facet = all_facets, AnchoredLevels = vapply(anchor_map, function(x) length(x),
         integer(1)), GroupAnchors = vapply(group_map, function(x) length(unique(x)), integer(1)), DummyFacet = all_facets %in%
         dummy_facets)
     list(theta_spec = theta_spec, facet_specs = facet_specs, anchor_summary = anchor_summary, anchor_review = anchor_review)
@@ -589,75 +589,7 @@ build_estimation_config <- function(prep, model, method, step_facet, slope_facet
     list(config = config, sizes = build_param_sizes(config))
 }
 
-extract_bias_facet_spec <- function(bias_results, data_cols = NULL) {
-    if (is.null(bias_results) || is.null(bias_results$table) || nrow(bias_results$table) == 0) {
-        return(NULL)
-    }
-    tbl <- as.data.frame(bias_results$table, stringsAsFactors = FALSE)
-    facets <- character(0)
-    if (!is.null(bias_results$interaction_facets)) {
-        facets <- c(facets, as.character(bias_results$interaction_facets))
-    }
-    if (!is.null(bias_results$facet_a) && length(bias_results$facet_a) > 0) {
-        facets <- c(facets, as.character(bias_results$facet_a[1]))
-    }
-    if (!is.null(bias_results$facet_b) && length(bias_results$facet_b) > 0) {
-        facets <- c(facets, as.character(bias_results$facet_b[1]))
-    }
-    facets <- facets[!is.na(facets) & nzchar(facets)]
-    facets <- unique(facets)
-    level_cols <- grep("^Facet[0-9]+_Level$", names(tbl), value = TRUE)
-    if (length(level_cols) > 0) {
-        ord <- suppressWarnings(as.integer(sub("^Facet([0-9]+)_Level$", "\\1", level_cols)))
-        ok <- is.finite(ord)
-        level_cols <- level_cols[ok]
-        ord <- ord[ok]
-        if (length(level_cols) == 0)
-            return(NULL)
-        o <- order(ord)
-        ord <- ord[o]
-        level_cols <- level_cols[o]
-        facet_name_cols <- paste0("Facet", ord)
-        if (all(facet_name_cols %in% names(tbl)) && nrow(tbl) > 0) {
-            facets_from_tbl <- vapply(facet_name_cols, function(col) as.character(tbl[[col]][1]), character(1))
-            if (all(!is.na(facets_from_tbl) & nzchar(facets_from_tbl))) {
-                facets <- facets_from_tbl
-            }
-        }
-        if (length(facets) < length(level_cols)) {
-            return(NULL)
-        }
-        facets <- facets[seq_along(level_cols)]
-        index_cols <- paste0("Facet", ord, "_Index")
-        measure_cols <- paste0("Facet", ord, "_Measure")
-        se_cols <- paste0("Facet", ord, "_SE")
-    }
-    else if (all(c("FacetA_Level", "FacetB_Level") %in% names(tbl))) {
-        if (length(facets) < 2 && all(c("FacetA", "FacetB") %in% names(tbl)) && nrow(tbl) > 0) {
-            facets <- c(as.character(tbl$FacetA[1]), as.character(tbl$FacetB[1]))
-        }
-        facets <- facets[!is.na(facets) & nzchar(facets)]
-        facets <- unique(facets)
-        if (length(facets) < 2)
-            return(NULL)
-        facets <- facets[1:2]
-        level_cols <- c("FacetA_Level", "FacetB_Level")
-        index_cols <- c("FacetA_Index", "FacetB_Index")
-        measure_cols <- c("FacetA_Measure", "FacetB_Measure")
-        se_cols <- c("FacetA_SE", "FacetB_SE")
-    }
-    else {
-        return(NULL)
-    }
-    if (!is.null(data_cols) && !all(facets %in% data_cols)) {
-        return(NULL)
-    }
-    list(facets = facets, level_cols = level_cols, index_cols = index_cols, measure_cols = measure_cols,
-        se_cols = se_cols, interaction_order = length(facets), interaction_mode = ifelse(length(facets) >
-            2, "higher_order", "pairwise"))
-}
 
-fit_df_method_choices <- c("engine", "facets", "both")
 
 safe_cor <- function(x, y, w = NULL) {
     ok <- is.finite(x) & is.finite(y)
@@ -712,29 +644,29 @@ infer_default_rater_facet <- function(facet_names, fallback_first = TRUE) {
 
 calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NULL) {
     if (is.null(obs_df) || nrow(obs_df) == 0) {
-        return(list(summary = tibble(), pairs = tibble()))
+        return(list(summary = tibble::tibble(), pairs = tibble::tibble()))
     }
     if (is.null(rater_facet) || !rater_facet %in% facet_cols) {
-        return(list(summary = tibble(), pairs = tibble()))
+        return(list(summary = tibble::tibble(), pairs = tibble::tibble()))
     }
     context_cols <- setdiff(facet_cols, rater_facet)
     if (length(context_cols) == 0) {
-        return(list(summary = tibble(), pairs = tibble()))
+        return(list(summary = tibble::tibble(), pairs = tibble::tibble()))
     }
     obs_df$.context <- dplyr::group_indices(dplyr::group_by(obs_df, dplyr::across(dplyr::all_of(context_cols))))
-    df <- select(obs_df, .context, !!rlang::sym(rater_facet), Observed, any_of("Weight"))
+    df <- dplyr::select(obs_df, .context, !!rlang::sym(rater_facet), Observed, dplyr::any_of("Weight"))
     df$.Weight <- get_weights(df)
-    df <- summarize(group_by(df, .context, !!rlang::sym(rater_facet)), Score = if (all(is.finite(Observed)))
+    df <- dplyr::summarize(dplyr::group_by(df, .context, !!rlang::sym(rater_facet)), Score = if (all(is.finite(Observed)))
         weighted_mean(Observed, .Weight)
-    else NA_real_, Ratings = n(), .groups = "drop")
+    else NA_real_, Ratings = dplyr::n(), .groups = "drop")
     if (nrow(df) == 0) {
-        return(list(summary = tibble(), pairs = tibble()))
+        return(list(summary = tibble::tibble(), pairs = tibble::tibble()))
     }
     rater_chr <- ifelse(is.na(df[[rater_facet]]), "NA", as.character(df[[rater_facet]]))
     rater_cols <- unique(rater_chr)
     n_raters <- length(rater_cols)
     if (n_raters < 2L) {
-        return(list(summary = tibble(), pairs = tibble()))
+        return(list(summary = tibble::tibble(), pairs = tibble::tibble()))
     }
     prob_map <- new.env(parent = emptyenv(), hash = TRUE)
     prob_map_size <- 0L
@@ -884,7 +816,7 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
     count_cast <- if (any(n_vec == 0L))
         as.numeric
     else as.integer
-    pair_tbl <- tibble(Rater1 = r1_names, Rater2 = r2_names, N = count_cast(n_vec), OpportunityCount = count_cast(n_vec),
+    pair_tbl <- tibble::tibble(Rater1 = r1_names, Rater2 = r2_names, N = count_cast(n_vec), OpportunityCount = count_cast(n_vec),
         ExactCount = count_cast(exact_cnt_vec), ExpectedExactCount = exp_exact_cnt_vec, ExpectedAvailableContexts = exp_avail_vec,
         ExpectedUnavailableContexts = exp_unavail_vec, ExpectedReason = exp_reason_vec, AdjacentCount = count_cast(adj_cnt_vec),
         Exact = exact_vec, ExpectedExact = exp_exact_vec, Adjacent = adj_vec, MeanDiff = mean_diff_vec, MAD = mad_vec,
@@ -898,7 +830,7 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
     else {
         NA_real_
     }
-    summary_tbl <- tibble(RaterFacet = rater_facet, Raters = length(rater_cols), Pairs = nrow(pair_tbl), AvailablePairs = sum(pair_tbl$N >
+    summary_tbl <- tibble::tibble(RaterFacet = rater_facet, Raters = length(rater_cols), Pairs = nrow(pair_tbl), AvailablePairs = sum(pair_tbl$N >
         0), UnavailablePairs = sum(pair_tbl$N == 0), CorrelationPairs = sum(is.finite(pair_tbl$Corr)), UnavailableCorrelationPairs = sum(!is.finite(pair_tbl$Corr)),
         RepeatedCells = sum(df$Ratings > 1L), ExpectedAvailableContexts = sum(pair_tbl$ExpectedAvailableContexts),
         ExpectedUnavailableContexts = sum(pair_tbl$ExpectedUnavailableContexts), ExpectedReason = if (expected_available)
@@ -991,9 +923,9 @@ compute_pca_overall <- function(obs_df, facet_names, max_factors = 10L) {
     if (anyDuplicated(do.call(paste, c(combinations, sep = "_")))) {
         return(pca_failure("Combined-facet column labels are ambiguous. Relabel facet levels to distinguish the combinations."))
     }
-    df_aug <- select(mutate(obs_df, Person = as.character(Person), item_combination = paste(!!!rlang::syms(facet_names),
+    df_aug <- dplyr::select(dplyr::mutate(obs_df, Person = as.character(Person), item_combination = paste(!!!rlang::syms(facet_names),
         sep = "_")), Person, item_combination, StdResidual)
-    residual_matrix_prep <- summarize(group_by(df_aug, Person, item_combination), std_residual = mean(StdResidual,
+    residual_matrix_prep <- dplyr::summarize(dplyr::group_by(df_aug, Person, item_combination), std_residual = mean(StdResidual,
         na.rm = TRUE), .groups = "drop")
     residual_matrix_wide <- tryCatch({
         tibble::column_to_rownames(tidyr::pivot_wider(residual_matrix_prep, id_cols = Person, names_from = item_combination,
@@ -1036,7 +968,7 @@ compute_pca_by_facet <- function(obs_df, facet_names, max_factors = 10L) {
                 warning = warning, calculation_version = 2L, max_factors = as.integer(max_factors))
         }
         facet_sym <- rlang::sym(facet)
-        prep <- summarize(group_by(select(mutate(obs_df, Person = as.character(Person), .Level = as.character(!!facet_sym)),
+        prep <- dplyr::summarize(dplyr::group_by(dplyr::select(dplyr::mutate(obs_df, Person = as.character(Person), .Level = as.character(!!facet_sym)),
             Person, .Level, StdResidual), Person, .Level), std_residual = mean(StdResidual, na.rm = TRUE),
             .groups = "drop")
         wide <- tryCatch({

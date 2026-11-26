@@ -26,6 +26,10 @@ test_that("estimation has one class and rejects removed controls and old saved s
 
 test_that("all G-study estimators use one contract while retaining statistical assumptions", {
   d <- load_mfrmr_data("example_core")
+  # A balanced subset is sufficient for the three estimator/S3 contracts.
+  d <- d[d$Person %in% unique(d$Person)[1:8] &
+           d$Rater %in% unique(d$Rater)[1:3] &
+           d$Criterion %in% unique(d$Criterion)[1:2], ]
   results <- lapply(c("anova", "minque0", "urgenova"), function(method)
     mfrm_g_study(d, score = "Score", person = "Person", facets = c("Rater", "Criterion"), method = method))
   for (g in results) {
@@ -57,6 +61,11 @@ test_that("automatic quadrature preserves refined results and withholds unstable
   expect_false(summary(coarse)$readiness$ready)
   expect_true("quadrature_sensitivity_not_stable" %in% summary(coarse)$readiness$reason_codes)
   expect_error(confint(coarse), "quadrature_sensitivity")
+})
+
+test_that("fine automatic quadrature is stable and survives serialization", {
+  skip_on_cran()
+  d <- load_mfrmr_data("example_core")
   fine <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score",
     control = list(mml_integration = "auto", quad_points = 61L))
   expect_equal(fine$quadrature_check$orders, c(61L, 123L))
@@ -82,7 +91,7 @@ test_that("data-review fit recipes use current estimation arguments", {
 
 test_that("anchor displacement summaries follow the unified calibration contract", {
   d <- load_mfrmr_data("example_core")
-  f <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score", method = "JML")
+  f <- read_example_bundle()$fit
   # Identical estimates isolate table matching and interval arithmetic, not wave independence.
   x <- detect_anchor_drift(list(A = f, B = f), include_person = TRUE)
   s <- summary(unserialize(serialize(x, NULL)))
@@ -107,7 +116,7 @@ test_that("anchor displacement summaries follow the unified calibration contract
 
 test_that("retired screening controls cannot silently change a requested analysis", {
   d <- load_mfrmr_data("example_core")
-  f <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score", method = "JML")
+  f <- read_example_bundle()$fit
   expect_error(estimate_bias(f, max_iter = 2), "unused argument")
   expect_error(estimate_bias(f, diagnostics = diagnose_mfrm(f)), "unused argument")
   expect_error(analyze_dff(f, "Rater", "Group", method = "refit"), "arg")

@@ -17,10 +17,10 @@ Description: Estimates many-facet ordered-response measurement models (Rating
     estimation, latent regression, and sandwich covariances), Conditional
     Maximum Likelihood, and Laplace empirical Bayes Markov rater drift models.
     Provides multi-threaded C++ batch estimation, connectivity audits prior to
-    estimation, fit diagnostics, Fair(M), Real SE, RajuSA-Welch pairwise bias
+    estimation, fit diagnostics, Fair(M), Real SE, 'RajuSA-Welch' pairwise bias
     and parallel split-element differential facet functioning,
     color-vision-safe 'ggplot2' graphics, and Generalizability (G-Study) and
-    Decision (D-Study) planning including fast Henderson Method 1 (urGENOVA)
+    Decision (D-Study) planning including fast Henderson Method 1 ('urGENOVA')
     estimation. Connects calibration, diagnostics, visualizations, and
     Markdown, HTML, or Word report generation in one analysis workflow. See
     Andrich (1978) <doi:10.1007/BF02293814>, Masters (1982)

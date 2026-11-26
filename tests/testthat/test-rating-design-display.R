@@ -16,9 +16,9 @@ test_that("observed rater panels retain shared-person linkage separately", {
   expect_length(redundant$rater_linkage$bridge_persons, 0L)
 })
 
-test_that("fast information validates and counts the declared rating plan", {
+test_that("saved-calibration information validates and counts the declared rating plan", {
   data <- load_mfrmr_data("example_core")
-  fit <- fit_mfrm(data, "Person", c("Rater", "Criterion"), "Score")
+  fit <- read_example_bundle()$fit
   context <- data[1L, c("Rater", "Criterion"), drop = FALSE]
   compute <- function(...) compute_information(fit, c(-1, 1), 3L, ...)
   one <- compute(rating_plan = transform(context, Count = 1L))
