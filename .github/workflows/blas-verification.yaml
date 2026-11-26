@@ -1,0 +1,69 @@
+name: MKL and OpenBLAS verification
+
+on:
+  push:
+    branches: [verify/mfrmr-0.3.2-blas]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: ${{ matrix.blas }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - blas: mkl
+            image: ghcr.io/r-hub/containers/mkl@sha256:2d300a6e03d2b9c64aa92f18358c6f721af8d02edd9bd8d26d46aa10f92443bb
+          - blas: openblas
+            image: ghcr.io/r-hub/containers/gcc16@sha256:898d94c4847cc1e74f22c203eb74b14f4cba8e60825436bb5766819cbd55455e
+    container:
+      image: ${{ matrix.image }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      NOT_CRAN: 'false'
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      BLIS_NUM_THREADS: '1'
+      _R_CHECK_CRAN_INCOMING_: 'false'
+      _R_CHECK_CRAN_INCOMING_REMOTE_: 'false'
+      _R_CHECK_SYSTEM_CLOCK_: 'false'
+      MFRMR_EXPECTED_BLAS: ${{ matrix.blas }}
+      MFRMR_CONTAINER: ${{ matrix.image }}
+    steps:
+      - uses: r-hub/actions/checkout@v1
+
+      - name: Verify candidate, source and active BLAS
+        run: |
+          mkdir -p validation-results/blas
+          sha256sum --check .github/blas-check-input/SHA256SUMS
+          Rscript --vanilla .github/blas-check-input/verify.R | tee validation-results/blas/environment.txt
+
+      - uses: r-hub/actions/setup-deps@v1
+
+      - name: Check exact source archive
+        run: |
+          R CMD check --as-cran --timings --no-manual .github/blas-check-input/mfrmr_0.3.2.tar.gz
+          Rscript --vanilla -e 'x <- readLines("mfrmr.Rcheck/00check.log"); stopifnot(any(x == "* DONE"), !any(grepl("^Status:.*(ERROR|WARNING)", x)))'
+
+      - name: Run all regression tests with the checked installation
+        run: |
+          R_LIBS="${GITHUB_WORKSPACE}/mfrmr.Rcheck" Rscript --vanilla scripts/run-regression.R . all validation-results/blas
+
+      - name: Retain check and regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blas-${{ matrix.blas }}-${{ github.sha }}
+          path: |
+            mfrmr.Rcheck/00check.log
+            mfrmr.Rcheck/00install.out
+            mfrmr.Rcheck/tests
+            mfrmr.Rcheck/mfrmr-Ex.timings
+            validation-results/blas
+          if-no-files-found: warn
