@@ -29,21 +29,25 @@ rubric (many-facet RS-GPCM). Select it with `model = "GPCM"` (also accepted as `
 
 ## Install and open tutorials
 
-Once version 0.3.2 is available on CRAN, use the standard installation:
+Version 0.3.2 is available on [CRAN](https://CRAN.R-project.org/package=mfrmr).
 
 ```r
-install.packages("mfrmr")
+install.packages("mfrmr", repos = "https://cran.r-project.org")
+packageVersion("mfrmr")
 ```
 
-Until 0.3.2 is available from CRAN, install the GitHub source release below.
-Download [mfrmr_0.3.2.tar.gz](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.3.2)
-from GitHub Releases. Install the package dependencies and ensure that your
-R package compiler toolchain works. Run the following from the folder containing the file.
+If the current release is not yet available as a binary for your platform,
+install it from source. Source installation requires an R package compiler
+toolchain with C++17 support.
 
 ```r
-install.packages("mfrmr_0.3.2.tar.gz", repos = NULL, type = "source")
+install.packages("mfrmr", type = "source",
+                 repos = "https://cran.r-project.org")
 browseVignettes("mfrmr")
 ```
+
+Source releases are also available from
+[GitHub Releases](https://github.com/Ryuya-dot-com/mfrmr/releases).
 
 Read the [assessment guide](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/vignettes/articles/mfrmr-assessment.Rmd)
 on GitHub. Its examples complement the two offline vignettes bundled with
@@ -159,5 +163,18 @@ for comparisons under an explicit common reference panel.
 Statistical fit indices (`Infit`/`Outfit`), severity estimates, and DFF contrasts support formative rater training, rubric clarification, and targeted second-scoring; they must not be used for automated high-stakes rater exclusion without qualitative review (Eckes, 2015). Observed-score $G$ and $\Phi$ decompose raw score variance (Brennan, 2001) and answer different questions from model-adjusted latent reliability.
 
 Use `citation("mfrmr")` and see [release notes](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.3.2) and [roadmap](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/ROADMAP.md). Licensed under the [MIT License](https://opensource.org/licenses/MIT).
+
+## langtest: a web-based route to MFRM
+
+[langtest](https://langtest.jp/) is a freely available web platform for statistical
+analyses in applied linguistics. Its MFRM module brings model estimation,
+diagnostics, visualization, bias analysis, and reporting into a browser-based
+workflow. Yamashita and Mizumoto (2026) provide a step-by-step tutorial and
+evaluate its outputs against Facets and the R package TAM.
+
+Yamashita, T., & Mizumoto, A. (2026). An evaluation of and tutorial for an
+open-source, web-based application for many-facet Rasch measurement.
+*Research Methods in Applied Linguistics, 5*(3), Article 100400.
+[https://doi.org/10.1016/j.rmal.2026.100400](https://doi.org/10.1016/j.rmal.2026.100400)
 
 `mfrmr` has benefited from discussion and methodological input from Dr. Atsushi Mizumoto and Dr. Taichi Yamashita.
